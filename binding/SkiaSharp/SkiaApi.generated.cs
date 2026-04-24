@@ -15958,6 +15958,25 @@ namespace SkiaSharp
 			(sk_fontmgr_create_from_file_delegate ??= GetSymbol<Delegates.sk_fontmgr_create_from_file> ("sk_fontmgr_create_from_file")).Invoke (param0, path, index);
 		#endif
 
+		// sk_typeface_t* sk_fontmgr_legacy_create_typeface(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		}
+		private static Delegates.sk_fontmgr_legacy_create_typeface sk_fontmgr_legacy_create_typeface_delegate;
+		internal static sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style) =>
+			(sk_fontmgr_legacy_create_typeface_delegate ??= GetSymbol<Delegates.sk_fontmgr_legacy_create_typeface> ("sk_fontmgr_legacy_create_typeface")).Invoke (param0, familyName, style);
+		#endif
+
 		// sk_typeface_t* sk_fontmgr_create_from_stream(sk_fontmgr_t*, sk_stream_asset_t* stream, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT

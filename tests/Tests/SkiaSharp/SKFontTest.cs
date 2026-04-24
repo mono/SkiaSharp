@@ -151,7 +151,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeasureTextMeasuresTheText()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var width = font.MeasureText("Hello World!");
 
@@ -161,7 +161,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeasureTextMeasuresTheTextForBytes()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
 			var width8 = font.MeasureText(text8, SKTextEncoding.Utf8);
@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeasureTextReturnsTheBounds()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var width = font.MeasureText("Hello World!", out var bounds);
 
@@ -191,7 +191,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeasureTextReturnsTheBoundsForBytes()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
 			var width8 = font.MeasureText(text8, SKTextEncoding.Utf8, out var bounds8);
@@ -273,7 +273,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void GetGlyphWidthsAreCorrect()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var widths = font.GetGlyphWidths("Hello World!", out var bounds);
 
@@ -299,7 +299,7 @@ namespace SkiaSharp.Tests
 		{
 			var text = "|";
 
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 			font.Size = 100;
 
 			var blob = SKTextBlob.Create(text, font, new SKPoint(50, 100));
@@ -337,7 +337,7 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextEncoding.GlyphId, "a", 2)]
 		public void BreakTextReturnsTheCorrectNumberOfBytes(SKTextEncoding encoding, string text, int expectedRead)
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			// get bytes
 			var bytes = encoding == SKTextEncoding.GlyphId
@@ -395,7 +395,7 @@ namespace SkiaSharp.Tests
 		[InlineData(1 << 17)]
 		public void BreakTextWidthIsEqualToMeasureTextWidth(int textSize)
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			if (textSize >= 0)
 				font.Size = textSize;
@@ -418,7 +418,7 @@ namespace SkiaSharp.Tests
 		[InlineData(1 << 17)]
 		public void BreakTextHandlesLongText(int textSize)
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			if (textSize >= 0)
 				font.Size = textSize;

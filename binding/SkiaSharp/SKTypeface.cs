@@ -22,10 +22,11 @@ namespace SkiaSharp
 
 			empty = new SKTypefaceStatic (SkiaApi.sk_typeface_create_empty ());
 
-			// Ask the default font manager for a platform default; fall back to the
-			// empty singleton if it has none (e.g. Android where matchFamilyStyle(null,...)
-			// can return null).
-			var matched = SkiaApi.sk_fontmgr_match_family_style (
+			// Use legacyMakeTypeface(null) to get the platform default — this uses
+			// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
+			// then falls back to style set 0). matchFamilyStyle(null) doesn't work
+			// on Android/NDK/Custom because onMatchFamily(null) returns null.
+			var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
 				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
 			defaultTypeface = matched == IntPtr.Zero
 				? empty
@@ -56,7 +57,7 @@ namespace SkiaSharp
 
 		public static SKTypeface CreateDefault ()
 		{
-			var matched = SkiaApi.sk_fontmgr_match_family_style (
+			var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
 				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
 			return matched == IntPtr.Zero
 				? empty
