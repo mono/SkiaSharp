@@ -1,20 +1,19 @@
+using System;
 using Uno.UI.Hosting;
 
 namespace SkiaSharpSample;
 
-public class Program
+internal class Program
 {
     [STAThread]
     public static void Main(string[] args)
     {
-        App.InitializeLogging();
-
         var host = UnoPlatformHostBuilder.Create()
             .App(() => new App())
             .UseX11()
             .UseLinuxFrameBuffer()
             .UseMacOS()
-            .UseWindows()
+            .UseWin32()
             .Build();
 
         host.Run();
