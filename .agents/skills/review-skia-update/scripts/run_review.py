@@ -112,6 +112,11 @@ def main():
         help="The SkiaSharp companion PR number.",
     )
     parser.add_argument(
+        "--milestone", type=int, required=True,
+        help="The target Chrome milestone number (e.g. 147). "
+             "AI extracts this from the PR title/body; the orchestrator validates consistency.",
+    )
+    parser.add_argument(
         "--output-dir", default="",
         help="Override output directory. Default: /tmp/skiasharp/skia-review/{timestamp}",
     )
@@ -119,6 +124,7 @@ def main():
 
     skia_pr_number = args.skia_pr
     skiasharp_pr_number = args.skiasharp_pr
+    caller_milestone = f"chrome/m{args.milestone}"
     output_dir = args.output_dir
 
     result = subprocess.run(
@@ -240,29 +246,36 @@ def main():
             f"{companion_base_sha[:12]}:cgmanifest.json"
         )
 
-    # Match both "m122" and "milestone 122" patterns
-    matches = re.findall(r"m(\d{3,})", pr["title"])
-    if not matches:
-        matches = re.findall(r"milestone\s+(\d{2,})", pr["title"], re.IGNORECASE)
-    if not matches:
-        raise RuntimeError(
-            f"Could not extract milestone from PR title: {pr['title']}. Expected 'mNNN' or 'milestone NNN' pattern."
-        )
-    title_milestone = f"chrome/m{matches[-1]}"
+    # 1c. Validate milestone consistency
+    # The caller (AI) provides --milestone; we validate it against PR title,
+    # PR body, branch name, and cgmanifest.json for consistency.
+    eprint(f"▸ Validating milestone {caller_milestone}...")
 
+    # Check PR title for milestone patterns
+    title_milestone = None
+    for pattern in [r"m(\d{3,})", r"milestone\s+(\d{2,})", r"skia[\s\-_]+(\d{2,})"]:
+        m = re.findall(pattern, pr["title"], re.IGNORECASE)
+        if m:
+            title_milestone = f"chrome/m{m[-1]}"
+            break
+    if title_milestone and title_milestone != caller_milestone:
+        eprint(f"   ⚠ PR title implies {title_milestone}, but --milestone says {caller_milestone}")
+    elif not title_milestone:
+        eprint(f"   ⚠ PR title '{pr['title']}' did not match any milestone pattern")
+
+    # Check cgmanifest.json from companion PR head
     companion_head_sha = companion_pr.get("headRefOid", "").strip()
-    new_milestone = title_milestone
+    cgmanifest_milestone = None
     if companion_head_sha and len(companion_head_sha) >= 7:
         new_cgmanifest = load_json_at_git_ref(repo_root, companion_head_sha, "cgmanifest.json")
-        new_milestone_from_cgmanifest = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
-        if new_milestone_from_cgmanifest:
-            if new_milestone_from_cgmanifest != title_milestone:
-                raise RuntimeError(
-                    f"Skia PR title implies {title_milestone}, but companion PR "
-                    f"#{skiasharp_pr_number} cgmanifest.json at {companion_head_sha[:12]} "
-                    f"records {new_milestone_from_cgmanifest}."
-                )
-            new_milestone = new_milestone_from_cgmanifest
+        cgmanifest_milestone = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
+    if cgmanifest_milestone and cgmanifest_milestone != caller_milestone:
+        eprint(
+            f"   ⚠ cgmanifest.json records {cgmanifest_milestone}, "
+            f"but --milestone says {caller_milestone}"
+        )
+
+    new_milestone = caller_milestone
 
     eprint(f"   New upstream: {new_milestone}")
     eprint(f"   Old upstream: {old_milestone}")
