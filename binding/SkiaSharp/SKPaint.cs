@@ -51,6 +51,7 @@ namespace SkiaSharp
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
 			}
+			RestoreDefaultTypeface ();
 		}
 
 		[Obsolete ($"Use {nameof (SKFont)} instead.")]
@@ -74,8 +75,23 @@ namespace SkiaSharp
 
 		// Reset
 
-		public void Reset () =>
+		public void Reset ()
+		{
 			SkiaApi.sk_compatpaint_reset (Handle);
+			RestoreDefaultTypeface ();
+		}
+
+		// SkCompatPaint's default constructor (called both directly by sk_compatpaint_new
+		// and transitively by sk_compatpaint_reset) constructs its internal SkFont with
+		// SkTypeface::MakeEmpty, which has zero glyphs and renders nothing. Pre-SKFont
+		// SKPaint text-rendering callers expect a platform default font instead; restore
+		// it here so new SKPaint().MeasureText(...) continues to work.
+		private void RestoreDefaultTypeface ()
+		{
+			SkiaApi.sk_font_set_typeface (
+				SkiaApi.sk_compatpaint_get_font (Handle),
+				SKTypeface.Default.Handle);
+		}
 
 		// properties
 
