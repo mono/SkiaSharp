@@ -179,6 +179,68 @@ namespace HarfBuzzSharp
 			return (int)coordsLength;
 		}
 
+		// Color font / palette support
+
+		public bool HasPalettes => HarfBuzzApi.hb_ot_color_has_palettes (Handle);
+
+		public int PaletteCount => (int)HarfBuzzApi.hb_ot_color_palette_get_count (Handle);
+
+		public uint[] GetPaletteColors (int paletteIndex)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+
+			var totalColors = (int)HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, null, null);
+			if (totalColors == 0)
+				return Array.Empty<uint> ();
+
+			uint count = (uint)totalColors;
+			var colors = new uint[totalColors];
+			fixed (uint* ptr = colors) {
+				HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, &count, ptr);
+			}
+			return colors;
+		}
+
+		public int GetPaletteColors (int paletteIndex, Span<uint> colors)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+
+			uint count = (uint)colors.Length;
+			fixed (uint* ptr = colors) {
+				HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, &count, ptr);
+			}
+			return (int)count;
+		}
+
+		public OpenTypeColorPaletteFlags GetPaletteFlags (int paletteIndex)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+			return HarfBuzzApi.hb_ot_color_palette_get_flags (Handle, (uint)paletteIndex);
+		}
+
+		public OpenTypeNameId GetPaletteNameId (int paletteIndex)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+			return HarfBuzzApi.hb_ot_color_palette_get_name_id (Handle, (uint)paletteIndex);
+		}
+
+		public OpenTypeNameId GetPaletteColorNameId (int colorIndex)
+		{
+			if (colorIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (colorIndex));
+			return HarfBuzzApi.hb_ot_color_palette_color_get_name_id (Handle, (uint)colorIndex);
+		}
+
+		public bool HasColorLayers => HarfBuzzApi.hb_ot_color_has_layers (Handle);
+
+		public bool HasColorPng => HarfBuzzApi.hb_ot_color_has_png (Handle);
+
+		public bool HasColorSvg => HarfBuzzApi.hb_ot_color_has_svg (Handle);
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 

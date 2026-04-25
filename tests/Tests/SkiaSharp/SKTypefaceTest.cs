@@ -719,5 +719,33 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty (clonedPosition);
 			Assert.Equal (axes[0].Min, clonedPosition[0].Value);
 		}
+
+		[SkippableFact]
+		public void CloneWithPaletteOverride ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
+			Assert.NotNull (typeface);
+
+			var overrides = new SKFontPaletteOverride[] {
+				new SKFontPaletteOverride { Index = 0, Color = 0xFFFF0000 }
+			};
+
+			ReadOnlySpan<SKFontVariationPositionCoordinate> emptyPosition = ReadOnlySpan<SKFontVariationPositionCoordinate>.Empty;
+			using var cloned = typeface.Clone (emptyPosition, 0, 0, overrides);
+			Assert.NotNull (cloned);
+		}
+
+		[SkippableFact]
+		public void CloneWithDifferentPaletteIndex ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
+			Assert.NotNull (typeface);
+
+			ReadOnlySpan<SKFontVariationPositionCoordinate> emptyPosition = ReadOnlySpan<SKFontVariationPositionCoordinate>.Empty;
+			using var clone0 = typeface.Clone (emptyPosition, 0, 0, ReadOnlySpan<SKFontPaletteOverride>.Empty);
+			using var clone1 = typeface.Clone (emptyPosition, 0, 1, ReadOnlySpan<SKFontPaletteOverride>.Empty);
+			Assert.NotNull (clone0);
+			Assert.NotNull (clone1);
+		}
 	}
 }

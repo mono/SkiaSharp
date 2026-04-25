@@ -248,6 +248,161 @@ namespace HarfBuzzSharp.Tests
 			Assert.False (face.HasVariationData);
 		}
 
+		// Color font / palette tests
+
+		private Face CreateColorFace ()
+		{
+			using var blob = Blob.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
+			return new Face (blob, 0);
+		}
+
+		[SkippableFact]
+		public void HasPalettesIsTrueForColorFont ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.HasPalettes);
+		}
+
+		[SkippableFact]
+		public void HasPalettesIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasPalettes);
+		}
+
+		[SkippableFact]
+		public void PaletteCountIsNonZeroForColorFont ()
+		{
+			using var face = CreateColorFace ();
+			// test_glyphs-COLRv1.ttf has 3 palettes
+			Assert.True (face.PaletteCount >= 3);
+		}
+
+		[SkippableFact]
+		public void PaletteCountIsZeroForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.Equal (0, face.PaletteCount);
+		}
+
+		[SkippableFact]
+		public void CanGetPaletteColors ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var colors = face.GetPaletteColors (0);
+			Assert.NotEmpty (colors);
+		}
+
+		[SkippableFact]
+		public void SpanGetPaletteColorsMatchesArrayVersion ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var arrayResult = face.GetPaletteColors (0);
+			Assert.NotEmpty (arrayResult);
+
+			var spanBuffer = new uint[arrayResult.Length];
+			var written = face.GetPaletteColors (0, spanBuffer);
+			Assert.Equal (arrayResult.Length, written);
+
+			for (int i = 0; i < arrayResult.Length; i++)
+				Assert.Equal (arrayResult[i], spanBuffer[i]);
+		}
+
+		[SkippableFact]
+		public void DifferentPalettesHaveDifferentColors ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount >= 2);
+
+			var palette0 = face.GetPaletteColors (0);
+			var palette1 = face.GetPaletteColors (1);
+			Assert.Equal (palette0.Length, palette1.Length);
+
+			// At least one color should differ between palettes
+			var anyDifferent = false;
+			for (int i = 0; i < palette0.Length; i++) {
+				if (palette0[i] != palette1[i]) {
+					anyDifferent = true;
+					break;
+				}
+			}
+			Assert.True (anyDifferent);
+		}
+
+		[SkippableFact]
+		public void CanGetPaletteFlags ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+			// Should not throw
+			var flags = face.GetPaletteFlags (0);
+		}
+
+		[SkippableFact]
+		public void CanGetPaletteNameId ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+			// Should not throw
+			var nameId = face.GetPaletteNameId (0);
+		}
+
+		[SkippableFact]
+		public void CanGetPaletteColorNameId ()
+		{
+			using var face = CreateColorFace ();
+			var colors = face.GetPaletteColors (0);
+			Assert.NotEmpty (colors);
+			// Should not throw
+			var nameId = face.GetPaletteColorNameId (0);
+		}
+
+		[SkippableFact]
+		public void HasColorLayersIsTrueForColorFont ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.HasColorLayers);
+		}
+
+		[SkippableFact]
+		public void HasColorLayersIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasColorLayers);
+		}
+
+		[SkippableFact]
+		public void NegativeIndexThrowsForPaletteColors ()
+		{
+			using var face = CreateColorFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteColors (-1));
+		}
+
+		[SkippableFact]
+		public void NegativeIndexThrowsForPaletteFlags ()
+		{
+			using var face = CreateColorFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteFlags (-1));
+		}
+
+		[SkippableFact]
+		public void NegativeIndexThrowsForPaletteNameId ()
+		{
+			using var face = CreateColorFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteNameId (-1));
+		}
+
+		[SkippableFact]
+		public void NegativeIndexThrowsForPaletteColorNameId ()
+		{
+			using var face = CreateColorFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteColorNameId (-1));
+		}
+
 		[SkippableFact]
 		public void ShouldHaveGlyphCount()
 		{
