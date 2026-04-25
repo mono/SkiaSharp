@@ -5,396 +5,251 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Skia Feature Scout</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
-    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
-    body { background: var(--bg); color: #1f2328; }
-    .page-shell { max-width: 1200px; }
-    .sticky-header { position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
-      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border); }
-    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
-    .status-pill { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 12px; white-space: nowrap; }
-    .st-full { background: #dcfce7; color: #166534; }
-    .st-partial { background: #fef3c7; color: #92400e; }
-    .st-missing { background: #fee2e2; color: #991b1b; }
-    .st-action-needed { background: #fce7f3; color: #9d174d; }
-    .st-not-applicable { background: #f3f4f6; color: #6b7280; }
-    .st-correctly-absent { background: #f3f4f6; color: #6b7280; }
-    .pri-critical { color: #7f1d1d; font-weight: 700; }
-    .pri-high { color: #991b1b; font-weight: 600; }
-    .pri-medium { color: #92400e; }
-    .pri-low { color: #6b7280; }
-    .cat-pill { font-size: 0.7rem; font-weight: 500; padding: 1px 6px; border-radius: 8px; }
-    .cat-new_feature { background: #dbeafe; color: #1e40af; }
-    .cat-codec { background: #fce7f3; color: #9d174d; }
-    .cat-image { background: #ede9fe; color: #5b21b6; }
-    .cat-image_filter { background: #e0e7ff; color: #3730a3; }
-    .cat-shader { background: #ccfbf1; color: #115e59; }
-    .cat-color { background: #fef3c7; color: #92400e; }
-    .cat-canvas { background: #dbeafe; color: #1e40af; }
-    .cat-path { background: #fed7aa; color: #9a3412; }
-    .cat-font { background: #e0e7ff; color: #3730a3; }
-    .cat-utility { background: #f3f4f6; color: #374151; }
-    .cat-performance { background: #d1fae5; color: #065f46; }
-    .cat-behavior_change { background: #fef3c7; color: #92400e; }
-    .cat-deprecation { background: #fee2e2; color: #991b1b; }
-    .finding-header { cursor: pointer; }
-    .finding-header:hover { background: #f3f4f6; }
-    .milestone-badge { font-size: 0.75rem; font-weight: 600; padding: 2px 8px;
-      border-radius: 12px; background: #e0e7ff; color: #3730a3; }
-    .ms-enhanced { background: #d1fae5; color: #065f46; font-size: 0.65rem; }
-    .next-step { border-left: 3px solid; padding-left: 12px; margin-bottom: 12px; }
-    .ns-critical { border-color: #dc2626; }
-    .ns-high { border-color: #f97316; }
-    .ns-medium { border-color: #f59e0b; }
-    .ns-low { border-color: #6b7280; }
-    .meta-table td, .meta-table th { font-size: 0.85rem; padding: 4px 8px; }
-    code { font-size: 0.8rem; }
-    .filter-btn { font-size: 0.8rem; }
-    .filter-btn.active { font-weight: 700; }
-    .depr-table td, .depr-table th { font-size: 0.85rem; }
-    .window-marker { border-left: 3px solid #3b82f6; background: #eff6ff; }
-    .future-marker { border-left: 3px solid #d1d5db; background: #fafafa; }
-    .available-marker { border-left: 3px solid #22c55e; background: #f0fdf4; }
-    .ms-range { font-size: 0.85rem; padding: 4px 12px; border-radius: 8px; }
-    .ms-current { background: #dbeafe; color: #1e40af; }
-    .ms-future { background: #f3f4f6; color: #6b7280; }
-    .quick-win { background: #fef3c7; border-left: 3px solid #f59e0b; }
-    .hidden-api { background: #ede9fe; border-left: 3px solid #7c3aed; }
-    .perf-note { background: #d1fae5; border-left: 3px solid #10b981; }
-    .nav-pills .nav-link.active { background: #1e40af; }
+    :root { --bg: #f6f8fa; --border: #d8dee4; --row-hover: #f0f4f8; --muted: #656d76; }
+    body { background: var(--bg); color: #1f2328; font-size: 14px; }
+    .shell { max-width: 1100px; }
+    .sticky-bar { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+    .summary-num { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .summary-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .pill { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 1px 7px;
+      border-radius: 10px; cursor: pointer; user-select: none; white-space: nowrap; }
+    .pill:hover { opacity: 0.8; }
+    .pill.dim { opacity: 0.35; }
+    .p-critical { background: #fee2e2; color: #991b1b; }
+    .p-high { background: #fed7aa; color: #9a3412; }
+    .p-medium { background: #fef3c7; color: #92400e; }
+    .p-low { background: #f3f4f6; color: #6b7280; }
+    .s-full { background: #dcfce7; color: #166534; }
+    .s-partial { background: #fef3c7; color: #92400e; }
+    .s-missing { background: #fee2e2; color: #991b1b; }
+    .s-action_needed { background: #fce7f3; color: #9d174d; }
+    .s-not_applicable { background: #f3f4f6; color: #6b7280; }
+    .s-correctly_absent { background: #f3f4f6; color: #6b7280; }
+    .c-new_feature { background: #dbeafe; color: #1e40af; } .c-codec { background: #fce7f3; color: #9d174d; }
+    .c-image { background: #ede9fe; color: #5b21b6; } .c-image_filter { background: #e0e7ff; color: #3730a3; }
+    .c-shader { background: #ccfbf1; color: #115e59; } .c-color { background: #fef3c7; color: #92400e; }
+    .c-canvas { background: #dbeafe; color: #1e40af; } .c-path { background: #fed7aa; color: #9a3412; }
+    .c-font { background: #e0e7ff; color: #3730a3; } .c-utility { background: #f3f4f6; color: #374151; }
+    .c-performance { background: #d1fae5; color: #065f46; } .c-behavior_change { background: #fef3c7; color: #92400e; }
+    .c-deprecation { background: #fee2e2; color: #991b1b; }
+    .l-pill { background: #e0e7ff; color: #3730a3; }
+    .ms { font-size: 0.7rem; font-weight: 600; color: #3730a3; background: #e0e7ff; padding: 1px 6px; border-radius: 8px; }
+    .row-item { border-bottom: 1px solid #eaeef2; padding: 8px 12px; cursor: pointer; }
+    .row-item:hover { background: var(--row-hover); }
+    .row-item.expanded { background: #fafbfc; }
+    .row-name { font-weight: 600; font-size: 0.9rem; }
+    .row-desc { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+    .row-detail { display: none; padding: 8px 0 4px 0; font-size: 0.82rem; }
+    .row-item.expanded .row-detail { display: block; }
+    .detail-grid { display: grid; grid-template-columns: 100px 1fr; gap: 2px 12px; }
+    .detail-label { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+    .detail-value { font-size: 0.82rem; }
+    .detail-value code { font-size: 0.78rem; background: #f0f4f8; padding: 1px 4px; border-radius: 3px; }
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 0; }
+    .filter-group { display: flex; gap: 3px; align-items: center; }
+    .filter-group-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; margin-right: 2px; }
+    .search-box { font-size: 0.8rem; padding: 3px 10px; border: 1px solid var(--border);
+      border-radius: 6px; width: 200px; }
+    .next-step { border-left: 3px solid; padding: 6px 12px; margin-bottom: 8px; font-size: 0.85rem; }
+    .ns-critical { border-color: #dc2626; } .ns-high { border-color: #f97316; }
+    .ns-medium { border-color: #f59e0b; } .ns-low { border-color: #6b7280; }
+    .count-badge { font-size: 0.65rem; background: #e5e7eb; color: #374151; padding: 0 5px;
+      border-radius: 8px; margin-left: 2px; vertical-align: middle; }
   </style>
 </head>
 <body>
 <!--INJECT_DATA_HERE-->
-<div class="page-shell mx-auto px-3 py-4">
+<div class="shell mx-auto px-3 py-3">
 
-  <!-- Header -->
-  <div class="sticky-header py-2 px-3 mb-4">
-    <div class="d-flex align-items-center justify-content-between">
+  <!-- Sticky header + summary + filters -->
+  <div class="sticky-bar px-3 py-2 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-2">
       <div>
-        <h4 class="mb-0"><i class="bi bi-binoculars me-2"></i>Skia Feature Scout</h4>
-        <small class="text-muted" id="header-subtitle"></small>
+        <strong style="font-size:1.1rem">Skia Feature Scout</strong>
+        <span class="ms-2 text-muted" style="font-size:0.8rem" id="subtitle"></span>
       </div>
-      <div id="header-badges" class="d-flex gap-2 align-items-center"></div>
+      <div id="summary-pills" class="d-flex gap-3"></div>
     </div>
+    <div class="filter-bar" id="filters">
+      <input type="text" class="search-box" id="search" placeholder="Search...">
+    </div>
+    <div class="text-muted" style="font-size:0.75rem" id="filter-count"></div>
   </div>
 
-  <!-- Tab Navigation -->
-  <ul class="nav nav-pills mb-4" role="tablist">
-    <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tab-overview">Overview</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-items">All Features</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-quickwins">Quick Wins</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-hidden">Hidden APIs</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-perf">Performance</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-deprecations">Deprecations</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-nextsteps">Next Steps</a></li>
-  </ul>
+  <!-- Findings list -->
+  <div id="list"></div>
 
-  <div class="tab-content">
-    <!-- Overview Tab -->
-    <div class="tab-pane fade show active" id="tab-overview">
-      <div class="row g-3 mb-4" id="summary-cards"></div>
-      <div class="card mb-4">
-        <div class="card-header bg-white"><strong>Priority Breakdown</strong></div>
-        <div class="card-body" id="priority-breakdown"></div>
-      </div>
-    </div>
+  <!-- Next Steps -->
+  <div id="next-steps" class="mt-4"></div>
 
-    <!-- All Features Tab -->
-    <div class="tab-pane fade" id="tab-items">
-      <div class="card mb-3">
-        <div class="card-body py-2 d-flex flex-wrap gap-2 align-items-center">
-          <strong class="small me-2">Filter:</strong>
-          <button class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="all">All</button>
-          <button class="btn btn-sm btn-outline-danger filter-btn" data-filter="missing">❌ Missing</button>
-          <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="action_needed">⚠️ Action</button>
-          <button class="btn btn-sm btn-outline-info filter-btn" data-filter="partial">🟡 Partial</button>
-          <button class="btn btn-sm btn-outline-success filter-btn" data-filter="full">✅ Full</button>
-          <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="not_applicable">🚫 N/A</button>
-          <span class="ms-auto small text-muted" id="filter-count"></span>
-        </div>
-      </div>
-      <div id="items-container"></div>
-    </div>
-
-    <!-- Quick Wins Tab -->
-    <div class="tab-pane fade" id="tab-quickwins">
-      <div class="alert alert-warning"><i class="bi bi-lightning me-2"></i>These features have C API support but no C# wrapper — fastest path to new bindings.</div>
-      <div id="quickwins-container"></div>
-    </div>
-
-    <!-- Hidden APIs Tab -->
-    <div class="tab-pane fade" id="tab-hidden">
-      <div class="alert alert-info"><i class="bi bi-search me-2"></i>Features discovered in C++ headers that are NOT mentioned in Skia release notes.</div>
-      <div id="hidden-container"></div>
-    </div>
-
-    <!-- Performance Tab -->
-    <div class="tab-pane fade" id="tab-perf">
-      <div class="alert alert-success"><i class="bi bi-speedometer2 me-2"></i>Performance improvements, optimizations, and regressions.</div>
-      <div id="perf-container"></div>
-    </div>
-
-    <!-- Deprecations Tab -->
-    <div class="tab-pane fade" id="tab-deprecations">
-      <div id="deprecations-section">
-        <div class="card">
-          <div class="card-header bg-white"><i class="bi bi-exclamation-diamond me-2"></i><strong>APIs Needing [Obsolete] Markers</strong></div>
-          <div class="card-body p-0">
-            <table class="table table-sm table-hover mb-0 depr-table" id="deprecations-table">
-              <thead><tr><th>SkiaSharp API</th><th>Deprecated In</th><th>Replacement</th><th>[Obsolete] Message</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Next Steps Tab -->
-    <div class="tab-pane fade" id="tab-nextsteps">
-      <div id="next-steps"></div>
-    </div>
-  </div>
-
-  <!-- Meta -->
-  <div class="card mt-4 mb-4">
-    <div class="card-header bg-white"><i class="bi bi-info-circle me-2"></i><strong>Audit Details</strong></div>
-    <div class="card-body" id="audit-meta"></div>
-  </div>
+  <!-- Meta footer -->
+  <div class="mt-4 mb-3 text-muted" style="font-size:0.75rem" id="meta-footer"></div>
 </div>
 
 <script>
-const STATUS_MAP = {
-  full: ['✅ Full', 'st-full'],
-  partial: ['🟡 Partial', 'st-partial'],
-  missing: ['❌ Missing', 'st-missing'],
-  action_needed: ['⚠️ Action Needed', 'st-action-needed'],
-  not_applicable: ['🚫 N/A', 'st-not-applicable'],
-  correctly_absent: ['🚫 Absent', 'st-correctly-absent'],
+const STATUS_LABELS = {
+  full:'✅ Full', partial:'🟡 Partial', missing:'❌ Missing',
+  action_needed:'⚠️ Action', not_applicable:'N/A', correctly_absent:'N/A'
 };
-
 const CAT_LABELS = {
-  new_feature: 'New Feature', codec: 'Codec', image: 'Image', image_filter: 'Image Filter',
-  shader: 'Shader', color: 'Color', canvas: 'Canvas', path: 'Path', font: 'Font',
-  utility: 'Utility', performance: 'Performance', behavior_change: 'Behavior Change',
-  deprecation: 'Deprecation',
+  new_feature:'Feature', codec:'Codec', image:'Image', image_filter:'Filter',
+  shader:'Shader', color:'Color', canvas:'Canvas', path:'Path', font:'Font',
+  utility:'Utility', performance:'Perf', behavior_change:'Behavior', deprecation:'Deprecated'
 };
 
-const PRI_CLASS = { critical: 'pri-critical', high: 'pri-high', medium: 'pri-medium', low: 'pri-low' };
+let activeFilters = { priority: new Set(), status: new Set(), category: new Set(), label: new Set() };
+let searchText = '';
 
-function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+function toggleFilter(type, value) {
+  const s = activeFilters[type];
+  if (s.has(value)) s.delete(value); else s.add(value);
+  applyFilters();
+}
+
+function applyFilters() {
+  const items = document.querySelectorAll('.row-item');
+  let shown = 0;
+  items.forEach(el => {
+    const d = JSON.parse(el.dataset.finding);
+    let visible = true;
+    if (activeFilters.priority.size && !activeFilters.priority.has(d.priority)) visible = false;
+    if (activeFilters.status.size && !activeFilters.status.has(d.bindingStatus)) visible = false;
+    if (activeFilters.category.size && !activeFilters.category.has(d.category)) visible = false;
+    if (activeFilters.label.size && !(d.labels||[]).some(l => activeFilters.label.has(l))) visible = false;
+    if (searchText && !JSON.stringify(d).toLowerCase().includes(searchText)) visible = false;
+    el.style.display = visible ? '' : 'none';
+    if (visible) shown++;
+  });
+  document.getElementById('filter-count').textContent = `Showing ${shown} of ${DATA.findings.length}`;
+  // Update pill dimming
+  document.querySelectorAll('.pill[data-filter]').forEach(p => {
+    const [type, val] = p.dataset.filter.split(':');
+    const active = activeFilters[type];
+    p.classList.toggle('dim', active.size > 0 && !active.has(val));
+  });
+}
 
 function renderSummary(s) {
-  const cards = [
-    ['Missing', s.missing, 'danger', 'x-circle'],
-    ['Action Needed', s.actionNeeded, 'warning', 'exclamation-triangle'],
-    ['Partial', s.partial || 0, 'info', 'circle-half'],
-    ['Full', s.full, 'success', 'check-circle'],
-    ['Hidden APIs', s.hiddenApiCount || 0, 'purple', 'search'],
-    ['Performance', s.performanceCount || 0, 'success', 'speedometer2'],
+  const el = document.getElementById('summary-pills');
+  const pairs = [
+    ['Missing', s.byStatus?.missing||0, '#991b1b'],
+    ['Partial', s.byStatus?.partial||0, '#92400e'],
+    ['Full', s.byStatus?.full||0, '#166534'],
+    ['Hidden', s.bySource?.['header-scan']||0, '#5b21b6'],
+    ['Perf', s.byLabel?.perf||0, '#065f46'],
   ];
-  document.getElementById('summary-cards').innerHTML = cards.map(([label, count, color, icon]) => `
-    <div class="col-6 col-md-2">
-      <div class="card text-center p-3">
-        <div class="fs-3 text-${color}"><i class="bi bi-${icon}"></i></div>
-        <div class="fs-2 fw-bold">${count}</div>
-        <div class="text-muted small">${label}</div>
-      </div>
-    </div>`).join('');
-
-  const priData = [
-    ['Critical', s.critical || 0, 'danger'],
-    ['High', s.high || 0, 'warning'],
-    ['Medium', s.medium || 0, 'info'],
-    ['Low', s.low || 0, 'secondary'],
-  ];
-  document.getElementById('priority-breakdown').innerHTML = priData.map(([label, count, color]) =>
-    `<span class="badge bg-${color} me-2">${label}: ${count}</span>`).join('') +
-    `<span class="badge bg-dark ms-2">Total: ${s.totalItems}</span>`;
+  el.innerHTML = pairs.map(([l,n,c]) =>
+    `<div class="text-center"><div class="summary-num" style="color:${c}">${n}</div><div class="summary-label">${l}</div></div>`
+  ).join('');
 }
 
-function renderItem(item) {
-  const [statusLabel, statusCls] = STATUS_MAP[item.bindingStatus] || ['?', ''];
-  const catCls = `cat-${item.category}`;
-  const priCls = PRI_CLASS[item.priority] || 'pri-low';
-  const currentMs = DATA.meta.currentMilestone;
-  const rowCls = item.milestoneIntroduced <= currentMs ? 'available-marker' : 'future-marker';
-
-  let body = '<table class="table table-sm meta-table mb-2"><tbody>';
-  if (item.milestoneEnhanced) body += `<tr><th>Enhanced</th><td>${item.milestoneEnhanced.split(',').map(m => `<span class="ms-enhanced badge">${m.trim()}</span>`).join(' ')}</td></tr>`;
-  if (item.milestoneDeprecated) body += `<tr><th>Deprecated</th><td><span class="badge bg-warning text-dark">m${item.milestoneDeprecated}</span></td></tr>`;
-  if (item.milestoneRemoved) body += `<tr><th>Removed</th><td><span class="badge bg-danger">m${item.milestoneRemoved}</span></td></tr>`;
-  if (item.userValue) body += `<tr><th>User Value</th><td>${esc(item.userValue)}</td></tr>`;
-  if (item.cApiFunction) body += `<tr><th>C API</th><td><code>${esc(item.cApiFunction)}</code> (${esc(item.cApiFile || '')})</td></tr>`;
-  else if (item.cApiStatus === 'missing') body += `<tr><th>C API</th><td class="text-danger">Not in C API</td></tr>`;
-  if (item.csharpMethod) body += `<tr><th>C# Binding</th><td><code>${esc(item.csharpMethod)}</code> (${esc(item.csharpFile || '')})</td></tr>`;
-  else if (item.csharpStatus === 'missing') body += `<tr><th>C# Binding</th><td class="text-danger">Not bound</td></tr>`;
-  if (item.notes) body += `<tr><th>Notes</th><td>${esc(item.notes)}</td></tr>`;
-  body += '</tbody></table>';
-
-  return `
-    <div class="card mb-2 item-card" data-status="${item.bindingStatus}" data-priority="${item.priority}" data-category="${item.category}">
-      <div class="card-header bg-white finding-header d-flex align-items-center py-2 ${rowCls}" data-bs-toggle="collapse" data-bs-target="#item-${item.id}">
-        <span class="milestone-badge me-2">m${item.milestoneIntroduced}</span>
-        <span class="cat-pill ${catCls} me-2">${CAT_LABELS[item.category] || item.category}</span>
-        <span class="status-pill ${statusCls} me-2">${statusLabel}</span>
-        <strong class="me-auto small">${esc(item.name || item.skiaApi)}</strong>
-        <span class="${priCls} small me-2">${item.priority.toUpperCase()}</span>
-        <i class="bi bi-chevron-down"></i>
-      </div>
-      <div class="collapse" id="item-${item.id}">
-        <div class="card-body py-2">
-          <p class="small text-muted mb-2">${esc(item.description)}</p>
-          ${body}
-        </div>
-      </div>
-    </div>`;
-}
-
-function renderItems(items) {
-  const sorted = [...items].sort((a, b) => {
-    const priOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    const pa = priOrder[a.priority] ?? 4, pb = priOrder[b.priority] ?? 4;
-    if (pa !== pb) return pa - pb;
-    return (b.milestoneIntroduced || 0) - (a.milestoneIntroduced || 0);
+function renderFilters() {
+  const bar = document.getElementById('filters');
+  const groups = [
+    ['priority', ['critical','high','medium','low'], 'p-'],
+    ['status', ['missing','partial','full','action_needed','not_applicable'], 's-'],
+    ['category', [...new Set(DATA.findings.map(f=>f.category))].sort(), 'c-'],
+    ['label', [...new Set(DATA.findings.flatMap(f=>f.labels||[]))].sort(), 'l-'],
+  ];
+  groups.forEach(([type, values, prefix]) => {
+    if (!values.length) return;
+    const g = document.createElement('div');
+    g.className = 'filter-group';
+    g.innerHTML = `<span class="filter-group-label">${type}:</span>` +
+      values.map(v => {
+        const count = DATA.findings.filter(f => {
+          if (type==='label') return (f.labels||[]).includes(v);
+          return f[type === 'status' ? 'bindingStatus' : type] === v;
+        }).length;
+        const cls = type==='label' ? 'l-pill' : `${prefix}${v}`;
+        const label = type==='category' ? (CAT_LABELS[v]||v) : type==='status' ? (STATUS_LABELS[v]||v) : v;
+        return `<span class="pill ${cls}" data-filter="${type}:${v}" onclick="toggleFilter('${type}','${v}')">${label}<span class="count-badge">${count}</span></span>`;
+      }).join('');
+    bar.appendChild(g);
   });
-  document.getElementById('items-container').innerHTML = sorted.map(renderItem).join('');
 }
 
-function renderQuickWins(items) {
-  const partial = items.filter(i => i.bindingStatus === 'partial');
-  const el = document.getElementById('quickwins-container');
-  if (partial.length === 0) { el.innerHTML = '<p class="text-muted">No quick wins found — all features need C API work first.</p>'; return; }
-  el.innerHTML = partial.map(item => `
-    <div class="card mb-2 quick-win">
-      <div class="card-body py-2">
-        <div class="d-flex align-items-center">
-          <span class="milestone-badge me-2">m${item.milestoneIntroduced}</span>
-          <strong>${esc(item.name || item.skiaApi)}</strong>
-          <span class="ms-auto small text-muted">C API: <code>${esc(item.cApiFunction || '?')}</code></span>
-        </div>
-        <p class="small text-muted mb-0 mt-1">${esc(item.userValue || item.description)}</p>
-      </div>
-    </div>`).join('');
-}
+function renderRow(f) {
+  const ms = f.milestone ? `<span class="ms">m${f.milestone}</span>` : '';
+  const extra_ms = (f.milestones||[]).map(m => `<span class="ms" style="opacity:0.6">m${m}</span>`).join(' ');
+  const labels = (f.labels||[]).map(l => `<span class="pill l-pill" data-filter="label:${l}" onclick="event.stopPropagation();toggleFilter('label','${l}')">${l}</span>`).join(' ');
+  const cat = `<span class="pill c-${f.category}" data-filter="category:${f.category}" onclick="event.stopPropagation();toggleFilter('category','${f.category}')">${CAT_LABELS[f.category]||f.category}</span>`;
+  const pri = `<span class="pill p-${f.priority}" data-filter="priority:${f.priority}" onclick="event.stopPropagation();toggleFilter('priority','${f.priority}')">${f.priority}</span>`;
+  const st = `<span class="pill s-${f.bindingStatus}" data-filter="status:${f.bindingStatus}" onclick="event.stopPropagation();toggleFilter('status','${f.bindingStatus}')">${STATUS_LABELS[f.bindingStatus]||f.bindingStatus}</span>`;
 
-function renderHiddenApis(apis) {
-  const el = document.getElementById('hidden-container');
-  if (!apis || apis.length === 0) { el.innerHTML = '<p class="text-muted">No hidden APIs discovered in this run.</p>'; return; }
-  el.innerHTML = apis.map(a => `
-    <div class="card mb-2 hidden-api">
-      <div class="card-body py-2">
-        <div class="d-flex align-items-center">
-          <code class="me-2">${esc(a.cppClass)}::${esc(a.cppMethod)}</code>
-          <span class="status-pill st-missing ms-auto">Not Bound</span>
-        </div>
-        <p class="small text-muted mb-0 mt-1">${esc(a.description)}</p>
-        <small class="text-muted">Source: <code>${esc(a.cppHeader)}</code></small>
-      </div>
-    </div>`).join('');
-}
+  let detail = '<div class="detail-grid">';
+  if (f.userValue) detail += `<div class="detail-label">Value</div><div class="detail-value">${esc(f.userValue)}</div>`;
+  if (f.skiaApi) detail += `<div class="detail-label">Skia API</div><div class="detail-value"><code>${esc(f.skiaApi)}</code></div>`;
+  if (f.cppClass) detail += `<div class="detail-label">C++ Class</div><div class="detail-value"><code>${esc(f.cppClass)}::${esc(f.cppMethod||'')}</code> (${esc(f.cppHeader||'')})</div>`;
+  if (f.cApiFunction) detail += `<div class="detail-label">C API</div><div class="detail-value"><code>${esc(f.cApiFunction)}</code> (${esc(f.cApiFile||'')})</div>`;
+  else if (f.bindingStatus==='missing') detail += `<div class="detail-label">C API</div><div class="detail-value" style="color:#991b1b">Not in C API</div>`;
+  if (f.csharpMethod) detail += `<div class="detail-label">C# Binding</div><div class="detail-value"><code>${esc(f.csharpMethod)}</code> (${esc(f.csharpFile||'')})</div>`;
+  else if (f.bindingStatus==='missing'||f.bindingStatus==='partial') detail += `<div class="detail-label">C# Binding</div><div class="detail-value" style="color:#991b1b">Not bound</div>`;
+  if (f.replacement) detail += `<div class="detail-label">Replace with</div><div class="detail-value"><code>${esc(f.replacement)}</code></div>`;
+  if (f.obsoleteMessage) detail += `<div class="detail-label">[Obsolete]</div><div class="detail-value"><code>${esc(f.obsoleteMessage)}</code></div>`;
+  if (f.impact) detail += `<div class="detail-label">Impact</div><div class="detail-value">${esc(f.impact)}</div>`;
+  if (f.milestoneDeprecated) detail += `<div class="detail-label">Deprecated</div><div class="detail-value">m${f.milestoneDeprecated}</div>`;
+  if (f.milestoneRemoved) detail += `<div class="detail-label">Removed</div><div class="detail-value">m${f.milestoneRemoved}</div>`;
+  if (f.skillToUse) detail += `<div class="detail-label">Skill</div><div class="detail-value"><code>${esc(f.skillToUse)}</code>${f.effort ? ` (${f.effort})` : ''}</div>`;
+  if (f.notes) detail += `<div class="detail-label">Notes</div><div class="detail-value">${esc(f.notes)}</div>`;
+  detail += '</div>';
 
-function renderPerf(perfs) {
-  const el = document.getElementById('perf-container');
-  if (!perfs || perfs.length === 0) { el.innerHTML = '<p class="text-muted">No performance notes in this run.</p>'; return; }
-  el.innerHTML = perfs.map(p => `
-    <div class="card mb-2 perf-note">
-      <div class="card-body py-2">
-        <div class="d-flex align-items-center">
-          <span class="milestone-badge me-2">m${p.milestone}</span>
-          <strong class="small">${esc(p.area)}</strong>
-          ${p.bindingActionNeeded ? '<span class="badge bg-warning ms-2">Binding needed</span>' : '<span class="badge bg-success ms-2">Automatic</span>'}
-        </div>
-        <p class="small text-muted mb-0 mt-1">${esc(p.description)}</p>
-        <small class="text-info">${esc(p.impact)}</small>
-      </div>
-    </div>`).join('');
-}
-
-function renderDeprecations(deps) {
-  const tbody = document.querySelector('#deprecations-table tbody');
-  if (!deps || deps.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">No deprecation actions needed.</td></tr>'; return; }
-  tbody.innerHTML = deps.map(d => `
-    <tr>
-      <td><code>${esc(d.skiasharpApi)}</code><br><small class="text-muted">${esc(d.skiasharpFile || '')}</small></td>
-      <td><span class="milestone-badge">m${d.deprecatedSince}</span></td>
-      <td>${d.replacement ? `<code>${esc(d.replacement)}</code>` : '<span class="text-muted">—</span>'}</td>
-      <td><small><code>${esc(d.obsoleteMessage)}</code></small></td>
-    </tr>`).join('');
+  return `<div class="row-item" data-finding='${JSON.stringify(f).replace(/'/g,"&#39;")}' onclick="this.classList.toggle('expanded')">
+    <div class="d-flex align-items-center gap-1 flex-wrap">
+      ${ms} ${cat} ${pri} ${st} ${labels}
+      <span class="row-name ms-1">${esc(f.name)}</span>
+      ${extra_ms}
+    </div>
+    <div class="row-desc">${esc(f.description)}</div>
+    <div class="row-detail">${detail}</div>
+  </div>`;
 }
 
 function renderNextSteps(steps) {
+  if (!steps || !steps.length) return;
   const el = document.getElementById('next-steps');
-  if (!steps || steps.length === 0) { el.innerHTML = '<p class="text-muted">No action items.</p>'; return; }
-  el.innerHTML = steps.map(s => {
-    const cls = s.severity === 'critical' ? 'ns-critical' : s.severity === 'high' ? 'ns-high' : s.severity === 'medium' ? 'ns-medium' : 'ns-low';
-    return `<div class="next-step ${cls} mb-3 p-2">
-      <div class="d-flex align-items-center flex-wrap gap-2">
-        <span class="badge bg-dark">#${s.priority}</span>
-        <strong>${esc(s.action)}</strong>
-        <span class="${PRI_CLASS[s.severity] || ''} small">${(s.severity || '').toUpperCase()}</span>
-        ${s.milestone ? `<span class="milestone-badge">m${s.milestone}</span>` : ''}
-        ${s.effort ? `<span class="badge bg-secondary">${s.effort}</span>` : ''}
-      </div>
-      <div class="text-muted small mt-1">${esc(s.reason)}</div>
-      ${s.skillToUse ? `<span class="small text-info">→ Use <code>${esc(s.skillToUse)}</code> skill</span>` : ''}
-    </div>`;
-  }).join('');
-}
-
-function renderMeta(meta) {
-  document.getElementById('audit-meta').innerHTML = `
-    <table class="table table-sm meta-table mb-0"><tbody>
-      <tr><th>Date</th><td>${meta.date}</td></tr>
-      <tr><th>Mode</th><td>${meta.mode === 'windowed' ? `Windowed (m${meta.previousMilestone} → m${meta.currentMilestone})` : 'Full Scan'}</td></tr>
-      <tr><th>Current Milestone</th><td>m${meta.currentMilestone}</td></tr>
-      <tr><th>Latest Upstream</th><td>m${meta.latestUpstreamMilestone}</td></tr>
-      ${meta.skiaSubmoduleCommit ? `<tr><th>Submodule</th><td><code><a href="https://github.com/mono/skia/commit/${meta.skiaSubmoduleCommit}" target="_blank">${meta.skiaSubmoduleCommit.slice(0, 12)}</a></code></td></tr>` : ''}
-      <tr><th>Source</th><td><a href="${meta.releaseNotesSource}" target="_blank">RELEASE_NOTES.md</a></td></tr>
-    </tbody></table>`;
-}
-
-let currentFilter = 'all';
-function applyFilter(filter) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
-  let shown = 0, total = 0;
-  document.querySelectorAll('.item-card').forEach(card => {
-    total++;
-    const match = filter === 'all' || card.dataset.status === filter;
-    card.style.display = match ? '' : 'none';
-    if (match) shown++;
-  });
-  document.getElementById('filter-count').textContent = filter === 'all' ? `${total} items` : `${shown} of ${total}`;
+  el.innerHTML = '<div style="font-weight:600;margin-bottom:8px">Recommended Next Steps</div>' +
+    steps.map((s,i) => {
+      const cls = 'ns-'+(s.severity||'low');
+      return `<div class="next-step ${cls}">
+        <strong>#${i+1} ${esc(s.action)}</strong>
+        <span class="pill p-${s.severity||'low'} ms-1">${s.severity||''}</span>
+        ${s.milestone ? `<span class="ms ms-1">m${s.milestone}</span>` : ''}
+        ${s.effort ? `<span class="pill" style="background:#e5e7eb;color:#374151">${s.effort}</span>` : ''}
+        ${s.skillToUse ? `<span style="font-size:0.75rem;color:#3730a3"> → ${s.skillToUse}</span>` : ''}
+        <div style="color:var(--muted);font-size:0.8rem;margin-top:2px">${esc(s.reason)}</div>
+      </div>`;
+    }).join('');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (typeof DATA === 'undefined') { document.body.innerHTML = '<p class="p-4 text-danger">No DATA found.</p>'; return; }
-  const d = DATA;
-  const mode = d.meta.mode === 'windowed' ? `m${d.meta.previousMilestone}→m${d.meta.currentMilestone}` : 'Full Scan';
+  if (typeof DATA === 'undefined') { document.body.innerHTML = '<p style="padding:2rem;color:red">No DATA found.</p>'; return; }
+  const m = DATA.meta;
+  const mode = m.mode==='windowed' ? `m${m.previousMilestone}→m${m.currentMilestone}` : `m${m.currentMilestone} (full)`;
+  document.getElementById('subtitle').textContent = `${m.date} · ${mode} · ${DATA.summary.totalFindings} findings`;
+  renderSummary(DATA.summary);
+  renderFilters();
 
-  document.getElementById('header-subtitle').textContent =
-    `${d.meta.date} · ${mode} · ${d.summary.totalItems} features`;
-  document.getElementById('header-badges').innerHTML =
-    `<span class="ms-range ms-current">m${d.meta.currentMilestone}</span>` +
-    `<span class="ms-range ms-future">→ m${d.meta.latestUpstreamMilestone}</span>`;
-
-  renderSummary(d.summary);
-  renderItems(d.items);
-  renderQuickWins(d.items);
-  renderHiddenApis(d.hiddenApis);
-  renderPerf(d.performance);
-  renderDeprecations(d.deprecations);
-  renderNextSteps(d.nextSteps);
-  renderMeta(d.meta);
-
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => applyFilter(btn.dataset.filter));
+  const sorted = [...DATA.findings].sort((a,b) => {
+    const po = {critical:0,high:1,medium:2,low:3};
+    return (po[a.priority]??4)-(po[b.priority]??4) || (b.milestone||0)-(a.milestone||0);
   });
-  applyFilter('all');
+  document.getElementById('list').innerHTML = sorted.map(renderRow).join('');
+  renderNextSteps(DATA.nextSteps);
+  document.getElementById('meta-footer').innerHTML =
+    `Source: <a href="${m.releaseNotesSource}">RELEASE_NOTES.md</a> · ${m.date}` +
+    (m.skiaSubmoduleCommit ? ` · <a href="https://github.com/mono/skia/commit/${m.skiaSubmoduleCommit}">${m.skiaSubmoduleCommit.slice(0,10)}</a>` : '');
+
+  document.getElementById('search').addEventListener('input', e => {
+    searchText = e.target.value.toLowerCase();
+    applyFilters();
+  });
+  applyFilters();
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -193,7 +193,7 @@ Save to the artifacts directory as `skia-feature-scout-YYYY-MM-DD.json`.
 The JSON must include:
 - `meta` — audit metadata (date, milestones, source)
 - `summary` — counts by status and priority
-- `items` — every cataloged feature with full binding details
+- `findings` — every cataloged feature with full binding details
 - `deprecations` — APIs needing `[Obsolete]` markers, with exact SkiaSharp API name/file,
   the Skia milestone when deprecated, the replacement API, and a suggested `[Obsolete("...")]` msg
 - `hiddenApis` — features discovered via C++ header scan (not in release notes)

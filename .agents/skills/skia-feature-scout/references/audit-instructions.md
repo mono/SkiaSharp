@@ -39,8 +39,8 @@ for, how to check bindings, how to scan C++ headers, and accuracy tips learned f
 |-------|-------------|
 | **name** | Short descriptive name |
 | **category** | See categories table below |
-| **milestoneIntroduced** | When it first appeared |
-| **milestoneEnhanced** | Later milestones that improved/extended it (comma-separated) |
+| **milestone** | When it first appeared |
+| **milestones** | Later milestones that improved/extended it (comma-separated) |
 | **milestoneDeprecated** | When it was deprecated (if applicable) |
 | **milestoneRemoved** | When it was removed (if applicable) |
 | **skiaApi** | The upstream Skia API name(s) |

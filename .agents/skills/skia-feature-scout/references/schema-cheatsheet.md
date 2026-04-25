@@ -1,7 +1,8 @@
-# Feature Scout Report Schema
+# Feature Scout Report Schema (v3)
 
-JSON schema for the Skia Feature Scout report. The skill generates this JSON, then
-`render-feature-scout.py` produces a standalone HTML dashboard.
+JSON schema for the Skia Feature Scout report. One unified `findings` array instead of
+separate arrays for items, hidden APIs, performance, and deprecations. The formal JSON Schema
+is at `feature-scout-schema.json`.
 
 ## Top-Level Structure
 
@@ -9,10 +10,7 @@ JSON schema for the Skia Feature Scout report. The skill generates this JSON, th
 {
   "meta": { ... },
   "summary": { ... },
-  "items": [ ... ],
-  "hiddenApis": [ ... ],
-  "deprecations": [ ... ],
-  "performance": [ ... ],
+  "findings": [ ... ],
   "nextSteps": [ ... ]
 }
 ```
@@ -22,7 +20,7 @@ JSON schema for the Skia Feature Scout report. The skill generates this JSON, th
 ```json
 {
   "date": "2026-04-25",
-  "schemaVersion": "2.0",
+  "schemaVersion": "3.0",
   "mode": "full",
   "previousMilestone": 119,
   "currentMilestone": 133,
@@ -32,93 +30,142 @@ JSON schema for the Skia Feature Scout report. The skill generates this JSON, th
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `date` | string | Yes | ISO date of the audit |
-| `schemaVersion` | string | Yes | Always `"2.0"` |
-| `mode` | string | Yes | `"full"` or `"windowed"` |
-| `previousMilestone` | integer | No | Only for windowed mode |
-| `currentMilestone` | integer | Yes | The milestone SkiaSharp is on |
-| `latestUpstreamMilestone` | integer | Yes | Latest milestone in upstream |
-| `skiaSubmoduleCommit` | string | No | mono/skia fork commit |
-| `releaseNotesSource` | string | Yes | URL of release notes |
-
 ## `summary` — Overview Counts
 
 ```json
 {
-  "totalItems": 52,
-  "full": 3,
-  "partial": 1,
-  "missing": 14,
-  "actionNeeded": 5,
-  "correctlyAbsent": 4,
-  "notApplicable": 12,
-  "hiddenApiCount": 8,
-  "performanceCount": 3,
-  "critical": 2,
-  "high": 6,
-  "medium": 8,
-  "low": 10
+  "totalFindings": 75,
+  "byStatus": { "missing": 38, "full": 14, "partial": 3, "action_needed": 2, "not_applicable": 12, "correctly_absent": 6 },
+  "byPriority": { "critical": 2, "high": 12, "medium": 25, "low": 36 },
+  "bySource": { "release-notes": 55, "header-scan": 17, "binding-audit": 3 },
+  "byLabel": { "quick-win": 3, "hidden-api": 17, "perf": 6, "behavior-change": 4, "action-needed": 2 }
 }
 ```
 
-## `items` — Individual Feature Items
+## `findings` — Unified Array
 
-Each item tracks a feature across its full lifecycle:
+Every finding (release notes features, hidden APIs, performance notes, deprecations) is in
+one array with the same shape. Use `source` to know where it came from and `labels` for
+filtering.
+
+### Required fields (every finding)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Human-readable name (used as identifier) |
+| `category` | string | See category enum below |
+| `priority` | string | `critical`, `high`, `medium`, `low` |
+| `description` | string | What it is and why it matters |
+| `bindingStatus` | string | See binding status enum below |
+| `source` | string | `release-notes`, `header-scan`, or `binding-audit` |
+
+### Optional fields
+
+| Field | Type | When to include |
+|-------|------|-----------------|
+| `labels` | string[] | Freeform tags for filtering: `quick-win`, `hidden-api`, `perf`, `behavior-change`, `action-needed` |
+| `milestone` | integer | Primary milestone (when introduced or relevant) |
+| `milestones` | integer[] | Additional milestones where enhanced/changed |
+| `milestoneDeprecated` | integer | When deprecated |
+| `milestoneRemoved` | integer | When removed |
+| `skiaApi` | string | Upstream Skia API name(s) |
+| `userValue` | string | Why an app developer would want this |
+| `notes` | string | Additional context |
+| `cApiFunction` | string | C API function name if present |
+| `cApiFile` | string | C API header file |
+| `csharpMethod` | string | C# method/property name |
+| `csharpFile` | string | C# file |
+| `cppClass` | string | C++ class (for hidden APIs from header scan) |
+| `cppHeader` | string | C++ header path |
+| `cppMethod` | string | C++ method signature |
+| `replacement` | string | Replacement API (for deprecations) |
+| `obsoleteMessage` | string | Suggested `[Obsolete("...")]` text |
+| `impact` | string | Impact description (for perf/behavior changes) |
+| `bindingActionNeeded` | boolean | Whether binding work is needed (for perf notes) |
+| `skillToUse` | string | Which skill to invoke for follow-up |
+| `effort` | string | `trivial`, `small`, `medium`, `large` |
+
+### Example: Release notes feature
 
 ```json
 {
-  "id": 1,
   "name": "SkMesh / Custom Vertex Mesh Drawing",
   "category": "new_feature",
-  "milestoneIntroduced": 106,
-  "milestoneEnhanced": "110,117,119,120",
-  "milestoneDeprecated": null,
-  "milestoneRemoved": null,
-  "skiaApi": "SkMesh::Make, SkMeshSpecification",
-  "description": "Draw custom vertex meshes with user-defined attributes and varyings using SkSL.",
-  "userValue": "Enables particle systems, deformable meshes, and custom geometry rendering.",
-  "cApiStatus": "missing",
-  "cApiFunction": null,
-  "cApiFile": null,
-  "csharpStatus": "missing",
-  "csharpMethod": null,
-  "csharpFile": null,
-  "bindingStatus": "missing",
   "priority": "high",
-  "notes": "HUGE for custom rendering. M106: initial. M120: child effects."
+  "description": "Draw custom vertex meshes with user-defined attributes and varyings using SkSL.",
+  "bindingStatus": "missing",
+  "source": "release-notes",
+  "milestone": 106,
+  "milestones": [110, 117, 119, 120],
+  "skiaApi": "SkMesh::Make, SkMeshSpecification",
+  "userValue": "Enables particle systems, deformable meshes, and custom geometry rendering.",
+  "skillToUse": "add-api",
+  "effort": "large"
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | integer | Yes | Sequential identifier |
-| `name` | string | Yes | Human-readable feature name |
-| `category` | string | Yes | See category enum below |
-| `milestoneIntroduced` | integer | Yes | When it first appeared |
-| `milestoneEnhanced` | string | No | Comma-separated milestones with improvements |
-| `milestoneDeprecated` | integer | No | When deprecated |
-| `milestoneRemoved` | integer | No | When removed |
-| `skiaApi` | string | Yes | Upstream Skia API name(s) |
-| `description` | string | Yes | What changed technically |
-| `userValue` | string | No | Why it matters to SkiaSharp users (plain language) |
-| `cApiStatus` | string | Yes | `"present"`, `"missing"`, `"not_applicable"` |
-| `cApiFunction` | string | No | C API function name if present |
-| `cApiFile` | string | No | C API header file if present |
-| `csharpStatus` | string | Yes | `"present"`, `"missing"`, `"not_applicable"` |
-| `csharpMethod` | string | No | C# method/property name if present |
-| `csharpFile` | string | No | C# file if present |
-| `bindingStatus` | string | Yes | See binding status enum |
-| `priority` | string | Yes | `"critical"`, `"high"`, `"medium"`, `"low"` |
-| `notes` | string | No | Additional context |
+### Example: Hidden API from header scan
 
-### Category Enum
+```json
+{
+  "name": "SkImage::reinterpretColorSpace",
+  "category": "image",
+  "priority": "medium",
+  "description": "Re-tag image with new color space without converting pixels.",
+  "bindingStatus": "missing",
+  "source": "header-scan",
+  "labels": ["hidden-api"],
+  "cppClass": "SkImage",
+  "cppHeader": "include/core/SkImage.h",
+  "cppMethod": "reinterpretColorSpace(sk_sp<SkColorSpace>) const",
+  "skillToUse": "add-api",
+  "effort": "small"
+}
+```
 
-`new_feature`, `codec`, `image`, `image_filter`, `shader`, `color`, `canvas`, `path`, `font`,
-`utility`, `performance`, `behavior_change`, `deprecation`
+### Example: Performance note
 
-### Binding Status Enum
+```json
+{
+  "name": "Perlin noise raster performance",
+  "category": "performance",
+  "priority": "low",
+  "description": "Perlin noise shaders now properly rotate when transformed. Raster performance significantly improved.",
+  "bindingStatus": "not_applicable",
+  "source": "release-notes",
+  "labels": ["perf"],
+  "milestone": 124,
+  "impact": "Automatic speedup for apps using Perlin noise on raster surfaces.",
+  "bindingActionNeeded": false
+}
+```
+
+### Example: Deprecation needing action
+
+```json
+{
+  "name": "SkPath mutable methods deprecation",
+  "category": "deprecation",
+  "priority": "critical",
+  "description": "SkPath is migrating to immutable. moveTo/lineTo/etc. will be removed.",
+  "bindingStatus": "action_needed",
+  "source": "release-notes",
+  "labels": ["action-needed"],
+  "milestone": 143,
+  "skiaApi": "SkPath::moveTo, lineTo, quadTo, cubicTo, etc.",
+  "csharpMethod": "SKPath.MoveTo(), LineTo(), etc.",
+  "csharpFile": "SKPath.cs",
+  "replacement": "SKPathBuilder (not yet bound)",
+  "obsoleteMessage": "SkPath is becoming immutable. Use SKPathBuilder to create paths."
+}
+```
+
+## Category Enum
+
+`new_feature`, `codec`, `image`, `image_filter`, `shader`, `color`, `canvas`, `path`,
+`font`, `utility`, `performance`, `behavior_change`, `deprecation`
+
+## Binding Status Enum
 
 | Value | Description |
 |-------|-------------|
@@ -129,71 +176,25 @@ Each item tracks a feature across its full lifecycle:
 | `correctly_absent` | Skia removed; SkiaSharp never wrapped |
 | `not_applicable` | Doesn't need a binding |
 
-## `hiddenApis` — Discovered via C++ Header Scan
+## Source Enum
 
-Features found in upstream C++ headers that are NOT mentioned in release notes:
+| Value | Description |
+|-------|-------------|
+| `release-notes` | Found in Skia RELEASE_NOTES.md |
+| `header-scan` | Found by comparing C++ headers against C API |
+| `binding-audit` | Found by auditing existing SkiaSharp bindings |
 
-```json
-{
-  "id": 1,
-  "cppClass": "SkImage",
-  "cppHeader": "include/core/SkImage.h",
-  "cppMethod": "makeScaledToFit(SkISize)",
-  "description": "Scale image to fit within given dimensions while preserving aspect ratio.",
-  "cApiStatus": "missing",
-  "csharpStatus": "missing",
-  "priority": "medium",
-  "notes": "Not in release notes but would be useful for thumbnail generation."
-}
-```
+## `nextSteps` — Prioritized Action Plan
 
-## `deprecations` — APIs Needing [Obsolete] Markers
+Separate from findings. Ordered list of what to do next.
 
 ```json
 {
-  "id": 1,
-  "skiaApi": "SkTypeface::MakeFromName",
-  "deprecatedSince": 120,
-  "skiasharpApi": "SKTypeface.FromFamilyName()",
-  "skiasharpFile": "SKTypeface.cs",
-  "replacement": "SKFontManager.CreateTypeface()",
-  "obsoleteMessage": "Use SKFontManager.CreateTypeface() instead. Deprecated in Skia m120."
-}
-```
-
-## `performance` — Performance-Related Changes
-
-```json
-{
-  "id": 1,
-  "milestone": 124,
-  "area": "shader",
-  "description": "Perlin noise shaders now properly rotate when transformed. Raster performance significantly improved.",
-  "impact": "Automatic speedup for apps using Perlin noise on raster surfaces.",
-  "bindingActionNeeded": false
-}
-```
-
-## `nextSteps` — Prioritized Action Items
-
-```json
-{
-  "priority": 1,
   "severity": "critical",
-  "action": "Create SKPathBuilder bindings",
+  "action": "Create SkPathBuilder bindings",
   "milestone": 143,
   "reason": "SkPath going immutable. All edit methods will be removed.",
   "skillToUse": "add-api",
   "effort": "large"
 }
 ```
-
-| Field | Type | Required |
-|-------|------|----------|
-| `priority` | integer | Yes (1 = highest) |
-| `severity` | string | Yes |
-| `action` | string | Yes |
-| `milestone` | integer | No |
-| `reason` | string | Yes |
-| `skillToUse` | string | No (`add-api`, `issue-fix`, `update-skia`, `native-dependency-update`) |
-| `effort` | string | No (`trivial`, `small`, `medium`, `large`) |
