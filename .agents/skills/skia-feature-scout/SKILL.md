@@ -46,7 +46,27 @@ The skill supports two modes. The user may specify one or you can suggest the ri
 
 ## Workflow
 
-### Phase 1: Fetch Release Notes
+The skill uses a **parallel fan-out / synthesize / verify** architecture. Different agents
+specialize in different aspects of the audit and run concurrently, then you merge their findings,
+validate for accuracy, and produce the final report. This approach catches items that any single
+pass would miss — testing shows individual model runs miss 15-30% of findings that other runs
+catch.
+
+```
+Phase 1: Setup (fetch notes, determine milestone)
+Phase 2: Fan-Out — launch 4 parallel agents
+  ├─ Agent A: Recent milestones (current → M110)
+  ├─ Agent B: Older milestones (M109 → M78)
+  ├─ Agent C: C++ header scan for hidden APIs
+  └─ Agent D: Binding inventory (what we already have)
+Phase 3: Synthesize — merge all agent findings, dedupe, resolve conflicts
+Phase 4: Verify — spot-check high-priority items for hallucinations
+Phase 5: Generate outputs (JSON → validate → HTML → markdown)
+```
+
+### Phase 1: Setup
+
+**1a. Fetch Release Notes**
 
 Fetch the full Skia release notes from upstream:
 
@@ -55,27 +75,232 @@ https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md
 ```
 
 The file is large (100KB+). Fetch it in 20KB chunks using `web_fetch` with increasing `start_index`
-until you've read the entire file. Continue fetching until you see milestone numbers in the 80s or
-the content ends.
+until you've read the entire file. Save to a temp file so agents can read it:
+
+```bash
+# Save fetched content to a file agents can access
+cat > /tmp/skia-release-notes.md << 'NOTES'
+<paste all fetched content>
+NOTES
+```
 
 In **windowed mode**, you can stop once you've read past the target milestone range, but always
 read at least a few milestones beyond the current one to catch future items.
 
-### Phase 2: Determine Current Milestone
+**1b. Determine Current Milestone**
 
 Check what Skia milestone SkiaSharp is currently on:
 
 ```bash
 cd externals/skia && git log --oneline -1
+# Also check:
+cat externals/skia/include/core/SkMilestone.h 2>/dev/null
 ```
 
-Also check `externals/skia/include/core/SkMilestone.h` if available. The user may also tell you
-directly. Everything at or below this milestone is "available now". Everything above is "coming
-with bump".
+The user may also tell you directly. Everything at or below this milestone is "available now".
+Everything above is "coming with bump".
 
-### Phase 3: Extract Notable Features
+**1c. Locate C API headers**
 
-Read each milestone section and extract items that match these criteria.
+The skia submodule may not be checked out in this worktree. Find the C API:
+
+```bash
+# Try worktree first
+ls externals/skia/include/c/ 2>/dev/null
+# Fallback to main repo checkout
+ls /path/to/main/SkiaSharp/externals/skia/include/c/ 2>/dev/null
+```
+
+Record the path for agents to use.
+
+### Phase 2: Fan-Out — Launch Parallel Agents
+
+Launch **four** background `task` agents simultaneously. Each has a focused job and produces
+a JSON fragment. Give each agent the release notes file path, C API path, and current milestone.
+
+**Agent A: Recent Release Notes (current milestone → M110)**
+
+```
+task agent_type=explore mode=background name=scout-recent:
+  "Read the Skia release notes at /tmp/skia-release-notes.md, focusing on
+   milestones M110 through M{current}+15 (to catch future items).
+   
+   For each milestone, extract notable features matching these criteria:
+   [paste the Include/Exclude criteria and category/priority tables from this skill]
+   
+   For each item, also check if SkiaSharp has it:
+   - Search binding/SkiaSharp/*.cs for C# wrappers
+   - Search {c_api_path} for C API functions
+   
+   Output a JSON array of feature objects. Each must have:
+   id, name, category, milestoneIntroduced, milestoneEnhanced, milestoneDeprecated,
+   milestoneRemoved, skiaApi, description, userValue, cApiStatus, cApiFunction,
+   cApiFile, csharpStatus, csharpMethod, csharpFile, bindingStatus, priority, notes.
+   
+   Be thorough. Check EVERY milestone in your range. Don't skip any."
+```
+
+**Agent B: Older Release Notes (M109 → M78)**
+
+Same prompt as Agent A but for the older milestone range. This agent exists because testing
+showed that models lose rigor when processing very long documents — splitting the range ensures
+old milestones (where gems like SkTextBlob::Iter M79, SkBlendMode_AsCoeff M80, SkColorInfo M79,
+SkImage::reinterpretColorSpace M78 hide) get equal attention.
+
+**Agent C: C++ Header Scan**
+
+```
+task agent_type=explore mode=background name=scout-headers:
+  "Scan upstream Skia C++ headers for public methods not exposed in SkiaSharp's C API.
+   
+   For each of these types, fetch the upstream header from Google's Skia repo and
+   compare against the C API in {c_api_path}:
+   
+   Priority 1 (most likely to have gems):
+   - SkImage (include/core/SkImage.h) vs sk_image.h
+   - SkCanvas (include/core/SkCanvas.h) vs sk_canvas.h
+   - SkImageFilters (include/effects/SkImageFilters.h) vs sk_imagefilter.h
+   - SkCodec (include/codec/SkCodec.h) vs sk_codec.h
+   - SkShader/SkShaders (include/core/SkShader.h) vs sk_shader.h
+   - SkColorFilter (include/core/SkColorFilter.h) vs sk_colorfilter.h
+   - SkPath + SkPathBuilder (include/core/SkPath.h, SkPathBuilder.h) vs sk_path.h
+   
+   Priority 2:
+   - SkBitmap, SkPixmap, SkSurface, SkFont, SkTypeface, SkData, SkColorSpace
+   - SkTextBlob (include/core/SkTextBlob.h) vs any sk_textblob in C API
+   - SkBlendMode (include/core/SkBlendMode.h)
+   
+   For each public C++ method that has NO corresponding C API function, output:
+   { cppClass, cppHeader, cppMethod, description, cApiStatus, csharpStatus, priority, notes }
+   
+   Focus on methods that would add user value. Skip internal/friend/protected methods."
+```
+
+**Agent D: Binding Inventory**
+
+```
+task agent_type=explore mode=background name=scout-bindings:
+  "Inventory the current SkiaSharp bindings to establish what we already have.
+   
+   1. List all C API functions from {c_api_path}/*.h (grep for 'SK_C_API')
+   2. List all public classes and key methods from binding/SkiaSharp/*.cs
+   3. Check SkiaApi.generated.cs for internal struct fields that may have hidden
+      plumbing not exposed in public option types (especially encoder options like
+      SKJpegEncoderOptions, SKPngEncoderOptions, SKWebpEncoderOptions — look for
+      ICC, XMP, gainmap, HDR metadata fields in the generated code vs public structs)
+   4. For any method marked 'Raw' or 'raw' in the name, verify it actually calls
+      the correct underlying C API (not a regular version of the same method)
+   
+   Output:
+   - A list of C API function names (one per line)
+   - A list of {csharpClass, csharpMethod, cApiFunction} for key bindings
+   - Any discrepancies found (wrong C API calls, hidden generated fields, etc.)"
+```
+
+### Phase 3: Synthesize
+
+When all four agents complete, merge their findings:
+
+1. **Collect** all feature items from Agents A and B into a single list
+2. **Deduplicate** — if both agents found the same feature (by skiaApi name), merge them,
+   keeping the richer description and noting both milestone ranges
+3. **Add hidden APIs** from Agent C as a separate `hiddenApis` array
+4. **Cross-reference with Agent D's inventory** to verify binding statuses:
+   - If Agent D says a C API function exists but Agents A/B said `missing`, fix to `partial`
+   - If Agent D found implementation bugs (wrong C API calls), mark as `action_needed`
+   - If Agent D found hidden generated fields, create items for those as quick wins
+5. **Track feature lifecycles** — for items that appear in multiple milestones (introduced,
+   enhanced, deprecated, removed), merge into a single item with all milestone fields populated
+6. **Extract performance notes** into the `performance` array
+7. **Extract deprecations** into the `deprecations` array with concrete `[Obsolete]` messages
+8. **Build the `nextSteps`** array, ordered by priority, with `skillToUse` and `effort`
+
+### Phase 4: Verify High-Priority Findings
+
+For every item marked `critical` or `high` priority, and every item marked `full` (to confirm
+they're not false positives), do a direct verification:
+
+```bash
+# For each high-priority "missing" item — confirm it's truly missing
+grep -ril "function_name_or_keyword" binding/SkiaSharp/ externals/skia/include/c/ externals/skia/src/c/
+
+# For each "full" item — confirm the C# wrapper exists AND calls the right native function
+grep -n "MethodName" binding/SkiaSharp/SKRelevantFile.cs
+```
+
+This catches hallucinations where an agent claims something exists (or doesn't) incorrectly.
+Pay special attention to the **implementation**, not just the signature — a method may exist by
+name but forward to the wrong native function (the "ToRawShader bug" pattern).
+
+### Phase 5: Generate Outputs
+
+The synthesis from Phase 3 should have produced all the data. Now generate the three output
+formats.
+
+**5a. Generate Structured JSON Report**
+
+Produce a JSON report following the schema in [references/schema-cheatsheet.md](references/schema-cheatsheet.md).
+The formal JSON Schema is at [references/feature-scout-schema.json](references/feature-scout-schema.json).
+Save to the artifacts directory as `skia-feature-scout-YYYY-MM-DD.json`.
+
+The JSON must include:
+- `meta` — audit metadata (date, milestones, source)
+- `summary` — counts by status and priority
+- `items` — every cataloged feature with full binding details
+- `deprecations` — APIs needing `[Obsolete]` markers, with exact SkiaSharp API name/file,
+  the Skia milestone when deprecated, the replacement API, and a suggested `[Obsolete("...")]` msg
+- `hiddenApis` — features discovered via C++ header scan (not in release notes)
+- `performance` — performance-related changes worth noting
+- `nextSteps` — prioritized action items, each with `skillToUse` and `effort`
+
+**5b. Validate JSON Report**
+
+> 🛑 **MANDATORY:** Always validate before rendering.
+
+```bash
+pip3 install -r .agents/skills/skia-feature-scout/scripts/requirements.txt --quiet
+python3 .agents/skills/skia-feature-scout/scripts/validate-feature-scout.py <path-to-json>
+```
+
+Exit codes: 0=valid, 1=fixable (regenerate), 2=fatal. Fix and re-validate if it fails.
+
+**5c. Render HTML Report**
+
+> 🛑 **MANDATORY:** Always generate the HTML report.
+
+```bash
+python3 .agents/skills/skia-feature-scout/scripts/render-feature-scout.py <path-to-json>
+```
+
+**5d. Generate Markdown Summary**
+
+Present a concise markdown summary in the conversation, grouped by urgency:
+
+1. 🔴 **Critical** — Will break on next Skia bump
+2. ⚠️ **Action Needed** — Deprecated APIs missing `[Obsolete]` markers
+3. ❌ **Missing (High)** — Major features with no binding
+4. 🔶 **Missing (Medium)** — Useful features to plan for
+5. 🟢 **Full** — Features already bound
+6. 🟡 **Quick Wins** — C API exists, just needs C# wrapper
+7. 🆕 **Hidden APIs** — Discovered via C++ scan, not in release notes
+8. ⚡ **Performance** — Speed/memory improvements
+9. 🔄 **Behavior Changes** — Silent semantic changes
+
+Include: Before/After milestone split, Deprecation Watch, Recommended Action Plan with skill routing.
+
+### Phase 6: Offer Next Steps
+
+After presenting the report, offer:
+1. "Want me to investigate any of these features in more detail?"
+2. "Should I create issues or todos for the high-priority items?"
+3. "Want me to use the `add-api` skill to start binding a specific feature?"
+4. "Should I set up a periodic workflow to re-run this audit?"
+
+---
+
+## Feature Extraction Criteria
+
+These criteria are used by the fan-out agents (Phase 2) and by you during synthesis (Phase 3).
 
 **Include (high signal):**
 - Brand new classes or APIs (SkMesh, skhdr::Metadata, SkAnimatedImage, etc.)
@@ -140,178 +365,6 @@ For each notable item, record:
 | `high` | Major new capability, popular format, or highly requested feature |
 | `medium` | Useful addition, quality improvement, or niche but valuable |
 | `low` | Minor utility, internal concern, or auto-available |
-
-### Phase 4: Check SkiaSharp Bindings
-
-For each extracted feature, check whether SkiaSharp already has it:
-
-1. **C API layer** — Search `externals/skia/include/c/*.h` and `externals/skia/src/c/*.cpp`:
-   ```bash
-   grep -ril "keyword" externals/skia/include/c/ externals/skia/src/c/
-   ```
-
-2. **C# binding layer** — Search `binding/SkiaSharp/*.cs`:
-   ```bash
-   grep -ril "keyword" binding/SkiaSharp/
-   ```
-
-3. **Generated bindings** — Check `binding/SkiaSharp/SkiaApi.generated.cs` for P/Invoke entries.
-
-If the submodule isn't checked out in this worktree, try the main repo checkout or use GitHub API:
-```bash
-# Main repo fallback
-ls /path/to/main/SkiaSharp/externals/skia/include/c/
-# Or GitHub API
-github-mcp-server-get_file_contents owner=mono repo=skia path=include/c/sk_image.h
-```
-
-#### Binding Status Classification
-
-| Status | Badge | Description |
-|--------|-------|-------------|
-| `full` | ✅ | C API + C# wrapper both exist and cover the feature |
-| `partial` | 🟡 | C API exists but C# wrapper is missing (**quick win!**) |
-| `missing` | ❌ | Neither C API nor C# wrapper exist |
-| `correctly_absent` | 🚫 | Skia removed this and SkiaSharp correctly never wrapped it |
-| `action_needed` | ⚠️ | SkiaSharp wraps something Skia deprecated/removed without `[Obsolete]` |
-| `not_applicable` | ⚪ | Doesn't need a binding (internal, auto-available, Graphite-only) |
-
-### Phase 5: Hidden API Discovery (C++ Header Scan)
-
-This is the secret weapon phase. For types that SkiaSharp already binds, check the upstream C++
-headers for new methods that were added without a release notes mention.
-
-**How it works:**
-
-1. Identify the core Skia types SkiaSharp wraps. These map from C# → C API → C++ like:
-   - `SKCanvas` → `sk_canvas_*` → `SkCanvas` in `include/core/SkCanvas.h`
-   - `SKImage` → `sk_image_*` → `SkImage` in `include/core/SkImage.h`
-   - `SKPaint` → `sk_paint_*` → `SkPaint` in `include/core/SkPaint.h`
-   - `SKPath` → `sk_path_*` → `SkPath` in `include/core/SkPath.h`
-   - `SKShader` → `sk_shader_*` → `SkShader` / `SkShaders` in `include/core/SkShader.h`
-   - `SKColorFilter` → `sk_colorfilter_*` → `SkColorFilter` in `include/core/SkColorFilter.h`
-   - `SKImageFilter` → `sk_imagefilter_*` → `SkImageFilters` in `include/effects/SkImageFilters.h`
-   - `SKCodec` → `sk_codec_*` → `SkCodec` in `include/codec/SkCodec.h`
-   - `SKBitmap` → `sk_bitmap_*` → `SkBitmap` in `include/core/SkBitmap.h`
-   - `SKPixmap` → `sk_pixmap_*` → `SkPixmap` in `include/core/SkPixmap.h`
-   - `SKSurface` → `sk_surface_*` → `SkSurface` / `SkSurfaces` in `include/core/SkSurface.h`
-   - `SKFont` → `sk_font_*` → `SkFont` in `include/core/SkFont.h`
-   - `SKTypeface` → `sk_typeface_*` → `SkTypeface` in `include/core/SkTypeface.h`
-   - `SKData` → `sk_data_*` → `SkData` in `include/core/SkData.h`
-   - `SKColorSpace` → `sk_colorspace_*` → `SkColorSpace` in `include/core/SkColorSpace.h`
-
-2. For each type, fetch the upstream C++ header from Google's Skia repo:
-   ```
-   https://raw.githubusercontent.com/google/skia/main/include/core/SkImage.h
-   ```
-   Also check `include/effects/` for filter/shader types.
-
-3. Extract public method signatures from the C++ header.
-
-4. Compare against the C API functions in `externals/skia/include/c/sk_image.h` (our fork).
-
-5. Any public C++ method that has no corresponding C API function is a **hidden gap**. Evaluate
-   whether it's worth binding based on user value.
-
-**Focus on these high-value headers first** (most likely to have hidden gems):
-- `SkImage.h` — new factory methods, transformations
-- `SkCanvas.h` — new draw methods
-- `SkImageFilters.h` — new filter factories
-- `SkShader.h` / `SkShaders` — new shader factories
-- `SkCodec.h` — new decode capabilities
-- `SkColorFilter.h` — new filter types
-- `SkPath.h` + `SkPathBuilder.h` — path construction changes
-
-Use background `task` agents to parallelize this — launch one per header file.
-
-### Phase 6: Cross-Validation
-
-For accuracy, use a `task` agent with a different model to independently verify the top findings:
-
-```
-task agent_type=general-purpose:
-  "Verify these SkiaSharp binding findings. For each item, confirm:
-   1. The C API status (search externals/skia/include/c/ and src/c/)
-   2. The C# binding status (search binding/SkiaSharp/)
-   Report any disagreements."
-```
-
-At minimum, validate:
-- All items marked `full` (confirm they actually exist)
-- All items marked `action_needed` (confirm the deprecation)
-- All items marked `missing` that are `high` or `critical` priority
-
-### Phase 7: Generate Structured JSON Report
-
-Produce a JSON report following the schema in [references/schema-cheatsheet.md](references/schema-cheatsheet.md).
-The formal JSON Schema is at [references/feature-scout-schema.json](references/feature-scout-schema.json).
-Save to the artifacts directory as `skia-feature-scout-YYYY-MM-DD.json`.
-
-The JSON must include:
-- `meta` — audit metadata (date, milestones, source)
-- `summary` — counts by status and priority
-- `items` — every cataloged feature with full binding details
-- `deprecations` — APIs needing `[Obsolete]` markers, with:
-  - The exact SkiaSharp API name and file
-  - The Skia milestone when deprecated
-  - The replacement API
-  - A suggested `[Obsolete("...")]` message
-- `hiddenApis` — features discovered via C++ header scan (not in release notes)
-- `performance` — performance-related changes worth noting
-- `nextSteps` — prioritized action items, each with:
-  - `skillToUse` — which SkiaSharp skill to invoke (`add-api`, `issue-fix`, `update-skia`, etc.)
-  - `effort` — estimated effort (`trivial`, `small`, `medium`, `large`)
-
-### Phase 8: Validate JSON Report
-
-> 🛑 **MANDATORY:** Always validate before rendering.
-
-```bash
-pip3 install -r .agents/skills/skia-feature-scout/scripts/requirements.txt --quiet
-python3 .agents/skills/skia-feature-scout/scripts/validate-feature-scout.py \
-  <path-to-json>
-```
-
-Exit codes: 0=valid, 1=fixable (regenerate), 2=fatal. If validation fails, fix the JSON and
-re-validate before proceeding.
-
-### Phase 9: Render HTML Report
-
-Run the render script to produce a self-contained HTML dashboard:
-
-```bash
-python3 .agents/skills/skia-feature-scout/scripts/render-feature-scout.py \
-  <path-to-json>
-```
-
-This produces a filterable, interactive HTML report. Present the output path to the user.
-
-### Phase 10: Generate Markdown Summary
-
-Present a concise markdown summary in the conversation. Group items by urgency:
-
-1. 🔴 **Critical** — Will break on next Skia bump
-2. ⚠️ **Action Needed** — Deprecated APIs missing `[Obsolete]` markers
-3. ❌ **Missing (High)** — Major features with no binding
-4. 🔶 **Missing (Medium)** — Useful features to plan for
-5. 🟢 **Full** — Features already bound
-6. 🟡 **Quick Wins** — C API exists, just needs C# wrapper
-7. 🆕 **Hidden APIs** — Discovered via C++ scan, not in release notes
-8. ⚡ **Performance** — Speed/memory improvements
-9. 🔄 **Behavior Changes** — Silent semantic changes
-
-Include sections for:
-- **Before/After Current Milestone** — what's workable today vs needs a bump
-- **Deprecation Watch** — with concrete `[Obsolete]` messages
-- **Recommended Action Plan** — ordered by priority, with skill routing
-
-### Phase 11: Offer Next Steps
-
-After presenting the report, offer:
-1. "Want me to investigate any of these features in more detail?"
-2. "Should I create issues or todos for the high-priority items?"
-3. "Want me to use the `add-api` skill to start binding a specific feature?"
-4. "Should I set up a periodic workflow to re-run this audit?"
 
 ## Tips for Accurate Assessment
 
