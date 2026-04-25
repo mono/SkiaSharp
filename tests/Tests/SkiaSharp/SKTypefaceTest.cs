@@ -572,7 +572,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void DefaultFamilyNameIsNotNull()
+		public void DefaultFamilyNameIsNotNullOrEmpty()
 		{
 			Assert.NotNull(SKTypeface.Default.FamilyName);
 			Assert.NotEmpty(SKTypeface.Default.FamilyName);
@@ -646,12 +646,27 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void FromFamilyNameNonExistentReturnsFallback()
+		{
+			var tf = SKTypeface.FromFamilyName("NonExistentFontFamilyXYZ12345");
+			Assert.NotNull(tf);
+		}
+
+		[SkippableFact]
 		public void FromFamilyNameNonExistentConsistentWithMatchFamily()
 		{
 			var fromFamily = SKTypeface.FromFamilyName("NonExistentFontFamilyXYZ12345");
-			Assert.NotNull(fromFamily);
+			var matched = SKFontManager.Default.MatchFamily("NonExistentFontFamilyXYZ12345");
+
 			// FromFamilyName always returns non-null (falls back to Default)
-			// MatchFamily is the strict API (may return null on some platforms)
+			Assert.NotNull(fromFamily);
+
+			// MatchFamily is the strict API — may return null on some platforms
+			if (matched != null)
+			{
+				// If both returned a result, they should be the same cached object
+				Assert.Same(matched, fromFamily);
+			}
 		}
 
 		[SkippableFact]

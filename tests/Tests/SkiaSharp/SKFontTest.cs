@@ -535,13 +535,13 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void FontTypefaceSetNullStillMeasures()
+		public void FontTypefaceSetNullDoesNotCrashOnMeasure()
 		{
 			using var font = new SKFont(SKTypeface.Default);
 			font.Typeface = null;
 			Assert.NotEqual(IntPtr.Zero, font.Handle);
 			var width = font.MeasureText("Hello");
-			Assert.True(width >= 0);
+			Assert.Equal(0, width);
 		}
 
 		[SkippableFact]
