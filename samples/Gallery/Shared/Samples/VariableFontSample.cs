@@ -15,7 +15,7 @@ public class VariableFontSample : CanvasSampleBase
 
 	private static readonly string[] TextOptions =
 	{
-		"Variable Fonts",
+		"Variable SkiaSharp",
 		"The Quick Brown Fox",
 		"Hello World!",
 		"AaBbCcDdEeFf",
