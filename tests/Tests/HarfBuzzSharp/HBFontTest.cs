@@ -143,12 +143,80 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
+		public void SpanGetVariationCoordsNormalizedReturnsTotalLengthWhenBufferSmall ()
+		{
+			var (face, font) = CreateVariableFontPair ();
+			using (face)
+			using (font) {
+				var axisCount = face.VariationAxisCount;
+				Assert.True (axisCount > 0);
+
+				var coords = new int[axisCount];
+				coords[0] = 4096;
+				font.SetVariationCoordsNormalized (coords);
+
+				// Pass an empty buffer — should return total length without crashing
+				var emptyBuffer = new int[0];
+				var totalLength = font.GetVariationCoordsNormalized (emptyBuffer);
+				Assert.Equal (axisCount, totalLength);
+			}
+		}
+
+		[SkippableFact]
+		public void SetVariationCoordsDesignAffectsNormalizedCoords ()
+		{
+			var (face, font) = CreateVariableFontPair ();
+			using (face)
+			using (font) {
+				var axes = face.GetVariationAxisInfos ();
+				Assert.NotEmpty (axes);
+
+				// Set design coords to min value
+				var designCoords = new float[axes.Length];
+				designCoords[0] = axes[0].MinValue;
+				font.SetVariationCoordsDesign (designCoords);
+
+				// Normalized coords should now be non-zero (unless min == default)
+				var normalized = font.VariationCoordsNormalized;
+				Assert.Equal (axes.Length, normalized.Length);
+
+				// Now set to max and verify it's different
+				designCoords[0] = axes[0].MaxValue;
+				font.SetVariationCoordsDesign (designCoords);
+				var normalized2 = font.VariationCoordsNormalized;
+
+				if (axes[0].MinValue != axes[0].MaxValue)
+					Assert.NotEqual (normalized[0], normalized2[0]);
+			}
+		}
+
+		[SkippableFact]
+		public void NegativeInstanceIndexThrowsForSetVariationNamedInstance ()
+		{
+			var (face, font) = CreateVariableFontPair ();
+			using (face)
+			using (font) {
+				Assert.Throws<ArgumentOutOfRangeException> (() => font.SetVariationNamedInstance (-1));
+			}
+		}
+
+		[SkippableFact]
 		public void NormalizedCoordsAreEmptyForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
 			using var font = new Font (face);
 			var coords = font.VariationCoordsNormalized;
 			Assert.Empty (coords);
+		}
+
+		[SkippableFact]
+		public void SpanNormalizedCoordsReturnsZeroForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			using var font = new Font (face);
+			var buffer = new int[4];
+			var length = font.GetVariationCoordsNormalized (buffer);
+			Assert.Equal (0, length);
 		}
 
 		[SkippableFact]
