@@ -239,7 +239,7 @@ At minimum, validate:
 
 ### Phase 7: Generate Structured JSON Report
 
-Produce a JSON report following the schema in [references/report-schema.md](references/report-schema.md).
+Produce a JSON report following the schema in [references/schema-cheatsheet.md](references/schema-cheatsheet.md).
 The formal JSON Schema is at [references/feature-scout-schema.json](references/feature-scout-schema.json).
 Save to the artifacts directory as `skia-feature-scout-YYYY-MM-DD.json`.
 
