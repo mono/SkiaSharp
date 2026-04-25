@@ -414,21 +414,23 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position) =>
-			Clone (position, 0);
-
-		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position, int collectionIndex)
+		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position)
 		{
 			fixed (SKFontVariationPositionCoordinate* ptr = position) {
-				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, ptr, position.Length, collectionIndex, 0, null, 0));
+				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, ptr, position.Length, 0, 0, null, 0));
 			}
 		}
 
-		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position, int collectionIndex, int paletteIndex, ReadOnlySpan<SKFontPaletteOverride> paletteOverrides)
+		public SKTypeface Clone (int paletteIndex)
 		{
-			fixed (SKFontVariationPositionCoordinate* posPtr = position)
-			fixed (SKFontPaletteOverride* palPtr = paletteOverrides) {
-				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, posPtr, position.Length, collectionIndex, paletteIndex, palPtr, paletteOverrides.Length));
+			return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, null, 0, 0, paletteIndex, null, 0));
+		}
+
+		public SKTypeface Clone (SKFontArguments args)
+		{
+			fixed (SKFontVariationPositionCoordinate* posPtr = args.VariationDesignPosition)
+			fixed (SKFontPaletteOverride* palPtr = args.PaletteOverrides) {
+				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, posPtr, args.VariationDesignPosition.Length, args.CollectionIndex, args.PaletteIndex, palPtr, args.PaletteOverrides.Length));
 			}
 		}
 

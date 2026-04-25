@@ -54,9 +54,9 @@ canvas.Clear(SKColors.White);
 if (baseTypeface == null)
 return;
 
-ReadOnlySpan<SKFontVariationPositionCoordinate> emptyPosition = ReadOnlySpan<SKFontVariationPositionCoordinate>.Empty;
 
-using var typeface = baseTypeface.Clone(emptyPosition, 0, paletteIndex, ReadOnlySpan<SKFontPaletteOverride>.Empty);
+
+using var typeface = baseTypeface.Clone(paletteIndex);
 if (typeface == null)
 return;
 
@@ -91,7 +91,7 @@ var spectrumSize = Math.Max(20, textSize * 0.5f);
 var cols = Math.Min(paletteCount, 5);
 var spacing = width / (float)(cols + 1);
 
-ReadOnlySpan<SKFontVariationPositionCoordinate> emptyPosition = ReadOnlySpan<SKFontVariationPositionCoordinate>.Empty;
+
 using var labelPaint = new SKPaint { Color = new SKColor(0xAA, 0xAA, 0xAA), IsAntialias = true };
 using var labelFont = new SKFont(SKTypeface.Default, 11);
 using var paint = new SKPaint { IsAntialias = true };
@@ -103,7 +103,7 @@ var row = i / cols;
 var cx = spacing * (col + 1);
 var cy = spectrumY + row * (spectrumSize + 28);
 
-using var pTypeface = baseTypeface!.Clone(emptyPosition, 0, i, ReadOnlySpan<SKFontPaletteOverride>.Empty);
+using var pTypeface = baseTypeface!.Clone(i);
 if (pTypeface == null)
 continue;
 
