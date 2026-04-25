@@ -46,22 +46,21 @@ The skill supports two modes. The user may specify one or you can suggest the ri
 
 ## Workflow
 
-The skill uses a **parallel fan-out / synthesize / verify** architecture. Different agents
-specialize in different aspects of the audit and run concurrently, then you merge their findings,
-validate for accuracy, and produce the final report. This approach catches items that any single
-pass would miss — testing shows individual model runs miss 15-30% of findings that other runs
-catch.
+The skill uses a **dual-model / synthesize / verify** architecture. Two different AI models each
+independently do a complete audit (release notes + hidden APIs + binding checks), then you merge
+their findings, resolve conflicts, and verify accuracy. This approach catches items that any single
+model would miss — testing shows individual runs miss 15-30% of findings the other model catches,
+with almost no overlap in their blind spots.
 
 ```
-Phase 1: Setup (fetch notes, determine milestone)
-Phase 2: Fan-Out — launch 4 parallel agents
-  ├─ Agent A: Recent milestones (current → M110)
-  ├─ Agent B: Older milestones (M109 → M78)
-  ├─ Agent C: C++ header scan for hidden APIs
-  └─ Agent D: Binding inventory (what we already have)
-Phase 3: Synthesize — merge all agent findings, dedupe, resolve conflicts
-Phase 4: Verify — spot-check high-priority items for hallucinations
+Phase 1: Setup (fetch notes, determine milestone, locate C API)
+Phase 2: Launch two parallel full-audit agents (different models)
+  ├─ Agent 1 (Opus 4.7): Full audit — notes + hidden APIs + binding check
+  └─ Agent 2 (GPT 5.4):  Full audit — notes + hidden APIs + binding check
+Phase 3: Synthesize — merge both agents' findings, dedupe, resolve conflicts
+Phase 4: Verify — you spot-check high-priority items directly
 Phase 5: Generate outputs (JSON → validate → HTML → markdown)
+Phase 6: Offer next steps
 ```
 
 ### Phase 1: Setup
@@ -78,7 +77,6 @@ The file is large (100KB+). Fetch it in 20KB chunks using `web_fetch` with incre
 until you've read the entire file. Save to a temp file so agents can read it:
 
 ```bash
-# Save fetched content to a file agents can access
 cat > /tmp/skia-release-notes.md << 'NOTES'
 <paste all fetched content>
 NOTES
@@ -89,11 +87,8 @@ read at least a few milestones beyond the current one to catch future items.
 
 **1b. Determine Current Milestone**
 
-Check what Skia milestone SkiaSharp is currently on:
-
 ```bash
 cd externals/skia && git log --oneline -1
-# Also check:
 cat externals/skia/include/core/SkMilestone.h 2>/dev/null
 ```
 
@@ -105,7 +100,6 @@ Everything above is "coming with bump".
 The skia submodule may not be checked out in this worktree. Find the C API:
 
 ```bash
-# Try worktree first
 ls externals/skia/include/c/ 2>/dev/null
 # Fallback to main repo checkout
 ls /path/to/main/SkiaSharp/externals/skia/include/c/ 2>/dev/null
@@ -113,112 +107,88 @@ ls /path/to/main/SkiaSharp/externals/skia/include/c/ 2>/dev/null
 
 Record the path for agents to use.
 
-### Phase 2: Fan-Out — Launch Parallel Agents
+### Phase 2: Launch Two Full-Audit Agents
 
-Launch **four** background `task` agents simultaneously. Each has a focused job and produces
-a JSON fragment. Give each agent the release notes file path, C API path, and current milestone.
+Launch **two** background `task` agents simultaneously, using **different models**. Each does the
+same complete job — read ALL release notes, scan C++ headers for hidden APIs, check bindings. Their
+different perspectives and blind spots complement each other.
 
-**Agent A: Recent Release Notes (current milestone → M110)**
-
-```
-task agent_type=explore mode=background name=scout-recent:
-  "Read the Skia release notes at /tmp/skia-release-notes.md, focusing on
-   milestones M110 through M{current}+15 (to catch future items).
-   
-   For each milestone, extract notable features matching these criteria:
-   [paste the Include/Exclude criteria and category/priority tables from this skill]
-   
-   For each item, also check if SkiaSharp has it:
-   - Search binding/SkiaSharp/*.cs for C# wrappers
-   - Search {c_api_path} for C API functions
-   
-   Output a JSON array of feature objects. Each must have:
-   id, name, category, milestoneIntroduced, milestoneEnhanced, milestoneDeprecated,
-   milestoneRemoved, skiaApi, description, userValue, cApiStatus, cApiFunction,
-   cApiFile, csharpStatus, csharpMethod, csharpFile, bindingStatus, priority, notes.
-   
-   Be thorough. Check EVERY milestone in your range. Don't skip any."
-```
-
-**Agent B: Older Release Notes (M109 → M78)**
-
-Same prompt as Agent A but for the older milestone range. This agent exists because testing
-showed that models lose rigor when processing very long documents — splitting the range ensures
-old milestones (where gems like SkTextBlob::Iter M79, SkBlendMode_AsCoeff M80, SkColorInfo M79,
-SkImage::reinterpretColorSpace M78 hide) get equal attention.
-
-**Agent C: C++ Header Scan**
+Give each agent this prompt (adapted with actual paths and milestone):
 
 ```
-task agent_type=explore mode=background name=scout-headers:
-  "Scan upstream Skia C++ headers for public methods not exposed in SkiaSharp's C API.
-   
-   For each of these types, fetch the upstream header from Google's Skia repo and
-   compare against the C API in {c_api_path}:
-   
-   Priority 1 (most likely to have gems):
-   - SkImage (include/core/SkImage.h) vs sk_image.h
-   - SkCanvas (include/core/SkCanvas.h) vs sk_canvas.h
-   - SkImageFilters (include/effects/SkImageFilters.h) vs sk_imagefilter.h
-   - SkCodec (include/codec/SkCodec.h) vs sk_codec.h
-   - SkShader/SkShaders (include/core/SkShader.h) vs sk_shader.h
-   - SkColorFilter (include/core/SkColorFilter.h) vs sk_colorfilter.h
-   - SkPath + SkPathBuilder (include/core/SkPath.h, SkPathBuilder.h) vs sk_path.h
-   
-   Priority 2:
-   - SkBitmap, SkPixmap, SkSurface, SkFont, SkTypeface, SkData, SkColorSpace
-   - SkTextBlob (include/core/SkTextBlob.h) vs any sk_textblob in C API
-   - SkBlendMode (include/core/SkBlendMode.h)
-   
-   For each public C++ method that has NO corresponding C API function, output:
-   { cppClass, cppHeader, cppMethod, description, cApiStatus, csharpStatus, priority, notes }
-   
-   Focus on methods that would add user value. Skip internal/friend/protected methods."
-```
+task agent_type=general-purpose mode=background model=claude-opus-4.7 name=scout-opus:
+task agent_type=general-purpose mode=background model=gpt-5.4 name=scout-gpt:
 
-**Agent D: Binding Inventory**
+  "You are auditing Skia release notes for SkiaSharp. Work from scratch — be thorough.
+   SkiaSharp is on milestone M{current}.
 
-```
-task agent_type=explore mode=background name=scout-bindings:
-  "Inventory the current SkiaSharp bindings to establish what we already have.
-   
-   1. List all C API functions from {c_api_path}/*.h (grep for 'SK_C_API')
-   2. List all public classes and key methods from binding/SkiaSharp/*.cs
-   3. Check SkiaApi.generated.cs for internal struct fields that may have hidden
-      plumbing not exposed in public option types (especially encoder options like
-      SKJpegEncoderOptions, SKPngEncoderOptions, SKWebpEncoderOptions — look for
-      ICC, XMP, gainmap, HDR metadata fields in the generated code vs public structs)
-   4. For any method marked 'Raw' or 'raw' in the name, verify it actually calls
-      the correct underlying C API (not a regular version of the same method)
-   
-   Output:
-   - A list of C API function names (one per line)
-   - A list of {csharpClass, csharpMethod, cApiFunction} for key bindings
-   - Any discrepancies found (wrong C API calls, hidden generated fields, etc.)"
+   DO THREE THINGS:
+
+   1. RELEASE NOTES SCAN
+      Read /tmp/skia-release-notes.md (the full file, ALL milestones M78 through latest).
+      Extract every notable feature. For each, record:
+      - name, category, milestoneIntroduced, milestoneEnhanced, milestoneDeprecated,
+        milestoneRemoved, skiaApi, description, userValue, priority
+      Include: new APIs/classes, codec/format support, color types, shader features,
+      image filter additions, canvas enhancements, performance improvements,
+      behavior changes, codec introspection, GPU interop, text/font APIs,
+      sampling options, API migrations.
+      Exclude: header reorgs, Graphite/Dawn internals, build system, SkSL parser fixes.
+      PAY EQUAL ATTENTION TO OLD MILESTONES (M78-M100). They contain overlooked gems.
+
+   2. HIDDEN API SCAN
+      For each type SkiaSharp binds, fetch the upstream C++ header from Google's repo
+      (https://raw.githubusercontent.com/google/skia/main/include/core/SkImage.h etc.)
+      and compare against our C API in {c_api_path}.
+      Focus on: SkImage.h, SkCanvas.h, SkImageFilters.h, SkShader.h, SkCodec.h,
+      SkColorFilter.h, SkPath.h, SkPathBuilder.h, SkBitmap.h, SkTextBlob.h.
+      For each public C++ method with no C API equivalent, output:
+      { cppClass, cppHeader, cppMethod, description, priority }
+
+   3. BINDING VERIFICATION
+      For each feature found in step 1, check:
+      - C API: grep {c_api_path}/*.h and src/c/*.cpp
+      - C# wrapper: grep binding/SkiaSharp/*.cs
+      - Generated interop: check SkiaApi.generated.cs for hidden struct fields
+        (especially encoder options: ICC, XMP, gainmap, HDR metadata fields that
+        exist in generated code but not in public option structs)
+      - For any method with 'Raw' in the name, verify it calls the correct C API
+        (not a regular version — read the implementation, not just the signature)
+      Classify each as: full, partial, missing, action_needed, correctly_absent, not_applicable
+
+      Also look for SkiaSharp APIs wrapping things Skia has deprecated — these need [Obsolete].
+
+   Save your complete findings as JSON to {output_path}/{agent_name}-findings.json"
 ```
 
 ### Phase 3: Synthesize
 
-When all four agents complete, merge their findings:
+When both agents complete, merge their findings. This is your most important job —
+you are the quality gate.
 
-1. **Collect** all feature items from Agents A and B into a single list
-2. **Deduplicate** — if both agents found the same feature (by skiaApi name), merge them,
-   keeping the richer description and noting both milestone ranges
-3. **Add hidden APIs** from Agent C as a separate `hiddenApis` array
-4. **Cross-reference with Agent D's inventory** to verify binding statuses:
-   - If Agent D says a C API function exists but Agents A/B said `missing`, fix to `partial`
-   - If Agent D found implementation bugs (wrong C API calls), mark as `action_needed`
-   - If Agent D found hidden generated fields, create items for those as quick wins
-5. **Track feature lifecycles** — for items that appear in multiple milestones (introduced,
-   enhanced, deprecated, removed), merge into a single item with all milestone fields populated
+1. **Collect** all feature items from both agents into a combined list
+2. **Deduplicate** — if both found the same feature (by skiaApi name or description), merge them:
+   - Keep the richer description / userValue
+   - If they disagree on bindingStatus, the more cautious one wins (e.g., `missing` beats `full`)
+   - If they disagree on priority, keep the higher one and note the disagreement
+3. **Union the hidden APIs** — combine both agents' hidden API lists, deduplicating by method name.
+   Testing shows the two models find almost completely different hidden APIs (only ~6% overlap), so
+   the union is much richer than either alone.
+4. **Cross-reference binding statuses**:
+   - If one agent says `full` and the other says `missing`, investigate directly (Phase 4)
+   - If one found `partial` bindings (C API exists, no C# wrapper), keep those — they're quick wins
+   - If either found implementation bugs (wrong C API calls), mark as `action_needed`
+   - If either found hidden generated interop fields, add as `partial` quick wins
+5. **Track feature lifecycles** — merge entries for features that appear across multiple milestones
+   into single items with milestoneIntroduced + milestoneEnhanced + milestoneDeprecated + milestoneRemoved
 6. **Extract performance notes** into the `performance` array
 7. **Extract deprecations** into the `deprecations` array with concrete `[Obsolete]` messages
-8. **Build the `nextSteps`** array, ordered by priority, with `skillToUse` and `effort`
+8. **Build `nextSteps`** ordered by priority, with `skillToUse` and `effort`
 
 ### Phase 4: Verify High-Priority Findings
 
 For every item marked `critical` or `high` priority, and every item marked `full` (to confirm
-they're not false positives), do a direct verification:
+they're not false positives), do a direct verification yourself:
 
 ```bash
 # For each high-priority "missing" item — confirm it's truly missing
