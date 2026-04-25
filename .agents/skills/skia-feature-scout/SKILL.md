@@ -35,6 +35,12 @@ automatically appear in SkiaSharp — someone needs to:
 
 This skill handles step 1 and 2 so the team can prioritize steps 3-5.
 
+## Key References
+
+- **[references/audit-instructions.md](references/audit-instructions.md)** — Complete agent instructions: extraction criteria, binding verification, hidden API scan methodology, accuracy tips. **Agents read this before starting.**
+- **[references/schema-cheatsheet.md](references/schema-cheatsheet.md)** — Human-readable JSON output schema
+- **[references/feature-scout-schema.json](references/feature-scout-schema.json)** — JSON Schema (Draft 2020-12) for machine validation
+
 ## Modes of Operation
 
 The skill supports two modes. The user may specify one or you can suggest the right one:
@@ -119,48 +125,15 @@ Give each agent this prompt (adapted with actual paths and milestone):
 task agent_type=general-purpose mode=background model=claude-opus-4.7 name=scout-opus:
 task agent_type=general-purpose mode=background model=gpt-5.4 name=scout-gpt:
 
-  "You are auditing Skia release notes for SkiaSharp. Work from scratch — be thorough.
-   SkiaSharp is on milestone M{current}.
+  "You are auditing Skia release notes for SkiaSharp. SkiaSharp is on milestone M{current}.
 
-   FIRST: Read .agents/skills/skia-feature-scout/references/extraction-criteria.md
-   It contains the full criteria, categories, priorities, binding status classifications,
-   and C#→C API→C++ type mapping table you need for this audit.
+   FIRST: Read .agents/skills/skia-feature-scout/references/audit-instructions.md — it contains
+   the complete criteria, methodology, type mapping, and accuracy tips for this audit.
 
-   THEN DO THREE THINGS:
-
-   1. RELEASE NOTES SCAN
-      Read /tmp/skia-release-notes.md (the full file, ALL milestones M78 through latest).
-      Extract every notable feature. For each, record:
-      - name, category, milestoneIntroduced, milestoneEnhanced, milestoneDeprecated,
-        milestoneRemoved, skiaApi, description, userValue, priority
-      Include: new APIs/classes, codec/format support, color types, shader features,
-      image filter additions, canvas enhancements, performance improvements,
-      behavior changes, codec introspection, GPU interop, text/font APIs,
-      sampling options, API migrations.
-      Exclude: header reorgs, Graphite/Dawn internals, build system, SkSL parser fixes.
-      PAY EQUAL ATTENTION TO OLD MILESTONES (M78-M100). They contain overlooked gems.
-
-   2. HIDDEN API SCAN
-      For each type SkiaSharp binds, fetch the upstream C++ header from Google's repo
-      (https://raw.githubusercontent.com/google/skia/main/include/core/SkImage.h etc.)
-      and compare against our C API in {c_api_path}.
-      Focus on: SkImage.h, SkCanvas.h, SkImageFilters.h, SkShader.h, SkCodec.h,
-      SkColorFilter.h, SkPath.h, SkPathBuilder.h, SkBitmap.h, SkTextBlob.h.
-      For each public C++ method with no C API equivalent, output:
-      { cppClass, cppHeader, cppMethod, description, priority }
-
-   3. BINDING VERIFICATION
-      For each feature found in step 1, check:
-      - C API: grep {c_api_path}/*.h and src/c/*.cpp
-      - C# wrapper: grep binding/SkiaSharp/*.cs
-      - Generated interop: check SkiaApi.generated.cs for hidden struct fields
-        (especially encoder options: ICC, XMP, gainmap, HDR metadata fields that
-        exist in generated code but not in public option structs)
-      - For any method with 'Raw' in the name, verify it calls the correct C API
-        (not a regular version — read the implementation, not just the signature)
-      Classify each as: full, partial, missing, action_needed, correctly_absent, not_applicable
-
-      Also look for SkiaSharp APIs wrapping things Skia has deprecated — these need [Obsolete].
+   THEN: Do the three tasks described in that file:
+   1. RELEASE NOTES SCAN — Read /tmp/skia-release-notes.md (ALL milestones). Extract features.
+   2. HIDDEN API SCAN — Fetch upstream C++ headers, compare against C API at {c_api_path}.
+   3. BINDING VERIFICATION — Check C API, C# wrappers, generated interop, deprecations.
 
    Save your complete findings as JSON to {output_path}/{agent_name}-findings.json"
 ```
@@ -272,41 +245,11 @@ After presenting the report, offer:
 
 ---
 
-## Feature Extraction Criteria
+## Feature Extraction Criteria & Tips
 
-See [references/extraction-criteria.md](references/extraction-criteria.md) for the complete criteria,
-categories, priorities, binding status classifications, and C#→C API→C++ type mapping table.
-
-Agents must read that file before starting their audit. It contains everything they need to know
-about what to look for, what to skip, and how to classify findings.
-
-## Tips for Accurate Assessment
-
-- **Don't confuse enum values with full support.** Having `AVIF` in an encoded format enum doesn't
-  mean AVIF decoding is fully wired up in C#.
-- **Check for the actual C# method, not just the class.** A class may exist but be missing specific
-  overloads (e.g., DropShadow exists but only with SKColor, not SKColor4f).
-- **Verify C# wrappers actually call the right C API.** A wrapper may exist with the right name but
-  forward to the wrong native function. For example, check that `ToRawShader` actually calls a raw
-  shader C API and not the regular `makeShader`. Read the implementation, not just the signature.
-- **Check SkiaApi.generated.cs for hidden plumbing.** The generated interop file may contain fields
-  (e.g., gainmap, ICC profile, XMP metadata) in internal structs that the public C# option types
-  don't expose. These are quick wins — the native plumbing exists, just needs a public wrapper.
-- **Runtime effects children vs image filter children are different.** SKRuntimeEffect supporting
-  children doesn't mean SkImageFilters::RuntimeShader is bound.
-- **Path features need special attention.** SkPath immutability is a massive migration that affects
-  the entire SkiaSharp path API surface.
-- **Gradient interpolation is a high-value gap.** CSS Color Level 4 gradient interpolation produces
-  dramatically better gradients. This is a visible quality improvement users will notice.
-- **Track API churn across milestones.** Some APIs are added then removed (e.g., ICC profile fields
-  in encoder options were added in M108 then removed in M142). Flag these lifecycle issues.
-- **Performance notes matter.** A Perlin noise speedup or decode optimization benefits users without
-  any binding changes needed — but they should know about it.
-- **Behavior changes can cause subtle bugs.** If Skia changed how `kRec709` transfer function works,
-  apps may see color shifts. Flag these even if no binding change is required.
-- **The mono/skia fork may retain deprecated APIs** that upstream removed. This isn't a bug — it's
-  intentional for backward compatibility. Flag it but don't classify as broken.
-- **C++ headers are the source of truth.** Release notes are curated highlights. The headers contain
-  everything. When in doubt, check the header.
-- **Don't skip very old milestones.** Features from M78-M90 like SkTextBlob::Iter, SkBlendMode_AsCoeff,
-  SkColorInfo, and SkImage::reinterpretColorSpace are easily overlooked but still valuable.
+See [references/audit-instructions.md](references/audit-instructions.md) for the complete:
+- Include/Exclude criteria
+- Categories and priority classification
+- Binding status definitions
+- C++ header scan methodology and type mapping table
+- Tips for accurate assessment (lessons from prior runs)
