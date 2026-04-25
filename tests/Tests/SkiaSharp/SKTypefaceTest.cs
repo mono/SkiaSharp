@@ -575,7 +575,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty (axes);
 
 			var axis = axes[0];
-			Assert.NotEqual ((uint)0, axis.Tag);
+			Assert.NotEqual (default(SKFourByteTag), axis.Tag);
 			Assert.True (axis.Min <= axis.Default);
 			Assert.True (axis.Default <= axis.Max);
 		}

@@ -4,11 +4,7 @@ using System;
 
 namespace SkiaSharp;
 
-/// <summary>
-/// Represents a four-byte tag value used throughout Skia for identifying font tables,
-/// variation axes, and other OpenType constructs. Wraps Skia's SkFourByteTag (uint32_t).
-/// </summary>
-public struct SKFourByteTag : IEquatable<SKFourByteTag>
+public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 {
 	private readonly uint value;
 
@@ -22,10 +18,6 @@ public struct SKFourByteTag : IEquatable<SKFourByteTag>
 		value = (uint)(((byte)c1 << 24) | ((byte)c2 << 16) | ((byte)c3 << 8) | (byte)c4);
 	}
 
-	/// <summary>
-	/// Creates a tag from a four-character string (e.g. "wght", "wdth", "slnt").
-	/// Strings shorter than 4 characters are padded with spaces.
-	/// </summary>
 	public static SKFourByteTag Parse (string tag)
 	{
 		if (string.IsNullOrEmpty (tag))
