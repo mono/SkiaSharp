@@ -48,19 +48,19 @@ public class SKVariableFontRenderingTest : SKTest
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
 		Assert.NotNull (baseTypeface);
 
-		var axes = baseTypeface.GetVariationDesignParameters ();
+		var axes = baseTypeface.VariationDesignParameters;
 		Assert.NotEmpty (axes);
 
 		// Clone with min weight
 		var minPosition = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Min }
+			new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Min }
 		};
 		using var minTypeface = baseTypeface.Clone (minPosition);
 		Assert.NotNull (minTypeface);
 
 		// Clone with max weight
 		var maxPosition = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
+			new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
 		};
 		using var maxTypeface = baseTypeface.Clone (maxPosition);
 		Assert.NotNull (maxTypeface);
@@ -80,24 +80,24 @@ public class SKVariableFontRenderingTest : SKTest
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
 		Assert.NotNull (baseTypeface);
 
-		var axes = baseTypeface.GetVariationDesignParameters ();
+		var axes = baseTypeface.VariationDesignParameters;
 		Assert.NotEmpty (axes);
 
 		var targetValue = axes[0].Min;
 		var position = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axes[0].Tag, Value = targetValue }
+			new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = targetValue }
 		};
 		using var cloned = baseTypeface.Clone (position);
 		Assert.NotNull (cloned);
 
 		// Verify the cloned typeface reports the expected variation position
-		var clonedPosition = cloned.GetVariationDesignPosition ();
+		var clonedPosition = cloned.VariationDesignPosition;
 		Assert.NotEmpty (clonedPosition);
 		Assert.Equal (targetValue, clonedPosition[0].Value);
 
 		// And render with it to confirm it produces distinct output from the max
 		var maxPosition = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
+			new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
 		};
 		using var maxTypeface = baseTypeface.Clone (maxPosition);
 
@@ -114,7 +114,7 @@ public class SKVariableFontRenderingTest : SKTest
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
 		Assert.NotNull (baseTypeface);
 
-		var axes = baseTypeface.GetVariationDesignParameters ();
+		var axes = baseTypeface.VariationDesignParameters;
 		Assert.NotEmpty (axes);
 
 		var axis = axes[0];
@@ -132,13 +132,13 @@ public class SKVariableFontRenderingTest : SKTest
 		}
 
 		var minPos = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axis.Tag, Value = axis.Min }
+			new SKFontVariationPositionCoordinate { Axis = axis.Tag, Value = axis.Min }
 		};
 		using var minTypeface = baseTypeface.Clone (minPos);
 		var minPixels = RenderTextToBitmapBytes (minTypeface, "Hello Variable", 32);
 
 		var maxPos = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axis.Tag, Value = axis.Max }
+			new SKFontVariationPositionCoordinate { Axis = axis.Tag, Value = axis.Max }
 		};
 		using var maxTypeface = baseTypeface.Clone (maxPos);
 		var maxPixels = RenderTextToBitmapBytes (maxTypeface, "Hello Variable", 32);
@@ -156,12 +156,12 @@ public class SKVariableFontRenderingTest : SKTest
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
 		Assert.NotNull (baseTypeface);
 
-		var axes = baseTypeface.GetVariationDesignParameters ();
+		var axes = baseTypeface.VariationDesignParameters;
 		Assert.NotEmpty (axes);
 
 		var midValue = (axes[0].Min + axes[0].Max) / 2;
 		var position = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axes[0].Tag, Value = midValue }
+			new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = midValue }
 		};
 
 		// Clone twice with the same value
@@ -184,7 +184,7 @@ public class SKVariableFontRenderingTest : SKTest
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
 		Assert.NotNull (baseTypeface);
 
-		var axes = baseTypeface.GetVariationDesignParameters ();
+		var axes = baseTypeface.VariationDesignParameters;
 		Assert.NotEmpty (axes);
 
 		var axis = axes[0];
@@ -197,7 +197,7 @@ public class SKVariableFontRenderingTest : SKTest
 		for (int i = 0; i < values.Length; i++)
 		{
 			var pos = new[] {
-				new SKFontVariationDesignPositionCoordinate { Axis = axis.Tag, Value = values[i] }
+				new SKFontVariationPositionCoordinate { Axis = axis.Tag, Value = values[i] }
 			};
 			using var typeface = baseTypeface.Clone (pos);
 			Assert.NotNull (typeface);
@@ -220,7 +220,7 @@ public class SKVariableFontRenderingTest : SKTest
 		Assert.NotNull (staticTypeface);
 
 		// Verify this is a static font with no axes
-		var axes = staticTypeface.GetVariationDesignParameters ();
+		var axes = staticTypeface.VariationDesignParameters;
 		Assert.Empty (axes);
 
 		// Render with the static font
@@ -229,7 +229,7 @@ public class SKVariableFontRenderingTest : SKTest
 
 		// Attempting to clone a static font with variation should return something usable
 		var position = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = SKFourByteTag.Parse ("wght"), Value = 700 }
+			new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse ("wght"), Value = 700 }
 		};
 		using var cloned = staticTypeface.Clone (position);
 
@@ -248,16 +248,16 @@ public class SKVariableFontRenderingTest : SKTest
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
 		Assert.NotNull (baseTypeface);
 
-		var axes = baseTypeface.GetVariationDesignParameters ();
+		var axes = baseTypeface.VariationDesignParameters;
 		Assert.NotEmpty (axes);
 
 		var minPos = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Min }
+			new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Min }
 		};
 		using var minTypeface = baseTypeface.Clone (minPos);
 
 		var maxPos = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
+			new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
 		};
 		using var maxTypeface = baseTypeface.Clone (maxPos);
 

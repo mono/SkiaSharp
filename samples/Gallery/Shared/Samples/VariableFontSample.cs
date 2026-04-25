@@ -57,8 +57,8 @@ public class VariableFontSample : CanvasSampleBase
 
 		var position = new[]
 		{
-			new SKFontVariationDesignPositionCoordinate { Axis = SKFourByteTag.Parse("wght"), Value = weight },
-			new SKFontVariationDesignPositionCoordinate { Axis = SKFourByteTag.Parse("opsz"), Value = opticalSize },
+			new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse("wght"), Value = weight },
+			new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse("opsz"), Value = opticalSize },
 		};
 
 		using var typeface = baseTypeface.Clone(position);
@@ -106,8 +106,8 @@ public class VariableFontSample : CanvasSampleBase
 
 			var pos = new[]
 			{
-				new SKFontVariationDesignPositionCoordinate { Axis = SKFourByteTag.Parse("wght"), Value = w },
-				new SKFontVariationDesignPositionCoordinate { Axis = SKFourByteTag.Parse("opsz"), Value = opticalSize },
+				new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse("wght"), Value = w },
+				new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse("opsz"), Value = opticalSize },
 			};
 
 			using var tf = baseTypeface!.Clone(pos);

@@ -571,7 +571,7 @@ namespace SkiaSharp.Tests
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
 			Assert.NotNull (typeface);
 
-			var axes = typeface.GetVariationDesignParameters ();
+			var axes = typeface.VariationDesignParameters;
 			Assert.NotEmpty (axes);
 
 			var axis = axes[0];
@@ -586,7 +586,7 @@ namespace SkiaSharp.Tests
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
 			Assert.NotNull (typeface);
 
-			var axes = typeface.GetVariationDesignParameters ();
+			var axes = typeface.VariationDesignParameters;
 			Assert.Empty (axes);
 		}
 
@@ -596,7 +596,7 @@ namespace SkiaSharp.Tests
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
 			Assert.NotNull (typeface);
 
-			var position = typeface.GetVariationDesignPosition ();
+			var position = typeface.VariationDesignPosition;
 			Assert.NotEmpty (position);
 		}
 
@@ -606,18 +606,18 @@ namespace SkiaSharp.Tests
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
 			Assert.NotNull (typeface);
 
-			var axes = typeface.GetVariationDesignParameters ();
+			var axes = typeface.VariationDesignParameters;
 			Assert.NotEmpty (axes);
 
-			var position = new SKFontVariationDesignPositionCoordinate[] {
-				new SKFontVariationDesignPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
+			var position = new SKFontVariationPositionCoordinate[] {
+				new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
 			};
 
 			using var cloned = typeface.Clone (position);
 			Assert.NotNull (cloned);
 
 			// Verify the cloned typeface has the new position
-			var clonedPosition = cloned.GetVariationDesignPosition ();
+			var clonedPosition = cloned.VariationDesignPosition;
 			Assert.NotEmpty (clonedPosition);
 			Assert.Equal (axes[0].Max, clonedPosition[0].Value);
 		}
@@ -628,13 +628,96 @@ namespace SkiaSharp.Tests
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
 			Assert.NotNull (typeface);
 
-			var position = new SKFontVariationDesignPositionCoordinate[] {
-				new SKFontVariationDesignPositionCoordinate { Axis = SKFourByteTag.Parse ("wght"), Value = 400 }
+			var position = new SKFontVariationPositionCoordinate[] {
+				new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse ("wght"), Value = 400 }
 			};
 
 			// Static fonts should handle this gracefully
 			using var cloned = typeface.Clone (position);
 			// Result may or may not be null depending on implementation
+		}
+
+		[SkippableFact]
+		public void SpanGetVariationDesignParametersMatchesProperty ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
+			Assert.NotNull (typeface);
+
+			var arrayResult = typeface.VariationDesignParameters;
+			Assert.NotEmpty (arrayResult);
+
+			var spanBuffer = new SKFontVariationAxis[arrayResult.Length];
+			var written = typeface.GetVariationDesignParameters (spanBuffer);
+			Assert.Equal (arrayResult.Length, written);
+
+			for (int i = 0; i < arrayResult.Length; i++) {
+				Assert.Equal (arrayResult[i].Tag, spanBuffer[i].Tag);
+				Assert.Equal (arrayResult[i].Min, spanBuffer[i].Min);
+				Assert.Equal (arrayResult[i].Default, spanBuffer[i].Default);
+				Assert.Equal (arrayResult[i].Max, spanBuffer[i].Max);
+			}
+		}
+
+		[SkippableFact]
+		public void SpanGetVariationDesignPositionMatchesProperty ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
+			Assert.NotNull (typeface);
+
+			var arrayResult = typeface.VariationDesignPosition;
+			Assert.NotEmpty (arrayResult);
+
+			var spanBuffer = new SKFontVariationPositionCoordinate[arrayResult.Length];
+			var written = typeface.GetVariationDesignPosition (spanBuffer);
+			Assert.Equal (arrayResult.Length, written);
+
+			for (int i = 0; i < arrayResult.Length; i++) {
+				Assert.Equal (arrayResult[i].Axis, spanBuffer[i].Axis);
+				Assert.Equal (arrayResult[i].Value, spanBuffer[i].Value);
+			}
+		}
+
+		[SkippableFact]
+		public void SpanVariationDesignParametersEmptyForStaticFont ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
+			Assert.NotNull (typeface);
+
+			var spanBuffer = new SKFontVariationAxis[4];
+			var written = typeface.GetVariationDesignParameters (spanBuffer);
+			Assert.True (written <= 0);
+		}
+
+		[SkippableFact]
+		public void SpanVariationDesignPositionEmptyForStaticFont ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
+			Assert.NotNull (typeface);
+
+			var spanBuffer = new SKFontVariationPositionCoordinate[4];
+			var written = typeface.GetVariationDesignPosition (spanBuffer);
+			Assert.True (written <= 0);
+		}
+
+		[SkippableFact]
+		public void CloneWithReadOnlySpan ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
+			Assert.NotNull (typeface);
+
+			var axes = typeface.VariationDesignParameters;
+			Assert.NotEmpty (axes);
+
+			ReadOnlySpan<SKFontVariationPositionCoordinate> position = new[] {
+				new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Min }
+			};
+
+			using var cloned = typeface.Clone (position);
+			Assert.NotNull (cloned);
+
+			var clonedPosition = cloned.VariationDesignPosition;
+			Assert.NotEmpty (clonedPosition);
+			Assert.Equal (axes[0].Min, clonedPosition[0].Value);
 		}
 	}
 }

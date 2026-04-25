@@ -16342,18 +16342,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationDesignPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex);
+		internal static partial sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationDesignPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex);
+		internal static extern sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationDesignPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex);
+			internal delegate sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex);
 		}
 		private static Delegates.sk_typeface_clone_with_arguments sk_typeface_clone_with_arguments_delegate;
-		internal static sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationDesignPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex) =>
+		internal static sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex) =>
 			(sk_typeface_clone_with_arguments_delegate ??= GetSymbol<Delegates.sk_typeface_clone_with_arguments> ("sk_typeface_clone_with_arguments")).Invoke (typeface, coordinates, coordinateCount, collectionIndex);
 		#endif
 
@@ -16744,18 +16744,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationDesignPositionCoordinate* coordinates, Int32 coordinateCount);
+		internal static partial Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationDesignPositionCoordinate* coordinates, Int32 coordinateCount);
+		internal static extern Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationDesignPositionCoordinate* coordinates, Int32 coordinateCount);
+			internal delegate Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
 		}
 		private static Delegates.sk_typeface_get_variation_design_position sk_typeface_get_variation_design_position_delegate;
-		internal static Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationDesignPositionCoordinate* coordinates, Int32 coordinateCount) =>
+		internal static Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount) =>
 			(sk_typeface_get_variation_design_position_delegate ??= GetSymbol<Delegates.sk_typeface_get_variation_design_position> ("sk_typeface_get_variation_design_position")).Invoke (typeface, coordinates, coordinateCount);
 		#endif
 
@@ -19045,7 +19045,7 @@ namespace SkiaSharp {
 
 	// sk_fontarguments_variation_position_coordinate_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKFontVariationDesignPositionCoordinate : IEquatable<SKFontVariationDesignPositionCoordinate> {
+	public unsafe partial struct SKFontVariationPositionCoordinate : IEquatable<SKFontVariationPositionCoordinate> {
 		// public sk_fourbytetag_t axis
 		private SKFourByteTag axis;
 		public SKFourByteTag Axis {
@@ -19060,18 +19060,18 @@ namespace SkiaSharp {
 			set => this.value = value;
 		}
 
-		public readonly bool Equals (SKFontVariationDesignPositionCoordinate obj) =>
+		public readonly bool Equals (SKFontVariationPositionCoordinate obj) =>
 #pragma warning disable CS8909
 			axis == obj.axis && value == obj.value;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
-			obj is SKFontVariationDesignPositionCoordinate f && Equals (f);
+			obj is SKFontVariationPositionCoordinate f && Equals (f);
 
-		public static bool operator == (SKFontVariationDesignPositionCoordinate left, SKFontVariationDesignPositionCoordinate right) =>
+		public static bool operator == (SKFontVariationPositionCoordinate left, SKFontVariationPositionCoordinate right) =>
 			left.Equals (right);
 
-		public static bool operator != (SKFontVariationDesignPositionCoordinate left, SKFontVariationDesignPositionCoordinate right) =>
+		public static bool operator != (SKFontVariationPositionCoordinate left, SKFontVariationPositionCoordinate right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()

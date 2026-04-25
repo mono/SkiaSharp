@@ -364,41 +364,62 @@ namespace SkiaSharp
 
 		// Variable fonts
 
-		public SKFontVariationAxis[] GetVariationDesignParameters ()
-		{
-			var count = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, null, 0);
-			if (count <= 0)
-				return Array.Empty<SKFontVariationAxis> ();
+		public int VariationDesignParameterCount =>
+			SkiaApi.sk_typeface_get_variation_design_parameters (Handle, null, 0);
 
-			var axes = new SKFontVariationAxis[count];
+		public SKFontVariationAxis[] VariationDesignParameters
+		{
+			get {
+				var count = VariationDesignParameterCount;
+				if (count <= 0)
+					return Array.Empty<SKFontVariationAxis> ();
+
+				var axes = new SKFontVariationAxis[count];
+				fixed (SKFontVariationAxis* ptr = axes) {
+					SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, count);
+				}
+				return axes;
+			}
+		}
+
+		public int GetVariationDesignParameters (Span<SKFontVariationAxis> axes)
+		{
 			fixed (SKFontVariationAxis* ptr = axes) {
-				SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, count);
+				return SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, axes.Length);
 			}
-			return axes;
 		}
 
-		public SKFontVariationDesignPositionCoordinate[] GetVariationDesignPosition ()
+		public int VariationDesignPositionCount =>
+			SkiaApi.sk_typeface_get_variation_design_position (Handle, null, 0);
+
+		public SKFontVariationPositionCoordinate[] VariationDesignPosition
 		{
-			var count = SkiaApi.sk_typeface_get_variation_design_position (Handle, null, 0);
-			if (count <= 0)
-				return Array.Empty<SKFontVariationDesignPositionCoordinate> ();
+			get {
+				var count = VariationDesignPositionCount;
+				if (count <= 0)
+					return Array.Empty<SKFontVariationPositionCoordinate> ();
 
-			var coords = new SKFontVariationDesignPositionCoordinate[count];
-			fixed (SKFontVariationDesignPositionCoordinate* ptr = coords) {
-				SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, count);
+				var coords = new SKFontVariationPositionCoordinate[count];
+				fixed (SKFontVariationPositionCoordinate* ptr = coords) {
+					SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, count);
+				}
+				return coords;
 			}
-			return coords;
 		}
 
-		public SKTypeface Clone (SKFontVariationDesignPositionCoordinate[] position) =>
+		public int GetVariationDesignPosition (Span<SKFontVariationPositionCoordinate> coordinates)
+		{
+			fixed (SKFontVariationPositionCoordinate* ptr = coordinates) {
+				return SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, coordinates.Length);
+			}
+		}
+
+		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position) =>
 			Clone (position, 0);
 
-		public SKTypeface Clone (SKFontVariationDesignPositionCoordinate[] position, int collectionIndex)
+		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position, int collectionIndex)
 		{
-			if (position == null)
-				throw new ArgumentNullException (nameof (position));
-
-			fixed (SKFontVariationDesignPositionCoordinate* ptr = position) {
+			fixed (SKFontVariationPositionCoordinate* ptr = position) {
 				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, ptr, position.Length, collectionIndex));
 			}
 		}
