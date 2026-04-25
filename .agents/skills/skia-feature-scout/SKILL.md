@@ -78,9 +78,9 @@ with bump".
 Read each milestone section and extract items that match these criteria.
 
 **Include (high signal):**
-- Brand new classes or APIs (SkMesh, skhdr::Metadata, etc.)
+- Brand new classes or APIs (SkMesh, skhdr::Metadata, SkAnimatedImage, etc.)
 - New codec/format support (AVIF, JPEG XL, animated WebP encoding)
-- New color types or color space features
+- New color types or color space features (SkColorInfo, reinterpretColorSpace, etc.)
 - Shader capabilities (CoordClamp, gradient interpolation spaces)
 - Image filter additions (RuntimeShader, Crop with TileMode)
 - Canvas/Surface enhancements that affect rendering quality
@@ -88,6 +88,10 @@ Read each milestone section and extract items that match these criteria.
 - Significant API migrations (SkPath → SkPathBuilder)
 - **Performance improvements** — rendering speedups, memory reductions, decode optimizations
 - **Behavior changes** — existing APIs that silently changed semantics
+- **Codec introspection** — SelectionPolicy, getICCProfile, isAnimated, hasHighBitDepthEncodedData
+- **GPU interop** — async rescale/readback, MSAA resolve, anisotropic filtering
+- **Text APIs** — SkTextBlob::Iter, palette overrides, font argument extensions
+- **Sampling options extensions** — anisotropic max level, new filter modes
 
 **Exclude (noise):**
 - Internal refactoring (moving headers between directories)
@@ -315,12 +319,20 @@ After presenting the report, offer:
   mean AVIF decoding is fully wired up in C#.
 - **Check for the actual C# method, not just the class.** A class may exist but be missing specific
   overloads (e.g., DropShadow exists but only with SKColor, not SKColor4f).
+- **Verify C# wrappers actually call the right C API.** A wrapper may exist with the right name but
+  forward to the wrong native function. For example, check that `ToRawShader` actually calls a raw
+  shader C API and not the regular `makeShader`. Read the implementation, not just the signature.
+- **Check SkiaApi.generated.cs for hidden plumbing.** The generated interop file may contain fields
+  (e.g., gainmap, ICC profile, XMP metadata) in internal structs that the public C# option types
+  don't expose. These are quick wins — the native plumbing exists, just needs a public wrapper.
 - **Runtime effects children vs image filter children are different.** SKRuntimeEffect supporting
   children doesn't mean SkImageFilters::RuntimeShader is bound.
 - **Path features need special attention.** SkPath immutability is a massive migration that affects
   the entire SkiaSharp path API surface.
 - **Gradient interpolation is a high-value gap.** CSS Color Level 4 gradient interpolation produces
   dramatically better gradients. This is a visible quality improvement users will notice.
+- **Track API churn across milestones.** Some APIs are added then removed (e.g., ICC profile fields
+  in encoder options were added in M108 then removed in M142). Flag these lifecycle issues.
 - **Performance notes matter.** A Perlin noise speedup or decode optimization benefits users without
   any binding changes needed — but they should know about it.
 - **Behavior changes can cause subtle bugs.** If Skia changed how `kRec709` transfer function works,
@@ -329,3 +341,5 @@ After presenting the report, offer:
   intentional for backward compatibility. Flag it but don't classify as broken.
 - **C++ headers are the source of truth.** Release notes are curated highlights. The headers contain
   everything. When in doubt, check the header.
+- **Don't skip very old milestones.** Features from M78-M90 like SkTextBlob::Iter, SkBlendMode_AsCoeff,
+  SkColorInfo, and SkImage::reinterpretColorSpace are easily overlooked but still valuable.
