@@ -629,7 +629,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull (typeface);
 
 			var position = new SKFontVariationDesignPositionCoordinate[] {
-				new SKFontVariationDesignPositionCoordinate { Axis = 0x77676874 /* wght */, Value = 400 }
+				new SKFontVariationDesignPositionCoordinate { Axis = SKFourByteTag.Parse ("wght"), Value = 400 }
 			};
 
 			// Static fonts should handle this gracefully

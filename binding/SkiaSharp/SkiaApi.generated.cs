@@ -18981,9 +18981,9 @@ namespace SkiaSharp {
 	// sk_fontarguments_variation_axis_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKFontVariationAxis : IEquatable<SKFontVariationAxis> {
-		// public uint32_t tag
-		private UInt32 tag;
-		public UInt32 Tag {
+		// public sk_fourbytetag_t tag
+		private SKFourByteTag tag;
+		public SKFourByteTag Tag {
 			readonly get => tag;
 			set => tag = value;
 		}
@@ -19046,9 +19046,9 @@ namespace SkiaSharp {
 	// sk_fontarguments_variation_position_coordinate_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKFontVariationDesignPositionCoordinate : IEquatable<SKFontVariationDesignPositionCoordinate> {
-		// public uint32_t axis
-		private UInt32 axis;
-		public UInt32 Axis {
+		// public sk_fourbytetag_t axis
+		private SKFourByteTag axis;
+		public SKFourByteTag Axis {
 			readonly get => axis;
 			set => axis = value;
 		}

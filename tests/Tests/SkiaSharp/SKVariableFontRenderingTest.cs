@@ -229,7 +229,7 @@ public class SKVariableFontRenderingTest : SKTest
 
 		// Attempting to clone a static font with variation should return something usable
 		var position = new[] {
-			new SKFontVariationDesignPositionCoordinate { Axis = 0x77676874 /* wght */, Value = 700 }
+			new SKFontVariationDesignPositionCoordinate { Axis = SKFourByteTag.Parse ("wght"), Value = 700 }
 		};
 		using var cloned = staticTypeface.Clone (position);
 
