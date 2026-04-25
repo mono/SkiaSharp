@@ -27,7 +27,7 @@ namespace HarfBuzzSharp.Tests
 		public void CanGetVariationAxisInfos ()
 		{
 			using var face = CreateVariableFace ();
-			var axes = face.GetVariationAxisInfos ();
+			var axes = face.VariationAxisInfos;
 			Assert.NotEmpty (axes);
 
 			// Distortable.ttf should have at least one axis
@@ -48,7 +48,7 @@ namespace HarfBuzzSharp.Tests
 		public void TryFindVariationAxisReturnsTrueForExistingAxis ()
 		{
 			using var face = CreateVariableFace ();
-			var axes = face.GetVariationAxisInfos ();
+			var axes = face.VariationAxisInfos;
 			Assert.NotEmpty (axes);
 
 			Tag axisTag = axes[0].Tag;
@@ -72,7 +72,7 @@ namespace HarfBuzzSharp.Tests
 		public void VariationAxisCountMatchesArrayLength ()
 		{
 			using var face = CreateVariableFace ();
-			var axes = face.GetVariationAxisInfos ();
+			var axes = face.VariationAxisInfos;
 			Assert.Equal (face.VariationAxisCount, axes.Length);
 		}
 
@@ -80,7 +80,7 @@ namespace HarfBuzzSharp.Tests
 		public void SpanGetVariationAxisInfosMatchesArrayVersion ()
 		{
 			using var face = CreateVariableFace ();
-			var arrayResult = face.GetVariationAxisInfos ();
+			var arrayResult = face.VariationAxisInfos;
 			Assert.NotEmpty (arrayResult);
 
 			var spanBuffer = new OpenTypeVarAxisInfo[face.VariationAxisCount];

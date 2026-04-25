@@ -25,7 +25,7 @@ namespace HarfBuzzSharp.Tests
 			var (face, font) = CreateVariableFontPair ();
 			using (face)
 			using (font) {
-				var axes = face.GetVariationAxisInfos ();
+				var axes = face.VariationAxisInfos;
 				Assert.NotEmpty (axes);
 
 				var variations = new Variation[] {
@@ -41,7 +41,7 @@ namespace HarfBuzzSharp.Tests
 			var (face, font) = CreateVariableFontPair ();
 			using (face)
 			using (font) {
-				var axes = face.GetVariationAxisInfos ();
+				var axes = face.VariationAxisInfos;
 				if (axes.Length < 1) return;
 
 				// Set all axes to their min values
@@ -63,7 +63,7 @@ namespace HarfBuzzSharp.Tests
 				Assert.True (axisCount > 0);
 
 				var coords = new float[axisCount];
-				var axes = face.GetVariationAxisInfos ();
+				var axes = face.VariationAxisInfos;
 				for (int i = 0; i < axisCount; i++)
 					coords[i] = axes[i].DefaultValue;
 
@@ -168,7 +168,7 @@ namespace HarfBuzzSharp.Tests
 			var (face, font) = CreateVariableFontPair ();
 			using (face)
 			using (font) {
-				var axes = face.GetVariationAxisInfos ();
+				var axes = face.VariationAxisInfos;
 				Assert.NotEmpty (axes);
 
 				// Set design coords to min value

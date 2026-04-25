@@ -92,17 +92,19 @@ namespace HarfBuzzSharp
 		public int VariationAxisCount =>
 			(int)HarfBuzzApi.hb_ot_var_get_axis_count (Handle);
 
-		public OpenTypeVarAxisInfo[] GetVariationAxisInfos ()
+		public OpenTypeVarAxisInfo[] VariationAxisInfos
 		{
-			var count = HarfBuzzApi.hb_ot_var_get_axis_count (Handle);
-			if (count == 0)
-				return Array.Empty<OpenTypeVarAxisInfo> ();
+			get {
+				var count = HarfBuzzApi.hb_ot_var_get_axis_count (Handle);
+				if (count == 0)
+					return Array.Empty<OpenTypeVarAxisInfo> ();
 
-			var axes = new OpenTypeVarAxisInfo[(int)count];
-			fixed (OpenTypeVarAxisInfo* ptr = axes) {
-				HarfBuzzApi.hb_ot_var_get_axis_infos (Handle, 0, &count, ptr);
+				var axes = new OpenTypeVarAxisInfo[(int)count];
+				fixed (OpenTypeVarAxisInfo* ptr = axes) {
+					HarfBuzzApi.hb_ot_var_get_axis_infos (Handle, 0, &count, ptr);
+				}
+				return axes;
 			}
-			return axes;
 		}
 
 		public int GetVariationAxisInfos (Span<OpenTypeVarAxisInfo> axes)
