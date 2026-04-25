@@ -64,19 +64,3 @@ public struct SKFourByteTag : IEquatable<SKFourByteTag>
 
 	public static bool operator != (SKFourByteTag left, SKFourByteTag right) => !left.Equals (right);
 }
-
-public unsafe partial struct SKFontVariationAxis
-{
-	/// <summary>
-	/// Gets the four-character OpenType tag name for this axis (e.g. "wght", "wdth", "slnt").
-	/// </summary>
-	public readonly string TagName => ((SKFourByteTag)Tag).ToString ();
-}
-
-public unsafe partial struct SKFontVariationDesignPositionCoordinate
-{
-	/// <summary>
-	/// Gets the four-character OpenType tag name for this axis (e.g. "wght", "wdth", "slnt").
-	/// </summary>
-	public readonly string TagName => ((SKFourByteTag)Axis).ToString ();
-}
