@@ -240,6 +240,7 @@ At minimum, validate:
 ### Phase 7: Generate Structured JSON Report
 
 Produce a JSON report following the schema in [references/report-schema.md](references/report-schema.md).
+The formal JSON Schema is at [references/feature-scout-schema.json](references/feature-scout-schema.json).
 Save to the artifacts directory as `skia-feature-scout-YYYY-MM-DD.json`.
 
 The JSON must include:
@@ -257,7 +258,20 @@ The JSON must include:
   - `skillToUse` — which SkiaSharp skill to invoke (`add-api`, `issue-fix`, `update-skia`, etc.)
   - `effort` — estimated effort (`trivial`, `small`, `medium`, `large`)
 
-### Phase 8: Render HTML Report
+### Phase 8: Validate JSON Report
+
+> 🛑 **MANDATORY:** Always validate before rendering.
+
+```bash
+pip3 install -r .agents/skills/skia-feature-scout/scripts/requirements.txt --quiet
+python3 .agents/skills/skia-feature-scout/scripts/validate-feature-scout.py \
+  <path-to-json>
+```
+
+Exit codes: 0=valid, 1=fixable (regenerate), 2=fatal. If validation fails, fix the JSON and
+re-validate before proceeding.
+
+### Phase 9: Render HTML Report
 
 Run the render script to produce a self-contained HTML dashboard:
 
@@ -268,7 +282,7 @@ python3 .agents/skills/skia-feature-scout/scripts/render-feature-scout.py \
 
 This produces a filterable, interactive HTML report. Present the output path to the user.
 
-### Phase 9: Generate Markdown Summary
+### Phase 10: Generate Markdown Summary
 
 Present a concise markdown summary in the conversation. Group items by urgency:
 
@@ -287,7 +301,7 @@ Include sections for:
 - **Deprecation Watch** — with concrete `[Obsolete]` messages
 - **Recommended Action Plan** — ordered by priority, with skill routing
 
-### Phase 10: Offer Next Steps
+### Phase 11: Offer Next Steps
 
 After presenting the report, offer:
 1. "Want me to investigate any of these features in more detail?"

@@ -1,0 +1,91 @@
+{
+  "skill_name": "skia-feature-scout",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What cool new features has Google added to Skia that we're missing in SkiaSharp? We're on milestone 133.",
+      "expected_output": "Full scan report covering M79-M148. Should find SkMesh, gradient interpolation, SkImageFilters::RuntimeShader, HDR metadata, SkPath immutability, and other high-value gaps. Should produce JSON + HTML + markdown summary.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-feature-scout.py (exit 0)",
+        "Produces an HTML viewer file",
+        "JSON meta.mode is 'full'",
+        "JSON meta.currentMilestone is 133",
+        "JSON items array contains at least 20 features",
+        "At least one item has name containing 'Mesh' or 'SkMesh' with bindingStatus 'missing' and priority 'high'",
+        "At least one item mentions gradient interpolation or color space interpolation with priority 'high'",
+        "At least one item mentions SkPath immutability or SkPathBuilder with priority 'critical' or 'high'",
+        "At least one item mentions RuntimeShader in image filters with bindingStatus 'missing'",
+        "Items with bindingStatus 'full' have cApiStatus 'present' and csharpStatus 'present'",
+        "JSON summary.totalItems equals the actual length of the items array",
+        "JSON nextSteps array is non-empty and first item has severity 'critical' or 'high'",
+        "nextSteps include at least one entry with skillToUse field",
+        "Markdown summary includes a 'Before vs After' or timeline section splitting features by milestone",
+        "Markdown summary includes a 'Quick Wins' section for partial-status items"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm about to bump Skia from m132 to m133. Can you scout the release notes and tell me what changed in this window?",
+      "expected_output": "Windowed scan for m132→m133. Should find SkColorSpace::MakeCICP as the key new feature (already bound). Should flag GPU timing and canvas save prealloc. Much smaller item count than full scan.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-feature-scout.py (exit 0)",
+        "Produces an HTML viewer file",
+        "JSON meta.mode is 'windowed'",
+        "JSON meta.previousMilestone is 132",
+        "JSON meta.currentMilestone is 133",
+        "JSON items array has at least 3 items",
+        "At least one item mentions MakeCICP or CICP with bindingStatus 'full'",
+        "JSON summary counts are internally consistent (totalItems = sum of status counts)",
+        "Items are scoped to the m132-m133 window (milestoneIntroduced between 132 and 133 inclusive, or slightly wider for context)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "scout for new Skia features — especially anything related to HDR, color management, or image formats we should support",
+      "expected_output": "Full scan with emphasis on HDR/color/codec features. Should prominently feature skhdr::Metadata, skhdr::Agtm, CICP color spaces, AVIF, JPEG XL, new color types (R16), and gradient interpolation color spaces.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-feature-scout.py (exit 0)",
+        "At least one item mentions HDR metadata or skhdr::Metadata",
+        "At least one item mentions AGTM or Adaptive Global Tone Mapping",
+        "At least one item mentions AVIF with category 'codec'",
+        "At least one item mentions CICP or MakeCICP",
+        "At least one item mentions R16 or kR16 color type",
+        "At least one item mentions gradient interpolation color spaces",
+        "Items related to HDR/color have priority 'high' or 'medium' (not 'low')",
+        "Markdown summary highlights HDR and color features prominently"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "check what new Skia APIs we might be missing — also look at the C++ headers for SkImage and SkCanvas to see if there are hidden methods we haven't wrapped",
+      "expected_output": "Full scan plus C++ header discovery phase. Should find release-notes features AND discover hidden methods from upstream headers not in the C API. hiddenApis array should be non-empty.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-feature-scout.py (exit 0)",
+        "JSON hiddenApis array has at least 1 entry",
+        "Hidden API entries have cppClass field mentioning 'SkImage' or 'SkCanvas'",
+        "Hidden API entries have cppHeader field pointing to an include/ path",
+        "JSON summary.hiddenApiCount matches the length of hiddenApis array",
+        "Regular items array also present with release-notes-based features",
+        "Markdown summary includes a 'Hidden APIs' section"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "what performance improvements has Skia made recently that would benefit our users?",
+      "expected_output": "Should identify performance-related items from release notes. Should include Perlin noise raster improvement (M124), any codec decode optimizations, GPU backend performance changes. Performance array in JSON should be populated.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-feature-scout.py (exit 0)",
+        "JSON performance array has at least 1 entry",
+        "At least one performance entry mentions Perlin noise or noise shader improvement",
+        "Performance entries have bindingActionNeeded boolean field",
+        "JSON summary.performanceCount matches the length of performance array",
+        "Markdown summary includes a performance or optimization section"
+      ]
+    }
+  ]
+}
