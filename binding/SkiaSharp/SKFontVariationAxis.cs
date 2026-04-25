@@ -5,32 +5,64 @@ using System;
 namespace SkiaSharp;
 
 /// <summary>
-/// Utility class for creating OpenType tag values from four-character strings.
+/// Represents a four-byte tag value used throughout Skia for identifying font tables,
+/// variation axes, and other OpenType constructs. Wraps Skia's SkFourByteTag (uint32_t).
 /// </summary>
-public static class SKFontVariationTag
+public struct SKFourByteTag : IEquatable<SKFourByteTag>
 {
-	/// <summary>
-	/// Creates an OpenType tag from a four-character string (e.g. "wght", "wdth", "slnt").
-	/// </summary>
-	public static uint Make (string tag)
-	{
-		if (tag == null)
-			throw new ArgumentNullException (nameof (tag));
-		if (tag.Length != 4)
-			throw new ArgumentException ("Tag must be exactly 4 characters.", nameof (tag));
+	private readonly uint value;
 
-		return ((uint)tag[0] << 24) | ((uint)tag[1] << 16) | ((uint)tag[2] << 8) | tag[3];
+	public SKFourByteTag (uint value)
+	{
+		this.value = value;
+	}
+
+	public SKFourByteTag (char c1, char c2, char c3, char c4)
+	{
+		value = (uint)(((byte)c1 << 24) | ((byte)c2 << 16) | ((byte)c3 << 8) | (byte)c4);
 	}
 
 	/// <summary>
-	/// Converts an OpenType tag value to its four-character string representation.
+	/// Creates a tag from a four-character string (e.g. "wght", "wdth", "slnt").
+	/// Strings shorter than 4 characters are padded with spaces.
 	/// </summary>
-	public static string GetName (uint tag) => new string (new[] {
-		(char)((tag >> 24) & 0xFF),
-		(char)((tag >> 16) & 0xFF),
-		(char)((tag >> 8) & 0xFF),
-		(char)(tag & 0xFF),
-	});
+	public static SKFourByteTag Parse (string tag)
+	{
+		if (string.IsNullOrEmpty (tag))
+			return new SKFourByteTag (0);
+
+		var realTag = new char[4];
+		var len = Math.Min (4, tag.Length);
+		var i = 0;
+		for (; i < len; i++)
+			realTag[i] = tag[i];
+		for (; i < 4; i++)
+			realTag[i] = ' ';
+
+		return new SKFourByteTag (realTag[0], realTag[1], realTag[2], realTag[3]);
+	}
+
+	public override string ToString () =>
+		string.Concat (
+			(char)(byte)(value >> 24),
+			(char)(byte)(value >> 16),
+			(char)(byte)(value >> 8),
+			(char)(byte)value);
+
+	public static implicit operator uint (SKFourByteTag tag) => tag.value;
+
+	public static implicit operator SKFourByteTag (uint tag) => new SKFourByteTag (tag);
+
+	public override bool Equals (object obj) =>
+		obj is SKFourByteTag tag && value.Equals (tag.value);
+
+	public bool Equals (SKFourByteTag other) => value == other.value;
+
+	public override int GetHashCode () => (int)value;
+
+	public static bool operator == (SKFourByteTag left, SKFourByteTag right) => left.Equals (right);
+
+	public static bool operator != (SKFourByteTag left, SKFourByteTag right) => !left.Equals (right);
 }
 
 public unsafe partial struct SKFontVariationAxis
@@ -38,7 +70,7 @@ public unsafe partial struct SKFontVariationAxis
 	/// <summary>
 	/// Gets the four-character OpenType tag name for this axis (e.g. "wght", "wdth", "slnt").
 	/// </summary>
-	public readonly string TagName => SKFontVariationTag.GetName (Tag);
+	public readonly string TagName => ((SKFourByteTag)Tag).ToString ();
 }
 
 public unsafe partial struct SKFontVariationDesignPositionCoordinate
@@ -46,5 +78,5 @@ public unsafe partial struct SKFontVariationDesignPositionCoordinate
 	/// <summary>
 	/// Gets the four-character OpenType tag name for this axis (e.g. "wght", "wdth", "slnt").
 	/// </summary>
-	public readonly string TagName => SKFontVariationTag.GetName (Axis);
+	public readonly string TagName => ((SKFourByteTag)Axis).ToString ();
 }
