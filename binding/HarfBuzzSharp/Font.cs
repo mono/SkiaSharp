@@ -300,34 +300,49 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public void SetVarCoordsDesign (ReadOnlySpan<float> coords)
+		public void SetVariationCoordsDesign (ReadOnlySpan<float> coords)
 		{
 			fixed (float* ptr = coords) {
 				HarfBuzzApi.hb_font_set_var_coords_design (Handle, ptr, (uint)coords.Length);
 			}
 		}
 
-		public void SetVarCoordsNormalized (ReadOnlySpan<int> coords)
+		public void SetVariationCoordsNormalized (ReadOnlySpan<int> coords)
 		{
 			fixed (int* ptr = coords) {
 				HarfBuzzApi.hb_font_set_var_coords_normalized (Handle, ptr, (uint)coords.Length);
 			}
 		}
 
-		public int[] GetVarCoordsNormalized ()
+		public int[] VariationCoordsNormalized
+		{
+			get {
+				uint length;
+				var ptr = HarfBuzzApi.hb_font_get_var_coords_normalized (Handle, &length);
+				if (length == 0 || ptr == null)
+					return Array.Empty<int> ();
+
+				var coords = new int[length];
+				for (uint i = 0; i < length; i++)
+					coords[i] = ptr[i];
+				return coords;
+			}
+		}
+
+		public int GetVariationCoordsNormalized (Span<int> coords)
 		{
 			uint length;
 			var ptr = HarfBuzzApi.hb_font_get_var_coords_normalized (Handle, &length);
 			if (length == 0 || ptr == null)
-				return Array.Empty<int> ();
+				return 0;
 
-			var coords = new int[length];
-			for (uint i = 0; i < length; i++)
+			var count = Math.Min ((int)length, coords.Length);
+			for (int i = 0; i < count; i++)
 				coords[i] = ptr[i];
-			return coords;
+			return (int)length;
 		}
 
-		public void SetVarNamedInstance (int instanceIndex)
+		public void SetVariationNamedInstance (int instanceIndex)
 		{
 			if (instanceIndex < 0)
 				throw new ArgumentOutOfRangeException (nameof (instanceIndex));

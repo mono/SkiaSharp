@@ -20,7 +20,7 @@ namespace HarfBuzzSharp.Tests
 		public void CanGetVariationAxisCount ()
 		{
 			using var face = CreateVariableFace ();
-			Assert.True (face.GetVariationAxisCount () > 0);
+			Assert.True (face.VariationAxisCount > 0);
 		}
 
 		[SkippableFact]
@@ -41,7 +41,7 @@ namespace HarfBuzzSharp.Tests
 		public void VariationAxisCountIsZeroForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
-			Assert.Equal (0, face.GetVariationAxisCount ());
+			Assert.Equal (0, face.VariationAxisCount);
 		}
 
 		[SkippableFact]
@@ -69,10 +69,29 @@ namespace HarfBuzzSharp.Tests
 		// US3: Named Instances
 
 		[SkippableFact]
+		public void SpanGetVariationAxisInfosMatchesArrayVersion ()
+		{
+			using var face = CreateVariableFace ();
+			var arrayResult = face.GetVariationAxisInfos ();
+			Assert.NotEmpty (arrayResult);
+
+			var spanBuffer = new OpenTypeVarAxisInfo[face.VariationAxisCount];
+			var written = face.GetVariationAxisInfos (spanBuffer);
+			Assert.Equal (arrayResult.Length, written);
+
+			for (int i = 0; i < arrayResult.Length; i++) {
+				Assert.Equal (arrayResult[i].Tag, spanBuffer[i].Tag);
+				Assert.Equal (arrayResult[i].MinValue, spanBuffer[i].MinValue);
+				Assert.Equal (arrayResult[i].DefaultValue, spanBuffer[i].DefaultValue);
+				Assert.Equal (arrayResult[i].MaxValue, spanBuffer[i].MaxValue);
+			}
+		}
+
+		[SkippableFact]
 		public void CanGetNamedInstanceCount ()
 		{
 			using var face = CreateVariableFace ();
-			var count = face.GetNamedInstanceCount ();
+			var count = face.NamedInstanceCount;
 			// Distortable.ttf may or may not have named instances, but the call should not throw
 			Assert.True (count >= 0);
 		}
@@ -81,7 +100,7 @@ namespace HarfBuzzSharp.Tests
 		public void CanGetNamedInstanceDesignCoords ()
 		{
 			using var face = CreateVariableFace ();
-			var count = face.GetNamedInstanceCount ();
+			var count = face.NamedInstanceCount;
 			if (count == 0)
 				return; // Font has no named instances, skip
 
@@ -90,10 +109,40 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CanGetNamedInstanceDesignCoordsCount ()
+		{
+			using var face = CreateVariableFace ();
+			var count = face.NamedInstanceCount;
+			if (count == 0)
+				return;
+
+			var coordsCount = face.GetNamedInstanceDesignCoordsCount (0);
+			var coords = face.GetNamedInstanceDesignCoords (0);
+			Assert.Equal (coords.Length, coordsCount);
+		}
+
+		[SkippableFact]
+		public void SpanGetNamedInstanceDesignCoordsMatchesArrayVersion ()
+		{
+			using var face = CreateVariableFace ();
+			var count = face.NamedInstanceCount;
+			if (count == 0)
+				return;
+
+			var arrayResult = face.GetNamedInstanceDesignCoords (0);
+			var spanBuffer = new float[face.GetNamedInstanceDesignCoordsCount (0)];
+			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
+			Assert.Equal (arrayResult.Length, written);
+
+			for (int i = 0; i < arrayResult.Length; i++)
+				Assert.Equal (arrayResult[i], spanBuffer[i]);
+		}
+
+		[SkippableFact]
 		public void NamedInstanceCountIsZeroForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
-			Assert.Equal (0, face.GetNamedInstanceCount ());
+			Assert.Equal (0, face.NamedInstanceCount);
 		}
 
 		[SkippableFact]
