@@ -59,6 +59,8 @@
     .group-header{font-weight:700;font-size:.82rem;padding:8px 12px 4px;color:#1e40af;border-bottom:2px solid #dbeafe;margin-top:12px;background:#f8faff;}
     .meta-footer{font-size:.72rem;color:var(--muted);margin-top:16px;padding:8px 12px;}
     .meta-footer a{color:#3730a3;}
+    .dir-btn{font-size:.8rem;width:26px;height:26px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:#1e40af;font-weight:700;padding:0;line-height:26px;text-align:center;}
+    .dir-btn:hover{background:#f0f4f8;}
   </style>
 </head>
 <body>
@@ -101,15 +103,17 @@
           <option value="milestone">Milestone</option>
           <option value="source">Source</option>
         </select>
+        <button class="dir-btn" id="group-dir" onclick="toggleDir('group-dir');rebuildList()" title="Toggle group order">▼</button>
+        <span style="width:16px"></span>
         <span class="filter-label" style="width:55px">Sort by:</span>
         <select class="ctrl-select" id="sort-by" onchange="rebuildList()">
           <option value="priority">Priority</option>
-          <option value="milestone-desc">Milestone (newest)</option>
-          <option value="milestone-asc">Milestone (oldest)</option>
+          <option value="milestone">Milestone</option>
           <option value="name">Name</option>
           <option value="status">Status</option>
           <option value="category">Category</option>
         </select>
+        <button class="dir-btn" id="sort-dir" onclick="toggleDir('sort-dir');rebuildList()" title="Toggle sort order">▼</button>
       </div>
     </div>
     <div class="text-muted d-flex justify-content-between" style="font-size:.72rem;padding:0 12px 4px">
@@ -148,17 +152,19 @@ let fF={priority:new Set(),status:new Set(),category:new Set(),label:new Set()};
 let nF={severity:new Set(),effort:new Set(),skill:new Set()};
 let sT='',nsT='',msMin=0,msMax=999;
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function toggleDir(id){const b=document.getElementById(id);b.textContent=b.textContent==='▼'?'▲':'▼';}
+function getDir(id){return document.getElementById(id).textContent==='▲'?-1:1;}
 function switchTab(t){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');}
 function tF(scope,type,val){const f=scope==='findings'?fF:nF;f[type].has(val)?f[type].delete(val):f[type].add(val);scope==='findings'?applyAndRebuild():aNF();}
 function resetFilters(scope){if(scope==='findings'){Object.values(fF).forEach(s=>s.clear());sT='';msMin=0;msMax=999;document.getElementById('search').value='';document.getElementById('ms-min').value='';document.getElementById('ms-max').value='';applyAndRebuild();}else{Object.values(nF).forEach(s=>s.clear());nsT='';document.getElementById('ns-search').value='';aNF();}}
 function updateMsFilter(){msMin=parseInt(document.getElementById('ms-min').value)||0;msMax=parseInt(document.getElementById('ms-max').value)||999;applyAndRebuild();}
 function passesFilter(f){if(fF.priority.size&&!fF.priority.has(f.priority))return false;if(fF.status.size&&!fF.status.has(f.bindingStatus))return false;if(fF.category.size&&!fF.category.has(f.category))return false;if(fF.label.size&&!(f.labels||[]).some(l=>fF.label.has(l)))return false;if(sT&&!JSON.stringify(f).toLowerCase().includes(sT))return false;const m=f.milestone||0;if(m&&(m<msMin||m>msMax))return false;return true;}
-function sortFindings(arr){const s=document.getElementById('sort-by').value;return[...arr].sort((a,b)=>{switch(s){case'priority':return(PO[a.priority]??4)-(PO[b.priority]??4)||(b.milestone||0)-(a.milestone||0);case'milestone-desc':return(b.milestone||0)-(a.milestone||0);case'milestone-asc':return(a.milestone||0)-(b.milestone||0);case'name':return(a.name||'').localeCompare(b.name||'');case'status':return(SO[a.bindingStatus]??9)-(SO[b.bindingStatus]??9);case'category':return(a.category||'').localeCompare(b.category||'');default:return 0;}});}
+function sortFindings(arr){const s=document.getElementById('sort-by').value;const dir=getDir('sort-dir');return[...arr].sort((a,b)=>{let r=0;switch(s){case'priority':r=(PO[a.priority]??4)-(PO[b.priority]??4);if(r===0)r=(b.milestone||0)-(a.milestone||0);break;case'milestone':r=(a.milestone||0)-(b.milestone||0);break;case'name':r=(a.name||'').localeCompare(b.name||'');break;case'status':r=(SO[a.bindingStatus]??9)-(SO[b.bindingStatus]??9);break;case'category':r=(a.category||'').localeCompare(b.category||'');break;}return r*dir;});}
 function groupKey(f){const g=document.getElementById('group-by').value;switch(g){case'priority':return f.priority;case'bindingStatus':return f.bindingStatus;case'category':return f.category;case'milestone':return f.milestone?'m'+f.milestone:'Unknown';case'source':return f.source||'unknown';default:return null;}}
 function groupLabel(key,by){switch(by){case'priority':return key.charAt(0).toUpperCase()+key.slice(1);case'bindingStatus':return SL[key]||key;case'category':return CL[key]||key;default:return key;}}
 function applyAndRebuild(){rebuildList();document.querySelectorAll('#tab-findings .pill[data-filter]').forEach(p=>{const[t,v]=p.dataset.filter.split(':');p.classList.toggle('dim',fF[t]?.size>0&&!fF[t].has(v));});}
 function rebuildList(){const filtered=DATA.findings.filter(passesFilter);const sorted=sortFindings(filtered);document.getElementById('filter-count').textContent=`Showing ${filtered.length} of ${DATA.findings.length}`;const by=document.getElementById('group-by').value;const el=document.getElementById('list');if(by==='none'){el.innerHTML=sorted.map(renderRow).join('');return;}
-const groups={};sorted.forEach(f=>{const k=groupKey(f);if(!groups[k])groups[k]=[];groups[k].push(f);});const gOrder=Object.keys(groups);if(by==='priority')gOrder.sort((a,b)=>(PO[a]??9)-(PO[b]??9));else if(by==='bindingStatus')gOrder.sort((a,b)=>(SO[a]??9)-(SO[b]??9));else if(by==='milestone')gOrder.sort((a,b)=>{const na=parseInt(a.replace('m',''))||0,nb=parseInt(b.replace('m',''))||0;return nb-na;});else gOrder.sort();
+const groups={};sorted.forEach(f=>{const k=groupKey(f);if(!groups[k])groups[k]=[];groups[k].push(f);});const gOrder=Object.keys(groups);const gDir=getDir('group-dir');if(by==='priority')gOrder.sort((a,b)=>((PO[a]??9)-(PO[b]??9))*gDir);else if(by==='bindingStatus')gOrder.sort((a,b)=>((SO[a]??9)-(SO[b]??9))*gDir);else if(by==='milestone')gOrder.sort((a,b)=>{const na=parseInt(a.replace('m',''))||0,nb=parseInt(b.replace('m',''))||0;return(na-nb)*gDir;});else gOrder.sort((a,b)=>a.localeCompare(b)*gDir);
 el.innerHTML=gOrder.map(k=>`<div class="group-header">${groupLabel(k,by)} <span class="count-badge">${groups[k].length}</span></div>`+groups[k].map(renderRow).join('')).join('');}
 function aNF(){let n=0;document.querySelectorAll('.ns-item').forEach(el=>{const d=JSON.parse(el.dataset.step);let v=true;if(nF.severity.size&&!nF.severity.has(d.severity))v=false;if(nF.effort.size&&!nF.effort.has(d.effort))v=false;if(nF.skill.size&&!nF.skill.has(d.skillToUse))v=false;if(nsT&&!JSON.stringify(d).toLowerCase().includes(nsT))v=false;el.style.display=v?'':'none';if(v)n++;});document.getElementById('ns-filter-count').textContent=`Showing ${n} of ${(DATA.nextSteps||[]).length}`;document.querySelectorAll('#tab-nextsteps .pill[data-filter]').forEach(p=>{const[t,v]=p.dataset.filter.split(':');p.classList.toggle('dim',nF[t]?.size>0&&!nF[t].has(v));});}
 function renderSummary(s){document.getElementById('summary-bar').innerHTML=[['Total',s.totalFindings||0,'#1f2328'],['Missing',s.byStatus?.missing||0,'#991b1b'],['Partial',s.byStatus?.partial||0,'#92400e'],['Full',s.byStatus?.full||0,'#166534'],['Action',s.byStatus?.action_needed||0,'#9d174d'],['Hidden',s.bySource?.['header-scan']||0,'#5b21b6']].map(([l,n,c])=>`<div class="text-center"><div class="summary-num" style="color:${c}">${n}</div><div class="summary-label">${l}</div></div>`).join('');}
