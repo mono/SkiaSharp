@@ -85,6 +85,7 @@ Look for:
 | `removed` | Public API or feature removed |
 | `dependency` | Third-party library version bumped |
 | `platform` | New platform/arch support, build flag changes, security hardening |
+| `upstream` | Benefit from Skia engine upgrade — perf, rendering quality, codec improvement, reliability |
 
 ### importance
 
@@ -107,11 +108,48 @@ Apply these freeform labels where relevant:
 
 ---
 
+## Part 3: Extracting Upstream Skia Benefits
+
+When a Skia milestone bump is part of the diff, read Skia's RELEASE_NOTES.md for the milestone
+range and extract "invisible benefits" — things users get automatically from the engine upgrade
+without any SkiaSharp API changes.
+
+**Categories to look for:**
+
+| Category | What to extract | Example |
+|----------|----------------|---------|
+| **Rendering quality** | Better visual output from the same API calls | "Perlin noise shaders now properly rotate when transformed" (m124) |
+| **Performance** | Faster rendering, lower memory usage | "Raster performance of Perlin noise significantly improved" (m124), "Canvas save/restore preallocation tunable" (m133) |
+| **Color accuracy** | More correct color handling | "kRec709 transfer function corrected to match BT.1886 pure gamma 2.4" (m142) |
+| **Codec improvements** | Better image decode/encode | "HDR metadata support in PNG" (m142), "MaxDecodeMemory protection" (m145) |
+| **Reliability** | Crash fixes, error handling | "Vulkan device-lost callback" (m123), "SkSL reserved keyword rejection" (m128) |
+| **HDR pipeline** | End-to-end HDR improvements | "skhdr::Metadata" (m142), "AGTM tone mapping" (m145) |
+
+**What to SKIP:**
+- New Skia APIs that SkiaSharp already wraps (those appear as `added` findings from the API diff)
+- Graphite-only changes (SkiaSharp uses Ganesh/GL/Metal/Vulkan)
+- Dawn backend changes
+- Internal header reorganization
+- Build system (GN flags, defines)
+- Changes to APIs SkiaSharp doesn't expose
+
+**How to write upstream findings:**
+- `changeType`: always `"upstream"`
+- `importance`: usually `"minor"` unless it's a behavior change that could affect output (`"major"`)
+- `labels`: always include `"skia-upstream"`, add `"performance"` for perf items
+- `skiaMilestone`: the milestone where the improvement was introduced
+- `skiaFeature`: the upstream Skia API or feature name
+- `description`: Focus on USER VALUE. Don't say "Skia changed X". Say "Apps that use X will
+  see Y improvement. No code changes needed."
+- `slideBullet`: Include for items that are exciting enough for a conference slide
+
+---
+
 ## Part 3: Writing Marketing Slide Bullets
 
 Each finding that's `major` importance or higher should have a `slideBullet` field. Guidelines:
 
-- Start with a thematic emoji (🎨🖼️⚡🔒🌐🔧🐛📦)
+- Start with a thematic emoji (🎨🖼️⚡🔒🌐🔧🐛📦🚀)
 - **Bold** the feature name (max 5 words)
 - Follow with a dash and one sentence of user value (max 20 words)
 - Focus on what the user gains, not what we did internally

@@ -145,19 +145,55 @@ THEN:
 Save findings as JSON to /tmp/release-notes-build-changes.json
 ```
 
-### Phase 3: Cross-Reference with Skia Milestones
+### Phase 3: Extract Skia Upstream Benefits
+
+This phase is **critical** whenever the Skia submodule was bumped. A Skia milestone bump is often
+the most valuable part of a release — even when SkiaSharp adds zero new APIs, the engine upgrade
+delivers rendering improvements, codec fixes, performance wins, and reliability gains that users
+get automatically.
+
+**The key insight:** SkiaSharp controls the *API surface*. Skia controls the *engine*. When Skia
+improves gradient rendering, fixes a PNG decoder bug, or optimizes path rasterization, SkiaSharp
+users benefit without any managed code changes. These "invisible benefits" are the main reason to
+bump Skia, and they deserve prominent placement in release notes.
 
 If the Skia submodule was bumped between the two refs:
 
-1. Identify the old and new Skia commit SHAs from the submodule diff
-2. Check if the milestone changed (SkMilestone.h)
-3. If milestones differ, fetch Skia's RELEASE_NOTES.md and extract features for the
-   milestone range:
+1. Identify the old and new Skia milestone numbers from commit messages or SkMilestone.h
+2. Fetch Skia's RELEASE_NOTES.md:
    ```
    https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md
    ```
-4. For each Skia feature that landed, explain **why it matters to SkiaSharp users** —
-   don't just list the Skia change, connect it to user value
+3. Read **every milestone** in the range (e.g., m120 through m133)
+4. For each milestone, extract items in these categories — these are the things users get
+   "for free" from the engine upgrade:
+
+**What to look for (and examples from real Skia release notes):**
+
+| Category | What it means for users | Examples |
+|----------|------------------------|----------|
+| **Rendering quality** | Visual output is better | Perlin noise now rotates properly (m124), mipmap sharpening on by default (m131), gradient interpolation with wide-gamut color spaces like P3/Rec2020 (m134) |
+| **Color accuracy** | Colors are more correct | kRec709 transfer function corrected to BT.1886 (m142), kHLG/kPQ use new skcms representations (m141) |
+| **Codec/format improvements** | Image decode/encode is better | Rust PNG encoder/decoder promoted to official API (m142), HDR metadata in PNG (m142), hasHighBitDepthEncodedData (m132), MaxDecodeMemory protection (m145), Exif orientation respected in getImage (m123) |
+| **Performance** | Faster rendering or lower memory | Perlin noise raster perf "significantly improved" (m124), canvas save/restore preallocation tuning (m133), pipeline precompilation improvements (m133-135) |
+| **Reliability/safety** | Fewer crashes, better error handling | Vulkan device-lost callback (m123), SkSL reserved keyword rejection (m128), codec memory limit protection (m145) |
+| **HDR pipeline** | Better HDR support end-to-end | skhdr::Metadata (m142), AGTM tone mapping (m145), HDR PNG metadata (m142), CICP color spaces (m133) |
+
+**What to skip:**
+- API additions that SkiaSharp already exposes (those are in the API diff findings)
+- Graphite-only changes (SkiaSharp uses Ganesh)
+- Dawn backend changes
+- Internal refactoring (header moves, GN flag changes)
+- Build system changes
+
+5. For each extracted benefit, create a finding with `changeType: "upstream"` and connect
+   it to user value — don't say "Skia changed kRec709", say "Colors using the Rec.709
+   transfer function are now more accurate, matching the BT.1886 standard. Apps displaying
+   video-sourced content may see subtle color improvements."
+
+6. Separate the "upstream" findings clearly — these go in their own section in both the
+   slides and changelog. The narrative is: "By upgrading to Skia m133, you automatically
+   get these improvements without changing any code."
 
 ### Phase 4: Synthesize
 
@@ -173,6 +209,7 @@ Merge findings from all three agents into a unified findings list. This is the q
    - `removed` — removed APIs or features
    - `dependency` — dependency version bumps
    - `platform` — new platform support, build flag changes
+   - `upstream` — benefit from Skia engine upgrade (perf, quality, codec, reliability)
 3. **Assign importance**: `breaking`, `major`, `minor`, `patch`
    - `breaking` — removed APIs, changed signatures, behavior changes that affect existing code
    - `major` — new APIs, significant new capabilities
@@ -276,6 +313,7 @@ Group by themes like:
 - 🔒 Security
 - 🌐 Platform Support
 - 🔧 Developer Experience
+- 🚀 Engine Improvements (what you get from the Skia upgrade, no code changes needed)
 
 ## Changelog Writing Guidelines
 
@@ -291,7 +329,8 @@ Ordering within the changelog:
 3. 🐛 Bug Fixes
 4. ⚡ Performance
 5. 🔒 Security
-6. ⚠️ Deprecations
-7. 📦 Dependencies
-8. 🌐 Platform Changes
-9. 📝 Other
+6. 🚀 Engine Improvements (upstream Skia benefits — rendering, codecs, color, reliability)
+7. ⚠️ Deprecations
+8. 📦 Dependencies
+9. 🌐 Platform Changes
+10. 📝 Other

@@ -193,6 +193,36 @@ Every finding (new API, bug fix, dependency bump, etc.) in one array with the sa
 }
 ```
 
+### Example: Upstream Engine Benefit
+
+```json
+{
+  "name": "Perlin noise rendering fixed and significantly faster",
+  "changeType": "upstream",
+  "importance": "minor",
+  "description": "Perlin noise shaders now properly rotate when transformed. Raster surface performance for noise shaders is significantly improved. No API changes needed — users benefit automatically.",
+  "labels": ["skia-upstream", "performance"],
+  "skiaMilestone": 124,
+  "skiaFeature": "Perlin noise rotation fix and raster performance optimization",
+  "slideBullet": "⚡ **Faster Noise Shaders** — Perlin noise renders correctly under rotation and runs significantly faster on CPU"
+}
+```
+
+### Example: Upstream Color Accuracy
+
+```json
+{
+  "name": "Rec.709 transfer function corrected to BT.1886",
+  "changeType": "upstream",
+  "importance": "minor",
+  "description": "The kRec709 transfer function now matches the pure gamma 2.4 definition from ITU-R BT.1886. Apps displaying video-sourced content may see subtle color improvements. This is a silent behavior change — no API change required.",
+  "labels": ["skia-upstream"],
+  "skiaMilestone": 142,
+  "skiaFeature": "SkNamedTransferFn::kRec709 corrected to BT.1886",
+  "notes": "Affects transfer characteristics values 1, 6, 11, 14, and 16."
+}
+```
+
 ## `slides` — Marketing Slides Markdown
 
 Pre-rendered markdown string with themed, emoji-prefixed bullet points suitable for conference
@@ -214,6 +244,7 @@ Breaking Changes always first. Includes PR references and affected APIs.
 | `removed` | Removed API or feature |
 | `dependency` | Dependency version bump |
 | `platform` | New platform support, build flags |
+| `upstream` | Benefit from Skia engine upgrade (perf, quality, codec, reliability) |
 
 ## importance Enum
 
