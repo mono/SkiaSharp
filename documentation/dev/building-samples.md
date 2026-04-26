@@ -44,7 +44,7 @@ After downloading, the extracted nupkgs in `output/nugets/` have real version nu
 
 ```powershell
 # Detect from downloaded packages
-ls output/nugets/SkiaSharp.3*-*.nupkg
+ls output/nugets/SkiaSharp.[0-9]*-*.nupkg
 # → SkiaSharp.3.119.4-preview.0.76.nupkg
 # So: --previewLabel=preview.0 --buildNumber=76
 ```

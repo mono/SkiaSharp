@@ -15,7 +15,7 @@ var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
 var VERIFY_INCLUDED = Argument("verifyIncluded", Argument("verifyincluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-var VERIFY_GLIBC_MAX = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
+var VERIFY_GLIBC_MAX = Argument("verifyGlibcMax", Argument("verifyglibcmax", ""));
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));

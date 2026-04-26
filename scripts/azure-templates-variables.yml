@@ -1,6 +1,9 @@
 variables:
-  SKIASHARP_MAJOR_VERSION: 3
-  SKIASHARP_VERSION: 3.133.0
+  # NOTE: Update this value when bumping the SkiaSharp version.
+  # It must match the SkiaSharp nuget version in scripts/VERSIONS.txt.
+  # SKIASHARP_VERSION is used in the BUILD_NUMBER counter expression below,
+  # which requires a compile-time constant (cannot be derived dynamically).
+  SKIASHARP_VERSION: 4.133.0
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
