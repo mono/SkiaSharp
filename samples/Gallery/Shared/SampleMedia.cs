@@ -33,6 +33,8 @@ public static class SampleMedia
 	public static class Fonts
 	{
 		public static Stream EmbeddedFont => Embedded.Load("embedded-font.ttf");
+		public static Stream InterVariable => Embedded.Load("InterVariable.ttf");
+		public static Stream Nabla => Embedded.Load("Nabla.ttf");
 
 		public static string ContentFontPath = string.Empty;
 	}

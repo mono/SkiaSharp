@@ -15958,25 +15958,6 @@ namespace SkiaSharp
 			(sk_fontmgr_create_from_file_delegate ??= GetSymbol<Delegates.sk_fontmgr_create_from_file> ("sk_fontmgr_create_from_file")).Invoke (param0, path, index);
 		#endif
 
-		// sk_typeface_t* sk_fontmgr_legacy_create_typeface(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
-		}
-		private static Delegates.sk_fontmgr_legacy_create_typeface sk_fontmgr_legacy_create_typeface_delegate;
-		internal static sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style) =>
-			(sk_fontmgr_legacy_create_typeface_delegate ??= GetSymbol<Delegates.sk_fontmgr_legacy_create_typeface> ("sk_fontmgr_legacy_create_typeface")).Invoke (param0, familyName, style);
-		#endif
-
 		// sk_typeface_t* sk_fontmgr_create_from_stream(sk_fontmgr_t*, sk_stream_asset_t* stream, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -16032,6 +16013,25 @@ namespace SkiaSharp
 		private static Delegates.sk_fontmgr_get_family_name sk_fontmgr_get_family_name_delegate;
 		internal static void sk_fontmgr_get_family_name (sk_fontmgr_t param0, Int32 index, sk_string_t familyName) =>
 			(sk_fontmgr_get_family_name_delegate ??= GetSymbol<Delegates.sk_fontmgr_get_family_name> ("sk_fontmgr_get_family_name")).Invoke (param0, index, familyName);
+		#endif
+
+		// sk_typeface_t* sk_fontmgr_legacy_create_typeface(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		}
+		private static Delegates.sk_fontmgr_legacy_create_typeface sk_fontmgr_legacy_create_typeface_delegate;
+		internal static sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style) =>
+			(sk_fontmgr_legacy_create_typeface_delegate ??= GetSymbol<Delegates.sk_fontmgr_legacy_create_typeface> ("sk_fontmgr_legacy_create_typeface")).Invoke (param0, familyName, style);
 		#endif
 
 		// sk_fontstyleset_t* sk_fontmgr_match_family(sk_fontmgr_t*, const char* familyName)
@@ -16317,6 +16317,25 @@ namespace SkiaSharp
 		private static Delegates.sk_fontstyleset_unref sk_fontstyleset_unref_delegate;
 		internal static void sk_fontstyleset_unref (sk_fontstyleset_t fss) =>
 			(sk_fontstyleset_unref_delegate ??= GetSymbol<Delegates.sk_fontstyleset_unref> ("sk_fontstyleset_unref")).Invoke (fss);
+		#endif
+
+		// sk_typeface_t* sk_typeface_clone_with_arguments(const sk_typeface_t* typeface, const sk_fontarguments_variation_position_coordinate_t* coordinates, int coordinateCount, int collectionIndex, int paletteIndex, const sk_fontarguments_palette_override_t* paletteOverrides, int paletteOverrideCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex, Int32 paletteIndex, SKFontPaletteOverride* paletteOverrides, Int32 paletteOverrideCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex, Int32 paletteIndex, SKFontPaletteOverride* paletteOverrides, Int32 paletteOverrideCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex, Int32 paletteIndex, SKFontPaletteOverride* paletteOverrides, Int32 paletteOverrideCount);
+		}
+		private static Delegates.sk_typeface_clone_with_arguments sk_typeface_clone_with_arguments_delegate;
+		internal static sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex, Int32 paletteIndex, SKFontPaletteOverride* paletteOverrides, Int32 paletteOverrideCount) =>
+			(sk_typeface_clone_with_arguments_delegate ??= GetSymbol<Delegates.sk_typeface_clone_with_arguments> ("sk_typeface_clone_with_arguments")).Invoke (typeface, coordinates, coordinateCount, collectionIndex, paletteIndex, paletteOverrides, paletteOverrideCount);
 		#endif
 
 		// sk_data_t* sk_typeface_copy_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
@@ -16605,6 +16624,44 @@ namespace SkiaSharp
 		private static Delegates.sk_typeface_get_units_per_em sk_typeface_get_units_per_em_delegate;
 		internal static Int32 sk_typeface_get_units_per_em (sk_typeface_t typeface) =>
 			(sk_typeface_get_units_per_em_delegate ??= GetSymbol<Delegates.sk_typeface_get_units_per_em> ("sk_typeface_get_units_per_em")).Invoke (typeface);
+		#endif
+
+		// int sk_typeface_get_variation_design_parameters(const sk_typeface_t* typeface, sk_fontarguments_variation_axis_t* parameters, int parameterCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_get_variation_design_parameters (sk_typeface_t typeface, SKFontVariationAxis* parameters, Int32 parameterCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_typeface_get_variation_design_parameters (sk_typeface_t typeface, SKFontVariationAxis* parameters, Int32 parameterCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_typeface_get_variation_design_parameters (sk_typeface_t typeface, SKFontVariationAxis* parameters, Int32 parameterCount);
+		}
+		private static Delegates.sk_typeface_get_variation_design_parameters sk_typeface_get_variation_design_parameters_delegate;
+		internal static Int32 sk_typeface_get_variation_design_parameters (sk_typeface_t typeface, SKFontVariationAxis* parameters, Int32 parameterCount) =>
+			(sk_typeface_get_variation_design_parameters_delegate ??= GetSymbol<Delegates.sk_typeface_get_variation_design_parameters> ("sk_typeface_get_variation_design_parameters")).Invoke (typeface, parameters, parameterCount);
+		#endif
+
+		// int sk_typeface_get_variation_design_position(const sk_typeface_t* typeface, sk_fontarguments_variation_position_coordinate_t* coordinates, int coordinateCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
+		}
+		private static Delegates.sk_typeface_get_variation_design_position sk_typeface_get_variation_design_position_delegate;
+		internal static Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount) =>
+			(sk_typeface_get_variation_design_position_delegate ??= GetSymbol<Delegates.sk_typeface_get_variation_design_position> ("sk_typeface_get_variation_design_position")).Invoke (typeface, coordinates, coordinateCount);
 		#endif
 
 		// bool sk_typeface_is_fixed_pitch(const sk_typeface_t* typeface)
@@ -18783,6 +18840,153 @@ namespace SkiaSharp {
 			hash.Add (fRasterDPI);
 			hash.Add (fPDFA);
 			hash.Add (fEncodingQuality);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_fontarguments_palette_override_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKFontPaletteOverride : IEquatable<SKFontPaletteOverride> {
+		// public uint16_t index
+		private UInt16 index;
+		public UInt16 Index {
+			readonly get => index;
+			set => index = value;
+		}
+
+		// public sk_color_t color
+		private UInt32 color;
+		public UInt32 Color {
+			readonly get => color;
+			set => color = value;
+		}
+
+		public readonly bool Equals (SKFontPaletteOverride obj) =>
+#pragma warning disable CS8909
+			index == obj.index && color == obj.color;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKFontPaletteOverride f && Equals (f);
+
+		public static bool operator == (SKFontPaletteOverride left, SKFontPaletteOverride right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKFontPaletteOverride left, SKFontPaletteOverride right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (index);
+			hash.Add (color);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_fontarguments_variation_axis_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKFontVariationAxis : IEquatable<SKFontVariationAxis> {
+		// public sk_fourbytetag_t tag
+		private SKFourByteTag tag;
+		public SKFourByteTag Tag {
+			readonly get => tag;
+			set => tag = value;
+		}
+
+		// public float min
+		private Single min;
+		public Single Min {
+			readonly get => min;
+			set => min = value;
+		}
+
+		// public float def
+		private Single def;
+		public Single Default {
+			readonly get => def;
+			set => def = value;
+		}
+
+		// public float max
+		private Single max;
+		public Single Max {
+			readonly get => max;
+			set => max = value;
+		}
+
+		// public bool isHidden
+		private Byte isHidden;
+		public bool IsHidden {
+			readonly get => isHidden > 0;
+			set => isHidden = value ? (byte)1 : (byte)0;
+		}
+
+		public readonly bool Equals (SKFontVariationAxis obj) =>
+#pragma warning disable CS8909
+			tag == obj.tag && min == obj.min && def == obj.def && max == obj.max && isHidden == obj.isHidden;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKFontVariationAxis f && Equals (f);
+
+		public static bool operator == (SKFontVariationAxis left, SKFontVariationAxis right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKFontVariationAxis left, SKFontVariationAxis right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (tag);
+			hash.Add (min);
+			hash.Add (def);
+			hash.Add (max);
+			hash.Add (isHidden);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_fontarguments_variation_position_coordinate_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKFontVariationPositionCoordinate : IEquatable<SKFontVariationPositionCoordinate> {
+		// public sk_fourbytetag_t axis
+		private SKFourByteTag axis;
+		public SKFourByteTag Axis {
+			readonly get => axis;
+			set => axis = value;
+		}
+
+		// public float value
+		private Single value;
+		public Single Value {
+			readonly get => this.value;
+			set => this.value = value;
+		}
+
+		public readonly bool Equals (SKFontVariationPositionCoordinate obj) =>
+#pragma warning disable CS8909
+			axis == obj.axis && value == obj.value;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKFontVariationPositionCoordinate f && Equals (f);
+
+		public static bool operator == (SKFontVariationPositionCoordinate left, SKFontVariationPositionCoordinate right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKFontVariationPositionCoordinate left, SKFontVariationPositionCoordinate right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (axis);
+			hash.Add (value);
 			return hash.ToHashCode ();
 		}
 

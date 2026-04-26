@@ -40,21 +40,22 @@ Write-Host "`n--- Updating scripts/VERSIONS.txt ---" -ForegroundColor Yellow
 $versionsPath = Join-Path $repoRoot 'scripts/VERSIONS.txt'
 $content = Get-Content $versionsPath -Raw
 
-# Get current nuget version pattern (e.g., 3.119.4)
-$nugetPattern = "3\.$Current\.\d+"
-$currentNuget = [regex]::Match($content, $nugetPattern).Value
+# Get current nuget version pattern (e.g., 4.119.4)
+$majorPattern = '\d+\.' + $Current + '\.\d+'
+$currentNuget = [regex]::Match($content, $majorPattern).Value
 if (-not $currentNuget) {
-    Write-Error "Could not find current nuget version pattern 3.$Current.x in VERSIONS.txt"
+    Write-Error "Could not find current nuget version pattern X.$Current.x in VERSIONS.txt"
 }
 Write-Host "  Current nuget version: $currentNuget"
+$currentMajor = $currentNuget.Split('.')[0]
 
 # Replace all version patterns
 $content = $content -replace "release\s+m$Current", "release     m$Target"
 $content = $content -replace "milestone\s+$Current", "milestone   $Target"
 $content = $content -replace "increment\s+\d+", "increment   0"
 $content = $content -replace "$Current\.0\.0", "$Target.0.0"
-$content = $content -replace "3\.$Current\.\d+\.0", "3.$Target.0.0"
-$content = $content -replace "3\.$Current\.\d+", "3.$Target.0"
+$content = $content -replace "$currentMajor\.$Current\.\d+\.0", "$currentMajor.$Target.0.0"
+$content = $content -replace "$currentMajor\.$Current\.\d+", "$currentMajor.$Target.0"
 
 Set-Content $versionsPath $content -NoNewline
 Write-Host "  Updated VERSIONS.txt" -ForegroundColor Green

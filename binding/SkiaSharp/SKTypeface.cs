@@ -247,7 +247,7 @@ namespace SkiaSharp
 			GetFont ().ContainsGlyphs (text);
 
 		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
-			ContainsGlyphs (text, encoding);
+			GetFont ().ContainsGlyphs (text, encoding);
 
 		public bool ContainsGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
 			GetFont ().ContainsGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
@@ -338,6 +338,108 @@ namespace SkiaSharp
 				adjustments.Slice(0, glyphs.Length - 1).Clear ();
 
 			return res;
+		}
+
+		// Variable fonts
+
+		public int VariationDesignParameterCount =>
+			SkiaApi.sk_typeface_get_variation_design_parameters (Handle, null, 0);
+
+		public SKFontVariationAxis[] VariationDesignParameters
+		{
+			get {
+				var count = VariationDesignParameterCount;
+				if (count <= 0)
+					return Array.Empty<SKFontVariationAxis> ();
+
+				var axes = new SKFontVariationAxis[count];
+				fixed (SKFontVariationAxis* ptr = axes) {
+					SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, count);
+				}
+				return axes;
+			}
+		}
+
+		public int GetVariationDesignParameters (Span<SKFontVariationAxis> axes)
+		{
+			if (axes.Length == 0)
+				return 0;
+
+			fixed (SKFontVariationAxis* ptr = axes) {
+				var total = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, axes.Length);
+				if (total <= axes.Length)
+					return total;
+
+				// Skia is all-or-nothing: if buffer is undersized it writes nothing.
+				// Retry with a pooled buffer and copy what fits.
+				using var temp = Utils.RentArray<SKFontVariationAxis> (total);
+				fixed (SKFontVariationAxis* tempPtr = temp.Span) {
+					SkiaApi.sk_typeface_get_variation_design_parameters (Handle, tempPtr, total);
+				}
+				temp.Span.Slice (0, axes.Length).CopyTo (axes);
+				return axes.Length;
+			}
+		}
+
+		public int VariationDesignPositionCount =>
+			SkiaApi.sk_typeface_get_variation_design_position (Handle, null, 0);
+
+		public SKFontVariationPositionCoordinate[] VariationDesignPosition
+		{
+			get {
+				var count = VariationDesignPositionCount;
+				if (count <= 0)
+					return Array.Empty<SKFontVariationPositionCoordinate> ();
+
+				var coords = new SKFontVariationPositionCoordinate[count];
+				fixed (SKFontVariationPositionCoordinate* ptr = coords) {
+					SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, count);
+				}
+				return coords;
+			}
+		}
+
+		public int GetVariationDesignPosition (Span<SKFontVariationPositionCoordinate> coordinates)
+		{
+			if (coordinates.Length == 0)
+				return 0;
+
+			fixed (SKFontVariationPositionCoordinate* ptr = coordinates) {
+				var total = SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, coordinates.Length);
+				if (total <= coordinates.Length)
+					return total;
+
+				// Skia is all-or-nothing: if buffer is undersized it writes nothing.
+				// Retry with a pooled buffer and copy what fits.
+				using var temp = Utils.RentArray<SKFontVariationPositionCoordinate> (total);
+				fixed (SKFontVariationPositionCoordinate* tempPtr = temp.Span) {
+					SkiaApi.sk_typeface_get_variation_design_position (Handle, tempPtr, total);
+				}
+				temp.Span.Slice (0, coordinates.Length).CopyTo (coordinates);
+				return coordinates.Length;
+			}
+		}
+
+		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position)
+		{
+			fixed (SKFontVariationPositionCoordinate* ptr = position) {
+				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, ptr, position.Length, 0, 0, null, 0));
+			}
+		}
+
+		public SKTypeface Clone (int paletteIndex)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+			return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, null, 0, 0, paletteIndex, null, 0));
+		}
+
+		public SKTypeface Clone (SKFontArguments args)
+		{
+			fixed (SKFontVariationPositionCoordinate* posPtr = args.VariationDesignPosition)
+			fixed (SKFontPaletteOverride* palPtr = args.PaletteOverrides) {
+				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, posPtr, args.VariationDesignPosition.Length, args.CollectionIndex, args.PaletteIndex, palPtr, args.PaletteOverrides.Length));
+			}
 		}
 
 		//
