@@ -29,10 +29,10 @@ namespace SkiaSharp
 
 		public static void SwapRedBlue (ReadOnlySpan<byte> dest, ReadOnlySpan<byte> src, int count)
 		{
-			if (dest == null) {
+			if (dest.IsEmpty) {
 				throw new ArgumentNullException (nameof (dest));
 			}
-			if (src == null) {
+			if (src.IsEmpty) {
 				throw new ArgumentNullException (nameof (src));
 			}
 

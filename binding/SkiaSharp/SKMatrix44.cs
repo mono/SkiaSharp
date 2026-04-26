@@ -268,7 +268,7 @@ namespace SkiaSharp
 
 		internal float[] MapScalars (ReadOnlySpan<float> srcVector4)
 		{
-			if (srcVector4 == null)
+			if (srcVector4.IsEmpty)
 				throw new ArgumentNullException (nameof (srcVector4));
 			if (srcVector4.Length != 4)
 				throw new ArgumentException ("The source vector array must be 4 entries.", nameof (srcVector4));
@@ -280,11 +280,11 @@ namespace SkiaSharp
 
 		internal void MapScalars (ReadOnlySpan<float> srcVector4, Span<float> dstVector4)
 		{
-			if (srcVector4 == null)
+			if (srcVector4.IsEmpty)
 				throw new ArgumentNullException (nameof (srcVector4));
 			if (srcVector4.Length != 4)
 				throw new ArgumentException ("The source vector array must be 4 entries.", nameof (srcVector4));
-			if (dstVector4 == null)
+			if (dstVector4.IsEmpty)
 				throw new ArgumentNullException (nameof (dstVector4));
 			if (dstVector4.Length != 4)
 				throw new ArgumentException ("The destination vector array must be 4 entries.", nameof (dstVector4));

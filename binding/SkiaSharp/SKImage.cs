@@ -96,7 +96,7 @@ namespace SkiaSharp
 
 		public static SKImage FromPixelCopy (SKImageInfo info, ReadOnlySpan<byte> pixels, int rowBytes)
 		{
-			if (pixels == null)
+			if (pixels.IsEmpty)
 				throw new ArgumentNullException (nameof (pixels));
 			using (var data = SKData.CreateCopy (pixels)) {
 				return FromPixels (info, data, rowBytes);
@@ -174,7 +174,7 @@ namespace SkiaSharp
 
 		public static SKImage FromEncodedData (ReadOnlySpan<byte> data)
 		{
-			if (data == null)
+			if (data.IsEmpty)
 				throw new ArgumentNullException (nameof (data));
 			if (data.Length == 0)
 				throw new ArgumentException ("The data buffer was empty.");

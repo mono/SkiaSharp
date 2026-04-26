@@ -166,7 +166,7 @@ namespace SkiaSharp
 
 		public bool SetRects (ReadOnlySpan<SKRectI> rects)
 		{
-			if (rects == null)
+			if (rects.IsEmpty)
 				throw new ArgumentNullException (nameof (rects));
 
 			fixed (SKRectI* r = rects) {

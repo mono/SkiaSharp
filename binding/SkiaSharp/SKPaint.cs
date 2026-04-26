@@ -741,7 +741,7 @@ namespace SkiaSharp
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetTextIntercepts (ReadOnlySpan<char> text, float x, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
+			if (text.IsEmpty)
 				throw new ArgumentNullException (nameof (text));
 
 			using var blob = SKTextBlob.Create (text, GetFont (), new SKPoint (x, y));
@@ -755,7 +755,7 @@ namespace SkiaSharp
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetTextIntercepts (ReadOnlySpan<byte> text, float x, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
+			if (text.IsEmpty)
 				throw new ArgumentNullException (nameof (text));
 
 			using var blob = SKTextBlob.Create (text, TextEncoding, GetFont (), new SKPoint (x, y));
@@ -796,7 +796,7 @@ namespace SkiaSharp
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetPositionedTextIntercepts (ReadOnlySpan<char> text, ReadOnlySpan<SKPoint> positions, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
+			if (text.IsEmpty)
 				throw new ArgumentNullException (nameof (text));
 
 			using var blob = SKTextBlob.CreatePositioned (text, GetFont (), positions);
@@ -810,7 +810,7 @@ namespace SkiaSharp
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetPositionedTextIntercepts (ReadOnlySpan<byte> text, ReadOnlySpan<SKPoint> positions, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
+			if (text.IsEmpty)
 				throw new ArgumentNullException (nameof (text));
 
 			using var blob = SKTextBlob.CreatePositioned (text, TextEncoding, GetFont (), positions);
@@ -840,7 +840,7 @@ namespace SkiaSharp
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetHorizontalTextIntercepts (ReadOnlySpan<char> text, ReadOnlySpan<float> xpositions, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
+			if (text.IsEmpty)
 				throw new ArgumentNullException (nameof (text));
 
 			using var blob = SKTextBlob.CreateHorizontal (text, GetFont (), xpositions, y);
@@ -854,7 +854,7 @@ namespace SkiaSharp
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetHorizontalTextIntercepts (ReadOnlySpan<byte> text, ReadOnlySpan<float> xpositions, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
+			if (text.IsEmpty)
 				throw new ArgumentNullException (nameof (text));
 
 			using var blob = SKTextBlob.CreateHorizontal (text, TextEncoding, GetFont (), xpositions, y);
