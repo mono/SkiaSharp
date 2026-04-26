@@ -13,9 +13,16 @@ namespace SkiaSharp.Tests
 	{
 		[SkippableTheory]
 		[InlineData(10, 10)]
+		[InlineData(10, 100)]
 		[InlineData(100, 1000)]
 		public static void ImageScalingMultipleThreadsTest(int numThreads, int numIterationsPerThread)
 		{
+			// The (100, 1000) variant creates 100K undisposed native allocations to stress
+			// GC finalizer throughput. On x86 (2GB address space), the GC can't keep up and
+			// Skia's native allocator fails. See #3608.
+			if (IntPtr.Size == 4 && numThreads >= 100 && numIterationsPerThread >= 1000)
+				throw new SkipException("Stress test skipped on x86 due to address space limit.");
+
 			var referenceFile = Path.Combine(PathToImages, "baboon.jpg");
 
 			var tasks = new List<Task>();
