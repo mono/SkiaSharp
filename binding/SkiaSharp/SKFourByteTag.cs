@@ -43,7 +43,7 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 
 	public static implicit operator SKFourByteTag (uint tag) => new SKFourByteTag (tag);
 
-	public override bool Equals (object obj) =>
+	public override bool Equals (object? obj) =>
 		obj is SKFourByteTag tag && value.Equals (tag.value);
 
 	public bool Equals (SKFourByteTag other) => value == other.value;
