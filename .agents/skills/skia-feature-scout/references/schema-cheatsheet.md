@@ -99,7 +99,7 @@ filtering.
   "milestones": [110, 117, 119, 120],
   "skiaApi": "SkMesh::Make, SkMeshSpecification",
   "userValue": "Enables particle systems, deformable meshes, and custom geometry rendering.",
-  "skillToUse": "add-api",
+  "skillToUse": "api-add-review",
   "effort": "large"
 }
 ```
@@ -118,7 +118,7 @@ filtering.
   "cppClass": "SkImage",
   "cppHeader": "include/core/SkImage.h",
   "cppMethod": "reinterpretColorSpace(sk_sp<SkColorSpace>) const",
-  "skillToUse": "add-api",
+  "skillToUse": "api-add-review",
   "effort": "small"
 }
 ```
@@ -194,7 +194,7 @@ Separate from findings. Ordered list of what to do next.
   "action": "Create SkPathBuilder bindings",
   "milestone": 143,
   "reason": "SkPath going immutable. All edit methods will be removed.",
-  "skillToUse": "add-api",
+  "skillToUse": "api-add-review",
   "effort": "large"
 }
 ```

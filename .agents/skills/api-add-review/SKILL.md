@@ -1,5 +1,5 @@
 ---
-name: add-api
+name: api-add-review
 description: >
   Add new C# APIs to SkiaSharp by wrapping Skia C++ functionality, or review
   existing API PRs for correctness and style. Two workflows:

@@ -8,7 +8,7 @@ description: >
   memory leak, disposal issues, "fails", "broken", "doesn't work", "investigate issue",
   "fix issue", "look at #NNNN", any GitHub issue number referencing a bug.
   
-  For adding new APIs, use `add-api` skill instead.
+  For adding new APIs, use `api-add-review` skill instead.
 ---
 
 # Bug Fix Skill

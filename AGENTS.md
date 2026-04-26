@@ -329,7 +329,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Reproduce bug | `/issue-repro` | "repro #NNNN", "reproduce issue", "create reproduction" |
 | Fix bug | `/issue-fix` | "investigate #NNNN", "fix issue", crash, exception, segfault, "doesn't work" |
 | Bulk process issues | `/issue-bulk-process` | "triage these issues", "process issues #1 #2 #3" |
-| Add new API | `/add-api` | "expose", "wrap method", issue requests new functionality |
+| Add new API | `/api-add-review` | "expose", "wrap method", issue requests new functionality |
 | Update dependency | `/native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
@@ -362,7 +362,7 @@ See [documentation/dev/issue-pipeline.md](documentation/dev/issue-pipeline.md) f
 | "triage", "classify", "analyze issue" | Triage | `/issue-triage` |
 | "repro", "reproduce", "reproduction" | Reproduction | `/issue-repro` |
 | "crash", "exception", "wrong", "fails", "broken", "segfault" | Bug | `/issue-fix` |
-| "add", "expose", "missing API", "feature request" | New API | `/add-api` |
+| "add", "expose", "missing API", "feature request" | New API | `/api-add-review` |
 | "docs", "documentation", "XML", "comments" | Docs | `/api-docs` |
 | CVE, security, vulnerability | Security | `/security-audit` then `/native-dependency-update` |
 

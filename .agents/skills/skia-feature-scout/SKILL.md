@@ -240,7 +240,7 @@ Include: Before/After milestone split, Deprecation Watch, Recommended Action Pla
 After presenting the report, offer:
 1. "Want me to investigate any of these features in more detail?"
 2. "Should I create issues or todos for the high-priority items?"
-3. "Want me to use the `add-api` skill to start binding a specific feature?"
+3. "Want me to use the `api-add-review` skill to start binding a specific feature?"
 4. "Should I set up a periodic workflow to re-run this audit?"
 
 ---
