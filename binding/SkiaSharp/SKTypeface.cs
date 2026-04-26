@@ -280,7 +280,7 @@ namespace SkiaSharp
 		// GetKerningPairAdjustments
 
 		/// <summary>
-		/// If false, then <see cref="GetKerningPairAdjustments"/> will never return nonzero
+		/// If false, then <see cref="GetKerningPairAdjustments(ReadOnlySpan{ushort})"/> will never return nonzero
 		/// adjustments for any possible pair of glyphs.
 		/// </summary>
 		public bool HasGetKerningPairAdjustments =>
