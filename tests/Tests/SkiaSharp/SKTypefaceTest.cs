@@ -835,7 +835,7 @@ namespace SkiaSharp.Tests
 			var total = typeface.VariationDesignParameterCount;
 			Assert.True (total >= 2, $"Need a multi-axis font, got {total} axes");
 
-			// span=0: should return 0 (nothing written)
+			// span=0: nothing to write, returns 0
 			var buf0 = new SKFontVariationAxis[0];
 			Assert.Equal (0, typeface.GetVariationDesignParameters (buf0));
 
@@ -863,7 +863,7 @@ namespace SkiaSharp.Tests
 			var total = typeface.VariationDesignPositionCount;
 			Assert.True (total >= 2, $"Need a multi-axis font, got {total} axes");
 
-			// span=0: should return 0
+			// span=0: nothing to write, returns 0
 			var buf0 = new SKFontVariationPositionCoordinate[0];
 			Assert.Equal (0, typeface.GetVariationDesignPosition (buf0));
 
@@ -951,6 +951,15 @@ namespace SkiaSharp.Tests
 			using var clone1 = typeface.Clone (1);
 			Assert.NotNull (clone0);
 			Assert.NotNull (clone1);
+		}
+
+		[SkippableFact]
+		public void CloneWithNegativePaletteIndexThrows ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
+			Assert.NotNull (typeface);
+
+			Assert.Throws<ArgumentOutOfRangeException> (() => typeface.Clone (-1));
 		}
 
 // Exact axis value tests — verify interop produces correct values

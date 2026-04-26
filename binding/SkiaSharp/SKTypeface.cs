@@ -362,6 +362,9 @@ namespace SkiaSharp
 
 		public int GetVariationDesignParameters (Span<SKFontVariationAxis> axes)
 		{
+			if (axes.Length == 0)
+				return 0;
+
 			fixed (SKFontVariationAxis* ptr = axes) {
 				var total = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, axes.Length);
 				if (total <= axes.Length)
@@ -398,6 +401,9 @@ namespace SkiaSharp
 
 		public int GetVariationDesignPosition (Span<SKFontVariationPositionCoordinate> coordinates)
 		{
+			if (coordinates.Length == 0)
+				return 0;
+
 			fixed (SKFontVariationPositionCoordinate* ptr = coordinates) {
 				var total = SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, coordinates.Length);
 				if (total <= coordinates.Length)
@@ -423,6 +429,8 @@ namespace SkiaSharp
 
 		public SKTypeface Clone (int paletteIndex)
 		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
 			return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, null, 0, 0, paletteIndex, null, 0));
 		}
 
