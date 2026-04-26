@@ -401,6 +401,197 @@ public void DrawRect(SKRect rect, SKPaint paint)
 
 ---
 
+## Span Overloads
+
+Every API that returns an array should also provide a `Span<T>` fill overload for
+allocation-free usage, plus a count property for pre-allocation:
+
+```csharp
+// Array property — convenient, allocates
+public SKFontVariationAxis[] VariationDesignParameters { get { ... } }
+
+// Count property — for pre-allocating span buffers
+public int VariationDesignParameterCount => ...;
+
+// Span overload — allocation-free, returns items written
+public int GetVariationDesignParameters(Span<SKFontVariationAxis> axes) { ... }
+```
+
+Every API that accepts an array should use `ReadOnlySpan<T>` instead, which accepts
+arrays, spans, and `stackalloc`:
+
+```csharp
+// Accepts array, span, or stackalloc
+public SKTypeface Clone(ReadOnlySpan<SKFontVariationPositionCoordinate> position) { ... }
+```
+
+---
+
+## Properties vs Methods
+
+Parameterless getters that return arrays or simple values should be **properties**.
+If a method takes parameters (including Span buffers), it stays a **method**.
+
+| Pattern | Example | Rationale |
+|---------|---------|-----------|
+| Property | `Face.Tables`, `Face.VariationAxisInfos`, `Face.GlyphCount` | No parameters, returns data |
+| Method | `GetVariationAxisInfos(Span<>)`, `GetTableData(tag)` | Takes parameters |
+| Property | `VariationCoordsNormalized` | No parameters, returns `int[]` |
+| Method | `GetVariationCoordsNormalized(Span<int>)` | Span fill buffer |
+
+Existing patterns to follow: `Buffer.GlyphInfos`, `Buffer.GlyphPositions`, `Face.Tables`.
+
+---
+
+## Type Wrapping for Typedefs
+
+When Skia uses a `uint32_t` typedef (like `SkFourByteTag`), wrap it as a C# struct
+rather than using raw `uint`. This provides type safety and discoverability:
+
+```csharp
+public struct SKFourByteTag : IEquatable<SKFourByteTag>
+{
+    private readonly uint value;
+
+    public SKFourByteTag(uint value) { this.value = value; }
+    public SKFourByteTag(char c1, char c2, char c3, char c4) { ... }
+
+    public static SKFourByteTag Parse(string? tag) { ... }
+    public override string ToString() => ...;
+
+    public static implicit operator uint(SKFourByteTag tag) => tag.value;
+    public static implicit operator SKFourByteTag(uint tag) => new(tag);
+
+    // IEquatable<T>, ==, !=, GetHashCode
+}
+```
+
+Then define a C typedef and map it in `libSkiaSharp.json` so generated structs use
+the type directly:
+
+```cpp
+// C header
+typedef uint32_t sk_fourbytetag_t;
+```
+
+```json
+// libSkiaSharp.json
+"sk_fourbytetag_t": { "cs": "SKFourByteTag" }
+```
+
+Check if HarfBuzzSharp already has an equivalent type (e.g., `Tag`) — model yours
+after it, keeping it in the SkiaSharp namespace.
+
+---
+
+## Ref Struct Parameter Bags
+
+When a method has many optional parameters (especially if more will be added in future
+PRs), use a `ref struct` with `ReadOnlySpan` properties instead of overload explosion:
+
+```csharp
+public ref struct SKFontArguments
+{
+    public ReadOnlySpan<SKFontVariationPositionCoordinate> VariationDesignPosition { get; set; }
+    public int CollectionIndex { get; set; }
+}
+```
+
+`ref struct` allows `ReadOnlySpan` properties (which regular structs cannot hold).
+Callers can use arrays, spans, or `stackalloc`. The tradeoff: `ref struct` cannot be
+boxed, stored in fields, or used in async methods — but for call-site parameter bags
+this is fine.
+
+Keep 1-2 common-case shortcut overloads alongside the ref struct overload:
+
+```csharp
+Clone(ReadOnlySpan<Position> position)  // simple shortcut
+Clone(SKFontArguments args)             // full control
+```
+
+---
+
+## Test Patterns
+
+### What to assert
+
+**Exact values** — load a known test font and assert precise field values:
+
+```csharp
+var axes = typeface.VariationDesignParameters;
+Assert.Single(axes);
+Assert.Equal(SKFourByteTag.Parse("wght"), axes[0].Tag);
+Assert.Equal(0.5f, axes[0].Min);
+Assert.Equal(1.0f, axes[0].Default);
+Assert.Equal(2.0f, axes[0].Max);
+Assert.False(axes[0].IsHidden);
+```
+
+**Span vs property equivalence** — every Span overload should produce identical results
+to its array counterpart:
+
+```csharp
+var arrayResult = typeface.VariationDesignParameters;
+var spanBuffer = new SKFontVariationAxis[arrayResult.Length];
+var written = typeface.GetVariationDesignParameters(spanBuffer);
+Assert.Equal(arrayResult.Length, written);
+for (int i = 0; i < arrayResult.Length; i++)
+    Assert.Equal(arrayResult[i].Tag, spanBuffer[i].Tag);
+```
+
+**Interop round-trip** — create data in C#, pass through native, read back:
+
+```csharp
+var position = new[] {
+    new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse("wght"), Value = 1.5f }
+};
+using var cloned = typeface.Clone(position);
+var readBack = cloned.VariationDesignPosition;
+Assert.Equal(SKFourByteTag.Parse("wght"), readBack[0].Axis);
+Assert.Equal(1.5f, readBack[0].Value);
+```
+
+**Static/empty font handling** — APIs should return empty arrays, not null or crash:
+
+```csharp
+using var staticFont = SKTypeface.FromFile("content-font.ttf");
+Assert.Empty(staticFont.VariationDesignParameters);
+```
+
+**Negative index validation** — every index parameter should be tested:
+
+```csharp
+Assert.Throws<ArgumentOutOfRangeException>(() => face.GetNamedInstanceDesignCoords(-1));
+```
+
+**Type-specific tests** — standalone types get their own test file with Parse, ToString,
+constructors, equality, edge cases (null, empty, short strings, known hex values).
+
+### Test organization
+
+- One test class per type: `SKTypefaceTest`, `SKFourByteTagTest`, `HBFaceTest`
+- Standalone types (like `SKFourByteTag`) get their own test file
+- Use `[SkippableFact]` attribute and `using` for all disposables
+- Never use early returns that silently pass — assert explicitly
+
+---
+
+## XML Documentation
+
+Do **not** add triple-slash XML doc comments (`/// <summary>`) to new APIs.
+Documentation is generated from a separate localized repository and inserted via an
+automated process. Adding them manually creates merge conflicts with that process.
+
+---
+
+## File Conventions
+
+- **File-scoped namespaces** preferred for new files: `namespace SkiaSharp;`
+- **No `#nullable disable`** unless the file has reference-type fields that require it
+- **One primary type per file**, file named after the type
+
+---
+
 ## Summary Checklist
 
 When designing a new API:
