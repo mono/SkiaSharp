@@ -215,6 +215,14 @@ def main():
     eprint(f"   Head:  {companion_pr['headRefOid']} ({companion_pr['headRefName']})")
     eprint(f"   Base:  {companion_pr['baseRefOid']} ({companion_pr['baseRefName']})")
 
+    # Pre-fetch the skia PR ref in the submodule so that the companion PR's
+    # submodule pointer (which references a SHA from the skia PR branch) is
+    # locally available when git recurses into the submodule during the
+    # SkiaSharp fetch below.  Works for forks too — pull/{N}/head is always
+    # available on origin regardless of where the PR branch lives.
+    eprint(f"▸ Pre-fetching skia PR #{skia_pr_number} ref in submodule...")
+    run_git(["fetch", "origin", f"pull/{skia_pr_number}/head"], cwd=skia_root)
+
     # 1c. Determine old/new upstream milestones
     # Read cgmanifest.json from the companion PR base and head commits, not from the
     # current working tree. This keeps the review correct even when the local repo is
