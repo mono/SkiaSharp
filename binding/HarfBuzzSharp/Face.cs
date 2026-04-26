@@ -118,6 +118,7 @@ namespace HarfBuzzSharp
 
 		public bool TryFindVariationAxis (Tag tag, out OpenTypeVarAxisInfo axisInfo)
 		{
+			axisInfo = default;
 			fixed (OpenTypeVarAxisInfo* ptr = &axisInfo) {
 				return HarfBuzzApi.hb_ot_var_find_axis_info (Handle, tag, ptr);
 			}

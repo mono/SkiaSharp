@@ -322,8 +322,9 @@ namespace HarfBuzzSharp
 				if (length == 0 || ptr == null)
 					return Array.Empty<int> ();
 
-				var coords = new int[length];
-				for (uint i = 0; i < length; i++)
+				var count = (int)length;
+				var coords = new int[count];
+				for (int i = 0; i < count; i++)
 					coords[i] = ptr[i];
 				return coords;
 			}

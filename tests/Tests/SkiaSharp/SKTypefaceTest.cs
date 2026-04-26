@@ -767,9 +767,9 @@ namespace SkiaSharp.Tests
 				new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse ("wght"), Value = 400 }
 			};
 
-			// Static fonts should handle this gracefully
+			// Static fonts should handle this gracefully — Skia returns a valid typeface
 			using var cloned = typeface.Clone (position);
-			// Result may or may not be null depending on implementation
+			Assert.NotNull (cloned);
 		}
 
 		[SkippableFact]
@@ -955,22 +955,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (typeface.VariationDesignPositionCount, typeface.VariationDesignPosition.Length);
 		}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		// Interop safety tests — verify struct layout through native round-trip
-
 
 		[SkippableFact]
 		public void VariationAxisStructLayoutMatchesNative ()

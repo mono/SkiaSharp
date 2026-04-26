@@ -91,8 +91,7 @@ namespace HarfBuzzSharp.Tests
 			using (face)
 			using (font) {
 				var count = face.NamedInstanceCount;
-				if (count == 0)
-					return;
+				Assert.True (count > 0);
 				font.SetVariationNamedInstance (0); // Should not throw
 			}
 		}
