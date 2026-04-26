@@ -252,6 +252,19 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ContainsGlyphsWithByteSpanDoesNotStackOverflow ()
+		{
+			using var typeface = SKTypeface.Default;
+			var text = System.Text.Encoding.UTF8.GetBytes ("Hello");
+			ReadOnlySpan<byte> span = text;
+
+			// This overload had infinite recursion (called itself instead of GetFont())
+			// It should throw StackOverflowException if still broken, or work correctly if fixed
+			var result = typeface.ContainsGlyphs (span, SKTextEncoding.Utf8);
+			Assert.True (result);
+		}
+
+		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
 		{
 			SkipOnPlatform(IsMac, "macOS does not release the data when the typeface is disposed");

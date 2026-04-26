@@ -432,6 +432,20 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
+		public void HasColorPngIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasColorPng);
+		}
+
+		[SkippableFact]
+		public void HasColorSvgIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasColorSvg);
+		}
+
+		[SkippableFact]
 		public void NegativeIndexThrowsForPaletteColors ()
 		{
 			using var face = CreateColorFace ();
