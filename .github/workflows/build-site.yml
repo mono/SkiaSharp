@@ -275,9 +275,8 @@ jobs:
           git config --local user.name "GitHub Action"
           git add .nojekyll staging/$PR_NUMBER
           if ! git diff --cached --quiet; then
-            git commit -m "Deploy staging docs for PR #$PR_NUMBER
-
-https://mono.github.io/SkiaSharp/staging/$PR_NUMBER/"
+            git commit -m "Deploy staging docs for PR #$PR_NUMBER" \
+              -m "https://mono.github.io/SkiaSharp/staging/$PR_NUMBER/"
             git push origin docs-live
           else
             echo "No changes to commit"
