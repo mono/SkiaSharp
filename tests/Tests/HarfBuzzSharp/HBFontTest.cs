@@ -17,6 +17,14 @@ namespace HarfBuzzSharp.Tests
 			return (face, font);
 		}
 
+		private (Face face, Font font) CreateMultiAxisFontPair ()
+		{
+			using var blob = Blob.FromFile (Path.Combine (PathToFonts, "InterVariable.ttf"));
+			var face = new Face (blob, 0);
+			var font = new Font (face);
+			return (face, font);
+		}
+
 		// US2: Set Font Variation Values
 
 		[SkippableFact]
@@ -167,6 +175,31 @@ namespace HarfBuzzSharp.Tests
 				var fullBuffer = new int[axisCount];
 				var fullWritten = font.GetVariationCoordsNormalized (fullBuffer);
 				Assert.Equal (axisCount, fullWritten);
+
+				// Pass an oversized buffer — should still return axis count
+				var overBuffer = new int[axisCount + 5];
+				var overWritten = font.GetVariationCoordsNormalized (overBuffer);
+				Assert.Equal (axisCount, overWritten);
+			}
+		}
+
+		[SkippableFact]
+		public void SpanGetVariationCoordsNormalizedWithUndersizedBuffer ()
+		{
+			var (face, font) = CreateMultiAxisFontPair ();
+			using (face)
+			using (font) {
+				var axisCount = face.VariationAxisCount;
+				Assert.True (axisCount >= 2, $"Need multi-axis font, got {axisCount}");
+
+				var coords = new int[axisCount];
+				coords[0] = 4096;
+				font.SetVariationCoordsNormalized (coords);
+
+				// Pass a buffer with 1 slot when there are multiple axes
+				var buf1 = new int[1];
+				var written = font.GetVariationCoordsNormalized (buf1);
+				Assert.Equal (1, written);
 			}
 		}
 

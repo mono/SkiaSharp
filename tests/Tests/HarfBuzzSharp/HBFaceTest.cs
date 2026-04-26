@@ -122,6 +122,17 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
+		public void SpanGetVariationAxisInfosWithEmptyBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.VariationAxisCount > 0);
+
+			var spanBuffer = new OpenTypeVarAxisInfo[0];
+			var written = face.GetVariationAxisInfos (spanBuffer);
+			Assert.Equal (0, written);
+		}
+
+		[SkippableFact]
 		public void CanGetNamedInstanceCount ()
 		{
 			using var face = CreateVariableFace ();
@@ -182,6 +193,29 @@ namespace HarfBuzzSharp.Tests
 			var spanBuffer = new float[1];
 			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
 			Assert.Equal (1, written);
+		}
+
+		[SkippableFact]
+		public void SpanGetNamedInstanceDesignCoordsWithEmptyBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var spanBuffer = new float[0];
+			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
+			Assert.Equal (0, written);
+		}
+
+		[SkippableFact]
+		public void SpanGetNamedInstanceDesignCoordsWithOversizedBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var totalCoords = face.GetNamedInstanceDesignCoordsCount (0);
+			var spanBuffer = new float[totalCoords + 5];
+			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
+			Assert.Equal (totalCoords, written);
 		}
 
 		[SkippableFact]
@@ -366,6 +400,17 @@ namespace HarfBuzzSharp.Tests
 			var spanBuffer = new uint[totalColors + 5];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (totalColors, written);
+		}
+
+		[SkippableFact]
+		public void SpanGetPaletteColorsWithEmptyBuffer ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var spanBuffer = new uint[0];
+			var written = face.GetPaletteColors (0, spanBuffer);
+			Assert.Equal (0, written);
 		}
 
 		[SkippableFact]

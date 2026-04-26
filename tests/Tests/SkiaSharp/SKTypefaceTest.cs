@@ -905,6 +905,34 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void SpanGetVariationDesignParametersWithOversizedBuffer ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
+			Assert.NotNull (typeface);
+
+			var total = typeface.VariationDesignParameterCount;
+			Assert.True (total > 0);
+
+			var spanBuffer = new SKFontVariationAxis[total + 5];
+			var written = typeface.GetVariationDesignParameters (spanBuffer);
+			Assert.Equal (total, written);
+		}
+
+		[SkippableFact]
+		public void SpanGetVariationDesignPositionWithOversizedBuffer ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
+			Assert.NotNull (typeface);
+
+			var total = typeface.VariationDesignPositionCount;
+			Assert.True (total > 0);
+
+			var spanBuffer = new SKFontVariationPositionCoordinate[total + 5];
+			var written = typeface.GetVariationDesignPosition (spanBuffer);
+			Assert.Equal (total, written);
+		}
+
+		[SkippableFact]
 		public void CloneWithReadOnlySpan ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
