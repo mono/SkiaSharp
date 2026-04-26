@@ -770,8 +770,6 @@ namespace SkiaSharp
 
 			public SKPathVerb Next (Span<SKPoint> points)
 			{
-				if (points.IsEmpty)
-					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 
@@ -811,8 +809,6 @@ namespace SkiaSharp
 
 			public SKPathVerb Next (Span<SKPoint> points)
 			{
-				if (points.IsEmpty)
-					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 				fixed (SKPoint* p = points) {
