@@ -8,6 +8,7 @@ namespace SkiaSharp.Tests
 	public class SKColorFilterTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void StaticSrgbToLinearIsReturnedAsTheStaticInstance()
 		{
 			var handle = SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma();

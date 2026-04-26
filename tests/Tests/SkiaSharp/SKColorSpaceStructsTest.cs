@@ -104,7 +104,8 @@ namespace SkiaSharp.Tests
 			var csxyz = new SKColorSpaceXyz(values);
 			var inverted = csxyz.Invert();
 
-			AssertSimilar(invertedValues, inverted.Values);
+			// Use precision 3 to account for floating-point differences across .NET versions
+			AssertSimilar(invertedValues, inverted.Values, 3);
 		}
 
 		[SkippableFact]

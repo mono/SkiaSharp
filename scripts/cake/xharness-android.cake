@@ -5,7 +5,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 var TEST_APP = Argument("app", EnvironmentVariable("ANDROID_TEST_APP") ?? "");
 var TEST_RESULTS = Argument("results", EnvironmentVariable("ANDROID_TEST_RESULTS") ?? "");
 var TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64");
-var TEST_VERSION = Argument("deviceVersion", EnvironmentVariable("ANDROID_TEST_DEVICE_VERSION") ?? "34");
+var TEST_VERSION = Argument("deviceVersion", EnvironmentVariable("ANDROID_TEST_DEVICE_VERSION") ?? "36");
 var TEST_APP_PACKAGE_NAME = Argument("package", EnvironmentVariable("ANDROID_TEST_APP_PACKAGE_NAME") ?? "");
 var TEST_APP_INSTRUMENTATION = Argument("instrumentation", EnvironmentVariable("ANDROID_TEST_APP_INSTRUMENTATION") ?? "devicerunners.xharness.maui.XHarnessInstrumentation");
 
@@ -38,7 +38,7 @@ Setup(context =>
     // determine the device characteristics
     {
         var working = TEST_DEVICE.Trim().ToLower();
-        var api = 34;
+        var api = 36;
         // version
         if (working.IndexOf("_") is int idx && idx > 0) {
             api = int.Parse(working.Substring(idx + 1));
@@ -81,15 +81,26 @@ Setup(context =>
 
     // create the new AVD
     Information("Creating AVD: {0}...", ANDROID_AVD);
+    Information("  SDK: {0}", DEVICE_ID);
+    Information("  Device: {0}", DEVICE_NAME);
     DotNetTool($"android avd create --name \"{ANDROID_AVD}\" --sdk \"{DEVICE_ID}\" --device \"{DEVICE_NAME}\" --force");
 
+    // verify the AVD was created
+    Information("Listing AVDs after creation:");
+    DotNetTool("android avd list");
+
     // start the emulator (only wait 5 mins)
+    var gpuMode = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+        ? "swiftshader_indirect"
+        : "guest";
     Information("Starting Emulator: {0}...", ANDROID_AVD);
-    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --timeout 300");
+    Information("  GPU: {0}", gpuMode);
+    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu {gpuMode} --wait --no-window --no-snapshot --no-audio --no-boot-anim --no-animations --cpu-threshold 3 --response-threshold 5 --camera-back none --camera-front none --timeout 300");
 
     // show running emulator information
     Information("Emulator started:");
     DotNetTool("android device list");
+
     TakeSnapshot(TEST_RESULTS, "boot-complete");
 });
 

@@ -13,6 +13,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
+    await AddDep("System.Runtime.CompilerServices.Unsafe", "netstandard2.1");
     await AddDep("Microsoft.WindowsAppSDK", "net6.0-windows10.0.18362.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
     await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
@@ -22,13 +23,13 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Microsoft.WindowsDesktop.App.Ref", "net6.0");
     await AddDep("Microsoft.AspNetCore.Components", "net6.0");
     await AddDep("OpenTK.GLWpfControl", "netcoreapp3.1");
-    await AddDep("Microsoft.Maui.Core", "net8.0");
-    await AddDep("Microsoft.Maui.Controls.Core", "net8.0");
-    await AddDep("Microsoft.iOS.Ref.net8.0_17.0", "net8.0");
-    await AddDep("Microsoft.MacCatalyst.Ref.net8.0_17.0", "net8.0");
-    await AddDep("Microsoft.tvOS.Ref.net8.0_17.0", "net8.0");
-    await AddDep("Microsoft.macOS.Ref.net8.0_14.0", "net8.0");
-    await AddDep("Samsung.Tizen.Ref", "net8.0");
+    await AddDep("Microsoft.Maui.Core", "net10.0");
+    await AddDep("Microsoft.Maui.Controls.Core", "net10.0");
+    await AddDep("Microsoft.iOS.Ref.net10.0_26.2", "net10.0");
+    await AddDep("Microsoft.MacCatalyst.Ref.net10.0_26.2", "net10.0");
+    await AddDep("Microsoft.tvOS.Ref.net10.0_26.2", "net10.0");
+    await AddDep("Microsoft.macOS.Ref.net10.0_26.2", "net10.0");
+    await AddDep("Samsung.Tizen.Ref", "net10.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.iOS/v1.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.TVOS/v1.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0");
@@ -196,7 +197,7 @@ Task ("docs-api-diff")
         // generate the diff and copy to the changelogs
         Debug ($"Running a diff on '{latestVersion}' vs '{localNugetVersion}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
-        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{localNugetVersion}.nupkg")) {
+        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id}.{localNugetVersion}.nupkg")) {
             // run the diff with just the breaking changes
             comparer.MarkdownDiffFileExtension = ".breaking.md";
             comparer.IgnoreNonBreakingChanges = true;

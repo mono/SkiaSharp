@@ -26,29 +26,32 @@ stages:
               additionalArgs: --verifyExcluded=fontconfig
               gnArgs: skia_use_fontconfig=false
           matrix:
-            - arch: x64
-              docker: scripts/Docker/debian/amd64
             - arch: loongarch64
-              docker: scripts/Docker/debian/clang-cross/13
+              docker: scripts/Docker/debian/13
               target: externals-linux-clang-cross
               additionalArgs: --verifyGlibcMax=2.38
-            - ${{ each arch in split('arm,arm64,x86,riscv64', ',') }}: # separate x64 as it fails when cross-compiling
+            - ${{ each arch in split('arm,arm64,x86,x64,riscv64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/Docker/debian/clang-cross/10
+                docker: scripts/Docker/debian/10
                 target: externals-linux-clang-cross
+                additionalArgs: --verifyGlibcMax=2.28
             - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
               - arch: ${{ arch }}
                 variant: alpine
-                docker: scripts/Docker/alpine/clang-cross
+                docker: scripts/Docker/alpine
                 target: externals-linux-clang-cross
 
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen (Linux)
+      - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
         parameters:
-          name: native_tizen_linux
-          displayName: Tizen
-          buildAgent: ${{ parameters.buildAgentLinuxNative }}
           buildExternals: ${{ parameters.buildExternals }}
+          buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-          packages: $(TIZEN_LINUX_PACKAGES)
-          target: externals-tizen
-          condition: false # https://github.com/mono/SkiaSharp/issues/2933
+          builds:
+            - name: ''
+              additionalArgs: --verifyExcluded=fontconfig
+          matrix:
+            - ${{ each arch in split('arm64,x64', ',') }}:
+              - arch: ${{ arch }}
+                variant: bionic
+                docker: scripts/Docker/bionic
+

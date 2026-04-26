@@ -14,6 +14,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void StrokePropertyValuesAreCorrect()
 		{
 			var paint = new SKPaint();
@@ -76,9 +77,10 @@ namespace SkiaSharp.Tests
 
 		// Test for issue #276
 		[SkippableFact]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // TODO: figure out why the font has changed
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
+			SkipOnPlatform(IsAndroid, "TODO: figure out why the font has changed");
+
 			using (var bitmapAA = new SKBitmap(new SKImageInfo(200, 200)))
 			using (var bitmapNoAA = new SKBitmap(new SKImageInfo(200, 200)))
 			{
@@ -718,7 +720,17 @@ namespace SkiaSharp.Tests
 			using var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, fontfile));
 			paint.Typeface = typeface;
 
-			Assert.Same(typeface, paint.Typeface);
+			// In Skia m132, attempting to load woff2 files will still create a non-null typeface
+			// with an empty family name
+			if (typeface == null || string.IsNullOrEmpty(typeface?.FamilyName))
+			{
+				var result = paint.Typeface;
+				Assert.True(result == null || ReferenceEquals(result, typeface) || string.IsNullOrEmpty(result?.FamilyName));
+			}
+			else
+			{
+				Assert.Same(typeface, paint.Typeface);
+			}
 		}
 
 		[SkippableFact]
@@ -727,6 +739,38 @@ namespace SkiaSharp.Tests
 			using var paint = new SKPaint();
 			using var clonedPaint = paint.Clone();
 			using var clonedPaint2 = paint.Clone();
+		}
+
+		// Default typeface behavior
+
+		[Obsolete]
+		[SkippableFact]
+		public void DefaultPaintCanMeasureText()
+		{
+			var paint = new SKPaint();
+			var width = paint.MeasureText("Hello World!");
+			Assert.True(width > 0);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void DefaultPaintTypefaceIsDefault()
+		{
+			var paint = new SKPaint();
+			Assert.NotNull(paint.Typeface);
+			Assert.False(paint.Typeface.IsEmpty);
+			Assert.Equal(SKTypeface.Default.FamilyName, paint.Typeface.FamilyName);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void PaintResetPreservesDefaultTypeface()
+		{
+			var paint = new SKPaint();
+			paint.Typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			paint.Reset();
+			Assert.NotNull(paint.Typeface);
+			Assert.False(paint.Typeface.IsEmpty);
 		}
 	}
 }

@@ -149,7 +149,8 @@ namespace SkiaSharp
 			return SkiaApi.sk_stream_seek (Handle, (IntPtr)position);
 		}
 
-		public bool Move (long offset) => Move ((int)offset);
+		[Obsolete ("The native stream move offset is capped at a 32-bit int. Use Move(int) instead.")]
+		public bool Move (long offset) => Move (checked ((int)offset));
 
 		public bool Move (int offset)
 		{

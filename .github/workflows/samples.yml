@@ -1,0 +1,199 @@
+name: Publish Samples
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'samples/**'
+      - '.github/workflows/samples.yml'
+  pull_request:
+    paths:
+      - 'samples/**'
+      - '.github/workflows/samples.yml'
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SkiaSharp NuGet version to use (leave empty for latest from NuGet.org)'
+        required: false
+        default: ''
+      sha:
+        description: 'Git SHA of the commit to build samples from (leave empty to use the default branch HEAD)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run — generate samples but do not push to the samples branch'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Generate and Publish Samples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - name: Get latest SkiaSharp NuGet version
+        id: nuget
+        shell: pwsh
+        run: |
+          $inputVersion = '${{ inputs.version }}'
+
+          if ($inputVersion) {
+            $version = $inputVersion
+          } else {
+            # Fetch all published versions of SkiaSharp from NuGet.org (includes pre-releases)
+            try {
+              $response = Invoke-RestMethod 'https://api.nuget.org/v3-flatcontainer/skiasharp/index.json'
+            } catch {
+              throw "Failed to query NuGet.org for SkiaSharp versions: $_"
+            }
+            if (-not $response.versions -or $response.versions.Count -eq 0) {
+              throw "NuGet.org returned no versions for SkiaSharp"
+            }
+            # Versions are sorted ascending by semver; the last one is the highest version
+            $version = $response.versions | Select-Object -Last 1
+          }
+
+          Write-Host "Using SkiaSharp version: $version"
+
+          # Parse base version and optional pre-release suffix
+          if ($version -match '^(\d+\.\d+\.\d+)(?:-(.+))?$') {
+            $baseVersion = $Matches[1]
+            $previewSuffix = if ($Matches[2]) { $Matches[2] } else { '' }
+          } else {
+            throw "Unexpected version format: $version"
+          }
+
+          Write-Host "Base version: $baseVersion"
+          Write-Host "Preview suffix: $previewSuffix"
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "base_version=$baseVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "preview_suffix=$previewSuffix" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Get latest HarfBuzzSharp NuGet version
+        id: hb-nuget
+        shell: pwsh
+        run: |
+          # Fetch all published versions of HarfBuzzSharp from NuGet.org
+          try {
+            $response = Invoke-RestMethod 'https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/index.json'
+          } catch {
+            throw "Failed to query NuGet.org for HarfBuzzSharp versions: $_"
+          }
+          if (-not $response.versions -or $response.versions.Count -eq 0) {
+            throw "NuGet.org returned no versions for HarfBuzzSharp"
+          }
+          # Use the latest stable version for HarfBuzzSharp
+          $version = $response.versions | Where-Object { $_ -notmatch '-' } | Select-Object -Last 1
+          if (-not $version) {
+            throw "No stable HarfBuzzSharp version found on NuGet.org"
+          }
+          Write-Host "Latest stable HarfBuzzSharp version: $version"
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Update NuGet versions in VERSIONS.txt
+        shell: pwsh
+        run: |
+          $skiaVersion = '${{ steps.nuget.outputs.base_version }}'
+          $hbVersion = '${{ steps.hb-nuget.outputs.version }}'
+          $versionsFile = 'scripts/VERSIONS.txt'
+
+          $content = Get-Content $versionsFile -Raw
+
+          # Update all SkiaSharp package nuget version entries
+          $content = [Regex]::Replace(
+            $content,
+            '(?m)^(SkiaSharp\S*\s+nuget\s+)[\d.]+',
+            "`${1}$skiaVersion")
+
+          # Update all HarfBuzzSharp package nuget version entries
+          if ($hbVersion) {
+            $content = [Regex]::Replace(
+              $content,
+              '(?m)^(HarfBuzzSharp\S*\s+nuget\s+)[\d.]+',
+              "`${1}$hbVersion")
+          }
+
+          Set-Content $versionsFile $content -NoNewline
+          Write-Host "Updated $versionsFile with SkiaSharp=$skiaVersion, HarfBuzzSharp=$hbVersion"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Generate samples
+        env:
+          PREVIEW_LABEL: ${{ steps.nuget.outputs.preview_suffix }}
+          BUILD_NUMBER: ''
+        run: dotnet cake --target=samples-generate
+
+      - name: Publish samples to branch
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.nuget.outputs.version }}"
+          PREVIEW_SUFFIX="${{ steps.nuget.outputs.preview_suffix }}"
+          BRANCH_NAME="docs-samples"
+          REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+
+          # Dry run: triggered by a pull_request event, or the dry_run input is set to true
+          DRY_RUN="false"
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN="true"
+          fi
+
+          # Choose the appropriate output directory based on whether it is a preview release
+          if [ -n "$PREVIEW_SUFFIX" ]; then
+            SAMPLES_DIR="output/samples-preview"
+          else
+            SAMPLES_DIR="output/samples"
+          fi
+
+          echo "Publishing $SAMPLES_DIR to branch: $BRANCH_NAME (dry_run=$DRY_RUN)"
+
+          # Work in a temp directory so we can clone the existing branch (if any) and add a new commit
+          WORK_DIR=$(mktemp -d)
+          trap 'rm -rf "$WORK_DIR"' EXIT
+
+          if git ls-remote --exit-code "$REMOTE_URL" "refs/heads/${BRANCH_NAME}" > /dev/null; then
+            # Branch already exists — clone it so we preserve the history
+            git clone --depth=1 --branch "${BRANCH_NAME}" "$REMOTE_URL" "$WORK_DIR"
+          else
+            # Branch does not exist yet — initialise an empty repo
+            git init "$WORK_DIR"
+            git -C "$WORK_DIR" checkout -b "${BRANCH_NAME}"
+          fi
+
+          # Replace contents with the freshly generated samples (delete files no longer present)
+          rsync -a --delete --exclude='.git' "${SAMPLES_DIR}/" "$WORK_DIR/"
+
+          git -C "$WORK_DIR" config user.name "github-actions[bot]"
+          git -C "$WORK_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$WORK_DIR" add .
+          # --allow-empty handles the case where the generated output is identical to the previous commit
+          git -C "$WORK_DIR" commit --allow-empty -m "Samples for SkiaSharp $VERSION"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run — skipping push. Would publish $SAMPLES_DIR to branch: $BRANCH_NAME"
+            git -C "$WORK_DIR" show --stat HEAD
+          else
+            git -C "$WORK_DIR" push "$REMOTE_URL" "HEAD:refs/heads/${BRANCH_NAME}"
+            echo "Successfully published samples to branch: $BRANCH_NAME"
+          fi

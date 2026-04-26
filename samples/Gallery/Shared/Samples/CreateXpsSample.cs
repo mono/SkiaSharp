@@ -1,107 +1,62 @@
-﻿using System;
+using System;
 using System.IO;
-using System.Threading.Tasks;
-
 using SkiaSharp;
 
-namespace SkiaSharpSample.Samples
+namespace SkiaSharpSample.Samples;
+
+public class CreateXpsSample : DocumentSampleBase
 {
-	[Preserve(AllMembers = true)]
-	public class CreateXpsSample : SampleBase
+	private bool isSupported = true;
+
+	public override string Title => "Create XPS Document";
+
+	public override string Description => "Generate multi-page XPS documents using SkiaSharp's document API. Windows only.";
+
+	public override bool IsSupported => OperatingSystem.IsWindows();
+
+	protected override void OnGenerateDocument(SKCanvas previewCanvas, int width, int height)
 	{
-		private string path;
-		private bool isSupported = true;
-
-		[Preserve]
-		public CreateXpsSample()
+		if (DocumentBytes == null && isSupported)
 		{
-		}
-
-		protected override async Task OnInit()
-		{
-			await base.OnInit();
-
-			// create the folder for this sample
-			var root = SamplesManager.EnsureTempDataDirectory("CreateXpsSample");
-			path = Path.Combine(root, $"{Guid.NewGuid():N}.xps");
-		}
-
-		public override string Title => "Create XPS Document";
-
-		public override SampleCategories Category => SampleCategories.Documents;
-
-		public override SamplePlatforms SupportedPlatform => SamplePlatforms.AllWindows;
-
-		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
-		{
-			canvas.Clear(SKColors.White);
-
-			GenerateDocument();
-
-			using var paint = new SKPaint
-			{
-				TextSize = 60.0f,
-				IsAntialias = true,
-				Color = 0xFF9CAFB7,
-				StrokeWidth = 3,
-				TextAlign = SKTextAlign.Center
-			};
-
-			canvas.DrawText(isSupported ? "tap to open XPS" : "Oops! No XPS support!", width / 2f, height / 3, paint);
-		}
-
-		private void GenerateDocument()
-		{
-			if (!isSupported || (isSupported && File.Exists(path)))
-				return;
-
-			using var document = SKDocument.CreateXps(path);
-
+			using var stream = new MemoryStream();
+			using var document = SKDocument.CreateXps(stream);
 			if (document == null)
 			{
 				isSupported = false;
-				return;
 			}
-
-			using var paint = new SKPaint
+			else
 			{
-				TextSize = 64.0f,
-				IsAntialias = true,
-				Color = 0xFF9CAFB7,
-				IsStroke = true,
-				StrokeWidth = 3,
-				TextAlign = SKTextAlign.Center
-			};
+				using var paint = new SKPaint
+				{
+					IsAntialias = true,
+					Color = 0xFF9CAFB7,
+					IsStroke = true,
+					StrokeWidth = 3,
+				};
+				using var docFont = new SKFont { Size = 64.0f };
 
-			var pageWidth = 840;
-			var pageHeight = 1188;
+				var pageWidth = 840;
+				var pageHeight = 1188;
 
-			// draw page 1
-			using (var xpsCanvas = document.BeginPage(pageWidth, pageHeight))
-			{
-				// draw contents
-				xpsCanvas.DrawText("...XPS 1/2...", pageWidth / 2, pageHeight / 4, paint);
-				document.EndPage();
+				for (var i = 1; i <= 2; i++)
+				{
+					using var xpsCanvas = document.BeginPage(pageWidth, pageHeight);
+					xpsCanvas.DrawText($"...XPS {i}/2...", pageWidth / 2, pageHeight / 4, SKTextAlign.Center, docFont, paint);
+					document.EndPage();
+				}
+
+				document.Close();
+				DocumentBytes = stream.ToArray();
+				DocumentFileName = "SkiaSharp-Sample.xps";
+				DocumentMimeType = "application/oxps";
 			}
-
-			// draw page 2
-			using (var xpsCanvas = document.BeginPage(pageWidth, pageHeight))
-			{
-				// draw contents
-				xpsCanvas.DrawText("...XPS 2/2...", pageWidth / 2, pageHeight / 4, paint);
-				document.EndPage();
-			}
-
-			// end the doc
-			document.Close();
 		}
 
-		protected override void OnTapped()
-		{
-			base.OnTapped();
+		using var font = new SKFont { Size = 40 };
+		using var previewPaint = new SKPaint { IsAntialias = true, Color = 0xFF9CAFB7 };
 
-			// display to the user
-			SamplesManager.OnOpenFile(path);
-		}
+		previewCanvas.DrawText(
+			isSupported ? "Tap to open XPS" : "XPS not supported on this platform",
+			width / 2f, height / 3, SKTextAlign.Center, font, previewPaint);
 	}
 }

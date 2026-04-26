@@ -112,6 +112,7 @@ var SUPPORTED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views",                               new Version (2, 80, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (2, 80, 0) },
     { "SkiaSharp.Views.Gtk3",                          new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Gtk4",                          new Version (3, 119, 0) },
     { "SkiaSharp.Views.WindowsForms",                  new Version (2, 80, 0) },
     { "SkiaSharp.Views.WPF",                           new Version (2, 80, 0) },
     { "SkiaSharp.Views.Uno.WinUI",                     new Version (2, 80, 0) },
@@ -149,6 +150,7 @@ var OBSOLETED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Forms.WPF",                     new Version (2, 80, 0) },
     { "SkiaSharp.Views.Forms.GTK",                     new Version (2, 80, 0) },
     { "SkiaSharp.Views.Uno",                           new Version (2, 80, 0) },
+    { "SkiaSharp.Views.NativeAssets.UWP",              new Version (2, 80, 0) },
     { "HarfBuzzSharp.NativeAssets.UWP",                new Version (2, 6, 1) },
     { "HarfBuzzSharp.NativeAssets.watchOS",            new Version (2, 6, 1) },
 };
@@ -173,9 +175,10 @@ Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
 #load "./scripts/cake/msbuild.cake"
 #load "./scripts/cake/UtilsManaged.cake"
+#load "./scripts/cake/samples.cake"
 #load "./scripts/cake/externals.cake"
 #load "./scripts/cake/UpdateDocs.cake"
-#load "./scripts/cake/samples.cake"
+
 
 Task ("__________________________________")
     .Description ("__________________________________________________");
@@ -228,7 +231,7 @@ Task ("tests-netfx")
     foreach ( var arch in new [] { "x86", "x64" }) {
         if (Skip(arch)) continue;
 
-        var tfm = "net472";
+        var tfm = "net48";
         var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
         if (SUPPORT_VULKAN)
             testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
@@ -281,7 +284,7 @@ Task ("tests-netcore")
 
     var failedTests = 0;
 
-    var tfm = "net8.0";
+    var tfm = "net10.0";
     var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
@@ -329,9 +332,19 @@ Task ("tests-android")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Release";
-    var tfm = "net8.0-android";
+    var tfm = "net10.0-android36.0";
     var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
+
+    Information ("=== Android Test Build Configuration ===");
+    Information ("  Project:       {0}", csproj);
+    Information ("  Configuration: {0}", configuration);
+    Information ("  TFM:           {0}", tfm);
+    Information ("  RID:           {0}", rid);
+    Information ("  App Path:      {0}", app);
+    Information ("  OS:            {0}", RuntimeInformation.OSDescription);
+    Information ("  Arch:          {0}", RuntimeInformation.ProcessArchitecture);
+    Information ("========================================");
 
     // build the app
     if (!SKIP_BUILD) {
@@ -361,9 +374,9 @@ Task ("tests-ios")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net8.0-ios";
+    var tfm = "net10.0-ios26.2";
     var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
 
     // package the app
     if (!SKIP_BUILD) {
@@ -374,6 +387,13 @@ Task ("tests-ios")
                 { "RuntimeIdentifier", rid },
             });
     }
+
+    // find the .app bundle (name may differ from AssemblyName in .NET 10)
+    var appBundles = GetDirectories ($"{outputDir}/*.app");
+    if (!appBundles.Any ())
+        throw new Exception ($"No .app bundle found in {outputDir}");
+    var app = appBundles.First ();
+    Information ("Found app bundle: {0}", app);
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
@@ -393,9 +413,9 @@ Task ("tests-maccatalyst")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net8.0-maccatalyst";
+    var tfm = "net10.0-maccatalyst26.2";
     var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
 
     // package the app
     if (!SKIP_BUILD) {
@@ -406,6 +426,13 @@ Task ("tests-maccatalyst")
                 { "RuntimeIdentifier", rid },
             });
     }
+
+    // find the .app bundle (name may differ from AssemblyName in .NET 10)
+    var appBundles = GetDirectories ($"{outputDir}/*.app");
+    if (!appBundles.Any ())
+        throw new Exception ($"No .app bundle found in {outputDir}");
+    var app = appBundles.First ();
+    Information ("Found app bundle: {0}", app);
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
@@ -437,145 +464,6 @@ Task ("tests-wasm")
     } finally {
         serverProc?.Kill ();
     }
-});
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// SAMPLES - the demo apps showing off the work
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Task ("samples-generate")
-    .Description ("Generate and zip the samples directory structure.")
-    .Does (() =>
-{
-    EnsureDirectoryExists ("./output/");
-
-    // create the interactive archive
-    Zip ("./interactive", "./output/interactive.zip");
-
-    // create the samples archive
-    CreateSamplesDirectory ("./samples/", "./output/samples/");
-    Zip ("./output/samples/", "./output/samples.zip");
-
-    // create the preview samples archive
-    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", PREVIEW_NUGET_SUFFIX);
-    Zip ("./output/samples-preview/", "./output/samples-preview.zip");
-});
-
-Task ("samples")
-    .Description ("Build all samples.")
-    .IsDependentOn ("samples-generate")
-    .Does(() =>
-{
-    var isLinux = IsRunningOnLinux ();
-    var isMac = IsRunningOnMacOs ();
-    var isWin = IsRunningOnWindows ();
-
-    void BuildSample (FilePath sln, bool dryrun)
-    {
-        var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
-        var name = sln.GetFilenameWithoutExtension ();
-        var slnPlatform = name.GetExtension ();
-        if (!string.IsNullOrEmpty (slnPlatform)) {
-            slnPlatform = slnPlatform.ToLower ();
-        }
-
-        if (dryrun) {
-            Information ($"    BUILD       {sln}");
-        } else {
-            Information ($"Building sample {sln} ({platform})...");
-            RunDotNetBuild (sln);
-        }
-    }
-
-    // build the newly migrated samples
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    // TODO: Docker seems to be having issues on the old DevOps agents
-
-    // // copy all the packages next to the Dockerfile files
-    // var dockerfiles = GetFiles ("./output/samples/**/Dockerfile");
-    // foreach (var dockerfile in dockerfiles) {
-    //     CopyDirectory (OUTPUT_NUGETS_PATH, dockerfile.GetDirectory ().Combine ("packages"));
-    // }
-
-    // // build the run.ps1 (typically for Dockerfiles)
-    // var runs = GetFiles ("./output/samples/**/run.ps1");
-    // foreach (var run in runs) {
-    //     RunProcess ("pwsh", new ProcessSettings {
-    //         Arguments = run.FullPath,
-    //         WorkingDirectory = run.GetDirectory (),
-    //     });
-    // }
-
-    // build solutions locally
-    var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
-        ? "samples-preview"
-        : "samples";
-    var solutions =
-        GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
-        GetFiles ($"./output/{actualSamples}/**/*.slnf"))
-        .OrderBy (x => x.FullPath)
-        .ToArray ();
-
-    Information ("Solutions found:");
-    foreach (var sln in solutions) {
-        Information ("    " + sln);
-    }
-
-    var firstLoop = true;
-    foreach (var dryrun in new [] { true, true, false }) {
-        if (dryrun)
-            Information ("Sample builds:");
-
-        foreach (var sln in solutions) {
-            // might have been deleted due to a platform build and cleanup
-            if (!FileExists (sln))
-                continue;
-
-            var name = sln.GetFilenameWithoutExtension ();
-            var slnPlatform = name.GetExtension ();
-            if (string.IsNullOrEmpty (slnPlatform)) {
-                // this is the main solution
-                var variants =
-                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
-                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
-                if (!variants.Any ()) {
-                    // there is no platform variant
-                    BuildSample (sln, dryrun);
-                    // delete the built sample
-                    if (!dryrun)
-                        CleanDir (sln.GetDirectory ().FullPath);
-                } else {
-                    // skip as there is a platform variant
-                    if (dryrun && firstLoop)
-                        Information ($"    SKIP   (PS) {sln} (has platform specific)");
-                }
-            } else {
-                // this is a platform variant
-                slnPlatform = slnPlatform.ToLower ();
-                if (slnPlatform == ($".{CURRENT_PLATFORM.ToLower ()}")) {
-                    // this is the correct platform variant
-                    BuildSample (sln, dryrun);
-                    // delete the built sample
-                    if (!dryrun) {
-                        CleanDir (sln.GetDirectory ().FullPath);
-                    }
-                } else {
-                    // skip this as this is not the correct platform
-                    if (dryrun && firstLoop)
-                        Information ($"    SKIP   (AP) {sln} (has alternate platform)");
-                }
-            }
-        }
-
-        firstLoop = false;
-    }
-
-    CleanDir ("./output/samples/");
-    DeleteDir ("./output/samples/");
-    CleanDir ("./output/samples-preview/");
-    DeleteDir ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -650,86 +538,210 @@ Task ("nuget-special")
         Information ("  - {0}" + " ".PadRight(max - version.Key.Length) + "=> {1}", version.Key, version.Value);
     }
 
-    // get a list of all the nuspecs to pack
-    var specials = new Dictionary<string, string> ();
+    // _NativeAssets handling (per-platform raw native binaries)
     var nativePlatforms = GetDirectories ("./output/native/*")
         .Select (d => d.GetDirectoryName ())
         .ToArray ();
     if (nativePlatforms.Length > 0) {
-        specials[$"_NativeAssets"] = $"native";
+        var nativeSpecials = new Dictionary<string, string> ();
+        nativeSpecials["_NativeAssets"] = "native";
         foreach (var platform in nativePlatforms) {
-            specials[$"_NativeAssets.{platform}"] = $"native/{platform}";
+            nativeSpecials[$"_NativeAssets.{platform}"] = $"native/{platform}";
         }
-    }
-    if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
-        specials[$"_NuGets"] = $"nugets";
-        specials[$"_NuGetsPreview"] = $"nugets";
-        specials[$"_Symbols"] = $"nugets-symbols";
-        specials[$"_SymbolsPreview"] = $"nugets-symbols";
-    }
-    Information ("Detected {0} special artifacts to process:", specials.Count);
-    max = 0;
-    foreach (var special in specials) {
-        if (special.Key.Length > max)
-            max = special.Key.Length + 1;
-    }
-    foreach (var special in specials) {
-        Information ("  - {0}" + " ".PadRight(max - special.Key.Length) + "=> {1}", special.Key, special.Value);
-    }
 
-    foreach (var pair in specials) {
-        var id = pair.Key;
-        var path = pair.Value;
-        var nuspec = $"./output/{path}/{id}.nuspec";
+        Information ("Detected {0} native asset artifacts to process:", nativeSpecials.Count);
+        max = 0;
+        foreach (var special in nativeSpecials) {
+            if (special.Key.Length > max)
+                max = special.Key.Length + 1;
+        }
+        foreach (var special in nativeSpecials) {
+            Information ("  - {0}" + " ".PadRight(max - special.Key.Length) + "=> {1}", special.Key, special.Value);
+        }
 
-        DeleteFiles ($"./output/{path}/*.nuspec");
+        foreach (var pair in nativeSpecials) {
+            var id = pair.Key;
+            var path = pair.Value;
+            var nuspec = $"./output/{path}/{id}.nuspec";
 
-        foreach (var version in versions) {
-            // update the version
-            var packageVersion = version.Value;
-            var fn = id.StartsWith ("_NativeAssets.") ? "_NativeAssets" : id;
-            var xdoc = XDocument.Load ($"./scripts/nuget/{fn}.nuspec");
-            var metadata = xdoc.Root.Element ("metadata");
-            metadata.Element ("version").Value = packageVersion;
-            metadata.Element ("id").Value = id;
+            DeleteFiles ($"./output/{path}/*.nuspec");
 
-            if (id == "_NativeAssets") {
-                // handle the root package
-                var dependencies = metadata.Element ("dependencies");
-                foreach (var platform in nativePlatforms) {
-                    dependencies.Add (new XElement ("dependency",
-                        new XAttribute ("id", $"_NativeAssets.{platform}"),
-                        new XAttribute ("version", packageVersion)));
+            foreach (var version in versions) {
+                var packageVersion = version.Value;
+
+                var xdoc = XDocument.Load ("./scripts/nuget/_NativeAssets.nuspec");
+                var metadata = xdoc.Root.Element ("metadata");
+                metadata.Element ("version").Value = packageVersion;
+                metadata.Element ("id").Value = id;
+
+                if (id == "_NativeAssets") {
+                    var dependencies = metadata.Element ("dependencies");
+                    foreach (var platform in nativePlatforms) {
+                        dependencies.Add (new XElement ("dependency",
+                            new XAttribute ("id", $"_NativeAssets.{platform}"),
+                            new XAttribute ("version", packageVersion)));
+                    }
+                } else {
+                    var platform = id.Substring (id.IndexOf (".") + 1);
+                    var files = xdoc.Root.Element ("files");
+                    files.Add (new XElement ("file",
+                        new XAttribute ("src", "**"),
+                        new XAttribute ("target", $"tools/{platform}")));
                 }
-            } else if (id.StartsWith ("_NativeAssets.")) {
-                // handle the dependencies
-                var platform = id.Substring (id.IndexOf (".") + 1);
-                var files = xdoc.Root.Element ("files");
-                files.Add (new XElement ("file",
-                    new XAttribute ("src", $"**"),
-                    new XAttribute ("target", $"tools/{platform}")));
-            }
-            // add the readme
-            {
-                var files = xdoc.Root.Element ("files");
-                files.Add (new XElement ("file",
-                    new XAttribute ("src", MakeAbsolute(File("./scripts/nuget/README.md")).FullPath),
-                    new XAttribute ("target", $"README.md")));
+                {
+                    var files = xdoc.Root.Element ("files");
+                    files.Add (new XElement ("file",
+                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
+                        new XAttribute ("target", "README.md")));
+                }
+
+                xdoc.Save (nuspec);
+                RunDotNetPack (
+                    "./scripts/nuget/NuGet.csproj",
+                    OUTPUT_SPECIAL_NUGETS_PATH,
+                    bl: $".{id}.{version.Key}",
+                    additionalArgs: "/restore /nologo",
+                    properties: new Dictionary<string, string> {
+                        { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
+                    });
             }
 
-            // save and pack
-            xdoc.Save (nuspec);
-            RunDotNetPack (
-                "./scripts/nuget/NuGet.csproj",
-                OUTPUT_SPECIAL_NUGETS_PATH,
-                bl: $".{id}.{version.Key}",
-                additionalArgs: "/restore /nologo",
-                properties: new Dictionary<string, string> {
-                    { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
-                });
+            DeleteFiles ($"./output/{path}/*.nuspec");
         }
+    }
 
-        DeleteFiles ($"./output/{path}/*.nuspec");
+    // NuGets and Symbols: bin-pack all nupkgs into ~200 MB numbered chunks
+    if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
+        const long MAX_CHUNK_SIZE = 200L * 1024 * 1024;
+
+        var metaPackages = new[] {
+            new { Id = "_NuGets",         SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = false },
+            new { Id = "_NuGetsPreview",  SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = true },
+            new { Id = "_Symbols",        SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = false },
+            new { Id = "_SymbolsPreview", SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = true },
+        };
+
+        foreach (var meta in metaPackages) {
+            // enumerate matching files
+            var allFiles = GetFiles ($"./output/{meta.SourceDir}/*.nupkg").ToList ();
+            if (meta.IncludeSnupkg)
+                allFiles.AddRange (GetFiles ($"./output/{meta.SourceDir}/*.snupkg"));
+
+            var matchingFiles = allFiles
+                .Where (f => {
+                    var name = f.GetFilename ().ToString ();
+                    if (name.StartsWith ("_")) return false;
+                    return meta.IsPreview ? name.Contains ("-") : !name.Contains ("-");
+                })
+                .Select (f => new { Path = f, Size = new FileInfo (f.FullPath).Length })
+                .OrderByDescending (f => f.Size)
+                .ToList ();
+
+            if (matchingFiles.Count == 0)
+                continue;
+
+            // bin-pack using first-fit decreasing
+            var chunks = new List<List<FilePath>> ();
+            var chunkSizes = new List<long> ();
+
+            foreach (var file in matchingFiles) {
+                var placed = false;
+                for (int i = 0; i < chunks.Count; i++) {
+                    if (chunkSizes[i] + file.Size <= MAX_CHUNK_SIZE) {
+                        chunks[i].Add (file.Path);
+                        chunkSizes[i] += file.Size;
+                        placed = true;
+                        break;
+                    }
+                }
+                if (!placed) {
+                    chunks.Add (new List<FilePath> { file.Path });
+                    chunkSizes.Add (file.Size);
+                }
+            }
+
+            Information ("{0}: {1} files -> {2} chunk(s)", meta.Id, matchingFiles.Count, chunks.Count);
+            for (int i = 0; i < chunks.Count; i++) {
+                Information ("  Chunk {0}: {1} files, {2:F1} MB",
+                    i + 1, chunks[i].Count, chunkSizes[i] / 1024.0 / 1024.0);
+            }
+
+            foreach (var version in versions) {
+                var packageVersion = version.Value;
+
+                // pack each chunk as a numbered dependency
+                for (int i = 0; i < chunks.Count; i++) {
+                    var chunkId = $"{meta.Id}.Dependencies.{i + 1}";
+                    var nuspec = $"./output/{meta.SourceDir}/{chunkId}.nuspec";
+
+                    DeleteFiles ($"./output/{meta.SourceDir}/*.nuspec");
+
+                    var xdoc = XDocument.Load ("./scripts/nuget/_Dependencies.nuspec");
+                    var xmeta = xdoc.Root.Element ("metadata");
+                    xmeta.Element ("id").Value = chunkId;
+                    xmeta.Element ("version").Value = packageVersion;
+                    xmeta.Element ("title").Value = $"{meta.Id.TrimStart ('_')} (Part {i + 1})";
+                    xmeta.Element ("description").Value =
+                        $"Part {i + 1} of {chunks.Count} of the {meta.Id.TrimStart ('_')} packages.";
+                    xmeta.Element ("summary").Value = xmeta.Element ("description").Value;
+
+                    var files = xdoc.Root.Element ("files");
+                    foreach (var file in chunks[i]) {
+                        files.Add (new XElement ("file",
+                            new XAttribute ("src", MakeAbsolute (file).FullPath),
+                            new XAttribute ("target", "tools/")));
+                    }
+                    files.Add (new XElement ("file",
+                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
+                        new XAttribute ("target", "README.md")));
+
+                    xdoc.Save (nuspec);
+                    RunDotNetPack (
+                        "./scripts/nuget/NuGet.csproj",
+                        OUTPUT_SPECIAL_NUGETS_PATH,
+                        bl: $".{chunkId}.{version.Key}",
+                        additionalArgs: "/restore /nologo",
+                        properties: new Dictionary<string, string> {
+                            { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
+                        });
+                }
+
+                // pack the parent meta-package with dependencies on all chunks
+                {
+                    var nuspec = $"./output/{meta.SourceDir}/{meta.Id}.nuspec";
+
+                    DeleteFiles ($"./output/{meta.SourceDir}/*.nuspec");
+
+                    var xdoc = XDocument.Load ($"./scripts/nuget/{meta.Id}.nuspec");
+                    var xmeta = xdoc.Root.Element ("metadata");
+                    xmeta.Element ("version").Value = packageVersion;
+
+                    var dependencies = xmeta.Element ("dependencies");
+                    for (int i = 0; i < chunks.Count; i++) {
+                        dependencies.Add (new XElement ("dependency",
+                            new XAttribute ("id", $"{meta.Id}.Dependencies.{i + 1}"),
+                            new XAttribute ("version", packageVersion)));
+                    }
+
+                    var files = xdoc.Root.Element ("files");
+                    files.Add (new XElement ("file",
+                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
+                        new XAttribute ("target", "README.md")));
+
+                    xdoc.Save (nuspec);
+                    RunDotNetPack (
+                        "./scripts/nuget/NuGet.csproj",
+                        OUTPUT_SPECIAL_NUGETS_PATH,
+                        bl: $".{meta.Id}.{version.Key}",
+                        additionalArgs: "/restore /nologo",
+                        properties: new Dictionary<string, string> {
+                            { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
+                        });
+                }
+
+                DeleteFiles ($"./output/{meta.SourceDir}/*.nuspec");
+            }
+        }
     }
 });
 

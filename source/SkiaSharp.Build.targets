@@ -47,10 +47,6 @@
     <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != '' and $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
-    <Compile Include="$(MSBuildThisFileDirectory)Common\NullableAttributes.generated.cs" Visible="false" />
-  </ItemGroup>
-
   <!-- HACK: Do not copy the native bootstrap files -->
   <Target Name="_RemoveWasdkBootstrapDll" BeforeTargets="ResolveReferences">
     <ItemGroup>

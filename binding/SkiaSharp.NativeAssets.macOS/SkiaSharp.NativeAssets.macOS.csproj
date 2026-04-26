@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
-    <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMCurrent)-macos$(TPVmacOSCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="!$(IsLinux) and '$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-macos$(TPVmacOSNext)</TargetFrameworks>
+    <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMPrevious)-macos$(TPVmacOSPrevious);$(TFMCurrent)-macos$(TPVmacOSCurrent)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for macOS</Title>
   </PropertyGroup>

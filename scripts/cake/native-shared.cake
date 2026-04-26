@@ -38,18 +38,145 @@ Task("git-sync-deps")
     if (actualIncrement != expectedIncrement)
         throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
 
-    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"));
+    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"),
+        envVars: new Dictionary<string, string> { ["GIT_SYNC_DEPS_SKIP_EMSDK"] = "1" });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void RunPython(DirectoryPath working, FilePath script, string args = "")
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// DEPENDENCY VERIFICATION
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] included = null, string[] delayLoaded = null)
+{
+    excluded = excluded ?? new string[0];
+    included = included ?? new string[0];
+    delayLoaded = delayLoaded ?? new string[0];
+
+    if (excluded.Length > 0)
+        Information($"Making sure that there are no dependencies on: {string.Join(", ", excluded)}");
+    if (included.Length > 0)
+        Information($"Making sure that there ARE dependencies on: {string.Join(", ", included)}");
+    if (delayLoaded.Length > 0)
+        Information($"Making sure that these are delay-loaded (not hard deps): {string.Join(", ", delayLoaded)}");
+
+    var dumpbins = GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Host*/*/dumpbin.exe");
+    if (dumpbins.Count == 0) {
+        throw new Exception("Could not find dumpbin.exe, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+    }
+
+    RunProcess(dumpbins.First(), $"/dependents {dll}", out var stdoutEnum);
+    var stdout = stdoutEnum.ToArray();
+
+    // Parse the dumpbin /dependents output into regular and delay-loaded sections.
+    var needed = new List<string>();
+    var delayed = new List<string>();
+    List<string> currentList = null;
+    foreach (var line in stdout) {
+        if (line.Contains("has the following dependencies:"))
+            currentList = needed;
+        else if (line.Contains("has the following delay load dependencies:"))
+            currentList = delayed;
+        else if (line.Contains("Summary"))
+            currentList = null;
+        else if (currentList != null) {
+            var match = System.Text.RegularExpressions.Regex.Match(line, @"\s\s+(\S+\.dll)");
+            if (match.Success)
+                currentList.Add(match.Groups[1].Value);
+        }
+    }
+
+    Information("Dependencies:");
+    foreach (var need in needed) {
+        Information($"    {need}");
+    }
+    if (delayed.Count > 0) {
+        Information("Delay-loaded:");
+        foreach (var d in delayed) {
+            Information($"    {d}");
+        }
+    }
+
+    foreach (var exclude in excluded) {
+        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{dll} contained a dependency on {exclude}.");
+    }
+
+    foreach (var include in included) {
+        if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{dll} is missing an expected dependency on {include}.");
+    }
+
+    foreach (var dl in delayLoaded) {
+        if (needed.Any(o => o.Contains(dl.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{dll} has a hard dependency on {dl} which should be delay-loaded.");
+        if (!delayed.Any(o => o.Contains(dl.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{dll} is missing an expected delay-loaded dependency on {dl}.");
+    }
+}
+
+void CheckLinuxDependencies(FilePath so, string[] excluded = null, string[] included = null, string maxGlibc = null)
+{
+    excluded = excluded ?? new string[0];
+    included = included ?? new string[0];
+
+    if (excluded.Length > 0)
+        Information($"Making sure that there are no dependencies on: {string.Join(", ", excluded)}");
+    if (included.Length > 0)
+        Information($"Making sure that there ARE dependencies on: {string.Join(", ", included)}");
+
+    RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
+    var stdout = stdoutEnum.ToArray();
+
+    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
+
+    Information("Dependencies:");
+    foreach (var need in needed) {
+        Information($"    {need}");
+    }
+
+    foreach (var exclude in excluded) {
+        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{so} contained a dependency on {exclude}.");
+    }
+
+    foreach (var include in included) {
+        if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{so} is missing an expected dependency on {include}.");
+    }
+
+    if (!string.IsNullOrEmpty(maxGlibc)) {
+        var maxVersion = System.Version.Parse(maxGlibc);
+
+        var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
+        glibcs.Sort();
+
+        Information("GLIBC:");
+        foreach (var glibc in glibcs) {
+            Information($"    {glibc}");
+        }
+
+        foreach (var glibc in glibcs) {
+            var version = System.Version.Parse(glibc);
+            if (version > maxVersion)
+                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {maxVersion}.");
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// HELPERS
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void RunPython(DirectoryPath working, FilePath script, string args = "", IDictionary<string, string> envVars = null)
 {
     RunProcess(PYTHON_EXE, new ProcessSettings {
         Arguments = $"{script.FullPath} {args}",
         WorkingDirectory = working.FullPath,
+        EnvironmentVariables = envVars,
     });
 }
 
@@ -119,6 +246,7 @@ string ReduceArch(string arch)
             return "arm64";
         case "riscv64":
             return "riscv64";
+        case "loong64":
         case "loongarch64":
             return "loongarch64";
     }
@@ -133,7 +261,7 @@ bool Skip(string arch)
 
     arch = ReduceArch(arch);
 
-    if (BUILD_ARCH.Contains(arch))
+    if (BUILD_ARCH.Select(ReduceArch).Contains(arch))
         return false;
 
     Warning($"Skipping architecture: {arch}");

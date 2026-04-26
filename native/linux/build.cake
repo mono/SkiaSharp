@@ -15,12 +15,19 @@ var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
 var VERIFY_INCLUDED = Argument("verifyIncluded", Argument("verifyincluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-var VERIFY_GLIBC_MAX_VAR = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
-var VERIFY_GLIBC_MAX = string.IsNullOrEmpty(VERIFY_GLIBC_MAX_VAR) ? null : System.Version.Parse(VERIFY_GLIBC_MAX_VAR);
+var VERIFY_GLIBC_MAX = Argument("verifyGlibcMax", Argument("verifyglibcmax", ""));
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
+
+string GetSkiaArch(string arch) =>
+    arch switch {
+        // Skia's GN files use "loong64", while the rest of our build and packaging
+        // pipeline uses the more explicit "loongarch64".
+        "loongarch64" => "loong64",
+        _ => arch,
+    };
 
 string VARIANT = string.IsNullOrEmpty(BUILD_VARIANT) ? "linux" : BUILD_VARIANT?.Trim();
 
@@ -37,47 +44,11 @@ if (!string.IsNullOrEmpty(AR))
 
 void CheckDeps(FilePath so, bool checkIncluded = true)
 {
-    Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
-    if (checkIncluded && VERIFY_INCLUDED.Length > 0)
-        Information($"Making sure that there ARE dependencies on: {string.Join(", ", VERIFY_INCLUDED)}");
-
-    RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
-    var stdout = stdoutEnum.ToArray();
-
-    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
-
-    Information("Dependencies:");
-    foreach (var need in needed) {
-        Information($"    {need}");
-    }
-
-    foreach (var exclude in VERIFY_EXCLUDED) {
-        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{so} contained a dependency on {exclude}.");
-    }
-
-    if (checkIncluded) {
-        foreach (var include in VERIFY_INCLUDED) {
-            if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
-                throw new Exception($"{so} is missing an expected dependency on {include}.");
-        }
-    }
-
-    var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
-    glibcs.Sort();
-
-    Information("GLIBC:");
-    foreach (var glibc in glibcs) {
-        Information($"    {glibc}");
-    }
-    
-    if (VERIFY_GLIBC_MAX != null) {
-        foreach (var glibc in glibcs) {
-            var version = System.Version.Parse(glibc);
-            if (version > VERIFY_GLIBC_MAX)
-                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {VERIFY_GLIBC_MAX}.");
-        }
-    }
+    CheckLinuxDependencies(
+        so,
+        excluded: VERIFY_EXCLUDED,
+        included: checkIncluded ? VERIFY_INCLUDED : null,
+        maxGlibc: string.IsNullOrEmpty(VERIFY_GLIBC_MAX) ? null : VERIFY_GLIBC_MAX);
 }
 
 Task("libSkiaSharp")
@@ -99,6 +70,8 @@ Task("libSkiaSharp")
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
+        var skiaArch = GetSkiaArch(arch);
+
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
 
@@ -110,14 +83,27 @@ Task("libSkiaSharp")
             ? $", '-D__WORDSIZE={wordSize}'"
             : $"";
 
+        // Architecture-specific Spectre mitigation flags
+        var spectreFlags = arch switch {
+            "x64" or "x86" => ", '-mretpoline'",
+            "arm" or "arm64" => ", '-mharden-sls=all'",
+            _ => ""  // RISC-V, LoongArch - no standard flags yet
+        };
+
+        // Bionic (Android NDK) builds need SK_BUILD_FOR_UNIX to prevent the
+        // NDK's __ANDROID__ define from suppressing SkDebugf (stdio port).
+        // Fontconfig is not available on Bionic.
+        var isBionic = VARIANT.ToLower().StartsWith("bionic");
+        var bionicDefine = isBionic ? ", '-DSK_BUILD_FOR_UNIX'" : "";
+        var bionicArgs = isBionic ? "skia_use_fontconfig=false " : "";
+
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
-            $"target_cpu='{arch}' " +
+            $"target_cpu='{skiaArch}' " +
             $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
-            $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +
@@ -126,8 +112,9 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
+            bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' {wordSizeDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
@@ -151,15 +138,17 @@ Task("libHarfBuzzSharp")
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
+        var skiaArch = GetSkiaArch(arch);
+
         var soname = GetVersion("HarfBuzz", "soname");
         var map = MakeAbsolute((FilePath)"libHarfBuzzSharp/libHarfBuzzSharp.map");
 
         GnNinja($"{VARIANT}/{arch}", "HarfBuzzSharp",
             $"target_os='linux' " +
-            $"target_cpu='{arch}' " +
+            $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[] " +
+            $"extra_cflags=[ {(VARIANT.ToLower().StartsWith("bionic") ? "'-DSK_BUILD_FOR_UNIX'" : "")} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +

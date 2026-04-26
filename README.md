@@ -21,9 +21,10 @@ be used across mobile, server and desktop models to render images.
 
 SkiaSharp provides cross-platform bindings for:
 
- - .NET Standard 1.3
+ - .NET Standard 2.0
+ - .NET Framework 4.6.2+ (Recommended .NET Framework 4.8)
  - .NET Core
- - .NET 6
+ - .NET 6+
  - Tizen
  - Android
  - iOS
@@ -60,8 +61,8 @@ Building SkiaSharp is mostly straight forward. The main issue is the multiple de
 
 However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there are ways to skip all the native builds.
 
-- To get started building, see [documentation/building.md](documentation/building.md)
-- If you are just wanting a custom Linux build, see [documentation/building-linux.md](documentation/building-linux.md)
+- To get started building, see [documentation/dev/building.md](documentation/dev/building.md)
+- If you are just wanting a custom Linux build, see [documentation/dev/building-linux.md](documentation/dev/building-linux.md)
 
 ## Contributing
 
@@ -73,7 +74,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 For comprehensive documentation:
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines
-- **[documentation/](documentation/)** - Architecture, build instructions, and maintainer guides
+- **[documentation/dev/](documentation/dev/)** - Architecture, build instructions, and maintainer guides
 
 ## Contributors
 
@@ -88,6 +89,6 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m119**](https://github.com/google/skia/tree/chrome/m119)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m119)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m119...mono:skiasharp)  
+What version are we on? [**m132**](https://github.com/google/skia/tree/chrome/m132)
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m132)
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m132...mono:skiasharp)  

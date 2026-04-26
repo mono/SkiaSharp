@@ -49,6 +49,14 @@
             <Dir>musl-loongarch64\</Dir>
         </_NativeHarfBuzzSharpFile>
 
+        <!-- Bionic -->
+        <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-bionic-x64\native\libHarfBuzzSharp*.so">
+            <Dir>bionic-x64\</Dir>
+        </_NativeHarfBuzzSharpFile>
+        <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-bionic-arm64\native\libHarfBuzzSharp*.so">
+            <Dir>bionic-arm64\</Dir>
+        </_NativeHarfBuzzSharpFile>
+
         <!-- include everything -->
         <Content Include="@(_NativeHarfBuzzSharpFile)">
             <Link>%(Dir)%(Filename)%(Extension)</Link>

@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent)-android$(TPVAndroidCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-android$(TPVAndroidNext)</TargetFrameworks>
+    <TargetFrameworks>$(TFMPrevious)-android$(TPVAndroidPrevious);$(TFMCurrent)-android$(TPVAndroidCurrent)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Android</Title>
     <IsNativeAssetsProject>true</IsNativeAssetsProject>

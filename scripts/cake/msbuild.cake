@@ -182,6 +182,15 @@ void RunDotNetBuild(
             }
         }
     }
+
+    Information("=== RunDotNetBuild ===");
+    Information("  Solution:      {0}", solution);
+    Information("  Configuration: {0}", c.Configuration);
+    foreach (var p in msb.Properties) {
+        Information("  Property:      {0} = {1}", p.Key, string.Join(", ", p.Value));
+    }
+    Information("======================");
+
     c.Sources = GetNuGetSources();
 
     c.ArgumentCustomization = AppendForwardingLogger;

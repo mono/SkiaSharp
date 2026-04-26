@@ -29,6 +29,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestFamilyName()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
@@ -250,10 +251,11 @@ namespace SkiaSharp.Tests
 			Assert.DoesNotContain((ushort)0, glyphs);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not release the data when the typeface is disposed
 		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
 		{
+			SkipOnPlatform(IsMac, "macOS does not release the data when the typeface is disposed");
+
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
 			var bytes = File.ReadAllBytes(path);
 
@@ -344,12 +346,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void StreamIsAccessibleFromNativeType()
 		{
+			SkipOnMono();
+
 			var font = CreateFont(out var typefaceHandle);
 
 			CollectGarbage();
@@ -415,12 +416,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
+			SkipOnMono();
+
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 
 			DoWork(out var typefaceH, out var streamH);
@@ -526,14 +526,11 @@ namespace SkiaSharp.Tests
 			Assert.False(tf1.IsDisposed);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)]
 		[SkippableFact]
 		public unsafe void GCStillCollectsTypeface()
 		{
+			SkipOnNonWindows("Test uses Windows-specific font path");
+
 			var handle = DoWork();
 
 			CollectGarbage();
@@ -564,6 +561,141 @@ namespace SkiaSharp.Tests
 
 				return tf1.Handle;
 			}
+		}
+
+		// Empty / IsEmpty
+
+		[SkippableFact]
+		public void DefaultHasValidNativeHandle()
+		{
+			Assert.NotEqual(IntPtr.Zero, SKTypeface.Default.Handle);
+		}
+
+		[SkippableFact]
+		public void DefaultFamilyNameIsNotNullOrEmpty()
+		{
+			Assert.NotNull(SKTypeface.Default.FamilyName);
+			Assert.NotEmpty(SKTypeface.Default.FamilyName);
+		}
+
+		[SkippableFact]
+		public void DefaultIsNotEmpty()
+		{
+			Assert.False(SKTypeface.Default.IsEmpty);
+			Assert.True(SKTypeface.Default.GlyphCount > 0);
+		}
+
+		[SkippableFact]
+		public void CreateDefaultHasValidHandle()
+		{
+			using var tf = SKTypeface.CreateDefault();
+			Assert.NotNull(tf);
+			Assert.NotEqual(IntPtr.Zero, tf.Handle);
+		}
+
+		[SkippableFact]
+		public void CreateDefaultAndDefaultSameFamily()
+		{
+			using var created = SKTypeface.CreateDefault();
+			Assert.Equal(SKTypeface.Default.FamilyName, created.FamilyName);
+		}
+
+		[SkippableFact]
+		public void EmptyTypefaceIsEmpty()
+		{
+			Assert.True(SKTypeface.Empty.IsEmpty);
+			Assert.Equal(0, SKTypeface.Empty.GlyphCount);
+		}
+
+		[SkippableFact]
+		public void EmptyTypefaceHasEmptyFamilyName()
+		{
+			Assert.NotNull(SKTypeface.Empty.FamilyName);
+			Assert.Empty(SKTypeface.Empty.FamilyName);
+		}
+
+		[SkippableFact]
+		public void CanDisposeEmpty()
+		{
+			SKTypeface.Empty.Dispose();
+			Assert.NotNull(SKTypeface.Empty);
+			Assert.NotEqual(IntPtr.Zero, SKTypeface.Empty.Handle);
+		}
+
+		// FromFamilyName behavioral changes
+
+		[SkippableFact]
+		public void FromFamilyNameNonExistentReturnsNonNull()
+		{
+			var tf = SKTypeface.FromFamilyName("NonExistentFontFamilyXYZ12345");
+			Assert.NotNull(tf);
+		}
+
+		[SkippableFact]
+		public void FromFamilyNameNullReturnsNonNull()
+		{
+			var tf = SKTypeface.FromFamilyName(null);
+			Assert.NotNull(tf);
+		}
+
+		[SkippableFact]
+		public void FromFamilyNameEmptyStringReturnsNonNull()
+		{
+			var tf = SKTypeface.FromFamilyName("");
+			Assert.NotNull(tf);
+		}
+
+		[SkippableFact]
+		public void FromFamilyNameNonExistentReturnsFallback()
+		{
+			var tf = SKTypeface.FromFamilyName("NonExistentFontFamilyXYZ12345");
+			Assert.NotNull(tf);
+		}
+
+		[SkippableFact]
+		public void FromFamilyNameNonExistentConsistentWithMatchFamily()
+		{
+			var fromFamily = SKTypeface.FromFamilyName("NonExistentFontFamilyXYZ12345");
+			var matched = SKFontManager.Default.MatchFamily("NonExistentFontFamilyXYZ12345");
+
+			// FromFamilyName always returns non-null (falls back to Default)
+			Assert.NotNull(fromFamily);
+
+			// MatchFamily is the strict API — may return null on some platforms
+			if (matched != null)
+			{
+				// If both returned a result, they should be the same cached object
+				Assert.Same(matched, fromFamily);
+			}
+		}
+
+		[SkippableFact]
+		public void FromFileNullThrows()
+		{
+			Assert.Throws<ArgumentNullException>(() => SKTypeface.FromFile(null));
+		}
+
+		// ZeroGlyphs font
+
+		[SkippableFact]
+		public void ZeroGlyphFontIsEmpty()
+		{
+			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "ZeroGlyphs.ttf"));
+			if (tf == null)
+				return;
+
+			Assert.Equal(0, tf.GlyphCount);
+			Assert.True(tf.IsEmpty);
+		}
+
+		[SkippableFact]
+		public void ZeroGlyphFontHasFamilyName()
+		{
+			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "ZeroGlyphs.ttf"));
+			if (tf == null)
+				return;
+
+			Assert.Equal("ZeroGlyphs", tf.FamilyName);
 		}
 	}
 }

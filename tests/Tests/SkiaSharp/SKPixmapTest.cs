@@ -36,6 +36,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ReadPixelSucceeds()
 		{
 			var info = new SKImageInfo(10, 10);

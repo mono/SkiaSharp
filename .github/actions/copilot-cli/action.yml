@@ -1,0 +1,104 @@
+# Copilot CLI Action
+#
+# Setup: Create a PAT with Copilot access for this action.
+#
+# 1. Create a fine-grained PAT with Copilot access:
+#    https://github.com/settings/personal-access-tokens/new?name=Copilot+CLI+Token&description=GitHub+Copilot+CLI+automation+for+workflows&expires_in=90&user_copilot_requests=read
+# 2. Generate the token and copy it
+# 3. In your repo: Settings → Secrets and variables → Actions → New repository secret
+# 4. Name: COPILOT_TOKEN, Value: paste the token
+# 5. Reference in workflow: copilot-token: ${{ secrets.COPILOT_TOKEN }}
+#
+# Note: The default GITHUB_TOKEN does NOT have Copilot permissions.
+
+name: 'Copilot CLI'
+description: 'Install and run the GitHub Copilot CLI with a prompt (cross-platform)'
+inputs:
+  copilot-token:
+    description: 'PAT with "Copilot Requests" permission (GITHUB_TOKEN does NOT work)'
+    required: true
+  prompt:
+    description: 'Prompt to send to Copilot'
+    required: true
+  model:
+    description: 'Model to use (e.g., "claude-opus-4.6", "claude-sonnet-4.5", "gpt-5")'
+    required: true
+    default: 'claude-opus-4.6'
+  mcp-config:
+    description: 'MCP server configuration JSON'
+    required: false
+  artifact-name:
+    description: 'Name for the uploaded artifact'
+    required: true
+    default: 'copilot-output'
+outputs:
+  logs-path:
+    description: 'Path to copilot logs'
+    value: ${{ steps.copilot.outputs.logs_path }}
+  exit-code:
+    description: 'Exit code from copilot'
+    value: ${{ steps.copilot.outputs.exit_code }}
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Install Copilot CLI
+      shell: pwsh
+      run: |
+        npm install -g @github/copilot
+        Write-Host "CLI Version: $(copilot --version)"
+
+    - name: Configure MCP
+      if: ${{ inputs.mcp-config != '' }}
+      shell: pwsh
+      run: |
+        if ($IsWindows) {
+          $configDir = Join-Path $env:APPDATA '.copilot'
+        } else {
+          $xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { Join-Path $HOME '.config' }
+          $configDir = Join-Path $xdg '.copilot'
+        }
+        New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+        $env:MCP_CONFIG | Set-Content (Join-Path $configDir 'mcp-config.json')
+        Get-Content (Join-Path $configDir 'mcp-config.json')
+      env:
+        MCP_CONFIG: ${{ inputs.mcp-config }}
+
+    - name: Run Copilot CLI
+      id: copilot
+      shell: pwsh
+      run: |
+        $logDir = Join-Path $env:RUNNER_TEMP 'copilot-logs'
+        New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+
+        $copilotArgs = @(
+          '-p', $env:PROMPT,
+          '--yolo',
+          '--model', $env:MODEL,
+          '--log-level', 'all',
+          '--log-dir', $logDir,
+          '--screen-reader',
+          '--no-color',
+          '--stream', 'off'
+        )
+        & copilot @copilotArgs
+        $exitCode = $LASTEXITCODE
+
+        "logs_path=$logDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        "exit_code=$exitCode" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      env:
+        GH_TOKEN: ${{ github.token }}
+        COPILOT_GITHUB_TOKEN: ${{ inputs.copilot-token }}
+        PROMPT: ${{ inputs.prompt }}
+        MODEL: ${{ inputs.model }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ${{ inputs.artifact-name }}-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ steps.copilot.outputs.logs_path }}
+        if-no-files-found: warn

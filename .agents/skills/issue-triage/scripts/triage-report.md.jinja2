@@ -1,0 +1,262 @@
+# Issue Triage Report — #{{ meta.number }}
+
+| Field | Value |
+|-------|-------|
+| Repository | {{ meta.repo | d('—') }} |
+| Analyzed | {{ meta.analyzedAt | d('—') }} |
+| Type | {{ classification.type.value | d('—') }} ({{ classification.type.confidence | fmt_confidence }}) |
+| Area | {{ classification.area.value | d('—') }} ({{ classification.area.confidence | fmt_confidence }}) |
+| Suggested action | {{ actionability.suggestedAction | d('—') }} ({{ actionability.confidence | fmt_confidence }}) |
+
+**Issue Summary:** {{ summary }}
+
+**Analysis:** {{ analysis.summary | d('—') }}
+
+**Recommendations:** **{{ actionability.suggestedAction | d('—') }}** — {{ actionability.reason | d('—') }}
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | {{ classification.type.value | d('—') }} |
+| Area | {{ classification.area.value | d('—') }} |
+| Platforms | {{ classification.platforms | fmt_list }} |
+| Backends | {{ classification.backends | fmt_list }} |
+| Tenets | {{ classification.tenets | fmt_list }} |
+| Partner | {{ classification.partner | d('—') }} |
+{% if meta.currentLabels %}
+| Current labels | {{ meta.currentLabels | join(', ') }} |
+{% endif %}
+
+## Evidence
+{% if repro %}
+
+### Reproduction
+  {% if repro.stepsToReproduce %}
+
+    {% for step in repro.stepsToReproduce %}
+{{ loop.index }}. {{ step }}
+    {% endfor %}
+  {% endif %}
+  {% if repro.environmentDetails %}
+
+**Environment:** {{ repro.environmentDetails }}
+  {% endif %}
+  {% if repro.relatedIssues %}
+
+**Related issues:** {{ repro.relatedIssues | map('string') | map('prefix', '#') | join(', ') }}
+  {% endif %}
+  {% if repro.repoLinks %}
+
+**Repository links:**
+    {% for item in repro.repoLinks %}
+- {{ item.url }} — {{ item.description | d('linked repro') }}
+    {% endfor %}
+  {% endif %}
+  {% if repro.screenshots %}
+
+**Screenshots:**
+    {% for item in repro.screenshots %}
+- {{ item.url }} — {{ item.description | d('screenshot') }}
+    {% endfor %}
+  {% endif %}
+  {% if repro.attachments %}
+
+**Attachments:**
+    {% for item in repro.attachments %}
+- {{ item.filename }} — {{ item.url }}{{ ' — ' ~ item.description if item.description else '' }}
+    {% endfor %}
+  {% endif %}
+  {% if repro.codeSnippets %}
+
+**Code snippets:**
+    {% for snippet in repro.codeSnippets %}
+
+```csharp
+{{ snippet }}
+```
+    {% endfor %}
+  {% endif %}
+{% endif %}
+{% if bug %}
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | {{ bug.severity | d('—') }} |
+| Regression claimed | {{ bug.regressionClaimed | d('—') }} |
+| Error type | {{ bug.errorType | d('—') }} |
+| Error message | {{ bug.errorMessage | d('—') }} |
+| Repro quality | {{ bug.reproQuality | d('—') }} |
+| Target frameworks | {{ bug.targetFrameworks | fmt_list }} |
+  {% if bug.stackTrace %}
+
+**Stack trace:**
+
+```text
+{{ bug.stackTrace }}
+```
+  {% endif %}
+{% endif %}
+{% if version %}
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | {{ version.mentionedVersions | fmt_list }} |
+| Worked in | {{ version.workedIn | d('—') }} |
+| Broke in | {{ version.brokeIn | d('—') }} |
+| Current relevance | {{ version.currentRelevance | d('—') }} |
+| Relevance reason | {{ version.relevanceReason | d('—') }} |
+{% endif %}
+{% if regression %}
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | {{ regression.isRegression | d('—') }} |
+| Confidence | {{ regression.confidence | fmt_confidence }} |
+| Reason | {{ regression.reason | d('—') }} |
+| Worked in version | {{ regression.workedInVersion | d('—') }} |
+| Broke in version | {{ regression.brokeInVersion | d('—') }} |
+{% endif %}
+{% if fix %}
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | {{ fix.likelyFixed | d('—') }} |
+| Confidence | {{ fix.confidence | fmt_confidence }} |
+| Reason | {{ fix.reason | d('—') }} |
+| Related PRs | {{ fix.relatedPRs | map('string') | map('prefix', '#') | join(', ') if fix.relatedPRs else '—' }} |
+| Related commits | {{ fix.relatedCommits | fmt_list }} |
+| Fixed in version | {{ fix.fixedInVersion | d('—') }} |
+{% endif %}
+
+## Analysis
+
+### Technical Summary
+
+{{ analysis.summary | d('—') }}
+{% if analysis.rationale %}
+
+### Rationale
+
+{{ analysis.rationale }}
+{% endif %}
+{% if analysis.keySignals %}
+
+### Key Signals
+
+  {% for signal in analysis.keySignals %}
+- "{{ signal.text }}" — **{{ signal.source }}**{{ ' (' ~ signal.interpretation ~ ')' if signal.interpretation else '' }}
+  {% endfor %}
+{% endif %}
+{% if analysis.codeInvestigation %}
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+  {% for entry in analysis.codeInvestigation %}
+| `{{ entry.file }}` | {{ entry.lines | d('—') }} | {{ entry.relevance | d('—') }} | {{ entry.finding | d('—') }} |
+  {% endfor %}
+{% endif %}
+{% if analysis.errorFingerprint %}
+
+**Error fingerprint:** `{{ analysis.errorFingerprint }}`
+{% endif %}
+{% if analysis.workarounds %}
+
+### Workarounds
+
+  {% for item in analysis.workarounds %}
+- {{ item }}
+  {% endfor %}
+{% endif %}
+{% if analysis.nextQuestions %}
+
+### Next Questions
+
+  {% for item in analysis.nextQuestions %}
+- {{ item }}
+  {% endfor %}
+{% endif %}
+{% if resolution %}
+
+### Resolution Proposals
+  {% if resolution.hypothesis %}
+
+**Hypothesis:** {{ resolution.hypothesis }}
+  {% endif %}
+
+  {% for proposal in resolution.proposals | d([]) %}
+{{ loop.index }}. **{{ proposal.title | d('Proposal ' ~ loop.index) }}**{% if proposal.category or proposal.confidence is defined or proposal.effort or proposal.validated %} — {{ [proposal.category, 'confidence ' ~ (proposal.confidence | fmt_confidence) if proposal.confidence is defined else none, proposal.effort, 'validated=' ~ proposal.validated if proposal.validated else none] | select | join(', ') }}{% endif %}
+
+   - {{ proposal.description | d('—') }}
+    {% if proposal.codeSnippet %}
+
+```csharp
+{{ proposal.codeSnippet }}
+```
+    {% endif %}
+  {% endfor %}
+  {% if resolution.recommendedProposal %}
+
+**Recommended proposal:** {{ resolution.recommendedProposal }}
+  {% endif %}
+  {% if resolution.recommendedReason %}
+
+**Why:** {{ resolution.recommendedReason }}
+  {% endif %}
+{% endif %}
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | {{ actionability.suggestedAction | d('—') }} |
+| Confidence | {{ actionability.confidence | fmt_confidence }} |
+| Reason | {{ actionability.reason | d('—') }} |
+| Suggested repro platform | {{ actionability.suggestedReproPlatform | d('—') }} |
+{% if output.missingInfo %}
+
+### Missing Info
+
+  {% for item in output.missingInfo %}
+- {{ item }}
+  {% endfor %}
+{% endif %}
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+{% for action in actions %}
+| {{ action.type | d('—') }} | {{ action.risk | d('—') }} | {{ action.confidence | fmt_confidence }} | {{ action.description | d('—') }} | {{ action | action_details }} |
+{% endfor %}
+{% for action in actions if action.comment %}
+
+**Comment draft for `{{ action.type }}`:**
+
+```markdown
+{{ action.comment }}
+```
+{% endfor %}
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{{ raw_json }}
+```
+
+</details>

@@ -1,0 +1,119 @@
+name: Add PR Artifacts Comment
+
+on:
+  # Use pull_request_target to run in the context of the base branch,
+  # which allows commenting on PRs from forks.
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+  # Allow manual triggering for any PR.
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to add artifacts comment to'
+        required: true
+        type: number
+
+# Only one comment update at a time per PR.
+concurrency:
+  group: pr-artifacts-comment-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  add-artifacts-comment:
+    if: github.repository_owner == 'mono'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Add PR artifacts comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const prNumber = context.payload.pull_request?.number
+              || context.payload.inputs?.pr_number;
+
+            if (!prNumber) {
+              core.setFailed('Could not determine PR number.');
+              return;
+            }
+
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+            const repoSlug = `${repo.owner}/${repo.repo}`;
+
+            const bashUrl = `https://raw.githubusercontent.com/${repoSlug}/main/scripts/get-skiasharp-pr.sh`;
+            const psUrl = `https://raw.githubusercontent.com/${repoSlug}/main/scripts/get-skiasharp-pr.ps1`;
+            const adoUrl = 'https://dev.azure.com/xamarin/public/_build?definitionId=4';
+
+            const marker = '<!-- skiasharp-pr-artifacts -->';
+
+            const body = [
+              marker,
+              `### 📦 Try the packages from this PR`,
+              '',
+              '> [!WARNING]',
+              '> Do not run these scripts without first reviewing the code in this PR.',
+              '',
+              '**Step 1 — Download the packages**',
+              '',
+              '*bash / macOS / Linux:*',
+              '```bash',
+              `curl -fsSL ${bashUrl} | bash -s -- ${prNumber}`,
+              '```',
+              '',
+              '*PowerShell / Windows:*',
+              '```powershell',
+              `iex "& { $(irm ${psUrl}) } ${prNumber}"`,
+              '```',
+              '',
+              '**Step 2 — Add the local NuGet source**',
+              '',
+              '```bash',
+              `dotnet nuget add source ~/.skiasharp/hives/pr-${prNumber}/packages --name skiasharp-pr-${prNumber}`,
+              '```',
+              '',
+              '<details>',
+              '<summary>More options</summary>',
+              '',
+              '| Option | Description |',
+              '|--------|-------------|',
+              '| `--successful-only` / `-SuccessfulOnly` | Only use successful builds |',
+              '| `--force` / `-Force` | Overwrite previously downloaded packages |',
+              '| `--list` / `-List` | List available artifacts without downloading |',
+              '| `--build-id ID` / `-BuildId ID` | Download from a specific build |',
+              '',
+              `Or download manually from [Azure Pipelines](${adoUrl}) — look for the \`nuget\` artifact on the build for this PR.`,
+              '',
+              '**Remove the source when you\'re done:**',
+              '',
+              '```bash',
+              `dotnet nuget remove source skiasharp-pr-${prNumber}`,
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+
+            // Find existing comment (paginate in case of many comments).
+            let existing = null;
+            for await (const page of github.paginate.iterator(
+              github.rest.issues.listComments,
+              { ...repo, issue_number: prNumber, per_page: 100 }
+            )) {
+              existing = page.data.find(c => c.body.includes(marker));
+              if (existing) break;
+            }
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...repo,
+                issue_number: prNumber,
+                body,
+              });
+            }

@@ -35,6 +35,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestFamilyCount()
 		{
 			var fonts = SKFontManager.Default;
@@ -110,12 +111,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void StreamIsAccessibleFromNativeType()
 		{
+			SkipOnMono();
+
 			var paint = CreateFont(out var typefaceHandle);
 
 			CollectGarbage();
@@ -255,20 +255,21 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			var tf1 = fonts.MatchFamily("Times New Roman");
-			var tf2 = SKTypeface.FromFamilyName("Times New Roman");
+			// Use a font family known to exist on the current platform
+			var familyName = DefaultFontFamily;
 
+			var tf1 = fonts.MatchFamily(familyName);
+			var tf2 = SKTypeface.FromFamilyName(familyName);
+
+			Assert.NotNull(tf1);
 			Assert.Same(tf1, tf2);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)]
 		[SkippableFact]
 		public unsafe void GCStillCollectsTypeface()
 		{
+			SkipOnNonWindows("Test uses Windows-specific font path");
+
 			var handle = DoWork();
 
 			CollectGarbage();
@@ -301,6 +302,12 @@ namespace SkiaSharp.Tests
 
 				return tf1.Handle;
 			}
+		}
+
+		[SkippableFact]
+		public void FontManagerDefaultHasValidHandle()
+		{
+			Assert.NotEqual(IntPtr.Zero, SKFontManager.Default.Handle);
 		}
 	}
 }

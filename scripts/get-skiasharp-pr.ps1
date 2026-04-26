@@ -389,7 +389,7 @@ try {
         foreach ($artifact in $artifacts) {
             Write-Message "  - $($artifact.name)" -Level Info
         }
-        exit 0
+        return
     }
 
     # Find the nuget artifact - prefer nuget_preview (smaller), fallback to nuget
@@ -463,5 +463,5 @@ try {
 catch {
     Write-Host ""
     Write-Error $_.Exception.Message
-    exit 1
+    throw
 }

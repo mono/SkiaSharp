@@ -1,0 +1,84 @@
+name: "Docs - PR Staging - Sweep Stale"
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+# Default to no permissions — each job declares only what it needs.
+permissions: {}
+
+# Only one sweep at a time
+concurrency:
+  group: "docs-staging-sweep"
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # push to docs-live
+      pull-requests: read    # check PR state
+    steps:
+      - name: Checkout docs-live branch
+        uses: actions/checkout@v4
+        with:
+          ref: docs-live
+          fetch-depth: 1
+
+      - name: Find and remove stale staging directories
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ ! -d staging ]; then
+            echo "No staging directory found, nothing to do"
+            exit 0
+          fi
+
+          stale_dirs=()
+
+          for dir in staging/*/; do
+            # Extract PR number from directory name
+            pr_number="$(basename "$dir")"
+
+            # Validate it is a positive integer
+            if ! [[ "$pr_number" =~ ^[1-9][0-9]*$ ]]; then
+              echo "Skipping non-numeric directory: $dir"
+              continue
+            fi
+
+            # Query PR state via GitHub CLI
+            pr_state=$(gh pr view "$pr_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
+
+            echo "PR #$pr_number — state: $pr_state"
+
+            if [ "$pr_state" = "CLOSED" ] || [ "$pr_state" = "MERGED" ]; then
+              stale_dirs+=("staging/$pr_number")
+            fi
+          done
+
+          if [ ${#stale_dirs[@]} -eq 0 ]; then
+            echo "No stale staging directories found"
+            exit 0
+          fi
+
+          echo ""
+          echo "Removing ${#stale_dirs[@]} stale staging director(ies):"
+          for d in "${stale_dirs[@]}"; do
+            echo "  - $d"
+            rm -rf "$d"
+          done
+
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Sweep stale staging docs for ${#stale_dirs[@]} closed PR(s)"
+            git push origin docs-live
+          else
+            echo "No changes to commit"
+          fi

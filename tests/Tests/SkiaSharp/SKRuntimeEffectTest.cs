@@ -153,6 +153,7 @@ namespace SkiaSharp.Tests
 			}
 
 			[SkippableFact]
+			[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 			public void UndefinedFunctionsFailsCreation()
 			{
 				using var effect = SKRuntimeEffect.CreateShader("", out var errorText);
