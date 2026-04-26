@@ -19,7 +19,7 @@ namespace SkiaSharp
 			//       instances are created before any access is made to them.
 			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
 
-			defaultManager = new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ());
+			defaultManager = new SKFontManagerStatic (SkiaApi.sk_fontmgr_create_default ());
 		}
 
 		internal static void EnsureStaticInstanceAreInitialized ()

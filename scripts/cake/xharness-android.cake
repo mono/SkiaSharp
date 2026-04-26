@@ -90,8 +90,12 @@ Setup(context =>
     DotNetTool("android avd list");
 
     // start the emulator (only wait 5 mins)
+    var gpuMode = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+        ? "swiftshader_indirect"
+        : "guest";
     Information("Starting Emulator: {0}...", ANDROID_AVD);
-    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --timeout 300");
+    Information("  GPU: {0}", gpuMode);
+    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu {gpuMode} --wait --no-window --no-snapshot --no-audio --no-boot-anim --no-animations --cpu-threshold 3 --response-threshold 5 --camera-back none --camera-front none --timeout 300");
 
     // show running emulator information
     Information("Emulator started:");

@@ -5,13 +5,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="3.119.0" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.0" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.0" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.0" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.Desktop.Common" Version="3.119.0" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.WPF" Version="3.119.0" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="3.119.0" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp" Version="3.119.2" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.2" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
+    <PackageReference Include="SkiaSharp.Views.Uno.WinUI" Version="3.119.2" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.2" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.Desktop.Common" Version="3.119.2" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="3.119.2" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="3.119.2" ExcludeAssets="all" />
     <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" ExcludeAssets="all" />
     <PackageReference Include="HarfBuzzSharp.NativeAssets.Android" Version="8.3.1.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-android'))" />
     <PackageReference Include="HarfBuzzSharp.NativeAssets.iOS" Version="8.3.1.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-ios'))" />
@@ -25,10 +26,25 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" Condition="!$(TargetFramework.Contains('-windows')) and !$(TargetFramework.Contains('-desktop')) and !$(TargetFramework.Contains('-browserwasm'))" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" Condition="$(TargetFramework.Contains('-desktop'))" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" Condition="$(TargetFramework.Contains('-browserwasm'))" />
   </ItemGroup>
 
+  <Choose>
+    <When Condition="$(TargetFramework.Contains('-windows'))">
+      <ItemGroup>
+        <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" />
+      </ItemGroup>
+    </When>
+    <When Condition="$(UnoFeatures.Contains('SkiaRenderer'))">
+      <ItemGroup>
+        <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" Condition="!$(TargetFramework.Contains('-desktop')) and !$(TargetFramework.Contains('-browserwasm'))" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" Condition="$(TargetFramework.Contains('-desktop'))" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" Condition="$(TargetFramework.Contains('-browserwasm'))" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>

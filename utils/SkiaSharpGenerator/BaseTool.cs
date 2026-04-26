@@ -115,6 +115,39 @@ namespace SkiaSharpGenerator
 				}
 			}
 
+			if (OperatingSystem.IsLinux())
+			{
+				var process = new System.Diagnostics.Process
+				{
+					StartInfo = new System.Diagnostics.ProcessStartInfo
+					{
+						FileName = "clang",
+						Arguments = "-print-resource-dir",
+						RedirectStandardOutput = true,
+						UseShellExecute = false,
+						CreateNoWindow = true,
+					}
+				};
+				try
+				{
+					process.Start();
+					var resourceDir = process.StandardOutput.ReadToEnd().Trim();
+					process.WaitForExit();
+					if (!string.IsNullOrEmpty(resourceDir))
+					{
+						var include = Path.Combine(resourceDir, "include");
+						if (Directory.Exists(include))
+							options.SystemIncludeFolders.Add(include);
+					}
+				}
+				catch { }
+				foreach (var sys in new[] { "/usr/include/x86_64-linux-gnu", "/usr/include" })
+				{
+					if (Directory.Exists(sys))
+						options.SystemIncludeFolders.Add(sys);
+				}
+			}
+
 			foreach (var header in config.IncludeDirs)
 			{
 				var path = Path.Combine(SkiaRoot, header);
@@ -192,14 +225,16 @@ namespace SkiaSharpGenerator
 				{ "signed int",           nameof(Int32) },
 				{ "unsigned",             nameof(UInt32) },
 				{ "unsigned int",         nameof(UInt32) },
-				{ "long",                 nameof(Int64) },
-				{ "long int",             nameof(Int64) },
+				// NOTE: C `long` / `unsigned long` / `signed long` (and the
+				// equivalent `long int` spellings) are intentionally omitted.
+				// Their size is platform-dependent (32-bit on Windows LLP64,
+				// 64-bit on Linux/macOS LP64), so no single managed type maps
+				// correctly on all platforms. GetType() below rejects them with
+				// a diagnostic pointing at int32_t / int64_t.
 				{ "long long",            nameof(Int64) },
 				{ "long long int",        nameof(Int64) },
-				{ "signed long",          nameof(Int64) },
-				{ "signed long int",      nameof(Int64) },
-				{ "unsigned long",        nameof(UInt64) },
-				{ "unsigned long int",    nameof(UInt64) },
+				{ "unsigned long long",   nameof(UInt64) },
+				{ "unsigned long long int", nameof(UInt64) },
 				{ "float",                nameof(Single) },
 				{ "double",               nameof(Double) },
 				// TODO: long double, wchar_t ?
@@ -317,6 +352,16 @@ namespace SkiaSharpGenerator
 			return null;
 		}
 
+		// C types whose sizes differ between LLP64 (Windows) and LP64 (Linux/macOS)
+		// platforms. There is no single managed mapping that is correct on both,
+		// so we refuse to generate bindings for them instead of silently picking
+		// one and propagating the platform-dependent bug.
+		private static readonly HashSet<string> PlatformDependentLongTypes = new()
+		{
+			"long", "signed long", "unsigned long",
+			"long int", "signed long int", "unsigned long int",
+		};
+
 		protected string GetType(CppType type)
 		{
 			var typeName = GetCppType(type);
@@ -325,6 +370,15 @@ namespace SkiaSharpGenerator
 			var pointerIndex = typeName.IndexOf("*");
 			var pointers = pointerIndex == -1 ? "" : typeName.Substring(pointerIndex);
 			var noPointers = pointerIndex == -1 ? typeName : typeName.Substring(0, pointerIndex);
+
+			if (PlatformDependentLongTypes.Contains(noPointers.TrimEnd()))
+			{
+				throw new InvalidOperationException(
+					$"C type '{noPointers.TrimEnd()}' has a platform-dependent size " +
+					$"(32-bit on Windows LLP64, 64-bit on Linux/macOS LP64). " +
+					$"Use int32_t or int64_t explicitly in the C header, " +
+					$"or add an explicit type override in the JSON config.");
+			}
 
 			if (skiaTypes.TryGetValue(noPointers, out var isStruct))
 			{
@@ -352,8 +406,12 @@ namespace SkiaSharpGenerator
 		{
 			var typeName = type.GetDisplayName();
 
-			// remove the const
-			typeName = typeName.Replace("const ", "");
+			// remove the const (both prefix and suffix forms — CppAst switched between them)
+			typeName = typeName.Replace("const ", "").Replace(" const", "");
+
+			// normalize whitespace around pointer/reference sigils: newer CppAst emits
+			// "T *" instead of "T*", which breaks the pointer/name split downstream
+			typeName = typeName.Replace(" *", "*").Replace(" &", "&");
 
 			// replace the [] with a *
 			int start;

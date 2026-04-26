@@ -18,10 +18,8 @@ namespace SkiaSharp
 		}
 
 		public SKFont ()
-			: this (SkiaApi.sk_font_new (), true)
+			: this (null, DefaultSize, DefaultScaleX, DefaultSkewX)
 		{
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKFont instance.");
 		}
 
 		public SKFont (SKTypeface typeface, float size = DefaultSize, float scaleX = DefaultScaleX, float skewX = DefaultSkewX)

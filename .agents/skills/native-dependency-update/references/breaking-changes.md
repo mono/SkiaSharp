@@ -154,6 +154,8 @@ BUILD.gn changes are usually NOT needed for:
 
 The BUILD.gn lives at `externals/skia/third_party/{dep}/BUILD.gn`. Look at existing patterns—sources are listed explicitly, platform-specific code uses `if (current_cpu == "...")` conditionals.
 
+> **Note:** The `freetype` BUILD.gn is at `third_party/freetype2/` (not `third_party/freetype/`).
+
 ## Analysis Summary Template
 
 When reporting analysis results:

@@ -40,13 +40,29 @@ namespace SkiaSharp
 		[Obsolete]
 		private SKFont font;
 
+		// Shared template that backs SKPaint()'s default font and SKPaint.Reset()'s
+		// reset-to-default font. sk_compatpaint_new_with_font / sk_compatpaint_reset
+		// both *copy* the font state into SkCompatPaint::fFont, so this singleton is
+		// never mutated by callers.
+		private static readonly SKFont defaultFont;
+
+		static SKPaint ()
+		{
+			defaultFont = new SKFontStatic (
+				SkiaApi.sk_font_new_with_values (
+					SKTypeface.Default.Handle,
+					SKFont.DefaultSize,
+					SKFont.DefaultScaleX,
+					SKFont.DefaultSkewX));
+		}
+
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
 		public SKPaint ()
-			: this (SkiaApi.sk_compatpaint_new (), true)
+			: this (SkiaApi.sk_compatpaint_new_with_font (defaultFont.Handle), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
@@ -75,7 +91,14 @@ namespace SkiaSharp
 		// Reset
 
 		public void Reset () =>
-			SkiaApi.sk_compatpaint_reset (Handle);
+			SkiaApi.sk_compatpaint_reset (Handle, defaultFont.Handle);
+
+		private sealed class SKFontStatic : SKFont
+		{
+			internal SKFontStatic (IntPtr handle) : base (handle, false) { }
+
+			protected override void Dispose (bool disposing) { }
+		}
 
 		// properties
 

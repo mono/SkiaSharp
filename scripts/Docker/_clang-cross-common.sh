@@ -32,10 +32,11 @@ VARIANT=$4
 # extra arguments passed through
 EXTRA_ARGS=$5
 
-# architecture-specific additional args (matching CI configuration)
+# GLIBC verification based on Docker image (matching CI configuration)
 ADDITIONAL_ARGS=""
-case $ARCH in
-  loongarch64) ADDITIONAL_ARGS="--verifyGlibcMax=2.38" ;;
+case "$DOCKER_DIR" in
+  *debian/10*) ADDITIONAL_ARGS="--verifyGlibcMax=2.28" ;;
+  *debian/13*) ADDITIONAL_ARGS="--verifyGlibcMax=2.38" ;;
 esac
 
 (cd $DIR && 

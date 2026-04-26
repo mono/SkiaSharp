@@ -108,6 +108,7 @@ Read the triage JSON and update the issue in the **SkiaSharp Backlog** project (
 | Repro Quality | `evidence.bugSignals.reproQuality` | SINGLE_SELECT: complete, partial, none. Skip if null. |
 | Error Type | `evidence.bugSignals.errorType` | SINGLE_SELECT: crash, exception, wrong-output, etc. Skip if null. |
 | Triage Summary | `analysis.summary` | TEXT: root cause hypothesis. Truncate to 1024 chars. |
+| Suggested Repro Platform | `output.actionability.suggestedReproPlatform` | SINGLE_SELECT: linux, macos, windows. Skip if null. |
 
 The `update-project` safe output auto-creates missing SINGLE_SELECT options — no need to pre-create values.
 

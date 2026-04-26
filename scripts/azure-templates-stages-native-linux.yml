@@ -34,6 +34,7 @@ stages:
               - arch: ${{ arch }}
                 docker: scripts/Docker/debian/10
                 target: externals-linux-clang-cross
+                additionalArgs: --verifyGlibcMax=2.28
             - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
               - arch: ${{ arch }}
                 variant: alpine
