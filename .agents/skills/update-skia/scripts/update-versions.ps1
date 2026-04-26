@@ -19,7 +19,7 @@
     The target Skia milestone number (e.g., 120)
 
 .EXAMPLE
-    pwsh .claude/skills/update-skia/scripts/update-versions.ps1 -Current 119 -Target 120
+    pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current 119 -Target 120
 #>
 
 param(
