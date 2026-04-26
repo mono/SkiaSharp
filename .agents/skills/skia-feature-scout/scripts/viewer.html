@@ -101,12 +101,21 @@ const CAT_LABELS = {
 
 let activeFilters = { priority: new Set(), status: new Set(), category: new Set(), label: new Set() };
 let searchText = '';
+let msMin = 0, msMax = 999;
 
 function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
 function toggleFilter(type, value) {
   const s = activeFilters[type];
   if (s.has(value)) s.delete(value); else s.add(value);
+  applyFilters();
+}
+
+function updateMsFilter() {
+  const minEl = document.getElementById('ms-min');
+  const maxEl = document.getElementById('ms-max');
+  msMin = parseInt(minEl.value) || 0;
+  msMax = parseInt(maxEl.value) || 999;
   applyFilters();
 }
 
@@ -121,6 +130,8 @@ function applyFilters() {
     if (activeFilters.category.size && !activeFilters.category.has(d.category)) visible = false;
     if (activeFilters.label.size && !(d.labels||[]).some(l => activeFilters.label.has(l))) visible = false;
     if (searchText && !JSON.stringify(d).toLowerCase().includes(searchText)) visible = false;
+    const m = d.milestone || 0;
+    if (m && (m < msMin || m > msMax)) visible = false;
     el.style.display = visible ? '' : 'none';
     if (visible) shown++;
   });
@@ -149,6 +160,18 @@ function renderSummary(s) {
 
 function renderFilters() {
   const bar = document.getElementById('filters');
+  // Milestone range inputs
+  const allMs = DATA.findings.map(f => f.milestone).filter(Boolean);
+  const minMs = allMs.length ? Math.min(...allMs) : 79;
+  const maxMs = allMs.length ? Math.max(...allMs) : 148;
+  const msGroup = document.createElement('div');
+  msGroup.className = 'filter-group';
+  msGroup.innerHTML = `<span class="filter-group-label">milestone:</span>` +
+    `<input type="number" id="ms-min" class="search-box" style="width:60px" placeholder="${minMs}" min="79" max="200" oninput="updateMsFilter()">` +
+    `<span style="color:var(--muted);font-size:0.8rem">–</span>` +
+    `<input type="number" id="ms-max" class="search-box" style="width:60px" placeholder="${maxMs}" min="79" max="200" oninput="updateMsFilter()">`;
+  bar.appendChild(msGroup);
+
   const groups = [
     ['priority', ['critical','high','medium','low'], 'p-'],
     ['status', ['missing','partial','full','action_needed','not_applicable'], 's-'],
