@@ -16,7 +16,7 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 		value = (uint)(((byte)c1 << 24) | ((byte)c2 << 16) | ((byte)c3 << 8) | (byte)c4);
 	}
 
-	public static SKFourByteTag Parse (string tag)
+	public static SKFourByteTag Parse (string? tag)
 	{
 		if (string.IsNullOrEmpty (tag))
 			return new SKFourByteTag (0);

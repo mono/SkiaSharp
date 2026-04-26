@@ -241,6 +241,7 @@ namespace HarfBuzzSharp
 
 		public bool HasColorSvg => HarfBuzzApi.hb_ot_color_has_svg (Handle);
 
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 

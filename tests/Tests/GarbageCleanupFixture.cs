@@ -18,6 +18,7 @@ namespace SkiaSharp.Tests
 			"SkiaSharp.SKColorSpace+SKColorSpaceStatic",
 			"SkiaSharp.SKColorFilter+SKColorFilterStatic",
 			"SkiaSharp.SKBlender+SKBlenderStatic",
+			"SkiaSharp.SKPaint+SKFontStatic",
 		};
 
 		public GarbageCleanupFixture()

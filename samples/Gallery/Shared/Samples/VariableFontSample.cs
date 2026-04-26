@@ -88,20 +88,21 @@ public class VariableFontSample : CanvasSampleBase
 		DrawWeightSpectrum(canvas, width, height, typeface);
 	}
 
+	private static readonly float[] SpectrumWeights = { 100, 200, 300, 400, 500, 600, 700, 800, 900 };
+
 	private void DrawWeightSpectrum(SKCanvas canvas, int width, int height, SKTypeface currentTypeface)
 	{
 		var spectrumY = height * 0.65f;
 		var spectrumText = "Aa";
 		var spectrumSize = Math.Max(20, textSize * 0.6f);
-		float[] weights = { 100, 200, 300, 400, 500, 600, 700, 800, 900 };
-		var spacing = width / (float)(weights.Length + 1);
+		var spacing = width / (float)(SpectrumWeights.Length + 1);
 
 		using var labelPaint = new SKPaint { Color = new SKColor(0xAA, 0xAA, 0xAA), IsAntialias = true };
 		using var labelFont = new SKFont(currentTypeface, 11);
 
-		for (int i = 0; i < weights.Length; i++)
+		for (int i = 0; i < SpectrumWeights.Length; i++)
 		{
-			var w = weights[i];
+			var w = SpectrumWeights[i];
 			var cx = spacing * (i + 1);
 
 			var pos = new[]

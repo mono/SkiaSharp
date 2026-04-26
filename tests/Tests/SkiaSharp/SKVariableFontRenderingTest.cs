@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests;
@@ -227,19 +226,17 @@ public class SKVariableFontRenderingTest : SKTest
 		var text = "Static";
 		var pixels = RenderTextToBitmapBytes (staticTypeface, text, 32);
 
-		// Attempting to clone a static font with variation should return something usable
+		// Attempting to clone a static font with variation should return a usable typeface
 		var position = new[] {
 			new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse ("wght"), Value = 700 }
 		};
 		using var cloned = staticTypeface.Clone (position);
+		Assert.NotNull (cloned);
 
-		if (cloned != null)
-		{
-			var clonedPixels = RenderTextToBitmapBytes (cloned, text, 32);
-			// For a static font, the output should be the same regardless of variation
-			Assert.False (PixelsDiffer (pixels, clonedPixels),
-				"Static font rendering should not change with variation parameters.");
-		}
+		var clonedPixels = RenderTextToBitmapBytes (cloned, text, 32);
+		// For a static font, the output should be the same regardless of variation
+		Assert.False (PixelsDiffer (pixels, clonedPixels),
+			"Static font rendering should not change with variation parameters.");
 	}
 
 	[SkippableFact]
