@@ -340,7 +340,7 @@ namespace HarfBuzzSharp
 			var count = Math.Min ((int)length, coords.Length);
 			for (int i = 0; i < count; i++)
 				coords[i] = ptr[i];
-			return (int)length;
+			return count;
 		}
 
 		public void SetVariationNamedInstance (int instanceIndex)

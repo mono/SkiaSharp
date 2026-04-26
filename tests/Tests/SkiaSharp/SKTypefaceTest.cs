@@ -813,6 +813,63 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void SpanGetVariationDesignParametersWithUndersizedBuffer ()
+		{
+			// InterVariable has multiple axes (wght, opsz) — tests undersized buffer behavior
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "InterVariable.ttf"));
+			Assert.NotNull (typeface);
+
+			var total = typeface.VariationDesignParameterCount;
+			Assert.True (total >= 2, $"Need a multi-axis font, got {total} axes");
+
+			// span=0: should return 0 (nothing written)
+			var buf0 = new SKFontVariationAxis[0];
+			Assert.Equal (0, typeface.GetVariationDesignParameters (buf0));
+
+			// span=1 (undersized): should fill 1 and return 1
+			var buf1 = new SKFontVariationAxis[1];
+			var ret1 = typeface.GetVariationDesignParameters (buf1);
+			Assert.Equal (1, ret1);
+			Assert.NotEqual (default, buf1[0].Tag);
+
+			// span=exact: should fill all and return total
+			var bufExact = new SKFontVariationAxis[total];
+			Assert.Equal (total, typeface.GetVariationDesignParameters (bufExact));
+
+			// The partial fill should match the first element of the full fill
+			Assert.Equal (bufExact[0].Tag, buf1[0].Tag);
+			Assert.Equal (bufExact[0].Min, buf1[0].Min);
+		}
+
+		[SkippableFact]
+		public void SpanGetVariationDesignPositionWithUndersizedBuffer ()
+		{
+			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "InterVariable.ttf"));
+			Assert.NotNull (typeface);
+
+			var total = typeface.VariationDesignPositionCount;
+			Assert.True (total >= 2, $"Need a multi-axis font, got {total} axes");
+
+			// span=0: should return 0
+			var buf0 = new SKFontVariationPositionCoordinate[0];
+			Assert.Equal (0, typeface.GetVariationDesignPosition (buf0));
+
+			// span=1 (undersized): should fill 1 and return 1
+			var buf1 = new SKFontVariationPositionCoordinate[1];
+			var ret1 = typeface.GetVariationDesignPosition (buf1);
+			Assert.Equal (1, ret1);
+			Assert.NotEqual (default, buf1[0].Axis);
+
+			// span=exact: should fill all
+			var bufExact = new SKFontVariationPositionCoordinate[total];
+			Assert.Equal (total, typeface.GetVariationDesignPosition (bufExact));
+
+			// Partial fill matches first element of full fill
+			Assert.Equal (bufExact[0].Axis, buf1[0].Axis);
+			Assert.Equal (bufExact[0].Value, buf1[0].Value);
+		}
+
+		[SkippableFact]
 		public void SpanVariationDesignParametersEmptyForStaticFont ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
@@ -820,7 +877,7 @@ namespace SkiaSharp.Tests
 
 			var spanBuffer = new SKFontVariationAxis[4];
 			var written = typeface.GetVariationDesignParameters (spanBuffer);
-			Assert.True (written <= 0);
+			Assert.True (written <= 0, $"Static font should return 0 or -1, got {written}");
 		}
 
 		[SkippableFact]
@@ -831,7 +888,7 @@ namespace SkiaSharp.Tests
 
 			var spanBuffer = new SKFontVariationPositionCoordinate[4];
 			var written = typeface.GetVariationDesignPosition (spanBuffer);
-			Assert.True (written <= 0);
+			Assert.True (written <= 0, $"Static font should return 0 or -1, got {written}");
 		}
 
 		[SkippableFact]

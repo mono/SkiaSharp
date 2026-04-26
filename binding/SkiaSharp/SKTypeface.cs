@@ -363,7 +363,18 @@ namespace SkiaSharp
 		public int GetVariationDesignParameters (Span<SKFontVariationAxis> axes)
 		{
 			fixed (SKFontVariationAxis* ptr = axes) {
-				return SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, axes.Length);
+				var total = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, axes.Length);
+				if (total <= axes.Length)
+					return total;
+
+				// Skia is all-or-nothing: if buffer is undersized it writes nothing.
+				// Retry with a pooled buffer and copy what fits.
+				using var temp = Utils.RentArray<SKFontVariationAxis> (total);
+				fixed (SKFontVariationAxis* tempPtr = temp.Span) {
+					SkiaApi.sk_typeface_get_variation_design_parameters (Handle, tempPtr, total);
+				}
+				temp.Span.Slice (0, axes.Length).CopyTo (axes);
+				return axes.Length;
 			}
 		}
 
@@ -388,7 +399,18 @@ namespace SkiaSharp
 		public int GetVariationDesignPosition (Span<SKFontVariationPositionCoordinate> coordinates)
 		{
 			fixed (SKFontVariationPositionCoordinate* ptr = coordinates) {
-				return SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, coordinates.Length);
+				var total = SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, coordinates.Length);
+				if (total <= coordinates.Length)
+					return total;
+
+				// Skia is all-or-nothing: if buffer is undersized it writes nothing.
+				// Retry with a pooled buffer and copy what fits.
+				using var temp = Utils.RentArray<SKFontVariationPositionCoordinate> (total);
+				fixed (SKFontVariationPositionCoordinate* tempPtr = temp.Span) {
+					SkiaApi.sk_typeface_get_variation_design_position (Handle, tempPtr, total);
+				}
+				temp.Span.Slice (0, coordinates.Length).CopyTo (coordinates);
+				return coordinates.Length;
 			}
 		}
 

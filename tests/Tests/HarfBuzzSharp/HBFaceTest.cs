@@ -109,6 +109,19 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
+		public void SpanGetVariationAxisInfosWithUndersizedBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			var axisCount = face.VariationAxisCount;
+			Assert.True (axisCount > 0);
+
+			// Pass a buffer smaller than needed — HarfBuzz fills what fits
+			var spanBuffer = new OpenTypeVarAxisInfo[1];
+			var written = face.GetVariationAxisInfos (spanBuffer);
+			Assert.Equal (1, written);
+		}
+
+		[SkippableFact]
 		public void CanGetNamedInstanceCount ()
 		{
 			using var face = CreateVariableFace ();
@@ -154,6 +167,21 @@ namespace HarfBuzzSharp.Tests
 
 			for (int i = 0; i < arrayResult.Length; i++)
 				Assert.Equal (arrayResult[i], spanBuffer[i]);
+		}
+
+		[SkippableFact]
+		public void SpanGetNamedInstanceDesignCoordsWithUndersizedBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var totalCoords = face.GetNamedInstanceDesignCoordsCount (0);
+			Assert.True (totalCoords > 0);
+
+			// Pass a buffer with only 1 slot — HarfBuzz fills what fits
+			var spanBuffer = new float[1];
+			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
+			Assert.Equal (1, written);
 		}
 
 		[SkippableFact]
@@ -310,6 +338,34 @@ namespace HarfBuzzSharp.Tests
 
 			for (int i = 0; i < arrayResult.Length; i++)
 				Assert.Equal (arrayResult[i], spanBuffer[i]);
+		}
+
+		[SkippableFact]
+		public void SpanGetPaletteColorsWithUndersizedBuffer ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var totalColors = face.GetPaletteColors (0).Length;
+			Assert.True (totalColors > 1, $"Need palette with >1 colors, got {totalColors}");
+
+			// HarfBuzz fills what fits
+			var spanBuffer = new uint[1];
+			var written = face.GetPaletteColors (0, spanBuffer);
+			Assert.Equal (1, written);
+		}
+
+		[SkippableFact]
+		public void SpanGetPaletteColorsWithOversizedBuffer ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var totalColors = face.GetPaletteColors (0).Length;
+
+			var spanBuffer = new uint[totalColors + 5];
+			var written = face.GetPaletteColors (0, spanBuffer);
+			Assert.Equal (totalColors, written);
 		}
 
 		[SkippableFact]
