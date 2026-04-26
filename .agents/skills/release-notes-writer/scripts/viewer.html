@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SkiaSharp Release Notes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f8fa;--border:#d8dee4;--row-hover:#f0f4f8;--muted:#656d76;}
+    body{background:var(--bg);color:#1f2328;font-size:14px;}
+    .shell{max-width:1100px;}
+    .summary-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:12px;}
+    .summary-num{font-size:1.5rem;font-weight:700;line-height:1;}
+    .summary-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+    .pill{display:inline-block;font-size:.68rem;font-weight:600;padding:1px 7px;border-radius:10px;cursor:pointer;user-select:none;white-space:nowrap;vertical-align:middle;}
+    .pill:hover{opacity:.8;}.pill.dim{opacity:.3;}
+    .i-breaking{background:#fee2e2;color:#991b1b;}.i-major{background:#dbeafe;color:#1e40af;}
+    .i-minor{background:#fef3c7;color:#92400e;}.i-patch{background:#f3f4f6;color:#6b7280;}
+    .ct-added{background:#dcfce7;color:#166534;}.ct-changed{background:#fef3c7;color:#92400e;}
+    .ct-fixed{background:#dbeafe;color:#1e40af;}.ct-deprecated{background:#fed7aa;color:#9a3412;}
+    .ct-removed{background:#fee2e2;color:#991b1b;}.ct-dependency{background:#ede9fe;color:#5b21b6;}
+    .ct-platform{background:#ccfbf1;color:#115e59;}
+    .l-pill{background:#e0e7ff;color:#3730a3;}
+    .row-item{border-bottom:1px solid #eaeef2;padding:7px 12px;cursor:pointer;}
+    .row-item:hover{background:var(--row-hover);}
+    .row-item.expanded{background:#fafbfc;}
+    .row-name{font-weight:600;font-size:.88rem;}.row-chevron{color:#bbb;font-size:.7rem;margin-right:6px;transition:transform .15s;}
+    .row-item.expanded .row-chevron{transform:rotate(90deg);color:#666;}
+    .row-desc{color:var(--muted);font-size:.78rem;margin-top:2px;}
+    .row-pills{margin-top:3px;}
+    .row-detail{display:none;padding:8px 0 4px 0;font-size:.82rem;}
+    .row-item.expanded .row-detail{display:block;}
+    .detail-grid{display:grid;grid-template-columns:110px 1fr;gap:2px 12px;}
+    .detail-label{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;}
+    .detail-value{font-size:.82rem;}
+    .detail-value code{font-size:.78rem;background:#f0f4f8;padding:1px 4px;border-radius:3px;}
+    .filter-bar{display:flex;flex-direction:column;gap:4px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;}
+    .filter-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+    .filter-label{font-size:.7rem;color:var(--muted);font-weight:600;width:80px;flex-shrink:0;text-align:right;padding-right:6px;}
+    .search-box{font-size:.8rem;padding:3px 10px;border:1px solid var(--border);border-radius:6px;}
+    .ctrl-select{font-size:.78rem;padding:2px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:#1f2328;}
+    .reset-btn{font-size:.7rem;color:#3730a3;cursor:pointer;border:none;background:none;padding:2px 6px;}
+    .reset-btn:hover{text-decoration:underline;}
+    .count-badge{font-size:.6rem;background:#e5e7eb;color:#374151;padding:0 5px;border-radius:8px;margin-left:2px;vertical-align:middle;}
+    .tab-btn{font-size:.85rem;font-weight:600;padding:6px 16px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;}
+    .tab-btn.active{color:#1e40af;border-bottom-color:#1e40af;}.tab-btn:hover{color:#1e40af;}
+    .tab-pane{display:none;}.tab-pane.active{display:block;}
+    .group-header{font-weight:700;font-size:.82rem;padding:8px 12px 4px;color:#1e40af;border-bottom:2px solid #dbeafe;margin-top:12px;background:#f8faff;}
+    .meta-footer{font-size:.72rem;color:var(--muted);margin-top:16px;padding:8px 12px;}
+    .meta-footer a{color:#3730a3;}
+    .dir-btn{font-size:.8rem;width:26px;height:26px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:#1e40af;font-weight:700;padding:0;line-height:26px;text-align:center;}
+    .dir-btn:hover{background:#f0f4f8;}
+    .md-content{background:#fff;border:1px solid var(--border);border-radius:8px;padding:20px 24px;font-size:.9rem;line-height:1.6;}
+    .md-content h2{font-size:1.1rem;margin-top:20px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+    .md-content h3{font-size:1rem;margin-top:16px;}
+    .md-content code{font-size:.85em;background:#f0f4f8;padding:1px 4px;border-radius:3px;}
+    .md-content pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow-x:auto;font-size:.82rem;}
+    .md-content ul{padding-left:20px;}
+    .md-content li{margin-bottom:4px;}
+    .pr-link{font-size:.72rem;color:#3730a3;text-decoration:none;}
+    .pr-link:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+<!--INJECT_DATA_HERE-->
+<div class="shell mx-auto px-3 py-3">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div><strong style="font-size:1.15rem">SkiaSharp Release Notes</strong>
+      <span class="text-muted" style="font-size:.8rem;margin-left:8px" id="subtitle"></span></div>
+  </div>
+  <div class="summary-bar d-flex gap-4 align-items-center flex-wrap" id="summary-bar"></div>
+  <div style="border-bottom:1px solid var(--border);margin-bottom:8px">
+    <button class="tab-btn active" onclick="switchTab('findings')">Findings <span id="findings-count" class="count-badge"></span></button>
+    <button class="tab-btn" onclick="switchTab('slides')">Slides</button>
+    <button class="tab-btn" onclick="switchTab('changelog')">Changelog</button>
+  </div>
+
+  <!-- Findings Tab -->
+  <div class="tab-pane active" id="tab-findings">
+    <div class="filter-bar" id="findings-filters">
+      <div class="filter-row">
+        <span class="filter-label">Search:</span>
+        <input type="text" class="search-box" style="width:300px" id="search" placeholder="Search findings...">
+      </div>
+      <div class="filter-row" id="fr-importance"></div>
+      <div class="filter-row" id="fr-changetype"></div>
+      <div class="filter-row" id="fr-label"></div>
+      <div class="filter-row">
+        <span class="filter-label">Group by:</span>
+        <select class="ctrl-select" id="group-by" onchange="rebuildList()">
+          <option value="none">None</option>
+          <option value="changeType" selected>Change Type</option>
+          <option value="importance">Importance</option>
+          <option value="label">Label</option>
+        </select>
+        <button class="dir-btn" id="group-dir" onclick="toggleDir('group-dir');rebuildList()" title="Toggle group order">▼</button>
+        <span style="width:16px"></span>
+        <span class="filter-label" style="width:55px">Sort by:</span>
+        <select class="ctrl-select" id="sort-by" onchange="rebuildList()">
+          <option value="importance">Importance</option>
+          <option value="changeType">Change Type</option>
+          <option value="name">Name</option>
+        </select>
+        <button class="dir-btn" id="sort-dir" onclick="toggleDir('sort-dir');rebuildList()" title="Toggle sort order">▼</button>
+      </div>
+    </div>
+    <div class="text-muted d-flex justify-content-between" style="font-size:.72rem;padding:0 12px 4px">
+      <span id="filter-count"></span>
+      <button class="reset-btn" onclick="resetFilters()">Reset filters</button>
+    </div>
+    <div id="list"></div>
+  </div>
+
+  <!-- Slides Tab -->
+  <div class="tab-pane" id="tab-slides">
+    <div class="md-content" id="slides-content"></div>
+  </div>
+
+  <!-- Changelog Tab -->
+  <div class="tab-pane" id="tab-changelog">
+    <div class="md-content" id="changelog-content"></div>
+  </div>
+
+  <div class="meta-footer" id="meta-footer"></div>
+</div>
+<script>
+const CTL={added:'✨ Added',changed:'🔄 Changed',fixed:'🐛 Fixed',deprecated:'⚠️ Deprecated',removed:'❌ Removed',dependency:'📦 Dependency',platform:'🌐 Platform'};
+const IL={breaking:'⚠️ Breaking',major:'Major',minor:'Minor',patch:'Patch'};
+const IO={breaking:0,major:1,minor:2,patch:3};
+const CTO={removed:0,added:1,changed:2,fixed:3,deprecated:4,dependency:5,platform:6};
+let fF={importance:new Set(),changeType:new Set(),label:new Set()};
+let sT='';
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function toggleDir(id){const b=document.getElementById(id);b.textContent=b.textContent==='▼'?'▲':'▼';}
+function getDir(id){return document.getElementById(id).textContent==='▲'?-1:1;}
+function switchTab(t){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');}
+function tF(type,val){fF[type].has(val)?fF[type].delete(val):fF[type].add(val);applyAndRebuild();}
+function resetFilters(){Object.values(fF).forEach(s=>s.clear());sT='';document.getElementById('search').value='';applyAndRebuild();}
+function passesFilter(f){if(fF.importance.size&&!fF.importance.has(f.importance))return false;if(fF.changeType.size&&!fF.changeType.has(f.changeType))return false;if(fF.label.size&&!(f.labels||[]).some(l=>fF.label.has(l)))return false;if(sT&&!JSON.stringify(f).toLowerCase().includes(sT))return false;return true;}
+function sortFindings(arr){const s=document.getElementById('sort-by').value;const dir=getDir('sort-dir');return[...arr].sort((a,b)=>{let r=0;switch(s){case'importance':r=(IO[a.importance]??4)-(IO[b.importance]??4);break;case'changeType':r=(CTO[a.changeType]??9)-(CTO[b.changeType]??9);break;case'name':r=(a.name||'').localeCompare(b.name||'');break;}return r*dir;});}
+function groupKey(f){const g=document.getElementById('group-by').value;switch(g){case'changeType':return f.changeType;case'importance':return f.importance;case'label':return(f.labels||[])[0]||'other';default:return null;}}
+function groupLabel(key,by){switch(by){case'changeType':return CTL[key]||key;case'importance':return IL[key]||key;default:return key;}}
+function groupOrder(key,by){switch(by){case'changeType':return CTO[key]??9;case'importance':return IO[key]??9;default:return 0;}}
+function applyAndRebuild(){rebuildList();document.querySelectorAll('#tab-findings .pill[data-filter]').forEach(p=>{const[t,v]=p.dataset.filter.split(':');p.classList.toggle('dim',fF[t]?.size>0&&!fF[t].has(v));});}
+function rebuildList(){const filtered=DATA.findings.filter(passesFilter);const sorted=sortFindings(filtered);document.getElementById('filter-count').textContent=`Showing ${filtered.length} of ${DATA.findings.length}`;const by=document.getElementById('group-by').value;const el=document.getElementById('list');if(by==='none'){el.innerHTML=sorted.map(renderRow).join('');return;}
+const groups={};sorted.forEach(f=>{const k=groupKey(f);if(!groups[k])groups[k]=[];groups[k].push(f);});const gOrder=Object.keys(groups);const gDir=getDir('group-dir');gOrder.sort((a,b)=>(groupOrder(a,by)-groupOrder(b,by))*gDir||(a.localeCompare(b)*gDir));
+el.innerHTML=gOrder.map(k=>`<div class="group-header">${groupLabel(k,by)} <span class="count-badge">${groups[k].length}</span></div>`+groups[k].map(renderRow).join('')).join('');}
+function renderRow(f){const ct=`<span class="pill ct-${f.changeType}" data-filter="changeType:${f.changeType}" onclick="event.stopPropagation();tF('changeType','${f.changeType}')">${CTL[f.changeType]||f.changeType}</span>`;const imp=`<span class="pill i-${f.importance}" data-filter="importance:${f.importance}" onclick="event.stopPropagation();tF('importance','${f.importance}')">${f.importance}</span>`;const labels=(f.labels||[]).map(l=>`<span class="pill l-pill" data-filter="label:${l}" onclick="event.stopPropagation();tF('label','${l}')">${l}</span>`).join(' ');const prLink=f.pr?`<a class="pr-link" href="${f.prUrl||'https://github.com/mono/SkiaSharp/pull/'+f.pr}" target="_blank">#${f.pr}</a>`:'';const commitLink=f.commit&&!f.pr?`<a class="pr-link" href="${f.commitUrl||'https://github.com/mono/SkiaSharp/commit/'+f.commit}" target="_blank">${f.commit.slice(0,7)}</a>`:'';
+let det='<div class="detail-grid">';if(f.affectedTypes?.length)det+=`<div class="detail-label">Types</div><div class="detail-value">${f.affectedTypes.map(t=>'<code>'+esc(t)+'</code>').join(', ')}</div>`;if(f.affectedMethods?.length)det+=`<div class="detail-label">Methods</div><div class="detail-value">${f.affectedMethods.map(m=>'<code>'+esc(m)+'</code>').join(', ')}</div>`;if(f.cApiFunction)det+=`<div class="detail-label">C API</div><div class="detail-value"><code>${esc(f.cApiFunction)}</code></div>`;if(f.csharpMethod)det+=`<div class="detail-label">C#</div><div class="detail-value"><code>${esc(f.csharpMethod)}</code>${f.csharpFile?' ('+esc(f.csharpFile)+')':''}</div>`;if(f.skiaFeature)det+=`<div class="detail-label">Skia</div><div class="detail-value">${esc(f.skiaFeature)}${f.skiaMilestone?' (m'+f.skiaMilestone+')':''}</div>`;if(f.dependencyName)det+=`<div class="detail-label">Dependency</div><div class="detail-value"><code>${esc(f.dependencyName)}</code>: ${esc(f.dependencyFrom||'?')} → ${esc(f.dependencyTo||'?')}</div>`;if(f.platforms?.length)det+=`<div class="detail-label">Platforms</div><div class="detail-value">${f.platforms.join(', ')}</div>`;if(f.author)det+=`<div class="detail-label">Author</div><div class="detail-value">${esc(f.author)}</div>`;if(f.migrationGuide)det+=`<div class="detail-label">Migration</div><div class="detail-value" style="white-space:pre-wrap">${esc(f.migrationGuide)}</div>`;if(f.notes)det+=`<div class="detail-label">Notes</div><div class="detail-value">${esc(f.notes)}</div>`;det+='</div>';
+return`<div class="row-item" onclick="this.classList.toggle('expanded')"><div class="d-flex align-items-start"><span class="row-chevron">▶</span><div style="flex:1"><div class="row-name">${esc(f.name)} ${prLink}${commitLink}</div><div class="row-pills">${ct} ${imp} ${labels}</div><div class="row-desc">${esc(f.description)}</div><div class="row-detail">${det}</div></div></div></div>`;}
+function renderSummary(s){const byCt=s.byChangeType||{};const byImp=s.byImportance||{};document.getElementById('summary-bar').innerHTML=[['Total',s.totalFindings||0,'#1f2328'],['Added',byCt.added||0,'#166534'],['Fixed',byCt.fixed||0,'#1e40af'],['Deps',byCt.dependency||0,'#5b21b6'],['Platform',byCt.platform||0,'#115e59'],['Breaking',byImp.breaking||0,'#991b1b']].map(([l,n,c])=>`<div class="text-center"><div class="summary-num" style="color:${c}">${n}</div><div class="summary-label">${l}</div></div>`).join('');}
+function addPillRow(rowId,label,type,vals,pre){const row=document.getElementById(rowId);row.innerHTML=`<span class="filter-label">${label}:</span>`+vals.map(v=>{const cls=pre?`${pre}${v}`:'l-pill';const lb=type==='changeType'?(CTL[v]||v):type==='importance'?(IL[v]||v):v;return`<span class="pill ${cls}" data-filter="${type}:${v}" onclick="tF('${type}','${v}')">${lb}</span>`;}).join(' ');}
+function renderMarkdown(md){if(!md)return'<p style="color:var(--muted)">No content generated.</p>';return md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/^- (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>').replace(/\n\n/g,'<br><br>').replace(/\n(?!<)/g,'\n');}
+document.addEventListener('DOMContentLoaded',()=>{if(typeof DATA==='undefined'){document.body.innerHTML='<p style="padding:2rem;color:red">No DATA found.</p>';return;}const m=DATA.meta;document.getElementById('subtitle').textContent=`${m.refFrom}..${m.refTo} · ${m.date} · ${m.commitCount} commits`;renderSummary(DATA.summary);
+addPillRow('fr-importance','Importance','importance',['breaking','major','minor','patch'],'i-');
+addPillRow('fr-changetype','Type','changeType',['added','changed','fixed','deprecated','removed','dependency','platform'],'ct-');
+const lbls=[...new Set(DATA.findings.flatMap(f=>f.labels||[]))].sort();if(lbls.length)addPillRow('fr-label','Label','label',lbls,'');
+document.getElementById('findings-count').textContent=DATA.findings.length;
+document.getElementById('slides-content').innerHTML=renderMarkdown(DATA.slides);
+document.getElementById('changelog-content').innerHTML=renderMarkdown(DATA.changelog);
+document.getElementById('meta-footer').innerHTML=`${m.repo} · ${m.refFrom}..${m.refTo} · ${m.date} · ${m.commitCount} commits`+(m.prCount?` · ${m.prCount} PRs`:'')+(m.skiaMilestoneBumped?` · Skia m${m.skiaMilestoneFrom}→m${m.skiaMilestoneTo}`:'');
+document.getElementById('search').addEventListener('input',e=>{sT=e.target.value.toLowerCase();applyAndRebuild();});rebuildList();});
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{
+  "skill_name": "release-notes-writer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Generate release notes for SkiaSharp comparing v3.116.1 and v3.119.0. I need both marketing slides and a detailed changelog.",
+      "expected_output": "Should diff two stable tags across a major range. Should find: LoongArch64 support (#3198), RISC-V64 support (#3192), Direct3D on Windows (#2823), Alpine clang-cross (#3200), SKImage.FromPicture fix (#3231), Vulkan Memory Allocator update (#3196), fontconfig update (#3221), tvOS fixes (#3186, #3199), Linux ARM/GL improvements (#3189, #3190, #3209). Should produce JSON + HTML + marketing slides + detailed changelog.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-release-notes.py with exit code 0",
+        "Produces an HTML viewer file via render-release-notes.py",
+        "JSON meta.schemaVersion is '1.0'",
+        "JSON meta.refFrom is 'v3.116.1'",
+        "JSON meta.refTo is 'v3.119.0'",
+        "JSON meta.commitCount is greater than 10",
+        "JSON findings array has at least 8 findings",
+        "JSON summary.totalFindings equals the actual length of the findings array",
+        "At least one finding mentions LoongArch64 with changeType 'platform' or 'added'",
+        "At least one finding mentions RISC-V or riscv64 with changeType 'platform' or 'added'",
+        "At least one finding mentions Direct3D or D3D with changeType 'added'",
+        "At least one finding mentions SKImage.FromPicture with changeType 'fixed'",
+        "At least one finding mentions Vulkan Memory Allocator with changeType 'dependency'",
+        "JSON slides field is non-empty and contains emoji bullet points",
+        "JSON changelog field is non-empty and contains PR references (#NNNN)",
+        "Changelog includes a 'Breaking Changes' section (even if 'None')",
+        "Marketing slides group items by theme, not by PR number"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What changed between v3.119.1 and v3.119.2? I want to see what went into the security hardening release.",
+      "expected_output": "Narrow diff of a security-focused release. Should find: Control Flow Guard (#3397), BufferSecurityCheck (#3404), Spectre mitigations (#3496, #3497, #3502, #3503), Android symbols preservation (#3374). Many commits are CI/docs/versioning and should be filtered out or marked as 'patch' importance.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-release-notes.py with exit code 0",
+        "Produces an HTML viewer file via render-release-notes.py",
+        "JSON meta.refFrom is 'v3.119.1'",
+        "JSON meta.refTo is 'v3.119.2'",
+        "At least one finding mentions Control Flow Guard or CFG with labels including 'security'",
+        "At least one finding mentions Spectre with labels including 'security'",
+        "At least one finding mentions BufferSecurityCheck with labels including 'security'",
+        "JSON findings array has at least 3 findings",
+        "JSON slides field mentions security hardening",
+        "Changelog groups security items together",
+        "Version bump commits are not listed as separate findings"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Can you generate release notes for just the changes in PR #3231? I want to document what that specific fix changed.",
+      "expected_output": "Should handle a single-PR scope. May diff the merge base of the PR or look at just that commit. Should find: SKImage.FromPicture fix, the affected method, what was wrong and how it was fixed. Focused output with 1-2 findings.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-release-notes.py with exit code 0",
+        "JSON findings array has at least 1 finding",
+        "At least one finding mentions SKImage.FromPicture",
+        "At least one finding has changeType 'fixed'",
+        "JSON slides field is non-empty",
+        "JSON changelog field is non-empty"
+      ]
+    }
+  ]
+}
