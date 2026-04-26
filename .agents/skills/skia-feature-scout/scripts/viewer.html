@@ -9,24 +9,18 @@
     :root { --bg: #f6f8fa; --border: #d8dee4; --row-hover: #f0f4f8; --muted: #656d76; }
     body { background: var(--bg); color: #1f2328; font-size: 14px; }
     .shell { max-width: 1100px; }
-    .sticky-bar { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.96);
-      backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
-    .summary-num { font-size: 1.6rem; font-weight: 700; line-height: 1; }
-    .summary-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .pill { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 1px 7px;
-      border-radius: 10px; cursor: pointer; user-select: none; white-space: nowrap; }
+    .summary-bar { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+    .summary-num { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .summary-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .pill { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 1px 7px;
+      border-radius: 10px; cursor: pointer; user-select: none; white-space: nowrap; vertical-align: middle; }
     .pill:hover { opacity: 0.8; }
-    .pill.dim { opacity: 0.35; }
-    .p-critical { background: #fee2e2; color: #991b1b; }
-    .p-high { background: #fed7aa; color: #9a3412; }
-    .p-medium { background: #fef3c7; color: #92400e; }
-    .p-low { background: #f3f4f6; color: #6b7280; }
-    .s-full { background: #dcfce7; color: #166534; }
-    .s-partial { background: #fef3c7; color: #92400e; }
-    .s-missing { background: #fee2e2; color: #991b1b; }
-    .s-action_needed { background: #fce7f3; color: #9d174d; }
-    .s-not_applicable { background: #f3f4f6; color: #6b7280; }
-    .s-correctly_absent { background: #f3f4f6; color: #6b7280; }
+    .pill.dim { opacity: 0.3; }
+    .p-critical { background: #fee2e2; color: #991b1b; } .p-high { background: #fed7aa; color: #9a3412; }
+    .p-medium { background: #fef3c7; color: #92400e; } .p-low { background: #f3f4f6; color: #6b7280; }
+    .s-full { background: #dcfce7; color: #166534; } .s-partial { background: #fef3c7; color: #92400e; }
+    .s-missing { background: #fee2e2; color: #991b1b; } .s-action_needed { background: #fce7f3; color: #9d174d; }
+    .s-not_applicable,.s-correctly_absent { background: #f3f4f6; color: #6b7280; }
     .c-new_feature { background: #dbeafe; color: #1e40af; } .c-codec { background: #fce7f3; color: #9d174d; }
     .c-image { background: #ede9fe; color: #5b21b6; } .c-image_filter { background: #e0e7ff; color: #3730a3; }
     .c-shader { background: #ccfbf1; color: #115e59; } .c-color { background: #fef3c7; color: #92400e; }
@@ -35,244 +29,104 @@
     .c-performance { background: #d1fae5; color: #065f46; } .c-behavior_change { background: #fef3c7; color: #92400e; }
     .c-deprecation { background: #fee2e2; color: #991b1b; }
     .l-pill { background: #e0e7ff; color: #3730a3; }
-    .ms { font-size: 0.7rem; font-weight: 600; color: #3730a3; background: #e0e7ff; padding: 1px 6px; border-radius: 8px; }
-    .row-item { border-bottom: 1px solid #eaeef2; padding: 8px 12px; cursor: pointer; }
+    .ms { font-size: 0.68rem; font-weight: 600; color: #3730a3; background: #e0e7ff; padding: 1px 6px; border-radius: 8px; }
+    .row-item { border-bottom: 1px solid #eaeef2; padding: 7px 12px; cursor: pointer; }
     .row-item:hover { background: var(--row-hover); }
     .row-item.expanded { background: #fafbfc; }
-    .row-name { font-weight: 600; font-size: 0.9rem; }
-    .row-desc { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+    .row-name { font-weight: 600; font-size: 0.88rem; }
+    .row-desc { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+    .row-pills { margin-top: 3px; }
     .row-detail { display: none; padding: 8px 0 4px 0; font-size: 0.82rem; }
     .row-item.expanded .row-detail { display: block; }
     .detail-grid { display: grid; grid-template-columns: 100px 1fr; gap: 2px 12px; }
-    .detail-label { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+    .detail-label { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
     .detail-value { font-size: 0.82rem; }
     .detail-value code { font-size: 0.78rem; background: #f0f4f8; padding: 1px 4px; border-radius: 3px; }
-    .filter-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 0; }
-    .filter-group { display: flex; gap: 3px; align-items: center; }
-    .filter-group-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; margin-right: 2px; }
-    .search-box { font-size: 0.8rem; padding: 3px 10px; border: 1px solid var(--border);
-      border-radius: 6px; width: 200px; }
-    .next-step { border-left: 3px solid; padding: 6px 12px; margin-bottom: 8px; font-size: 0.85rem; }
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px 12px;
+      background: #fff; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; }
+    .filter-group { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+    .filter-group-label { font-size: 0.68rem; color: var(--muted); font-weight: 600; margin-right: 2px; }
+    .search-box { font-size: 0.8rem; padding: 3px 10px; border: 1px solid var(--border); border-radius: 6px; }
+    .reset-btn { font-size: 0.7rem; color: #3730a3; cursor: pointer; border: none; background: none; padding: 2px 6px; }
+    .reset-btn:hover { text-decoration: underline; }
+    .next-step { border-left: 3px solid; padding: 6px 12px; margin-bottom: 6px; cursor: pointer; }
+    .next-step:hover { background: var(--row-hover); }
     .ns-critical { border-color: #dc2626; } .ns-high { border-color: #f97316; }
     .ns-medium { border-color: #f59e0b; } .ns-low { border-color: #6b7280; }
-    .count-badge { font-size: 0.65rem; background: #e5e7eb; color: #374151; padding: 0 5px;
+    .count-badge { font-size: 0.6rem; background: #e5e7eb; color: #374151; padding: 0 5px;
       border-radius: 8px; margin-left: 2px; vertical-align: middle; }
+    .tab-btn { font-size: 0.85rem; font-weight: 600; padding: 6px 16px; border: none; background: none;
+      color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab-btn.active { color: #1e40af; border-bottom-color: #1e40af; }
+    .tab-btn:hover { color: #1e40af; }
+    .tab-pane { display: none; } .tab-pane.active { display: block; }
+    .meta-footer { font-size: 0.72rem; color: var(--muted); margin-top: 16px; padding: 8px 12px; }
+    .meta-footer a { color: #3730a3; }
   </style>
 </head>
 <body>
 <!--INJECT_DATA_HERE-->
 <div class="shell mx-auto px-3 py-3">
-
-  <!-- Sticky header + summary + filters -->
-  <div class="sticky-bar px-3 py-2 mb-3">
-    <div class="d-flex align-items-center justify-content-between mb-2">
-      <div>
-        <strong style="font-size:1.1rem">Skia Feature Scout</strong>
-        <span class="ms-2 text-muted" style="font-size:0.8rem" id="subtitle"></span>
-      </div>
-      <div id="summary-pills" class="d-flex gap-3"></div>
-    </div>
-    <div class="filter-bar" id="filters">
-      <input type="text" class="search-box" id="search" placeholder="Search...">
-    </div>
-    <div class="text-muted" style="font-size:0.75rem" id="filter-count"></div>
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div><strong style="font-size:1.15rem">Skia Feature Scout</strong>
+      <span class="text-muted" style="font-size:0.8rem;margin-left:8px" id="subtitle"></span></div>
   </div>
-
-  <!-- Findings list -->
-  <div id="list"></div>
-
-  <!-- Next Steps -->
-  <div id="next-steps" class="mt-4"></div>
-
-  <!-- Meta footer -->
-  <div class="mt-4 mb-3 text-muted" style="font-size:0.75rem" id="meta-footer"></div>
-</div>
-
-<script>
-const STATUS_LABELS = {
-  full:'✅ Full', partial:'🟡 Partial', missing:'❌ Missing',
-  action_needed:'⚠️ Action', not_applicable:'N/A', correctly_absent:'N/A'
-};
-const CAT_LABELS = {
-  new_feature:'Feature', codec:'Codec', image:'Image', image_filter:'Filter',
-  shader:'Shader', color:'Color', canvas:'Canvas', path:'Path', font:'Font',
-  utility:'Utility', performance:'Perf', behavior_change:'Behavior', deprecation:'Deprecated'
-};
-
-let activeFilters = { priority: new Set(), status: new Set(), category: new Set(), label: new Set() };
-let searchText = '';
-let msMin = 0, msMax = 999;
-
-function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
-
-function toggleFilter(type, value) {
-  const s = activeFilters[type];
-  if (s.has(value)) s.delete(value); else s.add(value);
-  applyFilters();
-}
-
-function updateMsFilter() {
-  const minEl = document.getElementById('ms-min');
-  const maxEl = document.getElementById('ms-max');
-  msMin = parseInt(minEl.value) || 0;
-  msMax = parseInt(maxEl.value) || 999;
-  applyFilters();
-}
-
-function applyFilters() {
-  const items = document.querySelectorAll('.row-item');
-  let shown = 0;
-  items.forEach(el => {
-    const d = JSON.parse(el.dataset.finding);
-    let visible = true;
-    if (activeFilters.priority.size && !activeFilters.priority.has(d.priority)) visible = false;
-    if (activeFilters.status.size && !activeFilters.status.has(d.bindingStatus)) visible = false;
-    if (activeFilters.category.size && !activeFilters.category.has(d.category)) visible = false;
-    if (activeFilters.label.size && !(d.labels||[]).some(l => activeFilters.label.has(l))) visible = false;
-    if (searchText && !JSON.stringify(d).toLowerCase().includes(searchText)) visible = false;
-    const m = d.milestone || 0;
-    if (m && (m < msMin || m > msMax)) visible = false;
-    el.style.display = visible ? '' : 'none';
-    if (visible) shown++;
-  });
-  document.getElementById('filter-count').textContent = `Showing ${shown} of ${DATA.findings.length}`;
-  // Update pill dimming
-  document.querySelectorAll('.pill[data-filter]').forEach(p => {
-    const [type, val] = p.dataset.filter.split(':');
-    const active = activeFilters[type];
-    p.classList.toggle('dim', active.size > 0 && !active.has(val));
-  });
-}
-
-function renderSummary(s) {
-  const el = document.getElementById('summary-pills');
-  const pairs = [
-    ['Missing', s.byStatus?.missing||0, '#991b1b'],
-    ['Partial', s.byStatus?.partial||0, '#92400e'],
-    ['Full', s.byStatus?.full||0, '#166534'],
-    ['Hidden', s.bySource?.['header-scan']||0, '#5b21b6'],
-    ['Perf', s.byLabel?.perf||0, '#065f46'],
-  ];
-  el.innerHTML = pairs.map(([l,n,c]) =>
-    `<div class="text-center"><div class="summary-num" style="color:${c}">${n}</div><div class="summary-label">${l}</div></div>`
-  ).join('');
-}
-
-function renderFilters() {
-  const bar = document.getElementById('filters');
-  // Milestone range inputs
-  const allMs = DATA.findings.map(f => f.milestone).filter(Boolean);
-  const minMs = allMs.length ? Math.min(...allMs) : 79;
-  const maxMs = allMs.length ? Math.max(...allMs) : 148;
-  const msGroup = document.createElement('div');
-  msGroup.className = 'filter-group';
-  msGroup.innerHTML = `<span class="filter-group-label">milestone:</span>` +
-    `<input type="number" id="ms-min" class="search-box" style="width:60px" placeholder="${minMs}" min="79" max="200" oninput="updateMsFilter()">` +
-    `<span style="color:var(--muted);font-size:0.8rem">–</span>` +
-    `<input type="number" id="ms-max" class="search-box" style="width:60px" placeholder="${maxMs}" min="79" max="200" oninput="updateMsFilter()">`;
-  bar.appendChild(msGroup);
-
-  const groups = [
-    ['priority', ['critical','high','medium','low'], 'p-'],
-    ['status', ['missing','partial','full','action_needed','not_applicable'], 's-'],
-    ['category', [...new Set(DATA.findings.map(f=>f.category))].sort(), 'c-'],
-    ['label', [...new Set(DATA.findings.flatMap(f=>f.labels||[]))].sort(), 'l-'],
-  ];
-  groups.forEach(([type, values, prefix]) => {
-    if (!values.length) return;
-    const g = document.createElement('div');
-    g.className = 'filter-group';
-    g.innerHTML = `<span class="filter-group-label">${type}:</span>` +
-      values.map(v => {
-        const count = DATA.findings.filter(f => {
-          if (type==='label') return (f.labels||[]).includes(v);
-          return f[type === 'status' ? 'bindingStatus' : type] === v;
-        }).length;
-        const cls = type==='label' ? 'l-pill' : `${prefix}${v}`;
-        const label = type==='category' ? (CAT_LABELS[v]||v) : type==='status' ? (STATUS_LABELS[v]||v) : v;
-        return `<span class="pill ${cls}" data-filter="${type}:${v}" onclick="toggleFilter('${type}','${v}')">${label}<span class="count-badge">${count}</span></span>`;
-      }).join('');
-    bar.appendChild(g);
-  });
-}
-
-function renderRow(f) {
-  const ms = f.milestone ? `<span class="ms">m${f.milestone}</span>` : '';
-  const extra_ms = (f.milestones||[]).map(m => `<span class="ms" style="opacity:0.6">m${m}</span>`).join(' ');
-  const labels = (f.labels||[]).map(l => `<span class="pill l-pill" data-filter="label:${l}" onclick="event.stopPropagation();toggleFilter('label','${l}')">${l}</span>`).join(' ');
-  const cat = `<span class="pill c-${f.category}" data-filter="category:${f.category}" onclick="event.stopPropagation();toggleFilter('category','${f.category}')">${CAT_LABELS[f.category]||f.category}</span>`;
-  const pri = `<span class="pill p-${f.priority}" data-filter="priority:${f.priority}" onclick="event.stopPropagation();toggleFilter('priority','${f.priority}')">${f.priority}</span>`;
-  const st = `<span class="pill s-${f.bindingStatus}" data-filter="status:${f.bindingStatus}" onclick="event.stopPropagation();toggleFilter('status','${f.bindingStatus}')">${STATUS_LABELS[f.bindingStatus]||f.bindingStatus}</span>`;
-
-  let detail = '<div class="detail-grid">';
-  if (f.userValue) detail += `<div class="detail-label">Value</div><div class="detail-value">${esc(f.userValue)}</div>`;
-  if (f.skiaApi) detail += `<div class="detail-label">Skia API</div><div class="detail-value"><code>${esc(f.skiaApi)}</code></div>`;
-  if (f.cppClass) detail += `<div class="detail-label">C++ Class</div><div class="detail-value"><code>${esc(f.cppClass)}::${esc(f.cppMethod||'')}</code> (${esc(f.cppHeader||'')})</div>`;
-  if (f.cApiFunction) detail += `<div class="detail-label">C API</div><div class="detail-value"><code>${esc(f.cApiFunction)}</code> (${esc(f.cApiFile||'')})</div>`;
-  else if (f.bindingStatus==='missing') detail += `<div class="detail-label">C API</div><div class="detail-value" style="color:#991b1b">Not in C API</div>`;
-  if (f.csharpMethod) detail += `<div class="detail-label">C# Binding</div><div class="detail-value"><code>${esc(f.csharpMethod)}</code> (${esc(f.csharpFile||'')})</div>`;
-  else if (f.bindingStatus==='missing'||f.bindingStatus==='partial') detail += `<div class="detail-label">C# Binding</div><div class="detail-value" style="color:#991b1b">Not bound</div>`;
-  if (f.replacement) detail += `<div class="detail-label">Replace with</div><div class="detail-value"><code>${esc(f.replacement)}</code></div>`;
-  if (f.obsoleteMessage) detail += `<div class="detail-label">[Obsolete]</div><div class="detail-value"><code>${esc(f.obsoleteMessage)}</code></div>`;
-  if (f.impact) detail += `<div class="detail-label">Impact</div><div class="detail-value">${esc(f.impact)}</div>`;
-  if (f.milestoneDeprecated) detail += `<div class="detail-label">Deprecated</div><div class="detail-value">m${f.milestoneDeprecated}</div>`;
-  if (f.milestoneRemoved) detail += `<div class="detail-label">Removed</div><div class="detail-value">m${f.milestoneRemoved}</div>`;
-  if (f.skillToUse) detail += `<div class="detail-label">Skill</div><div class="detail-value"><code>${esc(f.skillToUse)}</code>${f.effort ? ` (${f.effort})` : ''}</div>`;
-  if (f.notes) detail += `<div class="detail-label">Notes</div><div class="detail-value">${esc(f.notes)}</div>`;
-  detail += '</div>';
-
-  return `<div class="row-item" data-finding='${JSON.stringify(f).replace(/'/g,"&#39;")}' onclick="this.classList.toggle('expanded')">
-    <div class="d-flex align-items-center gap-1 flex-wrap">
-      ${ms} ${cat} ${pri} ${st} ${labels}
-      <span class="row-name ms-1">${esc(f.name)}</span>
-      ${extra_ms}
+  <div class="summary-bar d-flex gap-4 align-items-center flex-wrap" id="summary-bar"></div>
+  <div style="border-bottom:1px solid var(--border);margin-bottom:8px">
+    <button class="tab-btn active" onclick="switchTab('findings')">Findings <span id="findings-count" class="count-badge"></span></button>
+    <button class="tab-btn" onclick="switchTab('nextsteps')">Next Steps <span id="nextsteps-count" class="count-badge"></span></button>
+  </div>
+  <div class="tab-pane active" id="tab-findings">
+    <div class="filter-bar" id="findings-filters">
+      <input type="text" class="search-box" style="width:180px" id="search" placeholder="Search...">
+      <div class="filter-group"><span class="filter-group-label">m:</span>
+        <input type="number" id="ms-min" class="search-box" style="width:55px" placeholder="min" oninput="updateMsFilter()">
+        <span style="color:var(--muted);font-size:0.75rem">–</span>
+        <input type="number" id="ms-max" class="search-box" style="width:55px" placeholder="max" oninput="updateMsFilter()">
+      </div>
     </div>
-    <div class="row-desc">${esc(f.description)}</div>
-    <div class="row-detail">${detail}</div>
-  </div>`;
-}
-
-function renderNextSteps(steps) {
-  if (!steps || !steps.length) return;
-  const el = document.getElementById('next-steps');
-  el.innerHTML = '<div style="font-weight:600;margin-bottom:8px">Recommended Next Steps</div>' +
-    steps.map((s,i) => {
-      const cls = 'ns-'+(s.severity||'low');
-      return `<div class="next-step ${cls}">
-        <strong>#${i+1} ${esc(s.action)}</strong>
-        <span class="pill p-${s.severity||'low'} ms-1">${s.severity||''}</span>
-        ${s.milestone ? `<span class="ms ms-1">m${s.milestone}</span>` : ''}
-        ${s.effort ? `<span class="pill" style="background:#e5e7eb;color:#374151">${s.effort}</span>` : ''}
-        ${s.skillToUse ? `<span style="font-size:0.75rem;color:#3730a3"> → ${s.skillToUse}</span>` : ''}
-        <div style="color:var(--muted);font-size:0.8rem;margin-top:2px">${esc(s.reason)}</div>
-      </div>`;
-    }).join('');
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (typeof DATA === 'undefined') { document.body.innerHTML = '<p style="padding:2rem;color:red">No DATA found.</p>'; return; }
-  const m = DATA.meta;
-  const mode = m.mode==='windowed' ? `m${m.previousMilestone}→m${m.currentMilestone}` : `m${m.currentMilestone} (full)`;
-  document.getElementById('subtitle').textContent = `${m.date} · ${mode} · ${DATA.summary.totalFindings} findings`;
-  renderSummary(DATA.summary);
-  renderFilters();
-
-  const sorted = [...DATA.findings].sort((a,b) => {
-    const po = {critical:0,high:1,medium:2,low:3};
-    return (po[a.priority]??4)-(po[b.priority]??4) || (b.milestone||0)-(a.milestone||0);
-  });
-  document.getElementById('list').innerHTML = sorted.map(renderRow).join('');
-  renderNextSteps(DATA.nextSteps);
-  document.getElementById('meta-footer').innerHTML =
-    `Source: <a href="${m.releaseNotesSource}">RELEASE_NOTES.md</a> · ${m.date}` +
-    (m.skiaSubmoduleCommit ? ` · <a href="https://github.com/mono/skia/commit/${m.skiaSubmoduleCommit}">${m.skiaSubmoduleCommit.slice(0,10)}</a>` : '');
-
-  document.getElementById('search').addEventListener('input', e => {
-    searchText = e.target.value.toLowerCase();
-    applyFilters();
-  });
-  applyFilters();
-});
+    <div class="text-muted d-flex justify-content-between" style="font-size:0.72rem;padding:0 12px 4px">
+      <span id="filter-count"></span>
+      <button class="reset-btn" onclick="resetFilters('findings')">Reset filters</button>
+    </div>
+    <div id="list"></div>
+  </div>
+  <div class="tab-pane" id="tab-nextsteps">
+    <div class="filter-bar" id="nextsteps-filters">
+      <input type="text" class="search-box" style="width:180px" id="ns-search" placeholder="Search steps...">
+    </div>
+    <div class="text-muted d-flex justify-content-between" style="font-size:0.72rem;padding:0 12px 4px">
+      <span id="ns-filter-count"></span>
+      <button class="reset-btn" onclick="resetFilters('nextsteps')">Reset filters</button>
+    </div>
+    <div id="next-steps"></div>
+  </div>
+  <div class="meta-footer" id="meta-footer"></div>
+</div>
+<script>
+const SL={full:'✅ Full',partial:'🟡 Partial',missing:'❌ Missing',action_needed:'⚠️ Action',not_applicable:'N/A',correctly_absent:'N/A'};
+const CL={new_feature:'Feature',codec:'Codec',image:'Image',image_filter:'Filter',shader:'Shader',color:'Color',canvas:'Canvas',path:'Path',font:'Font',utility:'Utility',performance:'Perf',behavior_change:'Behavior',deprecation:'Deprecated'};
+let fF={priority:new Set(),status:new Set(),category:new Set(),label:new Set()};
+let nF={severity:new Set(),effort:new Set(),skill:new Set()};
+let sT='',nsT='',msMin=0,msMax=999;
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function switchTab(t){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');}
+function tF(scope,type,val){const f=scope==='findings'?fF:nF;const s=f[type];if(s.has(val))s.delete(val);else s.add(val);scope==='findings'?aFF():aNF();}
+function resetFilters(scope){if(scope==='findings'){Object.values(fF).forEach(s=>s.clear());sT='';msMin=0;msMax=999;document.getElementById('search').value='';document.getElementById('ms-min').value='';document.getElementById('ms-max').value='';aFF();}else{Object.values(nF).forEach(s=>s.clear());nsT='';document.getElementById('ns-search').value='';aNF();}}
+function updateMsFilter(){msMin=parseInt(document.getElementById('ms-min').value)||0;msMax=parseInt(document.getElementById('ms-max').value)||999;aFF();}
+function aFF(){let n=0;document.querySelectorAll('.row-item').forEach(el=>{const d=JSON.parse(el.dataset.finding);let v=true;if(fF.priority.size&&!fF.priority.has(d.priority))v=false;if(fF.status.size&&!fF.status.has(d.bindingStatus))v=false;if(fF.category.size&&!fF.category.has(d.category))v=false;if(fF.label.size&&!(d.labels||[]).some(l=>fF.label.has(l)))v=false;if(sT&&!JSON.stringify(d).toLowerCase().includes(sT))v=false;const m=d.milestone||0;if(m&&(m<msMin||m>msMax))v=false;el.style.display=v?'':'none';if(v)n++;});document.getElementById('filter-count').textContent=`Showing ${n} of ${DATA.findings.length}`;document.querySelectorAll('#tab-findings .pill[data-filter]').forEach(p=>{const[t,val]=p.dataset.filter.split(':');p.classList.toggle('dim',fF[t]?.size>0&&!fF[t].has(val));});}
+function aNF(){let n=0;document.querySelectorAll('.ns-item').forEach(el=>{const d=JSON.parse(el.dataset.step);let v=true;if(nF.severity.size&&!nF.severity.has(d.severity))v=false;if(nF.effort.size&&!nF.effort.has(d.effort))v=false;if(nF.skill.size&&!nF.skill.has(d.skillToUse))v=false;if(nsT&&!JSON.stringify(d).toLowerCase().includes(nsT))v=false;el.style.display=v?'':'none';if(v)n++;});document.getElementById('ns-filter-count').textContent=`Showing ${n} of ${(DATA.nextSteps||[]).length}`;document.querySelectorAll('#tab-nextsteps .pill[data-filter]').forEach(p=>{const[t,val]=p.dataset.filter.split(':');p.classList.toggle('dim',nF[t]?.size>0&&!nF[t].has(val));});}
+function renderSummary(s){document.getElementById('summary-bar').innerHTML=[['Total',s.totalFindings||0,'#1f2328'],['Missing',s.byStatus?.missing||0,'#991b1b'],['Partial',s.byStatus?.partial||0,'#92400e'],['Full',s.byStatus?.full||0,'#166534'],['Action',s.byStatus?.action_needed||0,'#9d174d'],['Hidden',s.bySource?.['header-scan']||0,'#5b21b6']].map(([l,n,c])=>`<div class="text-center"><div class="summary-num" style="color:${c}">${n}</div><div class="summary-label">${l}</div></div>`).join('');}
+function addPills(id,scope,groups){const bar=document.getElementById(id);groups.forEach(([type,vals,pre])=>{if(!vals.length)return;const g=document.createElement('div');g.className='filter-group';g.innerHTML=`<span class="filter-group-label">${type}:</span>`+vals.map(v=>{const cls=pre?`${pre}${v}`:'l-pill';const label=type==='category'?(CL[v]||v):type==='status'?(SL[v]||v):v;return`<span class="pill ${cls}" data-filter="${type}:${v}" onclick="tF('${scope}','${type}','${v}')">${label}</span>`;}).join('');bar.appendChild(g);});}
+function renderRow(f){const ms=f.milestone?`<span class="ms">m${f.milestone}</span>`:'';const xms=(f.milestones||[]).map(m=>`<span class="ms" style="opacity:0.5">m${m}</span>`).join(' ');const labels=(f.labels||[]).map(l=>`<span class="pill l-pill" data-filter="label:${l}" onclick="event.stopPropagation();tF('findings','label','${l}')">${l}</span>`).join(' ');const cat=`<span class="pill c-${f.category}" data-filter="category:${f.category}" onclick="event.stopPropagation();tF('findings','category','${f.category}')">${CL[f.category]||f.category}</span>`;const pri=`<span class="pill p-${f.priority}" data-filter="priority:${f.priority}" onclick="event.stopPropagation();tF('findings','priority','${f.priority}')">${f.priority}</span>`;const st=`<span class="pill s-${f.bindingStatus}" data-filter="status:${f.bindingStatus}" onclick="event.stopPropagation();tF('findings','status','${f.bindingStatus}')">${SL[f.bindingStatus]||f.bindingStatus}</span>`;
+let det='<div class="detail-grid">';if(f.userValue)det+=`<div class="detail-label">Value</div><div class="detail-value">${esc(f.userValue)}</div>`;if(f.skiaApi)det+=`<div class="detail-label">Skia API</div><div class="detail-value"><code>${esc(f.skiaApi)}</code></div>`;if(f.cppClass)det+=`<div class="detail-label">C++ Class</div><div class="detail-value"><code>${esc(f.cppClass)}::${esc(f.cppMethod||'')}</code> (${esc(f.cppHeader||'')})</div>`;if(f.cApiFunction)det+=`<div class="detail-label">C API</div><div class="detail-value"><code>${esc(f.cApiFunction)}</code> (${esc(f.cApiFile||'')})</div>`;else if(f.bindingStatus==='missing')det+=`<div class="detail-label">C API</div><div class="detail-value" style="color:#991b1b">Not in C API</div>`;if(f.csharpMethod)det+=`<div class="detail-label">C# Binding</div><div class="detail-value"><code>${esc(f.csharpMethod)}</code> (${esc(f.csharpFile||'')})</div>`;else if(f.bindingStatus==='missing'||f.bindingStatus==='partial')det+=`<div class="detail-label">C# Binding</div><div class="detail-value" style="color:#991b1b">Not bound</div>`;if(f.replacement)det+=`<div class="detail-label">Replace</div><div class="detail-value"><code>${esc(f.replacement)}</code></div>`;if(f.obsoleteMessage)det+=`<div class="detail-label">[Obsolete]</div><div class="detail-value"><code>${esc(f.obsoleteMessage)}</code></div>`;if(f.impact)det+=`<div class="detail-label">Impact</div><div class="detail-value">${esc(f.impact)}</div>`;if(f.milestoneDeprecated)det+=`<div class="detail-label">Deprecated</div><div class="detail-value">m${f.milestoneDeprecated}</div>`;if(f.milestoneRemoved)det+=`<div class="detail-label">Removed</div><div class="detail-value">m${f.milestoneRemoved}</div>`;if(f.skillToUse)det+=`<div class="detail-label">Skill</div><div class="detail-value"><code>${esc(f.skillToUse)}</code>${f.effort?` (${f.effort})`:''}</div>`;if(f.notes)det+=`<div class="detail-label">Notes</div><div class="detail-value">${esc(f.notes)}</div>`;det+='</div>';
+return`<div class="row-item" data-finding='${JSON.stringify(f).replace(/'/g,"&#39;")}' onclick="this.classList.toggle('expanded')"><div class="row-name">${esc(f.name)}</div><div class="row-pills">${ms} ${cat} ${pri} ${st} ${labels} ${xms}</div><div class="row-desc">${esc(f.description)}</div><div class="row-detail">${det}</div></div>`;}
+function renderNS(steps){if(!steps||!steps.length)return;document.getElementById('next-steps').innerHTML=steps.map(s=>{const cls='ns-'+(s.severity||'low');return`<div class="next-step ns-item ${cls}" data-step='${JSON.stringify(s).replace(/'/g,"&#39;")}'><div><strong>${esc(s.action)}</strong></div><div style="margin-top:3px"><span class="pill p-${s.severity||'low'}" data-filter="severity:${s.severity}" onclick="event.stopPropagation();tF('nextsteps','severity','${s.severity}')">${s.severity||''}</span>${s.milestone?` <span class="ms">m${s.milestone}</span>`:''}${s.effort?` <span class="pill" style="background:#e5e7eb;color:#374151" data-filter="effort:${s.effort}" onclick="event.stopPropagation();tF('nextsteps','effort','${s.effort}')">${s.effort}</span>`:''}${s.skillToUse?` <span class="pill l-pill" data-filter="skill:${s.skillToUse}" onclick="event.stopPropagation();tF('nextsteps','skill','${s.skillToUse}')">${s.skillToUse}</span>`:''}</div><div style="color:var(--muted);font-size:0.78rem;margin-top:3px">${esc(s.reason)}</div></div>`;}).join('');}
+document.addEventListener('DOMContentLoaded',()=>{if(typeof DATA==='undefined'){document.body.innerHTML='<p style="padding:2rem;color:red">No DATA found.</p>';return;}const m=DATA.meta;const mode=m.mode==='windowed'?`m${m.previousMilestone}→m${m.currentMilestone}`:`m${m.currentMilestone} (full)`;document.getElementById('subtitle').textContent=`${m.date} · ${mode}`;renderSummary(DATA.summary);
+addPills('findings-filters','findings',[['priority',['critical','high','medium','low'],'p-'],['status',['missing','partial','full','action_needed','not_applicable'],'s-'],['category',[...new Set(DATA.findings.map(f=>f.category))].sort(),'c-'],['label',[...new Set(DATA.findings.flatMap(f=>f.labels||[]))].sort(),'']]);
+const sev=[...new Set((DATA.nextSteps||[]).map(s=>s.severity).filter(Boolean))];const eff=[...new Set((DATA.nextSteps||[]).map(s=>s.effort).filter(Boolean))];const sk=[...new Set((DATA.nextSteps||[]).map(s=>s.skillToUse).filter(Boolean))];addPills('nextsteps-filters','nextsteps',[['severity',sev,'p-'],['effort',eff,''],['skill',sk,'']]);
+const sorted=[...DATA.findings].sort((a,b)=>{const po={critical:0,high:1,medium:2,low:3};return(po[a.priority]??4)-(po[b.priority]??4)||(b.milestone||0)-(a.milestone||0);});document.getElementById('list').innerHTML=sorted.map(renderRow).join('');document.getElementById('findings-count').textContent=DATA.findings.length;document.getElementById('nextsteps-count').textContent=(DATA.nextSteps||[]).length;renderNS(DATA.nextSteps);document.getElementById('meta-footer').innerHTML=`Source: <a href="${m.releaseNotesSource}">RELEASE_NOTES.md</a> · ${m.date}`+(m.skiaSubmoduleCommit?` · <a href="https://github.com/mono/skia/commit/${m.skiaSubmoduleCommit}">${m.skiaSubmoduleCommit.slice(0,10)}</a>`:'');
+document.getElementById('search').addEventListener('input',e=>{sT=e.target.value.toLowerCase();aFF();});document.getElementById('ns-search').addEventListener('input',e=>{nsT=e.target.value.toLowerCase();aNF();});aFF();aNF();});
 </script>
 </body>
 </html>
