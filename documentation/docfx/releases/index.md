@@ -5,7 +5,34 @@ Release notes for all SkiaSharp versions. Each page includes the stable release 
 ## What's Coming Next
 
 <!-- UNRELEASED_PLACEHOLDER -->
-<!-- This section is populated at build time by the CI workflow. -->
+
+Typography gets a major upgrade with full variable font support and color font palettes, while the core API gains finer sampling control for surface drawing. Community contributor [@ramezgerges](https://github.com/ramezgerges) has been instrumental in driving these font and platform improvements.
+
+### 🎨 Core API
+
+- **SKSamplingOptions for surface drawing** — `SKSurface.Draw` and `SKCanvas.DrawSurface` now accept `SKSamplingOptions` for finer control over image sampling quality. ❤️ ([#3491](https://github.com/mono/SkiaSharp/pull/3491))
+
+### 📦 Text & Fonts
+
+- **Variable font support** — Full variable font axis support including weight, width, slant, and custom axes. ❤️ @ramezgerges ([#3703](https://github.com/mono/SkiaSharp/pull/3703))
+- **Color font palette support** — Added color font (COLR/CPAL) palette selection and improved variable font robustness. ([#3742](https://github.com/mono/SkiaSharp/pull/3742))
+- **Default typeface resolution fix** — Moved default-typeface resolution to the managed layer, fixing incorrect fallback behavior. ❤️ @ramezgerges ([#3730](https://github.com/mono/SkiaSharp/pull/3730))
+- **Legacy typeface creation** — Bumped Skia to include `sk_fontmgr_legacy_create_typeface` for improved font manager support. ([#3744](https://github.com/mono/SkiaSharp/pull/3744))
+
+### 🐧 Linux
+
+- **Debian 13 Docker build fix** — Fixed Docker build for non-loong64/riscv64 architectures on Debian 13. ([#3747](https://github.com/mono/SkiaSharp/pull/3747))
+
+### 🌐 WebAssembly
+
+- **Uno Platform WebAssembly gallery** — New sample project demonstrating SkiaSharp with Uno Platform on WebAssembly. ❤️ @ramezgerges ([#3758](https://github.com/mono/SkiaSharp/pull/3758))
+
+### 📦 General
+
+- **Uno Platform sample update** — Updated existing Uno Platform sample project. ❤️ @ramezgerges ([#3666](https://github.com/mono/SkiaSharp/pull/3666))
+- **Threading test fix** — Fixed x86 .NET Framework threading test OOM failures. ([#3674](https://github.com/mono/SkiaSharp/pull/3674))
+
+Plus several CI, documentation, and tooling improvements.
 
 *Build the site with CI to see merged PRs since the last release.*
 
