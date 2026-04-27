@@ -12,6 +12,10 @@ public abstract class DocumentSampleBase : SampleBase
 
 	public override string Category => SampleCategories.Documents;
 
+	public override byte[]? DownloadBytes => DocumentBytes;
+	public override string DownloadFileName => DocumentFileName ?? "document.pdf";
+	public override string DownloadMimeType => DocumentMimeType ?? "application/pdf";
+
 	protected abstract void OnGenerateDocument(SKCanvas previewCanvas, int width, int height);
 
 	public void DrawSample(SKCanvas canvas, int width, int height)

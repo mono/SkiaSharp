@@ -17,7 +17,15 @@ else if (IsDocument)
     <div class="sample-page">
         <div class="sample-header">
             <a href="" class="text-decoration-none small d-inline-block">&larr; Back to Gallery</a>
-            <h2>@sample.Title</h2>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="mb-0">@sample.Title</h2>
+                @if (sample.HasDownload)
+                {
+                    <button class="btn btn-sm btn-outline-primary" @onclick="TriggerDownload" title="Download @sample.DownloadFileName">
+                        ⬇ Download
+                    </button>
+                }
+            </div>
             @if (!string.IsNullOrWhiteSpace(sample.Description))
             {
                 <p class="text-muted mb-1">@sample.Description</p>
@@ -79,7 +87,15 @@ else
     <div class="sample-page">
         <div class="sample-header">
             <a href="" class="text-decoration-none small d-inline-block">&larr; Back to Gallery</a>
-            <h2>@sample.Title</h2>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="mb-0">@sample.Title</h2>
+                @if (sample.HasDownload)
+                {
+                    <button class="btn btn-sm btn-outline-primary" @onclick="TriggerDownload" title="Download @sample.DownloadFileName">
+                        ⬇ Download
+                    </button>
+                }
+            </div>
             @if (!string.IsNullOrWhiteSpace(sample.Description))
             {
                 <p class="text-muted mb-1">@sample.Description</p>
@@ -154,6 +170,7 @@ else
     private SKGLView? glView;
     private bool previousUseGpu;
     private string? documentBlobUrl;
+    private string? downloadBlobUrl;
 
     private int canvasInfoWidth, canvasInfoHeight;
     private int canvasRawWidth, canvasRawHeight;
@@ -290,11 +307,37 @@ else
             sample = null;
         }
 
-        if (!string.IsNullOrEmpty(documentBlobUrl))
+        RevokeUrl(ref documentBlobUrl);
+        RevokeUrl(ref downloadBlobUrl);
+    }
+
+    private void RevokeUrl(ref string? url)
+    {
+        if (!string.IsNullOrEmpty(url))
         {
-            _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{documentBlobUrl}')");
-            documentBlobUrl = null;
+            _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{url}')");
+            url = null;
         }
+    }
+
+    private async Task TriggerDownload()
+    {
+        if (sample is null || !sample.HasDownload)
+            return;
+
+        RevokeUrl(ref downloadBlobUrl);
+
+        var base64 = Convert.ToBase64String(sample.DownloadBytes!);
+        var mime = sample.DownloadMimeType;
+        var fileName = sample.DownloadFileName;
+
+        downloadBlobUrl = await JS.InvokeAsync<string>(
+            "eval",
+            $"(() => {{ var b = atob('{base64}'); var a = new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return URL.createObjectURL(new Blob([a], {{type:'{mime}'}})); }})()");
+
+        await JS.InvokeVoidAsync(
+            "eval",
+            $"(() => {{ var a = document.createElement('a'); a.href = '{downloadBlobUrl}'; a.download = '{fileName}'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }})()");
     }
 
     private void OnControlChanged((string id, object value) args)
@@ -307,12 +350,7 @@ else
     {
         if (sample is DocumentSampleBase doc)
         {
-            // Clear old blob
-            if (!string.IsNullOrEmpty(documentBlobUrl))
-            {
-                _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{documentBlobUrl}')");
-                documentBlobUrl = null;
-            }
+            RevokeUrl(ref documentBlobUrl);
 
             // Generate the document (calls OnGenerateDocument which populates DocumentBytes)
             using var tempSurface = SKSurface.Create(new SKImageInfo(1, 1));
