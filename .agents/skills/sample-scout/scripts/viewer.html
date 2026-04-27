@@ -34,9 +34,14 @@ body{background:var(--bg);color:#1f2328;font-size:14px;}
 .filter-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .filter-label{font-size:.7rem;color:var(--muted);font-weight:600;width:80px;flex-shrink:0;text-align:right;padding-right:6px;}
 .search-box{font-size:.8rem;padding:3px 10px;border:1px solid var(--border);border-radius:6px;width:300px;}
+.ctrl-select{font-size:.78rem;padding:2px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:#1f2328;}
 .filter-count{font-size:.72rem;color:var(--muted);padding:0 12px 4px;}
 .reset-btn{font-size:.7rem;color:#3730a3;cursor:pointer;border:none;background:none;padding:2px 6px;}
 .reset-btn:hover{text-decoration:underline;}
+.dir-btn{font-size:.8rem;width:26px;height:26px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:#1e40af;font-weight:700;padding:0;line-height:26px;text-align:center;}
+.dir-btn:hover{background:#f0f4f8;}
+.group-header{font-weight:700;font-size:.82rem;padding:8px 12px 4px;color:#1e40af;border-bottom:2px solid #dbeafe;margin-top:12px;background:#f8faff;}
+.count-badge{font-size:.6rem;background:#e5e7eb;color:#374151;padding:0 5px;border-radius:8px;margin-left:2px;vertical-align:middle;}
 </style>
 </head>
 <body>
@@ -54,6 +59,26 @@ body{background:var(--bg);color:#1f2328;font-size:14px;}
 <div class="filter-row"><span class="filter-label">Interest:</span><span id="fr-interest"></span></div>
 <div class="filter-row"><span class="filter-label">APIs:</span><span id="fr-avail"></span></div>
 <div class="filter-row"><span class="filter-label">Coverage:</span><span id="fr-status"></span></div>
+<div class="filter-row">
+<span class="filter-label">Group by:</span>
+<select class="ctrl-select" id="group-by" onchange="applyFilters()">
+  <option value="none">None</option>
+  <option value="interesting">Interest</option>
+  <option value="sampleStatus" selected>Coverage</option>
+  <option value="apis_available">API Availability</option>
+</select>
+<button class="dir-btn" id="group-dir" onclick="this.textContent=this.textContent==='▼'?'▲':'▼';applyFilters()" title="Toggle group order">▼</button>
+<span style="width:16px"></span>
+<span class="filter-label" style="width:55px">Sort by:</span>
+<select class="ctrl-select" id="sort-by" onchange="applyFilters()">
+  <option value="interest" selected>Interest</option>
+  <option value="name">Name</option>
+  <option value="file">File</option>
+  <option value="coverage">Coverage</option>
+  <option value="apis">API Availability</option>
+</select>
+<button class="dir-btn" id="sort-dir" onclick="this.textContent=this.textContent==='▼'?'▲':'▼';applyFilters()" title="Toggle sort order">▼</button>
+</div>
 </div>
 <div class="d-flex justify-content-between" style="padding:0 12px 4px">
 <span class="filter-count" id="filter-count"></span>
@@ -63,8 +88,15 @@ body{background:var(--bg);color:#1f2328;font-size:14px;}
 </div>
 <script>
 const DATA = [/*INJECT_DATA_HERE*/];
+const IO={high:0,medium:1,low:2};
+const IL={high:'🟢 High',medium:'🟡 Medium',low:'⚪ Low'};
+const SSO={none:0,similar:1,existing:2};
+const SSL={none:'🆕 No sample',similar:'🔶 Similar exists',existing:'✅ Covered'};
+const AO={true:0,false:1};
+const AL={true:'✅ APIs ready',false:'❌ Blocked'};
 let fI=new Set(),fA=new Set(),fS=new Set();
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function getDir(id){return document.getElementById(id).textContent==='▲'?-1:1;}
 function tF(type,val){const m={interest:fI,avail:fA,status:fS};const f=m[type];f.has(val)?f.delete(val):f.add(val);applyFilters();}
 function applyFilters(){
   const sT=document.getElementById('search').value.toLowerCase();
@@ -75,8 +107,44 @@ function applyFilters(){
     if(sT&&!JSON.stringify(f).toLowerCase().includes(sT))return false;
     return true;
   });
+  const sorted=sortFindings(filtered);
   document.getElementById('filter-count').textContent='Showing '+filtered.length+' of '+DATA.length;
-  document.getElementById('list').innerHTML=filtered.map(renderRow).join('');
+  const by=document.getElementById('group-by').value;
+  const el=document.getElementById('list');
+  if(by==='none'){el.innerHTML=sorted.map(renderRow).join('');updatePillDim();return;}
+  const groups={};sorted.forEach(f=>{const k=groupKey(f,by);if(!groups[k])groups[k]=[];groups[k].push(f);});
+  const gOrder=Object.keys(groups);const gDir=getDir('group-dir');
+  if(by==='interesting')gOrder.sort((a,b)=>((IO[a]??9)-(IO[b]??9))*gDir);
+  else if(by==='sampleStatus')gOrder.sort((a,b)=>((SSO[a]??9)-(SSO[b]??9))*gDir);
+  else if(by==='apis_available')gOrder.sort((a,b)=>((AO[a]??9)-(AO[b]??9))*gDir);
+  else gOrder.sort((a,b)=>a.localeCompare(b)*gDir);
+  el.innerHTML=gOrder.map(k=>'<div class="group-header">'+groupLabel(k,by)+' <span class="count-badge">'+groups[k].length+'</span></div>'+groups[k].map(renderRow).join('')).join('');
+  updatePillDim();
+}
+function groupKey(f,by){
+  if(by==='interesting')return f.interesting;
+  if(by==='sampleStatus')return f.sampleStatus||'none';
+  if(by==='apis_available')return String(f.apis_available);
+  return '';
+}
+function groupLabel(key,by){
+  if(by==='interesting')return IL[key]||key;
+  if(by==='sampleStatus')return SSL[key]||key;
+  if(by==='apis_available')return AL[key]||key;
+  return key;
+}
+function sortFindings(arr){
+  const s=document.getElementById('sort-by').value;
+  const dir=getDir('sort-dir');
+  return[...arr].sort((a,b)=>{let r=0;switch(s){
+    case'interest':r=(IO[a.interesting]??9)-(IO[b.interesting]??9);if(r===0)r=(a.name||'').localeCompare(b.name||'');break;
+    case'name':r=(a.name||'').localeCompare(b.name||'');break;
+    case'file':r=(a.file||'').localeCompare(b.file||'');break;
+    case'coverage':r=(SSO[a.sampleStatus||'none']??9)-(SSO[b.sampleStatus||'none']??9);break;
+    case'apis':r=(a.apis_available?0:1)-(b.apis_available?0:1);break;
+  }return r*dir;});
+}
+function updatePillDim(){
   document.querySelectorAll('.pill[data-filter]').forEach(p=>{
     const[t,v]=p.dataset.filter.split(':');
     const m={interest:fI,avail:fA,status:fS};
@@ -84,7 +152,6 @@ function applyFilters(){
   });
 }
 function renderRow(f){
-  const ssLabels={none:'🆕 No sample',similar:'🔶 Similar exists',existing:'✅ Covered'};
   const ss=f.sampleStatus||'none';
   const missing=(f.missing_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'';
   const apis=(f.key_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'—';
@@ -96,7 +163,7 @@ function renderRow(f){
   if(f.notes)det+='<div class="detail-label">Notes</div><div class="detail-value">'+esc(f.notes)+'</div>';
   det+='<div class="detail-label">Source</div><div class="detail-value"><a href="'+gh+'" target="_blank">gm/'+esc(f.file)+'</a></div>';
   det+='</div>';
-  return '<div class="row-item" onclick="this.classList.toggle(\'expanded\')"><div class="d-flex align-items-start"><span class="row-chevron">▶</span><div style="flex:1"><div class="row-name">'+esc(f.name||f.file)+' <span class="pill i-'+f.interesting+'" data-filter="interest:'+f.interesting+'" onclick="event.stopPropagation();tF(\'interest\',\''+f.interesting+'\')">'+f.interesting+'</span> <span class="pill '+(f.apis_available?'a-yes':'a-no')+'" data-filter="avail:'+(f.apis_available?'yes':'no')+'" onclick="event.stopPropagation();tF(\'avail\',\''+(f.apis_available?'yes':'no')+'\')">'+(f.apis_available?'✅ APIs':'❌ APIs')+'</span> <span class="pill ss-'+ss+'" data-filter="status:'+ss+'" onclick="event.stopPropagation();tF(\'status\',\''+ss+'\')">'+ssLabels[ss]+'</span></div><div class="row-desc">'+esc(f.description)+'</div><div class="row-detail">'+det+'</div></div></div></div>';
+  return '<div class="row-item" onclick="this.classList.toggle(\'expanded\')"><div class="d-flex align-items-start"><span class="row-chevron">▶</span><div style="flex:1"><div class="row-name">'+esc(f.name||f.file)+' <span class="pill i-'+f.interesting+'" data-filter="interest:'+f.interesting+'" onclick="event.stopPropagation();tF(\'interest\',\''+f.interesting+'\')">'+f.interesting+'</span> <span class="pill '+(f.apis_available?'a-yes':'a-no')+'" data-filter="avail:'+(f.apis_available?'yes':'no')+'" onclick="event.stopPropagation();tF(\'avail\',\''+(f.apis_available?'yes':'no')+'\')">'+(f.apis_available?'✅ APIs':'❌ APIs')+'</span> <span class="pill ss-'+ss+'" data-filter="status:'+ss+'" onclick="event.stopPropagation();tF(\'status\',\''+ss+'\')">'+SSL[ss]+'</span></div><div class="row-desc">'+esc(f.description)+'</div><div class="row-detail">'+det+'</div></div></div></div>';
 }
 document.addEventListener('DOMContentLoaded',()=>{
   const high=DATA.filter(f=>f.interesting==='high').length;
@@ -116,7 +183,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   ].map(([l,n,c])=>'<div class="text-center"><div class="summary-num" style="color:'+c+'">'+n+'</div><div class="summary-label">'+l+'</div></div>').join('');
   document.getElementById('fr-interest').innerHTML=['high','medium','low'].map(v=>'<span class="pill i-'+v+'" data-filter="interest:'+v+'" onclick="tF(\'interest\',\''+v+'\')">'+v+'</span>').join(' ');
   document.getElementById('fr-avail').innerHTML=['yes','no'].map(v=>'<span class="pill a-'+v+'" data-filter="avail:'+v+'" onclick="tF(\'avail\',\''+v+'\')">'+(v==='yes'?'✅ APIs ready':'❌ Blocked')+'</span>').join(' ');
-  document.getElementById('fr-status').innerHTML=['none','similar','existing'].map(v=>'<span class="pill ss-'+v+'" data-filter="status:'+v+'" onclick="tF(\'status\',\''+v+'\')">'+(({none:'🆕 No sample',similar:'🔶 Similar',existing:'✅ Covered'})[v])+'</span>').join(' ');
+  document.getElementById('fr-status').innerHTML=['none','similar','existing'].map(v=>'<span class="pill ss-'+v+'" data-filter="status:'+v+'" onclick="tF(\'status\',\''+v+'\')">'+(SSL[v])+'</span>').join(' ');
   applyFilters();
 });
 </script>
