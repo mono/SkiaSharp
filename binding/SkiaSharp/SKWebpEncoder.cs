@@ -39,17 +39,17 @@ public static unsafe class SKWebpEncoder
 	{
 		_ = dst ?? throw new ArgumentNullException (nameof (dst));
 
-		var nativeFrames = new SKWebpEncoderFrameNative[frames.Length];
+		using var nativeFrames = Utils.RentArray<SKWebpEncoderFrameNative> (frames.Length);
 		for (var i = 0; i < frames.Length; i++) {
 			var pixmap = frames[i].Pixmap ?? throw new ArgumentNullException ($"frames[{i}].Pixmap");
-			nativeFrames[i] = new SKWebpEncoderFrameNative {
+			nativeFrames.Span[i] = new SKWebpEncoderFrameNative {
 				pixmap = pixmap.Handle,
 				duration = frames[i].Duration,
 			};
 		}
 
-		fixed (SKWebpEncoderFrameNative* f = nativeFrames) {
-			return SkiaApi.sk_webpencoder_encode_animated (dst.Handle, f, nativeFrames.Length, &options);
+		fixed (SKWebpEncoderFrameNative* f = nativeFrames.Span) {
+			return SkiaApi.sk_webpencoder_encode_animated (dst.Handle, f, frames.Length, &options);
 		}
 	}
 
