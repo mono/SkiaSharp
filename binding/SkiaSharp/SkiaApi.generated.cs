@@ -7962,6 +7962,44 @@ namespace SkiaSharp
 			(sk_imagefilter_new_point_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_point_lit_specular> ("sk_imagefilter_new_point_lit_specular")).Invoke (location, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
+		// sk_imagefilter_t* sk_imagefilter_new_runtime_shader(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, const char* childShaderName, const sk_imagefilter_t* input)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_runtime_shader (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, /* char */ void* childShaderName, sk_imagefilter_t input);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_runtime_shader (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, /* char */ void* childShaderName, sk_imagefilter_t input);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_runtime_shader (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, /* char */ void* childShaderName, sk_imagefilter_t input);
+		}
+		private static Delegates.sk_imagefilter_new_runtime_shader sk_imagefilter_new_runtime_shader_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_runtime_shader (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, /* char */ void* childShaderName, sk_imagefilter_t input) =>
+			(sk_imagefilter_new_runtime_shader_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_runtime_shader> ("sk_imagefilter_new_runtime_shader")).Invoke (effect, uniforms, children, childCount, childShaderName, input);
+		#endif
+
+		// sk_imagefilter_t* sk_imagefilter_new_runtime_shader_with_children(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, float maxSampleRadius, const char** childShaderNames, const sk_imagefilter_t** inputs, int inputCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_runtime_shader_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_runtime_shader_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_runtime_shader_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		}
+		private static Delegates.sk_imagefilter_new_runtime_shader_with_children sk_imagefilter_new_runtime_shader_with_children_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_runtime_shader_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount) =>
+			(sk_imagefilter_new_runtime_shader_with_children_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_runtime_shader_with_children> ("sk_imagefilter_new_runtime_shader_with_children")).Invoke (effect, uniforms, children, childCount, maxSampleRadius, childShaderNames, inputs, inputCount);
+		#endif
+
 		// sk_imagefilter_t* sk_imagefilter_new_shader(const sk_shader_t* shader, bool dither, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
