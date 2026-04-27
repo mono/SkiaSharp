@@ -42,7 +42,8 @@ Publish packages to NuGet.org and finalize releases.
 │  4. Tag Release          → Push git tag (ask_user first!)          │
 │  5. Create GitHub Release→ Generate notes, set prerelease flag     │
 │  6. Annotate Notes       → Add platform/contributor emojis         │
-│  7. Close Milestone      → Stable releases only                    │
+│  7. Update Website       → Regenerate release notes for website    │
+│  8. Close Milestone      → Stable releases only                    │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -250,7 +251,34 @@ After creating the release, annotate each PR line with **platform** and **commun
 
 ---
 
-## Step 7: Close Milestone (Stable only)
+## Step 7: Update Website Release Notes
+
+After annotating the GitHub release, update the website release notes in the repo.
+
+### Process
+
+1. **Regenerate the release notes pages** from GitHub releases:
+   ```bash
+   python3 scripts/generate-release-notes.py
+   ```
+   This fetches all release bodies and regenerates the markdown files in `documentation/docfx/releases/`.
+
+2. **Commit to the release branch** so the website updates when the release PR merges:
+   ```bash
+   git add documentation/docfx/releases/
+   git commit -m "Update website release notes for {tag}"
+   ```
+
+3. **Push** to the release branch:
+   ```bash
+   git push
+   ```
+
+> **Note:** The `generate-release-notes.py` script is idempotent — it overwrites all files based on the current state of GitHub releases. The "What's Coming Next" section on the index page is generated at site build time by `generate-unreleased-notes.py` in CI, so you don't need to run that manually.
+
+---
+
+## Step 8: Close Milestone (Stable only)
 
 **Skip for preview releases.**
 
