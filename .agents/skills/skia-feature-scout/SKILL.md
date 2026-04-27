@@ -235,6 +235,9 @@ Present a concise markdown summary in the conversation, grouped by urgency:
 
 Include: Before/After milestone split, Deprecation Watch, Recommended Action Plan with skill routing.
 
+**Top Priorities table:** Show the top 10 findings sorted by action score (impact × priority × 1/effort).
+This answers "what should I do next?" — the items at the top are high-value, urgent, and achievable.
+
 ### Phase 6: Offer Next Steps
 
 After presenting the report, offer:

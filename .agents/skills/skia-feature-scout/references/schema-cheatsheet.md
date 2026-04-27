@@ -80,7 +80,7 @@ filtering.
 | `cppMethod` | string | C++ method signature |
 | `replacement` | string | Replacement API (for deprecations) |
 | `obsoleteMessage` | string | Suggested `[Obsolete("...")]` text |
-| `impact` | string | Impact description (for perf/behavior changes) |
+| `impact` | string | `transformative`, `significant`, `moderate`, `minor` — how much users care if we add this |
 | `bindingActionNeeded` | boolean | Whether binding work is needed (for perf notes) |
 | `skillToUse` | string | Which skill to invoke for follow-up |
 | `effort` | string | `trivial`, `small`, `medium`, `large` |
@@ -95,6 +95,7 @@ filtering.
   "description": "Draw custom vertex meshes with user-defined attributes and varyings using SkSL.",
   "bindingStatus": "missing",
   "source": "release-notes",
+  "impact": "transformative",
   "milestone": 106,
   "milestones": [110, 117, 119, 120],
   "skiaApi": "SkMesh::Make, SkMeshSpecification",
@@ -183,6 +184,27 @@ filtering.
 | `release-notes` | Found in Skia RELEASE_NOTES.md |
 | `header-scan` | Found by comparing C++ headers against C API |
 | `binding-audit` | Found by auditing existing SkiaSharp bindings |
+
+## Impact Enum
+
+How much this matters to users if SkiaSharp adds or fixes it. Use this to answer "what should
+I work on next?" — combine with `priority` (urgency) and `effort` (cost) for full prioritization.
+
+| Value | Meaning | Examples |
+|-------|---------|---------|
+| `transformative` | Unlocks an entirely new class of applications or workflows. Users can do things they literally couldn't before. | SkMesh (particles, deformable geometry), HDR pipeline (skhdr::Metadata + HDR PNG + CICP), SkPathBuilder (new path paradigm) |
+| `significant` | Major visible improvement to existing workflows. Users notice immediately. | Gradient interpolation in P3/Rec2020 (dramatically better gradients), SkImageFilters::RuntimeShader (custom GPU effects in filter graphs), async rescale/readback |
+| `moderate` | Useful addition that fills a gap or improves safety. Nice to have. | SkCodec fMaxDecodeMemory (security), AVIF/JPEG XL registration, encoder metadata fields, SkBitmap.setColorSpace |
+| `minor` | Small utility, niche use case, or completeness item. | SkData.Equals, SkSurfaceProps::kDefault_Flag, SkColorSpacePrimaries::operator== |
+
+**How impact differs from priority:**
+
+| Feature | Priority (urgency) | Impact (user value) |
+|---------|-------------------|---------------------|
+| SkPathBuilder | critical (will break) | transformative (new paradigm) |
+| Gradient interpolation | high (quality gap) | significant (visible improvement) |
+| SkData.Equals | low (convenience) | minor (trivial utility) |
+| kRec709 correction | medium (behavior change) | minor (subtle, automatic) |
 
 ## `nextSteps` — Prioritized Action Plan
 

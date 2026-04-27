@@ -75,6 +75,37 @@ for, how to check bindings, how to scan C++ headers, and accuracy tips learned f
 | `medium` | Useful addition, quality improvement, or niche but valuable |
 | `low` | Minor utility, internal concern, or auto-available |
 
+### Impact Classification
+
+Impact measures **how much users care** if SkiaSharp adds or fixes this. Priority is about urgency
+("when"); impact is about value ("how much"). Together they answer "what should I do next?"
+
+| Impact | Criteria | Decision Guide |
+|--------|----------|----------------|
+| `transformative` | Enables an entirely new class of applications or workflows. Users can do things they literally couldn't do before. | Ask: "Does this unlock a new *category* of app?" If yes → transformative. |
+| `significant` | Major visible improvement to existing workflows. Quality jump users notice immediately. Aligns with industry standards. | Ask: "Would a user *see* the difference or gain a major capability?" If yes → significant. |
+| `moderate` | Useful gap fill, improves safety/completeness, or helps a specific audience. Nice to have but not a headline feature. | Ask: "Is this useful but not exciting?" If yes → moderate. |
+| `minor` | Small utility, niche, or completeness item. Few users would notice if missing. | Default for small helpers, already-working-ok items, and internal concerns. |
+
+**Examples to calibrate:**
+
+| Feature | Priority | Impact | Why |
+|---------|----------|--------|-----|
+| SkMesh (custom vertex shaders) | high | transformative | Enables particles, deformable geometry, custom rendering — new app category |
+| SkPathBuilder migration | critical | transformative | Entire path creation paradigm changes, affects every path user |
+| HDR pipeline (Metadata+PNG+CICP) | high | transformative | Enables end-to-end HDR image workflow — new capability |
+| Gradient interpolation in P3/Rec2020 | high | significant | CSS Color Level 4 gradients look dramatically better — visible quality |
+| SkImageFilters::RuntimeShader | high | significant | Custom GPU effects in filter graphs — powerful for image processing |
+| Async rescale/readback | high | significant | Non-blocking pixel readback for video/streaming — major perf pattern |
+| SkCodec fMaxDecodeMemory | medium | moderate | Safety feature — prevents OOM on malicious images |
+| AVIF codec registration | medium | moderate | New format, but registration plumbing not a headline |
+| SkBitmap.setColorSpace | medium | moderate | Useful for color management workflows |
+| SkData.Equals | low | minor | Convenience — trivially done in user code |
+| kDefault_Flag | low | minor | Readability, no functional change |
+
+Every finding should have an `impact` field. When in doubt, lean toward the lower level —
+it's better to undercount than to oversell.
+
 ---
 
 ## Part 2: Binding Verification
