@@ -38,14 +38,6 @@ public sealed partial class SamplePage : Page
 
         ControlPanel.SetControls(sample.Controls);
 
-        var hasDownload = sample.HasDownload;
-        DownloadButton.Visibility = hasDownload
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        ControlsSidebar.Visibility = sample.Controls.Count > 0 || hasDownload
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
         currentSample = sample;
         if (sample is CanvasSampleBase canvasSample)
         {
@@ -59,6 +51,16 @@ public sealed partial class SamplePage : Page
         {
             GenerateDocument(docSample);
         }
+
+        // Set download/sidebar visibility after init and document generation
+        // so that HasDownload reflects populated DocumentBytes.
+        var hasDownload = sample.HasDownload;
+        DownloadButton.Visibility = hasDownload
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        ControlsSidebar.Visibility = sample.Controls.Count > 0 || hasDownload
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
         canvasHost.InvalidateRender();
     }
