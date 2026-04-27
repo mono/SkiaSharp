@@ -55,6 +55,7 @@ filtering.
 | `name` | string | Human-readable name (used as identifier) |
 | `category` | string | See category enum below |
 | `priority` | string | `critical`, `high`, `medium`, `low` |
+| `impact` | string | `transformative`, `significant`, `moderate`, `minor` |
 | `description` | string | What it is and why it matters |
 | `bindingStatus` | string | See binding status enum below |
 | `source` | string | `release-notes`, `header-scan`, or `binding-audit` |
@@ -80,7 +81,6 @@ filtering.
 | `cppMethod` | string | C++ method signature |
 | `replacement` | string | Replacement API (for deprecations) |
 | `obsoleteMessage` | string | Suggested `[Obsolete("...")]` text |
-| `impact` | string | `transformative`, `significant`, `moderate`, `minor` — how much users care if we add this |
 | `bindingActionNeeded` | boolean | Whether binding work is needed (for perf notes) |
 | `skillToUse` | string | Which skill to invoke for follow-up |
 | `effort` | string | `trivial`, `small`, `medium`, `large` |
