@@ -69,6 +69,7 @@ jobs:
             echo "artifact_name=staging-site-${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
             echo "uno_gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery-uno/" >> $GITHUB_OUTPUT
+            echo "fiddle_base_href=/SkiaSharp/staging/${PR_NUMBER}/fiddle/" >> $GITHUB_OUTPUT
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -78,6 +79,7 @@ jobs:
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
             echo "uno_gallery_base_href=/SkiaSharp/gallery-uno/" >> $GITHUB_OUTPUT
+            echo "fiddle_base_href=/SkiaSharp/fiddle/" >> $GITHUB_OUTPUT
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -164,11 +166,42 @@ jobs:
           path: output/gallery-uno-publish/smoke.png
           if-no-files-found: ignore
 
+      # ── Build SkiaFiddle Uno WASM app ────────────────────────────
+      - name: Publish SkiaFiddle WASM
+        env:
+          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
+          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
+        run: |
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
+          dotnet publish "samples/Basic/SkiaFiddle/SkiaFiddle/SkiaFiddle.csproj" \
+            -c Release \
+            -f net10.0-browserwasm \
+            -o output/skia-fiddle-publish \
+            -p:PlatformTargetFrameworks="" \
+            -p:WasmEnableSIMD=false \
+            -p:BuildFooter="$BUILD_FOOTER"
+
+      - name: Smoke test SkiaFiddle WASM
+        run: |
+          bash samples/Basic/SkiaFiddle/SkiaFiddle/scripts/smoke.sh \
+            output/skia-fiddle-publish/wwwroot \
+            --screenshot output/skia-fiddle-publish/smoke.png
+
+      - name: Upload SkiaFiddle smoke screenshot on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skia-fiddle-smoke-screenshot
+          path: output/skia-fiddle-publish/smoke.png
+          if-no-files-found: ignore
+
       # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
         env:
           GALLERY_BASE_HREF: ${{ steps.vars.outputs.gallery_base_href }}
           UNO_GALLERY_BASE_HREF: ${{ steps.vars.outputs.uno_gallery_base_href }}
+          FIDDLE_BASE_HREF: ${{ steps.vars.outputs.fiddle_base_href }}
           SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
           BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
         shell: bash
@@ -209,49 +242,61 @@ jobs:
           # index.html and duplicates the root in package_<hash>/uno-config.js
           # (config.uno_app_base, offline_files). Unlike Blazor there is no
           # single <base href> to rewrite — we prefix each absolute asset path.
-          UNO_PREFIX="${UNO_GALLERY_BASE_HREF%/}"
-          uno_rewrite() {
+          uno_rewrite_file() {
+            # Rewrite Uno.Wasm.Bootstrap absolute asset paths in one file so it
+            # works under a deployment prefix.
+            # Args:  $1 — file to rewrite
+            #        $2 — prefix (with leading slash, no trailing slash)
             local f="$1"
-            # Guard against double-rewrites if this step is re-run.
-            if grep -q "${UNO_PREFIX}/package_" "$f" 2>/dev/null; then
-              return
+            local prefix="$2"
+            if grep -q "${prefix}/package_" "$f" 2>/dev/null; then
+              return  # guard against double-rewrites if this step is re-run
             fi
             sed -i \
-              -e "s|\"/package_|\"${UNO_PREFIX}/package_|g" \
-              -e "s|\"/_framework/|\"${UNO_PREFIX}/_framework/|g" \
-              -e "s|\"/manifest\.webmanifest\"|\"${UNO_PREFIX}/manifest.webmanifest\"|g" \
-              -e "s|\"/service-worker\.js\"|\"${UNO_PREFIX}/service-worker.js\"|g" \
-              -e "s|\"/favicon\.ico\"|\"${UNO_PREFIX}/favicon.ico\"|g" \
-              -e "s|\"/staticwebapp\.config\.json\"|\"${UNO_PREFIX}/staticwebapp.config.json\"|g" \
-              -e "s|\"/web\.config\"|\"${UNO_PREFIX}/web.config\"|g" \
-              -e "s|\"/index\.html\"|\"${UNO_PREFIX}/index.html\"|g" \
-              -e "s|\"/\\.\"|\"${UNO_PREFIX}/\"|g" \
+              -e "s|\"/package_|\"${prefix}/package_|g" \
+              -e "s|\"/_framework/|\"${prefix}/_framework/|g" \
+              -e "s|\"/manifest\.webmanifest\"|\"${prefix}/manifest.webmanifest\"|g" \
+              -e "s|\"/service-worker\.js\"|\"${prefix}/service-worker.js\"|g" \
+              -e "s|\"/favicon\.ico\"|\"${prefix}/favicon.ico\"|g" \
+              -e "s|\"/staticwebapp\.config\.json\"|\"${prefix}/staticwebapp.config.json\"|g" \
+              -e "s|\"/web\.config\"|\"${prefix}/web.config\"|g" \
+              -e "s|\"/index\.html\"|\"${prefix}/index.html\"|g" \
+              -e "s|\"/\\.\"|\"${prefix}/\"|g" \
               "$f"
           }
-          uno_rewrite site/gallery-uno/index.html
-          for cfg in site/gallery-uno/package_*/uno-config.js; do
-            uno_rewrite "$cfg"
-            # UNO_BOOTSTRAP_WEBAPP_BASE_PATH governs the service-worker scope.
-            # uno_rewrite above doesn't touch it because the value is the bare "/"
-            # string, not a path under our prefix. Rewrite it explicitly here.
-            sed -i \
-              -e "s|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"\\] = \"/\"|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"] = \"${UNO_PREFIX}/\"|g" \
-              "$cfg"
-          done
-          # service-worker.js contains an absolute `import from "/package_XXX/uno-config.js"`
-          # that also needs the deployment prefix. The uno_rewrite function handles the
-          # quoted form "/package_ already, so a single pass is sufficient.
-          if [ -f site/gallery-uno/service-worker.js ]; then
-            uno_rewrite site/gallery-uno/service-worker.js
-          fi
+          uno_rewrite_dir() {
+            # Rewrite a published wwwroot copy so it works under a deployment prefix.
+            # Args:  $1 — site sub-directory (relative to repo root)
+            #        $2 — prefix (with leading slash, no trailing slash)
+            local dir="$1"
+            local prefix="$2"
+            uno_rewrite_file "$dir/index.html" "$prefix"
+            for cfg in "$dir"/package_*/uno-config.js; do
+              uno_rewrite_file "$cfg" "$prefix"
+              # UNO_BOOTSTRAP_WEBAPP_BASE_PATH governs the service-worker scope.
+              # The rewrite above doesn't touch it because the value is the bare
+              # "/" string, not a path under our prefix.
+              sed -i \
+                -e "s|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"\\] = \"/\"|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"] = \"${prefix}/\"|g" \
+                "$cfg"
+            done
+            # service-worker.js contains an absolute `import from
+            # "/package_XXX/uno-config.js"` that also needs the deployment prefix.
+            if [ -f "$dir/service-worker.js" ]; then
+              uno_rewrite_file "$dir/service-worker.js" "$prefix"
+            fi
+            # Pre-compressed .br / .gz copies of the rewritten files are stale —
+            # delete so the server falls back to the freshly rewritten plain ones.
+            find "$dir" -maxdepth 1 -name 'index.html.br' -delete
+            find "$dir" -maxdepth 1 -name 'index.html.gz' -delete
+            find "$dir" -path '*/package_*/uno-config.js.br' -delete
+            find "$dir" -path '*/package_*/uno-config.js.gz' -delete
+          }
+          uno_rewrite_dir site/gallery-uno "${UNO_GALLERY_BASE_HREF%/}"
 
-          # Pre-compressed .br / .gz copies of index.html and uno-config.js are
-          # stale after the rewrite — delete so the server falls back to the
-          # freshly rewritten plain files.
-          find site/gallery-uno -maxdepth 1 -name 'index.html.br' -delete
-          find site/gallery-uno -maxdepth 1 -name 'index.html.gz' -delete
-          find site/gallery-uno -path '*/package_*/uno-config.js.br' -delete
-          find site/gallery-uno -path '*/package_*/uno-config.js.gz' -delete
+          # SkiaFiddle (Uno Platform) → /fiddle/
+          cp -r output/skia-fiddle-publish/wwwroot site/fiddle
+          uno_rewrite_dir site/fiddle "${FIDDLE_BASE_HREF%/}"
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
@@ -388,6 +433,7 @@ jobs:
             const docsUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/docs/`;
             const galleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery/`;
             const unoGalleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery-uno/`;
+            const fiddleUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/fiddle/`;
 
             // Hidden marker to uniquely identify this workflow's comment
             const marker = '<!-- skiasharp-docs-staging-preview -->';
@@ -402,6 +448,7 @@ jobs:
               `🔗 **[View Staging Docs](${docsUrl})**`,
               `🔗 **[View Staging Gallery (Blazor)](${galleryUrl})**`,
               `🔗 **[View Staging Gallery (Uno Platform)](${unoGalleryUrl})**`,
+              `🔗 **[View Staging SkiaFiddle](${fiddleUrl})**`,
               '',
               'This preview will be updated automatically when you push new commits to this PR.',
               '',
