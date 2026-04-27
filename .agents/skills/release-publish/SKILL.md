@@ -257,24 +257,41 @@ After annotating the GitHub release, update the website release notes in the rep
 
 ### Process
 
-1. **Regenerate the release notes pages** from GitHub releases:
+1. **Fetch the raw release data** to a temp directory:
    ```bash
-   python3 scripts/generate-release-notes.py
+   python3 scripts/generate-release-notes.py --version {X.Y.Z}
    ```
-   This fetches all release bodies and regenerates the markdown files in `documentation/docfx/releases/`.
+   This downloads the GitHub release bodies for the version to a temp directory.
 
-2. **Commit to the release branch** so the website updates when the release PR merges:
+2. **Read the template** at `documentation/docfx/releases/TEMPLATE.md` for formatting guidelines.
+
+3. **Read the raw file** from the temp directory output.
+
+4. **Reformat using AI** — Apply the template to create a polished version page with:
+   - Highlights paragraph summarizing the release
+   - Features categorized by type (Engine, GPU, API Surface, Platform, etc.)
+   - Community contributors credited with ❤️
+   - Internal/CI-only PRs omitted
+   - Minimal preview sections with one-line summaries
+   - Breaking changes, security, bug fixes sections as applicable
+
+5. **Write the polished file** to `documentation/docfx/releases/{X.Y.Z}.md`.
+
+6. **Update TOC and index**:
+   ```bash
+   python3 scripts/generate-release-notes.py --update-toc
+   ```
+
+7. **Commit to the release branch** so the website updates when the release PR merges:
    ```bash
    git add documentation/docfx/releases/
    git commit -m "Update website release notes for {tag}"
-   ```
-
-3. **Push** to the release branch:
-   ```bash
    git push
    ```
 
-> **Note:** The `generate-release-notes.py` script is idempotent — it overwrites all files based on the current state of GitHub releases. The "What's Coming Next" section on the index page is generated at site build time by `generate-unreleased-notes.py` in CI, so you don't need to run that manually.
+> **Note:** The "What's Coming Next" section on the index page is maintained by the
+> `update-release-notes` agentic workflow, which runs on every push to main. You don't
+> need to update it manually.
 
 ---
 

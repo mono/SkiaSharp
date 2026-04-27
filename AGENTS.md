@@ -88,6 +88,8 @@ Single source of truth for all commands:
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
+| **Fetch release notes** | `python3 scripts/generate-release-notes.py --last 5` |
+| **Update release notes TOC** | `python3 scripts/generate-release-notes.py --update-toc` |
 
 ### When to Use Which Bootstrap
 
@@ -132,6 +134,8 @@ C# Wrapper (binding/SkiaSharp/)  ->  P/Invoke  ->  C API (externals/skia/src/c/)
 | `*.generated.cs` | No | Run `pwsh ./utils/generate.ps1` |
 | `docs/` | No | Auto-generated |
 | `documentation/dev/` | Yes | Architecture guides |
+| `documentation/docfx/releases/` | Yes | Website release notes (template-formatted) |
+| `documentation/docfx/releases/TEMPLATE.md` | Yes | Template for AI formatting |
 
 ---
 
