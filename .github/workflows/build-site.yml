@@ -102,12 +102,6 @@ jobs:
       - name: Restore .NET tools
         run: dotnet tool restore
 
-      # ── Generate unreleased release notes ──────────────────────
-      - name: Generate unreleased release notes
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/generate-unreleased-notes.py
-
       # ── Build DocFX documentation ──────────────────────────────
       - name: Build DocFX
         env:
