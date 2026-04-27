@@ -2169,6 +2169,22 @@ namespace SkiaSharp
 			GC.KeepAlive (this);
 		}
 
+		// DrawMesh
+
+		public void DrawMesh (SKMesh mesh, SKPaint paint)
+		{
+			DrawMesh (mesh, null, paint);
+		}
+
+		public void DrawMesh (SKMesh mesh, SKBlender blender, SKPaint paint)
+		{
+			if (mesh == null)
+				throw new ArgumentNullException (nameof (mesh));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			SkiaApi.sk_canvas_draw_mesh (Handle, mesh.Handle, blender?.Handle ?? IntPtr.Zero, paint.Handle);
+		}
+
 		// DrawArc
 
 		/// <summary>Draws an arc on the canvas.</summary>
