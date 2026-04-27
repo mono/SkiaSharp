@@ -16,6 +16,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 	private int _currentFrame;
 	private SKBitmap? _currentBitmap;
 	private int _frameDurationMs;
+	private SKTypeface? _typeface;
 
 	private static readonly string[] CompressionOptions = { "Lossy", "Lossless" };
 
@@ -61,6 +62,8 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	protected override Task OnInit()
 	{
+		using var fontStream = SampleMedia.Fonts.InterVariable;
+		_typeface = SKTypeface.FromStream(fontStream);
 		RebuildAnimation();
 		return base.OnInit();
 	}
@@ -105,7 +108,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 			{
 				bitmaps[i] = new SKBitmap(FrameWidth, FrameHeight);
 				using var canvas = new SKCanvas(bitmaps[i]);
-				DrawAnimationFrame(canvas, FrameWidth, FrameHeight, i, totalFrames, letterCount);
+				DrawAnimationFrame(canvas, FrameWidth, FrameHeight, i, totalFrames, letterCount, _typeface);
 				pixmaps[i] = bitmaps[i].PeekPixels();
 				frames[i] = new SKWebpEncoderFrame(pixmaps[i], FrameDuration);
 			}
@@ -136,7 +139,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 	}
 
 	private static void DrawAnimationFrame(
-		SKCanvas canvas, int w, int h, int frame, int totalFrames, int letterCount)
+		SKCanvas canvas, int w, int h, int frame, int totalFrames, int letterCount, SKTypeface? typeface)
 	{
 		// interpolate background gradient across the timeline for subtle motion
 		var t = (float)frame / Math.Max(1, totalFrames - 1);
@@ -158,7 +161,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 			return;
 
 		var fontSize = h * 0.28f;
-		using var font = new SKFont { Size = fontSize };
+		using var font = new SKFont(typeface, fontSize);
 		using var textPaint = new SKPaint
 		{
 			Color = SKColors.White,
@@ -305,5 +308,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 	{
 		base.OnDestroy();
 		DisposeEncoded();
+		_typeface?.Dispose();
+		_typeface = null;
 	}
 }
