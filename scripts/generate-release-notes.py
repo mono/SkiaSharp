@@ -283,18 +283,10 @@ def generate_index(releases_dir: str) -> str:
     for major in sorted(major_groups.keys(), key=int, reverse=True):
         is_obsolete = int(major) < 3
 
-        if is_obsolete:
-            lines.append(f"<details>")
-            lines.append(f"<summary><h3>SkiaSharp {major}.x (Obsolete)</h3></summary>")
-            lines.append("")
-            lines.extend(render_major_group(major, major_groups[major]))
-            lines.append("")
-            lines.append("</details>")
-            lines.append("")
-        else:
-            lines.extend([f"### SkiaSharp {major}.x", ""])
-            lines.extend(render_major_group(major, major_groups[major]))
-            lines.append("")
+        obsolete = " (Obsolete)" if is_obsolete else ""
+        lines.extend([f"### SkiaSharp {major}.x{obsolete}", ""])
+        lines.extend(render_major_group(major, major_groups[major]))
+        lines.append("")
 
     return "\n".join(lines)
 

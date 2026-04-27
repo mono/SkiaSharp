@@ -23,8 +23,7 @@ Release notes for all SkiaSharp versions. Each page includes the stable release 
 - **Version 3.0.x**
   - [Version 3.0.0](3.0.0.md)
 
-<details>
-<summary><h3>SkiaSharp 2.x (Obsolete)</h3></summary>
+### SkiaSharp 2.x (Obsolete)
 
 - **Version 2.88.x**
   - [Version 2.88.9](2.88.9.md)
@@ -44,10 +43,7 @@ Release notes for all SkiaSharp versions. Each page includes the stable release 
   - [Version 2.80.1](2.80.1.md)
   - [Version 2.80.0](2.80.0.md)
 
-</details>
-
-<details>
-<summary><h3>SkiaSharp 1.x (Obsolete)</h3></summary>
+### SkiaSharp 1.x (Obsolete)
 
 - **Version 1.68.x**
   - [Version 1.68.3](1.68.3.md)
@@ -97,5 +93,3 @@ Release notes for all SkiaSharp versions. Each page includes the stable release 
   - [Version 1.49.2](1.49.2.md)
   - [Version 1.49.1](1.49.1.md)
   - [Version 1.49.0](1.49.0.md)
-
-</details>
