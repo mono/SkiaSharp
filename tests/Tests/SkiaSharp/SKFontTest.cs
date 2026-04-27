@@ -548,14 +548,18 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		// m132 empty typeface behavior
+		// m132 empty typeface behavior — `new SKFont(null)` and
+		// `font.Typeface = null` produce the empty typeface; `new SKFont()`
+		// is wrapped in the managed binding to use SKTypeface.Default so
+		// the parameterless ctor stays useful for text measurement.
 
 		[SkippableFact]
-		public void DefaultFontTypefaceIsEmpty()
+		public void DefaultFontTypefaceIsDefault()
 		{
 			using var font = new SKFont();
 			Assert.NotNull(font.Typeface);
-			Assert.True(font.Typeface.IsEmpty);
+			Assert.False(font.Typeface.IsEmpty);
+			Assert.Same(SKTypeface.Default, font.Typeface);
 		}
 
 		[SkippableFact]
