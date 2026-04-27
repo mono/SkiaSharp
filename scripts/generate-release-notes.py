@@ -162,30 +162,51 @@ def generate_version_page(base_version: str, releases: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def minor_group_key(version: str) -> str:
+    """Extract major.minor group: 3.119.2 -> 3.119, 1.68.0 -> 1.68"""
+    parts = version.split(".")
+    if len(parts) >= 2:
+        return f"{parts[0]}.{parts[1]}"
+    return parts[0]
+
+
 def generate_toc(releases_dir: str) -> str:
-    """Generate TOC.yml from existing markdown files in the releases directory."""
+    """Generate TOC.yml from existing markdown files, grouped by major.minor."""
     versions = []
     for f in os.listdir(releases_dir):
         if f.endswith(".md") and f not in ("index.md", "TEMPLATE.md"):
-            base = f[:-3]  # strip .md
-            # Read the file to find the latest date
-            filepath = os.path.join(releases_dir, f)
-            with open(filepath) as fh:
-                content = fh.read()
-            # Extract dates from headers like "## ... (April 23, 2026)"
-            # Use file mtime as fallback
-            versions.append(base)
+            versions.append(f[:-3])
 
-    # Sort by version number descending
     versions.sort(key=version_sort_key, reverse=True)
+
+    # Group by major.minor
+    minor_groups = defaultdict(list)
+    for base in versions:
+        group = minor_group_key(base)
+        minor_groups[group].append(base)
 
     lines = [
         "- name: Overview",
         "  href: index.md",
     ]
-    for base in versions:
-        lines.append(f"- name: Version {base}")
-        lines.append(f"  href: {base}.md")
+
+    # Sort groups by version descending
+    for group in sorted(minor_groups.keys(), key=lambda g: version_sort_key(g), reverse=True):
+        members = minor_groups[group]
+        if len(members) == 1:
+            # Single version in group — no nesting needed
+            base = members[0]
+            lines.append(f"- name: Version {base}")
+            lines.append(f"  href: {base}.md")
+        else:
+            # Multiple versions — nest under group header
+            lines.append(f"- name: Version {group}.x")
+            lines.append(f"  href: {members[0]}.md")
+            lines.append(f"  items:")
+            for base in members:
+                lines.append(f"    - name: Version {base}")
+                lines.append(f"      href: {base}.md")
+
     return "\n".join(lines) + "\n"
 
 
@@ -198,33 +219,78 @@ def generate_index(releases_dir: str) -> str:
 
     versions.sort(key=version_sort_key, reverse=True)
 
+    # Read upcoming version from azure-templates-variables.yml
+    variables_path = os.path.join(os.path.dirname(releases_dir),
+                                  "..", "..", "scripts", "azure-templates-variables.yml")
+    upcoming_version = None
+    if os.path.exists(variables_path):
+        with open(variables_path) as f:
+            for line in f:
+                m = re.match(r"\s*SKIASHARP_VERSION:\s*(\S+)", line)
+                if m:
+                    upcoming_version = m.group(1)
+                    break
+
     lines = [
         "# Release Notes",
         "",
         "Release notes for all SkiaSharp versions. Each page includes the stable release and all associated preview releases.",
         "",
-        "## What's Coming Next",
-        "",
-        "<!-- UNRELEASED_BEGIN -->",
-        "",
-        "*No unreleased changes yet.*",
-        "",
-        "<!-- UNRELEASED_END -->",
-        "",
-        "## All Versions",
-        "",
     ]
 
-    # Group by major version
+    if upcoming_version and upcoming_version + ".md" not in os.listdir(releases_dir):
+        lines.extend([
+            f"## Version {upcoming_version} (Upcoming)",
+            "",
+            "<!-- UNRELEASED_BEGIN -->",
+            "",
+            "*No unreleased changes yet.*",
+            "",
+            "<!-- UNRELEASED_END -->",
+            "",
+        ])
+    else:
+        lines.extend([
+            "## What's Coming Next",
+            "",
+            "<!-- UNRELEASED_BEGIN -->",
+            "",
+            "*No unreleased changes yet.*",
+            "",
+            "<!-- UNRELEASED_END -->",
+            "",
+        ])
+
+    lines.extend([
+        "## All Versions",
+        "",
+    ])
+
+    # Group by major version, then by minor
     major_groups = defaultdict(list)
     for base in versions:
         major = base.split(".")[0]
         major_groups[major].append(base)
 
     for major in sorted(major_groups.keys(), key=int, reverse=True):
-        lines.extend([f"### SkiaSharp {major}.x", ""])
+        obsolete = " (Obsolete)" if int(major) < 3 else ""
+        lines.extend([f"### SkiaSharp {major}.x{obsolete}", ""])
+
+        # Sub-group by major.minor
+        minor_groups = defaultdict(list)
         for base in major_groups[major]:
-            lines.append(f"- [Version {base}]({base}.md)")
+            group = minor_group_key(base)
+            minor_groups[group].append(base)
+
+        for group in sorted(minor_groups.keys(), key=lambda g: version_sort_key(g), reverse=True):
+            members = minor_groups[group]
+            if len(members) == 1:
+                lines.append(f"- [Version {members[0]}]({members[0]}.md)")
+            else:
+                lines.append(f"- **Version {group}.x**")
+                for base in members:
+                    lines.append(f"  - [Version {base}]({base}.md)")
+        lines.append("")
         lines.append("")
 
     return "\n".join(lines)
