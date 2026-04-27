@@ -37,13 +37,6 @@ public sealed partial class SamplePage : Page
         DescriptionText.Text = sample.Description ?? string.Empty;
 
         ControlPanel.SetControls(sample.Controls);
-        ControlsSidebar.Visibility = sample.Controls.Count > 0
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
-        DownloadButton.Visibility = sample is DocumentSampleBase
-            ? Visibility.Visible
-            : Visibility.Collapsed;
 
         currentSample = sample;
         if (sample is CanvasSampleBase canvasSample)
@@ -58,6 +51,16 @@ public sealed partial class SamplePage : Page
         {
             GenerateDocument(docSample);
         }
+
+        // Set download/sidebar visibility after init and document generation
+        // so that HasDownload reflects populated DocumentBytes.
+        var hasDownload = sample.HasDownload;
+        DownloadButton.Visibility = hasDownload
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        ControlsSidebar.Visibility = sample.Controls.Count > 0 || hasDownload
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
         canvasHost.InvalidateRender();
     }
@@ -142,26 +145,28 @@ public sealed partial class SamplePage : Page
 
     private async void OnDownloadClicked(object sender, RoutedEventArgs e)
     {
-        if (currentSample is not DocumentSampleBase doc) return;
-        if (doc.DocumentBytes is not { Length: > 0 } bytes)
+        if (currentSample is null || !currentSample.HasDownload)
+            return;
+
+        var bytes = currentSample.DownloadBytes;
+        if (bytes is not { Length: > 0 })
         {
-            GenerateDocument(doc);
-            bytes = doc.DocumentBytes ?? System.Array.Empty<byte>();
-            if (bytes.Length == 0) return;
+            if (currentSample is DocumentSampleBase doc)
+                GenerateDocument(doc);
+            bytes = currentSample.DownloadBytes;
+            if (bytes is not { Length: > 0 }) return;
         }
 
-        var extension = (doc.DocumentMimeType ?? "application/pdf") switch
-        {
-            "application/pdf" => ".pdf",
-            "application/oxps" => ".xps",
-            _ => ".bin",
-        };
+        var fileName = currentSample.DownloadFileName;
+        var extension = System.IO.Path.GetExtension(fileName);
+        if (string.IsNullOrEmpty(extension))
+            extension = ".bin";
 
         var picker = new FileSavePicker
         {
-            SuggestedFileName = doc.Title.Replace(' ', '-').ToLowerInvariant() + extension,
+            SuggestedFileName = fileName,
         };
-        picker.FileTypeChoices.Add("Document", new List<string> { extension });
+        picker.FileTypeChoices.Add("File", new List<string> { extension });
 
         var file = await picker.PickSaveFileAsync();
         if (file is null) return;

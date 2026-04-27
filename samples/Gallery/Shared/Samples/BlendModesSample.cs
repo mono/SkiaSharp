@@ -74,7 +74,7 @@ public class BlendModesSample : CanvasSampleBase
 		canvas.Restore();
 
 		// Draw blend mode name
-		using var textFont = new SKFont { Size = Math.Min(width, height) * 0.06f };
+		using var textFont = new SKFont(SampleMedia.Fonts.Default, Math.Min(width, height) * 0.06f);
 		using var textPaint = new SKPaint
 		{
 			Color = SKColors.Black,
