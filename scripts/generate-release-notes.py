@@ -1,13 +1,26 @@
 #!/usr/bin/env python3
 """
-Generate release notes markdown files for the SkiaSharp website.
+Fetch raw release notes from GitHub for the SkiaSharp website.
 
-Fetches all GitHub releases for mono/SkiaSharp, groups them by base version
-(stable + previews), and writes DocFX-compatible markdown + TOC.yml into
-documentation/docfx/releases/.
+Downloads GitHub release data and writes raw markdown files grouped by base
+version. These raw files are then reformatted by AI using the template in
+documentation/docfx/releases/TEMPLATE.md.
 
 Usage:
-    python3 scripts/generate-release-notes.py [--output DIR]
+    # Fetch the last 5 base versions to a temp directory
+    python3 scripts/generate-release-notes.py --last 5
+
+    # Fetch a specific version
+    python3 scripts/generate-release-notes.py --version 3.119.2
+
+    # Fetch a range of versions
+    python3 scripts/generate-release-notes.py --version 3.119.0 --version 3.119.2
+
+    # Fetch all versions and write directly to the releases directory
+    python3 scripts/generate-release-notes.py --all --output documentation/docfx/releases
+
+    # Regenerate TOC and index (no fetching)
+    python3 scripts/generate-release-notes.py --update-toc
 
 Requirements: gh (GitHub CLI), Python 3.7+
 """
@@ -20,6 +33,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from collections import defaultdict
 from datetime import datetime
 from typing import Optional
@@ -51,7 +65,6 @@ def parse_preview_number(tag: str) -> tuple:
     if "-" not in tag:
         return (0,)  # Stable comes first
     suffix = tag.split("-", 1)[1]
-    # Try to extract numeric parts for sorting
     nums = re.findall(r"\d+", suffix)
     return (1,) + tuple(int(n) for n in nums)
 
@@ -75,7 +88,7 @@ def version_sort_key(version: str) -> list:
 
 def fetch_releases() -> list[dict]:
     """Fetch all releases from GitHub."""
-    print(f"Fetching releases from {REPO}...")
+    print(f"Fetching release list from {REPO}...")
     raw = run_gh([
         "release", "list", "--repo", REPO,
         "--limit", "300",
@@ -98,17 +111,24 @@ def fetch_release_body(tag: str) -> dict:
         return {"body": "", "publishedAt": "", "name": tag, "isPrerelease": False}
 
 
+def group_releases_by_base(releases: list[dict]) -> dict:
+    """Group releases by base version. Returns {base_version: [release_info]}."""
+    grouped = defaultdict(list)
+    for rel in releases:
+        tag = rel["tagName"]
+        base = extract_base_version(tag)
+        grouped[base].append(rel)
+    return grouped
+
+
 def generate_version_page(base_version: str, releases: list[dict]) -> str:
-    """Generate markdown for a single base version page."""
+    """Generate raw markdown for a single base version page."""
     lines = [f"# Version {base_version}", ""]
 
-    # Sort: stable first, then previews by preview number descending (latest first)
-    releases.sort(key=lambda r: parse_preview_number(r["tag"]), reverse=True)
-    # But stable (key starts with (0,)) should still be first, so re-sort:
-    # stable=False sorts before stable=True when reversed, so we use a two-level key
+    # Sort: stable first, then previews descending
     releases.sort(key=lambda r: (
-        0 if "-" not in r["tag"] else 1,  # stable first
-        [-n for n in parse_preview_number(r["tag"])]  # previews descending
+        0 if "-" not in r["tag"] else 1,
+        [-n for n in parse_preview_number(r["tag"])]
     ))
 
     first = True
@@ -142,49 +162,47 @@ def generate_version_page(base_version: str, releases: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def generate_toc(versions_by_date: list[tuple[str, str]]) -> str:
-    """Generate TOC.yml for DocFX."""
+def generate_toc(releases_dir: str) -> str:
+    """Generate TOC.yml from existing markdown files in the releases directory."""
+    versions = []
+    for f in os.listdir(releases_dir):
+        if f.endswith(".md") and f not in ("index.md", "TEMPLATE.md"):
+            base = f[:-3]  # strip .md
+            # Read the file to find the latest date
+            filepath = os.path.join(releases_dir, f)
+            with open(filepath) as fh:
+                content = fh.read()
+            # Extract dates from headers like "## ... (April 23, 2026)"
+            # Use file mtime as fallback
+            versions.append(base)
+
+    # Sort by version number descending
+    versions.sort(key=version_sort_key, reverse=True)
+
     lines = [
         "- name: Overview",
         "  href: index.md",
     ]
-    for _date, base in versions_by_date:
+    for base in versions:
         lines.append(f"- name: Version {base}")
         lines.append(f"  href: {base}.md")
     return "\n".join(lines) + "\n"
 
 
-def generate_index(
-    versions_by_date: list[tuple[str, str]],
-    latest_stable: Optional[tuple[str, str]],
-    latest_preview: Optional[tuple[str, str, str]],
-) -> str:
-    """Generate the index.md overview page."""
+def generate_index(releases_dir: str) -> str:
+    """Generate index.md from existing markdown files."""
+    versions = []
+    for f in os.listdir(releases_dir):
+        if f.endswith(".md") and f not in ("index.md", "TEMPLATE.md"):
+            versions.append(f[:-3])
+
+    versions.sort(key=version_sort_key, reverse=True)
+
     lines = [
         "# Release Notes",
         "",
         "Release notes for all SkiaSharp versions. Each page includes the stable release and all associated preview releases.",
         "",
-    ]
-
-    # Latest stable
-    lines.append("## Latest Stable")
-    lines.append("")
-    if latest_stable:
-        base, date = latest_stable
-        lines.append(f"**[Version {base}]({base}.md)** — released {format_date(date)}")
-    lines.append("")
-
-    # Latest preview
-    lines.append("## Latest Preview")
-    lines.append("")
-    if latest_preview:
-        base, date, name = latest_preview
-        lines.append(f"**[{name}]({base}.md)** — released {format_date(date)}")
-    lines.append("")
-
-    # Unreleased placeholder
-    lines.extend([
         "## What's Coming Next",
         "",
         "<!-- UNRELEASED_PLACEHOLDER -->",
@@ -192,117 +210,145 @@ def generate_index(
         "",
         "*Build the site with CI to see merged PRs since the last release.*",
         "",
-    ])
+        "## All Versions",
+        "",
+    ]
 
-    # All versions grouped by major
-    lines.append("## All Versions")
-    lines.append("")
-
-    # Group by major version first, then list within each group by date descending
-    major_groups: dict[str, list[tuple[str, str]]] = defaultdict(list)
-    for _date, base in versions_by_date:
+    # Group by major version
+    major_groups = defaultdict(list)
+    for base in versions:
         major = base.split(".")[0]
-        major_groups[major].append((_date, base))
+        major_groups[major].append(base)
 
-    # Sort major versions descending
     for major in sorted(major_groups.keys(), key=int, reverse=True):
         lines.extend([f"### SkiaSharp {major}.x", ""])
-        for _date, base in major_groups[major]:
-            date_str = format_date(_date)
-            lines.append(f"- [Version {base}]({base}.md) — {date_str}")
+        for base in major_groups[major]:
+            lines.append(f"- [Version {base}]({base}.md)")
         lines.append("")
 
-    lines.append("")
     return "\n".join(lines)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate SkiaSharp release notes for the website")
-    parser.add_argument("--output", default="documentation/docfx/releases",
-                        help="Output directory for release notes")
+    parser = argparse.ArgumentParser(
+        description="Fetch raw SkiaSharp release notes from GitHub",
+        epilog="Examples:\n"
+               "  %(prog)s --last 5              # Last 5 base versions → temp dir\n"
+               "  %(prog)s --version 3.119.2      # Single version → temp dir\n"
+               "  %(prog)s --all --output DIR      # All versions → specified dir\n"
+               "  %(prog)s --update-toc            # Regenerate TOC + index only\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--output", default=None,
+                        help="Output directory (default: temp directory)")
+    parser.add_argument("--version", action="append", dest="versions",
+                        help="Fetch specific version(s). Can be repeated.")
+    parser.add_argument("--last", type=int, default=None,
+                        help="Fetch the last N base versions (by date)")
+    parser.add_argument("--all", action="store_true",
+                        help="Fetch all versions")
+    parser.add_argument("--update-toc", action="store_true",
+                        help="Regenerate TOC.yml and index.md from existing files")
     args = parser.parse_args()
 
-    output_dir = args.output
+    releases_dir = "documentation/docfx/releases"
+
+    # --update-toc: just regenerate TOC and index from existing files
+    if args.update_toc:
+        if not os.path.isdir(releases_dir):
+            print(f"Error: {releases_dir} does not exist")
+            sys.exit(1)
+        toc_path = os.path.join(releases_dir, "TOC.yml")
+        with open(toc_path, "w") as f:
+            f.write(generate_toc(releases_dir))
+        print(f"Updated {toc_path}")
+
+        index_path = os.path.join(releases_dir, "index.md")
+        with open(index_path, "w") as f:
+            f.write(generate_index(releases_dir))
+        print(f"Updated {index_path}")
+        return
+
+    # Determine output directory
+    if args.output:
+        output_dir = args.output
+    else:
+        output_dir = tempfile.mkdtemp(prefix="skiasharp-releases-")
     os.makedirs(output_dir, exist_ok=True)
 
-    # Fetch all releases
+    # Fetch all releases (we need the full list to group by base version)
     releases = fetch_releases()
+    grouped = group_releases_by_base(releases)
 
-    # Fetch bodies and group by base version
-    grouped: dict[str, list[dict]] = defaultdict(list)
-    base_dates: dict[str, str] = {}  # base_version -> latest date
+    # Determine which base versions to fetch
+    if args.versions:
+        target_versions = set(args.versions)
+        missing = target_versions - set(grouped.keys())
+        if missing:
+            print(f"Warning: versions not found: {', '.join(missing)}")
+    elif args.last:
+        # Sort all base versions by latest release date, take last N
+        base_dates = {}
+        for base, rels in grouped.items():
+            dates = [r.get("publishedAt", "") for r in rels]
+            base_dates[base] = max(dates) if dates else ""
+        sorted_bases = sorted(base_dates.keys(), key=lambda b: base_dates[b], reverse=True)
+        target_versions = set(sorted_bases[:args.last])
+    elif args.all:
+        target_versions = set(grouped.keys())
+    else:
+        # Default: last 5
+        base_dates = {}
+        for base, rels in grouped.items():
+            dates = [r.get("publishedAt", "") for r in rels]
+            base_dates[base] = max(dates) if dates else ""
+        sorted_bases = sorted(base_dates.keys(), key=lambda b: base_dates[b], reverse=True)
+        target_versions = set(sorted_bases[:5])
 
-    total = len(releases)
-    for i, rel in enumerate(releases, 1):
-        tag = rel["tagName"]
-        base = extract_base_version(tag)
+    print(f"Fetching {len(target_versions)} base version(s): {', '.join(sorted(target_versions, key=version_sort_key, reverse=True))}")
 
-        # Fetch full release details
+    # Fetch release bodies for target versions
+    tags_to_fetch = []
+    for base in target_versions:
+        for rel in grouped[base]:
+            tags_to_fetch.append((base, rel["tagName"]))
+
+    fetched = defaultdict(list)
+    total = len(tags_to_fetch)
+    for i, (base, tag) in enumerate(tags_to_fetch, 1):
         details = fetch_release_body(tag)
         details["tag"] = tag
-
-        grouped[base].append(details)
-
-        # Track latest date per base version
-        pub_date = details.get("publishedAt", "")
-        if pub_date and (base not in base_dates or pub_date > base_dates[base]):
-            base_dates[base] = pub_date
-
+        fetched[base].append(details)
         if i % 10 == 0:
             print(f"  Fetched {i} / {total}...")
-
     print(f"  Fetched {total} / {total} (done)")
-    print(f"Found {len(grouped)} unique base versions")
 
-    # Generate version pages
-    for base, rels in grouped.items():
+    # Generate raw version pages
+    for base, rels in fetched.items():
         filepath = os.path.join(output_dir, f"{base}.md")
         content = generate_version_page(base, rels)
         with open(filepath, "w") as f:
             f.write(content)
         print(f"  Generated {filepath}")
 
-    # Sort versions by date descending for TOC and index
-    versions_by_date = sorted(
-        [(base_dates.get(b, ""), b) for b in grouped],
-        key=lambda x: x[0],
-        reverse=True
-    )
+    # If writing to the releases dir, also update TOC and index
+    if args.output and os.path.samefile(args.output, releases_dir):
+        toc_path = os.path.join(output_dir, "TOC.yml")
+        with open(toc_path, "w") as f:
+            f.write(generate_toc(output_dir))
+        print(f"  Updated {toc_path}")
 
-    # Find latest stable and preview
-    latest_stable = None
-    latest_preview = None
-
-    for base, rels in grouped.items():
-        for rel in rels:
-            pub = rel.get("publishedAt", "")
-            is_pre = rel.get("isPrerelease", False)
-            name = rel.get("name", "") or rel["tag"]
-
-            if not is_pre:
-                if latest_stable is None or pub > latest_stable[1]:
-                    latest_stable = (base, pub)
-            else:
-                if latest_preview is None or pub > latest_preview[1]:
-                    latest_preview = (base, pub, name)
-
-    # Generate TOC
-    toc_path = os.path.join(output_dir, "TOC.yml")
-    with open(toc_path, "w") as f:
-        f.write(generate_toc(versions_by_date))
-    print(f"  Generated {toc_path}")
-
-    # Generate index
-    index_path = os.path.join(output_dir, "index.md")
-    with open(index_path, "w") as f:
-        f.write(generate_index(versions_by_date, latest_stable, latest_preview))
-    print(f"  Generated {index_path}")
+        index_path = os.path.join(output_dir, "index.md")
+        with open(index_path, "w") as f:
+            f.write(generate_index(output_dir))
+        print(f"  Updated {index_path}")
 
     # Summary
     md_count = len([f for f in os.listdir(output_dir) if f.endswith(".md")])
-    print(f"\nDone! Generated release notes in {output_dir}/")
-    print(f"  - {md_count} markdown files (including index.md)")
-    print(f"  - TOC.yml")
+    print(f"\nDone! Raw release notes in {output_dir}/")
+    print(f"  - {md_count} markdown file(s)")
+    if not args.output:
+        print(f"\n  (temp directory — read these files, then reformat using TEMPLATE.md)")
 
 
 if __name__ == "__main__":
