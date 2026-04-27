@@ -68,6 +68,7 @@ jobs:
             fi
             echo "artifact_name=staging-site-${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
+            echo "uno_gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery-uno/" >> $GITHUB_OUTPUT
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -76,6 +77,7 @@ jobs:
           else
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
+            echo "uno_gallery_base_href=/SkiaSharp/gallery-uno/" >> $GITHUB_OUTPUT
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -132,10 +134,41 @@ jobs:
             -p:PlatformTargetFrameworks="" \
             -p:BuildFooter="$BUILD_FOOTER"
 
+      # ── Build Gallery Uno Platform WASM app ──────────────────────
+      - name: Publish Gallery Uno WASM
+        env:
+          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
+          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
+        run: |
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
+          dotnet publish "samples/Gallery/Uno/SkiaSharpSample.Uno.csproj" \
+            -c Release \
+            -f net10.0-browserwasm \
+            -o output/gallery-uno-publish \
+            -p:PlatformTargetFrameworks="" \
+            -p:WasmEnableSIMD=false \
+            -p:BuildFooter="$BUILD_FOOTER"
+
+      - name: Smoke test Gallery Uno WASM
+        run: |
+          bash samples/Gallery/Uno/scripts/smoke.sh \
+            output/gallery-uno-publish/wwwroot \
+            --screenshot output/gallery-uno-publish/smoke.png
+
+      - name: Upload Uno gallery smoke screenshot on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uno-gallery-smoke-screenshot
+          path: output/gallery-uno-publish/smoke.png
+          if-no-files-found: ignore
+
       # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
         env:
           GALLERY_BASE_HREF: ${{ steps.vars.outputs.gallery_base_href }}
+          UNO_GALLERY_BASE_HREF: ${{ steps.vars.outputs.uno_gallery_base_href }}
           SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
           BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
         shell: bash
@@ -162,11 +195,63 @@ jobs:
           # Docs → /docs/
           cp -r output/site/docs site/docs
 
-          # Gallery → /gallery/
+          # Gallery (Blazor) → /gallery/
           cp -r output/gallery-publish/wwwroot site/gallery
 
           # Rewrite gallery base href for deployment path
           sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
+
+          # Gallery (Uno Platform) → /gallery-uno/
+          cp -r output/gallery-uno-publish/wwwroot site/gallery-uno
+
+          # Rewrite absolute asset paths in the Uno gallery for the deployment prefix.
+          # Uno.Wasm.Bootstrap uses absolute "/package_<hash>/..." references in
+          # index.html and duplicates the root in package_<hash>/uno-config.js
+          # (config.uno_app_base, offline_files). Unlike Blazor there is no
+          # single <base href> to rewrite — we prefix each absolute asset path.
+          UNO_PREFIX="${UNO_GALLERY_BASE_HREF%/}"
+          uno_rewrite() {
+            local f="$1"
+            # Guard against double-rewrites if this step is re-run.
+            if grep -q "${UNO_PREFIX}/package_" "$f" 2>/dev/null; then
+              return
+            fi
+            sed -i \
+              -e "s|\"/package_|\"${UNO_PREFIX}/package_|g" \
+              -e "s|\"/_framework/|\"${UNO_PREFIX}/_framework/|g" \
+              -e "s|\"/manifest\.webmanifest\"|\"${UNO_PREFIX}/manifest.webmanifest\"|g" \
+              -e "s|\"/service-worker\.js\"|\"${UNO_PREFIX}/service-worker.js\"|g" \
+              -e "s|\"/favicon\.ico\"|\"${UNO_PREFIX}/favicon.ico\"|g" \
+              -e "s|\"/staticwebapp\.config\.json\"|\"${UNO_PREFIX}/staticwebapp.config.json\"|g" \
+              -e "s|\"/web\.config\"|\"${UNO_PREFIX}/web.config\"|g" \
+              -e "s|\"/index\.html\"|\"${UNO_PREFIX}/index.html\"|g" \
+              -e "s|\"/\\.\"|\"${UNO_PREFIX}/\"|g" \
+              "$f"
+          }
+          uno_rewrite site/gallery-uno/index.html
+          for cfg in site/gallery-uno/package_*/uno-config.js; do
+            uno_rewrite "$cfg"
+            # UNO_BOOTSTRAP_WEBAPP_BASE_PATH governs the service-worker scope.
+            # uno_rewrite above doesn't touch it because the value is the bare "/"
+            # string, not a path under our prefix. Rewrite it explicitly here.
+            sed -i \
+              -e "s|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"\\] = \"/\"|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"] = \"${UNO_PREFIX}/\"|g" \
+              "$cfg"
+          done
+          # service-worker.js contains an absolute `import from "/package_XXX/uno-config.js"`
+          # that also needs the deployment prefix. The uno_rewrite function handles the
+          # quoted form "/package_ already, so a single pass is sufficient.
+          if [ -f site/gallery-uno/service-worker.js ]; then
+            uno_rewrite site/gallery-uno/service-worker.js
+          fi
+
+          # Pre-compressed .br / .gz copies of index.html and uno-config.js are
+          # stale after the rewrite — delete so the server falls back to the
+          # freshly rewritten plain files.
+          find site/gallery-uno -maxdepth 1 -name 'index.html.br' -delete
+          find site/gallery-uno -maxdepth 1 -name 'index.html.gz' -delete
+          find site/gallery-uno -path '*/package_*/uno-config.js.br' -delete
+          find site/gallery-uno -path '*/package_*/uno-config.js.gz' -delete
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
@@ -302,6 +387,7 @@ jobs:
             const stagingUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/`;
             const docsUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/docs/`;
             const galleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery/`;
+            const unoGalleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery-uno/`;
 
             // Hidden marker to uniquely identify this workflow's comment
             const marker = '<!-- skiasharp-docs-staging-preview -->';
@@ -314,7 +400,8 @@ jobs:
               '',
               `🔗 **[View Staging Site](${stagingUrl})**`,
               `🔗 **[View Staging Docs](${docsUrl})**`,
-              `🔗 **[View Staging Gallery](${galleryUrl})**`,
+              `🔗 **[View Staging Gallery (Blazor)](${galleryUrl})**`,
+              `🔗 **[View Staging Gallery (Uno Platform)](${unoGalleryUrl})**`,
               '',
               'This preview will be updated automatically when you push new commits to this PR.',
               '',
