@@ -17,15 +17,7 @@ else if (IsDocument)
     <div class="sample-page">
         <div class="sample-header">
             <a href="" class="text-decoration-none small d-inline-block">&larr; Back to Gallery</a>
-            <div class="d-flex align-items-center gap-2">
-                <h2 class="mb-0">@sample.Title</h2>
-                @if (sample.HasDownload)
-                {
-                    <button class="btn btn-sm btn-outline-primary" @onclick="TriggerDownload" title="Download @sample.DownloadFileName">
-                        ⬇ Download
-                    </button>
-                }
-            </div>
+            <h2>@sample.Title</h2>
             @if (!string.IsNullOrWhiteSpace(sample.Description))
             {
                 <p class="text-muted mb-1">@sample.Description</p>
@@ -72,6 +64,12 @@ else if (IsDocument)
                             </div>
                             <ControlPanel Controls="@sample!.Controls"
                                           OnChanged="@OnControlChanged" />
+                            @if (sample.HasDownload)
+                            {
+                                <button class="btn btn-sm btn-outline-primary w-100 mt-2" @onclick="TriggerDownload" @onclick:stopPropagation="true" title="Download @sample.DownloadFileName">
+                                    ⬇ Download
+                                </button>
+                            }
                         </div>
                     }
                 </div>
@@ -87,15 +85,7 @@ else
     <div class="sample-page">
         <div class="sample-header">
             <a href="" class="text-decoration-none small d-inline-block">&larr; Back to Gallery</a>
-            <div class="d-flex align-items-center gap-2">
-                <h2 class="mb-0">@sample.Title</h2>
-                @if (sample.HasDownload)
-                {
-                    <button class="btn btn-sm btn-outline-primary" @onclick="TriggerDownload" title="Download @sample.DownloadFileName">
-                        ⬇ Download
-                    </button>
-                }
-            </div>
+            <h2>@sample.Title</h2>
             @if (!string.IsNullOrWhiteSpace(sample.Description))
             {
                 <p class="text-muted mb-1">@sample.Description</p>
@@ -147,6 +137,12 @@ else
                             </div>
                             <ControlPanel Controls="@sample.Controls"
                                           OnChanged="@OnControlChanged" />
+                            @if (sample.HasDownload)
+                            {
+                                <button class="btn btn-sm btn-outline-primary w-100 mt-2" @onclick="TriggerDownload" @onclick:stopPropagation="true" title="Download @sample.DownloadFileName">
+                                    ⬇ Download
+                                </button>
+                            }
                         </div>
                     }
                 </div>
@@ -178,7 +174,7 @@ else
 
     // Computed helpers for template branching
     private bool IsDocument => sample is DocumentSampleBase;
-    private bool HasControls => sample is { Controls.Count: > 0 };
+    private bool HasControls => sample is { Controls.Count: > 0 } || (sample?.HasDownload ?? false);
 
     // Control panel layout state
     private bool isPinned = true;
