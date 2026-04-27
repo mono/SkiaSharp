@@ -8,27 +8,31 @@ namespace SkiaSharpSample.Samples;
 
 public class AnimatedWebpEncoderSample : CanvasSampleBase
 {
-	private int _frameCount = 4;
 	private float _quality = 80;
 	private int _compressionIndex;
-	private int _frameDuration = 250;
 
 	private SKData? _encodedData;
 	private SKCodec? _codec;
 	private int _currentFrame;
 	private SKBitmap? _currentBitmap;
+	private int _frameDurationMs;
 
 	private static readonly string[] CompressionOptions = { "Lossy", "Lossless" };
 
-	private static readonly SKColor[] FrameColors =
-	{
-		SKColors.Red, SKColors.Orange, SKColors.Yellow, SKColors.Green,
-		SKColors.Cyan, SKColors.Blue, SKColors.Purple, SKColors.Magenta,
-	};
+	private const string Text = "SkiaSharp";
+	private const int FrameWidth = 480;
+	private const int FrameHeight = 240;
+	private const int FrameDuration = 120;
+
+	// gradient colours for a loopable sky-like background
+	private static readonly SKColor TopStart = new SKColor(20, 30, 80);
+	private static readonly SKColor BottomStart = new SKColor(60, 90, 160);
+	private static readonly SKColor TopEnd = new SKColor(40, 50, 120);
+	private static readonly SKColor BottomEnd = new SKColor(80, 120, 200);
 
 	public override string Title => "Animated WebP Encoder";
 
-	public override string Description => "Encode multiple frames as an animated WebP, then decode and play it back.";
+	public override string Description => "Encode an animated WebP with letter-by-letter reveal, blink, and fade-out, then play it back.";
 
 	public override string Category => SampleCategories.General;
 
@@ -36,8 +40,6 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new SliderControl("frames", "Frame Count", 2, 8, _frameCount, 1),
-		new SliderControl("duration", "Frame Duration (ms)", 50, 1000, _frameDuration, 50),
 		new SliderControl("quality", "Quality", 0, 100, _quality, 5),
 		new PickerControl("compression", "Compression", CompressionOptions, _compressionIndex),
 	];
@@ -46,12 +48,6 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 	{
 		switch (id)
 		{
-			case "frames":
-				_frameCount = (int)(float)value;
-				break;
-			case "duration":
-				_frameDuration = (int)(float)value;
-				break;
 			case "quality":
 				_quality = (float)value;
 				break;
@@ -71,37 +67,47 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	protected override async Task OnUpdate(CancellationToken token)
 	{
-		await Task.Delay(Math.Max(16, _frameDuration), token);
+		await Task.Delay(Math.Max(16, _frameDurationMs), token);
 		if (_codec != null && _codec.FrameCount > 0)
 			_currentFrame = (_currentFrame + 1) % _codec.FrameCount;
 	}
 
 	private void RebuildAnimation()
 	{
-		_currentFrame = 0;
-		_currentBitmap?.Dispose();
-		_currentBitmap = null;
-		_codec?.Dispose();
-		_codec = null;
-		_encodedData?.Dispose();
-		_encodedData = null;
+		DisposeEncoded();
 
-		var size = 200;
-		var count = Math.Clamp(_frameCount, 2, FrameColors.Length);
+		// Phase 1: letters appear one by one  (Text.Length frames)
+		// Phase 2: full text visible           (4 frames)
+		// Phase 3: blink off                   (2 frames)
+		// Phase 4: blink on                    (2 frames)
+		// Phase 5: blink off                   (2 frames)
+		// Phase 6: blink on                    (2 frames)
+		// Phase 7: letters disappear one by one(Text.Length frames)
+		// Phase 8: empty pause                 (4 frames)  <- makes loop seamless
 
-		var frames = new SKWebpEncoderFrame[count];
-		var bitmaps = new SKBitmap[count];
-		var pixmaps = new SKPixmap[count];
+		var letterCount = Text.Length;
+		var totalFrames =
+			letterCount +    // appear
+			4 +              // hold
+			2 + 2 + 2 + 2 + // blink x2
+			letterCount +    // disappear
+			4;               // pause
+
+		var frames = new SKWebpEncoderFrame[totalFrames];
+		var bitmaps = new SKBitmap[totalFrames];
+		var pixmaps = new SKPixmap[totalFrames];
+
+		_frameDurationMs = FrameDuration;
 
 		try
 		{
-			for (var i = 0; i < count; i++)
+			for (var i = 0; i < totalFrames; i++)
 			{
-				bitmaps[i] = new SKBitmap(size, size);
+				bitmaps[i] = new SKBitmap(FrameWidth, FrameHeight);
 				using var canvas = new SKCanvas(bitmaps[i]);
-				DrawFrame(canvas, size, size, i, count);
+				DrawAnimationFrame(canvas, FrameWidth, FrameHeight, i, totalFrames, letterCount);
 				pixmaps[i] = bitmaps[i].PeekPixels();
-				frames[i] = new SKWebpEncoderFrame(pixmaps[i], _frameDuration);
+				frames[i] = new SKWebpEncoderFrame(pixmaps[i], FrameDuration);
 			}
 
 			var compression = _compressionIndex == 1
@@ -114,11 +120,12 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 			{
 				_codec = SKCodec.Create(_encodedData);
 				_currentBitmap = new SKBitmap(_codec!.Info);
+				_currentFrame = 0;
 			}
 		}
 		finally
 		{
-			for (var i = 0; i < count; i++)
+			for (var i = 0; i < totalFrames; i++)
 			{
 				pixmaps[i]?.Dispose();
 				bitmaps[i]?.Dispose();
@@ -128,36 +135,132 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 		Refresh();
 	}
 
-	private static void DrawFrame(SKCanvas canvas, int width, int height, int frameIndex, int totalFrames)
+	private static void DrawAnimationFrame(
+		SKCanvas canvas, int w, int h, int frame, int totalFrames, int letterCount)
 	{
-		var color = FrameColors[frameIndex % FrameColors.Length];
-		canvas.Clear(SKColors.White);
+		// interpolate background gradient across the timeline for subtle motion
+		var t = (float)frame / Math.Max(1, totalFrames - 1);
+		var top = LerpColor(TopStart, TopEnd, t);
+		var bottom = LerpColor(BottomStart, BottomEnd, t);
 
-		using var paint = new SKPaint
-		{
-			Color = color,
-			IsAntialias = true,
-			Style = SKPaintStyle.Fill,
-		};
+		using var bgPaint = new SKPaint();
+		bgPaint.Shader = SKShader.CreateLinearGradient(
+			new SKPoint(0, 0), new SKPoint(0, h),
+			new[] { top, bottom }, null, SKShaderTileMode.Clamp);
+		canvas.DrawRect(0, 0, w, h, bgPaint);
 
-		var cx = width / 2f;
-		var cy = height / 2f;
-		var radius = Math.Min(width, height) * 0.35f;
-		canvas.DrawCircle(cx, cy, radius, paint);
+		// draw subtle star-like dots that drift
+		DrawStars(canvas, w, h, t);
 
+		// determine how many letters are visible and whether text is "on"
+		var visibleLetters = ComputeVisibleLetters(frame, letterCount);
+		if (visibleLetters <= 0)
+			return;
+
+		var fontSize = h * 0.28f;
+		using var font = new SKFont { Size = fontSize };
 		using var textPaint = new SKPaint
 		{
 			Color = SKColors.White,
 			IsAntialias = true,
 		};
-		using var font = new SKFont { Size = radius * 0.6f };
-		var text = $"{frameIndex + 1}";
-		canvas.DrawText(text, cx, cy + font.Size * 0.35f, SKTextAlign.Center, font, textPaint);
+
+		// measure full text to centre it
+		var fullText = Text.Substring(0, visibleLetters);
+		var fullWidth = font.MeasureText(fullText, textPaint);
+		var totalWidth = font.MeasureText(Text, textPaint);
+		var x = (w - totalWidth) / 2f;
+		var y = h / 2f + fontSize * 0.35f;
+
+		// draw each visible letter with a slight glow
+		for (var i = 0; i < visibleLetters; i++)
+		{
+			var ch = Text[i].ToString();
+			var charW = font.MeasureText(ch, textPaint);
+
+			// glow
+			using var glowPaint = new SKPaint
+			{
+				Color = new SKColor(140, 180, 255, 90),
+				IsAntialias = true,
+				MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6),
+			};
+			canvas.DrawText(ch, x, y, font, glowPaint);
+
+			// letter
+			canvas.DrawText(ch, x, y, font, textPaint);
+			x += charW;
+		}
+	}
+
+	private static int ComputeVisibleLetters(int frame, int letterCount)
+	{
+		var phase = 0;
+
+		// Phase 1: appear
+		if (frame < letterCount)
+			return frame + 1;
+		phase = frame - letterCount;
+
+		// Phase 2: hold (4)
+		if (phase < 4)
+			return letterCount;
+		phase -= 4;
+
+		// Phase 3-6: blink (off 2, on 2, off 2, on 2)
+		if (phase < 2) return 0;            // blink off
+		phase -= 2;
+		if (phase < 2) return letterCount;  // blink on
+		phase -= 2;
+		if (phase < 2) return 0;            // blink off
+		phase -= 2;
+		if (phase < 2) return letterCount;  // blink on
+		phase -= 2;
+
+		// Phase 7: disappear
+		if (phase < letterCount)
+			return letterCount - phase - 1;
+		phase -= letterCount;
+
+		// Phase 8: empty pause
+		return 0;
+	}
+
+	private static void DrawStars(SKCanvas canvas, int w, int h, float t)
+	{
+		// deterministic "random" star positions
+		var seed = 42;
+		using var starPaint = new SKPaint
+		{
+			Color = new SKColor(255, 255, 255, 60),
+			IsAntialias = true,
+		};
+
+		for (var i = 0; i < 30; i++)
+		{
+			seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+			var sx = (seed % w) + t * 12f;
+			sx %= w;
+			seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+			var sy = seed % h;
+			seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+			var sr = 1f + (seed % 20) / 20f;
+			canvas.DrawCircle(sx, sy, sr, starPaint);
+		}
+	}
+
+	private static SKColor LerpColor(SKColor a, SKColor b, float t)
+	{
+		return new SKColor(
+			(byte)(a.Red + (b.Red - a.Red) * t),
+			(byte)(a.Green + (b.Green - a.Green) * t),
+			(byte)(a.Blue + (b.Blue - a.Blue) * t),
+			(byte)(a.Alpha + (b.Alpha - a.Alpha) * t));
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
-		canvas.Clear(SKColors.White);
+		canvas.Clear(SKColors.Black);
 
 		if (_codec == null || _encodedData == null || _currentBitmap == null)
 		{
@@ -171,31 +274,36 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 		var opts = new SKCodecOptions(frameIndex);
 		_codec.GetPixels(_currentBitmap.Info, _currentBitmap.GetPixels(), opts);
 
-		var scale = Math.Min((width - 20f) / _currentBitmap.Width, (height - 80f) / _currentBitmap.Height);
+		var scale = Math.Min((float)width / _currentBitmap.Width, (float)height / _currentBitmap.Height);
 		scale = Math.Min(scale, 2f);
 		var dw = _currentBitmap.Width * scale;
 		var dh = _currentBitmap.Height * scale;
 		var destRect = new SKRect(
-			(width - dw) / 2f, 10,
-			(width + dw) / 2f, 10 + dh);
+			(width - dw) / 2f, (height - dh) / 2f,
+			(width + dw) / 2f, (height + dh) / 2f);
 
 		canvas.DrawBitmap(_currentBitmap, destRect);
 
-		using var infoPaint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
-		using var infoFont = new SKFont { Size = 14 };
-		var infoY = destRect.Bottom + 24;
-		var infoText = $"Frames: {_codec.FrameCount}  |  Size: {_encodedData.Size:N0} bytes  |  Frame: {frameIndex + 1}/{_codec.FrameCount}";
-		canvas.DrawText(infoText, width / 2f, infoY, SKTextAlign.Center, infoFont, infoPaint);
+		// info bar
+		using var infoPaint = new SKPaint { Color = new SKColor(200, 200, 200), IsAntialias = true };
+		using var infoFont = new SKFont { Size = 12 };
+		var infoText = $"Frames: {_codec.FrameCount}  |  {_encodedData.Size:N0} bytes  |  Frame {frameIndex + 1}/{_codec.FrameCount}";
+		canvas.DrawText(infoText, width / 2f, destRect.Bottom + 18, SKTextAlign.Center, infoFont, infoPaint);
 	}
 
-	protected override void OnDestroy()
+	private void DisposeEncoded()
 	{
-		base.OnDestroy();
 		_currentBitmap?.Dispose();
 		_currentBitmap = null;
 		_codec?.Dispose();
 		_codec = null;
 		_encodedData?.Dispose();
 		_encodedData = null;
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		DisposeEncoded();
 	}
 }
