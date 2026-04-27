@@ -198,11 +198,10 @@ def generate_toc(releases_dir: str) -> str:
 
         lines.append(f"- name: Version {group}.x{obsolete}")
         lines.append(f"  href: {members[0]}.md")
-        if len(members) > 1:
-            lines.append(f"  items:")
-            for base in members:
-                lines.append(f"    - name: Version {base}")
-                lines.append(f"      href: {base}.md")
+        lines.append(f"  items:")
+        for base in members:
+            lines.append(f"    - name: Version {base}")
+            lines.append(f"      href: {base}.md")
 
     return "\n".join(lines) + "\n"
 
