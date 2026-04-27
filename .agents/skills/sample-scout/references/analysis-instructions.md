@@ -79,8 +79,25 @@ Each finding must have these fields:
   "apis_available": false,
   "missing_apis": ["SkMesh", "SkMeshSpecification", "SkCanvas::drawMesh"],
   "key_apis": ["SkMesh::Make", "SkMeshSpecification::Make", "SkCanvas::drawMesh"],
-  "notes": "Requires SkMesh API which is not yet exposed in SkiaSharp"
+  "notes": "Requires SkMesh API which is not yet exposed in SkiaSharp",
+  "visualGoal": "A colorful warped grid of triangles with per-vertex colors, demonstrating programmable vertex displacement and custom fragment shading.",
+  "suggestedControls": ["Grid density slider (4–32)", "Warp amplitude slider (0–50)", "Color mode toggle (rainbow/grayscale)"],
+  "category": "Shaders",
+  "skiaSharpApis": ["SKCanvas.DrawVertices", "SKRuntimeEffect", "SKVertices"]
 }
 ```
 
-All fields are required. `missing_apis` should be empty array `[]` when `apis_available` is `true`.
+### Required fields
+`file`, `name`, `description`, `interesting`, `apis_available`, `missing_apis`, `key_apis`
+
+### Gallery-ready fields (collect for high and medium interest)
+For findings rated `high` or `medium`, also provide these fields to enable zero-placeholder prompt
+generation. Think about what would make a great interactive Gallery demo:
+
+- **`visualGoal`** — Describe what the user *sees*. Not "tests blend modes" but "A grid of colored circles composited with every Porter-Duff and advanced blend mode, showing how each mode combines source and destination colors."
+- **`suggestedControls`** — What should the user be able to tweak? Include specific ranges. Examples: `"Blur sigma slider (0–50)"`, `"Color picker for shadow"`, `"Animation speed toggle (slow/medium/fast)"`, `"Blend mode dropdown"`
+- **`category`** — Which Gallery section: `"Shaders"`, `"Text"`, `"Paths"`, `"Image Filters"`, `"General"`, `"Bitmap & Decoding"`, `"Path Effects"`
+- **`skiaSharpApis`** — The C# SkiaSharp API names (not C++ names). Map them: `SkCanvas::drawRect` → `SKCanvas.DrawRect`, `SkShader` → `SKShader`, `SkRuntimeEffect` → `SKRuntimeEffect`
+
+All fields are required on findings. `missing_apis` should be empty array `[]` when `apis_available` is `true`.
+For `low` interest findings, the gallery-ready fields can be omitted.

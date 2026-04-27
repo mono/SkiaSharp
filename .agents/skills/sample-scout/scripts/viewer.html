@@ -155,30 +155,51 @@ function updatePillDim(){
 }
 function generatePrompt(f){
   const gh='https://github.com/google/skia/blob/main/gm/'+f.file;
-  const apis=(f.key_apis||[]).join(', ');
+  const csApis=(f.skiaSharpApis||[]);
+  const cppApis=(f.key_apis||[]);
   const missing=(f.missing_apis||[]);
-  let prompt='Build a new interactive Gallery sample for the SkiaSharp Blazor WASM Gallery app.\n\n';
-  prompt+='## Sample: '+f.name+'\n\n';
-  prompt+=f.description+'\n\n';
-  prompt+='**Upstream reference:** '+gh+'\n';
-  prompt+='Fetch this file to see the original Skia C++ implementation, then translate it to idiomatic C#/SkiaSharp.\n\n';
-  if(apis)prompt+='**Key Skia APIs used in the original:** '+apis+'\n\n';
+  const controls=(f.suggestedControls||[]);
+  let p='Build a new interactive Gallery sample for the SkiaSharp Blazor WASM Gallery app at `samples/Gallery/`.\n\n';
+  p+='Look at existing demos in `samples/Gallery/Shared/Samples/` to match the pattern — subclass `CanvasSampleBase`, use `SampleControl` records for interactivity, set Title/Description/Category properties, and auto-discover via reflection.\n\n';
+  p+='## Sample\n\n';
+  p+='**Title:** '+f.name+'\n';
+  if(f.category)p+='**Category:** '+f.category+'\n';
+  p+='**Inspiration:** Skia GM [`'+f.file+'`]('+gh+')\n';
+  p+='Fetch this file to see the original C++ implementation, then translate to idiomatic C#/SkiaSharp.\n\n';
+  if(f.visualGoal){
+    p+='**What it looks like:**\n'+f.visualGoal+'\n\n';
+  } else {
+    p+='**What it looks like:**\n'+f.description+'\n\n';
+  }
+  if(csApis.length){
+    p+='**Key SkiaSharp APIs to demonstrate:**\n';
+    csApis.forEach(a=>{p+='- `'+a+'`\n';});
+    p+='\n';
+  } else if(cppApis.length){
+    p+='**Key Skia APIs used in the original** (map to SkiaSharp equivalents):\n';
+    cppApis.forEach(a=>{p+='- `'+a+'`\n';});
+    p+='\n';
+  }
+  if(controls.length){
+    p+='**Interactive controls:**\n';
+    controls.forEach(c=>{p+='- '+c+'\n';});
+    p+='\n';
+  }
   if(!f.apis_available&&missing.length){
-    prompt+='⚠️ **Missing APIs:** '+missing.join(', ')+'\n';
-    prompt+='These APIs are not yet available in SkiaSharp. Either skip the parts that need them (with a TODO comment), or use the `add-api` skill to add them first.\n\n';
+    p+='⚠️ **Missing APIs:** '+missing.join(', ')+'\n';
+    p+='These are not yet available in SkiaSharp. Skip the parts that need them (with a TODO comment), or use the `add-api` skill to add them first.\n\n';
   }
   if(f.matchedSample){
-    prompt+='**Note:** The Gallery already has a "'+f.matchedSample+'" sample that covers similar ground. ';
-    prompt+='Make this new sample distinct — focus on the specific technique from the Skia GM rather than duplicating the existing sample.\n\n';
+    p+='**Note:** The Gallery already has a "'+f.matchedSample+'" sample that covers similar ground. Make this new sample distinct — focus on the specific technique from the Skia GM.\n\n';
   }
-  prompt+='## Requirements\n\n';
-  prompt+='- Look at existing samples in `samples/Gallery/Shared/Samples/` to match the pattern (subclass `CanvasSampleBase`, add Title, Description, Category)\n';
-  prompt+='- Make it visually impressive — this should make people say "wow, SkiaSharp can do that?"\n';
-  prompt+='- Add interactive controls where it makes sense (sliders, toggles, color pickers)\n';
-  prompt+='- Keep it self-contained — no external resource dependencies\n';
-  prompt+='- Do NOT create a PR or push branches — keep everything local, just commit to your branch\n';
-  prompt+='- Verify it builds: `dotnet build samples/Gallery/Gallery.csproj`\n';
-  return prompt;
+  p+='## Rules\n\n';
+  p+='- Match the existing Gallery demo pattern exactly.\n';
+  p+='- Visually impressive and self-contained.\n';
+  p+='- Render a title and brief explanation on the canvas.\n';
+  p+='- Use only existing SkiaSharp APIs — leave a TODO for missing ones.\n';
+  p+='- Do NOT create a PR or push branches — keep everything local.\n';
+  p+='- Verify it builds: `dotnet build samples/Gallery/Shared/SkiaSharpSample.Shared.csproj`\n';
+  return p;
 }
 function copyPrompt(idx,evt){
   evt.stopPropagation();
@@ -196,17 +217,20 @@ function renderRow(f){
   const ss=f.sampleStatus||'none';
   const idx=DATA.indexOf(f);
   const missing=(f.missing_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'';
-  const apis=(f.key_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'—';
+  const apis=(f.skiaSharpApis||[]).length?(f.skiaSharpApis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', '):(f.key_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'—';
   const gh='https://github.com/google/skia/blob/main/gm/'+f.file;
   let det='<div class="detail-grid">';
-  det+='<div class="detail-label">Key APIs</div><div class="detail-value">'+apis+'</div>';
+  if(f.visualGoal)det+='<div class="detail-label">Visual</div><div class="detail-value">'+esc(f.visualGoal)+'</div>';
+  det+='<div class="detail-label">APIs</div><div class="detail-value">'+apis+'</div>';
   if(!f.apis_available&&missing)det+='<div class="detail-label">Missing</div><div class="detail-value" style="color:#991b1b">'+missing+'</div>';
+  if(f.suggestedControls&&f.suggestedControls.length)det+='<div class="detail-label">Controls</div><div class="detail-value">'+f.suggestedControls.map(c=>esc(c)).join(', ')+'</div>';
+  if(f.category)det+='<div class="detail-label">Category</div><div class="detail-value">'+esc(f.category)+'</div>';
   if(f.matchedSample)det+='<div class="detail-label">Matched</div><div class="detail-value">Gallery: <strong>'+esc(f.matchedSample)+'</strong></div>';
   if(f.notes)det+='<div class="detail-label">Notes</div><div class="detail-value">'+esc(f.notes)+'</div>';
   det+='<div class="detail-label">Source</div><div class="detail-value"><a href="'+gh+'" target="_blank">gm/'+esc(f.file)+'</a></div>';
   det+='<div class="detail-label">Prompt</div><div class="detail-value"><button class="prompt-btn" onclick="copyPrompt('+idx+',event)">📋 Copy Prompt</button></div>';
   det+='</div>';
-  return '<div class="row-item" onclick="this.classList.toggle(\'expanded\')"><div class="d-flex align-items-start"><span class="row-chevron">▶</span><div style="flex:1"><div class="row-name">'+esc(f.name||f.file)+' <span class="pill i-'+f.interesting+'" data-filter="interest:'+f.interesting+'" onclick="event.stopPropagation();tF(\'interest\',\''+f.interesting+'\')">'+f.interesting+'</span> <span class="pill '+(f.apis_available?'a-yes':'a-no')+'" data-filter="avail:'+(f.apis_available?'yes':'no')+'" onclick="event.stopPropagation();tF(\'avail\',\''+(f.apis_available?'yes':'no')+'\')">'+(f.apis_available?'✅ APIs':'❌ APIs')+'</span> <span class="pill ss-'+ss+'" data-filter="status:'+ss+'" onclick="event.stopPropagation();tF(\'status\',\''+ss+'\')">'+SSL[ss]+'</span></div><div class="row-desc">'+esc(f.description)+'</div><div class="row-detail">'+det+'</div></div></div></div>';
+  return '<div class="row-item" onclick="this.classList.toggle(\'expanded\')"><div class="d-flex align-items-start"><span class="row-chevron">▶</span><div style="flex:1"><div class="row-name">'+esc(f.name||f.file)+' <span class="pill i-'+f.interesting+'" data-filter="interest:'+f.interesting+'" onclick="event.stopPropagation();tF(\'interest\',\''+f.interesting+'\')">'+f.interesting+'</span> <span class="pill '+(f.apis_available?'a-yes':'a-no')+'" data-filter="avail:'+(f.apis_available?'yes':'no')+'" onclick="event.stopPropagation();tF(\'avail\',\''+(f.apis_available?'yes':'no')+'\')">'+(f.apis_available?'✅ APIs':'❌ APIs')+'</span> <span class="pill ss-'+ss+'" data-filter="status:'+ss+'" onclick="event.stopPropagation();tF(\'status\',\''+ss+'\')">'+SSL[ss]+'</span>'+(f.category?' <span class="pill" style="background:#e0e7ff;color:#3730a3">'+esc(f.category)+'</span>':'')+'</div><div class="row-desc">'+esc(f.description)+'</div><div class="row-detail">'+det+'</div></div></div></div>';
 }
 document.addEventListener('DOMContentLoaded',()=>{
   const high=DATA.filter(f=>f.interesting==='high').length;

@@ -60,7 +60,11 @@
         "key_apis": { "type": "array", "items": { "type": "string" } },
         "notes": { "type": "string" },
         "sampleStatus": { "type": "string", "enum": ["none", "similar", "existing"] },
-        "matchedSample": { "type": "string" }
+        "matchedSample": { "type": "string" },
+        "visualGoal": { "type": "string", "description": "What the user sees — 1-3 sentences describing the rendered output" },
+        "suggestedControls": { "type": "array", "items": { "type": "string" }, "description": "Interactive controls: sliders, toggles, pickers with ranges" },
+        "category": { "type": "string", "description": "Gallery category: Shaders, Text, Paths, Image Filters, General, etc." },
+        "skiaSharpApis": { "type": "array", "items": { "type": "string" }, "description": "C# SkiaSharp API equivalents (not C++ names)" }
       }
     }
   }
