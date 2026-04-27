@@ -14255,6 +14255,25 @@ namespace SkiaSharp
 			(sk_stream_fork_delegate ??= GetSymbol<Delegates.sk_stream_fork> ("sk_stream_fork")).Invoke (cstream);
 		#endif
 
+		// sk_data_t* sk_stream_get_data(sk_stream_t* cstream)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		}
+		private static Delegates.sk_stream_get_data sk_stream_get_data_delegate;
+		internal static sk_data_t sk_stream_get_data (sk_stream_t cstream) =>
+			(sk_stream_get_data_delegate ??= GetSymbol<Delegates.sk_stream_get_data> ("sk_stream_get_data")).Invoke (cstream);
+		#endif
+
 		// size_t sk_stream_get_length(sk_stream_t* cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
