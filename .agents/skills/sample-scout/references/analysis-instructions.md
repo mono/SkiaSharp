@@ -88,16 +88,6 @@ Each finding must have these fields:
 ```
 
 ### Required fields
-`file`, `name`, `description`, `interesting`, `apis_available`, `missing_apis`, `key_apis`
+`file`, `name`, `description`, `interesting`, `apis_available`, `missing_apis`, `key_apis`, `visualGoal`, `suggestedControls`, `category`, `skiaSharpApis`
 
-### Gallery-ready fields (collect for high and medium interest)
-For findings rated `high` or `medium`, also provide these fields to enable zero-placeholder prompt
-generation. Think about what would make a great interactive Gallery demo:
-
-- **`visualGoal`** — Describe what the user *sees*. Not "tests blend modes" but "A grid of colored circles composited with every Porter-Duff and advanced blend mode, showing how each mode combines source and destination colors."
-- **`suggestedControls`** — What should the user be able to tweak? Include specific ranges. Examples: `"Blur sigma slider (0–50)"`, `"Color picker for shadow"`, `"Animation speed toggle (slow/medium/fast)"`, `"Blend mode dropdown"`
-- **`category`** — Which Gallery section: `"Shaders"`, `"Text"`, `"Paths"`, `"Image Filters"`, `"General"`, `"Bitmap & Decoding"`, `"Path Effects"`
-- **`skiaSharpApis`** — The C# SkiaSharp API names (not C++ names). Map them: `SkCanvas::drawRect` → `SKCanvas.DrawRect`, `SkShader` → `SKShader`, `SkRuntimeEffect` → `SKRuntimeEffect`
-
-All fields are required on findings. `missing_apis` should be empty array `[]` when `apis_available` is `true`.
-For `low` interest findings, the gallery-ready fields can be omitted.
+All fields are required on every finding. `missing_apis` and `suggestedControls` should be empty arrays `[]` when not applicable.

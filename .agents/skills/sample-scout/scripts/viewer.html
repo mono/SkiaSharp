@@ -155,38 +155,24 @@ function updatePillDim(){
 }
 function generatePrompt(f){
   const gh='https://github.com/google/skia/blob/main/gm/'+f.file;
-  const csApis=(f.skiaSharpApis||[]);
-  const cppApis=(f.key_apis||[]);
-  const missing=(f.missing_apis||[]);
-  const controls=(f.suggestedControls||[]);
   let p='Build a new interactive Gallery sample for the SkiaSharp Blazor WASM Gallery app at `samples/Gallery/`.\n\n';
   p+='Look at existing demos in `samples/Gallery/Shared/Samples/` to match the pattern — subclass `CanvasSampleBase`, use `SampleControl` records for interactivity, set Title/Description/Category properties, and auto-discover via reflection.\n\n';
   p+='## Sample\n\n';
   p+='**Title:** '+f.name+'\n';
-  if(f.category)p+='**Category:** '+f.category+'\n';
+  p+='**Category:** '+f.category+'\n';
   p+='**Inspiration:** Skia GM [`'+f.file+'`]('+gh+')\n';
   p+='Fetch this file to see the original C++ implementation, then translate to idiomatic C#/SkiaSharp.\n\n';
-  if(f.visualGoal){
-    p+='**What it looks like:**\n'+f.visualGoal+'\n\n';
-  } else {
-    p+='**What it looks like:**\n'+f.description+'\n\n';
-  }
-  if(csApis.length){
-    p+='**Key SkiaSharp APIs to demonstrate:**\n';
-    csApis.forEach(a=>{p+='- `'+a+'`\n';});
-    p+='\n';
-  } else if(cppApis.length){
-    p+='**Key Skia APIs used in the original** (map to SkiaSharp equivalents):\n';
-    cppApis.forEach(a=>{p+='- `'+a+'`\n';});
-    p+='\n';
-  }
-  if(controls.length){
+  p+='**What it looks like:**\n'+f.visualGoal+'\n\n';
+  p+='**Key SkiaSharp APIs to demonstrate:**\n';
+  f.skiaSharpApis.forEach(a=>{p+='- `'+a+'`\n';});
+  p+='\n';
+  if(f.suggestedControls.length){
     p+='**Interactive controls:**\n';
-    controls.forEach(c=>{p+='- '+c+'\n';});
+    f.suggestedControls.forEach(c=>{p+='- '+c+'\n';});
     p+='\n';
   }
-  if(!f.apis_available&&missing.length){
-    p+='⚠️ **Missing APIs:** '+missing.join(', ')+'\n';
+  if(!f.apis_available&&f.missing_apis.length){
+    p+='⚠️ **Missing APIs:** '+f.missing_apis.join(', ')+'\n';
     p+='These are not yet available in SkiaSharp. Skip the parts that need them (with a TODO comment), or use the `add-api` skill to add them first.\n\n';
   }
   if(f.matchedSample){
@@ -217,7 +203,7 @@ function renderRow(f){
   const ss=f.sampleStatus||'none';
   const idx=DATA.indexOf(f);
   const missing=(f.missing_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'';
-  const apis=(f.skiaSharpApis||[]).length?(f.skiaSharpApis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', '):(f.key_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'—';
+  const apis=f.skiaSharpApis.map(a=>'<code>'+esc(a)+'</code>').join(', ')||'—';
   const gh='https://github.com/google/skia/blob/main/gm/'+f.file;
   let det='<div class="detail-grid">';
   if(f.visualGoal)det+='<div class="detail-label">Visual</div><div class="detail-value">'+esc(f.visualGoal)+'</div>';
