@@ -49,3 +49,12 @@ Every array API needs three members:
 - No `#nullable disable` unless needed
 - No fabricated fonts — use real fonts
 - No early returns that hide test failures
+
+## Gallery Samples
+- Standalone features get a new sample file in `samples/Gallery/Shared/Samples/`
+- Small enhancements update existing samples with new controls
+- Internal/plumbing APIs don't need samples
+- Samples teach the API — clarity over performance
+- Interactive controls (sliders, pickers, toggles) for exploring parameters
+- Real assets only, loaded via `SampleMedia`
+- Dispose everything (`using` or `OnDestroy`)

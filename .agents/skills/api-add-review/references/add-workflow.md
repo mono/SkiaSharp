@@ -148,7 +148,58 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 
 Tests MUST PASS. Do not skip, do not claim completion if they fail.
 
-## Phase 9: Review
+## Phase 9: Gallery Sample
+
+Every user-facing API should be demonstrated in the Gallery sample app. Decide
+whether the feature needs a new sample or should enhance an existing one:
+
+| Feature scope | Action | Example |
+|--------------|--------|---------|
+| Standalone capability (new drawing mode, new input type, new rendering technique) | Create new sample file | `VariableFontSample.cs`, `ColorFontSample.cs` |
+| Enhancement to existing capability (new overload, new option, extra parameter) | Update existing sample | Adding optical size slider to an existing font sample |
+| Internal/plumbing API (no visible user effect) | No sample needed | ABI-only struct changes |
+
+### Creating a new sample
+
+- [ ] Create `samples/Gallery/Shared/Samples/{FeatureName}Sample.cs`
+- [ ] Extend `CanvasSampleBase` (for drawing) or `DocumentSampleBase` (for PDF/XPS)
+- [ ] Set `Title`, `Description`, and `Category` (use `SampleCategories.*` constants)
+- [ ] Add interactive controls (sliders, pickers, toggles) to let users explore the API
+- [ ] Load fonts/images from `SampleMedia` (add embedded resources to `Media/` if needed)
+- [ ] Register new media in `SampleMedia.cs` if you added assets
+- [ ] Dispose all SkiaSharp objects properly (`using` or override `OnDestroy`)
+
+### Sample quality guidelines
+
+- [ ] **Teach, don't optimize** — clarity over performance; the sample is documentation
+- [ ] **Interactive** — use controls so users can explore parameter ranges
+- [ ] **Self-contained** — no external dependencies beyond embedded assets
+- [ ] **Real assets** — use real fonts/images, never fabricate test data
+- [ ] **Constant data** — use `static readonly` arrays for fixed values (weights, etc.)
+- [ ] **Clean disposal** — `using` for per-frame objects, `OnDestroy` for cached objects
+- [ ] **Reasonable defaults** — controls should show a good result before any interaction
+
+### Updating an existing sample
+
+- [ ] Add new controls for the new API parameters
+- [ ] Integrate naturally — don't bolt on an unrelated section
+- [ ] Keep the sample focused; if it becomes unfocused, split into a new sample instead
+
+### Gallery architecture reference
+
+```
+samples/Gallery/Shared/
+├── Controls/SampleControl.cs      # SliderControl, PickerControl, ToggleControl, GroupControl
+├── SampleBase.cs                  # Base: Title, Description, Category, Controls
+├── CanvasSampleBase.cs            # OnDrawSample(canvas, width, height), IsAnimated
+├── DocumentSampleBase.cs          # For PDF/XPS document output
+├── SampleCategories.cs            # Category constants
+├── SampleMedia.cs                 # Embedded resource loader (Images, Fonts)
+├── Media/                         # Embedded assets (fonts, images, JSON)
+└── Samples/                       # One file per sample
+```
+
+## Phase 10: Review
 
 Run the [review-workflow.md](review-workflow.md) against your changes.
 Fix any issues it identifies. Re-run tests after fixes.

@@ -122,13 +122,40 @@ If tests fail, categorize:
 
 ## Step 5: Check Sample Code
 
-If a gallery sample exists:
+Determine whether the new API needs a gallery sample:
+
+### Does a sample exist?
+
+If a gallery sample **already exists** for this feature area, verify:
 - [ ] Uses the new APIs correctly (not deprecated patterns)
 - [ ] No HarfBuzz dependency in SkiaSharp-only samples (unless justified)
 - [ ] Uses real fonts, not fabricated/modified ones
 - [ ] Sample is clear and demonstrates API patterns (not optimized for perf)
-- [ ] static readonly for constant data (weights arrays, etc.)
-- [ ] Slider casts handled correctly ((int)(float)value for int sliders)
+- [ ] `static readonly` for constant data (weights arrays, etc.)
+- [ ] Slider casts handled correctly (`(int)(float)value` for int sliders)
+- [ ] New API parameters exposed via interactive controls where appropriate
+
+### Should a new sample be created?
+
+If no sample exists, evaluate:
+
+| Feature scope | Sample needed? |
+|--------------|---------------|
+| New standalone capability (new drawing mode, rendering technique, font feature) | **Yes** — new sample file |
+| Enhancement to existing capability (new overload, extra option) | **Maybe** — update existing sample with new controls |
+| Internal/plumbing API (no visible user effect) | **No** |
+
+Flag missing samples as "Missing sample: [description]" in the review report.
+
+### New sample checklist
+- [ ] Extends `CanvasSampleBase` or `DocumentSampleBase`
+- [ ] Has `Title`, `Description`, and `Category` (from `SampleCategories`)
+- [ ] Interactive controls (sliders, pickers, toggles) let users explore the API
+- [ ] Assets loaded from `SampleMedia` (new assets added to `Media/` and registered)
+- [ ] All SkiaSharp objects disposed (`using` or `OnDestroy`)
+- [ ] Teaches the API — clarity over performance
+- [ ] Real assets only — no fabricated fonts or images
+- [ ] Reasonable defaults — shows a good result before any user interaction
 
 ## Step 6: Produce Report
 

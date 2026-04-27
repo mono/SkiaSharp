@@ -60,15 +60,15 @@ All three references work together:
 
 | File | Purpose | When to read |
 |------|---------|-------------|
-| [references/api-design-rules.md](references/api-design-rules.md) | Naming, properties vs methods, Span patterns, type wrapping, test requirements | Always — before writing or reviewing any API |
-| [references/add-workflow.md](references/add-workflow.md) | Step-by-step add workflow with C API patterns, struct conversion, JSON config | Add mode |
-| [references/review-workflow.md](references/review-workflow.md) | Structured review checklist, test coverage analysis, auto-fix mode | Review mode, and as final phase of add mode |
+| [references/api-design-rules.md](references/api-design-rules.md) | Naming, properties vs methods, Span patterns, type wrapping, test and sample requirements | Always — before writing or reviewing any API |
+| [references/add-workflow.md](references/add-workflow.md) | Step-by-step add workflow with C API patterns, struct conversion, JSON config, gallery samples | Add mode |
+| [references/review-workflow.md](references/review-workflow.md) | Structured review checklist, test coverage analysis, sample review, auto-fix mode | Review mode, and as final phase of add mode |
 | [references/troubleshooting.md](references/troubleshooting.md) | Common errors and fixes | When something goes wrong |
 
 ## Add Mode
 
 1. Read [api-design-rules.md](references/api-design-rules.md)
-2. Follow [add-workflow.md](references/add-workflow.md) phases 1-9
+2. Follow [add-workflow.md](references/add-workflow.md) phases 1-10
 3. Run [review-workflow.md](references/review-workflow.md) on your own changes
 4. Fix any issues identified by the review
 5. Re-run tests to confirm
