@@ -39,6 +39,10 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	public override bool IsAnimated => _codec != null && _codec.FrameCount > 1;
 
+	public override byte[]? DownloadBytes => _encodedData?.ToArray();
+	public override string DownloadFileName => "SkiaSharp-Animation.webp";
+	public override string DownloadMimeType => "image/webp";
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new SliderControl("quality", "Quality", 0, 100, _quality, 5),
@@ -62,7 +66,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	protected override Task OnInit()
 	{
-		using var fontStream = SampleMedia.Fonts.InterVariable;
+		using var fontStream = SampleMedia.Fonts.Nabla;
 		_typeface = SKTypeface.FromStream(fontStream);
 		RebuildAnimation();
 		return base.OnInit();
@@ -155,9 +159,9 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 		// draw subtle star-like dots that drift
 		DrawStars(canvas, w, h, t);
 
-		// determine how many letters are visible and whether text is "on"
-		var visibleLetters = ComputeVisibleLetters(frame, letterCount);
-		if (visibleLetters <= 0)
+		// determine which letters are visible
+		var (visibleStart, visibleCount) = ComputeVisibleRange(frame, letterCount);
+		if (visibleCount <= 0)
 			return;
 
 		var fontSize = h * 0.28f;
@@ -168,15 +172,18 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 			IsAntialias = true,
 		};
 
-		// measure full text to centre it
-		var fullText = Text.Substring(0, visibleLetters);
-		var fullWidth = font.MeasureText(fullText, textPaint);
+		// measure full text to keep letters in stable positions
 		var totalWidth = font.MeasureText(Text, textPaint);
-		var x = (w - totalWidth) / 2f;
+		var startX = (w - totalWidth) / 2f;
 		var y = h / 2f + fontSize * 0.35f;
 
+		// advance past invisible leading letters
+		var x = startX;
+		for (var i = 0; i < visibleStart; i++)
+			x += font.MeasureText(Text[i].ToString(), textPaint);
+
 		// draw each visible letter with a slight glow
-		for (var i = 0; i < visibleLetters; i++)
+		for (var i = visibleStart; i < visibleStart + visibleCount; i++)
 		{
 			var ch = Text[i].ToString();
 			var charW = font.MeasureText(ch, textPaint);
@@ -196,37 +203,37 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 		}
 	}
 
-	private static int ComputeVisibleLetters(int frame, int letterCount)
+	private static (int start, int count) ComputeVisibleRange(int frame, int letterCount)
 	{
 		var phase = 0;
 
-		// Phase 1: appear
+		// Phase 1: appear (from first to last)
 		if (frame < letterCount)
-			return frame + 1;
+			return (0, frame + 1);
 		phase = frame - letterCount;
 
 		// Phase 2: hold (4)
 		if (phase < 4)
-			return letterCount;
+			return (0, letterCount);
 		phase -= 4;
 
 		// Phase 3-6: blink (off 2, on 2, off 2, on 2)
-		if (phase < 2) return 0;            // blink off
+		if (phase < 2) return (0, 0);            // blink off
 		phase -= 2;
-		if (phase < 2) return letterCount;  // blink on
+		if (phase < 2) return (0, letterCount);  // blink on
 		phase -= 2;
-		if (phase < 2) return 0;            // blink off
+		if (phase < 2) return (0, 0);            // blink off
 		phase -= 2;
-		if (phase < 2) return letterCount;  // blink on
+		if (phase < 2) return (0, letterCount);  // blink on
 		phase -= 2;
 
-		// Phase 7: disappear
+		// Phase 7: disappear (first letter goes first)
 		if (phase < letterCount)
-			return letterCount - phase - 1;
+			return (phase + 1, letterCount - phase - 1);
 		phase -= letterCount;
 
 		// Phase 8: empty pause
-		return 0;
+		return (0, 0);
 	}
 
 	private static void DrawStars(SKCanvas canvas, int w, int h, float t)
@@ -268,7 +275,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 		if (_codec == null || _encodedData == null || _currentBitmap == null)
 		{
 			using var errorPaint = new SKPaint { Color = SKColors.Red, IsAntialias = true };
-			using var errorFont = new SKFont { Size = 18 };
+			using var errorFont = new SKFont(SampleMedia.Fonts.Default, 18);
 			canvas.DrawText("Encoding failed", width / 2f, height / 2f, SKTextAlign.Center, errorFont, errorPaint);
 			return;
 		}
@@ -289,7 +296,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 		// info bar
 		using var infoPaint = new SKPaint { Color = new SKColor(200, 200, 200), IsAntialias = true };
-		using var infoFont = new SKFont { Size = 12 };
+		using var infoFont = new SKFont(SampleMedia.Fonts.Default, 12);
 		var infoText = $"Frames: {_codec.FrameCount}  |  {_encodedData.Size:N0} bytes  |  Frame {frameIndex + 1}/{_codec.FrameCount}";
 		canvas.DrawText(infoText, width / 2f, destRect.Bottom + 18, SKTextAlign.Center, infoFont, infoPaint);
 	}
