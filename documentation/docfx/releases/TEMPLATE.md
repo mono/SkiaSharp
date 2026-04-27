@@ -5,11 +5,20 @@ as reference when reformatting raw release data into polished pages.
 
 ## Workflow
 
+### Released Versions
+
 1. **Fetch raw data** — `python3 scripts/generate-release-notes.py --last 5` downloads
    GitHub release bodies to a temp directory
 2. **AI reformats** — Read the raw files + this template → write polished markdown
    to `documentation/docfx/releases/{version}.md`
-3. **Update TOC** — Add new versions to `documentation/docfx/releases/TOC.yml`
+3. **Update TOC** — `python3 scripts/generate-release-notes.py --update-toc`
+
+### Upcoming Version
+
+The upcoming version (read from `scripts/azure-templates-variables.yml`) has its own
+file (e.g., `4.133.0.md`) with `<!-- UNRELEASED_BEGIN -->` / `<!-- UNRELEASED_END -->`
+fence markers. The `update-release-notes` agentic workflow updates this file on every
+push to main with AI-polished content.
 
 ## Template Structure
 

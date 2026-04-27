@@ -261,8 +261,6 @@ def generate_index(releases_dir: str) -> str:
         "",
         "Release notes for all SkiaSharp versions. Each page includes the stable release and all associated preview releases.",
         "",
-        "## All Versions",
-        "",
     ]
 
     # Group by major version, then by minor
@@ -271,13 +269,11 @@ def generate_index(releases_dir: str) -> str:
         major = base.split(".")[0]
         major_groups[major].append(base)
 
-    for major in sorted(major_groups.keys(), key=int, reverse=True):
-        obsolete = " (Obsolete)" if int(major) < 3 else ""
-        lines.extend([f"### SkiaSharp {major}.x{obsolete}", ""])
-
-        # Sub-group by major.minor
+    def render_major_group(major: str, version_list: list[str]) -> list[str]:
+        """Render a major version group's version list."""
+        result = []
         minor_groups = defaultdict(list)
-        for base in major_groups[major]:
+        for base in version_list:
             group = minor_group_key(base)
             minor_groups[group].append(base)
 
@@ -286,14 +282,29 @@ def generate_index(releases_dir: str) -> str:
             if len(members) == 1:
                 label = members[0]
                 upcoming = " (Upcoming)" if label == upcoming_version else ""
-                lines.append(f"- [Version {label}{upcoming}]({label}.md)")
+                result.append(f"- [Version {label}{upcoming}]({label}.md)")
             else:
-                lines.append(f"- **Version {group}.x**")
+                result.append(f"- **Version {group}.x**")
                 for base in members:
                     upcoming = " (Upcoming)" if base == upcoming_version else ""
-                    lines.append(f"  - [Version {base}{upcoming}]({base}.md)")
-        lines.append("")
-        lines.append("")
+                    result.append(f"  - [Version {base}{upcoming}]({base}.md)")
+        return result
+
+    for major in sorted(major_groups.keys(), key=int, reverse=True):
+        is_obsolete = int(major) < 3
+
+        if is_obsolete:
+            lines.append(f"<details>")
+            lines.append(f"<summary><h3>SkiaSharp {major}.x (Obsolete)</h3></summary>")
+            lines.append("")
+            lines.extend(render_major_group(major, major_groups[major]))
+            lines.append("")
+            lines.append("</details>")
+            lines.append("")
+        else:
+            lines.extend([f"### SkiaSharp {major}.x", ""])
+            lines.extend(render_major_group(major, major_groups[major]))
+            lines.append("")
 
     return "\n".join(lines)
 
