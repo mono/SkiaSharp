@@ -38,6 +38,8 @@ body{background:var(--bg);color:#1f2328;font-size:14px;}
 .filter-count{font-size:.72rem;color:var(--muted);padding:0 12px 4px;}
 .reset-btn{font-size:.7rem;color:#3730a3;cursor:pointer;border:none;background:none;padding:2px 6px;}
 .reset-btn:hover{text-decoration:underline;}
+.prompt-btn{font-size:.72rem;font-weight:600;padding:3px 10px;border:1px solid #3730a3;border-radius:6px;background:#fff;color:#3730a3;cursor:pointer;white-space:nowrap;}
+.prompt-btn:hover{background:#e0e7ff;}
 .dir-btn{font-size:.8rem;width:26px;height:26px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:#1e40af;font-weight:700;padding:0;line-height:26px;text-align:center;}
 .dir-btn:hover{background:#f0f4f8;}
 .group-header{font-weight:700;font-size:.82rem;padding:8px 12px 4px;color:#1e40af;border-bottom:2px solid #dbeafe;margin-top:12px;background:#f8faff;}
@@ -151,8 +153,48 @@ function updatePillDim(){
     const f=m[t];if(f)p.classList.toggle('dim',f.size>0&&!f.has(v));
   });
 }
+function generatePrompt(f){
+  const gh='https://github.com/google/skia/blob/main/gm/'+f.file;
+  const apis=(f.key_apis||[]).join(', ');
+  const missing=(f.missing_apis||[]);
+  let prompt='Build a new interactive Gallery sample for the SkiaSharp Blazor WASM Gallery app.\n\n';
+  prompt+='## Sample: '+f.name+'\n\n';
+  prompt+=f.description+'\n\n';
+  prompt+='**Upstream reference:** '+gh+'\n';
+  prompt+='Fetch this file to see the original Skia C++ implementation, then translate it to idiomatic C#/SkiaSharp.\n\n';
+  if(apis)prompt+='**Key Skia APIs used in the original:** '+apis+'\n\n';
+  if(!f.apis_available&&missing.length){
+    prompt+='⚠️ **Missing APIs:** '+missing.join(', ')+'\n';
+    prompt+='These APIs are not yet available in SkiaSharp. Either skip the parts that need them (with a TODO comment), or use the `add-api` skill to add them first.\n\n';
+  }
+  if(f.matchedSample){
+    prompt+='**Note:** The Gallery already has a "'+f.matchedSample+'" sample that covers similar ground. ';
+    prompt+='Make this new sample distinct — focus on the specific technique from the Skia GM rather than duplicating the existing sample.\n\n';
+  }
+  prompt+='## Requirements\n\n';
+  prompt+='- Look at existing samples in `samples/Gallery/Shared/Samples/` to match the pattern (subclass `CanvasSampleBase`, add Title, Description, Category)\n';
+  prompt+='- Make it visually impressive — this should make people say "wow, SkiaSharp can do that?"\n';
+  prompt+='- Add interactive controls where it makes sense (sliders, toggles, color pickers)\n';
+  prompt+='- Keep it self-contained — no external resource dependencies\n';
+  prompt+='- Do NOT create a PR or push branches — keep everything local, just commit to your branch\n';
+  prompt+='- Verify it builds: `dotnet build samples/Gallery/Gallery.csproj`\n';
+  return prompt;
+}
+function copyPrompt(idx,evt){
+  evt.stopPropagation();
+  const f=DATA[idx];
+  const prompt=generatePrompt(f);
+  navigator.clipboard.writeText(prompt).then(()=>{
+    const btn=evt.target;
+    const orig=btn.textContent;
+    btn.textContent='✅ Copied!';
+    btn.style.background='#dcfce7';
+    setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1500);
+  });
+}
 function renderRow(f){
   const ss=f.sampleStatus||'none';
+  const idx=DATA.indexOf(f);
   const missing=(f.missing_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'';
   const apis=(f.key_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'—';
   const gh='https://github.com/google/skia/blob/main/gm/'+f.file;
@@ -162,6 +204,7 @@ function renderRow(f){
   if(f.matchedSample)det+='<div class="detail-label">Matched</div><div class="detail-value">Gallery: <strong>'+esc(f.matchedSample)+'</strong></div>';
   if(f.notes)det+='<div class="detail-label">Notes</div><div class="detail-value">'+esc(f.notes)+'</div>';
   det+='<div class="detail-label">Source</div><div class="detail-value"><a href="'+gh+'" target="_blank">gm/'+esc(f.file)+'</a></div>';
+  det+='<div class="detail-label">Prompt</div><div class="detail-value"><button class="prompt-btn" onclick="copyPrompt('+idx+',event)">📋 Copy Prompt</button></div>';
   det+='</div>';
   return '<div class="row-item" onclick="this.classList.toggle(\'expanded\')"><div class="d-flex align-items-start"><span class="row-chevron">▶</span><div style="flex:1"><div class="row-name">'+esc(f.name||f.file)+' <span class="pill i-'+f.interesting+'" data-filter="interest:'+f.interesting+'" onclick="event.stopPropagation();tF(\'interest\',\''+f.interesting+'\')">'+f.interesting+'</span> <span class="pill '+(f.apis_available?'a-yes':'a-no')+'" data-filter="avail:'+(f.apis_available?'yes':'no')+'" onclick="event.stopPropagation();tF(\'avail\',\''+(f.apis_available?'yes':'no')+'\')">'+(f.apis_available?'✅ APIs':'❌ APIs')+'</span> <span class="pill ss-'+ss+'" data-filter="status:'+ss+'" onclick="event.stopPropagation();tF(\'status\',\''+ss+'\')">'+SSL[ss]+'</span></div><div class="row-desc">'+esc(f.description)+'</div><div class="row-detail">'+det+'</div></div></div></div>';
 }
