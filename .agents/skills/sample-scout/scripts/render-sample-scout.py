@@ -50,7 +50,7 @@ def main():
     json_str = json.dumps(data["findings"], ensure_ascii=False)
     json_str = json_str.replace("</script>", "<\\/script>")
 
-    marker = "/*INJECT_DATA_HERE*/"
+    marker = "/*INJECT_DATA_HERE*/null"
     if marker not in template:
         print(f"❌ Injection marker '{marker}' not found in template")
         sys.exit(1)
