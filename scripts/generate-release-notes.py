@@ -196,13 +196,9 @@ def generate_toc(releases_dir: str) -> str:
         major = group.split(".")[0]
         obsolete = " (Obsolete)" if int(major) < 3 else ""
 
-        if len(members) == 1:
-            base = members[0]
-            lines.append(f"- name: Version {base}{obsolete}")
-            lines.append(f"  href: {base}.md")
-        else:
-            lines.append(f"- name: Version {group}.x{obsolete}")
-            lines.append(f"  href: {members[0]}.md")
+        lines.append(f"- name: Version {group}.x{obsolete}")
+        lines.append(f"  href: {members[0]}.md")
+        if len(members) > 1:
             lines.append(f"  items:")
             for base in members:
                 lines.append(f"    - name: Version {base}")
@@ -279,15 +275,10 @@ def generate_index(releases_dir: str) -> str:
 
         for group in sorted(minor_groups.keys(), key=lambda g: version_sort_key(g), reverse=True):
             members = minor_groups[group]
-            if len(members) == 1:
-                label = members[0]
-                upcoming = " (Upcoming)" if label == upcoming_version else ""
-                result.append(f"- [Version {label}{upcoming}]({label}.md)")
-            else:
-                result.append(f"- **Version {group}.x**")
-                for base in members:
-                    upcoming = " (Upcoming)" if base == upcoming_version else ""
-                    result.append(f"  - [Version {base}{upcoming}]({base}.md)")
+            result.append(f"- **Version {group}.x**")
+            for base in members:
+                upcoming = " (Upcoming)" if base == upcoming_version else ""
+                result.append(f"  - [Version {base}{upcoming}]({base}.md)")
         return result
 
     for major in sorted(major_groups.keys(), key=int, reverse=True):
