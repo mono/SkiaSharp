@@ -193,14 +193,15 @@ def generate_toc(releases_dir: str) -> str:
     # Sort groups by version descending
     for group in sorted(minor_groups.keys(), key=lambda g: version_sort_key(g), reverse=True):
         members = minor_groups[group]
+        major = group.split(".")[0]
+        obsolete = " (Obsolete)" if int(major) < 3 else ""
+
         if len(members) == 1:
-            # Single version in group — no nesting needed
             base = members[0]
-            lines.append(f"- name: Version {base}")
+            lines.append(f"- name: Version {base}{obsolete}")
             lines.append(f"  href: {base}.md")
         else:
-            # Multiple versions — nest under group header
-            lines.append(f"- name: Version {group}.x")
+            lines.append(f"- name: Version {group}.x{obsolete}")
             lines.append(f"  href: {members[0]}.md")
             lines.append(f"  items:")
             for base in members:
@@ -208,6 +209,40 @@ def generate_toc(releases_dir: str) -> str:
                 lines.append(f"      href: {base}.md")
 
     return "\n".join(lines) + "\n"
+
+
+def get_upcoming_version(releases_dir: str) -> Optional[str]:
+    """Read SKIASHARP_VERSION from azure-templates-variables.yml."""
+    variables_path = os.path.join(os.path.dirname(releases_dir),
+                                  "..", "..", "scripts", "azure-templates-variables.yml")
+    if os.path.exists(variables_path):
+        with open(variables_path) as f:
+            for line in f:
+                m = re.match(r"\s*SKIASHARP_VERSION:\s*(\S+)", line)
+                if m:
+                    return m.group(1)
+    return None
+
+
+def ensure_upcoming_version_file(releases_dir: str, version: str) -> None:
+    """Create the upcoming version file if it doesn't exist."""
+    filepath = os.path.join(releases_dir, f"{version}.md")
+    if os.path.exists(filepath):
+        return
+
+    content = f"""# Version {version}
+
+> **Upcoming release** · In development · Not yet available on NuGet
+
+<!-- UNRELEASED_BEGIN -->
+
+*No changes yet.*
+
+<!-- UNRELEASED_END -->
+"""
+    with open(filepath, "w") as f:
+        f.write(content)
+    print(f"  Created upcoming version file: {filepath}")
 
 
 def generate_index(releases_dir: str) -> str:
@@ -219,52 +254,16 @@ def generate_index(releases_dir: str) -> str:
 
     versions.sort(key=version_sort_key, reverse=True)
 
-    # Read upcoming version from azure-templates-variables.yml
-    variables_path = os.path.join(os.path.dirname(releases_dir),
-                                  "..", "..", "scripts", "azure-templates-variables.yml")
-    upcoming_version = None
-    if os.path.exists(variables_path):
-        with open(variables_path) as f:
-            for line in f:
-                m = re.match(r"\s*SKIASHARP_VERSION:\s*(\S+)", line)
-                if m:
-                    upcoming_version = m.group(1)
-                    break
+    upcoming_version = get_upcoming_version(releases_dir)
 
     lines = [
         "# Release Notes",
         "",
         "Release notes for all SkiaSharp versions. Each page includes the stable release and all associated preview releases.",
         "",
-    ]
-
-    if upcoming_version and upcoming_version + ".md" not in os.listdir(releases_dir):
-        lines.extend([
-            f"## Version {upcoming_version} (Upcoming)",
-            "",
-            "<!-- UNRELEASED_BEGIN -->",
-            "",
-            "*No unreleased changes yet.*",
-            "",
-            "<!-- UNRELEASED_END -->",
-            "",
-        ])
-    else:
-        lines.extend([
-            "## What's Coming Next",
-            "",
-            "<!-- UNRELEASED_BEGIN -->",
-            "",
-            "*No unreleased changes yet.*",
-            "",
-            "<!-- UNRELEASED_END -->",
-            "",
-        ])
-
-    lines.extend([
         "## All Versions",
         "",
-    ])
+    ]
 
     # Group by major version, then by minor
     major_groups = defaultdict(list)
@@ -285,11 +284,14 @@ def generate_index(releases_dir: str) -> str:
         for group in sorted(minor_groups.keys(), key=lambda g: version_sort_key(g), reverse=True):
             members = minor_groups[group]
             if len(members) == 1:
-                lines.append(f"- [Version {members[0]}]({members[0]}.md)")
+                label = members[0]
+                upcoming = " (Upcoming)" if label == upcoming_version else ""
+                lines.append(f"- [Version {label}{upcoming}]({label}.md)")
             else:
                 lines.append(f"- **Version {group}.x**")
                 for base in members:
-                    lines.append(f"  - [Version {base}]({base}.md)")
+                    upcoming = " (Upcoming)" if base == upcoming_version else ""
+                    lines.append(f"  - [Version {base}{upcoming}]({base}.md)")
         lines.append("")
         lines.append("")
 
@@ -325,6 +327,12 @@ def main():
         if not os.path.isdir(releases_dir):
             print(f"Error: {releases_dir} does not exist")
             sys.exit(1)
+
+        # Create upcoming version file if needed
+        upcoming = get_upcoming_version(releases_dir)
+        if upcoming:
+            ensure_upcoming_version_file(releases_dir, upcoming)
+
         toc_path = os.path.join(releases_dir, "TOC.yml")
         with open(toc_path, "w") as f:
             f.write(generate_toc(releases_dir))

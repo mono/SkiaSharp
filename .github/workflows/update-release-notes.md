@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - "documentation/docfx/releases/index.md"
+      - "documentation/docfx/releases/*.md"
       - ".github/**"
   workflow_dispatch:
   skip-bots: [github-actions, copilot, dependabot]
@@ -29,9 +29,19 @@ safe-outputs:
 
 # Update Unreleased Release Notes
 
-When code merges to main, regenerate the "What's Coming Next" section in the release notes index page with a polished summary of all merged PRs since the last release.
+When code merges to main, regenerate the upcoming version's release notes page with a polished summary of all merged PRs since the last release.
 
-## Step 1 — Fetch raw PR data
+## Step 1 — Determine the upcoming version
+
+Read the `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`:
+
+```bash
+grep 'SKIASHARP_VERSION:' scripts/azure-templates-variables.yml
+```
+
+This gives you the upcoming version number (e.g., `4.133.0`). The version file lives at `documentation/docfx/releases/{version}.md`.
+
+## Step 2 — Fetch raw PR data
 
 Run the unreleased notes script to fetch merged PRs since the last release tag and save to a temp file:
 
@@ -41,13 +51,13 @@ python3 scripts/generate-unreleased-notes.py --output /tmp/unreleased-raw.md
 
 Then read the output file `/tmp/unreleased-raw.md` to capture the raw content.
 
-## Step 2 — Read the format template
+## Step 3 — Read the format template
 
-Read `documentation/docfx/releases/TEMPLATE.md` for the release notes style guidelines. The unreleased section should follow the same conventions but adapted for an "upcoming changes" context (no version number, no NuGet link, no preview sections).
+Read `documentation/docfx/releases/TEMPLATE.md` for the release notes style guidelines. The upcoming version page should follow the same conventions but adapted for an in-development release (no stable release date, no NuGet link yet).
 
-## Step 3 — Polish the content with AI
+## Step 4 — Polish the content with AI
 
-Using the raw PR list from Step 1 and the template from Step 2, rewrite the unreleased section in polished form:
+Using the raw PR list from Step 2 and the template from Step 3, rewrite the unreleased section in polished form:
 
 1. **Highlights paragraph** — 1–3 sentences summarizing the theme of what's coming. What should users be excited about?
 2. **Categorized features** — Group changes by what they affect: Engine, API Surface, Platform, Security, Build, etc. Use the template's emoji prefixes (🎨 Core API, 🍎 Apple, 🪟 Windows, 🐧 Linux, 🤖 Android, 🌐 WebAssembly, 🏗️ Build/CI, 📦 General).
@@ -56,34 +66,22 @@ Using the raw PR list from Step 1 and the template from Step 2, rewrite the unre
 5. **PR links** — Every item should link to its PR: `([#NNN](url))`.
 6. **Breaking changes** — If any PR is labeled `breaking` or has "BREAKING" in the title, list it under a `### ⚠️ Breaking Changes` sub-header at the top.
 
-If there are no merged PRs since the last release, just write: `*No unreleased changes yet.*`
+If there are no merged PRs since the last release, just write: `*No changes yet.*`
 
-## Step 4 — Write the polished section back into index.md
+## Step 5 — Write the polished section into the version file
 
-Use the `edit` tool to replace the content between the placeholder markers in `documentation/docfx/releases/index.md`.
+Use the `edit` tool to replace the content between the fence markers in `documentation/docfx/releases/{version}.md`.
 
 The updated section MUST maintain this exact structure so future runs can find and replace it:
 
 ```
 <!-- UNRELEASED_BEGIN -->
 
-{polished content from Step 3}
+{polished content from Step 4}
 
 <!-- UNRELEASED_END -->
 ```
 
-**CRITICAL:** Both the `<!-- UNRELEASED_BEGIN -->` and `<!-- UNRELEASED_END -->` HTML comments MUST remain in the file. They are sentinel markers used by this workflow to locate and replace the unreleased section on every run.
+**CRITICAL:** Both the `<!-- UNRELEASED_BEGIN -->` and `<!-- UNRELEASED_END -->` HTML comments MUST remain in the file. They are sentinel markers used by this workflow to locate and replace the content on every run.
 
-Replace everything between (and including) these two lines:
-
-```
-<!-- UNRELEASED_BEGIN -->
-```
-
-through:
-
-```
-<!-- UNRELEASED_END -->
-```
-
-with the new block containing both markers and your polished content between them.
+Replace everything between (and including) these two lines with the new block containing both markers and your polished content between them.
