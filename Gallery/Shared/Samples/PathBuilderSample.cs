@@ -182,7 +182,7 @@ public class PathBuilderSample : CanvasSampleBase
 		canvas.DrawCircle(p3, anchorRadius, anchorPaint);
 
 		// Labels
-		using var labelFont = new SKFont { Size = 11 };
+		using var labelFont = new SKFont(SampleMedia.Fonts.Default, 11);
 		using var labelPaint = new SKPaint
 		{
 			IsAntialias = true,
