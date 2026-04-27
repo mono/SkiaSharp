@@ -601,6 +601,17 @@ namespace SkiaSharp
 		public float Quality => fQuality;
 	}
 
+	public unsafe partial struct SKWebpEncoderFrame
+	{
+		public SKWebpEncoderFrame (SKPixmap pixmap, int duration)
+		{
+			this.pixmap = pixmap?.Handle ?? throw new ArgumentNullException (nameof (pixmap));
+			this.duration = duration;
+		}
+
+		public int Duration => duration;
+	}
+
 	public partial struct SKCubicResampler
 	{
 		public static readonly SKCubicResampler Mitchell = new (1 / 3.0f, 1 / 3.0f);

@@ -12158,6 +12158,28 @@ namespace SkiaSharp
 			(sk_webpencoder_encode_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode> ("sk_webpencoder_encode")).Invoke (dst, src, options);
 		#endif
 
+		// bool sk_webpencoder_encode_animated(sk_wstream_t* dst, const sk_webpencoder_frame_t* src, int count, const sk_webpencoder_options_t* options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+		}
+		private static Delegates.sk_webpencoder_encode_animated sk_webpencoder_encode_animated_delegate;
+		internal static bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrame* src, Int32 count, SKWebpEncoderOptions* options) =>
+			(sk_webpencoder_encode_animated_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode_animated> ("sk_webpencoder_encode_animated")).Invoke (dst, src, count, options);
+		#endif
+
 		#endregion
 
 		#region sk_region.h
@@ -20653,6 +20675,39 @@ namespace SkiaSharp {
 			hash.Add (pos);
 			hash.Add (utf8text);
 			hash.Add (clusters);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_webpencoder_frame_t
+	[StructLayout (LayoutKind.Sequential)]
+	public readonly unsafe partial struct SKWebpEncoderFrame : IEquatable<SKWebpEncoderFrame> {
+		// public const sk_pixmap_t* pixmap
+		private readonly sk_pixmap_t pixmap;
+
+		// public int duration
+		private readonly Int32 duration;
+
+		public readonly bool Equals (SKWebpEncoderFrame obj) =>
+#pragma warning disable CS8909
+			pixmap == obj.pixmap && duration == obj.duration;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKWebpEncoderFrame f && Equals (f);
+
+		public static bool operator == (SKWebpEncoderFrame left, SKWebpEncoderFrame right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKWebpEncoderFrame left, SKWebpEncoderFrame right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (pixmap);
+			hash.Add (duration);
 			return hash.ToHashCode ();
 		}
 
