@@ -4,7 +4,7 @@ Release notes for all SkiaSharp versions. Each page includes the stable release 
 
 ## What's Coming Next
 
-<!-- UNRELEASED_PLACEHOLDER -->
+<!-- UNRELEASED_BEGIN -->
 
 Typography gets a major upgrade with full variable font support and color font palettes, while the core API gains finer sampling control for surface drawing. Community contributor [@ramezgerges](https://github.com/ramezgerges) has been instrumental in driving these font and platform improvements.
 
@@ -34,7 +34,7 @@ Typography gets a major upgrade with full variable font support and color font p
 
 Plus several CI, documentation, and tooling improvements.
 
-*Build the site with CI to see merged PRs since the last release.*
+<!-- UNRELEASED_END -->
 
 ## All Versions
 

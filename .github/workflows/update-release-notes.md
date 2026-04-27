@@ -65,25 +65,25 @@ Use the `edit` tool to replace the content between the placeholder markers in `d
 The updated section MUST maintain this exact structure so future runs can find and replace it:
 
 ```
-<!-- UNRELEASED_PLACEHOLDER -->
+<!-- UNRELEASED_BEGIN -->
 
 {polished content from Step 3}
 
-*Build the site with CI to see merged PRs since the last release.*
+<!-- UNRELEASED_END -->
 ```
 
-**CRITICAL:** Both the `<!-- UNRELEASED_PLACEHOLDER -->` HTML comment and the italic `*Build the site with CI to see merged PRs since the last release.*` line MUST remain in the file. They are sentinel markers used by this workflow to locate and replace the unreleased section on every run.
+**CRITICAL:** Both the `<!-- UNRELEASED_BEGIN -->` and `<!-- UNRELEASED_END -->` HTML comments MUST remain in the file. They are sentinel markers used by this workflow to locate and replace the unreleased section on every run.
 
 Replace everything between (and including) these two lines:
 
 ```
-<!-- UNRELEASED_PLACEHOLDER -->
+<!-- UNRELEASED_BEGIN -->
 ```
 
 through:
 
 ```
-*Build the site with CI to see merged PRs since the last release.*
+<!-- UNRELEASED_END -->
 ```
 
 with the new block containing both markers and your polished content between them.
