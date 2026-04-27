@@ -347,6 +347,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 | PR commit message | `/pr-commit-message` | "write commit message for PR" |
 | Validate samples | `/validate-samples` | "build samples", "test sample projects" |
 | Write release notes | `/release-notes-writer` | "generate changelog", "what changed between versions", "release notes for v3.x" |
+| Scout GM samples | `/sample-scout` | "find demos to port", "what samples are we missing", "gallery ideas" |
 | Create/improve skill | `/skill-creator` | "create a new skill", "improve skill X" |
 
 ### Issue Pipeline (3 steps)

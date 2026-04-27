@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skia GM Sample Scout</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+:root{--bg:#f6f8fa;--border:#d8dee4;--muted:#656d76;}
+body{background:var(--bg);color:#1f2328;font-size:14px;}
+.shell{max-width:1200px;}
+.pill{display:inline-block;font-size:.68rem;font-weight:600;padding:1px 7px;border-radius:10px;white-space:nowrap;vertical-align:middle;cursor:pointer;user-select:none;}
+.pill:hover{opacity:.8;}.pill.dim{opacity:.25;}
+.i-high{background:#dcfce7;color:#166534;}.i-medium{background:#fef3c7;color:#92400e;}.i-low{background:#f3f4f6;color:#6b7280;}
+.a-yes{background:#dcfce7;color:#166534;}.a-no{background:#fee2e2;color:#991b1b;}
+.ss-none{background:#dbeafe;color:#1e40af;}.ss-similar{background:#fef3c7;color:#92400e;}.ss-existing{background:#f3f4f6;color:#6b7280;}
+.row-item{border-bottom:1px solid #eaeef2;padding:7px 12px;cursor:pointer;}
+.row-item:hover{background:#f0f4f8;}
+.row-item.expanded{background:#fafbfc;}
+.row-name{font-weight:600;font-size:.88rem;}
+.row-chevron{color:#bbb;font-size:.7rem;margin-right:6px;transition:transform .15s;}
+.row-item.expanded .row-chevron{transform:rotate(90deg);color:#666;}
+.row-desc{color:var(--muted);font-size:.78rem;margin-top:2px;}
+.row-detail{display:none;padding:8px 0 4px 0;font-size:.82rem;}
+.row-item.expanded .row-detail{display:block;}
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:2px 12px;}
+.detail-label{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;}
+.detail-value{font-size:.82rem;}
+.detail-value code{font-size:.78rem;background:#f0f4f8;padding:1px 4px;border-radius:3px;}
+.summary-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:12px;}
+.summary-num{font-size:1.5rem;font-weight:700;line-height:1;}
+.summary-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.filter-bar{display:flex;flex-direction:column;gap:4px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;}
+.filter-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.filter-label{font-size:.7rem;color:var(--muted);font-weight:600;width:80px;flex-shrink:0;text-align:right;padding-right:6px;}
+.search-box{font-size:.8rem;padding:3px 10px;border:1px solid var(--border);border-radius:6px;width:300px;}
+.filter-count{font-size:.72rem;color:var(--muted);padding:0 12px 4px;}
+.reset-btn{font-size:.7rem;color:#3730a3;cursor:pointer;border:none;background:none;padding:2px 6px;}
+.reset-btn:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="shell mx-auto px-3 py-3">
+<div class="d-flex align-items-center mb-2">
+<strong style="font-size:1.15rem">Skia GM Sample Scout</strong>
+<span class="text-muted" style="font-size:.8rem;margin-left:8px">__TOTAL__ samples · __DATE__</span>
+</div>
+<div class="summary-bar d-flex gap-4 align-items-center flex-wrap" id="summary-bar"></div>
+<div class="filter-bar">
+<div class="filter-row">
+<span class="filter-label">Search:</span>
+<input type="text" class="search-box" id="search" placeholder="Search samples, APIs, descriptions..." oninput="applyFilters()">
+</div>
+<div class="filter-row"><span class="filter-label">Interest:</span><span id="fr-interest"></span></div>
+<div class="filter-row"><span class="filter-label">APIs:</span><span id="fr-avail"></span></div>
+<div class="filter-row"><span class="filter-label">Coverage:</span><span id="fr-status"></span></div>
+</div>
+<div class="d-flex justify-content-between" style="padding:0 12px 4px">
+<span class="filter-count" id="filter-count"></span>
+<button class="reset-btn" onclick="fI.clear();fA.clear();fS.clear();document.getElementById('search').value='';applyFilters()">Reset filters</button>
+</div>
+<div id="list"></div>
+</div>
+<script>
+const DATA = [/*INJECT_DATA_HERE*/];
+let fI=new Set(),fA=new Set(),fS=new Set();
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function tF(type,val){const m={interest:fI,avail:fA,status:fS};const f=m[type];f.has(val)?f.delete(val):f.add(val);applyFilters();}
+function applyFilters(){
+  const sT=document.getElementById('search').value.toLowerCase();
+  const filtered=DATA.filter(f=>{
+    if(fI.size&&!fI.has(f.interesting))return false;
+    if(fA.size){const av=f.apis_available?'yes':'no';if(!fA.has(av))return false;}
+    if(fS.size&&!fS.has(f.sampleStatus||'none'))return false;
+    if(sT&&!JSON.stringify(f).toLowerCase().includes(sT))return false;
+    return true;
+  });
+  document.getElementById('filter-count').textContent='Showing '+filtered.length+' of '+DATA.length;
+  document.getElementById('list').innerHTML=filtered.map(renderRow).join('');
+  document.querySelectorAll('.pill[data-filter]').forEach(p=>{
+    const[t,v]=p.dataset.filter.split(':');
+    const m={interest:fI,avail:fA,status:fS};
+    const f=m[t];if(f)p.classList.toggle('dim',f.size>0&&!f.has(v));
+  });
+}
+function renderRow(f){
+  const ssLabels={none:'🆕 No sample',similar:'🔶 Similar exists',existing:'✅ Covered'};
+  const ss=f.sampleStatus||'none';
+  const missing=(f.missing_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'';
+  const apis=(f.key_apis||[]).map(a=>'<code>'+esc(a)+'</code>').join(', ')||'—';
+  const gh='https://github.com/google/skia/blob/main/gm/'+f.file;
+  let det='<div class="detail-grid">';
+  det+='<div class="detail-label">Key APIs</div><div class="detail-value">'+apis+'</div>';
+  if(!f.apis_available&&missing)det+='<div class="detail-label">Missing</div><div class="detail-value" style="color:#991b1b">'+missing+'</div>';
+  if(f.matchedSample)det+='<div class="detail-label">Matched</div><div class="detail-value">Gallery: <strong>'+esc(f.matchedSample)+'</strong></div>';
+  if(f.notes)det+='<div class="detail-label">Notes</div><div class="detail-value">'+esc(f.notes)+'</div>';
+  det+='<div class="detail-label">Source</div><div class="detail-value"><a href="'+gh+'" target="_blank">gm/'+esc(f.file)+'</a></div>';
+  det+='</div>';
+  return '<div class="row-item" onclick="this.classList.toggle(\'expanded\')"><div class="d-flex align-items-start"><span class="row-chevron">▶</span><div style="flex:1"><div class="row-name">'+esc(f.name||f.file)+' <span class="pill i-'+f.interesting+'" data-filter="interest:'+f.interesting+'" onclick="event.stopPropagation();tF(\'interest\',\''+f.interesting+'\')">'+f.interesting+'</span> <span class="pill '+(f.apis_available?'a-yes':'a-no')+'" data-filter="avail:'+(f.apis_available?'yes':'no')+'" onclick="event.stopPropagation();tF(\'avail\',\''+(f.apis_available?'yes':'no')+'\')">'+(f.apis_available?'✅ APIs':'❌ APIs')+'</span> <span class="pill ss-'+ss+'" data-filter="status:'+ss+'" onclick="event.stopPropagation();tF(\'status\',\''+ss+'\')">'+ssLabels[ss]+'</span></div><div class="row-desc">'+esc(f.description)+'</div><div class="row-detail">'+det+'</div></div></div></div>';
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const high=DATA.filter(f=>f.interesting==='high').length;
+  const med=DATA.filter(f=>f.interesting==='medium').length;
+  const low=DATA.filter(f=>f.interesting==='low').length;
+  const avail=DATA.filter(f=>f.apis_available).length;
+  const blocked=DATA.filter(f=>!f.apis_available).length;
+  const none=DATA.filter(f=>(f.sampleStatus||'none')==='none').length;
+  const similar=DATA.filter(f=>f.sampleStatus==='similar').length;
+  const existing=DATA.filter(f=>f.sampleStatus==='existing').length;
+  const opp=DATA.filter(f=>f.interesting==='high'&&f.apis_available&&(f.sampleStatus||'none')==='none').length;
+  document.getElementById('summary-bar').innerHTML=[
+    ['Total',DATA.length,'#1f2328'],['High',high,'#166534'],['Medium',med,'#92400e'],['Low',low,'#6b7280'],
+    ['APIs Ready',avail,'#166534'],['Blocked',blocked,'#991b1b'],
+    ['🆕 New',none,'#1e40af'],['🔶 Similar',similar,'#92400e'],['✅ Covered',existing,'#6b7280'],
+    ['🎯 Opportunity',opp,'#7e22ce']
+  ].map(([l,n,c])=>'<div class="text-center"><div class="summary-num" style="color:'+c+'">'+n+'</div><div class="summary-label">'+l+'</div></div>').join('');
+  document.getElementById('fr-interest').innerHTML=['high','medium','low'].map(v=>'<span class="pill i-'+v+'" data-filter="interest:'+v+'" onclick="tF(\'interest\',\''+v+'\')">'+v+'</span>').join(' ');
+  document.getElementById('fr-avail').innerHTML=['yes','no'].map(v=>'<span class="pill a-'+v+'" data-filter="avail:'+v+'" onclick="tF(\'avail\',\''+v+'\')">'+(v==='yes'?'✅ APIs ready':'❌ Blocked')+'</span>').join(' ');
+  document.getElementById('fr-status').innerHTML=['none','similar','existing'].map(v=>'<span class="pill ss-'+v+'" data-filter="status:'+v+'" onclick="tF(\'status\',\''+v+'\')">'+(({none:'🆕 No sample',similar:'🔶 Similar',existing:'✅ Covered'})[v])+'</span>').join(' ');
+  applyFilters();
+});
+</script>
+</body>
+</html>
