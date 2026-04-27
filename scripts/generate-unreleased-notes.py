@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """
-Generate the "What's Coming Next" section for the release notes index page.
+Fetch unreleased changes (merged PRs since the last release) for SkiaSharp.
 
-Finds the latest release tag, fetches merged PRs since that tag, applies
-platform/contributor emoji annotations, and replaces the UNRELEASED_PLACEHOLDER
-in index.md.
+Outputs a raw markdown file with emoji-annotated PR lists, grouped by type.
+This file is then read by the agentic workflow which uses AI to polish it
+into the template format and update index.md.
 
 Usage:
-    python3 scripts/generate-unreleased-notes.py [--releases-dir DIR]
+    # Output to stdout
+    python3 scripts/generate-unreleased-notes.py
 
-Requirements: gh (GitHub CLI), git, Python 3.7+
+    # Output to a file
+    python3 scripts/generate-unreleased-notes.py --output /tmp/unreleased.md
+
+Requirements: gh (GitHub CLI), Python 3.7+
 """
 
 from __future__ import annotations
@@ -85,14 +89,12 @@ def get_merged_prs_since(date: str) -> list[dict]:
 
 def get_platform_emoji(title: str, labels: list[dict]) -> str:
     """Determine platform emoji from labels and title."""
-    # Check labels first
     label_names = [l.get("name", "") for l in labels]
     for label_prefix, emoji in LABEL_PLATFORM_MAP.items():
         for label in label_names:
             if label.startswith(label_prefix):
                 return emoji
 
-    # Check title keywords
     for pattern, emoji in TITLE_PLATFORM_MAP:
         if re.search(pattern, title):
             return emoji
@@ -125,7 +127,7 @@ def classify_pr(pr: dict) -> Optional[str]:
 
 
 def generate_unreleased_section(prs: list[dict], latest_tag: str) -> str:
-    """Generate the unreleased section markdown."""
+    """Generate the raw unreleased section markdown."""
     if not prs:
         return "*No changes since the last release.*\n"
 
@@ -137,7 +139,6 @@ def generate_unreleased_section(prs: list[dict], latest_tag: str) -> str:
         title = pr.get("title", "")
         author = pr.get("author", {})
         url = pr.get("url", "")
-        number = pr.get("number", "")
         labels = pr.get("labels", [])
 
         emoji = get_platform_emoji(title, labels)
@@ -173,57 +174,35 @@ def generate_unreleased_section(prs: list[dict], latest_tag: str) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate unreleased notes for SkiaSharp website")
-    parser.add_argument("--releases-dir", default="documentation/docfx/releases",
-                        help="Path to releases directory containing index.md")
+    parser = argparse.ArgumentParser(description="Fetch unreleased SkiaSharp changes")
+    parser.add_argument("--output", default=None,
+                        help="Output file path (default: stdout)")
     args = parser.parse_args()
 
-    index_path = os.path.join(args.releases_dir, "index.md")
-    if not os.path.exists(index_path):
-        print(f"Error: {index_path} not found. Run generate-release-notes.py first.")
-        sys.exit(1)
-
     # Find latest release
-    print("Finding latest release tag...")
+    print("Finding latest release tag...", file=sys.stderr)
     latest_tag = get_latest_release_tag()
-    print(f"Latest release: {latest_tag}")
+    print(f"Latest release: {latest_tag}", file=sys.stderr)
 
     # Get release date
     release_date = get_latest_release_date(latest_tag)
-    print(f"Released: {release_date}")
+    print(f"Released: {release_date}", file=sys.stderr)
 
     # Fetch merged PRs since that date
-    print("Fetching merged PRs since release...")
+    print("Fetching merged PRs since release...", file=sys.stderr)
     prs = get_merged_prs_since(release_date)
-    print(f"Found {len(prs)} merged PRs")
+    print(f"Found {len(prs)} merged PRs", file=sys.stderr)
 
     # Generate the unreleased section
     unreleased_md = generate_unreleased_section(prs, latest_tag)
 
-    # Replace placeholder in index.md
-    with open(index_path, "r") as f:
-        content = f.read()
-
-    # Replace the placeholder block
-    placeholder_start = "<!-- UNRELEASED_PLACEHOLDER -->"
-    placeholder_end = "*Build the site with CI to see merged PRs since the last release.*"
-
-    if placeholder_start in content:
-        # Replace everything between placeholder and the end marker
-        before = content.split(placeholder_start)[0]
-        after_parts = content.split(placeholder_end)
-        after = after_parts[1] if len(after_parts) > 1 else ""
-
-        new_content = before + unreleased_md + after
-        with open(index_path, "w") as f:
-            f.write(new_content)
-        print(f"Updated {index_path} with {len(prs)} unreleased PRs")
+    # Output
+    if args.output:
+        with open(args.output, "w") as f:
+            f.write(unreleased_md)
+        print(f"Wrote {args.output}", file=sys.stderr)
     else:
-        print("Warning: UNRELEASED_PLACEHOLDER not found in index.md")
-
-    # Also update the "Latest Preview" section if the latest tag is a preview
-    # and there's a newer preview since
-    print("Done!")
+        print(unreleased_md)
 
 
 if __name__ == "__main__":

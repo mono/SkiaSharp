@@ -31,21 +31,15 @@ safe-outputs:
 
 When code merges to main, regenerate the "What's Coming Next" section in the release notes index page with a polished summary of all merged PRs since the last release.
 
-## Step 1 — Capture raw PR data
+## Step 1 — Fetch raw PR data
 
-Run the unreleased notes generator script to fetch merged PRs since the last release tag:
-
-```bash
-python3 scripts/generate-unreleased-notes.py
-```
-
-This modifies `documentation/docfx/releases/index.md` in place, replacing the placeholder block with a raw list of merged PRs grouped by type. Read the modified file to capture the raw unreleased content — everything between `## What's Coming Next` and `## All Versions`.
-
-Then restore the original file so you have a clean base for writing:
+Run the unreleased notes script to fetch merged PRs since the last release tag and save to a temp file:
 
 ```bash
-git checkout -- documentation/docfx/releases/index.md
+python3 scripts/generate-unreleased-notes.py --output /tmp/unreleased-raw.md
 ```
+
+Then read the output file `/tmp/unreleased-raw.md` to capture the raw content.
 
 ## Step 2 — Read the format template
 
