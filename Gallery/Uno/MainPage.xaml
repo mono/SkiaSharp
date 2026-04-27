@@ -1,0 +1,75 @@
+<Page x:Class="SkiaSharpSample.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Background="#1A237E"
+                Padding="28,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            Spacing="12"
+                            VerticalAlignment="Center">
+                    <HyperlinkButton x:Name="BrandLink"
+                                     Click="OnHomeClicked"
+                                     Padding="0"
+                                     Margin="0">
+                        <TextBlock Text="SkiaSharp Gallery"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="White" />
+                    </HyperlinkButton>
+                    <TextBlock FontSize="12"
+                               VerticalAlignment="Center"
+                               Foreground="#B3FFFFFF">
+                        <Run Text="Powered by " />
+                        <Hyperlink NavigateUri="https://platform.uno/"
+                                   Foreground="White"
+                                   UnderlineStyle="Single">Uno Platform</Hyperlink>
+                    </TextBlock>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="12"
+                            VerticalAlignment="Center">
+                    <Button x:Name="ThemeToggleButton"
+                            Click="OnThemeToggleClicked"
+                            ToolTipService.ToolTip="Toggle dark mode"
+                            Background="Transparent"
+                            BorderBrush="#66FFFFFF"
+                            BorderThickness="1"
+                            Padding="8,4"
+                            MinWidth="36">
+                        <TextBlock x:Name="ThemeToggleIcon"
+                                   FontFamily="ms-appx:///Assets/Fonts/bootstrap-icons.ttf#bootstrap-icons"
+                                   Foreground="White"
+                                   FontSize="14" />
+                    </Button>
+                    <HyperlinkButton NavigateUri="https://github.com/mono/SkiaSharp">
+                        <TextBlock Text="GitHub" Foreground="White" />
+                    </HyperlinkButton>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Frame x:Name="ContentFrame" Grid.Row="1" />
+    </Grid>
+
+</Page>

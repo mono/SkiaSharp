@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Uno.Sdk/6.6.0-dev.208">
+  <PropertyGroup>
+    <!-- CI ships only -browserwasm; the other heads are for local exploration. -->
+    <TargetFrameworks>net10.0-desktop;net10.0-browserwasm</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.26100;$(TargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) or $([MSBuild]::IsOSPlatform('OSX'))">net10.0-android;net10.0-ios;$(TargetFrameworks)</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+    <UnoSingleProject>true</UnoSingleProject>
+    <ApplicationTitle>SkiaSharp Gallery</ApplicationTitle>
+    <ApplicationId>com.companyname.skiasharpsample.gallery</ApplicationId>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationPublisher>O=SkiaSharp</ApplicationPublisher>
+    <Description>SkiaSharp Gallery — Uno Platform sample running the shared SkiaSharp sample catalog.</Description>
+    <UnoFeatures>
+      SkiaRenderer;
+    </UnoFeatures>
+  </PropertyGroup>
+  <PropertyGroup>
+    <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Stamped by CI; surfaced by SkiaSharpSample.Shared via AssemblyMetadata. -->
+    <BuildFooter></BuildFooter>
+  </PropertyGroup>
+  <!-- The Shared ProjectReference below must come after this import:
+       _UnoPlatformSamples.targets does <ProjectReference Remove="@(ProjectReference)" />. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\SkiaSharpSample.Shared.csproj" />
+  </ItemGroup>
+</Project>
