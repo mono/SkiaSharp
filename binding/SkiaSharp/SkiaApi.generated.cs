@@ -13596,6 +13596,25 @@ namespace SkiaSharp
 			(sk_shader_new_linear_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_linear_gradient_color4f> ("sk_shader_new_linear_gradient_color4f")).Invoke (points, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
+		// sk_shader_t* sk_shader_new_linear_gradient_interpolation(const sk_point_t[2] points = 2, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_gradient_interpolation_t* interpolation, const sk_matrix_t* localMatrix)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_linear_gradient_interpolation (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_new_linear_gradient_interpolation (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_shader_t sk_shader_new_linear_gradient_interpolation (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		}
+		private static Delegates.sk_shader_new_linear_gradient_interpolation sk_shader_new_linear_gradient_interpolation_delegate;
+		internal static sk_shader_t sk_shader_new_linear_gradient_interpolation (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix) =>
+			(sk_shader_new_linear_gradient_interpolation_delegate ??= GetSymbol<Delegates.sk_shader_new_linear_gradient_interpolation> ("sk_shader_new_linear_gradient_interpolation")).Invoke (points, colors, colorspace, colorPos, colorCount, tileMode, interpolation, localMatrix);
+		#endif
+
 		// sk_shader_t* sk_shader_new_perlin_noise_fractal_noise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, const sk_isize_t* tileSize)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -13672,6 +13691,25 @@ namespace SkiaSharp
 			(sk_shader_new_radial_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_radial_gradient_color4f> ("sk_shader_new_radial_gradient_color4f")).Invoke (center, radius, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
+		// sk_shader_t* sk_shader_new_radial_gradient_interpolation(const sk_point_t* center, float radius, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_gradient_interpolation_t* interpolation, const sk_matrix_t* localMatrix)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_radial_gradient_interpolation (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_new_radial_gradient_interpolation (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_shader_t sk_shader_new_radial_gradient_interpolation (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		}
+		private static Delegates.sk_shader_new_radial_gradient_interpolation sk_shader_new_radial_gradient_interpolation_delegate;
+		internal static sk_shader_t sk_shader_new_radial_gradient_interpolation (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix) =>
+			(sk_shader_new_radial_gradient_interpolation_delegate ??= GetSymbol<Delegates.sk_shader_new_radial_gradient_interpolation> ("sk_shader_new_radial_gradient_interpolation")).Invoke (center, radius, colors, colorspace, colorPos, colorCount, tileMode, interpolation, localMatrix);
+		#endif
+
 		// sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* center, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -13710,6 +13748,25 @@ namespace SkiaSharp
 			(sk_shader_new_sweep_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_sweep_gradient_color4f> ("sk_shader_new_sweep_gradient_color4f")).Invoke (center, colors, colorspace, colorPos, colorCount, tileMode, startAngle, endAngle, localMatrix);
 		#endif
 
+		// sk_shader_t* sk_shader_new_sweep_gradient_interpolation(const sk_point_t* center, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, const sk_gradient_interpolation_t* interpolation, const sk_matrix_t* localMatrix)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_sweep_gradient_interpolation (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_new_sweep_gradient_interpolation (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_shader_t sk_shader_new_sweep_gradient_interpolation (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		}
+		private static Delegates.sk_shader_new_sweep_gradient_interpolation sk_shader_new_sweep_gradient_interpolation_delegate;
+		internal static sk_shader_t sk_shader_new_sweep_gradient_interpolation (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKGradientInterpolation* interpolation, SKMatrix* localMatrix) =>
+			(sk_shader_new_sweep_gradient_interpolation_delegate ??= GetSymbol<Delegates.sk_shader_new_sweep_gradient_interpolation> ("sk_shader_new_sweep_gradient_interpolation")).Invoke (center, colors, colorspace, colorPos, colorCount, tileMode, startAngle, endAngle, interpolation, localMatrix);
+		#endif
+
 		// sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -13746,6 +13803,25 @@ namespace SkiaSharp
 		private static Delegates.sk_shader_new_two_point_conical_gradient_color4f sk_shader_new_two_point_conical_gradient_color4f_delegate;
 		internal static sk_shader_t sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
 			(sk_shader_new_two_point_conical_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_two_point_conical_gradient_color4f> ("sk_shader_new_two_point_conical_gradient_color4f")).Invoke (start, startRadius, end, endRadius, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
+		#endif
+
+		// sk_shader_t* sk_shader_new_two_point_conical_gradient_interpolation(const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_gradient_interpolation_t* interpolation, const sk_matrix_t* localMatrix)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_two_point_conical_gradient_interpolation (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_new_two_point_conical_gradient_interpolation (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_shader_t sk_shader_new_two_point_conical_gradient_interpolation (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix);
+		}
+		private static Delegates.sk_shader_new_two_point_conical_gradient_interpolation sk_shader_new_two_point_conical_gradient_interpolation_delegate;
+		internal static sk_shader_t sk_shader_new_two_point_conical_gradient_interpolation (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKGradientInterpolation* interpolation, SKMatrix* localMatrix) =>
+			(sk_shader_new_two_point_conical_gradient_interpolation_delegate ??= GetSymbol<Delegates.sk_shader_new_two_point_conical_gradient_interpolation> ("sk_shader_new_two_point_conical_gradient_interpolation")).Invoke (start, startRadius, end, endRadius, colors, colorspace, colorPos, colorCount, tileMode, interpolation, localMatrix);
 		#endif
 
 		// void sk_shader_ref(sk_shader_t* shader)
@@ -19081,6 +19157,55 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_gradient_interpolation_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKGradientInterpolation : IEquatable<SKGradientInterpolation> {
+		// public sk_gradient_interpolation_colorspace_t fColorSpace
+		private SKGradientInterpolationColorSpace fColorSpace;
+		public SKGradientInterpolationColorSpace ColorSpace {
+			readonly get => fColorSpace;
+			set => fColorSpace = value;
+		}
+
+		// public sk_gradient_interpolation_huemethod_t fHueMethod
+		private SKGradientInterpolationHueMethod fHueMethod;
+		public SKGradientInterpolationHueMethod HueMethod {
+			readonly get => fHueMethod;
+			set => fHueMethod = value;
+		}
+
+		// public bool fInPremul
+		private Byte fInPremul;
+		public bool InPremul {
+			readonly get => fInPremul > 0;
+			set => fInPremul = value ? (byte)1 : (byte)0;
+		}
+
+		public readonly bool Equals (SKGradientInterpolation obj) =>
+#pragma warning disable CS8909
+			fColorSpace == obj.fColorSpace && fHueMethod == obj.fHueMethod && fInPremul == obj.fInPremul;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKGradientInterpolation f && Equals (f);
+
+		public static bool operator == (SKGradientInterpolation left, SKGradientInterpolation right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKGradientInterpolation left, SKGradientInterpolation right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fColorSpace);
+			hash.Add (fHueMethod);
+			hash.Add (fInPremul);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_highcontrastconfig_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKHighContrastConfig : IEquatable<SKHighContrastConfig> {
@@ -20910,6 +21035,44 @@ namespace SkiaSharp {
 		Italic = 1,
 		// OBLIQUE_SK_FONT_STYLE_SLANT = 2
 		Oblique = 2,
+	}
+
+	// sk_gradient_interpolation_colorspace_t
+	public enum SKGradientInterpolationColorSpace {
+		// DESTINATION_SK_GRADIENT_INTERPOLATION_COLORSPACE = 0
+		Destination = 0,
+		// SRGB_LINEAR_SK_GRADIENT_INTERPOLATION_COLORSPACE = 1
+		SrgbLinear = 1,
+		// LAB_SK_GRADIENT_INTERPOLATION_COLORSPACE = 2
+		Lab = 2,
+		// OKLAB_SK_GRADIENT_INTERPOLATION_COLORSPACE = 3
+		OKLab = 3,
+		// OKLAB_GAMUT_MAP_SK_GRADIENT_INTERPOLATION_COLORSPACE = 4
+		OKLabGamutMap = 4,
+		// LCH_SK_GRADIENT_INTERPOLATION_COLORSPACE = 5
+		LCH = 5,
+		// OKLCH_SK_GRADIENT_INTERPOLATION_COLORSPACE = 6
+		OKLCH = 6,
+		// OKLCH_GAMUT_MAP_SK_GRADIENT_INTERPOLATION_COLORSPACE = 7
+		OKLCHGamutMap = 7,
+		// SRGB_SK_GRADIENT_INTERPOLATION_COLORSPACE = 8
+		Srgb = 8,
+		// HSL_SK_GRADIENT_INTERPOLATION_COLORSPACE = 9
+		HSL = 9,
+		// HWB_SK_GRADIENT_INTERPOLATION_COLORSPACE = 10
+		HWB = 10,
+	}
+
+	// sk_gradient_interpolation_huemethod_t
+	public enum SKGradientInterpolationHueMethod {
+		// SHORTER_SK_GRADIENT_INTERPOLATION_HUEMETHOD = 0
+		Shorter = 0,
+		// LONGER_SK_GRADIENT_INTERPOLATION_HUEMETHOD = 1
+		Longer = 1,
+		// INCREASING_SK_GRADIENT_INTERPOLATION_HUEMETHOD = 2
+		Increasing = 2,
+		// DECREASING_SK_GRADIENT_INTERPOLATION_HUEMETHOD = 3
+		Decreasing = 3,
 	}
 
 	// sk_highcontrastconfig_invertstyle_t

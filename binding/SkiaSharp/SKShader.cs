@@ -181,6 +181,34 @@ namespace SkiaSharp
 			}
 		}
 
+		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKGradientInterpolation interpolation)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos != null && colors.Length != colorPos.Length)
+				throw new ArgumentException ("The number of colors must match the number of color positions.");
+
+			var points = stackalloc SKPoint[] { start, end };
+			fixed (SKColorF* c = colors)
+			fixed (float* cp = colorPos) {
+				return GetObject (SkiaApi.sk_shader_new_linear_gradient_interpolation (points, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, mode, &interpolation, null));
+			}
+		}
+
+		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKGradientInterpolation interpolation, SKMatrix localMatrix)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos != null && colors.Length != colorPos.Length)
+				throw new ArgumentException ("The number of colors must match the number of color positions.");
+
+			var points = stackalloc SKPoint[] { start, end };
+			fixed (SKColorF* c = colors)
+			fixed (float* cp = colorPos) {
+				return GetObject (SkiaApi.sk_shader_new_linear_gradient_interpolation (points, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, mode, &interpolation, &localMatrix));
+			}
+		}
+
 		// CreateRadialGradient
 
 		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, SKShaderTileMode mode) =>
@@ -238,6 +266,32 @@ namespace SkiaSharp
 			fixed (SKColorF* c = colors)
 			fixed (float* cp = colorPos) {
 				return GetObject (SkiaApi.sk_shader_new_radial_gradient_color4f (&center, radius, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, mode, &localMatrix));
+			}
+		}
+
+		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKGradientInterpolation interpolation)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos != null && colors.Length != colorPos.Length)
+				throw new ArgumentException ("The number of colors must match the number of color positions.");
+
+			fixed (SKColorF* c = colors)
+			fixed (float* cp = colorPos) {
+				return GetObject (SkiaApi.sk_shader_new_radial_gradient_interpolation (&center, radius, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, mode, &interpolation, null));
+			}
+		}
+
+		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKGradientInterpolation interpolation, SKMatrix localMatrix)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos != null && colors.Length != colorPos.Length)
+				throw new ArgumentException ("The number of colors must match the number of color positions.");
+
+			fixed (SKColorF* c = colors)
+			fixed (float* cp = colorPos) {
+				return GetObject (SkiaApi.sk_shader_new_radial_gradient_interpolation (&center, radius, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, mode, &interpolation, &localMatrix));
 			}
 		}
 
@@ -319,6 +373,32 @@ namespace SkiaSharp
 			}
 		}
 
+		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKGradientInterpolation interpolation)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos != null && colors.Length != colorPos.Length)
+				throw new ArgumentException ("The number of colors must match the number of color positions.");
+
+			fixed (SKColorF* c = colors)
+			fixed (float* cp = colorPos) {
+				return GetObject (SkiaApi.sk_shader_new_sweep_gradient_interpolation (&center, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, tileMode, startAngle, endAngle, &interpolation, null));
+			}
+		}
+
+		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKGradientInterpolation interpolation, SKMatrix localMatrix)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos != null && colors.Length != colorPos.Length)
+				throw new ArgumentException ("The number of colors must match the number of color positions.");
+
+			fixed (SKColorF* c = colors)
+			fixed (float* cp = colorPos) {
+				return GetObject (SkiaApi.sk_shader_new_sweep_gradient_interpolation (&center, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, tileMode, startAngle, endAngle, &interpolation, &localMatrix));
+			}
+		}
+
 		// CreateTwoPointConicalGradient
 
 		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, SKShaderTileMode mode) =>
@@ -376,6 +456,32 @@ namespace SkiaSharp
 			fixed (SKColorF* c = colors)
 			fixed (float* cp = colorPos) {
 				return GetObject (SkiaApi.sk_shader_new_two_point_conical_gradient_color4f (&start, startRadius, &end, endRadius, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, mode, &localMatrix));
+			}
+		}
+
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKGradientInterpolation interpolation)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos != null && colors.Length != colorPos.Length)
+				throw new ArgumentException ("The number of colors must match the number of color positions.");
+
+			fixed (SKColorF* c = colors)
+			fixed (float* cp = colorPos) {
+				return GetObject (SkiaApi.sk_shader_new_two_point_conical_gradient_interpolation (&start, startRadius, &end, endRadius, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, mode, &interpolation, null));
+			}
+		}
+
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKGradientInterpolation interpolation, SKMatrix localMatrix)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos != null && colors.Length != colorPos.Length)
+				throw new ArgumentException ("The number of colors must match the number of color positions.");
+
+			fixed (SKColorF* c = colors)
+			fixed (float* cp = colorPos) {
+				return GetObject (SkiaApi.sk_shader_new_two_point_conical_gradient_interpolation (&start, startRadius, &end, endRadius, c, colorspace?.Handle ?? IntPtr.Zero, cp, colors.Length, mode, &interpolation, &localMatrix));
 			}
 		}
 
