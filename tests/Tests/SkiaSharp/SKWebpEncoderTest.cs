@@ -195,6 +195,7 @@ namespace SkiaSharp.Tests
 
 			var frame = new SKWebpEncoderFrame(pix, 300);
 			Assert.Equal(300, frame.Duration);
+			Assert.Same(pix, frame.Pixmap);
 		}
 
 		[SkippableFact]
@@ -218,6 +219,80 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(codec);
 			Assert.Equal(bmp1.Width, codec.Info.Width);
 			Assert.Equal(bmp1.Height, codec.Info.Height);
+		}
+
+		// Single-frame encoding via SKWebpEncoder
+
+		[SkippableFact]
+		public void EncodeSingleFrameReturnsData()
+		{
+			using var bmp = CreateColorBitmap(SKColors.Green);
+			using var pix = bmp.PeekPixels();
+
+			var data = SKWebpEncoder.Encode(pix, SKWebpEncoderOptions.Default);
+
+			Assert.NotNull(data);
+			Assert.True(data.Size > 0);
+
+			using var codec = SKCodec.Create(data);
+			Assert.NotNull(codec);
+			Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
+		}
+
+		[SkippableFact]
+		public void EncodeSingleFrameToStream()
+		{
+			using var bmp = CreateColorBitmap(SKColors.Blue);
+			using var pix = bmp.PeekPixels();
+
+			using var stream = new MemoryStream();
+			var result = SKWebpEncoder.Encode(stream, pix, SKWebpEncoderOptions.Default);
+
+			Assert.True(result);
+			Assert.True(stream.Length > 0);
+		}
+
+		[SkippableFact]
+		public void EncodeSingleFrameWithWStream()
+		{
+			using var bmp = CreateColorBitmap(SKColors.Red);
+			using var pix = bmp.PeekPixels();
+
+			using var wstream = new SKDynamicMemoryWStream();
+			var result = SKWebpEncoder.Encode(wstream, pix, SKWebpEncoderOptions.Default);
+
+			Assert.True(result);
+
+			using var data = wstream.DetachAsData();
+			Assert.NotNull(data);
+			Assert.True(data.Size > 0);
+		}
+
+		[SkippableFact]
+		public void EncodeSingleFrameWithNullPixmapThrows()
+		{
+			Assert.Throws<ArgumentNullException>(() =>
+				SKWebpEncoder.Encode((SKPixmap)null!, SKWebpEncoderOptions.Default));
+		}
+
+		[SkippableFact]
+		public void EncodeSingleFrameWithNullWStreamThrows()
+		{
+			using var bmp = CreateColorBitmap(SKColors.Red);
+			using var pix = bmp.PeekPixels();
+
+			Assert.Throws<ArgumentNullException>(() =>
+				SKWebpEncoder.Encode((SKWStream)null!, pix, SKWebpEncoderOptions.Default));
+		}
+
+		[SkippableFact]
+		public void EncodeSingleFrameWithNullStreamThrows()
+		{
+			using var bmp = CreateColorBitmap(SKColors.Red);
+			using var pix = bmp.PeekPixels();
+
+			Assert.Throws<ArgumentNullException>(() =>
+				SKWebpEncoder.Encode((Stream)null!, pix, SKWebpEncoderOptions.Default));
 		}
 	}
 }
