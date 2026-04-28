@@ -36,8 +36,13 @@ from typing import Optional
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
 
+SKIA_REPO = "mono/skia"
+SKIA_PR_PATTERNS = [
+    re.compile(r"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+https?://github\.com/mono/skia/pull/(\d+)", re.IGNORECASE),
+    re.compile(r"https?://github\.com/mono/skia/pull/(\d+)"),
+]
 
-# ── Helpers ──────────────────────────────────────────────────────────
+
 
 
 def run(args: list[str], check: bool = True) -> str:
@@ -140,15 +145,62 @@ def generate_raw_version_page(base_version: str, releases: list[dict]) -> str:
 
 
 def compute_pr_effort(pr: dict) -> dict:
-    """Compute commit count and unique working days from PR commit data."""
+    """Compute commit count and unique working days from PR commit data.
+
+    If the PR body references a companion mono/skia PR, fetches that PR's
+    commits too and merges the effort (only counting authors from the
+    SkiaSharp PR to exclude unrelated upstream Skia committers).
+    """
     commits = pr.get("commits", [])
     commit_count = len(commits)
     unique_days = set()
+
+    # Collect SkiaSharp PR author logins for filtering skia commits
+    pr_author = pr.get("author", {}).get("login", "")
+    pr_authors = {pr_author} if pr_author else set()
+    for c in commits:
+        for a in c.get("authors", []):
+            login = a.get("login", "")
+            if login:
+                pr_authors.add(login)
+
     for c in commits:
         date_str = c.get("committedDate") or c.get("authoredDate", "")
         if date_str:
             unique_days.add(date_str[:10])  # YYYY-MM-DD
-    return {"commitCount": commit_count, "workingDays": len(unique_days)}
+
+    # Look for companion skia PR in the body
+    skia_pr_num = None
+    body = pr.get("body") or ""
+    for pattern in SKIA_PR_PATTERNS:
+        m = pattern.search(body)
+        if m:
+            skia_pr_num = m.group(1)
+            break
+
+    skia_commits = 0
+    if skia_pr_num:
+        try:
+            raw = gh(["pr", "view", skia_pr_num, "--repo", SKIA_REPO,
+                       "--json", "commits"])
+            skia_pr = json.loads(raw)
+            for c in skia_pr.get("commits", []):
+                # Only count commits from authors on the SkiaSharp PR
+                c_authors = {a.get("login", "") for a in c.get("authors", [])}
+                if not c_authors & pr_authors:
+                    continue
+                skia_commits += 1
+                date_str = c.get("committedDate") or c.get("authoredDate", "")
+                if date_str:
+                    unique_days.add(date_str[:10])
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            pass
+
+    return {
+        "commitCount": commit_count + skia_commits,
+        "workingDays": len(unique_days),
+        "skiaPr": int(skia_pr_num) if skia_pr_num else None,
+    }
 
 
 # ── Unreleased data ─────────────────────────────────────────────────
@@ -215,7 +267,7 @@ def get_unreleased_prs(tag: str) -> list[dict]:
     for i, num in enumerate(pr_numbers, 1):
         try:
             raw = gh(["pr", "view", str(num), "--repo", REPO,
-                      "--json", "title,author,url,number,labels,mergedAt,commits"])
+                      "--json", "title,author,url,number,labels,mergedAt,commits,body"])
             pr = json.loads(raw)
             pr.update(compute_pr_effort(pr))
             prs.append(pr)
@@ -243,8 +295,10 @@ def generate_raw_unreleased(prs: list[dict], tag: str) -> str:
         commits = pr.get("commitCount", 0)
         days = pr.get("workingDays", 0)
         effort = f" ({commits} commit{'s' if commits != 1 else ''}, {days} day{'s' if days != 1 else ''})"
+        skia_pr = pr.get("skiaPr")
+        skia_str = f" (skia: mono/skia#{skia_pr})" if skia_pr else ""
 
-        lines.append(f"- {title} by @{author} in {url}{labels_str}{effort}")
+        lines.append(f"- {title} by @{author} in {url}{labels_str}{effort}{skia_str}")
 
     lines.append("")
     return "\n".join(lines)
