@@ -32,4 +32,20 @@
   <ItemGroup>
     <ProjectReference Include="..\Shared\SkiaSharpSample.Shared.csproj" />
   </ItemGroup>
+  <!-- Pin SkiaSharp.Skottie because Uno.Sdk's Uno.Implicit.Packages.ProjectSystem.Uno.targets
+       (gated on the SkiaRenderer UnoFeature above) injects SkiaSharp.Skottie as a *direct*
+       PackageReference. SkiaSharpSample.Shared brings Skottie 4.x in transitively; the Uno
+       SDK's direct ref pegs the floor at 3.x, so NuGet's resolver fires NU1605 (downgrade
+       of a direct ref against a transitive higher version). Other SkiaSharp packages
+       (SkiaSharp itself, HarfBuzzSharp, SkiaSharp.HarfBuzz) reach the gallery only
+       transitively from both directions, so the resolver picks the higher version and no
+       NU1605 fires — Skottie is the only one with this asymmetry.
+       Re-stating Skottie here as a direct ref puts samples-generate's version-substitution
+       in charge of the floor (it bumps to whatever VERSIONS.txt has — currently 4.147.0),
+       lining up with what Shared asks for. ExcludeAssets="all" keeps the package from
+       contributing assets — the actual Skottie code keeps coming from Shared in the
+       generated build, and from _UnoPlatformSamples.targets's project reference in-tree. -->
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp.Skottie" Version="4.147.0-preview.1.1" ExcludeAssets="all" />
+  </ItemGroup>
 </Project>
