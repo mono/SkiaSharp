@@ -37,21 +37,19 @@ Ask the user which version(s) to generate, or infer from context:
 - Multiple versions: `3.119.0, 3.119.1, 3.119.2`
 - A range by minor: "all 3.119.x"
 
-### Step 2 — Fetch raw data
+### Step 2 — Get raw data
 
-For branch-based data (preferred — diffs against predecessor branch, writes directly to version file):
+Check if `documentation/docfx/releases/{version}.md` already has raw PR data (YAML
+front-matter with `branch:`, `version:`, `status:` fields and a `REPLACE THIS ENTIRE FILE`
+comment). If so, **skip this step** — the data is already there.
+
+If the file doesn't exist or has polished content (no YAML header), run the script:
 
 ```bash
+# Branch-based (preferred):
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
-```
 
-This writes raw PR data with YAML header to `documentation/docfx/releases/{version}.md`
-and regenerates TOC/index. Read the file to get the raw data and metadata.
-
-For published release data (fetches from GitHub Releases API to a temp dir):
-
-```bash
+# Or for published release data:
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version {X.Y.Z}
 ```
 
