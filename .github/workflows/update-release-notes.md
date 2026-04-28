@@ -60,11 +60,12 @@ Read `documentation/docfx/releases/TEMPLATE.md` for the release notes style guid
 Using the raw PR list from Step 2 and the template from Step 3, rewrite the unreleased section in polished form:
 
 1. **Highlights paragraph** — 1–3 sentences summarizing the theme of what's coming. What should users be excited about?
-2. **Categorized features** — Group changes by what they affect: Engine, API Surface, Platform, Security, Build, etc. Use the template's emoji prefixes (🎨 Core API, 🍎 Apple, 🪟 Windows, 🐧 Linux, 🤖 Android, 🌐 WebAssembly, 🏗️ Build/CI, 📦 General).
-3. **Community contributors** — Mark contributions from anyone other than @mattleibow with ❤️ inline.
-4. **Omit noise** — Do NOT itemize version bumps, CI-only fixes, doc-only updates, workflow changes, or skill file edits. If there are many of these, mention them as a group: "Plus several CI and documentation improvements."
-5. **PR links** — Every item should link to its PR: `([#NNN](url))`.
-6. **Breaking changes** — If any PR is labeled `breaking` or has "BREAKING" in the title, list it under a `### ⚠️ Breaking Changes` sub-header at the top.
+2. **Skia engine version** — The version number encodes the Skia milestone (e.g., **4.133.0** means Skia **m133**). If the upcoming version's milestone number differs from the last released version, mention the Skia engine bump as the first feature under an **Engine** category, even if it's not in the raw PR list. Check PR #3702 or similar "Bump skia" PRs if needed.
+3. **Categorized features** — Group changes by what they affect: Engine, API Surface, Platform, Security, Build, etc. Use the template's emoji prefixes (🎨 Core API, 🍎 Apple, 🪟 Windows, 🐧 Linux, 🤖 Android, 🌐 WebAssembly, 🏗️ Build/CI, 📦 General).
+4. **Community contributors** — Mark contributions from anyone other than @mattleibow with ❤️ inline. **Always link usernames:** `[@user](https://github.com/user)` — never use bare `@user` anywhere in the file (prose, bullet points, or tables).
+5. **Omit noise** — Do NOT itemize version bumps, CI-only fixes, doc-only updates, workflow changes, or skill file edits. If there are many of these, mention them as a group: "Plus several CI and documentation improvements."
+6. **PR links** — Every item should link to its PR: `([#NNN](url))`.
+7. **Breaking changes** — If any PR is labeled `breaking` or has "BREAKING" in the title, list it under a `### ⚠️ Breaking Changes` sub-header at the top.
 
 If there are no merged PRs since the last release, just write: `*No changes yet.*`
 
