@@ -71,41 +71,24 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Editor pane: editor stack and tab strip share a single cell so the
-                 tab strip can render *on top* of any sub-pixel clip overflow from
-                 Monaco's native HTML overlay. The editor's inner Margin reserves the
-                 vertical space the tab strip occupies. -->
+            <!-- Editor pane. Tabs and editors live in separate Grid rows so Uno
+                 generates a per-row clip-path for the Monaco native overlay (matches
+                 the editor's row 1 bounds). The earlier z-stacked single-cell layout
+                 worked structurally but Uno's clip generator silently dropped the
+                 inner Grid's Margin and produced a clip that hugged the tab strip's
+                 bottom — resulting in Monaco's HTML element punching a hole through
+                 Skia's render across the tab buttons. -->
             <Grid Grid.Column="0"
                   Background="{StaticResource EditorBackground}"
                   BorderBrush="{StaticResource PanelBorder}"
                   BorderThickness="0,0,1,0">
-                <!-- Editors first (rendered behind the tab strip in z-order). The
-                     inactive editor uses Visibility=Collapsed so its native HTML overlay
-                     is removed from rendering entirely — Opacity-based hiding left the
-                     overlay in place and it contributed sub-pixel clip overflow on top
-                     of the tab strip. Cached text is re-pushed in code-behind when the
-                     tab becomes active, in case Monaco re-initializes on show.
-                     Margin top is intentionally larger than the tab strip's height so
-                     Monaco's native overlay sub-pixel clip overflow lands in the
-                     EditorBackground gap below the tab strip rather than on top of it. -->
-                <Grid Margin="0,48,0,0">
-                    <monaco:CodeEditor x:Name="DrawEditor"
-                                       CodeLanguage="csharp"
-                                       RequestedTheme="Dark"
-                                       BorderThickness="0" />
-                    <monaco:CodeEditor x:Name="SetupEditor"
-                                       CodeLanguage="csharp"
-                                       RequestedTheme="Dark"
-                                       BorderThickness="0"
-                                       Visibility="Collapsed" />
-                </Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                <!-- Tab strip — declared after the editor stack so it renders on top in
-                     z-order (a defense in case the overlay clip undershoots upward).
-                     Height stays at the natural ~34px content height; the Monaco editor
-                     starts further down to leave a buffer below it. -->
-                <Border VerticalAlignment="Top"
-                        Height="34"
+                <!-- Tab strip. -->
+                <Border Grid.Row="0"
                         Background="{StaticResource PanelBackground}"
                         BorderBrush="{StaticResource PanelBorder}"
                         BorderThickness="0,0,0,1">
@@ -152,6 +135,23 @@
                         </Button>
                     </StackPanel>
                 </Border>
+
+                <!-- Editor stack: both editors share a single cell of row 1. The
+                     inactive editor uses Visibility=Collapsed so only one Monaco
+                     overlay is in the DOM at a time. Cached text is re-pushed in
+                     code-behind when the tab becomes active, in case Monaco
+                     re-initializes on show. -->
+                <Grid Grid.Row="1">
+                    <monaco:CodeEditor x:Name="DrawEditor"
+                                       CodeLanguage="csharp"
+                                       RequestedTheme="Dark"
+                                       BorderThickness="0" />
+                    <monaco:CodeEditor x:Name="SetupEditor"
+                                       CodeLanguage="csharp"
+                                       RequestedTheme="Dark"
+                                       BorderThickness="0"
+                                       Visibility="Collapsed" />
+                </Grid>
             </Grid>
 
             <!-- Preview pane -->
