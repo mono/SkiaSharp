@@ -400,9 +400,15 @@ def determine_diff_range(branch):
         latest = candidates[-1]
 
         # Determine next patch version from the latest branch
+        # If latest is a preview (no stable yet for that patch), target that patch
+        # If latest is a stable, target patch + 1
         latest_version = version_from_branch(latest)
         latest_patch = int(latest_version.split(".")[-1]) if latest_version else 0
-        next_version = "{}.{}".format(minor, latest_patch + 1)
+        latest_is_stable = not re.search(r"-preview\.", latest)
+        if latest_is_stable:
+            next_version = "{}.{}".format(minor, latest_patch + 1)
+        else:
+            next_version = "{}.{}".format(minor, latest_patch)
 
         return ("origin/{}".format(latest),
                 "origin/{}".format(branch),
@@ -688,21 +694,28 @@ def cmd_branch(branch):
     if re.match(r"^[0-9a-f]{7,}$", from_display):
         from_display = from_display[:12]
 
-    # Determine release status — check if any GitHub release exists for this version
+    # Determine release status: unreleased / preview / stable
     is_main = (branch == "main")
     is_servicing = branch.endswith(".x")
     status = "unreleased"
     if not is_main and not is_servicing:
         try:
             releases_raw = gh(["release", "list", "--repo", REPO, "--limit", "50",
-                               "--json", "tagName"])
-            release_tags = [r["tagName"] for r in json.loads(releases_raw)]
-            for tag in release_tags:
-                # Match exact version or version-preview.*
-                tag_base = tag.lstrip("v").split("-")[0]
+                               "--json", "tagName,isPrerelease"])
+            releases = json.loads(releases_raw)
+            has_stable = False
+            has_preview = False
+            for rel in releases:
+                tag_base = rel["tagName"].lstrip("v").split("-")[0]
                 if tag_base == version:
-                    status = "released"
-                    break
+                    if rel.get("isPrerelease", False):
+                        has_preview = True
+                    else:
+                        has_stable = True
+            if has_stable:
+                status = "stable"
+            elif has_preview:
+                status = "preview"
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             pass
 
@@ -724,8 +737,7 @@ def cmd_branch(branch):
     content = format_pr_list(prs, metadata)
 
     # Write directly to the version's release notes file
-    output_path = RELEASES_DIR / "{}.md".format(
-        version if not version.endswith(".x") else version)
+    output_path = RELEASES_DIR / "{}.md".format(version)
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(content)
     print("Wrote {}".format(output_path))

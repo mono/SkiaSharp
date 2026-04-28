@@ -6,8 +6,6 @@ Release notes for all SkiaSharp versions.
 
 - **Version 4.147.x**
   - [Version 4.147.0 (Upcoming)](4.147.0.md)
-- **Version 4.133.x**
-  - [Version 4.133.0](4.133.0.md)
 
 ### SkiaSharp 3.x
 

@@ -54,11 +54,14 @@ TAG=${GITHUB_REF#refs/tags/}
 # Preview tags: v4.147.0-preview.1.1 → release/4.147.0-preview.1 (strip build number)
 # Stable tags:  v3.119.2 → release/3.119.2 (keep as-is, just strip 'v')
 TAG_NO_V=${TAG#v}
-if echo "$TAG_NO_V" | grep -q "\-preview\."; then
-  # Preview: strip trailing .BUILD_NUMBER
+if echo "$TAG_NO_V" | grep -qE "\-preview\.[0-9]+\.[0-9]+$"; then
+  # Preview with build number (e.g., 4.147.0-preview.1.1): strip trailing .BUILD
   BRANCH="release/$(echo "$TAG_NO_V" | sed 's|\.[0-9]*$||')"
+elif echo "$TAG_NO_V" | grep -q "\-preview\."; then
+  # Preview without build number (e.g., 4.147.0-preview.1): use as-is
+  BRANCH="release/${TAG_NO_V}"
 else
-  # Stable: use version directly (no build number to strip)
+  # Stable: use version directly
   BRANCH="release/${TAG_NO_V}"
 fi
 ```
@@ -88,8 +91,6 @@ The script also regenerates `TOC.yml` and `index.md` automatically.
 
 Read the version file and `documentation/docfx/releases/TEMPLATE.md`.
 
-## Step 2 — Write polished content
-
 ## Step 2 — Polish the release notes
 
 The version file now contains raw PR data with a comment that says `REPLACE THIS ENTIRE FILE`.
@@ -98,9 +99,10 @@ Use the **release-notes** skill (`.agents/skills/release-notes/SKILL.md`) to rew
 the file with polished content. The skill has all the formatting rules, template reference,
 and content guidelines. Read it and follow Steps 3-4.
 
-The `status` field in the YAML header tells you whether it's `released` or `unreleased`:
+The `status` field in the YAML header tells you the release state:
 - `unreleased` → use the "Upcoming release / In development" header
-- `released` → fetch the release date with `gh release view` and use the released header
+- `preview` → use the "Preview only" header with preview NuGet link and GitHub Release link
+- `stable` → use the "Released {date}" header with stable NuGet link and GitHub Release link
 
 ## Step 3 — Create or update the pull request
 
