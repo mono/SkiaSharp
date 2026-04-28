@@ -114,7 +114,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 				using var canvas = new SKCanvas(bitmaps[i]);
 				DrawAnimationFrame(canvas, FrameWidth, FrameHeight, i, totalFrames, letterCount, _typeface);
 				pixmaps[i] = bitmaps[i].PeekPixels();
-				frames[i] = new SKWebpEncoderFrame(pixmaps[i], FrameDuration);
+				frames[i] = new SKWebpEncoderFrame(pixmaps[i], TimeSpan.FromMilliseconds(FrameDuration));
 			}
 
 			var compression = _compressionIndex == 1

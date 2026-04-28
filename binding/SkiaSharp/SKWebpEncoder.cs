@@ -44,7 +44,7 @@ public static unsafe class SKWebpEncoder
 			var pixmap = frames[i].Pixmap ?? throw new ArgumentNullException ($"frames[{i}].Pixmap");
 			nativeFrames.Span[i] = new SKWebpEncoderFrameNative {
 				pixmap = pixmap.Handle,
-				duration = frames[i].Duration,
+				duration = (int)frames[i].Duration.TotalMilliseconds,
 			};
 		}
 

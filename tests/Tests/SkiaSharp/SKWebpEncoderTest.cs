@@ -23,8 +23,8 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix1, 100),
-				new SKWebpEncoderFrame(pix2, 200),
+				new SKWebpEncoderFrame(pix1, TimeSpan.FromMilliseconds(100)),
+				new SKWebpEncoderFrame(pix2, TimeSpan.FromMilliseconds(200)),
 			};
 
 			var data = SKWebpEncoder.EncodeAnimated(frames, SKWebpEncoderOptions.Default);
@@ -43,8 +43,8 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix1, 100),
-				new SKWebpEncoderFrame(pix2, 200),
+				new SKWebpEncoderFrame(pix1, TimeSpan.FromMilliseconds(100)),
+				new SKWebpEncoderFrame(pix2, TimeSpan.FromMilliseconds(200)),
 			};
 
 			using var stream = new MemoryStream();
@@ -64,8 +64,8 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix1, 100),
-				new SKWebpEncoderFrame(pix2, 200),
+				new SKWebpEncoderFrame(pix1, TimeSpan.FromMilliseconds(100)),
+				new SKWebpEncoderFrame(pix2, TimeSpan.FromMilliseconds(200)),
 			};
 
 			using var wstream = new SKDynamicMemoryWStream();
@@ -88,8 +88,8 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix1, 150),
-				new SKWebpEncoderFrame(pix2, 250),
+				new SKWebpEncoderFrame(pix1, TimeSpan.FromMilliseconds(150)),
+				new SKWebpEncoderFrame(pix2, TimeSpan.FromMilliseconds(250)),
 			};
 
 			var data = SKWebpEncoder.EncodeAnimated(frames, SKWebpEncoderOptions.Default);
@@ -116,8 +116,8 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix1, 100),
-				new SKWebpEncoderFrame(pix2, 100),
+				new SKWebpEncoderFrame(pix1, TimeSpan.FromMilliseconds(100)),
+				new SKWebpEncoderFrame(pix2, TimeSpan.FromMilliseconds(100)),
 			};
 
 			var options = new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossless, 75);
@@ -139,7 +139,7 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix, 100),
+				new SKWebpEncoderFrame(pix, TimeSpan.FromMilliseconds(100)),
 			};
 
 			Assert.Throws<ArgumentNullException>(() =>
@@ -154,7 +154,7 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix, 100),
+				new SKWebpEncoderFrame(pix, TimeSpan.FromMilliseconds(100)),
 			};
 
 			Assert.Throws<ArgumentNullException>(() =>
@@ -165,7 +165,7 @@ namespace SkiaSharp.Tests
 		public void EncodeAnimatedWebpFrameWithNullPixmapThrows()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				new SKWebpEncoderFrame(null!, 100));
+				new SKWebpEncoderFrame(null!, TimeSpan.FromMilliseconds(100)));
 		}
 
 		[SkippableFact]
@@ -176,7 +176,7 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix, 500),
+				new SKWebpEncoderFrame(pix, TimeSpan.FromMilliseconds(500)),
 			};
 
 			var data = SKWebpEncoder.EncodeAnimated(frames, SKWebpEncoderOptions.Default);
@@ -193,8 +193,8 @@ namespace SkiaSharp.Tests
 			using var bmp = CreateColorBitmap(SKColors.Red);
 			using var pix = bmp.PeekPixels();
 
-			var frame = new SKWebpEncoderFrame(pix, 300);
-			Assert.Equal(300, frame.Duration);
+			var frame = new SKWebpEncoderFrame(pix, TimeSpan.FromMilliseconds(300));
+			Assert.Equal(TimeSpan.FromMilliseconds(300), frame.Duration);
 			Assert.Same(pix, frame.Pixmap);
 		}
 
@@ -208,8 +208,8 @@ namespace SkiaSharp.Tests
 
 			var frames = new SKWebpEncoderFrame[]
 			{
-				new SKWebpEncoderFrame(pix1, 100),
-				new SKWebpEncoderFrame(pix2, 100),
+				new SKWebpEncoderFrame(pix1, TimeSpan.FromMilliseconds(100)),
+				new SKWebpEncoderFrame(pix2, TimeSpan.FromMilliseconds(100)),
 			};
 
 			var data = SKWebpEncoder.EncodeAnimated(frames, SKWebpEncoderOptions.Default);

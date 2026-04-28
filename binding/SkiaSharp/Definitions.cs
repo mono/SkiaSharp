@@ -603,7 +603,7 @@ namespace SkiaSharp
 
 	public struct SKWebpEncoderFrame
 	{
-		public SKWebpEncoderFrame (SKPixmap pixmap, int duration)
+		public SKWebpEncoderFrame (SKPixmap pixmap, TimeSpan duration)
 		{
 			Pixmap = pixmap ?? throw new ArgumentNullException (nameof (pixmap));
 			Duration = duration;
@@ -611,7 +611,7 @@ namespace SkiaSharp
 
 		public SKPixmap Pixmap { readonly get; set; }
 
-		public int Duration { readonly get; set; }
+		public TimeSpan Duration { readonly get; set; }
 	}
 
 	public partial struct SKCubicResampler
