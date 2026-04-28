@@ -20,6 +20,22 @@ file (e.g., `4.133.0.md`) with `<!-- UNRELEASED_BEGIN -->` / `<!-- UNRELEASED_EN
 fence markers. The `update-release-notes` agentic workflow updates this file on every
 push to main with AI-polished content.
 
+### Updating the TOC and Index
+
+Run `python3 scripts/generate-release-notes.py --update-toc` whenever:
+
+- A new version file is added (the script creates missing upcoming version files too)
+- A version file is renamed or deleted
+- You want to refresh the index page or sidebar navigation
+
+This command:
+1. Scans `documentation/docfx/releases/` for all `*.md` version files
+2. Creates the upcoming version file if `SKIASHARP_VERSION` doesn't have one yet
+3. Regenerates `TOC.yml` — grouped by `major.minor.x`, obsolete 1.x/2.x nested under "Obsolete Versions"
+4. Regenerates `index.md` — version list with `(Upcoming)` labels and `(Obsolete)` headings
+
+**Never edit `TOC.yml` or `index.md` manually** — they are generated from the version files.
+
 ## Template Structure
 
 ```markdown
