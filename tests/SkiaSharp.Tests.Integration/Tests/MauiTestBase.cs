@@ -61,6 +61,20 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     /// Override in platform tests to verify API level, etc.
     /// </summary>
     protected virtual Task ValidateDeviceAsync() => Task.CompletedTask;
+
+    /// <summary>
+    /// Prepare the app window after launch (e.g., bring to foreground, resize).
+    /// Called after driver connection, before the render wait and screenshot.
+    /// </summary>
+    protected virtual Task PrepareWindowAsync(AppiumDriver driver) => Task.CompletedTask;
+
+    /// <summary>
+    /// Capture a screenshot of the app under test.
+    /// Default uses Appium's built-in screenshot, which captures the screen (not just the app window).
+    /// Override for platform-specific capture (e.g., Windows PrintWindow to bypass Z-order issues).
+    /// </summary>
+    protected virtual byte[] GetFullScreenshot(AppiumDriver driver) =>
+        driver.GetScreenshot().AsByteArray;
     
     /// <summary>
     /// Configure platform-specific Appium options.
@@ -77,6 +91,18 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     /// </summary>
     protected virtual IWebElement FindCanvasElement(AppiumDriver driver, string bundleId) =>
         driver.FindElement("accessibility id", "SkiaCanvas");
+
+    /// <summary>
+    /// Get the canvas bounds (location and size) in window coordinates.
+    /// Default uses FindCanvasElement. Override when the platform's accessibility tree
+    /// doesn't expose the canvas element (e.g., WinUI raw rendering surfaces).
+    /// </summary>
+    protected virtual (SKPointI location, SKSizeI size) GetCanvasBounds(AppiumDriver driver, string bundleId)
+    {
+        var element = FindCanvasElement(driver, bundleId);
+        return (new SKPointI(element.Location.X, element.Location.Y),
+                new SKSizeI(element.Size.Width, element.Size.Height));
+    }
     
     /// <summary>
     /// Find the built app artifact (apk, app bundle, exe, etc.)
@@ -330,6 +356,9 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             // Validate device matches expected configuration
             await ValidateDeviceAsync();
 
+            // Bring window to foreground before screenshot (platform-specific)
+            await PrepareWindowAsync(driver);
+
             Output.WriteLine("Waiting for app to render...");
             await Task.Delay(5000);
             
@@ -342,9 +371,8 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             await File.WriteAllTextAsync(pageSourcePath, pageSource);
             Output.WriteLine($"Page source saved: {pageSourcePath}");
             
-            // Full screenshot
-            var screenshot = driver.GetScreenshot();
-            var fullScreenshot = screenshot.AsByteArray;
+            // Full screenshot — platform override may use PrintWindow instead of screen capture
+            var fullScreenshot = GetFullScreenshot(driver);
             await SaveScreenshot(fullScreenshot, $"{screenshotName}-full");
             Output.WriteLine("Full screenshot saved");
             
@@ -354,9 +382,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             
             // Now find the canvas element
             Output.WriteLine("Looking for canvas element...");
-            var canvasElement = FindCanvasElement(driver, bundleId);
-            var canvasLocation = new SKPointI(canvasElement.Location.X, canvasElement.Location.Y);
-            var canvasSize = new SKSizeI(canvasElement.Size.Width, canvasElement.Size.Height);
+            var (canvasLocation, canvasSize) = GetCanvasBounds(driver, bundleId);
             Output.WriteLine($"Canvas element: {canvasLocation} {canvasSize}");
             
             // Get scale factor - derived class decides how to calculate it

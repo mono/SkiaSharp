@@ -220,7 +220,10 @@ public abstract class PlatformTestBase : IDisposable
             Output.WriteLine(combined);
             throw new Exception($"Command failed with exit code {process.ExitCode}:\n{combined}");
         }
-        
+
+        if (!string.IsNullOrWhiteSpace(combined))
+            Output.WriteLine(combined);
+
         return combined;
     }
     

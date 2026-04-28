@@ -23,10 +23,13 @@ public class AppiumFixture : IAsyncLifetime
 
         Console.WriteLine($"[AppiumFixture] Starting Appium on port {Port}...");
         
+        var appiumCommand = $"appium --port {Port} --relaxed-security --log-timestamp";
+        var (shell, shellArgs) = GetShellCommand(appiumCommand);
+
         var psi = new ProcessStartInfo
         {
-            FileName = "appium",
-            Arguments = $"--port {Port} --relaxed-security --log-timestamp",
+            FileName = shell,
+            Arguments = shellArgs,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -95,6 +98,14 @@ public class AppiumFixture : IAsyncLifetime
             await Task.Delay(1000);
         }
         return false;
+    }
+
+    private static (string Shell, string Arguments) GetShellCommand(string command)
+    {
+        if (OperatingSystem.IsWindows())
+            return ("cmd.exe", $"/C {command}");
+        else
+            return ("/bin/bash", $"-c \"{command}\"");
     }
 }
 
