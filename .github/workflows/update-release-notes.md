@@ -69,12 +69,12 @@ BRANCH="release/${BRANCH_VERSION}"
 ### Run the script
 
 ```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py \
-  --branch "$BRANCH" \
-  --output /tmp/raw-changes.md
+BRANCH="${GITHUB_REF#refs/heads/}"  # or derived from tag (see above)
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch "$BRANCH"
 ```
 
-The script writes a single file with a YAML front-matter header and PR list:
+The script writes directly to `documentation/docfx/releases/{version}.md` with a YAML
+front-matter header and raw PR list, and regenerates TOC/index:
 
 ```markdown
 ---
@@ -90,11 +90,11 @@ pr_count: 45
 
 The script also regenerates `TOC.yml` and `index.md` automatically.
 
-Read `/tmp/raw-changes.md` and `documentation/docfx/releases/TEMPLATE.md`.
+Read the version file and `documentation/docfx/releases/TEMPLATE.md`.
 
 ## Step 2 — Determine version and header
 
-Read the YAML front-matter from `/tmp/raw-changes.md` to get `version` and `status`.
+Read the YAML front-matter from the version file to get `version` and `status`.
 
 ### Header format
 

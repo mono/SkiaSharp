@@ -39,14 +39,17 @@ Ask the user which version(s) to generate, or infer from context:
 
 ### Step 2 — Fetch raw data
 
-For branch-based data (preferred — diffs against predecessor branch):
+For branch-based data (preferred — diffs against predecessor branch, writes directly to version file):
 
 ```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1 -o /tmp/raw.md
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main -o /tmp/raw.md
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
 ```
 
-For published release data (fetches from GitHub Releases API):
+This writes raw PR data with YAML header to `documentation/docfx/releases/{version}.md`
+and regenerates TOC/index. Read the file to get the raw data and metadata.
+
+For published release data (fetches from GitHub Releases API to a temp dir):
 
 ```bash
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version {X.Y.Z}

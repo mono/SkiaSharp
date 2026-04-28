@@ -5,10 +5,10 @@ Fetch SkiaSharp release data and manage the website release notes structure.
 This script collects raw data. AI does the formatting using TEMPLATE.md.
 
 Commands:
-    # Diff a branch against its predecessor and list PRs (writes file with YAML header)
-    python3 generate-release-notes.py --branch main -o /tmp/changes.md
-    python3 generate-release-notes.py --branch release/3.119.x -o /tmp/changes.md
-    python3 generate-release-notes.py --branch release/4.147.0-preview.1 -o /tmp/changes.md
+    # Diff a branch and write raw PR data to documentation/docfx/releases/{version}.md
+    python3 generate-release-notes.py --branch main
+    python3 generate-release-notes.py --branch release/3.119.x
+    python3 generate-release-notes.py --branch release/4.147.0-preview.1
 
     # Fetch raw release data for specific version(s) -> temp dir
     python3 generate-release-notes.py --version 3.119.2
@@ -18,6 +18,11 @@ Commands:
 
     # Regenerate TOC.yml and index.md from files on disk + create upcoming version file
     python3 generate-release-notes.py --update-toc
+
+The --branch command writes directly to documentation/docfx/releases/{version}.md
+with a YAML front-matter header containing metadata (branch, version, status, diff
+range, PR count) followed by the raw PR list. AI then rewrites this file with
+polished content. TOC and index are regenerated automatically.
 
 Requirements: gh (GitHub CLI), git, Python 3.7+
 """
@@ -649,9 +654,9 @@ def cmd_update_toc():
     print("Updated {}".format(RELEASES_DIR / "index.md"))
 
 
-def cmd_branch(branch, output_path):
-    # type: (str, Path) -> None
-    """Diff a branch against its predecessor and write results to a file."""
+def cmd_branch(branch):
+    # type: (str) -> None
+    """Diff a branch against its predecessor and write raw data to the version file."""
     branch = _removeprefix(branch, "origin/")
 
     print("Fetching remote branches...")
@@ -708,13 +713,15 @@ def cmd_branch(branch, output_path):
     }
     content = format_pr_list(prs, metadata)
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    # Write directly to the version's release notes file
+    output_path = RELEASES_DIR / "{}.md".format(
+        version if not version.endswith(".x") else version)
+    RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(content)
     print("Wrote {}".format(output_path))
 
-    # Always regenerate TOC and index
-    if RELEASES_DIR.is_dir():
-        cmd_update_toc()
+    # Regenerate TOC and index
+    cmd_update_toc()
 
 
 def cmd_fetch_versions(target_versions, output_dir):
@@ -762,10 +769,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  %(prog)s --branch main -o /tmp/changes.md    "
-            "PRs on main since last release branch\n"
-            "  %(prog)s --branch release/3.119.x -o out.md  "
-            "PRs on servicing branch\n"
+            "  %(prog)s --branch main                       "
+            "Raw PR data -> releases/4.147.0.md\n"
+            "  %(prog)s --branch release/3.119.x            "
+            "Raw PR data -> releases/3.119.x.md\n"
             "  %(prog)s --version 3.119.2                   "
             "Fetch published release data\n"
             "  %(prog)s --last 5                            "
@@ -818,9 +825,7 @@ def main():
         cmd_update_toc()
 
     elif args.branch:
-        if not args.output:
-            parser.error("--output is required with --branch")
-        cmd_branch(args.branch, Path(args.output))
+        cmd_branch(args.branch)
 
     elif args.versions:
         output = (Path(args.output) if args.output
