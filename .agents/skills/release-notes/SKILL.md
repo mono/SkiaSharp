@@ -96,13 +96,6 @@ After writing all version files:
 python3 scripts/generate-release-notes.py --update-toc
 ```
 
-### Step 6 — Commit
-
-```bash
-git add documentation/docfx/releases/
-git commit -m "Update website release notes for {versions}"
-```
-
 ## Parallelization
 
 When regenerating multiple versions, process them in parallel — each version is independent.

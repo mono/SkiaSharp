@@ -256,7 +256,14 @@ After creating the release, annotate each PR line with **platform** and **commun
 After annotating the GitHub release, invoke the **release-notes** skill to update the
 website. Pass it the version you just released (e.g., "generate release notes for 3.119.2").
 
-The skill handles fetching raw data, formatting with the template, updating the TOC, and committing.
+The skill handles fetching raw data, formatting with the template, and updating the TOC.
+After the skill finishes, commit and push:
+
+```bash
+git add documentation/docfx/releases/
+git commit -m "Update website release notes for {tag}"
+git push
+```
 
 ---
 
