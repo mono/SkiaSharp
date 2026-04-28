@@ -84,8 +84,11 @@
                      is removed from rendering entirely — Opacity-based hiding left the
                      overlay in place and it contributed sub-pixel clip overflow on top
                      of the tab strip. Cached text is re-pushed in code-behind when the
-                     tab becomes active, in case Monaco re-initializes on show. -->
-                <Grid Margin="0,34,0,0">
+                     tab becomes active, in case Monaco re-initializes on show.
+                     Margin top is intentionally larger than the tab strip's height so
+                     Monaco's native overlay sub-pixel clip overflow lands in the
+                     EditorBackground gap below the tab strip rather than on top of it. -->
+                <Grid Margin="0,48,0,0">
                     <monaco:CodeEditor x:Name="DrawEditor"
                                        CodeLanguage="csharp"
                                        RequestedTheme="Dark"
@@ -97,9 +100,10 @@
                                        Visibility="Collapsed" />
                 </Grid>
 
-                <!-- Tab strip — declared after the editor stack so it renders on top.
-                     Height is matched by the editor's Margin above (tweak both together
-                     if you change padding/font on the buttons). -->
+                <!-- Tab strip — declared after the editor stack so it renders on top in
+                     z-order (a defense in case the overlay clip undershoots upward).
+                     Height stays at the natural ~34px content height; the Monaco editor
+                     starts further down to leave a buffer below it. -->
                 <Border VerticalAlignment="Top"
                         Height="34"
                         Background="{StaticResource PanelBackground}"
