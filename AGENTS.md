@@ -341,6 +341,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Start release | `/release-branch` | "release now", "start release X" |
 | Test release | `/release-testing` | "test the release", "verify packages" |
 | Publish release | `/release-publish` | "push to nuget", "tag release" |
+| Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
 | Audit release notes | `/release-notes-audit` | "compare Skia changes", "API gap analysis" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |

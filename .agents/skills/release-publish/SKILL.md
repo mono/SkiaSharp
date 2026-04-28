@@ -253,41 +253,10 @@ After creating the release, annotate each PR line with **platform** and **commun
 
 ## Step 7: Update Website Release Notes
 
-After annotating the GitHub release, update the website release notes in the repo.
+After annotating the GitHub release, invoke the **release-notes** skill to update the
+website. Pass it the version you just released (e.g., "generate release notes for 3.119.2").
 
-### Process
-
-1. **Fetch the raw release data** to a temp directory:
-   ```bash
-   python3 scripts/generate-release-notes.py --version {X.Y.Z}
-   ```
-
-2. **Read the template** at `documentation/docfx/releases/TEMPLATE.md` — this is a real
-   example of a polished page. Match its structure, tone, and formatting.
-
-3. **Read the raw file** from the temp directory output.
-
-4. **Reformat** — Write a polished version page matching the template. For a stable release,
-   include NuGet link, release date, and GitHub Release link in the header. For a preview-only
-   release, use "Preview only" instead of a date. See the template's HTML comments for
-   the exact header format for each status.
-
-5. **Write the polished file** to `documentation/docfx/releases/{X.Y.Z}.md`.
-
-6. **Update TOC and index**:
-   ```bash
-   python3 scripts/generate-release-notes.py --update-toc
-   ```
-
-7. **Commit to the release branch**:
-   ```bash
-   git add documentation/docfx/releases/
-   git commit -m "Update website release notes for {tag}"
-   git push
-   ```
-
-> **Note:** The upcoming version page is maintained by the `update-release-notes` agentic
-> workflow on every push to main.
+The skill handles fetching raw data, formatting with the template, updating the TOC, and committing.
 
 ---
 
