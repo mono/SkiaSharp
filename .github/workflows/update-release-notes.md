@@ -41,15 +41,13 @@ echo "Ref: $GITHUB_REF"
 
 ### Determine the branch name
 
-| `GITHUB_REF` pattern | `--branch` argument |
-|----------------------|---------------------|
-| `refs/heads/main` | `main` |
-| `refs/heads/release/X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` |
-| `refs/heads/release/X.Y.Z` | `release/X.Y.Z` |
-| `refs/heads/release/X.Y.x` | `release/X.Y.x` |
-| `refs/tags/v*` | Find the release branch for this tag (see below) |
+For branch pushes, extract the branch name directly:
 
-For tag pushes, find the release branch the tag points to:
+```bash
+BRANCH="${GITHUB_REF#refs/heads/}"
+```
+
+For tag pushes, derive the release branch from the tag:
 
 ```bash
 TAG=${GITHUB_REF#refs/tags/}
@@ -58,18 +56,16 @@ TAG=${GITHUB_REF#refs/tags/}
 TAG_NO_V=${TAG#v}
 if echo "$TAG_NO_V" | grep -q "\-preview\."; then
   # Preview: strip trailing .BUILD_NUMBER
-  BRANCH_VERSION=$(echo "$TAG_NO_V" | sed 's|\.[0-9]*$||')
+  BRANCH="release/$(echo "$TAG_NO_V" | sed 's|\.[0-9]*$||')"
 else
   # Stable: use version directly (no build number to strip)
-  BRANCH_VERSION="$TAG_NO_V"
+  BRANCH="release/${TAG_NO_V}"
 fi
-BRANCH="release/${BRANCH_VERSION}"
 ```
 
 ### Run the script
 
 ```bash
-BRANCH="${GITHUB_REF#refs/heads/}"  # or derived from tag (see above)
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch "$BRANCH"
 ```
 
@@ -92,31 +88,19 @@ The script also regenerates `TOC.yml` and `index.md` automatically.
 
 Read the version file and `documentation/docfx/releases/TEMPLATE.md`.
 
-## Step 2 — Determine version and header
+## Step 2 — Write polished content
 
-Read the YAML front-matter from the version file to get `version` and `status`.
-
-### Header format
-
-| `status` | Header |
-|----------|--------|
-| `unreleased` | `> **Upcoming release** · In development · Not yet available on NuGet` |
-| `released` | `> **{theme}** · Released {date} · [NuGet](...) · [GitHub Release](...)` — fetch date from `gh release view` |
-| Tag push | Always has a release: `> **{theme}** · Released {date} · [NuGet](...) · [GitHub Release](...)` |
-
-## Step 3 — Write polished content
+Read the version file and `documentation/docfx/releases/TEMPLATE.md`. The YAML
+front-matter in the version file has `version` and `status`.
 
 Rewrite the raw PR list into polished release notes following the template.
 
-### Header format by trigger type
+### Header format
 
-| Trigger | Header |
-|---------|--------|
-| `main` push | `> **Upcoming release** · In development · Not yet available on NuGet` |
-| `release/*` (no tag yet) | `> **Upcoming release** · In development · Not yet available on NuGet` |
-| `release/*` (tag exists) | `> **Preview only** · [NuGet](https://www.nuget.org/packages/SkiaSharp/{nuget-version}) · [GitHub Release](url)` |
-| Tag push (preview) | `> **{theme}** · Released {date} · [NuGet](...) · [GitHub Release](...)` |
-| Tag push (stable) | `> **{theme}** · Released {date} · [NuGet](...) · [GitHub Release](...)` |
+| `status` value | Header to use |
+|----------------|---------------|
+| `unreleased` | `> **Upcoming release** · In development · Not yet available on NuGet` |
+| `released` | `> **{theme}** · Released {date} · [NuGet](...) · [GitHub Release](...)` — fetch date from `gh release view` |
 
 ### Content rules
 
@@ -142,7 +126,7 @@ Rewrite the raw PR list into polished release notes following the template.
 
 If there are no user-facing changes, write: `*No user-facing changes yet.*`
 
-## Step 4 — Write the version file
+## Step 3 — Write the version file
 
 Use the `edit` tool to **replace the entire content** of `documentation/docfx/releases/{VERSION}.md`
 with the polished release notes.
@@ -150,7 +134,7 @@ with the polished release notes.
 The file should follow the template structure exactly — title, blockquote header,
 then polished sections (Highlights, Breaking Changes, New Features, etc.).
 
-## Step 5 — Create or update the pull request
+## Step 4 — Create or update the pull request
 
 Always use `dev/release-notes-{VERSION}` as the branch name when creating the pull request.
 This ensures each workflow run updates the **same PR** for a given version instead of

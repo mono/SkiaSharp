@@ -798,7 +798,7 @@ def main():
         help="Regenerate TOC.yml + index.md")
     parser.add_argument(
         "-o", "--output",
-        help="Output directory (--version/--last) or file (--branch)")
+        help="Output directory for --version/--last (default: temp dir)")
 
     args = parser.parse_args()
 

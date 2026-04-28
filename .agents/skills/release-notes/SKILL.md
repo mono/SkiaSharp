@@ -60,7 +60,7 @@ python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version
 Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished
 release notes page. Match its structure, tone, and formatting exactly.
 
-Determine the version's status from the script's stderr output (`Status: released` or `Status: unreleased`):
+Determine the version's status from the YAML header in the version file (`status: released` or `status: unreleased`):
 - **Released**: header uses `Released {date}` + NuGet link + GitHub Release link
 - **Unreleased**: header uses `> **Upcoming release** · In development · Not yet available on NuGet`
 
@@ -97,14 +97,6 @@ Follow these rules:
 9. **Previews are minimal** — One sentence + changelog link each, at the bottom.
 
 10. **Links section** — Full Changelog, NuGet Package, API Diff.
-
-### Step 5 — Update TOC and index
-
-After writing all version files:
-
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc
-```
 
 ## Parallelization
 
