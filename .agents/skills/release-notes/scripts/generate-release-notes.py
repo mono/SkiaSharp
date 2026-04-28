@@ -155,16 +155,11 @@ def compute_pr_effort(pr: dict) -> dict:
     commit_count = len(commits)
     unique_days = set()
 
-    # Collect SkiaSharp PR author logins and names for filtering skia commits
-    pr_author = pr.get("author", {}).get("login", "")
-    pr_authors = {pr_author} if pr_author else set()
+    # Collect SkiaSharp PR author names for filtering skia commits
     pr_author_names = set()
     for c in commits:
         for a in c.get("authors", []):
-            login = a.get("login", "")
             name = a.get("name", "")
-            if login:
-                pr_authors.add(login)
             if name:
                 pr_author_names.add(name)
 
@@ -185,7 +180,7 @@ def compute_pr_effort(pr: dict) -> dict:
     skia_commits = 0
     if skia_pr_num:
         skia_commits, skia_days = _fetch_skia_pr_effort(
-            skia_pr_num, pr_authors, pr_author_names)
+            skia_pr_num, pr_author_names)
         unique_days |= skia_days
 
     return {
@@ -196,70 +191,19 @@ def compute_pr_effort(pr: dict) -> dict:
 
 
 def _fetch_skia_pr_effort(
-    pr_num: str, author_logins: set[str], author_names: set[str]
+    pr_num: str, author_names: set[str]
 ) -> tuple[int, set[str]]:
-    """Fetch effort from a mono/skia PR, filtering to known authors.
+    """Fetch effort from a mono/skia PR using git log on the submodule.
 
-    Large skia merge PRs can have thousands of upstream commits. The GitHub
-    API silently truncates commit lists (gh pr view caps at 100), so we
-    compare the returned count against the PR's actual commit total. When
-    truncated we fall back to git log via the submodule (externals/skia).
+    Uses the skia submodule directly to avoid GitHub API commit truncation
+    (the API caps at 100-250 commits, but skia merge PRs can have thousands).
+    Filters commits by author name to count only work by the SkiaSharp PR
+    contributors, excluding unrelated upstream Skia committers.
 
     Returns (commit_count, set_of_date_strings).
     """
-    try:
-        meta = json.loads(gh(["pr", "view", pr_num, "--repo", SKIA_REPO,
-                               "--json", "commits"]))
-    except (subprocess.CalledProcessError, json.JSONDecodeError):
-        return 0, set()
-
-    api_commits = meta.get("commits", [])
-
-    # Check actual commit count from the REST API
-    try:
-        total_str = gh(["api", f"repos/{SKIA_REPO}/pulls/{pr_num}",
-                         "--jq", ".commits"])
-        total_commits = int(total_str)
-    except (subprocess.CalledProcessError, ValueError):
-        total_commits = len(api_commits)
-
-    # If API returned the full list, use it directly
-    if len(api_commits) >= total_commits:
-        return _filter_skia_commits_api(api_commits, author_logins)
-
-    # Truncated — fall back to git log via submodule for accurate data
-    return _filter_skia_commits_git(pr_num, author_logins, author_names)
-
-
-def _filter_skia_commits_api(
-    commits: list[dict], author_logins: set[str]
-) -> tuple[int, set[str]]:
-    """Filter API commit data by author login."""
-    count = 0
-    days = set()
-    for c in commits:
-        c_authors = {a.get("login", "") for a in c.get("authors", [])}
-        if not c_authors & author_logins:
-            continue
-        count += 1
-        date_str = c.get("committedDate") or c.get("authoredDate", "")
-        if date_str:
-            days.add(date_str[:10])
-    return count, days
-
-
-def _filter_skia_commits_git(
-    pr_num: str, author_logins: set[str], author_names: set[str]
-) -> tuple[int, set[str]]:
-    """Use git log on the submodule for large PRs where the API truncates.
-
-    Fetches the PR head commit, finds the merge base with the PR's base
-    branch, then filters git log by author name.
-    """
     skia_dir = Path("externals/skia")
     if not (skia_dir / ".git").exists():
-        print(f"  Skia submodule not available, skipping git log for skia#{pr_num}",
-              file=sys.stderr)
         return 0, set()
 
     try:
@@ -272,19 +216,14 @@ def _filter_skia_commits_git(
         return 0, set()
 
     # Fetch the head commit into the submodule
-    try:
-        run(["git", "-C", str(skia_dir), "fetch", "origin", head_sha, "--quiet"],
-            check=False)
-    except Exception:
-        return 0, set()
+    run(["git", "-C", str(skia_dir), "fetch", "origin", head_sha, "--quiet"],
+        check=False)
 
-    # Verify we have the commits
+    # Verify we have both commits
     try:
         run(["git", "-C", str(skia_dir), "cat-file", "-e", head_sha])
         run(["git", "-C", str(skia_dir), "cat-file", "-e", base_sha])
     except subprocess.CalledProcessError:
-        print(f"  Cannot resolve commits for skia#{pr_num}, skipping git log",
-              file=sys.stderr)
         return 0, set()
 
     # Get all commits in the PR range with author and date
