@@ -9,16 +9,16 @@ public static unsafe class SKWebpEncoder
 
 	public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options)
 	{
-		_ = dst ?? throw new ArgumentNullException (nameof (dst));
-		_ = src ?? throw new ArgumentNullException (nameof (src));
+		ArgumentNullException.ThrowIfNull (dst);
+		ArgumentNullException.ThrowIfNull (src);
 
 		return SkiaApi.sk_webpencoder_encode (dst.Handle, src.Handle, &options);
 	}
 
 	public static bool Encode (Stream dst, SKPixmap src, SKWebpEncoderOptions options)
 	{
-		_ = dst ?? throw new ArgumentNullException (nameof (dst));
-		_ = src ?? throw new ArgumentNullException (nameof (src));
+		ArgumentNullException.ThrowIfNull (dst);
+		ArgumentNullException.ThrowIfNull (src);
 
 		using var wrapped = new SKManagedWStream (dst);
 		return Encode (wrapped, src, options);
@@ -26,7 +26,7 @@ public static unsafe class SKWebpEncoder
 
 	public static SKData? Encode (SKPixmap src, SKWebpEncoderOptions options)
 	{
-		_ = src ?? throw new ArgumentNullException (nameof (src));
+		ArgumentNullException.ThrowIfNull (src);
 
 		using var stream = new SKDynamicMemoryWStream ();
 		var result = Encode (stream, src, options);
@@ -37,7 +37,7 @@ public static unsafe class SKWebpEncoder
 
 	public static bool EncodeAnimated (SKWStream dst, ReadOnlySpan<SKWebpEncoderFrame> frames, SKWebpEncoderOptions options)
 	{
-		_ = dst ?? throw new ArgumentNullException (nameof (dst));
+		ArgumentNullException.ThrowIfNull (dst);
 
 		using var nativeFrames = Utils.RentArray<SKWebpEncoderFrameNative> (frames.Length);
 		for (var i = 0; i < frames.Length; i++) {
@@ -55,7 +55,7 @@ public static unsafe class SKWebpEncoder
 
 	public static bool EncodeAnimated (Stream dst, ReadOnlySpan<SKWebpEncoderFrame> frames, SKWebpEncoderOptions options)
 	{
-		_ = dst ?? throw new ArgumentNullException (nameof (dst));
+		ArgumentNullException.ThrowIfNull (dst);
 
 		using var wrapped = new SKManagedWStream (dst);
 		return EncodeAnimated (wrapped, frames, options);
