@@ -42,19 +42,12 @@ Ask the user which version(s) to generate, or infer from context:
 Run the script to collect raw PR data and write it to the version file:
 
 ```bash
-# Branch-based (preferred):
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
 ```
 
 This writes raw PR data with YAML header to `documentation/docfx/releases/{version}.md`
 and regenerates TOC/index. Read the file to get the raw data and metadata.
-
-For published release data (fetches from GitHub Releases API to a temp dir):
-
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version {X.Y.Z}
-```
 
 ### Step 3 — Read the template
 

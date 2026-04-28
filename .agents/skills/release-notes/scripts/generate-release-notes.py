@@ -10,12 +10,6 @@ Commands:
     python3 generate-release-notes.py --branch release/3.119.x
     python3 generate-release-notes.py --branch release/4.147.0-preview.1
 
-    # Fetch raw release data for specific version(s) -> temp dir
-    python3 generate-release-notes.py --version 3.119.2
-
-    # Fetch raw release data for the last N versions -> temp dir
-    python3 generate-release-notes.py --last 5
-
     # Regenerate TOC.yml and index.md from files on disk + create upcoming version file
     python3 generate-release-notes.py --update-toc
 
@@ -34,7 +28,6 @@ import json
 import re
 import subprocess
 import sys
-import tempfile
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional, Tuple
@@ -207,71 +200,6 @@ def _fetch_skia_pr_effort(pr_num, author_names):
             days.add(date_str)
 
     return count, days
-
-
-# ── Released version data ────────────────────────────────────────────
-
-
-def fetch_all_releases():
-    # type: () -> list[dict]
-    """Fetch the release list from GitHub."""
-    raw = gh(["release", "list", "--repo", REPO, "--limit", "300",
-              "--json", "tagName,name,isPrerelease,publishedAt"])
-    return json.loads(raw)
-
-
-def fetch_release_body(tag):
-    # type: (str) -> dict
-    """Fetch the full release body for a tag."""
-    try:
-        raw = gh(["release", "view", tag, "--repo", REPO,
-                  "--json", "body,publishedAt,name,isPrerelease"])
-        return json.loads(raw)
-    except subprocess.CalledProcessError:
-        return {"body": "", "publishedAt": "", "name": tag, "isPrerelease": False}
-
-
-def group_by_base(releases):
-    # type: (list[dict]) -> dict[str, list[dict]]
-    """Group releases by base version."""
-    grouped = defaultdict(list)
-    for rel in releases:
-        base = extract_base_version(rel["tagName"])
-        grouped[base].append(rel)
-    return grouped
-
-
-def generate_raw_version_page(base_version, releases):
-    # type: (str, list[dict]) -> str
-    """Generate raw markdown for a version -- stable first, then previews descending."""
-
-    def sort_key(r):
-        tag = r["tag"]
-        if "-" not in tag:
-            return (0,)
-        nums = re.findall(r"\d+", tag.split("-", 1)[1])
-        return (1,) + tuple(-int(n) for n in nums)
-
-    releases.sort(key=sort_key)
-    lines = ["# Version {}".format(base_version), ""]
-
-    for i, rel in enumerate(releases):
-        if i > 0:
-            lines.extend(["", "---", ""])
-
-        name = rel.get("name", "") or rel["tag"]
-        date = rel.get("publishedAt", "")
-        is_pre = rel.get("isPrerelease", False)
-        body = rel.get("body", "") or ""
-
-        title = name if is_pre else "Stable Release"
-        date_part = " ({})".format(date[:10]) if date else ""
-        lines.append("## {}{}".format(title, date_part))
-        lines.append("")
-        lines.append(body.rstrip() if body.strip() else "*No release notes available.*")
-        lines.append("")
-
-    return "\n".join(lines)
 
 
 # ── Branch diffing ──────────────────────────────────────────────────
@@ -746,42 +674,6 @@ def cmd_branch(branch):
     cmd_update_toc()
 
 
-def cmd_fetch_versions(target_versions, output_dir):
-    # type: (set[str], Path) -> None
-    """Fetch raw release data for specific versions."""
-    print("Fetching release list from {}...".format(REPO), file=sys.stderr)
-    releases = fetch_all_releases()
-    grouped = group_by_base(releases)
-
-    missing = target_versions - set(grouped.keys())
-    if missing:
-        print("Warning: not found on GitHub: {}".format(
-            ", ".join(sorted(missing))), file=sys.stderr)
-
-    tags_to_fetch = []
-    for base in target_versions & set(grouped.keys()):
-        for rel in grouped[base]:
-            tags_to_fetch.append((base, rel["tagName"]))
-
-    print("Fetching {} release(s)...".format(len(tags_to_fetch)), file=sys.stderr)
-    fetched = defaultdict(list)
-    for i, (base, tag) in enumerate(tags_to_fetch, 1):
-        details = fetch_release_body(tag)
-        details["tag"] = tag
-        fetched[base].append(details)
-        if i % 10 == 0:
-            print("  {}/{}...".format(i, len(tags_to_fetch)), file=sys.stderr)
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    for base, rels in fetched.items():
-        path = output_dir / "{}.md".format(base)
-        path.write_text(generate_raw_version_page(base, rels))
-        print("  {}".format(path))
-
-    print("\nDone: {} version(s) in {}/".format(len(fetched), output_dir),
-          file=sys.stderr)
-
-
 # ── Main ─────────────────────────────────────────────────────────────
 
 
@@ -794,81 +686,31 @@ def main():
             "  %(prog)s --branch main                       "
             "Raw PR data -> releases/4.147.0.md\n"
             "  %(prog)s --branch release/3.119.x            "
-            "Raw PR data -> releases/3.119.x.md\n"
-            "  %(prog)s --version 3.119.2                   "
-            "Fetch published release data\n"
-            "  %(prog)s --last 5                            "
-            "Fetch 5 most recent versions\n"
+            "Raw PR data -> releases/3.119.5.md\n"
             "  %(prog)s --update-toc                        "
             "Regenerate TOC + index\n"
         ),
     )
     parser.add_argument(
         "--branch",
-        help="Diff branch against its predecessor and list PRs")
-    parser.add_argument(
-        "--version", action="append", dest="versions",
-        help="Fetch specific version(s). Repeatable.")
-    parser.add_argument(
-        "--last", type=int,
-        help="Fetch the N most recent versions")
-    parser.add_argument(
-        "--unreleased", action="store_true",
-        help="Alias for --branch main (deprecated)")
+        help="Diff branch against its predecessor and write raw PR data")
     parser.add_argument(
         "--update-toc", action="store_true",
         help="Regenerate TOC.yml + index.md")
-    parser.add_argument(
-        "-o", "--output",
-        help="Output directory for --version/--last (default: temp dir)")
 
     args = parser.parse_args()
 
-    # --unreleased is a convenience alias for --branch main
-    if args.unreleased:
-        if args.branch:
-            parser.error("Cannot use both --unreleased and --branch")
-        args.branch = "main"
-
-    modes = sum([
-        bool(args.branch),
-        bool(args.versions),
-        bool(args.last),
-        args.update_toc,
-    ])
-    if modes == 0:
+    if not args.branch and not args.update_toc:
         parser.print_help()
         sys.exit(1)
-    if modes > 1:
-        parser.error(
-            "Specify only one of --branch, --version, --last, --update-toc")
+
+    if args.branch and args.update_toc:
+        parser.error("Specify only one of --branch or --update-toc")
 
     if args.update_toc:
         cmd_update_toc()
-
     elif args.branch:
         cmd_branch(args.branch)
-
-    elif args.versions:
-        output = (Path(args.output) if args.output
-                  else Path(tempfile.mkdtemp(prefix="skiasharp-releases-")))
-        cmd_fetch_versions(set(args.versions), output)
-
-    elif args.last:
-        releases = fetch_all_releases()
-        grouped = group_by_base(releases)
-        base_dates = {}
-        for base, rels in grouped.items():
-            dates = [r.get("publishedAt", "")
-                     for r in rels if r.get("publishedAt")]
-            base_dates[base] = max(dates) if dates else ""
-        recent = sorted(
-            base_dates, key=lambda b: base_dates[b], reverse=True
-        )[:args.last]
-
-        output = (Path(args.output) if args.output
-                  else Path(tempfile.mkdtemp(prefix="skiasharp-releases-")))
-        cmd_fetch_versions(set(recent), output)
 
 
 if __name__ == "__main__":
