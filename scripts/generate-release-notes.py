@@ -190,18 +190,40 @@ def generate_toc(releases_dir: str) -> str:
         "  href: index.md",
     ]
 
-    # Sort groups by version descending
+    # Split into current and obsolete groups
+    current_groups = []
+    obsolete_groups = []
     for group in sorted(minor_groups.keys(), key=lambda g: version_sort_key(g), reverse=True):
-        members = minor_groups[group]
         major = group.split(".")[0]
-        obsolete = " (Obsolete)" if int(major) < 3 else ""
+        if int(major) < 3:
+            obsolete_groups.append(group)
+        else:
+            current_groups.append(group)
 
-        lines.append(f"- name: Version {group}.x{obsolete}")
+    # Current versions (3.x+) — top level
+    for group in current_groups:
+        members = minor_groups[group]
+        lines.append(f"- name: Version {group}.x")
         lines.append(f"  href: {members[0]}.md")
         lines.append(f"  items:")
         for base in members:
             lines.append(f"    - name: Version {base}")
             lines.append(f"      href: {base}.md")
+
+    # Obsolete versions (1.x, 2.x) — nested under one parent node
+    if obsolete_groups:
+        lines.append(f"- name: Obsolete Versions")
+        lines.append(f"  href: {minor_groups[obsolete_groups[0]][0]}.md")
+        lines.append(f"  items:")
+        for group in obsolete_groups:
+            members = minor_groups[group]
+            lines.append(f"    - name: Version {group}.x")
+            lines.append(f"      href: {members[0]}.md")
+            if len(members) > 1:
+                lines.append(f"      items:")
+                for base in members:
+                    lines.append(f"        - name: Version {base}")
+                    lines.append(f"          href: {base}.md")
 
     return "\n".join(lines) + "\n"
 
@@ -281,10 +303,7 @@ def generate_index(releases_dir: str) -> str:
         return result
 
     for major in sorted(major_groups.keys(), key=int, reverse=True):
-        is_obsolete = int(major) < 3
-
-        obsolete = " (Obsolete)" if is_obsolete else ""
-        lines.extend([f"### SkiaSharp {major}.x{obsolete}", ""])
+        lines.extend([f"### SkiaSharp {major}.x", ""])
         lines.extend(render_major_group(major, major_groups[major]))
         lines.append("")
 
