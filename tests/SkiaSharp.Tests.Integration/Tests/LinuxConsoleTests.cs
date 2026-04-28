@@ -148,7 +148,7 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
         // Build and run in Docker using dotnet publish (resolves RID-specific native assets)
         var dockerfile = Path.Combine(projectDir, "Dockerfile");
         File.WriteAllText(dockerfile, $"""
-            FROM mcr.microsoft.com/dotnet/sdk:8.0
+            FROM mcr.microsoft.com/dotnet/sdk:10.0
             WORKDIR /src
             COPY {projectName}.csproj nuget.config ./
             RUN dotnet restore
@@ -160,9 +160,9 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
 
         var tag = $"skiasharp-test-{projectName}".ToLowerInvariant();
 
-        // Build Docker image
+        // Build Docker image (allow up to 10 minutes for first-time package restore)
         Output.WriteLine("Building Docker image...");
-        await Run("docker", $"build -t {tag} {projectDir}", timeoutSeconds: 180);
+        await Run("docker", $"build -t {tag} {projectDir}", timeoutSeconds: 600);
 
         // Run container with a dedicated output directory mounted
         Output.WriteLine("Running in Docker container...");
