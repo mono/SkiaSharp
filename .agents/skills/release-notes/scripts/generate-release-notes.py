@@ -675,26 +675,23 @@ def cmd_branch(branch):
     if re.match(r"^[0-9a-f]{7,}$", from_display):
         from_display = from_display[:12]
 
-    # Determine release status
+    # Determine release status — check if any GitHub release exists for this version
     is_main = (branch == "main")
     is_servicing = branch.endswith(".x")
     status = "unreleased"
     if not is_main and not is_servicing:
         try:
-            gh(["release", "view", "v{}".format(version),
-                "--repo", REPO, "--json", "tagName"])
-            status = "released"
-        except subprocess.CalledProcessError:
-            try:
-                tags_raw = gh(["api", "repos/{}/tags".format(REPO),
-                               "--jq", ".[].name",
-                               "-q", "--paginate"])
-                for tag_line in tags_raw.splitlines():
-                    if tag_line.startswith("v{}-".format(version)) or tag_line == "v{}".format(version):
-                        status = "released"
-                        break
-            except subprocess.CalledProcessError:
-                pass
+            releases_raw = gh(["release", "list", "--repo", REPO, "--limit", "50",
+                               "--json", "tagName"])
+            release_tags = [r["tagName"] for r in json.loads(releases_raw)]
+            for tag in release_tags:
+                # Match exact version or version-preview.*
+                tag_base = tag.lstrip("v").split("-")[0]
+                if tag_base == version:
+                    status = "released"
+                    break
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            pass
 
     print("Branch: {}".format(branch))
     print("Version: {}".format(version))
