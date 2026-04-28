@@ -25,7 +25,7 @@ string GetGnArgs(string arch)
     var init = $"{sysrootArg} '--target={TOOLCHAIN_ARCH_TARGET}'";
     var bin = $"'-B{sysroot}/bin/' ";
     var libs = $"'-L{sysroot}/lib/' ";
-    var includes = 
+    var includes =
         $"'-I{sysroot}/include', " +
         $"'-I{sysroot}/include/c++/current', " +
         $"'-I{sysroot}/include/c++/current/{TOOLCHAIN_ARCH}' ";

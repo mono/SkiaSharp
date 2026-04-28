@@ -497,34 +497,70 @@ namespace SkiaSharp
 
 		private SKPath GetFillPath (SKPath src, SKRect* cullRect, SKMatrix matrix)
 		{
-			var dst = new SKPath ();
+			using var dst = new SKPathBuilder ();
 			if (GetFillPath (src, dst, cullRect, matrix)) {
-				return dst;
+				return dst.Detach ();
 			} else {
-				dst.Dispose ();
 				return null;
 			}
 		}
 
+		[Obsolete ("Use the SKPathBuilder overload instead.")]
 		public bool GetFillPath (SKPath src, SKPath dst)
 			=> GetFillPath (src, dst, (SKRect*)null, SKMatrix.Identity);
 
+		[Obsolete ("Use the SKPathBuilder overload instead.")]
 		public bool GetFillPath (SKPath src, SKPath dst, float resScale)
 			=> GetFillPath (src, dst, (SKRect*)null, SKMatrix.CreateScale (resScale, resScale));
 
+		[Obsolete ("Use the SKPathBuilder overload instead.")]
 		public bool GetFillPath (SKPath src, SKPath dst, SKMatrix matrix)
 			=> GetFillPath (src, dst, (SKRect*)null, matrix);
 
+		[Obsolete ("Use the SKPathBuilder overload instead.")]
 		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect)
 			=> GetFillPath (src, dst, &cullRect, SKMatrix.Identity);
 
+		[Obsolete ("Use the SKPathBuilder overload instead.")]
 		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale)
 			=> GetFillPath (src, dst, &cullRect, SKMatrix.CreateScale (resScale, resScale));
 
+		[Obsolete ("Use the SKPathBuilder overload instead.")]
 		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, SKMatrix matrix)
 			=> GetFillPath (src, dst, &cullRect, matrix);
 
 		private bool GetFillPath (SKPath src, SKPath dst, SKRect* cullRect, SKMatrix matrix)
+		{
+			_ = src ?? throw new ArgumentNullException (nameof (src));
+			_ = dst ?? throw new ArgumentNullException (nameof (dst));
+
+			using var builder = new SKPathBuilder ();
+			if (!GetFillPath (src, builder, cullRect, matrix))
+				return false;
+
+			dst.ReplaceFromBuilder (builder);
+			return true;
+		}
+
+		public bool GetFillPath (SKPath src, SKPathBuilder dst)
+			=> GetFillPath (src, dst, (SKRect*)null, SKMatrix.Identity);
+
+		public bool GetFillPath (SKPath src, SKPathBuilder dst, float resScale)
+			=> GetFillPath (src, dst, (SKRect*)null, SKMatrix.CreateScale (resScale, resScale));
+
+		public bool GetFillPath (SKPath src, SKPathBuilder dst, SKMatrix matrix)
+			=> GetFillPath (src, dst, (SKRect*)null, matrix);
+
+		public bool GetFillPath (SKPath src, SKPathBuilder dst, SKRect cullRect)
+			=> GetFillPath (src, dst, &cullRect, SKMatrix.Identity);
+
+		public bool GetFillPath (SKPath src, SKPathBuilder dst, SKRect cullRect, float resScale)
+			=> GetFillPath (src, dst, &cullRect, SKMatrix.CreateScale (resScale, resScale));
+
+		public bool GetFillPath (SKPath src, SKPathBuilder dst, SKRect cullRect, SKMatrix matrix)
+			=> GetFillPath (src, dst, &cullRect, matrix);
+
+		private bool GetFillPath (SKPath src, SKPathBuilder dst, SKRect* cullRect, SKMatrix matrix)
 		{
 			_ = src ?? throw new ArgumentNullException (nameof (src));
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));

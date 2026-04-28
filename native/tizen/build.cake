@@ -26,8 +26,11 @@ Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    Build("armel", "arm",   "arm",     "mobile-6.0-device.core",       "mobile-6.0", "6.0");
-    Build("i586",  "x86",   "x86",     "mobile-6.0-emulator.core",     "mobile-6.0", "6.0");
+    // Tizen 32-bit (armel / i586 on the mobile-6.0 rootstrap) was dropped
+    // — the rootstrap ships gcc-9.2 / glibc 2.30 era headers that don't
+    // play with current Skia, and the only deployment targets that ever
+    // shipped 32-bit Tizen are years past EOL. Only tizen-8.0 64-bit
+    // x86_64 + aarch64 are supported.
     Build("x86_64","x64",   "x86_64",  "tizen-8.0-emulator64.core",    "tizen-8.0",  "8.0");
     Build("aarch64","arm64","aarch64",  "tizen-8.0-device64.core",      "tizen-8.0",  "8.0");
 
@@ -73,8 +76,8 @@ Task("libSkiaSharp")
 Task("libHarfBuzzSharp")
     .Does(() =>
 {
-    Build("armel", "arm",   "arm",     "mobile-6.0-device.core",     "mobile-6.0");
-    Build("i586",  "x86",  "x86",     "mobile-6.0-emulator.core",   "mobile-6.0");
+    // See the libSkiaSharp task above — Tizen 32-bit is no longer
+    // supported.
     Build("x86_64","x64",  "x86_64",  "tizen-8.0-emulator64.core",  "tizen-8.0");
     Build("aarch64","arm64","aarch64", "tizen-8.0-device64.core",     "tizen-8.0");
 
