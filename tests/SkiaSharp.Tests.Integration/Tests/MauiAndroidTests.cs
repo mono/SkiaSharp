@@ -235,8 +235,10 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
         };
         
         using var process = Process.Start(psi)!;
-        var output = await process.StandardOutput.ReadToEndAsync();
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        await Task.WhenAll(stdoutTask, stderrTask);
         await process.WaitForExitAsync();
-        return output;
+        return await stdoutTask;
     }
 }

@@ -398,8 +398,6 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
                 (int)(canvasSize.Height * scaleFactor));
             cropRect = SKRectI.Intersect(cropRect, SKRectI.Create(screenshotSize));
             
-            Output.WriteLine($"Crop region: {cropRect}");
-            
             await VerifyCanvasScreenshot(fullScreenshot, screenshotName, cropRect);
         }
         finally

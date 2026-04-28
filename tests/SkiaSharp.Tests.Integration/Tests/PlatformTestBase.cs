@@ -207,7 +207,7 @@ public abstract class PlatformTestBase : IDisposable
         var stdoutTask = process.StandardOutput.ReadToEndAsync();
         var stderrTask = process.StandardError.ReadToEndAsync();
 
-        var completed = await Task.WhenAny(
+        await Task.WhenAny(
             Task.WhenAll(stdoutTask, stderrTask),
             Task.Delay(timeoutSeconds * 1000));
 

@@ -81,5 +81,3 @@ public class MauiWindowsTests(ITestOutputHelper output) : MauiTestBase(output)
         return (new SKPointI(x, y), new SKSizeI(CanvasWidth, CanvasHeight));
     }
 }
-
-
