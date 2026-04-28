@@ -80,72 +80,70 @@
                   BorderThickness="0,0,1,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="2*" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="5*" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Setup header -->
+                <!-- Tab strip -->
                 <Border Grid.Row="0"
                         Background="{StaticResource PanelBackground}"
                         BorderBrush="{StaticResource PanelBorder}"
-                        BorderThickness="0,0,0,1"
-                        Padding="14,8">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Setup"
-                                   FontSize="11"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextSecondary}"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1"
-                                   Text="class scope · runs once · declare fields, methods, ctor"
-                                   FontSize="10"
-                                   Foreground="{StaticResource TextSecondary}"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0,0,0"
-                                   Opacity="0.7" />
-                    </Grid>
+                        BorderThickness="0,0,0,1">
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="DrawTabButton"
+                                Click="OnDrawTabClicked"
+                                Padding="14,8"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0,0,0,2"
+                                CornerRadius="0"
+                                Foreground="{StaticResource TextPrimary}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Draw"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="(SKCanvas, int, int, double t) · per frame"
+                                           FontSize="10"
+                                           Foreground="{StaticResource TextSecondary}"
+                                           VerticalAlignment="Center"
+                                           Opacity="0.7" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="SetupTabButton"
+                                Click="OnSetupTabClicked"
+                                Padding="14,8"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0,0,0,2"
+                                CornerRadius="0"
+                                Foreground="{StaticResource TextSecondary}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Setup"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="class scope · runs once"
+                                           FontSize="10"
+                                           Foreground="{StaticResource TextSecondary}"
+                                           VerticalAlignment="Center"
+                                           Opacity="0.7" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Border>
-                <monaco:CodeEditor x:Name="SetupEditor"
-                                   Grid.Row="1"
-                                   CodeLanguage="csharp"
-                                   RequestedTheme="Dark"
-                                   BorderThickness="0" />
 
-                <!-- Draw header -->
-                <Border Grid.Row="2"
-                        Background="{StaticResource PanelBackground}"
-                        BorderBrush="{StaticResource PanelBorder}"
-                        BorderThickness="0,1,0,1"
-                        Padding="14,8">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Draw"
-                                   FontSize="11"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextSecondary}"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1"
-                                   Text="(SKCanvas canvas, int width, int height, double t) · runs every frame"
-                                   FontSize="10"
-                                   Foreground="{StaticResource TextSecondary}"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0,0,0"
-                                   Opacity="0.7" />
-                    </Grid>
-                </Border>
-                <monaco:CodeEditor x:Name="DrawEditor"
-                                   Grid.Row="3"
-                                   CodeLanguage="csharp"
-                                   RequestedTheme="Dark"
-                                   BorderThickness="0" />
+                <!-- Editor stack: both editors are mounted; only the active tab is visible. -->
+                <Grid Grid.Row="1">
+                    <monaco:CodeEditor x:Name="DrawEditor"
+                                       CodeLanguage="csharp"
+                                       RequestedTheme="Dark"
+                                       BorderThickness="0" />
+                    <monaco:CodeEditor x:Name="SetupEditor"
+                                       CodeLanguage="csharp"
+                                       RequestedTheme="Dark"
+                                       BorderThickness="0"
+                                       Visibility="Collapsed" />
+                </Grid>
             </Grid>
 
             <!-- Preview pane -->

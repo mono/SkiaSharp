@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using SkiaFiddle.Fiddle;
 using SkiaSharp;
 
@@ -19,6 +20,7 @@ public sealed partial class MainPage : Page
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        SelectTab(drawActive: true);
         InitSamples();
         StatusText.Text = $"engine: {_compiler.Name}";
         OutputCanvas.FpsUpdated += (_, fps) => DispatcherQueue.TryEnqueue(() =>
@@ -27,6 +29,26 @@ public sealed partial class MainPage : Page
         });
         // SamplesCombo.SelectedIndex = 0 (set in InitSamples) fires OnSampleChanged,
         // which seeds both editors and runs.
+    }
+
+    private void OnDrawTabClicked(object sender, RoutedEventArgs e) => SelectTab(drawActive: true);
+
+    private void OnSetupTabClicked(object sender, RoutedEventArgs e) => SelectTab(drawActive: false);
+
+    private void SelectTab(bool drawActive)
+    {
+        DrawEditor.Visibility = drawActive ? Visibility.Visible : Visibility.Collapsed;
+        SetupEditor.Visibility = drawActive ? Visibility.Collapsed : Visibility.Visible;
+
+        var accent = (Brush)Resources["AccentBrush"];
+        var primary = (Brush)Resources["TextPrimary"];
+        var secondary = (Brush)Resources["TextSecondary"];
+        var transparent = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+
+        DrawTabButton.BorderBrush = drawActive ? accent : transparent;
+        DrawTabButton.Foreground = drawActive ? primary : secondary;
+        SetupTabButton.BorderBrush = drawActive ? transparent : accent;
+        SetupTabButton.Foreground = drawActive ? secondary : primary;
     }
 
     public void SetCompiler(IFiddleCompiler compiler)
