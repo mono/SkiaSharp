@@ -33,21 +33,24 @@ Manually generate or regenerate polished website release notes for SkiaSharp ver
 
 Ask the user which version(s) to generate, or infer from context:
 - A specific version: `3.119.2`
+- A branch: `release/4.147.0-preview.1` or `main`
 - Multiple versions: `3.119.0, 3.119.1, 3.119.2`
-- A range by minor: "all 3.119.x" — list files matching `documentation/docfx/releases/3.119.*.md`
-  and also check GitHub for any releases not yet on disk
-- If called from release-publish, the version is already known
+- A range by minor: "all 3.119.x"
 
 ### Step 2 — Fetch raw data
 
-For each version, fetch the raw GitHub release data:
+For branch-based data (preferred — diffs against predecessor branch):
+
+```bash
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1 -o /tmp/raw.md
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main -o /tmp/raw.md
+```
+
+For published release data (fetches from GitHub Releases API):
 
 ```bash
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version {X.Y.Z}
 ```
-
-This outputs raw markdown to a temp directory. Multiple `--version` flags can be
-combined in one call. Read the output file(s) from the temp directory.
 
 ### Step 3 — Read the template
 
