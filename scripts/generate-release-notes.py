@@ -142,10 +142,44 @@ def generate_raw_version_page(base_version: str, releases: list[dict]) -> str:
 # ── Unreleased data ─────────────────────────────────────────────────
 
 
-def get_latest_release_tag() -> str:
-    """Get the most recent release tag."""
-    return gh(["release", "list", "--repo", REPO, "--limit", "1",
-               "--json", "tagName", "-q", ".[0].tagName"]).strip()
+def find_baseline_tag(upcoming_version: Optional[str]) -> str:
+    """Find the correct baseline tag for unreleased diff.
+
+    Gets all release tags, parses as semver, and finds the highest tag
+    whose base version is <= the upcoming version. This correctly handles
+    the case where a v3 hotfix is tagged after a v4 preview — we still
+    pick the v4 preview as the baseline for v4 unreleased work.
+
+    The tag may be on a release/* branch (not main), but git log
+    {tag}..origin/main still works correctly because release branches
+    fork from main.
+    """
+    raw = gh(["release", "list", "--repo", REPO, "--limit", "100",
+              "--json", "tagName"])
+    tags = [r["tagName"] for r in json.loads(raw)]
+
+    if not tags:
+        raise RuntimeError("No releases found")
+
+    if not upcoming_version:
+        tags.sort(key=lambda t: version_key(t.lstrip("v")), reverse=True)
+        return tags[0]
+
+    upcoming_key = version_key(upcoming_version)
+
+    # Filter to tags whose base version is <= upcoming, then pick the highest
+    candidates = []
+    for tag in tags:
+        key = version_key(tag.lstrip("v"))
+        if key <= upcoming_key:
+            candidates.append((key, tag))
+
+    if not candidates:
+        tags.sort(key=lambda t: version_key(t.lstrip("v")), reverse=True)
+        return tags[0]
+
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    return candidates[0][1]
 
 
 def get_unreleased_prs(tag: str) -> list[dict]:
@@ -357,9 +391,12 @@ def cmd_fetch_versions(target_versions: set[str], output_dir: Path):
 
 def cmd_unreleased(output_path: Optional[Path]):
     """Fetch unreleased PRs and output raw list."""
-    print("Finding latest release tag...", file=sys.stderr)
-    tag = get_latest_release_tag()
-    print(f"Latest: {tag}", file=sys.stderr)
+    upcoming = get_upcoming_version()
+    print(f"Upcoming version: {upcoming or 'unknown'}", file=sys.stderr)
+
+    print("Finding baseline tag...", file=sys.stderr)
+    tag = find_baseline_tag(upcoming)
+    print(f"Baseline: {tag}", file=sys.stderr)
 
     print("Finding unreleased PRs via commit ancestry...", file=sys.stderr)
     prs = get_unreleased_prs(tag)
