@@ -163,7 +163,7 @@ public class TextLabSample : CanvasSampleBase
 			}
 
 			// Labels
-			using var labelFont = new SKFont { Size = 12 };
+			using var labelFont = new SKFont(SampleMedia.Fonts.Default, 12);
 			using var labelPaint = new SKPaint
 			{
 				IsAntialias = true,

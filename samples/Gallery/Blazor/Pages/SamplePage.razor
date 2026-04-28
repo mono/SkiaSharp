@@ -12,68 +12,6 @@
         <a href="">Return to home</a>
     </div>
 }
-else if (IsDocument)
-{
-    <div class="sample-page">
-        <div class="sample-header">
-            <a href="" class="text-decoration-none small d-inline-block">&larr; Back to Gallery</a>
-            <h2>@sample.Title</h2>
-            @if (!string.IsNullOrWhiteSpace(sample.Description))
-            {
-                <p class="text-muted mb-1">@sample.Description</p>
-            }
-        </div>
-        <div class="sample-body">
-            <div class="sample-canvas">
-                @if (!string.IsNullOrEmpty(documentBlobUrl))
-                {
-                    <div class="border rounded" style="width:100%;height:100%;">
-                        <iframe src="@documentBlobUrl" style="width:100%;height:100%;border:none;" />
-                    </div>
-                }
-                else
-                {
-                    <div class="border rounded d-flex align-items-center justify-content-center" style="width:100%;height:100%;background:#f8f8f8;">
-                        <span class="text-muted">Generating document...</span>
-                    </div>
-                }
-            </div>
-
-            @if (HasControls)
-            {
-                @if (!isPinned && showControls)
-                {
-                    <div class="sidebar-backdrop" @onclick="() => showControls = false"></div>
-                }
-
-                <div class="sample-sidebar @(!isPinned && !showControls ? "collapsed" : "")"
-                     @onclick="OnSidebarClick"
-                     @onclick:stopPropagation="true">
-                    @if (!isPinned && !showControls)
-                    {
-                        <span class="sidebar-label">Controls</span>
-                    }
-                    else
-                    {
-                        <div class="sidebar-content" @onclick:stopPropagation="true">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <small class="fw-bold text-uppercase" style="letter-spacing:0.05em;color:#666;">Controls</small>
-                                <button class="btn btn-sm btn-outline-secondary" @onclick="TogglePin" @onclick:stopPropagation="true">
-                                    @(isPinned ? "◀" : "▶")
-                                </button>
-                            </div>
-                            <ControlPanel Controls="@sample!.Controls"
-                                          OnChanged="@OnControlChanged" />
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-    </div>
-    <div class="sample-debug small text-muted px-2" style="flex-shrink:0;font-size:0.7rem;opacity:0.6;">
-        Canvas: @canvasInfoWidth×@canvasInfoHeight CSS px | @canvasRawWidth×@canvasRawHeight device px | DPI: @canvasDpi
-    </div>
-}
 else
 {
     <div class="sample-page">
@@ -87,23 +25,41 @@ else
         </div>
         <div class="sample-body">
             <div class="sample-canvas">
-                <div class="canvas-wrapper border rounded">
-                    @if (UseGpu)
+                @if (sample is DocumentSampleBase)
+                {
+                    @if (!string.IsNullOrEmpty(documentBlobUrl))
                     {
-                        <SKGLView @ref="glView"
-                                  OnPaintSurface="OnPaintGL"
-                                  EnableRenderLoop="@(sample is CanvasSampleBase cs && cs.IsAnimated)"
-                                  IgnorePixelScaling="true"
-                                  style="width:100%;height:100%;display:block;" />
+                        <div class="border rounded" style="width:100%;height:100%;">
+                            <iframe src="@documentBlobUrl" style="width:100%;height:100%;border:none;" />
+                        </div>
                     }
                     else
                     {
-                        <SKCanvasView @ref="canvasView"
-                                      OnPaintSurface="OnPaintRaster"
+                        <div class="border rounded d-flex align-items-center justify-content-center" style="width:100%;height:100%;background:#f8f8f8;">
+                            <span class="text-muted">Generating document...</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="canvas-wrapper border rounded">
+                        @if (UseGpu)
+                        {
+                            <SKGLView @ref="glView"
+                                      OnPaintSurface="OnPaintGL"
+                                      EnableRenderLoop="@(sample is CanvasSampleBase cs && cs.IsAnimated)"
                                       IgnorePixelScaling="true"
                                       style="width:100%;height:100%;display:block;" />
-                    }
-                </div>
+                        }
+                        else
+                        {
+                            <SKCanvasView @ref="canvasView"
+                                          OnPaintSurface="OnPaintRaster"
+                                          IgnorePixelScaling="true"
+                                          style="width:100%;height:100%;display:block;" />
+                        }
+                    </div>
+                }
             </div>
 
             @if (HasControls)
@@ -131,6 +87,12 @@ else
                             </div>
                             <ControlPanel Controls="@sample.Controls"
                                           OnChanged="@OnControlChanged" />
+                            @if (sample.HasDownload)
+                            {
+                                <button class="btn btn-sm btn-outline-primary w-100 mt-2" @onclick="TriggerDownload" @onclick:stopPropagation="true" title="Download @sample.DownloadFileName">
+                                    ⬇ Download
+                                </button>
+                            }
                         </div>
                     }
                 </div>
@@ -154,14 +116,14 @@ else
     private SKGLView? glView;
     private bool previousUseGpu;
     private string? documentBlobUrl;
+    private string? downloadBlobUrl;
 
     private int canvasInfoWidth, canvasInfoHeight;
     private int canvasRawWidth, canvasRawHeight;
     private string canvasDpi = "?";
 
     // Computed helpers for template branching
-    private bool IsDocument => sample is DocumentSampleBase;
-    private bool HasControls => sample is { Controls.Count: > 0 };
+    private bool HasControls => sample is { Controls.Count: > 0 } || (sample?.HasDownload ?? false);
 
     // Control panel layout state
     private bool isPinned = true;
@@ -290,11 +252,37 @@ else
             sample = null;
         }
 
-        if (!string.IsNullOrEmpty(documentBlobUrl))
+        RevokeUrl(ref documentBlobUrl);
+        RevokeUrl(ref downloadBlobUrl);
+    }
+
+    private void RevokeUrl(ref string? url)
+    {
+        if (!string.IsNullOrEmpty(url))
         {
-            _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{documentBlobUrl}')");
-            documentBlobUrl = null;
+            _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{url}')");
+            url = null;
         }
+    }
+
+    private async Task TriggerDownload()
+    {
+        if (sample is null || !sample.HasDownload)
+            return;
+
+        RevokeUrl(ref downloadBlobUrl);
+
+        var base64 = Convert.ToBase64String(sample.DownloadBytes!);
+        var mime = sample.DownloadMimeType;
+        var fileName = sample.DownloadFileName;
+
+        downloadBlobUrl = await JS.InvokeAsync<string>(
+            "eval",
+            $"(() => {{ var b = atob('{base64}'); var a = new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return URL.createObjectURL(new Blob([a], {{type:'{mime}'}})); }})()");
+
+        await JS.InvokeVoidAsync(
+            "eval",
+            $"(() => {{ var a = document.createElement('a'); a.href = '{downloadBlobUrl}'; a.download = '{fileName}'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }})()");
     }
 
     private void OnControlChanged((string id, object value) args)
@@ -307,12 +295,7 @@ else
     {
         if (sample is DocumentSampleBase doc)
         {
-            // Clear old blob
-            if (!string.IsNullOrEmpty(documentBlobUrl))
-            {
-                _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{documentBlobUrl}')");
-                documentBlobUrl = null;
-            }
+            RevokeUrl(ref documentBlobUrl);
 
             // Generate the document (calls OnGenerateDocument which populates DocumentBytes)
             using var tempSurface = SKSurface.Create(new SKImageInfo(1, 1));

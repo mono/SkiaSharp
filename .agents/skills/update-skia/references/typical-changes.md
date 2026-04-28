@@ -14,7 +14,7 @@
 | mono/SkiaSharp | `scripts/VERSIONS.txt` | All version numbers |
 | mono/SkiaSharp | `cgmanifest.json` | Security tracking |
 | mono/SkiaSharp | `scripts/azure-pipelines-variables.yml` | CI config |
-| mono/SkiaSharp | `native/*/build.cake` | Per-platform GN flag updates |
+| mono/SkiaSharp | `native/*/build.cake` | Per-platform GN flag updates (check for removed declare_args) |
 | mono/SkiaSharp | `binding/SkiaSharp/SkiaApi.generated.cs` | Regenerated |
 | mono/SkiaSharp | `binding/SkiaSharp/Definitions.cs` | Type definitions, new enums |
 | mono/SkiaSharp | `binding/SkiaSharp/EnumMappings.cs` | Enum mappings |

@@ -19,6 +19,12 @@ public abstract class SampleBase
 
 	public virtual IReadOnlyList<SampleControl> Controls => [];
 
+	// Download support — samples that produce downloadable output override these
+	public virtual byte[]? DownloadBytes => null;
+	public virtual string DownloadFileName => "download.bin";
+	public virtual string DownloadMimeType => "application/octet-stream";
+	public bool HasDownload => DownloadBytes is { Length: > 0 };
+
 	public virtual void UpdateControl(string id, object value)
 	{
 		OnControlChanged(id, value);

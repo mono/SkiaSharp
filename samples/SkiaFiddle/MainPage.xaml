@@ -1,0 +1,236 @@
+<Page x:Class="SkiaFiddle.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:SkiaFiddle"
+      xmlns:fiddle="using:SkiaFiddle.Fiddle"
+      xmlns:monaco="using:Monaco"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      RequestedTheme="Dark"
+      Background="#0F1216">
+    <Page.Resources>
+        <SolidColorBrush x:Key="EditorBackground" Color="#161B22" />
+        <SolidColorBrush x:Key="PanelBackground" Color="#11151A" />
+        <SolidColorBrush x:Key="PanelBorder" Color="#23303D" />
+        <SolidColorBrush x:Key="TextPrimary" Color="#E6EDF3" />
+        <SolidColorBrush x:Key="TextSecondary" Color="#8B949E" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#4FA3FF" />
+        <SolidColorBrush x:Key="AccentForeground" Color="#0B0F14" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#FF6B6B" />
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0"
+              Background="{StaticResource PanelBackground}"
+              BorderBrush="{StaticResource PanelBorder}"
+              BorderThickness="0,0,0,1"
+              Padding="20,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <TextBlock Text="🎨"
+                           FontSize="22"
+                           VerticalAlignment="Center" />
+                <StackPanel>
+                    <TextBlock Text="SkiaFiddle"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimary}" />
+                    <TextBlock FontSize="11"
+                               Foreground="{StaticResource TextSecondary}">
+                        <Run Text="Live SkiaSharp playground · powered by " />
+                        <Hyperlink NavigateUri="https://platform.uno/"
+                                   UnderlineStyle="Single"
+                                   Foreground="{StaticResource AccentBrush}">
+                            <Run Text="Uno Platform" />
+                        </Hyperlink>
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+
+            <ComboBox Grid.Column="2"
+                      x:Name="SamplesCombo"
+                      MinWidth="200"
+                      SelectionChanged="OnSampleChanged"
+                      VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Body: split editor / preview -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Editor pane -->
+            <Grid Grid.Column="0"
+                  Background="{StaticResource EditorBackground}"
+                  BorderBrush="{StaticResource PanelBorder}"
+                  BorderThickness="0,0,1,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="2*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="5*" />
+                </Grid.RowDefinitions>
+
+                <!-- Setup header -->
+                <Border Grid.Row="0"
+                        Background="{StaticResource PanelBackground}"
+                        BorderBrush="{StaticResource PanelBorder}"
+                        BorderThickness="0,0,0,1"
+                        Padding="14,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Setup"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="class scope · runs once · declare fields, methods, ctor"
+                                   FontSize="10"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,0,0"
+                                   Opacity="0.7" />
+                    </Grid>
+                </Border>
+                <monaco:CodeEditor x:Name="SetupEditor"
+                                   Grid.Row="1"
+                                   CodeLanguage="csharp"
+                                   RequestedTheme="Dark"
+                                   BorderThickness="0" />
+
+                <!-- Draw header -->
+                <Border Grid.Row="2"
+                        Background="{StaticResource PanelBackground}"
+                        BorderBrush="{StaticResource PanelBorder}"
+                        BorderThickness="0,1,0,1"
+                        Padding="14,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Draw"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="(SKCanvas canvas, int width, int height, double t) · runs every frame"
+                                   FontSize="10"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,0,0"
+                                   Opacity="0.7" />
+                    </Grid>
+                </Border>
+                <monaco:CodeEditor x:Name="DrawEditor"
+                                   Grid.Row="3"
+                                   CodeLanguage="csharp"
+                                   RequestedTheme="Dark"
+                                   BorderThickness="0" />
+            </Grid>
+
+            <!-- Preview pane -->
+            <Grid Grid.Column="1" Background="#0B0F14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0"
+                        Background="{StaticResource PanelBackground}"
+                        BorderBrush="{StaticResource PanelBorder}"
+                        BorderThickness="0,0,0,1"
+                        Padding="14,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Output"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="10"
+                                    VerticalAlignment="Center">
+                            <TextBlock x:Name="FpsText"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextSecondary}"
+                                       VerticalAlignment="Center" />
+                            <Button x:Name="PauseButton"
+                                    Click="OnPauseClicked"
+                                    Padding="10,4"
+                                    FontSize="11"
+                                    Background="Transparent"
+                                    BorderBrush="{StaticResource PanelBorder}"
+                                    BorderThickness="1"
+                                    Foreground="{StaticResource TextPrimary}"
+                                    CornerRadius="4">
+                                <TextBlock x:Name="PauseLabel" Text="⏸ Pause" />
+                            </Button>
+                            <TextBlock x:Name="StatusText"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextSecondary}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Grid Grid.Row="1" Padding="16">
+                    <fiddle:FiddleCanvas x:Name="OutputCanvas"
+                                         HorizontalAlignment="Stretch"
+                                         VerticalAlignment="Stretch" />
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- Footer / actions -->
+        <Grid Grid.Row="2"
+              Background="{StaticResource PanelBackground}"
+              BorderBrush="{StaticResource PanelBorder}"
+              BorderThickness="0,1,0,0"
+              Padding="16,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="MessageText"
+                       FontSize="12"
+                       Foreground="{StaticResource TextSecondary}"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap" />
+            <Button Grid.Column="1"
+                    x:Name="RunButton"
+                    Click="OnRunClicked"
+                    Padding="20,8"
+                    Background="{StaticResource AccentBrush}"
+                    Foreground="{StaticResource AccentForeground}"
+                    FontWeight="SemiBold"
+                    CornerRadius="6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="▶" FontSize="11" />
+                    <TextBlock Text="Run" />
+                </StackPanel>
+            </Button>
+        </Grid>
+    </Grid>
+</Page>

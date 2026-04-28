@@ -83,11 +83,11 @@ public class PathEffectsLabSample : CanvasSampleBase
 
 	private static SKPath CreateStarPath(float cx, float cy, float outerRadius, float innerRadius, int points)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var angle = -Math.PI / 2;
 		var step = Math.PI / points;
 
-		path.MoveTo(
+		builder.MoveTo(
 			cx + (float)(outerRadius * Math.Cos(angle)),
 			cy + (float)(outerRadius * Math.Sin(angle)));
 
@@ -95,12 +95,12 @@ public class PathEffectsLabSample : CanvasSampleBase
 		{
 			angle += step;
 			var r = (i % 2 == 0) ? outerRadius : innerRadius;
-			path.LineTo(
+			builder.LineTo(
 				cx + (float)(r * Math.Cos(angle)),
 				cy + (float)(r * Math.Sin(angle)));
 		}
 
-		path.Close();
-		return path;
+		builder.Close();
+		return builder.Detach();
 	}
 }

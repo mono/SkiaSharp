@@ -108,11 +108,12 @@ public class VertexMeshSample : CanvasSampleBase
 
 			for (var i = 0; i < indices.Length; i += 3)
 			{
-				using var triPath = new SKPath();
-				triPath.MoveTo(vertices[indices[i]]);
-				triPath.LineTo(vertices[indices[i + 1]]);
-				triPath.LineTo(vertices[indices[i + 2]]);
-				triPath.Close();
+				using var triBuilder = new SKPathBuilder();
+				triBuilder.MoveTo(vertices[indices[i]]);
+				triBuilder.LineTo(vertices[indices[i + 1]]);
+				triBuilder.LineTo(vertices[indices[i + 2]]);
+				triBuilder.Close();
+				using var triPath = triBuilder.Detach();
 				canvas.DrawPath(triPath, wirePaint);
 			}
 		}
