@@ -7,8 +7,8 @@
 // fiddle can fetch fresh text right before compiling.
 //
 // Editors are sorted by document position so index 0 is whatever appears first
-// in the DOM — that matches XAML declaration order in MainPage.xaml: Draw
-// editor first, Setup second.
+// in the DOM — that matches XAML declaration order in MainPage.xaml: Setup
+// editor first (top), Draw editor second (bottom).
 globalThis.skiaFiddleGetMonacoValues = function () {
     try {
         if (typeof monaco === 'undefined' || !monaco.editor || typeof monaco.editor.getEditors !== 'function') {

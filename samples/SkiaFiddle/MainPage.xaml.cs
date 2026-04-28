@@ -68,15 +68,15 @@ public sealed partial class MainPage : Page
     // Monaco's onDidChangeContent → managed CodeEditor.Text round-trip is unreliable
     // under Uno WASM (the property lags behind keystrokes), so we ask Monaco directly
     // for its current model values right before compiling. DOM order matches XAML
-    // declaration order: DrawEditor first, SetupEditor second.
+    // declaration order: SetupEditor first (top), DrawEditor second (bottom).
     private (string setup, string draw) GetEditorTexts()
     {
         try
         {
             var json = WebAssemblyRuntime.InvokeJS("globalThis.skiaFiddleGetMonacoValues ? globalThis.skiaFiddleGetMonacoValues() : '[]'");
             var values = JsonSerializer.Deserialize<string[]>(json) ?? Array.Empty<string>();
-            var draw = values.Length > 0 ? values[0] : DrawEditor.Text ?? string.Empty;
-            var setup = values.Length > 1 ? values[1] : SetupEditor.Text ?? string.Empty;
+            var setup = values.Length > 0 ? values[0] : SetupEditor.Text ?? string.Empty;
+            var draw = values.Length > 1 ? values[1] : DrawEditor.Text ?? string.Empty;
             return (setup, draw);
         }
         catch
