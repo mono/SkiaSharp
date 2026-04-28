@@ -480,15 +480,15 @@ def get_version_files():
     """List version strings from existing markdown files.
     
     Returns (versions, next_versions) where next_versions are the
-    base versions that have a -next.md file.
+    base versions that have a -unreleased.md file.
     """
     versions = []
     next_versions = []
     for f in RELEASES_DIR.iterdir():
         if f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md"):
             stem = f.stem
-            if stem.endswith("-next"):
-                next_versions.append(stem[:-5])  # strip "-next"
+            if stem.endswith("-unreleased"):
+                next_versions.append(stem[:-11])  # strip "-unreleased"
             else:
                 versions.append(stem)
     versions.sort(key=version_key, reverse=True)
@@ -521,8 +521,8 @@ def generate_toc(versions, next_versions):
         lines.append("  items:")
         for v in members:
             if v in next_set:
-                lines.append("    - name: Version {} (Next)".format(v))
-                lines.append("      href: {}-next.md".format(v))
+                lines.append("    - name: Version {} (Unreleased)".format(v))
+                lines.append("      href: {}-unreleased.md".format(v))
             lines.append("    - name: Version {}".format(v))
             lines.append("      href: {}.md".format(v))
 
@@ -571,7 +571,7 @@ def generate_index(versions, next_versions):
             lines.append("- **Version {}.x**".format(g))
             for v in members:
                 if v in next_set:
-                    lines.append("  - [Version {} (Next)]({}-next.md)".format(v, v))
+                    lines.append("  - [Version {} (Unreleased)]({}-unreleased.md)".format(v, v))
                 lines.append("  - [Version {}]({}.md)".format(v, v))
         lines.append("")
 
@@ -651,13 +651,13 @@ def cmd_branch(branch):
     print("Found {} PR(s)".format(len(prs)))
 
     # Determine output file:
-    # - "main" branches (main, release/X.Y.x) → {version}-next.md (unreleased)
+    # - "main" branches (main, release/X.Y.x) → {version}-unreleased.md (unreleased)
     # - versioned branches (release/X.Y.Z*) → {version}.md (released)
     is_main_branch = (branch == "main")
     is_servicing = bool(re.match(r"release/\d+\.\d+\.x$", branch))
 
     if is_main_branch or is_servicing:
-        filename = "{}-next.md".format(version)
+        filename = "{}-unreleased.md".format(version)
     else:
         filename = "{}.md".format(version)
 
