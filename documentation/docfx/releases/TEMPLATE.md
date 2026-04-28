@@ -119,7 +119,8 @@ a sentence of context, and a PR link. Add ❤️ for community contributions.}
    summary if relevant ("CI and documentation improvements") but don't itemize.
 
 4. **Community ❤️** — Always credit community contributors (anyone not @mattleibow)
-   with ❤️ inline and in the Contributors table.
+   with ❤️ inline and in the Contributors table. Always link usernames:
+   `[@username](https://github.com/username)` — never use bare `@username` in prose.
 
 5. **Categorize features** — Group by what they affect: Engine, GPU & Rendering,
    API Surface, Text, Images & Documents, Platform, Security, etc. Pick categories
