@@ -84,6 +84,7 @@ Task("libSkiaSharp")
             : $"";
 
         // Architecture-specific Spectre mitigation flags
+        // -mretpoline requires Clang; -mharden-sls=all works with both GCC and Clang
         var spectreFlags = arch switch {
             "x64" or "x86" => ", '-mretpoline'",
             "arm" or "arm64" => ", '-mharden-sls=all'",

@@ -326,6 +326,47 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, path.PointCount);
 		}
 
+		[SkippableFact]
+		public void GetTextPathWithPositionsProducesNonEmptyPath()
+		{
+			var font = new SKFont();
+			var text = "AV";
+			var glyphCount = font.CountGlyphs(text);
+			Assert.True(glyphCount > 0);
+
+			var positions = new SKPoint[glyphCount];
+			for (var i = 0; i < glyphCount; i++)
+				positions[i] = new SKPoint(i * 20, 0);
+
+			var path = font.GetTextPath(text, positions);
+
+			Assert.NotNull(path);
+			Assert.True(path.PointCount > 0);
+			Assert.False(path.Bounds.IsEmpty);
+		}
+
+		[SkippableFact]
+		public void GetTextPathWithPositionsMatchesExpectedBounds()
+		{
+			var font = new SKFont();
+			var text = "A";
+
+			// Get path at origin
+			var originPath = font.GetTextPath(text, SKPoint.Empty);
+
+			// Get path at offset position
+			var positions = new SKPoint[] { new SKPoint(100, 50) };
+			var posPath = font.GetTextPath(text, positions);
+
+			Assert.NotNull(originPath);
+			Assert.NotNull(posPath);
+			Assert.True(originPath.PointCount > 0);
+			Assert.True(posPath.PointCount > 0);
+
+			// The positioned path should be offset from the origin path
+			Assert.True(posPath.Bounds.Left > originPath.Bounds.Left + 50);
+		}
+
 		[SkippableTheory]
 		[InlineData(SKTextEncoding.Utf8, "ä", 2)]
 		[InlineData(SKTextEncoding.Utf8, "a", 1)]
@@ -507,14 +548,18 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		// m132 empty typeface behavior
+		// m132 empty typeface behavior — `new SKFont(null)` and
+		// `font.Typeface = null` produce the empty typeface; `new SKFont()`
+		// is wrapped in the managed binding to use SKTypeface.Default so
+		// the parameterless ctor stays useful for text measurement.
 
 		[SkippableFact]
-		public void DefaultFontTypefaceIsEmpty()
+		public void DefaultFontTypefaceIsDefault()
 		{
 			using var font = new SKFont();
 			Assert.NotNull(font.Typeface);
-			Assert.True(font.Typeface.IsEmpty);
+			Assert.False(font.Typeface.IsEmpty);
+			Assert.Same(SKTypeface.Default, font.Typeface);
 		}
 
 		[SkippableFact]

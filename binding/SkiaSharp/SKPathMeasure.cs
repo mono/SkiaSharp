@@ -122,21 +122,34 @@ namespace SkiaSharp
 
 		// GetSegment
 
-		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)
+		public bool GetSegment (float start, float stop, SKPathBuilder dst, bool startWithMoveTo)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
 			return SkiaApi.sk_pathmeasure_get_segment (Handle, start, stop, dst.Handle, startWithMoveTo);
 		}
 
+		[Obsolete ("Use the SKPathBuilder overload instead.")]
+		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var builder = new SKPathBuilder ();
+			if (!GetSegment (start, stop, builder, startWithMoveTo))
+				return false;
+
+			dst.ReplaceFromBuilder (builder);
+			return true;
+		}
+
 		public SKPath GetSegment (float start, float stop, bool startWithMoveTo)
 		{
-			var dst = new SKPath ();
+			using var dst = new SKPathBuilder ();
 			if (!GetSegment (start, stop, dst, startWithMoveTo)) {
-				dst.Dispose ();
-				dst = null;
+				return null;
 			}
-			return dst;
+			return dst.Detach ();
 		}
 
 		// NextContour

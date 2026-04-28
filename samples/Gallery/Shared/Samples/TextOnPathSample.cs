@@ -102,17 +102,17 @@ public class TextOnPathSample : CanvasSampleBase
 
 	private static SKPath CreateCirclePath(float cx, float cy, float radius)
 	{
-		var path = new SKPath();
-		path.AddCircle(cx, cy, radius);
-		return path;
+		using var builder = new SKPathBuilder();
+		builder.AddCircle(cx, cy, radius);
+		return builder.Detach();
 	}
 
 	private static SKPath CreateWavePath(float cx, float cy, float amplitude, float width)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var startX = cx - width * 0.4f;
 		var endX = cx + width * 0.4f;
-		path.MoveTo(startX, cy);
+		builder.MoveTo(startX, cy);
 
 		var segments = 4;
 		var segWidth = (endX - startX) / segments;
@@ -121,27 +121,27 @@ public class TextOnPathSample : CanvasSampleBase
 			var x0 = startX + i * segWidth;
 			var x1 = x0 + segWidth;
 			var sign = i % 2 == 0 ? -1f : 1f;
-			path.CubicTo(
+			builder.CubicTo(
 				x0 + segWidth * 0.33f, cy + sign * amplitude,
 				x0 + segWidth * 0.66f, cy + sign * amplitude,
 				x1, cy);
 		}
 
-		return path;
+		return builder.Detach();
 	}
 
 	private static SKPath CreateHeartPath(float cx, float cy, float size)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		// Heart shape using cubic Bézier curves
-		path.MoveTo(cx, cy + size * 0.4f);
-		path.CubicTo(cx + size * 0.6f, cy - size * 0.1f,
-					  cx + size * 0.9f, cy - size * 0.6f,
-					  cx, cy - size * 0.3f);
-		path.CubicTo(cx - size * 0.9f, cy - size * 0.6f,
-					  cx - size * 0.6f, cy - size * 0.1f,
-					  cx, cy + size * 0.4f);
-		path.Close();
-		return path;
+		builder.MoveTo(cx, cy + size * 0.4f);
+		builder.CubicTo(cx + size * 0.6f, cy - size * 0.1f,
+						 cx + size * 0.9f, cy - size * 0.6f,
+						 cx, cy - size * 0.3f);
+		builder.CubicTo(cx - size * 0.9f, cy - size * 0.6f,
+						 cx - size * 0.6f, cy - size * 0.1f,
+						 cx, cy + size * 0.4f);
+		builder.Close();
+		return builder.Detach();
 	}
 }

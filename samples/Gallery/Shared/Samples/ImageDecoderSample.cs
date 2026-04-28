@@ -179,7 +179,7 @@ public class ImageDecoderSample : CanvasSampleBase
 			StrokeWidth = 1,
 			IsAntialias = true,
 		};
-		using var font = new SKFont { Size = fontSize };
+		using var font = new SKFont(SampleMedia.Fonts.Default, fontSize);
 		using var textPaint = new SKPaint
 		{
 			Color = SKColors.White,
@@ -298,7 +298,7 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	private static void DrawErrorText(SKCanvas canvas, int width, int height, string message)
 	{
-		using var font = new SKFont { Size = 24 };
+		using var font = new SKFont(SampleMedia.Fonts.Default, 24);
 		using var paint = new SKPaint
 		{
 			Color = SKColors.Red,

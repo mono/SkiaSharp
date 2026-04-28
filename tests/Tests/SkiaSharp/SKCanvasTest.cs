@@ -157,13 +157,14 @@ namespace SkiaSharp.Tests
 			SKColor[] paths;
 			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
 			using (var canvas = new SKCanvas(bmp))
-			using (var path = new SKPath())
 			{
 				canvas.Clear(SKColors.Transparent);
 
-				path.AddRoundRect(outer);
-				path.AddRoundRect(inner);
-				path.FillType = SKPathFillType.EvenOdd;
+				using var pathBuilder = new SKPathBuilder();
+				pathBuilder.AddRoundRect(outer);
+				pathBuilder.AddRoundRect(inner);
+				pathBuilder.FillType = SKPathFillType.EvenOdd;
+				using var path = pathBuilder.Detach();
 
 				canvas.DrawPath(path, paint);
 
