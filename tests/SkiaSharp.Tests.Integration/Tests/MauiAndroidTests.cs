@@ -41,7 +41,8 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
         var androidHome = Environment.GetEnvironmentVariable("ANDROID_HOME") 
             ?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Android/sdk");
-        return Path.Combine(androidHome, "platform-tools", "adb");
+        var exe = OperatingSystem.IsWindows() ? "adb.exe" : "adb";
+        return Path.Combine(androidHome, "platform-tools", exe);
     }
 
     /// <summary>
