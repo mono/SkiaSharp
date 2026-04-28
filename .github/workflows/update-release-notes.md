@@ -90,51 +90,19 @@ Read the version file and `documentation/docfx/releases/TEMPLATE.md`.
 
 ## Step 2 — Write polished content
 
-Read the version file and `documentation/docfx/releases/TEMPLATE.md`. The YAML
-front-matter in the version file has `version` and `status`.
+## Step 2 — Polish the release notes
 
-Rewrite the raw PR list into polished release notes following the template.
+The version file now contains raw PR data with a comment that says `REPLACE THIS ENTIRE FILE`.
 
-### Header format
+Use the **release-notes** skill (`.agents/skills/release-notes/SKILL.md`) to rewrite
+the file with polished content. The skill has all the formatting rules, template reference,
+and content guidelines. Read it and follow Steps 3-4.
 
-| `status` value | Header to use |
-|----------------|---------------|
-| `unreleased` | `> **Upcoming release** · In development · Not yet available on NuGet` |
-| `released` | `> **{theme}** · Released {date} · [NuGet](...) · [GitHub Release](...)` — fetch date from `gh release view` |
+The `status` field in the YAML header tells you whether it's `released` or `unreleased`:
+- `unreleased` → use the "Upcoming release / In development" header
+- `released` → fetch the release date with `gh release view` and use the released header
 
-### Content rules
-
-1. **Highlights** — 1-3 sentences. Lead with the biggest changes. Mention community
-   contributors by linked name.
-
-2. **Skia engine** — The version number encodes the Skia milestone (e.g., 4.**147**.0 = m147).
-   If a "Bump skia" PR exists, list it first under **Engine**.
-
-3. **Categorize features** — Group by what they affect:
-   Engine, GPU & Rendering, API Surface, Text & Fonts, Platform, Security, etc.
-   Each item: **bold title** — description. ❤️ [@contributor](https://github.com/contributor) ([#NNN](url))
-
-4. **Community contributors** — Anyone not `@mattleibow`. Mark with ❤️ inline AND
-   in a Contributors table. **ALWAYS** link: `[@user](https://github.com/user)`.
-
-5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow/skill changes.
-   If many, mention as: "Plus several CI and documentation improvements."
-
-6. **Breaking changes** — If any, list under `### ⚠️ Breaking Changes` after Highlights.
-
-7. **PR links** — Every item links to its PR.
-
-If there are no user-facing changes, write: `*No user-facing changes yet.*`
-
-## Step 3 — Write the version file
-
-Use the `edit` tool to **replace the entire content** of `documentation/docfx/releases/{VERSION}.md`
-with the polished release notes.
-
-The file should follow the template structure exactly — title, blockquote header,
-then polished sections (Highlights, Breaking Changes, New Features, etc.).
-
-## Step 4 — Create or update the pull request
+## Step 3 — Create or update the pull request
 
 Always use `dev/release-notes-{VERSION}` as the branch name when creating the pull request.
 This ensures each workflow run updates the **same PR** for a given version instead of
