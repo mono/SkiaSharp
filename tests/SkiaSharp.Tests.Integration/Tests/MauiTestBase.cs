@@ -63,20 +63,6 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     protected virtual Task ValidateDeviceAsync() => Task.CompletedTask;
 
     /// <summary>
-    /// Prepare the app window after launch (e.g., bring to foreground, resize).
-    /// Called after driver connection, before the render wait and screenshot.
-    /// </summary>
-    protected virtual Task PrepareWindowAsync(AppiumDriver driver) => Task.CompletedTask;
-
-    /// <summary>
-    /// Capture a screenshot of the app under test.
-    /// Default uses Appium's built-in screenshot, which captures the screen (not just the app window).
-    /// Override for platform-specific capture (e.g., Windows PrintWindow to bypass Z-order issues).
-    /// </summary>
-    protected virtual byte[] GetFullScreenshot(AppiumDriver driver) =>
-        driver.GetScreenshot().AsByteArray;
-    
-    /// <summary>
     /// Configure platform-specific Appium options.
     /// </summary>
     protected abstract void ConfigureAppiumOptions(AppiumOptions options, string appPath, string bundleId);
@@ -85,21 +71,16 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     /// Create the platform-specific Appium driver.
     /// </summary>
     protected abstract AppiumDriver CreateDriver(AppiumOptions options);
-    
-    /// <summary>
-    /// Find the canvas element in the app. Override for platform-specific locators.
-    /// </summary>
-    protected virtual IWebElement FindCanvasElement(AppiumDriver driver, string bundleId) =>
-        driver.FindElement("accessibility id", "SkiaCanvas");
 
     /// <summary>
     /// Get the canvas bounds (location and size) in window coordinates.
-    /// Default uses FindCanvasElement. Override when the platform's accessibility tree
-    /// doesn't expose the canvas element (e.g., WinUI raw rendering surfaces).
+    /// The MAUI app exposes a Grid wrapper with AutomationId="SkiaCanvas" — a Grid has
+    /// automation peers on all platforms (WinUI UIA, Android contentDescription, iOS accessibilityId).
+    /// Override only when the platform uses a different locator strategy.
     /// </summary>
     protected virtual (SKPointI location, SKSizeI size) GetCanvasBounds(AppiumDriver driver, string bundleId)
     {
-        var element = FindCanvasElement(driver, bundleId);
+        var element = driver.FindElement("accessibility id", "SkiaCanvas");
         return (new SKPointI(element.Location.X, element.Location.Y),
                 new SKSizeI(element.Size.Width, element.Size.Height));
     }
@@ -221,9 +202,12 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
                          xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
                          x:Class="{projectName}.MainPage"
                          BackgroundColor="Black">
-                <Grid HorizontalOptions="Center" VerticalOptions="Center">
-                    <skia:{canvasView} x:Name="CanvasView" 
-                                       AutomationId="SkiaCanvas"
+                <Grid AutomationId="SkiaCanvas"
+                      WidthRequest="{CanvasWidth}"
+                      HeightRequest="{CanvasHeight}"
+                      HorizontalOptions="Center"
+                      VerticalOptions="Center">
+                    <skia:{canvasView} x:Name="CanvasView"
                                        WidthRequest="{CanvasWidth}"
                                        HeightRequest="{CanvasHeight}"
                                        IgnorePixelScaling="True"
@@ -356,9 +340,6 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             // Validate device matches expected configuration
             await ValidateDeviceAsync();
 
-            // Bring window to foreground before screenshot (platform-specific)
-            await PrepareWindowAsync(driver);
-
             Output.WriteLine("Waiting for app to render...");
             await Task.Delay(5000);
             
@@ -371,8 +352,8 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             await File.WriteAllTextAsync(pageSourcePath, pageSource);
             Output.WriteLine($"Page source saved: {pageSourcePath}");
             
-            // Full screenshot — platform override may use PrintWindow instead of screen capture
-            var fullScreenshot = GetFullScreenshot(driver);
+            // Full screenshot
+            var fullScreenshot = driver.GetScreenshot().AsByteArray;
             await SaveScreenshot(fullScreenshot, $"{screenshotName}-full");
             Output.WriteLine("Full screenshot saved");
             
