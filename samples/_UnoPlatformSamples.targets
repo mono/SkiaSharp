@@ -4,8 +4,38 @@
     <ProjectReference Remove="@(ProjectReference)" />
   </ItemGroup>
 
+  <!-- The Uno SDK injects PackageReferences for SkiaSharp packages through
+       Uno.Implicit.Packages (gated on UnoFeatures containing SkiaRenderer).
+       Those NuGet packages conflict with the in-tree ProjectReferences below
+       in three ways:
+
+       1. Duplicate assemblies (CS1704 error): the NuGet package and the
+          in-tree ProjectReference both produce the same assembly name.
+          Affects: SkiaSharp, SkiaSharp.Views.Uno.WinUI, SkiaSharp.HarfBuzz,
+          HarfBuzzSharp, and all Views/Desktop packages.
+
+       2. Version conflicts (MSB3243/MSB3277 warning): the Uno SDK pins
+          packages at 3.x while in-tree builds produce 4.x. The resolver
+          either picks 3.x (wrong) or gives up. Affects: SkiaSharp.Skottie,
+          SkiaSharp.Resources, SkiaSharp.SceneGraph — packages that the Uno
+          SDK injects as direct references and that also flow in transitively
+          from in-tree at a higher version.
+
+       3. Duplicate native symbols (wasm-ld error): NativeAssets NuGet
+          packages supply a pre-built libSkiaSharp.a / libHarfBuzzSharp.a,
+          but IncludeNativeAssets.*.targets also adds the locally-built copy.
+          The linker sees both and fails with duplicate symbols.
+          Affects: SkiaSharp.NativeAssets.WebAssembly,
+          HarfBuzzSharp.NativeAssets.WebAssembly, and all other
+          platform-specific NativeAssets packages.
+
+       ExcludeAssets="all" keeps each package in the graph (satisfying the
+       Uno SDK's direct reference) but prevents it from contributing any
+       assets — the real code comes from the ProjectReferences below and
+       the locally-built natives from IncludeNativeAssets.*.targets. -->
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="3.119.2" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Skottie" Version="3.119.2" ExcludeAssets="all" />
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.2" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
     <PackageReference Include="SkiaSharp.Views.Uno.WinUI" Version="3.119.2" ExcludeAssets="all" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" ExcludeAssets="all" />
@@ -26,6 +56,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
