@@ -74,9 +74,19 @@ python3 .agents/skills/release-notes/scripts/generate-release-notes.py \
   --output /tmp/raw-changes.md
 ```
 
-The script outputs:
-- **To stderr:** Branch name, version, diff range, PR count
-- **To file:** Raw markdown list of PRs with metadata
+The script writes a single file with a YAML front-matter header and PR list:
+
+```markdown
+---
+branch: release/4.147.0-preview.1
+version: 4.147.0
+status: unreleased
+diff: release/3.119.4-preview.1..release/4.147.0-preview.1
+pr_count: 45
+---
+
+- PR title by @author in https://...
+```
 
 Also ensure the TOC is up to date:
 
@@ -88,16 +98,14 @@ Read `/tmp/raw-changes.md` and `documentation/docfx/releases/TEMPLATE.md`.
 
 ## Step 2 — Determine version and header
 
-Read the version from the script's stderr output (it prints `Version: X.Y.Z`).
+Read the YAML front-matter from `/tmp/raw-changes.md` to get `version` and `status`.
 
 ### Header format
 
-| Branch type | Header |
-|-------------|--------|
-| `main` | `> **Upcoming release** · In development · Not yet available on NuGet` |
-| `release/X.Y.x` (servicing) | `> **Upcoming release** · In development · Not yet available on NuGet` |
-| `release/X.Y.Z-preview.N` | Check if a GitHub release exists for this version. If yes: `> **Preview only** · [NuGet](...) · [GitHub Release](...)`. If no: `> **Upcoming release** · In development` |
-| `release/X.Y.Z` (stable) | Check if a GitHub release exists. If yes: `> **Released {date}** · [NuGet](...) · [GitHub Release](...)`. If no: `> **Upcoming release** · In development` |
+| `status` | Header |
+|----------|--------|
+| `unreleased` | `> **Upcoming release** · In development · Not yet available on NuGet` |
+| `released` | `> **{theme}** · Released {date} · [NuGet](...) · [GitHub Release](...)` — fetch date from `gh release view` |
 | Tag push | Always has a release: `> **{theme}** · Released {date} · [NuGet](...) · [GitHub Release](...)` |
 
 ## Step 3 — Write polished content

@@ -5,10 +5,10 @@ Fetch SkiaSharp release data and manage the website release notes structure.
 This script collects raw data. AI does the formatting using TEMPLATE.md.
 
 Commands:
-    # Diff a branch against its predecessor and list PRs
-    python3 generate-release-notes.py --branch main
-    python3 generate-release-notes.py --branch release/3.119.x
-    python3 generate-release-notes.py --branch release/4.147.0-preview.1
+    # Diff a branch against its predecessor and list PRs (writes file with YAML header)
+    python3 generate-release-notes.py --branch main -o /tmp/changes.md
+    python3 generate-release-notes.py --branch release/3.119.x -o /tmp/changes.md
+    python3 generate-release-notes.py --branch release/4.147.0-preview.1 -o /tmp/changes.md
 
     # Fetch raw release data for specific version(s) -> temp dir
     python3 generate-release-notes.py --version 3.119.2
@@ -482,30 +482,39 @@ def get_prs_from_diff(from_ref, to_ref):
     return prs
 
 
-def format_pr_list(prs, branch_display, from_display):
-    # type: (list[dict], str, str) -> str
-    """Format the PR list as raw markdown."""
+def format_pr_list(prs, metadata):
+    # type: (list[dict], dict) -> str
+    """Format the PR list as markdown with a YAML front-matter header."""
+    lines = [
+        "---",
+        "branch: {}".format(metadata["branch"]),
+        "version: {}".format(metadata["version"]),
+        "status: {}".format(metadata["status"]),
+        "diff: {}..{}".format(metadata["from"], metadata["to"]),
+        "pr_count: {}".format(len(prs)),
+        "---",
+        "",
+    ]
+
     if not prs:
-        return "*No changes found.*\n"
+        lines.append("*No changes found.*")
+    else:
+        for pr in prs:
+            title = pr.get("title", "")
+            author = pr.get("author", {}).get("login", "unknown")
+            url = pr.get("url", "")
+            label_names = [la.get("name", "") for la in pr.get("labels", [])]
+            labels_str = " [{}]".format(", ".join(label_names)) if label_names else ""
+            commits = pr.get("commitCount", 0)
+            days = pr.get("workingDays", 0)
+            effort = " ({} commit{}, {} day{})".format(
+                commits, "s" if commits != 1 else "",
+                days, "s" if days != 1 else "")
+            skia_pr = pr.get("skiaPr")
+            skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
 
-    lines = ["Changes on `{}` since `{}`:".format(branch_display, from_display),
-             ""]
-    for pr in prs:
-        title = pr.get("title", "")
-        author = pr.get("author", {}).get("login", "unknown")
-        url = pr.get("url", "")
-        label_names = [la.get("name", "") for la in pr.get("labels", [])]
-        labels_str = " [{}]".format(", ".join(label_names)) if label_names else ""
-        commits = pr.get("commitCount", 0)
-        days = pr.get("workingDays", 0)
-        effort = " ({} commit{}, {} day{})".format(
-            commits, "s" if commits != 1 else "",
-            days, "s" if days != 1 else "")
-        skia_pr = pr.get("skiaPr")
-        skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
-
-        lines.append("- {} by @{} in {}{}{}{}".format(
-            title, author, url, labels_str, effort, skia_str))
+            lines.append("- {} by @{} in {}{}{}{}".format(
+                title, author, url, labels_str, effort, skia_str))
 
     lines.append("")
     return "\n".join(lines)
@@ -640,17 +649,17 @@ def cmd_update_toc():
     print("Updated {}".format(RELEASES_DIR / "index.md"))
 
 
-def cmd_branch(branch, output_path=None):
-    # type: (str, Optional[Path]) -> None
-    """Diff a branch against its predecessor and output PR data."""
+def cmd_branch(branch, output_path):
+    # type: (str, Path) -> None
+    """Diff a branch against its predecessor and write results to a file."""
     branch = _removeprefix(branch, "origin/")
 
-    print("Fetching remote branches...", file=sys.stderr)
+    print("Fetching remote branches...")
     try:
         run(["git", "fetch", "origin", "--quiet"], check=True)
     except subprocess.CalledProcessError:
         print("ERROR: git fetch failed. Cannot determine branch diff "
-              "range with stale data.", file=sys.stderr)
+              "range with stale data.")
         sys.exit(1)
 
     from_ref, to_ref, version = determine_diff_range(branch)
@@ -666,13 +675,11 @@ def cmd_branch(branch, output_path=None):
     is_servicing = branch.endswith(".x")
     status = "unreleased"
     if not is_main and not is_servicing:
-        # Check if a GitHub release exists for this version
         try:
             gh(["release", "view", "v{}".format(version),
                 "--repo", REPO, "--json", "tagName"])
             status = "released"
         except subprocess.CalledProcessError:
-            # Try preview tags too
             try:
                 tags_raw = gh(["api", "repos/{}/tags".format(REPO),
                                "--jq", ".[].name",
@@ -684,22 +691,26 @@ def cmd_branch(branch, output_path=None):
             except subprocess.CalledProcessError:
                 pass
 
-    print("Branch: {}".format(branch), file=sys.stderr)
-    print("Version: {}".format(version), file=sys.stderr)
-    print("Status: {}".format(status), file=sys.stderr)
-    print("Diff: {}..{}".format(from_display, to_display), file=sys.stderr)
+    print("Branch: {}".format(branch))
+    print("Version: {}".format(version))
+    print("Status: {}".format(status))
+    print("Diff: {}..{}".format(from_display, to_display))
 
     prs = get_prs_from_diff(from_ref, to_ref)
-    print("Found {} PR(s)".format(len(prs)), file=sys.stderr)
+    print("Found {} PR(s)".format(len(prs)))
 
-    content = format_pr_list(prs, to_display, from_display)
+    metadata = {
+        "branch": branch,
+        "version": version,
+        "status": status,
+        "from": from_display,
+        "to": to_display,
+    }
+    content = format_pr_list(prs, metadata)
 
-    if output_path:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(content)
-        print("Wrote {}".format(output_path), file=sys.stderr)
-    else:
-        print(content)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(content)
+    print("Wrote {}".format(output_path))
 
 
 def cmd_fetch_versions(target_versions, output_dir):
@@ -747,12 +758,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  %(prog)s --branch main                       "
+            "  %(prog)s --branch main -o /tmp/changes.md    "
             "PRs on main since last release branch\n"
-            "  %(prog)s --branch release/3.119.x            "
+            "  %(prog)s --branch release/3.119.x -o out.md  "
             "PRs on servicing branch\n"
-            "  %(prog)s --branch release/4.147.0-preview.1  "
-            "PRs since previous release branch\n"
             "  %(prog)s --version 3.119.2                   "
             "Fetch published release data\n"
             "  %(prog)s --last 5                            "
@@ -805,8 +814,9 @@ def main():
         cmd_update_toc()
 
     elif args.branch:
-        cmd_branch(args.branch,
-                   Path(args.output) if args.output else None)
+        if not args.output:
+            parser.error("--output is required with --branch")
+        cmd_branch(args.branch, Path(args.output))
 
     elif args.versions:
         output = (Path(args.output) if args.output
