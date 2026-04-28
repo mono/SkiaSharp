@@ -139,6 +139,18 @@ def generate_raw_version_page(base_version: str, releases: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def compute_pr_effort(pr: dict) -> dict:
+    """Compute commit count and unique working days from PR commit data."""
+    commits = pr.get("commits", [])
+    commit_count = len(commits)
+    unique_days = set()
+    for c in commits:
+        date_str = c.get("committedDate") or c.get("authoredDate", "")
+        if date_str:
+            unique_days.add(date_str[:10])  # YYYY-MM-DD
+    return {"commitCount": commit_count, "workingDays": len(unique_days)}
+
+
 # ── Unreleased data ─────────────────────────────────────────────────
 
 
@@ -203,8 +215,10 @@ def get_unreleased_prs(tag: str) -> list[dict]:
     for i, num in enumerate(pr_numbers, 1):
         try:
             raw = gh(["pr", "view", str(num), "--repo", REPO,
-                      "--json", "title,author,url,number,labels,mergedAt"])
-            prs.append(json.loads(raw))
+                      "--json", "title,author,url,number,labels,mergedAt,commits"])
+            pr = json.loads(raw)
+            pr.update(compute_pr_effort(pr))
+            prs.append(pr)
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             continue
         if i % 20 == 0:
@@ -226,8 +240,11 @@ def generate_raw_unreleased(prs: list[dict], tag: str) -> str:
         number = pr.get("number", "")
         label_names = [l.get("name", "") for l in pr.get("labels", [])]
         labels_str = f" [{', '.join(label_names)}]" if label_names else ""
+        commits = pr.get("commitCount", 0)
+        days = pr.get("workingDays", 0)
+        effort = f" ({commits} commit{'s' if commits != 1 else ''}, {days} day{'s' if days != 1 else ''})"
 
-        lines.append(f"- {title} by @{author} in {url}{labels_str}")
+        lines.append(f"- {title} by @{author} in {url}{labels_str}{effort}")
 
     lines.append("")
     return "\n".join(lines)
