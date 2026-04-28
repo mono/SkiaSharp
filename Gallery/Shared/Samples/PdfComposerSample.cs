@@ -216,7 +216,7 @@ public class PdfComposerSample : DocumentSampleBase
 		using var labelPaint = new SKPaint { IsAntialias = true, Color = BodyColor };
 
 		// Star
-		using var starPath = new SKPath();
+		using var starBuilder = new SKPathBuilder();
 		var scx = pageWidth / 4;
 		var scy = 200f;
 		var outerR = 60f;
@@ -227,10 +227,11 @@ public class PdfComposerSample : DocumentSampleBase
 			var angle = (float)(Math.PI / 2 + i * Math.PI / 5);
 			var px = scx + r * (float)Math.Cos(angle);
 			var py = scy - r * (float)Math.Sin(angle);
-			if (i == 0) starPath.MoveTo(px, py);
-			else starPath.LineTo(px, py);
+			if (i == 0) starBuilder.MoveTo(px, py);
+			else starBuilder.LineTo(px, py);
 		}
-		starPath.Close();
+		starBuilder.Close();
+		using var starPath = starBuilder.Detach();
 
 		using var starFill = new SKPaint { IsAntialias = true, Color = new SKColor(0xFF, 0xC1, 0x07) };
 		canvas.DrawPath(starPath, starFill);
@@ -262,12 +263,13 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawText("Radial Gradient Circle", ccx, ccy + cr + 20, SKTextAlign.Center, labelFont, labelPaint);
 
 		// Bezier curves
-		using var bezierPath = new SKPath();
+		using var bezierBuilder = new SKPathBuilder();
 		var bx = pageWidth / 2 + 20;
-		bezierPath.MoveTo(bx, 350);
-		bezierPath.CubicTo(bx + 40, 310, bx + 120, 310, bx + 160, 350);
-		bezierPath.CubicTo(bx + 120, 390, bx + 40, 430, bx, 400);
-		bezierPath.CubicTo(bx + 60, 370, bx + 100, 380, bx + 160, 400);
+		bezierBuilder.MoveTo(bx, 350);
+		bezierBuilder.CubicTo(bx + 40, 310, bx + 120, 310, bx + 160, 350);
+		bezierBuilder.CubicTo(bx + 120, 390, bx + 40, 430, bx, 400);
+		bezierBuilder.CubicTo(bx + 60, 370, bx + 100, 380, bx + 160, 400);
+		using var bezierPath = bezierBuilder.Detach();
 
 		using var bezierPaint = new SKPaint
 		{
@@ -478,17 +480,18 @@ public class PdfComposerSample : DocumentSampleBase
 		}
 
 		// Diamond row
-		using var diamondPath = new SKPath();
+		using var diamondBuilder = new SKPathBuilder();
 		var dy = 620f;
 		for (var d = 0; d < 5; d++)
 		{
 			var dx = 100f + d * 90;
-			diamondPath.MoveTo(dx, dy - 25);
-			diamondPath.LineTo(dx + 25, dy);
-			diamondPath.LineTo(dx, dy + 25);
-			diamondPath.LineTo(dx - 25, dy);
-			diamondPath.Close();
+			diamondBuilder.MoveTo(dx, dy - 25);
+			diamondBuilder.LineTo(dx + 25, dy);
+			diamondBuilder.LineTo(dx, dy + 25);
+			diamondBuilder.LineTo(dx - 25, dy);
+			diamondBuilder.Close();
 		}
+		using var diamondPath = diamondBuilder.Detach();
 		using var diaShader = SKShader.CreateLinearGradient(
 			new SKPoint(80, dy), new SKPoint(pageWidth - 80, dy),
 			new SKColor[] { new SKColor(0x42, 0xA5, 0xF5), new SKColor(0xAB, 0x47, 0xBC), new SKColor(0xEF, 0x53, 0x50) },
