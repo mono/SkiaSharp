@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Uno.Sdk/6.6.0-dev.208">
+  <PropertyGroup>
+    <!-- WASM-only: SkiaFiddle compiles user C# in the browser via Roslyn. -->
+    <TargetFrameworks>net10.0-browserwasm</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>SkiaFiddle</RootNamespace>
+    <UnoSingleProject>true</UnoSingleProject>
+    <ApplicationTitle>SkiaFiddle</ApplicationTitle>
+    <ApplicationId>com.companyname.skiafiddle</ApplicationId>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationPublisher>O=SkiaSharp</ApplicationPublisher>
+    <Description>SkiaFiddle — live SkiaSharp playground that compiles C# snippets in the browser with Roslyn.</Description>
+    <UnoFeatures>
+      SkiaRenderer;
+    </UnoFeatures>
+  </PropertyGroup>
+  <PropertyGroup>
+    <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Roslyn emits IL at runtime; the runtime must be able to execute it. -->
+    <WasmEnableInterpreter>true</WasmEnableInterpreter>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <!-- Roslyn relies on reflection-heavy code paths; trimming would strip them. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- Roslyn diagnostics use culture data. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- AssemblyExtensions.TryGetRawMetadata uses pointers; we wrap it in our own unsafe block. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- In-browser C# compilation -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+    <PackageReference Include="Basic.Reference.Assemblies.Net100" Version="1.8.5" />
+    <!-- Code editor -->
+    <PackageReference Include="Uno.Monaco.Editor" Version="6.4.0-dev.41.gfc42320b13" />
+  </ItemGroup>
+</Project>
