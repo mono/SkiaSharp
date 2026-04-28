@@ -506,6 +506,12 @@ def format_pr_list(prs, metadata):
         "pr_count: {}".format(len(prs)),
         "---",
         "",
+        "<!-- REPLACE THIS ENTIRE FILE with polished release notes.",
+        "     Use documentation/docfx/releases/TEMPLATE.md as the formatting reference.",
+        "     Remove this comment, the YAML header above, and the raw PR list below.",
+        "     Write the final content starting with: # Version {} -->".format(
+            metadata["version"]),
+        "",
     ]
 
     if not prs:
