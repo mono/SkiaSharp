@@ -388,18 +388,25 @@ def determine_diff_range(branch):
         # All versioned branches for this minor (exclude the .x branch itself)
         candidates = [b for b in all_branches
                       if b.startswith("release/{}.".format(minor))
-                      and b != branch]
+                      and b != branch
+                      and not b.endswith(".x")]
 
         if not candidates:
             base = run(["git", "merge-base",
                         "origin/{}".format(branch), "origin/main"])
-            return base, "origin/{}".format(branch), "{}.x".format(minor)
+            return base, "origin/{}".format(branch), "{}.0".format(minor)
 
         candidates.sort(key=release_branch_sort_key)
         latest = candidates[-1]
+
+        # Determine next patch version from the latest branch
+        latest_version = version_from_branch(latest)
+        latest_patch = int(latest_version.split(".")[-1]) if latest_version else 0
+        next_version = "{}.{}".format(minor, latest_patch + 1)
+
         return ("origin/{}".format(latest),
                 "origin/{}".format(branch),
-                "{}.x".format(minor))
+                next_version)
 
     # ── versioned branch (release/X.Y.Z or release/X.Y.Z-preview.N) ─
     m_ver = re.match(r"release/(\d+\.\d+)\.\S+", branch)
