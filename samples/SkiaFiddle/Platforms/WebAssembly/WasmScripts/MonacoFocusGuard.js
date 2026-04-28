@@ -1,20 +1,3 @@
-// Paint the document body and Monaco's container to match the dark panel color.
-// Uno's WASM Skia compositor punches a transparent hole through the canvas for
-// each native HTML overlay sized to the overlay's bounding box, not its
-// clip-path. When the box is larger than the clip-path (which seems to happen
-// here), the unclipped portion of the hole reveals the body's default white
-// background. Forcing both body and .monaco-editor to #11151A makes whatever
-// shows through indistinguishable from the surrounding XAML chrome.
-(function () {
-    if (window.__skiaFiddleBackgroundPainted) return;
-    window.__skiaFiddleBackgroundPainted = true;
-    var style = document.createElement('style');
-    style.textContent =
-        'html, body { background-color: #11151A !important; }\n' +
-        '.monaco-editor, .monaco-editor-background { background-color: #11151A !important; }';
-    (document.head || document.documentElement).appendChild(style);
-})();
-
 // Bridge from managed code into Monaco's live JS state. Monaco's
 // onDidChangeContent → Accessor.setValue("Text", …) round-trip into the managed
 // CodeEditor.Text property is flaky under Uno WASM — the property lags behind
