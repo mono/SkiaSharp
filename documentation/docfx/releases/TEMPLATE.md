@@ -4,8 +4,7 @@
      AI reads this file when formatting release notes for any version:
      - Stable release: has NuGet link, release date, GitHub Release link
      - Preview-only: use "Preview only" instead of date, NuGet links to preview package
-     - Upcoming/unreleased: use "In development", no NuGet/release links,
-       wrap content in UNRELEASED_BEGIN/END fences
+     - Upcoming/unreleased: use "In development", no NuGet/release links, omit Links section
 
      Adapt the example below based on the version's status.
      Omit sections that don't apply. Never force empty categories.
@@ -20,11 +19,6 @@
 
      For upcoming/unreleased versions:
 > **Upcoming release** · In development · Not yet available on NuGet
-
-     Then wrap ALL content below in fences:
-     <!-- UNRELEASED_BEGIN ->
-     {content}
-     <!-- UNRELEASED_END ->
 -->
 
 ## Highlights

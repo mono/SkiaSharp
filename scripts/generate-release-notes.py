@@ -251,11 +251,7 @@ def ensure_upcoming_version_file(releases_dir: str, version: str) -> None:
 
 > **Upcoming release** · In development · Not yet available on NuGet
 
-<!-- UNRELEASED_BEGIN -->
-
 *No changes yet.*
-
-<!-- UNRELEASED_END -->
 """
     with open(filepath, "w") as f:
         f.write(content)

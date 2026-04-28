@@ -46,10 +46,8 @@ Extract the version number (e.g., `4.133.0`). Then ensure the version file and T
 python3 scripts/generate-release-notes.py --update-toc
 ```
 
-This creates `documentation/docfx/releases/{version}.md` if missing (with `UNRELEASED_BEGIN/END`
-fences) and regenerates `TOC.yml` and `index.md`.
-
-Read the version file to confirm it has `<!-- UNRELEASED_BEGIN -->` and `<!-- UNRELEASED_END -->` markers.
+This creates `documentation/docfx/releases/{version}.md` if missing and regenerates
+`TOC.yml` and `index.md`. Read the version file to see its current content.
 
 ## Step 2 — Get raw change data
 
@@ -104,19 +102,13 @@ Rewrite the raw PR list into polished release notes following the template:
 
 If there are no user-facing changes, write: `*No user-facing changes yet.*`
 
-## Step 5 — Update the version file
+## Step 5 — Write the version file
 
-Use the `edit` tool to replace the content between the fence markers in
-`documentation/docfx/releases/{version}.md`.
+Use the `edit` tool to **replace the entire content** of `documentation/docfx/releases/{version}.md`
+with the polished release notes from Step 4.
 
-The replacement MUST keep both markers:
+The file should follow the template structure exactly — title, blockquote header
+(`> **Upcoming release** · In development · Not yet available on NuGet`),
+then the polished sections (Highlights, Breaking Changes, New Features, etc.).
 
-```
-<!-- UNRELEASED_BEGIN -->
-
-{your polished content from Step 4}
-
-<!-- UNRELEASED_END -->
-```
-
-Replace everything from `<!-- UNRELEASED_BEGIN -->` through `<!-- UNRELEASED_END -->` inclusive.
+No fence markers or placeholders needed — the workflow overwrites the whole file each run.
