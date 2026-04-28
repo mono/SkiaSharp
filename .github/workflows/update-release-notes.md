@@ -43,7 +43,7 @@ grep 'SKIASHARP_VERSION:' scripts/azure-templates-variables.yml
 Extract the version number (e.g., `4.133.0`). Then ensure the version file and TOC exist:
 
 ```bash
-python3 scripts/generate-release-notes.py --update-toc
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc
 ```
 
 This creates `documentation/docfx/releases/{version}.md` if missing and regenerates
@@ -54,7 +54,7 @@ This creates `documentation/docfx/releases/{version}.md` if missing and regenera
 Fetch the list of changes since the last release:
 
 ```bash
-python3 scripts/generate-release-notes.py --unreleased --output /tmp/unreleased-raw.md
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --unreleased --output /tmp/unreleased-raw.md
 ```
 
 This uses git commit ancestry (not dates) to find all PRs on main that are not in the last

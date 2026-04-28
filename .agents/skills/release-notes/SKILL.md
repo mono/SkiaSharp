@@ -39,7 +39,7 @@ Ask the user which version(s) to generate, or infer from context:
 For each version, fetch the raw GitHub release data:
 
 ```bash
-python3 scripts/generate-release-notes.py --version {X.Y.Z}
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version {X.Y.Z}
 ```
 
 This outputs raw markdown to a temp directory. Multiple `--version` flags can be
@@ -93,7 +93,7 @@ Follow these rules:
 After writing all version files:
 
 ```bash
-python3 scripts/generate-release-notes.py --update-toc
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc
 ```
 
 ## Parallelization

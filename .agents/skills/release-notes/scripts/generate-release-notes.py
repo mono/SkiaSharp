@@ -6,16 +6,16 @@ This script collects raw data. AI does the formatting using TEMPLATE.md.
 
 Commands:
     # Fetch raw release data for specific version(s) → temp dir
-    python3 scripts/generate-release-notes.py --version 3.119.2
+    python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version 3.119.2
 
     # Fetch raw release data for the last N versions → temp dir
-    python3 scripts/generate-release-notes.py --last 5
+    python3 .agents/skills/release-notes/scripts/generate-release-notes.py --last 5
 
     # Fetch unreleased PRs (commits on main not in the last release tag) → temp dir or stdout
-    python3 scripts/generate-release-notes.py --unreleased
+    python3 .agents/skills/release-notes/scripts/generate-release-notes.py --unreleased
 
     # Regenerate TOC.yml and index.md from files on disk + create upcoming version file
-    python3 scripts/generate-release-notes.py --update-toc
+    python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc
 
 Requirements: gh (GitHub CLI), git, Python 3.7+
 """
