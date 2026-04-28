@@ -174,7 +174,7 @@ jobs:
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
           BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          dotnet publish "samples/Basic/SkiaFiddle/SkiaFiddle/SkiaFiddle.csproj" \
+          dotnet publish "samples/SkiaFiddle/SkiaFiddle.csproj" \
             -c Release \
             -f net10.0-browserwasm \
             -o output/skia-fiddle-publish \
@@ -184,7 +184,7 @@ jobs:
 
       - name: Smoke test SkiaFiddle WASM
         run: |
-          bash samples/Basic/SkiaFiddle/SkiaFiddle/scripts/smoke.sh \
+          bash samples/SkiaFiddle/scripts/smoke.sh \
             output/skia-fiddle-publish/wwwroot \
             --screenshot output/skia-fiddle-publish/smoke.png
 

@@ -4,7 +4,7 @@
 # Mirrors samples/Gallery/Uno/scripts/smoke.sh.
 #
 # Usage:
-#   bash samples/Basic/SkiaFiddle/SkiaFiddle/scripts/smoke.sh <publish-wwwroot-dir> [--port N] [--screenshot PATH]
+#   bash samples/SkiaFiddle/scripts/smoke.sh <publish-wwwroot-dir> [--port N] [--screenshot PATH]
 #
 # Checks, in order:
 #   1. Inputs present (index.html, _framework/, package_*/uno-config.js)

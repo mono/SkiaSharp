@@ -59,7 +59,7 @@ If you're modifying native SkiaSharp C code, use
 
 ```bash
 dotnet run \
-  --project samples/Basic/SkiaFiddle/SkiaFiddle/SkiaFiddle.csproj \
+  --project samples/SkiaFiddle/SkiaFiddle.csproj \
   -c Debug \
   -f net10.0-browserwasm
 ```
@@ -69,7 +69,7 @@ Then open <http://localhost:5000/>.
 For a release build / static deployment:
 
 ```bash
-dotnet publish samples/Basic/SkiaFiddle/SkiaFiddle/SkiaFiddle.csproj \
+dotnet publish samples/SkiaFiddle/SkiaFiddle.csproj \
   -c Release \
   -f net10.0-browserwasm \
   -p:WasmEnableSIMD=false \
