@@ -67,23 +67,47 @@ def get_latest_release_tag() -> str:
     return raw.strip()
 
 
-def get_latest_release_date(tag: str) -> str:
-    """Get the published date of a release tag."""
-    raw = run(["gh", "release", "view", tag, "--repo", REPO,
-               "--json", "publishedAt", "-q", ".publishedAt"])
-    return raw.strip()
+def get_unreleased_pr_numbers(tag: str) -> list[int]:
+    """Find PR numbers from commits on main that are not in the release tag.
 
+    Uses git log to compare the tag with origin/main, extracting PR numbers
+    from merge commit messages (format: "... (#NNN)").
+    """
+    # Ensure we have the tag and main locally
+    run(["git", "fetch", "origin", "main", "--quiet"], check=False)
+    run(["git", "fetch", "origin", "tag", tag, "--quiet"], check=False)
 
-def get_merged_prs_since(date: str) -> list[dict]:
-    """Fetch merged PRs to main since a given date."""
-    raw = run([
-        "gh", "pr", "list", "--repo", REPO,
-        "--state", "merged", "--base", "main",
-        "--json", "title,author,url,number,labels,mergedAt",
-        "--limit", "200",
-        "--search", f"merged:>{date[:10]}"
+    log_output = run([
+        "git", "log", "--oneline", f"{tag}..origin/main"
     ])
-    prs = json.loads(raw) if raw else []
+
+    pr_numbers = []
+    for line in log_output.splitlines():
+        match = re.search(r"\(#(\d+)\)\s*$", line)
+        if match:
+            pr_numbers.append(int(match.group(1)))
+    return pr_numbers
+
+
+def fetch_pr_details(pr_numbers: list[int]) -> list[dict]:
+    """Fetch PR details for a list of PR numbers."""
+    if not pr_numbers:
+        return []
+
+    # Batch fetch using gh api
+    prs = []
+    for num in pr_numbers:
+        try:
+            raw = run([
+                "gh", "pr", "view", str(num), "--repo", REPO,
+                "--json", "title,author,url,number,labels,mergedAt,baseRefName"
+            ])
+            pr = json.loads(raw)
+            # Only include PRs merged to main
+            if pr.get("baseRefName") == "main":
+                prs.append(pr)
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            continue
     return prs
 
 
@@ -179,19 +203,20 @@ def main():
                         help="Output file path (default: stdout)")
     args = parser.parse_args()
 
-    # Find latest release
+    # Find latest release tag
     print("Finding latest release tag...", file=sys.stderr)
     latest_tag = get_latest_release_tag()
     print(f"Latest release: {latest_tag}", file=sys.stderr)
 
-    # Get release date
-    release_date = get_latest_release_date(latest_tag)
-    print(f"Released: {release_date}", file=sys.stderr)
+    # Find PRs from commits not in the release tag
+    print("Finding commits since release tag...", file=sys.stderr)
+    pr_numbers = get_unreleased_pr_numbers(latest_tag)
+    print(f"Found {len(pr_numbers)} PR(s) in commit log", file=sys.stderr)
 
-    # Fetch merged PRs since that date
-    print("Fetching merged PRs since release...", file=sys.stderr)
-    prs = get_merged_prs_since(release_date)
-    print(f"Found {len(prs)} merged PRs", file=sys.stderr)
+    # Fetch PR details
+    print("Fetching PR details...", file=sys.stderr)
+    prs = fetch_pr_details(pr_numbers)
+    print(f"Fetched {len(prs)} PR(s)", file=sys.stderr)
 
     # Generate the unreleased section
     unreleased_md = generate_unreleased_section(prs, latest_tag)
