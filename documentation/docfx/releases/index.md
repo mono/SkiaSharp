@@ -1,6 +1,6 @@
 # Release Notes
 
-Release notes for all SkiaSharp versions. Each page includes the stable release and all associated preview releases.
+Release notes for all SkiaSharp versions.
 
 ### SkiaSharp 4.x
 

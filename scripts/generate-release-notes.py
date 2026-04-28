@@ -1,437 +1,432 @@
 #!/usr/bin/env python3
 """
-Fetch raw release notes from GitHub for the SkiaSharp website.
+Fetch SkiaSharp release data and manage the website release notes structure.
 
-Downloads GitHub release data and writes raw markdown files grouped by base
-version. These raw files are then reformatted by AI using the template in
-documentation/docfx/releases/TEMPLATE.md.
+This script collects raw data. AI does the formatting using TEMPLATE.md.
 
-Usage:
-    # Fetch the last 5 base versions to a temp directory
-    python3 scripts/generate-release-notes.py --last 5
-
-    # Fetch a specific version
+Commands:
+    # Fetch raw release data for specific version(s) → temp dir
     python3 scripts/generate-release-notes.py --version 3.119.2
 
-    # Fetch a range of versions
-    python3 scripts/generate-release-notes.py --version 3.119.0 --version 3.119.2
+    # Fetch raw release data for the last N versions → temp dir
+    python3 scripts/generate-release-notes.py --last 5
 
-    # Fetch all versions and write directly to the releases directory
-    python3 scripts/generate-release-notes.py --all --output documentation/docfx/releases
+    # Fetch unreleased PRs (commits on main not in the last release tag) → temp dir or stdout
+    python3 scripts/generate-release-notes.py --unreleased
 
-    # Regenerate TOC and index (no fetching)
+    # Regenerate TOC.yml and index.md from files on disk + create upcoming version file
     python3 scripts/generate-release-notes.py --update-toc
 
-Requirements: gh (GitHub CLI), Python 3.7+
+Requirements: gh (GitHub CLI), git, Python 3.7+
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
 import tempfile
 from collections import defaultdict
-from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 
 REPO = "mono/SkiaSharp"
+RELEASES_DIR = Path("documentation/docfx/releases")
 
 
-def run_gh(args: list[str]) -> str:
+# ── Helpers ──────────────────────────────────────────────────────────
+
+
+def run(args: list[str], check: bool = True) -> str:
+    """Run a command and return stdout."""
+    result = subprocess.run(args, capture_output=True, text=True, check=check)
+    return result.stdout.strip()
+
+
+def gh(args: list[str]) -> str:
     """Run a gh CLI command and return stdout."""
-    result = subprocess.run(
-        ["gh"] + args,
-        capture_output=True, text=True, check=True
-    )
-    return result.stdout
+    return run(["gh"] + args)
 
 
 def extract_base_version(tag: str) -> str:
-    """Extract base version from tag: v3.119.2-preview.2.3 -> 3.119.2"""
-    ver = tag.lstrip("v")
-    return ver.split("-")[0]
+    """v3.119.2-preview.2.3 -> 3.119.2"""
+    return tag.lstrip("v").split("-")[0]
 
 
-def parse_preview_number(tag: str) -> tuple:
-    """Extract sort key from tag for ordering within a base version.
-
-    Stable releases sort first (0,), then previews by descending preview number.
-    """
-    if "-" not in tag:
-        return (0,)  # Stable comes first
-    suffix = tag.split("-", 1)[1]
-    nums = re.findall(r"\d+", suffix)
-    return (1,) + tuple(int(n) for n in nums)
+def minor_group(version: str) -> str:
+    """3.119.2 -> 3.119"""
+    parts = version.split(".")
+    return f"{parts[0]}.{parts[1]}" if len(parts) >= 2 else parts[0]
 
 
-def format_date(iso_date: str) -> str:
-    """Format ISO date to human-readable: April 23, 2026"""
-    if not iso_date:
-        return ""
-    try:
-        dt = datetime.fromisoformat(iso_date.replace("Z", "+00:00"))
-        return dt.strftime("%B %-d, %Y")
-    except (ValueError, AttributeError):
-        return iso_date[:10]
+def version_key(version: str) -> list[int]:
+    """Sortable key from version string."""
+    return [int(n) for n in re.findall(r"\d+", version)]
 
 
-def version_sort_key(version: str) -> list:
-    """Create a sortable key from a version string like 3.119.2"""
-    parts = re.findall(r"\d+", version)
-    return [int(p) for p in parts]
+def get_upcoming_version() -> Optional[str]:
+    """Read SKIASHARP_VERSION from azure-templates-variables.yml."""
+    path = Path("scripts/azure-templates-variables.yml")
+    if path.exists():
+        for line in path.read_text().splitlines():
+            m = re.match(r"\s*SKIASHARP_VERSION:\s*(\S+)", line)
+            if m:
+                return m.group(1)
+    return None
 
 
-def fetch_releases() -> list[dict]:
-    """Fetch all releases from GitHub."""
-    print(f"Fetching release list from {REPO}...")
-    raw = run_gh([
-        "release", "list", "--repo", REPO,
-        "--limit", "300",
-        "--json", "tagName,name,isPrerelease,publishedAt,isDraft"
-    ])
-    releases = json.loads(raw)
-    print(f"Found {len(releases)} releases")
-    return releases
+# ── Released version data ────────────────────────────────────────────
+
+
+def fetch_all_releases() -> list[dict]:
+    """Fetch the release list from GitHub."""
+    raw = gh(["release", "list", "--repo", REPO, "--limit", "300",
+              "--json", "tagName,name,isPrerelease,publishedAt"])
+    return json.loads(raw)
 
 
 def fetch_release_body(tag: str) -> dict:
-    """Fetch the full release details for a tag."""
+    """Fetch the full release body for a tag."""
     try:
-        raw = run_gh([
-            "release", "view", tag, "--repo", REPO,
-            "--json", "body,publishedAt,name,isPrerelease"
-        ])
+        raw = gh(["release", "view", tag, "--repo", REPO,
+                  "--json", "body,publishedAt,name,isPrerelease"])
         return json.loads(raw)
     except subprocess.CalledProcessError:
         return {"body": "", "publishedAt": "", "name": tag, "isPrerelease": False}
 
 
-def group_releases_by_base(releases: list[dict]) -> dict:
-    """Group releases by base version. Returns {base_version: [release_info]}."""
+def group_by_base(releases: list[dict]) -> dict[str, list[dict]]:
+    """Group releases by base version."""
     grouped = defaultdict(list)
     for rel in releases:
-        tag = rel["tagName"]
-        base = extract_base_version(tag)
+        base = extract_base_version(rel["tagName"])
         grouped[base].append(rel)
     return grouped
 
 
-def generate_version_page(base_version: str, releases: list[dict]) -> str:
-    """Generate raw markdown for a single base version page."""
+def generate_raw_version_page(base_version: str, releases: list[dict]) -> str:
+    """Generate raw markdown for a version — stable first, then previews descending."""
+
+    def sort_key(r):
+        tag = r["tag"]
+        if "-" not in tag:
+            return (0,)
+        nums = re.findall(r"\d+", tag.split("-", 1)[1])
+        return (1,) + tuple(-int(n) for n in nums)
+
+    releases.sort(key=sort_key)
     lines = [f"# Version {base_version}", ""]
 
-    # Sort: stable first, then previews descending
-    releases.sort(key=lambda r: (
-        0 if "-" not in r["tag"] else 1,
-        [-n for n in parse_preview_number(r["tag"])]
-    ))
-
-    first = True
-    for rel in releases:
-        if not first:
+    for i, rel in enumerate(releases):
+        if i > 0:
             lines.extend(["", "---", ""])
-        first = False
 
-        date_str = format_date(rel.get("publishedAt", ""))
-        is_pre = rel.get("isPrerelease", False)
         name = rel.get("name", "") or rel["tag"]
+        date = rel.get("publishedAt", "")
+        is_pre = rel.get("isPrerelease", False)
         body = rel.get("body", "") or ""
 
-        if not is_pre:
-            section_title = "Stable Release"
-        else:
-            section_title = name
-
-        if date_str:
-            lines.append(f"## {section_title} ({date_str})")
-        else:
-            lines.append(f"## {section_title}")
+        title = name if is_pre else "Stable Release"
+        date_part = f" ({date[:10]})" if date else ""
+        lines.append(f"## {title}{date_part}")
         lines.append("")
-
-        if body.strip():
-            lines.append(body.rstrip())
-        else:
-            lines.append("*No release notes available.*")
+        lines.append(body.rstrip() if body.strip() else "*No release notes available.*")
         lines.append("")
 
     return "\n".join(lines)
 
 
-def minor_group_key(version: str) -> str:
-    """Extract major.minor group: 3.119.2 -> 3.119, 1.68.0 -> 1.68"""
-    parts = version.split(".")
-    if len(parts) >= 2:
-        return f"{parts[0]}.{parts[1]}"
-    return parts[0]
+# ── Unreleased data ─────────────────────────────────────────────────
 
 
-def generate_toc(releases_dir: str) -> str:
-    """Generate TOC.yml from existing markdown files, grouped by major.minor."""
+def get_latest_release_tag() -> str:
+    """Get the most recent release tag."""
+    return gh(["release", "list", "--repo", REPO, "--limit", "1",
+               "--json", "tagName", "-q", ".[0].tagName"]).strip()
+
+
+def get_unreleased_prs(tag: str) -> list[dict]:
+    """Find PRs from commits on main that are not in the release tag."""
+    run(["git", "fetch", "origin", "main", "--quiet"], check=False)
+    run(["git", "fetch", "origin", "tag", tag, "--quiet"], check=False)
+
+    log = run(["git", "log", "--oneline", f"{tag}..origin/main"])
+
+    pr_numbers = []
+    for line in log.splitlines():
+        m = re.search(r"\(#(\d+)\)\s*$", line)
+        if m:
+            pr_numbers.append(int(m.group(1)))
+
+    if not pr_numbers:
+        return []
+
+    prs = []
+    total = len(pr_numbers)
+    for i, num in enumerate(pr_numbers, 1):
+        try:
+            raw = gh(["pr", "view", str(num), "--repo", REPO,
+                      "--json", "title,author,url,number,labels,mergedAt"])
+            prs.append(json.loads(raw))
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            continue
+        if i % 20 == 0:
+            print(f"  Fetched {i}/{total} PRs...", file=sys.stderr)
+
+    return prs
+
+
+def generate_raw_unreleased(prs: list[dict], tag: str) -> str:
+    """Generate raw unreleased PR list — just data, no formatting."""
+    if not prs:
+        return "*No unreleased changes.*\n"
+
+    lines = [f"Unreleased changes on `main` since `{tag}`:", ""]
+    for pr in prs:
+        title = pr.get("title", "")
+        author = pr.get("author", {}).get("login", "unknown")
+        url = pr.get("url", "")
+        number = pr.get("number", "")
+        label_names = [l.get("name", "") for l in pr.get("labels", [])]
+        labels_str = f" [{', '.join(label_names)}]" if label_names else ""
+
+        lines.append(f"- {title} by @{author} in {url}{labels_str}")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+# ── TOC and index generation ────────────────────────────────────────
+
+
+def get_version_files() -> list[str]:
+    """List version strings from existing markdown files."""
     versions = []
-    for f in os.listdir(releases_dir):
-        if f.endswith(".md") and f not in ("index.md", "TEMPLATE.md"):
-            versions.append(f[:-3])
+    for f in RELEASES_DIR.iterdir():
+        if f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md"):
+            versions.append(f.stem)
+    versions.sort(key=version_key, reverse=True)
+    return versions
 
-    versions.sort(key=version_sort_key, reverse=True)
 
-    # Group by major.minor
-    minor_groups = defaultdict(list)
-    for base in versions:
-        group = minor_group_key(base)
-        minor_groups[group].append(base)
+def generate_toc(versions: list[str]) -> str:
+    """Generate TOC.yml grouped by major.minor, obsolete under one node."""
+    groups = defaultdict(list)
+    for v in versions:
+        groups[minor_group(v)].append(v)
 
-    lines = [
-        "- name: Overview",
-        "  href: index.md",
-    ]
-
-    # Split into current and obsolete groups
-    current_groups = []
-    obsolete_groups = []
-    for group in sorted(minor_groups.keys(), key=lambda g: version_sort_key(g), reverse=True):
-        major = group.split(".")[0]
-        if int(major) < 3:
-            obsolete_groups.append(group)
+    current = []
+    obsolete = []
+    for g in sorted(groups.keys(), key=lambda x: version_key(x), reverse=True):
+        if int(g.split(".")[0]) < 3:
+            obsolete.append(g)
         else:
-            current_groups.append(group)
+            current.append(g)
 
-    # Current versions (3.x+) — top level
-    for group in current_groups:
-        members = minor_groups[group]
-        lines.append(f"- name: Version {group}.x")
+    lines = ["- name: Overview", "  href: index.md"]
+
+    for g in current:
+        members = groups[g]
+        lines.append(f"- name: Version {g}.x")
         lines.append(f"  href: {members[0]}.md")
         lines.append(f"  items:")
-        for base in members:
-            lines.append(f"    - name: Version {base}")
-            lines.append(f"      href: {base}.md")
+        for v in members:
+            lines.append(f"    - name: Version {v}")
+            lines.append(f"      href: {v}.md")
 
-    # Obsolete versions (1.x, 2.x) — nested under one parent node
-    if obsolete_groups:
+    if obsolete:
         lines.append(f"- name: Obsolete Versions")
-        lines.append(f"  href: {minor_groups[obsolete_groups[0]][0]}.md")
+        lines.append(f"  href: {groups[obsolete[0]][0]}.md")
         lines.append(f"  items:")
-        for group in obsolete_groups:
-            members = minor_groups[group]
-            lines.append(f"    - name: Version {group}.x")
+        for g in obsolete:
+            members = groups[g]
+            lines.append(f"    - name: Version {g}.x")
             lines.append(f"      href: {members[0]}.md")
             if len(members) > 1:
                 lines.append(f"      items:")
-                for base in members:
-                    lines.append(f"        - name: Version {base}")
-                    lines.append(f"          href: {base}.md")
+                for v in members:
+                    lines.append(f"        - name: Version {v}")
+                    lines.append(f"          href: {v}.md")
 
     return "\n".join(lines) + "\n"
 
 
-def get_upcoming_version(releases_dir: str) -> Optional[str]:
-    """Read SKIASHARP_VERSION from azure-templates-variables.yml."""
-    variables_path = os.path.join(os.path.dirname(releases_dir),
-                                  "..", "..", "scripts", "azure-templates-variables.yml")
-    if os.path.exists(variables_path):
-        with open(variables_path) as f:
-            for line in f:
-                m = re.match(r"\s*SKIASHARP_VERSION:\s*(\S+)", line)
-                if m:
-                    return m.group(1)
-    return None
-
-
-def ensure_upcoming_version_file(releases_dir: str, version: str) -> None:
-    """Create the upcoming version file if it doesn't exist."""
-    filepath = os.path.join(releases_dir, f"{version}.md")
-    if os.path.exists(filepath):
-        return
-
-    content = f"""# Version {version}
-
-> **Upcoming release** · In development · Not yet available on NuGet
-
-*No changes yet.*
-"""
-    with open(filepath, "w") as f:
-        f.write(content)
-    print(f"  Created upcoming version file: {filepath}")
-
-
-def generate_index(releases_dir: str) -> str:
-    """Generate index.md from existing markdown files."""
-    versions = []
-    for f in os.listdir(releases_dir):
-        if f.endswith(".md") and f not in ("index.md", "TEMPLATE.md"):
-            versions.append(f[:-3])
-
-    versions.sort(key=version_sort_key, reverse=True)
-
-    upcoming_version = get_upcoming_version(releases_dir)
-
+def generate_index(versions: list[str], upcoming: Optional[str]) -> str:
+    """Generate index.md with version list grouped by major."""
     lines = [
         "# Release Notes",
         "",
-        "Release notes for all SkiaSharp versions. Each page includes the stable release and all associated preview releases.",
+        "Release notes for all SkiaSharp versions.",
         "",
     ]
 
-    # Group by major version, then by minor
     major_groups = defaultdict(list)
-    for base in versions:
-        major = base.split(".")[0]
-        major_groups[major].append(base)
-
-    def render_major_group(major: str, version_list: list[str]) -> list[str]:
-        """Render a major version group's version list."""
-        result = []
-        minor_groups = defaultdict(list)
-        for base in version_list:
-            group = minor_group_key(base)
-            minor_groups[group].append(base)
-
-        for group in sorted(minor_groups.keys(), key=lambda g: version_sort_key(g), reverse=True):
-            members = minor_groups[group]
-            result.append(f"- **Version {group}.x**")
-            for base in members:
-                upcoming = " (Upcoming)" if base == upcoming_version else ""
-                result.append(f"  - [Version {base}{upcoming}]({base}.md)")
-        return result
+    for v in versions:
+        major_groups[v.split(".")[0]].append(v)
 
     for major in sorted(major_groups.keys(), key=int, reverse=True):
         lines.extend([f"### SkiaSharp {major}.x", ""])
-        lines.extend(render_major_group(major, major_groups[major]))
+
+        minor_groups = defaultdict(list)
+        for v in major_groups[major]:
+            minor_groups[minor_group(v)].append(v)
+
+        for g in sorted(minor_groups.keys(), key=lambda x: version_key(x), reverse=True):
+            members = minor_groups[g]
+            lines.append(f"- **Version {g}.x**")
+            for v in members:
+                tag = " (Upcoming)" if v == upcoming else ""
+                lines.append(f"  - [Version {v}{tag}]({v}.md)")
         lines.append("")
 
     return "\n".join(lines)
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Fetch raw SkiaSharp release notes from GitHub",
-        epilog="Examples:\n"
-               "  %(prog)s --last 5              # Last 5 base versions → temp dir\n"
-               "  %(prog)s --version 3.119.2      # Single version → temp dir\n"
-               "  %(prog)s --all --output DIR      # All versions → specified dir\n"
-               "  %(prog)s --update-toc            # Regenerate TOC + index only\n",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+def ensure_upcoming_file(version: str) -> bool:
+    """Create upcoming version file if it doesn't exist. Returns True if created."""
+    path = RELEASES_DIR / f"{version}.md"
+    if path.exists():
+        return False
+
+    path.write_text(
+        f"# Version {version}\n\n"
+        f"> **Upcoming release** · In development · Not yet available on NuGet\n\n"
+        f"*No changes yet.*\n"
     )
-    parser.add_argument("--output", default=None,
-                        help="Output directory (default: temp directory)")
-    parser.add_argument("--version", action="append", dest="versions",
-                        help="Fetch specific version(s). Can be repeated.")
-    parser.add_argument("--last", type=int, default=None,
-                        help="Fetch the last N base versions (by date)")
-    parser.add_argument("--all", action="store_true",
-                        help="Fetch all versions")
-    parser.add_argument("--update-toc", action="store_true",
-                        help="Regenerate TOC.yml and index.md from existing files")
-    args = parser.parse_args()
+    print(f"  Created {path}")
+    return True
 
-    releases_dir = "documentation/docfx/releases"
 
-    # --update-toc: just regenerate TOC and index from existing files
-    if args.update_toc:
-        if not os.path.isdir(releases_dir):
-            print(f"Error: {releases_dir} does not exist")
-            sys.exit(1)
+# ── Main ─────────────────────────────────────────────────────────────
 
-        # Create upcoming version file if needed
-        upcoming = get_upcoming_version(releases_dir)
-        if upcoming:
-            ensure_upcoming_version_file(releases_dir, upcoming)
 
-        toc_path = os.path.join(releases_dir, "TOC.yml")
-        with open(toc_path, "w") as f:
-            f.write(generate_toc(releases_dir))
-        print(f"Updated {toc_path}")
+def cmd_update_toc():
+    """Regenerate TOC.yml and index.md, create upcoming version file if needed."""
+    if not RELEASES_DIR.is_dir():
+        print(f"Error: {RELEASES_DIR} does not exist", file=sys.stderr)
+        sys.exit(1)
 
-        index_path = os.path.join(releases_dir, "index.md")
-        with open(index_path, "w") as f:
-            f.write(generate_index(releases_dir))
-        print(f"Updated {index_path}")
-        return
+    upcoming = get_upcoming_version()
+    if upcoming:
+        ensure_upcoming_file(upcoming)
 
-    # Determine output directory
-    if args.output:
-        output_dir = args.output
-    else:
-        output_dir = tempfile.mkdtemp(prefix="skiasharp-releases-")
-    os.makedirs(output_dir, exist_ok=True)
+    versions = get_version_files()
 
-    # Fetch all releases (we need the full list to group by base version)
-    releases = fetch_releases()
-    grouped = group_releases_by_base(releases)
+    (RELEASES_DIR / "TOC.yml").write_text(generate_toc(versions))
+    print(f"Updated {RELEASES_DIR / 'TOC.yml'}")
 
-    # Determine which base versions to fetch
-    if args.versions:
-        target_versions = set(args.versions)
-        missing = target_versions - set(grouped.keys())
-        if missing:
-            print(f"Warning: versions not found: {', '.join(missing)}")
-    elif args.last:
-        # Sort all base versions by latest release date, take last N
-        base_dates = {}
-        for base, rels in grouped.items():
-            dates = [r.get("publishedAt", "") for r in rels]
-            base_dates[base] = max(dates) if dates else ""
-        sorted_bases = sorted(base_dates.keys(), key=lambda b: base_dates[b], reverse=True)
-        target_versions = set(sorted_bases[:args.last])
-    elif args.all:
-        target_versions = set(grouped.keys())
-    else:
-        # Default: last 5
-        base_dates = {}
-        for base, rels in grouped.items():
-            dates = [r.get("publishedAt", "") for r in rels]
-            base_dates[base] = max(dates) if dates else ""
-        sorted_bases = sorted(base_dates.keys(), key=lambda b: base_dates[b], reverse=True)
-        target_versions = set(sorted_bases[:5])
+    (RELEASES_DIR / "index.md").write_text(generate_index(versions, upcoming))
+    print(f"Updated {RELEASES_DIR / 'index.md'}")
 
-    print(f"Fetching {len(target_versions)} base version(s): {', '.join(sorted(target_versions, key=version_sort_key, reverse=True))}")
 
-    # Fetch release bodies for target versions
+def cmd_fetch_versions(target_versions: set[str], output_dir: Path):
+    """Fetch raw release data for specific versions."""
+    print(f"Fetching release list from {REPO}...", file=sys.stderr)
+    releases = fetch_all_releases()
+    grouped = group_by_base(releases)
+
+    missing = target_versions - set(grouped.keys())
+    if missing:
+        print(f"Warning: not found on GitHub: {', '.join(sorted(missing))}", file=sys.stderr)
+
     tags_to_fetch = []
-    for base in target_versions:
+    for base in target_versions & set(grouped.keys()):
         for rel in grouped[base]:
             tags_to_fetch.append((base, rel["tagName"]))
 
+    print(f"Fetching {len(tags_to_fetch)} release(s)...", file=sys.stderr)
     fetched = defaultdict(list)
-    total = len(tags_to_fetch)
     for i, (base, tag) in enumerate(tags_to_fetch, 1):
         details = fetch_release_body(tag)
         details["tag"] = tag
         fetched[base].append(details)
         if i % 10 == 0:
-            print(f"  Fetched {i} / {total}...")
-    print(f"  Fetched {total} / {total} (done)")
+            print(f"  {i}/{len(tags_to_fetch)}...", file=sys.stderr)
 
-    # Generate raw version pages
+    output_dir.mkdir(parents=True, exist_ok=True)
     for base, rels in fetched.items():
-        filepath = os.path.join(output_dir, f"{base}.md")
-        content = generate_version_page(base, rels)
-        with open(filepath, "w") as f:
-            f.write(content)
-        print(f"  Generated {filepath}")
+        path = output_dir / f"{base}.md"
+        path.write_text(generate_raw_version_page(base, rels))
+        print(f"  {path}")
 
-    # If writing to the releases dir, also update TOC and index
-    if args.output and os.path.samefile(args.output, releases_dir):
-        toc_path = os.path.join(output_dir, "TOC.yml")
-        with open(toc_path, "w") as f:
-            f.write(generate_toc(output_dir))
-        print(f"  Updated {toc_path}")
+    print(f"\nDone: {len(fetched)} version(s) in {output_dir}/", file=sys.stderr)
 
-        index_path = os.path.join(output_dir, "index.md")
-        with open(index_path, "w") as f:
-            f.write(generate_index(output_dir))
-        print(f"  Updated {index_path}")
 
-    # Summary
-    md_count = len([f for f in os.listdir(output_dir) if f.endswith(".md")])
-    print(f"\nDone! Raw release notes in {output_dir}/")
-    print(f"  - {md_count} markdown file(s)")
-    if not args.output:
-        print(f"\n  (temp directory — read these files, then reformat using TEMPLATE.md)")
+def cmd_unreleased(output_path: Optional[Path]):
+    """Fetch unreleased PRs and output raw list."""
+    print("Finding latest release tag...", file=sys.stderr)
+    tag = get_latest_release_tag()
+    print(f"Latest: {tag}", file=sys.stderr)
+
+    print("Finding unreleased PRs via commit ancestry...", file=sys.stderr)
+    prs = get_unreleased_prs(tag)
+    print(f"Found {len(prs)} PR(s)", file=sys.stderr)
+
+    content = generate_raw_unreleased(prs, tag)
+
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(content)
+        print(f"Wrote {output_path}", file=sys.stderr)
+    else:
+        print(content)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Fetch SkiaSharp release data for the website",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Examples:\n"
+            "  %(prog)s --version 3.119.2        Fetch one version\n"
+            "  %(prog)s --last 5                  Fetch 5 most recent versions\n"
+            "  %(prog)s --unreleased              Unreleased PRs to stdout\n"
+            "  %(prog)s --unreleased -o /tmp/u.md  Unreleased PRs to file\n"
+            "  %(prog)s --update-toc              Regenerate TOC + index\n"
+        ),
+    )
+    parser.add_argument("--version", action="append", dest="versions",
+                        help="Fetch specific version(s). Repeatable.")
+    parser.add_argument("--last", type=int, help="Fetch the N most recent versions")
+    parser.add_argument("--unreleased", action="store_true",
+                        help="Fetch unreleased PRs since last tag")
+    parser.add_argument("--update-toc", action="store_true",
+                        help="Regenerate TOC.yml + index.md")
+    parser.add_argument("-o", "--output", help="Output directory (versions) or file (unreleased)")
+    args = parser.parse_args()
+
+    # Must specify exactly one mode
+    modes = sum([bool(args.versions), bool(args.last), args.unreleased, args.update_toc])
+    if modes == 0:
+        parser.print_help()
+        sys.exit(1)
+    if modes > 1:
+        parser.error("Specify only one of --version, --last, --unreleased, --update-toc")
+
+    if args.update_toc:
+        cmd_update_toc()
+
+    elif args.unreleased:
+        cmd_unreleased(Path(args.output) if args.output else None)
+
+    elif args.versions:
+        output = Path(args.output) if args.output else Path(tempfile.mkdtemp(prefix="skiasharp-releases-"))
+        cmd_fetch_versions(set(args.versions), output)
+
+    elif args.last:
+        releases = fetch_all_releases()
+        grouped = group_by_base(releases)
+        base_dates = {}
+        for base, rels in grouped.items():
+            dates = [r.get("publishedAt", "") for r in rels if r.get("publishedAt")]
+            base_dates[base] = max(dates) if dates else ""
+        recent = sorted(base_dates, key=lambda b: base_dates[b], reverse=True)[:args.last]
+
+        output = Path(args.output) if args.output else Path(tempfile.mkdtemp(prefix="skiasharp-releases-"))
+        cmd_fetch_versions(set(recent), output)
 
 
 if __name__ == "__main__":
