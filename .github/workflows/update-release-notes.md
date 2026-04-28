@@ -88,11 +88,7 @@ pr_count: 45
 - PR title by @author in https://...
 ```
 
-Also ensure the TOC is up to date:
-
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc
-```
+The script also regenerates `TOC.yml` and `index.md` automatically.
 
 Read `/tmp/raw-changes.md` and `documentation/docfx/releases/TEMPLATE.md`.
 

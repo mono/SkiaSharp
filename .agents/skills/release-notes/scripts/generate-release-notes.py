@@ -712,6 +712,10 @@ def cmd_branch(branch, output_path):
     output_path.write_text(content)
     print("Wrote {}".format(output_path))
 
+    # Always regenerate TOC and index
+    if RELEASES_DIR.is_dir():
+        cmd_update_toc()
+
 
 def cmd_fetch_versions(target_versions, output_dir):
     # type: (set[str], Path) -> None
