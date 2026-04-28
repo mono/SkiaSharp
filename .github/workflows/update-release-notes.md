@@ -31,7 +31,7 @@ safe-outputs:
 
 When code merges to main, regenerate the upcoming version's release notes page with a polished summary of all merged PRs since the last release.
 
-## Step 1 — Determine the upcoming version
+## Step 1 — Determine the upcoming version and ensure the file exists
 
 Read the `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`:
 
@@ -40,6 +40,16 @@ grep 'SKIASHARP_VERSION:' scripts/azure-templates-variables.yml
 ```
 
 This gives you the upcoming version number (e.g., `4.133.0`). The version file lives at `documentation/docfx/releases/{version}.md`.
+
+If the file does **not** exist, create it and update the TOC:
+
+```bash
+python3 scripts/generate-release-notes.py --update-toc
+```
+
+This creates the version file with fence markers and adds it to `TOC.yml` and `index.md`.
+
+Then read the version file to confirm it has `<!-- UNRELEASED_BEGIN -->` and `<!-- UNRELEASED_END -->` markers.
 
 ## Step 2 — Fetch raw PR data
 
