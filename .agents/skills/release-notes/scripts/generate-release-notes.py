@@ -476,19 +476,30 @@ def format_pr_list(prs, metadata):
 
 
 def get_version_files():
-    # type: () -> list[str]
-    """List version strings from existing markdown files."""
+    # type: () -> tuple[list[str], list[str]]
+    """List version strings from existing markdown files.
+    
+    Returns (versions, next_versions) where next_versions are the
+    base versions that have a -next.md file.
+    """
     versions = []
+    next_versions = []
     for f in RELEASES_DIR.iterdir():
         if f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md"):
-            versions.append(f.stem)
+            stem = f.stem
+            if stem.endswith("-next"):
+                next_versions.append(stem[:-5])  # strip "-next"
+            else:
+                versions.append(stem)
     versions.sort(key=version_key, reverse=True)
-    return versions
+    next_versions.sort(key=version_key, reverse=True)
+    return versions, next_versions
 
 
-def generate_toc(versions):
-    # type: (list[str]) -> str
+def generate_toc(versions, next_versions):
+    # type: (list[str], list[str]) -> str
     """Generate TOC.yml grouped by major.minor, obsolete under one node."""
+    next_set = set(next_versions)
     groups = defaultdict(list)
     for v in versions:
         groups[minor_group(v)].append(v)
@@ -511,6 +522,9 @@ def generate_toc(versions):
         for v in members:
             lines.append("    - name: Version {}".format(v))
             lines.append("      href: {}.md".format(v))
+            if v in next_set:
+                lines.append("    - name: Version {} (Next)".format(v))
+                lines.append("      href: {}-next.md".format(v))
 
     if obsolete:
         lines.append("- name: Obsolete Versions")
@@ -529,9 +543,10 @@ def generate_toc(versions):
     return "\n".join(lines) + "\n"
 
 
-def generate_index(versions, upcoming):
-    # type: (list[str], Optional[str]) -> str
+def generate_index(versions, next_versions):
+    # type: (list[str], list[str]) -> str
     """Generate index.md with version list grouped by major."""
+    next_set = set(next_versions)
     lines = [
         "# Release Notes",
         "",
@@ -555,49 +570,29 @@ def generate_index(versions, upcoming):
             members = minor_groups_map[g]
             lines.append("- **Version {}.x**".format(g))
             for v in members:
-                tag = " (Upcoming)" if v == upcoming else ""
-                lines.append("  - [Version {}{}]({}.md)".format(v, tag, v))
+                lines.append("  - [Version {}]({}.md)".format(v, v))
+                if v in next_set:
+                    lines.append("  - [Version {} (Next)]({}-next.md)".format(v, v))
         lines.append("")
 
     return "\n".join(lines)
-
-
-def ensure_upcoming_file(version):
-    # type: (str) -> bool
-    """Create upcoming version file if it doesn't exist. Returns True if created."""
-    path = RELEASES_DIR / "{}.md".format(version)
-    if path.exists():
-        return False
-
-    path.write_text(
-        "# Version {}\n\n"
-        "> **Upcoming release** \xb7 In development \xb7 "
-        "Not yet available on NuGet\n\n"
-        "*No changes yet.*\n".format(version)
-    )
-    print("  Created {}".format(path))
-    return True
 
 
 # ── Commands ─────────────────────────────────────────────────────────
 
 
 def cmd_update_toc():
-    """Regenerate TOC.yml and index.md, create upcoming version file if needed."""
+    """Regenerate TOC.yml and index.md."""
     if not RELEASES_DIR.is_dir():
         print("Error: {} does not exist".format(RELEASES_DIR), file=sys.stderr)
         sys.exit(1)
 
-    upcoming = get_upcoming_version()
-    if upcoming:
-        ensure_upcoming_file(upcoming)
+    versions, next_versions = get_version_files()
 
-    versions = get_version_files()
-
-    (RELEASES_DIR / "TOC.yml").write_text(generate_toc(versions))
+    (RELEASES_DIR / "TOC.yml").write_text(generate_toc(versions, next_versions))
     print("Updated {}".format(RELEASES_DIR / "TOC.yml"))
 
-    (RELEASES_DIR / "index.md").write_text(generate_index(versions, upcoming))
+    (RELEASES_DIR / "index.md").write_text(generate_index(versions, next_versions))
     print("Updated {}".format(RELEASES_DIR / "index.md"))
 
 
@@ -655,6 +650,17 @@ def cmd_branch(branch):
     prs = get_prs_from_diff(from_ref, to_ref)
     print("Found {} PR(s)".format(len(prs)))
 
+    # Determine output file:
+    # - "main" branches (main, release/X.Y.x) → {version}-next.md (unreleased)
+    # - versioned branches (release/X.Y.Z*) → {version}.md (released)
+    is_main_branch = (branch == "main")
+    is_servicing = bool(re.match(r"release/\d+\.\d+\.x$", branch))
+
+    if is_main_branch or is_servicing:
+        filename = "{}-next.md".format(version)
+    else:
+        filename = "{}.md".format(version)
+
     metadata = {
         "branch": branch,
         "version": version,
@@ -664,8 +670,7 @@ def cmd_branch(branch):
     }
     content = format_pr_list(prs, metadata)
 
-    # Write directly to the version's release notes file
-    output_path = RELEASES_DIR / "{}.md".format(version)
+    output_path = RELEASES_DIR / filename
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(content)
     print("Wrote {}".format(output_path))
