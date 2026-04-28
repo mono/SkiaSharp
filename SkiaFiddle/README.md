@@ -32,7 +32,7 @@ fiddle's value is *running C# in the browser*; the other heads aren't useful.
 
 | Name | What it shows |
 |---|---|
-| Default (static) | Radial gradient circle + centered text. |
+| Static · Hello world | Radial gradient circle + centered text. |
 | Animated · Orbits | Multi-planet orbit animation using `t`. |
 | Shader · Plasma | SkSL plasma fragment shader. |
 | Shader · Ripple | SkSL concentric ripples + radial gradient. |
