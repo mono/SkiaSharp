@@ -68,9 +68,15 @@ public sealed partial class MainPage : Page
         if (_samplesInitialized)
             return;
         _samplesInitialized = true;
-        foreach (var sample in SampleSnippets.All)
+        var defaultIndex = 0;
+        for (var i = 0; i < SampleSnippets.All.Count; i++)
+        {
+            var sample = SampleSnippets.All[i];
             SamplesCombo.Items.Add(new ComboBoxItem { Content = sample.Name, Tag = sample });
-        SamplesCombo.SelectedIndex = 0;
+            if (sample.Name == "Animated · Orbits")
+                defaultIndex = i;
+        }
+        SamplesCombo.SelectedIndex = defaultIndex;
     }
 
     private void OnSampleChanged(object sender, SelectionChangedEventArgs e)
