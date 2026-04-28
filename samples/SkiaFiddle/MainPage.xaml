@@ -71,18 +71,36 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Editor pane -->
+            <!-- Editor pane: editor stack and tab strip share a single cell so the
+                 tab strip can render *on top* of any sub-pixel clip overflow from
+                 Monaco's native HTML overlay. The editor's inner Margin reserves the
+                 vertical space the tab strip occupies. -->
             <Grid Grid.Column="0"
                   Background="{StaticResource EditorBackground}"
                   BorderBrush="{StaticResource PanelBorder}"
                   BorderThickness="0,0,1,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+                <!-- Editors first (rendered behind the tab strip in z-order). Both stay
+                     mounted (Monaco initializes on Loaded; collapsing one would skip its
+                     init); the inactive one is hidden via Opacity + IsHitTestVisible. -->
+                <Grid Margin="0,34,0,0">
+                    <monaco:CodeEditor x:Name="DrawEditor"
+                                       CodeLanguage="csharp"
+                                       RequestedTheme="Dark"
+                                       BorderThickness="0" />
+                    <monaco:CodeEditor x:Name="SetupEditor"
+                                       CodeLanguage="csharp"
+                                       RequestedTheme="Dark"
+                                       BorderThickness="0"
+                                       Opacity="0"
+                                       IsHitTestVisible="False"
+                                       IsTabStop="False" />
+                </Grid>
 
-                <!-- Tab strip -->
-                <Border Grid.Row="0"
+                <!-- Tab strip — declared after the editor stack so it renders on top.
+                     Height is matched by the editor's Margin above (tweak both together
+                     if you change padding/font on the buttons). -->
+                <Border VerticalAlignment="Top"
+                        Height="34"
                         Background="{StaticResource PanelBackground}"
                         BorderBrush="{StaticResource PanelBorder}"
                         BorderThickness="0,0,0,1">
@@ -129,23 +147,6 @@
                         </Button>
                     </StackPanel>
                 </Border>
-
-                <!-- Editor stack: both editors stay mounted (Monaco initializes on Loaded;
-                     collapsing one would skip its init and lose any text round-trip). The
-                     inactive editor is hidden via Opacity + IsHitTestVisible. -->
-                <Grid Grid.Row="1">
-                    <monaco:CodeEditor x:Name="DrawEditor"
-                                       CodeLanguage="csharp"
-                                       RequestedTheme="Dark"
-                                       BorderThickness="0" />
-                    <monaco:CodeEditor x:Name="SetupEditor"
-                                       CodeLanguage="csharp"
-                                       RequestedTheme="Dark"
-                                       BorderThickness="0"
-                                       Opacity="0"
-                                       IsHitTestVisible="False"
-                                       IsTabStop="False" />
-                </Grid>
             </Grid>
 
             <!-- Preview pane -->
