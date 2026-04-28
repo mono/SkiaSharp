@@ -128,23 +128,23 @@ new ToggleControl("showOriginal", "Show Original Path", showOriginal),
 
 	private static SKPath CreateRoundedRectPath(float cx, float cy, float size)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var rect = new SKRect(cx - size, cy - size * 0.6f, cx + size, cy + size * 0.6f);
 		var rrect = new SKRoundRect(rect, size * 0.2f);
-		path.AddRoundRect(rrect);
-		return path;
+		builder.AddRoundRect(rrect);
+		return builder.Detach();
 	}
 
 	private static SKPath CreateCirclePath(float cx, float cy, float size)
 	{
-		var path = new SKPath();
-		path.AddCircle(cx, cy, size);
-		return path;
+		using var builder = new SKPathBuilder();
+		builder.AddCircle(cx, cy, size);
+		return builder.Detach();
 	}
 
 	private static SKPath CreateSpiralPath(float cx, float cy, float size)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var turns = 4;
 		var pointsPerTurn = 60;
 		var totalPoints = turns * pointsPerTurn;
@@ -158,35 +158,35 @@ new ToggleControl("showOriginal", "Show Original Path", showOriginal),
 			var y = cy + radius * (float)Math.Sin(angle);
 
 			if (i == 0)
-				path.MoveTo(x, y);
+				builder.MoveTo(x, y);
 			else
-				path.LineTo(x, y);
+				builder.LineTo(x, y);
 		}
 
-		return path;
+		return builder.Detach();
 	}
 
 	private static SKPath CreateArrowPath(float cx, float cy, float size)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var shaftWidth = size * 0.3f;
 		var headWidth = size * 0.8f;
 
-		path.MoveTo(cx - size, cy + shaftWidth / 2);
-		path.LineTo(cx - size, cy - shaftWidth / 2);
-		path.LineTo(cx, cy - shaftWidth / 2);
-		path.LineTo(cx, cy - headWidth / 2);
-		path.LineTo(cx + size * 0.7f, cy);
-		path.LineTo(cx, cy + headWidth / 2);
-		path.LineTo(cx, cy + shaftWidth / 2);
-		path.Close();
+		builder.MoveTo(cx - size, cy + shaftWidth / 2);
+		builder.LineTo(cx - size, cy - shaftWidth / 2);
+		builder.LineTo(cx, cy - shaftWidth / 2);
+		builder.LineTo(cx, cy - headWidth / 2);
+		builder.LineTo(cx + size * 0.7f, cy);
+		builder.LineTo(cx, cy + headWidth / 2);
+		builder.LineTo(cx, cy + shaftWidth / 2);
+		builder.Close();
 
-		return path;
+		return builder.Detach();
 	}
 
 	private static SKPath CreateStarPath(float cx, float cy, float outerRadius, float innerRadius, int points)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var totalPoints = points * 2;
 		for (var i = 0; i < totalPoints; i++)
 		{
@@ -196,11 +196,11 @@ new ToggleControl("showOriginal", "Show Original Path", showOriginal),
 			var y = cy + radius * (float)Math.Sin(angle);
 
 			if (i == 0)
-				path.MoveTo(x, y);
+				builder.MoveTo(x, y);
 			else
-				path.LineTo(x, y);
+				builder.LineTo(x, y);
 		}
-		path.Close();
-		return path;
+		builder.Close();
+		return builder.Detach();
 	}
 }
