@@ -112,3 +112,20 @@ The file should follow the template structure exactly — title, blockquote head
 then the polished sections (Highlights, Breaking Changes, New Features, etc.).
 
 No fence markers or placeholders needed — the workflow overwrites the whole file each run.
+
+## Step 6 — Create or update the pull request
+
+Always use `dev/upcoming-release-notes` as the branch name when creating the pull request.
+This ensures each workflow run updates the **same PR** instead of opening a new one.
+
+Before finishing, close any other open documentation PRs with stale release notes:
+
+```bash
+gh pr list --repo mono/SkiaSharp --state open --label documentation --search "[docs]" --json number,headRefName
+```
+
+Close any whose branch is NOT `dev/upcoming-release-notes`:
+
+```bash
+gh pr close {number} --repo mono/SkiaSharp --comment "Superseded by the current release notes PR."
+```
