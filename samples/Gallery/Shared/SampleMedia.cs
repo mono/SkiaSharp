@@ -37,6 +37,16 @@ public static class SampleMedia
 		public static Stream Nabla => Embedded.Load("Nabla.ttf");
 
 		public static string ContentFontPath = string.Empty;
+
+		private static SKTypeface? defaultTypeface;
+
+		public static SKTypeface Default => defaultTypeface ??= LoadDefaultTypeface();
+
+		private static SKTypeface LoadDefaultTypeface()
+		{
+			using var stream = InterVariable;
+			return SKTypeface.FromStream(stream) ?? SKTypeface.CreateDefault();
+		}
 	}
 
 	public static class Embedded

@@ -191,12 +191,12 @@ half4 main(float2 fragCoord) {
 				Color = SKColors.Red,
 				IsAntialias = true,
 			};
-			using var errorFont = new SKFont { Size = 16 };
+			using var errorFont = new SKFont(SampleMedia.Fonts.Default, 16);
 			canvas.DrawText("Shader compilation failed:", 20, 40, SKTextAlign.Left, errorFont, errorPaint);
 			if (compileError != null)
 			{
 				errorPaint.Color = SKColors.White;
-				using var detailFont = new SKFont { Size = 14 };
+				using var detailFont = new SKFont(SampleMedia.Fonts.Default, 14);
 				canvas.DrawText(compileError, 20, 70, SKTextAlign.Left, detailFont, errorPaint);
 			}
 			return;

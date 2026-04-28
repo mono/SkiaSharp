@@ -45,6 +45,22 @@ Also watch for renamed/removed GN flags between milestones — obsolete flags ca
 
 When the mono/skia target branch name changes, `.gitmodules` must be updated to track the new branch. Easy to forget; causes silent submodule tracking failures.
 
+### 19. Fork-Only GN `declare_args` Cleanup
+
+When removing fork-only GN args, check ALL native build scripts (`native/*/build.cake`) for references. Platform scripts may pass these args to GN, causing `Unknown GN flag` warnings.
+
+### 20. GN-to-Bazel Define Migration
+
+Upstream progressively moves defines from GN to Bazel-only. Check that all `#if defined(X)` guards in Skia source that SkiaSharp depends on still have their defines set in the GN build. Symptoms: feature code silently compiled out, returning nullptr/fallback.
+
+### 21. Backend Defines Not Reaching `:core`
+
+The C API shims (`src/c/gr_context.cpp` etc.) compile as part of `:core`, but backend defines (`SK_VULKAN`, `SK_DIRECT3D`, `SK_METAL`) may only live on `:gpu`'s `all_dependent_configs`. Verify these reach `:core`'s own compile — if not, macros like `SK_ONLY_VULKAN(expr, fallback)` expand to the fallback. Add the backend defines directly to `:core` in `BUILD.gn`.
+
+### 22. Modules Made Optional
+
+Upstream may move previously-core modules into separate optional targets. If the C API exposes functions from that module, add it as an explicit dependency of the `SkiaSharp` target in `BUILD.gn` rather than merging sources into core.
+
 ## Dependencies & Bindings
 
 ### 8. DEPS: Fork-Customized Dependencies
@@ -147,8 +163,10 @@ Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaShar
 | `static_assert` sizeof failure | Upstream struct gained/lost fields | Update C API struct in `sk_types.h` |
 | `#include` file not found | Upstream moved file to new path | Search target branch, update path |
 | `LNK2001 unresolved external` | C function name mismatch or missing lib | Verify names; check system library linkage |
-| `Unknown GN flag` error | Obsolete build flag | Remove flag; diff target BUILD.gn |
+| `Unknown GN flag` error | Obsolete build flag | Remove flag; diff target BUILD.gn; check `native/*/build.cake` |
 | `git blame` all from merge commit | Tree-override merge was used | Redo as genuine conflict-resolved merge |
 | Merge conflict in DEPS | Both forks updated deps | Keep our pins, accept upstream structure |
 | Enum values don't match | Mid-sequence insertion | Regenerate bindings — never hand-edit |
 | Pixel mismatch by ±1 | Upstream precision change | Update expected test values |
+| GPU context C API returns nullptr | Backend defines not reaching `:core` | Add defines to `:core` in BUILD.gn |
+| Vulkan GRContext returns null | VMA fallback compiled out | Check `SK_USE_VMA` is defined in GN build |

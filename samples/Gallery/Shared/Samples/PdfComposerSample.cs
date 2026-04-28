@@ -101,7 +101,7 @@ public class PdfComposerSample : DocumentSampleBase
 		}
 
 		// Draw preview
-		using var font = new SKFont { Size = 40 };
+		using var font = new SKFont(SampleMedia.Fonts.Default, 40);
 		using var paint = new SKPaint { IsAntialias = true, Color = 0xFF9CAFB7 };
 
 		if (!isSupported)
@@ -124,7 +124,7 @@ public class PdfComposerSample : DocumentSampleBase
 
 	private static void DrawBackToTocLink(SKCanvas canvas, float pageWidth, float pageHeight)
 	{
-		using var font = new SKFont { Size = 12 };
+		using var font = new SKFont(SampleMedia.Fonts.Default, 12);
 		using var paint = new SKPaint { IsAntialias = true, Color = LinkColor };
 		var text = "\u2190 Back to Contents";
 		var textWidth = font.MeasureText(text);
@@ -141,7 +141,7 @@ public class PdfComposerSample : DocumentSampleBase
 
 	private static void DrawPageTitle(SKCanvas canvas, float pageWidth, string title)
 	{
-		using var font = new SKFont { Size = 28 };
+		using var font = new SKFont(SampleMedia.Fonts.Default, 28);
 		using var paint = new SKPaint { IsAntialias = true, Color = HeadingColor };
 		canvas.DrawText(title, pageWidth / 2, 60, SKTextAlign.Center, font, paint);
 
@@ -154,12 +154,12 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawNamedDestinationAnnotation(new SKPoint(0, 0), "toc")?.Dispose();
 
 		// Title
-		using var titleFont = new SKFont { Size = 48 };
+		using var titleFont = new SKFont(SampleMedia.Fonts.Default, 48);
 		using var titlePaint = new SKPaint { IsAntialias = true, Color = HeadingColor };
 		canvas.DrawText("SkiaSharp PDF Demo", pageWidth / 2, 120, SKTextAlign.Center, titleFont, titlePaint);
 
 		// Subtitle
-		using var subtitleFont = new SKFont { Size = 20 };
+		using var subtitleFont = new SKFont(SampleMedia.Fonts.Default, 20);
 		using var subtitlePaint = new SKPaint { IsAntialias = true, Color = SubtitleColor };
 		canvas.DrawText("Generated with SkiaSharp", pageWidth / 2, 155, SKTextAlign.Center, subtitleFont, subtitlePaint);
 
@@ -168,12 +168,12 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawLine(80, 185, pageWidth - 80, 185, rulePaint);
 
 		// TOC header
-		using var tocHeaderFont = new SKFont { Size = 22 };
+		using var tocHeaderFont = new SKFont(SampleMedia.Fonts.Default, 22);
 		using var tocHeaderPaint = new SKPaint { IsAntialias = true, Color = HeadingColor };
 		canvas.DrawText("Table of Contents", pageWidth / 2, 230, SKTextAlign.Center, tocHeaderFont, tocHeaderPaint);
 
 		// TOC entries
-		using var tocFont = new SKFont { Size = 16 };
+		using var tocFont = new SKFont(SampleMedia.Fonts.Default, 16);
 		using var tocPaint = new SKPaint { IsAntialias = true, Color = LinkColor };
 		using var tocUnderline = new SKPaint { IsAntialias = true, Color = LinkColor, StrokeWidth = 0.5f, IsStroke = true };
 
@@ -197,7 +197,7 @@ public class PdfComposerSample : DocumentSampleBase
 		}
 
 		// Footer URL
-		using var footerFont = new SKFont { Size = 11 };
+		using var footerFont = new SKFont(SampleMedia.Fonts.Default, 11);
 		using var footerPaint = new SKPaint { IsAntialias = true, Color = LinkColor };
 		var url = "https://github.com/mono/SkiaSharp";
 		var urlW = footerFont.MeasureText(url);
@@ -212,11 +212,11 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawNamedDestinationAnnotation(new SKPoint(0, 0), "page-shapes")?.Dispose();
 		DrawPageTitle(canvas, pageWidth, "Shapes & Paths");
 
-		using var labelFont = new SKFont { Size = 12 };
+		using var labelFont = new SKFont(SampleMedia.Fonts.Default, 12);
 		using var labelPaint = new SKPaint { IsAntialias = true, Color = BodyColor };
 
 		// Star
-		using var starPath = new SKPath();
+		using var starBuilder = new SKPathBuilder();
 		var scx = pageWidth / 4;
 		var scy = 200f;
 		var outerR = 60f;
@@ -227,10 +227,11 @@ public class PdfComposerSample : DocumentSampleBase
 			var angle = (float)(Math.PI / 2 + i * Math.PI / 5);
 			var px = scx + r * (float)Math.Cos(angle);
 			var py = scy - r * (float)Math.Sin(angle);
-			if (i == 0) starPath.MoveTo(px, py);
-			else starPath.LineTo(px, py);
+			if (i == 0) starBuilder.MoveTo(px, py);
+			else starBuilder.LineTo(px, py);
 		}
-		starPath.Close();
+		starBuilder.Close();
+		using var starPath = starBuilder.Detach();
 
 		using var starFill = new SKPaint { IsAntialias = true, Color = new SKColor(0xFF, 0xC1, 0x07) };
 		canvas.DrawPath(starPath, starFill);
@@ -262,12 +263,13 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawText("Radial Gradient Circle", ccx, ccy + cr + 20, SKTextAlign.Center, labelFont, labelPaint);
 
 		// Bezier curves
-		using var bezierPath = new SKPath();
+		using var bezierBuilder = new SKPathBuilder();
 		var bx = pageWidth / 2 + 20;
-		bezierPath.MoveTo(bx, 350);
-		bezierPath.CubicTo(bx + 40, 310, bx + 120, 310, bx + 160, 350);
-		bezierPath.CubicTo(bx + 120, 390, bx + 40, 430, bx, 400);
-		bezierPath.CubicTo(bx + 60, 370, bx + 100, 380, bx + 160, 400);
+		bezierBuilder.MoveTo(bx, 350);
+		bezierBuilder.CubicTo(bx + 40, 310, bx + 120, 310, bx + 160, 350);
+		bezierBuilder.CubicTo(bx + 120, 390, bx + 40, 430, bx, 400);
+		bezierBuilder.CubicTo(bx + 60, 370, bx + 100, 380, bx + 160, 400);
+		using var bezierPath = bezierBuilder.Detach();
 
 		using var bezierPaint = new SKPaint
 		{
@@ -291,7 +293,7 @@ public class PdfComposerSample : DocumentSampleBase
 		var margin = 60f;
 		var y = 110f;
 
-		using var sectionFont = new SKFont { Size = 14 };
+		using var sectionFont = new SKFont(SampleMedia.Fonts.Default, 14);
 		using var sectionPaint = new SKPaint { IsAntialias = true, Color = AccentColor };
 		using var bodyPaint = new SKPaint { IsAntialias = true, Color = BodyColor };
 
@@ -300,7 +302,7 @@ public class PdfComposerSample : DocumentSampleBase
 		y += 10;
 		foreach (var size in new[] { 12, 24, 36, 48 })
 		{
-			using var sizedFont = new SKFont { Size = size };
+			using var sizedFont = new SKFont(SampleMedia.Fonts.Default, size);
 			y += size + 8;
 			canvas.DrawText($"{size}pt Sample Text", margin, y, sizedFont, bodyPaint);
 		}
@@ -310,7 +312,7 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawText("Text Styles", margin, y, sectionFont, sectionPaint);
 		y += 30;
 
-		using var styleFont = new SKFont { Size = 20 };
+		using var styleFont = new SKFont(SampleMedia.Fonts.Default, 20);
 		canvas.DrawText("Normal text style", margin, y, styleFont, bodyPaint);
 		y += 30;
 
@@ -324,7 +326,7 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawText("Bold text style (stroke)", margin, y, styleFont, boldPaint);
 		y += 30;
 
-		using var italicFont = new SKFont(null, 20, 1, -0.25f);
+		using var italicFont = new SKFont(SampleMedia.Fonts.Default, 20, 1, -0.25f);
 		canvas.DrawText("Italic text style (skew)", margin, y, italicFont, bodyPaint);
 		y += 50;
 
@@ -332,7 +334,7 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawText("Text Alignment", margin, y, sectionFont, sectionPaint);
 		y += 30;
 
-		using var alignFont = new SKFont { Size = 16 };
+		using var alignFont = new SKFont(SampleMedia.Fonts.Default, 16);
 		using var guidePaint = new SKPaint { IsAntialias = true, Color = LightGray, StrokeWidth = 1, IsStroke = true };
 		canvas.DrawLine(pageWidth / 2, y - 16, pageWidth / 2, y + 60, guidePaint);
 
@@ -357,7 +359,7 @@ public class PdfComposerSample : DocumentSampleBase
 		var y = 100f;
 
 		// Description
-		using var descFont = new SKFont { Size = 13 };
+		using var descFont = new SKFont(SampleMedia.Fonts.Default, 13);
 		using var descPaint = new SKPaint { IsAntialias = true, Color = BodyColor };
 		canvas.DrawText("SkiaSharp can decode and embed bitmap images in PDF documents.", margin, y, descFont, descPaint);
 		y += 30;
@@ -374,7 +376,7 @@ public class PdfComposerSample : DocumentSampleBase
 				canvas.DrawBitmap(baboonBitmap, imgRect);
 
 				// Label
-				using var labelFont = new SKFont { Size = 11 };
+				using var labelFont = new SKFont(SampleMedia.Fonts.Default, 11);
 				using var labelPaint = new SKPaint { IsAntialias = true, Color = SubtitleColor };
 				canvas.DrawText($"baboon.png ({baboonBitmap.Width}×{baboonBitmap.Height})", margin, y + imgSize + 16, labelFont, labelPaint);
 
@@ -420,14 +422,14 @@ public class PdfComposerSample : DocumentSampleBase
 				var cwSize = 150f;
 				canvas.DrawBitmap(cwBitmap, SKRect.Create(margin, y, cwSize, cwSize));
 
-				using var cwLabel = new SKFont { Size = 11 };
+				using var cwLabel = new SKFont(SampleMedia.Fonts.Default, 11);
 				using var cwPaint = new SKPaint { IsAntialias = true, Color = SubtitleColor };
 				canvas.DrawText($"color-wheel.png ({cwBitmap.Width}×{cwBitmap.Height})", margin, y + cwSize + 16, cwLabel, cwPaint);
 			}
 		}
 
 		// Page number
-		using var pageFont = new SKFont { Size = 11 };
+		using var pageFont = new SKFont(SampleMedia.Fonts.Default, 11);
 		using var pagePaint = new SKPaint { IsAntialias = true, Color = BodyColor };
 		canvas.DrawText("Page 4 of 5", pageWidth / 2, pageHeight - 60, SKTextAlign.Center, pageFont, pagePaint);
 
@@ -478,17 +480,18 @@ public class PdfComposerSample : DocumentSampleBase
 		}
 
 		// Diamond row
-		using var diamondPath = new SKPath();
+		using var diamondBuilder = new SKPathBuilder();
 		var dy = 620f;
 		for (var d = 0; d < 5; d++)
 		{
 			var dx = 100f + d * 90;
-			diamondPath.MoveTo(dx, dy - 25);
-			diamondPath.LineTo(dx + 25, dy);
-			diamondPath.LineTo(dx, dy + 25);
-			diamondPath.LineTo(dx - 25, dy);
-			diamondPath.Close();
+			diamondBuilder.MoveTo(dx, dy - 25);
+			diamondBuilder.LineTo(dx + 25, dy);
+			diamondBuilder.LineTo(dx, dy + 25);
+			diamondBuilder.LineTo(dx - 25, dy);
+			diamondBuilder.Close();
 		}
+		using var diamondPath = diamondBuilder.Detach();
 		using var diaShader = SKShader.CreateLinearGradient(
 			new SKPoint(80, dy), new SKPoint(pageWidth - 80, dy),
 			new SKColor[] { new SKColor(0x42, 0xA5, 0xF5), new SKColor(0xAB, 0x47, 0xBC), new SKColor(0xEF, 0x53, 0x50) },
@@ -497,7 +500,7 @@ public class PdfComposerSample : DocumentSampleBase
 		canvas.DrawPath(diamondPath, diaPaint);
 
 		// Page number
-		using var pageFont = new SKFont { Size = 11 };
+		using var pageFont = new SKFont(SampleMedia.Fonts.Default, 11);
 		using var pagePaint = new SKPaint { IsAntialias = true, Color = BodyColor };
 		canvas.DrawText($"Page {pageNum} of {totalPages}", pageWidth / 2, pageHeight - 60, SKTextAlign.Center, pageFont, pagePaint);
 

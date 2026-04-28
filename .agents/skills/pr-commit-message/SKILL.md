@@ -192,12 +192,38 @@ State:
 When one PR contains multiple tightly related changes, organize the body so each part
 has a name and purpose. Use bullets or short section headers instead of a wall of text.
 
+## Co-authored-by trailers
+
+Every commit message **must** end with `Co-authored-by:` trailers listing all people
+who contributed to the PR. This includes:
+
+- commit authors (from `git log`)
+- co-authors already present in commit trailers
+- PR reviewers who approved or left substantive feedback
+
+To collect the full list, run:
+
+```bash
+gh pr view <number> --json commits --jq '[.commits[].authors[]| "Co-authored-by: \(.name) <\(.email)>"] | unique | .[]'
+```
+
+Deduplicate by email. Do not include bots (e.g. `github-actions`) unless they authored
+real code. Always include `Copilot` if any commit has the Copilot co-author trailer.
+
+Place the trailers at the very end of the message, after a blank line, one per line:
+
+```text
+Co-authored-by: Alice Smith <alice@example.com>
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+```
+
 ## Output format
 
 When the user asks for a commit message, return:
 
 1. **One polished commit message** in a fenced code block, ready to paste.
-2. **Optional `Missing context:` bullets** only if important context could not be found.
+2. Co-authored-by trailers at the end (see above).
+3. **Optional `Missing context:` bullets** only if important context could not be found.
 
 Do not dump brainstorming notes unless the user explicitly asks for alternatives.
 

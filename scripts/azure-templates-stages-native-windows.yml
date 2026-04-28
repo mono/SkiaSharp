@@ -41,22 +41,6 @@ stages:
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-android
           additionalArgs: --buildarch=arm64
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|arm (Win)
-        parameters:
-          name: native_tizen_arm_windows
-          displayName: Tizen arm
-          buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
-          target: externals-tizen
-          additionalArgs: --buildarch=arm
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|x86 (Win)
-        parameters:
-          name: native_tizen_x86_windows
-          displayName: Tizen x86
-          buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
-          target: externals-tizen
-          additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|x64 (Win)
         parameters:
           name: native_tizen_x64_windows

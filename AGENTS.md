@@ -88,6 +88,9 @@ Single source of truth for all commands:
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
+| **Fetch release notes** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --last 5` |
+| **Fetch unreleased PRs** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --unreleased` |
+| **Update release notes TOC** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc` |
 
 ### When to Use Which Bootstrap
 
@@ -132,6 +135,8 @@ C# Wrapper (binding/SkiaSharp/)  ->  P/Invoke  ->  C API (externals/skia/src/c/)
 | `*.generated.cs` | No | Run `pwsh ./utils/generate.ps1` |
 | `docs/` | No | Auto-generated |
 | `documentation/dev/` | Yes | Architecture guides |
+| `documentation/docfx/releases/` | Yes | Website release notes (template-formatted) |
+| `documentation/docfx/releases/TEMPLATE.md` | Yes | Template for AI formatting |
 
 ---
 
@@ -336,6 +341,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Start release | `/release-branch` | "release now", "start release X" |
 | Test release | `/release-testing` | "test the release", "verify packages" |
 | Publish release | `/release-publish` | "push to nuget", "tag release" |
+| Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
 | Audit release notes | `/release-notes-audit` | "compare Skia changes", "API gap analysis" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |
