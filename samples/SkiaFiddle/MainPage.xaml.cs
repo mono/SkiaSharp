@@ -1,9 +1,11 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using SkiaFiddle.Fiddle;
 using SkiaSharp;
+using Uno.Foundation;
 
 namespace SkiaFiddle;
 
@@ -37,8 +39,12 @@ public sealed partial class MainPage : Page
 
     private void SelectTab(bool drawActive)
     {
-        DrawEditor.Visibility = drawActive ? Visibility.Visible : Visibility.Collapsed;
-        SetupEditor.Visibility = drawActive ? Visibility.Collapsed : Visibility.Visible;
+        DrawEditor.Opacity = drawActive ? 1 : 0;
+        DrawEditor.IsHitTestVisible = drawActive;
+        DrawEditor.IsTabStop = drawActive;
+        SetupEditor.Opacity = drawActive ? 0 : 1;
+        SetupEditor.IsHitTestVisible = !drawActive;
+        SetupEditor.IsTabStop = !drawActive;
 
         var accent = (Brush)Resources["AccentBrush"];
         var primary = (Brush)Resources["TextPrimary"];
@@ -79,6 +85,26 @@ public sealed partial class MainPage : Page
 
     private async void OnRunClicked(object sender, RoutedEventArgs e) => await RunAsync();
 
+    // Monaco's onDidChangeContent → managed CodeEditor.Text round-trip is unreliable
+    // under Uno WASM (the property lags behind keystrokes), so we ask Monaco directly
+    // for its current model values right before compiling. DOM order matches XAML
+    // declaration order: DrawEditor first, SetupEditor second.
+    private (string setup, string draw) GetEditorTexts()
+    {
+        try
+        {
+            var json = WebAssemblyRuntime.InvokeJS("globalThis.skiaFiddleGetMonacoValues ? globalThis.skiaFiddleGetMonacoValues() : '[]'");
+            var values = JsonSerializer.Deserialize<string[]>(json) ?? Array.Empty<string>();
+            var draw = values.Length > 0 ? values[0] : DrawEditor.Text ?? string.Empty;
+            var setup = values.Length > 1 ? values[1] : SetupEditor.Text ?? string.Empty;
+            return (setup, draw);
+        }
+        catch
+        {
+            return (SetupEditor.Text ?? string.Empty, DrawEditor.Text ?? string.Empty);
+        }
+    }
+
     private void OnPauseClicked(object sender, RoutedEventArgs e)
     {
         OutputCanvas.TogglePause();
@@ -95,7 +121,8 @@ public sealed partial class MainPage : Page
         FpsText.Text = "";
         try
         {
-            var result = await _compiler.CompileAsync(SetupEditor.Text, DrawEditor.Text);
+            var (setup, draw) = GetEditorTexts();
+            var result = await _compiler.CompileAsync(setup, draw);
             if (result.Draw is not null)
             {
                 OutputCanvas.SetDrawDelegate(result.Draw);

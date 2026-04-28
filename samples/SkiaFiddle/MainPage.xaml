@@ -132,7 +132,9 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Editor stack: both editors are mounted; only the active tab is visible. -->
+                <!-- Editor stack: both editors stay mounted (Monaco initializes on Loaded;
+                     collapsing one would skip its init and lose any text round-trip). The
+                     inactive editor is hidden via Opacity + IsHitTestVisible. -->
                 <Grid Grid.Row="1">
                     <monaco:CodeEditor x:Name="DrawEditor"
                                        CodeLanguage="csharp"
@@ -142,7 +144,9 @@
                                        CodeLanguage="csharp"
                                        RequestedTheme="Dark"
                                        BorderThickness="0"
-                                       Visibility="Collapsed" />
+                                       Opacity="0"
+                                       IsHitTestVisible="False"
+                                       IsTabStop="False" />
                 </Grid>
             </Grid>
 

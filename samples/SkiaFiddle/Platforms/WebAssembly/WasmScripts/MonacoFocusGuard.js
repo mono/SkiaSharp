@@ -37,3 +37,19 @@
         start();
     }
 })();
+
+// Read the live model value out of every Monaco editor on the page. Monaco's
+// onDidChangeContent → Accessor.setValue("Text", …) round-trip into managed code is
+// flaky under WASM (the value can lag behind keystrokes, so reading
+// CodeEditor.Text after the user types returns stale sample text). We expose a
+// global that returns Monaco's current values keyed by their DOM order so the
+// fiddle can pull fresh text right before compiling, bypassing the property bag.
+globalThis.skiaFiddleGetMonacoValues = function () {
+    var values = [];
+    document.querySelectorAll('.monaco-editor').forEach(function (el) {
+        if (typeof EditorContext === 'undefined') return;
+        var ctx = EditorContext.getEditorForElement(el);
+        if (ctx && ctx.model) values.push(ctx.model.getValue());
+    });
+    return JSON.stringify(values);
+};
