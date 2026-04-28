@@ -261,19 +261,16 @@ After annotating the GitHub release, update the website release notes in the rep
    ```bash
    python3 scripts/generate-release-notes.py --version {X.Y.Z}
    ```
-   This downloads the GitHub release bodies for the version to a temp directory.
 
-2. **Read the template** at `documentation/docfx/releases/TEMPLATE.md` for formatting guidelines.
+2. **Read the template** at `documentation/docfx/releases/TEMPLATE.md` — this is a real
+   example of a polished page. Match its structure, tone, and formatting.
 
 3. **Read the raw file** from the temp directory output.
 
-4. **Reformat using AI** — Apply the template to create a polished version page with:
-   - Highlights paragraph summarizing the release
-   - Features categorized by type (Engine, GPU, API Surface, Platform, etc.)
-   - Community contributors credited with ❤️
-   - Internal/CI-only PRs omitted
-   - Minimal preview sections with one-line summaries
-   - Breaking changes, security, bug fixes sections as applicable
+4. **Reformat** — Write a polished version page matching the template. For a stable release,
+   include NuGet link, release date, and GitHub Release link in the header. For a preview-only
+   release, use "Preview only" instead of a date. See the template's HTML comments for
+   the exact header format for each status.
 
 5. **Write the polished file** to `documentation/docfx/releases/{X.Y.Z}.md`.
 
@@ -282,16 +279,15 @@ After annotating the GitHub release, update the website release notes in the rep
    python3 scripts/generate-release-notes.py --update-toc
    ```
 
-7. **Commit to the release branch** so the website updates when the release PR merges:
+7. **Commit to the release branch**:
    ```bash
    git add documentation/docfx/releases/
    git commit -m "Update website release notes for {tag}"
    git push
    ```
 
-> **Note:** The "What's Coming Next" section on the index page is maintained by the
-> `update-release-notes` agentic workflow, which runs on every push to main. You don't
-> need to update it manually.
+> **Note:** The upcoming version page is maintained by the `update-release-notes` agentic
+> workflow on every push to main.
 
 ---
 

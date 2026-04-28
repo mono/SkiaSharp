@@ -1,5 +1,5 @@
 ---
-description: "Regenerate the 'What's Coming Next' release notes section when PRs merge to main."
+description: "Update the upcoming version's release notes when PRs merge to main."
 on:
   push:
     branches: [main]
@@ -15,7 +15,7 @@ timeout-minutes: 10
 permissions:
   contents: read
 tools:
-  bash: ["python3", "gh", "git", "cat"]
+  bash: ["python3", "gh", "git", "cat", "grep"]
   edit:
 network:
   allowed:
@@ -27,72 +27,96 @@ safe-outputs:
     draft: false
 ---
 
-# Update Unreleased Release Notes
+# Update Upcoming Release Notes
 
-When code merges to main, regenerate the upcoming version's release notes page with a polished summary of all merged PRs since the last release.
+When code merges to main, update the upcoming version's release notes page with a
+polished summary of all changes since the last release.
 
-## Step 1 — Determine the upcoming version and ensure the file exists
+## Step 1 — Set up
 
-Read the `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`:
+Determine the upcoming version and ensure the file exists:
 
 ```bash
 grep 'SKIASHARP_VERSION:' scripts/azure-templates-variables.yml
 ```
 
-This gives you the upcoming version number (e.g., `4.133.0`). The version file lives at `documentation/docfx/releases/{version}.md`.
-
-If the file does **not** exist, create it and update the TOC:
+Extract the version number (e.g., `4.133.0`). Then ensure the version file and TOC exist:
 
 ```bash
 python3 scripts/generate-release-notes.py --update-toc
 ```
 
-This creates the version file with fence markers and adds it to `TOC.yml` and `index.md`.
+This creates `documentation/docfx/releases/{version}.md` if missing (with `UNRELEASED_BEGIN/END`
+fences) and regenerates `TOC.yml` and `index.md`.
 
-Then read the version file to confirm it has `<!-- UNRELEASED_BEGIN -->` and `<!-- UNRELEASED_END -->` markers.
+Read the version file to confirm it has `<!-- UNRELEASED_BEGIN -->` and `<!-- UNRELEASED_END -->` markers.
 
-## Step 2 — Fetch raw PR data
+## Step 2 — Get raw change data
 
-Run the unreleased notes script to fetch merged PRs since the last release tag and save to a temp file:
+Fetch the list of changes since the last release:
 
 ```bash
 python3 scripts/generate-unreleased-notes.py --output /tmp/unreleased-raw.md
 ```
 
-Then read the output file `/tmp/unreleased-raw.md` to capture the raw content.
+This uses git commit ancestry (not dates) to find all PRs on main that are not in the last
+release tag. Read `/tmp/unreleased-raw.md` to capture the raw content.
 
-## Step 3 — Read the format template
+## Step 3 — Read the template
 
-Read `documentation/docfx/releases/TEMPLATE.md` for the release notes style guidelines. The upcoming version page should follow the same conventions but adapted for an in-development release (no stable release date, no NuGet link yet).
+Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished release
+notes page. Use it as the style reference — match its structure, tone, and formatting.
 
-## Step 4 — Polish the content with AI
+The upcoming version adapts the template for unreleased status:
+- Use `> **Upcoming release** · In development · Not yet available on NuGet` as the header
+- Omit the Links section (no NuGet, no changelog, no API diff yet)
+- Omit Preview sections (no tagged previews yet)
+- Keep everything else: Highlights, Breaking Changes, New Features, Security, Bug Fixes,
+  Platform Support, Community Contributors
 
-Using the raw PR list from Step 2 and the template from Step 3, rewrite the unreleased section in polished form:
+## Step 4 — Write polished content
 
-1. **Highlights paragraph** — 1–3 sentences summarizing the theme of what's coming. What should users be excited about?
-2. **Skia engine version** — The version number encodes the Skia milestone (e.g., **4.133.0** means Skia **m133**). Always mention the Skia engine version in the Highlights and as the first feature under an **Engine** category. If a "Bump skia" PR is in the raw list, link to it. Otherwise, search for a merged "Bump skia to milestone {N}" PR using `gh pr list --state merged --search "bump skia milestone {N}"` and link to that.
-3. **Categorized features** — Group changes by what they affect: Engine, API Surface, Platform, Security, Build, etc. Use the template's emoji prefixes (🎨 Core API, 🍎 Apple, 🪟 Windows, 🐧 Linux, 🤖 Android, 🌐 WebAssembly, 🏗️ Build/CI, 📦 General).
-4. **Community contributors** — Mark contributions from anyone other than @mattleibow with ❤️ inline. **Always link usernames:** `[@user](https://github.com/user)` — never use bare `@user` anywhere in the file (prose, bullet points, or tables).
-5. **Omit noise** — Do NOT itemize version bumps, CI-only fixes, doc-only updates, workflow changes, or skill file edits. If there are many of these, mention them as a group: "Plus several CI and documentation improvements."
-6. **PR links** — Every item should link to its PR: `([#NNN](url))`.
-7. **Breaking changes** — If any PR is labeled `breaking` or has "BREAKING" in the title, list it under a `### ⚠️ Breaking Changes` sub-header at the top.
+Rewrite the raw PR list into polished release notes following the template:
 
-If there are no merged PRs since the last release, just write: `*No changes yet.*`
+1. **Highlights** — 1-3 sentences. What's the story of this version? Lead with the biggest
+   changes. Mention community contributors by linked name.
 
-## Step 5 — Write the polished section into the version file
+2. **Skia engine** — The version number encodes the Skia milestone (e.g., 4.**133**.0 = Skia m133).
+   Search for the merged bump PR: `gh pr list --repo mono/SkiaSharp --state merged --search "bump skia milestone {N}" --json number,title --limit 1`
+   If found, list it first under an **Engine** category. If the raw data already contains
+   a "Bump skia" PR, use that directly.
 
-Use the `edit` tool to replace the content between the fence markers in `documentation/docfx/releases/{version}.md`.
+3. **Categorize features** — Group by what they affect. Use sub-headers like:
+   Engine, GPU & Rendering, API Surface, Text & Fonts, Platform, Security, etc.
+   Each item: **bold title** — description. ❤️ [@contributor](https://github.com/contributor) ([#NNN](url))
 
-The updated section MUST maintain this exact structure so future runs can find and replace it:
+4. **Community contributors** — Anyone not `@mattleibow`. Mark with ❤️ inline AND list
+   in a Contributors table. **ALWAYS** link usernames: `[@user](https://github.com/user)`.
+   Never write bare `@user` anywhere.
+
+5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow changes,
+   skill file edits. If many, mention as: "Plus several CI and documentation improvements."
+
+6. **Breaking changes** — If any PR has a `breaking` label or "BREAKING" in the title,
+   list under `### ⚠️ Breaking Changes` right after Highlights.
+
+7. **PR links** — Every item links to its PR: `([#NNN](url))`.
+
+If there are no user-facing changes, write: `*No user-facing changes yet.*`
+
+## Step 5 — Update the version file
+
+Use the `edit` tool to replace the content between the fence markers in
+`documentation/docfx/releases/{version}.md`.
+
+The replacement MUST keep both markers:
 
 ```
 <!-- UNRELEASED_BEGIN -->
 
-{polished content from Step 4}
+{your polished content from Step 4}
 
 <!-- UNRELEASED_END -->
 ```
 
-**CRITICAL:** Both the `<!-- UNRELEASED_BEGIN -->` and `<!-- UNRELEASED_END -->` HTML comments MUST remain in the file. They are sentinel markers used by this workflow to locate and replace the content on every run.
-
-Replace everything between (and including) these two lines with the new block containing both markers and your polished content between them.
+Replace everything from `<!-- UNRELEASED_BEGIN -->` through `<!-- UNRELEASED_END -->` inclusive.
