@@ -9,19 +9,23 @@ description: >
   - Generate release notes for a version ("write release notes for 3.119.2")
   - Regenerate or refresh release notes ("regenerate 3.119.x release notes")
   - Format raw release data into the website template
-  - Update the release notes after publishing a new release
+  - Manually fix or update release notes that the automated workflow got wrong
 
   Triggers: "release notes for X", "regenerate release notes", "format release notes",
   "update website release notes", "write release notes", "refresh release notes".
 
-  This skill is also called by the release-publish skill (Step 7) after annotating
-  a GitHub release. You don't need to be asked explicitly — if release-publish is
-  running and reaches Step 7, invoke this skill.
+  NOTE: Website release notes are normally updated automatically by the
+  `update-release-notes` agentic workflow when code lands on main, release branches,
+  or tags are pushed. This skill is for manual regeneration or corrections only.
 ---
 
 # Release Notes Skill
 
-Generate polished website release notes for one or more SkiaSharp versions.
+Manually generate or regenerate polished website release notes for SkiaSharp versions.
+
+> **Note:** The `update-release-notes` agentic workflow handles this automatically
+> for pushes to `main`, `release/*` branches, and tag creation. Use this skill only
+> for manual regeneration, corrections, or bulk operations.
 
 ## Process
 
