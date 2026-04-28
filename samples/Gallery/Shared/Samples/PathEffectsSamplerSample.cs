@@ -138,14 +138,14 @@ public class PathEffectsSamplerSample : CanvasSampleBase
 
 	private static SKPath CreateStarPath(float cx, float cy, float size)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var outerR = size;
 		var innerR = size * 0.45f;
 		var points = 5;
 		var angle = -Math.PI / 2;
 		var step = Math.PI / points;
 
-		path.MoveTo(
+		builder.MoveTo(
 			cx + (float)(outerR * Math.Cos(angle)),
 			cy + (float)(outerR * Math.Sin(angle)));
 
@@ -153,28 +153,28 @@ public class PathEffectsSamplerSample : CanvasSampleBase
 		{
 			angle += step;
 			var r = (i % 2 == 0) ? outerR : innerR;
-			path.LineTo(
+			builder.LineTo(
 				cx + (float)(r * Math.Cos(angle)),
 				cy + (float)(r * Math.Sin(angle)));
 		}
 
-		path.Close();
-		return path;
+		builder.Close();
+		return builder.Detach();
 	}
 
 	private static SKPath CreateRoundedRectPath(float cx, float cy, float size)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var rect = new SKRect(cx - size, cy - size * 0.7f, cx + size, cy + size * 0.7f);
-		path.AddRoundRect(rect, size * 0.2f, size * 0.2f);
-		return path;
+		builder.AddRoundRect(rect, size * 0.2f, size * 0.2f);
+		return builder.Detach();
 	}
 
 	private static SKPath CreateWavePath(float cx, float cy, float size)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var startX = cx - size;
-		path.MoveTo(startX, cy);
+		builder.MoveTo(startX, cy);
 
 		var segments = 4;
 		var segW = (size * 2) / segments;
@@ -183,26 +183,27 @@ public class PathEffectsSamplerSample : CanvasSampleBase
 			var x0 = startX + i * segW;
 			var x1 = x0 + segW;
 			var sign = (i % 2 == 0) ? -1f : 1f;
-			path.CubicTo(
+			builder.CubicTo(
 				x0 + segW * 0.33f, cy + sign * size * 0.6f,
 				x0 + segW * 0.66f, cy + sign * size * 0.6f,
 				x1, cy);
 		}
 
-		return path;
+		return builder.Detach();
 	}
 
 	private static SKPathEffect? Create1DStamp(float param)
 	{
 		// Stamp a small diamond shape along the path
-		using var stampPath = new SKPath();
+		using var builder = new SKPathBuilder();
 		var s = Math.Max(2, param * 0.4f);
-		stampPath.MoveTo(0, -s);
-		stampPath.LineTo(s, 0);
-		stampPath.LineTo(0, s);
-		stampPath.LineTo(-s, 0);
-		stampPath.Close();
+		builder.MoveTo(0, -s);
+		builder.LineTo(s, 0);
+		builder.LineTo(0, s);
+		builder.LineTo(-s, 0);
+		builder.Close();
 
+		using var stampPath = builder.Detach();
 		var advance = Math.Max(s * 2 + 2, param);
 		return SKPathEffect.Create1DPath(stampPath, advance, 0, SKPath1DPathEffectStyle.Rotate);
 	}
@@ -210,10 +211,11 @@ public class PathEffectsSamplerSample : CanvasSampleBase
 	private static SKPathEffect? Create2DTile(float param, float cellW)
 	{
 		// Tile a small circle pattern across the path fill
-		using var tilePath = new SKPath();
+		using var builder = new SKPathBuilder();
 		var r = Math.Max(1, param * 0.2f);
-		tilePath.AddCircle(0, 0, r);
+		builder.AddCircle(0, 0, r);
 
+		using var tilePath = builder.Detach();
 		var spacing = Math.Max(r * 3, param);
 		var matrix = SKMatrix.CreateScale(spacing, spacing);
 		return SKPathEffect.Create2DPath(matrix, tilePath);

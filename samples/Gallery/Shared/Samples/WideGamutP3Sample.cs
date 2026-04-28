@@ -214,22 +214,24 @@ public class WideGamutP3Sample : CanvasSampleBase
 		var srgbG = MapChromaticity(0.30f, 0.60f, cx, cy, size);
 		var srgbB = MapChromaticity(0.15f, 0.06f, cx, cy, size);
 
-		using var srgbPath = new SKPath();
-		srgbPath.MoveTo(srgbR);
-		srgbPath.LineTo(srgbG);
-		srgbPath.LineTo(srgbB);
-		srgbPath.Close();
+		using var srgbBuilder = new SKPathBuilder();
+		srgbBuilder.MoveTo(srgbR);
+		srgbBuilder.LineTo(srgbG);
+		srgbBuilder.LineTo(srgbB);
+		srgbBuilder.Close();
+		using var srgbPath = srgbBuilder.Detach();
 
 		// P3 triangle (wider gamut)
 		var p3R = MapChromaticity(0.68f, 0.32f, cx, cy, size);
 		var p3G = MapChromaticity(0.265f, 0.69f, cx, cy, size);
 		var p3B = MapChromaticity(0.15f, 0.06f, cx, cy, size);
 
-		using var p3Path = new SKPath();
-		p3Path.MoveTo(p3R);
-		p3Path.LineTo(p3G);
-		p3Path.LineTo(p3B);
-		p3Path.Close();
+		using var p3Builder = new SKPathBuilder();
+		p3Builder.MoveTo(p3R);
+		p3Builder.LineTo(p3G);
+		p3Builder.LineTo(p3B);
+		p3Builder.Close();
+		using var p3Path = p3Builder.Detach();
 
 		// Fill P3 triangle (subtle)
 		using (var p3Fill = new SKPaint { Color = new SKColor(100, 200, 255, 30), IsAntialias = true })
@@ -289,7 +291,7 @@ public class WideGamutP3Sample : CanvasSampleBase
 	private static void DrawCIEBackground(SKCanvas canvas, float cx, float cy, float size)
 	{
 		// Approximate the CIE horseshoe shape with a filled path in dark grey
-		using var bgPath = new SKPath();
+		using var bgBuilder = new SKPathBuilder();
 
 		// Simplified spectral locus points (chromaticity coords mapped to canvas)
 		var points = new (float x, float y)[]
@@ -307,10 +309,11 @@ public class WideGamutP3Sample : CanvasSampleBase
 		for (var i = 0; i < points.Length; i++)
 			mapped[i] = MapChromaticity(points[i].x, points[i].y, cx, cy, size);
 
-		bgPath.MoveTo(mapped[0]);
+		bgBuilder.MoveTo(mapped[0]);
 		for (var i = 1; i < mapped.Length; i++)
-			bgPath.LineTo(mapped[i]);
-		bgPath.Close();
+			bgBuilder.LineTo(mapped[i]);
+		bgBuilder.Close();
+		using var bgPath = bgBuilder.Detach();
 
 		using var bgPaint = new SKPaint { Color = new SKColor(40, 40, 60, 100), IsAntialias = true };
 		canvas.DrawPath(bgPath, bgPaint);
