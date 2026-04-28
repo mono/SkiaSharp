@@ -4,9 +4,6 @@ on:
   push:
     branches: [main, "release/**"]
     tags: ["v*"]
-    paths-ignore:
-      - "documentation/docfx/releases/*.md"
-      - ".github/**"
   workflow_dispatch:
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
@@ -56,9 +53,16 @@ For tag pushes, find the release branch the tag points to:
 
 ```bash
 TAG=${GITHUB_REF#refs/tags/}
-# Extract branch-style name: v4.147.0-preview.1.1 → release/4.147.0-preview.1
-# Strip the 'v' prefix and trailing build number
-BRANCH_VERSION=$(echo "$TAG" | sed 's|^v||; s|\.[0-9]*$||')
+# Preview tags: v4.147.0-preview.1.1 → release/4.147.0-preview.1 (strip build number)
+# Stable tags:  v3.119.2 → release/3.119.2 (keep as-is, just strip 'v')
+TAG_NO_V=${TAG#v}
+if echo "$TAG_NO_V" | grep -q "\-preview\."; then
+  # Preview: strip trailing .BUILD_NUMBER
+  BRANCH_VERSION=$(echo "$TAG_NO_V" | sed 's|\.[0-9]*$||')
+else
+  # Stable: use version directly (no build number to strip)
+  BRANCH_VERSION="$TAG_NO_V"
+fi
 BRANCH="release/${BRANCH_VERSION}"
 ```
 

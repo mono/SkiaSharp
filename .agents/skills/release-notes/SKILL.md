@@ -57,9 +57,9 @@ python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version
 Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished
 release notes page. Match its structure, tone, and formatting exactly.
 
-Determine each version's status from its raw data:
-- **Stable release**: has a "## Stable Release" section → header uses `Released {date}` + NuGet link + GitHub Release link
-- **Preview only**: only preview sections → header uses `Preview only` + NuGet preview link + GitHub Release link
+Determine the version's status from the script's stderr output (`Status: released` or `Status: unreleased`):
+- **Released**: header uses `Released {date}` + NuGet link + GitHub Release link
+- **Unreleased**: header uses `> **Upcoming release** · In development · Not yet available on NuGet`
 
 ### Step 4 — Write polished pages
 

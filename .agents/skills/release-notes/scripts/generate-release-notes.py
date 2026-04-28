@@ -366,11 +366,10 @@ def determine_diff_range(branch):
             candidates = list(all_branches)
 
         if not candidates:
-            # No release branches at all -- use initial commit
-            initial = run(
-                ["git", "rev-list", "--max-parents=0", "origin/main"]
-            ).splitlines()[0]
-            return initial, "origin/main", version
+            # No release branches at all — refuse to diff entire history
+            raise RuntimeError(
+                "No release branches found. Cannot determine diff range "
+                "for main. Ensure release branches are fetched.")
 
         candidates.sort(key=release_branch_sort_key)
         latest = candidates[-1]
@@ -405,8 +404,10 @@ def determine_diff_range(branch):
     version = version_from_branch(branch)
 
     # All same-minor branches, sorted by semver
+    # Exclude .x servicing branches — they are not predecessors of versioned branches
     candidates = [b for b in all_branches
-                  if b.startswith("release/{}.".format(minor))]
+                  if b.startswith("release/{}.".format(minor))
+                  and not b.endswith(".x")]
     candidates.sort(key=release_branch_sort_key)
 
     if branch not in candidates:
@@ -452,6 +453,7 @@ def get_prs_from_diff(from_ref, to_ref):
         return []
 
     prs = []
+    failures = 0
     total = len(pr_numbers)
     for i, num in enumerate(pr_numbers, 1):
         try:
@@ -462,9 +464,20 @@ def get_prs_from_diff(from_ref, to_ref):
             pr.update(compute_pr_effort(pr))
             prs.append(pr)
         except (subprocess.CalledProcessError, json.JSONDecodeError):
+            failures += 1
+            print("  WARNING: Failed to fetch PR #{} ({}/{})".format(
+                num, failures, total), file=sys.stderr)
             continue
         if i % 20 == 0:
             print("  Fetched {}/{} PRs...".format(i, total), file=sys.stderr)
+
+    if failures > 0:
+        print("  WARNING: {} of {} PRs could not be fetched".format(
+            failures, total), file=sys.stderr)
+        if failures > total // 2:
+            print("ERROR: More than half of PRs failed to fetch. "
+                  "GitHub API may be down.", file=sys.stderr)
+            sys.exit(1)
 
     return prs
 
@@ -633,7 +646,12 @@ def cmd_branch(branch, output_path=None):
     branch = _removeprefix(branch, "origin/")
 
     print("Fetching remote branches...", file=sys.stderr)
-    run(["git", "fetch", "origin", "--quiet"], check=False)
+    try:
+        run(["git", "fetch", "origin", "--quiet"], check=True)
+    except subprocess.CalledProcessError:
+        print("ERROR: git fetch failed. Cannot determine branch diff "
+              "range with stale data.", file=sys.stderr)
+        sys.exit(1)
 
     from_ref, to_ref, version = determine_diff_range(branch)
 
@@ -643,8 +661,32 @@ def cmd_branch(branch, output_path=None):
     if re.match(r"^[0-9a-f]{7,}$", from_display):
         from_display = from_display[:12]
 
+    # Determine release status
+    is_main = (branch == "main")
+    is_servicing = branch.endswith(".x")
+    status = "unreleased"
+    if not is_main and not is_servicing:
+        # Check if a GitHub release exists for this version
+        try:
+            gh(["release", "view", "v{}".format(version),
+                "--repo", REPO, "--json", "tagName"])
+            status = "released"
+        except subprocess.CalledProcessError:
+            # Try preview tags too
+            try:
+                tags_raw = gh(["api", "repos/{}/tags".format(REPO),
+                               "--jq", ".[].name",
+                               "-q", "--paginate"])
+                for tag_line in tags_raw.splitlines():
+                    if tag_line.startswith("v{}-".format(version)) or tag_line == "v{}".format(version):
+                        status = "released"
+                        break
+            except subprocess.CalledProcessError:
+                pass
+
     print("Branch: {}".format(branch), file=sys.stderr)
     print("Version: {}".format(version), file=sys.stderr)
+    print("Status: {}".format(status), file=sys.stderr)
     print("Diff: {}..{}".format(from_display, to_display), file=sys.stderr)
 
     prs = get_prs_from_diff(from_ref, to_ref)
