@@ -520,11 +520,11 @@ def generate_toc(versions, next_versions):
         lines.append("  href: {}.md".format(members[0]))
         lines.append("  items:")
         for v in members:
-            lines.append("    - name: Version {}".format(v))
-            lines.append("      href: {}.md".format(v))
             if v in next_set:
                 lines.append("    - name: Version {} (Next)".format(v))
                 lines.append("      href: {}-next.md".format(v))
+            lines.append("    - name: Version {}".format(v))
+            lines.append("      href: {}.md".format(v))
 
     if obsolete:
         lines.append("- name: Obsolete Versions")
@@ -570,9 +570,9 @@ def generate_index(versions, next_versions):
             members = minor_groups_map[g]
             lines.append("- **Version {}.x**".format(g))
             for v in members:
-                lines.append("  - [Version {}]({}.md)".format(v, v))
                 if v in next_set:
                     lines.append("  - [Version {} (Next)]({}-next.md)".format(v, v))
+                lines.append("  - [Version {}]({}.md)".format(v, v))
         lines.append("")
 
     return "\n".join(lines)
