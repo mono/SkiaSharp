@@ -525,7 +525,7 @@ def format_pr_list(prs, metadata):
     else:
         for pr in prs:
             title = pr.get("title", "")
-            author = pr.get("author", {}).get("login", "unknown")
+            author = (pr.get("author") or {}).get("login", "unknown")
             url = pr.get("url", "")
             label_names = [la.get("name", "") for la in pr.get("labels", [])]
             labels_str = " [{}]".format(", ".join(label_names)) if label_names else ""

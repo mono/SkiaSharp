@@ -36,23 +36,21 @@ Automatically update website release notes when code changes land on `main`,
 echo "Ref: $GITHUB_REF"
 ```
 
-For branch pushes, extract the branch name directly:
+Determine the branch name based on the ref type:
 
 ```bash
-BRANCH="${GITHUB_REF#refs/heads/}"
-```
-
-For tag pushes, derive the release branch from the tag:
-
-```bash
-TAG=${GITHUB_REF#refs/tags/}
-TAG_NO_V=${TAG#v}
-if echo "$TAG_NO_V" | grep -qE "\-preview\.[0-9]+\.[0-9]+$"; then
-  BRANCH="release/$(echo "$TAG_NO_V" | sed 's|\.[0-9]*$||')"
-elif echo "$TAG_NO_V" | grep -q "\-preview\."; then
-  BRANCH="release/${TAG_NO_V}"
+if echo "$GITHUB_REF" | grep -q "^refs/tags/"; then
+  # Tag push — derive release branch from tag
+  TAG=${GITHUB_REF#refs/tags/}
+  TAG_NO_V=${TAG#v}
+  if echo "$TAG_NO_V" | grep -qE "\-preview\.[0-9]+\.[0-9]+$"; then
+    BRANCH="release/$(echo "$TAG_NO_V" | sed 's|\.[0-9]*$||')"
+  else
+    BRANCH="release/${TAG_NO_V}"
+  fi
 else
-  BRANCH="release/${TAG_NO_V}"
+  # Branch push — extract branch name directly
+  BRANCH="${GITHUB_REF#refs/heads/}"
 fi
 ```
 
