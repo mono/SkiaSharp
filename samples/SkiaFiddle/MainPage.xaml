@@ -79,9 +79,12 @@
                   Background="{StaticResource EditorBackground}"
                   BorderBrush="{StaticResource PanelBorder}"
                   BorderThickness="0,0,1,0">
-                <!-- Editors first (rendered behind the tab strip in z-order). Both stay
-                     mounted (Monaco initializes on Loaded; collapsing one would skip its
-                     init); the inactive one is hidden via Opacity + IsHitTestVisible. -->
+                <!-- Editors first (rendered behind the tab strip in z-order). The
+                     inactive editor uses Visibility=Collapsed so its native HTML overlay
+                     is removed from rendering entirely — Opacity-based hiding left the
+                     overlay in place and it contributed sub-pixel clip overflow on top
+                     of the tab strip. Cached text is re-pushed in code-behind when the
+                     tab becomes active, in case Monaco re-initializes on show. -->
                 <Grid Margin="0,34,0,0">
                     <monaco:CodeEditor x:Name="DrawEditor"
                                        CodeLanguage="csharp"
@@ -91,9 +94,7 @@
                                        CodeLanguage="csharp"
                                        RequestedTheme="Dark"
                                        BorderThickness="0"
-                                       Opacity="0"
-                                       IsHitTestVisible="False"
-                                       IsTabStop="False" />
+                                       Visibility="Collapsed" />
                 </Grid>
 
                 <!-- Tab strip — declared after the editor stack so it renders on top.

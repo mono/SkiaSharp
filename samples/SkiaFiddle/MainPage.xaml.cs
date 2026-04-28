@@ -39,12 +39,16 @@ public sealed partial class MainPage : Page
 
     private void SelectTab(bool drawActive)
     {
-        DrawEditor.Opacity = drawActive ? 1 : 0;
-        DrawEditor.IsHitTestVisible = drawActive;
-        DrawEditor.IsTabStop = drawActive;
-        SetupEditor.Opacity = drawActive ? 0 : 1;
-        SetupEditor.IsHitTestVisible = !drawActive;
-        SetupEditor.IsTabStop = !drawActive;
+        // Capture the soon-to-be-collapsed editor's live text first so it
+        // doesn't get lost if Monaco re-initializes when its host control is
+        // shown again. GetEditorTexts pulls from Monaco's model and seeds the
+        // managed Text properties as a side effect of falling back to them.
+        var (setup, draw) = GetEditorTexts();
+        DrawEditor.Text = draw;
+        SetupEditor.Text = setup;
+
+        DrawEditor.Visibility = drawActive ? Visibility.Visible : Visibility.Collapsed;
+        SetupEditor.Visibility = drawActive ? Visibility.Collapsed : Visibility.Visible;
 
         var accent = (Brush)Resources["AccentBrush"];
         var primary = (Brush)Resources["TextPrimary"];

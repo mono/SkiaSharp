@@ -33,25 +33,49 @@ globalThis.skiaFiddleGetMonacoValues = function () {
     }
 };
 
-// Stop key events that originate inside a Monaco editor from reaching Uno's
-// document-level routing. Uno's WASM Skia head listens at document/body for
-// keystrokes and dispatches them through XAML's focused-element pipeline; on
-// some characters (notably space and 's') the routing wins over Monaco's own
-// textarea handling and the keystroke ends up firing accelerators / button
-// clicks instead of typing. We register at document in capture phase so we
-// run before Uno's listener (assuming we're attached first), and use
-// stopImmediatePropagation to suppress every later document-level capture
-// listener — Monaco's own listeners are on its inner textarea, so they fire
-// in the target/bubble phase regardless and keep working.
+// Wrap document.addEventListener so any keyboard listener Uno installs at
+// document scope ignores events that originate inside a Monaco editor. Uno's
+// WASM Skia head listens at the document for keystrokes and dispatches them
+// through XAML's focused-element pipeline — that's how 's' / space / etc.
+// were leaking into the ComboBox or focused button while the user typed.
+//
+// We wrap rather than stopPropagation/stopImmediatePropagation because those
+// also abort propagation to the *target*, which means Monaco's own textarea
+// handlers (the ones that implement Ctrl+C/V, backspace at line boundaries,
+// and friends) never fire either. Wrapping skips Uno's handler in particular
+// without affecting the dispatch otherwise — Monaco's listeners are at the
+// textarea level, not on document, so they're not wrapped here.
+//
+// Must run before Uno's runtime registers its listener (i.e. while the script
+// is still loading; Uno's C# runtime registers listeners later, after the
+// WASM module boots).
 (function () {
-    if (window.__skiaFiddleKeyGuard) return;
-    window.__skiaFiddleKeyGuard = true;
-    var EVENTS = ['keydown', 'keyup', 'keypress'];
-    EVENTS.forEach(function (type) {
-        document.addEventListener(type, function (e) {
-            if (!e.target || typeof e.target.closest !== 'function') return;
-            if (!e.target.closest('.monaco-editor')) return;
-            e.stopImmediatePropagation();
-        }, true);
-    });
+    if (window.__skiaFiddleDocumentAELPatched) return;
+    window.__skiaFiddleDocumentAELPatched = true;
+
+    var KEY_EVENTS = ['keydown', 'keyup', 'keypress'];
+    var origAdd = document.addEventListener;
+    var origRemove = document.removeEventListener;
+
+    document.addEventListener = function (type, handler, options) {
+        if (typeof handler === 'function' && KEY_EVENTS.indexOf(type) !== -1) {
+            var wrapped = function (e) {
+                if (e && e.target && typeof e.target.closest === 'function' &&
+                    e.target.closest('.monaco-editor')) {
+                    return;
+                }
+                return handler.apply(this, arguments);
+            };
+            handler.__skiaFiddleWrapped = wrapped;
+            return origAdd.call(this, type, wrapped, options);
+        }
+        return origAdd.call(this, type, handler, options);
+    };
+
+    document.removeEventListener = function (type, handler, options) {
+        if (typeof handler === 'function' && handler.__skiaFiddleWrapped) {
+            return origRemove.call(this, type, handler.__skiaFiddleWrapped, options);
+        }
+        return origRemove.call(this, type, handler, options);
+    };
 })();
