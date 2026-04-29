@@ -15,9 +15,12 @@ steps:
           $buildId = $env:BUILD_BUILDID
           Write-Host "Using BUILD_BUILDID = '$env:BUILD_BUILDID'"
         }
+        $requestedBuildId = $buildId
+        $isPrLatest = $requestedBuildId -eq 'prlatest'
         $versionType = 'specific'
-        if ($buildId -eq 'latest') {
+        if (($requestedBuildId -eq 'latest') -or $isPrLatest) {
           $versionType = 'latestFromBranch'
+          $buildId = 'latest'
         }
         $pipelineId = "$env:SYSTEM_DEFINITIONID"
         if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) {
@@ -25,7 +28,7 @@ steps:
           Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_PIPELINEID = '$env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID'"
         }
         $branchName = "$env:BUILD_SOURCEBRANCH"
-        if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
+        if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH -and -not $isPrLatest) {
           $branchName = "refs/heads/$env:SYSTEM_PULLREQUEST_TARGETBRANCH"
         }
         Write-Host "DOWNLOAD_BUILD_ID = '$buildId'"
