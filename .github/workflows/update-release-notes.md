@@ -23,6 +23,7 @@ safe-outputs:
     title-prefix: "[docs] "
     labels: [documentation]
     draft: false
+    allowed-base-branches: [main]
 ---
 
 # Update Release Notes
