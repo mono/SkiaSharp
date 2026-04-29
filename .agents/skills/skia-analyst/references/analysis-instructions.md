@@ -20,10 +20,13 @@ Infer the scan mode from context. If unclear, ask.
 Fetch from: `https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md`
 Extract features per milestone. For windowed/diff mode, focus on the relevant range but still scan a few milestones beyond.
 
-### 2. C++ Header Scan
-For types SkiaSharp already binds, fetch upstream C++ headers and compare against the C API:
-- C API: `externals/skia/include/c/` and `externals/skia/src/c/`
-- C# wrappers: `binding/SkiaSharp/`
+### 2. C++ Header Scan (Hidden API Discovery)
+For types SkiaSharp already binds, fetch upstream C++ headers from `google/skia` and compare
+against what SkiaSharp exposes:
+- **Upstream C++ headers**: fetch from GitHub (`owner=google, repo=skia, path=include/core/SkImage.h`)
+- **SkiaSharp C API**: grep `binding/SkiaSharp/SkiaApi.generated.cs` for `sk_*` / `gr_*` P/Invoke externs.
+  This reflects the full C API surface even if `externals/skia/include/c/` isn't checked out.
+- **SkiaSharp C# wrappers**: `binding/SkiaSharp/*.cs`
 
 High-value headers to scan:
 | C# | C API prefix | C++ header |

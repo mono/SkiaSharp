@@ -16,20 +16,26 @@ description: >
 # Skia Analyst
 
 You analyze Skia features for SkiaSharp from two angles simultaneously:
-1. **What shipped** - changelog, marketing slides, PR links, upstream engine benefits, migration guides
-2. **What's missing** - gap analysis with impact/priority/effort scoring, hidden API scan, action items
+1. **What shipped** — changelog, marketing slides, PR links, upstream engine benefits, migration guides
+2. **What's missing** — gap analysis with impact/priority/effort scoring, hidden API scan, action items
 
-Every run produces both. No mode selection needed.
+Every run produces both. Output is structured JSON and rendered GitHub-flavored Markdown.
+
+This skill always runs in a SkiaSharp checkout. It uses:
+- `externals/skia/` submodule for the C API (our fork at `mono/skia`)
+- `binding/SkiaSharp/SkiaApi.generated.cs` for the C API reflected as P/Invoke externs
+- `binding/SkiaSharp/*.cs` for the C# wrappers
+- Upstream `google/skia` headers fetched via GitHub for hidden API comparison
 
 ## Key References
 
-- **[references/schema-cheatsheet.md](references/schema-cheatsheet.md)** - Human-readable schema
-- **[references/skia-analyst-schema.json](references/skia-analyst-schema.json)** - JSON Schema (Draft 2020-12)
-- **[references/analysis-instructions.md](references/analysis-instructions.md)** - Classification criteria for both lenses
+- **[references/schema-cheatsheet.md](references/schema-cheatsheet.md)** — Human-readable schema
+- **[references/skia-analyst-schema.json](references/skia-analyst-schema.json)** — JSON Schema (Draft 2020-12)
+- **[references/analysis-instructions.md](references/analysis-instructions.md)** — Classification criteria
 
 ## Input Flexibility
 
-The user may specify anything - infer the scan mode:
+The user may specify anything — infer the scan mode:
 
 | User says | Mode | What to do |
 |-----------|------|------------|
@@ -38,17 +44,16 @@ The user may specify anything - infer the scan mode:
 | "between m133 and m147" | `windowed` | milestoneFrom=133, milestoneTo=147 |
 | "diff v3.119.4..origin/main" | `diff` | Git diff + milestone analysis |
 | "what changed in v4.147.0" | `diff` | Auto-detect previous tag, diff |
-| "things before m120" | `windowed` | milestoneTo=120 |
 
 If unclear, ask. But try to infer first.
 
 ## Workflow
 
 ```
-Phase 1: Setup (determine scan range, locate C API)
+Phase 1: Setup (determine scan range, prepare sources)
 Phase 2: Launch dual-model agents (Opus + GPT in parallel)
-Phase 3: Synthesize - merge findings, dedupe, both lenses
-Phase 4: Generate outputs (JSON -> validate -> HTML)
+Phase 3: Synthesize — merge findings, dedupe, both lenses
+Phase 4: Generate outputs (JSON → validate → Markdown)
 Phase 5: Present results
 ```
 
@@ -60,9 +65,16 @@ Based on user input, establish:
 - `scanMode`: full, windowed, or diff
 - For windowed: `milestoneFrom` and `milestoneTo`
 - For diff: `refFrom` and `refTo` (resolve SHAs, dates, commit count)
-- `currentMilestone`: from `externals/skia/include/core/SkMilestone.h` or commit messages
 
-**1b. Fetch Skia release notes**
+**1b. Determine current milestone**
+
+```bash
+cat externals/skia/include/core/SkMilestone.h
+```
+
+Or check commit messages for the latest Skia bump PR.
+
+**1c. Fetch Skia release notes**
 
 ```
 https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md
@@ -70,69 +82,74 @@ https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md
 
 Fetch in 20KB chunks. Save to a temp file for agents.
 
-**1c. Locate C API**
+**1d. Prepare upstream headers for hidden API scan**
 
-```bash
-ls externals/skia/include/c/ 2>/dev/null
-# Fallback to main repo checkout
+Agents will fetch upstream C++ headers directly from GitHub during their scan:
 ```
+github-mcp-server-get_file_contents owner=google repo=skia path=include/core/SkImage.h
+```
+
+**1e. Locate binding sources**
+
+The C API is reflected in `binding/SkiaSharp/SkiaApi.generated.cs` as P/Invoke extern methods.
+The C# wrappers are in `binding/SkiaSharp/*.cs`. Both are in the worktree.
+
+For the C API headers (our fork), check `externals/skia/include/c/` and `externals/skia/src/c/`.
+If the submodule isn't checked out, agents can grep `SkiaApi.generated.cs` for `sk_*` and `gr_*`
+extern function names — this reflects the full C API surface.
 
 ### Phase 2: Launch Dual-Model Agents
 
-Launch **two** background agents simultaneously on **different models**. Each does the complete job independently. Their blind spots don't overlap.
-
-Give each agent this prompt (adapted with actual scan range):
+Launch **two** background agents simultaneously on **different models**:
 
 ```
 task agent_type=general-purpose mode=background model=claude-opus-4.7 name=analyst-opus:
 task agent_type=general-purpose mode=background model=gpt-5.4 name=analyst-gpt:
-
-  "You are analyzing Skia for SkiaSharp. Current milestone: M{current}.
-   Scan mode: {mode}. Range: {range details}.
-
-   FIRST: Read .agents/skills/skia-analyst/references/analysis-instructions.md
-
-   THEN do ALL of these:
-   1. RELEASE NOTES SCAN - Read the Skia release notes. Extract features for the relevant milestone range.
-   2. HIDDEN API SCAN - Fetch upstream C++ headers, compare against C API.
-   3. BINDING VERIFICATION - Check C API and C# wrappers exist.
-   4. GIT DIFF (if diff mode) - Analyze the git diff for API/build/dep changes.
-
-   For EVERY finding, classify with BOTH lenses:
-   - Changelog: changeType + importance
-   - Gap: bindingStatus + impact + priority + effort
-
-   Save to {output_path}"
 ```
+
+Each agent does the complete job independently:
+1. **Release notes scan** — read Skia RELEASE_NOTES.md, extract features
+2. **Hidden API scan** — fetch upstream C++ headers from `google/skia`, compare against
+   binding/SkiaSharp/SkiaApi.generated.cs for P/Invoke externs and binding/SkiaSharp/*.cs for wrappers
+3. **Binding verification** — grep the actual code to set bindingStatus
+4. **Git diff** (if diff mode) — analyze API/build/dep changes between refs
+
+For EVERY finding, classify with BOTH lenses:
+- Changelog: `changeType` + `importance`
+- Gap: `bindingStatus` + `impact` + `priority` + `effort`
 
 ### Phase 3: Synthesize
 
 When both agents complete, merge their findings:
 
-1. **Deduplicate** by name/skiaApi - keep richer data from each
-2. **Resolve conflicts** - more cautious bindingStatus wins, higher impact wins
-3. **Union hidden APIs** - combine both agents' header scan discoveries
-4. **Generate slides** - marketing bullets for major+ importance findings
-5. **Generate changelog** - grouped by: Breaking Changes (first), New APIs, Bug Fixes, Performance, Security, Engine Improvements, Deprecations, Dependencies, Platform Changes
-6. **Build nextSteps** - prioritized action items from gap analysis
+1. **Deduplicate** by name/skiaApi — keep richer data from each
+2. **Resolve conflicts** — more cautious bindingStatus wins, higher impact wins
+3. **Union hidden APIs** — combine both agents' header scan discoveries
+4. **Generate slides** — marketing bullets for major+ importance findings
+5. **Generate changelog** — grouped by: Breaking Changes, New APIs, Bug Fixes, Performance,
+   Security, Engine Improvements, Deprecations, Dependencies, Platform Changes
+6. **Build nextSteps** — prioritized action items from gap analysis
 
 ### Phase 4: Generate Outputs
 
 **4a. Generate JSON**
 
-Produce JSON following the schema. Save to `/tmp/skia-analyst-YYYY-MM-DD.json`.
+Save to `/tmp/skia-analyst-YYYY-MM-DD.json`.
 
 **4b. Validate**
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py <path-to-json>
+python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py /tmp/skia-analyst-YYYY-MM-DD.json
 ```
 
-**4c. Render HTML**
+**4c. Render Markdown**
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py <path-to-json>
+python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py /tmp/skia-analyst-YYYY-MM-DD.json
 ```
+
+This produces a GitHub-flavored Markdown file with collapsible details, suitable for pasting
+into a GitHub issue or sharing as a gist.
 
 ### Phase 5: Present Results
 
@@ -141,14 +158,13 @@ Show both perspectives inline:
 **Changelog highlights:**
 - Marketing slides (top items)
 - Breaking changes (if any)
-- New APIs summary
 
 **Gap analysis highlights:**
-- Top opportunities by action score (impact x priority x 1/effort)
-- Transformative gaps
+- Transformative and significant gaps
 - Quick wins (partial binding status)
 
 Then offer next steps:
 1. "Want me to investigate any finding in more detail?"
-2. "Should I use the add-api skill to start binding a feature?"
-3. "Want to upload the viewer to a gist for sharing?"
+2. "Should I use the api-add-review skill to start binding a feature?"
+3. "Want to upload the markdown to a gist for sharing?"
+4. "Should I create a GitHub issue with the gap analysis?"
