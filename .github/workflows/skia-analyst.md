@@ -47,22 +47,19 @@ Run a full skia-analyst scan and publish the results as a GitHub issue.
 
 Read and follow the instructions in `.agents/skills/skia-analyst/SKILL.md` to run a **full scan**.
 
-Complete all phases. Use `scanMode: full`. The skill will determine the current milestone,
-fetch upstream Skia release notes, check binding status, and produce a validated JSON report.
+Complete all phases (Setup → Agents → Synthesize → Generate Outputs → Present).
+Use `scanMode: full`. The skill handles milestone detection, analysis, validation, and rendering.
 
-After all phases complete, the report JSON will be at `skia-analyst-report.json`.
+After all phases complete, the outputs will be:
+- `skia-analyst-report.json` — the validated JSON report
+- `skia-analyst-report.md` — the rendered Markdown
 
-## Step 2 — Render the Markdown and publish
+## Step 2 — Publish as GitHub issue
 
-Render the report as GitHub-flavored Markdown:
+Create a GitHub issue with the contents of `skia-analyst-report.md` as the body.
 
-```bash
-python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-report.json skia-analyst-report.md
-```
-
-Create a GitHub issue with the rendered Markdown as the body. The issue title **must** start with
-`Skia API Gap Analysis:` (e.g. `Skia API Gap Analysis: m147 — 2025-01-15`) so `close-older-issues`
-matches correctly. If the body exceeds ~60,000 characters, trim lower-priority sections.
+The issue title **must** start with `Skia API Gap Analysis:` (e.g. `Skia API Gap Analysis: m147 — 2025-01-15`)
+so `close-older-issues` matches correctly. If the body exceeds ~60,000 characters, trim lower-priority sections.
 
 ## Step 3 — Upload artifacts and write step summary
 
