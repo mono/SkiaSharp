@@ -73,11 +73,8 @@ If validation fails, fix the JSON and re-validate. Do not proceed until it passe
 ## Step 4 — Render the Markdown
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-report.json skia-analyst-report.md --header-offset 2
+python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-report.json skia-analyst-report.md
 ```
-
-The `--header-offset 2` flag demotes all headers by 2 levels (`#` → `###`, `##` → `####`) so they
-are valid inside a GitHub issue body where `#` and `##` are reserved for the title.
 
 Read the rendered `skia-analyst-report.md`. If it exceeds ~60,000 characters, trim lower-priority
 sections — the full JSON is preserved in the step summary as a fallback.
