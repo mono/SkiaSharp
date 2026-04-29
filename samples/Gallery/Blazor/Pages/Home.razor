@@ -57,7 +57,6 @@
     private string[] allCategories = Array.Empty<string>();
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
     private IJSObjectReference? masonryModule;
-    private IJSObjectReference? masonryInstance;
 
     protected override void OnInitialized()
     {
@@ -75,7 +74,12 @@
         if (firstRender)
         {
             masonryModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
-            masonryInstance = await masonryModule.InvokeAsync<IJSObjectReference>("initMasonry", "#masonry-container");
+            await masonryModule.InvokeVoidAsync("initMasonry", "#masonry-container");
+        }
+        else if (masonryModule is not null)
+        {
+            // Re-layout after Blazor re-renders (filter/search change)
+            await masonryModule.InvokeVoidAsync("relayout", "#masonry-container");
         }
     }
 

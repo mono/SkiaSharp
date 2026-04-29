@@ -5,72 +5,60 @@ export function initMasonry(containerSelector) {
     const container = document.querySelector(containerSelector);
     if (!container) return null;
 
-    let isLayouting = false;
+    let currentCols = 0;
 
-    const layout = () => {
-        if (isLayouting) return;
-        isLayouting = true;
-        doLayout(container);
-        isLayouting = false;
-    };
+    function layout() {
+        const cols = getColCount(container.clientWidth);
+        if (cols === currentCols && container.querySelector('.masonry-col')) return;
+        currentCols = cols;
+        doLayout(container, cols);
+    }
 
+    // Initial layout
     layout();
 
-    // Re-layout on resize (debounced)
-    let timer;
-    const observer = new ResizeObserver(() => {
-        clearTimeout(timer);
-        timer = setTimeout(layout, 150);
+    // Only re-layout when column count changes (resize breakpoints)
+    window.addEventListener('resize', () => {
+        const cols = getColCount(container.clientWidth);
+        if (cols !== currentCols) layout();
     });
-    observer.observe(container);
 
-    // Re-layout when Blazor re-renders (new .grid-item children appear)
-    const mutObs = new MutationObserver(() => {
-        if (isLayouting) return; // ignore our own DOM changes
-        clearTimeout(timer);
-        timer = setTimeout(layout, 50);
-    });
-    mutObs.observe(container, { childList: true, subtree: true });
-
-    return { dispose: () => { observer.disconnect(); mutObs.disconnect(); } };
+    return null;
 }
 
-function doLayout(container) {
-    // Collect all grid-items (may be inside .masonry-col wrappers or direct children)
-    const existingCols = container.querySelectorAll('.masonry-col');
-    const items = [];
+// Call from Blazor after filter/search re-renders
+export function relayout(containerSelector) {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+    const cols = getColCount(container.clientWidth);
+    doLayout(container, cols);
+}
 
-    // Pull items out of any existing column wrappers back to container
+function getColCount(width) {
+    if (width < 640) return 1;
+    if (width < 960) return 2;
+    if (width < 1200) return 3;
+    return 4;
+}
+
+function doLayout(container, cols) {
+    const gap = 16;
+
+    // Pull all grid-items out of any existing column wrappers
+    const existingCols = container.querySelectorAll('.masonry-col');
     existingCols.forEach(col => {
-        while (col.firstChild) {
-            items.push(col.firstChild);
-            container.appendChild(col.firstChild);
-        }
+        while (col.firstChild) container.appendChild(col.firstChild);
         col.remove();
     });
 
-    // Also grab any direct .grid-item children
-    container.querySelectorAll(':scope > .grid-item').forEach(el => {
-        if (!items.includes(el)) items.push(el);
-    });
-
+    const items = Array.from(container.querySelectorAll(':scope > .grid-item'));
     if (items.length === 0) return;
 
-    // Determine column count from container width
-    const width = container.clientWidth;
-    let cols;
-    if (width < 640) cols = 1;
-    else if (width < 960) cols = 2;
-    else if (width < 1200) cols = 3;
-    else cols = 4;
-
-    const gap = 16;
-
-    // Split into NEW and rest (preserve Blazor's render order within each group)
+    // Split into NEW and rest
     const newItems = items.filter(el => el.dataset.isNew === 'true');
     const restItems = items.filter(el => el.dataset.isNew !== 'true');
 
-    // Style the container
+    // Style container
     container.style.display = 'flex';
     container.style.gap = gap + 'px';
     container.style.alignItems = 'flex-start';
@@ -89,12 +77,10 @@ function doLayout(container) {
         container.appendChild(col);
     }
 
-    // Distribute NEW items round-robin across columns (each column gets NEW at top)
-    newItems.forEach((item, i) => {
-        columns[i % cols].appendChild(item);
-    });
+    // NEW items round-robin
+    newItems.forEach((item, i) => columns[i % cols].appendChild(item));
 
-    // Distribute rest items to shortest column (balanced fill)
+    // Rest items to shortest column
     restItems.forEach(item => {
         let shortest = 0;
         let minH = columns[0].offsetHeight;
@@ -105,3 +91,4 @@ function doLayout(container) {
         columns[shortest].appendChild(item);
     });
 }
+
