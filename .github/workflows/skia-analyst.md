@@ -22,7 +22,7 @@ steps:
       rm -f /tmp/gh-aw/agent-step-summary.md
       ln -s /tmp/gh-aw/agent/step-summary.md /tmp/gh-aw/agent-step-summary.md
 
-      # Pre-fetch upstream release notes (different repo — agent can't access google/skia)
+      # Pre-fetch upstream release notes (different repo, not in checkout)
       gh api repos/google/skia/contents/RELEASE_NOTES.md \
         -H "Accept: application/vnd.github.raw" > /tmp/gh-aw/agent/skia-release-notes.md
       echo "Release notes: $(wc -l < /tmp/gh-aw/agent/skia-release-notes.md) lines"
@@ -30,11 +30,16 @@ permissions:
   contents: read
   issues: read
 tools:
+  github:
+    toolsets: [repos]
+    allowed-repos: ["mono/skiasharp", "mono/skia", "google/skia"]
+    min-integrity: none
   bash: ["python3", "cat", "grep", "find", "jq", "head", "tail", "wc", "sort", "sed", "cp", "mkdir", "echo"]
 network:
   allowed:
     - defaults
     - python
+    - github
 safe-outputs:
   mentions: false
   allowed-github-references: []
@@ -48,24 +53,14 @@ safe-outputs:
 
 # Daily Skia Analyst Report
 
-Analyze what's new in upstream Skia and what's missing in SkiaSharp, then publish
-a report as a GitHub issue using the `create_issue` safe output tool.
+Run the skia-analyst skill and publish the results as a GitHub issue.
 
 ## Step 1 — Run the skia-analyst skill
 
-Read `.agents/skills/skia-analyst/SKILL.md` and follow its instructions for a **full scan**.
+Read and follow `.agents/skills/skia-analyst/SKILL.md` for a **full scan**.
 
-Key data locations:
-- Upstream release notes have been pre-fetched to `/tmp/gh-aw/agent/skia-release-notes.md`
-- Current milestone: `externals/skia/include/core/SkMilestone.h`
-- C API bindings: `binding/SkiaSharp/SkiaApi.generated.cs`
-- C# wrappers: `binding/SkiaSharp/*.cs`
-- Upstream C++ headers: `externals/skia/include/` (submodule is checked out)
-- Our C API shim: `externals/skia/include/c/` and `externals/skia/src/c/`
-
-Read these files directly — do not fetch anything via MCP or `gh`.
-
-Use a **single analysis agent** to stay within the 30-minute budget.
+The upstream Skia release notes have been pre-fetched to `/tmp/gh-aw/agent/skia-release-notes.md`.
+The submodule is checked out so all headers and binding code are on disk.
 
 ## Step 2 — Publish as GitHub issue
 
