@@ -603,10 +603,21 @@ def cmd_branch(branch):
 
     print("Fetching remote branches...")
     try:
-        run(["git", "fetch", "origin", "--quiet"], check=True)
+        # Unshallow if needed (CI runners use shallow clones)
+        run(["git", "fetch", "origin", "--unshallow", "--quiet"], check=False)
+        # Fetch all release branches and main explicitly
+        run(["git", "fetch", "origin",
+             "refs/heads/release/*:refs/remotes/origin/release/*",
+             "refs/heads/main:refs/remotes/origin/main",
+             "--quiet"], check=True)
     except subprocess.CalledProcessError:
-        print("ERROR: git fetch failed. Cannot determine branch diff "
-              "range with stale data.")
+        print("ERROR: git fetch failed. Cannot determine branch diff range.")
+        sys.exit(1)
+
+    # Verify release branches are visible
+    all_branches = list_remote_release_branches()
+    if not all_branches:
+        print("ERROR: No release branches found after fetch.")
         sys.exit(1)
 
     from_ref, to_ref, version = determine_diff_range(branch)
