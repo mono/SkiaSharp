@@ -8,10 +8,12 @@ concurrency:
   group: sample-scout
   cancel-in-progress: true
 timeout-minutes: 30
+checkout:
+  submodules: recursive
+  fetch-depth: 1
 steps:
-  - name: Init submodule and redirect step summary
+  - name: Prepare working directory
     run: |
-      git submodule update --init --depth=1 externals/skia
       mkdir -p /tmp/gh-aw/agent
       touch /tmp/gh-aw/agent/step-summary.md
       rm -f /tmp/gh-aw/agent-step-summary.md
@@ -20,11 +22,7 @@ permissions:
   contents: read
   issues: read
 tools:
-  github:
-    toolsets: [repos, issues]
-    allowed-repos: ["mono/skiasharp"]
-    min-integrity: none
-  bash: ["python3", "pip3", "gh", "git", "jq", "cat", "grep", "find", "sed", "sort", "head", "tail", "wc", "ls", "cp", "mkdir", "echo", "xargs", "basename"]
+  bash: ["python3", "cat", "grep", "find", "jq", "head", "tail", "wc", "sort", "sed", "ls", "cp", "mkdir", "echo", "xargs", "basename"]
 network:
   allowed:
     - defaults
@@ -42,27 +40,27 @@ safe-outputs:
 
 # Weekly Sample Scout Report
 
-Scan all Skia GM samples from the submodule and publish a report of Gallery opportunities as a GitHub issue.
+Scan Skia GM samples from the submodule and publish a report of Gallery opportunities
+as a GitHub issue using the `create_issue` safe output tool.
 
 ## Step 1 — Run the sample-scout skill
 
-Read and follow the instructions in `.agents/skills/sample-scout/SKILL.md` to run a full scan.
+Read `.agents/skills/sample-scout/SKILL.md` and follow its instructions for a full scan.
 
-Complete all phases (Setup → Analyze → Cross-Reference → Validate & Render).
-The GM files are at `externals/skia/gm/*.cpp` — read them directly, no remote fetching needed.
-
-After Phase 4 completes, the outputs will be:
-- `sample-scout-report.json` — the validated JSON report
-- `sample-scout-report.md` — the rendered Markdown
+The GM files are at `externals/skia/gm/*.cpp` and binding code is in `binding/SkiaSharp/` —
+read them directly from the checkout, no remote fetching needed.
 
 ## Step 2 — Publish as GitHub issue
 
-Create a GitHub issue with the contents of `sample-scout-report.md` as the body.
+**Use the `create_issue` safe output tool** to publish the report. This is the primary deliverable.
+
+Read `sample-scout-report.md` and pass it as the issue body. If larger than 65000 characters,
+generate a condensed summary with the top opportunities instead.
 
 The issue title **must** start with `Sample Scout:` followed by date and key metric
-(e.g. `Sample Scout: 2025-01-15 (42 opportunities)`) so `close-older-issues` matches correctly.
+(e.g. `Sample Scout: 2025-01-15 (42 opportunities)`).
 
-## Step 3 — Upload artifacts and write step summary
+## Step 3 — Upload artifacts
 
 ```bash
 cp sample-scout-report.json /tmp/gh-aw/agent/
@@ -70,5 +68,10 @@ cp sample-scout-report.md /tmp/gh-aw/agent/
 cat sample-scout-report.md >> /tmp/gh-aw/agent/step-summary.md
 ```
 
-**IMPORTANT:** Write to the literal path `/tmp/gh-aw/agent/step-summary.md` — this file is symlinked
-to the step summary. Do NOT use `$GITHUB_STEP_SUMMARY` as it resolves to an inaccessible path.
+Write to `/tmp/gh-aw/agent/step-summary.md` (symlinked to step summary).
+
+## ⚠️ MANDATORY — Safe Output Required
+
+**You MUST call the `create_issue` safe output tool before finishing.** If the full report
+could not be generated, still call `create_issue` with a partial summary. Never exit without
+calling at least one safe output tool.
