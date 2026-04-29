@@ -132,7 +132,7 @@ python3 .agents/skills/sample-scout/scripts/validate-sample-scout.py sample-scou
 **4b. Render Markdown**
 
 ```bash
-python3 .agents/skills/sample-scout/scripts/render-sample-scout-md.py sample-scout-report.json sample-scout-report.md
+python3 .agents/skills/sample-scout/scripts/render-sample-scout.py sample-scout-report.json sample-scout-report.md
 ```
 
 This produces a `.md` file with `###`/`####` headers suitable for GitHub issues.
