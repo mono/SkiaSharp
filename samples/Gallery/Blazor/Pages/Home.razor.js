@@ -65,9 +65,11 @@ export function relayout(containerSelector) {
 }
 
 function getColCount(width) {
-    if (width < 640) return 1;
-    if (width < 960) return 2;
-    if (width < 1200) return 3;
+    // Use window width for consistent breakpoints (container width varies with scrollbar)
+    const w = window.innerWidth;
+    if (w < 640) return 1;
+    if (w < 960) return 2;
+    if (w < 1400) return 3;
     return 4;
 }
 
