@@ -42,8 +42,7 @@ Publish packages to NuGet.org and finalize releases.
 │  4. Tag Release          → Push git tag (ask_user first!)          │
 │  5. Create GitHub Release→ Generate notes, set prerelease flag     │
 │  6. Annotate Notes       → Add platform/contributor emojis         │
-│  7. Update Website       → Regenerate release notes for website    │
-│  8. Close Milestone      → Stable releases only                    │
+│  7. Close Milestone      → Stable releases only                    │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -251,23 +250,7 @@ After creating the release, annotate each PR line with **platform** and **commun
 
 ---
 
-## Step 7: Update Website Release Notes
-
-After annotating the GitHub release, invoke the **release-notes** skill to update the
-website. Pass it the version you just released (e.g., "generate release notes for 3.119.2").
-
-The skill handles fetching raw data, formatting with the template, and updating the TOC.
-After the skill finishes, commit and push:
-
-```bash
-git add documentation/docfx/releases/
-git commit -m "Update website release notes for {tag}"
-git push
-```
-
----
-
-## Step 8: Close Milestone (Stable only)
+## Step 7: Close Milestone (Stable only)
 
 **Skip for preview releases.**
 

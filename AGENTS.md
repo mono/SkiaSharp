@@ -88,8 +88,7 @@ Single source of truth for all commands:
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
-| **Fetch release notes** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --last 5` |
-| **Fetch unreleased PRs** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --unreleased` |
+| **Diff branch for release notes** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main` |
 | **Update release notes TOC** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc` |
 
 ### When to Use Which Bootstrap

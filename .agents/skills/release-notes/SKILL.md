@@ -9,19 +9,23 @@ description: >
   - Generate release notes for a version ("write release notes for 3.119.2")
   - Regenerate or refresh release notes ("regenerate 3.119.x release notes")
   - Format raw release data into the website template
-  - Update the release notes after publishing a new release
+  - Manually fix or update release notes that the automated workflow got wrong
 
   Triggers: "release notes for X", "regenerate release notes", "format release notes",
   "update website release notes", "write release notes", "refresh release notes".
 
-  This skill is also called by the release-publish skill (Step 7) after annotating
-  a GitHub release. You don't need to be asked explicitly — if release-publish is
-  running and reaches Step 7, invoke this skill.
+  NOTE: Website release notes are normally updated automatically by the
+  `update-release-notes` agentic workflow when code lands on main, release branches,
+  or tags are pushed. This skill is for manual regeneration or corrections only.
 ---
 
 # Release Notes Skill
 
-Generate polished website release notes for one or more SkiaSharp versions.
+Manually generate or regenerate polished website release notes for SkiaSharp versions.
+
+> **Note:** The `update-release-notes` agentic workflow handles this automatically
+> for pushes to `main`, `release/*` branches, and tag creation. Use this skill only
+> for manual regeneration, corrections, or bulk operations.
 
 ## Process
 
@@ -29,30 +33,31 @@ Generate polished website release notes for one or more SkiaSharp versions.
 
 Ask the user which version(s) to generate, or infer from context:
 - A specific version: `3.119.2`
+- A branch: `release/4.147.0-preview.1` or `main`
 - Multiple versions: `3.119.0, 3.119.1, 3.119.2`
-- A range by minor: "all 3.119.x" — list files matching `documentation/docfx/releases/3.119.*.md`
-  and also check GitHub for any releases not yet on disk
-- If called from release-publish, the version is already known
+- A range by minor: "all 3.119.x"
 
-### Step 2 — Fetch raw data
+### Step 2 — Run the script
 
-For each version, fetch the raw GitHub release data:
+Run the script to collect raw PR data and write it to the version file:
 
 ```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --version {X.Y.Z}
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
 ```
 
-This outputs raw markdown to a temp directory. Multiple `--version` flags can be
-combined in one call. Read the output file(s) from the temp directory.
+This writes raw PR data with YAML header to `documentation/docfx/releases/{version}.md`
+and regenerates TOC/index. Read the file to get the raw data and metadata.
 
 ### Step 3 — Read the template
 
 Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished
 release notes page. Match its structure, tone, and formatting exactly.
 
-Determine each version's status from its raw data:
-- **Stable release**: has a "## Stable Release" section → header uses `Released {date}` + NuGet link + GitHub Release link
-- **Preview only**: only preview sections → header uses `Preview only` + NuGet preview link + GitHub Release link
+Determine the version's status from the YAML header in the version file (`status: unreleased`, `status: preview`, or `status: stable`):
+- **Stable**: header uses `Released {date}` + NuGet link + GitHub Release link
+- **Preview**: header uses `Preview only` + preview NuGet link + GitHub Release link
+- **Unreleased**: header uses `> **Upcoming release** · In development · Not yet available on NuGet`
 
 ### Step 4 — Write polished pages
 
@@ -87,14 +92,6 @@ Follow these rules:
 9. **Previews are minimal** — One sentence + changelog link each, at the bottom.
 
 10. **Links section** — Full Changelog, NuGet Package, API Diff.
-
-### Step 5 — Update TOC and index
-
-After writing all version files:
-
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc
-```
 
 ## Parallelization
 

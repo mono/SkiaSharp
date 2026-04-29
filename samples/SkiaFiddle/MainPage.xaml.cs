@@ -1,8 +1,10 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
 using SkiaFiddle.Fiddle;
 using SkiaSharp;
+using Uno.Foundation;
 
 namespace SkiaFiddle;
 
@@ -25,7 +27,7 @@ public sealed partial class MainPage : Page
         {
             FpsText.Text = $"{fps:0.0} fps";
         });
-        // SamplesCombo.SelectedIndex = 0 (set in InitSamples) fires OnSampleChanged,
+        // SamplesCombo.SelectedIndex (set in InitSamples) fires OnSampleChanged,
         // which seeds both editors and runs.
     }
 
@@ -40,9 +42,15 @@ public sealed partial class MainPage : Page
         if (_samplesInitialized)
             return;
         _samplesInitialized = true;
-        foreach (var sample in SampleSnippets.All)
+        var defaultIndex = 0;
+        for (var i = 0; i < SampleSnippets.All.Count; i++)
+        {
+            var sample = SampleSnippets.All[i];
             SamplesCombo.Items.Add(new ComboBoxItem { Content = sample.Name, Tag = sample });
-        SamplesCombo.SelectedIndex = 0;
+            if (sample.Name == "Animated · Orbits")
+                defaultIndex = i;
+        }
+        SamplesCombo.SelectedIndex = defaultIndex;
     }
 
     private void OnSampleChanged(object sender, SelectionChangedEventArgs e)
@@ -56,6 +64,26 @@ public sealed partial class MainPage : Page
     }
 
     private async void OnRunClicked(object sender, RoutedEventArgs e) => await RunAsync();
+
+    // Monaco's onDidChangeContent → managed CodeEditor.Text round-trip is unreliable
+    // under Uno WASM (the property lags behind keystrokes), so we ask Monaco directly
+    // for its current model values right before compiling. DOM order matches XAML
+    // declaration order: SetupEditor first (top), DrawEditor second (bottom).
+    private (string setup, string draw) GetEditorTexts()
+    {
+        try
+        {
+            var json = WebAssemblyRuntime.InvokeJS("globalThis.skiaFiddleGetMonacoValues ? globalThis.skiaFiddleGetMonacoValues() : '[]'");
+            var values = JsonSerializer.Deserialize<string[]>(json) ?? Array.Empty<string>();
+            var setup = values.Length > 0 ? values[0] : SetupEditor.Text ?? string.Empty;
+            var draw = values.Length > 1 ? values[1] : DrawEditor.Text ?? string.Empty;
+            return (setup, draw);
+        }
+        catch
+        {
+            return (SetupEditor.Text ?? string.Empty, DrawEditor.Text ?? string.Empty);
+        }
+    }
 
     private void OnPauseClicked(object sender, RoutedEventArgs e)
     {
@@ -73,7 +101,8 @@ public sealed partial class MainPage : Page
         FpsText.Text = "";
         try
         {
-            var result = await _compiler.CompileAsync(SetupEditor.Text, DrawEditor.Text);
+            var (setup, draw) = GetEditorTexts();
+            var result = await _compiler.CompileAsync(setup, draw);
             if (result.Draw is not null)
             {
                 OutputCanvas.SetDrawDelegate(result.Draw);

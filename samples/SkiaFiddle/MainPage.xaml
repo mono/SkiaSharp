@@ -33,12 +33,10 @@
               BorderBrush="{StaticResource PanelBorder}"
               BorderThickness="0,0,0,1"
               Padding="20,12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center">
                 <TextBlock Text="🎨"
                            FontSize="22"
                            VerticalAlignment="Center" />
@@ -59,10 +57,10 @@
                 </StackPanel>
             </StackPanel>
 
-            <ComboBox Grid.Column="2"
-                      x:Name="SamplesCombo"
+            <ComboBox x:Name="SamplesCombo"
                       MinWidth="200"
                       SelectionChanged="OnSampleChanged"
+                      HorizontalAlignment="Center"
                       VerticalAlignment="Center" />
         </Grid>
 
@@ -73,7 +71,10 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Editor pane -->
+            <!-- Editor pane: Setup editor stacked above Draw editor, each with its
+                 own header row. Uno's clip-path generator is happy with explicit row
+                 cells per editor — see commit history for the tabbed-layout attempts
+                 that triggered Uno clip-path bugs. -->
             <Grid Grid.Column="0"
                   Background="{StaticResource EditorBackground}"
                   BorderBrush="{StaticResource PanelBorder}"

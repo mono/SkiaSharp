@@ -223,7 +223,7 @@ public static class SampleSnippets
 
     public static IReadOnlyList<FiddleSample> All { get; } = new[]
     {
-        new FiddleSample("Default (static)", DefaultDraw, DefaultSetup),
+        new FiddleSample("Static · Hello world", DefaultDraw, DefaultSetup),
         new FiddleSample("Animated · Orbits", OrbitsDraw, OrbitsSetup),
         new FiddleSample("Shader · Plasma", PlasmaDraw, PlasmaSetup),
         new FiddleSample("Shader · Ripple", RippleDraw, RippleSetup),
