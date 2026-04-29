@@ -5,7 +5,7 @@ description: >
   SkiaSharp Gallery. Fetches the full gm/ directory listing from google/skia on GitHub, analyzes
   each .cpp file to understand what it demonstrates, checks whether the required APIs exist in
   SkiaSharp, and cross-references against existing Gallery samples to identify gaps. Produces a
-  structured JSON report with an interactive HTML viewer for filtering by interest level, API
+  structured JSON report and a GitHub-flavored Markdown report for filtering by interest level, API
   availability, and sample coverage status. Use this skill whenever the user asks about "what
   samples should we build", "what demos are we missing", "find interesting Skia GMs", "sample gap
   analysis", "what can we port from Skia", "gallery ideas", "scout GM samples", or any request to

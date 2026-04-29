@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render a Sample Scout JSON report as GitHub-flavored Markdown.
 
-Usage: python3 render-sample-scout-md.py <path-to-json> [output.md]
+Usage: python3 render-sample-scout.py <path-to-json> [output.md]
 
 Headers start at ### so the output can be embedded directly in a GitHub issue.
 """
