@@ -30,8 +30,30 @@ export function initMasonry(containerSelector) {
 export function relayout(containerSelector) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
-    const cols = getColCount(container.clientWidth);
-    doLayout(container, cols);
+
+    // Fade out existing items
+    const allItems = container.querySelectorAll('.grid-item');
+    allItems.forEach(el => el.classList.add('fading-out'));
+
+    // After fade-out transition, rearrange and fade back in
+    setTimeout(() => {
+        const cols = getColCount(container.clientWidth);
+        doLayout(container, cols);
+
+        // Fade in with stagger
+        const items = container.querySelectorAll('.grid-item');
+        items.forEach((el, i) => {
+            el.style.transitionDelay = (i * 20) + 'ms';
+            // Force reflow before removing class
+            void el.offsetHeight;
+            el.classList.remove('fading-out');
+        });
+
+        // Clean up transition delays after animation
+        setTimeout(() => {
+            items.forEach(el => el.style.transitionDelay = '');
+        }, items.length * 20 + 350);
+    }, 250);
 }
 
 function getColCount(width) {

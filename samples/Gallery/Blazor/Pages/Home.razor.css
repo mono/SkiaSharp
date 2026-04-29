@@ -17,11 +17,16 @@
 /* ─── Masonry Grid (JS-driven columns) ─── */
 .masonry-grid {
     padding-bottom: 2rem;
-    /* JS sets display:flex and creates .masonry-col children */
 }
 
 .grid-item {
     min-height: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.grid-item.fading-out {
+    opacity: 0;
+    transform: scale(0.95);
 }
 
 .grid-link {
