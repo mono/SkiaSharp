@@ -10,12 +10,10 @@ export function reveal(gridSelector, skeletonSelector) {
 }
 
 // Called after Blazor re-renders (filter/search change): reorder cards.
+// NEW items go first (they'll fill the top of CSS columns), then the rest.
 export function reorder(gridSelector) {
     const grid = document.querySelector(gridSelector);
     if (!grid) return;
-
-    // Read column count from CSS — no magic numbers
-    const cols = parseInt(getComputedStyle(grid).columnCount) || 3;
 
     const items = Array.from(grid.querySelectorAll(':scope > .grid-item'));
     if (items.length === 0) return;
@@ -23,24 +21,8 @@ export function reorder(gridSelector) {
     const newItems = items.filter(el => el.dataset.isNew === 'true');
     const rest = items.filter(el => el.dataset.isNew !== 'true');
 
-    // CSS columns fill top-to-bottom. To spread NEW across columns evenly,
-    // we interleave them at intervals of `cols` positions. This way, each
-    // NEW item lands in a different column.
-    const result = [];
-    let ni = 0, ri = 0;
-    const totalNew = newItems.length;
-    const spacing = totalNew > 0 ? Math.max(1, Math.floor(items.length / totalNew)) : items.length;
-
-    for (let i = 0; i < items.length; i++) {
-        if (ni < totalNew && i % spacing === 0) {
-            result.push(newItems[ni++]);
-        } else if (ri < rest.length) {
-            result.push(rest[ri++]);
-        }
-    }
-    while (ni < totalNew) result.push(newItems[ni++]);
-    while (ri < rest.length) result.push(rest[ri++]);
-
-    // Append in new order (moves existing DOM nodes, no cloning)
-    result.forEach(el => grid.appendChild(el));
+    // NEW first, then rest. CSS columns fill top-to-bottom, so
+    // NEW items naturally appear at the top of each column.
+    newItems.forEach(el => grid.appendChild(el));
+    rest.forEach(el => grid.appendChild(el));
 }
