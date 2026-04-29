@@ -8,7 +8,7 @@ export function initMasonry(containerSelector) {
     let currentCols = 0;
 
     function layout() {
-        const cols = getColCount(container.clientWidth);
+        const cols = getColCount();
         if (cols === currentCols && container.querySelector('.masonry-col')) return;
         currentCols = cols;
         doLayout(container, cols);
@@ -24,7 +24,7 @@ export function initMasonry(containerSelector) {
 
     // Only re-layout when column count changes
     window.addEventListener('resize', () => {
-        const cols = getColCount(container.clientWidth);
+        const cols = getColCount();
         if (cols !== currentCols) {
             currentCols = cols;
             doLayout(container, cols);
@@ -45,7 +45,7 @@ export function relayout(containerSelector) {
 
     // After fade-out transition, rearrange and fade back in
     setTimeout(() => {
-        const cols = getColCount(container.clientWidth);
+        const cols = getColCount();
         doLayout(container, cols);
 
         // Fade in with stagger
@@ -64,12 +64,12 @@ export function relayout(containerSelector) {
     }, 250);
 }
 
-function getColCount(width) {
-    // Use window width for consistent breakpoints (container width varies with scrollbar)
-    const w = window.innerWidth;
+function getColCount() {
+    const container = document.querySelector('#masonry-container');
+    const w = container ? container.clientWidth : window.innerWidth;
     if (w < 640) return 1;
-    if (w < 960) return 2;
-    if (w < 1400) return 3;
+    if (w < 900) return 2;
+    if (w < 1300) return 3;
     return 4;
 }
 
