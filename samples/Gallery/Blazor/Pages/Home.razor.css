@@ -16,7 +16,7 @@
 
 /* ─── Shared column rules ─── */
 .skeleton-grid { column-count: 3; column-gap: 1rem; }
-.masonry-grid  { column-count: 3; column-gap: 1rem; }
+.masonry-grid  { /* JS creates flex columns */ }
 
 /* ─── Masonry grid ─── */
 .masonry-grid {
@@ -26,8 +26,7 @@
 }
 
 .grid-item {
-    break-inside: avoid;
-    margin-bottom: 1rem;
+    margin-bottom: 0; /* gap handled by flex column */
 }
 
 .grid-link {

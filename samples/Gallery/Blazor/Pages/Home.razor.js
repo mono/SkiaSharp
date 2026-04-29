@@ -1,72 +1,81 @@
-// Gallery masonry — JS reorders DOM so CSS columns place NEW at top.
+// Gallery masonry — JS creates flex columns and distributes cards.
+// CSS column-count can't guarantee NEW-at-top-per-column because
+// it balances heights unpredictably. So we create column divs.
+
+let lastCols = 0;
 
 export function reveal(gridSelector, skeletonSelector) {
-    reorder(gridSelector);
-    const skeleton = document.querySelector(skeletonSelector);
-    if (skeleton) skeleton.style.display = 'none';
+    layout(gridSelector);
+    document.querySelector(skeletonSelector)?.remove();
     const grid = document.querySelector(gridSelector);
     if (grid) grid.style.opacity = '1';
 
-    // Re-run reorder when column count changes on resize
-    let lastCols = parseInt(getComputedStyle(grid).columnCount) || 3;
+    // Re-layout when column count breakpoint changes
     window.addEventListener('resize', () => {
-        const cols = parseInt(getComputedStyle(grid).columnCount) || 3;
-        if (cols !== lastCols) {
-            lastCols = cols;
-            reorder(gridSelector);
-        }
+        const cols = getColCount();
+        if (cols !== lastCols) layout(gridSelector);
     });
 }
 
 export function reorder(gridSelector) {
+    layout(gridSelector);
+}
+
+function getColCount() {
+    const w = window.innerWidth;
+    if (w <= 640) return 1;
+    if (w <= 960) return 2;
+    if (w >= 1200) return 4;
+    return 3;
+}
+
+function layout(gridSelector) {
     const grid = document.querySelector(gridSelector);
     if (!grid) return;
 
-    const cols = parseInt(getComputedStyle(grid).columnCount) || 3;
-    const items = Array.from(grid.querySelectorAll('.grid-item'));
+    const cols = getColCount();
+    lastCols = cols;
+
+    // Collect all .grid-item (may be inside column divs or direct children)
+    const items = [];
+    grid.querySelectorAll('.grid-item').forEach(el => items.push(el));
+
+    // Remove existing column divs
+    grid.querySelectorAll('.mc').forEach(c => {
+        while (c.firstChild) grid.appendChild(c.firstChild);
+        c.remove();
+    });
+
     if (items.length === 0) return;
 
     const newItems = items.filter(el => el.dataset.isNew === 'true');
     const rest = items.filter(el => el.dataset.isNew !== 'true');
 
-    // CSS columns fill top-to-bottom. With N items and C columns,
-    // column K gets items at indices K*(N/C) through (K+1)*(N/C)-1.
-    // To place a NEW item at the top of column K, put it at index K*(N/C).
-    const total = items.length;
-    const result = new Array(total).fill(null);
+    // Create column containers
+    grid.style.display = 'flex';
+    grid.style.gap = '1rem';
+    grid.style.alignItems = 'flex-start';
 
-    // Reserve top slots: for each column, place NEW items starting at
-    // the column's first index
-    const colSize = Math.ceil(total / cols);
-    let ni = 0;
-    for (let c = 0; c < cols; c++) {
-        const colStart = c * colSize;
-        // Place as many NEW items as available for this column
-        while (ni < newItems.length && ni < (c + 1) * Math.ceil(newItems.length / cols)) {
-            // Find next empty slot in this column's range
-            let slot = colStart + (ni - c * Math.floor(newItems.length / cols));
-            if (slot < total && !result[slot]) {
-                result[slot] = newItems[ni++];
-            } else {
-                break;
-            }
+    const colEls = [];
+    for (let i = 0; i < cols; i++) {
+        const col = document.createElement('div');
+        col.className = 'mc';
+        col.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:1rem;min-width:0';
+        colEls.push(col);
+        grid.appendChild(col);
+    }
+
+    // 1) Distribute NEW items: one per column, round-robin
+    newItems.forEach((el, i) => colEls[i % cols].appendChild(el));
+
+    // 2) Distribute rest items: shortest column first
+    rest.forEach(el => {
+        let shortest = 0;
+        let minH = colEls[0].offsetHeight;
+        for (let c = 1; c < cols; c++) {
+            const h = colEls[c].offsetHeight;
+            if (h < minH) { minH = h; shortest = c; }
         }
-    }
-    // Place any remaining NEW items
-    for (let i = 0; i < total && ni < newItems.length; i++) {
-        if (!result[i]) result[i] = newItems[ni++];
-    }
-
-    // Fill rest
-    let ri = 0;
-    for (let i = 0; i < total; i++) {
-        if (!result[i] && ri < rest.length) {
-            result[i] = rest[ri++];
-        }
-    }
-
-    // Append leftovers
-    while (ri < rest.length) result.push(rest[ri++]);
-
-    result.filter(Boolean).forEach(el => grid.appendChild(el));
+        colEls[shortest].appendChild(el);
+    });
 }
