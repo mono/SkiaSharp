@@ -127,13 +127,21 @@ Tag each finding with `sampleStatus` and `matchedSample`.
 python3 .agents/skills/sample-scout/scripts/validate-sample-scout.py <path-to-json>
 ```
 
-**4b. Render HTML**
+**4b. Render Markdown**
+
+```bash
+python3 .agents/skills/sample-scout/scripts/render-sample-scout-md.py <path-to-json>
+```
+
+This produces a `.md` file with `###`/`####` headers suitable for GitHub issues.
+
+**4c. Render HTML** (optional, for interactive exploration)
 
 ```bash
 python3 .agents/skills/sample-scout/scripts/render-sample-scout.py <path-to-json>
 ```
 
-**4c. Persist**
+**4d. Persist**
 
 ```bash
 python3 .agents/skills/sample-scout/scripts/persist-sample-scout.py <path-to-json>
