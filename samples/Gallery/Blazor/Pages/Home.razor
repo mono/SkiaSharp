@@ -1,4 +1,5 @@
 ﻿@page "/"
+@implements IDisposable
 @using SkiaSharpSample.Services
 @inject SampleService SampleService
 @inject IJSRuntime JS
@@ -57,6 +58,8 @@
     private string[] allCategories = Array.Empty<string>();
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
     private IJSObjectReference? masonryModule;
+    private System.Timers.Timer? searchDebounce;
+    private string pendingSearch = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -67,6 +70,14 @@
             .OrderBy(c => c)
             .ToArray();
         selectedCategories = new HashSet<string>(allCategories);
+
+        searchDebounce = new System.Timers.Timer(300);
+        searchDebounce.AutoReset = false;
+        searchDebounce.Elapsed += (_, _) => InvokeAsync(() =>
+        {
+            searchText = pendingSearch;
+            StateHasChanged();
+        });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -76,9 +87,10 @@
             masonryModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
             await masonryModule.InvokeVoidAsync("initMasonry", "#masonry-container");
         }
-        else if (masonryModule is not null)
+
+        // Always relayout after render to keep columns consistent
+        if (masonryModule is not null)
         {
-            // Re-layout after Blazor re-renders (filter/search change)
             await masonryModule.InvokeVoidAsync("relayout", "#masonry-container");
         }
     }
@@ -88,16 +100,21 @@
 
     private void HandleSearchChanged(string text)
     {
-        searchText = text;
-        StateHasChanged();
+        pendingSearch = text;
+        searchDebounce?.Stop();
+        searchDebounce?.Start();
     }
 
     private void HandleCategoriesChanged(HashSet<string> cats)
     {
-        // If everything was deselected, reset to all selected
         if (cats.Count == 0)
             cats = new HashSet<string>(allCategories);
         selectedCategories = cats;
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        searchDebounce?.Dispose();
     }
 }
