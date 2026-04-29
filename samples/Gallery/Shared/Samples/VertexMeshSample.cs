@@ -16,7 +16,7 @@ public class VertexMeshSample : CanvasSampleBase
 
 	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
 
-	public override string Category => SampleCategories.General;
+	public override string Category => SampleManager.General;
 
 	public override string Description => "Render colored triangle meshes with adjustable grid density, color modes, and wireframe overlay.";
 

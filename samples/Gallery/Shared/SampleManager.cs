@@ -27,18 +27,30 @@ public static class SampleManager
 	public const string IconSun = "\uf5a2";       // bi-sun
 
 	// ---------------------------------------------------------------
+	// Category name constants (used by samples and hosts)
+	// ---------------------------------------------------------------
+
+	public const string ImageFilters = "Image & Filters";
+	public const string Shaders = "Shaders & Effects";
+	public const string Text = "Text & Typography";
+	public const string Paths = "Paths & Geometry";
+	public const string General = "General";
+	public const string BitmapDecoding = "Image Decoding";
+	public const string Documents = "Documents";
+
+	// ---------------------------------------------------------------
 	// Categories
 	// ---------------------------------------------------------------
 
 	private static readonly SampleCategory[] AllCategories =
 	[
-		new("Image & Filters",    "#E65100", "bi-image",            "\uf39b"),
-		new("Shaders & Effects",  "#1565C0", "bi-lightning",        "\uf46f"),
-		new("Text & Typography",  "#AD1457", "bi-fonts",            "\uf3da"),
-		new("Paths & Geometry",   "#2E7D32", "bi-pentagon",         "\uf4ce"),
-		new("General",            "#1A237E", "bi-grid-3x3",         "\uf3fa"),
-		new("Image Decoding",     "#00897B", "bi-file-image",       "\uf39b"),
-		new("Documents",          "#607D8B", "bi-file-earmark-richtext", "\uf383"),
+		new(ImageFilters,    "#E65100", "bi-image",                 "\uf39b"),
+		new(Shaders,         "#1565C0", "bi-lightning",             "\uf46f"),
+		new(Text,            "#AD1457", "bi-fonts",                 "\uf3da"),
+		new(Paths,           "#2E7D32", "bi-pentagon",              "\uf4ce"),
+		new(General,         "#1A237E", "bi-grid-3x3",              "\uf3fa"),
+		new(BitmapDecoding,  "#00897B", "bi-file-image",            "\uf39b"),
+		new(Documents,       "#607D8B", "bi-file-earmark-richtext", "\uf383"),
 	];
 
 	private static readonly Dictionary<string, SampleCategory> CategoryMap =

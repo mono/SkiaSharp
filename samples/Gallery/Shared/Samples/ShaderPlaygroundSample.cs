@@ -133,7 +133,7 @@ half4 main(float2 fragCoord) {
 
 	public override string Description => "Write and visualize animated SkSL runtime effect shaders with adjustable parameters.";
 
-	public override string Category => SampleCategories.Shaders;
+	public override string Category => SampleManager.Shaders;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

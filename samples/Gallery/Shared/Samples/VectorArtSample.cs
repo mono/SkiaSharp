@@ -18,7 +18,7 @@ public class VectorArtSample : CanvasSampleBase
 
 	public override string Description => "Render complex Bézier path artwork with rotation, scale, and color theme controls.";
 
-	public override string Category => SampleCategories.Paths;
+	public override string Category => SampleManager.Paths;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

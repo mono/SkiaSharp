@@ -22,7 +22,7 @@ public class GifPlayerSample : CanvasSampleBase
 
 	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
 
-	public override string Category => SampleCategories.BitmapDecoding;
+	public override string Category => SampleManager.BitmapDecoding;
 
 	public override string Description => "Play animated GIFs frame-by-frame with adjustable playback speed.";
 

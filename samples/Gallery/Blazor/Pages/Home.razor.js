@@ -23,9 +23,8 @@ export function reorder(gridSelector) {
 
 function getColCount() {
     const w = window.innerWidth;
-    if (w <= 640) return 1;
-    if (w <= 960) return 2;
-    if (w >= 1200) return 4;
+    if (w <= 680) return 1;
+    if (w <= 995) return 2;
     return 3;
 }
 

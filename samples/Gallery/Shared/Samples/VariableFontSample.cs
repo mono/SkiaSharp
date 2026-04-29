@@ -29,7 +29,7 @@ public class VariableFontSample : CanvasSampleBase
 	public override string Description =>
 		"Explore OpenType variable font axes — adjust weight and optical size in real time using Inter.";
 
-	public override string Category => SampleCategories.Text;
+	public override string Category => SampleManager.Text;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

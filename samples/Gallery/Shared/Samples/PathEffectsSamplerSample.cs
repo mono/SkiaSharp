@@ -19,7 +19,7 @@ public class PathEffectsSamplerSample : CanvasSampleBase
 	public override string Description =>
 		"All 6 path effects side by side on the same base path: corner, dash, discrete, 1D stamp, 2D tile, and compose.";
 
-	public override string Category => SampleCategories.Paths;
+	public override string Category => SampleManager.Paths;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

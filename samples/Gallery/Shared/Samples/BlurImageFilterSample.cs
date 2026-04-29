@@ -14,7 +14,7 @@ public class BlurImageFilterSample : CanvasSampleBase
 
 	public override DateOnly? DateAdded => new DateOnly(2018, 2, 8);
 
-	public override string Category => SampleCategories.ImageFilters;
+	public override string Category => SampleManager.ImageFilters;
 
 	public override string Description =>
 		"Apply Gaussian blur with independent horizontal and vertical sigma controls.";
