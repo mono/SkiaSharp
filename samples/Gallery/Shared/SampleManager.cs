@@ -196,38 +196,34 @@ public static class SampleManager
 	}
 
 	/// <summary>
-	/// NEW items first (by date desc), then remaining items in a day-seeded
-	/// pseudo-random order so the gallery feels fresh each day.
+	/// NEW items first (shuffled), then remaining items shuffled.
+	/// Both groups use day-based seed so the gallery feels fresh each day.
 	/// </summary>
 	private static IEnumerable<SampleBase> SortNewFirstThenDayShuffle(
 		List<SampleBase> items, IEnumerable<SampleBase> allSamples)
 	{
-		// Partition: unsupported last, then new first, then rest shuffled
 		var unsupported = items.Where(s => !s.IsSupported).ToList();
 		var supported = items.Where(s => s.IsSupported).ToList();
 
-		var newItems = supported
-			.Where(s => IsNew(s, allSamples))
-			.OrderByDescending(s => s.DateAdded ?? DateOnly.MinValue)
-			.ThenBy(s => s.Title)
-			.ToList();
-
-		var rest = supported
-			.Where(s => !IsNew(s, allSamples))
-			.ToList();
+		var newItems = supported.Where(s => IsNew(s, allSamples)).ToList();
+		var rest = supported.Where(s => !IsNew(s, allSamples)).ToList();
 
 		// Day-based seed: changes once per day
 		var daySeed = DateTime.UtcNow.DayOfYear * 1000 + DateTime.UtcNow.Year;
-		var rng = new Random(daySeed);
 
-		// Fisher-Yates shuffle
-		for (var i = rest.Count - 1; i > 0; i--)
-		{
-			var j = rng.Next(i + 1);
-			(rest[i], rest[j]) = (rest[j], rest[i]);
-		}
+		Shuffle(newItems, new Random(daySeed));
+		Shuffle(rest, new Random(daySeed + 7919)); // different seed for rest
 
 		return newItems.Concat(rest).Concat(unsupported);
+	}
+
+	private static void Shuffle<T>(List<T> list, Random rng)
+	{
+		for (var i = list.Count - 1; i > 0; i--)
+		{
+			var j = rng.Next(i + 1);
+			(list[i], list[j]) = (list[j], list[i]);
+		}
 	}
 }
 
