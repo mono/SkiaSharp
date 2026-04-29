@@ -50,7 +50,7 @@ def render_item(f):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 render-sample-scout-md.py <path-to-json> [output.md]")
+        print("Usage: python3 render-sample-scout.py <path-to-json> [output.md]")
         sys.exit(1)
 
     json_path = Path(sys.argv[1])

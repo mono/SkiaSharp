@@ -79,10 +79,10 @@ Or check commit messages for the latest Skia bump PR.
 Fetch `RELEASE_NOTES.md` from `google/skia` using the GitHub MCP tool or `gh api`:
 
 ```bash
-gh api repos/google/skia/contents/RELEASE_NOTES.md --jq '.content' | base64 -d > /tmp/skia-release-notes.md
+gh api repos/google/skia/contents/RELEASE_NOTES.md -H "Accept: application/vnd.github.raw" > skia-release-notes.md
 ```
 
-Save to a temp file for agents.
+Save to a file in the working directory for agents to reference.
 
 **1d. Prepare upstream headers for hidden API scan**
 

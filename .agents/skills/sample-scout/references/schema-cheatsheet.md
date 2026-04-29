@@ -43,6 +43,10 @@
 | `apis_available` | boolean | Whether all required APIs exist in SkiaSharp |
 | `missing_apis` | string[] | APIs not available (empty if all available) |
 | `key_apis` | string[] | Main Skia APIs used |
+| `visualGoal` | string | What the user *sees* — 1-3 sentences describing the rendered output |
+| `suggestedControls` | string[] | Interactive controls with ranges (e.g., `"Threshold slider (0–1)"`) |
+| `category` | string | Gallery category: `"Shaders"`, `"Text"`, `"Paths"`, `"Image Filters"`, `"General"`, etc. |
+| `skiaSharpApis` | string[] | C# SkiaSharp equivalents (e.g., `"SKRuntimeEffect"`, `"SKCanvas.DrawRect"`) |
 
 ### Optional Fields
 
@@ -51,7 +55,3 @@
 | `notes` | string | Context (GPU-only, bug regression, etc.) |
 | `sampleStatus` | string | `"none"`, `"similar"`, or `"existing"` — Gallery coverage |
 | `matchedSample` | string | Name of matching Gallery sample if similar/existing |
-| `visualGoal` | string | What the user *sees* — 1-3 sentences describing the rendered output |
-| `suggestedControls` | string[] | Interactive controls with ranges (e.g., `"Threshold slider (0–1)"`) |
-| `category` | string | Gallery category: `"Shaders"`, `"Text"`, `"Paths"`, `"Image Filters"`, `"General"`, etc. |
-| `skiaSharpApis` | string[] | C# SkiaSharp equivalents (e.g., `"SKRuntimeEffect"`, `"SKCanvas.DrawRect"`) |

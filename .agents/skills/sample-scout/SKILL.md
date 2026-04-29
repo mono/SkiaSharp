@@ -101,7 +101,9 @@ Files: {comma-separated list}
 Read .agents/skills/sample-scout/references/analysis-instructions.md for classification criteria.
 
 For each file output: file, name, description, interesting (high/medium/low),
-apis_available (true/false), missing_apis [], key_apis [], notes.
+apis_available (true/false), missing_apis [], key_apis [], notes,
+visualGoal (what the rendered output looks like), suggestedControls [],
+category (Gallery category), skiaSharpApis [] (C# equivalents).
 
 Check API availability by grepping binding/SkiaSharp/ for the C# equivalents.
 Save as JSON array to {output_path}.
