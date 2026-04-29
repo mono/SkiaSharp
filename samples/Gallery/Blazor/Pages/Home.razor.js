@@ -1,4 +1,4 @@
-// Gallery masonry — JS does reordering only, CSS does layout.
+// Gallery masonry — JS reorders DOM so CSS columns place NEW at top.
 
 export function reveal(gridSelector, skeletonSelector) {
     reorder(gridSelector);
@@ -6,41 +6,58 @@ export function reveal(gridSelector, skeletonSelector) {
     if (skeleton) skeleton.style.display = 'none';
     const grid = document.querySelector(gridSelector);
     if (grid) grid.style.opacity = '1';
+
+    // Re-run reorder when column count changes on resize
+    let lastCols = parseInt(getComputedStyle(grid).columnCount) || 3;
+    window.addEventListener('resize', () => {
+        const cols = parseInt(getComputedStyle(grid).columnCount) || 3;
+        if (cols !== lastCols) {
+            lastCols = cols;
+            reorder(gridSelector);
+        }
+    });
 }
 
-// Spread NEW items across CSS columns, rest fills in between.
-// CSS columns fill top-to-bottom, so item at index 0 goes to col 1,
-// index 1 to col 1, etc. To put a NEW item in each column, we need
-// to place them at evenly-spaced positions in the flat list.
 export function reorder(gridSelector) {
     const grid = document.querySelector(gridSelector);
     if (!grid) return;
 
     const cols = parseInt(getComputedStyle(grid).columnCount) || 3;
-    const items = Array.from(grid.querySelectorAll(':scope > .grid-item'));
+    const items = Array.from(grid.querySelectorAll('.grid-item'));
     if (items.length === 0) return;
 
     const newItems = items.filter(el => el.dataset.isNew === 'true');
     const rest = items.filter(el => el.dataset.isNew !== 'true');
+
+    // CSS columns fill top-to-bottom. With N items and C columns,
+    // column K gets items at indices K*(N/C) through (K+1)*(N/C)-1.
+    // To place a NEW item at the top of column K, put it at index K*(N/C).
     const total = items.length;
+    const result = new Array(total).fill(null);
 
-    // Calculate how many items per column (roughly)
-    const perCol = Math.ceil(total / cols);
-
-    // Build result: place NEW items at the start of each column's slice
-    const result = new Array(total);
+    // Reserve top slots: for each column, place NEW items starting at
+    // the column's first index
+    const colSize = Math.ceil(total / cols);
     let ni = 0;
-
-    // For each column, reserve the first slot for a NEW item if available
-    for (let c = 0; c < cols && ni < newItems.length; c++) {
-        result[c * perCol] = newItems[ni++];
+    for (let c = 0; c < cols; c++) {
+        const colStart = c * colSize;
+        // Place as many NEW items as available for this column
+        while (ni < newItems.length && ni < (c + 1) * Math.ceil(newItems.length / cols)) {
+            // Find next empty slot in this column's range
+            let slot = colStart + (ni - c * Math.floor(newItems.length / cols));
+            if (slot < total && !result[slot]) {
+                result[slot] = newItems[ni++];
+            } else {
+                break;
+            }
+        }
     }
-    // Remaining NEW items go after the first batch
-    for (let c = 0; c < cols && ni < newItems.length; c++) {
-        result[c * perCol + 1] = newItems[ni++];
+    // Place any remaining NEW items
+    for (let i = 0; i < total && ni < newItems.length; i++) {
+        if (!result[i]) result[i] = newItems[ni++];
     }
 
-    // Fill remaining slots with rest items
+    // Fill rest
     let ri = 0;
     for (let i = 0; i < total; i++) {
         if (!result[i] && ri < rest.length) {
@@ -48,10 +65,8 @@ export function reorder(gridSelector) {
         }
     }
 
-    // Append any leftovers
-    while (ni < newItems.length) result.push(newItems[ni++]);
+    // Append leftovers
     while (ri < rest.length) result.push(rest[ri++]);
 
-    // Apply to DOM (moves nodes, no cloning)
     result.filter(Boolean).forEach(el => grid.appendChild(el));
 }
