@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using SkiaSharpSample.Services
 @inject SampleService SampleService
+@inject IJSRuntime JS
 
 <PageTitle>SkiaSharp Gallery</PageTitle>
 
@@ -49,7 +50,7 @@
     </div>
 
     @* ─── Masonry Grid ─── *@
-    <div class="masonry-grid">
+    <div class="masonry-grid" id="masonry-container">
         @{ var index = 0; }
         @foreach (var sample in GetFilteredSamples())
         {
@@ -58,7 +59,7 @@
             var icon = SampleManager.GetCssIcon(sample.Title);
             var isNew = SampleManager.IsNew(sample, allSamples);
 
-            <div class="grid-item">
+            <div class="grid-item" data-is-new="@(isNew ? "true" : "false")">
                 @if (sample.IsSupported)
                 {
                     <a href="sample/@Uri.EscapeDataString(sample.Title)" class="grid-link">
@@ -92,6 +93,8 @@
     private HashSet<string> selectedCategories = new();
     private string[] allCategories = Array.Empty<string>();
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
+    private IJSObjectReference? masonryModule;
+    private IJSObjectReference? masonryInstance;
 
     protected override void OnInitialized()
     {
@@ -102,6 +105,15 @@
             .OrderBy(c => c)
             .ToArray();
         selectedCategories = new HashSet<string>(allCategories);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            masonryModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
+            masonryInstance = await masonryModule.InvokeAsync<IJSObjectReference>("initMasonry", "#masonry-container");
+        }
     }
 
     private IEnumerable<SampleBase> GetFilteredSamples() =>

@@ -45,20 +45,14 @@
     padding: 1.5rem 0 1rem;
 }
 
-/* ─── Masonry Grid (left-to-right flow) ─── */
+/* ─── Masonry Grid (JS-driven columns) ─── */
 .masonry-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
     padding-bottom: 2rem;
+    /* JS sets display:flex and creates .masonry-col children */
 }
 
 .grid-item {
     min-height: 0;
-}
-
-.grid-feature {
-    /* same width as others — height varies via card padding */
 }
 
 .grid-link {
@@ -78,23 +72,8 @@
 
 /* ─── Responsive ─── */
 @media (max-width: 640px) {
-    .masonry-grid {
-        grid-template-columns: 1fr;
-    }
     .design-picker {
         bottom: 0.75rem;
         right: 0.75rem;
-    }
-}
-
-@media (min-width: 641px) and (max-width: 960px) {
-    .masonry-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1200px) {
-    .masonry-grid {
-        grid-template-columns: repeat(4, 1fr);
     }
 }

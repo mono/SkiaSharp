@@ -1,16 +1,17 @@
 @{
     var isDoc = Sample is DocumentSampleBase;
     var isAnimated = Sample is CanvasSampleBase cs && cs.IsAnimated;
-    // Deterministic per-card height variance: ±10% of base via padding
+    // Deterministic per-card height: base tall card, randomized 50%–100%
     var hash = (uint)Sample.Title.GetHashCode();
-    var extraPad = 16 + (int)(hash % 24); // 16–39px range (~10% variance)
+    var heightPercent = 50 + (int)(hash % 51); // 50–100
+    var minHeight = 180 + (int)((hash >> 8) % 120); // 180–299px base range
     // Slight background tint from category color for uniqueness
     var bgTint = (int)(hash % 3); // 0, 1, or 2 — subtle warmth variance
     var bgClass = bgTint switch { 0 => "card-bg-warm", 1 => "card-bg-cool", _ => "card-bg-neutral" };
 }
 
 <div class="sample-card @bgClass @(!Supported ? "sample-card-disabled" : "")"
-     style="--card-color: @CategoryColor; --card-pad: @(extraPad)px; animation-delay: @(Index * 30)ms;">
+     style="--card-color: @CategoryColor; min-height: @(minHeight)px; animation-delay: @(Index * 30)ms;">
     @* Gradient top bar *@
     <div class="card-accent" style="background: linear-gradient(135deg, @CategoryColor, color-mix(in srgb, @CategoryColor 60%, #000));"></div>
 

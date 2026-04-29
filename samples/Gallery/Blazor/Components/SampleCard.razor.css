@@ -21,6 +21,8 @@
     cursor: pointer;
     animation: cardFadeIn 0.45s ease-out both;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Subtle background tint variants */
@@ -67,10 +69,10 @@
 
 /* Content area */
 .card-content {
-    padding: 1rem 1rem 0.5rem;
-    padding-bottom: var(--card-pad, 1rem);
+    padding: 1rem 1rem 0.75rem;
     position: relative;
     z-index: 1;
+    flex: 1;
 }
 
 .card-icon {
@@ -100,7 +102,10 @@
     flex-wrap: wrap;
     align-items: center;
     padding: 0.5rem 1rem 0.75rem;
-    position: relative; }
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+} }
 
 .meta-category {
     font-size: 0.65rem;
