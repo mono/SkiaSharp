@@ -28,11 +28,11 @@ network:
   allowed:
     - defaults
     - python
-    - raw.githubusercontent.com
+    - github
 safe-outputs:
   mentions: false
   allowed-github-references: []
-  max-bot-mentions: 0
+  max-bot-mentions: 1
   create-issue:
     title-prefix: "Sample Scout:"
     labels: [report, area/Gallery]
