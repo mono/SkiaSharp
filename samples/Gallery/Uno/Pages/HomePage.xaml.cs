@@ -62,7 +62,8 @@ public sealed partial class HomePage : Page
 
         foreach (var category in allCategories)
         {
-            var color = CategoryColors.Brush(category);
+            var cat = SampleManager.GetCategoryFor(category);
+            var color = ParseBrush(cat.Color);
             var button = new Button
             {
                 Content = "● " + category,
@@ -95,7 +96,7 @@ public sealed partial class HomePage : Page
         if (sender is not Button btn || btn.Tag is not (string category, bool selected)) return;
         var newSelected = !selected;
         btn.Tag = (category, newSelected);
-        UpdateCategoryChipVisual(btn, CategoryColors.Brush(category), newSelected);
+        UpdateCategoryChipVisual(btn, ParseBrush(SampleManager.GetCategoryFor(category).Color), newSelected);
         if (newSelected) selectedCategories.Add(category);
         else selectedCategories.Remove(category);
         UpdateAllClearLabel();
@@ -110,7 +111,7 @@ public sealed partial class HomePage : Page
         {
             if (btn.Tag is not (string category, _)) continue;
             btn.Tag = (category, target);
-            UpdateCategoryChipVisual(btn, CategoryColors.Brush(category), target);
+            UpdateCategoryChipVisual(btn, ParseBrush(SampleManager.GetCategoryFor(category).Color), target);
             if (target) selectedCategories.Add(category);
             else selectedCategories.Remove(category);
         }
@@ -148,12 +149,9 @@ public sealed partial class HomePage : Page
 
     private void RefreshCards()
     {
-        var items = sampleService.GetAllSamples()
-            .Where(s => selectedCategories.Contains(s.Category))
-            .Where(s => s.MatchesFilter(searchText))
-            .OrderBy(s => s.IsSupported ? 0 : 1)
-            .ThenBy(s => s.Title)
-            .Select(s => new SampleCardItem(s))
+        var allSamples = sampleService.GetAllSamples();
+        var items = SampleManager.SearchSamples(allSamples, searchText, selectedCategories, SampleSortOrder.NewestFirst)
+            .Select(s => new SampleCardItem(s, allSamples))
             .ToList();
 
         CardGridHost.Children.Clear();
@@ -217,20 +215,53 @@ public sealed partial class HomePage : Page
             parts.Add(sampleService.BuildFooter);
         return string.Join("  ·  ", parts);
     }
+
+    private static SolidColorBrush ParseBrush(string hex)
+    {
+        hex = hex.TrimStart('#');
+        if (hex.Length == 6)
+        {
+            var c = Windows.UI.Color.FromArgb(0xFF,
+                Convert.ToByte(hex[..2], 16),
+                Convert.ToByte(hex[2..4], 16),
+                Convert.ToByte(hex[4..6], 16));
+            return new SolidColorBrush(c);
+        }
+        return new SolidColorBrush(Windows.UI.Color.FromArgb(0xFF, 0x54, 0x6E, 0x7A));
+    }
 }
 
 public sealed class SampleCardItem
 {
-    public SampleCardItem(SampleBase sample)
+    public SampleCardItem(SampleBase sample, IEnumerable<SampleBase> allSamples)
     {
         Sample = sample;
-        Icon = CategoryColors.Icon(sample.Title);
-        CategoryColorBrush = CategoryColors.Brush(sample.Category);
+        Icon = SampleManager.GetUnicodeIcon(sample.Title);
+        CategoryColorBrush = ParseBrush(SampleManager.GetCategoryFor(sample.Category).Color);
         Supported = sample.IsSupported;
+        IsNew = SampleManager.IsNew(sample, allSamples);
     }
 
     public SampleBase Sample { get; }
     public string Icon { get; }
     public SolidColorBrush CategoryColorBrush { get; }
     public bool Supported { get; }
+    public bool IsNew { get; }
+
+    private static SolidColorBrush ParseBrush(string hex)
+    {
+        var c = ParseHexColor(hex);
+        return new SolidColorBrush(c);
+    }
+
+    private static Windows.UI.Color ParseHexColor(string hex)
+    {
+        hex = hex.TrimStart('#');
+        if (hex.Length == 6)
+            return Windows.UI.Color.FromArgb(0xFF,
+                Convert.ToByte(hex[..2], 16),
+                Convert.ToByte(hex[2..4], 16),
+                Convert.ToByte(hex[4..6], 16));
+        return Windows.UI.Color.FromArgb(0xFF, 0x54, 0x6E, 0x7A);
+    }
 }

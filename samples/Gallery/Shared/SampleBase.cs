@@ -12,6 +12,8 @@ public abstract class SampleBase
 
 	public virtual string Category { get; } = SampleCategories.General;
 
+	public virtual DateOnly? DateAdded { get; }
+
 
 	public virtual bool IsSupported => true;
 

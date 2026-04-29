@@ -14,6 +14,8 @@ public class PathEffectsSamplerSample : CanvasSampleBase
 
 	public override string Title => "Path Effects Sampler";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
+
 	public override string Description =>
 		"All 6 path effects side by side on the same base path: corner, dash, discrete, 1D stamp, 2D tile, and compose.";
 

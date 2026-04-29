@@ -17,6 +17,8 @@ public class TextOnPathSample : CanvasSampleBase
 
 	public override string Title => "Text on Path";
 
+	public override DateOnly? DateAdded => new DateOnly(2020, 5, 15);
+
 	public override string Category => SampleCategories.Text;
 
 	public override string Description =>

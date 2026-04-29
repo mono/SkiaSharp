@@ -37,6 +37,10 @@
         {
             <span class="type-badge type-unsupported">🚫 Unavailable</span>
         }
+        @if (IsNew)
+        {
+            <span class="type-badge" style="background-color:#e8f5e9;color:#2e7d32;font-weight:600;">✨ NEW</span>
+        }
     </div>
 </div>
 
@@ -46,6 +50,7 @@
     [Parameter, EditorRequired] public string Icon { get; set; } = "";
     [Parameter] public int Index { get; set; }
     [Parameter] public bool Supported { get; set; } = true;
+    [Parameter] public bool IsNew { get; set; }
 
     private static string TruncateDescription(string desc) =>
         desc.Length > 120 ? desc[..117] + "..." : desc;

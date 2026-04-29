@@ -13,6 +13,8 @@ public class WideGamutP3Sample : CanvasSampleBase
 
 	public override string Title => "Wide-Gamut P3";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
+
 	public override string Description =>
 		"Compare Display P3 wide-gamut colors with sRGB. P3 reds, greens, and blues are more vivid than sRGB can represent.";
 

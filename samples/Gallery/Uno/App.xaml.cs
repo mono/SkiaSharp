@@ -24,7 +24,7 @@ public partial class App : Application
     {
 #if HAS_UNO_SKIA
         await Uno.UI.Xaml.Media.FontFamilyHelper.PreloadAsync(
-            CategoryColors.IconFontFamily,
+            SampleManager.IconFontPath,
             Microsoft.UI.Text.FontWeights.Normal,
             Windows.UI.Text.FontStretch.Normal,
             Windows.UI.Text.FontStyle.Normal);

@@ -23,6 +23,8 @@ public class ThreeDSample : CanvasSampleBase
 
 	public override string Title => "3D Transforms";
 
+	public override DateOnly? DateAdded => new DateOnly(2018, 2, 8);
+
 	public override string Category => SampleCategories.General;
 
 	public override string Description => "Visualize 3D transformations with per-axis rotation, perspective projection, and translate controls.";

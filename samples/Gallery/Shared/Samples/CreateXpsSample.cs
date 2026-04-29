@@ -10,6 +10,8 @@ public class CreateXpsSample : DocumentSampleBase
 
 	public override string Title => "Create XPS Document";
 
+	public override DateOnly? DateAdded => new DateOnly(2018, 2, 8);
+
 	public override string Description => "Generate multi-page XPS documents using SkiaSharp's document API. Windows only.";
 
 	public override bool IsSupported => OperatingSystem.IsWindows();

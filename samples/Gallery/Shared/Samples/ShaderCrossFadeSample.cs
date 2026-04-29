@@ -76,6 +76,8 @@ half4 main(float2 fragCoord) {
 
 	public override string Title => "Shader Cross-Fade";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
+
 	public override string Description =>
 		"Animated cross-fade between two procedural images using an SkSL noise threshold mask with child shaders.";
 

@@ -42,16 +42,17 @@
             var categoryColor = GetCategoryColor(sample.Category);
             var icon = GetSampleIcon(sample.Title);
             var supported = sample.IsSupported;
+            var isNew = IsNew(sample);
             <div class="col">
                 @if (supported)
                 {
                     <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
-                        <SampleCard Sample="sample" CategoryColor="@categoryColor" Icon="@icon" Index="i" Supported="true" />
+                        <SampleCard Sample="sample" CategoryColor="@categoryColor" Icon="@icon" Index="i" Supported="true" IsNew="isNew" />
                     </a>
                 }
                 else
                 {
-                    <SampleCard Sample="sample" CategoryColor="@categoryColor" Icon="@icon" Index="i" Supported="false" />
+                    <SampleCard Sample="sample" CategoryColor="@categoryColor" Icon="@icon" Index="i" Supported="false" IsNew="isNew" />
                 }
             </div>
         }
@@ -76,12 +77,14 @@
     private string searchText = string.Empty;
     private HashSet<string> selectedCategories = new();
     private string[] allCategories = Array.Empty<string>();
+    private SampleBase[] allSamples = Array.Empty<SampleBase>();
 
     protected override void OnInitialized()
     {
-        allCategories = SampleService.GetSamples()
-            .Select(s => s.Category)
-            .Distinct()
+        allSamples = SampleService.GetAllSamples().ToArray();
+        allCategories = SampleManager.GetCategories()
+            .Select(c => c.Name)
+            .Where(name => allSamples.Any(s => s.Category == name))
             .OrderBy(c => c)
             .ToArray();
         selectedCategories = new HashSet<string>(allCategories);
@@ -89,12 +92,21 @@
 
     private IEnumerable<SampleBase> GetFilteredSamples()
     {
-        return SampleService.GetAllSamples()
-            .Where(s => s.MatchesFilter(searchText))
-            .Where(s => selectedCategories.Contains(s.Category))
-            .OrderBy(s => s.IsSupported ? 0 : 1)
-            .ThenBy(s => s.Title);
+        return SampleManager.SearchSamples(
+            allSamples,
+            searchText,
+            selectedCategories,
+            SampleSortOrder.NewestFirst);
     }
+
+    private static string GetCategoryColor(string category) =>
+        SampleManager.GetCategoryFor(category).Color;
+
+    private static string GetSampleIcon(string title) =>
+        SampleManager.GetCssIcon(title);
+
+    private bool IsNew(SampleBase sample) =>
+        SampleManager.IsNew(sample, allSamples);
 
     private void ToggleCategory(string category)
     {
@@ -109,42 +121,4 @@
         else
             selectedCategories = new HashSet<string>(allCategories);
     }
-
-    private static string GetCategoryColor(string category) => category switch
-    {
-        SampleCategories.Documents => "#607D8B",
-        SampleCategories.General => "#1A237E",
-        SampleCategories.ImageFilters => "#E65100",
-        SampleCategories.BitmapDecoding => "#00897B",
-        SampleCategories.Paths => "#2E7D32",
-        SampleCategories.Shaders => "#1565C0",
-        SampleCategories.Text => "#AD1457",
-        _ => "#546E7A",
-    };
-
-    private static string GetSampleIcon(string title) => title switch
-    {
-        "Blend Modes" => "bi-layers-half",
-        "Blur Image Filter" => "bi-droplet-half",
-        "2D Transforms" => "bi-arrows-move",
-        "3D Transforms" => "bi-box",
-        "Create XPS Document" => "bi-file-earmark-richtext",
-        "GIF Player" => "bi-film",
-        "Gradient" => "bi-rainbow",
-        "Image Decoder" => "bi-file-image",
-        "Lottie Player" => "bi-play-circle",
-        "Nine-Patch Scaler" => "bi-grid-3x3",
-        "Noise Generator" => "bi-soundwave",
-        "Path Builder" => "bi-pentagon",
-        "Path Effects Lab" => "bi-bezier2",
-        "PDF Composer" => "bi-file-pdf",
-        "Photo Lab" => "bi-camera",
-        "Shader Playground" => "bi-lightning",
-        "Text Lab" => "bi-fonts",
-        "Text on Path" => "bi-type",
-        "Vector Art" => "bi-vector-pen",
-        "Vertex Mesh" => "bi-diagram-3",
-        "World Text" => "bi-globe2",
-        _ => "bi-brush",
-    };
 }
