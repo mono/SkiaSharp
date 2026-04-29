@@ -100,6 +100,8 @@
     [data-theme="dark"] .palette-reset { color: #666; }
 </style>
 
+@implements IDisposable
+
 @code {
     [Parameter] public string[] AllCategories { get; set; } = [];
     [Parameter] public HashSet<string> SelectedCategories { get; set; } = new();
@@ -108,8 +110,22 @@
     [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
     [Parameter] public EventCallback<HashSet<string>> OnCategoriesChanged { get; set; }
 
-    private async Task OnSearch(ChangeEventArgs e) =>
-        await OnSearchChanged.InvokeAsync(e.Value?.ToString() ?? "");
+    private System.Timers.Timer? debounce;
+    private string pendingText = "";
+
+    protected override void OnInitialized()
+    {
+        debounce = new System.Timers.Timer(350) { AutoReset = false };
+        debounce.Elapsed += async (_, _) =>
+            await InvokeAsync(() => OnSearchChanged.InvokeAsync(pendingText));
+    }
+
+    private void OnSearch(ChangeEventArgs e)
+    {
+        pendingText = e.Value?.ToString() ?? "";
+        debounce?.Stop();
+        debounce?.Start();
+    }
 
     private async Task ToggleCategory(string cat)
     {
@@ -132,4 +148,6 @@
         "Image Decoding" => "Decode",
         _ => cat,
     };
+
+    public void Dispose() => debounce?.Dispose();
 }

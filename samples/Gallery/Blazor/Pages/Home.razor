@@ -75,8 +75,6 @@
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
     private IJSObjectReference? masonryModule;
     private bool masonryReady;
-    private System.Timers.Timer? searchDebounce;
-    private string pendingSearch = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -87,14 +85,6 @@
             .OrderBy(c => c)
             .ToArray();
         selectedCategories = new HashSet<string>(allCategories);
-
-        searchDebounce = new System.Timers.Timer(300);
-        searchDebounce.AutoReset = false;
-        searchDebounce.Elapsed += (_, _) => InvokeAsync(() =>
-        {
-            searchText = pendingSearch;
-            StateHasChanged();
-        });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -103,6 +93,8 @@
         {
             masonryModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
             await masonryModule.InvokeVoidAsync("initMasonry", "#masonry-container");
+            // Brief delay so the skeleton feels intentional
+            await Task.Delay(750);
             masonryReady = true;
             StateHasChanged();
             return;
@@ -120,9 +112,8 @@
 
     private void HandleSearchChanged(string text)
     {
-        pendingSearch = text;
-        searchDebounce?.Stop();
-        searchDebounce?.Start();
+        searchText = text;
+        StateHasChanged();
     }
 
     private void HandleCategoriesChanged(HashSet<string> cats)
@@ -135,6 +126,5 @@
 
     public void Dispose()
     {
-        searchDebounce?.Dispose();
     }
 }
