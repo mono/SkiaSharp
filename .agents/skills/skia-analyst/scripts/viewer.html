@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skia Analyst</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+:root{--bg:#f6f8fa;--border:#d8dee4;--row-hover:#f0f4f8;--muted:#656d76;}
+body{background:var(--bg);color:#1f2328;font-size:14px;}
+.shell{max-width:1200px;}
+.summary-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:12px;}
+.summary-num{font-size:1.5rem;font-weight:700;line-height:1;}
+.summary-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.pill{display:inline-block;font-size:.68rem;font-weight:600;padding:1px 7px;border-radius:10px;cursor:pointer;user-select:none;white-space:nowrap;vertical-align:middle;}
+.pill:hover{opacity:.8;}.pill.dim{opacity:.25;}
+.i-breaking{background:#fee2e2;color:#991b1b;}.i-major{background:#dbeafe;color:#1e40af;}
+.i-minor{background:#fef3c7;color:#92400e;}.i-patch{background:#f3f4f6;color:#6b7280;}
+.ct-added{background:#dcfce7;color:#166534;}.ct-changed{background:#fef3c7;color:#92400e;}
+.ct-fixed{background:#dbeafe;color:#1e40af;}.ct-deprecated{background:#fed7aa;color:#9a3412;}
+.ct-removed{background:#fee2e2;color:#991b1b;}.ct-dependency{background:#ede9fe;color:#5b21b6;}
+.ct-platform{background:#ccfbf1;color:#115e59;}.ct-upstream{background:#fce7f3;color:#9d174d;}
+.s-full{background:#dcfce7;color:#166534;}.s-partial{background:#fef3c7;color:#92400e;}
+.s-missing{background:#fee2e2;color:#991b1b;}.s-action_needed{background:#fce7f3;color:#9d174d;}
+.s-not_applicable,.s-correctly_absent{background:#f3f4f6;color:#6b7280;}
+.imp-transformative{background:#fae8ff;color:#7e22ce;}.imp-significant{background:#dbeafe;color:#1e40af;}
+.imp-moderate{background:#fef3c7;color:#92400e;}.imp-minor{background:#f3f4f6;color:#6b7280;}
+.p-critical{background:#fee2e2;color:#991b1b;}.p-high{background:#fed7aa;color:#9a3412;}
+.p-medium{background:#fef3c7;color:#92400e;}.p-low{background:#f3f4f6;color:#6b7280;}
+.l-pill{background:#e0e7ff;color:#3730a3;}
+.row-item{border-bottom:1px solid #eaeef2;padding:7px 12px;cursor:pointer;}
+.row-item:hover{background:var(--row-hover);}.row-item.expanded{background:#fafbfc;}
+.row-name{font-weight:600;font-size:.88rem;}
+.row-chevron{color:#bbb;font-size:.7rem;margin-right:6px;transition:transform .15s;}
+.row-item.expanded .row-chevron{transform:rotate(90deg);color:#666;}
+.row-desc{color:var(--muted);font-size:.78rem;margin-top:2px;}
+.row-detail{display:none;padding:8px 0 4px 0;font-size:.82rem;}
+.row-item.expanded .row-detail{display:block;}
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:2px 12px;}
+.detail-label{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;}
+.detail-value{font-size:.82rem;}
+.detail-value code{font-size:.78rem;background:#f0f4f8;padding:1px 4px;border-radius:3px;}
+.filter-bar{display:flex;flex-direction:column;gap:4px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;}
+.filter-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+.filter-label{font-size:.7rem;color:var(--muted);font-weight:600;width:80px;flex-shrink:0;text-align:right;padding-right:6px;}
+.search-box{font-size:.8rem;padding:3px 10px;border:1px solid var(--border);border-radius:6px;}
+.ctrl-select{font-size:.78rem;padding:2px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;}
+.reset-btn{font-size:.7rem;color:#3730a3;cursor:pointer;border:none;background:none;padding:2px 6px;}
+.reset-btn:hover{text-decoration:underline;}
+.dir-btn{font-size:.8rem;width:26px;height:26px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:#1e40af;font-weight:700;padding:0;line-height:26px;text-align:center;}
+.dir-btn:hover{background:#f0f4f8;}
+.group-header{font-weight:700;font-size:.82rem;padding:8px 12px 4px;color:#1e40af;border-bottom:2px solid #dbeafe;margin-top:12px;background:#f8faff;}
+.count-badge{font-size:.6rem;background:#e5e7eb;color:#374151;padding:0 5px;border-radius:8px;margin-left:2px;vertical-align:middle;}
+.tab-btn{font-size:.85rem;font-weight:600;padding:6px 16px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;}
+.tab-btn.active{color:#1e40af;border-bottom-color:#1e40af;}.tab-btn:hover{color:#1e40af;}
+.tab-pane{display:none;}.tab-pane.active{display:block;}
+.md-content{background:#fff;border:1px solid var(--border);border-radius:8px;padding:20px 24px;font-size:.9rem;line-height:1.6;}
+.md-content h2{font-size:1.1rem;margin-top:20px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+.md-content h3{font-size:1rem;margin-top:16px;}
+.md-content code{font-size:.85em;background:#f0f4f8;padding:1px 4px;border-radius:3px;}
+.md-content pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow-x:auto;font-size:.82rem;}
+.md-content ul{padding-left:20px;}.md-content li{margin-bottom:4px;}
+.pr-link{font-size:.72rem;color:#3730a3;text-decoration:none;}.pr-link:hover{text-decoration:underline;}
+.meta-footer{font-size:.72rem;color:var(--muted);margin-top:16px;padding:8px 12px;}
+.ns-item{border-left:3px solid;padding:6px 12px;margin-bottom:6px;cursor:pointer;}
+.ns-item:hover{background:var(--row-hover);}
+.ns-critical{border-color:#dc2626;}.ns-high{border-color:#f97316;}
+.ns-medium{border-color:#f59e0b;}.ns-low{border-color:#6b7280;}
+</style>
+</head>
+<body>
+<div class="shell mx-auto px-3 py-3">
+<div class="d-flex align-items-center justify-content-between mb-2">
+<div><strong style="font-size:1.15rem">Skia Analyst</strong>
+<span class="text-muted" style="font-size:.8rem;margin-left:8px" id="subtitle"></span></div>
+</div>
+<div class="summary-bar d-flex gap-4 align-items-center flex-wrap" id="summary-bar"></div>
+<div style="border-bottom:1px solid var(--border);margin-bottom:8px">
+<button class="tab-btn active" onclick="switchTab('findings')">Findings <span id="findings-count" class="count-badge"></span></button>
+<button class="tab-btn" onclick="switchTab('slides')">Slides</button>
+<button class="tab-btn" onclick="switchTab('changelog')">Changelog</button>
+<button class="tab-btn" onclick="switchTab('nextsteps')">Next Steps <span id="ns-count" class="count-badge"></span></button>
+</div>
+
+<div class="tab-pane active" id="tab-findings">
+<div class="filter-bar">
+<div class="filter-row"><span class="filter-label">Search:</span><input type="text" class="search-box" style="width:300px" id="search" placeholder="Search..." oninput="rebuild()"></div>
+<div class="filter-row" id="fr-impact"></div>
+<div class="filter-row" id="fr-priority"></div>
+<div class="filter-row" id="fr-binding"></div>
+<div class="filter-row" id="fr-changetype"></div>
+<div class="filter-row" id="fr-importance"></div>
+<div class="filter-row" id="fr-category"></div>
+<div class="filter-row">
+<span class="filter-label">Group by:</span>
+<select class="ctrl-select" id="group-by" onchange="rebuild()">
+<option value="none">None</option>
+<option value="impact">Impact</option>
+<option value="priority">Priority</option>
+<option value="bindingStatus">Binding Status</option>
+<option value="changeType">Change Type</option>
+<option value="importance">Importance</option>
+<option value="category">Category</option>
+<option value="source">Source</option>
+</select>
+<button class="dir-btn" id="group-dir" onclick="this.textContent=this.textContent==='▼'?'▲':'▼';rebuild()">▼</button>
+<span style="width:16px"></span>
+<span class="filter-label" style="width:55px">Sort by:</span>
+<select class="ctrl-select" id="sort-by" onchange="rebuild()">
+<option value="action">Action Score ↕</option>
+<option value="impact">Impact</option>
+<option value="priority">Priority</option>
+<option value="importance">Importance</option>
+<option value="name">Name</option>
+</select>
+<button class="dir-btn" id="sort-dir" onclick="this.textContent=this.textContent==='▼'?'▲':'▼';rebuild()">▼</button>
+</div>
+</div>
+<div class="d-flex justify-content-between" style="font-size:.72rem;padding:0 12px 4px">
+<span id="filter-count"></span>
+<button class="reset-btn" onclick="Object.values(fF).forEach(s=>s.clear());document.getElementById('search').value='';rebuild()">Reset</button>
+</div>
+<div id="list"></div>
+</div>
+
+<div class="tab-pane" id="tab-slides"><div class="md-content" id="slides-content"></div></div>
+<div class="tab-pane" id="tab-changelog"><div class="md-content" id="changelog-content"></div></div>
+<div class="tab-pane" id="tab-nextsteps"><div id="next-steps"></div></div>
+
+<div class="meta-footer" id="meta-footer"></div>
+</div>
+<script>
+const D = /*INJECT_DATA_HERE*/null;
+const CTL={added:'✨ Added',changed:'🔄 Changed',fixed:'🐛 Fixed',deprecated:'⚠️ Deprecated',removed:'❌ Removed',dependency:'📦 Dep',platform:'🌐 Platform',upstream:'🚀 Engine'};
+const IL={breaking:'⚠️ Breaking',major:'Major',minor:'Minor',patch:'Patch'};
+const SL={full:'✅ Full',partial:'🟡 Partial',missing:'❌ Missing',action_needed:'⚠️ Action',not_applicable:'N/A',correctly_absent:'N/A'};
+const IML={transformative:'🚀 Transformative',significant:'⭐ Significant',moderate:'📦 Moderate',minor:'🔹 Minor'};
+const PL={critical:'🔴 Critical',high:'🟠 High',medium:'🟡 Medium',low:'⚪ Low'};
+const CL={new_feature:'Feature',codec:'Codec',image:'Image',image_filter:'Filter',shader:'Shader',color:'Color',canvas:'Canvas',path:'Path',font:'Font',utility:'Utility',performance:'Perf',behavior_change:'Behavior',deprecation:'Deprecated',security:'Security',platform:'Platform',dependency:'Dep'};
+const IO={transformative:0,significant:1,moderate:2,minor:3};
+const PO={critical:0,high:1,medium:2,low:3};
+const IMO={breaking:0,major:1,minor:2,patch:3};
+const SO={missing:0,action_needed:1,partial:2,full:3,not_applicable:4,correctly_absent:5};
+const CTO={removed:0,added:1,changed:2,fixed:3,upstream:4,deprecated:5,dependency:6,platform:7};
+const EO={trivial:4,small:3,medium:2,large:1};
+let fF={impact:new Set(),priority:new Set(),bindingStatus:new Set(),changeType:new Set(),importance:new Set(),category:new Set()};
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function getDir(id){return document.getElementById(id).textContent==='▲'?-1:1;}
+function switchTab(t){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');}
+function tF(type,val){fF[type].has(val)?fF[type].delete(val):fF[type].add(val);rebuild();}
+function passesFilter(f){const sT=document.getElementById('search').value.toLowerCase();for(const[k,s]of Object.entries(fF)){if(s.size&&!s.has(f[k]))return false;}if(sT&&!JSON.stringify(f).toLowerCase().includes(sT))return false;return true;}
+function sortFindings(arr){const s=document.getElementById('sort-by').value;const dir=getDir('sort-dir');return[...arr].sort((a,b)=>{let r=0;switch(s){case'action':const sa=(4-(IO[a.impact]??3))*(4-(PO[a.priority]??3))*(EO[a.effort]||2);const sb=(4-(IO[b.impact]??3))*(4-(PO[b.priority]??3))*(EO[b.effort]||2);r=sb-sa;break;case'impact':r=(IO[a.impact]??9)-(IO[b.impact]??9);break;case'priority':r=(PO[a.priority]??9)-(PO[b.priority]??9);break;case'importance':r=(IMO[a.importance]??9)-(IMO[b.importance]??9);break;case'name':r=(a.name||'').localeCompare(b.name||'');break;}return r*dir;});}
+function groupKey(f,by){return f[by]||'unknown';}
+function groupLabel(key,by){switch(by){case'impact':return IML[key]||key;case'priority':return PL[key]||key;case'bindingStatus':return SL[key]||key;case'changeType':return CTL[key]||key;case'importance':return IL[key]||key;case'category':return CL[key]||key;default:return key;}}
+function groupOrder(key,by){switch(by){case'impact':return IO[key]??9;case'priority':return PO[key]??9;case'bindingStatus':return SO[key]??9;case'changeType':return CTO[key]??9;case'importance':return IMO[key]??9;default:return 0;}}
+function rebuild(){const filtered=D.findings.filter(passesFilter);const sorted=sortFindings(filtered);document.getElementById('filter-count').textContent=`Showing ${filtered.length} of ${D.findings.length}`;const by=document.getElementById('group-by').value;const el=document.getElementById('list');if(by==='none'){el.innerHTML=sorted.map(renderRow).join('');updateDim();return;}const groups={};sorted.forEach(f=>{const k=groupKey(f,by);if(!groups[k])groups[k]=[];groups[k].push(f);});const gOrder=Object.keys(groups);const gDir=getDir('group-dir');gOrder.sort((a,b)=>(groupOrder(a,by)-groupOrder(b,by))*gDir||a.localeCompare(b)*gDir);el.innerHTML=gOrder.map(k=>`<div class="group-header">${groupLabel(k,by)} <span class="count-badge">${groups[k].length}</span></div>`+groups[k].map(renderRow).join('')).join('');updateDim();}
+function updateDim(){document.querySelectorAll('#tab-findings .pill[data-filter]').forEach(p=>{const[t,v]=p.dataset.filter.split(':');p.classList.toggle('dim',fF[t]?.size>0&&!fF[t].has(v));});}
+function renderRow(f){const ct=`<span class="pill ct-${f.changeType}" data-filter="changeType:${f.changeType}" onclick="event.stopPropagation();tF('changeType','${f.changeType}')">${CTL[f.changeType]||f.changeType}</span>`;const imp=`<span class="pill imp-${f.impact}" data-filter="impact:${f.impact}" onclick="event.stopPropagation();tF('impact','${f.impact}')">${IML[f.impact]||f.impact}</span>`;const bs=`<span class="pill s-${f.bindingStatus}" data-filter="bindingStatus:${f.bindingStatus}" onclick="event.stopPropagation();tF('bindingStatus','${f.bindingStatus}')">${SL[f.bindingStatus]||f.bindingStatus}</span>`;const pri=`<span class="pill p-${f.priority}" data-filter="priority:${f.priority}" onclick="event.stopPropagation();tF('priority','${f.priority}')">${f.priority}</span>`;const prLink=f.pr?` <a class="pr-link" href="${f.prUrl||'https://github.com/mono/SkiaSharp/pull/'+f.pr}" target="_blank">#${f.pr}</a>`:'';
+let det='<div class="detail-grid">';if(f.userValue)det+=`<div class="detail-label">Value</div><div class="detail-value">${esc(f.userValue)}</div>`;if(f.skiaApi)det+=`<div class="detail-label">Skia API</div><div class="detail-value"><code>${esc(f.skiaApi)}</code></div>`;if(f.cppClass)det+=`<div class="detail-label">C++</div><div class="detail-value"><code>${esc(f.cppClass)}::${esc(f.cppMethod||'')}</code></div>`;if(f.cApiFunction)det+=`<div class="detail-label">C API</div><div class="detail-value"><code>${esc(f.cApiFunction)}</code></div>`;if(f.csharpMethod)det+=`<div class="detail-label">C#</div><div class="detail-value"><code>${esc(f.csharpMethod)}</code>${f.csharpFile?' ('+esc(f.csharpFile)+')':''}</div>`;if(f.affectedTypes?.length)det+=`<div class="detail-label">Types</div><div class="detail-value">${f.affectedTypes.map(t=>'<code>'+esc(t)+'</code>').join(', ')}</div>`;if(f.dependencyName)det+=`<div class="detail-label">Dep</div><div class="detail-value"><code>${esc(f.dependencyName)}</code>: ${esc(f.dependencyFrom||'?')} → ${esc(f.dependencyTo||'?')}</div>`;if(f.effort)det+=`<div class="detail-label">Effort</div><div class="detail-value">${f.effort}</div>`;if(f.migrationGuide)det+=`<div class="detail-label">Migration</div><div class="detail-value" style="white-space:pre-wrap">${esc(f.migrationGuide)}</div>`;if(f.replacement)det+=`<div class="detail-label">Replace</div><div class="detail-value"><code>${esc(f.replacement)}</code></div>`;if(f.skillToUse)det+=`<div class="detail-label">Skill</div><div class="detail-value"><code>${esc(f.skillToUse)}</code></div>`;if(f.notes)det+=`<div class="detail-label">Notes</div><div class="detail-value">${esc(f.notes)}</div>`;det+='</div>';
+return`<div class="row-item" onclick="this.classList.toggle('expanded')"><div class="d-flex align-items-start"><span class="row-chevron">▶</span><div style="flex:1"><div class="row-name">${esc(f.name)}${prLink}</div><div style="margin-top:3px">${ct} ${imp} ${bs} ${pri}</div><div class="row-desc">${esc(f.description)}</div><div class="row-detail">${det}</div></div></div></div>`;}
+function renderMd(md){if(!md)return'<p style="color:var(--muted)">No content.</p>';return md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/^- (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>').replace(/\n\n/g,'<br><br>');}
+function renderNS(steps){if(!steps?.length)return;document.getElementById('next-steps').innerHTML=steps.map(s=>`<div class="ns-item ns-${s.severity||'low'}"><strong>${esc(s.action)}</strong><div style="margin-top:3px"><span class="pill p-${s.severity||'low'}">${s.severity}</span>${s.effort?` <span class="pill" style="background:#e5e7eb;color:#374151">${s.effort}</span>`:''}${s.skillToUse?` <span class="pill l-pill">${s.skillToUse}</span>`:''}</div><div style="color:var(--muted);font-size:.78rem;margin-top:3px">${esc(s.reason)}</div></div>`).join('');}
+function addPills(id,label,type,vals,pre){document.getElementById(id).innerHTML=`<span class="filter-label">${label}:</span>`+vals.map(v=>{const cls=pre?`${pre}${v}`:'l-pill';const lb={impact:IML,priority:PL,bindingStatus:SL,changeType:CTL,importance:IL,category:CL}[type]?.[v]||v;return`<span class="pill ${cls}" data-filter="${type}:${v}" onclick="tF('${type}','${v}')">${lb}</span>`;}).join(' ');}
+document.addEventListener('DOMContentLoaded',()=>{if(!D){document.body.innerHTML='<p style="padding:2rem;color:red">No data.</p>';return;}
+const m=D.meta;const s=D.summary;const mode=m.scanMode||'full';const ms=m.refFrom?`${m.refFrom}..${m.refTo}`:`m${m.currentMilestone} (${mode})`;document.getElementById('subtitle').textContent=`${ms} · ${m.date}`;
+const byCt=s.byChangeType||{};const byBs=s.byBindingStatus||{};const byImp=s.byImpact||{};
+document.getElementById('summary-bar').innerHTML=[['Total',s.totalFindings||0,'#1f2328'],['Missing',byBs.missing||0,'#991b1b'],['Partial',byBs.partial||0,'#92400e'],['Full',byBs.full||0,'#166534'],['Added',byCt.added||0,'#166534'],['Fixed',byCt.fixed||0,'#1e40af'],['Engine',byCt.upstream||0,'#9d174d'],['🚀',byImp.transformative||0,'#7e22ce'],['⭐',byImp.significant||0,'#1e40af']].map(([l,n,c])=>`<div class="text-center"><div class="summary-num" style="color:${c}">${n}</div><div class="summary-label">${l}</div></div>`).join('');
+addPills('fr-impact','Impact','impact',['transformative','significant','moderate','minor'],'imp-');
+addPills('fr-priority','Priority','priority',['critical','high','medium','low'],'p-');
+addPills('fr-binding','Binding','bindingStatus',['missing','partial','full','action_needed','not_applicable'],'s-');
+addPills('fr-changetype','Type','changeType',Object.keys(CTL),'ct-');
+const imps=[...new Set(D.findings.map(f=>f.importance))].sort((a,b)=>(IMO[a]??9)-(IMO[b]??9));
+addPills('fr-importance','Importance','importance',imps,'i-');
+const cats=[...new Set(D.findings.map(f=>f.category))].sort();
+addPills('fr-category','Category','category',cats,'');
+document.getElementById('findings-count').textContent=D.findings.length;
+document.getElementById('ns-count').textContent=(D.nextSteps||[]).length;
+document.getElementById('slides-content').innerHTML=renderMd(D.slides);
+document.getElementById('changelog-content').innerHTML=renderMd(D.changelog);
+renderNS(D.nextSteps);
+document.getElementById('meta-footer').innerHTML=`${m.repo} · m${m.currentMilestone} · ${m.date}`+(m.commitCount?` · ${m.commitCount} commits`:'');
+rebuild();});
+</script>
+</body>
+</html>
