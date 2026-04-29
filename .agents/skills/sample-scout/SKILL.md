@@ -40,7 +40,6 @@ Phase 1: Setup (list GM files, list existing Gallery samples)
 Phase 2: Analyze GM files (parallel agents, each handles a chunk)
 Phase 3: Cross-reference with existing Gallery samples
 Phase 4: Validate and render
-Phase 5: Present results
 ```
 
 ### Phase 1: Setup
@@ -142,19 +141,4 @@ python3 .agents/skills/sample-scout/scripts/render-sample-scout.py sample-scout-
 
 This produces a `.md` file with `###`/`####` headers suitable for GitHub issues.
 
-### Phase 5: Present Results
-
-Show the summary with these key metrics:
-- Total samples analyzed
-- 🆕 No existing sample (opportunities)
-- 🔶 Similar sample exists (enhancement opportunities)
-- ✅ Already covered
-- 🎯 **Opportunity count** = high interest + APIs ready + no existing sample
-
-Then present the top opportunities — samples that are high-interest, have all APIs available,
-and have no existing Gallery coverage. These are the ones to build next.
-
-Offer:
-1. "Want me to build Gallery samples for the top opportunities?"
-2. "Should I focus on samples that need new APIs first?"
-3. "Want to filter by a specific category (shaders, image filters, text, etc.)?"
+ 
