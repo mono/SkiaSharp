@@ -149,9 +149,6 @@ into a GitHub issue or sharing as a gist.
 
 ### Phase 5: Present Results
 
-> **Headless mode:** When running in a scheduled workflow (no human present), skip this phase
-> entirely. Stop after Phase 4 — the workflow handles publishing.
-
 Show highlights inline:
 
 - **Top gaps** — transformative and significant items

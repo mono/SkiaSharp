@@ -49,7 +49,6 @@ Scan all upstream Skia GM samples and publish a report of Gallery opportunities 
 Read and follow the instructions in `.agents/skills/sample-scout/SKILL.md` to run a full scan.
 
 Complete all phases (Setup → Analyze → Cross-Reference → Validate & Render).
-Skip Phase 5 (Present Results) — this is a headless run with no human to interact with.
 Analyze all GM samples from `google/skia/gm/` — no filtering by milestone, always scan everything.
 
 After Phase 4 completes, the outputs will be:
@@ -62,10 +61,6 @@ Create a GitHub issue with the contents of `sample-scout-report.md` as the body.
 
 The issue title **must** start with `Sample Scout:` followed by date and key metric
 (e.g. `Sample Scout: 2025-01-15 (42 opportunities)`) so `close-older-issues` matches correctly.
-
-If the body exceeds ~60,000 characters, trim from the bottom up: drop the "Low Interest"
-section first, then "Already Covered", then "Medium Interest Opportunities". Always keep
-"Ready to Build" and "Needs New APIs" sections visible.
 
 ## Step 3 — Upload artifacts and write step summary
 

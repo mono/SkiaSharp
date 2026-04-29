@@ -151,9 +151,6 @@ python3 .agents/skills/sample-scout/scripts/persist-sample-scout.py sample-scout
 
 ### Phase 5: Present Results
 
-> **Headless mode:** When running in a scheduled workflow (no human present), skip this phase
-> entirely. Stop after Phase 4 — the workflow handles publishing.
-
 Show the summary with these key metrics:
 - Total samples analyzed
 - 🆕 No existing sample (opportunities)

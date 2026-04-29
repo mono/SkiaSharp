@@ -49,7 +49,6 @@ Run a full skia-analyst scan and publish the results as a GitHub issue.
 Read and follow the instructions in `.agents/skills/skia-analyst/SKILL.md` to run a **full scan**.
 
 Complete all phases (Setup → Agents → Synthesize → Generate Outputs). Use `scanMode: full`.
-Skip Phase 5 (Present Results) — this is a headless run with no human to interact with.
 
 After Phase 4 completes, the outputs will be:
 - `skia-analyst-report.json` — the validated JSON report
@@ -61,10 +60,6 @@ Create a GitHub issue with the contents of `skia-analyst-report.md` as the body.
 
 The issue title **must** start with `Skia Analyst:` followed by the milestone and date
 (e.g. `Skia Analyst: m147 (2025-01-15)`) so `close-older-issues` matches correctly.
-
-If the body exceeds ~60,000 characters, trim from the bottom up: drop the "No Action Needed"
-section first, then "Already Bound", then "Minor" impact items. Always keep "Transformative"
-and "Significant" sections visible.
 
 ## Step 3 — Upload artifacts and write step summary
 
