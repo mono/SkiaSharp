@@ -54,6 +54,7 @@ Phase 1: Setup (determine scan range, prepare sources)
 Phase 2: Launch dual-model agents (Opus + GPT in parallel)
 Phase 3: Synthesize — merge findings, dedupe, both lenses
 Phase 4: Generate outputs (JSON → validate → Markdown)
+Phase 5: Present results
 ```
 
 ### Phase 1: Setup
@@ -148,4 +149,16 @@ python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-
 This produces a GitHub-flavored Markdown file with collapsible details, suitable for pasting
 into a GitHub issue or sharing as a gist.
 
- 
+### Phase 5: Present Results
+
+Show highlights inline:
+
+- **Top gaps** — transformative and significant items
+- **Quick wins** — partial binding status (C API exists, just needs C# wrapper)
+- **Breaking changes** — if any findings have `importance: breaking`
+
+Then offer next steps:
+1. "Want me to investigate any finding in more detail?"
+2. "Should I use the api-add-review skill to start binding a feature?"
+3. "Want to upload the markdown to a gist for sharing?"
+4. "Should I create a GitHub issue with the gap analysis?"
