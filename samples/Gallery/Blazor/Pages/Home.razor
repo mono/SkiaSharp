@@ -31,7 +31,7 @@
     }
 
     @* ─── Masonry Grid (hidden until JS layouts it) ─── *@
-    <div class="masonry-grid @(masonryReady ? "" : "masonry-hidden")" id="masonry-container">
+    <div class="masonry-grid" id="masonry-container">
         @{ var index = 0; }
         @foreach (var sample in GetFilteredSamples())
         {
@@ -92,11 +92,10 @@
         if (firstRender)
         {
             masonryModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
-            await masonryModule.InvokeVoidAsync("initMasonry", "#masonry-container");
-            // Brief delay so the skeleton feels intentional
+            // Delay so skeleton shimmer is visible
             await Task.Delay(750);
+            await masonryModule.InvokeVoidAsync("initMasonry", "#masonry-container");
             masonryReady = true;
-            StateHasChanged();
             return;
         }
 

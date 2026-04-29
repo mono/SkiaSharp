@@ -14,13 +14,21 @@ export function initMasonry(containerSelector) {
         doLayout(container, cols);
     }
 
-    // Initial layout
+    // Initial layout, then reveal
     layout();
+    container.style.opacity = '1';
 
-    // Only re-layout when column count changes (resize breakpoints)
+    // Hide skeleton
+    const skeleton = document.querySelector('.skeleton-grid');
+    if (skeleton) skeleton.style.display = 'none';
+
+    // Only re-layout when column count changes
     window.addEventListener('resize', () => {
         const cols = getColCount(container.clientWidth);
-        if (cols !== currentCols) layout();
+        if (cols !== currentCols) {
+            currentCols = cols;
+            doLayout(container, cols);
+        }
     });
 
     return null;
