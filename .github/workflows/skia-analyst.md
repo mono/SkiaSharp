@@ -1,15 +1,16 @@
 ---
-description: "Run the skia-analyst skill daily to update a pinned issue tracking Skia API gaps."
+description: "Run the skia-analyst skill to produce a Skia API gap analysis report as a GitHub issue."
 on:
   schedule: daily
   workflow_dispatch:
+  skip-bots: [github-actions, copilot, dependabot]
 concurrency:
   group: skia-analyst
   cancel-in-progress: true
 timeout-minutes: 30
 permissions:
   contents: read
-  issues: write
+  issues: read
 tools:
   github:
     toolsets: [issues]
@@ -21,14 +22,19 @@ network:
     - defaults
     - python
 safe-outputs:
-  update-issue:
-    issue: 3684
-    max: 1
+  mentions: false
+  allowed-github-references: []
+  max-bot-mentions: 0
+  create-issue:
+    title-prefix: "Skia API Gap Analysis:"
+    labels: [report, area/SkiaSharp]
+    close-older-issues: true
+    expires: 30
 ---
 
-# Daily Skia Analyst
+# Daily Skia Analyst Report
 
-Run a full skia-analyst scan and update the pinned tracking issue with the latest gap analysis.
+Run a full skia-analyst scan and publish the results as a GitHub issue.
 
 ## Step 1 — Determine current milestone
 
@@ -36,7 +42,7 @@ Run a full skia-analyst scan and update the pinned tracking issue with the lates
 cat externals/skia/include/core/SkMilestone.h
 ```
 
-Extract the milestone number. If the submodule isn't checked out, check the latest Skia bump commit:
+Extract the `SK_MILESTONE` number. If the submodule isn't checked out, check the latest bump commit:
 
 ```bash
 git log --oneline --grep="milestone" --grep="Bump skia" --all-match -1
@@ -73,16 +79,14 @@ python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-
 
 Read the rendered `skia-analyst-report.md`.
 
-## Step 5 — Update the tracking issue
+## Step 5 — Publish the report
 
-Update issue #3684 in `mono/SkiaSharp` with the rendered Markdown report as the issue body.
+Create a GitHub issue with the rendered Markdown as the body. The `create-issue` safe output will
+automatically close any older issues with the same title prefix, so only the latest report is active.
 
-The issue body should be replaced entirely with the content of `skia-analyst-report.md`. This is a
-living document that gets regenerated daily — old content is replaced, not appended.
+Use headers at `###` level or lower (not `##` or `#`) since those are reserved for the issue title.
 
 ## Step 6 — Write step summary
-
-Copy the report files into the agent artifact directory and write the summary:
 
 ```bash
 cp skia-analyst-report.json /tmp/gh-aw/agent/
