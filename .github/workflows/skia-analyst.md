@@ -1,5 +1,5 @@
 ---
-description: "Run the skia-analyst skill to produce a Skia API gap analysis report as a GitHub issue."
+description: "Run the skia-analyst skill to produce a Skia feature analysis report as a GitHub issue."
 on:
   schedule: daily
   workflow_dispatch:
@@ -17,12 +17,13 @@ steps:
       ln -s /tmp/gh-aw/agent/step-summary.md /tmp/gh-aw/agent-step-summary.md
 permissions:
   contents: read
+  issues: read
 tools:
   github:
-    toolsets: [issues]
+    toolsets: [repos, issues]
     allowed-repos: ["mono/skiasharp", "mono/skia", "google/skia"]
     min-integrity: none
-  bash: ["python3", "pip3", "gh", "git", "cat", "grep", "sort", "head", "tail", "cp", "mkdir", "echo", "sed"]
+  bash: ["python3", "pip3", "gh", "git", "jq", "cat", "grep", "find", "sed", "sort", "head", "tail", "wc", "cp", "mkdir", "echo"]
 network:
   allowed:
     - defaults
@@ -33,7 +34,7 @@ safe-outputs:
   allowed-github-references: []
   max-bot-mentions: 0
   create-issue:
-    title-prefix: "Skia API Gap Analysis:"
+    title-prefix: "Skia Analyst:"
     labels: [report, area/SkiaSharp]
     close-older-issues: true
     expires: 30
@@ -47,10 +48,10 @@ Run a full skia-analyst scan and publish the results as a GitHub issue.
 
 Read and follow the instructions in `.agents/skills/skia-analyst/SKILL.md` to run a **full scan**.
 
-Complete all phases (Setup → Agents → Synthesize → Generate Outputs → Present).
-Use `scanMode: full`. The skill handles milestone detection, analysis, validation, and rendering.
+Complete all phases (Setup → Agents → Synthesize → Generate Outputs). Use `scanMode: full`.
+Skip Phase 5 (Present Results) — this is a headless run with no human to interact with.
 
-After all phases complete, the outputs will be:
+After Phase 4 completes, the outputs will be:
 - `skia-analyst-report.json` — the validated JSON report
 - `skia-analyst-report.md` — the rendered Markdown
 
@@ -58,8 +59,12 @@ After all phases complete, the outputs will be:
 
 Create a GitHub issue with the contents of `skia-analyst-report.md` as the body.
 
-The issue title **must** start with `Skia API Gap Analysis:` (e.g. `Skia API Gap Analysis: m147 — 2025-01-15`)
-so `close-older-issues` matches correctly. If the body exceeds ~60,000 characters, trim lower-priority sections.
+The issue title **must** start with `Skia Analyst:` followed by the milestone and date
+(e.g. `Skia Analyst: m147 (2025-01-15)`) so `close-older-issues` matches correctly.
+
+If the body exceeds ~60,000 characters, trim from the bottom up: drop the "No Action Needed"
+section first, then "Already Bound", then "Minor" impact items. Always keep "Transformative"
+and "Significant" sections visible.
 
 ## Step 3 — Upload artifacts and write step summary
 

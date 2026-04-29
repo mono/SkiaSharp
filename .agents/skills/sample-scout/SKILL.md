@@ -119,18 +119,20 @@ For each GM entry, check if an existing Gallery sample covers the same topic:
 
 Tag each finding with `sampleStatus` and `matchedSample`.
 
+Save the merged findings as `sample-scout-report.json` in the working directory.
+
 ### Phase 4: Validate and Render
 
 **4a. Validate**
 
 ```bash
-python3 .agents/skills/sample-scout/scripts/validate-sample-scout.py <path-to-json>
+python3 .agents/skills/sample-scout/scripts/validate-sample-scout.py sample-scout-report.json
 ```
 
 **4b. Render Markdown**
 
 ```bash
-python3 .agents/skills/sample-scout/scripts/render-sample-scout-md.py <path-to-json>
+python3 .agents/skills/sample-scout/scripts/render-sample-scout-md.py sample-scout-report.json sample-scout-report.md
 ```
 
 This produces a `.md` file with `###`/`####` headers suitable for GitHub issues.
@@ -138,16 +140,19 @@ This produces a `.md` file with `###`/`####` headers suitable for GitHub issues.
 **4c. Render HTML** (optional, for interactive exploration)
 
 ```bash
-python3 .agents/skills/sample-scout/scripts/render-sample-scout.py <path-to-json>
+python3 .agents/skills/sample-scout/scripts/render-sample-scout.py sample-scout-report.json
 ```
 
-**4d. Persist**
+**4d. Persist** (optional, for local archival)
 
 ```bash
-python3 .agents/skills/sample-scout/scripts/persist-sample-scout.py <path-to-json>
+python3 .agents/skills/sample-scout/scripts/persist-sample-scout.py sample-scout-report.json
 ```
 
 ### Phase 5: Present Results
+
+> **Headless mode:** When running in a scheduled workflow (no human present), skip this phase
+> entirely. Stop after Phase 4 — the workflow handles publishing.
 
 Show the summary with these key metrics:
 - Total samples analyzed

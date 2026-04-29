@@ -130,24 +130,27 @@ When both agents complete, merge their findings:
 
 **4a. Generate JSON**
 
-Save to `skia-analyst-YYYY-MM-DD.json` in the working directory.
+Save to `skia-analyst-report.json` in the working directory.
 
 **4b. Validate**
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py skia-analyst-YYYY-MM-DD.json
+python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py skia-analyst-report.json
 ```
 
 **4c. Render Markdown**
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-YYYY-MM-DD.json
+python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-report.json skia-analyst-report.md
 ```
 
 This produces a GitHub-flavored Markdown file with collapsible details, suitable for pasting
 into a GitHub issue or sharing as a gist.
 
 ### Phase 5: Present Results
+
+> **Headless mode:** When running in a scheduled workflow (no human present), skip this phase
+> entirely. Stop after Phase 4 — the workflow handles publishing.
 
 Show highlights inline:
 
