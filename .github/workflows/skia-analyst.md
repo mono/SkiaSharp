@@ -8,6 +8,13 @@ concurrency:
   group: skia-analyst
   cancel-in-progress: true
 timeout-minutes: 30
+steps:
+  - name: Redirect step summary into agent-writable directory
+    run: |
+      mkdir -p /tmp/gh-aw/agent
+      touch /tmp/gh-aw/agent/step-summary.md
+      rm -f /tmp/gh-aw/agent-step-summary.md
+      ln -s /tmp/gh-aw/agent/step-summary.md /tmp/gh-aw/agent-step-summary.md
 permissions:
   contents: read
 tools:
@@ -36,62 +43,34 @@ safe-outputs:
 
 Run a full skia-analyst scan and publish the results as a GitHub issue.
 
-## Step 1 — Determine current milestone
+## Step 1 — Run the skia-analyst skill
 
-The submodule is not checked out in the workflow environment. Fetch the milestone header
-from `mono/skia` via the GitHub MCP tool:
+Read and follow the instructions in `.agents/skills/skia-analyst/SKILL.md` to run a **full scan**.
 
-```
-Use the github tool to get file contents from mono/skia, path: include/core/SkMilestone.h
-```
+Complete all phases. Use `scanMode: full`. The skill will determine the current milestone,
+fetch upstream Skia release notes, check binding status, and produce a validated JSON report.
 
-Extract the `SK_MILESTONE` number from the `#define SK_MILESTONE` line.
+After all phases complete, the report JSON will be at `skia-analyst-report.json`.
 
-## Step 2 — Run the skia-analyst skill
+## Step 2 — Render the Markdown and publish
 
-Read and follow `.agents/skills/skia-analyst/SKILL.md` to run a **full scan**.
-
-Key parameters:
-- `scanMode`: full
-- `currentMilestone`: from Step 1
-- Fetch Skia release notes from `https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md`
-- Check binding status by grepping `binding/SkiaSharp/SkiaApi.generated.cs` for P/Invoke externs
-  and `binding/SkiaSharp/*.cs` for C# wrappers
-- For hidden API scan, fetch upstream C++ headers from `google/skia` via the GitHub MCP tool
-
-Save the JSON report to `skia-analyst-report.json` in the working directory.
-
-## Step 3 — Validate the report
-
-```bash
-pip3 install -r .agents/skills/skia-analyst/scripts/requirements.txt --quiet
-python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py skia-analyst-report.json
-```
-
-If validation fails, fix the JSON and re-validate. Do not proceed until it passes.
-
-## Step 4 — Render the Markdown
+Render the report as GitHub-flavored Markdown:
 
 ```bash
 python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-report.json skia-analyst-report.md
 ```
 
-Read the rendered `skia-analyst-report.md`. If it exceeds ~60,000 characters, trim lower-priority
-sections — the full JSON is preserved in the step summary as a fallback.
+Create a GitHub issue with the rendered Markdown as the body. The issue title **must** start with
+`Skia API Gap Analysis:` (e.g. `Skia API Gap Analysis: m147 — 2025-01-15`) so `close-older-issues`
+matches correctly. If the body exceeds ~60,000 characters, trim lower-priority sections.
 
-## Step 5 — Publish the report
-
-Create a GitHub issue with the rendered Markdown as the body. The `create-issue` safe output will
-automatically close any older issues with the same title prefix, so only the latest report is active.
-
-The issue title **must** start with `Skia API Gap Analysis:` (e.g. `Skia API Gap Analysis: m147 — 2025-01-15`)
-so `close-older-issues` matches correctly.
-
-## Step 6 — Write step summary
+## Step 3 — Upload artifacts and write step summary
 
 ```bash
-mkdir -p /tmp/gh-aw/agent
 cp skia-analyst-report.json /tmp/gh-aw/agent/
 cp skia-analyst-report.md /tmp/gh-aw/agent/
 cat skia-analyst-report.md >> /tmp/gh-aw/agent/step-summary.md
 ```
+
+**IMPORTANT:** Write to the literal path `/tmp/gh-aw/agent/step-summary.md` — this file is symlinked
+to the step summary. Do NOT use `$GITHUB_STEP_SUMMARY` as it resolves to an inaccessible path.
