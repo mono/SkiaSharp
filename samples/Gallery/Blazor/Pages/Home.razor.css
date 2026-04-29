@@ -45,27 +45,26 @@
     padding: 1.5rem 0 1rem;
 }
 
-/* ─── Masonry Grid ─── */
+/* ─── Masonry Grid (Pinterest columns) ─── */
 .masonry-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+    column-count: 3;
+    column-gap: 1rem;
     padding-bottom: 2rem;
 }
 
 .grid-item {
-    min-height: 0;
+    break-inside: avoid;
+    margin-bottom: 1rem;
 }
 
 .grid-feature {
-    grid-column: span 2;
+    /* no span — just a normal item in the column flow */
 }
 
 .grid-link {
     text-decoration: none;
     color: inherit;
     display: block;
-    height: 100%;
 }
 
 /* ─── Footer ─── */
@@ -80,13 +79,22 @@
 /* ─── Responsive ─── */
 @media (max-width: 640px) {
     .masonry-grid {
-        grid-template-columns: 1fr;
-    }
-    .grid-feature {
-        grid-column: span 1;
+        column-count: 1;
     }
     .design-picker {
         bottom: 0.75rem;
         right: 0.75rem;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 960px) {
+    .masonry-grid {
+        column-count: 2;
+    }
+}
+
+@media (min-width: 1200px) {
+    .masonry-grid {
+        column-count: 4;
     }
 }

@@ -17,9 +17,7 @@
                 @ShortName(catName)
             </button>
         }
-        <button class="palette-reset" @onclick="ResetAll">
-            @(SelectedCategories.Count == AllCategories.Length ? "Clear" : "All")
-        </button>
+        <button class="palette-reset" @onclick="ResetAll">Reset</button>
     </div>
 </div>
 
@@ -122,10 +120,7 @@
 
     private async Task ResetAll()
     {
-        var copy = SelectedCategories.Count == AllCategories.Length
-            ? new HashSet<string>()
-            : new HashSet<string>(AllCategories);
-        await OnCategoriesChanged.InvokeAsync(copy);
+        await OnCategoriesChanged.InvokeAsync(new HashSet<string>(AllCategories));
     }
 
     private static string ShortName(string cat) => cat switch

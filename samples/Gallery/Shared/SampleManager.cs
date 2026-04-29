@@ -156,7 +156,7 @@ public static class SampleManager
 	// ---------------------------------------------------------------
 
 	/// <summary>
-	/// Filter and sort samples. Default sort: newest first, then alphabetical.
+	/// Filter and sort samples. Default sort: NEW first, then day-seeded shuffle.
 	/// Unsupported samples are always pushed to the end.
 	/// </summary>
 	public static IEnumerable<SampleBase> SearchSamples(
@@ -175,13 +175,9 @@ public static class SampleManager
 
 		var list = query.ToList();
 
-		// Sort: unsupported always last
 		return sort switch
 		{
-			SampleSortOrder.NewestFirst => list
-				.OrderBy(s => s.IsSupported ? 0 : 1)
-				.ThenByDescending(s => s.DateAdded ?? DateOnly.MinValue)
-				.ThenBy(s => s.Title),
+			SampleSortOrder.NewestFirst => SortNewFirstThenDayShuffle(list, samples),
 			SampleSortOrder.OldestFirst => list
 				.OrderBy(s => s.IsSupported ? 0 : 1)
 				.ThenBy(s => s.DateAdded ?? DateOnly.MaxValue)
@@ -197,6 +193,41 @@ public static class SampleManager
 				.OrderBy(s => s.IsSupported ? 0 : 1)
 				.ThenBy(s => s.Title),
 		};
+	}
+
+	/// <summary>
+	/// NEW items first (by date desc), then remaining items in a day-seeded
+	/// pseudo-random order so the gallery feels fresh each day.
+	/// </summary>
+	private static IEnumerable<SampleBase> SortNewFirstThenDayShuffle(
+		List<SampleBase> items, IEnumerable<SampleBase> allSamples)
+	{
+		// Partition: unsupported last, then new first, then rest shuffled
+		var unsupported = items.Where(s => !s.IsSupported).ToList();
+		var supported = items.Where(s => s.IsSupported).ToList();
+
+		var newItems = supported
+			.Where(s => IsNew(s, allSamples))
+			.OrderByDescending(s => s.DateAdded ?? DateOnly.MinValue)
+			.ThenBy(s => s.Title)
+			.ToList();
+
+		var rest = supported
+			.Where(s => !IsNew(s, allSamples))
+			.ToList();
+
+		// Day-based seed: changes once per day
+		var daySeed = DateTime.UtcNow.DayOfYear * 1000 + DateTime.UtcNow.Year;
+		var rng = new Random(daySeed);
+
+		// Fisher-Yates shuffle
+		for (var i = rest.Count - 1; i > 0; i--)
+		{
+			var j = rng.Next(i + 1);
+			(rest[i], rest[j]) = (rest[j], rest[i]);
+		}
+
+		return newItems.Concat(rest).Concat(unsupported);
 	}
 }
 

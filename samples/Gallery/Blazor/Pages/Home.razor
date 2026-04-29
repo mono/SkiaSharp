@@ -94,7 +94,7 @@
 </div>
 
 @code {
-    private int activeDesign = 3; // default to Tag Cloud
+    private int activeDesign = 1; // default to Command Palette
     private string searchText = string.Empty;
     private HashSet<string> selectedCategories = new();
     private string[] allCategories = Array.Empty<string>();
@@ -122,6 +122,9 @@
 
     private void HandleCategoriesChanged(HashSet<string> cats)
     {
+        // If everything was deselected, reset to all selected
+        if (cats.Count == 0)
+            cats = new HashSet<string>(allCategories);
         selectedCategories = cats;
         StateHasChanged();
     }
