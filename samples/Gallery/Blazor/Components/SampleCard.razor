@@ -1,46 +1,73 @@
 @{
     var isDoc = Sample is DocumentSampleBase;
     var isAnimated = Sample is CanvasSampleBase cs && cs.IsAnimated;
+    var sizeClass = CardSize switch
+    {
+        SampleCardSize.Feature => "card-feature",
+        SampleCardSize.Compact => "card-compact",
+        _ => "card-standard",
+    };
 }
 
-<div class="card h-100 sample-card @(!Supported ? "sample-card-disabled" : "")"
-     style="border-left-color: @CategoryColor; background-color: @(CategoryColor)08; animation-delay: @(Index * 40)ms;">
-    <div class="card-body py-3 px-3">
-        <div class="d-flex align-items-start gap-2">
-            <i class="bi @Icon" style="font-size:1.4rem;color:@(Supported ? CategoryColor : "#bbb");flex-shrink:0;margin-top:1px;"></i>
-            <div>
-                <h6 class="card-title mb-1">@Sample.Title</h6>
-                @if (!string.IsNullOrWhiteSpace(Sample.Description))
-                {
-                    <p class="card-text text-muted small mb-0" style="line-height: 1.4;">
-                        @TruncateDescription(Sample.Description)
-                    </p>
-                }
-            </div>
-        </div>
+<div class="sample-card @sizeClass @(!Supported ? "sample-card-disabled" : "")"
+     style="--card-color: @CategoryColor; animation-delay: @(Index * 30)ms;">
+    @* Gradient top bar *@
+    <div class="card-accent" style="background: linear-gradient(135deg, @CategoryColor, color-mix(in srgb, @CategoryColor 60%, #000));"></div>
+
+    @* Watermark icon *@
+    <div class="card-watermark">
+        <i class="bi @Icon"></i>
     </div>
-    <div class="card-footer bg-transparent border-0 py-2 px-3 d-flex gap-1 flex-wrap align-items-center">
-        <span class="category-badge" style="background-color: @(CategoryColor)1A; color: @CategoryColor;">@Sample.Category</span>
-        @if (isDoc)
+
+    @* NEW glow dot *@
+    @if (IsNew)
+    {
+        <div class="new-dot" title="Recently added"></div>
+    }
+
+    @* Content *@
+    <div class="card-content">
+        <div class="card-icon">
+            <i class="bi @Icon" style="color: @(Supported ? CategoryColor : "#777");"></i>
+        </div>
+        <h3 class="card-title">@Sample.Title</h3>
+        @if (CardSize != SampleCardSize.Compact && !string.IsNullOrWhiteSpace(Sample.Description))
         {
-            <span class="type-badge type-doc">📄 Document</span>
+            <p class="card-desc">
+                @(CardSize == SampleCardSize.Feature ? Sample.Description : TruncateDescription(Sample.Description))
+            </p>
         }
-        else if (isAnimated)
+    </div>
+
+    @* Metadata strip *@
+    <div class="card-meta">
+        <span class="meta-category" style="background-color: @(CategoryColor)1A; color: @CategoryColor;">
+            @Sample.Category
+        </span>
+        @if (CardSize != SampleCardSize.Compact)
         {
-            <span class="type-badge type-animated">🎬 Animated</span>
-        }
-        else
-        {
-            <span class="type-badge type-canvas">🖼️ Canvas</span>
+            @if (isDoc)
+            {
+                <span class="meta-type meta-doc">📄 Doc</span>
+            }
+            else if (isAnimated)
+            {
+                <span class="meta-type meta-animated">🎬 Live</span>
+            }
+            else
+            {
+                <span class="meta-type meta-canvas">🖼️ Canvas</span>
+            }
         }
         @if (!Supported)
         {
-            <span class="type-badge type-unsupported">🚫 Unavailable</span>
+            <span class="meta-type meta-unsupported">🚫</span>
         }
-        @if (IsNew)
-        {
-            <span class="type-badge" style="background-color:#e8f5e9;color:#2e7d32;font-weight:600;">✨ NEW</span>
-        }
+    </div>
+
+    @* Hover reveal *@
+    <div class="card-hover-reveal">
+        Open <i class="bi bi-arrow-right"></i>
     </div>
 </div>
 
@@ -51,7 +78,8 @@
     [Parameter] public int Index { get; set; }
     [Parameter] public bool Supported { get; set; } = true;
     [Parameter] public bool IsNew { get; set; }
+    [Parameter] public SampleCardSize CardSize { get; set; } = SampleCardSize.Standard;
 
     private static string TruncateDescription(string desc) =>
-        desc.Length > 120 ? desc[..117] + "..." : desc;
+        desc.Length > 100 ? desc[..97] + "…" : desc;
 }

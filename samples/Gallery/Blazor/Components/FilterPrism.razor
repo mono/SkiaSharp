@@ -1,0 +1,144 @@
+@* Design E: Prism Bar — angled parallelogram color shards in a glass strip *@
+
+<div class="prism-bar">
+    <div class="prism-search" @onclick="FocusSearch">
+        <i class="bi bi-search"></i>
+        <input @ref="searchInput" type="search" placeholder="Search…" value="@SearchText"
+               @oninput="OnSearch" />
+    </div>
+    <div class="prism-shards">
+        @foreach (var catName in AllCategories)
+        {
+            var cat = SampleManager.GetCategoryFor(catName);
+            var active = SelectedCategories.Contains(catName);
+            <button class="shard @(active ? "active" : "")" style="--shard-color: @cat.Color;"
+                    @onclick="() => ToggleCategory(catName)">
+                <span class="shard-name">@ShortName(catName)</span>
+            </button>
+        }
+    </div>
+</div>
+
+<style>
+    .prism-bar {
+        display: flex;
+        align-items: stretch;
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(20px) saturate(1.4);
+        -webkit-backdrop-filter: blur(20px) saturate(1.4);
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        position: relative;
+    }
+
+    /* Shimmer animation */
+    .prism-bar::after {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%; width: 60%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        animation: prismShimmer 8s ease-in-out infinite;
+        pointer-events: none;
+    }
+    @@keyframes prismShimmer { 0%,100% { left: -100%; } 50% { left: 100%; } }
+
+    .prism-search {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 0.9rem;
+        border-right: 1px solid rgba(0,0,0,0.06);
+        flex-shrink: 0;
+        cursor: text;
+    }
+    .prism-search i { color: #888; }
+    .prism-search input {
+        border: none; background: transparent; outline: none;
+        font-size: 0.85rem; width: 120px; color: inherit;
+    }
+
+    .prism-shards {
+        display: flex;
+        flex: 1;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .prism-shards::-webkit-scrollbar { display: none; }
+
+    .shard {
+        flex: 1;
+        min-width: 80px;
+        padding: 0.6rem 0.4rem;
+        background: color-mix(in srgb, var(--shard-color) 12%, transparent);
+        border: none;
+        cursor: pointer;
+        clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%);
+        margin-left: -8px;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+    }
+    .shard:first-child { margin-left: 0; clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%); }
+    .shard:last-child { clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%); }
+
+    .shard:hover {
+        background: color-mix(in srgb, var(--shard-color) 30%, transparent);
+        z-index: 2;
+        box-shadow: 0 8px 24px color-mix(in srgb, var(--shard-color) 25%, transparent);
+    }
+    .shard.active {
+        background: color-mix(in srgb, var(--shard-color) 25%, transparent);
+    }
+    .shard:not(.active) { opacity: 0.4; }
+
+    .shard-name {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--shard-color);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    [data-theme="dark"] .prism-bar { background: rgba(30,30,46,0.8); border-color: rgba(255,255,255,0.06); }
+    [data-theme="dark"] .prism-search input { color: #e0e0e0; }
+    [data-theme="dark"] .shard { background: color-mix(in srgb, var(--shard-color) 18%, #1e1e2e); }
+    [data-theme="dark"] .shard.active { background: color-mix(in srgb, var(--shard-color) 30%, #1e1e2e); }
+
+    @@media (prefers-reduced-motion: reduce) { .prism-bar::after { animation: none; } }
+</style>
+
+@code {
+    [Parameter] public string[] AllCategories { get; set; } = [];
+    [Parameter] public HashSet<string> SelectedCategories { get; set; } = new();
+    [Parameter] public string SearchText { get; set; } = "";
+    [Parameter] public SampleBase[] AllSamples { get; set; } = [];
+    [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
+    [Parameter] public EventCallback<HashSet<string>> OnCategoriesChanged { get; set; }
+
+    private ElementReference searchInput;
+
+    private async Task OnSearch(ChangeEventArgs e) =>
+        await OnSearchChanged.InvokeAsync(e.Value?.ToString() ?? "");
+
+    private async Task ToggleCategory(string cat)
+    {
+        var copy = new HashSet<string>(SelectedCategories);
+        if (!copy.Remove(cat)) copy.Add(cat);
+        await OnCategoriesChanged.InvokeAsync(copy);
+    }
+
+    private async Task FocusSearch() =>
+        await searchInput.FocusAsync();
+
+    private static string ShortName(string cat) => cat switch
+    {
+        "Image & Filters" => "Filters",
+        "Shaders & Effects" => "Shaders",
+        "Text & Typography" => "Text",
+        "Paths & Geometry" => "Paths",
+        "Image Decoding" => "Decode",
+        _ => cat,
+    };
+}

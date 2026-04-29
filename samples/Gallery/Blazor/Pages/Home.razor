@@ -4,76 +4,97 @@
 
 <PageTitle>SkiaSharp Gallery</PageTitle>
 
-<div class="home-container">
-    <div class="hero-section">
-        <div class="hero-accent"></div>
-        <h1 class="hero-title">SkiaSharp Gallery</h1>
-        <p class="hero-subtitle">Interactive demos showcasing SkiaSharp's 2D graphics capabilities. Built with Blazor WebAssembly.</p>
+<div class="gallery-shell">
+    @* ─── Design Picker (floating) ─── *@
+    <div class="design-picker">
+        <select class="design-select" @bind="activeDesign">
+            <option value="0">A · Spectrum Ribbon</option>
+            <option value="1">B · Command Palette</option>
+            <option value="2">C · Constellation</option>
+            <option value="3">D · Tag Cloud</option>
+            <option value="4">E · Prism Bar</option>
+        </select>
     </div>
 
-    <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
-        <div class="flex-grow-1">
-            <input class="form-control search-input" type="search" placeholder="Search samples..."
-                   @bind="searchText" @bind:event="oninput" />
-        </div>
-        <div class="d-flex flex-wrap gap-1 align-items-center">
-            @foreach (var cat in allCategories)
-            {
-                var color = GetCategoryColor(cat);
-                var active = selectedCategories.Contains(cat);
-                <button class="btn btn-sm filter-chip @(active ? "active" : "")"
-                        style="--chip-color: @color;"
-                        @onclick="() => ToggleCategory(cat)">
-                    <span class="chip-dot" style="background-color: @color;"></span>
-                    @cat
-                </button>
-            }
-            <button class="btn btn-sm btn-link text-muted p-0 ms-1" @onclick="ToggleAll" style="font-size:0.75rem;">
-                @(selectedCategories.Count == allCategories.Length ? "Clear" : "All")
-            </button>
-        </div>
+    @* ─── Filter Area (swappable) ─── *@
+    <div class="filter-area">
+        @switch (activeDesign)
+        {
+            case 0:
+                <FilterRibbon AllCategories="allCategories" SelectedCategories="selectedCategories"
+                              SearchText="@searchText" AllSamples="allSamples"
+                              OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
+                break;
+            case 1:
+                <FilterPalette AllCategories="allCategories" SelectedCategories="selectedCategories"
+                               SearchText="@searchText" AllSamples="allSamples"
+                               OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
+                break;
+            case 2:
+                <FilterConstellation AllCategories="allCategories" SelectedCategories="selectedCategories"
+                                     SearchText="@searchText" AllSamples="allSamples"
+                                     OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
+                break;
+            case 3:
+                <FilterTagCloud AllCategories="allCategories" SelectedCategories="selectedCategories"
+                                SearchText="@searchText" AllSamples="allSamples"
+                                OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
+                break;
+            case 4:
+                <FilterPrism AllCategories="allCategories" SelectedCategories="selectedCategories"
+                              SearchText="@searchText" AllSamples="allSamples"
+                              OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
+                break;
+        }
     </div>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 g-3 mb-4">
+    @* ─── Masonry Grid ─── *@
+    <div class="masonry-grid">
         @{ var index = 0; }
         @foreach (var sample in GetFilteredSamples())
         {
             var i = index++;
-            var categoryColor = GetCategoryColor(sample.Category);
-            var icon = GetSampleIcon(sample.Title);
-            var supported = sample.IsSupported;
-            var isNew = IsNew(sample);
-            <div class="col">
-                @if (supported)
+            var cat = SampleManager.GetCategoryFor(sample.Category);
+            var icon = SampleManager.GetCssIcon(sample.Title);
+            var isNew = SampleManager.IsNew(sample, allSamples);
+            var cardSize = SampleManager.GetCardSize(sample, allSamples);
+            var sizeClass = cardSize switch
+            {
+                SampleCardSize.Feature => "grid-feature",
+                SampleCardSize.Compact => "grid-compact",
+                _ => "",
+            };
+
+            <div class="grid-item @sizeClass">
+                @if (sample.IsSupported)
                 {
-                    <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
-                        <SampleCard Sample="sample" CategoryColor="@categoryColor" Icon="@icon" Index="i" Supported="true" IsNew="isNew" />
+                    <a href="sample/@Uri.EscapeDataString(sample.Title)" class="grid-link">
+                        <SampleCard Sample="sample" CategoryColor="@cat.Color" Icon="@icon"
+                                    Index="i" Supported="true" IsNew="isNew" CardSize="cardSize" />
                     </a>
                 }
                 else
                 {
-                    <SampleCard Sample="sample" CategoryColor="@categoryColor" Icon="@icon" Index="i" Supported="false" IsNew="isNew" />
+                    <SampleCard Sample="sample" CategoryColor="@cat.Color" Icon="@icon"
+                                Index="i" Supported="false" IsNew="isNew" CardSize="cardSize" />
                 }
             </div>
         }
     </div>
 
-    <hr class="mt-4" />
-    <p class="text-muted small">
-        SkiaSharp: <strong>@SampleService.SkiaSharpVersion</strong> &nbsp;|&nbsp;
-        HarfBuzzSharp: <strong>@SampleService.HarfBuzzSharpVersion</strong>
+    @* ─── Footer ─── *@
+    <footer class="gallery-footer">
+        SkiaSharp <strong>@SampleService.SkiaSharpVersion</strong> ·
+        HarfBuzzSharp <strong>@SampleService.HarfBuzzSharpVersion</strong>
         @if (SampleService.BuildTimestamp is { } ts)
         {
-            <text>&nbsp;|&nbsp; Built: <strong><time datetime="@ts.UtcDateTime.ToString("o")">@ts.LocalDateTime.ToString("g")</time></strong></text>
+            <text> · Built <strong><time datetime="@ts.UtcDateTime.ToString("o")">@ts.LocalDateTime.ToString("g")</time></strong></text>
         }
-        @if (SampleService.BuildFooter is { } footer)
-        {
-            <text>&nbsp;|&nbsp; @footer</text>
-        }
-    </p>
+    </footer>
 </div>
 
 @code {
+    private int activeDesign = 3; // default to Tag Cloud
     private string searchText = string.Empty;
     private HashSet<string> selectedCategories = new();
     private string[] allCategories = Array.Empty<string>();
@@ -90,35 +111,18 @@
         selectedCategories = new HashSet<string>(allCategories);
     }
 
-    private IEnumerable<SampleBase> GetFilteredSamples()
+    private IEnumerable<SampleBase> GetFilteredSamples() =>
+        SampleManager.SearchSamples(allSamples, searchText, selectedCategories, SampleSortOrder.NewestFirst);
+
+    private void HandleSearchChanged(string text)
     {
-        return SampleManager.SearchSamples(
-            allSamples,
-            searchText,
-            selectedCategories,
-            SampleSortOrder.NewestFirst);
+        searchText = text;
+        StateHasChanged();
     }
 
-    private static string GetCategoryColor(string category) =>
-        SampleManager.GetCategoryFor(category).Color;
-
-    private static string GetSampleIcon(string title) =>
-        SampleManager.GetCssIcon(title);
-
-    private bool IsNew(SampleBase sample) =>
-        SampleManager.IsNew(sample, allSamples);
-
-    private void ToggleCategory(string category)
+    private void HandleCategoriesChanged(HashSet<string> cats)
     {
-        if (!selectedCategories.Remove(category))
-            selectedCategories.Add(category);
-    }
-
-    private void ToggleAll()
-    {
-        if (selectedCategories.Count == allCategories.Length)
-            selectedCategories.Clear();
-        else
-            selectedCategories = new HashSet<string>(allCategories);
+        selectedCategories = cats;
+        StateHasChanged();
     }
 }

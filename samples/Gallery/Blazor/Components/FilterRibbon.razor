@@ -1,0 +1,115 @@
+@* Design A: Spectrum Ribbon — chunky category tiles in a horizontal scroll row *@
+
+<div class="ribbon-container">
+    <div class="ribbon-search-tile">
+        <i class="bi bi-search"></i>
+        <input type="search" placeholder="Search…" value="@SearchText"
+               @oninput="OnSearch" class="ribbon-search-input" />
+    </div>
+    @foreach (var catName in AllCategories)
+    {
+        var cat = SampleManager.GetCategoryFor(catName);
+        var active = SelectedCategories.Contains(catName);
+        var count = SampleManager.GetSampleCount(catName, AllSamples);
+        <button class="ribbon-tile @(active ? "active" : "")" style="--tile-color: @cat.Color;"
+                @onclick="() => ToggleCategory(catName)">
+            <i class="bi @cat.CssIcon ribbon-tile-icon"></i>
+            <span class="ribbon-tile-name">@catName</span>
+            <span class="ribbon-tile-count">@count</span>
+        </button>
+    }
+</div>
+
+<style>
+    .ribbon-container {
+        display: flex;
+        gap: 0.65rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 0.5rem 0;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .ribbon-container::-webkit-scrollbar { display: none; }
+
+    .ribbon-search-tile {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 200px;
+        padding: 0.75rem 1rem;
+        background: #f4f4f5;
+        border-radius: 14px;
+        border: 2px solid transparent;
+        scroll-snap-align: start;
+        flex-shrink: 0;
+    }
+    .ribbon-search-tile i { color: #999; font-size: 1.1rem; }
+    .ribbon-search-input {
+        border: none;
+        background: transparent;
+        outline: none;
+        font-size: 0.9rem;
+        width: 100%;
+        color: inherit;
+    }
+
+    .ribbon-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 110px;
+        padding: 0.85rem 0.75rem;
+        border-radius: 14px;
+        border: 2px solid color-mix(in srgb, var(--tile-color) 25%, transparent);
+        background: color-mix(in srgb, var(--tile-color) 8%, white);
+        cursor: pointer;
+        transition: all 0.25s ease;
+        scroll-snap-align: start;
+        flex-shrink: 0;
+        gap: 0.25rem;
+    }
+    .ribbon-tile:hover {
+        border-color: var(--tile-color);
+        box-shadow: 0 4px 16px color-mix(in srgb, var(--tile-color) 20%, transparent);
+        transform: translateY(-2px);
+    }
+    .ribbon-tile.active {
+        border-color: var(--tile-color);
+        background: color-mix(in srgb, var(--tile-color) 18%, white);
+        box-shadow: 0 4px 20px color-mix(in srgb, var(--tile-color) 25%, transparent);
+    }
+    .ribbon-tile:not(.active) { opacity: 0.55; }
+
+    .ribbon-tile-icon { font-size: 1.5rem; color: var(--tile-color); }
+    .ribbon-tile-name { font-size: 0.7rem; font-weight: 600; color: #444; text-align: center; line-height: 1.2; }
+    .ribbon-tile-count { font-size: 0.65rem; color: #999; }
+
+    [data-theme="dark"] .ribbon-search-tile { background: #2a2a3e; }
+    [data-theme="dark"] .ribbon-tile { background: color-mix(in srgb, var(--tile-color) 12%, #1e1e2e); border-color: color-mix(in srgb, var(--tile-color) 20%, #333); }
+    [data-theme="dark"] .ribbon-tile.active { background: color-mix(in srgb, var(--tile-color) 22%, #1e1e2e); }
+    [data-theme="dark"] .ribbon-tile-name { color: #ccc; }
+    [data-theme="dark"] .ribbon-search-input { color: #e0e0e0; }
+</style>
+
+@code {
+    [Parameter] public string[] AllCategories { get; set; } = [];
+    [Parameter] public HashSet<string> SelectedCategories { get; set; } = new();
+    [Parameter] public string SearchText { get; set; } = "";
+    [Parameter] public SampleBase[] AllSamples { get; set; } = [];
+    [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
+    [Parameter] public EventCallback<HashSet<string>> OnCategoriesChanged { get; set; }
+
+    private async Task OnSearch(ChangeEventArgs e)
+    {
+        await OnSearchChanged.InvokeAsync(e.Value?.ToString() ?? "");
+    }
+
+    private async Task ToggleCategory(string cat)
+    {
+        var copy = new HashSet<string>(SelectedCategories);
+        if (!copy.Remove(cat)) copy.Add(cat);
+        await OnCategoriesChanged.InvokeAsync(copy);
+    }
+}

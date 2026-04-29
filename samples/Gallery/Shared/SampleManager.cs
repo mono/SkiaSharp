@@ -129,6 +129,29 @@ public static class SampleManager
 	}
 
 	// ---------------------------------------------------------------
+	// Card sizing for masonry layout
+	// ---------------------------------------------------------------
+
+	/// <summary>
+	/// Determines the card size for masonry layout.
+	/// Feature: new or animated samples. Compact: old (pre-2026). Standard: everything else.
+	/// </summary>
+	public static SampleCardSize GetCardSize(SampleBase sample, IEnumerable<SampleBase> allSamples)
+	{
+		if (IsNew(sample, allSamples) || (sample is CanvasSampleBase cs && cs.IsAnimated))
+			return SampleCardSize.Feature;
+
+		if (sample.DateAdded is { } date && date < new DateOnly(2026, 1, 1))
+			return SampleCardSize.Compact;
+
+		return SampleCardSize.Standard;
+	}
+
+	/// <summary>Returns the number of samples in a given category.</summary>
+	public static int GetSampleCount(string categoryName, IEnumerable<SampleBase> allSamples) =>
+		allSamples.Count(s => s.Category == categoryName);
+
+	// ---------------------------------------------------------------
 	// Search, filter, sort
 	// ---------------------------------------------------------------
 
@@ -183,4 +206,11 @@ public enum SampleSortOrder
 	OldestFirst,
 	Alphabetical,
 	Category,
+}
+
+public enum SampleCardSize
+{
+	Feature,
+	Standard,
+	Compact,
 }

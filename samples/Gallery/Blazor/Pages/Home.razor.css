@@ -1,103 +1,92 @@
-.home-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
+/* ============================================
+   Gallery Shell — Masonry Layout
+   ============================================ */
 
-.hero-section {
-    padding: 2rem 0 1.5rem;
+.gallery-shell {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
     position: relative;
 }
 
-.hero-accent {
-    width: 48px;
-    height: 4px;
-    background: linear-gradient(90deg, #1A237E, #1565C0);
-    border-radius: 2px;
-    margin-bottom: 1rem;
+/* ─── Design Picker (floating) ─── */
+.design-picker {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 100;
 }
 
-.hero-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1a1a2e;
-    margin-bottom: 0.35rem;
-}
-
-.hero-subtitle {
-    color: #6c757d;
-    font-size: 1.05rem;
-    margin-bottom: 0;
-}
-
-.search-wrapper {
-    padding: 0.75rem 0 0.25rem;
-    margin-bottom: 0.5rem;
-}
-
-.search-input {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.search-input:focus {
-    background-color: #fff;
-    border-color: #1565C0;
-}
-
-.category-header {
-    margin-top: 1.75rem;
-    margin-bottom: 0.85rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.05em;
-    color: #37474f;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.category-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.filter-chip {
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    padding: 0.2rem 0.7rem;
-    font-size: 0.75rem;
-    background: white;
-    color: #666;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.filter-chip.active {
-    border-color: var(--chip-color);
-    background-color: color-mix(in srgb, var(--chip-color) 10%, white);
-    color: var(--chip-color);
+.design-select {
+    appearance: none;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23666' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    transition: box-shadow 0.2s ease;
 }
 
-.filter-chip:hover {
-    border-color: var(--chip-color);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+.design-select:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
 }
 
-.chip-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
+/* ─── Filter Area ─── */
+.filter-area {
+    padding: 1.5rem 0 1rem;
+}
+
+/* ─── Masonry Grid ─── */
+.masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding-bottom: 2rem;
+}
+
+.grid-item {
+    min-height: 0;
+}
+
+.grid-feature {
+    grid-column: span 2;
+}
+
+.grid-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+}
+
+/* ─── Footer ─── */
+.gallery-footer {
+    text-align: center;
+    padding: 1.5rem 0 2rem;
+    font-size: 0.8rem;
+    color: #888;
+    border-top: 1px solid #eee;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+    .masonry-grid {
+        grid-template-columns: 1fr;
+    }
+    .grid-feature {
+        grid-column: span 1;
+    }
+    .design-picker {
+        bottom: 0.75rem;
+        right: 0.75rem;
+    }
 }
