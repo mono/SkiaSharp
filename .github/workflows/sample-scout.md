@@ -9,8 +9,9 @@ concurrency:
   cancel-in-progress: true
 timeout-minutes: 30
 steps:
-  - name: Redirect step summary into agent-writable directory
+  - name: Init submodule and redirect step summary
     run: |
+      git submodule update --init --depth=1 externals/skia
       mkdir -p /tmp/gh-aw/agent
       touch /tmp/gh-aw/agent/step-summary.md
       rm -f /tmp/gh-aw/agent-step-summary.md
@@ -21,14 +22,13 @@ permissions:
 tools:
   github:
     toolsets: [repos, issues]
-    allowed-repos: ["mono/skiasharp", "mono/skia", "google/skia"]
+    allowed-repos: ["mono/skiasharp"]
     min-integrity: none
-  bash: ["python3", "pip3", "gh", "git", "jq", "cat", "grep", "find", "sed", "sort", "head", "tail", "wc", "cp", "mkdir", "echo"]
+  bash: ["python3", "pip3", "gh", "git", "jq", "cat", "grep", "find", "sed", "sort", "head", "tail", "wc", "ls", "cp", "mkdir", "echo", "xargs", "basename"]
 network:
   allowed:
     - defaults
     - python
-    - github
 safe-outputs:
   mentions: false
   allowed-github-references: []
@@ -42,14 +42,14 @@ safe-outputs:
 
 # Weekly Sample Scout Report
 
-Scan all upstream Skia GM samples and publish a report of Gallery opportunities as a GitHub issue.
+Scan all Skia GM samples from the submodule and publish a report of Gallery opportunities as a GitHub issue.
 
 ## Step 1 — Run the sample-scout skill
 
 Read and follow the instructions in `.agents/skills/sample-scout/SKILL.md` to run a full scan.
 
 Complete all phases (Setup → Analyze → Cross-Reference → Validate & Render).
-Analyze all GM samples from `google/skia/gm/` — no filtering by milestone, always scan everything.
+The GM files are at `externals/skia/gm/*.cpp` — read them directly, no remote fetching needed.
 
 After Phase 4 completes, the outputs will be:
 - `sample-scout-report.json` — the validated JSON report

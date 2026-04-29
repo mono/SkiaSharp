@@ -1,24 +1,24 @@
 ---
 name: sample-scout
 description: >
-  Scout Google's upstream Skia GM (golden master) samples to find demos worth porting to the
-  SkiaSharp Gallery. Fetches the full gm/ directory listing from google/skia on GitHub, analyzes
-  each .cpp file to understand what it demonstrates, checks whether the required APIs exist in
-  SkiaSharp, and cross-references against existing Gallery samples to identify gaps. Produces a
-  structured JSON report and a GitHub-flavored Markdown report for filtering by interest level, API
-  availability, and sample coverage status. Use this skill whenever the user asks about "what
-  samples should we build", "what demos are we missing", "find interesting Skia GMs", "sample gap
-  analysis", "what can we port from Skia", "gallery ideas", "scout GM samples", or any request to
-  discover demo opportunities from upstream Skia. Also use proactively after adding new APIs to
-  find samples that showcase them.
+  Scout Skia GM (golden master) samples in the externals/skia submodule to find demos worth
+  porting to the SkiaSharp Gallery. Reads .cpp files directly from the checked-out submodule,
+  analyzes what each demonstrates, checks whether the required APIs exist in SkiaSharp, and
+  cross-references against existing Gallery samples to identify gaps. Produces a structured JSON
+  report and a GitHub-flavored Markdown report for filtering by interest level, API availability,
+  and sample coverage status. Use this skill whenever the user asks about "what samples should we
+  build", "what demos are we missing", "find interesting Skia GMs", "sample gap analysis", "what
+  can we port from Skia", "gallery ideas", "scout GM samples", or any request to discover demo
+  opportunities from upstream Skia. Also use proactively after adding new APIs to find samples
+  that showcase them.
 ---
 
 # Sample Scout
 
-You analyze Google's upstream Skia GM (golden master) sample files to discover demos worth porting
-to the SkiaSharp Gallery. The goal is to find visually impressive, educationally valuable samples
-that showcase SkiaSharp's capabilities — and identify which ones we can build today vs. which need
-new APIs first.
+You analyze Skia GM (golden master) sample files from the `externals/skia` submodule to discover
+demos worth porting to the SkiaSharp Gallery. The goal is to find visually impressive, educationally
+valuable samples that showcase SkiaSharp's capabilities — and identify which ones we can build today
+vs. which need new APIs first.
 
 ## Why This Matters
 
@@ -45,18 +45,22 @@ Phase 5: Present results
 
 ### Phase 1: Setup
 
-**1a. List all GM files from upstream**
+**1a. Ensure the submodule is checked out**
 
-Use the GitHub API to get the complete file listing from `google/skia/gm/`:
+The GM files live in `externals/skia/gm/`. If the submodule isn't initialized:
 
 ```bash
-gh api repos/google/skia/contents/gm --jq '.[].name' | grep '\.cpp$' | sort > gm-files.txt
+git submodule update --init --depth=1 externals/skia
+```
+
+**1b. List all GM files**
+
+```bash
+ls externals/skia/gm/*.cpp | xargs -n1 basename | sort > gm-files.txt
 wc -l < gm-files.txt
 ```
 
-IMPORTANT: Always use upstream `google/skia`, not our fork `mono/skia`. The fork may be behind.
-
-**1b. List existing Gallery samples**
+**1c. List existing Gallery samples**
 
 ```bash
 find samples/Gallery -name "*.cs" -path "*/Samples/*" | sort
@@ -64,7 +68,7 @@ find samples/Gallery -name "*.cs" -path "*/Samples/*" | sort
 
 For each sample, extract the `Title`, `Description`, and `Category` to build a coverage map.
 
-**1c. Split into chunks for parallel processing**
+**1d. Split into chunks for parallel processing**
 
 With 400+ files, split into 5 chunks of ~80-90 files each for parallel analysis.
 
@@ -72,9 +76,9 @@ With 400+ files, split into 5 chunks of ~80-90 files each for parallel analysis.
 
 Launch **5 parallel background agents** (general-purpose), each analyzing one chunk. Each agent:
 
-1. For each `.cpp` file in its chunk, fetch from GitHub:
-   ```
-   github-mcp-server-get_file_contents owner=google repo=skia path=gm/{filename}
+1. For each `.cpp` file in its chunk, read it directly from the submodule:
+   ```bash
+   cat externals/skia/gm/{filename}
    ```
 
 2. Read the file and extract:
@@ -92,9 +96,8 @@ criteria and decision guidelines.
 
 **Agent prompt template:**
 ```
-Analyze Skia GM sample files from google/skia. For EACH file, fetch it using
-github-mcp-server-get_file_contents (owner=google, repo=skia, path=gm/FILENAME),
-read it, and produce a JSON entry.
+Analyze Skia GM sample files. For EACH file, read it from externals/skia/gm/FILENAME
+and produce a JSON entry.
 
 Files: {comma-separated list}
 
