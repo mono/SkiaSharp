@@ -23,8 +23,13 @@ if not schema_path.exists():
     print(f"❌ Schema not found: {schema_path}")
     sys.exit(2)
 
-with open(path) as f:
-    data = json.load(f)
+try:
+    with open(path) as f:
+        data = json.load(f)
+except json.JSONDecodeError as e:
+    print(f"❌ Invalid JSON: {e}")
+    sys.exit(2)
+
 with open(schema_path) as f:
     schema = json.load(f)
 

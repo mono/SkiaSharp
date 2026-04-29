@@ -50,8 +50,8 @@ Phase 5: Present results
 Use the GitHub API to get the complete file listing from `google/skia/gm/`:
 
 ```bash
-gh api repos/google/skia/contents/gm --jq '.[].name' | grep '\.cpp$' | sort > /tmp/gm-files.txt
-wc -l < /tmp/gm-files.txt
+gh api repos/google/skia/contents/gm --jq '.[].name' | grep '\.cpp$' | sort > gm-files.txt
+wc -l < gm-files.txt
 ```
 
 IMPORTANT: Always use upstream `google/skia`, not our fork `mono/skia`. The fork may be behind.
