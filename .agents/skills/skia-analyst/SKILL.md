@@ -1,7 +1,7 @@
 ---
 name: skia-analyst
 description: >
-  Analyze Skia features for SkiaSharp - produces both a changelog (what shipped, marketing slides,
+  Analyze Skia features for SkiaSharp - produces a unified analysis of what shipped and what is
   migration guides) and a gap analysis (what's missing, impact/priority/effort scoring, hidden APIs).
   Given any combination of git refs, milestones, or no input at all, it scans upstream Skia release
   notes, diffs bindings, and checks C++ headers to produce a unified report. Use whenever the user
@@ -16,7 +16,7 @@ description: >
 # Skia Analyst
 
 You analyze Skia features for SkiaSharp from two angles simultaneously:
-1. **What shipped** — changelog, marketing slides, PR links, upstream engine benefits, migration guides
+1. **What shipped** — upstream engine benefits, PR links, migration guides
 2. **What's missing** — gap analysis with impact/priority/effort scoring, hidden API scan, action items
 
 Every run produces both. Output is structured JSON and rendered GitHub-flavored Markdown.
@@ -125,27 +125,24 @@ When both agents complete, merge their findings:
 1. **Deduplicate** by name/skiaApi — keep richer data from each
 2. **Resolve conflicts** — more cautious bindingStatus wins, higher impact wins
 3. **Union hidden APIs** — combine both agents' header scan discoveries
-4. **Generate slides** — marketing bullets for major+ importance findings
-5. **Generate changelog** — grouped by: Breaking Changes, New APIs, Bug Fixes, Performance,
    Security, Engine Improvements, Deprecations, Dependencies, Platform Changes
-6. **Build nextSteps** — prioritized action items from gap analysis
 
 ### Phase 4: Generate Outputs
 
 **4a. Generate JSON**
 
-Save to `/tmp/skia-analyst-YYYY-MM-DD.json`.
+Save to `skia-analyst-YYYY-MM-DD.json (in the working directory)`.
 
 **4b. Validate**
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py /tmp/skia-analyst-YYYY-MM-DD.json
+python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py skia-analyst-YYYY-MM-DD.json (in the working directory)
 ```
 
 **4c. Render Markdown**
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py /tmp/skia-analyst-YYYY-MM-DD.json
+python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-YYYY-MM-DD.json (in the working directory)
 ```
 
 This produces a GitHub-flavored Markdown file with collapsible details, suitable for pasting
@@ -156,7 +153,7 @@ into a GitHub issue or sharing as a gist.
 Show both perspectives inline:
 
 **Changelog highlights:**
-- Marketing slides (top items)
+- Top actionable items by impact
 - Breaking changes (if any)
 
 **Gap analysis highlights:**

@@ -7,8 +7,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from collections import defaultdict
-
+from collections import Counter
 
 IMPACT_EMOJI = {'transformative': '🚀', 'significant': '⭐', 'moderate': '📦', 'minor': '🔹'}
 IMPACT_DESC = {
@@ -17,32 +16,9 @@ IMPACT_DESC = {
     'moderate': 'Useful gap fill, improves safety or completeness',
     'minor': 'Small utility or completeness item',
 }
-CAT_EMOJI = {
-    'new_feature': '✨', 'codec': '🖼️', 'image': '🎞️', 'image_filter': '🔮',
-    'shader': '🎨', 'color': '🌈', 'canvas': '📐', 'path': '✏️', 'font': '🔤',
-    'utility': '🔧', 'performance': '⚡', 'behavior_change': '🔄', 'deprecation': '⚠️',
-    'security': '🔒', 'platform': '🌐', 'dependency': '📦',
-}
-CAT_NAME = {
-    'new_feature': 'New Features', 'codec': 'Codecs & Formats', 'image': 'Image Processing',
-    'image_filter': 'Image Filters', 'shader': 'Shaders', 'color': 'Color & Color Space',
-    'canvas': 'Canvas & Surface', 'path': 'Paths', 'font': 'Fonts & Typography',
-    'utility': 'Utilities', 'performance': 'Performance', 'behavior_change': 'Behavior Changes',
-    'deprecation': 'Deprecations', 'security': 'Security', 'platform': 'Platform',
-    'dependency': 'Dependencies',
-}
 BS_EMOJI = {'missing': '🟥', 'partial': '🟨', 'action_needed': '🟧'}
 PRI_EMOJI = {'critical': '🔴', 'high': '🟠', 'medium': '🟡', 'low': '⚪'}
 PRI_ORDER = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
-
-
-def render_table(items):
-    lines = ["| Name | Milestone |", "|------|-----------|"]
-    for f in sorted(items, key=lambda x: (PRI_ORDER.get(x.get('priority', 'low'), 3), x['name'])):
-        ms = f"m{f['milestone']}" if f.get('milestone') else "-"
-        lines.append(f"| {f['name']} | {ms} |")
-    lines.append("")
-    return '\n'.join(lines)
 
 
 def render_item(f):
@@ -50,10 +26,11 @@ def render_item(f):
     ms_num = f['milestone'] if f.get('milestone') else 0
     if ms_num:
         ms_text = f"m{ms_num}"
-        pad = "&nbsp;" * (4 - len(ms_text))
+        pad = "&nbsp;" * max(0, 4 - len(ms_text))
         ms = f"<code>{pad}{ms_text}</code>"
     else:
         ms = "<code>&nbsp;&nbsp;&nbsp;&nbsp;</code>"
+
     lines = ["<details>", f"<summary>{pri} {ms} <b>{f['name']}</b></summary>\n",
              f"> {f['description']}  "]
     detail = []
@@ -66,10 +43,10 @@ def render_item(f):
     if f.get('userValue'):
         detail.append(f"**User value:** {f['userValue']}")
     if f.get('milestone'):
-        ms = f"m{f['milestone']}"
+        ms_detail = f"m{f['milestone']}"
         if f.get('milestones'):
-            ms += ", " + ", ".join(f"m{m}" for m in f['milestones'])
-        detail.append(f"**Milestones:** {ms}")
+            ms_detail += ", " + ", ".join(f"m{m}" for m in f['milestones'])
+        detail.append(f"**Milestones:** {ms_detail}")
     if f.get('effort'):
         detail.append(f"**Effort:** {f['effort']}")
     if f.get('skillToUse'):
@@ -81,13 +58,6 @@ def render_item(f):
     if detail:
         lines.append(">  \n> " + "  \n> ".join(detail))
     lines.append("\n</details>\n")
-    return '\n'.join(lines)
-
-
-def render_category(cat, items):
-    lines = []
-    for f in sorted(items, key=lambda x: (PRI_ORDER.get(x.get('priority', 'low'), 3), x['name'])):
-        lines.append(render_item(f))
     return '\n'.join(lines)
 
 
@@ -116,22 +86,28 @@ def main():
     na_items = [f for f in all_findings if f.get('bindingStatus') in ('not_applicable', 'correctly_absent')]
     meta = data.get("meta", {})
 
-    md = []
-    md.append("# SkiaSharp API Gap Analysis\n")
-    md.append(f"> **{len(actionable)} actionable items** · {len(full_items)} already bound · {len(na_items)} no action needed")
-    md.append(f"> Full scan of Skia milestones m88-m148. SkiaSharp on **milestone {meta.get('currentMilestone', '?')}**.\n")
-    md.append(f"> Generated {meta.get('date', '?')} by the `skia-analyst` skill.\n")
+    # Derive subtitle from scan mode
+    mode = meta.get("scanMode", "full")
+    if mode == "diff" and meta.get("refFrom"):
+        subtitle = f"{meta['refFrom']}..{meta.get('refTo', 'HEAD')}"
+    elif mode == "windowed" and meta.get("milestoneFrom"):
+        subtitle = f"m{meta['milestoneFrom']}-m{meta.get('milestoneTo', meta.get('currentMilestone', '?'))}"
+    else:
+        subtitle = f"m{meta.get('currentMilestone', '?')} (full scan)"
 
-    # Emoji key with counts
     missing_count = sum(1 for f in actionable if f['bindingStatus'] == 'missing')
     partial_count = sum(1 for f in actionable if f['bindingStatus'] == 'partial')
     action_count = sum(1 for f in actionable if f['bindingStatus'] == 'action_needed')
 
-    # Emoji key - collapsed, two tables
+    md = []
+    md.append("# Skia Analyst Report\n")
+    md.append(f"> **{len(actionable)} actionable items** · {len(full_items)} already bound · {len(na_items)} no action needed  ")
+    md.append(f"> {subtitle} · Generated {meta.get('date', '?')}\n")
+
+    # Collapsed legend
     md.append("<details>")
     md.append("<summary><b>Legend</b></summary>\n")
-    md.append("**Status** (squares)")
-    md.append("")
+    md.append("**Status** (squares)\n")
     md.append("| Symbol | Meaning | Count |")
     md.append("|--------|---------|-------|")
     md.append(f"| 🟥 | Missing - no C API or C# wrapper | {missing_count} |")
@@ -140,8 +116,7 @@ def main():
     md.append(f"| 🟩 | Already bound | {len(full_items)} |")
     md.append(f"| ⬜ | No action needed | {len(na_items)} |")
     md.append("")
-    md.append("**Priority** (circles)")
-    md.append("")
+    md.append("**Priority** (circles)\n")
     md.append("| Symbol | Meaning |")
     md.append("|--------|---------|")
     md.append("| 🔴 | Critical - will break on next Skia bump |")
@@ -151,6 +126,7 @@ def main():
     md.append("")
     md.append("</details>\n")
 
+    # Impact summary
     md.append("| Impact | Count | What it means |")
     md.append("|--------|-------|---------------|")
     for imp in ['transformative', 'significant', 'moderate', 'minor']:
@@ -159,18 +135,16 @@ def main():
             md.append(f"| {IMPACT_EMOJI[imp]} **{imp.title()}** | {len(items)} | {IMPACT_DESC[imp]} |")
     md.append("")
 
-    # Actionable groups
+    # Findings by impact
     for imp in ['transformative', 'significant', 'moderate', 'minor']:
         items = [f for f in actionable if f.get('impact') == imp]
         if not items:
             continue
         md.append(f"## {IMPACT_EMOJI[imp]} {imp.title()}\n")
-
         for f in sorted(items, key=lambda x: (PRI_ORDER.get(x.get('priority', 'low'), 3), x['name'])):
             md.append(render_item(f))
 
-
-    # Reference: Already bound
+    # Already bound
     md.append("<details>")
     md.append(f"<summary><h2>✅ Already Bound ({len(full_items)})</h2></summary>\n")
     md.append("These Skia features are fully available in SkiaSharp.\n")
@@ -179,7 +153,7 @@ def main():
         md.append(f"- **{f['name']}**{ms} - {f['description'][:100]}")
     md.append("\n</details>\n")
 
-    # Reference: No action needed
+    # No action needed
     md.append("<details>")
     md.append(f"<summary><h2>⚪ No Action Needed ({len(na_items)})</h2></summary>\n")
     md.append("Internal Skia changes, automatic engine improvements, or correctly absent APIs.\n")
@@ -194,10 +168,9 @@ def main():
         f.write('\n'.join(md))
 
     size_kb = os.path.getsize(output_path) / 1024
-    missing = sum(1 for f in actionable if f.get('bindingStatus') == 'missing')
     transformative = sum(1 for f in actionable if f.get('impact') == 'transformative')
     print(f"✅ {output_path.name} ({size_kb:.0f} KB)")
-    print(f"   m{meta.get('currentMilestone', '?')} · {len(actionable)} actionable · {missing} missing · {transformative} transformative")
+    print(f"   {subtitle} · {len(actionable)} actionable · {missing_count} missing · {transformative} transformative")
     print(f"   Output: {output_path}")
 
 

@@ -18,13 +18,18 @@ if not path.exists():
     print(f"❌ File not found: {path}")
     sys.exit(2)
 
-schema_path = Path(__file__).parent / "../references/skia-analyst-schema.json"
+schema_path = Path(__file__).resolve().parent / "../references/skia-analyst-schema.json"
 if not schema_path.exists():
     print(f"❌ Schema not found: {schema_path}")
     sys.exit(2)
 
-with open(path) as f:
-    data = json.load(f)
+try:
+    with open(path) as f:
+        data = json.load(f)
+except json.JSONDecodeError as e:
+    print(f"❌ Invalid JSON: {e}")
+    sys.exit(2)
+
 with open(schema_path) as f:
     schema = json.load(f)
 
@@ -70,12 +75,6 @@ names = [f.get("name") for f in findings]
 dupes = [n for n in set(names) if names.count(n) > 1]
 if dupes:
     warnings.append(f"Duplicate names: {dupes[:5]}")
-
-# Slides and changelog non-empty
-if not data.get("slides", "").strip():
-    errors.append("slides field is empty")
-if not data.get("changelog", "").strip():
-    errors.append("changelog field is empty")
 
 # --- Output ---
 if warnings:
