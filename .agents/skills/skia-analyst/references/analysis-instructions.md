@@ -136,17 +136,15 @@ When a Skia bump is in the diff, extract "invisible benefits" — things users g
 
 For upstream findings: `bindingStatus` = `not_applicable`, `impact` and `priority` based on user value.
 
-## Slide Writing
+## Optional Enrichment Fields
 
-For findings with `importance` of `major` or higher, include a `slideBullet`:
-- Start with thematic emoji (🎨🖼️⚡🔒🌐🔧🐛📦🚀🔤)
-- **Bold** the feature name (max 5 words)
-- Dash + one sentence of user value (max 20 words)
-- Focus on what the user gains
-
-## Migration Guides
+For findings with `importance` of `major` or higher, include a `slideBullet` — a one-line marketing
+bullet for downstream tooling (e.g., blog post drafts). Not rendered in the Markdown report but
+captured in the JSON for other tools to use.
 
 For `importance: "breaking"` findings, include a `migrationGuide` with before/after code.
+
+For `changeType: "dependency"` findings, include `dependencyName`, `dependencyFrom`, `dependencyTo`.
 
 ## Accuracy Tips
 

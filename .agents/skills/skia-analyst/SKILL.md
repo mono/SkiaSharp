@@ -1,16 +1,16 @@
 ---
 name: skia-analyst
 description: >
-  Analyze Skia features for SkiaSharp - produces a unified analysis of what shipped and what is
-  migration guides) and a gap analysis (what's missing, impact/priority/effort scoring, hidden APIs).
-  Given any combination of git refs, milestones, or no input at all, it scans upstream Skia release
-  notes, diffs bindings, and checks C++ headers to produce a unified report. Use whenever the user
-  asks to "write release notes", "generate changelog", "what changed between versions", "what are
-  we missing", "feature gap analysis", "what should we bind next", "what's new in Skia", "scout
-  features", "diff two tags", "what shipped in this release", "summarize changes since v3.x",
-  "prepare release announcement", or any request to analyze SkiaSharp versions or Skia features.
-  Also use proactively when the user mentions a Skia milestone bump, finishes a release cycle, or
-  asks what went into a specific version.
+  Analyze Skia features for SkiaSharp - produces a unified analysis of what shipped (upstream
+  engine benefits, PR links, migration guides) and what's missing (impact/priority/effort scoring,
+  hidden APIs). Given any combination of git refs, milestones, or no input at all, it scans upstream
+  Skia release notes, diffs bindings, and checks C++ headers to produce a unified report. Use
+  whenever the user asks to "write release notes", "generate changelog", "what changed between
+  versions", "what are we missing", "feature gap analysis", "what should we bind next", "what's
+  new in Skia", "scout features", "diff two tags", "what shipped in this release", "summarize
+  changes since v3.x", "prepare release announcement", or any request to analyze SkiaSharp versions
+  or Skia features. Also use proactively when the user mentions a Skia milestone bump, finishes a
+  release cycle, or asks what went into a specific version.
 ---
 
 # Skia Analyst
@@ -125,24 +125,23 @@ When both agents complete, merge their findings:
 1. **Deduplicate** by name/skiaApi — keep richer data from each
 2. **Resolve conflicts** — more cautious bindingStatus wins, higher impact wins
 3. **Union hidden APIs** — combine both agents' header scan discoveries
-   Security, Engine Improvements, Deprecations, Dependencies, Platform Changes
 
 ### Phase 4: Generate Outputs
 
 **4a. Generate JSON**
 
-Save to `skia-analyst-YYYY-MM-DD.json (in the working directory)`.
+Save to `skia-analyst-YYYY-MM-DD.json` in the working directory.
 
 **4b. Validate**
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py skia-analyst-YYYY-MM-DD.json (in the working directory)
+python3 .agents/skills/skia-analyst/scripts/validate-skia-analyst.py skia-analyst-YYYY-MM-DD.json
 ```
 
 **4c. Render Markdown**
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-YYYY-MM-DD.json (in the working directory)
+python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-YYYY-MM-DD.json
 ```
 
 This produces a GitHub-flavored Markdown file with collapsible details, suitable for pasting
@@ -150,15 +149,11 @@ into a GitHub issue or sharing as a gist.
 
 ### Phase 5: Present Results
 
-Show both perspectives inline:
+Show highlights inline:
 
-**Changelog highlights:**
-- Top actionable items by impact
-- Breaking changes (if any)
-
-**Gap analysis highlights:**
-- Transformative and significant gaps
-- Quick wins (partial binding status)
+- **Top gaps** — transformative and significant items
+- **Quick wins** — partial binding status (C API exists, just needs C# wrapper)
+- **Breaking changes** — if any findings have `importance: breaking`
 
 Then offer next steps:
 1. "Want me to investigate any finding in more detail?"

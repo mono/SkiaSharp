@@ -1,17 +1,12 @@
 # Skia Analyst Report Schema (v1)
 
-Unified analysis: what shipped (changelog) + what's missing (gap analysis).
-
 ## Top-Level Structure
 
 ```json
 {
   "meta": { ... },
   "summary": { ... },
-  "findings": [ ... ],
-  "slides": "...",
-  "changelog": "...",
-  "nextSteps": [ ... ]
+  "findings": [ ... ]
 }
 ```
 
@@ -30,23 +25,35 @@ Unified analysis: what shipped (changelog) + what's missing (gap analysis).
 | `milestoneFrom` / `milestoneTo` | No | Milestone range when windowed |
 | `commitCount` / `prCount` | No | Commit stats when diffing |
 
+## `summary`
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `totalFindings` | Yes | Number of findings |
+| `byChangeType` | No | Counts per changeType |
+| `byImportance` | No | Counts per importance |
+| `byBindingStatus` | No | Counts per bindingStatus |
+| `byImpact` | No | Counts per impact |
+| `byPriority` | No | Counts per priority |
+| `bySource` | No | Counts per source |
+
 ## `findings` — Unified Array
 
-Every finding has BOTH lenses — what it means for the changelog AND what it means for the gap analysis.
+Every finding has BOTH lenses — what it means for the changelog AND for the gap analysis.
 
 ### Required fields (every finding)
 
-| Field | Type | Changelog lens | Gap lens |
-|-------|------|---------------|----------|
-| `name` | string | Feature title | Feature title |
-| `category` | enum | What area | What area |
-| `description` | string | What changed | What's missing |
-| `source` | enum | Where found | Where found |
-| `changeType` | enum | added/changed/fixed/upstream/... | What kind of change |
-| `importance` | enum | breaking/major/minor/patch | How big for users |
-| `bindingStatus` | enum | full/partial/missing/... | Do we have it? |
-| `impact` | enum | transformative/significant/moderate/minor | How much users care |
-| `priority` | enum | critical/high/medium/low | How urgent |
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Feature title |
+| `category` | enum | What area (new_feature, codec, image, image_filter, shader, color, canvas, path, font, utility, performance, behavior_change, deprecation, security, platform, dependency) |
+| `description` | string | What changed / what's missing |
+| `source` | enum | release-notes, header-scan, binding-audit, git-diff |
+| `changeType` | enum | added, changed, fixed, deprecated, removed, dependency, platform, upstream |
+| `importance` | enum | breaking, major, minor, patch |
+| `bindingStatus` | enum | full, partial, missing, action_needed, correctly_absent, not_applicable |
+| `impact` | enum | transformative, significant, moderate, minor |
+| `priority` | enum | critical, high, medium, low |
 
 ### Optional fields
 
@@ -54,67 +61,25 @@ Every finding has BOTH lenses — what it means for the changelog AND what it me
 |-------|------|-----------------|
 | `effort` | enum | trivial/small/medium/large — cost to implement |
 | `labels` | string[] | Freeform tags for filtering |
-| `milestone` | integer | Primary milestone |
+| `milestone` | integer | Primary Skia milestone |
 | `milestones` | integer[] | Additional milestones |
-| `pr` / `prUrl` | int/string | PR reference (changelog lens) |
+| `milestoneDeprecated` | integer | When deprecated |
+| `milestoneRemoved` | integer | When removed |
+| `pr` / `prUrl` | int/string | PR reference |
 | `commit` / `commitUrl` | string | Commit reference |
-| `author` | string | PR author |
+| `issue` / `issueUrl` | int/string | Issue reference |
+| `author` | string | PR/commit author |
 | `affectedTypes` / `affectedMethods` | string[] | C# types/methods affected |
-| `cApiFunction` / `csharpMethod` / `csharpFile` | string | Binding details |
+| `cApiFunction` / `cApiFile` | string | C API details |
+| `csharpMethod` / `csharpFile` | string | C# binding details |
 | `cppClass` / `cppHeader` / `cppMethod` | string | C++ header scan details |
-| `slideBullet` | string | Marketing bullet for this finding |
-| `migrationGuide` | string | Migration guide for breaking changes |
-| `skiaFeature` / `skiaMilestone` | string/int | Upstream Skia feature reference |
-| `dependencyName` / `dependencyFrom` / `dependencyTo` | string | Dependency version tracking |
-| `replacement` / `obsoleteMessage` | string | Deprecation details |
-| `skillToUse` | string | Which skill to invoke for follow-up |
+| `platforms` | string[] | Affected platforms |
+| `skiaApi` | string | Upstream Skia API name |
+| `skiaFeature` / `skiaMilestone` | string/int | Upstream feature reference |
 | `userValue` | string | Why an app developer would want this |
-
-## Enums
-
-### changeType
-`added`, `changed`, `fixed`, `deprecated`, `removed`, `dependency`, `platform`, `upstream`
-
-### importance
-`breaking`, `major`, `minor`, `patch`
-
-### bindingStatus
-| Value | Description |
-|-------|-------------|
-| `full` | C API + C# wrapper both exist |
-| `partial` | C API exists but C# wrapper missing |
-| `missing` | Neither C API nor C# wrapper |
-| `action_needed` | Wraps deprecated/removed Skia API |
-| `correctly_absent` | Skia removed; SkiaSharp never wrapped |
-| `not_applicable` | Doesn't need a binding |
-
-### impact
-| Value | Meaning |
-|-------|---------|
-| `transformative` | Unlocks new app categories |
-| `significant` | Major visible improvement |
-| `moderate` | Useful gap fill |
-| `minor` | Small utility, completeness |
-
-### priority
-`critical`, `high`, `medium`, `low`
-
-### source
-`release-notes`, `header-scan`, `binding-audit`, `git-diff`
-
-### category
-`new_feature`, `codec`, `image`, `image_filter`, `shader`, `color`, `canvas`, `path`, `font`, `utility`, `performance`, `behavior_change`, `deprecation`, `security`, `platform`, `dependency`
-
-## `slides` — Marketing Slides Markdown
-
-Pre-rendered emoji-prefixed bullets grouped by theme.
-
-## `changelog` — Detailed Changelog Markdown
-
-Grouped by: Breaking Changes (first), New APIs, Bug Fixes, Performance, Security, Engine Improvements, Deprecations, Dependencies, Platform Changes.
-
-## `nextSteps` — Prioritized Action Items
-
-```json
-{ "severity": "high", "action": "Bind SkMesh", "reason": "Transformative feature", "skillToUse": "api-add-review", "effort": "large" }
-```
+| `notes` | string | Additional context |
+| `slideBullet` | string | Marketing bullet (for downstream tooling) |
+| `migrationGuide` | string | Migration guide for breaking changes |
+| `replacement` / `obsoleteMessage` | string | Deprecation details |
+| `dependencyName` / `dependencyFrom` / `dependencyTo` | string | Dependency version tracking |
+| `skillToUse` | string | Which skill to invoke for follow-up |

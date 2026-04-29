@@ -7,7 +7,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from collections import Counter
+
 
 IMPACT_EMOJI = {'transformative': '🚀', 'significant': '⭐', 'moderate': '📦', 'minor': '🔹'}
 IMPACT_DESC = {
@@ -16,7 +16,6 @@ IMPACT_DESC = {
     'moderate': 'Useful gap fill, improves safety or completeness',
     'minor': 'Small utility or completeness item',
 }
-BS_EMOJI = {'missing': '🟥', 'partial': '🟨', 'action_needed': '🟧'}
 PRI_EMOJI = {'critical': '🔴', 'high': '🟠', 'medium': '🟡', 'low': '⚪'}
 PRI_ORDER = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
 
