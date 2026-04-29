@@ -6,47 +6,11 @@
 <PageTitle>SkiaSharp Gallery</PageTitle>
 
 <div class="gallery-shell">
-    @* ─── Design Picker (floating) ─── *@
-    <div class="design-picker">
-        <select class="design-select" @bind="activeDesign">
-            <option value="0">A · Spectrum Ribbon</option>
-            <option value="1">B · Command Palette</option>
-            <option value="2">C · Constellation</option>
-            <option value="3">D · Tag Cloud</option>
-            <option value="4">E · Prism Bar</option>
-        </select>
-    </div>
-
-    @* ─── Filter Area (swappable) ─── *@
+    @* ─── Filter Area ─── *@
     <div class="filter-area">
-        @switch (activeDesign)
-        {
-            case 0:
-                <FilterRibbon AllCategories="allCategories" SelectedCategories="selectedCategories"
-                              SearchText="@searchText" AllSamples="allSamples"
-                              OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
-                break;
-            case 1:
-                <FilterPalette AllCategories="allCategories" SelectedCategories="selectedCategories"
-                               SearchText="@searchText" AllSamples="allSamples"
-                               OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
-                break;
-            case 2:
-                <FilterConstellation AllCategories="allCategories" SelectedCategories="selectedCategories"
-                                     SearchText="@searchText" AllSamples="allSamples"
-                                     OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
-                break;
-            case 3:
-                <FilterTagCloud AllCategories="allCategories" SelectedCategories="selectedCategories"
-                                SearchText="@searchText" AllSamples="allSamples"
-                                OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
-                break;
-            case 4:
-                <FilterPrism AllCategories="allCategories" SelectedCategories="selectedCategories"
-                              SearchText="@searchText" AllSamples="allSamples"
-                              OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
-                break;
-        }
+        <FilterPalette AllCategories="allCategories" SelectedCategories="selectedCategories"
+                       SearchText="@searchText" AllSamples="allSamples"
+                       OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
     </div>
 
     @* ─── Masonry Grid ─── *@
@@ -88,7 +52,6 @@
 </div>
 
 @code {
-    private int activeDesign = 1; // default to Command Palette
     private string searchText = string.Empty;
     private HashSet<string> selectedCategories = new();
     private string[] allCategories = Array.Empty<string>();

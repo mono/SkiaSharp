@@ -5,15 +5,13 @@ export function initMasonry(containerSelector) {
     const container = document.querySelector(containerSelector);
     if (!container) return null;
 
-    let layoutInProgress = false;
+    let isLayouting = false;
 
     const layout = () => {
-        if (layoutInProgress) return;
-        layoutInProgress = true;
-        requestAnimationFrame(() => {
-            doLayout(container);
-            layoutInProgress = false;
-        });
+        if (isLayouting) return;
+        isLayouting = true;
+        doLayout(container);
+        isLayouting = false;
     };
 
     layout();
@@ -27,16 +25,12 @@ export function initMasonry(containerSelector) {
     observer.observe(container);
 
     // Re-layout when Blazor re-renders (new .grid-item children appear)
-    const mutObs = new MutationObserver((mutations) => {
-        // Only react if grid-items were added directly (Blazor re-render), not our columns
-        const hasNewItems = mutations.some(m =>
-            Array.from(m.addedNodes).some(n => n.classList && n.classList.contains('grid-item')));
-        if (hasNewItems) {
-            clearTimeout(timer);
-            timer = setTimeout(layout, 50);
-        }
+    const mutObs = new MutationObserver(() => {
+        if (isLayouting) return; // ignore our own DOM changes
+        clearTimeout(timer);
+        timer = setTimeout(layout, 50);
     });
-    mutObs.observe(container, { childList: true, subtree: false });
+    mutObs.observe(container, { childList: true, subtree: true });
 
     return { dispose: () => { observer.disconnect(); mutObs.disconnect(); } };
 }
