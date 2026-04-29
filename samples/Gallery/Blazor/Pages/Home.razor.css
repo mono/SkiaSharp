@@ -14,6 +14,57 @@
     padding: 1.5rem 0 1rem;
 }
 
+/* ─── Loading Skeleton ─── */
+@@keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    padding-bottom: 2rem;
+}
+
+.skeleton-card {
+    border-radius: 12px;
+    background: #f0f0f0;
+    padding: 1.2rem;
+    animation: shimmer 1.5s ease-in-out infinite;
+    background-image: linear-gradient(90deg, #f0f0f0 0px, #e8e8e8 40px, #f0f0f0 80px);
+    background-size: 400px 100%;
+}
+
+.skeleton-line {
+    height: 12px;
+    border-radius: 6px;
+    background: #e0e0e0;
+    margin-bottom: 0.6rem;
+}
+.skeleton-line.wide { width: 80%; }
+.skeleton-line.medium { width: 60%; }
+.skeleton-line.short { width: 40%; }
+
+.skeleton-accent {
+    height: 6px;
+    width: 100%;
+    border-radius: 3px;
+    background: #ddd;
+    margin-bottom: 1rem;
+}
+
+@@media (max-width: 640px) { .skeleton-grid { grid-template-columns: 1fr; } }
+@@media (min-width: 641px) and (max-width: 960px) { .skeleton-grid { grid-template-columns: repeat(2, 1fr); } }
+@@media (min-width: 961px) and (max-width: 1199px) { .skeleton-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.masonry-hidden {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
 /* ─── Masonry Grid (JS-driven columns) ─── */
 .masonry-grid {
     padding-bottom: 2rem;

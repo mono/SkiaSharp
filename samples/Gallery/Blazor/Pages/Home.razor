@@ -14,8 +14,24 @@
                        OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
     </div>
 
-    @* ─── Masonry Grid ─── *@
-    <div class="masonry-grid" id="masonry-container">
+    @* ─── Loading Skeleton ─── *@
+    @if (!masonryReady)
+    {
+        <div class="skeleton-grid">
+            @for (var s = 0; s < 12; s++)
+            {
+                <div class="skeleton-card" style="animation-delay: @(s * 80)ms;">
+                    <div class="skeleton-accent"></div>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line short"></div>
+                </div>
+            }
+        </div>
+    }
+
+    @* ─── Masonry Grid (hidden until JS layouts it) ─── *@
+    <div class="masonry-grid @(masonryReady ? "" : "masonry-hidden")" id="masonry-container">
         @{ var index = 0; }
         @foreach (var sample in GetFilteredSamples())
         {
@@ -58,6 +74,7 @@
     private string[] allCategories = Array.Empty<string>();
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
     private IJSObjectReference? masonryModule;
+    private bool masonryReady;
     private System.Timers.Timer? searchDebounce;
     private string pendingSearch = string.Empty;
 
@@ -86,10 +103,13 @@
         {
             masonryModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
             await masonryModule.InvokeVoidAsync("initMasonry", "#masonry-container");
+            masonryReady = true;
+            StateHasChanged();
+            return;
         }
 
-        // Always relayout after render to keep columns consistent
-        if (masonryModule is not null)
+        // Relayout after filter/search re-renders
+        if (masonryModule is not null && masonryReady)
         {
             await masonryModule.InvokeVoidAsync("relayout", "#masonry-container");
         }
