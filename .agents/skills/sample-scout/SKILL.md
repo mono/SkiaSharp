@@ -137,18 +137,6 @@ python3 .agents/skills/sample-scout/scripts/render-sample-scout-md.py sample-sco
 
 This produces a `.md` file with `###`/`####` headers suitable for GitHub issues.
 
-**4c. Render HTML** (optional, for interactive exploration)
-
-```bash
-python3 .agents/skills/sample-scout/scripts/render-sample-scout.py sample-scout-report.json
-```
-
-**4d. Persist** (optional, for local archival)
-
-```bash
-python3 .agents/skills/sample-scout/scripts/persist-sample-scout.py sample-scout-report.json
-```
-
 ### Phase 5: Present Results
 
 Show the summary with these key metrics:

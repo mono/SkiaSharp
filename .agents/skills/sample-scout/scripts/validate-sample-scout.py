@@ -6,6 +6,7 @@ Exits: 0=valid, 1=fixable errors (retry), 2=fatal.
 """
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 if len(sys.argv) != 2:
@@ -17,7 +18,7 @@ if not path.exists():
     print(f"❌ File not found: {path}")
     sys.exit(2)
 
-schema_path = Path(__file__).parent / "../references/sample-scout-schema.json"
+schema_path = Path(__file__).resolve().parent / "../references/sample-scout-schema.json"
 if not schema_path.exists():
     print(f"❌ Schema not found: {schema_path}")
     sys.exit(2)
@@ -56,7 +57,6 @@ if summary.get("totalFindings", 0) != actual_total:
 
 # Check byInterest counts
 by_interest = summary.get("byInterest", {})
-from collections import Counter
 actual_interest = Counter(f.get("interesting") for f in findings)
 for k, v in by_interest.items():
     if actual_interest.get(k, 0) != v:
