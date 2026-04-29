@@ -7,30 +7,26 @@
 <PageTitle>SkiaSharp Gallery</PageTitle>
 
 <div class="gallery-shell">
-    @* ─── Filter Area ─── *@
     <div class="filter-area">
         <FilterPalette AllCategories="allCategories" SelectedCategories="selectedCategories"
                        SearchText="@searchText" AllSamples="allSamples"
                        OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
     </div>
 
-    @* ─── Loading Skeleton ─── *@
-    @if (!masonryReady)
-    {
-        <div class="skeleton-grid">
-            @for (var s = 0; s < 12; s++)
-            {
-                <div class="skeleton-card" style="animation-delay: @(s * 80)ms;">
-                    <div class="skeleton-accent"></div>
-                    <div class="skeleton-line wide"></div>
-                    <div class="skeleton-line medium"></div>
-                    <div class="skeleton-line short"></div>
-                </div>
-            }
-        </div>
-    }
+    @* Skeleton — same CSS column layout as the real grid *@
+    <div class="skeleton-grid" id="skeleton">
+        @for (var s = 0; s < 12; s++)
+        {
+            <div class="skeleton-card" style="animation-delay: @(s * 80)ms;">
+                <div class="skeleton-accent"></div>
+                <div class="skeleton-line wide"></div>
+                <div class="skeleton-line medium"></div>
+                <div class="skeleton-line short"></div>
+            </div>
+        }
+    </div>
 
-    @* ─── Masonry Grid (hidden until JS layouts it) ─── *@
+    @* Card grid — CSS columns handle layout, JS only reorders for NEW distribution *@
     <div class="masonry-grid" id="masonry-container">
         @{ var index = 0; }
         @foreach (var sample in GetFilteredSamples())
@@ -57,7 +53,6 @@
         }
     </div>
 
-    @* ─── Footer ─── *@
     <footer class="gallery-footer">
         SkiaSharp <strong>@SampleService.SkiaSharpVersion</strong> ·
         HarfBuzzSharp <strong>@SampleService.HarfBuzzSharpVersion</strong>
@@ -73,8 +68,7 @@
     private HashSet<string> selectedCategories = new();
     private string[] allCategories = Array.Empty<string>();
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
-    private IJSObjectReference? masonryModule;
-    private bool masonryReady;
+    private IJSObjectReference? jsModule;
 
     protected override void OnInitialized()
     {
@@ -89,20 +83,16 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        jsModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
+
         if (firstRender)
         {
-            masonryModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
-            // Delay so skeleton shimmer is visible
-            await Task.Delay(750);
-            await masonryModule.InvokeVoidAsync("initMasonry", "#masonry-container");
-            masonryReady = true;
-            return;
+            await Task.Delay(600); // let skeleton shimmer be visible
+            await jsModule.InvokeVoidAsync("reveal", "#masonry-container", "#skeleton");
         }
-
-        // Relayout after filter/search re-renders
-        if (masonryModule is not null && masonryReady)
+        else
         {
-            await masonryModule.InvokeVoidAsync("relayout", "#masonry-container");
+            await jsModule.InvokeVoidAsync("reorder", "#masonry-container");
         }
     }
 
@@ -123,7 +113,5 @@
         StateHasChanged();
     }
 
-    public void Dispose()
-    {
-    }
+    public void Dispose() { }
 }
