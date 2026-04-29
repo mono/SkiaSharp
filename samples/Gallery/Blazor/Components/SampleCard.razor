@@ -1,18 +1,15 @@
 @{
     var isDoc = Sample is DocumentSampleBase;
     var isAnimated = Sample is CanvasSampleBase cs && cs.IsAnimated;
-    var sizeClass = CardSize switch
-    {
-        SampleCardSize.Feature => "card-feature",
-        SampleCardSize.Compact => "card-compact",
-        _ => "card-standard",
-    };
-    // Deterministic per-card height variance: hash title to get a stable padding
+    // Deterministic per-card height variance: ±10% of base via padding
     var hash = (uint)Sample.Title.GetHashCode();
-    var extraPad = 12 + (int)(hash % 40); // 12–51px extra bottom padding
+    var extraPad = 16 + (int)(hash % 24); // 16–39px range (~10% variance)
+    // Slight background tint from category color for uniqueness
+    var bgTint = (int)(hash % 3); // 0, 1, or 2 — subtle warmth variance
+    var bgClass = bgTint switch { 0 => "card-bg-warm", 1 => "card-bg-cool", _ => "card-bg-neutral" };
 }
 
-<div class="sample-card @sizeClass @(!Supported ? "sample-card-disabled" : "")"
+<div class="sample-card @bgClass @(!Supported ? "sample-card-disabled" : "")"
      style="--card-color: @CategoryColor; --card-pad: @(extraPad)px; animation-delay: @(Index * 30)ms;">
     @* Gradient top bar *@
     <div class="card-accent" style="background: linear-gradient(135deg, @CategoryColor, color-mix(in srgb, @CategoryColor 60%, #000));"></div>
@@ -34,11 +31,9 @@
             <i class="bi @Icon" style="color: @(Supported ? CategoryColor : "#777");"></i>
         </div>
         <h3 class="card-title">@Sample.Title</h3>
-        @if (CardSize != SampleCardSize.Compact && !string.IsNullOrWhiteSpace(Sample.Description))
+        @if (!string.IsNullOrWhiteSpace(Sample.Description))
         {
-            <p class="card-desc">
-                @(CardSize == SampleCardSize.Feature ? Sample.Description : TruncateDescription(Sample.Description))
-            </p>
+            <p class="card-desc">@TruncateDescription(Sample.Description)</p>
         }
     </div>
 
@@ -47,20 +42,17 @@
         <span class="meta-category" style="background-color: @(CategoryColor)1A; color: @CategoryColor;">
             @Sample.Category
         </span>
-        @if (CardSize != SampleCardSize.Compact)
+        @if (isDoc)
         {
-            @if (isDoc)
-            {
-                <span class="meta-type meta-doc">📄 Doc</span>
-            }
-            else if (isAnimated)
-            {
-                <span class="meta-type meta-animated">🎬 Live</span>
-            }
-            else
-            {
-                <span class="meta-type meta-canvas">🖼️ Canvas</span>
-            }
+            <span class="meta-type meta-doc">📄 Doc</span>
+        }
+        else if (isAnimated)
+        {
+            <span class="meta-type meta-animated">🎬 Live</span>
+        }
+        else
+        {
+            <span class="meta-type meta-canvas">🖼️ Canvas</span>
         }
         @if (!Supported)
         {
@@ -81,7 +73,6 @@
     [Parameter] public int Index { get; set; }
     [Parameter] public bool Supported { get; set; } = true;
     [Parameter] public bool IsNew { get; set; }
-    [Parameter] public SampleCardSize CardSize { get; set; } = SampleCardSize.Standard;
 
     private static string TruncateDescription(string desc) =>
         desc.Length > 100 ? desc[..97] + "…" : desc;

@@ -57,26 +57,19 @@
             var cat = SampleManager.GetCategoryFor(sample.Category);
             var icon = SampleManager.GetCssIcon(sample.Title);
             var isNew = SampleManager.IsNew(sample, allSamples);
-            var cardSize = SampleManager.GetCardSize(sample, allSamples);
-            var sizeClass = cardSize switch
-            {
-                SampleCardSize.Feature => "grid-feature",
-                SampleCardSize.Compact => "grid-compact",
-                _ => "",
-            };
 
-            <div class="grid-item @sizeClass">
+            <div class="grid-item">
                 @if (sample.IsSupported)
                 {
                     <a href="sample/@Uri.EscapeDataString(sample.Title)" class="grid-link">
                         <SampleCard Sample="sample" CategoryColor="@cat.Color" Icon="@icon"
-                                    Index="i" Supported="true" IsNew="isNew" CardSize="cardSize" />
+                                    Index="i" Supported="true" IsNew="isNew" />
                     </a>
                 }
                 else
                 {
                     <SampleCard Sample="sample" CategoryColor="@cat.Color" Icon="@icon"
-                                Index="i" Supported="false" IsNew="isNew" CardSize="cardSize" />
+                                Index="i" Supported="false" IsNew="isNew" />
                 }
             </div>
         }

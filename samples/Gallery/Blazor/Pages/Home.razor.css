@@ -45,20 +45,20 @@
     padding: 1.5rem 0 1rem;
 }
 
-/* ─── Masonry Grid (Pinterest columns) ─── */
+/* ─── Masonry Grid (left-to-right flow) ─── */
 .masonry-grid {
-    column-count: 3;
-    column-gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
     padding-bottom: 2rem;
 }
 
 .grid-item {
-    break-inside: avoid;
-    margin-bottom: 1rem;
+    min-height: 0;
 }
 
 .grid-feature {
-    /* no span — just a normal item in the column flow */
+    /* same width as others — height varies via card padding */
 }
 
 .grid-link {
@@ -79,7 +79,7 @@
 /* ─── Responsive ─── */
 @media (max-width: 640px) {
     .masonry-grid {
-        column-count: 1;
+        grid-template-columns: 1fr;
     }
     .design-picker {
         bottom: 0.75rem;
@@ -89,12 +89,12 @@
 
 @media (min-width: 641px) and (max-width: 960px) {
     .masonry-grid {
-        column-count: 2;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (min-width: 1200px) {
     .masonry-grid {
-        column-count: 4;
+        grid-template-columns: repeat(4, 1fr);
     }
 }
