@@ -10,17 +10,17 @@ concurrency:
 timeout-minutes: 30
 permissions:
   contents: read
-  issues: read
 tools:
   github:
     toolsets: [issues]
     allowed-repos: ["mono/skiasharp", "mono/skia", "google/skia"]
     min-integrity: none
-  bash: ["python3", "pip3", "gh", "git", "cat", "grep", "sort", "head", "tail"]
+  bash: ["python3", "pip3", "gh", "git", "cat", "grep", "sort", "head", "tail", "cp", "mkdir", "echo", "sed"]
 network:
   allowed:
     - defaults
     - python
+    - raw.githubusercontent.com
 safe-outputs:
   mentions: false
   allowed-github-references: []
@@ -38,15 +38,14 @@ Run a full skia-analyst scan and publish the results as a GitHub issue.
 
 ## Step 1 — Determine current milestone
 
-```bash
-cat externals/skia/include/core/SkMilestone.h
+The submodule is not checked out in the workflow environment. Fetch the milestone header
+from `mono/skia` via the GitHub MCP tool:
+
+```
+Use the github tool to get file contents from mono/skia, path: include/core/SkMilestone.h
 ```
 
-Extract the `SK_MILESTONE` number. If the submodule isn't checked out, check the latest bump commit:
-
-```bash
-git log --oneline --grep="milestone" --grep="Bump skia" --all-match -1
-```
+Extract the `SK_MILESTONE` number from the `#define SK_MILESTONE` line.
 
 ## Step 2 — Run the skia-analyst skill
 
@@ -74,21 +73,27 @@ If validation fails, fix the JSON and re-validate. Do not proceed until it passe
 ## Step 4 — Render the Markdown
 
 ```bash
-python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-report.json skia-analyst-report.md
+python3 .agents/skills/skia-analyst/scripts/render-skia-analyst.py skia-analyst-report.json skia-analyst-report.md --header-offset 2
 ```
 
-Read the rendered `skia-analyst-report.md`.
+The `--header-offset 2` flag demotes all headers by 2 levels (`#` → `###`, `##` → `####`) so they
+are valid inside a GitHub issue body where `#` and `##` are reserved for the title.
+
+Read the rendered `skia-analyst-report.md`. If it exceeds ~60,000 characters, trim lower-priority
+sections — the full JSON is preserved in the step summary as a fallback.
 
 ## Step 5 — Publish the report
 
 Create a GitHub issue with the rendered Markdown as the body. The `create-issue` safe output will
 automatically close any older issues with the same title prefix, so only the latest report is active.
 
-Use headers at `###` level or lower (not `##` or `#`) since those are reserved for the issue title.
+The issue title **must** start with `Skia API Gap Analysis:` (e.g. `Skia API Gap Analysis: m147 — 2025-01-15`)
+so `close-older-issues` matches correctly.
 
 ## Step 6 — Write step summary
 
 ```bash
+mkdir -p /tmp/gh-aw/agent
 cp skia-analyst-report.json /tmp/gh-aw/agent/
 cp skia-analyst-report.md /tmp/gh-aw/agent/
 cat skia-analyst-report.md >> /tmp/gh-aw/agent/step-summary.md

@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """Render a Skia Analyst JSON report as GitHub-flavored Markdown.
 
-Usage: python3 render-skia-analyst.py <path-to-json> [output.md]
+Usage: python3 render-skia-analyst.py <path-to-json> [output.md] [--header-offset N]
+
+Options:
+  --header-offset N   Demote all Markdown headers by N levels (default 0).
+                      Use --header-offset 2 when embedding in a GitHub issue
+                      so # becomes ### (issue titles reserve # and ##).
 """
+import argparse
 import json
 import os
 import sys
@@ -61,16 +67,24 @@ def render_item(f):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 render-skia-analyst.py <path-to-json> [output.md]")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Render Skia Analyst JSON as Markdown")
+    parser.add_argument("json_path", help="Path to the JSON report")
+    parser.add_argument("output_path", nargs="?", help="Output .md path (default: same as input with .md)")
+    parser.add_argument("--header-offset", type=int, default=0,
+                        help="Demote headers by N levels (e.g. 2 turns # into ###)")
+    args = parser.parse_args()
 
-    json_path = Path(sys.argv[1])
+    json_path = Path(args.json_path)
     if not json_path.exists():
         print(f"❌ JSON file not found: {json_path}")
         sys.exit(1)
 
-    output_path = Path(sys.argv[2]) if len(sys.argv) >= 3 else json_path.with_suffix(".md")
+    output_path = Path(args.output_path) if args.output_path else json_path.with_suffix(".md")
+    h_off = args.header_offset
+
+    def h(level):
+        """Return a Markdown header prefix at the given level, offset by h_off."""
+        return '#' * (level + h_off)
 
     try:
         with open(json_path, encoding="utf-8") as f:
@@ -99,7 +113,7 @@ def main():
     action_count = sum(1 for f in actionable if f['bindingStatus'] == 'action_needed')
 
     md = []
-    md.append("# Skia Analyst Report\n")
+    md.append(f"{h(1)} Skia Analyst Report\n")
     md.append(f"> **{len(actionable)} actionable items** · {len(full_items)} already bound · {len(na_items)} no action needed  ")
     md.append(f"> {subtitle} · Generated {meta.get('date', '?')}\n")
 
@@ -139,13 +153,14 @@ def main():
         items = [f for f in actionable if f.get('impact') == imp]
         if not items:
             continue
-        md.append(f"## {IMPACT_EMOJI[imp]} {imp.title()}\n")
+        md.append(f"{h(2)} {IMPACT_EMOJI[imp]} {imp.title()}\n")
         for f in sorted(items, key=lambda x: (PRI_ORDER.get(x.get('priority', 'low'), 3), x['name'])):
             md.append(render_item(f))
 
     # Already bound
+    hl = h_off + 2
     md.append("<details>")
-    md.append(f"<summary><h2>✅ Already Bound ({len(full_items)})</h2></summary>\n")
+    md.append(f"<summary><h{hl}>✅ Already Bound ({len(full_items)})</h{hl}></summary>\n")
     md.append("These Skia features are fully available in SkiaSharp.\n")
     for f in sorted(full_items, key=lambda x: x['name']):
         ms = f" (m{f['milestone']})" if f.get('milestone') else ""
@@ -154,7 +169,7 @@ def main():
 
     # No action needed
     md.append("<details>")
-    md.append(f"<summary><h2>⚪ No Action Needed ({len(na_items)})</h2></summary>\n")
+    md.append(f"<summary><h{hl}>⚪ No Action Needed ({len(na_items)})</h{hl}></summary>\n")
     md.append("Internal Skia changes, automatic engine improvements, or correctly absent APIs.\n")
     for f in sorted(na_items, key=lambda x: x['name']):
         bs = '🚫' if f['bindingStatus'] == 'correctly_absent' else 'N/A'
