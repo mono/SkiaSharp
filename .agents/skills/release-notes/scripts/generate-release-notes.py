@@ -384,30 +384,6 @@ def _fetch_pr(num, repo):
     }
 
 
-def _fetch_releases(repo, limit=50):
-    # type: (str, int) -> list[dict]
-    """Fetch releases in the format expected by the script.
-
-    Tries gh CLI first, falls back to REST API.
-    Returns list of {tagName, isPrerelease}.
-    """
-    if _check_gh_cli():
-        try:
-            raw = gh(["release", "list", "--repo", repo, "--limit", str(limit),
-                      "--json", "tagName,isPrerelease"])
-            return json.loads(raw)
-        except (subprocess.CalledProcessError, json.JSONDecodeError):
-            pass  # fall through to REST API
-
-    # REST API fallback
-    releases_raw = json.loads(_github_rest_get(
-        "repos/{}/releases?per_page={}".format(repo, limit)))
-    return [
-        {"tagName": r.get("tag_name", ""), "isPrerelease": r.get("prerelease", False)}
-        for r in releases_raw
-    ]
-
-
 def get_prs_from_diff(from_ref, to_ref):
     # type: (str, str) -> list[dict]
     """Extract merged PRs from git log between two refs.
@@ -656,24 +632,21 @@ def cmd_branch(branch):
     is_servicing = branch.endswith(".x")
     status = "unreleased"
     if not is_main and not is_servicing:
-        try:
-            releases = _fetch_releases(REPO, limit=50)
-            has_stable = False
-            has_preview = False
-            for rel in releases:
-                tag_base = rel["tagName"].lstrip("v").split("-")[0]
-                if tag_base == version:
-                    if rel.get("isPrerelease", False):
-                        has_preview = True
-                    else:
-                        has_stable = True
-            if has_stable:
-                status = "stable"
-            elif has_preview:
-                status = "preview"
-        except (subprocess.CalledProcessError, json.JSONDecodeError,
-                urllib.error.URLError):
-            pass
+        tags = run(["git", "tag", "-l", "v{}*".format(version)], check=False)
+        has_stable = False
+        has_preview = False
+        for tag in tags.splitlines():
+            tag = tag.strip()
+            if not tag:
+                continue
+            if "-preview" in tag or "-rc" in tag:
+                has_preview = True
+            else:
+                has_stable = True
+        if has_stable:
+            status = "stable"
+        elif has_preview:
+            status = "preview"
 
     print("Branch: {}".format(branch))
     print("Version: {}".format(version))
