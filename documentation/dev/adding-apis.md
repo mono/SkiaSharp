@@ -229,19 +229,253 @@ public static SKImage FromEncodedData(SKData data) {
 ## Build & Test Commands
 
 ```bash
-# Step 1: Regenerate P/Invoke (after C API changes)
+# Step 1: Build native library (REQUIRED after C API changes)
+dotnet cake --target=externals-macos --arch=arm64    # macOS Apple Silicon
+dotnet cake --target=externals-android --arch=arm64  # Android ARM64
+
+# Step 2: Regenerate P/Invoke (after C API changes)
 pwsh ./utils/generate.ps1
 
-# Step 2: Build C# bindings
+# Step 3: Build C# bindings
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 
-# Step 3: Run tests (MANDATORY - not optional)
-dotnet test tests/SkiaSharp.Tests.Console.sln
-
-# Alternative: Use Cake for everything
-dotnet cake --target=libs         # Build
-dotnet cake --target=tests        # Test
+# Step 4: Run tests (MANDATORY - not optional)
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
+
+> **Note:** If `bin/gn` is killed with error 137 after a Docker WASM build, re-sign it:
+> `codesign --force --sign - externals/skia/bin/gn`
+
+---
+
+## C API Struct Conversion Patterns
+
+### DEF_MAP Macros (sk_types_priv.h)
+
+The C API uses macros to generate bidirectional conversion functions between C and C++
+types. Each generates 8 inline functions: `As*()` (C→C++) and `To*()` (C++→C) in
+const/non-const × reference/pointer variants.
+
+| Macro | Forward Declaration | When to Use |
+|-------|-------------------|-------------|
+| `DEF_CLASS_MAP(SkType, sk_type, Name)` | `class SkType;` | Opaque class types (SkCanvas, SkPaint) |
+| `DEF_CLASS_MAP_WITH_NS(Ns, SkType, sk_type, Name)` | `class SkType;` in namespace | Namespaced classes (skottie::Animation) |
+| `DEF_STRUCT_MAP(SkType, sk_type, Name)` | `struct SkType;` | POD structs not yet included (SkRect, SkPoint) |
+| `DEF_MAP(SkType, sk_type, Name)` | none | Types already declared via #include |
+
+```cpp
+// For a class — forward-declares the class
+DEF_CLASS_MAP(SkCanvas, sk_canvas_t, Canvas)
+// Generates: AsCanvas(), ToCanvas()
+
+// For a namespaced class
+DEF_CLASS_MAP_WITH_NS(skottie, Animation, skottie_animation_t, SkottieAnimation)
+// Generates: AsSkottieAnimation(), ToSkottieAnimation()
+
+// For a POD struct — forward-declares the struct
+DEF_STRUCT_MAP(SkRect, sk_rect_t, Rect)
+// Generates: AsRect(), ToRect()
+
+// For an already-included type (nested class, etc.)
+#include "include/core/SkFontArguments.h"
+DEF_MAP(SkFontArguments::VariationPosition::Coordinate,
+        sk_fontarguments_variation_position_coordinate_t,
+        VariationPositionCoordinate)
+```
+
+### Layout-Compatible vs Manual Conversion
+
+If the C struct has identical layout to the C++ type, use `DEF_MAP` (reinterpret_cast).
+If the layout differs (e.g., C++ uses a getter method where C has a bool field), write
+a manual converter:
+
+```cpp
+// Layout-compatible — use DEF_MAP
+DEF_MAP(SkFontArguments::VariationPosition::Coordinate,
+        sk_fontarguments_variation_position_coordinate_t,
+        VariationPositionCoordinate)
+
+// Not layout-compatible — manual converter
+// (SkFontParameters::Variation::Axis uses isHidden() getter + uint16_t flags,
+//  but C struct has a bool field)
+static inline sk_fontarguments_variation_axis_t ToVariationAxis(
+    const SkFontParameters::Variation::Axis& axis) {
+    return { axis.tag, axis.min, axis.def, axis.max, axis.isHidden() };
+}
+```
+
+### Parameter Bag Helpers
+
+For complex functions that bundle multiple C structs into one C++ object:
+
+```cpp
+static inline SkFontArguments AsSkFontArguments(
+    const sk_fontarguments_variation_position_coordinate_t* coordinates,
+    int coordinateCount, int collectionIndex) {
+    SkFontArguments args;
+    args.setCollectionIndex(collectionIndex);
+    args.setVariationDesignPosition(
+        {AsVariationPositionCoordinate(coordinates), coordinateCount});
+    return args;
+}
+```
+
+### ABI Verification (sk_structs.cpp)
+
+Every layout-compatible struct mapping **must** have a `static_assert` in
+`externals/skia/src/c/sk_structs.cpp` to catch ABI drift at compile time:
+
+```cpp
+static_assert(sizeof(sk_fontarguments_variation_position_coordinate_t) ==
+    sizeof(SkFontArguments::VariationPosition::Coordinate),
+    ASSERT_MSG(SkFontArguments::VariationPosition::Coordinate,
+               sk_fontarguments_variation_position_coordinate_t));
+```
+
+### New Typedefs
+
+For simple `uint32_t` types (tags, identifiers), define a C typedef:
+
+```cpp
+// In the header (sk_typeface.h)
+typedef uint32_t sk_fourbytetag_t;
+```
+
+Then map it in `libSkiaSharp.json` so the generator uses the C# wrapper type:
+
+```json
+"sk_fourbytetag_t": { "cs": "SKFourByteTag" }
+```
+
+---
+
+## Generator Configuration (libSkiaSharp.json)
+
+The generator reads `binding/libSkiaSharp.json` to map C types to C# types.
+
+### Type Aliases
+
+```json
+"sk_color_t": { "cs": "UInt32" },
+"sk_fourbytetag_t": { "cs": "SKFourByteTag" }
+```
+
+### Struct Mapping with Member Renames
+
+```json
+"sk_fontarguments_variation_axis_t": {
+    "cs": "SKFontVariationAxis",
+    "members": {
+        "def": "Default",
+        "isHidden": "IsHidden"
+    }
+}
+```
+
+The `members` dictionary is `Dictionary<string, string>` — name remapping only.
+To change a field's C# type, define a C typedef and map it at the type level.
+
+### Struct Options
+
+| Option | Effect | Example |
+|--------|--------|---------|
+| `"cs"` | C# type name | `"SKFontVariationAxis"` |
+| `"members"` | Rename fields | `{ "def": "Default" }` |
+| `"internal"` | Hide from public API | GPU native structs |
+| `"properties": false` | Generate private fields only | Complex structs with manual properties |
+| `"readonly"` | Generate readonly struct | Immutable value types |
+| `"flags"` | Generate `[Flags]` enum | Bitfield enums |
+
+### Function Parameter Overrides
+
+Override specific parameters by index (0-based, -1 for return type):
+
+```json
+"sk_fontmgr_legacy_create_typeface": {
+    "parameters": {
+        "1": "IntPtr"
+    }
+}
+```
+
+String marshaling:
+```json
+"gr_glinterface_has_extension": {
+    "parameters": {
+        "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+    }
+}
+```
+
+Delegate overrides:
+```json
+"gr_vk_func_ptr": {
+    "convention": "stdcall",
+    "generateProxy": false
+}
+```
+
+---
+
+## GPU-Specific Patterns
+
+GPU types use the `GR` prefix and are guarded by `#if defined(SK_GANESH)` in the
+C API and by platform-conditional compilation in C#.
+
+### Prefix Conventions
+
+| Prefix | Meaning | Examples |
+|--------|---------|----------|
+| `SK` | Core SkiaSharp | `SKCanvas`, `SKPaint` |
+| `GR` | GPU rendering | `GRContext`, `GRBackendTexture` |
+| `GRGl` | OpenGL-specific | `GRGlInterface`, `GRGlTextureInfo` |
+| `GRVk` | Vulkan-specific | `GRVkBackendContext`, `GRVkExtensions` |
+| `GRMtl` | Metal-specific | `GRMtlBackendContext`, `GRMtlTextureInfo` |
+| `GRD3D` | Direct3D 12-specific | `GRD3DBackendContext` |
+
+### C API Guards
+
+```cpp
+// sk_types_priv.h
+#if defined(SK_GANESH)
+  DEF_STRUCT_MAP(GrGLTextureInfo, gr_gl_textureinfo_t, GrGLTextureInfo)
+
+  #if defined(SK_VULKAN)
+    DEF_MAP_WITH_NS(skgpu, VulkanYcbcrConversionInfo, ...)
+  #endif
+
+  #if defined(SK_DIRECT3D)
+    DEF_STRUCT_MAP(GrD3DBackendContext, ...)
+  #endif
+#endif
+```
+
+### C# Platform Guards
+
+```csharp
+// Metal — Apple platforms only
+#if __IOS__ || __MACOS__ || __TVOS__
+    public IMTLDevice Device { get; set; }
+#endif
+```
+
+### JSON Mapping for GPU Types
+
+GPU native structs are typically `internal`:
+```json
+"gr_vk_backendcontext_t": { "cs": "GRVkBackendContextNative", "internal": true },
+"gr_mtl_textureinfo_t": { "cs": "GRMtlTextureInfoNative", "internal": true }
+```
+
+Public GPU structs get member renames:
+```json
+"gr_gl_textureinfo_t": {
+    "cs": "GRGlTextureInfo",
+    "members": { "fID": "Id" }
+}
+```
+
+---
 
 ## Common Mistakes
 
@@ -251,4 +485,7 @@ dotnet cake --target=tests        # Test
 | Forgot `git add externals/skia` in parent | Parent repo doesn't reference your C API changes | Stage submodule after committing inside it |
 | Manually edited `*.generated.cs` | Binding mismatch, overwrites on next generation | Always run `pwsh ./utils/generate.ps1` |
 | Only built, didn't test | Functionality may not work despite compiling | Always run tests — passing tests required |
-| Generator or tests fail | Incomplete implementation | Retry once; if still failing, stop and notify developer to fix environment |
+| Used `externals-download` after C API change | Downloaded natives don't have your new functions | Use `externals-{platform}` to build |
+| No `static_assert` for DEF_MAP struct | ABI mismatch goes undetected | Add to `sk_structs.cpp` |
+| Missing `#include` in `sk_types_priv.h` | C struct types not declared | Include the C header before DEF_MAP |
+| Generator or tests fail | Incomplete implementation | Retry once; if still failing, stop and investigate |

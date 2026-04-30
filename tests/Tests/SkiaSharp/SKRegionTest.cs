@@ -70,8 +70,9 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void FromPathWithoutClipDoesNotCreateEmptyRegion()
 		{
-			using var path = new SKPath();
-			path.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var builder = new SKPathBuilder();
+			builder.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var path = builder.Detach();
 
 			using var region = new SKRegion(path);
 
@@ -83,8 +84,9 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void SetPathWithoutClipDoesNotCreateEmptyRegion()
 		{
-			using var path = new SKPath();
-			path.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var builder = new SKPathBuilder();
+			builder.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var path = builder.Detach();
 
 			using var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path);
@@ -96,8 +98,9 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void SetPathWithEmptyClipDoesCreatesEmptyRegion()
 		{
-			using var path = new SKPath();
-			path.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var builder = new SKPathBuilder();
+			builder.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var path = builder.Detach();
 
 			using var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path, new SKRegion());
@@ -115,8 +118,9 @@ namespace SkiaSharp.Tests
 			clip.SetRect(clipRect);
 
 			var rect = new SKRectI(10, 20, 30, 40);
-			using var path = new SKPath();
-			path.AddRect(rect);
+			using var builder = new SKPathBuilder();
+			builder.AddRect(rect);
+			using var path = builder.Detach();
 
 			using var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path, clip);

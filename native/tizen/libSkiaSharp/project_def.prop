@@ -43,7 +43,12 @@ USER_C_OPTS = -fPIC -g -fno-exceptions -fstrict-aliasing -Wall -Wextra          
               -Winit-self -Wpointer-arith -Wsign-compare -Wno-unused-parameter       \
               -Werror -Os -ffunction-sections -fdata-sections -fno-rtti
 
-USER_CPP_OPTS = $(USER_C_OPTS) -std=c++17 -fno-threadsafe-statics -Wnon-virtual-dtor
+# -std=c++2a (clang 10's spelling for C++20; clang only added the c++20
+# alias in clang 12). Required because Skia post-m143 uses C++20 stdlib
+# features — e.g. std::countl_zero / countr_zero / popcount in
+# src/base/SkMathPriv.h, which Tizen's gcc-9.2 libstdc++ gates behind
+# `#if __cplusplus > 201703L`.
+USER_CPP_OPTS = $(USER_C_OPTS) -std=c++2a -fno-threadsafe-statics -Wnon-virtual-dtor
 
 USER_SRCS = $(skia_root)/src/xamarin/sk_xamarin.cpp                 \
             $(skia_root)/src/xamarin/SkiaKeeper.c                   \

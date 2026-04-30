@@ -8,6 +8,7 @@ namespace SkiaSharp
 {
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
+		private static readonly SKTypeface empty;
 		private static readonly SKTypeface defaultTypeface;
 
 		private SKFont font;
@@ -19,7 +20,17 @@ namespace SkiaSharp
 			//       instances are created before any access is made to them.
 			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
 
-			defaultTypeface = new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ());
+			empty = new SKTypefaceStatic (SkiaApi.sk_typeface_create_empty ());
+
+			// Use legacyMakeTypeface(null) to get the platform default — this uses
+			// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
+			// then falls back to style set 0). matchFamilyStyle(null) doesn't work
+			// on Android/NDK/Custom because onMatchFamily(null) returns null.
+			var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
+				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
+			defaultTypeface = matched == IntPtr.Zero
+				? empty
+				: new SKTypefaceStatic (matched);
 		}
 
 		internal static void EnsureStaticInstanceAreInitialized ()
@@ -40,9 +51,17 @@ namespace SkiaSharp
 
 		public static SKTypeface Default => defaultTypeface;
 
+		public static SKTypeface Empty => empty;
+
+		public bool IsEmpty => GlyphCount == 0;
+
 		public static SKTypeface CreateDefault ()
 		{
-			return GetObject (SkiaApi.sk_typeface_create_default ());
+			var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
+				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
+			return matched == IntPtr.Zero
+				? empty
+				: GetObject (matched);
 		}
 
 		// FromFamilyName
@@ -57,19 +76,8 @@ namespace SkiaSharp
 			return FromFamilyName (familyName, SKFontStyle.Normal);
 		}
 
-		public static SKTypeface FromFamilyName (string familyName, SKFontStyle style)
-		{
-			if (style == null)
-				throw new ArgumentNullException (nameof (style));
-
-			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull:true);
-			fixed (byte* familyNamePointer = familyNameUtf8ByteList)
-			{
-				var tf = GetObject (SkiaApi.sk_typeface_create_from_name (new IntPtr (familyNamePointer), style.Handle));
-				tf?.PreventPublicDisposal ();
-				return tf;
-			}
-		}
+		public static SKTypeface FromFamilyName (string familyName, SKFontStyle style) =>
+			SKFontManager.Default.MatchFamily (familyName, style) ?? Default;
 
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
 		{
@@ -78,47 +86,17 @@ namespace SkiaSharp
 
 		// From*
 
-		public static SKTypeface FromFile (string path, int index = 0)
-		{
-			if (path == null)
-				throw new ArgumentNullException (nameof (path));
+		public static SKTypeface FromFile (string path, int index = 0) =>
+			SKFontManager.Default.CreateTypeface (path, index);
 
-			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8, true);
-			fixed (byte* u = utf8path) {
-				return GetObject (SkiaApi.sk_typeface_create_from_file (u, index));
-			}
-		}
+		public static SKTypeface FromStream (Stream stream, int index = 0) =>
+			SKFontManager.Default.CreateTypeface (stream, index);
 
-		public static SKTypeface FromStream (Stream stream, int index = 0)
-		{
-			if (stream == null)
-				throw new ArgumentNullException (nameof (stream));
+		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0) =>
+			SKFontManager.Default.CreateTypeface (stream, index);
 
-			return FromStream (new SKManagedStream (stream, true), index);
-		}
-
-		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0)
-		{
-			if (stream == null)
-				throw new ArgumentNullException (nameof (stream));
-
-			if (stream is SKManagedStream managed) {
-				stream = managed.ToMemoryStream ();
-				managed.Dispose ();
-			}
-
-			var typeface = GetObject (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
-			stream.RevokeOwnership (typeface);
-			return typeface;
-		}
-
-		public static SKTypeface FromData (SKData data, int index = 0)
-		{
-			if (data == null)
-				throw new ArgumentNullException (nameof (data));
-
-			return GetObject (SkiaApi.sk_typeface_create_from_data (data.Handle, index));
-		}
+		public static SKTypeface FromData (SKData data, int index = 0) =>
+			SKFontManager.Default.CreateTypeface (data, index);
 
 		// Properties
 
@@ -269,7 +247,7 @@ namespace SkiaSharp
 			GetFont ().ContainsGlyphs (text);
 
 		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
-			ContainsGlyphs (text, encoding);
+			GetFont ().ContainsGlyphs (text, encoding);
 
 		public bool ContainsGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
 			GetFont ().ContainsGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
@@ -360,6 +338,108 @@ namespace SkiaSharp
 				adjustments.Slice(0, glyphs.Length - 1).Clear ();
 
 			return res;
+		}
+
+		// Variable fonts
+
+		public int VariationDesignParameterCount =>
+			SkiaApi.sk_typeface_get_variation_design_parameters (Handle, null, 0);
+
+		public SKFontVariationAxis[] VariationDesignParameters
+		{
+			get {
+				var count = VariationDesignParameterCount;
+				if (count <= 0)
+					return Array.Empty<SKFontVariationAxis> ();
+
+				var axes = new SKFontVariationAxis[count];
+				fixed (SKFontVariationAxis* ptr = axes) {
+					SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, count);
+				}
+				return axes;
+			}
+		}
+
+		public int GetVariationDesignParameters (Span<SKFontVariationAxis> axes)
+		{
+			if (axes.Length == 0)
+				return 0;
+
+			fixed (SKFontVariationAxis* ptr = axes) {
+				var total = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, axes.Length);
+				if (total <= axes.Length)
+					return total;
+
+				// Skia is all-or-nothing: if buffer is undersized it writes nothing.
+				// Retry with a pooled buffer and copy what fits.
+				using var temp = Utils.RentArray<SKFontVariationAxis> (total);
+				fixed (SKFontVariationAxis* tempPtr = temp.Span) {
+					SkiaApi.sk_typeface_get_variation_design_parameters (Handle, tempPtr, total);
+				}
+				temp.Span.Slice (0, axes.Length).CopyTo (axes);
+				return axes.Length;
+			}
+		}
+
+		public int VariationDesignPositionCount =>
+			SkiaApi.sk_typeface_get_variation_design_position (Handle, null, 0);
+
+		public SKFontVariationPositionCoordinate[] VariationDesignPosition
+		{
+			get {
+				var count = VariationDesignPositionCount;
+				if (count <= 0)
+					return Array.Empty<SKFontVariationPositionCoordinate> ();
+
+				var coords = new SKFontVariationPositionCoordinate[count];
+				fixed (SKFontVariationPositionCoordinate* ptr = coords) {
+					SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, count);
+				}
+				return coords;
+			}
+		}
+
+		public int GetVariationDesignPosition (Span<SKFontVariationPositionCoordinate> coordinates)
+		{
+			if (coordinates.Length == 0)
+				return 0;
+
+			fixed (SKFontVariationPositionCoordinate* ptr = coordinates) {
+				var total = SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, coordinates.Length);
+				if (total <= coordinates.Length)
+					return total;
+
+				// Skia is all-or-nothing: if buffer is undersized it writes nothing.
+				// Retry with a pooled buffer and copy what fits.
+				using var temp = Utils.RentArray<SKFontVariationPositionCoordinate> (total);
+				fixed (SKFontVariationPositionCoordinate* tempPtr = temp.Span) {
+					SkiaApi.sk_typeface_get_variation_design_position (Handle, tempPtr, total);
+				}
+				temp.Span.Slice (0, coordinates.Length).CopyTo (coordinates);
+				return coordinates.Length;
+			}
+		}
+
+		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position)
+		{
+			fixed (SKFontVariationPositionCoordinate* ptr = position) {
+				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, ptr, position.Length, 0, 0, null, 0));
+			}
+		}
+
+		public SKTypeface Clone (int paletteIndex)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+			return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, null, 0, 0, paletteIndex, null, 0));
+		}
+
+		public SKTypeface Clone (SKFontArguments args)
+		{
+			fixed (SKFontVariationPositionCoordinate* posPtr = args.VariationDesignPosition)
+			fixed (SKFontPaletteOverride* palPtr = args.PaletteOverrides) {
+				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, posPtr, args.VariationDesignPosition.Length, args.CollectionIndex, args.PaletteIndex, palPtr, args.PaletteOverrides.Length));
+			}
 		}
 
 		//

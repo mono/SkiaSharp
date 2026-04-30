@@ -303,5 +303,11 @@ namespace SkiaSharp.Tests
 				return tf1.Handle;
 			}
 		}
+
+		[SkippableFact]
+		public void FontManagerDefaultHasValidHandle()
+		{
+			Assert.NotEqual(IntPtr.Zero, SKFontManager.Default.Handle);
+		}
 	}
 }

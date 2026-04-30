@@ -88,6 +88,8 @@ Single source of truth for all commands:
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
+| **Diff branch for release notes** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main` |
+| **Update release notes TOC** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc` |
 
 ### When to Use Which Bootstrap
 
@@ -132,6 +134,8 @@ C# Wrapper (binding/SkiaSharp/)  ->  P/Invoke  ->  C API (externals/skia/src/c/)
 | `*.generated.cs` | No | Run `pwsh ./utils/generate.ps1` |
 | `docs/` | No | Auto-generated |
 | `documentation/dev/` | Yes | Architecture guides |
+| `documentation/docfx/releases/` | Yes | Website release notes (template-formatted) |
+| `documentation/docfx/releases/TEMPLATE.md` | Yes | Template for AI formatting |
 
 ---
 
@@ -329,18 +333,20 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Reproduce bug | `/issue-repro` | "repro #NNNN", "reproduce issue", "create reproduction" |
 | Fix bug | `/issue-fix` | "investigate #NNNN", "fix issue", crash, exception, segfault, "doesn't work" |
 | Bulk process issues | `/issue-bulk-process` | "triage these issues", "process issues #1 #2 #3" |
-| Add new API | `/add-api` | "expose", "wrap method", issue requests new functionality |
+| Add new API | `/api-add-review` | "expose", "wrap method", issue requests new functionality |
 | Update dependency | `/native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
 | Start release | `/release-branch` | "release now", "start release X" |
 | Test release | `/release-testing` | "test the release", "verify packages" |
 | Publish release | `/release-publish` | "push to nuget", "tag release" |
-| Audit release notes | `/release-notes-audit` | "compare Skia changes", "API gap analysis" |
+| Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
+| Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "changelog", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |
 | PR commit message | `/pr-commit-message` | "write commit message for PR" |
 | Validate samples | `/validate-samples` | "build samples", "test sample projects" |
+| Scout GM samples | `/sample-scout` | "find demos to port", "what samples are we missing", "gallery ideas" |
 | Create/improve skill | `/skill-creator` | "create a new skill", "improve skill X" |
 
 ### Issue Pipeline (3 steps)
@@ -362,7 +368,7 @@ See [documentation/dev/issue-pipeline.md](documentation/dev/issue-pipeline.md) f
 | "triage", "classify", "analyze issue" | Triage | `/issue-triage` |
 | "repro", "reproduce", "reproduction" | Reproduction | `/issue-repro` |
 | "crash", "exception", "wrong", "fails", "broken", "segfault" | Bug | `/issue-fix` |
-| "add", "expose", "missing API", "feature request" | New API | `/add-api` |
+| "add", "expose", "missing API", "feature request" | New API | `/api-add-review` |
 | "docs", "documentation", "XML", "comments" | Docs | `/api-docs` |
 | CVE, security, vulnerability | Security | `/security-audit` then `/native-dependency-update` |
 

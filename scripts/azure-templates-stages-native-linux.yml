@@ -26,14 +26,26 @@ stages:
               additionalArgs: --verifyExcluded=fontconfig
               gnArgs: skia_use_fontconfig=false
           matrix:
-            - arch: loongarch64
-              docker: scripts/Docker/debian/13
-              target: externals-linux-clang-cross
-              additionalArgs: --verifyGlibcMax=2.38
+            # Debian 13 / Trixie (gcc-14, glibc 2.38) — for archs that
+            # never had release-arch packages in Bullseye OR Bookworm:
+            #   - loongarch64 (LoongArch port; not in Bullseye/Bookworm main,
+            #                  first release arch in Trixie)
+            - ${{ each arch in split('loongarch64', ',') }}:
+              - arch: ${{ arch }}
+                docker: scripts/Docker/debian/13
+                target: externals-linux-clang-cross
+                additionalArgs: --verifyGlibcMax=2.38
+            # Debian 11 / Bullseye (gcc-10, glibc 2.31). riscv64 is a
+            # carve-out: Bullseye has no riscv64 binary archive but ships
+            # gcc-10-cross packages that contain a riscv64 sysroot at
+            # glibc 2.31. The image installs those instead of LLVM
+            # multiarch packages and the build links libstdc++/libgcc
+            # statically — keeps glibc parity with the other archs.
             - ${{ each arch in split('arm,arm64,x86,x64,riscv64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/Docker/debian/10
+                docker: scripts/Docker/debian/11
                 target: externals-linux-clang-cross
+                additionalArgs: --verifyGlibcMax=2.31
             - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
               - arch: ${{ arch }}
                 variant: alpine

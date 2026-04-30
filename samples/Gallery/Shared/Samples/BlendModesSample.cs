@@ -14,10 +14,12 @@ public class BlendModesSample : CanvasSampleBase
 
 	public override string Title => "Blend Modes";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
 	public override string Description =>
 		"Explore all SkiaSharp blend modes with adjustable source and destination opacity.";
 
-	public override string Category => SampleCategories.Shaders;
+	public override string Category => SampleManager.Shaders;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -74,7 +76,7 @@ public class BlendModesSample : CanvasSampleBase
 		canvas.Restore();
 
 		// Draw blend mode name
-		using var textFont = new SKFont { Size = Math.Min(width, height) * 0.06f };
+		using var textFont = new SKFont(SampleMedia.Fonts.Default, Math.Min(width, height) * 0.06f);
 		using var textPaint = new SKPaint
 		{
 			Color = SKColors.Black,

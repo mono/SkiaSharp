@@ -66,7 +66,7 @@ Run the detection script — it prints the preview label and build number
 extracted from the downloaded nupkg filenames:
 
 ```powershell
-pwsh .claude/skills/validate-samples/scripts/detect-preview-version.ps1
+pwsh .agents/skills/validate-samples/scripts/detect-preview-version.ps1
 ```
 
 Output:

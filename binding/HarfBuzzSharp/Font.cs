@@ -291,6 +291,65 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		// Variable font support
+
+		public void SetVariations (ReadOnlySpan<Variation> variations)
+		{
+			fixed (Variation* ptr = variations) {
+				HarfBuzzApi.hb_font_set_variations (Handle, ptr, (uint)variations.Length);
+			}
+		}
+
+		public void SetVariationCoordsDesign (ReadOnlySpan<float> coords)
+		{
+			fixed (float* ptr = coords) {
+				HarfBuzzApi.hb_font_set_var_coords_design (Handle, ptr, (uint)coords.Length);
+			}
+		}
+
+		public void SetVariationCoordsNormalized (ReadOnlySpan<int> coords)
+		{
+			fixed (int* ptr = coords) {
+				HarfBuzzApi.hb_font_set_var_coords_normalized (Handle, ptr, (uint)coords.Length);
+			}
+		}
+
+		public int[] VariationCoordsNormalized
+		{
+			get {
+				uint length;
+				var ptr = HarfBuzzApi.hb_font_get_var_coords_normalized (Handle, &length);
+				if (length == 0 || ptr == null)
+					return Array.Empty<int> ();
+
+				var count = (int)length;
+				var coords = new int[count];
+				for (int i = 0; i < count; i++)
+					coords[i] = ptr[i];
+				return coords;
+			}
+		}
+
+		public int GetVariationCoordsNormalized (Span<int> coords)
+		{
+			uint length;
+			var ptr = HarfBuzzApi.hb_font_get_var_coords_normalized (Handle, &length);
+			if (length == 0 || ptr == null)
+				return 0;
+
+			var count = Math.Min ((int)length, coords.Length);
+			for (int i = 0; i < count; i++)
+				coords[i] = ptr[i];
+			return count;
+		}
+
+		public void SetVariationNamedInstance (int instanceIndex)
+		{
+			if (instanceIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (instanceIndex));
+			HarfBuzzApi.hb_font_set_var_named_instance (Handle, (uint)instanceIndex);
+		}
+
 		public void SetFunctionsOpenType () =>
 			HarfBuzzApi.hb_ot_font_set_funcs (Handle);
 

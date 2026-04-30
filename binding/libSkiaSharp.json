@@ -52,6 +52,23 @@
       "sk_font_table_tag_t": {
         "cs": "UInt32"
       },
+      "sk_fourbytetag_t": {
+        "cs": "SKFourByteTag"
+      },
+      // variable fonts
+      "sk_fontarguments_variation_axis_t": {
+        "cs": "SKFontVariationAxis",
+        "members": {
+          "def": "Default",
+          "isHidden": "IsHidden"
+        }
+      },
+      "sk_fontarguments_variation_position_coordinate_t": {
+        "cs": "SKFontVariationPositionCoordinate"
+      },
+      "sk_fontarguments_palette_override_t": {
+        "cs": "SKFontPaletteOverride"
+      },
       // the rest
       "gr_vk_imageinfo_t": {
         "cs": "GRVkImageInfo"
@@ -452,6 +469,11 @@
         "cs": "SKManagedWStreamDestroyProxyDelegate"
       },
       // functions
+      "sk_fontmgr_legacy_create_typeface": {
+        "parameters": {
+          "1": "IntPtr"
+        }
+      },
       "gr_glinterface_has_extension": {
         "parameters": {
           "1": "[MarshalAs (UnmanagedType.LPStr)] String"
@@ -482,11 +504,6 @@
         "parameters": {
           "1": "IntPtr",
           "3": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]"
-        }
-      },
-      "sk_typeface_create_from_name": {
-        "parameters": {
-          "0": "IntPtr"
         }
       },
       "sk_path_parse_svg_string": {

@@ -35,13 +35,13 @@ namespace SkiaSharp.Tests
 
 			var rect = new SKRect(10, 10, 30, 30);
 
-			var path = new SKPath();
-			path.AddRect(rect);
+			using var builder = new SKPathBuilder();
+			builder.AddRect(rect);
+			var path = builder.Detach();
 
-			var fillPath = new SKPath();
-			var isFilled = paint.GetFillPath(path, fillPath);
+			var fillPath = paint.GetFillPath(path);
 
-			Assert.True(isFilled);
+			Assert.NotNull(fillPath);
 			Assert.Equal(rect, fillPath.Bounds);
 			Assert.Equal(4, fillPath.PointCount);
 		}
@@ -54,25 +54,25 @@ namespace SkiaSharp.Tests
 			var thinRect = SKRect.Create(20, 10, 0, 20);
 			var rect = SKRect.Create(10, 10, 20, 20);
 
-			var path = new SKPath();
-			path.MoveTo(20, 10);
-			path.LineTo(20, 30);
+			using var builder = new SKPathBuilder();
+			builder.MoveTo(20, 10);
+			builder.LineTo(20, 30);
+			var path = builder.Detach();
 
-			var fillPath = new SKPath();
-			var isFilled = paint.GetFillPath(path, fillPath);
+			var fillPath = paint.GetFillPath(path);
 
-			Assert.True(isFilled);
+			Assert.NotNull(fillPath);
 			Assert.Equal(thinRect, fillPath.Bounds);
 			Assert.Equal(2, fillPath.PointCount);
 
 			paint.StrokeWidth = 20;
 			paint.IsStroke = true;
-			isFilled = paint.GetFillPath(path, fillPath);
+			var fillPath2 = paint.GetFillPath(path);
 
-			Assert.True(isFilled);
-			Assert.Equal(rect, fillPath.Bounds);
-			Assert.Equal(4 + 1, fillPath.PointCount); // +1 because the last point is the same as the first
-			Assert.Equal(4, fillPath.Points.Distinct().Count());
+			Assert.NotNull(fillPath2);
+			Assert.Equal(rect, fillPath2.Bounds);
+			Assert.Equal(4 + 1, fillPath2.PointCount); // +1 because the last point is the same as the first
+			Assert.Equal(4, fillPath2.Points.Distinct().Count());
 		}
 
 		// Test for issue #276
@@ -739,6 +739,38 @@ namespace SkiaSharp.Tests
 			using var paint = new SKPaint();
 			using var clonedPaint = paint.Clone();
 			using var clonedPaint2 = paint.Clone();
+		}
+
+		// Default typeface behavior
+
+		[Obsolete]
+		[SkippableFact]
+		public void DefaultPaintCanMeasureText()
+		{
+			var paint = new SKPaint();
+			var width = paint.MeasureText("Hello World!");
+			Assert.True(width > 0);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void DefaultPaintTypefaceIsDefault()
+		{
+			var paint = new SKPaint();
+			Assert.NotNull(paint.Typeface);
+			Assert.False(paint.Typeface.IsEmpty);
+			Assert.Equal(SKTypeface.Default.FamilyName, paint.Typeface.FamilyName);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void PaintResetPreservesDefaultTypeface()
+		{
+			var paint = new SKPaint();
+			paint.Typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			paint.Reset();
+			Assert.NotNull(paint.Typeface);
+			Assert.False(paint.Typeface.IsEmpty);
 		}
 	}
 }

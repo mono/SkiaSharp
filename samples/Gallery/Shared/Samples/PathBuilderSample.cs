@@ -17,7 +17,9 @@ public class PathBuilderSample : CanvasSampleBase
 
 	public override string Title => "Path Builder";
 
-	public override string Category => SampleCategories.Paths;
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
+	public override string Category => SampleManager.Paths;
 
 	public override string Description => "Build star, Bézier, and spiral paths with bounds visualization and fill rule controls.";
 
@@ -182,7 +184,7 @@ public class PathBuilderSample : CanvasSampleBase
 		canvas.DrawCircle(p3, anchorRadius, anchorPaint);
 
 		// Labels
-		using var labelFont = new SKFont { Size = 11 };
+		using var labelFont = new SKFont(SampleMedia.Fonts.Default, 11);
 		using var labelPaint = new SKPaint
 		{
 			IsAntialias = true,
@@ -198,7 +200,7 @@ public class PathBuilderSample : CanvasSampleBase
 
 	private static SKPath CreateStar(float cx, float cy, float outerR, float innerRatio, int n)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var innerR = outerR * innerRatio;
 		var totalPoints = n * 2;
 
@@ -210,45 +212,45 @@ public class PathBuilderSample : CanvasSampleBase
 			var y = cy + r * MathF.Sin(angle);
 
 			if (i == 0)
-				path.MoveTo(x, y);
+				builder.MoveTo(x, y);
 			else
-				path.LineTo(x, y);
+				builder.LineTo(x, y);
 		}
 
-		path.Close();
-		return path;
+		builder.Close();
+		return builder.Detach();
 	}
 
 	private static SKPath CreateBezierCurve(float cx, float cy, float radius)
 	{
 		// A shape where control points extend well beyond the path,
 		// creating a clear difference between bounds and tight bounds.
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var r = radius * 0.6f;
 		var cpExtend = radius * 1.4f;
 
 		// Start at top
-		path.MoveTo(cx, cy - r);
+		builder.MoveTo(cx, cy - r);
 
 		// Right curve with control points extending far right
-		path.CubicTo(
+		builder.CubicTo(
 			cx + cpExtend, cy - cpExtend,
 			cx + cpExtend, cy + cpExtend,
 			cx, cy + r);
 
 		// Left curve with control points extending far left
-		path.CubicTo(
+		builder.CubicTo(
 			cx - cpExtend, cy + cpExtend,
 			cx - cpExtend, cy - cpExtend,
 			cx, cy - r);
 
-		path.Close();
-		return path;
+		builder.Close();
+		return builder.Detach();
 	}
 
 	private static SKPath CreateSpiral(float cx, float cy, float maxRadius, int turns)
 	{
-		var path = new SKPath();
+		using var builder = new SKPathBuilder();
 		var steps = turns * 60;
 
 		for (var i = 0; i <= steps; i++)
@@ -260,11 +262,11 @@ public class PathBuilderSample : CanvasSampleBase
 			var y = cy + r * MathF.Sin(angle);
 
 			if (i == 0)
-				path.MoveTo(x, y);
+				builder.MoveTo(x, y);
 			else
-				path.LineTo(x, y);
+				builder.LineTo(x, y);
 		}
 
-		return path;
+		return builder.Detach();
 	}
 }

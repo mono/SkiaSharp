@@ -37,12 +37,16 @@ A single script handles all mechanical work: fetching PR metadata, checking out 
 running the generator, checking source integrity, auditing DEPS, and analyzing companion PR files.
 
 ```bash
-python3 .claude/skills/review-skia-update/scripts/run_review.py \
+python3 .agents/skills/review-skia-update/scripts/run_review.py \
     --skia-pr {skia_pr_number} \
-    --skiasharp-pr {skiasharp_pr_number}
+    --skiasharp-pr {skiasharp_pr_number} \
+    --milestone {milestone_number}
 ```
 
-Both parameters are required. A Skia update always has a companion SkiaSharp PR.
+All three parameters are required. A Skia update always has a companion SkiaSharp PR.
+Extract the milestone number from the PR title, body, or branch name (e.g. 147 from
+"Bump skia to milestone 147" or "Dev/update skia 147"). The orchestrator validates
+this against cgmanifest.json and the PR title for consistency.
 
 **Output:** `raw-results.json` in the output directory with all check results, including
 mechanically generated file lists and diffs for upstream integrity, interop integrity, DEPS,
@@ -98,9 +102,7 @@ The working tree is checked out to the companion PR, so you can read files direc
 > **Skipping validation = INVALID review. The task is incomplete.**
 
 ```bash
-# Try pwsh first, fall back to python3
-pwsh .claude/skills/review-skia-update/scripts/validate-skia-review.ps1 {output_dir}/{pr_number}.json \
-  || python3 .claude/skills/review-skia-update/scripts/validate-skia-review.py {output_dir}/{pr_number}.json
+python3 .agents/skills/review-skia-update/scripts/validate-skia-review.py {output_dir}/{pr_number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to persist
@@ -117,7 +119,7 @@ pwsh .claude/skills/review-skia-update/scripts/validate-skia-review.ps1 {output_
 Copy the validated JSON to `output/ai/` for collection.
 
 ```bash
-pwsh .claude/skills/review-skia-update/scripts/persist-skia-review.ps1 {output_dir}/{pr_number}.json
+python3 .agents/skills/review-skia-update/scripts/persist-skia-review.py {output_dir}/{pr_number}.json
 ```
 
 This copies the JSON to `output/ai/repos/mono-skia/ai-review/` and generates an HTML report

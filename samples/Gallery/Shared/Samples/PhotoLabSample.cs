@@ -28,10 +28,12 @@ public class PhotoLabSample : CanvasSampleBase
 
 	public override string Title => "Photo Lab";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
 	public override string Description =>
 		"Composable image effect stack — color filters, blur, morphology, magnifier, and high contrast.";
 
-	public override string Category => SampleCategories.ImageFilters;
+	public override string Category => SampleManager.ImageFilters;
 
 	protected override Task OnInit()
 	{

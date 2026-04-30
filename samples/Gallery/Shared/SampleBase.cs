@@ -10,7 +10,9 @@ public abstract class SampleBase
 
 	public virtual string Description { get; } = string.Empty;
 
-	public virtual string Category { get; } = SampleCategories.General;
+	public virtual string Category { get; } = SampleManager.General;
+
+	public virtual DateOnly? DateAdded { get; }
 
 
 	public virtual bool IsSupported => true;
@@ -18,6 +20,12 @@ public abstract class SampleBase
 	public bool IsInitialized { get; private set; } = false;
 
 	public virtual IReadOnlyList<SampleControl> Controls => [];
+
+	// Download support — samples that produce downloadable output override these
+	public virtual byte[]? DownloadBytes => null;
+	public virtual string DownloadFileName => "download.bin";
+	public virtual string DownloadMimeType => "application/octet-stream";
+	public bool HasDownload => DownloadBytes is { Length: > 0 };
 
 	public virtual void UpdateControl(string id, object value)
 	{

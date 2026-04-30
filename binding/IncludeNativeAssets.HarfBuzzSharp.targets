@@ -46,16 +46,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\i586\libHarfBuzzSharp.so">
-      <Visible>false</Visible>
-      <TizenTpkSubDir>bin\runtimes\tizen-x86\native\</TizenTpkSubDir>
-      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
-    </TizenTpkFiles>
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\armel\libHarfBuzzSharp.so">
-      <Visible>false</Visible>
-      <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
-      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
-    </TizenTpkFiles>
     <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\x86_64\libHarfBuzzSharp.so">
       <Visible>false</Visible>
       <TizenTpkSubDir>bin\runtimes\tizen-x64\native\</TizenTpkSubDir>
@@ -73,8 +63,13 @@
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libHarfBuzzSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_HarfBuzzSharpNativeBinaryType>
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_HarfBuzzSharpNativeBinaryType>
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_HarfBuzzSharpNativeBinaryType),simd</_HarfBuzzSharpNativeBinaryType>
+  </PropertyGroup>
   <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\**\*.a" Visible="false" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\*\$(_HarfBuzzSharpNativeBinaryType)\*.a" Visible="false" />
   </ItemGroup>
 
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">

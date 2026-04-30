@@ -46,16 +46,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\i586\libSkiaSharp.so">
-      <Visible>false</Visible>
-      <TizenTpkSubDir>bin\runtimes\tizen-x86\native\</TizenTpkSubDir>
-      <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
-    </TizenTpkFiles>
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\armel\libSkiaSharp.so">
-      <Visible>false</Visible>
-      <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
-      <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
-    </TizenTpkFiles>
     <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\x86_64\libSkiaSharp.so">
       <Visible>false</Visible>
       <TizenTpkSubDir>bin\runtimes\tizen-x64\native\</TizenTpkSubDir>
@@ -73,10 +63,13 @@
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libSkiaSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_SkiaSharpNativeBinaryType>
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_SkiaSharpNativeBinaryType),simd</_SkiaSharpNativeBinaryType>
+  </PropertyGroup>
   <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\**\*.a" Visible="false" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\*\$(_SkiaSharpNativeBinaryType)\*.a" Visible="false" />
     <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
     <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
   </ItemGroup>

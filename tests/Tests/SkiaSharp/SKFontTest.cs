@@ -151,7 +151,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeasureTextMeasuresTheText()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var width = font.MeasureText("Hello World!");
 
@@ -161,7 +161,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeasureTextMeasuresTheTextForBytes()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
 			var width8 = font.MeasureText(text8, SKTextEncoding.Utf8);
@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeasureTextReturnsTheBounds()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var width = font.MeasureText("Hello World!", out var bounds);
 
@@ -191,7 +191,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeasureTextReturnsTheBoundsForBytes()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
 			var width8 = font.MeasureText(text8, SKTextEncoding.Utf8, out var bounds8);
@@ -273,7 +273,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void GetGlyphWidthsAreCorrect()
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			var widths = font.GetGlyphWidths("Hello World!", out var bounds);
 
@@ -299,7 +299,7 @@ namespace SkiaSharp.Tests
 		{
 			var text = "|";
 
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 			font.Size = 100;
 
 			var blob = SKTextBlob.Create(text, font, new SKPoint(50, 100));
@@ -326,6 +326,47 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, path.PointCount);
 		}
 
+		[SkippableFact]
+		public void GetTextPathWithPositionsProducesNonEmptyPath()
+		{
+			var font = new SKFont();
+			var text = "AV";
+			var glyphCount = font.CountGlyphs(text);
+			Assert.True(glyphCount > 0);
+
+			var positions = new SKPoint[glyphCount];
+			for (var i = 0; i < glyphCount; i++)
+				positions[i] = new SKPoint(i * 20, 0);
+
+			var path = font.GetTextPath(text, positions);
+
+			Assert.NotNull(path);
+			Assert.True(path.PointCount > 0);
+			Assert.False(path.Bounds.IsEmpty);
+		}
+
+		[SkippableFact]
+		public void GetTextPathWithPositionsMatchesExpectedBounds()
+		{
+			var font = new SKFont();
+			var text = "A";
+
+			// Get path at origin
+			var originPath = font.GetTextPath(text, SKPoint.Empty);
+
+			// Get path at offset position
+			var positions = new SKPoint[] { new SKPoint(100, 50) };
+			var posPath = font.GetTextPath(text, positions);
+
+			Assert.NotNull(originPath);
+			Assert.NotNull(posPath);
+			Assert.True(originPath.PointCount > 0);
+			Assert.True(posPath.PointCount > 0);
+
+			// The positioned path should be offset from the origin path
+			Assert.True(posPath.Bounds.Left > originPath.Bounds.Left + 50);
+		}
+
 		[SkippableTheory]
 		[InlineData(SKTextEncoding.Utf8, "ä", 2)]
 		[InlineData(SKTextEncoding.Utf8, "a", 1)]
@@ -337,7 +378,7 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextEncoding.GlyphId, "a", 2)]
 		public void BreakTextReturnsTheCorrectNumberOfBytes(SKTextEncoding encoding, string text, int expectedRead)
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			// get bytes
 			var bytes = encoding == SKTextEncoding.GlyphId
@@ -395,7 +436,7 @@ namespace SkiaSharp.Tests
 		[InlineData(1 << 17)]
 		public void BreakTextWidthIsEqualToMeasureTextWidth(int textSize)
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			if (textSize >= 0)
 				font.Size = textSize;
@@ -418,7 +459,7 @@ namespace SkiaSharp.Tests
 		[InlineData(1 << 17)]
 		public void BreakTextHandlesLongText(int textSize)
 		{
-			var font = new SKFont();
+			var font = new SKFont(SKTypeface.Default);
 
 			if (textSize >= 0)
 				font.Size = textSize;
@@ -505,6 +546,67 @@ namespace SkiaSharp.Tests
 			{
 				Assert.Same(typeface, font.Typeface);
 			}
+		}
+
+		// m132 empty typeface behavior — `new SKFont(null)` and
+		// `font.Typeface = null` produce the empty typeface; `new SKFont()`
+		// is wrapped in the managed binding to use SKTypeface.Default so
+		// the parameterless ctor stays useful for text measurement.
+
+		[SkippableFact]
+		public void DefaultFontTypefaceIsDefault()
+		{
+			using var font = new SKFont();
+			Assert.NotNull(font.Typeface);
+			Assert.False(font.Typeface.IsEmpty);
+			Assert.Same(SKTypeface.Default, font.Typeface);
+		}
+
+		[SkippableFact]
+		public void FontWithNullTypefaceIsEmpty()
+		{
+			using var font = new SKFont(null);
+			Assert.NotNull(font.Typeface);
+			Assert.True(font.Typeface.IsEmpty);
+		}
+
+		[SkippableFact]
+		public void FontTypefaceSetNullReturnsEmpty()
+		{
+			using var font = new SKFont(SKTypeface.Default);
+			font.Typeface = null;
+			Assert.NotNull(font.Typeface);
+			Assert.True(font.Typeface.IsEmpty);
+		}
+
+		[SkippableFact]
+		public void FontTypefaceSetNullDoesNotCrashOnMeasure()
+		{
+			using var font = new SKFont(SKTypeface.Default);
+			font.Typeface = null;
+			Assert.NotEqual(IntPtr.Zero, font.Handle);
+			var width = font.MeasureText("Hello");
+			Assert.Equal(0, width);
+		}
+
+		[SkippableFact]
+		public void FontWithDefaultCanMeasure()
+		{
+			using var font = new SKFont(SKTypeface.Default);
+			var width = font.MeasureText("Hello World!");
+			Assert.True(width > 0);
+		}
+
+		[SkippableFact]
+		public void ZeroGlyphFontMeasuresZero()
+		{
+			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "ZeroGlyphs.ttf"));
+			if (tf == null)
+				return;
+
+			using var font = new SKFont(tf);
+			var width = font.MeasureText("Hello");
+			Assert.Equal(0, width);
 		}
 	}
 }

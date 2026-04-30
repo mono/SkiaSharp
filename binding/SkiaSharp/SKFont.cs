@@ -18,10 +18,8 @@ namespace SkiaSharp
 		}
 
 		public SKFont ()
-			: this (SkiaApi.sk_font_new (), true)
+			: this (SKTypeface.Default, DefaultSize, DefaultScaleX, DefaultSkewX)
 		{
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKFont instance.");
 		}
 
 		public SKFont (SKTypeface typeface, float size = DefaultSize, float scaleX = DefaultScaleX, float skewX = DefaultSkewX)
@@ -881,7 +879,7 @@ namespace SkiaSharp
 			var alignment = (int)textAlign * 0.5f;
 			var startOffset = glyphPositions[0].X + (contourLength - textLength) * alignment;
 
-			var textPath = new SKPath ();
+			using var builder = new SKPathBuilder ();
 
 			// TODO: deal with multiple contours?
 			for (var index = 0; index < glyphPositions.Length; index++) {
@@ -895,14 +893,14 @@ namespace SkiaSharp
 					var glyphPath = glyphPathCache.GetPath (glyphId);
 					if (glyphPath != null) {
 						var transformation = SKMatrix.CreateTranslation (x0, glyphOffset.Y);
-						MorphPath (textPath, glyphPath, pathMeasure, transformation);
+						MorphPath (builder, glyphPath, pathMeasure, transformation);
 					}
 				}
 			}
 
-			return textPath;
+			return builder.Detach ();
 
-			static void MorphPath (SKPath dst, SKPath src, SKPathMeasure meas, in SKMatrix matrix)
+			static void MorphPath (SKPathBuilder dst, SKPath src, SKPathMeasure meas, in SKMatrix matrix)
 			{
 				// TODO:
 				// Need differentially more subdivisions when the follow-path is curvy. Not sure how to determine

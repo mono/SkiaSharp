@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Run all mechanical checks for a Skia update review.
 
-Fetches PR metadata, checks out the working tree, runs all three check modules,
-and outputs structured raw results for the model to process.
+Fetches PR metadata, checks out the working tree, runs all four check modules
+(generated files, source integrity, DEPS, companion PR), and outputs structured
+raw results for the model to process.
 """
 import argparse
 import json
@@ -112,6 +113,11 @@ def main():
         help="The SkiaSharp companion PR number.",
     )
     parser.add_argument(
+        "--milestone", type=int, required=True,
+        help="The target Chrome milestone number (e.g. 147). "
+             "AI extracts this from the PR title/body; the orchestrator validates consistency.",
+    )
+    parser.add_argument(
         "--output-dir", default="",
         help="Override output directory. Default: /tmp/skiasharp/skia-review/{timestamp}",
     )
@@ -119,6 +125,7 @@ def main():
 
     skia_pr_number = args.skia_pr
     skiasharp_pr_number = args.skiasharp_pr
+    caller_milestone = f"chrome/m{args.milestone}"
     output_dir = args.output_dir
 
     result = subprocess.run(
@@ -134,8 +141,10 @@ def main():
     skia_root = os.path.join(repo_root, "externals", "skia")
 
     # =========================================================================
-    # Pre-flight — Ensure submodule is initialised
+    # Pre-flight
     # =========================================================================
+    eprint("═══ Pre-flight ═══")
+
     # In worktree environments the skia submodule may not be initialised yet
     # (no .git file / dir inside externals/skia). Run submodule update so the
     # dirty-tree check below can inspect the submodule properly.
@@ -146,11 +155,16 @@ def main():
 
     # Verify submodule origin points at mono/skia (worktrees sometimes inherit
     # the parent repo's remote instead).
+    eprint("▸ Verifying submodule remote...")
     ensure_remote(skia_root, "origin", "https://github.com/mono/skia.git")
 
-    # =========================================================================
-    # Pre-flight — Ensure clean working trees
-    # =========================================================================
+    # Pre-fetch the skia PR ref so that later fetches in the parent repo
+    # can resolve the submodule pointer (which references a SHA from the
+    # skia PR branch). Uses pull/{N}/head which works for fork PRs too.
+    eprint(f"▸ Pre-fetching skia PR #{skia_pr_number} ref in submodule...")
+    run_git(["fetch", "origin", f"pull/{skia_pr_number}/head"], cwd=skia_root)
+
+    eprint("▸ Checking working trees are clean...")
     for label, cwd in [("SkiaSharp", repo_root), ("skia submodule", skia_root)]:
         status = subprocess.run(
             ["git", "status", "--porcelain"],
@@ -164,6 +178,8 @@ def main():
                 f"  Dirty files:\n" +
                 "\n".join(f"    {line}" for line in dirty.splitlines()[:10])
             )
+    eprint("   ✅ Working trees clean")
+    eprint()
 
     # =========================================================================
     # Step 1 — Parse & Setup
@@ -176,7 +192,7 @@ def main():
         [
             "gh", "pr", "view", str(skia_pr_number),
             "--repo", "mono/skia",
-            "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,body,state,author",
+            "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,state,author",
         ],
         capture_output=True, text=True,
     )
@@ -194,7 +210,7 @@ def main():
         [
             "gh", "pr", "view", str(skiasharp_pr_number),
             "--repo", "mono/SkiaSharp",
-            "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,body,state,author",
+            "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,state,author",
         ],
         capture_output=True, text=True,
     )
@@ -240,34 +256,41 @@ def main():
             f"{companion_base_sha[:12]}:cgmanifest.json"
         )
 
-    # Match both "m122" and "milestone 122" patterns
-    matches = re.findall(r"m(\d{3,})", pr["title"])
-    if not matches:
-        matches = re.findall(r"milestone\s+(\d{2,})", pr["title"], re.IGNORECASE)
-    if not matches:
-        raise RuntimeError(
-            f"Could not extract milestone from PR title: {pr['title']}. Expected 'mNNN' or 'milestone NNN' pattern."
-        )
-    title_milestone = f"chrome/m{matches[-1]}"
+    # 1d. Validate milestone consistency
+    # The caller (AI) provides --milestone; we validate it against PR title
+    # and cgmanifest.json for consistency.
+    eprint(f"▸ Validating milestone {caller_milestone}...")
 
+    # Check PR title for milestone patterns
+    title_milestone = None
+    for pattern in [r"m(\d{3,})", r"milestone\s+(\d{2,})", r"skia[\s\-_]+(\d{2,})"]:
+        m = re.findall(pattern, pr["title"], re.IGNORECASE)
+        if m:
+            title_milestone = f"chrome/m{m[-1]}"
+            break
+    if title_milestone and title_milestone != caller_milestone:
+        eprint(f"   ⚠ PR title implies {title_milestone}, but --milestone says {caller_milestone}")
+    elif not title_milestone:
+        eprint(f"   ⚠ PR title '{pr['title']}' did not match any milestone pattern")
+
+    # Check cgmanifest.json from companion PR head
     companion_head_sha = companion_pr.get("headRefOid", "").strip()
-    new_milestone = title_milestone
+    cgmanifest_milestone = None
     if companion_head_sha and len(companion_head_sha) >= 7:
         new_cgmanifest = load_json_at_git_ref(repo_root, companion_head_sha, "cgmanifest.json")
-        new_milestone_from_cgmanifest = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
-        if new_milestone_from_cgmanifest:
-            if new_milestone_from_cgmanifest != title_milestone:
-                raise RuntimeError(
-                    f"Skia PR title implies {title_milestone}, but companion PR "
-                    f"#{skiasharp_pr_number} cgmanifest.json at {companion_head_sha[:12]} "
-                    f"records {new_milestone_from_cgmanifest}."
-                )
-            new_milestone = new_milestone_from_cgmanifest
+        cgmanifest_milestone = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
+    if cgmanifest_milestone and cgmanifest_milestone != caller_milestone:
+        eprint(
+            f"   ⚠ cgmanifest.json records {cgmanifest_milestone}, "
+            f"but --milestone says {caller_milestone}"
+        )
+
+    new_milestone = caller_milestone
 
     eprint(f"   New upstream: {new_milestone}")
     eprint(f"   Old upstream: {old_milestone}")
 
-    # 1d. Fetch git refs
+    # 1e. Fetch git refs
     eprint("▸ Fetching git refs...")
     ensure_remote(skia_root, "upstream", "https://github.com/google/skia.git")
     run_git(["fetch", "upstream", old_milestone, new_milestone], cwd=skia_root)
@@ -327,11 +350,11 @@ def main():
     eprint(f"   Old upstream: {old_upstream_sha}")
     eprint(f"   New upstream: {new_upstream_sha}")
 
-    # 1e. Check out SkiaSharp companion PR
+    # 1f. Check out SkiaSharp companion PR
     eprint(f"▸ Checking out SkiaSharp companion PR #{skiasharp_pr_number}...")
     run_git(["checkout", "--detach", companion_head_sha], cwd=repo_root)
 
-    # 1f. Check out skia submodule at PR head
+    # 1g. Check out skia submodule at PR head
     eprint(f"▸ Checking out skia submodule at PR head: {pr_head_sha}")
     run_git(["checkout", pr_head_sha], cwd=skia_root)
     actual_sha = subprocess.run(
@@ -342,10 +365,9 @@ def main():
         raise RuntimeError(f"Submodule checkout mismatch: expected {pr_head_sha}, got {actual_sha}")
     eprint(f"   ✅ Submodule at {actual_sha}")
 
-    # 1g. Sync third-party dependencies (harfbuzz, freetype, etc.)
+    # 1h. Sync third-party dependencies (harfbuzz, freetype, etc.)
     # These live under externals/skia/third_party/externals/ and are fetched
-    # by Skia's DEPS mechanism, not git submodules. The cake task validates
-    # milestone/increment versions and sets GIT_SYNC_DEPS_SKIP_EMSDK=1.
+    # by Skia's DEPS mechanism, not git submodules.
     eprint("▸ Syncing third-party dependencies (dotnet cake git-sync-deps)...")
     sync_result = subprocess.run(
         ["dotnet", "cake", "--target=git-sync-deps"],
@@ -373,7 +395,7 @@ def main():
         )
     eprint("   ✅ Third-party dependencies synced")
 
-    # 1h. Create output directory
+    # 1i. Create output directory
     if not output_dir:
         ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         output_dir = f"/tmp/skiasharp/skia-review/{ts}"
@@ -382,25 +404,29 @@ def main():
     eprint()
 
     # =========================================================================
-    # Steps 2–4 — Run checks (with try/finally to save partial results on failure)
+    # Steps 2–5 — Run checks (with try/finally to save partial results on failure)
     # =========================================================================
     gen_result = None
     source_result = None
     deps_result = None
     companion_result = None
-    check_error = None
+    check_errors = []
 
+    # Step 2 — Generated File Verification
+    eprint("═══ Step 2 — Generated Files ═══")
     try:
-        # Step 2 — Generated File Verification
-        eprint("═══ Step 2 — Generated Files ═══")
         gen_result = check_generated_files.run_check(
             repo_root=repo_root,
             output_dir=output_dir,
         )
-        eprint()
+    except Exception as exc:
+        eprint(f"   ❌ Generated files check failed: {exc}")
+        check_errors.append(f"Step 2 (Generated Files): {exc}")
+    eprint()
 
-        # Step 3 — Source Integrity
-        eprint("═══ Step 3 — Source Integrity ═══")
+    # Step 3 — Source Integrity
+    eprint("═══ Step 3 — Source Integrity ═══")
+    try:
         source_result = check_source.run_check(
             skia_root=skia_root,
             old_upstream_branch=f"upstream/{old_milestone}",
@@ -409,10 +435,14 @@ def main():
             pr_head=pr_head_sha,
             output_dir=output_dir,
         )
-        eprint()
+    except Exception as exc:
+        eprint(f"   ❌ Source integrity check failed: {exc}")
+        check_errors.append(f"Step 3 (Source Integrity): {exc}")
+    eprint()
 
-        # Step 4 — DEPS Audit
-        eprint("═══ Step 4 — DEPS Audit ═══")
+    # Step 4 — DEPS Audit
+    eprint("═══ Step 4 — DEPS Audit ═══")
+    try:
         deps_result = check_deps.run_check(
             skia_root=skia_root,
             base_sha=base_sha,
@@ -420,11 +450,14 @@ def main():
             upstream_branch=f"upstream/{new_milestone}",
             output_dir=output_dir,
         )
-        eprint()
+    except Exception as exc:
+        eprint(f"   ❌ DEPS audit failed: {exc}")
+        check_errors.append(f"Step 4 (DEPS Audit): {exc}")
+    eprint()
 
-        # Step 5 — Companion PR Files
-        eprint("═══ Step 5 — Companion PR ═══")
-        # Fetch the main branch for comparison
+    # Step 5 — Companion PR Files
+    eprint("═══ Step 5 — Companion PR ═══")
+    try:
         run_git(["fetch", "origin", "main"], cwd=repo_root)
         companion_result = check_companion.run_check(
             repo_root=repo_root,
@@ -432,11 +465,12 @@ def main():
             pr_ref="HEAD",
             output_dir=output_dir,
         )
-        eprint()
     except Exception as exc:
-        check_error = str(exc)
-        eprint(f"\n❌ Check phase failed: {exc}")
-        eprint("   Saving partial results...\n")
+        eprint(f"   ❌ Companion PR check failed: {exc}")
+        check_errors.append(f"Step 5 (Companion PR): {exc}")
+    eprint()
+
+    check_error = "; ".join(check_errors) if check_errors else None
 
     # =========================================================================
     # Assemble raw results (includes partial results if a check failed)
@@ -479,17 +513,19 @@ def main():
     eprint()
 
     if check_error:
-        eprint(f"❌ Partial results saved — check phase failed: {check_error}")
+        eprint(f"⚠️  {len(check_errors)} step(s) failed — partial results saved")
+        for err in check_errors:
+            eprint(f"   • {err}")
         eprint(f"Raw results: {raw_results_path}")
-        raise RuntimeError(f"Check phase failed: {check_error}")
+        eprint()
 
     # Print summary
     eprint("═══ Summary ═══")
-    eprint(f"  Generated Files:    {gen_result['status']}")
-    eprint(f"  Upstream Integrity: {source_result['upstreamIntegrity']['status']}")
-    eprint(f"  Interop Integrity:  {source_result['interopIntegrity']['status']}")
-    eprint(f"  DEPS Audit:         {deps_result['status']}")
-    eprint(f"  Companion PR:       {companion_result['status']}")
+    eprint(f"  Generated Files:    {(gen_result or {}).get('status', 'ERROR')}")
+    eprint(f"  Upstream Integrity: {(source_result or {}).get('upstreamIntegrity', {}).get('status', 'ERROR')}")
+    eprint(f"  Interop Integrity:  {(source_result or {}).get('interopIntegrity', {}).get('status', 'ERROR')}")
+    eprint(f"  DEPS Audit:         {(deps_result or {}).get('status', 'ERROR')}")
+    eprint(f"  Companion PR:       {(companion_result or {}).get('status', 'ERROR')}")
     eprint()
     eprint(f"Raw results: {raw_results_path}")
     eprint(f"Generator log: {os.path.join(output_dir, 'generator-output.log')}")

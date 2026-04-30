@@ -113,7 +113,7 @@ Fix should treat repro JSON as the baseline execution record:
 - If triage suggests `request-info` or `close-*`: do **not** run repro/fix unless a human overrides.
 - If repro concludes `not-reproduced` / `inconclusive`: issue-fix generally should **not** start; instead update triage actions (request more info / close / document).
 - If repro concludes `reproduced`: proceed to issue-fix.
-- If repro concludes `confirmed` with `assessment: "feature-request"`: proceed to **add-api** skill (not issue-fix).
+- If repro concludes `confirmed` with `assessment: "feature-request"`: proceed to **api-add-review** skill (not issue-fix).
 - If repro concludes `confirmed` with `assessment: "docs-gap"`: proceed to **api-docs** skill.
 - If repro concludes `not-confirmed`: close or request more info (feature already exists or docs are correct).
 
