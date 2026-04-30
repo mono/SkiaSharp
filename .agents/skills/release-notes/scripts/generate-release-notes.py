@@ -179,6 +179,27 @@ def get_upcoming_version():
     return None
 
 
+# ── Effort computation ───────────────────────────────────────────────
+
+
+def compute_pr_effort(pr):
+    # type: (dict) -> dict
+    """Compute commit count and unique working days from PR commit data."""
+    commits = pr.get("commits", [])
+    commit_count = len(commits)
+    unique_days = set()
+
+    for c in commits:
+        date_str = c.get("committedDate") or c.get("authoredDate", "")
+        if date_str:
+            unique_days.add(date_str[:10])
+
+    return {
+        "commitCount": commit_count,
+        "workingDays": len(unique_days),
+    }
+
+
 # ── Branch diffing ──────────────────────────────────────────────────
 
 
@@ -357,20 +378,33 @@ def _fetch_pr(num, repo):
     """Fetch a single PR in the normalized format expected by the script.
 
     Tries gh CLI first, falls back to REST API via urllib.
-    Returns a dict with: title, author, url, number, labels, mergedAt, body.
+    Returns a dict with: title, author, url, number, labels, mergedAt,
+    commits, body.
     """
     if _check_gh_cli():
         try:
             raw = gh(["pr", "view", str(num), "--repo", repo,
                       "--json",
-                      "title,author,url,number,labels,mergedAt,body"])
+                      "title,author,url,number,labels,mergedAt,commits,body"])
             return json.loads(raw)
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             pass  # fall through to REST API
 
-    # REST API fallback
+    # REST API fallback — commits endpoint gives us dates for effort calc
     pr_raw = json.loads(_github_rest_get(
         "repos/{}/pulls/{}".format(repo, num)))
+
+    commits = []
+    try:
+        commits_url = "repos/{}/pulls/{}/commits?per_page=100".format(repo, num)
+        commits_raw = json.loads(_github_rest_get(commits_url))
+        for c in commits_raw:
+            commit_obj = c.get("commit", {})
+            commits.append({
+                "committedDate": commit_obj.get("author", {}).get("date", ""),
+            })
+    except (urllib.error.URLError, json.JSONDecodeError):
+        pass
 
     return {
         "title": pr_raw.get("title", ""),
@@ -380,6 +414,7 @@ def _fetch_pr(num, repo):
         "labels": [{"name": la.get("name", "")}
                    for la in pr_raw.get("labels", [])],
         "mergedAt": pr_raw.get("merged_at", ""),
+        "commits": commits,
         "body": pr_raw.get("body", ""),
     }
 
@@ -413,6 +448,7 @@ def get_prs_from_diff(from_ref, to_ref):
     for i, num in enumerate(pr_numbers, 1):
         try:
             pr = _fetch_pr(num, REPO)
+            pr.update(compute_pr_effort(pr))
             prs.append(pr)
         except (subprocess.CalledProcessError, json.JSONDecodeError,
                 urllib.error.URLError, KeyError):
@@ -463,9 +499,14 @@ def format_pr_list(prs, metadata):
             url = pr.get("url", "")
             label_names = [la.get("name", "") for la in pr.get("labels", [])]
             labels_str = " [{}]".format(", ".join(label_names)) if label_names else ""
+            commits = pr.get("commitCount", 0)
+            days = pr.get("workingDays", 0)
+            effort = " ({} commit{}, {} day{})".format(
+                commits, "s" if commits != 1 else "",
+                days, "s" if days != 1 else "")
 
-            lines.append("- {} by @{} in {}{}".format(
-                title, author, url, labels_str))
+            lines.append("- {} by @{} in {}{}{}".format(
+                title, author, url, labels_str, effort))
 
     lines.append("")
     return "\n".join(lines)
