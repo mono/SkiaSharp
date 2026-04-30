@@ -28,6 +28,7 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -580,21 +581,21 @@ def get_prs_from_diff(from_ref, to_ref):
 
 def format_pr_list(prs, metadata):
     # type: (list[dict], dict) -> str
-    """Format the PR list as markdown with a YAML front-matter header."""
+    """Format the PR list as markdown with metadata header."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     lines = [
-        "---",
-        "branch: {}".format(metadata["branch"]),
-        "version: {}".format(metadata["version"]),
-        "status: {}".format(metadata["status"]),
-        "diff: {}..{}".format(metadata["from"], metadata["to"]),
-        "pr_count: {}".format(len(prs)),
-        "---",
+        "<!--",
+        "  Generated: {} by generate-release-notes.py".format(now),
         "",
-        "<!-- REPLACE THIS ENTIRE FILE with polished release notes.",
-        "     Use documentation/docfx/releases/TEMPLATE.md as the formatting reference.",
-        "     Remove this comment, the YAML header above, and the raw PR list below.",
-        "     Write the final content starting with: # Version {} -->".format(
-            metadata["version"]),
+        "  This is raw PR data. Rewrite this entire file with polished release",
+        "  notes using documentation/docfx/releases/TEMPLATE.md as the reference.",
+        "",
+        "  version: {}".format(metadata["version"]),
+        "  status:  {}".format(metadata["status"]),
+        "  branch:  {}".format(metadata["branch"]),
+        "  diff:    {}..{}".format(metadata["from"], metadata["to"]),
+        "  prs:     {}".format(len(prs)),
+        "-->",
         "",
     ]
 
@@ -832,26 +833,41 @@ def cmd_branch(branch):
     output_path.write_text(content)
     print("Wrote {}".format(output_path))
 
+    files_to_polish = [str(output_path)]
+
     # When a versioned branch is pushed, also regenerate the unreleased
     # file(s) — the diff range for main or the .x branch may have changed
     # because a new release branch now exists.
     if not is_main_branch and not is_servicing:
-        _regen_unreleased(branch)
+        extra_files = _regen_unreleased(branch)
+        files_to_polish.extend(extra_files)
 
     # Regenerate TOC and index
     cmd_update_toc()
 
+    # Print summary for the AI agent
+    print("")
+    print("========================================")
+    print("Files to polish:")
+    for f in files_to_polish:
+        print("  - {}".format(f))
+    print("========================================")
+
 
 def _regen_unreleased(trigger_branch):
-    # type: (str) -> None
+    # type: (str) -> list[str]
     """Regenerate unreleased files after a versioned branch push.
 
     When a new release/X.Y.Z branch appears, the diff ranges for
     main and/or the servicing release/X.Y.x branch may have changed.
+
+    Returns a list of file paths that were written.
     """
     m = re.match(r"release/(\d+)\.(\d+)\.\d+", trigger_branch)
     if not m:
-        return
+        return []
+
+    written_files = []  # type: list[str]
 
     major = int(m.group(1))
     minor_num = int(m.group(2))
@@ -881,33 +897,42 @@ def _regen_unreleased(trigger_branch):
             svc_path = RELEASES_DIR / "{}-unreleased.md".format(svc_version)
             svc_path.write_text(format_pr_list(prs, metadata))
             print("Wrote {} ({} PRs)".format(svc_path, len(prs)))
+            written_files.append(str(svc_path))
         except (RuntimeError, subprocess.CalledProcessError) as e:
             print("  WARNING: Could not regenerate {}: {}".format(
                 svc_branch, e), file=sys.stderr)
 
-    # Regenerate main's unreleased file
-    print("\nRegenerating unreleased for main...")
-    try:
-        from_ref, to_ref, main_version = determine_diff_range("main")
-        from_display = _removeprefix(from_ref, "origin/")
-        if re.match(r"^[0-9a-f]{7,}$", from_display):
-            from_display = from_display[:12]
-        to_display = _removeprefix(to_ref, "origin/")
+    # Regenerate main's unreleased file — but only if the trigger branch
+    # is in the same minor as main's upcoming version. A push to a 3.119.x
+    # preview doesn't change main's diff range if main is on 4.147.x.
+    main_version = get_upcoming_version()
+    main_minor = minor_group(main_version) if main_version else None
+    if main_minor and main_minor == minor:
+        print("\nRegenerating unreleased for main...")
+        try:
+            from_ref, to_ref, main_version = determine_diff_range("main")
+            from_display = _removeprefix(from_ref, "origin/")
+            if re.match(r"^[0-9a-f]{7,}$", from_display):
+                from_display = from_display[:12]
+            to_display = _removeprefix(to_ref, "origin/")
 
-        prs = get_prs_from_diff(from_ref, to_ref)
-        metadata = {
-            "branch": "main",
-            "version": main_version,
-            "status": "unreleased",
-            "from": from_display,
-            "to": to_display,
-        }
-        main_path = RELEASES_DIR / "{}-unreleased.md".format(main_version)
-        main_path.write_text(format_pr_list(prs, metadata))
-        print("Wrote {} ({} PRs)".format(main_path, len(prs)))
-    except (RuntimeError, subprocess.CalledProcessError) as e:
-        print("  WARNING: Could not regenerate main: {}".format(e),
-              file=sys.stderr)
+            prs = get_prs_from_diff(from_ref, to_ref)
+            metadata = {
+                "branch": "main",
+                "version": main_version,
+                "status": "unreleased",
+                "from": from_display,
+                "to": to_display,
+            }
+            main_path = RELEASES_DIR / "{}-unreleased.md".format(main_version)
+            main_path.write_text(format_pr_list(prs, metadata))
+            print("Wrote {} ({} PRs)".format(main_path, len(prs)))
+            written_files.append(str(main_path))
+        except (RuntimeError, subprocess.CalledProcessError) as e:
+            print("  WARNING: Could not regenerate main: {}".format(e),
+                  file=sys.stderr)
+
+    return written_files
 
 
 # ── Main ─────────────────────────────────────────────────────────────
