@@ -19,19 +19,14 @@ range, PR count) followed by the raw PR list. AI then rewrites this file with
 polished content. TOC and index are regenerated automatically.
 
 Requirements: git, Python 3.7+
-             gh (GitHub CLI) OR GITHUB_TOKEN/GH_TOKEN environment variable
 """
 
 from __future__ import annotations
 
 import argparse
-import json
-import os
 import re
 import subprocess
 import sys
-import urllib.error
-import urllib.request
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional, Tuple
@@ -45,6 +40,9 @@ SKIA_PR_PATTERNS = [
     re.compile(r"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+https?://github\.com/mono/skia/pull/(\d+)", re.IGNORECASE),
     re.compile(r"https?://github\.com/mono/skia/pull/(\d+)"),
 ]
+
+# Noreply email pattern: {id}+{username}@users.noreply.github.com
+_NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -63,95 +61,6 @@ def run(args, check=True):
     """Run a command and return stdout."""
     result = subprocess.run(args, capture_output=True, text=True, check=check)
     return result.stdout.strip()
-
-
-def _get_github_token():
-    # type: () -> Optional[str]
-    """Read a GitHub token from the environment."""
-    return (os.environ.get("GH_TOKEN")
-            or os.environ.get("GITHUB_TOKEN")
-            or None)
-
-
-def _github_rest_get(path):
-    # type: (str) -> str
-    """GET a GitHub REST API endpoint using urllib (no gh CLI needed).
-
-    Falls back to unauthenticated requests if no token is available
-    (will hit rate limits quickly).
-    """
-    url = "https://api.github.com/{}".format(path.lstrip("/"))
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-    token = _get_github_token()
-    if token:
-        headers["Authorization"] = "Bearer {}".format(token)
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req) as resp:
-        return resp.read().decode("utf-8")
-
-
-_gh_cli_available = None  # type: Optional[bool]
-
-
-def _check_gh_cli():
-    # type: () -> bool
-    """Check if gh CLI is installed and can authenticate (cached).
-
-    gh CLI automatically uses GH_TOKEN or GITHUB_TOKEN env vars, so we
-    check for those in addition to the config-based ``gh auth status``.
-    """
-    global _gh_cli_available
-    if _gh_cli_available is not None:
-        return _gh_cli_available
-
-    # First, check if gh is even installed
-    try:
-        subprocess.run(
-            ["gh", "--version"],
-            capture_output=True, text=True, check=True)
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        _gh_cli_available = False
-        token = _get_github_token()
-        if token:
-            print("  gh CLI not installed, using REST API with token from env",
-                  file=sys.stderr)
-        else:
-            print("  WARNING: gh CLI not installed and no GITHUB_TOKEN set",
-                  file=sys.stderr)
-        return _gh_cli_available
-
-    # gh is installed — check if it can authenticate.
-    # gh reads GH_TOKEN / GITHUB_TOKEN env vars automatically, so if
-    # either is set the CLI will work even without `gh auth login`.
-    if _get_github_token():
-        _gh_cli_available = True
-        return _gh_cli_available
-
-    # No env token — fall back to config-based auth check
-    result = subprocess.run(
-        ["gh", "auth", "status"],
-        capture_output=True, text=True, check=False)
-    _gh_cli_available = result.returncode == 0
-    if not _gh_cli_available:
-        print("  WARNING: gh CLI not authenticated and no GITHUB_TOKEN set",
-              file=sys.stderr)
-    return _gh_cli_available
-
-
-def gh(args):
-    # type: (list[str]) -> str
-    """Run a gh CLI command and return stdout.
-
-    Falls back to direct REST API calls via urllib when gh CLI is
-    unavailable or not authenticated (common in agentic workflow
-    containers where GITHUB_TOKEN is set but gh isn't configured).
-    """
-    if _check_gh_cli():
-        return run(["gh"] + args)
-    raise subprocess.CalledProcessError(1, "gh", "gh CLI not available")
 
 
 def extract_base_version(tag):
@@ -185,32 +94,85 @@ def get_upcoming_version():
     return None
 
 
+def _login_from_email(email):
+    # type: (str) -> str
+    """Extract GitHub login from a commit email.
+
+    Handles noreply format: 12345+username@users.noreply.github.com -> username
+    Falls back to the local part of the email.
+    """
+    m = _NOREPLY_RE.match(email)
+    if m:
+        return m.group(1)
+    return email.split("@")[0]
+
+
 # ── Effort computation ───────────────────────────────────────────────
+
+
+def _get_pr_effort_from_git(pr_num, target_ref="origin/main", git_dir="."):
+    # type: (int, str, str) -> Tuple[int, set[str], set[str]]
+    """Get commit count, working days, and author names from a PR via git refs.
+
+    Fetches refs/pull/{N}/head, then uses merge-base with the target branch
+    to determine the base commit. Works for both squash-merged and
+    regular-merged PRs.
+
+    Returns (commit_count, set_of_date_strings, set_of_author_names).
+    """
+    ref_head = "refs/pull/{}/head".format(pr_num)
+    local_ref = "refs/pr-tmp/{}".format(pr_num)
+
+    try:
+        run(["git", "-C", git_dir, "fetch", "origin",
+             "{}:{}".format(ref_head, local_ref), "--quiet"])
+    except subprocess.CalledProcessError:
+        return 0, set(), set()
+
+    try:
+        head_sha = run(["git", "-C", git_dir, "rev-parse", local_ref])
+        base_sha = run(["git", "-C", git_dir, "merge-base",
+                        local_ref, target_ref])
+    except subprocess.CalledProcessError:
+        run(["git", "-C", git_dir, "update-ref", "-d", local_ref], check=False)
+        return 0, set(), set()
+
+    log_output = run([
+        "git", "-C", git_dir, "log",
+        "--format=%ad\t%an", "--date=short",
+        "{}..{}".format(base_sha, head_sha),
+    ], check=False)
+
+    run(["git", "-C", git_dir, "update-ref", "-d", local_ref], check=False)
+
+    if not log_output:
+        return 0, set(), set()
+
+    count = 0
+    days = set()  # type: set[str]
+    authors = set()  # type: set[str]
+    for line in log_output.splitlines():
+        parts = line.split("\t", 1)
+        if len(parts) != 2:
+            continue
+        date_str, author_name = parts
+        count += 1
+        days.add(date_str)
+        authors.add(author_name)
+
+    return count, days, authors
 
 
 def compute_pr_effort(pr):
     # type: (dict) -> dict
-    """Compute commit count and unique working days from PR commit data.
+    """Compute commit count and unique working days from git refs.
 
+    Uses refs/pull/N/merge to get base..head range for commit counting.
     If the PR body references a companion mono/skia PR, fetches that PR's
-    commits too and merges the effort (only counting authors from the
-    SkiaSharp PR to exclude unrelated upstream Skia committers).
+    commits too (filtered to SkiaSharp contributor authors only).
     """
-    commits = pr.get("commits", [])
-    commit_count = len(commits)
-    unique_days = set()
-
-    pr_author_names = set()  # type: set[str]
-    for c in commits:
-        for a in c.get("authors", []):
-            name = a.get("name", "")
-            if name:
-                pr_author_names.add(name)
-
-    for c in commits:
-        date_str = c.get("committedDate") or c.get("authoredDate", "")
-        if date_str:
-            unique_days.add(date_str[:10])
+    pr_num = pr.get("number", 0)
+    commit_count, unique_days, pr_author_names = _get_pr_effort_from_git(pr_num)
 
     skia_pr_num = None
     body = pr.get("body") or ""
@@ -233,25 +195,13 @@ def compute_pr_effort(pr):
     }
 
 
-def _fetch_skia_pr_shas(pr_num):
-    # type: (str) -> dict
-    """Fetch base_sha and head_sha for a mono/skia PR via REST API."""
-    pr_raw = json.loads(_github_rest_get(
-        "repos/{}/pulls/{}".format(SKIA_REPO, pr_num)))
-    return {
-        "base_sha": pr_raw.get("base", {}).get("sha", ""),
-        "head_sha": pr_raw.get("head", {}).get("sha", ""),
-    }
-
-
 def _fetch_skia_pr_effort(pr_num, author_names):
     # type: (str, set[str]) -> Tuple[int, set[str]]
-    """Fetch effort from a mono/skia PR using git log on the submodule.
+    """Fetch effort from a mono/skia PR using git refs on the submodule.
 
-    Uses the skia submodule directly to avoid GitHub API commit truncation
-    (the API caps at 100-250 commits, but skia merge PRs can have thousands).
-    Filters commits by author name to count only work by the SkiaSharp PR
-    contributors, excluding unrelated upstream Skia committers.
+    Fetches refs/pull/N/head and uses merge-base to find the range,
+    then filters commits to only those by SkiaSharp PR authors
+    (excluding upstream Google committers).
 
     Returns (commit_count, set_of_date_strings).
     """
@@ -259,21 +209,35 @@ def _fetch_skia_pr_effort(pr_num, author_names):
     if not (skia_dir / ".git").exists():
         return 0, set()
 
+    ref_head = "refs/pull/{}/head".format(pr_num)
+    local_ref = "refs/pr-tmp/skia-{}".format(pr_num)
+
     try:
-        meta = _fetch_skia_pr_shas(pr_num)
-        base_sha = meta["base_sha"]
-        head_sha = meta["head_sha"]
-    except (subprocess.CalledProcessError, json.JSONDecodeError,
-            urllib.error.URLError, KeyError):
+        run(["git", "-C", str(skia_dir), "fetch", "origin",
+             "{}:{}".format(ref_head, local_ref), "--quiet"])
+    except subprocess.CalledProcessError:
         return 0, set()
 
-    run(["git", "-C", str(skia_dir), "fetch", "origin", head_sha, "--quiet"],
-        check=False)
+    # Use merge-base with the skiasharp branch (the usual target for mono/skia PRs)
+    base_sha = None
+    for target in ["origin/skiasharp", "origin/main"]:
+        try:
+            base_sha = run(["git", "-C", str(skia_dir), "merge-base",
+                            local_ref, target])
+            break
+        except subprocess.CalledProcessError:
+            continue
+
+    if not base_sha:
+        run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
+            check=False)
+        return 0, set()
 
     try:
-        run(["git", "-C", str(skia_dir), "cat-file", "-e", head_sha])
-        run(["git", "-C", str(skia_dir), "cat-file", "-e", base_sha])
+        head_sha = run(["git", "-C", str(skia_dir), "rev-parse", local_ref])
     except subprocess.CalledProcessError:
+        run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
+            check=False)
         return 0, set()
 
     log_output = run([
@@ -281,6 +245,9 @@ def _fetch_skia_pr_effort(pr_num, author_names):
         "--format=%ad\t%an", "--date=short",
         "{}..{}".format(base_sha, head_sha),
     ], check=False)
+
+    run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
+        check=False)
 
     if not log_output:
         return 0, set()
@@ -472,101 +439,75 @@ def determine_diff_range(branch):
     return base, "origin/{}".format(branch), version
 
 
-def _fetch_pr(num, repo):
-    # type: (int, str) -> dict
-    """Fetch a single PR in the normalized format expected by the script.
-
-    Tries gh CLI first, falls back to REST API via urllib.
-    Returns a dict with: title, author, url, number, labels, mergedAt,
-    commits, body.
-    """
-    if _check_gh_cli():
-        try:
-            raw = gh(["pr", "view", str(num), "--repo", repo,
-                      "--json",
-                      "title,author,url,number,labels,mergedAt,commits,body"])
-            return json.loads(raw)
-        except (subprocess.CalledProcessError, json.JSONDecodeError):
-            pass  # fall through to REST API
-
-    # REST API fallback — commits endpoint gives us dates for effort calc
-    pr_raw = json.loads(_github_rest_get(
-        "repos/{}/pulls/{}".format(repo, num)))
-
-    commits = []
-    try:
-        commits_url = "repos/{}/pulls/{}/commits?per_page=100".format(repo, num)
-        commits_raw = json.loads(_github_rest_get(commits_url))
-        for c in commits_raw:
-            commit_obj = c.get("commit", {})
-            commits.append({
-                "committedDate": commit_obj.get("author", {}).get("date", ""),
-            })
-    except (urllib.error.URLError, json.JSONDecodeError):
-        pass
-
-    return {
-        "title": pr_raw.get("title", ""),
-        "author": {"login": (pr_raw.get("user") or {}).get("login", "unknown")},
-        "url": pr_raw.get("html_url", ""),
-        "number": pr_raw.get("number", num),
-        "labels": [{"name": la.get("name", "")}
-                   for la in pr_raw.get("labels", [])],
-        "mergedAt": pr_raw.get("merged_at", ""),
-        "commits": commits,
-        "body": pr_raw.get("body", ""),
-    }
-
-
 def get_prs_from_diff(from_ref, to_ref):
     # type: (str, str) -> list[dict]
     """Extract merged PRs from git log between two refs.
 
-    Parses PR numbers from '(#NNN)' at end of commit subject lines,
-    then fetches full PR metadata from GitHub.
+    Parses PR numbers, titles, authors, and bodies from commit messages.
+    No GitHub API calls needed — everything comes from git.
     """
-    log = run(["git", "log", "--oneline",
+    # Use a format that gives us everything: hash, author email, subject, body
+    # Separator between commits: a line that won't appear in commit messages
+    SEP = "---COMMIT-END-7f3b---"
+    log = run(["git", "log",
+               "--format=%H%n%ae%n%s%n%b{}".format(SEP),
                "{}..{}".format(from_ref, to_ref)])
 
-    pr_numbers = []  # type: list[int]
+    prs = []
     seen = set()  # type: set[int]
-    for line in log.splitlines():
-        m = re.search(r"\(#(\d+)\)\s*$", line)
-        if m:
-            num = int(m.group(1))
-            if num not in seen:
-                seen.add(num)
-                pr_numbers.append(num)
 
-    if not pr_numbers:
+    for block in log.split(SEP):
+        block = block.strip()
+        if not block:
+            continue
+        lines = block.split("\n", 3)
+        if len(lines) < 3:
+            continue
+
+        commit_hash = lines[0].strip()
+        author_email = lines[1].strip()
+        subject = lines[2].strip()
+        body = lines[3].strip() if len(lines) > 3 else ""
+
+        # Extract PR number from subject: "Some title (#1234)"
+        m = re.search(r"\(#(\d+)\)\s*$", subject)
+        if not m:
+            continue
+        num = int(m.group(1))
+        if num in seen:
+            continue
+        seen.add(num)
+
+        # Title is the subject minus the PR ref
+        title = re.sub(r"\s*\(#\d+\)\s*$", "", subject)
+
+        # Author login from email
+        login = _login_from_email(author_email)
+
+        prs.append({
+            "title": title,
+            "author": {"login": login},
+            "url": "https://github.com/{}/pull/{}".format(REPO, num),
+            "number": num,
+            "body": body,
+        })
+
+    if not prs:
         return []
 
-    prs = []
-    failures = 0
-    total = len(pr_numbers)
-    for i, num in enumerate(pr_numbers, 1):
+    # Compute effort for each PR (uses git refs/pull/N/merge)
+    result = []
+    for i, pr in enumerate(prs, 1):
         try:
-            pr = _fetch_pr(num, REPO)
             pr.update(compute_pr_effort(pr))
-            prs.append(pr)
-        except (subprocess.CalledProcessError, json.JSONDecodeError,
-                urllib.error.URLError, KeyError):
-            failures += 1
-            print("  WARNING: Failed to fetch PR #{} ({}/{})".format(
-                num, failures, total), file=sys.stderr)
-            continue
+        except subprocess.CalledProcessError:
+            pass  # effort stays unset, that's fine
+        result.append(pr)
         if i % 20 == 0:
-            print("  Fetched {}/{} PRs...".format(i, total), file=sys.stderr)
+            print("  Processed {}/{} PRs...".format(i, len(prs)),
+                  file=sys.stderr)
 
-    if failures > 0:
-        print("  WARNING: {} of {} PRs could not be fetched".format(
-            failures, total), file=sys.stderr)
-        if failures > total // 2:
-            print("ERROR: More than half of PRs failed to fetch. "
-                  "GitHub API may be down.", file=sys.stderr)
-            sys.exit(1)
-
-    return prs
+    return result
 
 
 def format_pr_list(prs, metadata):
@@ -596,18 +537,18 @@ def format_pr_list(prs, metadata):
             title = pr.get("title", "")
             author = (pr.get("author") or {}).get("login", "unknown")
             url = pr.get("url", "")
-            label_names = [la.get("name", "") for la in pr.get("labels", [])]
-            labels_str = " [{}]".format(", ".join(label_names)) if label_names else ""
+            is_community = author != "mattleibow"
+            community_str = " [community ✨]" if is_community else ""
             commits = pr.get("commitCount", 0)
             days = pr.get("workingDays", 0)
             effort = " ({} commit{}, {} day{})".format(
                 commits, "s" if commits != 1 else "",
-                days, "s" if days != 1 else "")
+                days, "s" if days != 1 else "") if commits else ""
             skia_pr = pr.get("skiaPr")
             skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
 
             lines.append("- {} by @{} in {}{}{}{}".format(
-                title, author, url, labels_str, effort, skia_str))
+                title, author, url, community_str, effort, skia_str))
 
     lines.append("")
     return "\n".join(lines)
