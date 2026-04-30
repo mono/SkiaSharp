@@ -40,12 +40,6 @@ from typing import Optional, Tuple
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
 
-SKIA_REPO = "mono/skia"
-SKIA_PR_PATTERNS = [
-    re.compile(r"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+https?://github\.com/mono/skia/pull/(\d+)", re.IGNORECASE),
-    re.compile(r"https?://github\.com/mono/skia/pull/(\d+)"),
-]
-
 
 # ── Helpers ──────────────────────────────────────────────────────────
 
@@ -91,25 +85,6 @@ def _github_rest_get(path):
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req) as resp:
         return resp.read().decode("utf-8")
-
-
-def _github_rest_get_paginated(path, per_page=100):
-    # type: (str, int) -> list
-    """GET all pages from a GitHub REST API list endpoint."""
-    sep = "&" if "?" in path else "?"
-    items = []  # type: list
-    page = 1
-    while True:
-        raw = _github_rest_get(
-            "{}{}per_page={}&page={}".format(path, sep, per_page, page))
-        batch = json.loads(raw)
-        if not batch:
-            break
-        items.extend(batch)
-        if len(batch) < per_page:
-            break
-        page += 1
-    return items
 
 
 _gh_cli_available = None  # type: Optional[bool]
@@ -202,109 +177,6 @@ def get_upcoming_version():
             if m:
                 return m.group(1)
     return None
-
-
-# ── Effort computation ───────────────────────────────────────────────
-
-
-def compute_pr_effort(pr):
-    # type: (dict) -> dict
-    """Compute commit count and unique working days from PR commit data.
-
-    If the PR body references a companion mono/skia PR, fetches that PR's
-    commits too and merges the effort (only counting authors from the
-    SkiaSharp PR to exclude unrelated upstream Skia committers).
-    """
-    commits = pr.get("commits", [])
-    commit_count = len(commits)
-    unique_days = set()
-
-    pr_author_names = set()  # type: set[str]
-    for c in commits:
-        for a in c.get("authors", []):
-            name = a.get("name", "")
-            if name:
-                pr_author_names.add(name)
-
-    for c in commits:
-        date_str = c.get("committedDate") or c.get("authoredDate", "")
-        if date_str:
-            unique_days.add(date_str[:10])
-
-    skia_pr_num = None
-    body = pr.get("body") or ""
-    for pattern in SKIA_PR_PATTERNS:
-        m = pattern.search(body)
-        if m:
-            skia_pr_num = m.group(1)
-            break
-
-    skia_commits = 0
-    if skia_pr_num:
-        skia_commits, skia_days = _fetch_skia_pr_effort(
-            skia_pr_num, pr_author_names)
-        unique_days |= skia_days
-
-    return {
-        "commitCount": commit_count + skia_commits,
-        "workingDays": len(unique_days),
-        "skiaPr": int(skia_pr_num) if skia_pr_num else None,
-    }
-
-
-def _fetch_skia_pr_effort(pr_num, author_names):
-    # type: (str, set[str]) -> Tuple[int, set[str]]
-    """Fetch effort from a mono/skia PR using git log on the submodule.
-
-    Uses the skia submodule directly to avoid GitHub API commit truncation
-    (the API caps at 100-250 commits, but skia merge PRs can have thousands).
-    Filters commits by author name to count only work by the SkiaSharp PR
-    contributors, excluding unrelated upstream Skia committers.
-
-    Returns (commit_count, set_of_date_strings).
-    """
-    skia_dir = Path("externals/skia")
-    if not (skia_dir / ".git").exists():
-        return 0, set()
-
-    try:
-        meta = _fetch_skia_pr_shas(pr_num)
-        base_sha = meta["base_sha"]
-        head_sha = meta["head_sha"]
-    except (subprocess.CalledProcessError, json.JSONDecodeError,
-            urllib.error.URLError, KeyError):
-        return 0, set()
-
-    run(["git", "-C", str(skia_dir), "fetch", "origin", head_sha, "--quiet"],
-        check=False)
-
-    try:
-        run(["git", "-C", str(skia_dir), "cat-file", "-e", head_sha])
-        run(["git", "-C", str(skia_dir), "cat-file", "-e", base_sha])
-    except subprocess.CalledProcessError:
-        return 0, set()
-
-    log_output = run([
-        "git", "-C", str(skia_dir), "log",
-        "--format=%ad\t%an", "--date=short",
-        "{}..{}".format(base_sha, head_sha),
-    ], check=False)
-
-    if not log_output:
-        return 0, set()
-
-    count = 0
-    days = set()  # type: set[str]
-    for line in log_output.splitlines():
-        parts = line.split("\t", 1)
-        if len(parts) != 2:
-            continue
-        date_str, author_name = parts
-        if author_name in author_names:
-            count += 1
-            days.add(date_str)
-
-    return count, days
 
 
 # ── Branch diffing ──────────────────────────────────────────────────
@@ -485,14 +357,13 @@ def _fetch_pr(num, repo):
     """Fetch a single PR in the normalized format expected by the script.
 
     Tries gh CLI first, falls back to REST API via urllib.
-    Returns a dict with: title, author, url, number, labels, mergedAt,
-    commits, body.
+    Returns a dict with: title, author, url, number, labels, mergedAt, body.
     """
     if _check_gh_cli():
         try:
             raw = gh(["pr", "view", str(num), "--repo", repo,
                       "--json",
-                      "title,author,url,number,labels,mergedAt,commits,body"])
+                      "title,author,url,number,labels,mergedAt,body"])
             return json.loads(raw)
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             pass  # fall through to REST API
@@ -500,24 +371,6 @@ def _fetch_pr(num, repo):
     # REST API fallback
     pr_raw = json.loads(_github_rest_get(
         "repos/{}/pulls/{}".format(repo, num)))
-
-    # Fetch commits (paginated — gh pr view returns all)
-    commits_raw = _github_rest_get_paginated(
-        "repos/{}/pulls/{}/commits".format(repo, num))
-
-    # Map REST format to gh --json format
-    commits = []
-    for c in commits_raw:
-        commit_obj = c.get("commit", {})
-        authors = []
-        if commit_obj.get("author"):
-            authors.append({
-                "name": commit_obj["author"].get("name", ""),
-            })
-        commits.append({
-            "committedDate": commit_obj.get("author", {}).get("date", ""),
-            "authors": authors,
-        })
 
     return {
         "title": pr_raw.get("title", ""),
@@ -527,7 +380,6 @@ def _fetch_pr(num, repo):
         "labels": [{"name": la.get("name", "")}
                    for la in pr_raw.get("labels", [])],
         "mergedAt": pr_raw.get("merged_at", ""),
-        "commits": commits,
         "body": pr_raw.get("body", ""),
     }
 
@@ -554,29 +406,6 @@ def _fetch_releases(repo, limit=50):
         {"tagName": r.get("tag_name", ""), "isPrerelease": r.get("prerelease", False)}
         for r in releases_raw
     ]
-
-
-def _fetch_skia_pr_shas(pr_num):
-    # type: (str) -> dict
-    """Fetch base_sha and head_sha for a mono/skia PR.
-
-    Tries gh CLI first, falls back to REST API.
-    """
-    if _check_gh_cli():
-        try:
-            raw = gh(["api", "repos/{}/pulls/{}".format(SKIA_REPO, pr_num),
-                      "--jq", "{base_sha: .base.sha, head_sha: .head.sha}"])
-            return json.loads(raw)
-        except (subprocess.CalledProcessError, json.JSONDecodeError):
-            pass  # fall through to REST API
-
-    # REST API fallback
-    pr_raw = json.loads(_github_rest_get(
-        "repos/{}/pulls/{}".format(SKIA_REPO, pr_num)))
-    return {
-        "base_sha": pr_raw.get("base", {}).get("sha", ""),
-        "head_sha": pr_raw.get("head", {}).get("sha", ""),
-    }
 
 
 def get_prs_from_diff(from_ref, to_ref):
@@ -608,7 +437,6 @@ def get_prs_from_diff(from_ref, to_ref):
     for i, num in enumerate(pr_numbers, 1):
         try:
             pr = _fetch_pr(num, REPO)
-            pr.update(compute_pr_effort(pr))
             prs.append(pr)
         except (subprocess.CalledProcessError, json.JSONDecodeError,
                 urllib.error.URLError, KeyError):
@@ -659,16 +487,9 @@ def format_pr_list(prs, metadata):
             url = pr.get("url", "")
             label_names = [la.get("name", "") for la in pr.get("labels", [])]
             labels_str = " [{}]".format(", ".join(label_names)) if label_names else ""
-            commits = pr.get("commitCount", 0)
-            days = pr.get("workingDays", 0)
-            effort = " ({} commit{}, {} day{})".format(
-                commits, "s" if commits != 1 else "",
-                days, "s" if days != 1 else "")
-            skia_pr = pr.get("skiaPr")
-            skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
 
-            lines.append("- {} by @{} in {}{}{}{}".format(
-                title, author, url, labels_str, effort, skia_str))
+            lines.append("- {} by @{} in {}{}".format(
+                title, author, url, labels_str))
 
     lines.append("")
     return "\n".join(lines)
