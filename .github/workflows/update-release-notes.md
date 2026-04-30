@@ -22,6 +22,7 @@ safe-outputs:
     labels: [documentation]
     draft: false
     allowed-base-branches: [main]
+    preserve-branch-name: true
 ---
 
 # Update Release Notes
