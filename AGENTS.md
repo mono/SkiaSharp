@@ -341,11 +341,12 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Test release | `/release-testing` | "test the release", "verify packages" |
 | Publish release | `/release-publish` | "push to nuget", "tag release" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
-| Audit release notes | `/release-notes-audit` | "compare Skia changes", "API gap analysis" |
+| Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "changelog", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |
 | PR commit message | `/pr-commit-message` | "write commit message for PR" |
 | Validate samples | `/validate-samples` | "build samples", "test sample projects" |
+| Scout GM samples | `/sample-scout` | "find demos to port", "what samples are we missing", "gallery ideas" |
 | Create/improve skill | `/skill-creator` | "create a new skill", "improve skill X" |
 
 ### Issue Pipeline (3 steps)

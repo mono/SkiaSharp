@@ -13,16 +13,15 @@ timeout-minutes: 10
 permissions:
   contents: read
 tools:
-  bash: ["python3", "gh", "git", "cat", "grep", "sort", "head", "tail", "sed", "awk"]
+  bash: ["python3", "git", "cat", "grep", "sort", "head", "tail", "sed", "awk"]
   edit:
-network:
-  allowed:
-    - defaults
+network: {}
 safe-outputs:
   create-pull-request:
     title-prefix: "[docs] "
     labels: [documentation]
     draft: false
+    allowed-base-branches: [main]
 ---
 
 # Update Release Notes
