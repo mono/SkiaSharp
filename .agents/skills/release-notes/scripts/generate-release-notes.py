@@ -94,6 +94,29 @@ def get_upcoming_version():
     return None
 
 
+def get_version_from_remote_branch(branch):
+    # type: (str) -> Optional[str]
+    """Read SKIASHARP_VERSION from a remote branch without checking it out."""
+    try:
+        content = run(["git", "show",
+                       "origin/{}:scripts/azure-templates-variables.yml".format(branch)])
+        for line in content.splitlines():
+            m = re.match(r"\s*SKIASHARP_VERSION:\s*(\S+)", line)
+            if m:
+                return m.group(1)
+    except subprocess.CalledProcessError:
+        pass
+    return None
+
+
+def _is_stable_branch(branch):
+    # type: (str) -> bool
+    """Check if a branch is a stable release (not preview, not .x)."""
+    if branch.endswith(".x"):
+        return False
+    return not re.search(r"-preview\.", branch)
+
+
 def _login_from_email(email):
     # type: (str) -> str
     """Extract GitHub login from a commit email.
@@ -335,13 +358,65 @@ def version_from_branch(branch):
     return ver.split("-")[0]
 
 
+def find_previous_stable_base(all_branches, major, minor_num, patch):
+    # type: (list[str], int, int, int) -> Optional[str]
+    """Find the previous stable release branch to use as the cumulative diff base.
+
+    For version X.Y.Z:
+    1. If Z > 0: look for release/X.Y.(Z-1) stable, fall back to latest preview
+    2. If Z == 0: look for the latest branch from any previous minor/major
+
+    Falls back to None if nothing found.
+    """
+    minor = "{}.{}".format(major, minor_num)
+
+    # Case 1: Z > 0 — look for stable release of previous patch
+    if patch > 0:
+        prev_version = "{}.{}".format(minor, patch - 1)
+        # Prefer stable
+        prev_stable = "release/{}".format(prev_version)
+        if prev_stable in all_branches:
+            return prev_stable
+        # No stable — find latest preview of that patch
+        prev_candidates = [b for b in all_branches
+                           if b.startswith("release/{}-preview.".format(
+                               prev_version))]
+        if prev_candidates:
+            prev_candidates.sort(key=release_branch_sort_key)
+            return prev_candidates[-1]
+        # No previous patch at all — fall back to any earlier patch
+        earlier = [b for b in all_branches
+                   if b.startswith("release/{}.".format(minor))
+                   and not b.endswith(".x")]
+        earlier = [b for b in earlier
+                   if release_branch_sort_key(b) <
+                   (major, minor_num, patch, 0, 0)]
+        if earlier:
+            earlier.sort(key=release_branch_sort_key)
+            return earlier[-1]
+
+    # Case 2: Z == 0 (or no previous patch found) — search previous minors
+    all_versioned = [b for b in all_branches if not b.endswith(".x")]
+    all_versioned.sort(key=release_branch_sort_key)
+
+    # Find the latest branch that sorts before our minor
+    target_key = (major, minor_num, -2, 0, 0)  # before even .x
+    candidates = [b for b in all_versioned
+                  if release_branch_sort_key(b) < target_key]
+    if candidates:
+        return candidates[-1]
+
+    return None
+
+
 def determine_diff_range(branch):
     # type: (str) -> Tuple[str, str, str]
     """Determine the git diff range for a branch.
 
+    Uses cumulative diffs: always diffs from the previous stable base,
+    so that previews produce a full rollup of all changes.
+
     Returns (from_ref, to_ref, version_display).
-    Refs include 'origin/' prefix where appropriate; from_ref may be a
-    bare commit SHA when merge-base or initial commit is used.
     """
     all_branches = list_remote_release_branches()
 
@@ -356,14 +431,14 @@ def determine_diff_range(branch):
 
         # Find latest release branch for the same minor
         candidates = [b for b in all_branches
-                      if b.startswith("release/{}.".format(minor))]
+                      if b.startswith("release/{}.".format(minor))
+                      and not b.endswith(".x")]
 
         # Fallback: latest release branch across ALL minors
         if not candidates:
-            candidates = list(all_branches)
+            candidates = [b for b in all_branches if not b.endswith(".x")]
 
         if not candidates:
-            # No release branches at all — refuse to diff entire history
             raise RuntimeError(
                 "No release branches found. Cannot determine diff range "
                 "for main. Ensure release branches are fetched.")
@@ -373,70 +448,63 @@ def determine_diff_range(branch):
         return "origin/{}".format(latest), "origin/main", version
 
     # ── servicing branch (release/X.Y.x) ────────────────────────
-    m_svc = re.match(r"release/(\d+\.\d+)\.x$", branch)
+    m_svc = re.match(r"release/(\d+)\.(\d+)\.x$", branch)
     if m_svc:
-        minor = m_svc.group(1)
+        major = int(m_svc.group(1))
+        minor_num = int(m_svc.group(2))
+        minor = "{}.{}".format(major, minor_num)
 
-        # All versioned branches for this minor (exclude the .x branch itself)
+        # Read version from the remote branch
+        version = get_version_from_remote_branch(branch)
+        if not version:
+            version = "{}.0".format(minor)
+
+        # All versioned branches for this minor (exclude .x)
         candidates = [b for b in all_branches
                       if b.startswith("release/{}.".format(minor))
                       and b != branch
                       and not b.endswith(".x")]
 
-        if not candidates:
-            base = run(["git", "merge-base",
+        if candidates:
+            candidates.sort(key=release_branch_sort_key)
+            latest = candidates[-1]
+            return ("origin/{}".format(latest),
+                    "origin/{}".format(branch),
+                    version)
+
+        # No versioned branches — use previous minor
+        base = find_previous_stable_base(all_branches, major, minor_num, 0)
+        if base:
+            return ("origin/{}".format(base),
+                    "origin/{}".format(branch),
+                    version)
+
+        base_sha = run(["git", "merge-base",
                         "origin/{}".format(branch), "origin/main"])
-            return base, "origin/{}".format(branch), "{}.0".format(minor)
-
-        candidates.sort(key=release_branch_sort_key)
-        latest = candidates[-1]
-
-        # Determine next patch version from the latest branch
-        # If latest is a preview (no stable yet for that patch), target that patch
-        # If latest is a stable, target patch + 1
-        latest_version = version_from_branch(latest)
-        latest_patch = int(latest_version.split(".")[-1]) if latest_version else 0
-        latest_is_stable = not re.search(r"-preview\.", latest)
-        if latest_is_stable:
-            next_version = "{}.{}".format(minor, latest_patch + 1)
-        else:
-            next_version = "{}.{}".format(minor, latest_patch)
-
-        return ("origin/{}".format(latest),
-                "origin/{}".format(branch),
-                next_version)
+        return base_sha, "origin/{}".format(branch), version
 
     # ── versioned branch (release/X.Y.Z or release/X.Y.Z-preview.N) ─
-    m_ver = re.match(r"release/(\d+\.\d+)\.\S+", branch)
+    m_ver = re.match(r"release/(\d+)\.(\d+)\.(\d+)", branch)
     if not m_ver:
         raise RuntimeError("Cannot parse branch: {}".format(branch))
-    minor = m_ver.group(1)
-    version = version_from_branch(branch)
 
-    # All same-minor branches, sorted by semver
-    # Exclude .x servicing branches — they are not predecessors of versioned branches
-    candidates = [b for b in all_branches
-                  if b.startswith("release/{}.".format(minor))
-                  and not b.endswith(".x")]
-    candidates.sort(key=release_branch_sort_key)
+    major = int(m_ver.group(1))
+    minor_num = int(m_ver.group(2))
+    patch = int(m_ver.group(3))
+    version = version_from_branch(branch)  # strips preview suffix
 
-    if branch not in candidates:
-        raise RuntimeError(
-            "Branch {} not found in remote branches. "
-            "Available: {}".format(
-                branch, ", ".join(candidates) or "(none)"))
+    # Find the cumulative base: previous stable (or previous minor for Z==0)
+    base = find_previous_stable_base(all_branches, major, minor_num, patch)
 
-    idx = candidates.index(branch)
-    if idx > 0:
-        previous = candidates[idx - 1]
-        return ("origin/{}".format(previous),
+    if base:
+        return ("origin/{}".format(base),
                 "origin/{}".format(branch),
                 version)
 
-    # No previous in same minor -- use merge-base with main
-    base = run(["git", "merge-base",
-                "origin/{}".format(branch), "origin/main"])
-    return base, "origin/{}".format(branch), version
+    # Last resort: merge-base with main
+    base_sha = run(["git", "merge-base",
+                    "origin/{}".format(branch), "origin/main"])
+    return base_sha, "origin/{}".format(branch), version
 
 
 def get_prs_from_diff(from_ref, to_ref):
@@ -764,8 +832,82 @@ def cmd_branch(branch):
     output_path.write_text(content)
     print("Wrote {}".format(output_path))
 
+    # When a versioned branch is pushed, also regenerate the unreleased
+    # file(s) — the diff range for main or the .x branch may have changed
+    # because a new release branch now exists.
+    if not is_main_branch and not is_servicing:
+        _regen_unreleased(branch)
+
     # Regenerate TOC and index
     cmd_update_toc()
+
+
+def _regen_unreleased(trigger_branch):
+    # type: (str) -> None
+    """Regenerate unreleased files after a versioned branch push.
+
+    When a new release/X.Y.Z branch appears, the diff ranges for
+    main and/or the servicing release/X.Y.x branch may have changed.
+    """
+    m = re.match(r"release/(\d+)\.(\d+)\.\d+", trigger_branch)
+    if not m:
+        return
+
+    major = int(m.group(1))
+    minor_num = int(m.group(2))
+    minor = "{}.{}".format(major, minor_num)
+
+    all_branches = list_remote_release_branches()
+
+    # Regenerate the servicing branch (.x) if it exists
+    svc_branch = "release/{}.x".format(minor)
+    if svc_branch in all_branches:
+        print("\nRegenerating unreleased for {}...".format(svc_branch))
+        try:
+            from_ref, to_ref, svc_version = determine_diff_range(svc_branch)
+            from_display = _removeprefix(from_ref, "origin/")
+            if re.match(r"^[0-9a-f]{7,}$", from_display):
+                from_display = from_display[:12]
+            to_display = _removeprefix(to_ref, "origin/")
+
+            prs = get_prs_from_diff(from_ref, to_ref)
+            metadata = {
+                "branch": svc_branch,
+                "version": svc_version,
+                "status": "unreleased",
+                "from": from_display,
+                "to": to_display,
+            }
+            svc_path = RELEASES_DIR / "{}-unreleased.md".format(svc_version)
+            svc_path.write_text(format_pr_list(prs, metadata))
+            print("Wrote {} ({} PRs)".format(svc_path, len(prs)))
+        except (RuntimeError, subprocess.CalledProcessError) as e:
+            print("  WARNING: Could not regenerate {}: {}".format(
+                svc_branch, e), file=sys.stderr)
+
+    # Regenerate main's unreleased file
+    print("\nRegenerating unreleased for main...")
+    try:
+        from_ref, to_ref, main_version = determine_diff_range("main")
+        from_display = _removeprefix(from_ref, "origin/")
+        if re.match(r"^[0-9a-f]{7,}$", from_display):
+            from_display = from_display[:12]
+        to_display = _removeprefix(to_ref, "origin/")
+
+        prs = get_prs_from_diff(from_ref, to_ref)
+        metadata = {
+            "branch": "main",
+            "version": main_version,
+            "status": "unreleased",
+            "from": from_display,
+            "to": to_display,
+        }
+        main_path = RELEASES_DIR / "{}-unreleased.md".format(main_version)
+        main_path.write_text(format_pr_list(prs, metadata))
+        print("Wrote {} ({} PRs)".format(main_path, len(prs)))
+    except (RuntimeError, subprocess.CalledProcessError) as e:
+        print("  WARNING: Could not regenerate main: {}".format(e),
+              file=sys.stderr)
 
 
 # ── Main ─────────────────────────────────────────────────────────────
