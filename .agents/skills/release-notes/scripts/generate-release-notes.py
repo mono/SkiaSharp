@@ -18,16 +18,20 @@ with a YAML front-matter header containing metadata (branch, version, status, di
 range, PR count) followed by the raw PR list. AI then rewrites this file with
 polished content. TOC and index are regenerated automatically.
 
-Requirements: gh (GitHub CLI), git, Python 3.7+
+Requirements: git, Python 3.7+
+             gh (GitHub CLI) OR GITHUB_TOKEN/GH_TOKEN environment variable
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional, Tuple
@@ -61,10 +65,112 @@ def run(args, check=True):
     return result.stdout.strip()
 
 
+def _get_github_token():
+    # type: () -> Optional[str]
+    """Read a GitHub token from the environment."""
+    return (os.environ.get("GH_TOKEN")
+            or os.environ.get("GITHUB_TOKEN")
+            or None)
+
+
+def _github_rest_get(path):
+    # type: (str) -> str
+    """GET a GitHub REST API endpoint using urllib (no gh CLI needed).
+
+    Falls back to unauthenticated requests if no token is available
+    (will hit rate limits quickly).
+    """
+    url = "https://api.github.com/{}".format(path.lstrip("/"))
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    token = _get_github_token()
+    if token:
+        headers["Authorization"] = "Bearer {}".format(token)
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req) as resp:
+        return resp.read().decode("utf-8")
+
+
+def _github_rest_get_paginated(path, per_page=100):
+    # type: (str, int) -> list
+    """GET all pages from a GitHub REST API list endpoint."""
+    sep = "&" if "?" in path else "?"
+    items = []  # type: list
+    page = 1
+    while True:
+        raw = _github_rest_get(
+            "{}{}per_page={}&page={}".format(path, sep, per_page, page))
+        batch = json.loads(raw)
+        if not batch:
+            break
+        items.extend(batch)
+        if len(batch) < per_page:
+            break
+        page += 1
+    return items
+
+
+_gh_cli_available = None  # type: Optional[bool]
+
+
+def _check_gh_cli():
+    # type: () -> bool
+    """Check if gh CLI is installed and can authenticate (cached).
+
+    gh CLI automatically uses GH_TOKEN or GITHUB_TOKEN env vars, so we
+    check for those in addition to the config-based ``gh auth status``.
+    """
+    global _gh_cli_available
+    if _gh_cli_available is not None:
+        return _gh_cli_available
+
+    # First, check if gh is even installed
+    try:
+        subprocess.run(
+            ["gh", "--version"],
+            capture_output=True, text=True, check=True)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        _gh_cli_available = False
+        token = _get_github_token()
+        if token:
+            print("  gh CLI not installed, using REST API with token from env",
+                  file=sys.stderr)
+        else:
+            print("  WARNING: gh CLI not installed and no GITHUB_TOKEN set",
+                  file=sys.stderr)
+        return _gh_cli_available
+
+    # gh is installed — check if it can authenticate.
+    # gh reads GH_TOKEN / GITHUB_TOKEN env vars automatically, so if
+    # either is set the CLI will work even without `gh auth login`.
+    if _get_github_token():
+        _gh_cli_available = True
+        return _gh_cli_available
+
+    # No env token — fall back to config-based auth check
+    result = subprocess.run(
+        ["gh", "auth", "status"],
+        capture_output=True, text=True, check=False)
+    _gh_cli_available = result.returncode == 0
+    if not _gh_cli_available:
+        print("  WARNING: gh CLI not authenticated and no GITHUB_TOKEN set",
+              file=sys.stderr)
+    return _gh_cli_available
+
+
 def gh(args):
     # type: (list[str]) -> str
-    """Run a gh CLI command and return stdout."""
-    return run(["gh"] + args)
+    """Run a gh CLI command and return stdout.
+
+    Falls back to direct REST API calls via urllib when gh CLI is
+    unavailable or not authenticated (common in agentic workflow
+    containers where GITHUB_TOKEN is set but gh isn't configured).
+    """
+    if _check_gh_cli():
+        return run(["gh"] + args)
+    raise subprocess.CalledProcessError(1, "gh", "gh CLI not available")
 
 
 def extract_base_version(tag):
@@ -162,12 +268,11 @@ def _fetch_skia_pr_effort(pr_num, author_names):
         return 0, set()
 
     try:
-        meta = json.loads(
-            gh(["api", "repos/{}/pulls/{}".format(SKIA_REPO, pr_num),
-                "--jq", "{base_sha: .base.sha, head_sha: .head.sha}"]))
+        meta = _fetch_skia_pr_shas(pr_num)
         base_sha = meta["base_sha"]
         head_sha = meta["head_sha"]
-    except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError):
+    except (subprocess.CalledProcessError, json.JSONDecodeError,
+            urllib.error.URLError, KeyError):
         return 0, set()
 
     run(["git", "-C", str(skia_dir), "fetch", "origin", head_sha, "--quiet"],
@@ -375,6 +480,105 @@ def determine_diff_range(branch):
     return base, "origin/{}".format(branch), version
 
 
+def _fetch_pr(num, repo):
+    # type: (int, str) -> dict
+    """Fetch a single PR in the normalized format expected by the script.
+
+    Tries gh CLI first, falls back to REST API via urllib.
+    Returns a dict with: title, author, url, number, labels, mergedAt,
+    commits, body.
+    """
+    if _check_gh_cli():
+        try:
+            raw = gh(["pr", "view", str(num), "--repo", repo,
+                      "--json",
+                      "title,author,url,number,labels,mergedAt,commits,body"])
+            return json.loads(raw)
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            pass  # fall through to REST API
+
+    # REST API fallback
+    pr_raw = json.loads(_github_rest_get(
+        "repos/{}/pulls/{}".format(repo, num)))
+
+    # Fetch commits (paginated — gh pr view returns all)
+    commits_raw = _github_rest_get_paginated(
+        "repos/{}/pulls/{}/commits".format(repo, num))
+
+    # Map REST format to gh --json format
+    commits = []
+    for c in commits_raw:
+        commit_obj = c.get("commit", {})
+        authors = []
+        if commit_obj.get("author"):
+            authors.append({
+                "name": commit_obj["author"].get("name", ""),
+            })
+        commits.append({
+            "committedDate": commit_obj.get("author", {}).get("date", ""),
+            "authors": authors,
+        })
+
+    return {
+        "title": pr_raw.get("title", ""),
+        "author": {"login": (pr_raw.get("user") or {}).get("login", "unknown")},
+        "url": pr_raw.get("html_url", ""),
+        "number": pr_raw.get("number", num),
+        "labels": [{"name": la.get("name", "")}
+                   for la in pr_raw.get("labels", [])],
+        "mergedAt": pr_raw.get("merged_at", ""),
+        "commits": commits,
+        "body": pr_raw.get("body", ""),
+    }
+
+
+def _fetch_releases(repo, limit=50):
+    # type: (str, int) -> list[dict]
+    """Fetch releases in the format expected by the script.
+
+    Tries gh CLI first, falls back to REST API.
+    Returns list of {tagName, isPrerelease}.
+    """
+    if _check_gh_cli():
+        try:
+            raw = gh(["release", "list", "--repo", repo, "--limit", str(limit),
+                      "--json", "tagName,isPrerelease"])
+            return json.loads(raw)
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            pass  # fall through to REST API
+
+    # REST API fallback
+    releases_raw = json.loads(_github_rest_get(
+        "repos/{}/releases?per_page={}".format(repo, limit)))
+    return [
+        {"tagName": r.get("tag_name", ""), "isPrerelease": r.get("prerelease", False)}
+        for r in releases_raw
+    ]
+
+
+def _fetch_skia_pr_shas(pr_num):
+    # type: (str) -> dict
+    """Fetch base_sha and head_sha for a mono/skia PR.
+
+    Tries gh CLI first, falls back to REST API.
+    """
+    if _check_gh_cli():
+        try:
+            raw = gh(["api", "repos/{}/pulls/{}".format(SKIA_REPO, pr_num),
+                      "--jq", "{base_sha: .base.sha, head_sha: .head.sha}"])
+            return json.loads(raw)
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            pass  # fall through to REST API
+
+    # REST API fallback
+    pr_raw = json.loads(_github_rest_get(
+        "repos/{}/pulls/{}".format(SKIA_REPO, pr_num)))
+    return {
+        "base_sha": pr_raw.get("base", {}).get("sha", ""),
+        "head_sha": pr_raw.get("head", {}).get("sha", ""),
+    }
+
+
 def get_prs_from_diff(from_ref, to_ref):
     # type: (str, str) -> list[dict]
     """Extract merged PRs from git log between two refs.
@@ -403,13 +607,11 @@ def get_prs_from_diff(from_ref, to_ref):
     total = len(pr_numbers)
     for i, num in enumerate(pr_numbers, 1):
         try:
-            raw = gh(["pr", "view", str(num), "--repo", REPO,
-                      "--json",
-                      "title,author,url,number,labels,mergedAt,commits,body"])
-            pr = json.loads(raw)
+            pr = _fetch_pr(num, REPO)
             pr.update(compute_pr_effort(pr))
             prs.append(pr)
-        except (subprocess.CalledProcessError, json.JSONDecodeError):
+        except (subprocess.CalledProcessError, json.JSONDecodeError,
+                urllib.error.URLError, KeyError):
             failures += 1
             print("  WARNING: Failed to fetch PR #{} ({}/{})".format(
                 num, failures, total), file=sys.stderr)
@@ -634,9 +836,7 @@ def cmd_branch(branch):
     status = "unreleased"
     if not is_main and not is_servicing:
         try:
-            releases_raw = gh(["release", "list", "--repo", REPO, "--limit", "50",
-                               "--json", "tagName,isPrerelease"])
-            releases = json.loads(releases_raw)
+            releases = _fetch_releases(REPO, limit=50)
             has_stable = False
             has_preview = False
             for rel in releases:
@@ -650,7 +850,8 @@ def cmd_branch(branch):
                 status = "stable"
             elif has_preview:
                 status = "preview"
-        except (subprocess.CalledProcessError, json.JSONDecodeError):
+        except (subprocess.CalledProcessError, json.JSONDecodeError,
+                urllib.error.URLError):
             pass
 
     print("Branch: {}".format(branch))
