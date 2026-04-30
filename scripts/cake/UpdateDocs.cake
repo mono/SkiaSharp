@@ -30,6 +30,8 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Microsoft.tvOS.Ref.net10.0_26.0", "net10.0");
     await AddDep("Microsoft.macOS.Ref.net10.0_26.0", "net10.0");
     await AddDep("Samsung.Tizen.Ref", "net10.0");
+    await AddDep("GirCore.Gdk-4.0", "net10.0");
+    await AddDep("GirCore.Gtk-4.0", "net10.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.iOS/v1.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.TVOS/v1.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0");
