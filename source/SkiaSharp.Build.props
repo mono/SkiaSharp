@@ -80,10 +80,10 @@
     <TPVWindowsPrevious>10.0.19041.0</TPVWindowsPrevious>
     <!-- Current (net10.0) -->
     <TPVAndroidCurrent>36.0</TPVAndroidCurrent>
-    <TPViOSCurrent>26.2</TPViOSCurrent>
-    <TPVMacCatalystCurrent>26.2</TPVMacCatalystCurrent>
-    <TPVtvOSCurrent>26.2</TPVtvOSCurrent>
-    <TPVmacOSCurrent>26.2</TPVmacOSCurrent>
+    <TPViOSCurrent>26.0</TPViOSCurrent>
+    <TPVMacCatalystCurrent>26.0</TPVMacCatalystCurrent>
+    <TPVtvOSCurrent>26.0</TPVtvOSCurrent>
+    <TPVmacOSCurrent>26.0</TPVmacOSCurrent>
     <TPVTizenCurrent>10.0</TPVTizenCurrent>
     <TPVWindowsCurrent>10.0.19041.0</TPVWindowsCurrent>
     <!-- Minimum (net6.0) — for platforms where device runtime lags behind SDK -->
@@ -159,15 +159,15 @@
     <MauiTargetFrameworks>$(MauiTargetFrameworksCurrent);$(MauiTargetFrameworksPrevious)</MauiTargetFrameworks>
   </PropertyGroup>
 
-  <!-- .NET MAUI Apps (no TPV) -->
+  <!-- .NET MAUI Apps (no TPV — apps should use latest installed workload) -->
   <PropertyGroup>
-    <MauiTargetFrameworksAppCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksAppCurrent>
-    <MauiTargetFrameworksAppCurrent Condition="$(IsLinux)">$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksAppCurrent>
+    <MauiTargetFrameworksAppCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</MauiTargetFrameworksAppCurrent>
+    <MauiTargetFrameworksAppCurrent Condition="$(IsLinux)">$(TFMCurrent)-android</MauiTargetFrameworksAppCurrent>
     <MauiTargetFrameworksAppCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksAppCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</MauiTargetFrameworksAppCurrent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMPrevious)' != ''">
-    <MauiTargetFrameworksAppPrevious Condition="!$(IsLinux)">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksAppPrevious>
-    <MauiTargetFrameworksAppPrevious Condition="$(IsLinux)">$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksAppPrevious>
+    <MauiTargetFrameworksAppPrevious Condition="!$(IsLinux)">$(TFMPrevious)-ios;$(TFMPrevious)-maccatalyst;$(TFMPrevious)-android</MauiTargetFrameworksAppPrevious>
+    <MauiTargetFrameworksAppPrevious Condition="$(IsLinux)">$(TFMPrevious)-android</MauiTargetFrameworksAppPrevious>
     <MauiTargetFrameworksAppPrevious Condition="$(IsWindows)">$(MauiTargetFrameworksAppPrevious);$(TFMPrevious)-windows$(TPVWindowsPrevious)</MauiTargetFrameworksAppPrevious>
   </PropertyGroup>
 
