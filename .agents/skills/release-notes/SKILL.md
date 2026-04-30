@@ -2,8 +2,8 @@
 name: release-notes
 description: >
   Generate or regenerate polished website release notes for SkiaSharp versions.
-  Fetches raw release data from GitHub, reads the template, and writes formatted
-  markdown pages to documentation/docfx/releases/.
+  Collects raw PR data from git history (no API calls needed), reads the template,
+  and writes formatted markdown pages to documentation/docfx/releases/.
 
   Use this skill whenever the user asks to:
   - Generate release notes for a version ("write release notes for 3.119.2")
@@ -47,7 +47,8 @@ python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch 
 ```
 
 This writes raw PR data with YAML header to `documentation/docfx/releases/{version}.md`
-and regenerates TOC/index. Read the file to get the raw data and metadata.
+and regenerates TOC/index. All data comes from git history — no API calls or tokens needed.
+Read the file to get the raw data and metadata.
 
 ### Step 3 — Read the template
 
