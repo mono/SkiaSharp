@@ -63,16 +63,9 @@ on:
           exit 1
         fi
 
-        # Check if autobump branch is already up-to-date (skip for current mode —
-        # current mode merges into skiasharp where ancestry checks need a clone)
-        if [ "$MODE" != "current" ]; then
-          UPSTREAM_TIP=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
-          BRANCH_TIP=$(git ls-remote https://github.com/mono/skia.git "refs/heads/autobump/skia-m${TARGET}" 2>/dev/null | awk '{print $1}')
-          if [ -n "$BRANCH_TIP" ] && [ "$BRANCH_TIP" = "$UPSTREAM_TIP" ]; then
-            echo "::notice::autobump/skia-m${TARGET} tip matches upstream — up-to-date"
-            exit 1
-          fi
-        fi
+        # Note: we can't reliably check if the autobump branch is up-to-date
+        # from pre-activation (no clone, merge commits != upstream tip).
+        # The agent does the real check with git log HEAD..upstream after checkout.
 
         echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
 jobs:
@@ -117,9 +110,15 @@ safe-outputs:
 
 # Auto Skia Track
 
-Update SkiaSharp's Skia submodule from m${{ needs.pre_activation.outputs.current }} to
-milestone ${{ needs.pre_activation.outputs.target }} on branch
-`autobump/skia-m${{ needs.pre_activation.outputs.target }}`.
+Merge new upstream commits from `chrome/m${{ needs.pre_activation.outputs.target }}` into
+branch `autobump/skia-m${{ needs.pre_activation.outputs.target }}`.
+
+The current SkiaSharp milestone is m${{ needs.pre_activation.outputs.current }}.
+The target is m${{ needs.pre_activation.outputs.target }}.
+
+**Important**: Even when current == target, there may be new upstream bug-fix commits on
+`chrome/m${{ needs.pre_activation.outputs.target }}` that need merging. Always check for
+new commits — a matching milestone number does NOT mean there's nothing to do.
 
 Read and follow `.agents/skills/update-skia/SKILL.md` for detailed instructions on every phase.
 
@@ -131,11 +130,35 @@ Follow **Phases 2–3** of the skill. Save the analysis — it goes into the PR 
 
 Follow **Phase 4** of the skill in `externals/skia`:
 
-1. Create or checkout `autobump/skia-m${{ needs.pre_activation.outputs.target }}` from `origin/skiasharp`
-2. `git merge --no-commit upstream/chrome/m${{ needs.pre_activation.outputs.target }}`
-3. Resolve conflicts per the skill's strategy table (Phase 4, Step 3)
-4. Verify: no conflict markers, C API files intact
-5. Commit the merge
+First, check if the branch already exists or needs creating:
+
+```bash
+cd externals/skia
+git fetch origin --quiet
+git fetch upstream --quiet
+```
+
+**If `autobump/skia-m${{ needs.pre_activation.outputs.target }}` already exists on origin:**
+1. Check it out and check for new upstream commits:
+   ```bash
+   git checkout -b autobump/skia-m${{ needs.pre_activation.outputs.target }} origin/autobump/skia-m${{ needs.pre_activation.outputs.target }}
+   git log --oneline HEAD..upstream/chrome/m${{ needs.pre_activation.outputs.target }} | head -5
+   ```
+2. If there are no new commits, the branch is up-to-date — report this and stop.
+3. If there ARE new commits, merge them in:
+   ```bash
+   git merge --no-commit upstream/chrome/m${{ needs.pre_activation.outputs.target }}
+   ```
+
+**If the branch does NOT exist:**
+1. Create it from `origin/skiasharp`:
+   ```bash
+   git checkout -b autobump/skia-m${{ needs.pre_activation.outputs.target }} origin/skiasharp
+   git merge --no-commit upstream/chrome/m${{ needs.pre_activation.outputs.target }}
+   ```
+
+In either case, resolve any conflicts per the skill's strategy table (Phase 4, Step 3).
+Verify: no conflict markers, C API files intact. Commit the merge.
 
 ## Step 3 — Fix C API shim layer
 
