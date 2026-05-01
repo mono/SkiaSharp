@@ -192,7 +192,7 @@ milestone numbers and paste your breaking change analysis table. The default exp
    |--------------|----------|
    | `BUILD.gn` | **Combine both** — keep upstream structure AND SkiaSharp's platform flags + `skiasharp_build` target |
    | `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
-   | `RELEASE_NOTES.md`, `infra/bots/` | **Take upstream** |
+   | `RELEASE_NOTES.md`, `infra/` | **Take upstream** |
    | C API (`include/c/`, `src/c/`) | **Keep SkiaSharp** — adapt includes/API calls in post-merge commits |
    | Other upstream source (`src/`, `include/`) | **Check history first** — see [gotcha #15](references/known-gotchas.md) |
 
