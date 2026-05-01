@@ -12,70 +12,54 @@ flowchart TB
 
   subgraph global["🌍 Global — affects ALL targets"]
     direction LR
-    scripts_cake_native_shared_cake["native-shared.cake"]
-    scripts_cake_shared_cake["shared.cake"]
-    scripts_VERSIONS_txt["VERSIONS.txt"]
+    scripts_infra_shared_VERSIONS_txt["VERSIONS.txt"]
+    scripts_infra_shared_native_shared_cake["native-shared.cake"]
+    scripts_infra_shared_shared_cake["shared.cake"]
     scripts_azure_pipelines_complete_internal_yml["azure-pipelines-complete-internal.yml"]
     scripts_azure_pipelines_complete_yml["azure-pipelines-complete.yml"]
     scripts_azure_pipelines_native_yml["azure-pipelines-native.yml"]
     scripts_azure_pipelines_package_yml["azure-pipelines-package.yml"]
     scripts_azure_pipelines_tests_yml["azure-pipelines-tests.yml"]
-    scripts_azure_templates_jobs_bootstrapper_yml["azure-templates-jobs-bootstrapper.yml"]
     scripts_azure_templates_stages_native_yml["azure-templates-stages-native.yml"]
     scripts_azure_templates_stages_yml["azure-templates-stages.yml"]
-    scripts_azure_templates_steps_download_artifacts_yml["azure-templates-steps-download-artifacts.yml"]
-    scripts_azure_templates_variables_yml["azure-templates-variables.yml"]
-    scripts_compute_native_cache_key_ps1["compute-native-cache-key.ps1"]
-    scripts_free_disk_space_ps1["free-disk-space.ps1"]
-    scripts_get_free_space_ps1["get-free-space.ps1"]
-    scripts_install_7zip_ps1["install-7zip.ps1"]
-    scripts_install_android_ndk_ps1["install-android-ndk.ps1"]
-    scripts_install_android_platform_ps1["install-android-platform.ps1"]
-    scripts_install_android_sdk_ps1["install-android-sdk.ps1"]
-    scripts_install_dotnet_workloads_ps1["install-dotnet-workloads.ps1"]
-    scripts_install_emsdk_sh["install-emsdk.sh"]
-    scripts_install_llvm_ps1["install-llvm.ps1"]
-    scripts_install_ninja_ps1["install-ninja.ps1"]
-    scripts_install_openjdk_ps1["install-openjdk.ps1"]
-    scripts_install_tizen_ps1["install-tizen.ps1"]
-    scripts_install_winsdk_ps1["install-winsdk.ps1"]
-    scripts_patch_dotnet_ps1["patch-dotnet.ps1"]
-    scripts_select_vs_ps1["select-vs.ps1"]
-    scripts_select_xcode_sh["select-xcode.sh"]
-    scripts_set_build_variables_ps1["set-build-variables.ps1"]
+    scripts_infra_shared_free_disk_space_ps1["free-disk-space.ps1"]
+    scripts_infra_shared_get_free_space_ps1["get-free-space.ps1"]
+    scripts_infra_shared_install_ninja_ps1["install-ninja.ps1"]
+    scripts_infra_shared_patch_dotnet_ps1["patch-dotnet.ps1"]
+    scripts_infra_shared_set_build_variables_ps1["set-build-variables.ps1"]
   end
 
   subgraph __Apple["🍎 Apple"]
-    t_ios["ios\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    t_ios["ios\nyaml: azure-templates-stages-native-macos.yml"]
     j_native_ios_macos>"ios"]
     t_ios --> j_native_ios_macos
-    t_macos["macos\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    t_macos["macos\nyaml: azure-templates-stages-native-macos.yml"]
     j_native_macos_macos>"macos"]
     t_macos --> j_native_macos_macos
     t_maccatalyst["maccatalyst\nyaml: azure-templates-stages-native-macos.yml"]
     j_native_maccatalyst_macos>"maccatalyst"]
     t_maccatalyst --> j_native_maccatalyst_macos
-    t_tvos["tvos\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    t_tvos["tvos\nyaml: azure-templates-stages-native-macos.yml"]
     j_native_tvos_macos>"tvos"]
     t_tvos --> j_native_tvos_macos
   end
 
   subgraph __Windows["🪟 Windows"]
-    t_windows["windows\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    t_windows["windows\nyaml: azure-templates-stages-native-windows.yml"]
     j_native_win32_arm64_windows>"win32_arm64"]
     t_windows --> j_native_win32_arm64_windows
     j_native_win32_x64_windows>"win32_x64"]
     t_windows --> j_native_win32_x64_windows
     j_native_win32_x86_windows>"win32_x86"]
     t_windows --> j_native_win32_x86_windows
-    t_winui["winui\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    t_winui["winui\nyaml: azure-templates-stages-native-windows.yml"]
     j_native_winui_arm64_windows>"winui_arm64"]
     t_winui --> j_native_winui_arm64_windows
     j_native_winui_x64_windows>"winui_x64"]
     t_winui --> j_native_winui_x64_windows
     j_native_winui_x86_windows>"winui_x86"]
     t_winui --> j_native_winui_x86_windows
-    t_winui_angle["winui-angle\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    t_winui_angle["winui-angle\nyaml: azure-templates-stages-native-windows.yml"]
     j_native_winui_angle_arm64_windows>"winui_angle_arm64"]
     t_winui_angle --> j_native_winui_angle_arm64_windows
     j_native_winui_angle_x64_windows>"winui_angle_x64"]
@@ -106,7 +90,7 @@ flowchart TB
   end
 
   subgraph __Mobile["📱 Mobile"]
-    t_android["android\ncake: ndk.cake\nyaml: azure-templates-stages-native-macos.yml, azure-templates-stages-native-windows.yml"]
+    t_android["android\nyaml: azure-templates-stages-native-macos.yml, azure-templates-stages-native-windows.yml"]
     jg_android_bare>"8 jobs\nbare"]
     t_android --> jg_android_bare
     t_tizen["tizen\nyaml: azure-templates-stages-native-macos.yml, azure-templates-stages-native-windows.yml"]

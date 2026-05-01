@@ -66,67 +66,69 @@ if (-not $skiaSha) {
 # ---------------------------------------------------------------------------
 $depGraphPath = 'scripts/native-build-deps.json'
 $platformDir = $Target -replace '^externals-', ''
-$allFiles = @()
+$dirsToHash = @()
 
 if (Test-Path $depGraphPath) {
     $depGraph = Get-Content $depGraphPath -Raw | ConvertFrom-Json
 
-    # Get target files from the dep graph
     $targetInfo = $depGraph.targets.$platformDir
-    if ($targetInfo) {
-        $allFiles = @($targetInfo.files)
-        Write-Host "Dep graph: found $($allFiles.Count) files for target '$platformDir'"
+    if ($targetInfo -and $targetInfo.dirs) {
+        $dirsToHash = @($targetInfo.dirs)
+        Write-Host "Dep graph: found $($dirsToHash.Count) directories for target '$platformDir'"
     } else {
         Write-Warning "Target '$platformDir' not found in dep graph — using fallback"
     }
-
-    # Add Docker context files if applicable
-    if ($Docker -and $depGraph.docker_contexts.$Docker) {
-        $dockerFiles = @($depGraph.docker_contexts.$Docker)
-        $allFiles = @($allFiles) + @($dockerFiles) | Select-Object -Unique
-        Write-Host "Dep graph: added $($dockerFiles.Count) Docker files from '$Docker'"
-    }
 }
 
-# Fallback: if dep graph is missing or target not found, use basic file list
-if ($allFiles.Count -eq 0) {
-    Write-Host "Using fallback file list (dep graph not available)"
+# Add Docker context directory if applicable
+if ($Docker -and (Test-Path $Docker)) {
+    $dirsToHash = @($dirsToHash) + @($Docker) | Select-Object -Unique
+    Write-Host "Dep graph: added Docker context '$Docker'"
+}
 
-    $buildCake = "native/$platformDir/build.cake"
-    if (-not (Test-Path $buildCake)) {
-        $fallback = $platformDir -replace '-clang-cross$', ''
-        $buildCake = "native/$fallback/build.cake"
-    }
-
-    $allFiles = @(
-        $buildCake,
-        'scripts/cake/native-shared.cake',
-        'scripts/cake/shared.cake',
-        'scripts/cake/msbuild.cake',
-        'scripts/cake/ndk.cake',
-        'scripts/cake/xcode.cake',
-        'scripts/VERSIONS.txt'
+# Fallback: if dep graph is missing or target not found
+if ($dirsToHash.Count -eq 0) {
+    Write-Host "Using fallback directory list (dep graph not available)"
+    $dirsToHash = @(
+        "native/$platformDir",
+        'scripts/cake',
+        'scripts'
     )
-
     if ($Docker) {
-        $allFiles += "$Docker/Dockerfile"
+        $dirsToHash += $Docker
     }
 }
 
 # ---------------------------------------------------------------------------
-# 3. Hash all dependency files (excluding the skia submodule sentinel)
+# 3. Hash all files in dependency directories
 # ---------------------------------------------------------------------------
 $fileHashes = @()
 $hashedFiles = @()
+$hashedDirs = @()
 
-foreach ($file in $allFiles | Sort-Object) {
-    if ($file -eq 'externals/skia') {
-        continue  # Handled separately via git rev-parse
-    }
-    $hash = Get-FileHashString $file
-    if ($hash) {
-        $fileHashes += $hash
-        $hashedFiles += $file
+foreach ($dir in $dirsToHash | Sort-Object) {
+    if (-not (Test-Path $dir)) { continue }
+
+    if (Test-Path $dir -PathType Container) {
+        # Hash every file in the directory
+        $files = Get-ChildItem -Path $dir -File -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -notmatch '[/\\](bin|obj|libs|tools|\.git)[/\\]' } |
+            Sort-Object FullName
+        foreach ($file in $files) {
+            $hash = Get-FileHashString $file.FullName
+            if ($hash) {
+                $fileHashes += $hash
+                $hashedFiles += $file.FullName
+            }
+        }
+        $hashedDirs += "$dir/ ($($files.Count) files)"
+    } else {
+        # It's a single file
+        $hash = Get-FileHashString $dir
+        if ($hash) {
+            $fileHashes += $hash
+            $hashedFiles += $dir
+        }
     }
 }
 
@@ -159,9 +161,9 @@ Write-Host "║  Skia SHA:   $skiaSha"
 Write-Host "║  Files hash: $compositeHash ($($hashedFiles.Count) files)"
 Write-Host "║  Docker:     $(if ($Docker) { $Docker } else { 'none' })"
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
-Write-Host "║  Hashed files:"
-foreach ($f in $hashedFiles) {
-    Write-Host "║    $f"
+Write-Host "║  Hashed directories:"
+foreach ($d in $hashedDirs) {
+    Write-Host "║    $d"
 }
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
 Write-Host "║  KEY: $cacheKey"

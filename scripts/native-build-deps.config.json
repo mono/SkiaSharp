@@ -3,13 +3,9 @@
 
   "scan": [
     "native/**/*",
-    "scripts/**/*.cake",
-    "scripts/**/*.ps1",
-    "scripts/**/*.sh",
-    "scripts/**/*.yml",
-    "scripts/**/*.json",
-    "scripts/Docker/**/*",
-    "scripts/VERSIONS.txt",
+    "scripts/infra/**/*",
+    "scripts/cake/**/*",
+    "scripts/azure-*.yml",
     "build.cake"
   ],
 
@@ -18,9 +14,7 @@
   ],
 
   "global": [
-    "scripts/VERSIONS.txt",
-    "scripts/azure-templates-variables.yml",
-    "scripts/azure-templates-jobs-bootstrapper.yml"
+    "scripts/infra/shared/**/*"
   ],
 
   "submodules": [
@@ -42,7 +36,7 @@
       "prefix": "scripts/"
     },
     {
-      "_comment": "YAML referencing native build targets (e.g., target: externals-windows)",
+      "_comment": "YAML referencing native build targets",
       "files": "**/*.yml",
       "pattern": "target:\\s*externals-([a-z-]+)",
       "resolve": "prefix",
@@ -52,21 +46,15 @@
     {
       "_comment": "YAML referencing Docker contexts",
       "files": "**/*.yml",
-      "pattern": "docker:\\s*(scripts/Docker/[^\\s]+)",
+      "pattern": "docker:\\s*(scripts/infra/[^\\s]+)",
       "resolve": "root"
     },
     {
-      "_comment": "YAML/PowerShell script invocations (multiple path formats)",
+      "_comment": "YAML script invocations",
       "files": "**/*.yml",
-      "pattern": "(?:\\./|.\\\\)?scripts[/\\\\]([a-zA-Z0-9_./-]+\\.(?:ps1|sh))",
+      "pattern": "(?:\\./|.\\\\)?scripts[/\\\\]infra[/\\\\]([a-zA-Z0-9_./-]+\\.(?:ps1|sh))",
       "resolve": "prefix",
-      "prefix": "scripts/"
-    },
-    {
-      "_comment": "YAML script references in arguments (e.g., docker context paths)",
-      "files": "**/*.yml",
-      "pattern": "(?:docker|dockerfile|context):\\s*(?:\\$\\{\\{[^}]+\\}\\})?\\s*([^\\s]+/Dockerfile|scripts/Docker/[^\\s]+)",
-      "resolve": "root"
+      "prefix": "scripts/infra/"
     },
     {
       "_comment": "Docker contexts — Dockerfile pulls in all sibling files",

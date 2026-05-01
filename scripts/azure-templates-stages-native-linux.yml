@@ -29,7 +29,7 @@ stages:
             #                  first release arch in Trixie)
             - ${{ each arch in split('loongarch64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/Docker/debian/13
+                docker: scripts/infra/linux/docker/debian/13
                 target: externals-linux-clang-cross
                 additionalArgs: --verifyGlibcMax=2.38
             # Debian 11 / Bullseye (gcc-10, glibc 2.31). riscv64 is a
@@ -40,13 +40,13 @@ stages:
             # statically — keeps glibc parity with the other archs.
             - ${{ each arch in split('arm,arm64,x86,x64,riscv64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/Docker/debian/11
+                docker: scripts/infra/linux/docker/debian/11
                 target: externals-linux-clang-cross
                 additionalArgs: --verifyGlibcMax=2.31
             - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
               - arch: ${{ arch }}
                 variant: alpine
-                docker: scripts/Docker/alpine
+                docker: scripts/infra/linux/docker/alpine
                 target: externals-linux-clang-cross
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
@@ -60,5 +60,5 @@ stages:
             - ${{ each arch in split('arm64,x64', ',') }}:
               - arch: ${{ arch }}
                 variant: bionic
-                docker: scripts/Docker/bionic
+                docker: scripts/infra/linux/docker/bionic
 

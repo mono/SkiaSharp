@@ -11,7 +11,7 @@ jobs:
         displayName: WASM (${{ version.displayName }})
         buildAgent: ${{ parameters.buildAgent }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-        docker: scripts/Docker/wasm
+        docker: scripts/infra/wasm/docker
         target: externals-wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
         additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"

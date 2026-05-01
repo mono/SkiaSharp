@@ -1,8 +1,8 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/android"));
 
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/ndk.cake"
+#load "../../scripts/infra/shared/native-shared.cake"
+#load "../../scripts/infra/android/ndk.cake"
 
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
 bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";

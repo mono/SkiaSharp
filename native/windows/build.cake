@@ -14,8 +14,8 @@ bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLo
 var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
 
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/msbuild.cake"
+#load "../../scripts/infra/shared/native-shared.cake"
+#load "../../scripts/infra/windows/msbuild.cake"
 
 string GetSpectreLibPath(string arch)
 {

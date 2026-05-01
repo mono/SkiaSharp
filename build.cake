@@ -28,8 +28,8 @@ using NuGet.Versioning;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
-#load "./scripts/cake/shared.cake"
-#load "./scripts/cake/native-shared.cake"
+#load "./scripts/infra/shared/shared.cake"
+#load "./scripts/infra/shared/native-shared.cake"
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -173,7 +173,7 @@ Information($"    {"GIT_SHA".PadRight(30)} {{0}}", GIT_SHA);
 Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
 Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
-#load "./scripts/cake/msbuild.cake"
+#load "./scripts/infra/windows/msbuild.cake"
 #load "./scripts/cake/UtilsManaged.cake"
 #load "./scripts/cake/samples.cake"
 #load "./scripts/cake/externals.cake"

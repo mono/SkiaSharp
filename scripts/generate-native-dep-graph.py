@@ -202,11 +202,9 @@ def compute_target_deps(target_info, all_files, link_graph, reverse_graph, globa
     deps.update(submodules)
 
     # 5. Expand forward ONLY from files found via the forward walk and globals
-    #    (not from reverse-walked YAML templates which reference other platforms)
     expandable = set(forward_deps)
     for gf in global_files:
         expandable.update(transitive_deps(gf, link_graph))
-    # Also expand from files in the target directory
     for f in list(deps):
         if f.startswith(target_dir + "/"):
             expandable.add(f)
@@ -220,7 +218,32 @@ def compute_target_deps(target_info, all_files, link_graph, reverse_graph, globa
         expandable.update(expansion)
     deps.update(expandable)
 
-    return sorted(deps)
+    # 6. Separate into directories (target dir, cake dir) and individual files
+    #    This way new files in tracked dirs are caught, but we don't hash
+    #    unrelated files in broad parent dirs like scripts/
+    tracked_dirs = set()
+    tracked_files = set()
+
+    # The target directory is always a tracked dir
+    tracked_dirs.add(target_dir)
+
+    for f in deps:
+        if f.startswith("externals/"):
+            continue  # Submodule sentinel, not a real file
+        parent = str(Path(f).parent)
+        # If the file is in the target dir, it's covered by the dir
+        if f.startswith(target_dir + "/"):
+            continue
+        # If the file is in a "leaf" dir (no other tracked files in sibling dirs),
+        # track the dir. Otherwise track the file.
+        # Heuristic: directories under native/ and scripts/cake/ and scripts/Docker/
+        # are cohesive units. Individual files under scripts/ are standalone.
+        if parent.startswith("native/") or parent.startswith("scripts/cake") or parent.startswith("scripts/Docker"):
+            tracked_dirs.add(parent)
+        else:
+            tracked_files.add(f)
+
+    return sorted(deps), sorted(tracked_dirs), sorted(tracked_files)
 
 
 # --- Output -------------------------------------------------------------------
@@ -236,8 +259,11 @@ def generate_registry(targets, all_files, link_graph, global_files, submodules, 
         "load_graph": {k: sorted(v) for k, v in sorted(link_graph.items()) if v},
     }
     for name, info in sorted(targets.items()):
+        files, dirs, individual_files = compute_target_deps(info, all_files, link_graph, reverse_graph, global_files, submodules, exclude_globs)
         output["targets"][name] = {
-            "files": compute_target_deps(info, all_files, link_graph, reverse_graph, global_files, submodules, exclude_globs),
+            "files": files,
+            "dirs": dirs,
+            "individual_files": individual_files,
             "entry_point": info["entry_point"],
         }
     return output
