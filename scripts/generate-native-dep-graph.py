@@ -178,17 +178,21 @@ def compute_target_deps(target_info, all_files, link_graph, reverse_graph, globa
 
     entry = target_info["entry_point"]
 
-    # Forward: entry_point -> things it loads (cake #load chain)
-    deps.update(transitive_deps(entry, link_graph))
+    # 1. Forward: entry_point -> things it loads (cake #load chain)
+    forward_deps = transitive_deps(entry, link_graph)
+    deps.update(forward_deps)
 
-    # Backward: things that reference the entry_point (YAML templates that invoke this target)
-    deps.update(reverse_transitive(entry, reverse_graph))
+    # 2. Backward: things that reference the entry_point (YAML templates that invoke this target)
+    #    Only add the referencing files themselves — NOT their forward deps
+    #    (otherwise stages-native.yml pulls in all other platforms' deps)
+    reverse_deps = reverse_transitive(entry, reverse_graph)
+    deps.update(reverse_deps)
 
-    # Global deps + their transitive forward deps (e.g., bootstrapper → install scripts)
+    # 3. Global deps + their transitive forward deps (e.g., bootstrapper → install scripts)
     for gf in global_files:
         deps.update(transitive_deps(gf, link_graph))
 
-    # All files in the target directory
+    # 4. All files in the target directory
     target_dir = target_info["directory"]
     for f in all_files:
         if f.startswith(target_dir + "/") and not match_any(f, exclude_globs):
@@ -197,17 +201,24 @@ def compute_target_deps(target_info, all_files, link_graph, reverse_graph, globa
     deps.update(global_files)
     deps.update(submodules)
 
-    # Expand: walk forward from EVERY discovered dep to pick up their deps too.
-    # This catches e.g. YAML templates found via reverse walk that reference Docker
-    # paths, and Docker sibling files linked from Dockerfiles.
-    # Iterate until stable (usually 2-3 rounds).
+    # 5. Expand forward ONLY from files found via the forward walk and globals
+    #    (not from reverse-walked YAML templates which reference other platforms)
+    expandable = set(forward_deps)
+    for gf in global_files:
+        expandable.update(transitive_deps(gf, link_graph))
+    # Also expand from files in the target directory
+    for f in list(deps):
+        if f.startswith(target_dir + "/"):
+            expandable.add(f)
+
     prev_size = 0
-    while len(deps) != prev_size:
-        prev_size = len(deps)
+    while len(expandable) != prev_size:
+        prev_size = len(expandable)
         expansion = set()
-        for d in list(deps):
+        for d in list(expandable):
             expansion.update(transitive_deps(d, link_graph))
-        deps.update(expansion)
+        expandable.update(expansion)
+    deps.update(expandable)
 
     return sorted(deps)
 
