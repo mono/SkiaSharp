@@ -1,5 +1,4 @@
 parameters:
-  - name: buildExternals
     type: string
   - name: buildAgentHost
     type: object
@@ -17,24 +16,20 @@ stages:
   - template: /scripts/azure-templates-stages-native-windows.yml@self
     parameters:
       buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
-      buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-macos.yml@self
     parameters:
       buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
-      buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-linux.yml@self
     parameters:
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
       use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-      buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-wasm.yml@self
     parameters:
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
       use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-      buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-merge.yml@self
     parameters:

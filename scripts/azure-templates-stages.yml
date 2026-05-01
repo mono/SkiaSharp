@@ -1,7 +1,6 @@
 parameters:
   - name: buildPipelineType
     type: string
-  - name: buildExternals
     type: string
     default: 'latest'
   - name: buildAgentHost
@@ -51,7 +50,6 @@ stages:
         buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-        buildExternals: ${{ parameters.buildExternals }}
 
   - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self

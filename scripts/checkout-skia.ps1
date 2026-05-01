@@ -43,5 +43,4 @@ try {
     Pop-Location
 }
 
-Write-Host "Requesting full build."
-Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]required"
+Write-Host "Skia PR checked out — native build cache will handle rebuild detection."

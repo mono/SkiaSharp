@@ -23,10 +23,6 @@ schedules:
     always: true
 
 parameters:
-  - name: buildExternals
-    displayName: 'The Build ID containing the specific native artifacts to use:'
-    type: string
-    default: 'latest'
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
     type: object
@@ -105,7 +101,6 @@ extends:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'native'
-          buildExternals: ${{ parameters.buildExternals }}
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}

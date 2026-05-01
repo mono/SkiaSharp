@@ -1,5 +1,4 @@
 parameters:
-  - name: buildExternals
     type: string
   - name: buildAgentLinuxNative
     type: object
@@ -15,7 +14,6 @@ stages:
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Linux)
         parameters:
-          buildExternals: ${{ parameters.buildExternals }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:
@@ -54,7 +52,6 @@ stages:
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
         parameters:
-          buildExternals: ${{ parameters.buildExternals }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:

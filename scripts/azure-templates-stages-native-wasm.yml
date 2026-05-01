@@ -1,5 +1,4 @@
 parameters:
-  - name: buildExternals
     type: string
   - name: buildAgentLinuxNative
     type: object
@@ -15,7 +14,6 @@ stages:
       - template: /scripts/azure-templates-jobs-wasm-matrix.yml@self # Build Native WASM (Linux)
         parameters:
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           emscripten:
             - 2.0.6:
