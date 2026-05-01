@@ -52,10 +52,13 @@ LATEST=$(git branch -r \
 emit "latest" "$LATEST"
 
 # --- Pick target based on mode ---
+NEXT=$((CURRENT + 1))
+emit "next" "$NEXT"
+
 if [[ "$MODE" == "latest" ]]; then
     TARGET="$LATEST"
 else
-    TARGET=$((CURRENT + 1))
+    TARGET="$NEXT"
 fi
 
 # Verify upstream branch exists

@@ -33,8 +33,9 @@ jobs:
   pre-activation:
     outputs:
       current: ${{ steps.detect.outputs.current }}
-      target: ${{ steps.detect.outputs.target }}
+      next: ${{ steps.detect.outputs.next }}
       latest: ${{ steps.detect.outputs.latest }}
+      target: ${{ steps.detect.outputs.target }}
       mode: ${{ steps.detect.outputs.mode }}
 if: needs.pre_activation.outputs.detect_result == 'success'
 checkout:
@@ -80,8 +81,9 @@ skill's instructions** — this workflow just orchestrates when and how to invok
 ## Context (from pre-activation)
 
 - **Current milestone**: m${{ needs.pre_activation.outputs.current }}
-- **Target milestone**: m${{ needs.pre_activation.outputs.target }}
+- **Next milestone**: m${{ needs.pre_activation.outputs.next }}
 - **Latest upstream**: m${{ needs.pre_activation.outputs.latest }}
+- **Target milestone**: m${{ needs.pre_activation.outputs.target }}
 - **Mode**: ${{ needs.pre_activation.outputs.mode }}
 
 Use `autobump/skia-m${{ needs.pre_activation.outputs.target }}` as the branch name in both repos.
