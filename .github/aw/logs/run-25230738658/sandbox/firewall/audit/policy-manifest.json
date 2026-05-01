@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-01T20:05:26.369Z",
+  "rules": [
+    {
+      "id": "deny-unsafe-ports",
+      "order": 1,
+      "action": "deny",
+      "aclName": "!Safe_ports",
+      "protocol": "both",
+      "domains": [],
+      "description": "Deny requests to ports not in Safe_ports ACL (only 80, 443, and user-specified ports allowed)"
+    },
+    {
+      "id": "deny-connect-unsafe-ports",
+      "order": 2,
+      "action": "deny",
+      "aclName": "CONNECT !Safe_ports",
+      "protocol": "https",
+      "domains": [],
+      "description": "Deny CONNECT (HTTPS) to ports not in Safe_ports ACL"
+    },
+    {
+      "id": "deny-raw-ipv4",
+      "order": 3,
+      "action": "deny",
+      "aclName": "dst_ipv4",
+      "protocol": "both",
+      "domains": [
+        "^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$"
+      ],
+      "description": "Deny requests to raw IPv4 addresses (bypasses domain filtering)"
+    },
+    {
+      "id": "deny-raw-ipv6",
+      "order": 4,
+      "action": "deny",
+      "aclName": "dst_ipv6",
+      "protocol": "both",
+      "domains": [
+        "^\\[?[0-9a-fA-F:]+\\]?$"
+      ],
+      "description": "Deny requests to raw IPv6 addresses (bypasses domain filtering)"
+    },
+    {
+      "id": "allow-both-plain",
+      "order": 5,
+      "action": "allow",
+      "aclName": "allowed_domains",
+      "protocol": "both",
+      "domains": [
+        ".api.business.githubcopilot.com",
+        ".api.enterprise.githubcopilot.com",
+        ".api.githubcopilot.com",
+        ".api.individual.githubcopilot.com",
+        ".chromium.googlesource.com",
+        ".github-cloud.s3.amazonaws.com",
+        ".github.blog",
+        ".github.com",
+        ".github.githubassets.com",
+        ".host.docker.internal",
+        ".registry.npmjs.org",
+        ".telemetry.enterprise.githubcopilot.com"
+      ],
+      "description": "Allow HTTP and HTTPS traffic to these domains"
+    },
+    {
+      "id": "allow-both-regex",
+      "order": 6,
+      "action": "allow",
+      "aclName": "allowed_domains_regex",
+      "protocol": "both",
+      "domains": [
+        "^[a-zA-Z0-9.-]*\\.githubusercontent\\.com$"
+      ],
+      "description": "Allow HTTP and HTTPS traffic matching these patterns"
+    },
+    {
+      "id": "deny-default",
+      "order": 7,
+      "action": "deny",
+      "aclName": "all",
+      "protocol": "both",
+      "domains": [],
+      "description": "Deny all traffic not matching any allow rule (default deny)"
+    }
+  ],
+  "dangerousPorts": [
+    22,
+    23,
+    25,
+    110,
+    143,
+    445,
+    1433,
+    1521,
+    3306,
+    3389,
+    5432,
+    5984,
+    6379,
+    6984,
+    8086,
+    8088,
+    9200,
+    9300,
+    27017,
+    27018,
+    28017
+  ],
+  "dnsServers": [
+    "168.63.129.16"
+  ],
+  "sslBumpEnabled": false,
+  "dlpEnabled": false,
+  "hostAccessEnabled": true,
+  "allowHostPorts": "80,443,8080"
+}

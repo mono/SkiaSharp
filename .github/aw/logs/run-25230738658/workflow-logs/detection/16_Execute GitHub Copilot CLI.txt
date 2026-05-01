@@ -1,0 +1,237 @@
+﻿2026-05-01T20:08:57.5015255Z ##[group]Run set -o pipefail
+2026-05-01T20:08:57.5015582Z [36;1mset -o pipefail[0m
+2026-05-01T20:08:57.5015869Z [36;1mtouch /tmp/gh-aw/agent-step-summary.md[0m
+2026-05-01T20:08:57.5016232Z [36;1mGH_AW_NODE_BIN=$(command -v node 2>/dev/null || true)[0m
+2026-05-01T20:08:57.5016571Z [36;1mexport GH_AW_NODE_BIN[0m
+2026-05-01T20:08:57.5016910Z [36;1m(umask 177 && touch /tmp/gh-aw/threat-detection/detection.log)[0m
+2026-05-01T20:08:57.5017275Z [36;1m# shellcheck disable=SC1003[0m
+2026-05-01T20:08:57.5021294Z [36;1msudo -E awf --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" --env-all --exclude-env COPILOT_GITHUB_TOKEN --allow-domains api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,github.com,host.docker.internal,telemetry.enterprise.githubcopilot.com --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --audit-dir /tmp/gh-aw/sandbox/firewall/audit --enable-host-access --allow-host-ports 80,443,8080 --image-tag 0.25.28,squid=sha256:844c18280f82cd1b06345eb2f4e91966b34185bfc51c9f237c3e022e848fb474,agent=sha256:a8834e285807654bf680154faa710d43fe4365a0868142f5c20e48c85e137a7a,api-proxy=sha256:93290f2393752252911bd7c39a047f776c0b53063575e7bde4e304962a9a61cb,cli-proxy=sha256:fdf310e4678ce58d248c466b89399e9680a3003038fd19322c388559016aaac7 --skip-pull --enable-api-proxy \[0m
+2026-05-01T20:08:57.5026622Z [36;1m  -- /bin/bash -c 'GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || echo node)"; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_driver.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-all-tools --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt' 2>&1 | tee -a /tmp/gh-aw/threat-detection/detection.log[0m
+2026-05-01T20:08:57.5048744Z shell: /usr/bin/bash -e {0}
+2026-05-01T20:08:57.5049223Z env:
+2026-05-01T20:08:57.5053375Z   GH_AW_MODEL_MULTIPLIERS: {
+  "version": "1",
+  "description": "Effective Tokens (ET) computation data per the gh-aw Effective Tokens Specification v0.2.0. Token class weights are applied first to normalize across token classes, then the per-model multiplier scales the result relative to the reference model.",
+  "reference_model": "claude-sonnet-4.5",
+  "token_class_weights": {
+    "input": 1.0,
+    "cached_input": 0.1,
+    "output": 4.0,
+    "reasoning": 4.0,
+    "cache_write": 1.0
+  },
+  "multipliers": {
+    "claude-haiku-4.5": 0.1,
+    "claude-3-5-haiku": 0.1,
+    "claude-3-haiku": 0.1,
+    "claude-sonnet-4.5": 1.0,
+    "claude-sonnet-4.6": 1.0,
+    "claude-3-5-sonnet": 1.0,
+    "claude-3-7-sonnet": 1.0,
+    "claude-3-sonnet": 1.0,
+    "claude-opus-4.5": 5.0,
+    "claude-opus-4.6": 5.0,
+    "claude-3-5-opus": 5.0,
+    "claude-3-opus": 5.0,
+    "gpt-4o": 1.0,
+    "gpt-4o-mini": 0.1,
+    "gpt-4.1": 1.0,
+    "gpt-4.1-2025-04-14": 1.0,
+    "gpt-41-copilot": 1.0,
+    "gpt-4.1-mini": 0.1,
+    "gpt-4.1-nano": 0.05,
+    "gpt-4-turbo": 1.0,
+    "gpt-4": 1.0,
+    "gpt-5": 1.0,
+    "gpt-5-mini": 0,
+    "gpt-5.1": 1.0,
+    "gpt-5.1-codex": 1.0,
+    "gpt-5.1-codex-mini": 0.33,
+    "gpt-5.1-codex-max": 1.0,
+    "gpt-5.2": 1.0,
+    "gpt-5.2-codex": 1.0,
+    "gpt-5.3-codex": 1.0,
+    "gpt-5.4": 1.0,
+    "gpt-5.4-mini": 0.33,
+    "o1": 3.0,
+    "o1-mini": 0.5,
+    "o1-pro": 10.0,
+    "o3": 3.0,
+    "o3-mini": 0.5,
+    "o4-mini": 0.5,
+    "gemini-2.5-pro": 1.0,
+    "gemini-2.5-flash": 0.2,
+    "gemini-2.0-flash": 0.1,
+    "gemini-1.5-pro": 1.0,
+    "gemini-1.5-flash": 0.1
+  }
+}
+2026-05-01T20:08:57.5057970Z   GITHUB_AW_OTEL_TRACE_ID: 6bf7d13b0c406498f31092a9e916935e
+2026-05-01T20:08:57.5058311Z   GITHUB_AW_OTEL_PARENT_SPAN_ID: dc3bca7641fedb4c
+2026-05-01T20:08:57.5058608Z   GITHUB_AW_OTEL_JOB_START_MS: 1777666121883
+2026-05-01T20:08:57.5058899Z   GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
+2026-05-01T20:08:57.5059597Z   COPILOT_AGENT_RUNNER_TYPE: STANDALONE
+2026-05-01T20:08:57.5059897Z   COPILOT_API_KEY: dummy-byok-key-for-offline-mode
+2026-05-01T20:08:57.5060835Z   COPILOT_GITHUB_TOKEN: ***
+2026-05-01T20:08:57.5061093Z   COPILOT_MODEL: claude-sonnet-4.6
+2026-05-01T20:08:57.5061339Z   GH_AW_PHASE: detection
+2026-05-01T20:08:57.5061552Z   GH_AW_VERSION: v0.71.1
+2026-05-01T20:08:57.5061794Z   GITHUB_API_URL: https://api.github.com
+2026-05-01T20:08:57.5062045Z   GITHUB_AW: true
+2026-05-01T20:08:57.5062274Z   GITHUB_COPILOT_INTEGRATION_ID: agentic-workflows
+2026-05-01T20:08:57.5062547Z   GITHUB_HEAD_REF: 
+2026-05-01T20:08:57.5062792Z   GITHUB_REF_NAME: mattleibow/auto-skia-update-workflow
+2026-05-01T20:08:57.5063106Z   GITHUB_SERVER_URL: https://github.com
+2026-05-01T20:08:57.5063437Z   GITHUB_STEP_SUMMARY: /tmp/gh-aw/agent-step-summary.md
+2026-05-01T20:08:57.5063803Z   GITHUB_WORKSPACE: /home/runner/work/SkiaSharp/SkiaSharp
+2026-05-01T20:08:57.5064183Z   GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+2026-05-01T20:08:57.5064529Z   GIT_AUTHOR_NAME: github-actions[bot]
+2026-05-01T20:08:57.5064860Z   GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+2026-05-01T20:08:57.5065209Z   GIT_COMMITTER_NAME: github-actions[bot]
+2026-05-01T20:08:57.5065460Z   XDG_CONFIG_HOME: /home/runner
+2026-05-01T20:08:57.5065682Z ##[endgroup]
+2026-05-01T20:08:57.5808733Z [INFO] Auto-detected DNS servers from /run/systemd/resolve/resolv.conf: 168.63.129.16
+2026-05-01T20:08:57.5815875Z [WARN] ⚠️  Using --env-all: All host environment variables will be passed to container
+2026-05-01T20:08:57.5816732Z [WARN]    This may expose sensitive credentials if logs or configs are shared
+2026-05-01T20:08:57.5817928Z [WARN] ⚠️  Host access enabled with host.docker.internal in allowed domains
+2026-05-01T20:08:57.5818797Z [WARN]    Containers can access ANY service running on the host machine
+2026-05-01T20:08:57.5819880Z [WARN]    Only use this for trusted workloads (e.g., MCP gateways)
+2026-05-01T20:08:57.5820855Z [INFO] API proxy enabled: OpenAI=false, Anthropic=false, Copilot=true, Gemini=false
+2026-05-01T20:08:57.5826664Z [INFO] Allowed domains: api.business.githubcopilot.com, api.enterprise.githubcopilot.com, api.github.com, api.githubcopilot.com, api.individual.githubcopilot.com, github.com, host.docker.internal, telemetry.enterprise.githubcopilot.com
+2026-05-01T20:08:57.5828573Z [INFO] Setting up host-level firewall network and iptables rules...
+2026-05-01T20:08:57.6573509Z [SUCCESS] Created network 'awf-net' with bridge 'fw-bridge'
+2026-05-01T20:08:57.6578815Z [INFO] Setting up host-level iptables rules...
+2026-05-01T20:08:57.7430240Z [INFO] Host access enabled: allowing traffic to gateway IPs 172.30.0.1, 172.17.0.1 on ports 80, 443, 8080
+2026-05-01T20:08:57.8112723Z [SUCCESS] Host-level iptables rules configured successfully
+2026-05-01T20:08:57.8168435Z [INFO] Generating configuration files...
+2026-05-01T20:08:57.9693990Z [WARN] --enable-api-proxy is active but GEMINI_API_KEY is not set.
+2026-05-01T20:08:57.9695054Z [WARN]    The api-proxy Gemini listener (port 10003) will return 503 responses until GEMINI_API_KEY is provided.
+2026-05-01T20:08:57.9695685Z [WARN]    This is expected when Gemini is not being used.
+2026-05-01T20:08:57.9696310Z [INFO] API proxy sidecar enabled - API keys will be held securely in sidecar container
+2026-05-01T20:08:57.9697288Z [INFO] API proxy will route through Squid to respect domain whitelisting
+2026-05-01T20:08:57.9808959Z [INFO] Starting containers...
+2026-05-01T20:08:59.8189992Z  Container awf-squid  Creating
+2026-05-01T20:08:59.8190448Z  Container awf-api-proxy  Creating
+2026-05-01T20:08:59.8816620Z  Container awf-api-proxy  Created
+2026-05-01T20:08:59.8941629Z  Container awf-squid  Created
+2026-05-01T20:08:59.8955512Z  Container awf-agent  Creating
+2026-05-01T20:08:59.9136260Z  Container awf-agent  Created
+2026-05-01T20:08:59.9136977Z  Container awf-iptables-init  Creating
+2026-05-01T20:08:59.9265308Z  Container awf-iptables-init  Created
+2026-05-01T20:08:59.9282269Z  Container awf-squid  Starting
+2026-05-01T20:08:59.9283304Z  Container awf-api-proxy  Starting
+2026-05-01T20:09:00.4431897Z  Container awf-api-proxy  Started
+2026-05-01T20:09:00.5873995Z  Container awf-squid  Started
+2026-05-01T20:09:00.5874690Z  Container awf-squid  Waiting
+2026-05-01T20:09:00.5875286Z  Container awf-api-proxy  Waiting
+2026-05-01T20:09:05.5894697Z  Container awf-api-proxy  Healthy
+2026-05-01T20:09:06.0893574Z  Container awf-squid  Healthy
+2026-05-01T20:09:06.0894235Z  Container awf-agent  Starting
+2026-05-01T20:09:06.2257027Z  Container awf-agent  Started
+2026-05-01T20:09:06.2257750Z  Container awf-agent  Waiting
+2026-05-01T20:09:11.7272310Z  Container awf-agent  Healthy
+2026-05-01T20:09:11.7272848Z  Container awf-iptables-init  Starting
+2026-05-01T20:09:11.8037031Z  Container awf-iptables-init  Started
+2026-05-01T20:09:11.8074066Z [SUCCESS] Containers started successfully
+2026-05-01T20:09:11.8077624Z [INFO] Executing agent command...
+2026-05-01T20:09:11.8277106Z [entrypoint] Agentic Workflow Firewall - Agent Container
+2026-05-01T20:09:11.8277625Z [entrypoint] ==================================
+2026-05-01T20:09:11.8278100Z [entrypoint] Adjusting awfuser UID:GID from 1000:1000 to 1001:1001
+2026-05-01T20:09:11.8278503Z [entrypoint] UID/GID adjustment complete
+2026-05-01T20:09:11.8278814Z [entrypoint] Configuring DNS...
+2026-05-01T20:09:11.8279779Z [entrypoint] DNS configured with Docker embedded DNS (127.0.0.11) only
+2026-05-01T20:09:11.8280676Z [entrypoint] Waiting for iptables initialization from init container...
+2026-05-01T20:09:12.0475835Z [entrypoint] iptables initialization complete
+2026-05-01T20:09:12.0492207Z [health-check] API Proxy Pre-flight Check
+2026-05-01T20:09:12.0492948Z [health-check] ==========================================
+2026-05-01T20:09:12.0496222Z [health-check] Checking GitHub Copilot API proxy configuration...
+2026-05-01T20:09:12.0497297Z [health-check] COPILOT_API_URL=http://172.30.0.30:10002
+2026-05-01T20:09:12.0499768Z [health-check] ✓ COPILOT_GITHUB_TOKEN is placeholder value (correct)
+2026-05-01T20:09:12.0501078Z [health-check] ✓ COPILOT_API_KEY is placeholder value (correct)
+2026-05-01T20:09:12.0502668Z [health-check] ✓ COPILOT_TOKEN is placeholder value (correct)
+2026-05-01T20:09:12.0503619Z [health-check] ✓ COPILOT_PROVIDER_API_KEY is placeholder value (correct)
+2026-05-01T20:09:12.0504435Z [health-check] COPILOT_PROVIDER_BASE_URL=http://172.30.0.30:10002 (offline+BYOK mode)
+2026-05-01T20:09:12.0505411Z [health-check] ✓ COPILOT_PROVIDER_BASE_URL matches COPILOT_API_URL
+2026-05-01T20:09:12.0506710Z [health-check] ✓ Copilot CLI offline+BYOK mode configured
+2026-05-01T20:09:12.0507679Z [health-check] Testing connectivity to GitHub Copilot API proxy at http://172.30.0.30:10002...
+2026-05-01T20:09:12.0586436Z [health-check] ✓ GitHub Copilot API proxy is reachable at http://172.30.0.30:10002
+2026-05-01T20:09:12.0587427Z [health-check] ==========================================
+2026-05-01T20:09:12.0587919Z [health-check] ✓ All API proxy health checks passed
+2026-05-01T20:09:12.0588382Z [health-check] ✓ Credential isolation verified
+2026-05-01T20:09:12.0588762Z [health-check] ✓ Connectivity established
+2026-05-01T20:09:12.0589654Z [health-check] ==========================================
+2026-05-01T20:09:12.0594727Z [entrypoint] Pre-seeding JVM build tool proxy configuration (squid-proxy:3128)...
+2026-05-01T20:09:12.0636335Z [entrypoint] ✓ Created Maven proxy config (/host/home/runner/.m2/settings.xml)
+2026-05-01T20:09:12.0673679Z [entrypoint] ✓ Created Gradle proxy config (/host/home/runner/.gradle/gradle.properties)
+2026-05-01T20:09:12.0693899Z [entrypoint] ✓ Set JAVA_TOOL_OPTIONS with proxy and nonProxyHosts flags
+2026-05-01T20:09:12.0694728Z [entrypoint] Proxy configuration:
+2026-05-01T20:09:12.0695392Z [entrypoint]   HTTP_PROXY=http://172.30.0.10:3128
+2026-05-01T20:09:12.0695966Z [entrypoint]   HTTPS_PROXY=http://172.30.0.10:3128
+2026-05-01T20:09:12.0696358Z [entrypoint] Network information:
+2026-05-01T20:09:12.0711439Z [entrypoint]   IP address: 172.30.0.20 
+2026-05-01T20:09:12.0719666Z [entrypoint]   Hostname: 2bad90eaac5a
+2026-05-01T20:09:12.0782893Z [entrypoint] ==================================
+2026-05-01T20:09:12.0784117Z [entrypoint] Chroot mode enabled - dropping CAP_SYS_CHROOT and CAP_SYS_ADMIN
+2026-05-01T20:09:12.0816559Z [entrypoint] Switching to awfuser (UID: 1001, GID: 1001)
+2026-05-01T20:09:12.0819554Z [entrypoint] Executing command: /bin/bash -c /bin/bash -c 'GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || echo node)"; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_driver.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-all-tools --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt'
+2026-05-01T20:09:12.0821302Z 
+2026-05-01T20:09:12.0824790Z [entrypoint] Chroot mode: running command inside host filesystem (/host)
+2026-05-01T20:09:12.0855617Z [entrypoint] Mounted procfs at /host/proc (nosuid,nodev,noexec)
+2026-05-01T20:09:12.0884225Z [entrypoint] One-shot token library copied to chroot at /tmp/awf-lib/one-shot-token.so
+2026-05-01T20:09:12.0921234Z [entrypoint] DNS configuration created in chroot (/host/etc/resolv.conf)
+2026-05-01T20:09:12.0958450Z [entrypoint] Chroot working directory: /home/runner/work/SkiaSharp/SkiaSharp
+2026-05-01T20:09:12.0985475Z [entrypoint] Running as host user: runner (UID: 1001)
+2026-05-01T20:09:12.0986445Z [entrypoint] Using host PATH for chroot
+2026-05-01T20:09:12.0999449Z [entrypoint] Adding JAVA_HOME/bin to PATH: /usr/lib/jvm/temurin-17-jdk-amd64/bin
+2026-05-01T20:09:12.1012984Z [entrypoint] DNS configuration will be removed on exit
+2026-05-01T20:09:12.1031057Z [entrypoint] Transferred /host/tmp/gh-aw ownership to chroot user (1001:1001)
+2026-05-01T20:09:12.1056076Z [entrypoint] Ensured ~/.gemini ownership for chroot user (1001:1001)
+2026-05-01T20:09:12.2508824Z [copilot-driver] 2026-05-01T20:09:12.138Z starting: command=/usr/local/bin/copilot maxRetries=3 initialDelayMs=5000 backoffMultiplier=2 maxDelayMs=60000 nodeVersion=v24.14.1 platform=linux
+2026-05-01T20:09:12.2524999Z [copilot-driver] 2026-05-01T20:09:12.252Z pre-flight: command is accessible and executable: /usr/local/bin/copilot
+2026-05-01T20:09:12.2527501Z [copilot-driver] 2026-05-01T20:09:12.252Z resolved --prompt-file: path=/tmp/gh-aw/aw-prompts/prompt.txt size=5706B
+2026-05-01T20:09:12.2532694Z [copilot-driver] 2026-05-01T20:09:12.252Z attempt 1: spawning: /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-all-tools --add-dir /home/runner/work/SkiaSharp/SkiaSharp -p <redacted>
+2026-05-01T20:09:12.2561782Z [copilot-driver] 2026-05-01T20:09:12.255Z attempt 1: process started (pid=152)
+2026-05-01T20:09:13.1294865Z [entrypoint] Unsetting sensitive tokens from parent shell environment...
+2026-05-01T20:09:13.1295859Z [entrypoint] Unset COPILOT_GITHUB_TOKEN from /proc/1/environ
+2026-05-01T20:09:17.7910209Z ● Read agent_output.json
+2026-05-01T20:09:17.7910922Z   │ /tmp/gh-aw/threat-detection/agent_output.json
+2026-05-01T20:09:17.7911545Z   └ 1 line read
+2026-05-01T20:09:17.7915510Z 
+2026-05-01T20:09:17.8204644Z ● Read prompt.txt
+2026-05-01T20:09:17.8206711Z   │ /tmp/gh-aw/threat-detection/aw-prompts/prompt.txt
+2026-05-01T20:09:17.8208748Z   └ 149 lines read
+2026-05-01T20:09:17.8209508Z 
+2026-05-01T20:09:20.1427555Z THREAT_DETECTION_RESULT:{"prompt_injection":false,"secret_leak":false,"malicious_patch":false,"reasons":[]}
+2026-05-01T20:09:20.1428083Z 
+2026-05-01T20:09:20.2053278Z 
+2026-05-01T20:09:20.2053826Z Changes   +0 -0
+2026-05-01T20:09:20.2054284Z Duration  6s
+2026-05-01T20:09:20.2054991Z Tokens    ↑ 31.6k • ↓ 218 • 20.3k (cached)
+2026-05-01T20:09:20.2654020Z [copilot-driver] 2026-05-01T20:09:20.264Z attempt 1: process exit event exitCode=0
+2026-05-01T20:09:20.2655596Z [copilot-driver] 2026-05-01T20:09:20.265Z attempt 1: process closed exitCode=0 duration=8s stdout=305B stderr=81B hasOutput=true
+2026-05-01T20:09:20.2657555Z [copilot-driver] 2026-05-01T20:09:20.265Z success on attempt 1: totalDuration=8s
+2026-05-01T20:09:20.5358775Z [INFO] Stopping containers...
+2026-05-01T20:09:20.6166963Z  Container awf-iptables-init  Stopping
+2026-05-01T20:09:20.6169768Z  Container awf-iptables-init  Stopped
+2026-05-01T20:09:20.6170784Z  Container awf-iptables-init  Removing
+2026-05-01T20:09:20.6209276Z  Container awf-iptables-init  Removed
+2026-05-01T20:09:20.6210067Z  Container awf-agent  Stopping
+2026-05-01T20:09:20.6212483Z  Container awf-agent  Stopped
+2026-05-01T20:09:20.6213020Z  Container awf-agent  Removing
+2026-05-01T20:09:20.6284118Z  Container awf-agent  Removed
+2026-05-01T20:09:20.6293624Z  Container awf-squid  Stopping
+2026-05-01T20:09:20.6294184Z  Container awf-api-proxy  Stopping
+2026-05-01T20:09:20.7000292Z  Container awf-api-proxy  Stopped
+2026-05-01T20:09:20.7001247Z  Container awf-api-proxy  Removing
+2026-05-01T20:09:20.7048707Z  Container awf-api-proxy  Removed
+2026-05-01T20:09:21.7396900Z  Container awf-squid  Stopped
+2026-05-01T20:09:21.7397634Z  Container awf-squid  Removing
+2026-05-01T20:09:21.7460306Z  Container awf-squid  Removed
+2026-05-01T20:09:21.7497307Z [SUCCESS] Containers stopped successfully
+2026-05-01T20:09:21.7972983Z [INFO] Agent session state preserved at: /tmp/awf-agent-session-state-1777666137576
+2026-05-01T20:09:21.7994449Z [INFO] API proxy logs available at: /tmp/gh-aw/sandbox/firewall/logs/api-proxy-logs
+2026-05-01T20:09:21.8015285Z [INFO] CLI proxy logs available at: /tmp/gh-aw/sandbox/firewall/logs/cli-proxy-logs
+2026-05-01T20:09:21.8038342Z [INFO] Squid logs available at: /tmp/gh-aw/sandbox/firewall/logs
+2026-05-01T20:09:21.8058216Z [INFO] Audit artifacts available at: /tmp/gh-aw/sandbox/firewall/audit
+2026-05-01T20:09:21.8075305Z [SUCCESS] Command completed successfully
+2026-05-01T20:09:21.8075739Z Process exiting with code: 0

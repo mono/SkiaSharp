@@ -1,0 +1,115 @@
+﻿2026-05-01T20:10:04.9290655Z ##[group]Run actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553
+2026-05-01T20:10:04.9291448Z with:
+2026-05-01T20:10:04.9292068Z   github-token: ***
+2026-05-01T20:10:04.9293721Z   script: const { setupGlobals } = require('/home/runner/work/_temp/gh-aw/actions/setup_globals.cjs');
+setupGlobals(core, github, context, exec, io, getOctokit);
+const { main } = require('/home/runner/work/_temp/gh-aw/actions/handle_agent_failure.cjs');
+await main();
+
+2026-05-01T20:10:04.9295934Z   debug: false
+2026-05-01T20:10:04.9296373Z   user-agent: actions/github-script
+2026-05-01T20:10:04.9296890Z   result-encoding: json
+2026-05-01T20:10:04.9297334Z   retries: 0
+2026-05-01T20:10:04.9297761Z   retry-exempt-status-codes: 400,401,403,404,422
+2026-05-01T20:10:04.9298311Z env:
+2026-05-01T20:10:04.9305385Z   GH_AW_MODEL_MULTIPLIERS: {
+  "version": "1",
+  "description": "Effective Tokens (ET) computation data per the gh-aw Effective Tokens Specification v0.2.0. Token class weights are applied first to normalize across token classes, then the per-model multiplier scales the result relative to the reference model.",
+  "reference_model": "claude-sonnet-4.5",
+  "token_class_weights": {
+    "input": 1.0,
+    "cached_input": 0.1,
+    "output": 4.0,
+    "reasoning": 4.0,
+    "cache_write": 1.0
+  },
+  "multipliers": {
+    "claude-haiku-4.5": 0.1,
+    "claude-3-5-haiku": 0.1,
+    "claude-3-haiku": 0.1,
+    "claude-sonnet-4.5": 1.0,
+    "claude-sonnet-4.6": 1.0,
+    "claude-3-5-sonnet": 1.0,
+    "claude-3-7-sonnet": 1.0,
+    "claude-3-sonnet": 1.0,
+    "claude-opus-4.5": 5.0,
+    "claude-opus-4.6": 5.0,
+    "claude-3-5-opus": 5.0,
+    "claude-3-opus": 5.0,
+    "gpt-4o": 1.0,
+    "gpt-4o-mini": 0.1,
+    "gpt-4.1": 1.0,
+    "gpt-4.1-2025-04-14": 1.0,
+    "gpt-41-copilot": 1.0,
+    "gpt-4.1-mini": 0.1,
+    "gpt-4.1-nano": 0.05,
+    "gpt-4-turbo": 1.0,
+    "gpt-4": 1.0,
+    "gpt-5": 1.0,
+    "gpt-5-mini": 0,
+    "gpt-5.1": 1.0,
+    "gpt-5.1-codex": 1.0,
+    "gpt-5.1-codex-mini": 0.33,
+    "gpt-5.1-codex-max": 1.0,
+    "gpt-5.2": 1.0,
+    "gpt-5.2-codex": 1.0,
+    "gpt-5.3-codex": 1.0,
+    "gpt-5.4": 1.0,
+    "gpt-5.4-mini": 0.33,
+    "o1": 3.0,
+    "o1-mini": 0.5,
+    "o1-pro": 10.0,
+    "o3": 3.0,
+    "o3-mini": 0.5,
+    "o4-mini": 0.5,
+    "gemini-2.5-pro": 1.0,
+    "gemini-2.5-flash": 0.2,
+    "gemini-2.0-flash": 0.1,
+    "gemini-1.5-pro": 1.0,
+    "gemini-1.5-flash": 0.1
+  }
+}
+2026-05-01T20:10:04.9313319Z   GITHUB_AW_OTEL_TRACE_ID: 6bf7d13b0c406498f31092a9e916935e
+2026-05-01T20:10:04.9313994Z   GITHUB_AW_OTEL_PARENT_SPAN_ID: 4f0d3f97aae3bc8b
+2026-05-01T20:10:04.9314582Z   GITHUB_AW_OTEL_JOB_START_MS: 1777666202493
+2026-05-01T20:10:04.9315344Z   GH_AW_AGENT_OUTPUT: /tmp/gh-aw/agent_output.json
+2026-05-01T20:10:04.9315934Z   GH_AW_WORKFLOW_NAME: Auto Skia Track
+2026-05-01T20:10:04.9316621Z   GH_AW_RUN_URL: https://github.com/mono/SkiaSharp/actions/runs/25230738658
+2026-05-01T20:10:04.9317321Z   GH_AW_AGENT_CONCLUSION: success
+2026-05-01T20:10:04.9317827Z   GH_AW_WORKFLOW_ID: auto-skia-track
+2026-05-01T20:10:04.9318360Z   GH_AW_ACTION_FAILURE_ISSUE_EXPIRES_HOURS: 168
+2026-05-01T20:10:04.9318931Z   GH_AW_ENGINE_ID: copilot
+2026-05-01T20:10:04.9319415Z   GH_AW_SECRET_VERIFICATION_RESULT: success
+2026-05-01T20:10:04.9319959Z   GH_AW_CHECKOUT_PR_SUCCESS: true
+2026-05-01T20:10:04.9320459Z   GH_AW_INFERENCE_ACCESS_ERROR: false
+2026-05-01T20:10:04.9320985Z   GH_AW_MCP_POLICY_ERROR: false
+2026-05-01T20:10:04.9321470Z   GH_AW_AGENTIC_ENGINE_TIMEOUT: false
+2026-05-01T20:10:04.9321992Z   GH_AW_MODEL_NOT_SUPPORTED_ERROR: false
+2026-05-01T20:10:04.9322514Z   GH_AW_CODE_PUSH_FAILURE_ERRORS: 
+2026-05-01T20:10:04.9323017Z   GH_AW_CODE_PUSH_FAILURE_COUNT: 0
+2026-05-01T20:10:04.9323697Z   GH_AW_LOCKDOWN_CHECK_FAILED: false
+2026-05-01T20:10:04.9324202Z   GH_AW_STALE_LOCK_FILE_FAILED: false
+2026-05-01T20:10:04.9324867Z   GH_AW_GROUP_REPORTS: false
+2026-05-01T20:10:04.9325362Z   GH_AW_FAILURE_REPORT_AS_ISSUE: true
+2026-05-01T20:10:04.9325863Z   GH_AW_TIMEOUT_MINUTES: 120
+2026-05-01T20:10:04.9326315Z ##[endgroup]
+2026-05-01T20:10:05.0698065Z Agent conclusion: success
+2026-05-01T20:10:05.0698859Z Workflow name: Auto Skia Track
+2026-05-01T20:10:05.0699364Z Workflow ID: auto-skia-track
+2026-05-01T20:10:05.0699889Z Secret verification result: success
+2026-05-01T20:10:05.0700402Z Assignment error count: 0
+2026-05-01T20:10:05.0700861Z Assign copilot failure count: 0
+2026-05-01T20:10:05.0701346Z Create discussion error count: 0
+2026-05-01T20:10:05.0701840Z Code push failure count: 0
+2026-05-01T20:10:05.0702305Z Checkout PR success: true
+2026-05-01T20:10:05.0702764Z Inference access error: false
+2026-05-01T20:10:05.0761272Z MCP policy error: false
+2026-05-01T20:10:05.0761846Z Agentic engine timeout: false
+2026-05-01T20:10:05.0762348Z Model not supported error: false
+2026-05-01T20:10:05.0762854Z Push repo-memory result: 
+2026-05-01T20:10:05.0763543Z App token minting failed (safe_outputs/conclusion/activation): false/false/false
+2026-05-01T20:10:05.0764294Z Lockdown check failed: false
+2026-05-01T20:10:05.0765077Z Stale lock file check failed: false
+2026-05-01T20:10:05.0765620Z Agent output content length: 548
+2026-05-01T20:10:05.0766252Z Agent succeeded with only noop outputs - this is not a failure
+2026-05-01T20:10:05.0767921Z Agent job did not fail and no assignment/discussion/code-push/push-repo-memory/app-token/lockdown/stale-lock-file/report-incomplete errors and has safe outputs (conclusion: success), skipping failure handling

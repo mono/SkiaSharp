@@ -63,12 +63,15 @@ on:
           exit 1
         fi
 
-        # Check if autobump branch is already up-to-date
-        UPSTREAM_TIP=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
-        BRANCH_TIP=$(git ls-remote https://github.com/mono/skia.git "refs/heads/autobump/skia-m${TARGET}" 2>/dev/null | awk '{print $1}')
-        if [ -n "$BRANCH_TIP" ] && [ "$BRANCH_TIP" = "$UPSTREAM_TIP" ]; then
-          echo "::notice::autobump/skia-m${TARGET} tip matches upstream — up-to-date"
-          exit 1
+        # Check if autobump branch is already up-to-date (skip for current mode —
+        # current mode merges into skiasharp where ancestry checks need a clone)
+        if [ "$MODE" != "current" ]; then
+          UPSTREAM_TIP=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
+          BRANCH_TIP=$(git ls-remote https://github.com/mono/skia.git "refs/heads/autobump/skia-m${TARGET}" 2>/dev/null | awk '{print $1}')
+          if [ -n "$BRANCH_TIP" ] && [ "$BRANCH_TIP" = "$UPSTREAM_TIP" ]; then
+            echo "::notice::autobump/skia-m${TARGET} tip matches upstream — up-to-date"
+            exit 1
+          fi
         fi
 
         echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"

@@ -1,0 +1,95 @@
+﻿2026-05-01T20:05:08.7276082Z ##[group]Run bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.25.28@sha256:a8834e285807654bf680154faa710d43fe4365a0868142f5c20e48c85e137a7a ghcr.io/github/gh-aw-firewall/api-proxy:0.25.28@sha256:93290f2393752252911bd7c39a047f776c0b53063575e7bde4e304962a9a61cb ghcr.io/github/gh-aw-firewall/squid:0.25.28@sha256:844c18280f82cd1b06345eb2f4e91966b34185bfc51c9f237c3e022e848fb474 ghcr.io/github/gh-aw-mcpg:v0.3.0 ghcr.io/github/github-mcp-server:v1.0.2 node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+2026-05-01T20:05:08.7279991Z [36;1mbash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.25.28@sha256:a8834e285807654bf680154faa710d43fe4365a0868142f5c20e48c85e137a7a ghcr.io/github/gh-aw-firewall/api-proxy:0.25.28@sha256:93290f2393752252911bd7c39a047f776c0b53063575e7bde4e304962a9a61cb ghcr.io/github/gh-aw-firewall/squid:0.25.28@sha256:844c18280f82cd1b06345eb2f4e91966b34185bfc51c9f237c3e022e848fb474 ghcr.io/github/gh-aw-mcpg:v0.3.0 ghcr.io/github/github-mcp-server:v1.0.2 node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f[0m
+2026-05-01T20:05:08.7302844Z shell: /usr/bin/bash -e {0}
+2026-05-01T20:05:08.7303079Z env:
+2026-05-01T20:05:08.7303244Z   DEFAULT_BRANCH: main
+2026-05-01T20:05:08.7303461Z   GH_AW_ASSETS_ALLOWED_EXTS: 
+2026-05-01T20:05:08.7303681Z   GH_AW_ASSETS_BRANCH: 
+2026-05-01T20:05:08.7303878Z   GH_AW_ASSETS_MAX_SIZE_KB: 0
+2026-05-01T20:05:08.7304138Z   GH_AW_MCP_LOG_DIR: /tmp/gh-aw/mcp-logs/safeoutputs
+2026-05-01T20:05:08.7304733Z   GH_AW_WORKFLOW_ID_SANITIZED: autoskiatrack
+2026-05-01T20:05:08.7308919Z   GH_AW_MODEL_MULTIPLIERS: {
+  "version": "1",
+  "description": "Effective Tokens (ET) computation data per the gh-aw Effective Tokens Specification v0.2.0. Token class weights are applied first to normalize across token classes, then the per-model multiplier scales the result relative to the reference model.",
+  "reference_model": "claude-sonnet-4.5",
+  "token_class_weights": {
+    "input": 1.0,
+    "cached_input": 0.1,
+    "output": 4.0,
+    "reasoning": 4.0,
+    "cache_write": 1.0
+  },
+  "multipliers": {
+    "claude-haiku-4.5": 0.1,
+    "claude-3-5-haiku": 0.1,
+    "claude-3-haiku": 0.1,
+    "claude-sonnet-4.5": 1.0,
+    "claude-sonnet-4.6": 1.0,
+    "claude-3-5-sonnet": 1.0,
+    "claude-3-7-sonnet": 1.0,
+    "claude-3-sonnet": 1.0,
+    "claude-opus-4.5": 5.0,
+    "claude-opus-4.6": 5.0,
+    "claude-3-5-opus": 5.0,
+    "claude-3-opus": 5.0,
+    "gpt-4o": 1.0,
+    "gpt-4o-mini": 0.1,
+    "gpt-4.1": 1.0,
+    "gpt-4.1-2025-04-14": 1.0,
+    "gpt-41-copilot": 1.0,
+    "gpt-4.1-mini": 0.1,
+    "gpt-4.1-nano": 0.05,
+    "gpt-4-turbo": 1.0,
+    "gpt-4": 1.0,
+    "gpt-5": 1.0,
+    "gpt-5-mini": 0,
+    "gpt-5.1": 1.0,
+    "gpt-5.1-codex": 1.0,
+    "gpt-5.1-codex-mini": 0.33,
+    "gpt-5.1-codex-max": 1.0,
+    "gpt-5.2": 1.0,
+    "gpt-5.2-codex": 1.0,
+    "gpt-5.3-codex": 1.0,
+    "gpt-5.4": 1.0,
+    "gpt-5.4-mini": 0.33,
+    "o1": 3.0,
+    "o1-mini": 0.5,
+    "o1-pro": 10.0,
+    "o3": 3.0,
+    "o3-mini": 0.5,
+    "o4-mini": 0.5,
+    "gemini-2.5-pro": 1.0,
+    "gemini-2.5-flash": 0.2,
+    "gemini-2.0-flash": 0.1,
+    "gemini-1.5-pro": 1.0,
+    "gemini-1.5-flash": 0.1
+  }
+}
+2026-05-01T20:05:08.7313525Z   GITHUB_AW_OTEL_TRACE_ID: 6bf7d13b0c406498f31092a9e916935e
+2026-05-01T20:05:08.7313856Z   GITHUB_AW_OTEL_PARENT_SPAN_ID: 765b83e7cbe7b78b
+2026-05-01T20:05:08.7314136Z   GITHUB_AW_OTEL_JOB_START_MS: 1777665708843
+2026-05-01T20:05:08.7314375Z ##[endgroup]
+2026-05-01T20:05:08.7368407Z Starting download of 6 image(s) with max 4 concurrent downloads...
+2026-05-01T20:05:08.7615320Z Attempt 1 of 3: Pulling ghcr.io/github/gh-aw-firewall/api-proxy:0.25.28@sha256:93290f2393752252911bd7c39a047f776c0b53063575e7bde4e304962a9a61cb...
+2026-05-01T20:05:08.7618798Z Attempt 1 of 3: Pulling ghcr.io/github/gh-aw-firewall/squid:0.25.28@sha256:844c18280f82cd1b06345eb2f4e91966b34185bfc51c9f237c3e022e848fb474...
+2026-05-01T20:05:08.7620104Z Attempt 1 of 3: Pulling ghcr.io/github/gh-aw-mcpg:v0.3.0...
+2026-05-01T20:05:08.7621187Z Attempt 1 of 3: Pulling ghcr.io/github/gh-aw-firewall/agent:0.25.28@sha256:a8834e285807654bf680154faa710d43fe4365a0868142f5c20e48c85e137a7a...
+2026-05-01T20:05:14.6366195Z ghcr.io/github/gh-aw-firewall/squid:0.25.28@sha256:844c18280f82cd1b06345eb2f4e91966b34185bfc51c9f237c3e022e848fb474
+2026-05-01T20:05:14.6386757Z Successfully pulled ghcr.io/github/gh-aw-firewall/squid:0.25.28@sha256:844c18280f82cd1b06345eb2f4e91966b34185bfc51c9f237c3e022e848fb474
+2026-05-01T20:05:14.6388448Z Tagging digest-pinned image as ghcr.io/github/gh-aw-firewall/squid:0.25.28
+2026-05-01T20:05:14.6618543Z Attempt 1 of 3: Pulling ghcr.io/github/github-mcp-server:v1.0.2...
+2026-05-01T20:05:14.9025989Z ghcr.io/github/gh-aw-mcpg:v0.3.0
+2026-05-01T20:05:14.9048640Z Successfully pulled ghcr.io/github/gh-aw-mcpg:v0.3.0
+2026-05-01T20:05:14.9089962Z Attempt 1 of 3: Pulling node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f...
+2026-05-01T20:05:15.6954871Z ghcr.io/github/gh-aw-firewall/api-proxy:0.25.28@sha256:93290f2393752252911bd7c39a047f776c0b53063575e7bde4e304962a9a61cb
+2026-05-01T20:05:15.6971096Z Successfully pulled ghcr.io/github/gh-aw-firewall/api-proxy:0.25.28@sha256:93290f2393752252911bd7c39a047f776c0b53063575e7bde4e304962a9a61cb
+2026-05-01T20:05:15.6972558Z Tagging digest-pinned image as ghcr.io/github/gh-aw-firewall/api-proxy:0.25.28
+2026-05-01T20:05:16.4166637Z ghcr.io/github/github-mcp-server:v1.0.2
+2026-05-01T20:05:16.4185205Z Successfully pulled ghcr.io/github/github-mcp-server:v1.0.2
+2026-05-01T20:05:18.3912277Z docker.io/library/node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+2026-05-01T20:05:18.3930078Z Successfully pulled node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+2026-05-01T20:05:18.3931861Z Tagging digest-pinned image as node:lts-alpine
+2026-05-01T20:05:19.0832699Z ghcr.io/github/gh-aw-firewall/agent:0.25.28@sha256:a8834e285807654bf680154faa710d43fe4365a0868142f5c20e48c85e137a7a
+2026-05-01T20:05:19.0849841Z Successfully pulled ghcr.io/github/gh-aw-firewall/agent:0.25.28@sha256:a8834e285807654bf680154faa710d43fe4365a0868142f5c20e48c85e137a7a
+2026-05-01T20:05:19.0851352Z Tagging digest-pinned image as ghcr.io/github/gh-aw-firewall/agent:0.25.28
+2026-05-01T20:05:19.0989883Z All images downloaded successfully
