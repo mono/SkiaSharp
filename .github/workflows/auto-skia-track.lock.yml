@@ -47,7 +47,7 @@
 #   - ghcr.io/github/github-mcp-server:v1.0.2
 #   - node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
 
-name: "Auto Skia Track"
+name: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
 "on":
   schedule:
   - cron: "0 7 * * *"
@@ -95,7 +95,7 @@ concurrency:
   cancel-in-progress: true
   group: auto-skia-track-m${{ needs.pre_activation.outputs.target }}
 
-run-name: "Auto Skia Track"
+run-name: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
 
 jobs:
   activation:
@@ -131,7 +131,7 @@ jobs:
           GH_AW_INFO_VERSION: "1.0.35"
           GH_AW_INFO_AGENT_VERSION: "1.0.35"
           GH_AW_INFO_CLI_VERSION: "v0.71.1"
-          GH_AW_INFO_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_INFO_WORKFLOW_NAME: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
           GH_AW_INFO_EXPERIMENTAL: "false"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "true"
           GH_AW_INFO_STAGED: "false"
@@ -208,9 +208,6 @@ jobs:
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT: ${{ needs.pre_activation.outputs.current }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_LATEST: ${{ needs.pre_activation.outputs.latest }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MODE: ${{ needs.pre_activation.outputs.mode }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_NEXT: ${{ needs.pre_activation.outputs.next }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET: ${{ needs.pre_activation.outputs.target }}
         # poutine:ignore untrusted_checkout_exec
         run: |
@@ -273,9 +270,6 @@ jobs:
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT: ${{ needs.pre_activation.outputs.current }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_LATEST: ${{ needs.pre_activation.outputs.latest }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MODE: ${{ needs.pre_activation.outputs.mode }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_NEXT: ${{ needs.pre_activation.outputs.next }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET: ${{ needs.pre_activation.outputs.target }}
         with:
           script: |
@@ -297,9 +291,6 @@ jobs:
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: ${{ needs.pre_activation.outputs.activated }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT: ${{ needs.pre_activation.outputs.current }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_LATEST: ${{ needs.pre_activation.outputs.latest }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MODE: ${{ needs.pre_activation.outputs.mode }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_NEXT: ${{ needs.pre_activation.outputs.next }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET: ${{ needs.pre_activation.outputs.target }}
         with:
           script: |
@@ -322,9 +313,6 @@ jobs:
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
                 GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED,
                 GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT,
-                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_LATEST: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_LATEST,
-                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MODE: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MODE,
-                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_NEXT: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_NEXT,
                 GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET
               }
             });
@@ -958,7 +946,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_REPORT_AS_ISSUE: "true"
@@ -974,7 +962,7 @@ jobs:
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
           GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
@@ -991,7 +979,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_MISSING_TOOL_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1005,7 +993,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_REPORT_INCOMPLETE_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1019,7 +1007,7 @@ jobs:
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_WORKFLOW_ID: "auto-skia-track"
@@ -1131,7 +1119,7 @@ jobs:
         if: always() && steps.detection_guard.outputs.run_detection == 'true'
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
-          WORKFLOW_NAME: "Auto Skia Track"
+          WORKFLOW_NAME: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
           WORKFLOW_DESCRIPTION: "Daily upstream Skia milestone tracking — merges new commits, resolves conflicts, builds, tests, and creates PRs."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
@@ -1283,7 +1271,7 @@ jobs:
       GH_AW_ENGINE_MODEL: ${{ needs.agent.outputs.model }}
       GH_AW_ENGINE_VERSION: "1.0.35"
       GH_AW_WORKFLOW_ID: "auto-skia-track"
-      GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+      GH_AW_WORKFLOW_NAME: "Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}"
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
