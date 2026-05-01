@@ -215,10 +215,21 @@ def _short(path):
 
 
 def write_markdown(registry, output_path):
-    """Write a clean overview Mermaid diagram showing target → dependency groups."""
+    """Write a clean overview Mermaid diagram: files → targets → CI jobs."""
     targets = registry["targets"]
 
-    # Categorize files into groups for readability
+    # Load job registry if available
+    jobs_path = output_path.parent / "native-build-jobs.json"
+    jobs = {}
+    if jobs_path.exists():
+        jobs = json.loads(jobs_path.read_text(encoding="utf-8"))
+
+    # Group jobs by target
+    jobs_by_target = defaultdict(list)
+    for job_name, job_info in sorted(jobs.items()):
+        jobs_by_target[job_info["target"]].append(job_name)
+
+    # Categorize files
     def categorize(f):
         if f.startswith("externals/"):
             return "submodule"
@@ -336,6 +347,30 @@ def write_markdown(registry, output_path):
 
             label = "\\n".join(parts)
             lines.append('    %s["%s"]' % (tid, label))
+
+            # CI jobs for this target
+            target_jobs = jobs_by_target.get(name, [])
+            if target_jobs:
+                # Group by docker context for compact display
+                docker_groups = defaultdict(list)
+                for jn in target_jobs:
+                    ji = jobs.get(jn, {})
+                    dk = ji.get("docker") or "bare"
+                    docker_groups[dk].append(jn)
+
+                for dk, job_list in sorted(docker_groups.items()):
+                    if len(job_list) <= 3:
+                        for jn in job_list:
+                            jid = _mid("j_" + jn)
+                            short_jn = jn.replace("native_", "").replace("_linux", "").replace("_macos", "").replace("_windows", "")
+                            lines.append('    %s>"%s"]' % (jid, short_jn))
+                            lines.append("    %s --> %s" % (tid, jid))
+                    else:
+                        # Compact: show as one node with count
+                        gid = _mid("jg_" + name + "_" + dk.replace("/", "_"))
+                        dk_short = dk.replace("scripts/Docker/", "") if dk != "bare" else "bare"
+                        lines.append('    %s>"%d jobs\\n%s"]' % (gid, len(job_list), dk_short))
+                        lines.append("    %s --> %s" % (tid, gid))
 
         lines.append("  end")
         lines.append("")

@@ -28,31 +28,77 @@ flowchart TB
 
   subgraph __Apple["🍎 Apple"]
     t_ios["ios\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    j_native_ios_macos>"ios"]
+    t_ios --> j_native_ios_macos
     t_macos["macos\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    j_native_macos_macos>"macos"]
+    t_macos --> j_native_macos_macos
     t_maccatalyst["maccatalyst\nyaml: azure-templates-stages-native-macos.yml"]
+    j_native_maccatalyst_macos>"maccatalyst"]
+    t_maccatalyst --> j_native_maccatalyst_macos
     t_tvos["tvos\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    j_native_tvos_macos>"tvos"]
+    t_tvos --> j_native_tvos_macos
   end
 
   subgraph __Windows["🪟 Windows"]
     t_windows["windows\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    j_native_win32_arm64_windows>"win32_arm64"]
+    t_windows --> j_native_win32_arm64_windows
+    j_native_win32_x64_windows>"win32_x64"]
+    t_windows --> j_native_win32_x64_windows
+    j_native_win32_x86_windows>"win32_x86"]
+    t_windows --> j_native_win32_x86_windows
     t_winui["winui\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    j_native_winui_arm64_windows>"winui_arm64"]
+    t_winui --> j_native_winui_arm64_windows
+    j_native_winui_x64_windows>"winui_x64"]
+    t_winui --> j_native_winui_x64_windows
+    j_native_winui_x86_windows>"winui_x86"]
+    t_winui --> j_native_winui_x86_windows
     t_winui_angle["winui-angle\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    j_native_winui_angle_arm64_windows>"winui_angle_arm64"]
+    t_winui_angle --> j_native_winui_angle_arm64_windows
+    j_native_winui_angle_x64_windows>"winui_angle_x64"]
+    t_winui_angle --> j_native_winui_angle_x64_windows
+    j_native_winui_angle_x86_windows>"winui_angle_x86"]
+    t_winui_angle --> j_native_winui_angle_x86_windows
     t_nanoserver["nanoserver\nyaml: azure-templates-stages-native-windows.yml"]
+    j_native_win32_x64_nanoserver_windows>"win32_x64_nanoserver"]
+    t_nanoserver --> j_native_win32_x64_nanoserver_windows
   end
 
   subgraph __Linux["🐧 Linux"]
     t_linux["linux"]
     t_linux_clang_cross["linux-clang-cross\nyaml: azure-templates-stages-native-linux.yml"]
+    jg_linux_clang_cross_scripts_Docker_alpine>"10 jobs\nalpine"]
+    t_linux_clang_cross --> jg_linux_clang_cross_scripts_Docker_alpine
+    j_native_linux_arm64_bionic_linux>"linux_arm64_bionic"]
+    t_linux_clang_cross --> j_native_linux_arm64_bionic_linux
+    j_native_linux_x64_bionic_linux>"linux_x64_bionic"]
+    t_linux_clang_cross --> j_native_linux_x64_bionic_linux
+    jg_linux_clang_cross_scripts_Docker_debian_11>"10 jobs\ndebian/11"]
+    t_linux_clang_cross --> jg_linux_clang_cross_scripts_Docker_debian_11
+    j_native_linux_loongarch64_linux>"linux_loongarch64"]
+    t_linux_clang_cross --> j_native_linux_loongarch64_linux
+    j_native_linux_loongarch64_nodeps_linux>"linux_loongarch64_nodeps"]
+    t_linux_clang_cross --> j_native_linux_loongarch64_nodeps_linux
     t_linuxnodeps["linuxnodeps"]
   end
 
   subgraph __Mobile["📱 Mobile"]
     t_android["android\ncake: ndk.cake\nyaml: azure-templates-stages-native-macos.yml, azure-templates-stages-native-windows.yml"]
+    jg_android_bare>"8 jobs\nbare"]
+    t_android --> jg_android_bare
     t_tizen["tizen\nyaml: azure-templates-stages-native-macos.yml, azure-templates-stages-native-windows.yml"]
+    jg_tizen_bare>"4 jobs\nbare"]
+    t_tizen --> jg_tizen_bare
   end
 
   subgraph __Web["🌐 Web"]
     t_wasm["wasm\nyaml: azure-templates-jobs-wasm-matrix.yml, azure-templates-stages-native-wasm.yml"]
+    jg_wasm_scripts_Docker_wasm>"15 jobs\nwasm"]
+    t_wasm --> jg_wasm_scripts_Docker_wasm
   end
 
   submodule --> global
