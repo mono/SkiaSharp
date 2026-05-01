@@ -474,12 +474,29 @@ def main():
     root = Path(args.root).resolve()
     output_path = Path(args.output) if args.output else root / "scripts" / "native-build-deps.json"
 
-    # Load config
+    # Load config: --config flag > sibling config file > built-in defaults
     config = dict(DEFAULT_CONFIG)
+    config_path = None
     if args.config:
-        with open(args.config) as f:
+        config_path = Path(args.config)
+    else:
+        # Look for config file next to the output
+        sibling = output_path.with_name("native-build-deps.config.json")
+        if sibling.exists():
+            config_path = sibling
+        else:
+            # Also check next to the script itself
+            script_sibling = Path(__file__).resolve().parent / "native-build-deps.config.json"
+            if script_sibling.exists():
+                config_path = script_sibling
+
+    if config_path and config_path.exists():
+        with open(config_path) as f:
             overrides = json.load(f)
         config.update(overrides)
+        print(f"Loaded config from: {config_path}")
+    else:
+        print("Using built-in default config")
 
     print(f"Scanning repository: {root}")
     print()

@@ -1,0 +1,30 @@
+{
+  "target_roots": [
+    {
+      "path": "native",
+      "entry_point": "build.cake"
+    }
+  ],
+  "script_roots": [
+    "scripts/cake"
+  ],
+  "global_deps": [
+    "scripts/VERSIONS.txt"
+  ],
+  "submodules": [
+    "externals/skia"
+  ],
+  "docker_roots": [
+    "scripts/Docker"
+  ],
+  "load_patterns": {
+    "*.cake": "^#load\\s+\"([^\"]+)\""
+  },
+  "exclude_dirs": [
+    "bin",
+    "obj",
+    "libs",
+    "tools",
+    ".git"
+  ]
+}
