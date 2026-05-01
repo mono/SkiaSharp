@@ -1,8 +1,8 @@
 {
   "_metadata": {
-    "description": "Native build dependency graph for SkiaSharp cache keys",
+    "description": "Native build dependency graph for cache keys",
     "generator": "scripts/generate-native-dep-graph.py",
-    "usage": "Used by scripts/compute-native-cache-key.ps1 to determine cache key inputs"
+    "usage": "Used by cache key scripts to determine inputs per target"
   },
   "targets": {
     "android": {
@@ -17,7 +17,7 @@
         "scripts/cake/ndk.cake",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-android"
+      "entry_point": "native/android/build.cake"
     },
     "ios": {
       "files": [
@@ -34,7 +34,7 @@
         "scripts/cake/shared.cake",
         "scripts/cake/xcode.cake"
       ],
-      "cake_target": "externals-ios"
+      "entry_point": "native/ios/build.cake"
     },
     "linux": {
       "files": [
@@ -46,7 +46,7 @@
         "scripts/cake/native-shared.cake",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-linux"
+      "entry_point": "native/linux/build.cake"
     },
     "linux-clang-cross": {
       "files": [
@@ -55,7 +55,7 @@
         "scripts/VERSIONS.txt",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-linux-clang-cross"
+      "entry_point": "native/linux-clang-cross/build.cake"
     },
     "linuxnodeps": {
       "files": [
@@ -64,7 +64,7 @@
         "scripts/VERSIONS.txt",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-linuxnodeps"
+      "entry_point": "native/linuxnodeps/build.cake"
     },
     "maccatalyst": {
       "files": [
@@ -73,7 +73,7 @@
         "scripts/VERSIONS.txt",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-maccatalyst"
+      "entry_point": "native/maccatalyst/build.cake"
     },
     "macos": {
       "files": [
@@ -86,7 +86,7 @@
         "scripts/cake/shared.cake",
         "scripts/cake/xcode.cake"
       ],
-      "cake_target": "externals-macos"
+      "entry_point": "native/macos/build.cake"
     },
     "nanoserver": {
       "files": [
@@ -95,7 +95,7 @@
         "scripts/VERSIONS.txt",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-nanoserver"
+      "entry_point": "native/nanoserver/build.cake"
     },
     "tizen": {
       "files": [
@@ -107,7 +107,7 @@
         "scripts/cake/native-shared.cake",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-tizen"
+      "entry_point": "native/tizen/build.cake"
     },
     "tvos": {
       "files": [
@@ -124,7 +124,7 @@
         "scripts/cake/shared.cake",
         "scripts/cake/xcode.cake"
       ],
-      "cake_target": "externals-tvos"
+      "entry_point": "native/tvos/build.cake"
     },
     "wasm": {
       "files": [
@@ -134,7 +134,7 @@
         "scripts/cake/native-shared.cake",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-wasm"
+      "entry_point": "native/wasm/build.cake"
     },
     "windows": {
       "files": [
@@ -147,7 +147,7 @@
         "scripts/cake/native-shared.cake",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-windows"
+      "entry_point": "native/windows/build.cake"
     },
     "winui": {
       "files": [
@@ -176,7 +176,7 @@
         "scripts/cake/native-shared.cake",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-winui"
+      "entry_point": "native/winui/build.cake"
     },
     "winui-angle": {
       "files": [
@@ -187,7 +187,7 @@
         "scripts/cake/native-shared.cake",
         "scripts/cake/shared.cake"
       ],
-      "cake_target": "externals-winui-angle"
+      "entry_point": "native/winui-angle/build.cake"
     }
   },
   "docker_contexts": {
@@ -226,74 +226,7 @@
       "scripts/Docker/wasm/startup.sh"
     ]
   },
-  "install_scripts": {
-    "scripts/install-ninja.ps1": {
-      "job_pattern": "native_",
-      "description": "all native jobs",
-      "affects_output": false
-    },
-    "scripts/install-android-ndk.ps1": {
-      "job_pattern": "_android_",
-      "description": "Android native jobs",
-      "affects_output": true
-    },
-    "scripts/install-tizen.ps1": {
-      "job_pattern": "_tizen_",
-      "description": "Tizen native jobs",
-      "affects_output": true
-    },
-    "scripts/install-7zip.ps1": {
-      "job_pattern": "_win32_",
-      "description": "Win32 native jobs",
-      "affects_output": false
-    },
-    "scripts/install-llvm.ps1": {
-      "job_pattern": "_win32_",
-      "description": "Win32 native jobs",
-      "affects_output": true
-    },
-    "scripts/install-emsdk.sh": {
-      "job_pattern": "native_wasm_",
-      "description": "WASM native jobs (via installEmsdk)",
-      "affects_output": true
-    },
-    "scripts/select-xcode.sh": {
-      "job_pattern": "native_",
-      "description": "native macOS jobs",
-      "affects_output": true
-    },
-    "scripts/select-vs.ps1": {
-      "job_pattern": "native_win",
-      "description": "native Windows jobs",
-      "affects_output": false
-    },
-    "scripts/install-openjdk.ps1": {
-      "job_pattern": "!native_",
-      "description": "managed jobs only",
-      "affects_output": false
-    },
-    "scripts/install-android-sdk.ps1": {
-      "job_pattern": "!native_",
-      "description": "managed jobs only",
-      "affects_output": false
-    },
-    "scripts/install-android-platform.ps1": {
-      "job_pattern": "!native_",
-      "description": "managed jobs only",
-      "affects_output": false
-    },
-    "scripts/install-dotnet-workloads.ps1": {
-      "job_pattern": "!native_",
-      "description": "managed jobs only",
-      "affects_output": false
-    },
-    "scripts/install-winsdk.ps1": {
-      "job_pattern": "native_win",
-      "description": "Windows native jobs (conditional)",
-      "affects_output": false
-    }
-  },
-  "cake_graph": {
+  "load_graph": {
     "build.cake": [
       "scripts/cake/shared.cake",
       "scripts/cake/native-shared.cake",

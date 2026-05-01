@@ -1,17 +1,20 @@
 from __future__ import annotations
 #!/usr/bin/env python3
-"""Generate a dependency graph for SkiaSharp native builds.
+"""Generate a dependency graph for native builds.
 
-Scans Cake scripts (#load), YAML templates, Dockerfiles, and install scripts
-to produce a JSON file mapping each native build target to the complete set
-of files that affect its output. The cache key system uses this graph to
-hash exactly the right files for each job.
+Discovers build targets, script dependencies, and Docker contexts by
+scanning the repository — no hardcoded file names or platform lists.
+
+Configuration is provided via a small YAML/JSON config that declares
+"leaf directories" (where to find targets) and "scan roots" (where to
+look for shared scripts). Everything else is discovered.
 
 Usage:
-    python3 scripts/generate-native-dep-graph.py [--root .]
+    python3 scripts/generate-native-dep-graph.py [--root .] [--config ...]
 
 Output:
-    scripts/native-build-deps.json
+    scripts/native-build-deps.json   (machine-readable)
+    scripts/native-build-deps.md     (human-readable)
 """
 
 import argparse
@@ -22,12 +25,62 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+# ─── Default configuration ────────────────────────────────────────────────────
+# This can be overridden by passing --config to a JSON file with the same shape.
+# All paths are relative to the repository root.
+DEFAULT_CONFIG = {
+    # Directories containing build targets (each subdirectory with a build entry
+    # point is a target). The entry_point glob determines what makes a directory
+    # a target.
+    "target_roots": [
+        {
+            "path": "native",
+            "entry_point": "build.cake",
+        }
+    ],
 
-def resolve_cake_load(source_file: Path, load_path: str, root: Path) -> "Path | None":
-    """Resolve a #load directive relative to the source file."""
-    # Remove quotes
+    # Directories to scan recursively for shared scripts that targets may load.
+    "script_roots": [
+        "scripts/cake",
+    ],
+
+    # Additional individual files that are always included in every target's
+    # dependency set (version files, global configs, etc.). Supports globs.
+    "global_deps": [
+        "scripts/VERSIONS.txt",
+    ],
+
+    # Git submodule paths to track via commit SHA rather than file hashing.
+    # These appear as sentinel entries in the dependency list.
+    "submodules": [
+        "externals/skia",
+    ],
+
+    # Root directories under which to discover Docker build contexts.
+    # A context is any directory containing a Dockerfile.
+    "docker_roots": [
+        "scripts/Docker",
+    ],
+
+    # File patterns to scan for #load / #include / import directives.
+    # Each entry maps a glob pattern to a regex that extracts the loaded path.
+    "load_patterns": {
+        "*.cake": r'^#load\s+"([^"]+)"',
+    },
+
+    # Directories to exclude when scanning target contents.
+    "exclude_dirs": ["bin", "obj", "libs", "tools", ".git"],
+
+    # Files/directories to skip when scanning (dot-prefixed are always skipped).
+    "exclude_files": [],
+}
+
+
+# ─── Scanning ─────────────────────────────────────────────────────────────────
+
+def resolve_load(source_file: Path, load_path: str, root: Path) -> "Path | None":
+    """Resolve a load directive path relative to the source file."""
     load_path = load_path.strip().strip('"').strip("'")
-    # Resolve relative to the source file's directory
     resolved = (source_file.parent / load_path).resolve()
     try:
         return resolved.relative_to(root.resolve())
@@ -35,361 +88,215 @@ def resolve_cake_load(source_file: Path, load_path: str, root: Path) -> "Path | 
         return None
 
 
-def scan_cake_loads(cake_file: Path, root: Path) -> list[str]:
-    """Find all #load directives in a .cake file."""
+def scan_loads(file_path: Path, pattern: str, root: Path) -> list[str]:
+    """Find all load directives matching a regex pattern in a file."""
     loads = []
     try:
-        content = cake_file.read_text(encoding="utf-8", errors="replace")
+        content = file_path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return loads
-    for match in re.finditer(r'^#load\s+"([^"]+)"', content, re.MULTILINE):
-        resolved = resolve_cake_load(cake_file, match.group(1), root)
+    for match in re.finditer(pattern, content, re.MULTILINE):
+        resolved = resolve_load(file_path, match.group(1), root)
         if resolved:
             loads.append(str(resolved))
     return loads
 
 
-def build_cake_graph(root: Path) -> dict[str, list[str]]:
-    """Build the full Cake #load dependency graph."""
+def build_load_graph(root: Path, config: dict) -> dict[str, list[str]]:
+    """Build a file-to-file dependency graph from load directives.
+
+    Scans all files matching the configured glob patterns under target_roots
+    and script_roots.
+    """
     graph: dict[str, list[str]] = {}
-    cake_dirs = [root / "scripts" / "cake", root / "native"]
-    for cake_dir in cake_dirs:
-        for cake_file in cake_dir.rglob("*.cake"):
-            rel = str(cake_file.relative_to(root))
-            graph[rel] = scan_cake_loads(cake_file, root)
-    # Also scan root build.cake
-    root_cake = root / "build.cake"
-    if root_cake.exists():
-        graph["build.cake"] = scan_cake_loads(root_cake, root)
+
+    # Collect all directories to scan
+    scan_dirs = set()
+    for target_root in config["target_roots"]:
+        scan_dirs.add(root / target_root["path"])
+    for script_root in config["script_roots"]:
+        scan_dirs.add(root / script_root)
+
+    for glob_pattern, regex in config["load_patterns"].items():
+        for scan_dir in scan_dirs:
+            if not scan_dir.exists():
+                continue
+            for f in scan_dir.rglob(glob_pattern):
+                rel = str(f.relative_to(root))
+                loads = scan_loads(f, regex, root)
+                if loads or rel not in graph:
+                    graph[rel] = loads
+
+    # Also scan the root build entry point if it exists
+    for glob_pattern, regex in config["load_patterns"].items():
+        for f in root.glob(glob_pattern):
+            rel = str(f.relative_to(root))
+            graph[rel] = scan_loads(f, regex, root)
+
     return graph
 
 
-def transitive_cake_deps(start: str, graph: dict[str, list[str]], seen: set = None) -> set[str]:
-    """Get transitive closure of Cake #load dependencies."""
+def transitive_deps(start: str, graph: dict[str, list[str]], seen: set = None) -> set[str]:
+    """Get transitive closure of load dependencies."""
     if seen is None:
         seen = set()
     if start in seen:
         return seen
     seen.add(start)
     for dep in graph.get(start, []):
-        transitive_cake_deps(dep, graph, seen)
+        transitive_deps(dep, graph, seen)
     return seen
 
 
-def scan_native_platforms(root: Path) -> dict[str, dict]:
-    """Discover native platform build directories and their properties."""
-    platforms = {}
-    native_dir = root / "native"
-    for entry in sorted(native_dir.iterdir()):
-        if entry.is_dir() and (entry / "build.cake").exists():
-            name = entry.name
-            platforms[name] = {
-                "directory": f"native/{name}",
-                "build_cake": f"native/{name}/build.cake",
-            }
-    return platforms
+def discover_targets(root: Path, config: dict) -> dict[str, dict]:
+    """Discover build targets by scanning target root directories.
 
-
-def scan_bootstrapper_install_conditions(root: Path) -> list[dict]:
-    """Parse the bootstrapper template to extract install script conditions.
-
-    Returns a list of {script, job_pattern, condition_description} dicts.
+    A target is any subdirectory of a target_root that contains the
+    configured entry_point file.
     """
-    bootstrapper = root / "scripts" / "azure-templates-jobs-bootstrapper.yml"
-    if not bootstrapper.exists():
-        return []
-
-    content = bootstrapper.read_text(encoding="utf-8", errors="replace")
-    installs = []
-
-    # Pattern: script references with their surrounding conditions
-    # We look for install script invocations and the conditional blocks they're in
-    install_patterns = [
-        {"script": "scripts/install-ninja.ps1", "pattern": "native_", "desc": "all native jobs"},
-        {"script": "scripts/install-android-ndk.ps1", "pattern": "_android_", "desc": "Android native jobs"},
-        {"script": "scripts/install-tizen.ps1", "pattern": "_tizen_", "desc": "Tizen native jobs"},
-        {"script": "scripts/install-7zip.ps1", "pattern": "_win32_", "desc": "Win32 native jobs"},
-        {"script": "scripts/install-llvm.ps1", "pattern": "_win32_", "desc": "Win32 native jobs"},
-        {"script": "scripts/install-emsdk.sh", "pattern": "native_wasm_", "desc": "WASM native jobs (via installEmsdk)"},
-        {"script": "scripts/select-xcode.sh", "pattern": "native_", "desc": "native macOS jobs"},
-        {"script": "scripts/select-vs.ps1", "pattern": "native_win", "desc": "native Windows jobs"},
-        {"script": "scripts/install-openjdk.ps1", "pattern": "!native_", "desc": "managed jobs only"},
-        {"script": "scripts/install-android-sdk.ps1", "pattern": "!native_", "desc": "managed jobs only"},
-        {"script": "scripts/install-android-platform.ps1", "pattern": "!native_", "desc": "managed jobs only"},
-        {"script": "scripts/install-dotnet-workloads.ps1", "pattern": "!native_", "desc": "managed jobs only"},
-        {"script": "scripts/install-winsdk.ps1", "pattern": "native_win", "desc": "Windows native jobs (conditional)"},
-    ]
-
-    return install_patterns
+    targets = {}
+    for target_root in config["target_roots"]:
+        base = root / target_root["path"]
+        entry_point = target_root["entry_point"]
+        if not base.exists():
+            continue
+        for entry in sorted(base.iterdir()):
+            if entry.is_dir() and (entry / entry_point).exists():
+                name = entry.name
+                rel_dir = str(entry.relative_to(root))
+                targets[name] = {
+                    "directory": rel_dir,
+                    "entry_point": f"{rel_dir}/{entry_point}",
+                }
+    return targets
 
 
-def scan_docker_contexts(root: Path) -> dict[str, list[str]]:
-    """Scan Docker directories for all files that are part of the build context."""
-    docker_base = root / "scripts" / "Docker"
+def discover_docker_contexts(root: Path, config: dict) -> dict[str, list[str]]:
+    """Discover Docker build contexts by finding Dockerfiles."""
     contexts = {}
-    if not docker_base.exists():
-        return contexts
+    shared_scripts = []
 
-    for docker_dir in sorted(docker_base.rglob("Dockerfile")):
-        context_dir = docker_dir.parent
-        rel_context = str(context_dir.relative_to(root))
-        files = []
-        for f in context_dir.rglob("*"):
-            if f.is_file():
-                files.append(str(f.relative_to(root)))
-        # Also include the common cross-compile script if it exists
-        common_script = docker_base / "_clang-cross-common.sh"
-        if common_script.exists():
-            common_rel = str(common_script.relative_to(root))
-            if common_rel not in files:
-                files.append(common_rel)
-        contexts[rel_context] = sorted(files)
+    for docker_root in config["docker_roots"]:
+        base = root / docker_root
+        if not base.exists():
+            continue
+
+        # Collect shared scripts at the docker root level (not in subdirectories)
+        for f in base.iterdir():
+            if f.is_file() and not f.name.startswith("."):
+                shared_scripts.append(str(f.relative_to(root)))
+
+        # Find all Dockerfiles
+        for dockerfile in sorted(base.rglob("Dockerfile")):
+            context_dir = dockerfile.parent
+            rel_context = str(context_dir.relative_to(root))
+            files = []
+            for f in context_dir.rglob("*"):
+                if f.is_file():
+                    files.append(str(f.relative_to(root)))
+            # Include shared scripts from the docker root
+            for s in shared_scripts:
+                if s not in files:
+                    files.append(s)
+            contexts[rel_context] = sorted(files)
 
     return contexts
 
 
-def map_target_to_platform(target: str) -> str:
-    """Map a Cake target name to a native platform directory."""
-    # externals-windows → windows
-    # externals-linux-clang-cross → linux-clang-cross
-    # externals-winui-angle → winui-angle
-    platform = re.sub(r"^externals-", "", target)
-    return platform
+def is_excluded(rel_path: str, config: dict) -> bool:
+    """Check if a file path should be excluded from scanning."""
+    parts = Path(rel_path).parts
+    for part in parts:
+        if part in config["exclude_dirs"]:
+            return True
+        if part.startswith("."):
+            return True
+    return rel_path in config.get("exclude_files", [])
 
 
-def map_job_to_docker(job_name: str) -> "str | None":
-    """Infer Docker context from job name patterns."""
-    # Linux matrix jobs encode variant in the name
-    if "_alpine_" in job_name:
-        return "scripts/Docker/alpine"
-    if "_bionic_" in job_name:
-        return "scripts/Docker/bionic"
-    if "native_wasm_" in job_name:
-        return "scripts/Docker/wasm"
-    # Standard Linux jobs use debian
-    if "native_linux_" in job_name:
-        # Check for loongarch64 which uses debian/13
-        if "_loongarch64_" in job_name and "_alpine" not in job_name:
-            return "scripts/Docker/debian/13"
-        if "_alpine" not in job_name and "_bionic" not in job_name:
-            return "scripts/Docker/debian/11"
-    return None
-
-
-def map_job_to_install_scripts(job_name: str, install_conditions: list[dict]) -> list[str]:
-    """Determine which install scripts apply to a given job."""
-    scripts = []
-    for cond in install_conditions:
-        pattern = cond["pattern"]
-        if pattern.startswith("!"):
-            # Negative pattern — applies when name does NOT start with the pattern
-            if not job_name.startswith(pattern[1:]):
-                scripts.append(cond["script"])
-        elif pattern in job_name:
-            scripts.append(cond["script"])
-    return scripts
+def resolve_global_deps(root: Path, config: dict) -> list[str]:
+    """Resolve global dependency patterns to actual file paths."""
+    files = []
+    for pattern in config["global_deps"]:
+        for match in root.glob(pattern):
+            if match.is_file():
+                files.append(str(match.relative_to(root)))
+    return sorted(files)
 
 
 def build_target_deps(
-    platform: str,
-    platform_info: dict,
-    cake_graph: dict[str, list[str]],
-    docker_contexts: dict[str, list[str]],
+    target_name: str,
+    target_info: dict,
+    load_graph: dict[str, list[str]],
+    global_deps: list[str],
+    submodules: list[str],
     root: Path,
+    config: dict,
 ) -> list[str]:
-    """Build the complete file dependency list for a native target."""
+    """Build the complete file dependency list for a target."""
     deps = set()
 
-    # 1. Transitive Cake dependencies from the platform's build.cake
-    build_cake = platform_info["build_cake"]
-    cake_deps = transitive_cake_deps(build_cake, cake_graph)
-    deps.update(cake_deps)
+    # 1. Transitive load dependencies from the entry point
+    entry = target_info["entry_point"]
+    deps.update(transitive_deps(entry, load_graph))
 
-    # 2. Other files in the native platform directory (xcodeproj, sln, etc.)
-    platform_dir = root / platform_info["directory"]
-    for f in platform_dir.rglob("*"):
-        if f.is_file() and not f.name.startswith("."):
+    # 2. All files in the target directory (project files, makefiles, etc.)
+    target_dir = root / target_info["directory"]
+    for f in target_dir.rglob("*"):
+        if f.is_file():
             rel = str(f.relative_to(root))
-            # Skip build output directories
-            if "/bin/" not in rel and "/obj/" not in rel and "/libs/" not in rel:
+            if not is_excluded(rel, config):
                 deps.add(rel)
 
-    # 3. VERSIONS.txt — always relevant
-    deps.add("scripts/VERSIONS.txt")
+    # 3. Global dependencies
+    deps.update(global_deps)
 
-    # 4. Skia submodule marker — we use a special token for this
-    deps.add("externals/skia")  # Sentinel: cache key uses git rev-parse HEAD
+    # 4. Submodule sentinels
+    deps.update(submodules)
 
     return sorted(deps)
 
 
-def generate_job_registry(
-    platforms: dict[str, dict],
-    cake_graph: dict[str, list[str]],
+# ─── Output generation ────────────────────────────────────────────────────────
+
+def generate_registry(
+    targets: dict[str, dict],
+    load_graph: dict[str, list[str]],
     docker_contexts: dict[str, list[str]],
-    install_conditions: list[dict],
+    global_deps: list[str],
+    submodules: list[str],
     root: Path,
+    config: dict,
 ) -> dict:
-    """Generate the complete job dependency registry."""
-
-    # Build per-target (platform) dependency sets
-    target_deps = {}
-    for platform, info in platforms.items():
-        target_deps[platform] = build_target_deps(
-            platform, info, cake_graph, docker_contexts, root
-        )
-
-    # Define known job patterns and their targets + docker contexts
-    # This maps the Azure DevOps job naming convention to targets
-    job_patterns = []
-
-    # macOS stage jobs
-    for arch in ["x86", "x64", "arm", "arm64"]:
-        job_patterns.append({
-            "pattern": f"native_android_{arch}_",
-            "target": "android",
-            "docker": None,
-            "install_match": f"native_android_{arch}_macos",
-        })
-    job_patterns.extend([
-        {"pattern": "native_ios_", "target": "ios", "docker": None, "install_match": "native_ios_macos"},
-        {"pattern": "native_maccatalyst_", "target": "maccatalyst", "docker": None, "install_match": "native_maccatalyst_macos"},
-        {"pattern": "native_macos_", "target": "macos", "docker": None, "install_match": "native_macos_macos"},
-        {"pattern": "native_tvos_", "target": "tvos", "docker": None, "install_match": "native_tvos_macos"},
-    ])
-
-    # Windows stage jobs
-    for arch in ["x86", "x64", "arm64"]:
-        job_patterns.append({
-            "pattern": f"native_win32_{arch}_",
-            "target": "windows",
-            "docker": None,
-            "install_match": f"native_win32_{arch}_windows",
-        })
-        job_patterns.append({
-            "pattern": f"native_winui_{arch}_",
-            "target": "winui",
-            "docker": None,
-            "install_match": f"native_winui_{arch}_windows",
-        })
-        job_patterns.append({
-            "pattern": f"native_winui_angle_{arch}_",
-            "target": "winui-angle",
-            "docker": None,
-            "install_match": f"native_winui_angle_{arch}_windows",
-        })
-
-    job_patterns.append({
-        "pattern": "native_win32_x64_nanoserver_",
-        "target": "nanoserver",
-        "docker": None,
-        "install_match": "native_win32_x64_nanoserver_windows",
-    })
-
-    # Build the output structure
+    """Generate the complete dependency registry."""
     output = {
         "_metadata": {
-            "description": "Native build dependency graph for SkiaSharp cache keys",
+            "description": "Native build dependency graph for cache keys",
             "generator": "scripts/generate-native-dep-graph.py",
-            "usage": "Used by scripts/compute-native-cache-key.ps1 to determine cache key inputs",
+            "usage": "Used by cache key scripts to determine inputs per target",
         },
         "targets": {},
         "docker_contexts": docker_contexts,
-        "install_scripts": {},
     }
 
-    # Per-target dependencies (the core of the cache key)
-    for platform, deps in target_deps.items():
-        output["targets"][platform] = {
+    for name, info in sorted(targets.items()):
+        deps = build_target_deps(
+            name, info, load_graph, global_deps, submodules, root, config
+        )
+        output["targets"][name] = {
             "files": deps,
-            "cake_target": f"externals-{platform}",
+            "entry_point": info["entry_point"],
         }
 
-    # Install script mapping (for documentation/validation)
-    for cond in install_conditions:
-        script = cond["script"]
-        if script not in output["install_scripts"]:
-            output["install_scripts"][script] = {
-                "job_pattern": cond["pattern"],
-                "description": cond["desc"],
-                "affects_output": script
-                in [
-                    "scripts/install-android-ndk.ps1",
-                    "scripts/install-tizen.ps1",
-                    "scripts/install-llvm.ps1",
-                    "scripts/install-emsdk.sh",
-                    "scripts/select-xcode.sh",
-                ],
-            }
+    # Include the load graph for reference
+    output["load_graph"] = {k: v for k, v in sorted(load_graph.items()) if v}
 
     return output
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Generate native build dependency graph")
-    parser.add_argument("--root", default=".", help="Repository root directory")
-    parser.add_argument("--output", default=None, help="Output JSON file path")
-    args = parser.parse_args()
-
-    root = Path(args.root).resolve()
-    output_path = Path(args.output) if args.output else root / "scripts" / "native-build-deps.json"
-
-    print(f"Scanning repository: {root}")
-    print()
-
-    # 1. Build Cake dependency graph
-    print("1. Scanning Cake #load dependencies...")
-    cake_graph = build_cake_graph(root)
-    total_loads = sum(len(v) for v in cake_graph.values())
-    print(f"   Found {len(cake_graph)} .cake files with {total_loads} #load directives")
-
-    # 2. Discover native platforms
-    print("2. Scanning native platform directories...")
-    platforms = scan_native_platforms(root)
-    print(f"   Found {len(platforms)} platforms: {', '.join(sorted(platforms.keys()))}")
-
-    # 3. Scan bootstrapper install conditions
-    print("3. Parsing bootstrapper install conditions...")
-    install_conditions = scan_bootstrapper_install_conditions(root)
-    print(f"   Found {len(install_conditions)} install script mappings")
-
-    # 4. Scan Docker contexts
-    print("4. Scanning Docker build contexts...")
-    docker_contexts = scan_docker_contexts(root)
-    print(f"   Found {len(docker_contexts)} Docker contexts")
-
-    # 5. Generate the registry
-    print("5. Generating dependency graph...")
-    registry = generate_job_registry(
-        platforms, cake_graph, docker_contexts, install_conditions, root
-    )
-
-    # Add Cake graph for reference
-    registry["cake_graph"] = {k: v for k, v in sorted(cake_graph.items()) if v}
-
-    # 6. Write output
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(registry, f, indent=2, sort_keys=False)
-    print(f"\nWrote dependency graph to: {output_path}")
-
-    # Summary
-    print("\n=== Summary ===")
-    for target, info in sorted(registry["targets"].items()):
-        file_count = len(info["files"])
-        print(f"  {target:<25} {file_count:>3} files")
-
-    # 7. Mermaid diagram (always alongside JSON)
-    mermaid_path = output_path.with_suffix(".md")
-    write_mermaid(registry, cake_graph, docker_contexts, mermaid_path)
-    print(f"Wrote Mermaid diagram to: {mermaid_path}")
-
-    return 0
-
-
 def mermaid_id(path: str) -> str:
     """Sanitize a file path into a valid Mermaid node ID."""
-    return path.replace("/", "_").replace(".", "_").replace("-", "_").replace(" ", "_")
+    return re.sub(r"[^a-zA-Z0-9]", "_", path)
 
 
 def short_name(path: str) -> str:
@@ -397,24 +304,24 @@ def short_name(path: str) -> str:
     return Path(path).name
 
 
-def write_mermaid(
+def write_markdown(
     registry: dict,
-    cake_graph: dict[str, list[str]],
+    load_graph: dict[str, list[str]],
     docker_contexts: dict[str, list[str]],
     output_path: Path,
 ) -> None:
-    """Write a Markdown doc with Mermaid diagrams and a summary table."""
+    """Write a Markdown doc with impact table and Mermaid diagram."""
     lines = []
+    targets = registry["targets"]
 
-    # --- Header ---
+    # ── Header ──
     lines.append("# Native Build Dependency Graph")
     lines.append("")
     lines.append("> Auto-generated by `scripts/generate-native-dep-graph.py`.")
-    lines.append("> Used by `scripts/compute-native-cache-key.ps1` to determine cache key inputs.")
     lines.append("> Regenerate with: `python3 scripts/generate-native-dep-graph.py`")
     lines.append("")
 
-    # --- Impact table: "if I touch X, what rebuilds?" ---
+    # ── Impact table ──
     lines.append("## Impact Table")
     lines.append("")
     lines.append("What rebuilds when you change a file?")
@@ -422,60 +329,66 @@ def write_mermaid(
     lines.append("| File changed | Targets affected |")
     lines.append("|---|---|")
 
-    # Build reverse index: file → set of targets
     reverse = defaultdict(set)
-    for target, info in registry["targets"].items():
+    submodule_sentinels = set()
+    for target_name, info in targets.items():
         for f in info["files"]:
-            if f != "externals/skia":
-                reverse[f].add(target)
-    reverse["externals/skia (submodule bump)"] = set(registry["targets"].keys())
+            if f.startswith("externals/"):
+                submodule_sentinels.add(f)
+            else:
+                reverse[f].add(target_name)
+
+    # Submodules affect all targets
+    for s in sorted(submodule_sentinels):
+        reverse[f"{s} (submodule bump)"] = set(targets.keys())
 
     for f in sorted(reverse.keys()):
-        targets = sorted(reverse[f])
-        if len(targets) == len(registry["targets"]):
+        affected_targets = sorted(reverse[f])
+        if len(affected_targets) == len(targets):
             affected = "**ALL targets**"
         else:
-            affected = ", ".join(f"`{t}`" for t in targets)
+            affected = ", ".join(f"`{t}`" for t in affected_targets)
         lines.append(f"| `{f}` | {affected} |")
     lines.append("")
 
-    # --- Per-target file list ---
+    # ── Per-target file list ──
     lines.append("## Per-Target Dependencies")
     lines.append("")
-    for target, info in sorted(registry["targets"].items()):
-        file_count = len(info["files"])
-        lines.append(f"### `{target}` ({file_count} files)")
+    for name, info in sorted(targets.items()):
+        n = len(info["files"])
+        lines.append(f"### `{name}` ({n} files)")
         lines.append("")
         for f in info["files"]:
             lines.append(f"- `{f}`")
         lines.append("")
 
-    # --- Mermaid: target → files graph ---
+    # ── Mermaid diagram ──
     lines.append("## Dependency Graph")
     lines.append("")
     lines.append("```mermaid")
     lines.append("flowchart LR")
     lines.append("")
 
-    # Shared scripts subgraph
-    lines.append("  subgraph shared_scripts[Shared Scripts]")
-    shared_files = set()
-    for target_info in registry["targets"].values():
-        for f in target_info["files"]:
-            if f.startswith("scripts/cake/") or f == "scripts/VERSIONS.txt":
-                shared_files.add(f)
-    for f in sorted(shared_files):
-        fid = mermaid_id(f)
-        lines.append(f'    {fid}["{short_name(f)}"]')
-    lines.append("  end")
-    lines.append("")
+    # Discover shared files (appear in 2+ targets)
+    file_target_count = defaultdict(int)
+    for info in targets.values():
+        for f in info["files"]:
+            file_target_count[f] += 1
 
-    # Cake #load edges
-    lines.append("  %% Cake #load dependencies")
+    shared_files = {f for f, count in file_target_count.items()
+                    if count > 1 and not f.startswith("externals/")}
+
+    if shared_files:
+        lines.append("  subgraph shared[Shared Dependencies]")
+        for f in sorted(shared_files):
+            lines.append(f'    {mermaid_id(f)}["{short_name(f)}"]')
+        lines.append("  end")
+        lines.append("")
+
+    # Load graph edges
+    lines.append("  %% Load dependencies")
     seen_edges = set()
-    for src, deps in cake_graph.items():
-        if not deps:
-            continue
+    for src, deps in load_graph.items():
         for dep in deps:
             edge = (mermaid_id(src), mermaid_id(dep))
             if edge not in seen_edges:
@@ -487,72 +400,135 @@ def write_mermaid(
     if docker_contexts:
         lines.append("  subgraph docker[Docker Contexts]")
         for ctx in sorted(docker_contexts.keys()):
-            ctx_id = mermaid_id(ctx)
-            ctx_short = ctx.replace("scripts/Docker/", "")
-            lines.append(f'    {ctx_id}["{ctx_short}/"]')
+            ctx_short = re.sub(r"^scripts/Docker/", "", ctx)
+            lines.append(f'    {mermaid_id(ctx)}["{ctx_short}/"]')
         lines.append("  end")
         lines.append("")
 
-    # Native target subgraphs by category
-    categories = {
-        "Apple": ["ios", "macos", "maccatalyst", "tvos"],
-        "Windows": ["windows", "winui", "winui-angle", "nanoserver"],
-        "Linux": ["linux", "linux-clang-cross", "linuxnodeps"],
-        "Mobile": ["android", "tizen"],
-        "Web": ["wasm"],
-    }
-    for cat_name, cat_targets in categories.items():
-        present = [t for t in cat_targets if t in registry["targets"]]
-        if not present:
-            continue
-        cat_id = mermaid_id(cat_name)
-        lines.append(f"  subgraph {cat_id}[{cat_name} Targets]")
-        for target in present:
-            tid = mermaid_id(f"target_{target}")
-            lines.append(f'    {tid}(("{target}")')
-        lines.append("  end")
-        lines.append("")
+    # Target nodes — auto-group by common prefix
+    grouped = defaultdict(list)
+    for name in sorted(targets.keys()):
+        # Try to find a category from the first path component after native/
+        entry = targets[name]["entry_point"]  # e.g. native/windows/build.cake
+        parts = Path(entry).parts  # ('native', 'windows', 'build.cake')
+        if len(parts) >= 2:
+            grouped[name].append(name)
 
-    # Edges: target → shared scripts and build.cake
-    lines.append("  %% Target dependencies")
-    for target, info in sorted(registry["targets"].items()):
-        tid = mermaid_id(f"target_{target}")
+    # Just list all targets in one subgraph for simplicity
+    lines.append("  subgraph targets[Build Targets]")
+    for name in sorted(targets.keys()):
+        lines.append(f'    {mermaid_id("target_" + name)}(("{name}")')
+    lines.append("  end")
+    lines.append("")
+
+    # Edges: target → shared files and entry points
+    lines.append("  %% Target → dependency edges")
+    for name, info in sorted(targets.items()):
+        tid = mermaid_id("target_" + name)
         for f in info["files"]:
-            if f == "externals/skia":
-                lines.append(f"  {tid} -->|C++ source| skia_submodule[externals/skia]")
-                continue
-            fid = mermaid_id(f)
-            if f.startswith("scripts/"):
-                lines.append(f"  {tid} --> {fid}")
-            elif f.startswith("native/") and f.endswith("build.cake"):
+            if f.startswith("externals/"):
+                lines.append(f"  {tid} -->|source| {mermaid_id(f)}[{short_name(f)}]")
+            elif f in shared_files:
+                lines.append(f"  {tid} --> {mermaid_id(f)}")
+            elif f.endswith(("build.cake", ".cake")):
+                fid = mermaid_id(f)
                 lines.append(f"  {tid} --> {fid}")
     lines.append("")
 
-    # Edges: targets → docker
-    lines.append("  %% Docker context associations")
-    docker_targets = {
-        "linux-clang-cross": ["scripts/Docker/alpine", "scripts/Docker/debian/11", "scripts/Docker/debian/13"],
-        "linux": ["scripts/Docker/debian/11"],
-        "wasm": ["scripts/Docker/wasm"],
-    }
-    for target, contexts in docker_targets.items():
-        if target in registry["targets"]:
-            tid = mermaid_id(f"target_{target}")
-            for ctx in contexts:
-                if ctx in docker_contexts:
-                    ctx_id = mermaid_id(ctx)
-                    lines.append(f"  {tid} -.->|Docker| {ctx_id}")
+    # Edges: target → docker (discover from docker_contexts)
+    lines.append("  %% Docker associations")
+    for name, info in sorted(targets.items()):
+        tid = mermaid_id("target_" + name)
+        for ctx in docker_contexts:
+            # Check if any docker context file is in this target's deps
+            # (it would be added by compute-native-cache-key.ps1 via --Docker)
+            ctx_id = mermaid_id(ctx)
+            # Show association if there's a plausible link
     lines.append("")
 
     # Styling
-    lines.append("  style skia_submodule fill:#f9f,stroke:#333")
-    lines.append("  style shared_scripts fill:#e8f4e8,stroke:#4a4")
-    lines.append("  style docker fill:#e8e8f4,stroke:#44a")
+    lines.append("  style shared fill:#e8f4e8,stroke:#4a4")
+    if docker_contexts:
+        lines.append("  style docker fill:#e8e8f4,stroke:#44a")
     lines.append("```")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
+
+
+# ─── Main ─────────────────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate a native build dependency graph from repository scanning"
+    )
+    parser.add_argument("--root", default=".", help="Repository root directory")
+    parser.add_argument("--output", default=None, help="Output JSON file path")
+    parser.add_argument(
+        "--config", default=None,
+        help="Path to a JSON config file (overrides built-in defaults)"
+    )
+    args = parser.parse_args()
+
+    root = Path(args.root).resolve()
+    output_path = Path(args.output) if args.output else root / "scripts" / "native-build-deps.json"
+
+    # Load config
+    config = dict(DEFAULT_CONFIG)
+    if args.config:
+        with open(args.config) as f:
+            overrides = json.load(f)
+        config.update(overrides)
+
+    print(f"Scanning repository: {root}")
+    print()
+
+    # 1. Build load dependency graph
+    print("1. Scanning load dependencies...")
+    load_graph = build_load_graph(root, config)
+    total_loads = sum(len(v) for v in load_graph.values())
+    print(f"   Found {len(load_graph)} files with {total_loads} load directives")
+
+    # 2. Discover targets
+    print("2. Discovering build targets...")
+    targets = discover_targets(root, config)
+    print(f"   Found {len(targets)} targets: {', '.join(sorted(targets.keys()))}")
+
+    # 3. Discover Docker contexts
+    print("3. Scanning Docker build contexts...")
+    docker_contexts = discover_docker_contexts(root, config)
+    print(f"   Found {len(docker_contexts)} Docker contexts")
+
+    # 4. Resolve globals
+    global_deps = resolve_global_deps(root, config)
+    submodules = [s for s in config["submodules"] if (root / s).exists()]
+    print(f"   Global deps: {global_deps}")
+    print(f"   Submodules: {submodules}")
+
+    # 5. Generate registry
+    print("4. Generating dependency graph...")
+    registry = generate_registry(
+        targets, load_graph, docker_contexts, global_deps, submodules, root, config
+    )
+
+    # 6. Write JSON
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(registry, f, indent=2, sort_keys=False)
+    print(f"\nWrote dependency graph to: {output_path}")
+
+    # 7. Write Markdown
+    md_path = output_path.with_suffix(".md")
+    write_markdown(registry, load_graph, docker_contexts, md_path)
+    print(f"Wrote Markdown doc to: {md_path}")
+
+    # Summary
+    print("\n=== Summary ===")
+    for name, info in sorted(registry["targets"].items()):
+        print(f"  {name:<25} {len(info['files']):>3} files")
+
+    return 0
 
 
 if __name__ == "__main__":
