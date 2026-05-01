@@ -1,9 +1,11 @@
 <#
 .SYNOPSIS Compute a content-based cache key for a native build job.
 .DESCRIPTION
-    Produces a deterministic cache key from the Skia submodule commit SHA,
-    platform-specific build script hash, shared infrastructure hashes, and
-    (optionally) the Docker image Dockerfile hash.
+    Reads the dependency graph from scripts/native-build-deps.json (generated
+    by scripts/generate-native-dep-graph.py) and hashes ALL files that can
+    affect the native build output for the given target.
+
+    Falls back to a basic key if the dep graph file is missing.
 
     The key is emitted as the Azure DevOps pipeline variable NATIVE_CACHE_KEY.
 
@@ -13,11 +15,11 @@
 
 .PARAMETER Target
     The Cake target (e.g. externals-windows, externals-macos,
-    externals-linux-clang-cross). Used to locate the platform build script.
+    externals-linux-clang-cross). Used to locate the platform in the dep graph.
 
 .PARAMETER Docker
     Optional path to the Docker context directory (e.g. scripts/Docker/alpine).
-    When provided, the Dockerfile hash is included in the cache key.
+    When provided, all files in that Docker context are included in the hash.
 
 .EXAMPLE
     .\scripts\compute-native-cache-key.ps1 -JobName 'native_win32_x64_windows' -Target 'externals-windows'
@@ -36,12 +38,16 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Get-TruncatedFileHash {
-    param([string]$Path, [int]$Length = 16)
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+function Get-FileHashString {
+    param([string]$Path)
     if (Test-Path $Path) {
-        return (Get-FileHash $Path -Algorithm SHA256).Hash.Substring(0, $Length)
+        return (Get-FileHash $Path -Algorithm SHA256).Hash
     }
-    return 'missing'
+    return ''
 }
 
 # ---------------------------------------------------------------------------
@@ -56,73 +62,107 @@ if (-not $skiaSha) {
 }
 
 # ---------------------------------------------------------------------------
-# 2. Platform-specific build script
+# 2. Load dependency graph
 # ---------------------------------------------------------------------------
-# Map Cake target to the native/<platform> directory.
-# Targets like "externals-linux-clang-cross" → "linux-clang-cross"
-# Targets like "externals-windows" → "windows"
-# Targets like "externals-macos" → "macos"
-# Targets like "externals-winui-angle" → "winui-angle"
+$depGraphPath = 'scripts/native-build-deps.json'
 $platformDir = $Target -replace '^externals-', ''
+$allFiles = @()
 
-$buildCake = "native/$platformDir/build.cake"
-if (-not (Test-Path $buildCake)) {
-    # Fallback: some targets share a build directory.
-    # e.g. externals-linux uses native/linux/build.cake
-    # but externals-linux-clang-cross uses native/linux-clang-cross/build.cake
-    $fallback = $platformDir -replace '-clang-cross$', ''
-    $buildCake = "native/$fallback/build.cake"
+if (Test-Path $depGraphPath) {
+    $depGraph = Get-Content $depGraphPath -Raw | ConvertFrom-Json
+
+    # Get target files from the dep graph
+    $targetInfo = $depGraph.targets.$platformDir
+    if ($targetInfo) {
+        $allFiles = @($targetInfo.files)
+        Write-Host "Dep graph: found $($allFiles.Count) files for target '$platformDir'"
+    } else {
+        Write-Warning "Target '$platformDir' not found in dep graph — using fallback"
+    }
+
+    # Add Docker context files if applicable
+    if ($Docker -and $depGraph.docker_contexts.$Docker) {
+        $dockerFiles = @($depGraph.docker_contexts.$Docker)
+        $allFiles = @($allFiles) + @($dockerFiles) | Select-Object -Unique
+        Write-Host "Dep graph: added $($dockerFiles.Count) Docker files from '$Docker'"
+    }
 }
 
-$buildCakeHash = Get-TruncatedFileHash $buildCake
+# Fallback: if dep graph is missing or target not found, use basic file list
+if ($allFiles.Count -eq 0) {
+    Write-Host "Using fallback file list (dep graph not available)"
 
-# ---------------------------------------------------------------------------
-# 3. Shared build infrastructure
-# ---------------------------------------------------------------------------
-$sharedCakeHash = Get-TruncatedFileHash 'scripts/cake/native-shared.cake'
-$sharedCakeCommonHash = Get-TruncatedFileHash 'scripts/cake/shared.cake'
-$versionsHash = Get-TruncatedFileHash 'scripts/VERSIONS.txt'
+    $buildCake = "native/$platformDir/build.cake"
+    if (-not (Test-Path $buildCake)) {
+        $fallback = $platformDir -replace '-clang-cross$', ''
+        $buildCake = "native/$fallback/build.cake"
+    }
 
-# Also hash xcode.cake if it exists (used by Apple platforms)
-$xcodeCakeHash = 'none'
-if ($platformDir -match '^(macos|ios|maccatalyst|tvos)$' -or $Target -match 'android') {
-    $xcodeCakeHash = Get-TruncatedFileHash 'scripts/cake/xcode.cake'
+    $allFiles = @(
+        $buildCake,
+        'scripts/cake/native-shared.cake',
+        'scripts/cake/shared.cake',
+        'scripts/cake/msbuild.cake',
+        'scripts/cake/ndk.cake',
+        'scripts/cake/xcode.cake',
+        'scripts/VERSIONS.txt'
+    )
+
+    if ($Docker) {
+        $allFiles += "$Docker/Dockerfile"
+    }
 }
 
 # ---------------------------------------------------------------------------
-# 4. Docker image definition (Linux/WASM builds only)
+# 3. Hash all dependency files (excluding the skia submodule sentinel)
 # ---------------------------------------------------------------------------
-$dockerHash = 'none'
-if ($Docker -and (Test-Path "$Docker/Dockerfile")) {
-    $dockerHash = Get-TruncatedFileHash "$Docker/Dockerfile"
+$fileHashes = @()
+$hashedFiles = @()
+
+foreach ($file in $allFiles | Sort-Object) {
+    if ($file -eq 'externals/skia') {
+        continue  # Handled separately via git rev-parse
+    }
+    $hash = Get-FileHashString $file
+    if ($hash) {
+        $fileHashes += $hash
+        $hashedFiles += $file
+    }
 }
 
+# Combine all file hashes into a single composite hash
+$combinedInput = ($fileHashes -join '|')
+$sha256 = [System.Security.Cryptography.SHA256]::Create()
+$bytes = [System.Text.Encoding]::UTF8.GetBytes($combinedInput)
+$compositeHash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2') }) -join ''
+$compositeHash = $compositeHash.Substring(0, 24)
+
 # ---------------------------------------------------------------------------
-# 5. Compose the cache key
+# 4. Compose the cache key
 # ---------------------------------------------------------------------------
 # Key segments:
-#   JobName     — unique per matrix combination (encodes arch, variant, features)
-#   skiaSha     — all C++ source code state
-#   versions    — version numbers, sonames, milestone
-#   buildCake   — platform-specific build logic
-#   shared      — shared Cake helper scripts
-#   docker      — container image definition (if applicable)
-$cacheKey = "native|$JobName|$skiaSha|$versionsHash|$buildCakeHash|$sharedCakeHash|$sharedCakeCommonHash|$xcodeCakeHash|$dockerHash"
+#   JobName        — unique per matrix combination (encodes arch, variant, features)
+#   skiaSha        — all C++ source code state
+#   compositeHash  — hash of all dependency files (scripts, Dockerfiles, etc.)
+$cacheKey = "native|$JobName|$skiaSha|$compositeHash"
 
 # ---------------------------------------------------------------------------
-# 6. Output
+# 5. Output
 # ---------------------------------------------------------------------------
+Write-Host ""
 Write-Host "╔══════════════════════════════════════════════════════════════╗"
 Write-Host "║  Native Build Cache Key                                     ║"
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
-Write-Host "║  Job:          $JobName"
-Write-Host "║  Skia SHA:     $skiaSha"
-Write-Host "║  VERSIONS:     $versionsHash"
-Write-Host "║  Build cake:   $buildCakeHash  ($buildCake)"
-Write-Host "║  Shared:       $sharedCakeHash  (native-shared.cake)"
-Write-Host "║  Common:       $sharedCakeCommonHash  (shared.cake)"
-Write-Host "║  Xcode:        $xcodeCakeHash"
-Write-Host "║  Docker:       $dockerHash  ($Docker)"
+Write-Host "║  Job:        $JobName"
+Write-Host "║  Target:     $Target → $platformDir"
+Write-Host "║  Skia SHA:   $skiaSha"
+Write-Host "║  Files hash: $compositeHash ($($hashedFiles.Count) files)"
+Write-Host "║  Docker:     $(if ($Docker) { $Docker } else { 'none' })"
+Write-Host "╠══════════════════════════════════════════════════════════════╣"
+Write-Host "║  Hashed files:"
+foreach ($f in $hashedFiles) {
+    Write-Host "║    $f"
+}
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
 Write-Host "║  KEY: $cacheKey"
 Write-Host "╚══════════════════════════════════════════════════════════════╝"

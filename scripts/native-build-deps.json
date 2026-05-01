@@ -1,0 +1,365 @@
+{
+  "_metadata": {
+    "description": "Native build dependency graph for SkiaSharp cache keys",
+    "generator": "scripts/generate-native-dep-graph.py",
+    "usage": "Used by scripts/compute-native-cache-key.ps1 to determine cache key inputs"
+  },
+  "targets": {
+    "android": {
+      "files": [
+        "externals/skia",
+        "native/android/build.cake",
+        "native/android/libHarfBuzzSharp/jni/Android.mk",
+        "native/android/libHarfBuzzSharp/jni/Application.mk",
+        "native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/ndk.cake",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-android"
+    },
+    "ios": {
+      "files": [
+        "externals/skia",
+        "native/ios/build.cake",
+        "native/ios/libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj/project.pbxproj",
+        "native/ios/libHarfBuzzSharp/libHarfBuzzSharp/Info.plist",
+        "native/ios/libHarfBuzzSharp/libHarfBuzzSharp/libHarfBuzzSharp.h",
+        "native/ios/libSkiaSharp/libSkiaSharp.xcodeproj/project.pbxproj",
+        "native/ios/libSkiaSharp/libSkiaSharp/Info.plist",
+        "native/ios/libSkiaSharp/libSkiaSharp/libSkiaSharp.h",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake",
+        "scripts/cake/xcode.cake"
+      ],
+      "cake_target": "externals-ios"
+    },
+    "linux": {
+      "files": [
+        "externals/skia",
+        "native/linux/build.cake",
+        "native/linux/libHarfBuzzSharp/libHarfBuzzSharp.map",
+        "native/linux/libSkiaSharp/libSkiaSharp.map",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-linux"
+    },
+    "linux-clang-cross": {
+      "files": [
+        "externals/skia",
+        "native/linux-clang-cross/build.cake",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-linux-clang-cross"
+    },
+    "linuxnodeps": {
+      "files": [
+        "externals/skia",
+        "native/linuxnodeps/build.cake",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-linuxnodeps"
+    },
+    "maccatalyst": {
+      "files": [
+        "externals/skia",
+        "native/maccatalyst/build.cake",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-maccatalyst"
+    },
+    "macos": {
+      "files": [
+        "externals/skia",
+        "native/macos/build.cake",
+        "native/macos/libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj/project.pbxproj",
+        "native/macos/libSkiaSharp/libSkiaSharp.xcodeproj/project.pbxproj",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake",
+        "scripts/cake/xcode.cake"
+      ],
+      "cake_target": "externals-macos"
+    },
+    "nanoserver": {
+      "files": [
+        "externals/skia",
+        "native/nanoserver/build.cake",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-nanoserver"
+    },
+    "tizen": {
+      "files": [
+        "externals/skia",
+        "native/tizen/build.cake",
+        "native/tizen/libHarfBuzzSharp/project_def.prop",
+        "native/tizen/libSkiaSharp/project_def.prop",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-tizen"
+    },
+    "tvos": {
+      "files": [
+        "externals/skia",
+        "native/tvos/build.cake",
+        "native/tvos/libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj/project.pbxproj",
+        "native/tvos/libHarfBuzzSharp/libHarfBuzzSharp/Info.plist",
+        "native/tvos/libHarfBuzzSharp/libHarfBuzzSharp/libHarfBuzzSharp.h",
+        "native/tvos/libSkiaSharp/libSkiaSharp.xcodeproj/project.pbxproj",
+        "native/tvos/libSkiaSharp/libSkiaSharp/Info.plist",
+        "native/tvos/libSkiaSharp/libSkiaSharp/libSkiaSharp.h",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake",
+        "scripts/cake/xcode.cake"
+      ],
+      "cake_target": "externals-tvos"
+    },
+    "wasm": {
+      "files": [
+        "externals/skia",
+        "native/wasm/build.cake",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-wasm"
+    },
+    "windows": {
+      "files": [
+        "externals/skia",
+        "native/windows/build.cake",
+        "native/windows/libHarfBuzzSharp/libHarfBuzzSharp.sln",
+        "native/windows/libHarfBuzzSharp/libHarfBuzzSharp.vcxproj",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/msbuild.cake",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-windows"
+    },
+    "winui": {
+      "files": [
+        "externals/skia",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.Projection/Directory.Build.props",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.Projection/Directory.Build.targets",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.Projection/SkiaSharp.Views.WinUI.Native.Projection.csproj",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.sln",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/BufferExtensions.cpp",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/BufferExtensions.h",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/BufferExtensions.idl",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/PropertySetExtensions.cpp",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/PropertySetExtensions.h",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/PropertySetExtensions.idl",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.vcxproj",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.vcxproj.filters",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/SkiaSharp_Views_WinUI_Native.def",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/packages.config",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/pch.cpp",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/pch.h",
+        "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/readme.txt",
+        "native/winui/build.cake",
+        "native/winui/global.json",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/msbuild.cake",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-winui"
+    },
+    "winui-angle": {
+      "files": [
+        "externals/skia",
+        "native/winui-angle/build.cake",
+        "scripts/VERSIONS.txt",
+        "scripts/cake/msbuild.cake",
+        "scripts/cake/native-shared.cake",
+        "scripts/cake/shared.cake"
+      ],
+      "cake_target": "externals-winui-angle"
+    }
+  },
+  "docker_contexts": {
+    "scripts/Docker/alpine": [
+      "scripts/Docker/_clang-cross-common.sh",
+      "scripts/Docker/alpine/.dockerignore",
+      "scripts/Docker/alpine/Dockerfile",
+      "scripts/Docker/alpine/build-local.sh",
+      "scripts/Docker/alpine/startup.sh"
+    ],
+    "scripts/Docker/bionic": [
+      "scripts/Docker/_clang-cross-common.sh",
+      "scripts/Docker/bionic/Dockerfile",
+      "scripts/Docker/bionic/build-local.sh",
+      "scripts/Docker/bionic/startup.sh"
+    ],
+    "scripts/Docker/debian/11": [
+      "scripts/Docker/_clang-cross-common.sh",
+      "scripts/Docker/debian/11/Dockerfile",
+      "scripts/Docker/debian/11/build-local.sh",
+      "scripts/Docker/debian/11/startup.sh"
+    ],
+    "scripts/Docker/debian/13": [
+      "scripts/Docker/_clang-cross-common.sh",
+      "scripts/Docker/debian/13/.dockerignore",
+      "scripts/Docker/debian/13/Dockerfile",
+      "scripts/Docker/debian/13/build-local.sh",
+      "scripts/Docker/debian/13/startup.sh"
+    ],
+    "scripts/Docker/wasm": [
+      "scripts/Docker/_clang-cross-common.sh",
+      "scripts/Docker/wasm/.dockerignore",
+      "scripts/Docker/wasm/Dockerfile",
+      "scripts/Docker/wasm/build-local.ps1",
+      "scripts/Docker/wasm/build-local.sh",
+      "scripts/Docker/wasm/startup.sh"
+    ]
+  },
+  "install_scripts": {
+    "scripts/install-ninja.ps1": {
+      "job_pattern": "native_",
+      "description": "all native jobs",
+      "affects_output": false
+    },
+    "scripts/install-android-ndk.ps1": {
+      "job_pattern": "_android_",
+      "description": "Android native jobs",
+      "affects_output": true
+    },
+    "scripts/install-tizen.ps1": {
+      "job_pattern": "_tizen_",
+      "description": "Tizen native jobs",
+      "affects_output": true
+    },
+    "scripts/install-7zip.ps1": {
+      "job_pattern": "_win32_",
+      "description": "Win32 native jobs",
+      "affects_output": false
+    },
+    "scripts/install-llvm.ps1": {
+      "job_pattern": "_win32_",
+      "description": "Win32 native jobs",
+      "affects_output": true
+    },
+    "scripts/install-emsdk.sh": {
+      "job_pattern": "native_wasm_",
+      "description": "WASM native jobs (via installEmsdk)",
+      "affects_output": true
+    },
+    "scripts/select-xcode.sh": {
+      "job_pattern": "native_",
+      "description": "native macOS jobs",
+      "affects_output": true
+    },
+    "scripts/select-vs.ps1": {
+      "job_pattern": "native_win",
+      "description": "native Windows jobs",
+      "affects_output": false
+    },
+    "scripts/install-openjdk.ps1": {
+      "job_pattern": "!native_",
+      "description": "managed jobs only",
+      "affects_output": false
+    },
+    "scripts/install-android-sdk.ps1": {
+      "job_pattern": "!native_",
+      "description": "managed jobs only",
+      "affects_output": false
+    },
+    "scripts/install-android-platform.ps1": {
+      "job_pattern": "!native_",
+      "description": "managed jobs only",
+      "affects_output": false
+    },
+    "scripts/install-dotnet-workloads.ps1": {
+      "job_pattern": "!native_",
+      "description": "managed jobs only",
+      "affects_output": false
+    },
+    "scripts/install-winsdk.ps1": {
+      "job_pattern": "native_win",
+      "description": "Windows native jobs (conditional)",
+      "affects_output": false
+    }
+  },
+  "cake_graph": {
+    "build.cake": [
+      "scripts/cake/shared.cake",
+      "scripts/cake/native-shared.cake",
+      "scripts/cake/msbuild.cake",
+      "scripts/cake/UtilsManaged.cake",
+      "scripts/cake/samples.cake",
+      "scripts/cake/externals.cake",
+      "scripts/cake/UpdateDocs.cake"
+    ],
+    "native/android/build.cake": [
+      "scripts/cake/native-shared.cake",
+      "scripts/cake/ndk.cake"
+    ],
+    "native/ios/build.cake": [
+      "scripts/cake/native-shared.cake",
+      "scripts/cake/xcode.cake"
+    ],
+    "native/linux-clang-cross/build.cake": [
+      "scripts/cake/shared.cake"
+    ],
+    "native/linux/build.cake": [
+      "scripts/cake/native-shared.cake"
+    ],
+    "native/linuxnodeps/build.cake": [
+      "scripts/cake/shared.cake"
+    ],
+    "native/maccatalyst/build.cake": [
+      "scripts/cake/shared.cake"
+    ],
+    "native/macos/build.cake": [
+      "scripts/cake/native-shared.cake",
+      "scripts/cake/xcode.cake"
+    ],
+    "native/nanoserver/build.cake": [
+      "scripts/cake/shared.cake"
+    ],
+    "native/tizen/build.cake": [
+      "scripts/cake/native-shared.cake"
+    ],
+    "native/tvos/build.cake": [
+      "scripts/cake/native-shared.cake",
+      "scripts/cake/xcode.cake"
+    ],
+    "native/wasm/build.cake": [
+      "scripts/cake/native-shared.cake"
+    ],
+    "native/windows/build.cake": [
+      "scripts/cake/native-shared.cake",
+      "scripts/cake/msbuild.cake"
+    ],
+    "native/winui-angle/build.cake": [
+      "scripts/cake/native-shared.cake",
+      "scripts/cake/msbuild.cake"
+    ],
+    "native/winui/build.cake": [
+      "scripts/cake/native-shared.cake",
+      "scripts/cake/msbuild.cake"
+    ],
+    "scripts/cake/native-shared.cake": [
+      "scripts/cake/shared.cake"
+    ],
+    "scripts/cake/xharness-android.cake": [
+      "scripts/cake/shared.cake"
+    ],
+    "scripts/cake/xharness-apple.cake": [
+      "scripts/cake/shared.cake"
+    ]
+  }
+}
