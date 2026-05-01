@@ -12,9 +12,9 @@ flowchart TB
 
   subgraph global["🌍 Global — affects ALL targets"]
     direction LR
-    scripts_infra_shared_VERSIONS_txt["VERSIONS.txt"]
-    scripts_infra_shared_native_shared_cake["native-shared.cake"]
-    scripts_infra_shared_shared_cake["shared.cake"]
+    scripts_infra_native_shared_VERSIONS_txt["VERSIONS.txt"]
+    scripts_infra_native_shared_native_shared_cake["native-shared.cake"]
+    scripts_infra_native_shared_shared_cake["shared.cake"]
     scripts_azure_pipelines_complete_internal_yml["azure-pipelines-complete-internal.yml"]
     scripts_azure_pipelines_complete_yml["azure-pipelines-complete.yml"]
     scripts_azure_pipelines_native_yml["azure-pipelines-native.yml"]
@@ -22,11 +22,12 @@ flowchart TB
     scripts_azure_pipelines_tests_yml["azure-pipelines-tests.yml"]
     scripts_azure_templates_stages_native_yml["azure-templates-stages-native.yml"]
     scripts_azure_templates_stages_yml["azure-templates-stages.yml"]
-    scripts_infra_shared_free_disk_space_ps1["free-disk-space.ps1"]
-    scripts_infra_shared_get_free_space_ps1["get-free-space.ps1"]
-    scripts_infra_shared_install_ninja_ps1["install-ninja.ps1"]
-    scripts_infra_shared_patch_dotnet_ps1["patch-dotnet.ps1"]
-    scripts_infra_shared_set_build_variables_ps1["set-build-variables.ps1"]
+    scripts_infra_native_shared_compute_native_cache_key_ps1["compute-native-cache-key.ps1"]
+    scripts_infra_native_shared_free_disk_space_ps1["free-disk-space.ps1"]
+    scripts_infra_native_shared_get_free_space_ps1["get-free-space.ps1"]
+    scripts_infra_native_shared_install_ninja_ps1["install-ninja.ps1"]
+    scripts_infra_native_shared_patch_dotnet_ps1["patch-dotnet.ps1"]
+    scripts_infra_native_shared_set_build_variables_ps1["set-build-variables.ps1"]
   end
 
   subgraph __Apple["🍎 Apple"]

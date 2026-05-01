@@ -86,22 +86,22 @@ jobs:
       # prepare
       - checkout: self
         submodules: recursive
-      - pwsh: ./scripts/infra/shared/set-build-variables.ps1
+      - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
         displayName: Configure build variables
 
-      - pwsh: .\scripts\infra\shared\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the checkout
         condition: always()
 
       # free disk space on hosted agents by removing pre-installed tools
       - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:
-        - pwsh: ./scripts/infra/shared/free-disk-space.ps1
+        - pwsh: ./scripts/infra/native/shared/free-disk-space.ps1
           displayName: Free disk space
 
       # native build caching — content-based cache for native build outputs
       - ${{ if startsWith(parameters.name, 'native_') }}:
         - pwsh: |
-            .\scripts\infra\shared\compute-native-cache-key.ps1 `
+            .\scripts\infra\native\shared\compute-native-cache-key.ps1 `
               -JobName '${{ parameters.name }}' `
               -Target '${{ parameters.target }}' `
               -Docker '${{ parameters.docker }}'
@@ -128,7 +128,7 @@ jobs:
             }
           displayName: Evaluate native cache decision
 
-      - pwsh: .\scripts\infra\shared\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before the provisioning
         condition: always()
 
@@ -158,30 +158,30 @@ jobs:
             versionSpec: '3.x'
             architecture: 'x64'
         # install ninja
-        - pwsh: .\scripts\infra\shared\install-ninja.ps1
+        - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
           displayName: Install Ninja
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
           - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
-            - pwsh: .\scripts\infra\android\install-android-ndk.ps1
+            - pwsh: .\scripts\infra\native\android\install-android-ndk.ps1
               displayName: Install the Android NDK
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
           # install tizen
           - ${{ if and(eq(parameters.installTizenSdk, 'true'), contains(parameters.name, '_tizen_')) }}:
-            - pwsh: .\scripts\infra\tizen\install-tizen.ps1
+            - pwsh: .\scripts\infra\native\tizen\install-tizen.ps1
               displayName: Install the Tizen SDK
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
           # install llvm
           - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
-            - pwsh: .\scripts\infra\windows\install-7zip.ps1
+            - pwsh: .\scripts\infra\native\windows\install-7zip.ps1
               displayName: Install 7-zip
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
-            - pwsh: .\scripts\infra\windows\install-llvm.ps1
+            - pwsh: .\scripts\infra\native\windows\install-llvm.ps1
               displayName: Install LLVM
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
@@ -190,24 +190,24 @@ jobs:
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
         # install ninja
         - ${{ if eq(parameters.installNinja, 'true') }}:
-          - pwsh: .\scripts\infra\shared\install-ninja.ps1
+          - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
             displayName: Install Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
         # install the bits needed for Android on macOS and Windows
         - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
           # install the correct version of the JDK
-          - pwsh: .\scripts\install-openjdk.ps1
+          - pwsh: .\scripts\infra\managed\install-openjdk.ps1
             displayName: Install OpenJDK
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
           # install the correct version of the Android SDK
-          - pwsh: .\scripts\install-android-sdk.ps1
+          - pwsh: .\scripts\infra\managed\install-android-sdk.ps1
             displayName: Install Android SDK
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
           # install the required version of the Android Platforms
-          - pwsh: .\scripts\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
+          - pwsh: .\scripts\infra\managed\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
             displayName: Install Android APIs
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
@@ -221,7 +221,7 @@ jobs:
             retryCountOnTaskFailure: 3
             displayName: Install .NET $(DOTNET_VERSION)
           - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
-            - pwsh: .\scripts\infra\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
               displayName: Fix the Microsoft.WinFX.* file
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
           # display dotnet info
@@ -229,7 +229,7 @@ jobs:
             displayName: Display all the .NET information
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
           # install workloads
-          - pwsh: .\scripts\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
+          - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3
             displayName: Install the .NET workloads
@@ -237,17 +237,17 @@ jobs:
       # install the mac tools
       - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
         - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-          - bash: sudo ./scripts/infra/apple/select-xcode.sh $(XCODE_VERSION)
+          - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
         - ${{ if startsWith(parameters.name, 'native_') }}:
-          - bash: sudo ./scripts/infra/apple/select-xcode.sh $(XCODE_VERSION_NATIVE)
+          - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION_NATIVE)
             displayName: Switch to the latest Xcode
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), eq(parameters.buildAgent.pool.os, 'linux'), ne(parameters.skipInstall, 'true')) }}:
-        - bash: ./scripts/infra/wasm/install-emsdk.sh $(EMSCRIPTEN_VERSION)
+        - bash: ./scripts/infra/native/wasm/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
@@ -255,25 +255,25 @@ jobs:
       # install the Windows tools
       - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
         # select the correct/latest version of Visual Studio
-        - pwsh: .\scripts\infra\windows\select-vs.ps1
+        - pwsh: .\scripts\infra\native\windows\select-vs.ps1
           displayName: Select Visual Studio
           condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
-            - pwsh: .\scripts\infra\windows\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
+            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
               displayName: Install the Windows 10 SDK 10.0.10240
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
-            - pwsh: .\scripts\infra\windows\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
+            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
               displayName: Install the Windows 10 SDK 10.0.16299
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
-            - pwsh: .\scripts\infra\windows\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
+            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
               displayName: Install the Windows 10 SDK 10.0.18362
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
-            - pwsh: .\scripts\infra\windows\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
+            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
               displayName: Install the Windows 10 SDK 10.0.19041
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
@@ -286,7 +286,7 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
 
-      - pwsh: .\scripts\infra\shared\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before downloading artifacts
         condition: always()
 
@@ -296,7 +296,7 @@ jobs:
           condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
           artifacts: ${{ parameters.requiredArtifacts }}
 
-      - pwsh: .\scripts\infra\shared\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after downloading artifacts
         condition: always()
 
@@ -306,7 +306,7 @@ jobs:
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
-      - pwsh: .\scripts\infra\shared\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before the build
         condition: always()
 
@@ -382,7 +382,7 @@ jobs:
             retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
 
-      - pwsh: .\scripts\infra\shared\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the build
         condition: always()
 
@@ -398,6 +398,6 @@ jobs:
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
-      - pwsh: .\scripts\infra\shared\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the entire run
         condition: always()

@@ -6,8 +6,8 @@ string ANGLE_VERSION = GetVersion("ANGLE", "release");
 
 var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
 
-#load "../../scripts/infra/shared/native-shared.cake"
-#load "../../scripts/infra/windows/msbuild.cake"
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/native/windows/msbuild.cake"
 
 string GetSpectreLibPath(string arch)
 {

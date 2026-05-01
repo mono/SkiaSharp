@@ -28,8 +28,8 @@ using NuGet.Versioning;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
-#load "./scripts/infra/shared/shared.cake"
-#load "./scripts/infra/shared/native-shared.cake"
+#load "./scripts/infra/native/shared/shared.cake"
+#load "./scripts/infra/native/shared/native-shared.cake"
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -173,7 +173,7 @@ Information($"    {"GIT_SHA".PadRight(30)} {{0}}", GIT_SHA);
 Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
 Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
-#load "./scripts/infra/windows/msbuild.cake"
+#load "./scripts/infra/native/windows/msbuild.cake"
 #load "./scripts/cake/UtilsManaged.cake"
 #load "./scripts/cake/samples.cake"
 #load "./scripts/cake/externals.cake"
@@ -358,7 +358,7 @@ Task ("tests-android")
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
+    RunCake ("./scripts/infra/tests/xharness-android.cake", "Default", new Dictionary<string, string> {
         { "app", MakeAbsolute (app).FullPath },
         { "results", MakeAbsolute (results).FullPath },
     });
@@ -397,7 +397,7 @@ Task ("tests-ios")
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
+    RunCake ("./scripts/infra/tests/xharness-apple.cake", "Default", new Dictionary<string, string> {
         { "app", MakeAbsolute (app).FullPath },
         { "results", MakeAbsolute (results).FullPath },
     });
@@ -436,7 +436,7 @@ Task ("tests-maccatalyst")
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
+    RunCake ("./scripts/infra/tests/xharness-apple.cake", "Default", new Dictionary<string, string> {
         { "app", MakeAbsolute (app).FullPath },
         { "results", MakeAbsolute (results).FullPath },
         { "device", "maccatalyst" },

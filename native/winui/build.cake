@@ -3,8 +3,8 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"
 
 var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
 
-#load "../../scripts/infra/shared/native-shared.cake"
-#load "../../scripts/infra/windows/msbuild.cake"
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/native/windows/msbuild.cake"
 
 void CheckDeps(FilePath dll)
 {

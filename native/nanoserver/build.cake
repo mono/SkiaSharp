@@ -1,7 +1,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../scripts/infra/shared/shared.cake"
+#load "../../scripts/infra/native/shared/shared.cake"
 
 Task("libSkiaSharp")
     .WithCriteria(IsRunningOnWindows())
