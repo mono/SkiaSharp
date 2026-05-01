@@ -79,7 +79,11 @@ branch `autobump/skia-m${{ needs.pre_activation.outputs.target }}`.
 
 Read and follow `.agents/skills/update-skia/SKILL.md` for detailed instructions on every phase.
 
-## Step 1 — Merge upstream in submodule
+## Step 1 — Breaking change analysis and validation
+
+Follow **Phases 2–3** of the skill. Save the analysis — it goes into the PR description.
+
+## Step 2 — Merge upstream in submodule
 
 Follow **Phase 4** of the skill in `externals/skia`:
 
@@ -88,10 +92,6 @@ Follow **Phase 4** of the skill in `externals/skia`:
 3. Resolve conflicts per the skill's strategy table (Phase 4, Step 3)
 4. Verify: no conflict markers, C API files intact
 5. Commit the merge
-
-## Step 2 — Breaking change analysis and validation
-
-Follow **Phases 2–3** of the skill. Save the analysis — it goes into the PR description.
 
 ## Step 3 — Fix C API shim layer
 
