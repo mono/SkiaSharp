@@ -57,6 +57,8 @@ emit "next" "$NEXT"
 
 if [[ "$MODE" == "latest" ]]; then
     TARGET="$LATEST"
+elif [[ "$MODE" == "current" ]]; then
+    TARGET="$CURRENT"
 else
     TARGET="$NEXT"
 fi

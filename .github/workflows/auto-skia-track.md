@@ -2,16 +2,17 @@
 description: "Daily upstream Skia milestone tracking — merges new commits, resolves conflicts, builds, tests, and creates PRs."
 on:
   schedule:
-    - cron: "0 9 * * *"
-    - cron: "0 15 * * *"
+    - cron: "0 7 * * *"
+    - cron: "0 12 * * *"
+    - cron: "0 17 * * *"
   workflow_dispatch:
     inputs:
       mode:
-        description: "Which milestone to track: next (current+1) or latest (highest upstream)"
+        description: "Which milestone to track"
         required: false
         type: choice
         default: next
-        options: [next, latest]
+        options: [current, next, latest]
   steps:
     - name: Detect milestone
       id: detect
@@ -22,7 +23,9 @@ on:
         # Determine mode from input or schedule
         if [ -n "$INPUT_MODE" ]; then
           MODE="$INPUT_MODE"
-        elif [ "$SCHEDULE" = "0 15 * * *" ]; then
+        elif [ "$SCHEDULE" = "0 7 * * *" ]; then
+          MODE=current
+        elif [ "$SCHEDULE" = "0 17 * * *" ]; then
           MODE=latest
         else
           MODE=next
