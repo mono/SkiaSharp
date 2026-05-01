@@ -34,7 +34,7 @@ stages:
               - name: nuget
                 dir: nugets
             preBuildSteps:
-              - pwsh: .\scripts\install-gtk.ps1
+              - pwsh: .\scripts\infra\managed\install-gtk.ps1
                 displayName: Install GTK# 2.12
             publishArtifacts:
               - name: api-diff
@@ -226,9 +226,9 @@ stages:
                   echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
                   echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
                 displayName: Set Android AVD home (fix XDG path mismatch)
-              - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
+              - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
-              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
+              - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
                 displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
             postBuildSteps:
               - task: PublishTestResults@2

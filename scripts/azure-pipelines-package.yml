@@ -132,7 +132,7 @@ extends:
             preScanSteps:
               - pwsh: |
                   $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
-                  $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
+                  $surrogateFile = "$(Build.SourcesDirectory)\scripts\infra\security\APIScanSurrogates.in.xml"
                   $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
                   $destFile = "$destFolder\APIScanSurrogates.xml"
                   New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
