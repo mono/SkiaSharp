@@ -12,7 +12,7 @@ flowchart TB
 
   subgraph global["🌍 Global — affects ALL targets"]
     direction LR
-    scripts_infra_native_shared_VERSIONS_txt["VERSIONS.txt"]
+    scripts_VERSIONS_txt["VERSIONS.txt"]
     scripts_infra_native_shared_native_shared_cake["native-shared.cake"]
     scripts_infra_native_shared_shared_cake["shared.cake"]
     scripts_azure_pipelines_complete_internal_yml["azure-pipelines-complete-internal.yml"]
@@ -23,6 +23,7 @@ flowchart TB
     scripts_azure_templates_stages_native_yml["azure-templates-stages-native.yml"]
     scripts_azure_templates_stages_yml["azure-templates-stages.yml"]
     scripts_infra_native_shared_compute_native_cache_key_ps1["compute-native-cache-key.ps1"]
+    scripts_infra_native_shared_download_file_ps1["download-file.ps1"]
     scripts_infra_native_shared_free_disk_space_ps1["free-disk-space.ps1"]
     scripts_infra_native_shared_get_free_space_ps1["get-free-space.ps1"]
     scripts_infra_native_shared_install_ninja_ps1["install-ninja.ps1"]
