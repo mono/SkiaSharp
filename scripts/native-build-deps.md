@@ -12,28 +12,47 @@ flowchart TB
 
   subgraph global["🌍 Global — affects ALL targets"]
     direction LR
+    scripts_cake_msbuild_cake["msbuild.cake"]
     scripts_cake_native_shared_cake["native-shared.cake"]
+    scripts_cake_ndk_cake["ndk.cake"]
     scripts_cake_shared_cake["shared.cake"]
+    scripts_cake_xcode_cake["xcode.cake"]
     scripts_VERSIONS_txt["VERSIONS.txt"]
     scripts_azure_pipelines_complete_internal_yml["azure-pipelines-complete-internal.yml"]
     scripts_azure_pipelines_complete_yml["azure-pipelines-complete.yml"]
     scripts_azure_pipelines_native_yml["azure-pipelines-native.yml"]
     scripts_azure_pipelines_package_yml["azure-pipelines-package.yml"]
     scripts_azure_pipelines_tests_yml["azure-pipelines-tests.yml"]
+    scripts_azure_template_fake_1es_yml["azure-template-fake-1es.yml"]
     scripts_azure_templates_jobs_bootstrapper_yml["azure-templates-jobs-bootstrapper.yml"]
+    scripts_azure_templates_jobs_linux_matrix_yml["azure-templates-jobs-linux-matrix.yml"]
+    scripts_azure_templates_jobs_merger_yml["azure-templates-jobs-merger.yml"]
+    scripts_azure_templates_jobs_wasm_matrix_yml["azure-templates-jobs-wasm-matrix.yml"]
+    scripts_azure_templates_stages_native_linux_yml["azure-templates-stages-native-linux.yml"]
+    scripts_azure_templates_stages_native_macos_yml["azure-templates-stages-native-macos.yml"]
+    scripts_azure_templates_stages_native_merge_yml["azure-templates-stages-native-merge.yml"]
+    scripts_azure_templates_stages_native_wasm_yml["azure-templates-stages-native-wasm.yml"]
+    scripts_azure_templates_stages_native_windows_yml["azure-templates-stages-native-windows.yml"]
     scripts_azure_templates_stages_native_yml["azure-templates-stages-native.yml"]
+    scripts_azure_templates_stages_package_yml["azure-templates-stages-package.yml"]
+    scripts_azure_templates_stages_prepare_yml["azure-templates-stages-prepare.yml"]
+    scripts_azure_templates_stages_test_yml["azure-templates-stages-test.yml"]
     scripts_azure_templates_stages_yml["azure-templates-stages.yml"]
     scripts_azure_templates_steps_download_artifacts_yml["azure-templates-steps-download-artifacts.yml"]
+    scripts_azure_templates_steps_provisioning_profiles_yml["azure-templates-steps-provisioning-profiles.yml"]
     scripts_azure_templates_variables_yml["azure-templates-variables.yml"]
     scripts_compute_native_cache_key_ps1["compute-native-cache-key.ps1"]
+    scripts_extract_nupkg_files_ps1["extract-nupkg-files.ps1"]
     scripts_free_disk_space_ps1["free-disk-space.ps1"]
     scripts_get_free_space_ps1["get-free-space.ps1"]
     scripts_install_7zip_ps1["install-7zip.ps1"]
     scripts_install_android_ndk_ps1["install-android-ndk.ps1"]
+    scripts_install_android_package_ps1["install-android-package.ps1"]
     scripts_install_android_platform_ps1["install-android-platform.ps1"]
     scripts_install_android_sdk_ps1["install-android-sdk.ps1"]
     scripts_install_dotnet_workloads_ps1["install-dotnet-workloads.ps1"]
     scripts_install_emsdk_sh["install-emsdk.sh"]
+    scripts_install_gtk_ps1["install-gtk.ps1"]
     scripts_install_llvm_ps1["install-llvm.ps1"]
     scripts_install_ninja_ps1["install-ninja.ps1"]
     scripts_install_openjdk_ps1["install-openjdk.ps1"]
@@ -46,50 +65,50 @@ flowchart TB
   end
 
   subgraph __Apple["🍎 Apple"]
-    t_ios["ios\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    t_ios["ios\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     j_native_ios_macos>"ios"]
     t_ios --> j_native_ios_macos
-    t_macos["macos\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    t_macos["macos\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     j_native_macos_macos>"macos"]
     t_macos --> j_native_macos_macos
-    t_maccatalyst["maccatalyst\nyaml: azure-templates-stages-native-macos.yml"]
+    t_maccatalyst["maccatalyst\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     j_native_maccatalyst_macos>"maccatalyst"]
     t_maccatalyst --> j_native_maccatalyst_macos
-    t_tvos["tvos\ncake: xcode.cake\nyaml: azure-templates-stages-native-macos.yml"]
+    t_tvos["tvos\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     j_native_tvos_macos>"tvos"]
     t_tvos --> j_native_tvos_macos
   end
 
   subgraph __Windows["🪟 Windows"]
-    t_windows["windows\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    t_windows["windows\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     j_native_win32_arm64_windows>"win32_arm64"]
     t_windows --> j_native_win32_arm64_windows
     j_native_win32_x64_windows>"win32_x64"]
     t_windows --> j_native_win32_x64_windows
     j_native_win32_x86_windows>"win32_x86"]
     t_windows --> j_native_win32_x86_windows
-    t_winui["winui\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    t_winui["winui\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     j_native_winui_arm64_windows>"winui_arm64"]
     t_winui --> j_native_winui_arm64_windows
     j_native_winui_x64_windows>"winui_x64"]
     t_winui --> j_native_winui_x64_windows
     j_native_winui_x86_windows>"winui_x86"]
     t_winui --> j_native_winui_x86_windows
-    t_winui_angle["winui-angle\ncake: msbuild.cake\nyaml: azure-templates-stages-native-windows.yml"]
+    t_winui_angle["winui-angle\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     j_native_winui_angle_arm64_windows>"winui_angle_arm64"]
     t_winui_angle --> j_native_winui_angle_arm64_windows
     j_native_winui_angle_x64_windows>"winui_angle_x64"]
     t_winui_angle --> j_native_winui_angle_x64_windows
     j_native_winui_angle_x86_windows>"winui_angle_x86"]
     t_winui_angle --> j_native_winui_angle_x86_windows
-    t_nanoserver["nanoserver\nyaml: azure-templates-stages-native-windows.yml"]
+    t_nanoserver["nanoserver\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     j_native_win32_x64_nanoserver_windows>"win32_x64_nanoserver"]
     t_nanoserver --> j_native_win32_x64_nanoserver_windows
   end
 
   subgraph __Linux["🐧 Linux"]
     t_linux["linux"]
-    t_linux_clang_cross["linux-clang-cross\nyaml: azure-templates-stages-native-linux.yml"]
+    t_linux_clang_cross["linux-clang-cross\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     jg_linux_clang_cross_scripts_Docker_alpine>"10 jobs\nalpine"]
     t_linux_clang_cross --> jg_linux_clang_cross_scripts_Docker_alpine
     j_native_linux_arm64_bionic_linux>"linux_arm64_bionic"]
@@ -106,16 +125,16 @@ flowchart TB
   end
 
   subgraph __Mobile["📱 Mobile"]
-    t_android["android\ncake: ndk.cake\nyaml: azure-templates-stages-native-macos.yml, azure-templates-stages-native-windows.yml"]
+    t_android["android\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     jg_android_bare>"8 jobs\nbare"]
     t_android --> jg_android_bare
-    t_tizen["tizen\nyaml: azure-templates-stages-native-macos.yml, azure-templates-stages-native-windows.yml"]
+    t_tizen["tizen\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     jg_tizen_bare>"4 jobs\nbare"]
     t_tizen --> jg_tizen_bare
   end
 
   subgraph __Web["🌐 Web"]
-    t_wasm["wasm\nyaml: azure-templates-jobs-wasm-matrix.yml, azure-templates-stages-native-wasm.yml"]
+    t_wasm["wasm\ndocker: alpine, bionic, debian, debian/11, debian/13, scripts/Docker, wasm"]
     jg_wasm_scripts_Docker_wasm>"15 jobs\nwasm"]
     t_wasm --> jg_wasm_scripts_Docker_wasm
   end

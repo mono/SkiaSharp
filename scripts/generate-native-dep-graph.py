@@ -125,6 +125,15 @@ def build_link_graph(root, all_files, link_rules):
 
                     if resolved and (resolved in files_set or (root / resolved).exists()):
                         graph[f].add(resolved)
+                        # If resolved is a directory, also link to its Dockerfile
+                        # (Docker context directories should link to all contents)
+                        resolved_path = root / resolved
+                        if resolved_path.is_dir():
+                            dockerfile = resolved_path / "Dockerfile"
+                            if dockerfile.exists():
+                                df_rel = str(dockerfile.relative_to(root))
+                                if df_rel in files_set:
+                                    graph[f].add(df_rel)
 
     return graph
 
@@ -187,6 +196,19 @@ def compute_target_deps(target_info, all_files, link_graph, reverse_graph, globa
 
     deps.update(global_files)
     deps.update(submodules)
+
+    # Expand: walk forward from EVERY discovered dep to pick up their deps too.
+    # This catches e.g. YAML templates found via reverse walk that reference Docker
+    # paths, and Docker sibling files linked from Dockerfiles.
+    # Iterate until stable (usually 2-3 rounds).
+    prev_size = 0
+    while len(deps) != prev_size:
+        prev_size = len(deps)
+        expansion = set()
+        for d in list(deps):
+            expansion.update(transitive_deps(d, link_graph))
+        deps.update(expansion)
+
     return sorted(deps)
 
 
