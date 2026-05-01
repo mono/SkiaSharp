@@ -81,6 +81,7 @@ def resolve_relative(source_file, captured, root):
 
 def build_link_graph(root, all_files, link_rules):
     graph = defaultdict(set)
+    files_set = set(all_files)
 
     for rule in link_rules:
         file_glob = rule.get("files", "**/*")
@@ -101,6 +102,9 @@ def build_link_graph(root, all_files, link_rules):
 
         elif "pattern" in rule:
             regex = rule["pattern"]
+            resolve_mode = rule.get("resolve", "relative")
+            prefix = rule.get("prefix", "")
+            suffix = rule.get("suffix", "")
             matching = [f for f in all_files if fnmatch.fnmatch(f, file_glob)]
             for f in matching:
                 try:
@@ -108,14 +112,25 @@ def build_link_graph(root, all_files, link_rules):
                 except OSError:
                     continue
                 for m in re.finditer(regex, content, re.MULTILINE):
-                    resolved = resolve_relative(root / f, m.group(1), root)
-                    if resolved and (resolved in all_files or (root / resolved).exists()):
+                    captured = m.group(1).strip()
+
+                    if resolve_mode == "relative":
+                        resolved = resolve_relative(root / f, captured, root)
+                    elif resolve_mode == "prefix":
+                        resolved = prefix + captured + suffix
+                    elif resolve_mode == "root":
+                        resolved = captured
+                    else:
+                        resolved = captured
+
+                    if resolved and (resolved in files_set or (root / resolved).exists()):
                         graph[f].add(resolved)
 
     return graph
 
 
 def transitive_deps(start, graph, seen=None):
+    """Walk forward: start -> things it loads."""
     if seen is None:
         seen = set()
     if start in seen:
@@ -126,12 +141,41 @@ def transitive_deps(start, graph, seen=None):
     return seen
 
 
+def reverse_transitive(start, reverse_graph, seen=None):
+    """Walk backward: start -> things that reference it."""
+    if seen is None:
+        seen = set()
+    if start in seen:
+        return seen
+    seen.add(start)
+    for dep in reverse_graph.get(start, set()):
+        reverse_transitive(dep, reverse_graph, seen)
+    return seen
+
+
+def build_reverse_graph(graph):
+    """Invert edge direction: {A -> B} becomes {B -> A}."""
+    rev = defaultdict(set)
+    for src, dsts in graph.items():
+        for dst in dsts:
+            rev[dst].add(src)
+    return rev
+
+
 # --- Target dependency computation --------------------------------------------
 
-def compute_target_deps(target_info, all_files, link_graph, global_files, submodules, exclude_globs):
+def compute_target_deps(target_info, all_files, link_graph, reverse_graph, global_files, submodules, exclude_globs):
     deps = set()
-    deps.update(transitive_deps(target_info["entry_point"], link_graph))
 
+    entry = target_info["entry_point"]
+
+    # Forward: entry_point -> things it loads (cake #load chain)
+    deps.update(transitive_deps(entry, link_graph))
+
+    # Backward: things that reference the entry_point (YAML templates that invoke this target)
+    deps.update(reverse_transitive(entry, reverse_graph))
+
+    # All files in the target directory
     target_dir = target_info["directory"]
     for f in all_files:
         if f.startswith(target_dir + "/") and not match_any(f, exclude_globs):
@@ -145,6 +189,7 @@ def compute_target_deps(target_info, all_files, link_graph, global_files, submod
 # --- Output -------------------------------------------------------------------
 
 def generate_registry(targets, all_files, link_graph, global_files, submodules, exclude_globs):
+    reverse_graph = build_reverse_graph(link_graph)
     output = {
         "_metadata": {
             "description": "Build dependency graph for cache keys",
@@ -155,7 +200,7 @@ def generate_registry(targets, all_files, link_graph, global_files, submodules, 
     }
     for name, info in sorted(targets.items()):
         output["targets"][name] = {
-            "files": compute_target_deps(info, all_files, link_graph, global_files, submodules, exclude_globs),
+            "files": compute_target_deps(info, all_files, link_graph, reverse_graph, global_files, submodules, exclude_globs),
             "entry_point": info["entry_point"],
         }
     return output

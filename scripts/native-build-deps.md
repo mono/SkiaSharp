@@ -67,6 +67,20 @@ What rebuilds when you change a file?
 | `native/winui/build.cake` | `winui` |
 | `native/winui/global.json` | `winui` |
 | `scripts/VERSIONS.txt` | **ALL targets** |
+| `scripts/azure-pipelines-complete-internal.yml` | `android`, `ios`, `linux-clang-cross`, `maccatalyst`, `macos`, `nanoserver`, `tizen`, `tvos`, `wasm`, `windows`, `winui`, `winui-angle` |
+| `scripts/azure-pipelines-complete.yml` | `android`, `ios`, `linux-clang-cross`, `maccatalyst`, `macos`, `nanoserver`, `tizen`, `tvos`, `wasm`, `windows`, `winui`, `winui-angle` |
+| `scripts/azure-pipelines-native.yml` | `android`, `ios`, `linux-clang-cross`, `maccatalyst`, `macos`, `nanoserver`, `tizen`, `tvos`, `wasm`, `windows`, `winui`, `winui-angle` |
+| `scripts/azure-pipelines-package.yml` | `android`, `ios`, `linux-clang-cross`, `maccatalyst`, `macos`, `nanoserver`, `tizen`, `tvos`, `wasm`, `windows`, `winui`, `winui-angle` |
+| `scripts/azure-pipelines-tests.yml` | `android`, `ios`, `linux-clang-cross`, `maccatalyst`, `macos`, `nanoserver`, `tizen`, `tvos`, `wasm`, `windows`, `winui`, `winui-angle` |
+| `scripts/azure-templates-jobs-bootstrapper.yml` | **ALL targets** |
+| `scripts/azure-templates-jobs-wasm-matrix.yml` | `wasm` |
+| `scripts/azure-templates-stages-native-linux.yml` | `linux-clang-cross` |
+| `scripts/azure-templates-stages-native-macos.yml` | `android`, `ios`, `maccatalyst`, `macos`, `tizen`, `tvos` |
+| `scripts/azure-templates-stages-native-wasm.yml` | `wasm` |
+| `scripts/azure-templates-stages-native-windows.yml` | `android`, `nanoserver`, `tizen`, `windows`, `winui`, `winui-angle` |
+| `scripts/azure-templates-stages-native.yml` | `android`, `ios`, `linux-clang-cross`, `maccatalyst`, `macos`, `nanoserver`, `tizen`, `tvos`, `wasm`, `windows`, `winui`, `winui-angle` |
+| `scripts/azure-templates-stages.yml` | `android`, `ios`, `linux-clang-cross`, `maccatalyst`, `macos`, `nanoserver`, `tizen`, `tvos`, `wasm`, `windows`, `winui`, `winui-angle` |
+| `scripts/azure-templates-variables.yml` | **ALL targets** |
 | `scripts/cake/msbuild.cake` | `windows`, `winui`, `winui-angle` |
 | `scripts/cake/native-shared.cake` | `android`, `ios`, `linux`, `macos`, `tizen`, `tvos`, `wasm`, `windows`, `winui`, `winui-angle` |
 | `scripts/cake/ndk.cake` | `android` |
@@ -75,7 +89,7 @@ What rebuilds when you change a file?
 
 ## Per-Target Dependencies
 
-### `android` (10 files)
+### `android` (21 files)
 
 - `externals/skia`
 - `native/android/build.cake`
@@ -84,11 +98,22 @@ What rebuilds when you change a file?
 - `native/android/libHarfBuzzSharp/jni/Application.mk`
 - `native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-macos.yml`
+- `scripts/azure-templates-stages-native-windows.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/ndk.cake`
 - `scripts/cake/shared.cake`
 
-### `ios` (12 files)
+### `ios` (22 files)
 
 - `externals/skia`
 - `native/ios/build.cake`
@@ -99,70 +124,135 @@ What rebuilds when you change a file?
 - `native/ios/libSkiaSharp/libSkiaSharp/Info.plist`
 - `native/ios/libSkiaSharp/libSkiaSharp/libSkiaSharp.h`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-macos.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
 - `scripts/cake/xcode.cake`
 
-### `linux` (7 files)
+### `linux` (9 files)
 
 - `externals/skia`
 - `native/linux/build.cake`
 - `native/linux/libHarfBuzzSharp/libHarfBuzzSharp.map`
 - `native/linux/libSkiaSharp/libSkiaSharp.map`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
 
-### `linux-clang-cross` (4 files)
+### `linux-clang-cross` (14 files)
 
 - `externals/skia`
 - `native/linux-clang-cross/build.cake`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-linux.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/shared.cake`
 
-### `linuxnodeps` (4 files)
+### `linuxnodeps` (6 files)
 
 - `externals/skia`
 - `native/linuxnodeps/build.cake`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/shared.cake`
 
-### `maccatalyst` (4 files)
+### `maccatalyst` (14 files)
 
 - `externals/skia`
 - `native/maccatalyst/build.cake`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-macos.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/shared.cake`
 
-### `macos` (8 files)
+### `macos` (18 files)
 
 - `externals/skia`
 - `native/macos/build.cake`
 - `native/macos/libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj/project.pbxproj`
 - `native/macos/libSkiaSharp/libSkiaSharp.xcodeproj/project.pbxproj`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-macos.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
 - `scripts/cake/xcode.cake`
 
-### `nanoserver` (4 files)
+### `nanoserver` (14 files)
 
 - `externals/skia`
 - `native/nanoserver/build.cake`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-windows.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/shared.cake`
 
-### `tizen` (7 files)
+### `tizen` (18 files)
 
 - `externals/skia`
 - `native/tizen/build.cake`
 - `native/tizen/libHarfBuzzSharp/project_def.prop`
 - `native/tizen/libSkiaSharp/project_def.prop`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-macos.yml`
+- `scripts/azure-templates-stages-native-windows.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
 
-### `tvos` (12 files)
+### `tvos` (22 files)
 
 - `externals/skia`
 - `native/tvos/build.cake`
@@ -173,30 +263,61 @@ What rebuilds when you change a file?
 - `native/tvos/libSkiaSharp/libSkiaSharp/Info.plist`
 - `native/tvos/libSkiaSharp/libSkiaSharp/libSkiaSharp.h`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-macos.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
 - `scripts/cake/xcode.cake`
 
-### `wasm` (5 files)
+### `wasm` (16 files)
 
 - `externals/skia`
 - `native/wasm/build.cake`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-jobs-wasm-matrix.yml`
+- `scripts/azure-templates-stages-native-wasm.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
 
-### `windows` (8 files)
+### `windows` (18 files)
 
 - `externals/skia`
 - `native/windows/build.cake`
 - `native/windows/libHarfBuzzSharp/libHarfBuzzSharp.sln`
 - `native/windows/libHarfBuzzSharp/libHarfBuzzSharp.vcxproj`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-windows.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/msbuild.cake`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
 
-### `winui` (24 files)
+### `winui` (34 files)
 
 - `externals/skia`
 - `native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.Projection/Directory.Build.props`
@@ -219,15 +340,35 @@ What rebuilds when you change a file?
 - `native/winui/build.cake`
 - `native/winui/global.json`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-windows.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/msbuild.cake`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
 
-### `winui-angle` (6 files)
+### `winui-angle` (16 files)
 
 - `externals/skia`
 - `native/winui-angle/build.cake`
 - `scripts/VERSIONS.txt`
+- `scripts/azure-pipelines-complete-internal.yml`
+- `scripts/azure-pipelines-complete.yml`
+- `scripts/azure-pipelines-native.yml`
+- `scripts/azure-pipelines-package.yml`
+- `scripts/azure-pipelines-tests.yml`
+- `scripts/azure-templates-jobs-bootstrapper.yml`
+- `scripts/azure-templates-stages-native-windows.yml`
+- `scripts/azure-templates-stages-native.yml`
+- `scripts/azure-templates-stages.yml`
+- `scripts/azure-templates-variables.yml`
 - `scripts/cake/msbuild.cake`
 - `scripts/cake/native-shared.cake`
 - `scripts/cake/shared.cake`
@@ -239,6 +380,17 @@ flowchart LR
 
   subgraph shared[Shared Dependencies]
     scripts_VERSIONS_txt["VERSIONS.txt"]
+    scripts_azure_pipelines_complete_internal_yml["azure-pipelines-complete-internal.yml"]
+    scripts_azure_pipelines_complete_yml["azure-pipelines-complete.yml"]
+    scripts_azure_pipelines_native_yml["azure-pipelines-native.yml"]
+    scripts_azure_pipelines_package_yml["azure-pipelines-package.yml"]
+    scripts_azure_pipelines_tests_yml["azure-pipelines-tests.yml"]
+    scripts_azure_templates_jobs_bootstrapper_yml["azure-templates-jobs-bootstrapper.yml"]
+    scripts_azure_templates_stages_native_macos_yml["azure-templates-stages-native-macos.yml"]
+    scripts_azure_templates_stages_native_windows_yml["azure-templates-stages-native-windows.yml"]
+    scripts_azure_templates_stages_native_yml["azure-templates-stages-native.yml"]
+    scripts_azure_templates_stages_yml["azure-templates-stages.yml"]
+    scripts_azure_templates_variables_yml["azure-templates-variables.yml"]
     scripts_cake_msbuild_cake["msbuild.cake"]
     scripts_cake_native_shared_cake["native-shared.cake"]
     scripts_cake_shared_cake["shared.cake"]
@@ -284,6 +436,65 @@ flowchart LR
   scripts_Docker_wasm_Dockerfile -.->|load| scripts_Docker_wasm_build_local_ps1
   scripts_Docker_wasm_Dockerfile -.->|load| scripts_Docker_wasm_build_local_sh
   scripts_Docker_wasm_Dockerfile -.->|load| scripts_Docker_wasm_startup_sh
+  scripts_azure_pipelines_complete_internal_yml -.->|load| scripts_azure_template_fake_1es_yml
+  scripts_azure_pipelines_complete_internal_yml -.->|load| scripts_azure_templates_stages_yml
+  scripts_azure_pipelines_complete_internal_yml -.->|load| scripts_azure_templates_variables_yml
+  scripts_azure_pipelines_complete_yml -.->|load| scripts_azure_template_fake_1es_yml
+  scripts_azure_pipelines_complete_yml -.->|load| scripts_azure_templates_stages_yml
+  scripts_azure_pipelines_complete_yml -.->|load| scripts_azure_templates_variables_yml
+  scripts_azure_pipelines_native_yml -.->|load| scripts_azure_templates_stages_yml
+  scripts_azure_pipelines_native_yml -.->|load| scripts_azure_templates_variables_yml
+  scripts_azure_pipelines_package_yml -.->|load| scripts_azure_templates_stages_yml
+  scripts_azure_pipelines_package_yml -.->|load| scripts_azure_templates_variables_yml
+  scripts_azure_pipelines_tests_yml -.->|load| scripts_azure_template_fake_1es_yml
+  scripts_azure_pipelines_tests_yml -.->|load| scripts_azure_templates_stages_yml
+  scripts_azure_pipelines_tests_yml -.->|load| scripts_azure_templates_variables_yml
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_azure_templates_steps_download_artifacts_yml
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_free_disk_space_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_emsdk_sh
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_set_build_variables_ps1
+  scripts_azure_templates_jobs_linux_matrix_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
+  scripts_azure_templates_jobs_merger_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
+  scripts_azure_templates_jobs_wasm_matrix_yml -.->|load| native_wasm_build_cake
+  scripts_azure_templates_jobs_wasm_matrix_yml -.->|load| scripts_Docker_wasm
+  scripts_azure_templates_jobs_wasm_matrix_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
+  scripts_azure_templates_stages_native_linux_yml -.->|load| native_linux_clang_cross_build_cake
+  scripts_azure_templates_stages_native_linux_yml -.->|load| scripts_Docker_alpine
+  scripts_azure_templates_stages_native_linux_yml -.->|load| scripts_Docker_bionic
+  scripts_azure_templates_stages_native_linux_yml -.->|load| scripts_Docker_debian_11
+  scripts_azure_templates_stages_native_linux_yml -.->|load| scripts_Docker_debian_13
+  scripts_azure_templates_stages_native_linux_yml -.->|load| scripts_azure_templates_jobs_linux_matrix_yml
+  scripts_azure_templates_stages_native_macos_yml -.->|load| native_android_build_cake
+  scripts_azure_templates_stages_native_macos_yml -.->|load| native_ios_build_cake
+  scripts_azure_templates_stages_native_macos_yml -.->|load| native_maccatalyst_build_cake
+  scripts_azure_templates_stages_native_macos_yml -.->|load| native_macos_build_cake
+  scripts_azure_templates_stages_native_macos_yml -.->|load| native_tizen_build_cake
+  scripts_azure_templates_stages_native_macos_yml -.->|load| native_tvos_build_cake
+  scripts_azure_templates_stages_native_macos_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
+  scripts_azure_templates_stages_native_merge_yml -.->|load| scripts_azure_templates_jobs_merger_yml
+  scripts_azure_templates_stages_native_wasm_yml -.->|load| scripts_azure_templates_jobs_wasm_matrix_yml
+  scripts_azure_templates_stages_native_windows_yml -.->|load| native_android_build_cake
+  scripts_azure_templates_stages_native_windows_yml -.->|load| native_nanoserver_build_cake
+  scripts_azure_templates_stages_native_windows_yml -.->|load| native_tizen_build_cake
+  scripts_azure_templates_stages_native_windows_yml -.->|load| native_windows_build_cake
+  scripts_azure_templates_stages_native_windows_yml -.->|load| native_winui_angle_build_cake
+  scripts_azure_templates_stages_native_windows_yml -.->|load| native_winui_build_cake
+  scripts_azure_templates_stages_native_windows_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
+  scripts_azure_templates_stages_native_yml -.->|load| scripts_azure_templates_stages_native_linux_yml
+  scripts_azure_templates_stages_native_yml -.->|load| scripts_azure_templates_stages_native_macos_yml
+  scripts_azure_templates_stages_native_yml -.->|load| scripts_azure_templates_stages_native_merge_yml
+  scripts_azure_templates_stages_native_yml -.->|load| scripts_azure_templates_stages_native_wasm_yml
+  scripts_azure_templates_stages_native_yml -.->|load| scripts_azure_templates_stages_native_windows_yml
+  scripts_azure_templates_stages_package_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
+  scripts_azure_templates_stages_package_yml -.->|load| scripts_azure_templates_jobs_merger_yml
+  scripts_azure_templates_stages_prepare_yml -.->|load| scripts_set_build_variables_ps1
+  scripts_azure_templates_stages_test_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
+  scripts_azure_templates_stages_test_yml -.->|load| scripts_azure_templates_steps_provisioning_profiles_yml
+  scripts_azure_templates_stages_test_yml -.->|load| scripts_set_build_variables_ps1
+  scripts_azure_templates_stages_yml -.->|load| scripts_azure_templates_stages_native_yml
+  scripts_azure_templates_stages_yml -.->|load| scripts_azure_templates_stages_package_yml
+  scripts_azure_templates_stages_yml -.->|load| scripts_azure_templates_stages_prepare_yml
+  scripts_azure_templates_stages_yml -.->|load| scripts_azure_templates_stages_test_yml
   scripts_cake_native_shared_cake -.->|load| scripts_cake_shared_cake
   scripts_cake_xharness_android_cake -.->|load| scripts_cake_shared_cake
   scripts_cake_xharness_apple_cake -.->|load| scripts_cake_shared_cake
@@ -309,72 +520,196 @@ flowchart LR
   target_android -->|source| externals_skia[skia]
   target_android --> native_android_build_cake
   target_android --> scripts_VERSIONS_txt
+  target_android --> scripts_azure_pipelines_complete_internal_yml
+  target_android --> scripts_azure_pipelines_complete_yml
+  target_android --> scripts_azure_pipelines_native_yml
+  target_android --> scripts_azure_pipelines_package_yml
+  target_android --> scripts_azure_pipelines_tests_yml
+  target_android --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_android --> scripts_azure_templates_stages_native_macos_yml
+  target_android --> scripts_azure_templates_stages_native_windows_yml
+  target_android --> scripts_azure_templates_stages_native_yml
+  target_android --> scripts_azure_templates_stages_yml
+  target_android --> scripts_azure_templates_variables_yml
   target_android --> scripts_cake_native_shared_cake
   target_android --> scripts_cake_shared_cake
   target_ios -->|source| externals_skia[skia]
   target_ios --> native_ios_build_cake
   target_ios --> scripts_VERSIONS_txt
+  target_ios --> scripts_azure_pipelines_complete_internal_yml
+  target_ios --> scripts_azure_pipelines_complete_yml
+  target_ios --> scripts_azure_pipelines_native_yml
+  target_ios --> scripts_azure_pipelines_package_yml
+  target_ios --> scripts_azure_pipelines_tests_yml
+  target_ios --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_ios --> scripts_azure_templates_stages_native_macos_yml
+  target_ios --> scripts_azure_templates_stages_native_yml
+  target_ios --> scripts_azure_templates_stages_yml
+  target_ios --> scripts_azure_templates_variables_yml
   target_ios --> scripts_cake_native_shared_cake
   target_ios --> scripts_cake_shared_cake
   target_ios --> scripts_cake_xcode_cake
   target_linux -->|source| externals_skia[skia]
   target_linux --> native_linux_build_cake
   target_linux --> scripts_VERSIONS_txt
+  target_linux --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_linux --> scripts_azure_templates_variables_yml
   target_linux --> scripts_cake_native_shared_cake
   target_linux --> scripts_cake_shared_cake
   target_linux_clang_cross -->|source| externals_skia[skia]
   target_linux_clang_cross --> native_linux_clang_cross_build_cake
   target_linux_clang_cross --> scripts_VERSIONS_txt
+  target_linux_clang_cross --> scripts_azure_pipelines_complete_internal_yml
+  target_linux_clang_cross --> scripts_azure_pipelines_complete_yml
+  target_linux_clang_cross --> scripts_azure_pipelines_native_yml
+  target_linux_clang_cross --> scripts_azure_pipelines_package_yml
+  target_linux_clang_cross --> scripts_azure_pipelines_tests_yml
+  target_linux_clang_cross --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_linux_clang_cross --> scripts_azure_templates_stages_native_yml
+  target_linux_clang_cross --> scripts_azure_templates_stages_yml
+  target_linux_clang_cross --> scripts_azure_templates_variables_yml
   target_linux_clang_cross --> scripts_cake_shared_cake
   target_linuxnodeps -->|source| externals_skia[skia]
   target_linuxnodeps --> native_linuxnodeps_build_cake
   target_linuxnodeps --> scripts_VERSIONS_txt
+  target_linuxnodeps --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_linuxnodeps --> scripts_azure_templates_variables_yml
   target_linuxnodeps --> scripts_cake_shared_cake
   target_maccatalyst -->|source| externals_skia[skia]
   target_maccatalyst --> native_maccatalyst_build_cake
   target_maccatalyst --> scripts_VERSIONS_txt
+  target_maccatalyst --> scripts_azure_pipelines_complete_internal_yml
+  target_maccatalyst --> scripts_azure_pipelines_complete_yml
+  target_maccatalyst --> scripts_azure_pipelines_native_yml
+  target_maccatalyst --> scripts_azure_pipelines_package_yml
+  target_maccatalyst --> scripts_azure_pipelines_tests_yml
+  target_maccatalyst --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_maccatalyst --> scripts_azure_templates_stages_native_macos_yml
+  target_maccatalyst --> scripts_azure_templates_stages_native_yml
+  target_maccatalyst --> scripts_azure_templates_stages_yml
+  target_maccatalyst --> scripts_azure_templates_variables_yml
   target_maccatalyst --> scripts_cake_shared_cake
   target_macos -->|source| externals_skia[skia]
   target_macos --> native_macos_build_cake
   target_macos --> scripts_VERSIONS_txt
+  target_macos --> scripts_azure_pipelines_complete_internal_yml
+  target_macos --> scripts_azure_pipelines_complete_yml
+  target_macos --> scripts_azure_pipelines_native_yml
+  target_macos --> scripts_azure_pipelines_package_yml
+  target_macos --> scripts_azure_pipelines_tests_yml
+  target_macos --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_macos --> scripts_azure_templates_stages_native_macos_yml
+  target_macos --> scripts_azure_templates_stages_native_yml
+  target_macos --> scripts_azure_templates_stages_yml
+  target_macos --> scripts_azure_templates_variables_yml
   target_macos --> scripts_cake_native_shared_cake
   target_macos --> scripts_cake_shared_cake
   target_macos --> scripts_cake_xcode_cake
   target_nanoserver -->|source| externals_skia[skia]
   target_nanoserver --> native_nanoserver_build_cake
   target_nanoserver --> scripts_VERSIONS_txt
+  target_nanoserver --> scripts_azure_pipelines_complete_internal_yml
+  target_nanoserver --> scripts_azure_pipelines_complete_yml
+  target_nanoserver --> scripts_azure_pipelines_native_yml
+  target_nanoserver --> scripts_azure_pipelines_package_yml
+  target_nanoserver --> scripts_azure_pipelines_tests_yml
+  target_nanoserver --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_nanoserver --> scripts_azure_templates_stages_native_windows_yml
+  target_nanoserver --> scripts_azure_templates_stages_native_yml
+  target_nanoserver --> scripts_azure_templates_stages_yml
+  target_nanoserver --> scripts_azure_templates_variables_yml
   target_nanoserver --> scripts_cake_shared_cake
   target_tizen -->|source| externals_skia[skia]
   target_tizen --> native_tizen_build_cake
   target_tizen --> scripts_VERSIONS_txt
+  target_tizen --> scripts_azure_pipelines_complete_internal_yml
+  target_tizen --> scripts_azure_pipelines_complete_yml
+  target_tizen --> scripts_azure_pipelines_native_yml
+  target_tizen --> scripts_azure_pipelines_package_yml
+  target_tizen --> scripts_azure_pipelines_tests_yml
+  target_tizen --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_tizen --> scripts_azure_templates_stages_native_macos_yml
+  target_tizen --> scripts_azure_templates_stages_native_windows_yml
+  target_tizen --> scripts_azure_templates_stages_native_yml
+  target_tizen --> scripts_azure_templates_stages_yml
+  target_tizen --> scripts_azure_templates_variables_yml
   target_tizen --> scripts_cake_native_shared_cake
   target_tizen --> scripts_cake_shared_cake
   target_tvos -->|source| externals_skia[skia]
   target_tvos --> native_tvos_build_cake
   target_tvos --> scripts_VERSIONS_txt
+  target_tvos --> scripts_azure_pipelines_complete_internal_yml
+  target_tvos --> scripts_azure_pipelines_complete_yml
+  target_tvos --> scripts_azure_pipelines_native_yml
+  target_tvos --> scripts_azure_pipelines_package_yml
+  target_tvos --> scripts_azure_pipelines_tests_yml
+  target_tvos --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_tvos --> scripts_azure_templates_stages_native_macos_yml
+  target_tvos --> scripts_azure_templates_stages_native_yml
+  target_tvos --> scripts_azure_templates_stages_yml
+  target_tvos --> scripts_azure_templates_variables_yml
   target_tvos --> scripts_cake_native_shared_cake
   target_tvos --> scripts_cake_shared_cake
   target_tvos --> scripts_cake_xcode_cake
   target_wasm -->|source| externals_skia[skia]
   target_wasm --> native_wasm_build_cake
   target_wasm --> scripts_VERSIONS_txt
+  target_wasm --> scripts_azure_pipelines_complete_internal_yml
+  target_wasm --> scripts_azure_pipelines_complete_yml
+  target_wasm --> scripts_azure_pipelines_native_yml
+  target_wasm --> scripts_azure_pipelines_package_yml
+  target_wasm --> scripts_azure_pipelines_tests_yml
+  target_wasm --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_wasm --> scripts_azure_templates_stages_native_yml
+  target_wasm --> scripts_azure_templates_stages_yml
+  target_wasm --> scripts_azure_templates_variables_yml
   target_wasm --> scripts_cake_native_shared_cake
   target_wasm --> scripts_cake_shared_cake
   target_windows -->|source| externals_skia[skia]
   target_windows --> native_windows_build_cake
   target_windows --> scripts_VERSIONS_txt
+  target_windows --> scripts_azure_pipelines_complete_internal_yml
+  target_windows --> scripts_azure_pipelines_complete_yml
+  target_windows --> scripts_azure_pipelines_native_yml
+  target_windows --> scripts_azure_pipelines_package_yml
+  target_windows --> scripts_azure_pipelines_tests_yml
+  target_windows --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_windows --> scripts_azure_templates_stages_native_windows_yml
+  target_windows --> scripts_azure_templates_stages_native_yml
+  target_windows --> scripts_azure_templates_stages_yml
+  target_windows --> scripts_azure_templates_variables_yml
   target_windows --> scripts_cake_msbuild_cake
   target_windows --> scripts_cake_native_shared_cake
   target_windows --> scripts_cake_shared_cake
   target_winui -->|source| externals_skia[skia]
   target_winui --> native_winui_build_cake
   target_winui --> scripts_VERSIONS_txt
+  target_winui --> scripts_azure_pipelines_complete_internal_yml
+  target_winui --> scripts_azure_pipelines_complete_yml
+  target_winui --> scripts_azure_pipelines_native_yml
+  target_winui --> scripts_azure_pipelines_package_yml
+  target_winui --> scripts_azure_pipelines_tests_yml
+  target_winui --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_winui --> scripts_azure_templates_stages_native_windows_yml
+  target_winui --> scripts_azure_templates_stages_native_yml
+  target_winui --> scripts_azure_templates_stages_yml
+  target_winui --> scripts_azure_templates_variables_yml
   target_winui --> scripts_cake_msbuild_cake
   target_winui --> scripts_cake_native_shared_cake
   target_winui --> scripts_cake_shared_cake
   target_winui_angle -->|source| externals_skia[skia]
   target_winui_angle --> native_winui_angle_build_cake
   target_winui_angle --> scripts_VERSIONS_txt
+  target_winui_angle --> scripts_azure_pipelines_complete_internal_yml
+  target_winui_angle --> scripts_azure_pipelines_complete_yml
+  target_winui_angle --> scripts_azure_pipelines_native_yml
+  target_winui_angle --> scripts_azure_pipelines_package_yml
+  target_winui_angle --> scripts_azure_pipelines_tests_yml
+  target_winui_angle --> scripts_azure_templates_jobs_bootstrapper_yml
+  target_winui_angle --> scripts_azure_templates_stages_native_windows_yml
+  target_winui_angle --> scripts_azure_templates_stages_native_yml
+  target_winui_angle --> scripts_azure_templates_stages_yml
+  target_winui_angle --> scripts_azure_templates_variables_yml
   target_winui_angle --> scripts_cake_msbuild_cake
   target_winui_angle --> scripts_cake_native_shared_cake
   target_winui_angle --> scripts_cake_shared_cake

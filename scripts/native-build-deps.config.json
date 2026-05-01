@@ -3,7 +3,11 @@
 
   "scan": [
     "native/**/*",
-    "scripts/cake/**/*",
+    "scripts/**/*.cake",
+    "scripts/**/*.ps1",
+    "scripts/**/*.sh",
+    "scripts/**/*.yml",
+    "scripts/**/*.json",
     "scripts/Docker/**/*",
     "scripts/VERSIONS.txt",
     "build.cake"
@@ -14,7 +18,9 @@
   ],
 
   "global": [
-    "scripts/VERSIONS.txt"
+    "scripts/VERSIONS.txt",
+    "scripts/azure-templates-variables.yml",
+    "scripts/azure-templates-jobs-bootstrapper.yml"
   ],
 
   "submodules": [
@@ -23,13 +29,47 @@
 
   "links": [
     {
-      "_comment": "Cake #load directives — file A loads file B",
+      "_comment": "Cake #load directives",
       "files": "**/*.cake",
       "pattern": "^#load\\s+\"([^\"]+)\"",
       "resolve": "relative"
     },
     {
-      "_comment": "Docker contexts — a Dockerfile pulls in all sibling files",
+      "_comment": "YAML template references",
+      "files": "**/*.yml",
+      "pattern": "template:\\s*/scripts/([^@\\s]+)",
+      "resolve": "prefix",
+      "prefix": "scripts/"
+    },
+    {
+      "_comment": "YAML referencing native build targets (e.g., target: externals-windows)",
+      "files": "**/*.yml",
+      "pattern": "target:\\s*externals-([a-z-]+)",
+      "resolve": "prefix",
+      "prefix": "native/",
+      "suffix": "/build.cake"
+    },
+    {
+      "_comment": "YAML referencing Docker contexts",
+      "files": "**/*.yml",
+      "pattern": "docker:\\s*(scripts/Docker/[^\\s]+)",
+      "resolve": "root"
+    },
+    {
+      "_comment": "YAML/PowerShell script invocations (pwsh/bash steps)",
+      "files": "**/*.yml",
+      "pattern": "(?:pwsh|bash):\\s*(?:\\./|.\\\\)?scripts/([^\\s;|]+)",
+      "resolve": "prefix",
+      "prefix": "scripts/"
+    },
+    {
+      "_comment": "YAML script references in arguments (e.g., docker context paths)",
+      "files": "**/*.yml",
+      "pattern": "(?:docker|dockerfile|context):\\s*(?:\\$\\{\\{[^}]+\\}\\})?\\s*([^\\s]+/Dockerfile|scripts/Docker/[^\\s]+)",
+      "resolve": "root"
+    },
+    {
+      "_comment": "Docker contexts — Dockerfile pulls in all sibling files",
       "files": "**/Dockerfile",
       "siblings": true
     }
