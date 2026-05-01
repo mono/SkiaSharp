@@ -46,7 +46,7 @@ checkout:
   submodules: recursive
 timeout-minutes: 120
 concurrency:
-  group: auto-skia-track-m${{ needs.pre_activation.outputs.target }}
+  group: auto-skia-track
   cancel-in-progress: true
 tools:
   github:
