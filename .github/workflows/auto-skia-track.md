@@ -82,7 +82,7 @@ checkout:
   submodules: recursive
 timeout-minutes: 120
 concurrency:
-  group: auto-skia-track
+  group: auto-skia-track-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
   cancel-in-progress: true
 tools:
   github:
