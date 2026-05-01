@@ -70,7 +70,7 @@ The workflow follows this shape:
 
 ## Critical Rules
 
-> **🛑 STOP AND ASK** before: Creating PRs, Merging PRs, Force pushing, Any destructive git operations
+> **🛑 STOP AND ASK** before: Merging PRs, Force pushing, Deleting branches, Any destructive git operations
 
 ### 🚫 BRANCH PROTECTION (MANDATORY)
 
@@ -149,7 +149,8 @@ The workflow follows this shape:
 
 👉 See [references/breaking-changes-checklist.md](references/breaking-changes-checklist.md) for the full analysis template, including verification steps for struct sizes, moved files, and diff-reading traps.
 
-> 🛑 **GATE**: Present full breaking change analysis to user. Get approval before proceeding.
+> 🛑 **GATE**: Include the breaking change analysis in the PR description body. Summarize the
+> key findings (HIGH/MEDIUM risk changes and their C API impact) for the user.
 
 ### Phase 3: Validation
 
@@ -364,8 +365,6 @@ before the update can be considered complete. Do not create PRs with only smoke 
 > Do NOT proceed with failures.
 
 ### Phase 10: Create PRs
-
-> **🛑 STOP AND ASK FOR APPROVAL** before creating PRs.
 
 #### PR 1: mono/skia (submodule)
 
