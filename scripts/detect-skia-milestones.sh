@@ -2,16 +2,18 @@
 #
 # detect-skia-milestones.sh — Discover current milestone, upstream targets, and existing PRs.
 #
-# Outputs lines of KEY=VALUE for the agent to parse:
-#   CURRENT=147
-#   LATEST=148
-#   NEXT=148
-#   TARGET_0=148
-#   TARGET_1=149       (if different from NEXT)
-#   UPSTREAM_m148=afe8b760ada...
-#   BRANCH_EXISTS_m148=true|false
-#   PR_SKIA_m148=205   (or empty)
-#   PR_SKIASHARP_m148=3797  (or empty)
+# When GITHUB_OUTPUT is set (GitHub Actions), writes key=value to it for use in
+# workflow expressions. Otherwise prints to stdout for local testing.
+#
+# Exits with code 1 if there is nothing to do (no targets or all up-to-date),
+# which causes gh aw pre-activation to skip the agent job entirely.
+#
+# Output keys:
+#   current       — current milestone number (e.g. 147)
+#   next          — current + 1
+#   latest        — highest upstream chrome/m* branch
+#   targets       — comma-separated target milestones to process (e.g. "148,149")
+#   target_count  — number of targets (0, 1, or 2)
 #
 
 set -euo pipefail
@@ -19,9 +21,17 @@ set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 SKIA_DIR="$REPO_ROOT/externals/skia"
 
+# Helper: write key=value to GITHUB_OUTPUT (if set) and stdout
+emit() {
+    echo "$1=$2"
+    if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+        echo "$1=$2" >> "$GITHUB_OUTPUT"
+    fi
+}
+
 # --- Current milestone ---
 CURRENT=$(grep '^libSkiaSharp.*milestone' "$REPO_ROOT/scripts/VERSIONS.txt" | awk '{print $NF}')
-echo "CURRENT=$CURRENT"
+emit "current" "$CURRENT"
 
 # --- Init submodule and remotes ---
 cd "$REPO_ROOT"
@@ -39,11 +49,11 @@ LATEST=$(git branch -r \
     | sed -n 's|.*upstream/chrome/m\([0-9]*\).*|\1|p' \
     | sort -n \
     | tail -1)
-echo "LATEST=$LATEST"
+emit "latest" "$LATEST"
 
 # --- Compute targets ---
 NEXT=$((CURRENT + 1))
-echo "NEXT=$NEXT"
+emit "next" "$NEXT"
 
 # Build deduplicated, sorted target list
 TARGETS=()
@@ -55,46 +65,46 @@ if [[ "$LATEST" -ne "$NEXT" && "$LATEST" -gt "$CURRENT" ]]; then
 fi
 
 # Sort targets numerically
-IFS=$'\n' TARGETS=($(printf '%s\n' "${TARGETS[@]}" | sort -n)); unset IFS
-
-for i in "${!TARGETS[@]}"; do
-    echo "TARGET_$i=${TARGETS[$i]}"
-done
-
-if [[ ${#TARGETS[@]} -eq 0 ]]; then
-    echo "NO_TARGETS=true"
-    exit 0
+if [[ ${#TARGETS[@]} -gt 0 ]]; then
+    IFS=$'\n' TARGETS=($(printf '%s\n' "${TARGETS[@]}" | sort -n)); unset IFS
 fi
 
-# --- For each target, gather info ---
+emit "target_count" "${#TARGETS[@]}"
+
+if [[ ${#TARGETS[@]} -eq 0 ]]; then
+    echo "::notice::No milestones ahead of m$CURRENT (latest upstream: m$LATEST)"
+    exit 1
+fi
+
+# --- For each target, check if up-to-date ---
+WORK_NEEDED=()
 for T in "${TARGETS[@]}"; do
     UPSTREAM_REF="upstream/chrome/m${T}"
 
-    # Upstream tip SHA
-    if git rev-parse --verify "$UPSTREAM_REF" &>/dev/null; then
-        echo "UPSTREAM_m${T}=$(git rev-parse "$UPSTREAM_REF")"
-    else
-        echo "UPSTREAM_m${T}="
+    if ! git rev-parse --verify "$UPSTREAM_REF" &>/dev/null; then
         continue
     fi
 
-    # Does our branch exist?
+    # Does our branch exist and is it current?
     if git rev-parse --verify "origin/autobump/skia-m${T}" &>/dev/null; then
-        echo "BRANCH_EXISTS_m${T}=true"
-
-        # Is it up-to-date?
         BRANCH_TIP=$(git rev-parse "origin/autobump/skia-m${T}")
         MERGE_BASE=$(git merge-base "$BRANCH_TIP" "$UPSTREAM_REF" 2>/dev/null || echo "")
         UPSTREAM_TIP=$(git rev-parse "$UPSTREAM_REF")
         if [[ "$MERGE_BASE" == "$UPSTREAM_TIP" ]]; then
-            echo "UP_TO_DATE_m${T}=true"
-        else
-            echo "UP_TO_DATE_m${T}=false"
+            echo "  m$T: up-to-date, skipping"
+            continue
         fi
-    else
-        echo "BRANCH_EXISTS_m${T}=false"
-        echo "UP_TO_DATE_m${T}=false"
     fi
+
+    WORK_NEEDED+=("$T")
 done
 
-echo "DISCOVERY_COMPLETE=true"
+if [[ ${#WORK_NEEDED[@]} -eq 0 ]]; then
+    echo "::notice::All targets up-to-date (checked: ${TARGETS[*]})"
+    exit 1
+fi
+
+# Emit the final targets list (only milestones that need work)
+emit "targets" "$(IFS=,; echo "${WORK_NEEDED[*]}")"
+
+echo "Milestones needing work: ${WORK_NEEDED[*]}"
