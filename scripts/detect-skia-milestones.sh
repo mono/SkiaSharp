@@ -1,27 +1,26 @@
 #!/usr/bin/env bash
 #
-# detect-skia-milestones.sh — Discover current milestone, upstream targets, and existing PRs.
+# detect-skia-milestones.sh — Pick a single milestone to bump.
 #
-# When GITHUB_OUTPUT is set (GitHub Actions), writes key=value to it for use in
-# workflow expressions. Otherwise prints to stdout for local testing.
+# Accepts MODE env var: "next" (current+1) or "latest" (highest upstream).
+# Defaults to "next" if unset.
 #
-# Exits with code 1 if there is nothing to do (no targets or all up-to-date),
-# which causes gh aw pre-activation to skip the agent job entirely.
+# Writes to GITHUB_OUTPUT (if set) and stdout:
+#   current  — current milestone (e.g. 147)
+#   target   — the single milestone to process (e.g. 148)
+#   latest   — highest upstream chrome/m* branch
+#   mode     — "next" or "latest"
 #
-# Output keys:
-#   current       — current milestone number (e.g. 147)
-#   next          — current + 1
-#   latest        — highest upstream chrome/m* branch
-#   targets       — comma-separated target milestones to process (e.g. "148,149")
-#   target_count  — number of targets (0, 1, or 2)
+# Exits 1 if the target is already up-to-date or doesn't exist (skips agent).
 #
 
 set -euo pipefail
 
+MODE="${MODE:-next}"
+
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 SKIA_DIR="$REPO_ROOT/externals/skia"
 
-# Helper: write key=value to GITHUB_OUTPUT (if set) and stdout
 emit() {
     echo "$1=$2"
     if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
@@ -32,6 +31,7 @@ emit() {
 # --- Current milestone ---
 CURRENT=$(grep '^libSkiaSharp.*milestone' "$REPO_ROOT/scripts/VERSIONS.txt" | awk '{print $NF}')
 emit "current" "$CURRENT"
+emit "mode" "$MODE"
 
 # --- Init submodule and remotes ---
 cd "$REPO_ROOT"
@@ -51,60 +51,32 @@ LATEST=$(git branch -r \
     | tail -1)
 emit "latest" "$LATEST"
 
-# --- Compute targets ---
-NEXT=$((CURRENT + 1))
-emit "next" "$NEXT"
-
-# Build deduplicated, sorted target list
-TARGETS=()
-if [[ "$NEXT" -le "$LATEST" ]]; then
-    TARGETS+=("$NEXT")
-fi
-if [[ "$LATEST" -ne "$NEXT" && "$LATEST" -gt "$CURRENT" ]]; then
-    TARGETS+=("$LATEST")
+# --- Pick target based on mode ---
+if [[ "$MODE" == "latest" ]]; then
+    TARGET="$LATEST"
+else
+    TARGET=$((CURRENT + 1))
 fi
 
-# Sort targets numerically
-if [[ ${#TARGETS[@]} -gt 0 ]]; then
-    IFS=$'\n' TARGETS=($(printf '%s\n' "${TARGETS[@]}" | sort -n)); unset IFS
-fi
-
-emit "target_count" "${#TARGETS[@]}"
-
-if [[ ${#TARGETS[@]} -eq 0 ]]; then
-    echo "::notice::No milestones ahead of m$CURRENT (latest upstream: m$LATEST)"
+# Verify upstream branch exists
+if ! git rev-parse --verify "upstream/chrome/m${TARGET}" &>/dev/null; then
+    echo "::notice::upstream/chrome/m${TARGET} does not exist yet"
     exit 1
 fi
 
-# --- For each target, check if up-to-date ---
-WORK_NEEDED=()
-for T in "${TARGETS[@]}"; do
-    UPSTREAM_REF="upstream/chrome/m${T}"
-
-    if ! git rev-parse --verify "$UPSTREAM_REF" &>/dev/null; then
-        continue
+# Check if already up-to-date
+if git rev-parse --verify "origin/autobump/skia-m${TARGET}" &>/dev/null; then
+    BRANCH_TIP=$(git rev-parse "origin/autobump/skia-m${TARGET}")
+    UPSTREAM_TIP=$(git rev-parse "upstream/chrome/m${TARGET}")
+    MERGE_BASE=$(git merge-base "$BRANCH_TIP" "upstream/chrome/m${TARGET}" 2>/dev/null || echo "")
+    if [[ "$MERGE_BASE" == "$UPSTREAM_TIP" ]]; then
+        echo "::notice::autobump/skia-m${TARGET} is already up-to-date"
+        exit 1
     fi
-
-    # Does our branch exist and is it current?
-    if git rev-parse --verify "origin/autobump/skia-m${T}" &>/dev/null; then
-        BRANCH_TIP=$(git rev-parse "origin/autobump/skia-m${T}")
-        MERGE_BASE=$(git merge-base "$BRANCH_TIP" "$UPSTREAM_REF" 2>/dev/null || echo "")
-        UPSTREAM_TIP=$(git rev-parse "$UPSTREAM_REF")
-        if [[ "$MERGE_BASE" == "$UPSTREAM_TIP" ]]; then
-            echo "  m$T: up-to-date, skipping"
-            continue
-        fi
-    fi
-
-    WORK_NEEDED+=("$T")
-done
-
-if [[ ${#WORK_NEEDED[@]} -eq 0 ]]; then
-    echo "::notice::All targets up-to-date (checked: ${TARGETS[*]})"
-    exit 1
+    echo "autobump/skia-m${TARGET} exists but has new upstream commits"
+else
+    echo "autobump/skia-m${TARGET} does not exist yet — will create"
 fi
 
-# Emit the final targets list (only milestones that need work)
-emit "targets" "$(IFS=,; echo "${WORK_NEEDED[*]}")"
-
-echo "Milestones needing work: ${WORK_NEEDED[*]}"
+emit "target" "$TARGET"
+echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
