@@ -74,12 +74,28 @@ flowchart LR
   scripts_azure_pipelines_native_yml -.->|load| scripts_azure_templates_variables_yml
   scripts_azure_pipelines_package_yml -.->|load| scripts_azure_templates_stages_yml
   scripts_azure_pipelines_package_yml -.->|load| scripts_azure_templates_variables_yml
+  scripts_azure_pipelines_package_yml -.->|load| scripts_extract_nupkg_files_ps1
   scripts_azure_pipelines_tests_yml -.->|load| scripts_azure_template_fake_1es_yml
   scripts_azure_pipelines_tests_yml -.->|load| scripts_azure_templates_stages_yml
   scripts_azure_pipelines_tests_yml -.->|load| scripts_azure_templates_variables_yml
   scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_azure_templates_steps_download_artifacts_yml
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_compute_native_cache_key_ps1
   scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_free_disk_space_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_get_free_space_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_7zip_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_android_ndk_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_android_platform_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_android_sdk_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_dotnet_workloads_ps1
   scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_emsdk_sh
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_llvm_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_ninja_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_openjdk_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_tizen_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_install_winsdk_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_patch_dotnet_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_select_vs_ps1
+  scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_select_xcode_sh
   scripts_azure_templates_jobs_bootstrapper_yml -.->|load| scripts_set_build_variables_ps1
   scripts_azure_templates_jobs_linux_matrix_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
   scripts_azure_templates_jobs_merger_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
@@ -115,9 +131,12 @@ flowchart LR
   scripts_azure_templates_stages_native_yml -.->|load| scripts_azure_templates_stages_native_windows_yml
   scripts_azure_templates_stages_package_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
   scripts_azure_templates_stages_package_yml -.->|load| scripts_azure_templates_jobs_merger_yml
+  scripts_azure_templates_stages_package_yml -.->|load| scripts_extract_nupkg_files_ps1
   scripts_azure_templates_stages_prepare_yml -.->|load| scripts_set_build_variables_ps1
   scripts_azure_templates_stages_test_yml -.->|load| scripts_azure_templates_jobs_bootstrapper_yml
   scripts_azure_templates_stages_test_yml -.->|load| scripts_azure_templates_steps_provisioning_profiles_yml
+  scripts_azure_templates_stages_test_yml -.->|load| scripts_install_android_package_ps1
+  scripts_azure_templates_stages_test_yml -.->|load| scripts_install_gtk_ps1
   scripts_azure_templates_stages_test_yml -.->|load| scripts_set_build_variables_ps1
   scripts_azure_templates_stages_yml -.->|load| scripts_azure_templates_stages_native_yml
   scripts_azure_templates_stages_yml -.->|load| scripts_azure_templates_stages_package_yml

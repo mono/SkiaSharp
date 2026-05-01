@@ -56,9 +56,9 @@
       "resolve": "root"
     },
     {
-      "_comment": "YAML/PowerShell script invocations (pwsh/bash steps)",
+      "_comment": "YAML/PowerShell script invocations (multiple path formats)",
       "files": "**/*.yml",
-      "pattern": "(?:pwsh|bash):\\s*(?:\\./|.\\\\)?scripts/([^\\s;|]+)",
+      "pattern": "(?:\\./|.\\\\)?scripts[/\\\\]([a-zA-Z0-9_./-]+\\.(?:ps1|sh))",
       "resolve": "prefix",
       "prefix": "scripts/"
     },
