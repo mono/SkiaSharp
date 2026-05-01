@@ -175,6 +175,10 @@ def compute_target_deps(target_info, all_files, link_graph, reverse_graph, globa
     # Backward: things that reference the entry_point (YAML templates that invoke this target)
     deps.update(reverse_transitive(entry, reverse_graph))
 
+    # Global deps + their transitive forward deps (e.g., bootstrapper → install scripts)
+    for gf in global_files:
+        deps.update(transitive_deps(gf, link_graph))
+
     # All files in the target directory
     target_dir = target_info["directory"]
     for f in all_files:
