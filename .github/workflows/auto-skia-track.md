@@ -72,10 +72,11 @@ safe-outputs:
     protected-files: allowed
 ---
 
-# Update Skia from m${{ needs.pre_activation.outputs.current }} to m${{ needs.pre_activation.outputs.target }}
+# Auto Skia Track
 
-Update SkiaSharp's Skia submodule to milestone ${{ needs.pre_activation.outputs.target }} on
-branch `autobump/skia-m${{ needs.pre_activation.outputs.target }}`.
+Update SkiaSharp's Skia submodule from m${{ needs.pre_activation.outputs.current }} to
+milestone ${{ needs.pre_activation.outputs.target }} on branch
+`autobump/skia-m${{ needs.pre_activation.outputs.target }}`.
 
 Read and follow `.agents/skills/update-skia/SKILL.md` for detailed instructions on every phase.
 
