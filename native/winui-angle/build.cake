@@ -101,7 +101,7 @@ Task("sync-ANGLE")
     if (!FileExists(WINAPPSDK_PATH.CombineWithFilePath("Microsoft.WindowsAppSDK.nuspec"))) {
         var setup = ANGLE_PATH.CombineWithFilePath("scripts/winappsdk_setup.py");
         RunProcess(
-            ROOT_PATH.CombineWithFilePath("scripts/vcvarsall.bat"),
+            ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat"),
             $"\"{VS_INSTALL}\" \"x64\" \"{PYTHON_EXE}\" \"{setup}\" --output \"{WINAPPSDK_PATH}\"");
     }
 });

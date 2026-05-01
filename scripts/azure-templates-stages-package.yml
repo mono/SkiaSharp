@@ -57,7 +57,7 @@ stages:
               displayName: Re-organize the output folder for publishing
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
-                Copy-Item -Path '.\scripts\SignList.xml' -Destination '.\output\nugets\'
+                Copy-Item -Path '.\scripts\infra\package\SignList.xml' -Destination '.\output\nugets\'
               displayName: Prepare the nugets artifact for publishing
             - pwsh: |
                 # Create nuget_preview with only prerelease packages (for easier PR testing)
@@ -97,7 +97,7 @@ stages:
               currentRun: true
           postBuildSteps:
             - pwsh: |
-                .\scripts\extract-nupkg-files.ps1 `
+                .\scripts\infra\package\extract-nupkg-files.ps1 `
                   -SourcePath ".\output\nugets*\*.*nupkg" `
                   -DestinationPath ".\output\extracted_nugets"
               displayName: Extract all the .nupkg files for scanning

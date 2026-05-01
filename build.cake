@@ -174,10 +174,10 @@ Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
 Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
 #load "./scripts/infra/native/windows/msbuild.cake"
-#load "./scripts/cake/UtilsManaged.cake"
-#load "./scripts/cake/samples.cake"
-#load "./scripts/cake/externals.cake"
-#load "./scripts/cake/UpdateDocs.cake"
+#load "./scripts/infra/managed/cake/UtilsManaged.cake"
+#load "./scripts/infra/managed/cake/samples.cake"
+#load "./scripts/infra/managed/cake/externals.cake"
+#load "./scripts/infra/managed/cake/UpdateDocs.cake"
 
 
 Task ("__________________________________")

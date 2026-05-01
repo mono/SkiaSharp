@@ -141,7 +141,7 @@ extends:
                   $surrogateContents | Set-Content $destFile
                 displayName: Generate the surrogate files
               - pwsh: |
-                  ./scripts/extract-nupkg-files.ps1 `
+                  ./scripts/infra/package/extract-nupkg-files.ps1 `
                     -SourcePath "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg" `
                     -DestinationPath "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted" `
                     -RemoveOriginal
