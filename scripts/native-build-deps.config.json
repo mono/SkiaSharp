@@ -1,30 +1,45 @@
 {
-  "target_roots": [
-    {
-      "path": "native",
-      "entry_point": "build.cake"
-    }
+  "_comment": "Dependency graph configuration. Declares what to scan and how files connect.",
+
+  "scan": [
+    "native/**/*",
+    "scripts/cake/**/*",
+    "scripts/Docker/**/*",
+    "scripts/VERSIONS.txt",
+    "build.cake"
   ],
-  "script_roots": [
-    "scripts/cake"
+
+  "targets": [
+    "native/*/build.cake"
   ],
-  "global_deps": [
+
+  "global": [
     "scripts/VERSIONS.txt"
   ],
+
   "submodules": [
     "externals/skia"
   ],
-  "docker_roots": [
-    "scripts/Docker"
+
+  "links": [
+    {
+      "_comment": "Cake #load directives — file A loads file B",
+      "files": "**/*.cake",
+      "pattern": "^#load\\s+\"([^\"]+)\"",
+      "resolve": "relative"
+    },
+    {
+      "_comment": "Docker contexts — a Dockerfile pulls in all sibling files",
+      "files": "**/Dockerfile",
+      "siblings": true
+    }
   ],
-  "load_patterns": {
-    "*.cake": "^#load\\s+\"([^\"]+)\""
-  },
-  "exclude_dirs": [
-    "bin",
-    "obj",
-    "libs",
-    "tools",
-    ".git"
+
+  "exclude": [
+    "**/bin/**",
+    "**/obj/**",
+    "**/libs/**",
+    "**/tools/**",
+    "**/.git/**"
   ]
 }

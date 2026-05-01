@@ -1,14 +1,14 @@
 {
   "_metadata": {
-    "description": "Native build dependency graph for cache keys",
-    "generator": "scripts/generate-native-dep-graph.py",
-    "usage": "Used by cache key scripts to determine inputs per target"
+    "description": "Build dependency graph for cache keys",
+    "generator": "scripts/generate-native-dep-graph.py"
   },
   "targets": {
     "android": {
       "files": [
         "externals/skia",
         "native/android/build.cake",
+        "native/android/libHarfBuzzSharp/.gitignore",
         "native/android/libHarfBuzzSharp/jni/Android.mk",
         "native/android/libHarfBuzzSharp/jni/Application.mk",
         "native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk",
@@ -190,52 +190,7 @@
       "entry_point": "native/winui-angle/build.cake"
     }
   },
-  "docker_contexts": {
-    "scripts/Docker/alpine": [
-      "scripts/Docker/_clang-cross-common.sh",
-      "scripts/Docker/alpine/.dockerignore",
-      "scripts/Docker/alpine/Dockerfile",
-      "scripts/Docker/alpine/build-local.sh",
-      "scripts/Docker/alpine/startup.sh"
-    ],
-    "scripts/Docker/bionic": [
-      "scripts/Docker/_clang-cross-common.sh",
-      "scripts/Docker/bionic/Dockerfile",
-      "scripts/Docker/bionic/build-local.sh",
-      "scripts/Docker/bionic/startup.sh"
-    ],
-    "scripts/Docker/debian/11": [
-      "scripts/Docker/_clang-cross-common.sh",
-      "scripts/Docker/debian/11/Dockerfile",
-      "scripts/Docker/debian/11/build-local.sh",
-      "scripts/Docker/debian/11/startup.sh"
-    ],
-    "scripts/Docker/debian/13": [
-      "scripts/Docker/_clang-cross-common.sh",
-      "scripts/Docker/debian/13/.dockerignore",
-      "scripts/Docker/debian/13/Dockerfile",
-      "scripts/Docker/debian/13/build-local.sh",
-      "scripts/Docker/debian/13/startup.sh"
-    ],
-    "scripts/Docker/wasm": [
-      "scripts/Docker/_clang-cross-common.sh",
-      "scripts/Docker/wasm/.dockerignore",
-      "scripts/Docker/wasm/Dockerfile",
-      "scripts/Docker/wasm/build-local.ps1",
-      "scripts/Docker/wasm/build-local.sh",
-      "scripts/Docker/wasm/startup.sh"
-    ]
-  },
   "load_graph": {
-    "build.cake": [
-      "scripts/cake/shared.cake",
-      "scripts/cake/native-shared.cake",
-      "scripts/cake/msbuild.cake",
-      "scripts/cake/UtilsManaged.cake",
-      "scripts/cake/samples.cake",
-      "scripts/cake/externals.cake",
-      "scripts/cake/UpdateDocs.cake"
-    ],
     "native/android/build.cake": [
       "scripts/cake/native-shared.cake",
       "scripts/cake/ndk.cake"
@@ -274,16 +229,43 @@
       "scripts/cake/native-shared.cake"
     ],
     "native/windows/build.cake": [
-      "scripts/cake/native-shared.cake",
-      "scripts/cake/msbuild.cake"
+      "scripts/cake/msbuild.cake",
+      "scripts/cake/native-shared.cake"
     ],
     "native/winui-angle/build.cake": [
-      "scripts/cake/native-shared.cake",
-      "scripts/cake/msbuild.cake"
+      "scripts/cake/msbuild.cake",
+      "scripts/cake/native-shared.cake"
     ],
     "native/winui/build.cake": [
-      "scripts/cake/native-shared.cake",
-      "scripts/cake/msbuild.cake"
+      "scripts/cake/msbuild.cake",
+      "scripts/cake/native-shared.cake"
+    ],
+    "scripts/Docker/alpine/Dockerfile": [
+      "scripts/Docker/_clang-cross-common.sh",
+      "scripts/Docker/alpine/.dockerignore",
+      "scripts/Docker/alpine/build-local.sh",
+      "scripts/Docker/alpine/startup.sh"
+    ],
+    "scripts/Docker/bionic/Dockerfile": [
+      "scripts/Docker/_clang-cross-common.sh",
+      "scripts/Docker/bionic/build-local.sh",
+      "scripts/Docker/bionic/startup.sh"
+    ],
+    "scripts/Docker/debian/11/Dockerfile": [
+      "scripts/Docker/debian/11/build-local.sh",
+      "scripts/Docker/debian/11/startup.sh"
+    ],
+    "scripts/Docker/debian/13/Dockerfile": [
+      "scripts/Docker/debian/13/.dockerignore",
+      "scripts/Docker/debian/13/build-local.sh",
+      "scripts/Docker/debian/13/startup.sh"
+    ],
+    "scripts/Docker/wasm/Dockerfile": [
+      "scripts/Docker/_clang-cross-common.sh",
+      "scripts/Docker/wasm/.dockerignore",
+      "scripts/Docker/wasm/build-local.ps1",
+      "scripts/Docker/wasm/build-local.sh",
+      "scripts/Docker/wasm/startup.sh"
     ],
     "scripts/cake/native-shared.cake": [
       "scripts/cake/shared.cake"
