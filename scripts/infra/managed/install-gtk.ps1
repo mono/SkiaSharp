@@ -12,7 +12,7 @@ $installer = Join-Path "$tempDir" "gtk-sharp.msi"
 New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 
 Write-Host "Downloading GTK# Installer: $uri..."
-.\scripts\download-file.ps1 -Uri $uri -OutFile $installer
+.\scripts\infra\native\shared\download-file.ps1 -Uri $uri -OutFile $installer
 
 $p = "$env:BUILD_SOURCESDIRECTORY\output\logs\install-logs"
 New-Item -ItemType Directory -Force -Path $p | Out-Null

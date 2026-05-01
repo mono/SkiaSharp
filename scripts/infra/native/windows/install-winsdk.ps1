@@ -32,7 +32,7 @@ $installer = Join-Path "$tempDir" "sdksetup-$LinkId.exe"
 New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 
 Write-Host "Downloading Windows SDK Installer: $uri..."
-.\scripts\download-file.ps1 -Uri $uri -OutFile $installer
+.\scripts\infra\native\shared\download-file.ps1 -Uri $uri -OutFile $installer
 
 Write-Host "Installing Windows SDK..."
 & $installer /norestart /quiet | Out-Null
