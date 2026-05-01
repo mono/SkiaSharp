@@ -19,6 +19,7 @@ on:
       env:
         INPUT_MODE: ${{ github.event.inputs.mode }}
         SCHEDULE: ${{ github.event.schedule }}
+        GH_TOKEN: ${{ github.token }}
       run: |
         # Determine mode from input or schedule
         if [ -n "$INPUT_MODE" ]; then
@@ -30,8 +31,47 @@ on:
         else
           MODE=next
         fi
-        export MODE
-        bash scripts/detect-skia-milestones.sh
+        echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+
+        # Read current milestone from VERSIONS.txt via API (no checkout yet)
+        CURRENT=$(gh api "repos/$GITHUB_REPOSITORY/contents/scripts/VERSIONS.txt?ref=$GITHUB_REF" \
+          --jq '.content' | base64 -d | grep '^libSkiaSharp.*milestone' | awk '{print $NF}')
+        echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+
+        NEXT=$((CURRENT + 1))
+        echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+
+        # Find latest upstream chrome/m* branch (no clone needed)
+        LATEST=$(git ls-remote --heads https://github.com/google/skia.git 'refs/heads/chrome/m*' \
+          | sed -n 's|.*refs/heads/chrome/m\([0-9]*\)$|\1|p' \
+          | sort -n | tail -1)
+        echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+
+        # Pick target
+        if [ "$MODE" = "latest" ]; then
+          TARGET="$LATEST"
+        elif [ "$MODE" = "current" ]; then
+          TARGET="$CURRENT"
+        else
+          TARGET="$NEXT"
+        fi
+        echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+
+        # Verify upstream branch exists
+        if ! git ls-remote --exit-code https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" >/dev/null 2>&1; then
+          echo "::notice::upstream/chrome/m${TARGET} does not exist yet"
+          exit 1
+        fi
+
+        # Check if autobump branch is already up-to-date
+        UPSTREAM_TIP=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
+        BRANCH_TIP=$(git ls-remote https://github.com/mono/skia.git "refs/heads/autobump/skia-m${TARGET}" 2>/dev/null | awk '{print $1}')
+        if [ -n "$BRANCH_TIP" ] && [ "$BRANCH_TIP" = "$UPSTREAM_TIP" ]; then
+          echo "::notice::autobump/skia-m${TARGET} tip matches upstream — up-to-date"
+          exit 1
+        fi
+
+        echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
 jobs:
   pre-activation:
     outputs:

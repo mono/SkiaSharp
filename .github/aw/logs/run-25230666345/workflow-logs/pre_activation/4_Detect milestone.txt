@@ -1,0 +1,80 @@
+﻿2026-05-01T19:59:22.8056049Z ##[group]Run # Determine mode from input or schedule
+2026-05-01T19:59:22.8056973Z [36;1m# Determine mode from input or schedule[0m
+2026-05-01T19:59:22.8057566Z [36;1mif [ -n "$INPUT_MODE" ]; then[0m
+2026-05-01T19:59:22.8058075Z [36;1m  MODE="$INPUT_MODE"[0m
+2026-05-01T19:59:22.8058578Z [36;1melif [ "$SCHEDULE" = "0 7 * * *" ]; then[0m
+2026-05-01T19:59:22.8059146Z [36;1m  MODE=current[0m
+2026-05-01T19:59:22.8059617Z [36;1melif [ "$SCHEDULE" = "0 17 * * *" ]; then[0m
+2026-05-01T19:59:22.8060142Z [36;1m  MODE=latest[0m
+2026-05-01T19:59:22.8060680Z [36;1melse[0m
+2026-05-01T19:59:22.8061057Z [36;1m  MODE=next[0m
+2026-05-01T19:59:22.8061442Z [36;1mfi[0m
+2026-05-01T19:59:22.8061807Z [36;1mexport MODE[0m
+2026-05-01T19:59:22.8062270Z [36;1mbash scripts/detect-skia-milestones.sh[0m
+2026-05-01T19:59:22.8070363Z shell: /usr/bin/bash -e {0}
+2026-05-01T19:59:22.8070867Z env:
+2026-05-01T19:59:22.8077816Z   GH_AW_MODEL_MULTIPLIERS: {
+  "version": "1",
+  "description": "Effective Tokens (ET) computation data per the gh-aw Effective Tokens Specification v0.2.0. Token class weights are applied first to normalize across token classes, then the per-model multiplier scales the result relative to the reference model.",
+  "reference_model": "claude-sonnet-4.5",
+  "token_class_weights": {
+    "input": 1.0,
+    "cached_input": 0.1,
+    "output": 4.0,
+    "reasoning": 4.0,
+    "cache_write": 1.0
+  },
+  "multipliers": {
+    "claude-haiku-4.5": 0.1,
+    "claude-3-5-haiku": 0.1,
+    "claude-3-haiku": 0.1,
+    "claude-sonnet-4.5": 1.0,
+    "claude-sonnet-4.6": 1.0,
+    "claude-3-5-sonnet": 1.0,
+    "claude-3-7-sonnet": 1.0,
+    "claude-3-sonnet": 1.0,
+    "claude-opus-4.5": 5.0,
+    "claude-opus-4.6": 5.0,
+    "claude-3-5-opus": 5.0,
+    "claude-3-opus": 5.0,
+    "gpt-4o": 1.0,
+    "gpt-4o-mini": 0.1,
+    "gpt-4.1": 1.0,
+    "gpt-4.1-2025-04-14": 1.0,
+    "gpt-41-copilot": 1.0,
+    "gpt-4.1-mini": 0.1,
+    "gpt-4.1-nano": 0.05,
+    "gpt-4-turbo": 1.0,
+    "gpt-4": 1.0,
+    "gpt-5": 1.0,
+    "gpt-5-mini": 0,
+    "gpt-5.1": 1.0,
+    "gpt-5.1-codex": 1.0,
+    "gpt-5.1-codex-mini": 0.33,
+    "gpt-5.1-codex-max": 1.0,
+    "gpt-5.2": 1.0,
+    "gpt-5.2-codex": 1.0,
+    "gpt-5.3-codex": 1.0,
+    "gpt-5.4": 1.0,
+    "gpt-5.4-mini": 0.33,
+    "o1": 3.0,
+    "o1-mini": 0.5,
+    "o1-pro": 10.0,
+    "o3": 3.0,
+    "o3-mini": 0.5,
+    "o4-mini": 0.5,
+    "gemini-2.5-pro": 1.0,
+    "gemini-2.5-flash": 0.2,
+    "gemini-2.0-flash": 0.1,
+    "gemini-1.5-pro": 1.0,
+    "gemini-1.5-flash": 0.1
+  }
+}
+2026-05-01T19:59:22.8085687Z   GITHUB_AW_OTEL_TRACE_ID: e3b12824e41b43bacb6d6a1779ee1164
+2026-05-01T19:59:22.8086323Z   GITHUB_AW_OTEL_PARENT_SPAN_ID: e07b0a2202803439
+2026-05-01T19:59:22.8086884Z   GITHUB_AW_OTEL_JOB_START_MS: 1777665562623
+2026-05-01T19:59:22.8087374Z   INPUT_MODE: current
+2026-05-01T19:59:22.8087765Z   SCHEDULE: 
+2026-05-01T19:59:22.8088144Z ##[endgroup]
+2026-05-01T19:59:22.8149952Z bash: scripts/detect-skia-milestones.sh: No such file or directory
+2026-05-01T19:59:22.8161703Z ##[error]Process completed with exit code 127.
