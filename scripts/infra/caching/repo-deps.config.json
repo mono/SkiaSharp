@@ -1,17 +1,74 @@
 {
-  "_comment": "Repository dependency graph configuration.",
+  "_comment": "Repository dependency graph. Maps file paths to pipeline stages.",
 
   "scan": [
     "native/**/*",
+    "binding/**/*",
+    "source/**/*",
+    "tests/**/*",
+    "samples/**/*",
     "scripts/infra/**/*",
     "scripts/azure-*.yml",
     "scripts/VERSIONS.txt",
-    "build.cake"
+    "build.cake",
+    "nuget.config",
+    "global.json"
   ],
 
-  "targets": [
-    "native/*/build.cake"
-  ],
+  "stages": {
+    "native": {
+      "_comment": "C/C++ native library compilation",
+      "targets": ["native/*/build.cake"],
+      "paths": [
+        "externals/skia",
+        "native/**",
+        "scripts/infra/native/**",
+        "scripts/VERSIONS.txt"
+      ]
+    },
+    "managed": {
+      "_comment": "C# managed library build",
+      "depends_on": ["native"],
+      "paths": [
+        "binding/**",
+        "source/**",
+        "scripts/infra/managed/**",
+        "build.cake",
+        "nuget.config",
+        "global.json"
+      ]
+    },
+    "package": {
+      "_comment": "NuGet package creation",
+      "depends_on": ["managed"],
+      "paths": [
+        "scripts/infra/package/**"
+      ]
+    },
+    "tests": {
+      "_comment": "Test execution",
+      "depends_on": ["managed"],
+      "paths": [
+        "tests/**",
+        "scripts/infra/tests/**"
+      ]
+    },
+    "samples": {
+      "_comment": "Sample project builds",
+      "depends_on": ["managed"],
+      "paths": [
+        "samples/**"
+      ]
+    },
+    "api_diff": {
+      "_comment": "API diff and documentation",
+      "depends_on": ["package"],
+      "paths": [
+        "docs/**",
+        "changelogs/**"
+      ]
+    }
+  },
 
   "global": [
     "scripts/infra/native/shared/**/*",
