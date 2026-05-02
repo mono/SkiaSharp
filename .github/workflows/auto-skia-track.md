@@ -59,14 +59,6 @@ on:
         fi
 
         echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
-jobs:
-  pre-activation:
-    outputs:
-      current: ${{ steps.detect.outputs.current }}
-      next: ${{ steps.detect.outputs.next }}
-      latest: ${{ steps.detect.outputs.latest }}
-      target: ${{ steps.detect.outputs.target }}
-      mode: ${{ steps.detect.outputs.mode }}
 if: needs.pre_activation.outputs.detect_result == 'success'
 checkout:
   - fetch-depth: 0
@@ -89,17 +81,37 @@ network:
 permissions:
   contents: read
   pull-requests: read
+safe-outputs:
+  create-pull-request:
+    if-no-changes: ignore
+jobs:
+  pre-activation:
+    outputs:
+      current: ${{ steps.detect.outputs.current }}
+      next: ${{ steps.detect.outputs.next }}
+      latest: ${{ steps.detect.outputs.latest }}
+      target: ${{ steps.detect.outputs.target }}
+      mode: ${{ steps.detect.outputs.mode }}
+env:
+  AUTOBUMP_TARGET: ${{ needs.pre_activation.outputs.target }}
+  AUTOBUMP_CURRENT: ${{ needs.pre_activation.outputs.current }}
 post-steps:
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-      TARGET: ${{ needs.pre_activation.outputs.target }}
-      CURRENT: ${{ needs.pre_activation.outputs.current }}
     run: |
       set -euo pipefail
+      TARGET="${AUTOBUMP_TARGET}"
+      CURRENT="${AUTOBUMP_CURRENT}"
+
+      if [ -z "$TARGET" ]; then
+        echo "TARGET is empty — skipping push"
+        exit 0
+      fi
+
       BRANCH="autobump/skia-m${TARGET}"
 
-      # Read the agent's summary from workspace (if it wrote one)
+      # Read agent summary
       SUMMARY=""
       if [ -f /tmp/gh-aw/agent/autobump-summary.md ]; then
         SUMMARY=$(cat /tmp/gh-aw/agent/autobump-summary.md)
@@ -110,61 +122,54 @@ post-steps:
       if git rev-parse --verify "$BRANCH" &>/dev/null; then
         echo "Pushing $BRANCH to mono/skia..."
         git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/skia.git"
-        git push origin "$BRANCH" --force-with-lease 2>/dev/null || git push -u origin "$BRANCH"
+        git push origin "$BRANCH" --force-with-lease 2>/dev/null || git push origin "$BRANCH" --force
 
-        # Create or update mono/skia PR
         SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
         if [ -z "$SKIA_PR" ]; then
           echo "Creating mono/skia PR..."
-          SKIA_PR=$(gh pr create --repo mono/skia \
+          gh pr create --repo mono/skia \
             --head "$BRANCH" --base skiasharp \
             --title "[autobump] Update skia to milestone ${TARGET}" \
             --draft \
-            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
+            --body "Automated upstream merge of chrome/m${TARGET}.
 
       ${SUMMARY}
 
-      Created by auto-skia-track workflow." \
-            --json number --jq '.number' 2>/dev/null || echo "")
-          echo "Created mono/skia PR #$SKIA_PR"
+      Created by auto-skia-track workflow." 2>/dev/null || true
         else
-          echo "mono/skia PR #$SKIA_PR already exists, updating description..."
+          echo "Updating mono/skia PR #${SKIA_PR}..."
           gh pr edit "$SKIA_PR" --repo mono/skia \
-            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
+            --body "Automated upstream merge of chrome/m${TARGET}.
 
       ${SUMMARY}
 
-      Created by auto-skia-track workflow. Last updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>/dev/null || true
+      Updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>/dev/null || true
         fi
       else
-        echo "No submodule branch $BRANCH found — agent may have determined no work needed"
+        echo "No submodule branch $BRANCH — skipping mono/skia push"
       fi
 
       # --- Push SkiaSharp branch ---
       cd "$GITHUB_WORKSPACE"
-      if git diff --cached --quiet && git diff --quiet; then
+      git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH" 2>/dev/null || true
+      git add -A
+      if git diff --cached --quiet; then
         echo "No SkiaSharp changes to push"
         exit 0
       fi
-
-      # Stage all changes and commit on the autobump branch
-      git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
-      git add -A
-      git diff --cached --quiet || git commit -m "Bump skia to milestone ${TARGET}
+      git commit -m "Bump skia to milestone ${TARGET}
 
       Automated merge of upstream chrome/m${TARGET}."
 
       echo "Pushing $BRANCH to mono/SkiaSharp..."
       git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp.git"
-      git push origin "$BRANCH" --force-with-lease 2>/dev/null || git push -u origin "$BRANCH"
+      git push origin "$BRANCH" --force-with-lease 2>/dev/null || git push origin "$BRANCH" --force
 
-      # Create or update mono/SkiaSharp PR
-      SS_PR=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+      SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
       SKIA_PR_LINK=""
-      if [ -n "${SKIA_PR:-}" ]; then
-        SKIA_PR_LINK="**Companion skia PR:** https://github.com/mono/skia/pull/$SKIA_PR"
-      fi
+      [ -n "$SKIA_PR" ] && SKIA_PR_LINK="**Companion skia PR:** https://github.com/mono/skia/pull/$SKIA_PR"
 
+      SS_PR=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
       if [ -z "$SS_PR" ]; then
         echo "Creating mono/SkiaSharp PR..."
         gh pr create --repo mono/SkiaSharp \
@@ -179,7 +184,7 @@ post-steps:
 
       Created by auto-skia-track workflow."
       else
-        echo "mono/SkiaSharp PR #$SS_PR already exists, updating description..."
+        echo "Updating mono/SkiaSharp PR #${SS_PR}..."
         gh pr edit "$SS_PR" --repo mono/SkiaSharp \
           --body "Automated Skia milestone bump from m${CURRENT} to m${TARGET}.
 
@@ -187,11 +192,8 @@ post-steps:
 
       ${SUMMARY}
 
-      Last updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>/dev/null || true
+      Updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>/dev/null || true
       fi
-safe-outputs:
-  create-pull-request:
-    if-no-changes: ignore
 ---
 
 # Auto Skia Track
