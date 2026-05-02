@@ -99,14 +99,12 @@ permissions:
   contents: read
   pull-requests: read
 safe-outputs:
-  github-token: ${{ secrets.GH_AW_GITHUB_TOKEN }}
   create-pull-request:
     title-prefix: "[autobump] "
     labels: [upstream-tracking]
     draft: true
-    max: 2
-    allowed-base-branches: [main, skiasharp]
-    allowed-repos: ["mono/skia"]
+    max: 1
+    allowed-base-branches: [main]
     preserve-branch-name: true
     protected-files: allowed
 ---
@@ -178,7 +176,7 @@ cd externals/skia
 git add -A && git commit -m "Adapt SkiaSharp shims for m${{ needs.pre_activation.outputs.target }}"
 ```
 
-## Step 4 — Push submodule branch and create mono/skia PR
+## Step 4 — Push submodule branch
 
 Push the submodule branch to mono/skia:
 
@@ -188,12 +186,8 @@ git push origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}" --fo
   git push -u origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
 ```
 
-Then create a draft PR in mono/skia via the `create_pull_request` safe-output tool:
-- `repo`: `mono/skia`
-- Branch: `autobump/skia-m${{ needs.pre_activation.outputs.target }}`
-- Base: `skiasharp`
-- Title: `Update skia to milestone ${{ needs.pre_activation.outputs.target }}`
-- Body: Breaking change analysis from Step 1
+Note in the mono/SkiaSharp PR body that a companion mono/skia PR is needed for
+`autobump/skia-m${{ needs.pre_activation.outputs.target }}` → `skiasharp`.
 
 ## Step 5 — Update SkiaSharp parent repo
 
