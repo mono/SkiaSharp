@@ -89,6 +89,7 @@ tools:
     toolsets: [repos, pull_requests]
     allowed-repos: ["mono/skia", "mono/skiasharp"]
     min-integrity: none
+    github-token: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
   bash: ["*"]
   edit:
 network:
@@ -99,16 +100,8 @@ permissions:
   contents: read
   pull-requests: read
 safe-outputs:
-  github-token: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
   create-pull-request:
-    title-prefix: "[autobump] "
-    labels: [upstream-tracking]
-    draft: true
-    max: 2
-    allowed-base-branches: [main, skiasharp]
-    allowed-repos: ["mono/skia"]
-    preserve-branch-name: true
-    protected-files: allowed
+    if-no-changes: ignore
 ---
 
 # Auto Skia Track
@@ -188,12 +181,13 @@ git push origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}" --fo
   git push -u origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
 ```
 
-Then create a draft PR in mono/skia via the `create_pull_request` safe-output tool:
-- `repo`: `mono/skia`
-- Branch: `autobump/skia-m${{ needs.pre_activation.outputs.target }}`
-- Base: `skiasharp`
-- Title: `Update skia to milestone ${{ needs.pre_activation.outputs.target }}`
-- Body: Breaking change analysis from Step 1
+Then use the GitHub MCP `create_pull_request` tool to create a draft PR in mono/skia:
+- repo: `mono/skia`
+- head: `autobump/skia-m${{ needs.pre_activation.outputs.target }}`
+- base: `skiasharp`
+- title: `[autobump] Update skia to milestone ${{ needs.pre_activation.outputs.target }}`
+- body: Breaking change analysis from Step 1
+- draft: true
 
 ## Step 5 — Update SkiaSharp parent repo
 
@@ -208,18 +202,24 @@ Follow **Phases 6–9** of the skill:
    dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
    ```
 
-## Step 6 — Commit for mono/SkiaSharp PR
+## Step 6 — Push SkiaSharp branch and create PR
 
-Use `autobump/skia-m${{ needs.pre_activation.outputs.target }}` as the branch name. Commit:
+Push the SkiaSharp changes directly (safe-outputs can't handle 300+ file patches):
 
+```bash
+git checkout -b "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
+git add -A
+git commit -m "Bump skia to milestone ${{ needs.pre_activation.outputs.target }}
+
+Automated merge of upstream chrome/m${{ needs.pre_activation.outputs.target }}."
+git push origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}" --force-with-lease 2>/dev/null || \
+  git push -u origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
 ```
-Bump skia to milestone ${{ needs.pre_activation.outputs.target }}
 
-Automated merge of upstream chrome/m${{ needs.pre_activation.outputs.target }}.
-```
-
-Create the mono/SkiaSharp PR via the `create_pull_request` safe-output tool:
-- Branch: `autobump/skia-m${{ needs.pre_activation.outputs.target }}`
-- Base: `main`
-- Title: `Bump skia to milestone ${{ needs.pre_activation.outputs.target }}`
-- Body: Breaking change analysis, link to the companion mono/skia PR from Step 4, build/test status
+Then use the GitHub MCP `create_pull_request` tool to create a draft PR in mono/SkiaSharp:
+- repo: `mono/SkiaSharp`
+- head: `autobump/skia-m${{ needs.pre_activation.outputs.target }}`
+- base: `main`
+- title: `[autobump] Bump skia to milestone ${{ needs.pre_activation.outputs.target }}`
+- body: Breaking change analysis, link to the companion mono/skia PR from Step 4, build/test status
+- draft: true
