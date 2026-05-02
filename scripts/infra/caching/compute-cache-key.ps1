@@ -2,7 +2,7 @@
 .SYNOPSIS Compute a content-based cache key for a native build job.
 .DESCRIPTION
     Reads the dependency graph from scripts/infra/caching/repo-deps.json (generated
-    by scripts/generate-native-dep-graph.py) and hashes ALL files that can
+    by scripts/generate-dep-graph.py) and hashes ALL files that can
     affect the native build output for the given target.
 
     Falls back to a basic key if the dep graph file is missing.
@@ -22,9 +22,9 @@
     When provided, all files in that Docker context are included in the hash.
 
 .EXAMPLE
-    .\scripts\compute-native-cache-key.ps1 -JobName 'native_win32_x64_windows' -Target 'externals-windows'
+    .\scripts\compute-cache-key.ps1 -JobName 'native_win32_x64_windows' -Target 'externals-windows'
 .EXAMPLE
-    .\scripts\compute-native-cache-key.ps1 -JobName 'native_linux_arm64_alpine_linux' -Target 'externals-linux-clang-cross' -Docker 'scripts/Docker/alpine'
+    .\scripts\compute-cache-key.ps1 -JobName 'native_linux_arm64_alpine_linux' -Target 'externals-linux-clang-cross' -Docker 'scripts/Docker/alpine'
 #>
 param(
     [Parameter(Mandatory)]
