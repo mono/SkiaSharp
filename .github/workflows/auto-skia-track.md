@@ -21,7 +21,6 @@ on:
         SCHEDULE: ${{ github.event.schedule }}
         GH_TOKEN: ${{ github.token }}
       run: |
-        # Determine mode from input or schedule
         if [ -n "$INPUT_MODE" ]; then
           MODE="$INPUT_MODE"
         elif [ "$SCHEDULE" = "0 7 * * *" ]; then
@@ -33,7 +32,6 @@ on:
         fi
         echo "mode=$MODE" >> "$GITHUB_OUTPUT"
 
-        # Read current milestone from VERSIONS.txt via API (no checkout yet)
         CURRENT=$(gh api "repos/$GITHUB_REPOSITORY/contents/scripts/VERSIONS.txt?ref=$GITHUB_REF" \
           --jq '.content' | base64 -d | grep '^libSkiaSharp.*milestone' | awk '{print $NF}')
         echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
@@ -41,13 +39,11 @@ on:
         NEXT=$((CURRENT + 1))
         echo "next=$NEXT" >> "$GITHUB_OUTPUT"
 
-        # Find latest upstream chrome/m* branch (no clone needed)
         LATEST=$(git ls-remote --heads https://github.com/google/skia.git 'refs/heads/chrome/m*' \
           | sed -n 's|.*refs/heads/chrome/m\([0-9]*\)$|\1|p' \
           | sort -n | tail -1)
         echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
 
-        # Pick target
         if [ "$MODE" = "latest" ]; then
           TARGET="$LATEST"
         elif [ "$MODE" = "current" ]; then
@@ -57,15 +53,10 @@ on:
         fi
         echo "target=$TARGET" >> "$GITHUB_OUTPUT"
 
-        # Verify upstream branch exists
         if ! git ls-remote --exit-code https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" >/dev/null 2>&1; then
           echo "::notice::upstream/chrome/m${TARGET} does not exist yet"
           exit 1
         fi
-
-        # Note: we can't reliably check if the autobump branch is up-to-date
-        # from pre-activation (no clone, merge commits != upstream tip).
-        # The agent does the real check with git log HEAD..upstream after checkout.
 
         echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
 jobs:
@@ -89,7 +80,6 @@ tools:
     toolsets: [repos, pull_requests]
     allowed-repos: ["mono/skia", "mono/skiasharp"]
     min-integrity: none
-    github-token: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
   bash: ["*"]
   edit:
 network:
@@ -99,6 +89,106 @@ network:
 permissions:
   contents: read
   pull-requests: read
+post-steps:
+  - name: Push branches and create PRs
+    env:
+      GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+      TARGET: ${{ needs.pre_activation.outputs.target }}
+      CURRENT: ${{ needs.pre_activation.outputs.current }}
+    run: |
+      set -euo pipefail
+      BRANCH="autobump/skia-m${TARGET}"
+
+      # Read the agent's summary from workspace (if it wrote one)
+      SUMMARY=""
+      if [ -f /tmp/gh-aw/agent/autobump-summary.md ]; then
+        SUMMARY=$(cat /tmp/gh-aw/agent/autobump-summary.md)
+      fi
+
+      # --- Push submodule branch to mono/skia ---
+      cd externals/skia
+      if git rev-parse --verify "$BRANCH" &>/dev/null; then
+        echo "Pushing $BRANCH to mono/skia..."
+        git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/skia.git"
+        git push origin "$BRANCH" --force-with-lease 2>/dev/null || git push -u origin "$BRANCH"
+
+        # Create or update mono/skia PR
+        SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+        if [ -z "$SKIA_PR" ]; then
+          echo "Creating mono/skia PR..."
+          SKIA_PR=$(gh pr create --repo mono/skia \
+            --head "$BRANCH" --base skiasharp \
+            --title "[autobump] Update skia to milestone ${TARGET}" \
+            --draft \
+            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
+
+      ${SUMMARY}
+
+      Created by auto-skia-track workflow." \
+            --json number --jq '.number' 2>/dev/null || echo "")
+          echo "Created mono/skia PR #$SKIA_PR"
+        else
+          echo "mono/skia PR #$SKIA_PR already exists, updating description..."
+          gh pr edit "$SKIA_PR" --repo mono/skia \
+            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
+
+      ${SUMMARY}
+
+      Created by auto-skia-track workflow. Last updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>/dev/null || true
+        fi
+      else
+        echo "No submodule branch $BRANCH found — agent may have determined no work needed"
+      fi
+
+      # --- Push SkiaSharp branch ---
+      cd "$GITHUB_WORKSPACE"
+      if git diff --cached --quiet && git diff --quiet; then
+        echo "No SkiaSharp changes to push"
+        exit 0
+      fi
+
+      # Stage all changes and commit on the autobump branch
+      git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
+      git add -A
+      git diff --cached --quiet || git commit -m "Bump skia to milestone ${TARGET}
+
+      Automated merge of upstream chrome/m${TARGET}."
+
+      echo "Pushing $BRANCH to mono/SkiaSharp..."
+      git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp.git"
+      git push origin "$BRANCH" --force-with-lease 2>/dev/null || git push -u origin "$BRANCH"
+
+      # Create or update mono/SkiaSharp PR
+      SS_PR=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+      SKIA_PR_LINK=""
+      if [ -n "${SKIA_PR:-}" ]; then
+        SKIA_PR_LINK="**Companion skia PR:** https://github.com/mono/skia/pull/$SKIA_PR"
+      fi
+
+      if [ -z "$SS_PR" ]; then
+        echo "Creating mono/SkiaSharp PR..."
+        gh pr create --repo mono/SkiaSharp \
+          --head "$BRANCH" --base main \
+          --title "[autobump] Bump skia to milestone ${TARGET}" \
+          --draft \
+          --body "Automated Skia milestone bump from m${CURRENT} to m${TARGET}.
+
+      $SKIA_PR_LINK
+
+      ${SUMMARY}
+
+      Created by auto-skia-track workflow."
+      else
+        echo "mono/SkiaSharp PR #$SS_PR already exists, updating description..."
+        gh pr edit "$SS_PR" --repo mono/SkiaSharp \
+          --body "Automated Skia milestone bump from m${CURRENT} to m${TARGET}.
+
+      $SKIA_PR_LINK
+
+      ${SUMMARY}
+
+      Last updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>/dev/null || true
+      fi
 safe-outputs:
   create-pull-request:
     if-no-changes: ignore
@@ -171,31 +261,10 @@ cd externals/skia
 git add -A && git commit -m "Adapt SkiaSharp shims for m${{ needs.pre_activation.outputs.target }}"
 ```
 
-## Step 4 — Push submodule and create mono/skia PR
+## Step 4 — Commit submodule changes
 
-Configure git to use the autobump token for pushing to mono/skia, then push and create PR:
-
-```bash
-cd externals/skia
-git remote set-url origin "https://x-access-token:${SECRET_SKIASHARP_AUTOBUMP_TOKEN}@github.com/mono/skia.git"
-git push origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}" --force-with-lease 2>/dev/null || \
-  git push -u origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
-```
-
-Then create the mono/skia PR using `gh` CLI:
-
-```bash
-cd externals/skia
-export GH_TOKEN="${SECRET_SKIASHARP_AUTOBUMP_TOKEN}"
-gh pr create --repo mono/skia \
-  --head "autobump/skia-m${{ needs.pre_activation.outputs.target }}" \
-  --base skiasharp \
-  --title "[autobump] Update skia to milestone ${{ needs.pre_activation.outputs.target }}" \
-  --draft \
-  --body "Breaking change analysis and merge details here"
-```
-
-Include the breaking change analysis from Step 1 in the PR body.
+All submodule work stays local — the post-step handles pushing and PR creation.
+Make sure all changes in `externals/skia` are committed on the `autobump/skia-m${{ needs.pre_activation.outputs.target }}` branch.
 
 ## Step 5 — Update SkiaSharp parent repo
 
@@ -210,34 +279,14 @@ Follow **Phases 6–9** of the skill:
    dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
    ```
 
-## Step 6 — Push SkiaSharp branch and create PR
+## Step 6 — Write summary
 
-Push the SkiaSharp changes and create the PR using `gh` CLI:
+Write a markdown summary of everything you did to `/tmp/gh-aw/agent/autobump-summary.md`.
+The post-step will include this in the PR descriptions.
 
-```bash
-cd "$GITHUB_WORKSPACE"
-git checkout -b "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
-git add -A
-git commit -m "Bump skia to milestone ${{ needs.pre_activation.outputs.target }}
-
-Automated merge of upstream chrome/m${{ needs.pre_activation.outputs.target }}."
-
-# Push using the autobump token
-git remote set-url origin "https://x-access-token:${SECRET_SKIASHARP_AUTOBUMP_TOKEN}@github.com/mono/SkiaSharp.git"
-git push origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}" --force-with-lease 2>/dev/null || \
-  git push -u origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
-```
-
-Then create the mono/SkiaSharp PR:
-
-```bash
-export GH_TOKEN="${SECRET_SKIASHARP_AUTOBUMP_TOKEN}"
-gh pr create --repo mono/SkiaSharp \
-  --head "autobump/skia-m${{ needs.pre_activation.outputs.target }}" \
-  --base main \
-  --title "[autobump] Bump skia to milestone ${{ needs.pre_activation.outputs.target }}" \
-  --draft \
-  --body "Breaking change analysis and companion PR link here"
-```
-
-Include in the PR body: breaking change analysis, link to the companion mono/skia PR from Step 4, build/test status.
+Include:
+- Breaking change analysis table from Step 1
+- What conflicts were resolved and how
+- What C API / C# fixes were applied
+- Build and test results
+- Any issues that need human attention
