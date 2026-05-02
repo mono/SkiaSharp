@@ -1,13 +1,12 @@
 {
-  "_comment": "Dependency graph configuration. Declares what to scan and how files connect.",
+  "_comment": "Repository dependency graph configuration.",
 
   "scan": [
     "native/**/*",
     "scripts/infra/**/*",
-    "scripts/cake/**/*",
     "scripts/azure-*.yml",
-    "build.cake",
-    "scripts/VERSIONS.txt"
+    "scripts/VERSIONS.txt",
+    "build.cake"
   ],
 
   "targets": [
@@ -52,7 +51,7 @@
       "resolve": "root"
     },
     {
-      "_comment": "YAML script invocations (infra paths)",
+      "_comment": "YAML script invocations",
       "files": "**/*.yml",
       "pattern": "(?:\\./|.\\\\)?scripts[/\\\\]infra[/\\\\]([a-zA-Z0-9_./-]+\\.(?:ps1|sh))",
       "resolve": "prefix",

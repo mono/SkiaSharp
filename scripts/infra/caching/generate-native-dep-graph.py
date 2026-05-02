@@ -6,7 +6,7 @@ Scans the repository for files matching configured globs, discovers
 connections between them using regex link rules, then computes the
 transitive dependency set for each target.
 
-Configuration (native-build-deps.config.json):
+Configuration (repo-deps.config.json):
 
   scan:       Globs for files to index
   targets:    Globs for which files are build entry points
@@ -21,7 +21,7 @@ Usage:
     python3 scripts/generate-native-dep-graph.py [--root .] [--config ...]
 
 Output:
-    scripts/native-build-deps.json   (machine-readable)
+    scripts/repo-deps.json   (machine-readable)
     scripts/native-build-deps.md     (human-readable)
 """
 
@@ -471,8 +471,8 @@ def load_config(args_config, output_path):
         config_path = Path(args_config)
     else:
         for candidate in [
-            output_path.with_name("native-build-deps.config.json"),
-            Path(__file__).resolve().parent / "native-build-deps.config.json",
+            output_path.with_name("repo-deps.config.json"),
+            Path(__file__).resolve().parent / "repo-deps.config.json",
         ]:
             if candidate.exists():
                 config_path = candidate
@@ -503,7 +503,7 @@ def main():
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
-    output_path = Path(args.output) if args.output else root / "scripts" / "infra" / "caching" / "native-build-deps.json"
+    output_path = Path(args.output) if args.output else root / "scripts" / "infra" / "caching" / "repo-deps.json"
     config = load_config(args.config, output_path)
 
     print("Root: %s\n" % root)
