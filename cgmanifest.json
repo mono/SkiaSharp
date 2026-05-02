@@ -3,22 +3,23 @@
   "Version": 1,
   "registrations": [
     {
-      "comment": "Security-relevant dependencies - using 'other' type with canonical names for CVE matching",
+      "comment": "Security-relevant dependencies - using 'other' type with canonical upstream names for CVE matching. Actual code comes from Chromium forks (see DEPS) but CVEs are filed against the upstream projects.",
       "component": {
         "type": "other",
         "other": {
           "name": "libpng",
           "version": "1.6.58",
-          "downloadUrl": "https://github.com/glennrp/libpng"
+          "downloadUrl": "https://github.com/pnggroup/libpng"
         }
       }
     },
     {
+      "comment": "Used by both Skia (via DEPS -> chromium fork) and ANGLE (via submodule -> same chromium fork). CVEs are filed against upstream madler/zlib.",
       "component": {
         "type": "other",
         "other": {
           "name": "zlib",
-          "version": "1.3.0.1",
+          "version": "1.3.2",
           "downloadUrl": "https://github.com/madler/zlib"
         }
       }
@@ -98,7 +99,7 @@
         "type": "other",
         "other": {
           "name": "dng_sdk",
-          "version": "1.6.0",
+          "version": "1.4.0",
           "downloadUrl": "https://android.googlesource.com/platform/external/dng_sdk"
         }
       }
@@ -109,7 +110,7 @@
         "type": "other",
         "other": {
           "name": "VulkanMemoryAllocator",
-          "version": "3.0.1",
+          "version": "3.2.1",
           "downloadUrl": "https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator"
         }
       }
@@ -119,17 +120,18 @@
         "type": "other",
         "other": {
           "name": "SPIRV-Cross",
-          "version": "vulkan-sdk-1.3.268.0",
+          "version": "vulkan-sdk-1.3.275.0",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Cross"
         }
       }
     },
     {
+      "comment": "Pinned to commit 169895d (2020-08-18), header declares version 2.0.0-development",
       "component": {
         "type": "other",
         "other": {
           "name": "D3D12MemoryAllocator",
-          "version": "2.0.1",
+          "version": "2.0.0-development",
           "downloadUrl": "https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator"
         }
       }
@@ -139,7 +141,7 @@
         "type": "other",
         "other": {
           "name": "vulkan-headers",
-          "version": "1.3.301",
+          "version": "1.4.345",
           "downloadUrl": "https://github.com/KhronosGroup/Vulkan-Headers"
         }
       }
@@ -161,7 +163,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/google/angle.git",
-          "commitHash": "chromium/6275"
+          "commitHash": "ea1cea778c4a2312ef1b963b29a62fe595dd4df8"
         }
       }
     },
@@ -171,7 +173,7 @@
         "other": {
           "name": "angle",
           "version": "chromium/6275",
-          "downloadUrl": "https://github.com/ArtifexSoftware/angle"
+          "downloadUrl": "https://github.com/google/angle"
         }
       }
     },
@@ -182,7 +184,7 @@
         "other": {
           "name": "jsoncpp",
           "version": "1.9.4",
-          "downloadUrl": "https://github.com/nicknaso/jsoncpp"
+          "downloadUrl": "https://github.com/open-source-parsers/jsoncpp"
         }
       }
     },
@@ -214,7 +216,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/mono/skia.git",
-          "commitHash": "e09e6c1349c2e1bab47ed32675d03be951250f8e"
+          "commitHash": "c00877ea9fa7e69d3985801a82c96f7d6fcdda30"
         }
       }
     },
