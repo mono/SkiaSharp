@@ -92,19 +92,22 @@ jobs:
       latest: ${{ steps.detect.outputs.latest }}
       target: ${{ steps.detect.outputs.target }}
       mode: ${{ steps.detect.outputs.mode }}
-env:
-  AUTOBUMP_TARGET: ${{ needs.pre_activation.outputs.target }}
-  AUTOBUMP_CURRENT: ${{ needs.pre_activation.outputs.current }}
 post-steps:
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
     run: |
       set -euo pipefail
-      TARGET="${AUTOBUMP_TARGET}"
-      CURRENT="${AUTOBUMP_CURRENT}"
 
-      if [ -z "$TARGET" ]; then
+      # Read target from file the agent wrote
+      if [ ! -f /tmp/gh-aw/agent/autobump-env.sh ]; then
+        echo "No autobump-env.sh found — agent may have determined no work needed"
+        exit 0
+      fi
+      source /tmp/gh-aw/agent/autobump-env.sh
+      # Expects: TARGET=148, CURRENT=147
+
+      if [ -z "${TARGET:-}" ]; then
         echo "TARGET is empty — skipping push"
         exit 0
       fi
@@ -281,12 +284,17 @@ Follow **Phases 6–9** of the skill:
    dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
    ```
 
-## Step 6 — Write summary
+## Step 6 — Write summary and env file
 
-Write a markdown summary of everything you did to `/tmp/gh-aw/agent/autobump-summary.md`.
-The post-step will include this in the PR descriptions.
+Write two files for the post-step:
 
-Include:
+1. `/tmp/gh-aw/agent/autobump-env.sh` — variables for the push script:
+   ```bash
+   TARGET=${{ needs.pre_activation.outputs.target }}
+   CURRENT=${{ needs.pre_activation.outputs.current }}
+   ```
+
+2. `/tmp/gh-aw/agent/autobump-summary.md` — markdown summary of everything you did:
 - Breaking change analysis table from Step 1
 - What conflicts were resolved and how
 - What C API / C# fixes were applied
