@@ -63,6 +63,7 @@ namespace SkiaSharp
 		Bgra10101010XR = 25,
 		RgbF16F16F16x = 26,
 		R16Unorm = 27,
+		R16Float = 28,
 	}
 
 	public static partial class SkiaExtensions
