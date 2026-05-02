@@ -173,21 +173,29 @@ git add -A && git commit -m "Adapt SkiaSharp shims for m${{ needs.pre_activation
 
 ## Step 4 — Push submodule and create mono/skia PR
 
-Push the submodule branch to mono/skia:
+Configure git to use the autobump token for pushing to mono/skia, then push and create PR:
 
 ```bash
 cd externals/skia
+git remote set-url origin "https://x-access-token:${SECRET_SKIASHARP_AUTOBUMP_TOKEN}@github.com/mono/skia.git"
 git push origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}" --force-with-lease 2>/dev/null || \
   git push -u origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
 ```
 
-Then use the GitHub MCP `create_pull_request` tool to create a draft PR in mono/skia:
-- repo: `mono/skia`
-- head: `autobump/skia-m${{ needs.pre_activation.outputs.target }}`
-- base: `skiasharp`
-- title: `[autobump] Update skia to milestone ${{ needs.pre_activation.outputs.target }}`
-- body: Breaking change analysis from Step 1
-- draft: true
+Then create the mono/skia PR using `gh` CLI:
+
+```bash
+cd externals/skia
+export GH_TOKEN="${SECRET_SKIASHARP_AUTOBUMP_TOKEN}"
+gh pr create --repo mono/skia \
+  --head "autobump/skia-m${{ needs.pre_activation.outputs.target }}" \
+  --base skiasharp \
+  --title "[autobump] Update skia to milestone ${{ needs.pre_activation.outputs.target }}" \
+  --draft \
+  --body "Breaking change analysis and merge details here"
+```
+
+Include the breaking change analysis from Step 1 in the PR body.
 
 ## Step 5 — Update SkiaSharp parent repo
 
@@ -204,22 +212,32 @@ Follow **Phases 6–9** of the skill:
 
 ## Step 6 — Push SkiaSharp branch and create PR
 
-Push the SkiaSharp changes directly (safe-outputs can't handle 300+ file patches):
+Push the SkiaSharp changes and create the PR using `gh` CLI:
 
 ```bash
+cd "$GITHUB_WORKSPACE"
 git checkout -b "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
 git add -A
 git commit -m "Bump skia to milestone ${{ needs.pre_activation.outputs.target }}
 
 Automated merge of upstream chrome/m${{ needs.pre_activation.outputs.target }}."
+
+# Push using the autobump token
+git remote set-url origin "https://x-access-token:${SECRET_SKIASHARP_AUTOBUMP_TOKEN}@github.com/mono/SkiaSharp.git"
 git push origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}" --force-with-lease 2>/dev/null || \
   git push -u origin "autobump/skia-m${{ needs.pre_activation.outputs.target }}"
 ```
 
-Then use the GitHub MCP `create_pull_request` tool to create a draft PR in mono/SkiaSharp:
-- repo: `mono/SkiaSharp`
-- head: `autobump/skia-m${{ needs.pre_activation.outputs.target }}`
-- base: `main`
-- title: `[autobump] Bump skia to milestone ${{ needs.pre_activation.outputs.target }}`
-- body: Breaking change analysis, link to the companion mono/skia PR from Step 4, build/test status
-- draft: true
+Then create the mono/SkiaSharp PR:
+
+```bash
+export GH_TOKEN="${SECRET_SKIASHARP_AUTOBUMP_TOKEN}"
+gh pr create --repo mono/SkiaSharp \
+  --head "autobump/skia-m${{ needs.pre_activation.outputs.target }}" \
+  --base main \
+  --title "[autobump] Bump skia to milestone ${{ needs.pre_activation.outputs.target }}" \
+  --draft \
+  --body "Breaking change analysis and companion PR link here"
+```
+
+Include in the PR body: breaking change analysis, link to the companion mono/skia PR from Step 4, build/test status.
