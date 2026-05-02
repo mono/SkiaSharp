@@ -101,7 +101,7 @@ jobs:
       # native build caching — content-based cache for native build outputs
       - ${{ if startsWith(parameters.name, 'native_') }}:
         - pwsh: |
-            .\scripts\infra\native\shared\compute-native-cache-key.ps1 `
+            .\scripts\infra\caching\compute-native-cache-key.ps1 `
               -JobName '${{ parameters.name }}' `
               -Target '${{ parameters.target }}' `
               -Docker '${{ parameters.docker }}'

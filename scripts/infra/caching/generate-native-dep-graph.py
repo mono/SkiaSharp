@@ -503,7 +503,7 @@ def main():
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
-    output_path = Path(args.output) if args.output else root / "scripts" / "infra" / "native" / "tools" / "native-build-deps.json"
+    output_path = Path(args.output) if args.output else root / "scripts" / "infra" / "caching" / "native-build-deps.json"
     config = load_config(args.config, output_path)
 
     print("Root: %s\n" % root)

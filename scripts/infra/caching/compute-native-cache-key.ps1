@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS Compute a content-based cache key for a native build job.
 .DESCRIPTION
-    Reads the dependency graph from scripts/infra/native/tools/native-build-deps.json (generated
+    Reads the dependency graph from scripts/infra/caching/native-build-deps.json (generated
     by scripts/generate-native-dep-graph.py) and hashes ALL files that can
     affect the native build output for the given target.
 
@@ -64,7 +64,7 @@ if (-not $skiaSha) {
 # ---------------------------------------------------------------------------
 # 2. Load dependency graph
 # ---------------------------------------------------------------------------
-$depGraphPath = 'scripts/infra/native/tools/native-build-deps.json'
+$depGraphPath = 'scripts/infra/caching/native-build-deps.json'
 $platformDir = $Target -replace '^externals-', ''
 $dirsToHash = @()
 
