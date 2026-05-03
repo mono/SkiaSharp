@@ -53,9 +53,20 @@ function Get-FileHashString {
 # ---------------------------------------------------------------------------
 # 1. Skia submodule SHA — uniquely identifies ALL C++ source
 # ---------------------------------------------------------------------------
-$skiaSha = (git -C externals/skia rev-parse HEAD 2>$null)
+# Prefer SKIA_SHA_OVERRIDE (set from git ls-tree, no submodule clone needed)
+$skiaSha = $env:SKIA_SHA_OVERRIDE
 if (-not $skiaSha) {
-    Write-Warning "Could not read externals/skia HEAD — using 'unknown'"
+    $skiaSha = (git -C externals/skia rev-parse HEAD 2>$null)
+}
+if (-not $skiaSha) {
+    # Last resort: read from parent tree
+    $treeLine = (git ls-tree HEAD externals/skia 2>$null)
+    if ($treeLine -match '([0-9a-f]{40})') {
+        $skiaSha = $Matches[1]
+    }
+}
+if (-not $skiaSha) {
+    Write-Warning "Could not determine Skia submodule SHA — using 'unknown'"
     $skiaSha = 'unknown'
 } else {
     $skiaSha = $skiaSha.Trim()

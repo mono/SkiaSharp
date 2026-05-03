@@ -83,26 +83,26 @@ jobs:
         displayName: Get the volume information before the run
         condition: always()
 
-      # prepare
-      - checkout: self
-        submodules: recursive
-      - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
-        displayName: Configure build variables
+      # prepare — phase 1: shallow checkout (fast, no submodules)
+      - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.target, '')) }}:
+        - checkout: self
+          submodules: false
+          fetchDepth: 1
+        - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+          displayName: Configure build variables
 
-      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
-        displayName: Get the volume information after the checkout
-        condition: always()
-
-      # free disk space on hosted agents by removing pre-installed tools
-      - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:
-        - pwsh: ./scripts/infra/native/shared/free-disk-space.ps1
-          displayName: Free disk space
-
-      # native build caching — content-based cache for native build outputs
+      # native build caching — check cache BEFORE full checkout
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.target, '')) }}:
         - bash: python3 scripts/infra/caching/generate-dep-graph.py
           displayName: Generate native build dependency graph
         - pwsh: |
+            # Get submodule SHA from the tree (no submodule clone needed)
+            $skiaSha = (git ls-tree HEAD externals/skia 2>$null) -replace '.*\s([0-9a-f]{40})\s.*', '$1'
+            Write-Host "##vso[task.setvariable variable=SKIA_SHA_OVERRIDE]$skiaSha"
+            Write-Host "Skia submodule SHA (from tree): $skiaSha"
+          displayName: Get submodule SHA from tree
+        - pwsh: |
+            $env:SKIA_SHA_OVERRIDE = '$(SKIA_SHA_OVERRIDE)'
             .\scripts\infra\caching\compute-cache-key.ps1 `
               -JobName '${{ parameters.name }}' `
               -Target '${{ parameters.target }}' `
@@ -129,6 +129,30 @@ jobs:
                 Write-Host "##[section]Cache MISS — full native build required"
             }
           displayName: Evaluate native cache decision
+
+      # prepare — phase 2: full checkout (only if cache miss or non-native job)
+      - ${{ if not(and(startsWith(parameters.name, 'native_'), ne(parameters.target, ''))) }}:
+        - checkout: self
+          submodules: recursive
+        - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+          displayName: Configure build variables
+
+      - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.target, '')) }}:
+        - bash: |
+            echo "Upgrading to full checkout with submodules..."
+            git submodule update --init --recursive
+          displayName: Full checkout (submodules)
+          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
+        displayName: Get the volume information after the checkout
+        condition: always()
+
+      # free disk space on hosted agents — skip on cache hit (not building)
+      - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:
+        - pwsh: ./scripts/infra/native/shared/free-disk-space.ps1
+          displayName: Free disk space
+          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before the provisioning
