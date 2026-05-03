@@ -1,20 +1,6 @@
 {
   "_comment": "Repository dependency graph. Maps file paths to pipeline stages.",
 
-  "scan": [
-    "native/**/*",
-    "binding/**/*",
-    "source/**/*",
-    "tests/**/*",
-    "samples/**/*",
-    "scripts/infra/**/*",
-    "scripts/azure-*.yml",
-    "scripts/VERSIONS.txt",
-    "build.cake",
-    "nuget.config",
-    "global.json"
-  ],
-
   "stages": {
     "native": {
       "_comment": "C/C++ native library compilation",
@@ -32,6 +18,7 @@
       "paths": [
         "binding/**",
         "source/**",
+        "utils/**",
         "scripts/infra/managed/**",
         "build.cake",
         "nuget.config",
@@ -50,7 +37,8 @@
       "depends_on": ["managed"],
       "paths": [
         "tests/**",
-        "scripts/infra/tests/**"
+        "scripts/infra/tests/**",
+        "benchmarks/**"
       ]
     },
     "samples": {
@@ -69,6 +57,25 @@
       ]
     }
   },
+
+  "ignore": [
+    "_comment: Files matching these patterns trigger NO stages (docs-only, non-build)",
+    "documentation/**",
+    "images/**",
+    "interactive/**",
+    ".github/**",
+    ".devcontainer/**",
+    ".vscode/**",
+    ".agents/**",
+    "*.md",
+    "LICENSE.*",
+    "CODE-OF-CONDUCT.md",
+    "CONTRIBUTING.md",
+    "External-Dependency-Info.txt",
+    "cgmanifest.json"
+  ],
+
+  "_comment2": "Files not matching any stage or ignore pattern trigger ALL stages (safe fallback)",
 
   "global": [
     "scripts/infra/native/shared/**/*",

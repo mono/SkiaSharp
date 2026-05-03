@@ -110,6 +110,48 @@ foreach ($stage in $stages) {
 }
 
 # ---------------------------------------------------------------------------
+# 5b. Check for unmatched files — if any changed file doesn't match ANY
+#     stage or ignore pattern, trigger ALL stages (safe fallback)
+# ---------------------------------------------------------------------------
+$ignorePatterns = @($config.ignore | Where-Object { $_ -and -not $_.StartsWith('_comment') })
+$allStagePatterns = @()
+foreach ($stage in $stages) {
+    $allStagePatterns += @($stage.Value.paths)
+}
+
+$unmatchedFiles = @()
+foreach ($file in $changedFiles) {
+    $matchedAny = $false
+
+    # Check stage patterns
+    foreach ($pattern in $allStagePatterns) {
+        if (Test-PathMatch -File $file -Pattern $pattern) { $matchedAny = $true; break }
+    }
+
+    # Check ignore patterns
+    if (-not $matchedAny) {
+        foreach ($pattern in $ignorePatterns) {
+            if (Test-PathMatch -File $file -Pattern $pattern) { $matchedAny = $true; break }
+        }
+    }
+
+    if (-not $matchedAny) {
+        $unmatchedFiles += $file
+    }
+}
+
+if ($unmatchedFiles.Count -gt 0) {
+    Write-Host ""
+    Write-Host "⚠️  Unmatched files (triggering ALL stages as safe fallback):"
+    foreach ($f in $unmatchedFiles) {
+        Write-Host "  $f"
+    }
+    foreach ($stage in $stages) {
+        $stageResults[$stage.Name] = $true
+    }
+}
+
+# ---------------------------------------------------------------------------
 # 6. Propagate dependencies — if a stage is triggered, its dependents run too
 # ---------------------------------------------------------------------------
 $changed = $true
