@@ -99,7 +99,7 @@ jobs:
           displayName: Free disk space
 
       # native build caching — content-based cache for native build outputs
-      - ${{ if startsWith(parameters.name, 'native_') }}:
+      - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.target, '')) }}:
         - bash: python3 scripts/infra/caching/generate-dep-graph.py
           displayName: Generate native build dependency graph
         - pwsh: |
