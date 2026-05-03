@@ -4,7 +4,7 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-.\scripts\install-android-sdk.ps1
+.\scripts\infra\managed\install-android-sdk.ps1
 
 $sdkmanager = "$env:ANDROID_SDK_MANAGER_PATH"
 
