@@ -20,7 +20,7 @@ public class DrawingViewController : UIViewController
 	};
 
 	private readonly List<Stroke> strokes = new();
-	private SKPath? currentPath;
+	private SKPathBuilder? currentBuilder;
 	private SKColor currentColorLight = SKColors.Black;
 	private SKColor currentColorDark = SKColors.White;
 	private float brushSize = 4f;
@@ -108,22 +108,22 @@ public class DrawingViewController : UIViewController
 		switch (gesture.State)
 		{
 			case UIGestureRecognizerState.Began:
-				currentPath = new SKPath();
-				currentPath.MoveTo((float)loc.X, (float)loc.Y);
+				currentBuilder = new SKPathBuilder();
+				currentBuilder.MoveTo((float)loc.X, (float)loc.Y);
 				break;
 			case UIGestureRecognizerState.Changed:
-				currentPath?.LineTo((float)loc.X, (float)loc.Y);
+				currentBuilder?.LineTo((float)loc.X, (float)loc.Y);
 				break;
 			case UIGestureRecognizerState.Ended:
-				if (currentPath != null)
+				if (currentBuilder != null)
 				{
-					strokes.Add(new Stroke(currentPath, CurrentColor, brushSize));
-					currentPath = null;
+					strokes.Add(new Stroke(currentBuilder.Detach(), CurrentColor, brushSize));
+					currentBuilder = null;
 				}
 				break;
 			case UIGestureRecognizerState.Cancelled:
-				currentPath?.Dispose();
-				currentPath = null;
+				currentBuilder?.Dispose();
+				currentBuilder = null;
 				break;
 		}
 		skiaView.SetNeedsDisplay();
@@ -146,8 +146,8 @@ public class DrawingViewController : UIViewController
 		foreach (var stroke in strokes)
 			stroke.Path.Dispose();
 		strokes.Clear();
-		currentPath?.Dispose();
-		currentPath = null;
+		currentBuilder?.Dispose();
+		currentBuilder = null;
 		skiaView.SetNeedsDisplay();
 	}
 
@@ -171,11 +171,12 @@ public class DrawingViewController : UIViewController
 			canvas.DrawPath(stroke.Path, paint);
 		}
 
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
+			using var path = currentBuilder.Snapshot();
 			paint.Color = CurrentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(currentPath, paint);
+			canvas.DrawPath(path, paint);
 		}
 	}
 
