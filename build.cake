@@ -569,7 +569,7 @@ Task ("nuget-special")
             foreach (var version in versions) {
                 var packageVersion = version.Value;
 
-                var xdoc = XDocument.Load ("./scripts/nuget/_NativeAssets.nuspec");
+                var xdoc = XDocument.Load ("./scripts/infra/package/nuget/_NativeAssets.nuspec");
                 var metadata = xdoc.Root.Element ("metadata");
                 metadata.Element ("version").Value = packageVersion;
                 metadata.Element ("id").Value = id;
@@ -591,13 +591,13 @@ Task ("nuget-special")
                 {
                     var files = xdoc.Root.Element ("files");
                     files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
+                        new XAttribute ("src", MakeAbsolute (File ("./scripts/infra/package/nuget/README.md")).FullPath),
                         new XAttribute ("target", "README.md")));
                 }
 
                 xdoc.Save (nuspec);
                 RunDotNetPack (
-                    "./scripts/nuget/NuGet.csproj",
+                    "./scripts/infra/package/nuget/NuGet.csproj",
                     OUTPUT_SPECIAL_NUGETS_PATH,
                     bl: $".{id}.{version.Key}",
                     additionalArgs: "/restore /nologo",
@@ -676,7 +676,7 @@ Task ("nuget-special")
 
                     DeleteFiles ($"./output/{meta.SourceDir}/*.nuspec");
 
-                    var xdoc = XDocument.Load ("./scripts/nuget/_Dependencies.nuspec");
+                    var xdoc = XDocument.Load ("./scripts/infra/package/nuget/_Dependencies.nuspec");
                     var xmeta = xdoc.Root.Element ("metadata");
                     xmeta.Element ("id").Value = chunkId;
                     xmeta.Element ("version").Value = packageVersion;
@@ -692,12 +692,12 @@ Task ("nuget-special")
                             new XAttribute ("target", "tools/")));
                     }
                     files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
+                        new XAttribute ("src", MakeAbsolute (File ("./scripts/infra/package/nuget/README.md")).FullPath),
                         new XAttribute ("target", "README.md")));
 
                     xdoc.Save (nuspec);
                     RunDotNetPack (
-                        "./scripts/nuget/NuGet.csproj",
+                        "./scripts/infra/package/nuget/NuGet.csproj",
                         OUTPUT_SPECIAL_NUGETS_PATH,
                         bl: $".{chunkId}.{version.Key}",
                         additionalArgs: "/restore /nologo",
@@ -712,7 +712,7 @@ Task ("nuget-special")
 
                     DeleteFiles ($"./output/{meta.SourceDir}/*.nuspec");
 
-                    var xdoc = XDocument.Load ($"./scripts/nuget/{meta.Id}.nuspec");
+                    var xdoc = XDocument.Load ($"./scripts/infra/package/nuget/{meta.Id}.nuspec");
                     var xmeta = xdoc.Root.Element ("metadata");
                     xmeta.Element ("version").Value = packageVersion;
 
@@ -725,12 +725,12 @@ Task ("nuget-special")
 
                     var files = xdoc.Root.Element ("files");
                     files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
+                        new XAttribute ("src", MakeAbsolute (File ("./scripts/infra/package/nuget/README.md")).FullPath),
                         new XAttribute ("target", "README.md")));
 
                     xdoc.Save (nuspec);
                     RunDotNetPack (
-                        "./scripts/nuget/NuGet.csproj",
+                        "./scripts/infra/package/nuget/NuGet.csproj",
                         OUTPUT_SPECIAL_NUGETS_PATH,
                         bl: $".{meta.Id}.{version.Key}",
                         additionalArgs: "/restore /nologo",
