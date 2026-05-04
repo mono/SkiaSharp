@@ -1,30 +1,19 @@
 <#
 .SYNOPSIS Compute a content-based cache key for a native build job.
 .DESCRIPTION
-    Reads the dependency graph from scripts/infra/caching/repo-deps.json (generated
-    by scripts/generate-dep-graph.py) and hashes ALL files that can
-    affect the native build output for the given target.
-
-    Falls back to a basic key if the dep graph file is missing.
-
-    The key is emitted as the Azure DevOps pipeline variable NATIVE_CACHE_KEY.
+    Reads stage paths from repo-deps.config.json and hashes all files
+    in the directories that affect the given target. Combined with
+    submodule SHAs to produce a deterministic cache key.
 
 .PARAMETER JobName
-    The unique job name (e.g. native_win32_x64_windows). This encodes
-    architecture, variant, and feature flags for matrix jobs.
+    The unique job name (e.g. native_win32_x64_windows).
 
 .PARAMETER Target
-    The Cake target (e.g. externals-windows, externals-macos,
-    externals-linux-clang-cross). Used to locate the platform in the dep graph.
+    The Cake target (e.g. externals-windows). Used to find the
+    matching stage in the config.
 
 .PARAMETER Docker
-    Optional path to the Docker context directory (e.g. scripts/Docker/alpine).
-    When provided, all files in that Docker context are included in the hash.
-
-.EXAMPLE
-    .\scripts\compute-cache-key.ps1 -JobName 'native_win32_x64_windows' -Target 'externals-windows'
-.EXAMPLE
-    .\scripts\compute-cache-key.ps1 -JobName 'native_linux_arm64_alpine_linux' -Target 'externals-linux-clang-cross' -Docker 'scripts/Docker/alpine'
+    Optional Docker context directory path.
 #>
 param(
     [Parameter(Mandatory)]
@@ -38,112 +27,91 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-function Get-FileHashString {
-    param([string]$Path)
-    if (Test-Path $Path) {
-        return (Get-FileHash $Path -Algorithm SHA256).Hash
-    }
+function Get-FileHashString([string]$Path) {
+    if (Test-Path $Path) { return (Get-FileHash $Path -Algorithm SHA256).Hash }
     return ''
 }
 
 # ---------------------------------------------------------------------------
-# 1. Skia submodule SHA — uniquely identifies ALL C++ source
+# 1. Submodule SHAs (set by pipeline step or read from tree)
 # ---------------------------------------------------------------------------
-# Prefer SKIA_SHA_OVERRIDE (set from git ls-tree, no submodule clone needed)
-$skiaSha = $env:SKIA_SHA_OVERRIDE
+$skiaSha = $env:SKIA_SHA
 if (-not $skiaSha) {
-    $skiaSha = (git -C externals/skia rev-parse HEAD 2>$null)
-}
-if (-not $skiaSha) {
-    # Last resort: read from parent tree
     $treeLine = (git ls-tree HEAD externals/skia 2>$null)
-    if ($treeLine -match '([0-9a-f]{40})') {
-        $skiaSha = $Matches[1]
-    }
+    if ($treeLine -match '([0-9a-f]{40})') { $skiaSha = $Matches[1] }
 }
-if (-not $skiaSha) {
-    Write-Warning "Could not determine Skia submodule SHA — using 'unknown'"
-    $skiaSha = 'unknown'
-} else {
-    $skiaSha = $skiaSha.Trim()
+$depotSha = $env:DEPOT_SHA
+if (-not $depotSha) {
+    $treeLine = (git ls-tree HEAD externals/depot_tools 2>$null)
+    if ($treeLine -match '([0-9a-f]{40})') { $depotSha = $Matches[1] }
 }
+$skiaSha = ($skiaSha ?? 'unknown').Trim()
+$depotSha = ($depotSha ?? 'unknown').Trim()
 
 # ---------------------------------------------------------------------------
-# 2. Load dependency graph
+# 2. Find matching stage from config
 # ---------------------------------------------------------------------------
-$depGraphPath = 'scripts/infra/caching/repo-deps.json'
+$configPath = 'scripts/infra/caching/repo-deps.config.json'
 $platformDir = $Target -replace '^externals-', ''
-$dirsToHash = @()
 
-if (Test-Path $depGraphPath) {
-    $depGraph = Get-Content $depGraphPath -Raw | ConvertFrom-Json
+# Map target to stage name
+$stageName = "native_$($platformDir -replace '-','_')"
 
-    $targetInfo = $depGraph.targets.$platformDir
-    if ($targetInfo -and $targetInfo.dirs) {
-        $dirsToHash = @($targetInfo.dirs)
-        Write-Host "Dep graph: found $($dirsToHash.Count) directories for target '$platformDir'"
-    } else {
-        Write-Warning "Target '$platformDir' not found in dep graph — using fallback"
+$dirs = @()
+if (Test-Path $configPath) {
+    $config = Get-Content $configPath -Raw | ConvertFrom-Json
+    $stages = $config.stages.PSObject.Properties
+
+    # Collect paths by walking depends_on chain
+    function Get-StagePaths([string]$Name) {
+        $stage = $stages | Where-Object { $_.Name -eq $Name } | Select-Object -First 1
+        if (-not $stage) { return @() }
+        $paths = @($stage.Value.paths | Where-Object { $_ })
+        foreach ($dep in @($stage.Value.depends_on | Where-Object { $_ })) {
+            $paths += Get-StagePaths $dep
+        }
+        return $paths
     }
+
+    $dirs = @(Get-StagePaths $stageName | Select-Object -Unique)
+    Write-Host "Stage '$stageName': $($dirs.Count) path patterns (including inherited)"
+} else {
+    Write-Host "Config not found — using fallback"
+    $dirs = @("native/$platformDir", "scripts/infra/native/shared", "scripts/VERSIONS.txt")
 }
 
-# Add Docker context directory if applicable
+# Add Docker context if specified
 if ($Docker -and (Test-Path $Docker)) {
-    $dirsToHash = @($dirsToHash) + @($Docker) | Select-Object -Unique
-    Write-Host "Dep graph: added Docker context '$Docker'"
-}
-
-# Fallback: if dep graph is missing or target not found
-if ($dirsToHash.Count -eq 0) {
-    Write-Host "Using fallback directory list (dep graph not available)"
-    $dirsToHash = @(
-        "native/$platformDir",
-        'scripts/cake',
-        'scripts'
-    )
-    if ($Docker) {
-        $dirsToHash += $Docker
-    }
+    $dirs = @($dirs) + @($Docker)
 }
 
 # ---------------------------------------------------------------------------
-# 3. Hash all files in dependency directories
+# 3. Hash all files matching the path patterns
 # ---------------------------------------------------------------------------
 $fileHashes = @()
-$hashedFiles = @()
 $hashedDirs = @()
 
-foreach ($dir in $dirsToHash | Sort-Object) {
-    if (-not (Test-Path $dir)) { continue }
+foreach ($pattern in $dirs | Sort-Object -Unique) {
+    # Strip trailing /** for directory matching
+    $dirPath = $pattern -replace '/\*\*$', '' -replace '\*\*$', ''
 
-    if (Test-Path $dir -PathType Container) {
-        # Hash every file in the directory
-        $files = Get-ChildItem -Path $dir -File -Recurse -ErrorAction SilentlyContinue |
+    if (Test-Path $dirPath -PathType Container) {
+        $files = Get-ChildItem -Path $dirPath -File -Recurse -ErrorAction SilentlyContinue |
             Where-Object { $_.FullName -notmatch '[/\\](bin|obj|libs|tools|\.git)[/\\]' } |
             Sort-Object FullName
         foreach ($file in $files) {
             $hash = Get-FileHashString $file.FullName
-            if ($hash) {
-                $fileHashes += $hash
-                $hashedFiles += $file.FullName
-            }
+            if ($hash) { $fileHashes += $hash }
         }
-        $hashedDirs += "$dir/ ($($files.Count) files)"
-    } else {
-        # It's a single file
-        $hash = Get-FileHashString $dir
-        if ($hash) {
-            $fileHashes += $hash
-            $hashedFiles += $dir
-        }
+        $hashedDirs += "$dirPath/ ($($files.Count) files)"
+    } elseif (Test-Path $dirPath -PathType Leaf) {
+        $hash = Get-FileHashString $dirPath
+        if ($hash) { $fileHashes += $hash }
+        $hashedDirs += $dirPath
     }
 }
 
-# Combine all file hashes into a single composite hash
+# Composite hash of all file hashes
 $combinedInput = ($fileHashes -join '|')
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes = [System.Text.Encoding]::UTF8.GetBytes($combinedInput)
@@ -151,30 +119,25 @@ $compositeHash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2
 $compositeHash = $compositeHash.Substring(0, 24)
 
 # ---------------------------------------------------------------------------
-# 4. Compose the cache key
+# 4. Compose cache key
 # ---------------------------------------------------------------------------
-# Key segments:
-#   JobName        — unique per matrix combination (encodes arch, variant, features)
-#   skiaSha        — all C++ source code state
-#   compositeHash  — hash of all dependency files (scripts, Dockerfiles, etc.)
-$cacheKey = "native|$JobName|$skiaSha|$compositeHash"
+$cacheKey = "native|$JobName|$skiaSha|$depotSha|$compositeHash"
 
 # ---------------------------------------------------------------------------
 # 5. Output
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "╔══════════════════════════════════════════════════════════════╗"
-Write-Host "║  Native Build Cache Key                                     ║"
+Write-Host "║  Cache Key                                                   ║"
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
-Write-Host "║  Job:        $JobName"
-Write-Host "║  Target:     $Target → $platformDir"
-Write-Host "║  Skia SHA:   $skiaSha"
-Write-Host "║  Files hash: $compositeHash ($($hashedFiles.Count) files)"
-Write-Host "║  Docker:     $(if ($Docker) { $Docker } else { 'none' })"
+Write-Host "║  Job:      $JobName"
+Write-Host "║  Stage:    $stageName"
+Write-Host "║  Skia:     $skiaSha"
+Write-Host "║  Depot:    $depotSha"
+Write-Host "║  Files:    $compositeHash ($($fileHashes.Count) files)"
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
-Write-Host "║  Hashed directories:"
 foreach ($d in $hashedDirs) {
-    Write-Host "║    $d"
+    Write-Host "║  $d"
 }
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
 Write-Host "║  KEY: $cacheKey"

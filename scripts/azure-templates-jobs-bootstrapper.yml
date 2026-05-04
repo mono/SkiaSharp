@@ -93,16 +93,15 @@ jobs:
 
       # native build caching — check cache BEFORE full checkout
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.target, '')) }}:
-        - bash: python3 scripts/infra/caching/generate-dep-graph.py
-          displayName: Generate native build dependency graph
         - pwsh: |
-            # Get submodule SHA from the tree (no submodule clone needed)
+            # Get submodule SHAs from the tree (no submodule clone needed)
             $skiaSha = (git ls-tree HEAD externals/skia 2>$null) -replace '.*\s([0-9a-f]{40})\s.*', '$1'
-            Write-Host "##vso[task.setvariable variable=SKIA_SHA_OVERRIDE]$skiaSha"
-            Write-Host "Skia submodule SHA (from tree): $skiaSha"
-          displayName: Get submodule SHA from tree
+            $depotSha = (git ls-tree HEAD externals/depot_tools 2>$null) -replace '.*\s([0-9a-f]{40})\s.*', '$1'
+            Write-Host "##vso[task.setvariable variable=SKIA_SHA]$skiaSha"
+            Write-Host "##vso[task.setvariable variable=DEPOT_SHA]$depotSha"
+            Write-Host "Skia SHA: $skiaSha  Depot SHA: $depotSha"
+          displayName: Get submodule SHAs from tree
         - pwsh: |
-            $env:SKIA_SHA_OVERRIDE = '$(SKIA_SHA_OVERRIDE)'
             .\scripts\infra\caching\compute-cache-key.ps1 `
               -JobName '${{ parameters.name }}' `
               -Target '${{ parameters.target }}' `
