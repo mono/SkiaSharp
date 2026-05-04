@@ -94,10 +94,10 @@ jobs:
 
       # build caching — check cache BEFORE full checkout
       - ${{ if ne(parameters.cacheJob, '') }}:
-        - bash: |
-            python3 scripts/infra/caching/repo-deps.py cache-key \
-              --name '${{ parameters.name }}' \
-              --job '${{ parameters.cacheJob }}' \
+        - pwsh: |
+            python3 scripts/infra/caching/repo-deps.py cache-key `
+              --name '${{ parameters.name }}' `
+              --job '${{ parameters.cacheJob }}' `
               --docker '${{ parameters.docker }}'
           displayName: Compute cache key
         - task: Cache@2
@@ -133,9 +133,7 @@ jobs:
           displayName: Configure build variables
 
       - ${{ if ne(parameters.cacheJob, '') }}:
-        - bash: |
-            echo "Upgrading to full checkout with submodules..."
-            git submodule update --init --recursive
+        - pwsh: git submodule update --init --recursive
           displayName: Full checkout (submodules)
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
@@ -406,15 +404,6 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the build
         condition: always()
-
-      # cache hit summary
-      - ${{ if ne(parameters.cacheJob, '') }}:
-        - pwsh: |
-            Write-Host "##[section]✅ CACHE HIT — build skipped for ${{ parameters.name }}"
-            Write-Host "Output restored from content-based cache."
-            Write-Host "Cache key: $(CACHE_KEY)"
-          displayName: Cache hit — build skipped
-          condition: and(succeeded(), eq(variables['CACHE_SKIP'], 'true'))
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}
