@@ -48,7 +48,7 @@ esac
 
 [ -n "$VARIANT" ] && VARIANT="--variant=$VARIANT"
 
-(cd $DIR/../.. && 
+(cd $DIR/../../../../.. && 
     docker run --rm --name skiasharp-linux-$ABI-cross-$ARCH --volume $(pwd):/work skiasharp-linux-$ABI-cross-$ARCH /bin/bash -c " \
         dotnet tool restore ; \
         dotnet cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH $VARIANT $ADDITIONAL_ARGS $EXTRA_ARGS ")

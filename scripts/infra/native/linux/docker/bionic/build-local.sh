@@ -20,7 +20,7 @@ fi
     --build-arg BUILD_ARCH=$ARCH            \
     .)
 
-(cd "$DIR/../../.." && 
+(cd "$DIR/../../../../../.." && 
     docker run --rm $PLATFORM_ARGS --name "skiasharp-bionic-$ARCH" --volume "$(pwd)":/work "skiasharp-bionic-$ARCH" /bin/bash -c " \
         dotnet tool restore ; \
         dotnet cake --target=externals-linux --configuration=Release --buildarch=$ARCH --variant=bionic --verifyExcluded=fontconfig ")

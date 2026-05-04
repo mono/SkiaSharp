@@ -19,7 +19,7 @@ if [ -n "$FEATURES" ]; then
     FEATURES_ARG="--emscriptenFeatures='$FEATURES'"
 fi
 
-(cd "$DIR/../../../" && \
+(cd "$DIR/../../../../.." && \
     docker run --rm $PLATFORM_ARGS --name skiasharp-wasm-$EMSCRIPTEN_VERSION --volume "$(pwd)":/work skiasharp-wasm:$EMSCRIPTEN_VERSION /bin/bash -c "\
         dotnet tool restore ; \
         dotnet cake --target=externals-wasm --emscriptenVersion=$EMSCRIPTEN_VERSION $FEATURES_ARG")
