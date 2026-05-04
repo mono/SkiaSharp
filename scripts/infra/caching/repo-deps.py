@@ -48,7 +48,7 @@ def load_yaml(path):
 
 def walk_tree(node, prefix="", parent_paths=None, parent_subs=None):
     """Walk the job tree, yielding (full_path, accumulated_paths, accumulated_submodules) for each node."""
-    paths = list(parent_paths or []) + list(node.get("paths", []))
+    paths = list(parent_paths or []) + list(node.get("include", []))
     subs = list(parent_subs or []) + list(node.get("submodules", []))
     name = prefix.lstrip("/")
 
@@ -63,7 +63,7 @@ def resolve_job(config, job_path):
     """Find a job by its slash-separated path and return (paths, submodules)."""
     # Start with shared paths/subs from root
     shared = config.get("shared", {})
-    accumulated_paths = list(shared.get("paths", []))
+    accumulated_paths = list(shared.get("include", []))
     accumulated_subs = list(shared.get("submodules", []))
 
     parts = job_path.strip("/").split("/")
@@ -73,7 +73,7 @@ def resolve_job(config, job_path):
         if part not in node:
             return None, None
         node = node[part]
-        accumulated_paths.extend(node.get("paths", []))
+        accumulated_paths.extend(node.get("include", []))
         accumulated_subs.extend(node.get("submodules", []))
         if i < len(parts) - 1:
             node = node.get("children", {})
@@ -84,7 +84,7 @@ def resolve_job(config, job_path):
 def all_jobs(config):
     """Return dict of {job_path: (paths, submodules)} for all leaf and branch nodes."""
     shared = config.get("shared", {})
-    shared_paths = list(shared.get("paths", []))
+    shared_paths = list(shared.get("include", []))
     shared_subs = list(shared.get("submodules", []))
 
     result = {}
@@ -204,7 +204,7 @@ def cmd_analyze(config, args):
     print(f"Changed: {len(changed)} files\n")
 
     jobs = all_jobs(config)
-    ignore = [p for p in config.get("ignore", []) if not p.startswith("#")]
+    ignore = [p for p in config.get("exclude", []) if not p.startswith("#")]
 
     # Match files to jobs
     results = {}
@@ -240,7 +240,7 @@ def cmd_analyze(config, args):
         print("❌ UNMATCHED FILES:")
         for f in unmatched:
             print(f"  {f}")
-        print(f"\nAdd to a job or ignore in repo-deps.yaml")
+        print(f"\nAdd to a job or exclude list in repo-deps.yaml")
         return 1
 
     # Output
@@ -262,7 +262,7 @@ def cmd_validate(config, args):
                for f in tracked if f]
 
     jobs = all_jobs(config)
-    ignore = [p for p in config.get("ignore", []) if not p.startswith("#")]
+    ignore = [p for p in config.get("exclude", []) if not p.startswith("#")]
 
     all_patterns = []
     all_subs = []
@@ -288,7 +288,7 @@ def cmd_validate(config, args):
         print(f"\n❌ UNCOVERED FILES:")
         for f in uncovered:
             print(f"  {f}")
-        print(f"\nAdd to a job or ignore in repo-deps.yaml")
+        print(f"\nAdd to a job or exclude list in repo-deps.yaml")
         return 1
 
     print("\n✅ All files covered!")
