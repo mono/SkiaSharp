@@ -23,6 +23,7 @@ safe-outputs:
     draft: false
     allowed-base-branches: [main]
     preserve-branch-name: true
+    recreate-ref: true
 ---
 
 # Update Release Notes
