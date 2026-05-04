@@ -107,19 +107,13 @@ jobs:
             cacheHitVar: CACHE_HIT
           displayName: Build cache
         - pwsh: |
-            $branch = $env:BUILD_SOURCEBRANCH
             $cacheHit = '$(CACHE_HIT)'
             $forceBuild = $env:FORCE_BUILD
-            $isProtected = ($branch -eq 'refs/heads/main') -or
-                           ($branch -like 'refs/heads/release/*') -or
-                           ($branch -like 'refs/heads/develop*')
             if ($forceBuild -eq 'true') {
                 Write-Host "##[section]FORCE_BUILD set — full build for ${{ parameters.name }}"
-            } elseif ($cacheHit -eq 'true' -and -not $isProtected) {
+            } elseif ($cacheHit -eq 'true') {
                 Write-Host "##[section]Cache HIT — skipping build for ${{ parameters.name }}"
                 Write-Host "##vso[task.setvariable variable=CACHE_SKIP]true"
-            } elseif ($cacheHit -eq 'true') {
-                Write-Host "##[section]Cache HIT but on protected branch — building to seed cache"
             } else {
                 Write-Host "##[section]Cache MISS — full build required"
             }
