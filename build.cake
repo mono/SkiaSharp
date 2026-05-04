@@ -31,8 +31,8 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 #load "./scripts/infra/native/shared/native-shared.cake"
 
 #load "./scripts/infra/native/windows/msbuild.cake"
-#load "./scripts/infra/managed/cake/UtilsManaged.cake"
-#load "./scripts/infra/managed/cake/UpdateDocs.cake"
+#load "./scripts/infra/managed/UtilsManaged.cake"
+#load "./scripts/infra/managed/UpdateDocs.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
