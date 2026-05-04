@@ -9,8 +9,9 @@ Task("libSkiaSharp")
 {
     RunCake("../windows/build.cake", "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "nanoserver" },
-        { "gnArgs", "skia_use_vulkan=false skia_use_direct3d=false extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ]" },
+        { "gnArgs", "extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ]" },
         { "arch", "x64" },
+        { "supportVulkan", "false" },
         { "supportDirect3D", "false" },
     });
 
