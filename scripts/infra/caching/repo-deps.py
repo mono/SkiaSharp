@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build caching tool — cache keys, change analysis, and validation.
 
-Reads the job tree from repo-deps.yaml and provides three commands:
+Reads the job tree from repo-deps.json and provides three commands:
 
   cache-key   Compute a cache key for a job (hashes files + submodule SHAs)
   analyze     Determine which jobs need to run based on changed files
@@ -23,24 +23,13 @@ import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# YAML loading (PyYAML or fallback)
+# Config loading
 # ---------------------------------------------------------------------------
-try:
-    import yaml
-except ImportError:
-    yaml = None
+import json
 
-def load_yaml(path):
+def load_config(path):
     text = Path(path).read_text(encoding="utf-8")
-    if yaml:
-        return yaml.safe_load(text)
-    # Minimal fallback: try json (won't work for yaml, but gives a clear error)
-    import json
-    try:
-        return json.loads(text)
-    except Exception:
-        print("ERROR: PyYAML not installed. Run: pip install pyyaml", file=sys.stderr)
-        sys.exit(1)
+    return json.loads(text)
 
 # ---------------------------------------------------------------------------
 # Tree walking
@@ -240,7 +229,7 @@ def cmd_analyze(config, args):
         print("❌ UNMATCHED FILES (not covered by any job or exclude):")
         for f in unmatched:
             print(f"{f}")
-        print(f"\nAdd to a job or exclude list in repo-deps.yaml")
+        print(f"\nAdd to a job or exclude list in repo-deps.json")
         return 1
 
     # Output
@@ -323,7 +312,7 @@ def cmd_validate(config, args):
         print(f"\n❌ UNCOVERED FILES:")
         for f in uncovered:
             print(f"{f}")
-        print(f"\nAdd to a job or exclude list in repo-deps.yaml")
+        print(f"\nAdd to a job or exclude list in repo-deps.json")
         return 1
 
     print("\n✅ All files covered!")
@@ -353,8 +342,8 @@ def main():
         parser.print_help()
         return 1
 
-    config_path = args.config or str(Path(__file__).parent / "repo-deps.yaml")
-    config = load_yaml(config_path)
+    config_path = args.config or str(Path(__file__).parent / "repo-deps.json")
+    config = load_config(config_path)
 
     if args.command == "cache-key":
         return cmd_cache_key(config, args)
