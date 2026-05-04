@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, "release/**"]
     tags: ["v*"]
+    paths-ignore:
+      - "documentation/docfx/releases/**"
   workflow_dispatch:
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
