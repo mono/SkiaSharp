@@ -85,16 +85,11 @@ jobs:
         displayName: Get the volume information before the run
         condition: always()
 
-      # prepare — phase 1: shallow checkout (fast, no submodules)
+      # prepare - checkout strategy depends on caching
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - checkout: self
           submodules: false
           fetchDepth: 1
-        - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
-          displayName: Configure build variables
-
-      # build caching — check cache BEFORE full checkout
-      - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - pwsh: |
             python3 scripts/infra/caching/repo-deps.py cache-key `
               --name '${{ parameters.name }}' `
@@ -110,30 +105,28 @@ jobs:
         - pwsh: |
             $cacheHit = '$(CACHE_HIT)'
             if ($cacheHit -eq 'true') {
-                Write-Host "##[section]Cache HIT — skipping build for ${{ parameters.name }}"
+                Write-Host "##[section]Cache HIT - skipping build for ${{ parameters.name }}"
                 Write-Host "##vso[task.setvariable variable=CACHE_SKIP]true"
             } else {
-                Write-Host "##[section]Cache MISS — full build required"
+                Write-Host "##[section]Cache MISS - full build required"
             }
           displayName: Evaluate cache decision
-
-      # prepare — phase 2: full checkout (only if cache miss or non-native job)
-      - ${{ if not(and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true))) }}:
-        - checkout: self
-          submodules: recursive
-        - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
-          displayName: Configure build variables
-
-      - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - pwsh: git submodule update --init --recursive
           displayName: Full checkout (submodules)
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+
+      - ${{ else }}:
+        - checkout: self
+          submodules: recursive
+
+      - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+        displayName: Configure build variables
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the checkout
         condition: always()
 
-      # free disk space on hosted agents — skip on cache hit (not building)
+      # free disk space on hosted agents - skip on cache hit (not building)
       - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:
         - pwsh: ./scripts/infra/native/shared/free-disk-space.ps1
           displayName: Free disk space

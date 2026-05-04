@@ -27,7 +27,7 @@ stages:
               additionalArgs: --verifyExcluded=fontconfig
               gnArgs: skia_use_fontconfig=false
           matrix:
-            # Debian 13 / Trixie (gcc-14, glibc 2.38) — for archs that
+            # Debian 13 / Trixie (gcc-14, glibc 2.38) - for archs that
             # never had release-arch packages in Bullseye OR Bookworm:
             #   - loongarch64 (LoongArch port; not in Bullseye/Bookworm main,
             #                  first release arch in Trixie)
@@ -41,7 +41,7 @@ stages:
             # gcc-10-cross packages that contain a riscv64 sysroot at
             # glibc 2.31. The image installs those instead of LLVM
             # multiarch packages and the build links libstdc++/libgcc
-            # statically — keeps glibc parity with the other archs.
+            # statically - keeps glibc parity with the other archs.
             - ${{ each arch in split('arm,arm64,x86,x64,riscv64', ',') }}:
               - arch: ${{ arch }}
                 docker: scripts/infra/native/linux/docker/debian/11
