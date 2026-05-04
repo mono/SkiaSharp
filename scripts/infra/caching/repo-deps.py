@@ -268,36 +268,61 @@ def cmd_validate(config, args):
         all_include.extend(paths)
         all_subs.extend(subs)
 
-    # Check for include/exclude overlap
+    # Categorize every file
+    job_files = {}     # job_path → count
+    excluded_count = 0
+    uncovered = []
     overlaps = []
+
     for f in tracked:
-        in_include = match_any(f, all_include) or any(f == s or f.startswith(s + "/") for s in all_subs)
         in_exclude = match_any(f, exclude)
-        if in_include and in_exclude:
+
+        # Find which job(s) include this file
+        matched_jobs = []
+        for job_path, (paths, subs) in jobs.items():
+            if match_any(f, paths) or any(f == s or f.startswith(s + "/") for s in subs):
+                matched_jobs.append(job_path)
+
+        # Also check root include
+        in_root = match_any(f, config.get("include", []))
+
+        if in_exclude and (matched_jobs or in_root):
             overlaps.append(f)
+        elif matched_jobs or in_root:
+            for j in matched_jobs:
+                job_files[j] = job_files.get(j, 0) + 1
+        elif in_exclude:
+            excluded_count += 1
+        else:
+            uncovered.append(f)
+
+    # Output
+    print("╔══════════════════════════════════════════════════════════════╗")
+    print("║  Repo Deps Validation                                        ║")
+    print("╠══════════════════════════════════════════════════════════════╣")
+    print(f"║  Total tracked files: {len(tracked)}")
+    print(f"║  Excluded:            {excluded_count}")
+    print(f"║  Uncovered:           {len(uncovered)}")
+    print("╠══════════════════════════════════════════════════════════════╣")
+
+    # Show jobs with file counts
+    for job_path in sorted(jobs.keys()):
+        count = job_files.get(job_path, 0)
+        _, subs = jobs[job_path]
+        sub_str = ""
+        if subs:
+            sub_shas = [f"{s}:{get_submodule_sha(s)[:12]}" for s in sorted(set(subs))]
+            sub_str = "  " + " ".join(sub_shas)
+        print(f"║  {job_path:<30} {count:>4} files{sub_str}")
+
+    print("╚══════════════════════════════════════════════════════════════╝")
 
     if overlaps:
-        print(f"⚠️  {len(overlaps)} files match BOTH include and exclude (possible bug):")
+        print(f"\n⚠️  {len(overlaps)} files match BOTH include and exclude (bug?):")
         for f in overlaps[:10]:
             print(f"  {f}")
         if len(overlaps) > 10:
             print(f"  ... +{len(overlaps) - 10} more")
-        print()
-
-    # Check coverage
-    uncovered = []
-    covered = 0
-    for f in tracked:
-        if match_any(f, all_include + exclude):
-            covered += 1
-        elif any(f == s or f.startswith(s + "/") for s in all_subs):
-            covered += 1
-        else:
-            uncovered.append(f)
-
-    print(f"Total: {len(tracked)} files")
-    print(f"Covered: {covered}")
-    print(f"Uncovered: {len(uncovered)}")
 
     if uncovered:
         print(f"\n❌ UNCOVERED FILES:")
