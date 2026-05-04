@@ -11,7 +11,6 @@
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.4.1
 
 #tool nuget:?package=mdoc&version=5.8.9
-#tool nuget:?package=xunit.runner.console&version=2.4.2
 #tool nuget:?package=vswhere&version=2.8.4
 
 using System.Linq;
@@ -63,265 +62,43 @@ Task ("libs")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS - some test cases to make sure it works
+// TESTS - run test suites (isolated via RunCake)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
     .Description ("Run all tests.")
-    .IsDependentOn ("tests-netfx")
-    .IsDependentOn ("tests-netcore")
-    .IsDependentOn ("tests-android")
-    .IsDependentOn ("tests-ios")
-    .IsDependentOn ("tests-maccatalyst");
+    .IsDependentOn ("externals")
+    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests"));
 
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
-    .WithCriteria (IsRunningOnWindows ())
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    var failedTests = 0;
-
-    foreach ( var arch in new [] { "x86", "x64" }) {
-        if (Skip(arch)) continue;
-
-        var tfm = "net48";
-        var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
-        if (SUPPORT_VULKAN)
-            testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
-        if (SUPPORT_DIRECT3D)
-            testAssemblies.Add ("SkiaSharp.Direct3D.Tests.Console");
-        foreach (var testAssembly in testAssemblies) {
-            var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
-
-            // build
-            if (!SKIP_BUILD) {
-                RunDotNetBuild (csproj, platform: arch, properties: new Dictionary<string, string> {
-                    { "TargetFramework", tfm }
-                });
-            }
-
-            // test
-            DirectoryPath results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}-{arch}";
-            var assName = testAssembly.Replace (".Console", "");
-            EnsureDirectoryExists (results);
-            try {
-                RunTests ($"./tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.dll", results, arch == "x86");
-            } catch {
-                failedTests++;
-                if (THROW_ON_FIRST_TEST_FAILURE)
-                    throw;
-            }
-        }
-    }
-
-    if (failedTests > 0) {
-        throw new Exception ($"There were {failedTests} failed test runs.");
-    }
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-netfx"));
 
 Task ("tests-netcore")
     .Description ("Run all .NET Core tests.")
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    if (IsRunningOnLinux ()) {
-        try {
-            RunProcess ("dpkg", "-s libfontconfig1 ttf-ancient-fonts ttf-mscorefonts-installer", out var _);
-        } catch {
-            Warning ("Running tests on Linux requires that FontConfig and various font packages are installed. Run the `./scripts/install-linux-test-requirements.sh` script file.");
-        }
-    }
-
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    var failedTests = 0;
-
-    var tfm = "net10.0";
-    var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
-    if (SUPPORT_VULKAN)
-        testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
-    if (SUPPORT_DIRECT3D)
-        testAssemblies.Add ("SkiaSharp.Direct3D.Tests.Console");
-    foreach (var testAssembly in testAssemblies) {
-        var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
-
-        // build
-        if (!SKIP_BUILD) {
-            RunDotNetBuild (csproj, properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm }
-            });
-        }
-
-        // test
-        var results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
-        try {
-            RunDotNetTest (csproj, results, properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm }
-            });
-        } catch {
-            failedTests++;
-            if (THROW_ON_FIRST_TEST_FAILURE)
-                throw;
-        }
-    }
-
-    if (failedTests > 0) {
-        throw new Exception ($"There were {failedTests} failed test runs.");
-    }
-
-    if (COVERAGE) {
-        RunCodeCoverage ("./output/logs/testlogs/**/Coverage/**/*.xml", "./output/coverage");
-    }
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-netcore"));
 
 Task ("tests-android")
     .Description ("Run all Android tests.")
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
-    var configuration = "Release";
-    var tfm = "net10.0-android36.0";
-    var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
-
-    Information ("=== Android Test Build Configuration ===");
-    Information ("  Project:       {0}", csproj);
-    Information ("  Configuration: {0}", configuration);
-    Information ("  TFM:           {0}", tfm);
-    Information ("  RID:           {0}", rid);
-    Information ("  App Path:      {0}", app);
-    Information ("  OS:            {0}", RuntimeInformation.OSDescription);
-    Information ("  Arch:          {0}", RuntimeInformation.ProcessArchitecture);
-    Information ("========================================");
-
-    // build the app
-    if (!SKIP_BUILD) {
-        RunDotNetBuild (csproj,
-            configuration: configuration,
-            properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm },
-                { "RuntimeIdentifier", rid },
-            });
-    }
-
-    // run the tests
-    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
-    RunCake ("./scripts/infra/tests/xharness-android.cake", "Default", new Dictionary<string, string> {
-        { "app", MakeAbsolute (app).FullPath },
-        { "results", MakeAbsolute (results).FullPath },
-    });
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-android"));
 
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
-    var configuration = "Debug";
-    var tfm = "net10.0-ios";
-    var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
-
-    // package the app
-    if (!SKIP_BUILD) {
-        RunDotNetBuild (csproj,
-            configuration: configuration,
-            properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm },
-                { "RuntimeIdentifier", rid },
-            });
-    }
-
-    // find the .app bundle (name may differ from AssemblyName in .NET 10)
-    var appBundles = GetDirectories ($"{outputDir}/*.app");
-    if (!appBundles.Any ())
-        throw new Exception ($"No .app bundle found in {outputDir}");
-    var app = appBundles.First ();
-    Information ("Found app bundle: {0}", app);
-
-    // run the tests
-    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
-    RunCake ("./scripts/infra/tests/xharness-apple.cake", "Default", new Dictionary<string, string> {
-        { "app", MakeAbsolute (app).FullPath },
-        { "results", MakeAbsolute (results).FullPath },
-    });
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-ios"));
 
 Task ("tests-maccatalyst")
     .Description ("Run all Mac Catalyst tests.")
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
-    var configuration = "Debug";
-    var tfm = "net10.0-maccatalyst";
-    var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
-
-    // package the app
-    if (!SKIP_BUILD) {
-        RunDotNetBuild (csproj,
-            configuration: configuration,
-            properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm },
-                { "RuntimeIdentifier", rid },
-            });
-    }
-
-    // find the .app bundle (name may differ from AssemblyName in .NET 10)
-    var appBundles = GetDirectories ($"{outputDir}/*.app");
-    if (!appBundles.Any ())
-        throw new Exception ($"No .app bundle found in {outputDir}");
-    var app = appBundles.First ();
-    Information ("Found app bundle: {0}", app);
-
-    // run the tests
-    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
-    RunCake ("./scripts/infra/tests/xharness-apple.cake", "Default", new Dictionary<string, string> {
-        { "app", MakeAbsolute (app).FullPath },
-        { "results", MakeAbsolute (results).FullPath },
-        { "device", "maccatalyst" },
-    });
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-maccatalyst"));
 
 Task ("tests-wasm")
     .Description ("Run WASM tests.")
     .IsDependentOn ("externals-wasm")
-    .Does (() =>
-{
-    if (!SKIP_BUILD) {
-        RunDotNetBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
-    }
-
-    IProcess serverProc = null;
-    try {
-        var wasmProj = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj")).FullPath;
-        serverProc = RunAndReturnProcess ("dotnet", $"run --project {wasmProj} --no-build -c {CONFIGURATION}");
-        DotNetRun ("./utils/WasmTestRunner/WasmTestRunner.csproj",
-            $"--output=\"./output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}/\" " +
-            (string.IsNullOrEmpty (CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
-            "--verbose " +
-            "\"http://127.0.0.1:8000/\" ");
-    } finally {
-        serverProc?.Kill ();
-    }
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-wasm"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - building the package for NuGet.org
