@@ -160,10 +160,10 @@ def cmd_cache_key(config, args):
     for s in sub_shas:
         print(f"Sub:      {s}")
     print(f"Files:    {composite} ({len(file_hashes)} files)")
+    print(f"Key:      {cache_key}")
     print("\nHashed:")
     for d in hashed_dirs:
         print(f"  - {d}")
-    print(f"\nKey: {cache_key}\n")
 
     if os.environ.get("BUILD_BUILDID"):
         print(f"##vso[task.setvariable variable=CACHE_KEY]{cache_key}")
