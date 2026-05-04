@@ -407,10 +407,10 @@ jobs:
         displayName: Get the volume information after the build
         condition: always()
 
-      # cache hit summary for native builds
-      - ${{ if startsWith(parameters.name, 'native_') }}:
+      # cache hit summary
+      - ${{ if ne(parameters.cacheJob, '') }}:
         - pwsh: |
-            Write-Host "##[section]✅ CACHE HIT — native build skipped for ${{ parameters.name }}"
+            Write-Host "##[section]✅ CACHE HIT — build skipped for ${{ parameters.name }}"
             Write-Host "Output restored from content-based cache."
             Write-Host "Cache key: $(CACHE_KEY)"
           displayName: Cache hit — build skipped
