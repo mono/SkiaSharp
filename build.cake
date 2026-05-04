@@ -1,28 +1,6 @@
-#addin nuget:?package=Cake.FileHelpers&version=4.0.1
-#addin nuget:?package=Cake.Json&version=6.0.1
-#addin nuget:?package=NuGet.Packaging&version=6.9.1
-#addin nuget:?package=SharpCompress&version=0.32.2
-#addin nuget:?package=Mono.ApiTools.ApiInfo&version=1.4.1
-#addin nuget:?package=Mono.ApiTools.ApiDiff&version=1.4.1
-#addin nuget:?package=Mono.ApiTools.ApiDiffFormatted&version=1.4.1
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.4.1
-
-#tool nuget:?package=mdoc&version=5.8.9
-
-using System.Xml;
-using System.Xml.Linq;
-using SharpCompress.Common;
-using SharpCompress.Readers;
-using Mono.ApiTools;
-using NuGet.Packaging;
-using NuGet.Versioning;
-
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 #load "./scripts/infra/shared/shared.cake"
-
-#load "./scripts/infra/managed/utils-managed.cake"
-#load "./scripts/infra/managed/update-docs.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
@@ -170,9 +148,27 @@ Task ("nuget-special")
 
 Task ("update-docs")
     .Description ("Regenerate all docs.")
-    .IsDependentOn ("docs-api-diff")
-    .IsDependentOn ("docs-update-frameworks")
-    .IsDependentOn ("docs-format-docs");
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "update-docs"));
+
+Task ("docs-download-output")
+    .Description ("Download CI build output for docs.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-download-output"));
+
+Task ("docs-api-diff")
+    .Description ("Generate API diffs.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-api-diff"));
+
+Task ("docs-api-diff-past")
+    .Description ("Generate historical API diffs.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-api-diff-past"));
+
+Task ("docs-update-frameworks")
+    .Description ("Update doc frameworks.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-update-frameworks"));
+
+Task ("docs-format-docs")
+    .Description ("Format doc XML files.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-format-docs"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts

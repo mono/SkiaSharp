@@ -1,3 +1,89 @@
+#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+#addin nuget:?package=Cake.Json&version=6.0.1
+#addin nuget:?package=NuGet.Packaging&version=6.9.1
+#addin nuget:?package=SharpCompress&version=0.32.2
+#addin nuget:?package=Mono.ApiTools.ApiInfo&version=1.4.1
+#addin nuget:?package=Mono.ApiTools.ApiDiff&version=1.4.1
+#addin nuget:?package=Mono.ApiTools.ApiDiffFormatted&version=1.4.1
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.4.1
+
+#tool nuget:?package=mdoc&version=5.8.9
+
+using System.Xml;
+using System.Xml.Linq;
+using SharpCompress.Common;
+using SharpCompress.Readers;
+using Mono.ApiTools;
+using NuGet.Packaging;
+using NuGet.Versioning;
+
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
+
+#load "../shared/shared.cake"
+#load "../shared/download.cake"
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// DOCS UTILITIES
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void DecompressArchive(FilePath archive, DirectoryPath outputDir)
+{
+    using (var stream = System.IO.File.OpenRead(archive.FullPath))
+    using (var reader = ReaderFactory.Open(stream)) {
+        while(reader.MoveToNextEntry()) {
+            if (!reader.Entry.IsDirectory) {
+                reader.WriteEntryToDirectory(outputDir.FullPath, new ExtractionOptions {
+                    ExtractFullPath = true,
+                    Overwrite = true
+                });
+            }
+        }
+    }
+}
+
+IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(DirectoryPath rootDir)
+{
+    var platformDirs = GetDirectories($"{rootDir}/*");
+
+    // try find any cross-platform frameworks
+    foreach (var dir in platformDirs) {
+        var d = dir.GetDirectoryName().ToLower();
+        if (d.StartsWith("netstandard") || d.StartsWith("portable") || d.Equals("net6.0") || d.Equals("net7.0") || d.Equals("net8.0") || d.Equals("net9.0") || d.Equals("net10.0")) {
+            // we just want this single platform
+            yield return (dir, null);
+            yield break;
+        }
+    }
+
+    // there were no cross-platform libraries, so process each platform
+    foreach (var dir in platformDirs) {
+        var d = dir.GetDirectoryName().ToLower();
+        if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
+            yield return (dir, "android");
+        else if (d.StartsWith("net4"))
+            yield return (dir, "net");
+        else if (d.StartsWith("uap"))
+            yield return (dir, "uwp");
+        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
+            yield return (dir, "ios");
+        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
+            yield return (dir, "macos");
+        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
+            yield return (dir, "tvos");
+        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
+            yield return (dir, "watchos");
+        else if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
+            yield return (dir, "tizen");
+        else if (d.StartsWith("net") && d.Contains("-windows"))
+            yield return (dir, "windows");
+        else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
+            yield return (dir, "maccatalyst");
+        else if (d.StartsWith("netcoreapp"))
+            continue; // skip this one for now
+        else
+            throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
+    }
+}
 
 async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
@@ -687,3 +773,14 @@ Task ("docs-format-docs")
         typeCount, totalTypes, typeCount / totalTypes,
         memberCount, totalMembers, memberCount / totalMembers);
 });
+
+Task ("update-docs")
+    .Description ("Regenerate all docs.")
+    .IsDependentOn ("docs-api-diff")
+    .IsDependentOn ("docs-update-frameworks")
+    .IsDependentOn ("docs-format-docs");
+
+Task ("Default")
+    .IsDependentOn ("update-docs");
+
+RunTarget(TARGET);
