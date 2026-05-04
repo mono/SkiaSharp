@@ -14,6 +14,7 @@ stages:
           displayName: Android x86
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-android
+          cacheJob: native_android
           additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|x64 (macOS)
         parameters:
@@ -21,6 +22,7 @@ stages:
           displayName: Android x64
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-android
+          cacheJob: native_android
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|arm (macOS)
         parameters:
@@ -28,6 +30,7 @@ stages:
           displayName: Android arm
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-android
+          cacheJob: native_android
           additionalArgs: --buildarch=arm
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|arm64 (macOS)
         parameters:
@@ -35,6 +38,7 @@ stages:
           displayName: Android arm64
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-android
+          cacheJob: native_android
           additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native iOS (macOS)
         parameters:
@@ -42,30 +46,35 @@ stages:
           displayName: iOS
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-ios
+          cacheJob: native_ios
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Mac Catalyst (macOS)
         parameters:
           name: native_maccatalyst_macos
           displayName: Mac Catalyst
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-maccatalyst
+          cacheJob: native_maccatalyst
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native macOS (macOS)
         parameters:
           name: native_macos_macos
           displayName: macOS
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-macos
+          cacheJob: native_macos
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native tvOS (macOS)
         parameters:
           name: native_tvos_macos
           displayName: tvOS
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-tvos
+          cacheJob: native_tvos
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|x64 (macOS)
         parameters:
           name: native_tizen_x64_macos
           displayName: Tizen x64
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-tizen
+          cacheJob: native_tizen
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|arm64 (macOS)
         parameters:
@@ -73,4 +82,5 @@ stages:
           displayName: Tizen arm64
           buildAgent: ${{ parameters.buildAgentMacNative }}
           target: externals-tizen
+          cacheJob: native_tizen
           additionalArgs: --buildarch=arm64

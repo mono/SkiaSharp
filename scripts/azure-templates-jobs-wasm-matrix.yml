@@ -13,5 +13,6 @@ jobs:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         docker: scripts/infra/native/wasm/docker
         target: externals-wasm
+        cacheJob: native_wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
         additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"

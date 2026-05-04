@@ -4,6 +4,7 @@ parameters:
   buildAgent: ''                                # the configuration for the build agent
   packages: ''                                  # any additional packages
   target: ''                                    # the bootstrapper target
+  cacheJob: ''                                  # the job name in repo-deps.config.json for caching (empty = no caching)
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
@@ -84,15 +85,15 @@ jobs:
         condition: always()
 
       # prepare — phase 1: shallow checkout (fast, no submodules)
-      - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.target, '')) }}:
+      - ${{ if ne(parameters.cacheJob, '') }}:
         - checkout: self
           submodules: false
           fetchDepth: 1
         - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
           displayName: Configure build variables
 
-      # native build caching — check cache BEFORE full checkout
-      - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.target, '')) }}:
+      # build caching — check cache BEFORE full checkout
+      - ${{ if ne(parameters.cacheJob, '') }}:
         - pwsh: |
             # Get submodule SHAs from the tree (no submodule clone needed)
             $skiaSha = (git ls-tree HEAD externals/skia 2>$null) -replace '.*\s([0-9a-f]{40})\s.*', '$1'
@@ -100,48 +101,48 @@ jobs:
             Write-Host "##vso[task.setvariable variable=SKIA_SHA]$skiaSha"
             Write-Host "##vso[task.setvariable variable=DEPOT_SHA]$depotSha"
             Write-Host "Skia SHA: $skiaSha  Depot SHA: $depotSha"
-          displayName: Get submodule SHAs from tree
+          displayName: Get submodule SHAs
         - pwsh: |
             .\scripts\infra\caching\compute-cache-key.ps1 `
               -JobName '${{ parameters.name }}' `
-              -Target '${{ parameters.target }}' `
+              -CacheJob '${{ parameters.cacheJob }}' `
               -Docker '${{ parameters.docker }}'
-          displayName: Compute native build cache key
+          displayName: Compute cache key
         - task: Cache@2
           inputs:
-            key: $(NATIVE_CACHE_KEY)
+            key: $(CACHE_KEY)
             path: 'output'
-            cacheHitVar: NATIVE_CACHE_HIT
-          displayName: Native build cache
+            cacheHitVar: CACHE_HIT
+          displayName: Build cache
         - pwsh: |
             $branch = $env:BUILD_SOURCEBRANCH
-            $cacheHit = '$(NATIVE_CACHE_HIT)'
+            $cacheHit = '$(CACHE_HIT)'
             $isProtected = ($branch -eq 'refs/heads/main') -or
                            ($branch -like 'refs/heads/release/*') -or
                            ($branch -like 'refs/heads/develop*')
             if ($cacheHit -eq 'true' -and -not $isProtected) {
-                Write-Host "##[section]Cache HIT on branch '$branch' — skipping native build"
-                Write-Host "##vso[task.setvariable variable=NATIVE_CACHE_SKIP]true"
+                Write-Host "##[section]Cache HIT — skipping build for ${{ parameters.name }}"
+                Write-Host "##vso[task.setvariable variable=CACHE_SKIP]true"
             } elseif ($cacheHit -eq 'true') {
-                Write-Host "##[section]Cache HIT but on protected branch '$branch' — building to seed cache"
+                Write-Host "##[section]Cache HIT but on protected branch — building to seed cache"
             } else {
-                Write-Host "##[section]Cache MISS — full native build required"
+                Write-Host "##[section]Cache MISS — full build required"
             }
-          displayName: Evaluate native cache decision
+          displayName: Evaluate cache decision
 
       # prepare — phase 2: full checkout (only if cache miss or non-native job)
-      - ${{ if not(and(startsWith(parameters.name, 'native_'), ne(parameters.target, ''))) }}:
+      - ${{ if not(ne(parameters.cacheJob, '')) }}:
         - checkout: self
           submodules: recursive
         - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
           displayName: Configure build variables
 
-      - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.target, '')) }}:
+      - ${{ if ne(parameters.cacheJob, '') }}:
         - bash: |
             echo "Upgrading to full checkout with submodules..."
             git submodule update --init --recursive
           displayName: Full checkout (submodules)
-          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the checkout
@@ -151,7 +152,7 @@ jobs:
       - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:
         - pwsh: ./scripts/infra/native/shared/free-disk-space.ps1
           displayName: Free disk space
-          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before the provisioning
@@ -170,7 +171,7 @@ jobs:
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install additional package dependencies
           retryCountOnTaskFailure: 3
-          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'), ne('${{ parameters.packages }}', ''))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'), ne('${{ parameters.packages }}', ''))
 
       # install extra bits for the native builds
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipInstall, 'true')) }}:
@@ -178,7 +179,7 @@ jobs:
         - task: UsePythonVersion@0
           displayName: Switch to the correct Python version
           retryCountOnTaskFailure: 3
-          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           inputs:
             versionSpec: '3.x'
             architecture: 'x64'
@@ -186,30 +187,30 @@ jobs:
         - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
           displayName: Install Ninja
           retryCountOnTaskFailure: 3
-          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
           - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
             - pwsh: .\scripts\infra\native\android\install-android-ndk.ps1
               displayName: Install the Android NDK
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install tizen
           - ${{ if and(eq(parameters.installTizenSdk, 'true'), contains(parameters.name, '_tizen_')) }}:
             - pwsh: .\scripts\infra\native\tizen\install-tizen.ps1
               displayName: Install the Tizen SDK
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install llvm
           - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
             - pwsh: .\scripts\infra\native\windows\install-7zip.ps1
               displayName: Install 7-zip
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: .\scripts\infra\native\windows\install-llvm.ps1
               displayName: Install LLVM
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
@@ -218,28 +219,28 @@ jobs:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
             displayName: Install Ninja
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         # install the bits needed for Android on macOS and Windows
         - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
           # install the correct version of the JDK
           - pwsh: .\scripts\infra\managed\install-openjdk.ps1
             displayName: Install OpenJDK
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the correct version of the Android SDK
           - pwsh: .\scripts\infra\managed\install-android-sdk.ps1
             displayName: Install Android SDK
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the required version of the Android Platforms
           - pwsh: .\scripts\infra\managed\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
             displayName: Install Android APIs
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
           - task: UseDotNet@2
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             inputs:
               packageType: 'sdk'
               version: $(DOTNET_VERSION)
@@ -248,14 +249,14 @@ jobs:
           - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
             - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
               displayName: Fix the Microsoft.WinFX.* file
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # display dotnet info
           - pwsh: dotnet --info
             displayName: Display all the .NET information
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install workloads
           - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3
             displayName: Install the .NET workloads
 
@@ -264,44 +265,44 @@ jobs:
         - ${{ if not(startsWith(parameters.name, 'native_')) }}:
           - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if startsWith(parameters.name, 'native_') }}:
           - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION_NATIVE)
             displayName: Switch to the latest Xcode
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), eq(parameters.buildAgent.pool.os, 'linux'), ne(parameters.skipInstall, 'true')) }}:
         - bash: ./scripts/infra/native/wasm/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
           retryCountOnTaskFailure: 3
-          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the Windows tools
       - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
         # select the correct/latest version of Visual Studio
         - pwsh: .\scripts\infra\native\windows\select-vs.ps1
           displayName: Select Visual Studio
-          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
             - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
               displayName: Install the Windows 10 SDK 10.0.10240
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
               displayName: Install the Windows 10 SDK 10.0.16299
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
               displayName: Install the Windows 10 SDK 10.0.18362
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
               displayName: Install the Windows 10 SDK 10.0.19041
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install any .NET global tools
       - ${{ if ne(parameters.skipInstall, 'true') }}:
@@ -309,7 +310,7 @@ jobs:
           - pwsh: dotnet tool install -g ${{ tool }}
             displayName: Install ${{ tool }}
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before downloading artifacts
@@ -318,7 +319,7 @@ jobs:
       # download artifacts from other jobs in this pipeline run
       - template: /scripts/azure-templates-steps-download-artifacts.yml@self
         parameters:
-          condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           artifacts: ${{ parameters.requiredArtifacts }}
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
@@ -340,10 +341,10 @@ jobs:
         - ${{ if eq(parameters.docker, '') }}:
           - pwsh: dotnet --info
             displayName: Display all the .NET information
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - pwsh: dotnet tool restore
             displayName: Restore the .NET tools
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
             - pwsh: |
                 Get-Content $PSCommandPath
@@ -357,7 +358,7 @@ jobs:
                 AppxSymbolPackageEnabled: false
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
             - bash: |
                 cat ${BASH_SOURCE[0]}
@@ -368,12 +369,12 @@ jobs:
                 JavaSdkDirectory: $(JAVA_HOME)
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if ne(parameters.docker, '') }}:
           - ${{ if eq(parameters.use1ESPipelineTemplates, 'true') }}:
             - task: 1ES.BuildContainerImage@1
               displayName: Build the Docker image for ${{ parameters.docker }}
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
               inputs:
                 dockerfile: ${{ parameters.docker }}/Dockerfile
                 context: ${{ parameters.docker }}
@@ -388,7 +389,7 @@ jobs:
                 containerRegistry: skiasharp-docker
             - task: Docker@2
               displayName: Build the Docker image for ${{ parameters.docker }}
-              condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
               inputs:
                 command: build
                 buildContext: ${{ parameters.docker }}
@@ -400,12 +401,12 @@ jobs:
               sed -i 's/--gnArgs=\" \"//' cmd.sh
               cat cmd.sh
             displayName: Generate the script for the Docker image
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - bash: |
               docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash /work/cmd.sh
             displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
             retryCountOnTaskFailure: ${{ parameters.retryCount }}
-            condition: and(succeeded(), ne(variables['NATIVE_CACHE_SKIP'], 'true'))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the build
@@ -416,9 +417,9 @@ jobs:
         - pwsh: |
             Write-Host "##[section]✅ CACHE HIT — native build skipped for ${{ parameters.name }}"
             Write-Host "Output restored from content-based cache."
-            Write-Host "Cache key: $(NATIVE_CACHE_KEY)"
+            Write-Host "Cache key: $(CACHE_KEY)"
           displayName: Cache hit — build skipped
-          condition: and(succeeded(), eq(variables['NATIVE_CACHE_SKIP'], 'true'))
+          condition: and(succeeded(), eq(variables['CACHE_SKIP'], 'true'))
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}
