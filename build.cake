@@ -67,38 +67,41 @@ Task ("libs")
 
 Task ("tests")
     .Description ("Run all tests.")
-    .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests"));
+    .IsDependentOn ("tests-netfx")
+    .IsDependentOn ("tests-netcore")
+    .IsDependentOn ("tests-android")
+    .IsDependentOn ("tests-ios")
+    .IsDependentOn ("tests-maccatalyst");
 
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-netfx"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-desktop.cake", "tests-netfx"));
 
 Task ("tests-netcore")
     .Description ("Run all .NET Core tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-netcore"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-desktop.cake", "tests-netcore"));
 
 Task ("tests-android")
     .Description ("Run all Android tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-android"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-android.cake", "Default"));
 
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-ios"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-ios"));
 
 Task ("tests-maccatalyst")
     .Description ("Run all Mac Catalyst tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-maccatalyst"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-maccatalyst"));
 
 Task ("tests-wasm")
     .Description ("Run WASM tests.")
     .IsDependentOn ("externals-wasm")
-    .Does (() => RunCake ("./scripts/infra/tests/tests.cake", "tests-wasm"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-wasm.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - building the package for NuGet.org
