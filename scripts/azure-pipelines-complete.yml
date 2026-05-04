@@ -9,6 +9,10 @@ pr:
   - release/*
 
 parameters:
+  - name: enableCaching
+    displayName: "Enable build caching (skip native builds on cache hit):"
+    type: boolean
+    default: true
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
     type: object
@@ -73,10 +77,6 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-24.04
         os: linux
-  - name: enableCaching
-    displayName: 'Enable build caching (skip native builds on cache hit):'
-    type: boolean
-    default: true
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
