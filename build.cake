@@ -53,23 +53,10 @@ var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
 DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
 
-var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
-var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
-var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
 var BUILD_COUNTER = Argument ("buildCounter", EnvironmentVariable ("BUILD_COUNTER") ?? BUILD_NUMBER);
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
 var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
-
-var PREVIEW_NUGET_SUFFIX = "";
-if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
-} else {
-    PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
-}
-if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
-    PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
-}
 
 var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
     { "GIT_SHA", GIT_SHA },
@@ -81,14 +68,7 @@ var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
     { "PREVIEW_LABEL", PREVIEW_LABEL },
 };
 
-var CURRENT_PLATFORM = "";
-if (IsRunningOnWindows ()) {
-    CURRENT_PLATFORM = "Windows";
-} else if (IsRunningOnMacOs ()) {
-    CURRENT_PLATFORM = "Mac";
-} else if (IsRunningOnLinux ()) {
-    CURRENT_PLATFORM = "Linux";
-} else {
+if (string.IsNullOrEmpty (CURRENT_PLATFORM)) {
     throw new Exception ("This script is not running on a known platform.");
 }
 
@@ -158,9 +138,6 @@ var OBSOLETED_NUGETS = new Dictionary<string, Version> {
 var TRACKED_NUGETS = SUPPORTED_NUGETS
     .Concat(OBSOLETED_NUGETS)
     .ToDictionary(x => x.Key, x => x.Value);
-
-var PREVIEW_ONLY_NUGETS = new List<string> {
-};
 
 var DATE_TIME_NOW = DateTime.Now;
 var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_hhmmss");

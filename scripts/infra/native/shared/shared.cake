@@ -16,6 +16,31 @@ var ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariab
 
 DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
 
+var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
+var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
+var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
+
+var PREVIEW_NUGET_SUFFIX = "";
+if (!string.IsNullOrEmpty (FEATURE_NAME)) {
+    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
+} else {
+    PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
+}
+if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
+    PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
+}
+
+var CURRENT_PLATFORM = "";
+if (IsRunningOnWindows ()) {
+    CURRENT_PLATFORM = "Windows";
+} else if (IsRunningOnMacOs ()) {
+    CURRENT_PLATFORM = "Mac";
+} else if (IsRunningOnLinux ()) {
+    CURRENT_PLATFORM = "Linux";
+}
+
+var PREVIEW_ONLY_NUGETS = new List<string> {};
+
 Information("Arguments:");
 foreach (var arg in Arguments()) {
     foreach (var val in arg.Value) {
