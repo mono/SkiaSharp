@@ -175,7 +175,6 @@ Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
 #load "./scripts/infra/native/windows/msbuild.cake"
 #load "./scripts/infra/managed/cake/UtilsManaged.cake"
-#load "./scripts/infra/managed/cake/samples.cake"
 #load "./scripts/infra/managed/cake/externals.cake"
 #load "./scripts/infra/managed/cake/UpdateDocs.cake"
 
@@ -794,6 +793,15 @@ Task ("clean-managed")
 
     DeleteDir ("./output");
 });
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// SAMPLES - build sample projects (isolated via RunCake)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("samples")
+    .Description ("Build all sample projects.")
+    .IsDependentOn ("libs")
+    .Does (() => RunCake ("./scripts/infra/managed/cake/samples.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEFAULT - target for common development
