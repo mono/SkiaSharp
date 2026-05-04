@@ -8,7 +8,7 @@ using NuGet.Versioning;
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
-#load "UtilsManaged.cake"
+#load "utils-managed.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS DOWNLOAD — download pre-built native binaries from CI feed
