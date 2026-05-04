@@ -11,26 +11,11 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
-var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/native/windows/msbuild.cake"
-
-string GetSpectreLibPath(string arch)
-{
-    // Normalize architecture names to match spectre lib directory structure
-    var spectreArch = arch.ToLower() switch {
-        "win32" => "x86",
-        _ => arch.ToLower()
-    };
-
-    var spectrePaths = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/lib/spectre/{spectreArch}");
-    if (spectrePaths.Count == 0) {
-        throw new Exception($"Could not find spectre library path for {spectreArch}, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
-    }
-    return spectrePaths.First().FullPath;
-}
+#load "../../scripts/infra/native/windows/windows-shared.cake"
 
 string VARIANT = BUILD_VARIANT ?? "windows";
 

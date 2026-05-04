@@ -237,6 +237,10 @@ Task ("samples")
     .IsDependentOn ("libs")
     .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "Default"));
 
+Task ("samples-generate")
+    .Description ("Generate sample project files.")
+    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-generate"));
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEFAULT - target for common development
 ////////////////////////////////////////////////////////////////////////////////////////////////////
