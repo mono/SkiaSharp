@@ -76,12 +76,12 @@ Task ("tests")
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-desktop.cake", "tests-netfx"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-netfx.cake", "Default"));
 
 Task ("tests-netcore")
     .Description ("Run all .NET Core tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-desktop.cake", "tests-netcore"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-netcore.cake", "Default"));
 
 Task ("tests-android")
     .Description ("Run all Android tests.")
