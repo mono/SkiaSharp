@@ -241,9 +241,6 @@ Task ("samples-generate")
 // DEFAULT - target for common development
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("----------------------------------")
-    .Description ("--------------------------------------------------");
-
 Task ("Default")
     .Description ("Build all managed assemblies and external dependencies.")
     .IsDependentOn ("externals")
