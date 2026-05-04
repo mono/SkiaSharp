@@ -109,10 +109,7 @@ jobs:
           displayName: Build cache
         - pwsh: |
             $cacheHit = '$(CACHE_HIT)'
-            $forceBuild = $env:FORCE_BUILD
-            if ($forceBuild -eq 'true') {
-                Write-Host "##[section]FORCE_BUILD set — full build for ${{ parameters.name }}"
-            } elseif ($cacheHit -eq 'true') {
+            if ($cacheHit -eq 'true') {
                 Write-Host "##[section]Cache HIT — skipping build for ${{ parameters.name }}"
                 Write-Host "##vso[task.setvariable variable=CACHE_SKIP]true"
             } else {
