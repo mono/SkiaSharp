@@ -154,19 +154,16 @@ def cmd_cache_key(config, args):
     cache_key = f"{args.job}|{args.name}|{sub_key}|{composite}"
 
     print()
-    print("=== Cache Key ===")
-    print("---")
+    print("\n=== Cache Key ===")
     print(f"  Name:     {args.name}")
     print(f"  Job:      {args.job}")
     for s in sub_shas:
         print(f"  Sub:      {s}")
     print(f"  Files:    {composite} ({len(file_hashes)} files)")
-    print("---")
+    print("\n  Hashed:")
     for d in hashed_dirs:
-        print(f"  {d}")
-    print("---")
-    print(f"  KEY: {cache_key}")
-    print("")
+        print(f"    - {d}")
+    print(f"\n  Key: {cache_key}\n")
 
     if os.environ.get("BUILD_BUILDID"):
         print(f"##vso[task.setvariable variable=CACHE_KEY]{cache_key}")
@@ -247,14 +244,12 @@ def cmd_analyze(config, args):
         return 1
 
     # Output
-    print("=== Job Analysis ===")
-    print("---")
+    print("\n=== Job Analysis ===")
     for job_path in sorted(results.keys()):
         run = results[job_path]
         icon = "🔨" if run else "⏭️"
         label = "RUN" if run else "SKIP"
         print(f"  {icon} {job_path:<30} {label}")
-    print("")
     return 0
 
 
@@ -301,12 +296,11 @@ def cmd_validate(config, args):
             uncovered.append(f)
 
     # Output
-    print("=== Validation ===")
-    print("---")
+    print("\n=== Validation ===")
     print(f"  Total tracked files: {len(tracked)}")
     print(f"  Excluded:            {excluded_count}")
     print(f"  Uncovered:           {len(uncovered)}")
-    print("---")
+    print("\n  Jobs:")
 
     # Show jobs with file counts
     for job_path in sorted(jobs.keys()):
@@ -317,8 +311,6 @@ def cmd_validate(config, args):
             sub_shas = [f"{s}:{get_submodule_sha(s)[:12]}" for s in sorted(set(subs))]
             sub_str = "  " + " ".join(sub_shas)
         print(f"  {job_path:<30} {count:>4} files{sub_str}")
-
-    print("")
 
     if overlaps:
         print(f"\n⚠️  {len(overlaps)} files match BOTH include and exclude (bug?):")
