@@ -46,6 +46,8 @@ if (IsRunningOnWindows ()) {
     CURRENT_PLATFORM = "Mac";
 } else if (IsRunningOnLinux ()) {
     CURRENT_PLATFORM = "Linux";
+} else {
+    throw new Exception ("This script is not running on a known platform.");
 }
 
 var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {

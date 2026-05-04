@@ -31,12 +31,6 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 #load "./scripts/infra/shared/shared.cake"
 #load "./scripts/infra/native/shared/native-shared.cake"
 
-var MDocPath = Context.Tools.Resolve ("mdoc.exe");
-
-if (string.IsNullOrEmpty (CURRENT_PLATFORM)) {
-    throw new Exception ("This script is not running on a known platform.");
-}
-
 #load "./scripts/infra/native/windows/msbuild.cake"
 #load "./scripts/infra/managed/cake/UtilsManaged.cake"
 #load "./scripts/infra/managed/cake/externals.cake"

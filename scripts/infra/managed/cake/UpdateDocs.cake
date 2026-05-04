@@ -410,7 +410,7 @@ Task ("docs-update-frameworks")
     comparer = await CreateNuGetDiffAsync ();
     var refArgs = string.Join (" ", comparer.SearchPaths.Select (r => $"--lib=\"{r}\""));
     var fw = MakeAbsolute ((FilePath) fwxml);
-    RunProcess (MDocPath, new ProcessSettings {
+    RunProcess (Context.Tools.Resolve ("mdoc.exe"), new ProcessSettings {
         Arguments = $"update --debug --delete --out=\"{DOCS_PATH}\" --lang=DocId --frameworks={fw} {refArgs}",
         WorkingDirectory = docsTempPathFrameowrks
     });
