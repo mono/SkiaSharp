@@ -73,6 +73,10 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-24.04
         os: linux
+  - name: enableCaching
+    displayName: 'Enable build caching (skip native builds on cache hit):'
+    type: boolean
+    default: true
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
@@ -93,4 +97,4 @@ extends:
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
           buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
-          enableCaching: true
+          enableCaching: ${{ parameters.enableCaching }}
