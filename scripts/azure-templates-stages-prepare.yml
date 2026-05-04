@@ -15,5 +15,5 @@ stages:
             fetchDepth: 1
           - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
-          - pwsh: ./scripts/infra/caching/analyze-stage-changes.ps1 -Validate
+          - bash: python3 scripts/infra/caching/repo-deps.py validate
             displayName: Validate cache config coverage

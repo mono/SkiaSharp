@@ -94,11 +94,11 @@ jobs:
 
       # build caching — check cache BEFORE full checkout
       - ${{ if ne(parameters.cacheJob, '') }}:
-        - pwsh: |
-            .\scripts\infra\caching\compute-cache-key.ps1 `
-              -JobName '${{ parameters.name }}' `
-              -CacheJob '${{ parameters.cacheJob }}' `
-              -Docker '${{ parameters.docker }}'
+        - bash: |
+            python3 scripts/infra/caching/repo-deps.py cache-key \
+              --name '${{ parameters.name }}' \
+              --job '${{ parameters.cacheJob }}' \
+              --docker '${{ parameters.docker }}'
           displayName: Compute cache key
         - task: Cache@2
           inputs:
