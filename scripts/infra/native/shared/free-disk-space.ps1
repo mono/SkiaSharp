@@ -77,8 +77,6 @@ if ($IsLinux) {
     if ($agentTools) {
         Remove-IfExists (Join-Path $agentTools 'go')      # ~1.1 GB
         Remove-IfExists (Join-Path $agentTools 'CodeQL')   # ~1.7 GB
-        Remove-IfExists (Join-Path $agentTools 'Python')   # ~1.7 GB
-        Remove-IfExists (Join-Path $agentTools 'PyPy')     # ~524 MB
         Remove-IfExists (Join-Path $agentTools 'Ruby')     # ~312 MB
     }
 
@@ -98,8 +96,6 @@ if ($IsMacOS) {
     if ($agentTools) {
         Remove-IfExists (Join-Path $agentTools 'go')
         Remove-IfExists (Join-Path $agentTools 'CodeQL')
-        Remove-IfExists (Join-Path $agentTools 'Python')
-        Remove-IfExists (Join-Path $agentTools 'PyPy')
         Remove-IfExists (Join-Path $agentTools 'Ruby')
     }
 }
