@@ -50,30 +50,6 @@
         "externals/depot_tools"
       ]
     },
-    "native_apple_shared": {
-      "depends_on": [
-        "native_shared"
-      ],
-      "paths": [
-        "scripts/infra/native/apple/**"
-      ]
-    },
-    "native_windows_shared": {
-      "depends_on": [
-        "native_shared"
-      ],
-      "paths": [
-        "scripts/infra/native/windows/**"
-      ]
-    },
-    "native_linux_shared": {
-      "depends_on": [
-        "native_shared"
-      ],
-      "paths": [
-        "scripts/infra/native/linux/**"
-      ]
-    },
     "native_android": {
       "depends_on": [
         "native_shared"
@@ -85,85 +61,95 @@
     },
     "native_ios": {
       "depends_on": [
-        "native_apple_shared"
+        "native_shared"
       ],
       "paths": [
-        "native/ios/**"
+        "native/ios/**",
+        "scripts/infra/native/apple/**"
       ]
     },
     "native_macos": {
       "depends_on": [
-        "native_apple_shared"
+        "native_shared"
       ],
       "paths": [
-        "native/macos/**"
+        "native/macos/**",
+        "scripts/infra/native/apple/**"
       ]
     },
     "native_maccatalyst": {
       "depends_on": [
-        "native_apple_shared"
+        "native_shared"
       ],
       "paths": [
         "native/maccatalyst/**",
-        "native/ios/**"
+        "native/ios/**",
+        "scripts/infra/native/apple/**"
       ]
     },
     "native_tvos": {
       "depends_on": [
-        "native_apple_shared"
+        "native_shared"
       ],
       "paths": [
-        "native/tvos/**"
+        "native/tvos/**",
+        "scripts/infra/native/apple/**"
       ]
     },
     "native_windows": {
       "depends_on": [
-        "native_windows_shared"
+        "native_shared"
       ],
       "paths": [
-        "native/windows/**"
+        "native/windows/**",
+        "scripts/infra/native/windows/**"
       ]
     },
     "native_winui": {
       "depends_on": [
-        "native_windows_shared"
+        "native_shared"
       ],
       "paths": [
-        "native/winui/**"
+        "native/winui/**",
+        "scripts/infra/native/windows/**"
       ]
     },
     "native_winui_angle": {
       "depends_on": [
-        "native_windows_shared"
+        "native_shared"
       ],
       "paths": [
-        "native/winui-angle/**"
+        "native/winui-angle/**",
+        "scripts/infra/native/windows/**"
       ]
     },
     "native_nanoserver": {
       "depends_on": [
-        "native_windows_shared"
+        "native_shared"
       ],
       "paths": [
         "native/nanoserver/**",
-        "native/windows/**"
+        "native/windows/**",
+        "scripts/infra/native/windows/**"
       ]
     },
     "native_linux": {
       "depends_on": [
-        "native_linux_shared"
+        "native_shared"
       ],
       "paths": [
-        "native/linux/**"
+        "native/linux/**",
+        "scripts/infra/native/linux/**"
       ]
     },
     "native_linux_cross": {
       "depends_on": [
-        "native_linux_shared"
+        "native_shared"
       ],
       "paths": [
         "native/linux-clang-cross/**",
-        "native/linux/**"
+        "native/linux/**",
+        "scripts/infra/native/linux/**"
       ]
     },
     "native_linuxnodeps": {
