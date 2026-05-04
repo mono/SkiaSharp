@@ -193,21 +193,27 @@ def cmd_analyze(config, args):
         print(f"Protected branch '{branch}' — all jobs run")
         return 0
 
-    changed = git("diff", "--name-only", base, "HEAD").splitlines()
-    if not changed:
-        print("No changed files detected")
+    all_changed = git("diff", "--name-only", base, "HEAD").splitlines()
+    if not all_changed:
+        print("No changed files detected — all jobs skip")
         return 0
 
+    # Separate existing files from deleted ones
+    # Deleted files still trigger their job but shouldn't cause "unmatched" errors
+    changed = [f for f in all_changed if os.path.exists(f)]
+    deleted = [f for f in all_changed if not os.path.exists(f)]
+
     print(f"Base: {base}")
-    print(f"Changed: {len(changed)} files\n")
+    print(f"Changed: {len(changed)} files, {len(deleted)} deleted\n")
 
     jobs = all_jobs(config)
     ignore = [p for p in config.get("exclude", []) if not p.startswith("#")]
 
-    # Match files to jobs
+    # Match ALL changed files (including deleted) to jobs
+    # A deleted file in native/ios/ should still trigger native/ios
     results = {}
     for job_path, (paths, subs) in jobs.items():
-        matched = any(match_any(f, paths) for f in changed)
+        matched = any(match_any(f, paths) for f in all_changed)
         if not matched:
             matched = any(f == s or f.startswith(s + "/") for f in changed for s in subs)
         results[job_path] = matched
@@ -219,7 +225,7 @@ def cmd_analyze(config, args):
                 if other.startswith(job_path + "/"):
                     results[other] = True
 
-    # Check unmatched
+    # Check unmatched — only for files that still exist (deleted files are fine)
     all_patterns = []
     all_subs = []
     for paths, subs in jobs.values():
@@ -227,7 +233,7 @@ def cmd_analyze(config, args):
         all_subs.extend(subs)
 
     unmatched = []
-    for f in changed:
+    for f in changed:  # only existing files, not deleted
         if match_any(f, all_patterns + ignore):
             continue
         if any(f == s or f.startswith(s + "/") for s in all_subs):
@@ -235,7 +241,7 @@ def cmd_analyze(config, args):
         unmatched.append(f)
 
     if unmatched:
-        print("❌ UNMATCHED FILES:")
+        print("❌ UNMATCHED FILES (not covered by any job or exclude):")
         for f in unmatched:
             print(f"  {f}")
         print(f"\nAdd to a job or exclude list in repo-deps.yaml")
