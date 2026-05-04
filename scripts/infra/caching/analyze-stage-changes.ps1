@@ -269,6 +269,8 @@ while ($changed) {
 # ---------------------------------------------------------------------------
 # 7. Output
 # ---------------------------------------------------------------------------
+$isADO = $null -ne $env:BUILD_BUILDID
+
 Write-Host ""
 Write-Host "╔══════════════════════════════════════════════════╗"
 Write-Host "║  Job Analysis                                  ║"
@@ -278,9 +280,11 @@ foreach ($job in $jobs) {
     $run = $jobResults[$name]
     $icon = if ($run) { "🔨" } else { "⏭️" }
     $label = if ($run) { "RUN" } else { "SKIP" }
-    Write-Host "║  $icon $($name.PadRight(15)) $label"
+    Write-Host "║  $icon $($name.PadRight(25)) $label"
 
-    $varName = "JOB_$($name.ToUpper())"
-    Write-Host "##vso[task.setvariable variable=$varName;isOutput=true]$($run.ToString().ToLower())"
+    if ($isADO) {
+        $varName = "JOB_$($name.ToUpper())"
+        Write-Host "##vso[task.setvariable variable=$varName;isOutput=true]$($run.ToString().ToLower())"
+    }
 }
 Write-Host "╚══════════════════════════════════════════════════╝"

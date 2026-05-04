@@ -140,4 +140,6 @@ Write-Host "╠═════════════════════�
 Write-Host "║  KEY: $cacheKey"
 Write-Host "╚══════════════════════════════════════════════════════════════╝"
 
-Write-Host "##vso[task.setvariable variable=CACHE_KEY]$cacheKey"
+if ($env:BUILD_BUILDID) {
+    Write-Host "##vso[task.setvariable variable=CACHE_KEY]$cacheKey"
+}
