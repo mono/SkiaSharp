@@ -139,8 +139,9 @@ def cmd_cache_key(config, args):
             hashed_dirs.append(dir_path)
 
     composite = hashlib.sha256("|".join(file_hashes).encode()).hexdigest()[:24]
-    sub_key = "|".join(sub_shas)
-    cache_key = f"{args.job}|{args.name}|{sub_key}|{composite}"
+    sub_parts = "_".join(s.replace(":", "-").replace("/", "-") for s in sub_shas)
+    job_part = args.job.replace("/", "-")
+    cache_key = f"{job_part}_{args.name}_{sub_parts}_{composite}"
 
     print()
     print("\n=== Cache Key ===")
