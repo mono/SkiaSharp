@@ -98,7 +98,7 @@ jobs:
           displayName: Compute cache key
         - task: Cache@2
           inputs:
-            key: $(CACHE_KEY)
+            key: '"$(CACHE_KEY)"'
             path: 'output'
             cacheHitVar: CACHE_HIT
           displayName: Build cache

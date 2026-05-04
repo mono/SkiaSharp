@@ -181,7 +181,9 @@ def cmd_analyze(config, args):
 
     all_changed = git("diff", "--name-only", base, "HEAD").splitlines()
     if not all_changed:
-        print("No changed files detected — all jobs skip")
+        print("No changed files detected — unable to determine cache usage")
+        print("This is expected for direct branch builds (not PRs)")
+        print("Cache decisions are made per-job by the cache key, not by this analysis")
         return 0
 
     # Separate existing files from deleted ones
