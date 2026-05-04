@@ -30,7 +30,7 @@ The easiest way to build is using the Cake build script:
 dotnet cake --target=externals-linux
 
 # Or build everything including managed code
-dotnet cake --target=everything
+dotnet cake --target=Everything
 ```
 
 ### Manual Building

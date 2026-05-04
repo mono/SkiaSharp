@@ -1,3 +1,5 @@
+#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
