@@ -1,6 +1,8 @@
 # Paths included in ALL jobs (inherited by everything)
 include:
   - scripts/VERSIONS.txt
+  - nuget.config
+  - global.json
 
 # Paths that don't trigger any build
 exclude:
@@ -26,7 +28,6 @@ exclude:
   - scripts/get-skiasharp-pr.*
   - scripts/infra/caching/**
   - scripts/infra/security/**
-  - scripts/mono.*
   - External-Dependency-Info.txt
   - cgmanifest.json
 
@@ -66,7 +67,7 @@ jobs:
         include: [native/wasm/**, scripts/infra/native/wasm/**]
 
   managed:
-    include: [binding/**, source/**, utils/**, scripts/infra/managed/**, build.cake, nuget.config, global.json]
+    include: [binding/**, source/**, utils/**, scripts/infra/managed/**, scripts/mono.*, build.cake]
     submodules: [docs]
     children:
       package:
