@@ -10,7 +10,7 @@
 
 .PARAMETER Target
     The Cake target (e.g. externals-windows). Used to find the
-    matching stage in the config.
+    matching job in the config.
 
 .PARAMETER Docker
     Optional Docker context directory path.
@@ -49,7 +49,7 @@ $skiaSha = ($skiaSha ?? 'unknown').Trim()
 $depotSha = ($depotSha ?? 'unknown').Trim()
 
 # ---------------------------------------------------------------------------
-# 2. Find matching stage from config
+# 2. Find matching job from config
 # ---------------------------------------------------------------------------
 $configPath = 'scripts/infra/caching/repo-deps.config.json'
 $platformDir = $Target -replace '^externals-', ''
@@ -60,11 +60,11 @@ $stageName = "native_$($platformDir -replace '-','_')"
 $dirs = @()
 if (Test-Path $configPath) {
     $config = Get-Content $configPath -Raw | ConvertFrom-Json
-    $stages = $config.stages.PSObject.Properties
+    $jobs = $config.jobs.PSObject.Properties
 
     # Collect paths by walking depends_on chain
     function Get-StagePaths([string]$Name) {
-        $stage = $stages | Where-Object { $_.Name -eq $Name } | Select-Object -First 1
+        $stage = $jobs | Where-Object { $_.Name -eq $Name } | Select-Object -First 1
         if (-not $stage) { return @() }
         $paths = @($stage.Value.paths | Where-Object { $_ })
         foreach ($dep in @($stage.Value.depends_on | Where-Object { $_ })) {
@@ -74,7 +74,7 @@ if (Test-Path $configPath) {
     }
 
     $dirs = @(Get-StagePaths $stageName | Select-Object -Unique)
-    Write-Host "Stage '$stageName': $($dirs.Count) path patterns (including inherited)"
+    Write-Host "Job '$stageName': $($dirs.Count) path patterns (including inherited)"
 } else {
     Write-Host "Config not found — using fallback"
     $dirs = @("native/$platformDir", "scripts/infra/native/shared", "scripts/VERSIONS.txt")

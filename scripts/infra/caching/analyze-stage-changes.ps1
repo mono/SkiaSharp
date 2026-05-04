@@ -2,13 +2,13 @@
 .SYNOPSIS Determine which pipeline stages need to run based on changed files.
 .DESCRIPTION
     Compares HEAD against the merge base (or a given base SHA) and checks
-    which stage path patterns are matched. Outputs ADO pipeline variables
-    for each stage: STAGE_NATIVE, STAGE_MANAGED, STAGE_TESTS, etc.
+    which job path patterns are matched. Outputs ADO pipeline variables
+    for each stage: JOB_NATIVE, JOB_MANAGED, JOB_TESTS, etc.
 
-    On protected branches (main, release/*), all stages always run.
+    On protected branches (main, release/*), all jobs always run.
 
     Use -Validate to check that ALL files in the repo are covered by
-    at least one stage or ignore pattern.
+    at least one job or ignore pattern.
 
 .PARAMETER BaseSha
     The base commit to diff against. Defaults to HEAD~1.
@@ -28,12 +28,12 @@ $ErrorActionPreference = 'Stop'
 # ---------------------------------------------------------------------------
 $configPath = 'scripts/infra/caching/repo-deps.config.json'
 if (-not (Test-Path $configPath)) {
-    Write-Host "Config not found — all stages enabled"
+    Write-Host "Config not found — all jobs enabled"
     exit 0
 }
 
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
-$stages = $config.stages.PSObject.Properties
+$jobs = $config.jobs.PSObject.Properties
 
 # ---------------------------------------------------------------------------
 # VALIDATE MODE — check all tracked files are covered
@@ -43,11 +43,11 @@ if ($Validate) {
     Write-Host ""
 
     $ignorePatterns = @($config.ignore | Where-Object { $_ -and -not $_.StartsWith('_comment') })
-    $allStagePatterns = @()
+    $allJobPatterns = @()
     $allSubmodules = @()
-    foreach ($stage in $stages) {
-        $allStagePatterns += @($stage.Value.paths)
-        $allSubmodules += @($stage.Value.submodules | Where-Object { $_ })
+    foreach ($job in $jobs) {
+        $allJobPatterns += @($job.Value.paths)
+        $allSubmodules += @($job.Value.submodules | Where-Object { $_ })
     }
 
     function Test-PathMatch {
@@ -66,7 +66,7 @@ if ($Validate) {
     foreach ($file in $trackedFiles) {
         $matchedAny = $false
 
-        foreach ($pattern in $allStagePatterns) {
+        foreach ($pattern in $allJobPatterns) {
             if (Test-PathMatch -File $file -Pattern $pattern) { $matchedAny = $true; break }
         }
         if (-not $matchedAny) {
@@ -88,7 +88,7 @@ if ($Validate) {
     }
 
     Write-Host "Total tracked files: $($trackedFiles.Count)"
-    Write-Host "Covered by stages:   $coveredCount"
+    Write-Host "Covered by jobs:     $coveredCount"
     Write-Host "Covered by ignore:   $ignoredCount"
     Write-Host "Uncovered:           $($uncovered.Count)"
 
@@ -99,7 +99,7 @@ if ($Validate) {
             Write-Host "##[error]  $f"
         }
         Write-Host ""
-        Write-Host "##[error]Add these to a stage or ignore list in $configPath"
+        Write-Host "##[error]Add these to a job or ignore list in $configPath"
         exit 1
     } else {
         Write-Host ""
@@ -132,9 +132,9 @@ $isProtected = ($branch -eq 'refs/heads/main') -or
                ($branch -like 'refs/heads/develop*')
 
 if ($isProtected) {
-    Write-Host "Protected branch '$branch' — all stages enabled"
-    foreach ($stage in $stages) {
-        $varName = "STAGE_$($stage.Name.ToUpper())"
+    Write-Host "Protected branch '$branch' — all jobs enabled"
+    foreach ($job in $jobs) {
+        $varName = "JOB_$($job.Name.ToUpper())"
         Write-Host "##vso[task.setvariable variable=$varName;isOutput=true]true"
     }
     exit 0
@@ -145,9 +145,9 @@ if ($isProtected) {
 # ---------------------------------------------------------------------------
 $changedFiles = git diff --name-only $BaseSha HEAD 2>$null
 if (-not $changedFiles) {
-    Write-Host "No changed files detected — all stages enabled"
-    foreach ($stage in $stages) {
-        $varName = "STAGE_$($stage.Name.ToUpper())"
+    Write-Host "No changed files detected — all jobs enabled"
+    foreach ($job in $jobs) {
+        $varName = "JOB_$($job.Name.ToUpper())"
         Write-Host "##vso[task.setvariable variable=$varName;isOutput=true]true"
     }
     exit 0
@@ -160,7 +160,7 @@ foreach ($f in $changedFiles) {
 }
 
 # ---------------------------------------------------------------------------
-# 5. Match changed files against stage paths
+# 5. Match changed files against job paths
 # ---------------------------------------------------------------------------
 function Test-PathMatch {
     param([string]$File, [string]$Pattern)
@@ -170,11 +170,11 @@ function Test-PathMatch {
     return $File -match $regex
 }
 
-$stageResults = @{}
-foreach ($stage in $stages) {
-    $name = $stage.Name
-    $paths = @($stage.Value.paths)
-    $submodules = @($stage.Value.submodules | Where-Object { $_ })
+$jobResults = @{}
+foreach ($job in $jobs) {
+    $name = $job.Name
+    $paths = @($job.Value.paths)
+    $submodules = @($job.Value.submodules | Where-Object { $_ })
     $matched = $false
 
     foreach ($file in $changedFiles) {
@@ -197,17 +197,17 @@ foreach ($stage in $stages) {
         if ($matched) { break }
     }
 
-    $stageResults[$name] = $matched
+    $jobResults[$name] = $matched
 }
 
 # ---------------------------------------------------------------------------
 # 5b. Check for unmatched files — if any changed file doesn't match ANY
-#     stage or ignore pattern, trigger ALL stages (safe fallback)
+#     job or ignore pattern, trigger ALL jobs (safe fallback)
 # ---------------------------------------------------------------------------
 $ignorePatterns = @($config.ignore | Where-Object { $_ -and -not $_.StartsWith('_comment') })
-$allStagePatterns = @()
-foreach ($stage in $stages) {
-    $allStagePatterns += @($stage.Value.paths)
+$allJobPatterns = @()
+foreach ($job in $jobs) {
+    $allJobPatterns += @($job.Value.paths)
 }
 
 $unmatchedFiles = @()
@@ -215,7 +215,7 @@ foreach ($file in $changedFiles) {
     $matchedAny = $false
 
     # Check stage patterns
-    foreach ($pattern in $allStagePatterns) {
+    foreach ($pattern in $allJobPatterns) {
         if (Test-PathMatch -File $file -Pattern $pattern) { $matchedAny = $true; break }
     }
 
@@ -233,12 +233,12 @@ foreach ($file in $changedFiles) {
 
 if ($unmatchedFiles.Count -gt 0) {
     Write-Host ""
-    Write-Host "##[error]❌ UNMATCHED FILES — not covered by any stage or ignore pattern:"
+    Write-Host "##[error]❌ UNMATCHED FILES — not covered by any job or ignore pattern:"
     foreach ($f in $unmatchedFiles) {
         Write-Host "##[error]  $f"
     }
     Write-Host ""
-    Write-Host "##[error]Add these paths to a stage in scripts/infra/caching/repo-deps.config.json"
+    Write-Host "##[error]Add these paths to a job in scripts/infra/caching/repo-deps.config.json"
     Write-Host "##[error]or add them to the 'ignore' list if they don't affect builds."
     Write-Host ""
     Write-Host "##vso[task.logissue type=error]Unmatched files detected: $($unmatchedFiles -join ', ')"
@@ -251,14 +251,14 @@ if ($unmatchedFiles.Count -gt 0) {
 $changed = $true
 while ($changed) {
     $changed = $false
-    foreach ($stage in $stages) {
-        $name = $stage.Name
-        if ($stageResults[$name]) { continue }
+    foreach ($job in $jobs) {
+        $name = $job.Name
+        if ($jobResults[$name]) { continue }
 
-        $deps = @($stage.Value.depends_on)
+        $deps = @($job.Value.depends_on)
         foreach ($dep in $deps) {
-            if ($dep -and $stageResults[$dep]) {
-                $stageResults[$name] = $true
+            if ($dep -and $jobResults[$dep]) {
+                $jobResults[$name] = $true
                 $changed = $true
                 break
             }
@@ -271,16 +271,16 @@ while ($changed) {
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "╔══════════════════════════════════════════════════╗"
-Write-Host "║  Stage Analysis                                  ║"
+Write-Host "║  Job Analysis                                  ║"
 Write-Host "╠══════════════════════════════════════════════════╣"
-foreach ($stage in $stages) {
-    $name = $stage.Name
-    $run = $stageResults[$name]
+foreach ($job in $jobs) {
+    $name = $job.Name
+    $run = $jobResults[$name]
     $icon = if ($run) { "🔨" } else { "⏭️" }
     $label = if ($run) { "RUN" } else { "SKIP" }
     Write-Host "║  $icon $($name.PadRight(15)) $label"
 
-    $varName = "STAGE_$($name.ToUpper())"
+    $varName = "JOB_$($name.ToUpper())"
     Write-Host "##vso[task.setvariable variable=$varName;isOutput=true]$($run.ToString().ToLower())"
 }
 Write-Host "╚══════════════════════════════════════════════════╝"
