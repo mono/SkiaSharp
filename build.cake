@@ -32,21 +32,77 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 #load "./scripts/infra/native/windows/msbuild.cake"
 #load "./scripts/infra/managed/cake/UtilsManaged.cake"
-#load "./scripts/infra/managed/cake/externals.cake"
 #load "./scripts/infra/managed/cake/UpdateDocs.cake"
-
-
-Task ("__________________________________")
-    .Description ("__________________________________________________");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// this builds all the externals
+var externalsTask = Task("externals-native");
+
+foreach (var cake in GetFiles("native/*/build.cake"))
+{
+    var native = cake.GetDirectory().GetDirectoryName();
+    var should = ShouldBuildExternal(native);
+    var localCake = cake;
+
+    var task = Task($"externals-{native}")
+        .WithCriteria(should)
+        .WithCriteria(!SKIP_BUILD)
+        .Does(() => RunCake(localCake, "Default"));
+
+    externalsTask.IsDependentOn(task);
+}
+
+Task("externals-osx")
+    .IsDependentOn("externals-macos");
+
+Task("externals-nano")
+    .IsDependentOn("externals-nanoserver");
+
+Task("externals-catalyst")
+    .IsDependentOn("externals-maccatalyst");
+
 Task ("externals")
     .Description ("Build all external dependencies.")
     .IsDependentOn ("externals-native");
+
+Task ("externals-download")
+    .Description ("Download pre-built native binaries from CI.")
+    .Does (() => RunCake ("./scripts/infra/managed/externals-download.cake", "Default"));
+
+Task ("externals-interop")
+    .Description ("Re-generate the interop files.")
+    .Does (() => RunCake ("./scripts/infra/managed/interop.cake", "Default"));
+
+bool ShouldBuildExternal(string platform)
+{
+    platform = platform?.ToLower() ?? "";
+
+    if (SKIP_EXTERNALS.Contains("all") || SKIP_EXTERNALS.Contains("true"))
+        return false;
+
+    switch (platform) {
+        case "mac":
+        case "osx":
+            platform = "macos";
+            break;
+        case "catalyst":
+            platform = "maccatalyst";
+            break;
+        case "win":
+            platform = "windows";
+            break;
+        case "nano":
+            platform = "nanoserver";
+            break;
+    }
+
+    if (SKIP_EXTERNALS.Contains(platform))
+        return false;
+
+    return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // LIBS - build managed assemblies (isolated via RunCake)
@@ -136,6 +192,20 @@ Task ("clean")
     .Description ("Clean up.")
     .IsDependentOn ("clean-externals")
     .IsDependentOn ("clean-managed");
+
+Task ("clean-externals")
+    .Description ("Clean native build outputs.")
+    .Does (() =>
+{
+    CleanDirectories("externals/skia/out");
+    CleanDirectories("externals/skia/xcodebuild");
+    CleanDirectories("externals/angle");
+    CleanDirectories("output/native");
+    CleanDirectories("native/*/*/bin");
+    CleanDirectories("native/*/*/obj");
+    CleanDirectories("native/*/*/libs");
+    CleanDirectories("native/*/tools");
+});
 
 Task ("clean-managed")
     .Description ("Clean up (managed only).")
