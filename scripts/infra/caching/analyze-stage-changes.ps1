@@ -7,11 +7,18 @@
 
     On protected branches (main, release/*), all stages always run.
 
+    Use -Validate to check that ALL files in the repo are covered by
+    at least one stage or ignore pattern.
+
 .PARAMETER BaseSha
     The base commit to diff against. Defaults to HEAD~1.
+
+.PARAMETER Validate
+    Scan the entire repo for uncovered files instead of checking a diff.
 #>
 param(
-    [string]$BaseSha = ''
+    [string]$BaseSha = '',
+    [switch]$Validate
 )
 
 $ErrorActionPreference = 'Stop'
@@ -27,6 +34,79 @@ if (-not (Test-Path $configPath)) {
 
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
 $stages = $config.stages.PSObject.Properties
+
+# ---------------------------------------------------------------------------
+# VALIDATE MODE — check all tracked files are covered
+# ---------------------------------------------------------------------------
+if ($Validate) {
+    Write-Host "Validating all tracked files have coverage..."
+    Write-Host ""
+
+    $ignorePatterns = @($config.ignore | Where-Object { $_ -and -not $_.StartsWith('_comment') })
+    $allStagePatterns = @()
+    $allSubmodules = @()
+    foreach ($stage in $stages) {
+        $allStagePatterns += @($stage.Value.paths)
+        $allSubmodules += @($stage.Value.submodules | Where-Object { $_ })
+    }
+
+    function Test-PathMatch {
+        param([string]$File, [string]$Pattern)
+        $regex = '^' + ($Pattern -replace '\*\*', '§§' -replace '\*', '[^/]*' -replace '§§', '.*') + '$'
+        return $File -match $regex
+    }
+
+    $trackedFiles = git ls-files -z 2>$null | ForEach-Object { $_ -split "`0" } | Where-Object { $_ }
+    # Unquote git's octal-escaped paths
+    $trackedFiles = $trackedFiles | ForEach-Object { $_ -replace '^"(.*)"$', '$1' }
+    $uncovered = @()
+    $coveredCount = 0
+    $ignoredCount = 0
+
+    foreach ($file in $trackedFiles) {
+        $matchedAny = $false
+
+        foreach ($pattern in $allStagePatterns) {
+            if (Test-PathMatch -File $file -Pattern $pattern) { $matchedAny = $true; break }
+        }
+        if (-not $matchedAny) {
+            foreach ($pattern in $ignorePatterns) {
+                if (Test-PathMatch -File $file -Pattern $pattern) { $matchedAny = $true; $ignoredCount++; break }
+            }
+        }
+        if (-not $matchedAny) {
+            foreach ($sub in $allSubmodules) {
+                if ($file -eq $sub -or $file.StartsWith("$sub/")) { $matchedAny = $true; break }
+            }
+        }
+
+        if ($matchedAny) {
+            $coveredCount++
+        } else {
+            $uncovered += $file
+        }
+    }
+
+    Write-Host "Total tracked files: $($trackedFiles.Count)"
+    Write-Host "Covered by stages:   $coveredCount"
+    Write-Host "Covered by ignore:   $ignoredCount"
+    Write-Host "Uncovered:           $($uncovered.Count)"
+
+    if ($uncovered.Count -gt 0) {
+        Write-Host ""
+        Write-Host "##[error]❌ UNCOVERED FILES:"
+        foreach ($f in $uncovered) {
+            Write-Host "##[error]  $f"
+        }
+        Write-Host ""
+        Write-Host "##[error]Add these to a stage or ignore list in $configPath"
+        exit 1
+    } else {
+        Write-Host ""
+        Write-Host "✅ All files covered!"
+        exit 0
+    }
+}
 
 # ---------------------------------------------------------------------------
 # 2. Determine base SHA
@@ -153,13 +233,16 @@ foreach ($file in $changedFiles) {
 
 if ($unmatchedFiles.Count -gt 0) {
     Write-Host ""
-    Write-Host "⚠️  Unmatched files (triggering ALL stages as safe fallback):"
+    Write-Host "##[error]❌ UNMATCHED FILES — not covered by any stage or ignore pattern:"
     foreach ($f in $unmatchedFiles) {
-        Write-Host "  $f"
+        Write-Host "##[error]  $f"
     }
-    foreach ($stage in $stages) {
-        $stageResults[$stage.Name] = $true
-    }
+    Write-Host ""
+    Write-Host "##[error]Add these paths to a stage in scripts/infra/caching/repo-deps.config.json"
+    Write-Host "##[error]or add them to the 'ignore' list if they don't affect builds."
+    Write-Host ""
+    Write-Host "##vso[task.logissue type=error]Unmatched files detected: $($unmatchedFiles -join ', ')"
+    exit 1
 }
 
 # ---------------------------------------------------------------------------

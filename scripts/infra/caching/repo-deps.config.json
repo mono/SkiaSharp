@@ -1,111 +1,231 @@
 {
   "_comment": "Repository dependency graph with path inheritance via depends_on.",
-
   "stages": {
     "shared": {
       "_comment": "Global — affects everything",
-      "paths": ["scripts/VERSIONS.txt"]
+      "paths": [
+        "scripts/VERSIONS.txt"
+      ]
     },
-
     "native_shared": {
       "_comment": "Shared native infra — affects all native platforms",
-      "depends_on": ["shared"],
-      "paths": ["scripts/infra/native/shared/**"],
-      "submodules": ["externals/skia", "externals/depot_tools"]
+      "depends_on": [
+        "shared"
+      ],
+      "paths": [
+        "scripts/infra/native/shared/**"
+      ],
+      "submodules": [
+        "externals/skia",
+        "externals/depot_tools"
+      ]
     },
     "native_apple_shared": {
-      "depends_on": ["native_shared"],
-      "paths": ["scripts/infra/native/apple/**"]
+      "depends_on": [
+        "native_shared"
+      ],
+      "paths": [
+        "scripts/infra/native/apple/**"
+      ]
     },
     "native_windows_shared": {
-      "depends_on": ["native_shared"],
-      "paths": ["scripts/infra/native/windows/**"]
+      "depends_on": [
+        "native_shared"
+      ],
+      "paths": [
+        "scripts/infra/native/windows/**"
+      ]
     },
     "native_linux_shared": {
-      "depends_on": ["native_shared"],
-      "paths": ["scripts/infra/native/linux/**"]
+      "depends_on": [
+        "native_shared"
+      ],
+      "paths": [
+        "scripts/infra/native/linux/**"
+      ]
     },
-
     "native_android": {
-      "depends_on": ["native_shared"],
-      "paths": ["native/android/**", "scripts/infra/native/android/**"]
+      "depends_on": [
+        "native_shared"
+      ],
+      "paths": [
+        "native/android/**",
+        "scripts/infra/native/android/**"
+      ]
     },
     "native_ios": {
-      "depends_on": ["native_apple_shared"],
-      "paths": ["native/ios/**"]
+      "depends_on": [
+        "native_apple_shared"
+      ],
+      "paths": [
+        "native/ios/**"
+      ]
     },
     "native_macos": {
-      "depends_on": ["native_apple_shared"],
-      "paths": ["native/macos/**"]
+      "depends_on": [
+        "native_apple_shared"
+      ],
+      "paths": [
+        "native/macos/**"
+      ]
     },
     "native_maccatalyst": {
-      "depends_on": ["native_apple_shared"],
-      "paths": ["native/maccatalyst/**"]
+      "depends_on": [
+        "native_apple_shared"
+      ],
+      "paths": [
+        "native/maccatalyst/**"
+      ]
     },
     "native_tvos": {
-      "depends_on": ["native_apple_shared"],
-      "paths": ["native/tvos/**"]
+      "depends_on": [
+        "native_apple_shared"
+      ],
+      "paths": [
+        "native/tvos/**"
+      ]
     },
     "native_windows": {
-      "depends_on": ["native_windows_shared"],
-      "paths": ["native/windows/**"]
+      "depends_on": [
+        "native_windows_shared"
+      ],
+      "paths": [
+        "native/windows/**"
+      ]
     },
     "native_winui": {
-      "depends_on": ["native_windows_shared"],
-      "paths": ["native/winui/**"]
+      "depends_on": [
+        "native_windows_shared"
+      ],
+      "paths": [
+        "native/winui/**"
+      ]
     },
     "native_winui_angle": {
-      "depends_on": ["native_windows_shared"],
-      "paths": ["native/winui-angle/**"]
+      "depends_on": [
+        "native_windows_shared"
+      ],
+      "paths": [
+        "native/winui-angle/**"
+      ]
     },
     "native_nanoserver": {
-      "depends_on": ["native_windows_shared"],
-      "paths": ["native/nanoserver/**"]
+      "depends_on": [
+        "native_windows_shared"
+      ],
+      "paths": [
+        "native/nanoserver/**"
+      ]
     },
     "native_linux": {
-      "depends_on": ["native_linux_shared"],
-      "paths": ["native/linux/**"]
+      "depends_on": [
+        "native_linux_shared"
+      ],
+      "paths": [
+        "native/linux/**"
+      ]
     },
     "native_linux_cross": {
-      "depends_on": ["native_linux_shared"],
-      "paths": ["native/linux-clang-cross/**"]
+      "depends_on": [
+        "native_linux_shared"
+      ],
+      "paths": [
+        "native/linux-clang-cross/**"
+      ]
     },
     "native_linuxnodeps": {
-      "depends_on": ["native_shared"],
-      "paths": ["native/linuxnodeps/**"]
+      "depends_on": [
+        "native_shared"
+      ],
+      "paths": [
+        "native/linuxnodeps/**"
+      ]
     },
     "native_tizen": {
-      "depends_on": ["native_shared"],
-      "paths": ["native/tizen/**", "scripts/infra/native/tizen/**"]
+      "depends_on": [
+        "native_shared"
+      ],
+      "paths": [
+        "native/tizen/**",
+        "scripts/infra/native/tizen/**"
+      ]
     },
     "native_wasm": {
-      "depends_on": ["native_shared"],
-      "paths": ["native/wasm/**", "scripts/infra/native/wasm/**"]
+      "depends_on": [
+        "native_shared"
+      ],
+      "paths": [
+        "native/wasm/**",
+        "scripts/infra/native/wasm/**"
+      ]
     },
-
     "managed": {
-      "depends_on": ["shared", "native_android", "native_ios", "native_macos", "native_maccatalyst", "native_tvos", "native_windows", "native_winui", "native_winui_angle", "native_nanoserver", "native_linux", "native_linux_cross", "native_linuxnodeps", "native_tizen", "native_wasm"],
-      "paths": ["binding/**", "source/**", "docs/**", "utils/**", "scripts/infra/managed/**", "build.cake", "nuget.config", "global.json"],
-      "submodules": ["docs"]
+      "depends_on": [
+        "shared",
+        "native_android",
+        "native_ios",
+        "native_macos",
+        "native_maccatalyst",
+        "native_tvos",
+        "native_windows",
+        "native_winui",
+        "native_winui_angle",
+        "native_nanoserver",
+        "native_linux",
+        "native_linux_cross",
+        "native_linuxnodeps",
+        "native_tizen",
+        "native_wasm"
+      ],
+      "paths": [
+        "binding/**",
+        "source/**",
+        "docs/**",
+        "utils/**",
+        "scripts/infra/managed/**",
+        "build.cake",
+        "nuget.config",
+        "global.json"
+      ],
+      "submodules": [
+        "docs"
+      ]
     },
     "package": {
-      "depends_on": ["managed"],
-      "paths": ["scripts/infra/package/**"]
+      "depends_on": [
+        "managed"
+      ],
+      "paths": [
+        "scripts/infra/package/**"
+      ]
     },
     "tests": {
-      "depends_on": ["managed"],
-      "paths": ["tests/**", "scripts/infra/tests/**", "benchmarks/**"]
+      "depends_on": [
+        "managed"
+      ],
+      "paths": [
+        "tests/**",
+        "scripts/infra/tests/**",
+        "benchmarks/**"
+      ]
     },
     "samples": {
-      "depends_on": ["managed"],
-      "paths": ["samples/**"]
+      "depends_on": [
+        "managed"
+      ],
+      "paths": [
+        "samples/**"
+      ]
     },
     "api_diff": {
-      "depends_on": ["package"],
-      "paths": ["changelogs/**"]
+      "depends_on": [
+        "package"
+      ],
+      "paths": [
+        "changelogs/**"
+      ]
     }
   },
-
   "ignore": [
     "_comment: Files matching these patterns trigger NO stages",
     "documentation/**",
@@ -120,17 +240,62 @@
     "CODE-OF-CONDUCT.md",
     "CONTRIBUTING.md",
     "External-Dependency-Info.txt",
-    "cgmanifest.json"
+    "cgmanifest.json",
+    ".config/**",
+    ".editorconfig",
+    ".gitattributes",
+    ".gitignore",
+    ".gitmodules",
+    "build.ps1",
+    "build.sh",
+    "externals/.gitignore",
+    "native/.gitignore",
+    "scripts/azure-*.yml",
+    "scripts/get-skiasharp-pr.*",
+    "scripts/infra/caching/**",
+    "scripts/infra/security/**",
+    "scripts/mono.*"
   ],
-
   "links": [
-    {"files": "**/*.cake", "pattern": "^#load\\s+\"([^\"]+)\"", "resolve": "relative"},
-    {"files": "**/*.yml", "pattern": "template:\\s*/scripts/([^@\\s]+)", "resolve": "prefix", "prefix": "scripts/"},
-    {"files": "**/*.yml", "pattern": "target:\\s*externals-([a-z-]+)", "resolve": "prefix", "prefix": "native/", "suffix": "/build.cake"},
-    {"files": "**/*.yml", "pattern": "docker:\\s*(scripts/infra/[^\\s]+)", "resolve": "root"},
-    {"files": "**/*.yml", "pattern": "(?:\\./|.\\\\)?scripts[/\\\\]infra[/\\\\]([a-zA-Z0-9_./-]+\\.(?:ps1|sh))", "resolve": "prefix", "prefix": "scripts/infra/"},
-    {"files": "**/Dockerfile", "siblings": true}
+    {
+      "files": "**/*.cake",
+      "pattern": "^#load\\s+\"([^\"]+)\"",
+      "resolve": "relative"
+    },
+    {
+      "files": "**/*.yml",
+      "pattern": "template:\\s*/scripts/([^@\\s]+)",
+      "resolve": "prefix",
+      "prefix": "scripts/"
+    },
+    {
+      "files": "**/*.yml",
+      "pattern": "target:\\s*externals-([a-z-]+)",
+      "resolve": "prefix",
+      "prefix": "native/",
+      "suffix": "/build.cake"
+    },
+    {
+      "files": "**/*.yml",
+      "pattern": "docker:\\s*(scripts/infra/[^\\s]+)",
+      "resolve": "root"
+    },
+    {
+      "files": "**/*.yml",
+      "pattern": "(?:\\./|.\\\\)?scripts[/\\\\]infra[/\\\\]([a-zA-Z0-9_./-]+\\.(?:ps1|sh))",
+      "resolve": "prefix",
+      "prefix": "scripts/infra/"
+    },
+    {
+      "files": "**/Dockerfile",
+      "siblings": true
+    }
   ],
-
-  "exclude": ["**/bin/**", "**/obj/**", "**/libs/**", "**/tools/**", "**/.git/**"]
+  "exclude": [
+    "**/bin/**",
+    "**/obj/**",
+    "**/libs/**",
+    "**/tools/**",
+    "**/.git/**"
+  ]
 }
