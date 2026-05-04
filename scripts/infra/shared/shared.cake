@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 var TARGET = Argument("t", Argument("target", "Default"));
 var VERBOSITY = Context.Log.Verbosity;
@@ -16,9 +17,17 @@ var ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariab
 
 DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// BUILD IDENTITY
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
+var BUILD_COUNTER = Argument ("buildCounter", EnvironmentVariable ("BUILD_COUNTER") ?? BUILD_NUMBER);
+var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
+var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
+var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
 
 var PREVIEW_NUGET_SUFFIX = "";
 if (!string.IsNullOrEmpty (FEATURE_NAME)) {
@@ -39,7 +48,128 @@ if (IsRunningOnWindows ()) {
     CURRENT_PLATFORM = "Linux";
 }
 
+var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
+    { "GIT_SHA", GIT_SHA },
+    { "GIT_BRANCH_NAME", GIT_BRANCH_NAME },
+    { "GIT_URL", GIT_URL },
+    { "BUILD_COUNTER", BUILD_COUNTER },
+    { "BUILD_NUMBER", BUILD_NUMBER },
+    { "FEATURE_NAME", FEATURE_NAME },
+    { "PREVIEW_LABEL", PREVIEW_LABEL },
+};
+
+var DATE_TIME_NOW = DateTime.Now;
+var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_hhmmss");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// WELL-KNOWN PATHS
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+FilePath NUGET_CONFIG_PATH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("nuget.config"));
+DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
+DirectoryPath OUTPUT_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
+DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-special"));
+DirectoryPath OUTPUT_SYMBOLS_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-symbols"));
+DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
+DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// BUILD OPTIONS
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var SKIP_EXTERNALS = Argument ("skipexternals", "")
+    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+var SKIP_BUILD = Argument ("skipbuild", false);
+var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
+var THROW_ON_FIRST_TEST_FAILURE = Argument ("throwOnFirstTestFailure", false);
+var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
+var COVERAGE = Argument ("coverage", false);
+var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
+
+var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
+var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
+var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+
+var PLATFORM_SUPPORTS_DIRECT3D_TESTS = IsRunningOnWindows ().ToString ();
+var SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? PLATFORM_SUPPORTS_DIRECT3D_TESTS);
+var SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
+
+var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json");
+
 var PREVIEW_ONLY_NUGETS = new List<string> {};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// NUGET PACKAGES
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var SUPPORTED_NUGETS = new Dictionary<string, Version> {
+    // SkiaSharp core
+    { "SkiaSharp",                                     new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Linux",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.NanoServer",             new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Android",                new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.iOS",                    new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.macOS",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Tizen",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.tvOS",                   new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Win32",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.WinUI",                  new Version (2, 80, 0) },
+    { "SkiaSharp.Views",                               new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Desktop.Common",                new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Gtk3",                          new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Gtk4",                          new Version (3, 119, 0) },
+    { "SkiaSharp.Views.WindowsForms",                  new Version (2, 80, 0) },
+    { "SkiaSharp.Views.WPF",                           new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Uno.WinUI",                     new Version (2, 80, 0) },
+    { "SkiaSharp.Views.WinUI",                         new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Maui.Core",                     new Version (2, 88, 0) },
+    { "SkiaSharp.Views.Maui.Controls",                 new Version (2, 88, 0) },
+    { "SkiaSharp.Views.Blazor",                        new Version (2, 80, 0) },
+    // HarfBuzzSharp core
+    { "HarfBuzzSharp",                                 new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.Android",            new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.iOS",                new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.Linux",              new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.MacCatalyst",        new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.macOS",              new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.Tizen",              new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.tvOS",               new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.Win32",              new Version (2, 6, 1) },
+    // Extras
+    { "SkiaSharp.HarfBuzz",                            new Version (2, 80, 0) },
+    { "SkiaSharp.Skottie",                             new Version (2, 88, 0) },
+    { "SkiaSharp.SceneGraph",                          new Version (2, 88, 0) },
+    { "SkiaSharp.Resources",                           new Version (2, 88, 0) },
+    { "SkiaSharp.Vulkan.SharpVk",                      new Version (2, 80, 0) },
+    { "SkiaSharp.Direct3D.Vortice",                    new Version (2, 88, 0) },
+};
+
+var OBSOLETED_NUGETS = new Dictionary<string, Version> {
+    // Obsolete packages no longer built but still tracked for documentation
+    { "SkiaSharp.NativeAssets.UWP",                    new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.watchOS",                new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Gtk2",                          new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (2, 88, 0) },
+    { "SkiaSharp.Views.Forms",                         new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Forms.WPF",                     new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Forms.GTK",                     new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Uno",                           new Version (2, 80, 0) },
+    { "SkiaSharp.Views.NativeAssets.UWP",              new Version (2, 80, 0) },
+    { "HarfBuzzSharp.NativeAssets.UWP",                new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.watchOS",            new Version (2, 6, 1) },
+};
+
+var TRACKED_NUGETS = SUPPORTED_NUGETS
+    .Concat(OBSOLETED_NUGETS)
+    .ToDictionary(x => x.Key, x => x.Value);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// LOGGING
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information("Arguments:");
 foreach (var arg in Arguments()) {
@@ -47,6 +177,14 @@ foreach (var arg in Arguments()) {
         Information($"    {arg.Key.PadRight(30)} {{0}}", val);
     }
 }
+
+Information("Source Control:");
+Information($"    {"PREVIEW_LABEL".PadRight(30)} {{0}}", PREVIEW_LABEL);
+Information($"    {"FEATURE_NAME".PadRight(30)} {{0}}", FEATURE_NAME);
+Information($"    {"BUILD_NUMBER".PadRight(30)} {{0}}", BUILD_NUMBER);
+Information($"    {"GIT_SHA".PadRight(30)} {{0}}", GIT_SHA);
+Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
+Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
 void RunCake(FilePath cake, string target = null, Dictionary<string, string> arguments = null)
 {
