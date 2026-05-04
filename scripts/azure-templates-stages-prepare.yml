@@ -13,6 +13,7 @@ stages:
           - checkout: self
             submodules: false
             fetchDepth: 1
-            sparseCheckoutDirectories: scripts/infra/native/shared/set-build-variables.ps1
           - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
+          - pwsh: ./scripts/infra/caching/analyze-stage-changes.ps1 -Validate
+            displayName: Validate cache config coverage
