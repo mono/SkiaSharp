@@ -193,7 +193,7 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
     }
 
     cake = MakeAbsolute(cake);
-    var cmd = $"cake {cake}";
+    var cmd = $"cake {cake} --working=\"{ROOT_PATH}\"";
 
     foreach (var arg in args) {
         cmd += $@" --{arg.Key}=""{arg.Value}""";
