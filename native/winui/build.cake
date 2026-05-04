@@ -2,7 +2,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
-#load "../../scripts/infra/native/windows/msbuild.cake"
+#load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
 void CheckDeps(FilePath dll)

@@ -14,7 +14,7 @@ bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLo
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
-#load "../../scripts/infra/native/windows/msbuild.cake"
+#load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
 string VARIANT = BUILD_VARIANT ?? "windows";
