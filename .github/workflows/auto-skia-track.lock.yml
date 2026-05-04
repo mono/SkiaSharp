@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"7ac0da66a3fbf3fb213670e4b3ad3172b8d352ddc47fb62ff00d92c58da3213e","compiler_version":"v0.71.4","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"75398e8d5a936927b2211157d98f7524c0d0efb98a1231c6c50c038b3abacfc8","compiler_version":"v0.71.4","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_CI_TRIGGER_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","SKIASHARP_AUTOBUMP_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"f8495a686e66770ae977f82732f34d7340ee42a4","version":"v0.71.4"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.35"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.35"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.35"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.3"},{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -56,11 +56,11 @@ name: "Auto Skia Track"
   - cron: "0 17 * * *"
   # steps: # Steps injected into pre-activation job
   # - env:
-      # GH_TOKEN: ${{ github.token }}
+      # GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
       # INPUT_MODE: ${{ github.event.inputs.mode }}
       # SCHEDULE: ${{ github.event.schedule }}
     # id: detect
-    # name: Detect milestone
+    # name: Detect milestone and ensure PRs exist
     # run: |
       # if [ -n "$INPUT_MODE" ]; then
         # MODE="$INPUT_MODE"
@@ -99,7 +99,43 @@ name: "Auto Skia Track"
         # exit 1
       # fi
       # 
-      # echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
+      # BRANCH="autobump/skia-m${TARGET}"
+      # 
+      # # --- Ensure mono/skia branch + PR exist ---
+      # if ! git ls-remote --exit-code https://github.com/mono/skia.git "refs/heads/${BRANCH}" >/dev/null 2>&1; then
+        # echo "Creating ${BRANCH} in mono/skia from skiasharp..."
+        # SKIASHARP_SHA=$(git ls-remote https://github.com/mono/skia.git refs/heads/skiasharp | awk '{print $1}')
+        # gh api "repos/mono/skia/git/refs" -f ref="refs/heads/${BRANCH}" -f sha="$SKIASHARP_SHA" 2>/dev/null || true
+      # fi
+      # SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+      # if [ -z "$SKIA_PR" ]; then
+        # echo "Creating mono/skia draft PR..."
+        # SKIA_PR=$(gh pr create --repo mono/skia \
+          # --head "$BRANCH" --base skiasharp \
+          # --title "[autobump] Update skia to milestone ${TARGET}" \
+          # --draft \
+          # --body "Automated upstream merge of chrome/m${TARGET}. Pending agent run." 2>/dev/null | grep -oE '[0-9]+$' || echo "")
+      # fi
+      # echo "skia_pr=$SKIA_PR" >> "$GITHUB_OUTPUT"
+      # 
+      # # --- Ensure mono/SkiaSharp branch + PR exist ---
+      # if ! git ls-remote --exit-code https://github.com/mono/SkiaSharp.git "refs/heads/${BRANCH}" >/dev/null 2>&1; then
+        # echo "Creating ${BRANCH} in mono/SkiaSharp from main..."
+        # MAIN_SHA=$(git ls-remote https://github.com/mono/SkiaSharp.git refs/heads/main | awk '{print $1}')
+        # gh api "repos/mono/SkiaSharp/git/refs" -f ref="refs/heads/${BRANCH}" -f sha="$MAIN_SHA" 2>/dev/null || true
+      # fi
+      # SS_PR=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+      # if [ -z "$SS_PR" ]; then
+        # echo "Creating mono/SkiaSharp draft PR..."
+        # SS_PR=$(gh pr create --repo mono/SkiaSharp \
+          # --head "$BRANCH" --base main \
+          # --title "[autobump] Bump skia to milestone ${TARGET}" \
+          # --draft \
+          # --body "Automated Skia milestone bump to m${TARGET}. Pending agent run." 2>/dev/null | grep -oE '[0-9]+$' || echo "")
+      # fi
+      # echo "skiasharp_pr=$SS_PR" >> "$GITHUB_OUTPUT"
+      # 
+      # echo "Ready: target=m${TARGET}, skia PR=#${SKIA_PR}, SkiaSharp PR=#${SS_PR}"
   workflow_dispatch:
     inputs:
       aw_context:
@@ -240,28 +276,30 @@ jobs:
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT: ${{ needs.pre_activation.outputs.current }}
+          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIASHARP_PR: ${{ needs.pre_activation.outputs.skiasharp_pr }}
+          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIA_PR: ${{ needs.pre_activation.outputs.skia_pr }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET: ${{ needs.pre_activation.outputs.target }}
         # poutine:ignore untrusted_checkout_exec
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_87935c4ca3a6b7aa_EOF'
+          cat << 'GH_AW_PROMPT_ec3f64a34c025716_EOF'
           <system>
-          GH_AW_PROMPT_87935c4ca3a6b7aa_EOF
+          GH_AW_PROMPT_ec3f64a34c025716_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_87935c4ca3a6b7aa_EOF'
+          cat << 'GH_AW_PROMPT_ec3f64a34c025716_EOF'
           <safe-output-tools>
-          Tools: create_pull_request, missing_tool, missing_data, noop
-          GH_AW_PROMPT_87935c4ca3a6b7aa_EOF
-          cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_create_pull_request.md"
-          cat << 'GH_AW_PROMPT_87935c4ca3a6b7aa_EOF'
+          Tools: update_pull_request(max:2), push_to_pull_request_branch(max:2), missing_tool, missing_data, noop
+          GH_AW_PROMPT_ec3f64a34c025716_EOF
+          cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_push_to_pr_branch.md"
+          cat << 'GH_AW_PROMPT_ec3f64a34c025716_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_87935c4ca3a6b7aa_EOF
+          GH_AW_PROMPT_ec3f64a34c025716_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_87935c4ca3a6b7aa_EOF'
+          cat << 'GH_AW_PROMPT_ec3f64a34c025716_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -293,12 +331,12 @@ jobs:
             - **Note**: If a branch you need is not in the list above and is not listed as an additional fetched ref, it has NOT been checked out. For private repositories you cannot fetch it without proper authentication. If the branch is required and not available, exit with an error and ask the user to add it to the `fetch:` option of the `checkout:` configuration (e.g., `fetch: ["refs/pulls/open/*"]` for all open PR refs, or `fetch: ["main", "feature/my-branch"]` for specific branches).
           </github-context>
           
-          GH_AW_PROMPT_87935c4ca3a6b7aa_EOF
+          GH_AW_PROMPT_ec3f64a34c025716_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_87935c4ca3a6b7aa_EOF'
+          cat << 'GH_AW_PROMPT_ec3f64a34c025716_EOF'
           </system>
           {{#runtime-import .github/workflows/auto-skia-track.md}}
-          GH_AW_PROMPT_87935c4ca3a6b7aa_EOF
+          GH_AW_PROMPT_ec3f64a34c025716_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -306,6 +344,8 @@ jobs:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_ENGINE_ID: "copilot"
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT: ${{ needs.pre_activation.outputs.current }}
+          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIA_PR: ${{ needs.pre_activation.outputs.skia_pr }}
+          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIASHARP_PR: ${{ needs.pre_activation.outputs.skiasharp_pr }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET: ${{ needs.pre_activation.outputs.target }}
         with:
           script: |
@@ -328,6 +368,8 @@ jobs:
           GH_AW_MCP_CLI_SERVERS_LIST: '- `safeoutputs` — run `safeoutputs --help` to see available tools'
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: ${{ needs.pre_activation.outputs.activated }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT: ${{ needs.pre_activation.outputs.current }}
+          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIASHARP_PR: ${{ needs.pre_activation.outputs.skiasharp_pr }}
+          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIA_PR: ${{ needs.pre_activation.outputs.skia_pr }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET: ${{ needs.pre_activation.outputs.target }}
         with:
           script: |
@@ -351,6 +393,8 @@ jobs:
                 GH_AW_MCP_CLI_SERVERS_LIST: process.env.GH_AW_MCP_CLI_SERVERS_LIST,
                 GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED,
                 GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_CURRENT,
+                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIASHARP_PR: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIASHARP_PR,
+                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIA_PR: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_SKIA_PR,
                 GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_TARGET
               }
             });
@@ -494,62 +538,22 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_3ba81ce5faaaaa63_EOF'
-          {"create_pull_request":{"allowed_base_branches":["main"],"draft":true,"excluded_files":["externals/**"],"labels":["upstream-tracking"],"max":1,"max_patch_files":100,"max_patch_size":1024,"preserve_branch_name":true,"protect_top_level_dot_folders":true,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS","DESIGN.md","README.md","CONTRIBUTING.md","CHANGELOG.md","SECURITY.md","CODE_OF_CONDUCT.md","AGENTS.md","CLAUDE.md","GEMINI.md"],"protected_files_policy":"allowed","title_prefix":"[autobump] "},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_3ba81ce5faaaaa63_EOF
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_32777e19f06b91e8_EOF'
+          {"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"push_to_pull_request_branch":{"allowed_repos":["mono/skia"],"check_branch_protection":false,"if_no_changes":"ignore","max":2,"max_patch_size":1024,"protect_top_level_dot_folders":true,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS","DESIGN.md","README.md","CONTRIBUTING.md","CHANGELOG.md","SECURITY.md","CODE_OF_CONDUCT.md","AGENTS.md","CLAUDE.md","GEMINI.md"],"protected_files_policy":"allowed","target":"*","title_prefix":"[autobump] "},"report_incomplete":{},"update_pull_request":{"allow_body":true,"allow_title":true,"max":2,"target":"*","update_branch":false}}
+          GH_AW_SAFE_OUTPUTS_CONFIG_32777e19f06b91e8_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
             {
               "description_suffixes": {
-                "create_pull_request": " CONSTRAINTS: Maximum 1 pull request(s) can be created. Title will be prefixed with \"[autobump] \". Labels [\"upstream-tracking\"] will be automatically added. PRs will be created as drafts."
+                "push_to_pull_request_branch": " CONSTRAINTS: Maximum 2 push(es) can be made. The target pull request title must start with \"[autobump] \".",
+                "update_pull_request": " CONSTRAINTS: Maximum 2 pull request(s) can be updated. Target: *."
               },
               "repo_params": {},
               "dynamic_tools": []
             }
           GH_AW_VALIDATION_JSON: |
             {
-              "create_pull_request": {
-                "defaultMax": 1,
-                "fields": {
-                  "base": {
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 128
-                  },
-                  "body": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "branch": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 256
-                  },
-                  "draft": {
-                    "type": "boolean"
-                  },
-                  "labels": {
-                    "type": "array",
-                    "itemType": "string",
-                    "itemSanitize": true,
-                    "itemMaxLength": 128
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
-                  },
-                  "title": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 128
-                  }
-                }
-              },
               "missing_data": {
                 "defaultMax": 20,
                 "fields": {
@@ -607,6 +611,26 @@ jobs:
                   }
                 }
               },
+              "push_to_pull_request_branch": {
+                "defaultMax": 1,
+                "fields": {
+                  "branch": {
+                    "required": true,
+                    "type": "string",
+                    "sanitize": true,
+                    "maxLength": 256
+                  },
+                  "message": {
+                    "required": true,
+                    "type": "string",
+                    "sanitize": true,
+                    "maxLength": 65000
+                  },
+                  "pull_request_number": {
+                    "issueOrPRNumber": true
+                  }
+                }
+              },
               "report_incomplete": {
                 "defaultMax": 5,
                 "fields": {
@@ -622,6 +646,43 @@ jobs:
                     "maxLength": 1024
                   }
                 }
+              },
+              "update_pull_request": {
+                "defaultMax": 1,
+                "fields": {
+                  "body": {
+                    "type": "string",
+                    "sanitize": true,
+                    "maxLength": 65000
+                  },
+                  "draft": {
+                    "type": "boolean"
+                  },
+                  "operation": {
+                    "type": "string",
+                    "enum": [
+                      "replace",
+                      "append",
+                      "prepend"
+                    ]
+                  },
+                  "pull_request_number": {
+                    "issueOrPRNumber": true
+                  },
+                  "repo": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "title": {
+                    "type": "string",
+                    "sanitize": true,
+                    "maxLength": 256
+                  },
+                  "update_branch": {
+                    "type": "boolean"
+                  }
+                },
+                "customValidation": "requiresOneOf:title,body,update_branch"
               }
             }
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -702,7 +763,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_28faa87fab6afe3e_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_a6e0fc47c9fb9922_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -750,7 +811,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_28faa87fab6afe3e_EOF
+          GH_AW_MCP_CONFIG_a6e0fc47c9fb9922_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -944,11 +1005,6 @@ jobs:
           if [ ! -f /tmp/gh-aw/agent_output.json ]; then
             echo '{"items":[]}' > /tmp/gh-aw/agent_output.json
           fi
-      - env:
-          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-        name: Push submodule and create mono/skia PR
-        run: "set -euo pipefail\n\n# Read target from file the agent wrote\nif [ ! -f /tmp/gh-aw/agent/autobump-env.sh ]; then\n  echo \"No autobump-env.sh found — agent may have determined no work needed\"\n  exit 0\nfi\nsource /tmp/gh-aw/agent/autobump-env.sh\n\nif [ -z \"${TARGET:-}\" ]; then\n  echo \"TARGET is empty — skipping\"\n  exit 0\nfi\n\nBRANCH=\"autobump/skia-m${TARGET}\"\n\nSUMMARY=\"\"\nif [ -f /tmp/gh-aw/agent/autobump-summary.md ]; then\n  SUMMARY=$(cat /tmp/gh-aw/agent/autobump-summary.md)\nfi\n\n# Push submodule branch to mono/skia\ncd externals/skia\nif git rev-parse --verify \"$BRANCH\" &>/dev/null; then\n  echo \"Pushing $BRANCH to mono/skia...\"\n  git remote set-url origin \"https://x-access-token:${GH_TOKEN}@github.com/mono/skia.git\"\n  git push origin \"$BRANCH\" --force-with-lease 2>/dev/null || git push origin \"$BRANCH\" --force\n\n  SKIA_PR=$(gh pr list --repo mono/skia --head \"$BRANCH\" --json number --jq '.[0].number' 2>/dev/null || echo \"\")\n  if [ -z \"$SKIA_PR\" ]; then\n    echo \"Creating mono/skia PR...\"\n    gh pr create --repo mono/skia \\\n      --head \"$BRANCH\" --base skiasharp \\\n      --title \"[autobump] Update skia to milestone ${TARGET}\" \\\n      --draft \\\n      --body \"Automated upstream merge of chrome/m${TARGET}.\n\n${SUMMARY}\n\nCreated by auto-skia-track workflow.\" 2>/dev/null || true\n  else\n    echo \"Updating mono/skia PR #${SKIA_PR}...\"\n    gh pr edit \"$SKIA_PR\" --repo mono/skia \\\n      --body \"Automated upstream merge of chrome/m${TARGET}.\n\n${SUMMARY}\n\nUpdated: $(date -u +%Y-%m-%dT%H:%M:%SZ)\" 2>/dev/null || true\n  fi\nelse\n  echo \"No submodule branch $BRANCH — skipping mono/skia push\"\nfi\n"
-
       - name: Upload agent artifacts
         if: always()
         continue-on-error: true
@@ -989,7 +1045,6 @@ jobs:
     runs-on: ubuntu-slim
     permissions:
       contents: write
-      issues: write
       pull-requests: write
     concurrency:
       group: "gh-aw-conclusion-auto-skia-track"
@@ -1320,6 +1375,8 @@ jobs:
       mode: ${{ steps.detect.outputs.mode }}
       next: ${{ steps.detect.outputs.next }}
       setup-trace-id: ${{ steps.setup.outputs.trace-id }}
+      skia_pr: ${{ steps.detect.outputs.skia_pr }}
+      skiasharp_pr: ${{ steps.detect.outputs.skiasharp_pr }}
       target: ${{ steps.detect.outputs.target }}
     steps:
       - name: Setup Scripts
@@ -1343,7 +1400,7 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/check_membership.cjs');
             await main();
-      - name: Detect milestone
+      - name: Detect milestone and ensure PRs exist
         id: detect
         run: |
           if [ -n "$INPUT_MODE" ]; then
@@ -1383,9 +1440,45 @@ jobs:
             exit 1
           fi
 
-          echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
+          BRANCH="autobump/skia-m${TARGET}"
+
+          # --- Ensure mono/skia branch + PR exist ---
+          if ! git ls-remote --exit-code https://github.com/mono/skia.git "refs/heads/${BRANCH}" >/dev/null 2>&1; then
+            echo "Creating ${BRANCH} in mono/skia from skiasharp..."
+            SKIASHARP_SHA=$(git ls-remote https://github.com/mono/skia.git refs/heads/skiasharp | awk '{print $1}')
+            gh api "repos/mono/skia/git/refs" -f ref="refs/heads/${BRANCH}" -f sha="$SKIASHARP_SHA" 2>/dev/null || true
+          fi
+          SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -z "$SKIA_PR" ]; then
+            echo "Creating mono/skia draft PR..."
+            SKIA_PR=$(gh pr create --repo mono/skia \
+              --head "$BRANCH" --base skiasharp \
+              --title "[autobump] Update skia to milestone ${TARGET}" \
+              --draft \
+              --body "Automated upstream merge of chrome/m${TARGET}. Pending agent run." 2>/dev/null | grep -oE '[0-9]+$' || echo "")
+          fi
+          echo "skia_pr=$SKIA_PR" >> "$GITHUB_OUTPUT"
+
+          # --- Ensure mono/SkiaSharp branch + PR exist ---
+          if ! git ls-remote --exit-code https://github.com/mono/SkiaSharp.git "refs/heads/${BRANCH}" >/dev/null 2>&1; then
+            echo "Creating ${BRANCH} in mono/SkiaSharp from main..."
+            MAIN_SHA=$(git ls-remote https://github.com/mono/SkiaSharp.git refs/heads/main | awk '{print $1}')
+            gh api "repos/mono/SkiaSharp/git/refs" -f ref="refs/heads/${BRANCH}" -f sha="$MAIN_SHA" 2>/dev/null || true
+          fi
+          SS_PR=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -z "$SS_PR" ]; then
+            echo "Creating mono/SkiaSharp draft PR..."
+            SS_PR=$(gh pr create --repo mono/SkiaSharp \
+              --head "$BRANCH" --base main \
+              --title "[autobump] Bump skia to milestone ${TARGET}" \
+              --draft \
+              --body "Automated Skia milestone bump to m${TARGET}. Pending agent run." 2>/dev/null | grep -oE '[0-9]+$' || echo "")
+          fi
+          echo "skiasharp_pr=$SS_PR" >> "$GITHUB_OUTPUT"
+
+          echo "Ready: target=m${TARGET}, skia PR=#${SKIA_PR}, SkiaSharp PR=#${SS_PR}"
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
           INPUT_MODE: ${{ github.event.inputs.mode }}
           SCHEDULE: ${{ github.event.schedule }}
 
@@ -1398,7 +1491,6 @@ jobs:
     runs-on: ubuntu-slim
     permissions:
       contents: write
-      issues: write
       pull-requests: write
     timeout-minutes: 15
     env:
@@ -1416,10 +1508,10 @@ jobs:
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
       create_discussion_error_count: ${{ steps.process_safe_outputs.outputs.create_discussion_error_count }}
       create_discussion_errors: ${{ steps.process_safe_outputs.outputs.create_discussion_errors }}
-      created_pr_number: ${{ steps.process_safe_outputs.outputs.created_pr_number }}
-      created_pr_url: ${{ steps.process_safe_outputs.outputs.created_pr_url }}
       process_safe_outputs_processed_count: ${{ steps.process_safe_outputs.outputs.processed_count }}
       process_safe_outputs_temporary_id_map: ${{ steps.process_safe_outputs.outputs.temporary_id_map }}
+      push_commit_sha: ${{ steps.process_safe_outputs.outputs.push_commit_sha }}
+      push_commit_url: ${{ steps.process_safe_outputs.outputs.push_commit_url }}
     steps:
       - name: Setup Scripts
         id: setup
@@ -1452,7 +1544,7 @@ jobs:
           name: agent
           path: /tmp/gh-aw/
       - name: Checkout repository
-        if: (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'create_pull_request')
+        if: (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'push_to_pull_request_branch')
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.base_ref || github.event.pull_request.base.ref || github.ref_name || github.event.repository.default_branch }}
@@ -1460,7 +1552,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
       - name: Configure Git credentials
-        if: (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'create_pull_request')
+        if: (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'push_to_pull_request_branch')
         env:
           REPO_NAME: ${{ github.repository }}
           SERVER_URL: ${{ github.server_url }}
@@ -1490,7 +1582,7 @@ jobs:
           GH_AW_ALLOWED_DOMAINS: "*.githubusercontent.com,api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,chromium.googlesource.com,codeload.github.com,docs.github.com,github-cloud.githubusercontent.com,github-cloud.s3.amazonaws.com,github.blog,github.com,github.githubassets.com,host.docker.internal,lfs.github.com,objects.githubusercontent.com,raw.githubusercontent.com,registry.npmjs.org,telemetry.enterprise.githubcopilot.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_pull_request\":{\"allowed_base_branches\":[\"main\"],\"draft\":true,\"excluded_files\":[\"externals/**\"],\"labels\":[\"upstream-tracking\"],\"max\":1,\"max_patch_files\":100,\"max_patch_size\":1024,\"preserve_branch_name\":true,\"protect_top_level_dot_folders\":true,\"protected_files\":[\"package.json\",\"bun.lockb\",\"bunfig.toml\",\"deno.json\",\"deno.jsonc\",\"deno.lock\",\"global.json\",\"NuGet.Config\",\"Directory.Packages.props\",\"mix.exs\",\"mix.lock\",\"go.mod\",\"go.sum\",\"stack.yaml\",\"stack.yaml.lock\",\"pom.xml\",\"build.gradle\",\"build.gradle.kts\",\"settings.gradle\",\"settings.gradle.kts\",\"gradle.properties\",\"package-lock.json\",\"yarn.lock\",\"pnpm-lock.yaml\",\"npm-shrinkwrap.json\",\"requirements.txt\",\"Pipfile\",\"Pipfile.lock\",\"pyproject.toml\",\"setup.py\",\"setup.cfg\",\"Gemfile\",\"Gemfile.lock\",\"uv.lock\",\"CODEOWNERS\",\"DESIGN.md\",\"README.md\",\"CONTRIBUTING.md\",\"CHANGELOG.md\",\"SECURITY.md\",\"CODE_OF_CONDUCT.md\",\"AGENTS.md\",\"CLAUDE.md\",\"GEMINI.md\"],\"protected_files_policy\":\"allowed\",\"title_prefix\":\"[autobump] \"},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"report_incomplete\":{}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"push_to_pull_request_branch\":{\"allowed_repos\":[\"mono/skia\"],\"check_branch_protection\":false,\"if_no_changes\":\"ignore\",\"max\":2,\"max_patch_size\":1024,\"protect_top_level_dot_folders\":true,\"protected_files\":[\"package.json\",\"bun.lockb\",\"bunfig.toml\",\"deno.json\",\"deno.jsonc\",\"deno.lock\",\"global.json\",\"NuGet.Config\",\"Directory.Packages.props\",\"mix.exs\",\"mix.lock\",\"go.mod\",\"go.sum\",\"stack.yaml\",\"stack.yaml.lock\",\"pom.xml\",\"build.gradle\",\"build.gradle.kts\",\"settings.gradle\",\"settings.gradle.kts\",\"gradle.properties\",\"package-lock.json\",\"yarn.lock\",\"pnpm-lock.yaml\",\"npm-shrinkwrap.json\",\"requirements.txt\",\"Pipfile\",\"Pipfile.lock\",\"pyproject.toml\",\"setup.py\",\"setup.cfg\",\"Gemfile\",\"Gemfile.lock\",\"uv.lock\",\"CODEOWNERS\",\"DESIGN.md\",\"README.md\",\"CONTRIBUTING.md\",\"CHANGELOG.md\",\"SECURITY.md\",\"CODE_OF_CONDUCT.md\",\"AGENTS.md\",\"CLAUDE.md\",\"GEMINI.md\"],\"protected_files_policy\":\"allowed\",\"target\":\"*\",\"title_prefix\":\"[autobump] \"},\"report_incomplete\":{},\"update_pull_request\":{\"allow_body\":true,\"allow_title\":true,\"max\":2,\"target\":\"*\",\"update_branch\":false}}"
           GH_AW_CI_TRIGGER_TOKEN: ${{ secrets.GH_AW_CI_TRIGGER_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
         with:
