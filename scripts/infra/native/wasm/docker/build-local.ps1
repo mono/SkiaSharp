@@ -26,7 +26,7 @@ if ($Features) {
     $FeaturesArg = "--emscriptenFeatures='$Features'"
 }
 
-$pwd = (Resolve-Path (Join-Path $DIR "../../../")).Path
+$pwd = (Resolve-Path (Join-Path $DIR "../../../../..")).Path
 docker run --rm @PlatformArgs --name skiasharp-wasm-$Version --volume ${pwd}:/work skiasharp-wasm:$Version /bin/bash -c "\
     dotnet tool restore ; \
     dotnet cake --target=externals-wasm --emscriptenVersion=$Version $FeaturesArg"
