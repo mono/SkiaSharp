@@ -28,7 +28,7 @@ using NuGet.Versioning;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
-#load "./scripts/infra/native/shared/shared.cake"
+#load "./scripts/infra/shared/shared.cake"
 #load "./scripts/infra/native/shared/native-shared.cake"
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")

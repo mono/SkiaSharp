@@ -1,6 +1,6 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
-#load "../native/shared/shared.cake"
+#load "../shared/shared.cake"
 
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 

@@ -1,4 +1,4 @@
-#load "shared.cake"
+#load "../../shared/shared.cake"
 
 var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python3");
 
