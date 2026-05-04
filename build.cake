@@ -1,10 +1,7 @@
-#addin nuget:?package=Cake.Xamarin&version=3.1.0
-#addin nuget:?package=Cake.XCode&version=5.0.0
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 #addin nuget:?package=Cake.Json&version=6.0.1
 #addin nuget:?package=NuGet.Packaging&version=6.9.1
 #addin nuget:?package=SharpCompress&version=0.32.2
-#addin nuget:?package=Mono.Cecil&version=0.11.5
 #addin nuget:?package=Mono.ApiTools.ApiInfo&version=1.4.1
 #addin nuget:?package=Mono.ApiTools.ApiDiff&version=1.4.1
 #addin nuget:?package=Mono.ApiTools.ApiDiffFormatted&version=1.4.1
@@ -13,10 +10,6 @@
 #tool nuget:?package=mdoc&version=5.8.9
 #tool nuget:?package=vswhere&version=2.8.4
 
-using System.Linq;
-using System.Net.Http;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using SharpCompress.Common;
