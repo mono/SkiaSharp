@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS Compute a content-based cache key for a build job.
 .DESCRIPTION
-    Reads the job's path patterns from repo-deps.config.json (walking
-    depends_on for inheritance), hashes all files in those paths, and
-    combines with submodule SHAs to produce a deterministic cache key.
+    Reads the job's path patterns and submodules from repo-deps.config.json
+    (walking depends_on for inheritance), hashes all files in those paths,
+    and combines with submodule SHAs to produce a deterministic cache key.
 
 .PARAMETER JobName
     The unique ADO job name (e.g. native_win32_x64_windows).
@@ -32,52 +32,60 @@ function Get-FileHashString([string]$Path) {
 }
 
 # ---------------------------------------------------------------------------
-# 1. Submodule SHAs (set by pipeline or read from tree)
-# ---------------------------------------------------------------------------
-$skiaSha = $env:SKIA_SHA
-if (-not $skiaSha) {
-    $line = (git ls-tree HEAD externals/skia 2>$null)
-    if ($line -match '([0-9a-f]{40})') { $skiaSha = $Matches[1] }
-}
-$depotSha = $env:DEPOT_SHA
-if (-not $depotSha) {
-    $line = (git ls-tree HEAD externals/depot_tools 2>$null)
-    if ($line -match '([0-9a-f]{40})') { $depotSha = $Matches[1] }
-}
-$skiaSha = ($skiaSha ?? 'unknown').Trim()
-$depotSha = ($depotSha ?? 'unknown').Trim()
-
-# ---------------------------------------------------------------------------
-# 2. Collect paths from config (with depends_on inheritance)
+# 1. Load config and collect paths + submodules via depends_on
 # ---------------------------------------------------------------------------
 $configPath = 'scripts/infra/caching/repo-deps.config.json'
 $dirs = @()
+$submodulePaths = @()
 
 if (Test-Path $configPath) {
     $config = Get-Content $configPath -Raw | ConvertFrom-Json
-    $jobs = $config.jobs.PSObject.Properties
+    $allJobs = $config.jobs.PSObject.Properties
 
-    function Get-JobPaths([string]$Name) {
-        $job = $jobs | Where-Object { $_.Name -eq $Name } | Select-Object -First 1
-        if (-not $job) { return @() }
+    function Get-JobConfig([string]$Name) {
+        $job = $allJobs | Where-Object { $_.Name -eq $Name } | Select-Object -First 1
+        if (-not $job) { return @{ paths = @(); submodules = @() } }
         $paths = @($job.Value.paths | Where-Object { $_ })
+        $subs = @($job.Value.submodules | Where-Object { $_ })
         foreach ($dep in @($job.Value.depends_on | Where-Object { $_ })) {
-            $paths += Get-JobPaths $dep
+            $depConfig = Get-JobConfig $dep
+            $paths += $depConfig.paths
+            $subs += $depConfig.submodules
         }
-        return $paths
+        return @{ paths = $paths; submodules = $subs }
     }
 
-    $dirs = @(Get-JobPaths $CacheJob | Select-Object -Unique)
-    Write-Host "Job '$CacheJob': $($dirs.Count) path patterns (including inherited)"
+    $jobConfig = Get-JobConfig $CacheJob
+    $dirs = @($jobConfig.paths | Select-Object -Unique)
+    $submodulePaths = @($jobConfig.submodules | Select-Object -Unique)
+    Write-Host "Job '$CacheJob': $($dirs.Count) paths, $($submodulePaths.Count) submodules"
 } else {
     Write-Host "Config not found — using fallback"
     $dirs = @("native", "scripts/infra/native/shared", "scripts/VERSIONS.txt")
+    $submodulePaths = @("externals/skia")
 }
 
 # Add Docker context if specified
 if ($Docker -and (Test-Path $Docker)) {
     $dirs = @($dirs) + @($Docker)
 }
+
+# ---------------------------------------------------------------------------
+# 2. Get submodule SHAs (from env vars set by pipeline, or from git tree)
+# ---------------------------------------------------------------------------
+$submoduleShas = @()
+foreach ($sub in $submodulePaths) {
+    $envVar = $sub.Replace('/', '_').Replace('-', '_').ToUpper() + '_SHA'
+    $sha = [System.Environment]::GetEnvironmentVariable($envVar)
+    if (-not $sha) {
+        $line = (git ls-tree HEAD $sub 2>$null)
+        if ($line -match '([0-9a-f]{40})') { $sha = $Matches[1] }
+    }
+    $sha = ($sha ?? 'unknown').Trim()
+    $submoduleShas += "${sub}:${sha}"
+    Write-Host "  Submodule $sub = $sha"
+}
+$submoduleKey = ($submoduleShas | Sort-Object) -join '|'
 
 # ---------------------------------------------------------------------------
 # 3. Hash all files matching the path patterns
@@ -104,16 +112,16 @@ foreach ($pattern in $dirs | Sort-Object -Unique) {
     }
 }
 
-# Composite hash
+# Composite hash of all file hashes
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes = [System.Text.Encoding]::UTF8.GetBytes(($fileHashes -join '|'))
 $compositeHash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2') }) -join ''
 $compositeHash = $compositeHash.Substring(0, 24)
 
 # ---------------------------------------------------------------------------
-# 4. Cache key
+# 4. Cache key = cacheJob | jobName | submodules | files
 # ---------------------------------------------------------------------------
-$cacheKey = "$CacheJob|$JobName|$skiaSha|$depotSha|$compositeHash"
+$cacheKey = "$CacheJob|$JobName|$submoduleKey|$compositeHash"
 
 # ---------------------------------------------------------------------------
 # 5. Output
@@ -124,8 +132,7 @@ Write-Host "║  Cache Key                                                   ║
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
 Write-Host "║  Job:      $JobName"
 Write-Host "║  CacheJob: $CacheJob"
-Write-Host "║  Skia:     $skiaSha"
-Write-Host "║  Depot:    $depotSha"
+foreach ($s in $submoduleShas) { Write-Host "║  Sub:     $s" }
 Write-Host "║  Files:    $compositeHash ($($fileHashes.Count) files)"
 Write-Host "╠══════════════════════════════════════════════════════════════╣"
 foreach ($d in $hashedDirs) { Write-Host "║  $d" }

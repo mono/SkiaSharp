@@ -95,14 +95,6 @@ jobs:
       # build caching — check cache BEFORE full checkout
       - ${{ if ne(parameters.cacheJob, '') }}:
         - pwsh: |
-            # Get submodule SHAs from the tree (no submodule clone needed)
-            $skiaSha = (git ls-tree HEAD externals/skia 2>$null) -replace '.*\s([0-9a-f]{40})\s.*', '$1'
-            $depotSha = (git ls-tree HEAD externals/depot_tools 2>$null) -replace '.*\s([0-9a-f]{40})\s.*', '$1'
-            Write-Host "##vso[task.setvariable variable=SKIA_SHA]$skiaSha"
-            Write-Host "##vso[task.setvariable variable=DEPOT_SHA]$depotSha"
-            Write-Host "Skia SHA: $skiaSha  Depot SHA: $depotSha"
-          displayName: Get submodule SHAs
-        - pwsh: |
             .\scripts\infra\caching\compute-cache-key.ps1 `
               -JobName '${{ parameters.name }}' `
               -CacheJob '${{ parameters.cacheJob }}' `
