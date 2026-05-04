@@ -8,7 +8,6 @@
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.4.1
 
 #tool nuget:?package=mdoc&version=5.8.9
-#tool nuget:?package=vswhere&version=2.8.4
 
 using System.Xml;
 using System.Xml.Linq;
@@ -21,9 +20,7 @@ using NuGet.Versioning;
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 #load "./scripts/infra/shared/shared.cake"
-#load "./scripts/infra/native/shared/native-shared.cake"
 
-#load "./scripts/infra/native/windows/msbuild.cake"
 #load "./scripts/infra/managed/utils-managed.cake"
 #load "./scripts/infra/managed/update-docs.cake"
 
