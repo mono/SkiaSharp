@@ -1,6 +1,36 @@
-shared:
-  include: [scripts/VERSIONS.txt]
+# Paths included in ALL jobs (inherited by everything)
+include:
+  - scripts/VERSIONS.txt
 
+# Paths that don't trigger any build
+exclude:
+  - documentation/**
+  - images/**
+  - interactive/**
+  - .github/**
+  - .devcontainer/**
+  - .vscode/**
+  - .agents/**
+  - "*.md"
+  - LICENSE.*
+  - .config/**
+  - .editorconfig
+  - .gitattributes
+  - .gitignore
+  - .gitmodules
+  - build.ps1
+  - build.sh
+  - externals/.gitignore
+  - native/.gitignore
+  - scripts/azure-*.yml
+  - scripts/get-skiasharp-pr.*
+  - scripts/infra/caching/**
+  - scripts/infra/security/**
+  - scripts/mono.*
+  - External-Dependency-Info.txt
+  - cgmanifest.json
+
+# Job tree — each node inherits include/submodules from ancestors
 jobs:
   native:
     include: [scripts/infra/native/shared/**]
@@ -48,30 +78,3 @@ jobs:
         include: [tests/**, scripts/infra/tests/**, benchmarks/**]
       samples:
         include: [samples/**]
-
-exclude:
-  - documentation/**
-  - images/**
-  - interactive/**
-  - .github/**
-  - .devcontainer/**
-  - .vscode/**
-  - .agents/**
-  - "*.md"
-  - LICENSE.*
-  - .config/**
-  - .editorconfig
-  - .gitattributes
-  - .gitignore
-  - .gitmodules
-  - build.ps1
-  - build.sh
-  - externals/.gitignore
-  - native/.gitignore
-  - scripts/azure-*.yml
-  - scripts/get-skiasharp-pr.*
-  - scripts/infra/caching/**
-  - scripts/infra/security/**
-  - scripts/mono.*
-  - External-Dependency-Info.txt
-  - cgmanifest.json

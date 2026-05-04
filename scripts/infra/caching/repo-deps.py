@@ -61,10 +61,9 @@ def walk_tree(node, prefix="", parent_paths=None, parent_subs=None):
 
 def resolve_job(config, job_path):
     """Find a job by its slash-separated path and return (paths, submodules)."""
-    # Start with shared paths/subs from root
-    shared = config.get("shared", {})
-    accumulated_paths = list(shared.get("include", []))
-    accumulated_subs = list(shared.get("submodules", []))
+    # Start with root-level include
+    accumulated_paths = list(config.get("include", []))
+    accumulated_subs = []
 
     parts = job_path.strip("/").split("/")
     node = config["jobs"]
@@ -83,13 +82,12 @@ def resolve_job(config, job_path):
 
 def all_jobs(config):
     """Return dict of {job_path: (paths, submodules)} for all leaf and branch nodes."""
-    shared = config.get("shared", {})
-    shared_paths = list(shared.get("include", []))
-    shared_subs = list(shared.get("submodules", []))
+    root_paths = list(config.get("include", []))
+    root_subs = []
 
     result = {}
     for root_name, root_node in config["jobs"].items():
-        for path, paths, subs in walk_tree(root_node, root_name, shared_paths, shared_subs):
+        for path, paths, subs in walk_tree(root_node, root_name, root_paths, root_subs):
             result[path] = (paths, subs)
     return result
 
@@ -262,18 +260,35 @@ def cmd_validate(config, args):
                for f in tracked if f]
 
     jobs = all_jobs(config)
-    ignore = [p for p in config.get("exclude", []) if not p.startswith("#")]
+    exclude = [p for p in config.get("exclude", []) if not p.startswith("#")]
 
-    all_patterns = []
+    all_include = list(config.get("include", []))
     all_subs = []
     for paths, subs in jobs.values():
-        all_patterns.extend(paths)
+        all_include.extend(paths)
         all_subs.extend(subs)
 
+    # Check for include/exclude overlap
+    overlaps = []
+    for f in tracked:
+        in_include = match_any(f, all_include) or any(f == s or f.startswith(s + "/") for s in all_subs)
+        in_exclude = match_any(f, exclude)
+        if in_include and in_exclude:
+            overlaps.append(f)
+
+    if overlaps:
+        print(f"⚠️  {len(overlaps)} files match BOTH include and exclude (possible bug):")
+        for f in overlaps[:10]:
+            print(f"  {f}")
+        if len(overlaps) > 10:
+            print(f"  ... +{len(overlaps) - 10} more")
+        print()
+
+    # Check coverage
     uncovered = []
     covered = 0
     for f in tracked:
-        if match_any(f, all_patterns + ignore):
+        if match_any(f, all_include + exclude):
             covered += 1
         elif any(f == s or f.startswith(s + "/") for s in all_subs):
             covered += 1
