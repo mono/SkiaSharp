@@ -86,7 +86,7 @@ jobs:
         condition: always()
 
       # prepare — phase 1: shallow checkout (fast, no submodules)
-      - ${{ if and(ne(parameters.cacheJob, ''), parameters.enableCaching) }}:
+      - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - checkout: self
           submodules: false
           fetchDepth: 1
@@ -94,7 +94,7 @@ jobs:
           displayName: Configure build variables
 
       # build caching — check cache BEFORE full checkout
-      - ${{ if and(ne(parameters.cacheJob, ''), parameters.enableCaching) }}:
+      - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - pwsh: |
             python3 scripts/infra/caching/repo-deps.py cache-key `
               --name '${{ parameters.name }}' `
@@ -121,13 +121,13 @@ jobs:
           displayName: Evaluate cache decision
 
       # prepare — phase 2: full checkout (only if cache miss or non-native job)
-      - ${{ if not(and(ne(parameters.cacheJob, ''), parameters.enableCaching)) }}:
+      - ${{ if not(and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true))) }}:
         - checkout: self
           submodules: recursive
         - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
           displayName: Configure build variables
 
-      - ${{ if and(ne(parameters.cacheJob, ''), parameters.enableCaching) }}:
+      - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - pwsh: git submodule update --init --recursive
           displayName: Full checkout (submodules)
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))

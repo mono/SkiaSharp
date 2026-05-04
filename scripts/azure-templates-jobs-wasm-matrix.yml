@@ -17,6 +17,6 @@ jobs:
         docker: scripts/infra/native/wasm/docker
         target: externals-wasm
         cacheJob: native/wasm
-          enableCaching: ${{ parameters.enableCaching }}
+        enableCaching: ${{ parameters.enableCaching }}
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
         additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"
