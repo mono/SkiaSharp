@@ -94,11 +94,22 @@ $stageResults = @{}
 foreach ($stage in $stages) {
     $name = $stage.Name
     $paths = @($stage.Value.paths)
+    $submodules = @($stage.Value.submodules | Where-Object { $_ })
     $matched = $false
 
     foreach ($file in $changedFiles) {
+        # Check path patterns
         foreach ($pattern in $paths) {
             if (Test-PathMatch -File $file -Pattern $pattern) {
+                $matched = $true
+                break
+            }
+        }
+        if ($matched) { break }
+
+        # Check submodule paths (match if the file starts with the submodule path)
+        foreach ($sub in $submodules) {
+            if ($file -eq $sub -or $file.StartsWith("$sub/")) {
                 $matched = $true
                 break
             }

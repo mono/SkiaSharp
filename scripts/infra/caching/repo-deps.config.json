@@ -2,20 +2,65 @@
   "_comment": "Repository dependency graph. Maps file paths to pipeline stages.",
 
   "stages": {
-    "native": {
-      "_comment": "C/C++ native library compilation",
-      "targets": ["native/*/build.cake"],
+    "native_windows": {
+      "_comment": "Native builds on Windows agents: win32, winui, winui-angle, nanoserver, android(win), tizen(win)",
       "paths": [
-        "externals/skia",
-        "externals/depot_tools",
-        "native/**",
-        "scripts/infra/native/**",
+        "native/windows/**",
+        "native/winui/**",
+        "native/winui-angle/**",
+        "native/nanoserver/**",
+        "native/android/**",
+        "native/tizen/**",
+        "scripts/infra/native/shared/**",
+        "scripts/infra/native/windows/**",
+        "scripts/infra/native/android/**",
+        "scripts/infra/native/tizen/**",
         "scripts/VERSIONS.txt"
-      ]
+      ],
+      "submodules": ["externals/skia", "externals/depot_tools"]
+    },
+    "native_macos": {
+      "_comment": "Native builds on macOS agents: macos, ios, maccatalyst, tvos, android(mac), tizen(mac)",
+      "paths": [
+        "native/macos/**",
+        "native/ios/**",
+        "native/maccatalyst/**",
+        "native/tvos/**",
+        "native/android/**",
+        "native/tizen/**",
+        "scripts/infra/native/shared/**",
+        "scripts/infra/native/apple/**",
+        "scripts/infra/native/android/**",
+        "scripts/infra/native/tizen/**",
+        "scripts/VERSIONS.txt"
+      ],
+      "submodules": ["externals/skia", "externals/depot_tools"]
+    },
+    "native_linux": {
+      "_comment": "Native builds on Linux agents: linux, linux-clang-cross, linuxnodeps",
+      "paths": [
+        "native/linux/**",
+        "native/linux-clang-cross/**",
+        "native/linuxnodeps/**",
+        "scripts/infra/native/shared/**",
+        "scripts/infra/native/linux/**",
+        "scripts/VERSIONS.txt"
+      ],
+      "submodules": ["externals/skia", "externals/depot_tools"]
+    },
+    "native_wasm": {
+      "_comment": "Native WASM builds on Linux agents",
+      "paths": [
+        "native/wasm/**",
+        "scripts/infra/native/shared/**",
+        "scripts/infra/native/wasm/**",
+        "scripts/VERSIONS.txt"
+      ],
+      "submodules": ["externals/skia", "externals/depot_tools"]
     },
     "managed": {
       "_comment": "C# managed library build",
-      "depends_on": ["native"],
+      "depends_on": ["native_windows", "native_macos", "native_linux", "native_wasm"],
       "paths": [
         "binding/**",
         "source/**",
@@ -25,7 +70,8 @@
         "build.cake",
         "nuget.config",
         "global.json"
-      ]
+      ],
+      "submodules": ["docs"]
     },
     "package": {
       "_comment": "NuGet package creation",
@@ -81,12 +127,6 @@
   "global": [
     "scripts/infra/native/shared/**/*",
     "scripts/VERSIONS.txt"
-  ],
-
-  "submodules": [
-    "externals/skia",
-    "externals/depot_tools",
-    "docs"
   ],
 
   "links": [
