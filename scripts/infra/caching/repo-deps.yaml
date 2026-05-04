@@ -1,54 +1,53 @@
+shared:
+  paths: [scripts/VERSIONS.txt]
+
 jobs:
-  shared:
-    paths: [scripts/VERSIONS.txt]
+  native:
+    paths: [scripts/infra/native/shared/**]
+    submodules: [externals/skia, externals/depot_tools]
     children:
+      android:
+        paths: [native/android/**, scripts/infra/native/android/**]
+      ios:
+        paths: [native/ios/**, scripts/infra/native/apple/**]
+      macos:
+        paths: [native/macos/**, scripts/infra/native/apple/**]
+      maccatalyst:
+        paths: [native/maccatalyst/**, scripts/infra/native/apple/**, native/ios/**]
+      tvos:
+        paths: [native/tvos/**, scripts/infra/native/apple/**]
+      windows:
+        paths: [native/windows/**, scripts/infra/native/windows/**]
+      winui:
+        paths: [native/winui/**, scripts/infra/native/windows/**]
+      winui_angle:
+        paths: [native/winui-angle/**, scripts/infra/native/windows/**]
+      nanoserver:
+        paths: [native/nanoserver/**, scripts/infra/native/windows/**, native/windows/**]
+      linux:
+        paths: [native/linux/**, scripts/infra/native/linux/**]
+      linux_cross:
+        paths: [native/linux-clang-cross/**, scripts/infra/native/linux/**, native/linux/**]
+      linuxnodeps:
+        paths: [native/linuxnodeps/**, scripts/infra/native/linux/**, native/linux/**]
+      tizen:
+        paths: [native/tizen/**, scripts/infra/native/tizen/**]
+      wasm:
+        paths: [native/wasm/**, scripts/infra/native/wasm/**]
 
-      native:
-        paths: [scripts/infra/native/shared/**]
-        submodules: [externals/skia, externals/depot_tools]
+  managed:
+    paths: [binding/**, source/**, utils/**, scripts/infra/managed/**, build.cake, nuget.config, global.json]
+    submodules: [docs]
+    children:
+      package:
+        paths: [scripts/infra/package/**]
         children:
-          android:
-            paths: [native/android/**, scripts/infra/native/android/**]
-          ios:
-            paths: [native/ios/**, scripts/infra/native/apple/**]
-          macos:
-            paths: [native/macos/**, scripts/infra/native/apple/**]
-          maccatalyst:
-            paths: [native/maccatalyst/**, scripts/infra/native/apple/**, native/ios/**]
-          tvos:
-            paths: [native/tvos/**, scripts/infra/native/apple/**]
-          windows:
-            paths: [native/windows/**, scripts/infra/native/windows/**]
-          winui:
-            paths: [native/winui/**, scripts/infra/native/windows/**]
-          winui_angle:
-            paths: [native/winui-angle/**, scripts/infra/native/windows/**]
-          nanoserver:
-            paths: [native/nanoserver/**, scripts/infra/native/windows/**, native/windows/**]
-          linux:
-            paths: [native/linux/**, scripts/infra/native/linux/**]
-          linux_cross:
-            paths: [native/linux-clang-cross/**, scripts/infra/native/linux/**, native/linux/**]
-          linuxnodeps:
-            paths: [native/linuxnodeps/**, scripts/infra/native/linux/**, native/linux/**]
-          tizen:
-            paths: [native/tizen/**, scripts/infra/native/tizen/**]
-          wasm:
-            paths: [native/wasm/**, scripts/infra/native/wasm/**]
-
-      managed:
-        paths: [binding/**, source/**, utils/**, scripts/infra/managed/**, build.cake, nuget.config, global.json]
-        submodules: [docs]
-        children:
-          package:
-            paths: [scripts/infra/package/**]
-            children:
-              api_diff:
-                paths: [changelogs/**]
-          tests:
-            paths: [tests/**, scripts/infra/tests/**, benchmarks/**]
-          samples:
-            paths: [samples/**]
+          api_diff:
+            paths: [changelogs/**]
+      tests:
+        paths: [tests/**, scripts/infra/tests/**, benchmarks/**]
+      samples:
+        paths: [samples/**]
 
 ignore:
   - documentation/**

@@ -61,11 +61,13 @@ def walk_tree(node, prefix="", parent_paths=None, parent_subs=None):
 
 def resolve_job(config, job_path):
     """Find a job by its slash-separated path and return (paths, submodules)."""
+    # Start with shared paths/subs from root
+    shared = config.get("shared", {})
+    accumulated_paths = list(shared.get("paths", []))
+    accumulated_subs = list(shared.get("submodules", []))
+
     parts = job_path.strip("/").split("/")
     node = config["jobs"]
-
-    accumulated_paths = []
-    accumulated_subs = []
 
     for i, part in enumerate(parts):
         if part not in node:
@@ -81,9 +83,13 @@ def resolve_job(config, job_path):
 
 def all_jobs(config):
     """Return dict of {job_path: (paths, submodules)} for all leaf and branch nodes."""
+    shared = config.get("shared", {})
+    shared_paths = list(shared.get("paths", []))
+    shared_subs = list(shared.get("submodules", []))
+
     result = {}
     for root_name, root_node in config["jobs"].items():
-        for path, paths, subs in walk_tree(root_node, root_name):
+        for path, paths, subs in walk_tree(root_node, root_name, shared_paths, shared_subs):
             result[path] = (paths, subs)
     return result
 
