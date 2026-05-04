@@ -778,7 +778,7 @@ Task ("clean-managed")
 Task ("samples")
     .Description ("Build all sample projects.")
     .IsDependentOn ("libs")
-    .Does (() => RunCake ("./scripts/infra/managed/cake/samples.cake", "Default"));
+    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEFAULT - target for common development
