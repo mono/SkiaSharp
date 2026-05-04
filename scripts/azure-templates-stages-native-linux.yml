@@ -3,6 +3,9 @@ parameters:
     type: object
   - name: use1ESPipelineTemplates
     type: boolean
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
 
@@ -13,6 +16,7 @@ stages:
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Linux)
         parameters:
+          enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:
@@ -51,6 +55,7 @@ stages:
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
         parameters:
+          enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:

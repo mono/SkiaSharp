@@ -1,4 +1,7 @@
 parameters:
+  - name: enableCaching
+    type: boolean
+    default: false
   buildAgent: ''                                # the configuration for the build agent
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
   builds:
@@ -28,4 +31,5 @@ jobs:
           dockerArgs: --build-arg BUILD_ARCH=${{ item.arch }} ${{ item.dockerArgs }}
           target: ${{ coalesce(item.target, 'externals-linux') }}
           cacheJob: native/linux_cross
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=${{ item.arch }} --variant=${{ coalesce(item.variant, 'linux') }}${{ build.name }} --gnArgs="\"${{ build.gnArgs }} ${{ item.gnArgs }}\"" ${{ build.additionalArgs }} ${{ item.additionalArgs }}

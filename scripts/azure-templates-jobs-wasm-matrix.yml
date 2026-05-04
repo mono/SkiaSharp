@@ -1,4 +1,7 @@
 parameters:
+  - name: enableCaching
+    type: boolean
+    default: false
   buildAgent: ''                                # the configuration for the build agent
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
   emscripten: [ ]
@@ -14,5 +17,6 @@ jobs:
         docker: scripts/infra/native/wasm/docker
         target: externals-wasm
         cacheJob: native/wasm
+          enableCaching: ${{ parameters.enableCaching }}
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
         additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"

@@ -5,6 +5,7 @@ parameters:
   packages: ''                                  # any additional packages
   target: ''                                    # the bootstrapper target
   cacheJob: ''                                  # the job name in repo-deps.config.json for caching (empty = no caching)
+  enableCaching: false                           # whether to use build caching (opt-in)
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
@@ -85,7 +86,7 @@ jobs:
         condition: always()
 
       # prepare — phase 1: shallow checkout (fast, no submodules)
-      - ${{ if ne(parameters.cacheJob, '') }}:
+      - ${{ if and(ne(parameters.cacheJob, ''), parameters.enableCaching) }}:
         - checkout: self
           submodules: false
           fetchDepth: 1
@@ -93,7 +94,7 @@ jobs:
           displayName: Configure build variables
 
       # build caching — check cache BEFORE full checkout
-      - ${{ if ne(parameters.cacheJob, '') }}:
+      - ${{ if and(ne(parameters.cacheJob, ''), parameters.enableCaching) }}:
         - pwsh: |
             python3 scripts/infra/caching/repo-deps.py cache-key `
               --name '${{ parameters.name }}' `
@@ -120,13 +121,13 @@ jobs:
           displayName: Evaluate cache decision
 
       # prepare — phase 2: full checkout (only if cache miss or non-native job)
-      - ${{ if not(ne(parameters.cacheJob, '')) }}:
+      - ${{ if not(and(ne(parameters.cacheJob, ''), parameters.enableCaching)) }}:
         - checkout: self
           submodules: recursive
         - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
           displayName: Configure build variables
 
-      - ${{ if ne(parameters.cacheJob, '') }}:
+      - ${{ if and(ne(parameters.cacheJob, ''), parameters.enableCaching) }}:
         - pwsh: git submodule update --init --recursive
           displayName: Full checkout (submodules)
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))

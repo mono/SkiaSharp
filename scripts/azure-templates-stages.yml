@@ -33,6 +33,9 @@ parameters:
   - name: forceRealSigning
     type: boolean
     default: false
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
 
@@ -48,6 +51,7 @@ stages:
         buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+        enableCaching: ${{ parameters.enableCaching }}
 
   - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self
