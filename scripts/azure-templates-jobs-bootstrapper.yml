@@ -109,10 +109,13 @@ jobs:
         - pwsh: |
             $branch = $env:BUILD_SOURCEBRANCH
             $cacheHit = '$(CACHE_HIT)'
+            $forceBuild = $env:FORCE_BUILD
             $isProtected = ($branch -eq 'refs/heads/main') -or
                            ($branch -like 'refs/heads/release/*') -or
                            ($branch -like 'refs/heads/develop*')
-            if ($cacheHit -eq 'true' -and -not $isProtected) {
+            if ($forceBuild -eq 'true') {
+                Write-Host "##[section]FORCE_BUILD set — full build for ${{ parameters.name }}"
+            } elseif ($cacheHit -eq 'true' -and -not $isProtected) {
                 Write-Host "##[section]Cache HIT — skipping build for ${{ parameters.name }}"
                 Write-Host "##vso[task.setvariable variable=CACHE_SKIP]true"
             } elseif ($cacheHit -eq 'true') {
