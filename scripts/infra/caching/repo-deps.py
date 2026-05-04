@@ -155,15 +155,15 @@ def cmd_cache_key(config, args):
 
     print()
     print("\n=== Cache Key ===")
-    print(f"  Name:     {args.name}")
-    print(f"  Job:      {args.job}")
+    print(f"Name:     {args.name}")
+    print(f"Job:      {args.job}")
     for s in sub_shas:
-        print(f"  Sub:      {s}")
-    print(f"  Files:    {composite} ({len(file_hashes)} files)")
-    print("\n  Hashed:")
+        print(f"Sub:      {s}")
+    print(f"Files:    {composite} ({len(file_hashes)} files)")
+    print("\nHashed:")
     for d in hashed_dirs:
-        print(f"    - {d}")
-    print(f"\n  Key: {cache_key}\n")
+        print(f"  - {d}")
+    print(f"\nKey: {cache_key}\n")
 
     if os.environ.get("BUILD_BUILDID"):
         print(f"##vso[task.setvariable variable=CACHE_KEY]{cache_key}")
@@ -239,7 +239,7 @@ def cmd_analyze(config, args):
     if unmatched:
         print("❌ UNMATCHED FILES (not covered by any job or exclude):")
         for f in unmatched:
-            print(f"  {f}")
+            print(f"{f}")
         print(f"\nAdd to a job or exclude list in repo-deps.yaml")
         return 1
 
@@ -249,7 +249,7 @@ def cmd_analyze(config, args):
         run = results[job_path]
         icon = "🔨" if run else "⏭️"
         label = "RUN" if run else "SKIP"
-        print(f"  {icon} {job_path:<30} {label}")
+        print(f"{icon} {job_path:<30} {label}")
     return 0
 
 
@@ -297,10 +297,10 @@ def cmd_validate(config, args):
 
     # Output
     print("\n=== Validation ===")
-    print(f"  Total tracked files: {len(tracked)}")
-    print(f"  Excluded:            {excluded_count}")
-    print(f"  Uncovered:           {len(uncovered)}")
-    print("\n  Jobs:")
+    print(f"Total tracked files: {len(tracked)}")
+    print(f"Excluded:            {excluded_count}")
+    print(f"Uncovered:           {len(uncovered)}")
+    print("\nJobs:")
 
     # Show jobs with file counts
     for job_path in sorted(jobs.keys()):
@@ -310,19 +310,19 @@ def cmd_validate(config, args):
         if subs:
             sub_shas = [f"{s}:{get_submodule_sha(s)[:12]}" for s in sorted(set(subs))]
             sub_str = "  " + " ".join(sub_shas)
-        print(f"  {job_path:<30} {count:>4} files{sub_str}")
+        print(f"{job_path:<30} {count:>4} files{sub_str}")
 
     if overlaps:
         print(f"\n⚠️  {len(overlaps)} files match BOTH include and exclude (bug?):")
         for f in overlaps[:10]:
-            print(f"  {f}")
+            print(f"{f}")
         if len(overlaps) > 10:
-            print(f"  ... +{len(overlaps) - 10} more")
+            print(f"... +{len(overlaps) - 10} more")
 
     if uncovered:
         print(f"\n❌ UNCOVERED FILES:")
         for f in uncovered:
-            print(f"  {f}")
+            print(f"{f}")
         print(f"\nAdd to a job or exclude list in repo-deps.yaml")
         return 1
 
