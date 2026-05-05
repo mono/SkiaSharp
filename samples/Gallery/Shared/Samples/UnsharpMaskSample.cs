@@ -26,7 +26,7 @@ public class UnsharpMaskSample : CanvasSampleBase
 
 	public override string Description => "Multi-child runtime shader image filter: sharpens an image by subtracting a blurred version from the original.";
 
-	public override string Category => SampleCategories.ImageFilters;
+	public override string Category => SampleManager.ImageFilters;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

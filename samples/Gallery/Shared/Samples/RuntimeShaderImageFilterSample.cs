@@ -78,7 +78,7 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 
 	public override string Description => "Apply custom SkSL runtime shaders as image filters using SKImageFilter.CreateRuntimeShader.";
 
-	public override string Category => SampleCategories.ImageFilters;
+	public override string Category => SampleManager.ImageFilters;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
