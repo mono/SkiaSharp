@@ -159,7 +159,7 @@ public class SKWebpEncoderTest : SKTest
 	public void EncodeAnimatedWebpFrameWithNullPixmapThrows()
 	{
 		Assert.Throws<ArgumentNullException>(() =>
-			new SKWebpEncoderFrame(null!, TimeSpan.FromMilliseconds(100)));
+			new SKWebpEncoderFrame((SKPixmap)null!, TimeSpan.FromMilliseconds(100)));
 	}
 
 	[SkippableFact]
@@ -284,5 +284,165 @@ public class SKWebpEncoderTest : SKTest
 
 		Assert.Throws<ArgumentNullException>(() =>
 			SKWebpEncoder.Encode((Stream)null!, pix, SKWebpEncoderOptions.Default));
+	}
+
+	// SKWebpEncoderFrame constructor overloads
+
+	[SkippableFact]
+	public void FrameFromBitmapEncodes()
+	{
+		using var bmp1 = CreateColorBitmap(SKColors.Red);
+		using var bmp2 = CreateColorBitmap(SKColors.Blue);
+
+		SKWebpEncoderFrame[] frames =
+		[
+			new(bmp1, TimeSpan.FromMilliseconds(100)),
+			new(bmp2, TimeSpan.FromMilliseconds(200)),
+		];
+
+		var data = SKWebpEncoder.EncodeAnimated(frames, SKWebpEncoderOptions.Default);
+		Assert.NotNull(data);
+
+		using var codec = SKCodec.Create(data);
+		Assert.NotNull(codec);
+		Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
+		Assert.True(codec.FrameCount >= 2);
+	}
+
+	[SkippableFact]
+	public void FrameFromImageEncodes()
+	{
+		using var bmp1 = CreateColorBitmap(SKColors.Green);
+		using var bmp2 = CreateColorBitmap(SKColors.Yellow);
+		using var img1 = SKImage.FromBitmap(bmp1);
+		using var img2 = SKImage.FromBitmap(bmp2);
+
+		SKWebpEncoderFrame[] frames =
+		[
+			new(img1, TimeSpan.FromMilliseconds(150)),
+			new(img2, TimeSpan.FromMilliseconds(250)),
+		];
+
+		var data = SKWebpEncoder.EncodeAnimated(frames, SKWebpEncoderOptions.Default);
+		Assert.NotNull(data);
+
+		using var codec = SKCodec.Create(data);
+		Assert.NotNull(codec);
+		Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
+		Assert.True(codec.FrameCount >= 2);
+	}
+
+	[SkippableFact]
+	public void FrameFromNullBitmapThrows()
+	{
+		Assert.Throws<ArgumentNullException>(() =>
+			new SKWebpEncoderFrame((SKBitmap)null!, TimeSpan.FromMilliseconds(100)));
+	}
+
+	[SkippableFact]
+	public void FrameFromNullImageThrows()
+	{
+		Assert.Throws<ArgumentNullException>(() =>
+			new SKWebpEncoderFrame((SKImage)null!, TimeSpan.FromMilliseconds(100)));
+	}
+
+	// Full round-trip: encode → decode → validate pixels and durations
+
+	[SkippableFact]
+	public void FullRoundTripValidatesPixelsAndDurations()
+	{
+		var size = 40;
+		SKColor[] colors = [SKColors.Red, SKColors.Green, SKColors.Blue];
+		int[] durationsMs = [100, 200, 300];
+
+		// encode
+		var srcBitmaps = new SKBitmap[colors.Length];
+		var frames = new SKWebpEncoderFrame[colors.Length];
+		for (var i = 0; i < colors.Length; i++)
+		{
+			srcBitmaps[i] = CreateColorBitmap(colors[i], size, size);
+			frames[i] = new SKWebpEncoderFrame(srcBitmaps[i], TimeSpan.FromMilliseconds(durationsMs[i]));
+		}
+
+		var options = new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossless, 75);
+		var data = SKWebpEncoder.EncodeAnimated(frames, options);
+		Assert.NotNull(data);
+
+		// decode
+		using var codec = SKCodec.Create(data);
+		Assert.NotNull(codec);
+		Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
+		Assert.Equal(colors.Length, codec.FrameCount);
+		Assert.Equal(size, codec.Info.Width);
+		Assert.Equal(size, codec.Info.Height);
+
+		// validate each frame's duration and pixel content
+		var frameInfos = codec.FrameInfo;
+		Assert.Equal(colors.Length, frameInfos.Length);
+
+		for (var i = 0; i < colors.Length; i++)
+		{
+			// duration
+			Assert.Equal(durationsMs[i], frameInfos[i].Duration);
+
+			// decode frame pixels
+			var info = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var decoded = new SKBitmap(info);
+			var result = codec.GetPixels(info, decoded.GetPixels(), new SKCodecOptions(i));
+			Assert.Equal(SKCodecResult.Success, result);
+
+			// compare center pixel to expected color (lossless should be exact)
+			var actual = decoded.GetPixel(size / 2, size / 2);
+			Assert.Equal(colors[i].Red, actual.Red);
+			Assert.Equal(colors[i].Green, actual.Green);
+			Assert.Equal(colors[i].Blue, actual.Blue);
+		}
+
+		// cleanup source bitmaps
+		foreach (var bmp in srcBitmaps)
+			bmp.Dispose();
+	}
+
+	[SkippableFact]
+	public void LossyRoundTripPreservesApproximateColors()
+	{
+		var size = 40;
+		SKColor[] colors = [SKColors.Red, SKColors.Blue];
+		int[] durationsMs = [150, 250];
+
+		var frames = new SKWebpEncoderFrame[colors.Length];
+		var srcBitmaps = new SKBitmap[colors.Length];
+		for (var i = 0; i < colors.Length; i++)
+		{
+			srcBitmaps[i] = CreateColorBitmap(colors[i], size, size);
+			frames[i] = new SKWebpEncoderFrame(srcBitmaps[i], TimeSpan.FromMilliseconds(durationsMs[i]));
+		}
+
+		var options = new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossy, 100);
+		var data = SKWebpEncoder.EncodeAnimated(frames, options);
+		Assert.NotNull(data);
+
+		using var codec = SKCodec.Create(data);
+		Assert.NotNull(codec);
+		Assert.Equal(colors.Length, codec.FrameCount);
+
+		var frameInfos = codec.FrameInfo;
+		for (var i = 0; i < colors.Length; i++)
+		{
+			Assert.Equal(durationsMs[i], frameInfos[i].Duration);
+
+			var info = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var decoded = new SKBitmap(info);
+			codec.GetPixels(info, decoded.GetPixels(), new SKCodecOptions(i));
+
+			// lossy at q100 should be close but not necessarily exact
+			var actual = decoded.GetPixel(size / 2, size / 2);
+			Assert.InRange(actual.Red, (byte)Math.Max(0, colors[i].Red - 10), (byte)Math.Min(255, colors[i].Red + 10));
+			Assert.InRange(actual.Green, (byte)Math.Max(0, colors[i].Green - 10), (byte)Math.Min(255, colors[i].Green + 10));
+			Assert.InRange(actual.Blue, (byte)Math.Max(0, colors[i].Blue - 10), (byte)Math.Min(255, colors[i].Blue + 10));
+		}
+
+		foreach (var bmp in srcBitmaps)
+			bmp.Dispose();
 	}
 }
