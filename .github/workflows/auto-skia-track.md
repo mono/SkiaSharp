@@ -161,7 +161,7 @@ Commit the version changes in the parent repo.
 
 ## Step 4 — Build native and fix C API shim layer
 
-Follow **Phase 5** of the skill. Build on Linux x64:
+Follow **Phase 6** of the skill. Build on Linux x64:
 
 ```bash
 dotnet cake --target=externals-linux --arch=x64

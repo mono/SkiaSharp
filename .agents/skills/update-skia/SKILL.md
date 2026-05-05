@@ -33,7 +33,7 @@ Update Google Skia to a new Chrome milestone in SkiaSharp's mono/skia fork.
 
 ## Scripts
 
-- **`scripts/update-versions.ps1`** — Phase 6: Updates all version files and runs verification (replaces manual sed/grep)
+- **`scripts/update-versions.ps1`** — Phase 5: Updates all version files and runs verification (replaces manual sed/grep)
 - **`scripts/regenerate-bindings.ps1`** — Phase 7: Regenerates bindings, reverts HarfBuzz, reports new functions
 
 ## Overview
@@ -63,9 +63,9 @@ are project-specific and easy to get wrong from memory.
 
 The workflow follows this shape:
 1. **Research** (Phases 1–3): Understand what changed in Skia, validate the analysis
-2. **Merge & Fix** (Phases 4–5): Merge upstream, fix C API compilation errors
-3. **Update & Regenerate** (Phases 6–7): Version files and bindings (both handled by scripts)
-4. **Verify** (Phases 8–9): Review new functions, build, test
+2. **Merge** (Phase 4): Merge upstream, resolve conflicts
+3. **Update & Build** (Phases 5–6): Version files first, then build native and fix C API
+4. **Regenerate & Verify** (Phases 7–9): Bindings, C# wrappers, build, test
 5. **Ship** (Phase 10): Create cross-linked PRs in both repos
 
 ## Critical Rules
@@ -219,13 +219,34 @@ milestone numbers and paste your breaking change analysis table. The default exp
 > git blame src/c/sk_canvas.cpp | head -20         # Attribution shows original commits, not just merge
 > ```
 
-### Phase 5: Fix C API Shim Layer
+### Phase 5: Update SkiaSharp Version Files
+
+> 📋 **This phase is handled by a script.** The script updates VERSIONS.txt, cgmanifest.json,
+> azure-pipelines-variables.yml, and verifies SK_C_INCREMENT — then runs the mandatory
+> verification greps. It exits non-zero if any stale references remain.
+
+> **⚠️ This MUST be done before any native build.** The build scripts verify version
+> consistency — if VERSIONS.txt still says the old milestone, the build will fail.
+
+In the **SkiaSharp parent repo**, run:
+```bash
+pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
+```
+
+The script handles all of these (so you don't have to do them manually):
+- `scripts/VERSIONS.txt`: milestone, increment→0, soname, assembly, file, ALL ~30 nuget lines
+- `cgmanifest.json`: commitHash, version, chrome_milestone, upstream_merge_commit
+- `scripts/azure-pipelines-variables.yml` (if it exists)
+- Verifies `SK_C_INCREMENT` is 0 in `externals/skia/include/c/sk_types.h`
+- Runs mandatory `grep` verification — fails if any stale references remain
+
+> 🛑 **GATE**: Script exits with ✅. If it exits with ❌, fix the reported stale references
+> and re-run until it passes.
+
+### Phase 6: Fix C API Shim Layer
 
 This is where most of the work happens. The C API (`src/c/`, `include/c/`) wraps Skia C++ and
 must be updated when the underlying C++ APIs change.
-
-> **⚠️ Phase 6 (version update) MUST be completed before this phase.** The build scripts
-> verify version consistency — if VERSIONS.txt still says the old milestone, the build will fail.
 
 > **❌ NEVER use `externals-download` during a milestone update.** It downloads pre-built
 > binaries from the OLD milestone that don't contain your C API changes. Always build from
@@ -255,27 +276,6 @@ must be updated when the underlying C++ APIs change.
 4. **Build again** — iterate until clean compilation
 
 > 🛑 **GATE**: Native library builds successfully on at least one platform.
-
-### Phase 6: Update SkiaSharp Version Files
-
-> 📋 **This phase is handled by a script.** The script updates VERSIONS.txt, cgmanifest.json,
-> azure-pipelines-variables.yml, and verifies SK_C_INCREMENT — then runs the mandatory
-> verification greps. It exits non-zero if any stale references remain.
-
-In the **SkiaSharp parent repo**, run:
-```bash
-pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
-```
-
-The script handles all of these (so you don't have to do them manually):
-- `scripts/VERSIONS.txt`: milestone, increment→0, soname, assembly, file, ALL ~30 nuget lines
-- `cgmanifest.json`: commitHash, version, chrome_milestone, upstream_merge_commit
-- `scripts/azure-pipelines-variables.yml` (if it exists)
-- Verifies `SK_C_INCREMENT` is 0 in `externals/skia/include/c/sk_types.h`
-- Runs mandatory `grep` verification — fails if any stale references remain
-
-> 🛑 **GATE**: Script exits with ✅. If it exits with ❌, fix the reported stale references
-> and re-run until it passes.
 
 ### Phase 7: Regenerate Bindings
 
@@ -355,7 +355,7 @@ image loading, fonts, codecs, effects, and more. If these fail, something fundam
 broken — go back and fix before wasting time on the full suite.
 
 > ⚠️ If the version compatibility smoke test fails with "incompatible native library",
-> you missed a version update — go back to Phase 6 and verify ALL version lines.
+> you missed a version update — go back to Phase 5 and verify ALL version lines.
 > Do NOT work around this with `--no-incremental` or by copying native libs manually.
 
 **Step 2 — Full test suite (required before any PR):**
