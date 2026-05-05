@@ -39,7 +39,7 @@ namespace SkiaSharp.Tests
 				""";
 
 			using var builder = SKRuntimeEffect.BuildShader(src);
-			using var filter = SKImageFilter.CreateRuntimeShader(builder, "child");
+			using var filter = builder.BuildImageFilter("child");
 
 			Assert.NotNull(filter);
 		}
@@ -56,7 +56,7 @@ namespace SkiaSharp.Tests
 
 			using var builder = SKRuntimeEffect.BuildShader(src);
 			// empty string lets C++ auto-detect the single child
-			using var filter = SKImageFilter.CreateRuntimeShader(builder, "");
+			using var filter = builder.BuildImageFilter("");
 
 			Assert.NotNull(filter);
 		}
@@ -73,7 +73,7 @@ namespace SkiaSharp.Tests
 
 			using var builder = SKRuntimeEffect.BuildShader(src);
 			using var blur = SKImageFilter.CreateBlur(5, 5);
-			using var filter = SKImageFilter.CreateRuntimeShader(builder, "child", blur);
+			using var filter = builder.BuildImageFilter("child", blur);
 
 			Assert.NotNull(filter);
 		}
@@ -92,16 +92,9 @@ namespace SkiaSharp.Tests
 				""";
 
 			using var builder = SKRuntimeEffect.BuildShader(src);
-			using var filter = SKImageFilter.CreateRuntimeShader(builder, 1.0f, "child");
+			using var filter = builder.BuildImageFilter(1.0f, "child");
 
 			Assert.NotNull(filter);
-		}
-
-		[SkippableFact]
-		public void RuntimeShaderFilterThrowsWithNullBuilder()
-		{
-			Assert.Throws<ArgumentNullException>(() =>
-				SKImageFilter.CreateRuntimeShader(null!, "child"));
 		}
 
 		[SkippableFact]
@@ -116,7 +109,7 @@ namespace SkiaSharp.Tests
 				""";
 
 			using var builder = SKRuntimeEffect.BuildShader(src);
-			using var filter = SKImageFilter.CreateRuntimeShader(builder, "child");
+			using var filter = builder.BuildImageFilter("child");
 
 			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 			var canvas = surface.Canvas;
@@ -146,7 +139,7 @@ namespace SkiaSharp.Tests
 
 			using var builder = SKRuntimeEffect.BuildShader(src);
 			builder.Uniforms["tintColor"] = new float[] { 0, 0, 1, 1 };
-			using var filter = SKImageFilter.CreateRuntimeShader(builder, "child");
+			using var filter = builder.BuildImageFilter("child");
 
 			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 			var canvas = surface.Canvas;
@@ -175,7 +168,7 @@ namespace SkiaSharp.Tests
 
 			using var builder = SKRuntimeEffect.BuildShader(src);
 			using var blur = SKImageFilter.CreateBlur(2, 2);
-			using var filter = SKImageFilter.CreateRuntimeShader(builder, "child", blur);
+			using var filter = builder.BuildImageFilter("child", blur);
 
 			Assert.NotNull(filter);
 
@@ -206,7 +199,7 @@ namespace SkiaSharp.Tests
 				""";
 
 			using var builder = SKRuntimeEffect.BuildShader(src);
-			using var filter = SKImageFilter.CreateRuntimeShader(builder, 1.0f, "child", null);
+			using var filter = builder.BuildImageFilter(1.0f, "child", null);
 
 			Assert.NotNull(filter);
 
@@ -231,6 +224,40 @@ namespace SkiaSharp.Tests
 			Assert.Equal(255, pixel.Red);
 			Assert.Equal(0, pixel.Green);
 			Assert.Equal(0, pixel.Blue);
+		}
+
+		[SkippableFact]
+		public void ToImageFilterWorksDirectlyOnEffect()
+		{
+			var src = """
+				uniform shader child;
+				half4 main(float2 p) {
+					return half4(0, 1, 0, 1);
+				}
+				""";
+
+			using var effect = SKRuntimeEffect.CreateShader(src, out var errors);
+			Assert.Null(errors);
+
+			var uniforms = new SKRuntimeEffectUniforms(effect);
+			var children = new SKRuntimeEffectChildren(effect);
+			using var filter = effect.ToImageFilter(uniforms, children, "child");
+
+			Assert.NotNull(filter);
+
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+			canvas.Clear(SKColors.White);
+
+			using var paint = new SKPaint();
+			paint.ImageFilter = filter;
+			canvas.DrawPaint(paint);
+
+			using var snapshot = surface.Snapshot();
+			using var pixmap = snapshot.PeekPixels();
+			var pixel = pixmap.GetPixelColor(50, 50);
+
+			Assert.Equal(new SKColor(0, 255, 0), pixel);
 		}
 	}
 }

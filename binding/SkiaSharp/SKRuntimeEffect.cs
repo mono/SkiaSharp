@@ -190,6 +190,48 @@ namespace SkiaSharp
 			}
 		}
 
+		// ToImageFilter
+
+		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string childShaderName) =>
+			ToImageFilter (uniforms, children, childShaderName, null);
+
+		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string childShaderName, SKImageFilter input) =>
+			ToImageFilter (uniforms.ToData (), children.ToArray (), childShaderName, 0, input);
+
+		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, float maxSampleRadius, string childShaderName) =>
+			ToImageFilter (uniforms, children, maxSampleRadius, childShaderName, null);
+
+		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, float maxSampleRadius, string childShaderName, SKImageFilter input) =>
+			ToImageFilter (uniforms.ToData (), children.ToArray (), childShaderName, maxSampleRadius, input);
+
+		private SKImageFilter ToImageFilter (SKData uniforms, SKObject[] children, string childShaderName, float maxSampleRadius, SKImageFilter input)
+		{
+			var uniformsHandle = uniforms?.Handle ?? IntPtr.Zero;
+			using var childrenHandles = Utils.RentHandlesArray (children, true);
+			var childShaderNameUtf8 = StringUtilities.GetEncodedText (childShaderName ?? string.Empty, SKTextEncoding.Utf8, true);
+
+			if (maxSampleRadius > 0) {
+				var namesPtrs = stackalloc void*[1];
+				var inputs = stackalloc IntPtr[1];
+				inputs[0] = input?.Handle ?? IntPtr.Zero;
+
+				fixed (IntPtr* ch = childrenHandles)
+				fixed (byte* namePtr = childShaderNameUtf8) {
+					namesPtrs[0] = namePtr;
+					return SKImageFilter.GetObject (SkiaApi.sk_imagefilter_new_runtime_shader_with_children (
+						Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length,
+						maxSampleRadius, namesPtrs, inputs, 1));
+				}
+			}
+
+			fixed (IntPtr* ch = childrenHandles)
+			fixed (byte* namePtr = childShaderNameUtf8) {
+				return SKImageFilter.GetObject (SkiaApi.sk_imagefilter_new_runtime_shader (
+					Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length,
+					namePtr, input?.Handle ?? IntPtr.Zero));
+			}
+		}
+
 		//
 
 		internal static SKRuntimeEffect GetObject (IntPtr handle) =>
@@ -666,6 +708,18 @@ namespace SkiaSharp
 
 		public SKShader Build (SKMatrix localMatrix) =>
 			Effect.ToShader (Uniforms, Children, localMatrix);
+
+		public SKImageFilter BuildImageFilter (string childShaderName) =>
+			Effect.ToImageFilter (Uniforms, Children, childShaderName);
+
+		public SKImageFilter BuildImageFilter (string childShaderName, SKImageFilter input) =>
+			Effect.ToImageFilter (Uniforms, Children, childShaderName, input);
+
+		public SKImageFilter BuildImageFilter (float maxSampleRadius, string childShaderName) =>
+			Effect.ToImageFilter (Uniforms, Children, maxSampleRadius, childShaderName);
+
+		public SKImageFilter BuildImageFilter (float maxSampleRadius, string childShaderName, SKImageFilter input) =>
+			Effect.ToImageFilter (Uniforms, Children, maxSampleRadius, childShaderName, input);
 	}
 
 	public class SKRuntimeColorFilterBuilder : SKRuntimeEffectBuilder

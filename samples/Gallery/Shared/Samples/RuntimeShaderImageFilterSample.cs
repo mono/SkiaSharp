@@ -152,8 +152,8 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 		var sampleRadius = selectedShader == 4 ? 1.0f : 0f;
 
 		using var filter = sampleRadius > 0
-			? SKImageFilter.CreateRuntimeShader(builder, sampleRadius, "child")
-			: SKImageFilter.CreateRuntimeShader(builder, "child");
+			? builder.BuildImageFilter(sampleRadius, "child")
+			: builder.BuildImageFilter("child");
 
 		if (filter == null)
 			return;
