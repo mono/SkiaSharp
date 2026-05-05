@@ -15,7 +15,7 @@ public class PerlinNoiseTexturesSample : CanvasSampleBase
 
 	public override string Title => "Perlin Noise Textures";
 
-	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
+	public override DateOnly DateAdded => new DateOnly(2026, 4, 27);
 
 	public override string Description =>
 		"Procedural textures using Perlin noise — fractal vs turbulence side by side, with color presets for marble, wood, cloud, and fire effects.";

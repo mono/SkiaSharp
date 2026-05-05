@@ -22,7 +22,7 @@ public class PdfComposerSample : DocumentSampleBase
 
 	public override string Title => "PDF Composer";
 
-	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+	public override DateOnly DateAdded => new DateOnly(2026, 3, 27);
 
 	public override string Description => "Generate rich multi-page PDFs with shapes, text, images, and clickable annotations.";
 

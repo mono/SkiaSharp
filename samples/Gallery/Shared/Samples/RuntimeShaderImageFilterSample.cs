@@ -74,9 +74,11 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 	private float softness = 0.4f;
 	private float strength = 2.0f;
 
-	public override string Title => "Runtime Shader Image Filter";
+	public override string Title => "Custom SkSL Image Filter";
 
-	public override string Description => "Apply custom SkSL runtime shaders as image filters using SKImageFilter.CreateRuntimeShader.";
+	public override DateOnly DateAdded => new DateOnly(2026, 5, 5);
+
+	public override string Description => "Apply custom GPU image processing effects written in SkSL as image filters, composable with built-in filters.";
 
 	public override string Category => SampleManager.ImageFilters;
 
@@ -107,7 +109,7 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 		switch (id)
 		{
 			case "shader":
-				selectedShader = (int)(float)value;
+				selectedShader = (int)value;
 				break;
 			case "intensity":
 				intensity = (float)value;

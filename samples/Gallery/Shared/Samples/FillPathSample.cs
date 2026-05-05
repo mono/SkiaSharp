@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS0618 // Type or member is obsolete
-using System;
+﻿using System;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
 
@@ -20,7 +19,7 @@ public class FillPathSample : CanvasSampleBase
 
 	public override string Title => "Fill Path";
 
-	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
+	public override DateOnly DateAdded => new DateOnly(2026, 4, 27);
 
 	public override string Description =>
 	"Compute the filled outline of a stroked path using SKPaint.GetFillPath, with adjustable stroke parameters.";
