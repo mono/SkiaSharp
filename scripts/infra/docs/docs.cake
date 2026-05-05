@@ -2,6 +2,7 @@
 #addin nuget:?package=Cake.Json&version=6.0.1
 #addin nuget:?package=NuGet.Packaging&version=6.9.1
 #addin nuget:?package=SharpCompress&version=0.32.2
+#addin nuget:?package=Mono.Cecil&version=0.11.5
 #addin nuget:?package=Mono.ApiTools.ApiInfo&version=1.4.1
 #addin nuget:?package=Mono.ApiTools.ApiDiff&version=1.4.1
 #addin nuget:?package=Mono.ApiTools.ApiDiffFormatted&version=1.4.1
