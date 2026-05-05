@@ -192,16 +192,22 @@ namespace SkiaSharp
 
 		// ToImageFilter
 
+		public SKImageFilter ToImageFilter (string childShaderName) =>
+			ToImageFilter ((SKData)null, null, childShaderName, 0, null);
+
+		public SKImageFilter ToImageFilter (string childShaderName, SKImageFilter input) =>
+			ToImageFilter ((SKData)null, null, childShaderName, 0, input);
+
+		public SKImageFilter ToImageFilter (string childShaderName, SKImageFilter input, float maxSampleRadius) =>
+			ToImageFilter ((SKData)null, null, childShaderName, maxSampleRadius, input);
+
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string childShaderName) =>
-			ToImageFilter (uniforms, children, childShaderName, null);
+			ToImageFilter (uniforms.ToData (), children.ToArray (), childShaderName, 0, null);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string childShaderName, SKImageFilter input) =>
 			ToImageFilter (uniforms.ToData (), children.ToArray (), childShaderName, 0, input);
 
-		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, float maxSampleRadius, string childShaderName) =>
-			ToImageFilter (uniforms, children, maxSampleRadius, childShaderName, null);
-
-		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, float maxSampleRadius, string childShaderName, SKImageFilter input) =>
+		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string childShaderName, SKImageFilter input, float maxSampleRadius) =>
 			ToImageFilter (uniforms.ToData (), children.ToArray (), childShaderName, maxSampleRadius, input);
 
 		private SKImageFilter ToImageFilter (SKData uniforms, SKObject[] children, string childShaderName, float maxSampleRadius, SKImageFilter input)
@@ -715,11 +721,8 @@ namespace SkiaSharp
 		public SKImageFilter BuildImageFilter (string childShaderName, SKImageFilter input) =>
 			Effect.ToImageFilter (Uniforms, Children, childShaderName, input);
 
-		public SKImageFilter BuildImageFilter (float maxSampleRadius, string childShaderName) =>
-			Effect.ToImageFilter (Uniforms, Children, maxSampleRadius, childShaderName);
-
-		public SKImageFilter BuildImageFilter (float maxSampleRadius, string childShaderName, SKImageFilter input) =>
-			Effect.ToImageFilter (Uniforms, Children, maxSampleRadius, childShaderName, input);
+		public SKImageFilter BuildImageFilter (string childShaderName, SKImageFilter input, float maxSampleRadius) =>
+			Effect.ToImageFilter (Uniforms, Children, childShaderName, input, maxSampleRadius);
 	}
 
 	public class SKRuntimeColorFilterBuilder : SKRuntimeEffectBuilder
