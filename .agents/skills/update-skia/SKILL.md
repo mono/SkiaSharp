@@ -314,9 +314,8 @@ the build succeeds.
 
 **Step 1: Review new generated bindings for unwrapped functions:**
 ```bash
-# Show only NEW functions added by the regeneration
-# Use HEAD~1 in case the regenerated file was already committed
-git diff HEAD~1 -- binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
+# Show only NEW functions added by the regeneration (compare against main/skiasharp)
+git diff origin/main -- binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
 ```
 
 For each new function, check whether a C# wrapper exists:
