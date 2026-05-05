@@ -224,8 +224,8 @@ milestone numbers and paste your breaking change analysis table. The default exp
 > **⚠️ This MUST be done before any native build.** The build scripts verify version
 > consistency — if VERSIONS.txt still says the old milestone, the build will fail.
 
-**Before running the script**, reset `SK_C_INCREMENT` to `0` in `externals/skia/include/c/sk_types.h`
-if it's not already 0. The script will verify this.
+**Before running the script**, verify that `SK_C_INCREMENT` in `externals/skia/include/c/sk_types.h`
+is appropriate. The script will automatically reset it to `0` when the milestone changes.
 
 > 📋 **This phase is handled by a script.** The script updates VERSIONS.txt, cgmanifest.json,
 > azure-pipelines-variables.yml, and verifies SK_C_INCREMENT — then runs the mandatory

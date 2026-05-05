@@ -117,14 +117,22 @@ if (Test-Path $pipelinePath) {
     Write-Host "`n--- scripts/azure-pipelines-variables.yml not found (skipping) ---" -ForegroundColor DarkGray
 }
 
-# --- Step 4: Verify SK_C_INCREMENT ---
-Write-Host "`n--- Verifying SK_C_INCREMENT ---" -ForegroundColor Yellow
+# --- Step 4: Reset and verify SK_C_INCREMENT ---
+Write-Host "`n--- Checking SK_C_INCREMENT ---" -ForegroundColor Yellow
 $skTypesPath = Join-Path $repoRoot 'externals/skia/include/c/sk_types.h'
-$incrementLine = Select-String -Path $skTypesPath -Pattern 'SK_C_INCREMENT'
-if ($incrementLine -match 'SK_C_INCREMENT\s+0') {
-    Write-Host "  SK_C_INCREMENT is 0" -ForegroundColor Green
+if ($Current -ne $Target) {
+    Write-Host "  Milestone change (m$Current -> m$Target) — resetting SK_C_INCREMENT to 0" -ForegroundColor Yellow
+    $skTypesContent = Get-Content $skTypesPath -Raw
+    $skTypesContent = $skTypesContent -replace '(#define\s+SK_C_INCREMENT\s+)\d+', '${1}0'
+    Set-Content $skTypesPath $skTypesContent -NoNewline
+    Write-Host "  SK_C_INCREMENT reset to 0" -ForegroundColor Green
 } else {
-    Write-Error "SK_C_INCREMENT is NOT 0 — reset it to 0 in $skTypesPath"
+    $incrementLine = Select-String -Path $skTypesPath -Pattern 'SK_C_INCREMENT'
+    if ($incrementLine -match 'SK_C_INCREMENT\s+0') {
+        Write-Host "  SK_C_INCREMENT is 0" -ForegroundColor Green
+    } else {
+        Write-Error "SK_C_INCREMENT is NOT 0 — reset it to 0 in $skTypesPath"
+    }
 }
 
 # --- Step 5: Mandatory Verification ---
