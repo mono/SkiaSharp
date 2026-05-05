@@ -662,39 +662,53 @@ namespace SkiaSharp.Tests
 		public unsafe class ImageFilters : SKRuntimeEffectTest
 		{
 			[SkippableFact]
-			public void BuildImageFilterIsCreatedWithSingleChild()
+			public void ZeroArgAutoDetectsChild()
 			{
 				var src = """
 					uniform shader child;
 					half4 main(float2 p) {
-						return child.eval(p);
+						return half4(1, 0, 0, 1);
 					}
 					""";
 
 				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter("child");
+				using var filter = builder.BuildImageFilter();
 
 				Assert.NotNull(filter);
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.DrawPaint(paint);
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
 			}
 
 			[SkippableFact]
-			public void BuildImageFilterIsCreatedWithAutoDetectedChild()
+			public void ZeroArgFailsWithMultipleChildren()
 			{
 				var src = """
-					uniform shader child;
+					uniform shader a;
+					uniform shader b;
 					half4 main(float2 p) {
-						return child.eval(p);
+						return a.eval(p);
 					}
 					""";
 
 				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter("");
+				using var filter = builder.BuildImageFilter();
 
-				Assert.NotNull(filter);
+				// C++ returns nullptr when auto-detect fails with 2 children
+				Assert.Null(filter);
 			}
 
 			[SkippableFact]
-			public void BuildImageFilterIsCreatedWithInputFilter()
+			public void SingleChildWithNamedChild()
 			{
 				var src = """
 					uniform shader child;
@@ -711,7 +725,23 @@ namespace SkiaSharp.Tests
 			}
 
 			[SkippableFact]
-			public void BuildImageFilterIsCreatedWithMaxSampleRadius()
+			public void SingleChildWithNullNameAutoDetects()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return child.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildShader(src);
+				using var filter = builder.BuildImageFilter((string?)null, null);
+
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void SingleChildWithMaxSampleRadius()
 			{
 				var src = """
 					uniform shader child;
@@ -730,7 +760,7 @@ namespace SkiaSharp.Tests
 			}
 
 			[SkippableFact]
-			public void BuildImageFilterRendersCorrectly()
+			public void SingleChildRendersCorrectly()
 			{
 				var src = """
 					uniform shader child;
@@ -740,7 +770,7 @@ namespace SkiaSharp.Tests
 					""";
 
 				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter("child");
+				using var filter = builder.BuildImageFilter("child", null);
 
 				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 				var canvas = surface.Canvas;
@@ -752,13 +782,11 @@ namespace SkiaSharp.Tests
 
 				using var snapshot = surface.Snapshot();
 				using var pixmap = snapshot.PeekPixels();
-				var pixel = pixmap.GetPixelColor(50, 50);
-
-				Assert.Equal(SKColors.Red, pixel);
+				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
 			}
 
 			[SkippableFact]
-			public void BuildImageFilterWithUniformsRendersCorrectly()
+			public void UniformsArePassedToShader()
 			{
 				var src = """
 					uniform shader child;
@@ -770,7 +798,7 @@ namespace SkiaSharp.Tests
 
 				using var builder = SKRuntimeEffect.BuildShader(src);
 				builder.Uniforms["tintColor"] = new float[] { 0, 0, 1, 1 };
-				using var filter = builder.BuildImageFilter("child");
+				using var filter = builder.BuildImageFilter("child", null);
 
 				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 				var canvas = surface.Canvas;
@@ -782,13 +810,11 @@ namespace SkiaSharp.Tests
 
 				using var snapshot = surface.Snapshot();
 				using var pixmap = snapshot.PeekPixels();
-				var pixel = pixmap.GetPixelColor(50, 50);
-
-				Assert.Equal(SKColors.Blue, pixel);
+				Assert.Equal(SKColors.Blue, pixmap.GetPixelColor(50, 50));
 			}
 
 			[SkippableFact]
-			public void BuildImageFilterChainsWithOtherFilters()
+			public void InputFilterIsChained()
 			{
 				var src = """
 					uniform shader child;
@@ -813,7 +839,7 @@ namespace SkiaSharp.Tests
 			}
 
 			[SkippableFact]
-			public void BuildImageFilterWithMaxSampleRadiusRendersCorrectly()
+			public void MaxSampleRadiusRendersCorrectly()
 			{
 				var src = """
 					uniform shader child;
@@ -830,8 +856,6 @@ namespace SkiaSharp.Tests
 				using var builder = SKRuntimeEffect.BuildShader(src);
 				using var filter = builder.BuildImageFilter("child", null, 1.0f);
 
-				Assert.NotNull(filter);
-
 				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 				var canvas = surface.Canvas;
 				canvas.Clear(SKColors.Transparent);
@@ -846,14 +870,69 @@ namespace SkiaSharp.Tests
 				using var snapshot = surface.Snapshot();
 				using var pixmap = snapshot.PeekPixels();
 				var pixel = pixmap.GetPixelColor(50, 50);
-
 				Assert.Equal(255, pixel.Red);
 				Assert.Equal(0, pixel.Green);
 				Assert.Equal(0, pixel.Blue);
 			}
 
 			[SkippableFact]
-			public void ToImageFilterWorksDirectlyOnEffect()
+			public void MultiChildCreatesFilter()
+			{
+				var src = """
+					uniform shader content;
+					uniform shader blurred;
+					vec4 main(vec2 coord) {
+						vec4 c = content.eval(coord);
+						vec4 b = blurred.eval(coord);
+						return c + (c - b) * 4;
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildShader(src);
+				using var blur = SKImageFilter.CreateBlur(1, 1);
+				using var filter = builder.BuildImageFilter(
+					new[] { "content", "blurred" },
+					new SKImageFilter?[] { null, blur });
+
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void MultiChildRendersCorrectly()
+			{
+				// Two children: one returns red, one returns blue. Shader picks first.
+				var src = """
+					uniform shader a;
+					uniform shader b;
+					half4 main(float2 p) {
+						return a.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildShader(src);
+				var redInput = SKImageFilter.CreateShader(SKShader.CreateColor(SKColors.Red));
+				var blueInput = SKImageFilter.CreateShader(SKShader.CreateColor(SKColors.Blue));
+				using var filter = builder.BuildImageFilter(
+					new[] { "a", "b" },
+					new SKImageFilter?[] { redInput, blueInput });
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.SaveLayer(paint);
+				canvas.Clear(SKColors.Transparent);
+				canvas.Restore();
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
+			}
+
+			[SkippableFact]
+			public void ToImageFilterOnEffectWorks()
 			{
 				var src = """
 					uniform shader child;
@@ -865,8 +944,7 @@ namespace SkiaSharp.Tests
 				using var effect = SKRuntimeEffect.CreateShader(src, out var errors);
 				Assert.Null(errors);
 
-				using var filter = effect.ToImageFilter("child");
-
+				using var filter = effect.ToImageFilter();
 				Assert.NotNull(filter);
 
 				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
@@ -879,13 +957,11 @@ namespace SkiaSharp.Tests
 
 				using var snapshot = surface.Snapshot();
 				using var pixmap = snapshot.PeekPixels();
-				var pixel = pixmap.GetPixelColor(50, 50);
-
-				Assert.Equal(new SKColor(0, 255, 0), pixel);
+				Assert.Equal(new SKColor(0, 255, 0), pixmap.GetPixelColor(50, 50));
 			}
 
 			[SkippableFact]
-			public void ToImageFilterWithUniformsAndChildrenWorksOnEffect()
+			public void ToImageFilterWithExplicitUniformsWorks()
 			{
 				var src = """
 					uniform shader child;
@@ -901,7 +977,7 @@ namespace SkiaSharp.Tests
 				var uniforms = new SKRuntimeEffectUniforms(effect);
 				uniforms["tintColor"] = new float[] { 1, 0, 0, 1 };
 				var children = new SKRuntimeEffectChildren(effect);
-				using var filter = effect.ToImageFilter(uniforms, children, "child");
+				using var filter = effect.ToImageFilter(uniforms, children, "child", null);
 
 				Assert.NotNull(filter);
 
@@ -915,9 +991,7 @@ namespace SkiaSharp.Tests
 
 				using var snapshot = surface.Snapshot();
 				using var pixmap = snapshot.PeekPixels();
-				var pixel = pixmap.GetPixelColor(50, 50);
-
-				Assert.Equal(SKColors.Red, pixel);
+				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
 			}
 		}
 
