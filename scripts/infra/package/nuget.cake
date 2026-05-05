@@ -9,11 +9,6 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 // NUGET — pack NuGet packages
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("nuget")
-    .Description ("Pack all NuGets.")
-    .IsDependentOn ("nuget-normal")
-    .IsDependentOn ("nuget-special");
-
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .Does (() =>
@@ -281,8 +276,5 @@ Task ("nuget-special")
         }
     }
 });
-
-Task ("Default")
-    .IsDependentOn ("nuget");
 
 RunTarget(TARGET);
