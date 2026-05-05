@@ -89,7 +89,7 @@ public sealed partial class MainPage : Page
     private void OnPauseClicked(object sender, RoutedEventArgs e)
     {
         OutputCanvas.TogglePause();
-        PauseLabel.Text = OutputCanvas.IsAnimating ? "⏸ Pause" : "▶ Play";
+        PauseLabel.Text = OutputCanvas.IsAnimating ? "Stop" : "Play";
         if (!OutputCanvas.IsAnimating)
             FpsText.Text = "paused";
     }
@@ -107,14 +107,14 @@ public sealed partial class MainPage : Page
             if (result.Draw is not null)
             {
                 OutputCanvas.SetDrawDelegate(result.Draw);
-                PauseLabel.Text = "⏸ Pause";
+                PauseLabel.Text = "Stop";
                 MessageText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Resources["TextSecondary"];
                 MessageText.Text = result.Diagnostics ?? "Compiled in " + result.ElapsedMs + " ms";
             }
             else
             {
                 OutputCanvas.SetError(result.Diagnostics ?? "Unknown error");
-                PauseLabel.Text = "▶ Play";
+                PauseLabel.Text = "Play";
                 FpsText.Text = "";
                 MessageText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Resources["ErrorBrush"];
                 MessageText.Text = (result.Diagnostics ?? "Compile failed").Split('\n')[0];
