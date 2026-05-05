@@ -92,6 +92,7 @@ network:
     - "android.googlesource.com"
     - "dawn.googlesource.com"
     - "swiftshader.googlesource.com"
+    - "chrome-infra-packages.appspot.com"
 permissions:
   contents: read
   pull-requests: read
