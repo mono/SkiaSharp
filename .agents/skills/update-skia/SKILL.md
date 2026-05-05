@@ -175,6 +175,7 @@ milestone numbers and paste your breaking change analysis table. The default exp
    git pull origin skiasharp
    git checkout -b dev/update-skia-{TARGET}
    ```
+   > **Note:** Automated workflows may use a different branch name (e.g. `skia-sync/m{TARGET}`).
 
 2. **Merge upstream** — use `--no-commit` for manual conflict resolution:
    ```bash
@@ -233,6 +234,7 @@ is appropriate. The script will automatically reset it to `0` when the milestone
 
 In the **SkiaSharp parent repo**, run:
 ```bash
+cd ../..  # back to parent repo (Phase 4 ends inside externals/skia)
 pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
 ```
 
@@ -272,7 +274,7 @@ must be updated when the underlying C++ APIs change.
    | Legacy flag breaks C API | Update C API to use replacement API (see gotcha #6). Do not just comment out the flag without a plan |
 
 3. **Update `sk_types.h`** for any new enums or type changes
-   - Only bump `SK_C_INCREMENT` if you add new C API functions in this milestone
+   - Phase 5 reset `SK_C_INCREMENT` to 0. Only bump it if you add new C API functions in this milestone.
    - The build enforces that `SK_C_INCREMENT` matches `libSkiaSharp increment` in `VERSIONS.txt`
 
 4. **Build again** — iterate until clean compilation
@@ -280,6 +282,9 @@ must be updated when the underlying C++ APIs change.
 > 🛑 **GATE**: Native library builds successfully on at least one platform.
 
 ### Phase 7: Regenerate Bindings
+
+> **Prerequisite:** Phase 6's native build must have completed at least once — it runs
+> `git-sync-deps`, which fetches HarfBuzz and other headers the generator needs.
 
 > 📋 **This phase is handled by a script.** The script runs the generator, IMMEDIATELY
 > reverts HarfBuzz bindings (HarfBuzz updates are always separate), reports what changed,
@@ -341,7 +346,8 @@ New functions from upstream changes are usually additive and can be deferred.
 ### Phase 9: Build & Test
 
 ```bash
-# Build native (this also runs git-sync-deps)
+# Rebuild native only if you touched C API files in Phase 8
+# (Phase 6 already built — skip if no native changes since then)
 dotnet cake --target=externals-macos --arch=arm64
 
 # Build C#
@@ -382,6 +388,9 @@ before the update can be considered complete. Do not create PRs with only smoke 
 | Branch | `dev/update-skia-{TARGET}` |
 | Target | `skiasharp` |
 | Title | `Update skia to milestone {TARGET}` |
+
+> **Note:** Automated workflows may use a different branch naming convention
+> (e.g. `skia-sync/m{TARGET}`). Adjust the checklist below accordingly.
 
 #### PR 2: mono/SkiaSharp (parent)
 

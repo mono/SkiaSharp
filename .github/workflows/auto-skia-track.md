@@ -105,111 +105,30 @@ post-steps:
 
 # Skia Upstream Sync
 
-Merge new upstream commits from `chrome/m${{ needs.pre_activation.outputs.target }}` into
-branch `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
+Current: m${{ needs.pre_activation.outputs.current }}. Target: m${{ needs.pre_activation.outputs.target }}. Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 
-The current SkiaSharp milestone is m${{ needs.pre_activation.outputs.current }}.
-The target is m${{ needs.pre_activation.outputs.target }}.
+**Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2–9.** Notes specific to this automated workflow:
 
-**Important**: Even when current == target, there may be new upstream bug-fix commits on
-`chrome/m${{ needs.pre_activation.outputs.target }}` that need merging. Always check for
-new commits — a matching milestone number does NOT mean there's nothing to do.
+- **Phase 1 is pre-computed** (above). Skip it.
+- **Phase 4 branch name**: use `skia-sync/m${{ needs.pre_activation.outputs.target }}` (not `dev/update-skia-{TARGET}`).
+  Before creating a fresh branch, check if `origin/skia-sync/m${{ needs.pre_activation.outputs.target }}` already exists.
+  If so, check it out, check for new upstream commits with `git log HEAD..upstream/chrome/m${{ needs.pre_activation.outputs.target }}`, and merge if any. Stop if there are none.
+  Even when current == target, there may be new upstream bug-fix commits — a matching milestone does NOT mean no work.
+- **Phase 6 platform**: build on Linux x64 (`dotnet cake --target=externals-linux --arch=x64`).
+- **Phase 8 reminder**: a green C# build is NOT sufficient — run the new-function diff check from Phase 8 Step 1.
+- **Phase 10 is handled by a post-step.** Do NOT create PRs yourself. Instead, after Phase 9, write these files:
 
-Read and follow `.agents/skills/update-skia/SKILL.md` for detailed instructions on every phase.
-
-## Step 1 — Breaking change analysis and validation
-
-Follow **Phases 2–3** of the skill. Save the analysis — it goes into the PR descriptions.
-
-## Step 2 — Merge upstream in submodule
-
-Follow **Phase 4** of the skill in `externals/skia`:
-
-```bash
-cd externals/skia
-git fetch origin --quiet
-git fetch upstream --quiet
-```
-
-**If `skia-sync/m${{ needs.pre_activation.outputs.target }}` already exists on origin:**
-1. Check it out and check for new upstream commits:
+1. `/tmp/gh-aw/agent/skia-sync-env.sh`:
    ```bash
-   git checkout -b skia-sync/m${{ needs.pre_activation.outputs.target }} origin/skia-sync/m${{ needs.pre_activation.outputs.target }}
-   git log --oneline HEAD..upstream/chrome/m${{ needs.pre_activation.outputs.target }} | head -5
-   ```
-2. If there are no new commits, the branch is up-to-date — report this and stop.
-3. If there ARE new commits, merge them in.
-
-**If the branch does NOT exist:**
-1. Create it from `origin/skiasharp`:
-   ```bash
-   git checkout -b skia-sync/m${{ needs.pre_activation.outputs.target }} origin/skiasharp
-   git merge --no-commit upstream/chrome/m${{ needs.pre_activation.outputs.target }}
+   TARGET=${{ needs.pre_activation.outputs.target }}
+   CURRENT=${{ needs.pre_activation.outputs.current }}
    ```
 
-Resolve conflicts per the skill's strategy table. Verify and commit.
+2. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` — for the mono/skia PR:
+   - Upstream merge details, conflicts resolved, C API fixes, items needing human attention
 
-## Step 3 — Update version files
+3. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` — for the mono/SkiaSharp PR:
+   - Breaking change analysis, version/binding updates, C# changes, build/test results, items needing human attention
 
-**This must happen BEFORE the native build.** The build scripts verify version consistency.
-
-```bash
-pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current ${{ needs.pre_activation.outputs.current }} -Target ${{ needs.pre_activation.outputs.target }}
-```
-
-Commit the version changes in the parent repo.
-
-## Step 4 — Build native and fix C API shim layer
-
-Follow **Phase 6** of the skill. Build on Linux x64:
-
-```bash
-dotnet cake --target=externals-linux --arch=x64
-```
-
-This also runs `git-sync-deps` which fetches all Skia dependencies (HarfBuzz, etc.).
-Fix compilation errors iteratively per the skill. Commit fixes in the submodule.
-
-**⚠️ NEVER use `externals-download` — it downloads OLD pre-built binaries that don't
-have your C API changes. Always use `externals-{platform}` to build from source.**
-
-## Step 5 — Regenerate bindings and fix C# wrappers
-
-Follow **Phases 7–9** of the skill:
-
-1. `pwsh .agents/skills/update-skia/scripts/regenerate-bindings.ps1`
-2. Fix C# wrappers per Phase 8
-3. Build and test:
-   ```bash
-   dotnet build binding/SkiaSharp/SkiaSharp.csproj
-   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
-   ```
-
-Commit all SkiaSharp changes on the `skia-sync/m${{ needs.pre_activation.outputs.target }}` branch.
-
-## Step 6 — Write env and PR summaries
-
-**First**, write the env file so the post-step knows what to push:
-
-```bash
-mkdir -p /tmp/gh-aw/agent
-cat > /tmp/gh-aw/agent/skia-sync-env.sh << EOF
-TARGET=${{ needs.pre_activation.outputs.target }}
-CURRENT=${{ needs.pre_activation.outputs.current }}
-EOF
-```
-
-**Then** write two separate summary files for the PR descriptions:
-
-1. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` — for the **mono/skia** PR:
-   - Upstream merge details (commits merged, conflicts resolved)
-   - C API shim fixes applied
-   - Files changed in the submodule
-   - Items needing human attention
-
-2. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` — for the **mono/SkiaSharp** PR:
-   - Breaking change analysis table
-   - Version and binding updates
-   - C# wrapper changes
-   - Build and test results
-   - Items needing human attention
+Commit submodule changes inside `externals/skia` on `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
+Commit parent repo changes on `skia-sync/m${{ needs.pre_activation.outputs.target }}` in the parent.
