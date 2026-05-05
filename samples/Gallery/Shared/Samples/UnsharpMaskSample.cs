@@ -76,9 +76,9 @@ public class UnsharpMaskSample : CanvasSampleBase
 		builder.Uniforms["strength"] = strength;
 
 		using var blur = SKImageFilter.CreateBlur(blurRadius, blurRadius);
-		using var filter = builder.Build(
-			new[] { "content", "blurred" },
-			new SKImageFilter?[] { null, blur });
+		builder.Inputs["content"] = null;
+		builder.Inputs["blurred"] = blur;
+		using var filter = builder.Build();
 
 		if (filter == null)
 			return;

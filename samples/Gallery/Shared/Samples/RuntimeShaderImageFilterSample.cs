@@ -157,7 +157,7 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 		var sampleRadius = selectedShader == 4 ? 1.0f : 0f;
 
 		using var filter = sampleRadius > 0
-			? builder.Build("child", null, sampleRadius)
+			? builder.Build(sampleRadius)
 			: builder.Build();
 
 		if (filter == null)
