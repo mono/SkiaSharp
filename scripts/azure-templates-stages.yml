@@ -62,6 +62,7 @@ stages:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableSigning: ${{ parameters.enableSigning }}
         forceRealSigning: ${{ parameters.forceRealSigning }}
+        enableCaching: ${{ parameters.enableCaching }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self

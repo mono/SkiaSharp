@@ -12,6 +12,9 @@ parameters:
     type: object
   - name: buildAgentAndroidTests
     type: object
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
 
@@ -28,6 +31,8 @@ stages:
             displayName: API Diff
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: docs-api-diff
+            cacheJob: managed/package/api_diff
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
             shouldPublish: false
             requiredArtifacts:
@@ -65,6 +70,8 @@ stages:
             displayName: Managed (Windows)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: libs
+            cacheJob: managed
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -77,6 +84,8 @@ stages:
             displayName: Managed (macOS)
             buildAgent: ${{ parameters.buildAgentMac }}
             target: libs
+            cacheJob: managed
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -90,6 +99,8 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: libs
+            cacheJob: managed
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native

@@ -12,6 +12,9 @@ parameters:
     type: boolean
   - name: forceRealSigning
     type: boolean
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
 
@@ -45,6 +48,8 @@ stages:
           displayName: Package NuGets
           buildAgent: ${{ parameters.buildAgentWindows}}
           target: nuget-normal
+          cacheJob: managed/package
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
           shouldPublish: false
           requiredArtifacts:
@@ -108,6 +113,8 @@ stages:
           buildAgent: ${{ parameters.buildAgentWindows}}
           dependsOn: package_normal_windows
           target: nuget-special
+          cacheJob: managed/package
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
           shouldPublish: false
           requiredArtifacts:
