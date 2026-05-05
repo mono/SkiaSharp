@@ -66,14 +66,21 @@ on:
           SKIASHARP_SHA=$(git ls-remote https://github.com/mono/skia.git refs/heads/skiasharp | awk '{print $1}')
           gh api "repos/mono/skia/git/refs" -f ref="refs/heads/${BRANCH}" -f sha="$SKIASHARP_SHA" 2>/dev/null || true
         fi
-        SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+        SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
         if [ -z "$SKIA_PR" ]; then
           echo "Creating mono/skia draft PR..."
           SKIA_PR=$(gh pr create --repo mono/skia \
             --head "$BRANCH" --base skiasharp \
             --title "[autobump] Update skia to milestone ${TARGET}" \
             --draft \
-            --body "Automated upstream merge of chrome/m${TARGET}. Pending agent run." 2>/dev/null | grep -oE '[0-9]+$' || echo "")
+            --body "Automated upstream merge of chrome/m${TARGET}. Pending agent run." 2>&1 | tail -1 | grep -oE '[0-9]+$' || echo "")
+          if [ -z "$SKIA_PR" ]; then
+            echo "::warning::Failed to create mono/skia PR"
+          else
+            echo "Created mono/skia PR #${SKIA_PR}"
+          fi
+        else
+          echo "mono/skia PR #${SKIA_PR} already exists"
         fi
         echo "skia_pr=$SKIA_PR" >> "$GITHUB_OUTPUT"
 
@@ -83,14 +90,21 @@ on:
           MAIN_SHA=$(git ls-remote https://github.com/mono/SkiaSharp.git refs/heads/main | awk '{print $1}')
           gh api "repos/mono/SkiaSharp/git/refs" -f ref="refs/heads/${BRANCH}" -f sha="$MAIN_SHA" 2>/dev/null || true
         fi
-        SS_PR=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+        SS_PR=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
         if [ -z "$SS_PR" ]; then
           echo "Creating mono/SkiaSharp draft PR..."
           SS_PR=$(gh pr create --repo mono/SkiaSharp \
             --head "$BRANCH" --base main \
             --title "[autobump] Bump skia to milestone ${TARGET}" \
             --draft \
-            --body "Automated Skia milestone bump to m${TARGET}. Pending agent run." 2>/dev/null | grep -oE '[0-9]+$' || echo "")
+            --body "Automated Skia milestone bump to m${TARGET}. Pending agent run." 2>&1 | tail -1 | grep -oE '[0-9]+$' || echo "")
+          if [ -z "$SS_PR" ]; then
+            echo "::warning::Failed to create mono/SkiaSharp PR"
+          else
+            echo "Created mono/SkiaSharp PR #${SS_PR}"
+          fi
+        else
+          echo "mono/SkiaSharp PR #${SS_PR} already exists"
         fi
         echo "skiasharp_pr=$SS_PR" >> "$GITHUB_OUTPUT"
 
