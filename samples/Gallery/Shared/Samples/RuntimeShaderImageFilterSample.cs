@@ -76,7 +76,7 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 
 	public override string Title => "Custom SkSL Image Filter";
 
-	public override DateOnly DateAdded => new DateOnly(2026, 5, 5);
+	public override DateOnly? DateAdded => new DateOnly(2026, 5, 5);
 
 	public override string Description => "Apply custom GPU image processing effects written in SkSL as image filters, composable with built-in filters.";
 

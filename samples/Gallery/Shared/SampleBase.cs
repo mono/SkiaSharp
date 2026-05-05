@@ -8,11 +8,11 @@ public abstract class SampleBase
 {
 	public abstract string Title { get; }
 
-	public abstract string Description { get; }
+	public virtual string Description { get; } = string.Empty;
 
 	public virtual string Category { get; } = SampleManager.General;
 
-	public abstract DateOnly DateAdded { get; }
+	public virtual DateOnly? DateAdded { get; }
 
 
 	public virtual bool IsSupported => true;

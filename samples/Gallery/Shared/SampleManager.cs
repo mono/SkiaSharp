@@ -122,7 +122,8 @@ public static class SampleManager
 	/// </summary>
 	public static bool IsNew(SampleBase sample, IEnumerable<SampleBase> allSamples)
 	{
-		var added = sample.DateAdded;
+		if (sample.DateAdded is not { } added)
+			return false;
 
 		cachedCutoff ??= ComputeCutoff(allSamples);
 		return added >= cachedCutoff.Value;
@@ -134,8 +135,9 @@ public static class SampleManager
 	private static DateOnly ComputeCutoff(IEnumerable<SampleBase> allSamples)
 	{
 		var newest = allSamples
-			.Max(s => s.DateAdded);
-		return newest.AddDays(-3);
+			.Where(s => s.DateAdded.HasValue)
+			.Max(s => s.DateAdded!.Value);
+		return newest.AddDays(-10);
 	}
 
 	// ---------------------------------------------------------------
@@ -151,7 +153,7 @@ public static class SampleManager
 		if (IsNew(sample, allSamples) || (sample is CanvasSampleBase cs && cs.IsAnimated))
 			return SampleCardSize.Feature;
 
-		if (sample.DateAdded < new DateOnly(2026, 1, 1))
+		if (sample.DateAdded is { } date && date < new DateOnly(2026, 1, 1))
 			return SampleCardSize.Compact;
 
 		return SampleCardSize.Standard;
@@ -190,7 +192,7 @@ public static class SampleManager
 			SampleSortOrder.NewestFirst => SortNewFirstThenDayShuffle(list, samples),
 			SampleSortOrder.OldestFirst => list
 				.OrderBy(s => s.IsSupported ? 0 : 1)
-				.ThenBy(s => s.DateAdded)
+				.ThenBy(s => s.DateAdded ?? DateOnly.MaxValue)
 				.ThenBy(s => s.Title),
 			SampleSortOrder.Alphabetical => list
 				.OrderBy(s => s.IsSupported ? 0 : 1)
