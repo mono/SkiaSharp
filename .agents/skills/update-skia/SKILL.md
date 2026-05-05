@@ -259,8 +259,9 @@ must be updated when the underlying C++ APIs change.
 
 1. **Attempt to build** to identify all compilation errors:
    ```bash
-   dotnet cake --target=externals-macos --arch=arm64
+   dotnet cake --target=externals-{platform} --arch={arch}
    ```
+   Replace `{platform}` with your OS (`macos`, `linux`, `windows`) and `{arch}` with your architecture (`arm64`, `x64`).
 
 2. **Fix each error** following these patterns:
 
@@ -348,7 +349,7 @@ New functions from upstream changes are usually additive and can be deferred.
 ```bash
 # Rebuild native only if you touched C API files in Phase 8
 # (Phase 6 already built — skip if no native changes since then)
-dotnet cake --target=externals-macos --arch=arm64
+dotnet cake --target=externals-{platform} --arch={arch}
 
 # Build C#
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
