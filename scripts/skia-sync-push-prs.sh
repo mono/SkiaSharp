@@ -13,14 +13,15 @@
 
 set -euo pipefail
 
-if [ ! -f /tmp/gh-aw/agent/skia-sync-env.sh ]; then
-    echo "No skia-sync-env.sh — agent determined no work needed"
-    exit 0
+if [ -z "${TARGET:-}" ]; then
+    # Fallback: read from agent-written file
+    if [ -f /tmp/gh-aw/agent/skia-sync-env.sh ]; then
+        source /tmp/gh-aw/agent/skia-sync-env.sh
+    fi
 fi
-source /tmp/gh-aw/agent/skia-sync-env.sh
 
 if [ -z "${TARGET:-}" ]; then
-    echo "TARGET is empty — skipping"
+    echo "TARGET is empty — agent determined no work needed"
     exit 0
 fi
 

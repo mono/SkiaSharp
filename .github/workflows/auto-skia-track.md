@@ -99,6 +99,8 @@ post-steps:
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+      TARGET: ${{ needs.pre_activation.outputs.target }}
+      CURRENT: ${{ needs.pre_activation.outputs.current }}
     run: bash scripts/skia-sync-push-prs.sh
 ---
 
@@ -173,19 +175,9 @@ Follow **Phases 6–9** of the skill:
 
 Commit all SkiaSharp changes on the `skia-sync/m${{ needs.pre_activation.outputs.target }}` branch.
 
-## Step 5 — Write env and PR summaries
+## Step 5 — Write PR summaries
 
-**First**, write the env file so the post-step knows what to push:
-
-```bash
-mkdir -p /tmp/gh-aw/agent
-cat > /tmp/gh-aw/agent/skia-sync-env.sh << EOF
-TARGET=${{ needs.pre_activation.outputs.target }}
-CURRENT=${{ needs.pre_activation.outputs.current }}
-EOF
-```
-
-**Then** write two separate summary files for the PR descriptions:
+Write two separate summary files for the PR descriptions:
 
 1. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` — for the **mono/skia** PR:
    - Upstream merge details (commits merged, conflicts resolved)
