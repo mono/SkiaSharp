@@ -73,7 +73,7 @@ checkout:
     submodules: recursive
 timeout-minutes: 120
 concurrency:
-  group: auto-skia-track-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
+  group: skia-upstream-sync-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
   cancel-in-progress: true
 tools:
   github:
@@ -90,33 +90,29 @@ network:
 permissions:
   contents: read
   pull-requests: read
-pre-agent-steps:
-  - name: Write env file for post-step
-    run: |
-      mkdir -p /tmp/gh-aw/agent
-      cat > /tmp/gh-aw/agent/autobump-env.sh << 'ENVEOF'
-      TARGET=${{ needs.pre_activation.outputs.target }}
-      CURRENT=${{ needs.pre_activation.outputs.current }}
-      ENVEOF
 post-steps:
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-      TARGET: ${{ needs.pre_activation.outputs.target }}
-      CURRENT: ${{ needs.pre_activation.outputs.current }}
     run: |
       set -euo pipefail
+
+      if [ ! -f /tmp/gh-aw/agent/skia-sync-env.sh ]; then
+        echo "No skia-sync-env.sh — agent determined no work needed"
+        exit 0
+      fi
+      source /tmp/gh-aw/agent/skia-sync-env.sh
 
       if [ -z "${TARGET:-}" ]; then
         echo "TARGET is empty — skipping"
         exit 0
       fi
 
-      BRANCH="autobump/skia-m${TARGET}"
+      BRANCH="skia-sync/m${TARGET}"
       SKIA_SUMMARY=""
       SS_SUMMARY=""
-      [ -f /tmp/gh-aw/agent/autobump-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/autobump-skia-summary.md)
-      [ -f /tmp/gh-aw/agent/autobump-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/autobump-skiasharp-summary.md)
+      [ -f /tmp/gh-aw/agent/skia-sync-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skia-summary.md)
+      [ -f /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md)
 
       # --- mono/skia: push submodule branch and create/update PR ---
       cd externals/skia
@@ -130,13 +126,13 @@ post-steps:
           echo "Creating mono/skia PR..."
           gh pr create --repo mono/skia \
             --head "$BRANCH" --base skiasharp \
-            --title "[autobump] Update skia to milestone ${TARGET}" \
+            --title "[skia-sync] Merge upstream chrome/m${TARGET}" \
             --draft \
             --body "Automated upstream merge of \`chrome/m${TARGET}\`.
 
       ${SKIA_SUMMARY}
 
-      Created by [auto-skia-track](https://github.com/$GITHUB_REPOSITORY/actions/workflows/auto-skia-track.lock.yml)." || echo "::warning::Failed to create mono/skia PR"
+      Created by [skia-upstream-sync](https://github.com/$GITHUB_REPOSITORY/actions/workflows/skia-upstream-sync.lock.yml)." || echo "::warning::Failed to create mono/skia PR"
         else
           echo "Updating mono/skia PR #${SKIA_PR}..."
           gh pr edit "$SKIA_PR" --repo mono/skia \
@@ -166,7 +162,7 @@ post-steps:
           echo "Creating mono/SkiaSharp PR..."
           gh pr create --repo mono/SkiaSharp \
             --head "$BRANCH" --base main \
-            --title "[autobump] Bump skia to milestone ${TARGET}" \
+            --title "[skia-sync] Update skia to milestone ${TARGET}" \
             --draft \
             --body "Automated Skia milestone bump from m${CURRENT} to m${TARGET}.
 
@@ -174,7 +170,7 @@ post-steps:
 
       ${SS_SUMMARY}
 
-      Created by [auto-skia-track](https://github.com/$GITHUB_REPOSITORY/actions/workflows/auto-skia-track.lock.yml)." || echo "::warning::Failed to create mono/SkiaSharp PR"
+      Created by [skia-upstream-sync](https://github.com/$GITHUB_REPOSITORY/actions/workflows/skia-upstream-sync.lock.yml)." || echo "::warning::Failed to create mono/SkiaSharp PR"
         else
           echo "Updating mono/SkiaSharp PR #${SS_PR}..."
           gh pr edit "$SS_PR" --repo mono/SkiaSharp \
@@ -194,10 +190,10 @@ safe-outputs:
     if-no-changes: ignore
 ---
 
-# Auto Skia Track
+# Skia Upstream Sync
 
 Merge new upstream commits from `chrome/m${{ needs.pre_activation.outputs.target }}` into
-branch `autobump/skia-m${{ needs.pre_activation.outputs.target }}`.
+branch `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 
 The current SkiaSharp milestone is m${{ needs.pre_activation.outputs.current }}.
 The target is m${{ needs.pre_activation.outputs.target }}.
@@ -222,10 +218,10 @@ git fetch origin --quiet
 git fetch upstream --quiet
 ```
 
-**If `autobump/skia-m${{ needs.pre_activation.outputs.target }}` already exists on origin:**
+**If `skia-sync/m${{ needs.pre_activation.outputs.target }}` already exists on origin:**
 1. Check it out and check for new upstream commits:
    ```bash
-   git checkout -b autobump/skia-m${{ needs.pre_activation.outputs.target }} origin/autobump/skia-m${{ needs.pre_activation.outputs.target }}
+   git checkout -b skia-sync/m${{ needs.pre_activation.outputs.target }} origin/skia-sync/m${{ needs.pre_activation.outputs.target }}
    git log --oneline HEAD..upstream/chrome/m${{ needs.pre_activation.outputs.target }} | head -5
    ```
 2. If there are no new commits, the branch is up-to-date — report this and stop.
@@ -234,7 +230,7 @@ git fetch upstream --quiet
 **If the branch does NOT exist:**
 1. Create it from `origin/skiasharp`:
    ```bash
-   git checkout -b autobump/skia-m${{ needs.pre_activation.outputs.target }} origin/skiasharp
+   git checkout -b skia-sync/m${{ needs.pre_activation.outputs.target }} origin/skiasharp
    git merge --no-commit upstream/chrome/m${{ needs.pre_activation.outputs.target }}
    ```
 
@@ -263,18 +259,29 @@ Follow **Phases 6–9** of the skill:
    dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
    ```
 
-Commit all SkiaSharp changes on the `autobump/skia-m${{ needs.pre_activation.outputs.target }}` branch.
+Commit all SkiaSharp changes on the `skia-sync/m${{ needs.pre_activation.outputs.target }}` branch.
 
-## Step 5 — Write PR summaries
+## Step 5 — Write env and PR summaries
 
-Write two separate summary files for the post-step to use in PR descriptions:
+**First**, write the env file so the post-step knows what to push:
 
-1. `/tmp/gh-aw/agent/autobump-skia-summary.md` — for the **mono/skia** PR:
+```bash
+mkdir -p /tmp/gh-aw/agent
+cat > /tmp/gh-aw/agent/skia-sync-env.sh << EOF
+TARGET=${{ needs.pre_activation.outputs.target }}
+CURRENT=${{ needs.pre_activation.outputs.current }}
+EOF
+```
+
+**Then** write two separate summary files for the PR descriptions:
+
+1. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` — for the **mono/skia** PR:
    - Upstream merge details (commits merged, conflicts resolved)
    - C API shim fixes applied
    - Files changed in the submodule
+   - Items needing human attention
 
-2. `/tmp/gh-aw/agent/autobump-skiasharp-summary.md` — for the **mono/SkiaSharp** PR:
+2. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` — for the **mono/SkiaSharp** PR:
    - Breaking change analysis table
    - Version and binding updates
    - C# wrapper changes

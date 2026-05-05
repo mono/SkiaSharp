@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"da36dc5ce6d92ec9f1b05b87c1157b575fd726f4f2a86d0f83862bfe12c3b16c","compiler_version":"v0.71.4","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"bdec9292a37fafc6eb4e425fff398e20f730733097896828529f403e6c8b64a6","compiler_version":"v0.71.4","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_CI_TRIGGER_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","SKIASHARP_AUTOBUMP_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"f8495a686e66770ae977f82732f34d7340ee42a4","version":"v0.71.4"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.35"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.35"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.35"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.3"},{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -48,7 +48,7 @@
 #   - ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959
 #   - node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
 
-name: "Auto Skia Track"
+name: "Skia Upstream Sync"
 "on":
   schedule:
   - cron: "0 7 * * *"
@@ -121,9 +121,9 @@ permissions: {}
 
 concurrency:
   cancel-in-progress: true
-  group: auto-skia-track-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
+  group: skia-upstream-sync-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
 
-run-name: "Auto Skia Track"
+run-name: "Skia Upstream Sync"
 
 jobs:
   activation:
@@ -151,7 +151,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.pre_activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_SETUP_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/auto-skia-track.lock.yml@${{ github.ref }}
       - name: Generate agentic run info
         id: generate_aw_info
@@ -162,7 +162,7 @@ jobs:
           GH_AW_INFO_VERSION: "1.0.40"
           GH_AW_INFO_AGENT_VERSION: "1.0.40"
           GH_AW_INFO_CLI_VERSION: "v0.71.4"
-          GH_AW_INFO_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_INFO_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_INFO_EXPERIMENTAL: "false"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "true"
           GH_AW_INFO_STAGED: "false"
@@ -245,23 +245,23 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_aace44efffa11970_EOF'
+          cat << 'GH_AW_PROMPT_def66babd5a55a3d_EOF'
           <system>
-          GH_AW_PROMPT_aace44efffa11970_EOF
+          GH_AW_PROMPT_def66babd5a55a3d_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_aace44efffa11970_EOF'
+          cat << 'GH_AW_PROMPT_def66babd5a55a3d_EOF'
           <safe-output-tools>
           Tools: create_pull_request, missing_tool, missing_data, noop
-          GH_AW_PROMPT_aace44efffa11970_EOF
+          GH_AW_PROMPT_def66babd5a55a3d_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_create_pull_request.md"
-          cat << 'GH_AW_PROMPT_aace44efffa11970_EOF'
+          cat << 'GH_AW_PROMPT_def66babd5a55a3d_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_aace44efffa11970_EOF
+          GH_AW_PROMPT_def66babd5a55a3d_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_aace44efffa11970_EOF'
+          cat << 'GH_AW_PROMPT_def66babd5a55a3d_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -293,12 +293,12 @@ jobs:
             - **Note**: If a branch you need is not in the list above and is not listed as an additional fetched ref, it has NOT been checked out. For private repositories you cannot fetch it without proper authentication. If the branch is required and not available, exit with an error and ask the user to add it to the `fetch:` option of the `checkout:` configuration (e.g., `fetch: ["refs/pulls/open/*"]` for all open PR refs, or `fetch: ["main", "feature/my-branch"]` for specific branches).
           </github-context>
           
-          GH_AW_PROMPT_aace44efffa11970_EOF
+          GH_AW_PROMPT_def66babd5a55a3d_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_aace44efffa11970_EOF'
+          cat << 'GH_AW_PROMPT_def66babd5a55a3d_EOF'
           </system>
           {{#runtime-import .github/workflows/auto-skia-track.md}}
-          GH_AW_PROMPT_aace44efffa11970_EOF
+          GH_AW_PROMPT_def66babd5a55a3d_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -414,7 +414,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_SETUP_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/auto-skia-track.lock.yml@${{ github.ref }}
       - name: Set runtime paths
         id: set-runtime-paths
@@ -487,14 +487,6 @@ jobs:
           GH_AW_AGENT_FOLDERS: ".agents .claude .codex .crush .gemini .github .opencode .pi"
           GH_AW_AGENT_FILES: ".crush.json AGENTS.md CLAUDE.md GEMINI.md PI.md opencode.jsonc"
         run: bash "${RUNNER_TEMP}/gh-aw/actions/restore_base_github_folders.sh"
-      - name: Write env file for post-step
-        run: |-
-          mkdir -p /tmp/gh-aw/agent
-          cat > /tmp/gh-aw/agent/autobump-env.sh << 'ENVEOF'
-          TARGET=${{ needs.pre_activation.outputs.target }}
-          CURRENT=${{ needs.pre_activation.outputs.current }}
-          ENVEOF
-
       - name: Download container images
         run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.25.35 ghcr.io/github/gh-aw-firewall/api-proxy:0.25.35 ghcr.io/github/gh-aw-firewall/squid:0.25.35 ghcr.io/github/gh-aw-mcpg:v0.3.3 ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959 node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
       - name: Generate Safe Outputs Config
@@ -502,9 +494,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_12e5c92ec4b263f4_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_2461806dc1e91a45_EOF'
           {"create_pull_request":{"if_no_changes":"ignore","max":1,"max_patch_files":100,"max_patch_size":1024,"protect_top_level_dot_folders":true,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS","DESIGN.md","README.md","CONTRIBUTING.md","CHANGELOG.md","SECURITY.md","CODE_OF_CONDUCT.md","AGENTS.md","CLAUDE.md","GEMINI.md"]},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_12e5c92ec4b263f4_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_2461806dc1e91a45_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -710,7 +702,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_852b8cc6b1846075_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_5d437534223477e3_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -758,7 +750,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_852b8cc6b1846075_EOF
+          GH_AW_MCP_CONFIG_5d437534223477e3_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -952,11 +944,9 @@ jobs:
             echo '{"items":[]}' > /tmp/gh-aw/agent_output.json
           fi
       - env:
-          CURRENT: ${{ needs.pre_activation.outputs.current }}
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-          TARGET: ${{ needs.pre_activation.outputs.target }}
         name: Push branches and create PRs
-        run: "set -euo pipefail\n\nif [ -z \"${TARGET:-}\" ]; then\n  echo \"TARGET is empty — skipping\"\n  exit 0\nfi\n\nBRANCH=\"autobump/skia-m${TARGET}\"\nSKIA_SUMMARY=\"\"\nSS_SUMMARY=\"\"\n[ -f /tmp/gh-aw/agent/autobump-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/autobump-skia-summary.md)\n[ -f /tmp/gh-aw/agent/autobump-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/autobump-skiasharp-summary.md)\n\n# --- mono/skia: push submodule branch and create/update PR ---\ncd externals/skia\nif git rev-parse --verify \"$BRANCH\" &>/dev/null; then\n  echo \"Pushing $BRANCH to mono/skia...\"\n  git remote set-url origin \"https://x-access-token:${GH_TOKEN}@github.com/mono/skia.git\"\n  git push origin \"$BRANCH\" --force-with-lease 2>/dev/null || git push origin \"$BRANCH\" --force\n\n  SKIA_PR=$(gh pr list --repo mono/skia --head \"$BRANCH\" --state open --json number --jq '.[0].number' 2>/dev/null || echo \"\")\n  if [ -z \"$SKIA_PR\" ]; then\n    echo \"Creating mono/skia PR...\"\n    gh pr create --repo mono/skia \\\n      --head \"$BRANCH\" --base skiasharp \\\n      --title \"[autobump] Update skia to milestone ${TARGET}\" \\\n      --draft \\\n      --body \"Automated upstream merge of \\`chrome/m${TARGET}\\`.\n\n${SKIA_SUMMARY}\n\nCreated by [auto-skia-track](https://github.com/$GITHUB_REPOSITORY/actions/workflows/auto-skia-track.lock.yml).\" || echo \"::warning::Failed to create mono/skia PR\"\n  else\n    echo \"Updating mono/skia PR #${SKIA_PR}...\"\n    gh pr edit \"$SKIA_PR\" --repo mono/skia \\\n      --body \"Automated upstream merge of \\`chrome/m${TARGET}\\`.\n\n${SKIA_SUMMARY}\n\nUpdated: $(date -u +%Y-%m-%dT%H:%M:%SZ)\" || true\n  fi\nelse\n  echo \"No submodule branch $BRANCH — skipping mono/skia\"\nfi\n\n# --- mono/SkiaSharp: push parent branch and create/update PR ---\ncd \"$GITHUB_WORKSPACE\"\nif git rev-parse --verify \"$BRANCH\" &>/dev/null; then\n  echo \"Pushing $BRANCH to mono/SkiaSharp...\"\n  git remote set-url origin \"https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp.git\"\n  git push origin \"$BRANCH\" --force-with-lease 2>/dev/null || git push origin \"$BRANCH\" --force\n\n  SKIA_PR=$(gh pr list --repo mono/skia --head \"$BRANCH\" --state open --json number --jq '.[0].number' 2>/dev/null || echo \"\")\n  SKIA_PR_LINK=\"\"\n  [ -n \"$SKIA_PR\" ] && SKIA_PR_LINK=\"**Companion skia PR:** https://github.com/mono/skia/pull/$SKIA_PR\"\n\n  SS_PR=$(gh pr list --repo mono/SkiaSharp --head \"$BRANCH\" --state open --json number --jq '.[0].number' 2>/dev/null || echo \"\")\n  if [ -z \"$SS_PR\" ]; then\n    echo \"Creating mono/SkiaSharp PR...\"\n    gh pr create --repo mono/SkiaSharp \\\n      --head \"$BRANCH\" --base main \\\n      --title \"[autobump] Bump skia to milestone ${TARGET}\" \\\n      --draft \\\n      --body \"Automated Skia milestone bump from m${CURRENT} to m${TARGET}.\n\n$SKIA_PR_LINK\n\n${SS_SUMMARY}\n\nCreated by [auto-skia-track](https://github.com/$GITHUB_REPOSITORY/actions/workflows/auto-skia-track.lock.yml).\" || echo \"::warning::Failed to create mono/SkiaSharp PR\"\n  else\n    echo \"Updating mono/SkiaSharp PR #${SS_PR}...\"\n    gh pr edit \"$SS_PR\" --repo mono/SkiaSharp \\\n      --body \"Automated Skia milestone bump from m${CURRENT} to m${TARGET}.\n\n$SKIA_PR_LINK\n\n${SS_SUMMARY}\n\nUpdated: $(date -u +%Y-%m-%dT%H:%M:%SZ)\" || true\n  fi\nelse\n  echo \"No SkiaSharp branch $BRANCH — skipping\"\nfi\n"
+        run: "set -euo pipefail\n\nif [ ! -f /tmp/gh-aw/agent/skia-sync-env.sh ]; then\n  echo \"No skia-sync-env.sh — agent determined no work needed\"\n  exit 0\nfi\nsource /tmp/gh-aw/agent/skia-sync-env.sh\n\nif [ -z \"${TARGET:-}\" ]; then\n  echo \"TARGET is empty — skipping\"\n  exit 0\nfi\n\nBRANCH=\"skia-sync/m${TARGET}\"\nSKIA_SUMMARY=\"\"\nSS_SUMMARY=\"\"\n[ -f /tmp/gh-aw/agent/skia-sync-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skia-summary.md)\n[ -f /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md)\n\n# --- mono/skia: push submodule branch and create/update PR ---\ncd externals/skia\nif git rev-parse --verify \"$BRANCH\" &>/dev/null; then\n  echo \"Pushing $BRANCH to mono/skia...\"\n  git remote set-url origin \"https://x-access-token:${GH_TOKEN}@github.com/mono/skia.git\"\n  git push origin \"$BRANCH\" --force-with-lease 2>/dev/null || git push origin \"$BRANCH\" --force\n\n  SKIA_PR=$(gh pr list --repo mono/skia --head \"$BRANCH\" --state open --json number --jq '.[0].number' 2>/dev/null || echo \"\")\n  if [ -z \"$SKIA_PR\" ]; then\n    echo \"Creating mono/skia PR...\"\n    gh pr create --repo mono/skia \\\n      --head \"$BRANCH\" --base skiasharp \\\n      --title \"[skia-sync] Merge upstream chrome/m${TARGET}\" \\\n      --draft \\\n      --body \"Automated upstream merge of \\`chrome/m${TARGET}\\`.\n\n${SKIA_SUMMARY}\n\nCreated by [skia-upstream-sync](https://github.com/$GITHUB_REPOSITORY/actions/workflows/skia-upstream-sync.lock.yml).\" || echo \"::warning::Failed to create mono/skia PR\"\n  else\n    echo \"Updating mono/skia PR #${SKIA_PR}...\"\n    gh pr edit \"$SKIA_PR\" --repo mono/skia \\\n      --body \"Automated upstream merge of \\`chrome/m${TARGET}\\`.\n\n${SKIA_SUMMARY}\n\nUpdated: $(date -u +%Y-%m-%dT%H:%M:%SZ)\" || true\n  fi\nelse\n  echo \"No submodule branch $BRANCH — skipping mono/skia\"\nfi\n\n# --- mono/SkiaSharp: push parent branch and create/update PR ---\ncd \"$GITHUB_WORKSPACE\"\nif git rev-parse --verify \"$BRANCH\" &>/dev/null; then\n  echo \"Pushing $BRANCH to mono/SkiaSharp...\"\n  git remote set-url origin \"https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp.git\"\n  git push origin \"$BRANCH\" --force-with-lease 2>/dev/null || git push origin \"$BRANCH\" --force\n\n  SKIA_PR=$(gh pr list --repo mono/skia --head \"$BRANCH\" --state open --json number --jq '.[0].number' 2>/dev/null || echo \"\")\n  SKIA_PR_LINK=\"\"\n  [ -n \"$SKIA_PR\" ] && SKIA_PR_LINK=\"**Companion skia PR:** https://github.com/mono/skia/pull/$SKIA_PR\"\n\n  SS_PR=$(gh pr list --repo mono/SkiaSharp --head \"$BRANCH\" --state open --json number --jq '.[0].number' 2>/dev/null || echo \"\")\n  if [ -z \"$SS_PR\" ]; then\n    echo \"Creating mono/SkiaSharp PR...\"\n    gh pr create --repo mono/SkiaSharp \\\n      --head \"$BRANCH\" --base main \\\n      --title \"[skia-sync] Update skia to milestone ${TARGET}\" \\\n      --draft \\\n      --body \"Automated Skia milestone bump from m${CURRENT} to m${TARGET}.\n\n$SKIA_PR_LINK\n\n${SS_SUMMARY}\n\nCreated by [skia-upstream-sync](https://github.com/$GITHUB_REPOSITORY/actions/workflows/skia-upstream-sync.lock.yml).\" || echo \"::warning::Failed to create mono/SkiaSharp PR\"\n  else\n    echo \"Updating mono/SkiaSharp PR #${SS_PR}...\"\n    gh pr edit \"$SS_PR\" --repo mono/SkiaSharp \\\n      --body \"Automated Skia milestone bump from m${CURRENT} to m${TARGET}.\n\n$SKIA_PR_LINK\n\n${SS_SUMMARY}\n\nUpdated: $(date -u +%Y-%m-%dT%H:%M:%SZ)\" || true\n  fi\nelse\n  echo \"No SkiaSharp branch $BRANCH — skipping\"\nfi\n"
 
       - name: Upload agent artifacts
         if: always()
@@ -1017,7 +1007,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_SETUP_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/auto-skia-track.lock.yml@${{ github.ref }}
       - name: Download agent output artifact
         id: download-agent-output
@@ -1039,7 +1029,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_REPORT_AS_ISSUE: "true"
@@ -1055,7 +1045,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
           GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
@@ -1072,7 +1062,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_MISSING_TOOL_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Skia Upstream Sync"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1086,7 +1076,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_REPORT_INCOMPLETE_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Skia Upstream Sync"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1100,7 +1090,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_WORKFLOW_ID: "auto-skia-track"
@@ -1152,7 +1142,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_SETUP_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/auto-skia-track.lock.yml@${{ github.ref }}
       - name: Download agent output artifact
         id: download-agent-output
@@ -1218,7 +1208,7 @@ jobs:
         if: always() && steps.detection_guard.outputs.run_detection == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          WORKFLOW_NAME: "Auto Skia Track"
+          WORKFLOW_NAME: "Skia Upstream Sync"
           WORKFLOW_DESCRIPTION: "Daily upstream Skia milestone tracking — merges new commits, resolves conflicts, builds, tests, and creates PRs."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
@@ -1338,7 +1328,7 @@ jobs:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_SETUP_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/auto-skia-track.lock.yml@${{ github.ref }}
       - name: Check team membership for workflow
         id: check_membership
@@ -1419,7 +1409,7 @@ jobs:
       GH_AW_ENGINE_MODEL: ${{ needs.agent.outputs.model }}
       GH_AW_ENGINE_VERSION: "1.0.40"
       GH_AW_WORKFLOW_ID: "auto-skia-track"
-      GH_AW_WORKFLOW_NAME: "Auto Skia Track"
+      GH_AW_WORKFLOW_NAME: "Skia Upstream Sync"
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
@@ -1438,7 +1428,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Auto Skia Track"
+          GH_AW_SETUP_WORKFLOW_NAME: "Skia Upstream Sync"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/auto-skia-track.lock.yml@${{ github.ref }}
       - name: Download agent output artifact
         id: download-agent-output
