@@ -149,7 +149,17 @@ git fetch upstream --quiet
 
 Resolve conflicts per the skill's strategy table. Verify and commit.
 
-## Step 3 — Fix C API shim layer
+## Step 3 — Update version files
+
+**This must happen BEFORE the native build.** The build scripts verify version consistency.
+
+```bash
+pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current ${{ needs.pre_activation.outputs.current }} -Target ${{ needs.pre_activation.outputs.target }}
+```
+
+Commit the version changes in the parent repo.
+
+## Step 4 — Build native and fix C API shim layer
 
 Follow **Phase 5** of the skill. Build on Linux x64:
 
@@ -157,16 +167,19 @@ Follow **Phase 5** of the skill. Build on Linux x64:
 dotnet cake --target=externals-linux --arch=x64
 ```
 
-Fix errors iteratively. Commit fixes in the submodule.
+This also runs `git-sync-deps` which fetches all Skia dependencies (HarfBuzz, etc.).
+Fix compilation errors iteratively per the skill. Commit fixes in the submodule.
 
-## Step 4 — Update SkiaSharp parent repo
+**⚠️ NEVER use `externals-download` — it downloads OLD pre-built binaries that don't
+have your C API changes. Always use `externals-{platform}` to build from source.**
 
-Follow **Phases 6–9** of the skill:
+## Step 5 — Regenerate bindings and fix C# wrappers
 
-1. `pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current ${{ needs.pre_activation.outputs.current }} -Target ${{ needs.pre_activation.outputs.target }}`
-2. `pwsh .agents/skills/update-skia/scripts/regenerate-bindings.ps1`
-3. Fix C# wrappers per Phase 8
-4. Build and test:
+Follow **Phases 7–9** of the skill:
+
+1. `pwsh .agents/skills/update-skia/scripts/regenerate-bindings.ps1`
+2. Fix C# wrappers per Phase 8
+3. Build and test:
    ```bash
    dotnet build binding/SkiaSharp/SkiaSharp.csproj
    dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
@@ -174,7 +187,7 @@ Follow **Phases 6–9** of the skill:
 
 Commit all SkiaSharp changes on the `skia-sync/m${{ needs.pre_activation.outputs.target }}` branch.
 
-## Step 5 — Write env and PR summaries
+## Step 6 — Write env and PR summaries
 
 **First**, write the env file so the post-step knows what to push:
 

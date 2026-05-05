@@ -224,6 +224,13 @@ milestone numbers and paste your breaking change analysis table. The default exp
 This is where most of the work happens. The C API (`src/c/`, `include/c/`) wraps Skia C++ and
 must be updated when the underlying C++ APIs change.
 
+> **⚠️ Phase 6 (version update) MUST be completed before this phase.** The build scripts
+> verify version consistency — if VERSIONS.txt still says the old milestone, the build will fail.
+
+> **❌ NEVER use `externals-download` during a milestone update.** It downloads pre-built
+> binaries from the OLD milestone that don't contain your C API changes. Always build from
+> source with `externals-{platform}`.
+
 1. **Attempt to build** to identify all compilation errors:
    ```bash
    dotnet cake --target=externals-macos --arch=arm64
