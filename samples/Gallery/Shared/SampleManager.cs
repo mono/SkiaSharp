@@ -135,7 +135,7 @@ public static class SampleManager
 	{
 		var newest = allSamples
 			.Max(s => s.DateAdded);
-		return newest.AddDays(-10);
+		return newest.AddDays(-3);
 	}
 
 	// ---------------------------------------------------------------
