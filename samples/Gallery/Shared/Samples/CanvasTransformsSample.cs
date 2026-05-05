@@ -15,7 +15,9 @@ public class CanvasTransformsSample : CanvasSampleBase
 
 	public override string Title => "2D Transforms";
 
-	public override string Category => SampleCategories.General;
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
+	public override string Category => SampleManager.General;
 
 	public override string Description => "Visualize 2D canvas transformations — translate, rotate, and scale with live matrix display.";
 
