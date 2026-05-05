@@ -71,6 +71,7 @@ namespace SkiaSharp
 				SKColorType.R16Unorm => SKColorTypeNative.R16Unorm,
 				SKColorType.Bgra10101010XR => SKColorTypeNative.Bgra10101010Xr,
 				SKColorType.RgbF16F16F16x => SKColorTypeNative.RgbF16f16f16x,
+				SKColorType.R16Float => SKColorTypeNative.R16Float,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
 			};
 
@@ -105,6 +106,7 @@ namespace SkiaSharp
 				SKColorTypeNative.R16Unorm => SKColorType.R16Unorm,
 				SKColorTypeNative.Bgra10101010Xr => SKColorType.Bgra10101010XR,
 				SKColorTypeNative.RgbF16f16f16x => SKColorType.RgbF16F16F16x,
+				SKColorTypeNative.R16Float => SKColorType.R16Float,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
 			};
 	}
