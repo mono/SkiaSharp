@@ -63,6 +63,7 @@ namespace SkiaSharp
 		Bgra10101010XR = 25,
 		RgbF16F16F16x = 26,
 		R16Unorm = 27,
+		R16Float = 28,
 	}
 
 	public static partial class SkiaExtensions
@@ -95,6 +96,7 @@ namespace SkiaSharp
 				SKColorType.Alpha16 => 2,
 				SKColorType.AlphaF16 => 2,
 				SKColorType.R16Unorm => 2,
+				SKColorType.R16Float => 2,
 				// 4
 				SKColorType.Bgra8888 => 4,
 				SKColorType.Bgra1010102 => 4,
@@ -136,6 +138,7 @@ namespace SkiaSharp
 				SKColorType.Alpha16 => 1,
 				SKColorType.AlphaF16 => 1,
 				SKColorType.R16Unorm => 1,
+				SKColorType.R16Float => 1,
 				// 2
 				SKColorType.Bgra8888 => 2,
 				SKColorType.Bgra1010102 => 2,
@@ -205,6 +208,7 @@ namespace SkiaSharp
 				case SKColorType.Bgr101010xXR:
 				case SKColorType.R8Unorm:
 				case SKColorType.R16Unorm:
+				case SKColorType.R16Float:
 				case SKColorType.RgbF16F16F16x:
 					alphaType = SKAlphaType.Opaque;
 					break;
