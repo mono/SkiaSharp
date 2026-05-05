@@ -237,6 +237,33 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ManagedStreamGetDataReturnsNullForNonSeekableStream()
+		{
+			using var inner = new MemoryStream(new byte[] { 10, 20, 30 });
+			using var nonSeekable = new NonSeekableReadOnlyStream(inner);
+			using var stream = new SKManagedStream(nonSeekable);
+
+			var result = stream.GetData();
+
+			Assert.Null(result);
+		}
+
+		[SkippableFact]
+		public void ManagedStreamGetDataReturnsNullEvenAfterRead()
+		{
+			using var memoryStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+			using var stream = new SKManagedStream(memoryStream);
+
+			// read some data first, then ask for getData
+			stream.ReadByte();
+			stream.ReadByte();
+
+			var result = stream.GetData();
+
+			Assert.Null(result);
+		}
+
+		[SkippableFact]
 		public void GetDataReturnsSameManagedObject()
 		{
 			var bytes = new byte[] { 10, 20, 30, 40 };
