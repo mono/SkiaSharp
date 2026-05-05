@@ -1,6 +1,9 @@
-namespace SkiaSharp.Gallery;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using SkiaSharp;
+using SkiaSharpSample.Controls;
 
-using SkiaSharp.Gallery.Controls;
+namespace SkiaSharpSample.Samples;
 
 public class UnsharpMaskSample : CanvasSampleBase
 {
@@ -64,14 +67,14 @@ public class UnsharpMaskSample : CanvasSampleBase
 
 		canvas.Clear(SKColors.Black);
 
-		using var builder = SKRuntimeEffect.BuildShader(UnsharpShader);
+		using var builder = SKRuntimeEffect.BuildImageFilter(UnsharpShader);
 		if (builder.Effect == null)
 			return;
 
 		builder.Uniforms["strength"] = strength;
 
 		using var blur = SKImageFilter.CreateBlur(blurRadius, blurRadius);
-		using var filter = builder.BuildImageFilter(
+		using var filter = builder.Build(
 			new[] { "content", "blurred" },
 			new SKImageFilter?[] { null, blur });
 

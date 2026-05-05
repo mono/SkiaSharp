@@ -671,8 +671,8 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter();
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build();
 
 				Assert.NotNull(filter);
 
@@ -700,8 +700,8 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter();
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build();
 
 				// C++ returns nullptr when auto-detect fails with 2 children
 				Assert.Null(filter);
@@ -717,9 +717,9 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
 				using var blur = SKImageFilter.CreateBlur(5, 5);
-				using var filter = builder.BuildImageFilter("child", blur);
+				using var filter = builder.Build("child", blur);
 
 				Assert.NotNull(filter);
 			}
@@ -734,8 +734,8 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter((string?)null, null);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build((string?)null, null);
 
 				Assert.NotNull(filter);
 			}
@@ -753,8 +753,8 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter("child", null, 1.0f);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build("child", null, 1.0f);
 
 				Assert.NotNull(filter);
 			}
@@ -769,8 +769,8 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter("child", null);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build("child", null);
 
 				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 				var canvas = surface.Canvas;
@@ -796,9 +796,9 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
 				builder.Uniforms["tintColor"] = new float[] { 0, 0, 1, 1 };
-				using var filter = builder.BuildImageFilter("child", null);
+				using var filter = builder.Build("child", null);
 
 				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 				var canvas = surface.Canvas;
@@ -823,9 +823,9 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
 				using var blur = SKImageFilter.CreateBlur(2, 2);
-				using var filter = builder.BuildImageFilter("child", blur);
+				using var filter = builder.Build("child", blur);
 
 				Assert.NotNull(filter);
 
@@ -853,8 +853,8 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
-				using var filter = builder.BuildImageFilter("child", null, 1.0f);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build("child", null, 1.0f);
 
 				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 				var canvas = surface.Canvas;
@@ -888,9 +888,9 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
 				using var blur = SKImageFilter.CreateBlur(1, 1);
-				using var filter = builder.BuildImageFilter(
+				using var filter = builder.Build(
 					new[] { "content", "blurred" },
 					new SKImageFilter?[] { null, blur });
 
@@ -909,10 +909,10 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				using var builder = SKRuntimeEffect.BuildShader(src);
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
 				var redInput = SKImageFilter.CreateShader(SKShader.CreateColor(SKColors.Red));
 				var blueInput = SKImageFilter.CreateShader(SKShader.CreateColor(SKColors.Blue));
-				using var filter = builder.BuildImageFilter(
+				using var filter = builder.Build(
 					new[] { "a", "b" },
 					new SKImageFilter?[] { redInput, blueInput });
 

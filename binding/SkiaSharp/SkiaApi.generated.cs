@@ -13601,18 +13601,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, /* char */ void* childShaderName, sk_imagefilter_t input);
+		internal static partial sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, [MarshalAs (UnmanagedType.LPStr)] String childShaderName, sk_imagefilter_t input);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, /* char */ void* childShaderName, sk_imagefilter_t input);
+		internal static extern sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, [MarshalAs (UnmanagedType.LPStr)] String childShaderName, sk_imagefilter_t input);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, /* char */ void* childShaderName, sk_imagefilter_t input);
+			internal delegate sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, [MarshalAs (UnmanagedType.LPStr)] String childShaderName, sk_imagefilter_t input);
 		}
 		private static Delegates.sk_runtimeeffect_make_image_filter sk_runtimeeffect_make_image_filter_delegate;
-		internal static sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, /* char */ void* childShaderName, sk_imagefilter_t input) =>
+		internal static sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, [MarshalAs (UnmanagedType.LPStr)] String childShaderName, sk_imagefilter_t input) =>
 			(sk_runtimeeffect_make_image_filter_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_image_filter> ("sk_runtimeeffect_make_image_filter")).Invoke (effect, uniforms, children, childCount, childShaderName, input);
 		#endif
 
@@ -13620,18 +13620,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		internal static partial sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		internal static extern sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+			internal delegate sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
 		}
 		private static Delegates.sk_runtimeeffect_make_image_filter_with_children sk_runtimeeffect_make_image_filter_with_children_delegate;
-		internal static sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount) =>
+		internal static sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount) =>
 			(sk_runtimeeffect_make_image_filter_with_children_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_image_filter_with_children> ("sk_runtimeeffect_make_image_filter_with_children")).Invoke (effect, uniforms, children, childCount, maxSampleRadius, childShaderNames, inputs, inputCount);
 		#endif
 

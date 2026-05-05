@@ -1,6 +1,9 @@
-namespace SkiaSharp.Gallery;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using SkiaSharp;
+using SkiaSharpSample.Controls;
 
-using SkiaSharp.Gallery.Controls;
+namespace SkiaSharpSample.Samples;
 
 public class RuntimeShaderImageFilterSample : CanvasSampleBase
 {
@@ -130,7 +133,7 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 
 		var src = ShaderSources[selectedShader];
 
-		using var builder = SKRuntimeEffect.BuildShader(src);
+		using var builder = SKRuntimeEffect.BuildImageFilter(src);
 		if (builder.Effect == null)
 			return;
 
@@ -152,8 +155,8 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 		var sampleRadius = selectedShader == 4 ? 1.0f : 0f;
 
 		using var filter = sampleRadius > 0
-			? builder.BuildImageFilter("child", null, sampleRadius)
-			: builder.BuildImageFilter();
+			? builder.Build("child", null, sampleRadius)
+			: builder.Build();
 
 		if (filter == null)
 			return;
