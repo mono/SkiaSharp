@@ -31,7 +31,7 @@ Task ("Default")
             "SkiaSharp.Direct3D.Tests.Console",
         };
         foreach (var testAssembly in testAssemblies) {
-            var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
+            var csproj = $"{ROOT_PATH}/tests/{testAssembly}/{testAssembly}.csproj";
 
             if (!SKIP_BUILD) {
                 RunDotNetBuild (csproj, platform: arch, properties: new Dictionary<string, string> {
@@ -39,11 +39,11 @@ Task ("Default")
                 });
             }
 
-            DirectoryPath results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}-{arch}";
+            DirectoryPath results = $"{ROOT_PATH}/output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}-{arch}";
             var assName = testAssembly.Replace (".Console", "");
             EnsureDirectoryExists (results);
             try {
-                RunTests ($"./tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.dll", results, arch == "x86");
+                RunTests ($"{ROOT_PATH}/tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.dll", results, arch == "x86");
             } catch {
                 failedTests++;
                 if (THROW_ON_FIRST_TEST_FAILURE)

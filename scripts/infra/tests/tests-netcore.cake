@@ -32,7 +32,7 @@ Task ("Default")
         "SkiaSharp.Direct3D.Tests.Console",
     };
     foreach (var testAssembly in testAssemblies) {
-        var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
+        var csproj = $"{ROOT_PATH}/tests/{testAssembly}/{testAssembly}.csproj";
 
         if (!SKIP_BUILD) {
             RunDotNetBuild (csproj, properties: new Dictionary<string, string> {
@@ -40,7 +40,7 @@ Task ("Default")
             });
         }
 
-        var results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
+        var results = $"{ROOT_PATH}/output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
         try {
             RunDotNetTest (csproj, results, properties: new Dictionary<string, string> {
                 { "TargetFramework", tfm }
@@ -57,7 +57,7 @@ Task ("Default")
     }
 
     if (COVERAGE) {
-        RunCodeCoverage ("./output/logs/testlogs/**/Coverage/**/*.xml", "./output/coverage");
+        RunCodeCoverage ($"{ROOT_PATH}/output/logs/testlogs/**/Coverage/**/*.xml", $"{ROOT_PATH}/output/coverage");
     }
 });
 

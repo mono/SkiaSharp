@@ -232,10 +232,10 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 
                 dllName += ".breaking";
             }
-            var changelogPath = (FilePath)$"./changelogs/{id}/{version}/{dllName}.md";
+            var changelogPath = (FilePath)$"{ROOT_PATH}/changelogs/{id}/{version}/{dllName}.md";
             EnsureDirectoryExists (changelogPath.GetDirectory ());
             CopyFile (file, changelogPath);
-            var changelogOutputPath = (FilePath)$"./output/logs/changelogs/{id}/{version}/{dllName}.md";
+            var changelogOutputPath = (FilePath)$"{ROOT_PATH}/output/logs/changelogs/{id}/{version}/{dllName}.md";
             EnsureDirectoryExists (changelogOutputPath.GetDirectory ());
             CopyFile (file, changelogOutputPath);
         }
@@ -259,7 +259,7 @@ Task ("docs-api-diff")
     CleanDirectories (baseDir);
 
     // pretty version
-    var diffDir = "./output/api-diff";
+    var diffDir = $"{ROOT_PATH}/output/api-diff";
     EnsureDirectoryExists (diffDir);
     CleanDirectories (diffDir);
 
@@ -325,7 +325,7 @@ Task ("docs-api-diff")
 Task ("docs-api-diff-past")
     .Does (async () =>
 {
-    var baseDir = "./output/api-diffs-past";
+    var baseDir = $"{ROOT_PATH}/output/api-diffs-past";
     CleanDirectories (baseDir);
 
     Information ($"Creating comparer...");
@@ -381,9 +381,9 @@ Task ("docs-update-frameworks")
     .Does (async () =>
 {
     // clear the temp dir
-    var docsTempPath = "./output/docs/temp";
-    var docsTempPathFrameowrks = "./output/docs/temp/frameworks";
-    var docsTempPathNuGets = "./output/docs/temp/nugets";
+    var docsTempPath = $"{ROOT_PATH}/output/docs/temp";
+    var docsTempPathFrameowrks = $"{ROOT_PATH}/output/docs/temp/frameworks";
+    var docsTempPathNuGets = $"{ROOT_PATH}/output/docs/temp/nugets";
     EnsureDirectoryExists (docsTempPath);
     CleanDirectories (docsTempPath);
     EnsureDirectoryExists (docsTempPathNuGets);
@@ -509,7 +509,7 @@ Task ("docs-format-docs")
     .Does (() =>
 {
     // process the generated docs
-    var docFiles = GetFiles ("./docs/**/*.xml");
+    var docFiles = GetFiles ($"{ROOT_PATH}/docs/**/*.xml");
     float typeCount = 0;
     float memberCount = 0;
     float totalTypes = 0;

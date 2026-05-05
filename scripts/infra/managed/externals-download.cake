@@ -17,10 +17,10 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 Task("Default")
     .Does(async () =>
 {
-    EnsureDirectoryExists ("./output");
-    CleanDirectories ("./output");
+    EnsureDirectoryExists ($"{ROOT_PATH}/output");
+    CleanDirectories ($"{ROOT_PATH}/output");
 
-    await DownloadPackageAsync("_nativeassets", "./output/native");
+    await DownloadPackageAsync("_nativeassets", $"{ROOT_PATH}/output/native");
 });
 
 RunTarget(TARGET);

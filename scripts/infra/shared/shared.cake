@@ -164,8 +164,6 @@ var TRACKED_NUGETS = SUPPORTED_NUGETS
 // LOGGING
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Ensure working directory is always the repo root
-System.IO.Directory.SetCurrentDirectory(ROOT_PATH.FullPath);
 
 Information("Arguments:");
 foreach (var arg in Arguments()) {

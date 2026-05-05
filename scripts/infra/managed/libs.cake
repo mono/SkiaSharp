@@ -12,7 +12,7 @@ Task ("Default")
     .WithCriteria (!SKIP_BUILD)
     .Does (() =>
 {
-    RunDotNetBuild ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", properties: MSBUILD_VERSION_PROPERTIES);
+    RunDotNetBuild ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", properties: MSBUILD_VERSION_PROPERTIES);
 });
 
 RunTarget(TARGET);

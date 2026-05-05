@@ -11,7 +11,7 @@ Task("externals-interop")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    RunProcess("pwsh", "./utils/generate.ps1");
+    RunProcess("pwsh", $"{ROOT_PATH}/utils/generate.ps1");
 
     RunProcess("git", "diff --name-only binding/*/*.generated.cs", out var files);
 

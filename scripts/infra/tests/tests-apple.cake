@@ -12,9 +12,9 @@ void RunAppleTests(string platform, string tfm, string configuration = "Debug")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+    FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var rid = $"{platform.Replace("ios", "iossimulator")}-{RuntimeInformation.ProcessArchitecture.ToString().ToLower()}";
-    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
+    var outputDir = ROOT_PATH + $"/tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
 
     // build the app
     if (!SKIP_BUILD) {
@@ -39,7 +39,7 @@ void RunAppleTests(string platform, string tfm, string configuration = "Debug")
         : $"{platform}-simulator-64";
 
     // run xharness
-    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.{platform}/{DATE_TIME_STR}";
+    DirectoryPath results = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.{platform}/{DATE_TIME_STR}";
     CleanDirectories(results.FullPath);
 
     try {

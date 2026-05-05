@@ -24,11 +24,11 @@ Setup(context =>
 {
     // if app wasn't passed as argument, build it
     if (string.IsNullOrEmpty(TEST_APP)) {
-        FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+        FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
         var configuration = "Release";
         var tfm = "net10.0-android36.0";
         var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString().ToLower();
-        TEST_APP = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
+        TEST_APP = ROOT_PATH + $"/tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
 
         Information("=== Android Test Build Configuration ===");
         Information("  Project:       {0}", csproj);
@@ -54,7 +54,7 @@ Setup(context =>
     }
 
     if (string.IsNullOrEmpty(TEST_RESULTS)) {
-        TEST_RESULTS = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
+        TEST_RESULTS = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
     }
     Information("Test Results Directory: {0}", TEST_RESULTS);
     CleanDir(TEST_RESULTS);

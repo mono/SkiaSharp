@@ -15,18 +15,18 @@ Task ("samples-generate")
     .Description ("Generate and zip the samples directory structure.")
     .Does (() =>
 {
-    EnsureDirectoryExists ("./output/");
+    EnsureDirectoryExists ($"{ROOT_PATH}/output/");
 
     // create the interactive archive
-    Zip ("./interactive", "./output/interactive.zip");
+    Zip ($"{ROOT_PATH}/interactive", $"{ROOT_PATH}/output/interactive.zip");
 
     // create the samples archive
-    CreateSamplesDirectory ("./samples/", "./output/samples/");
-    Zip ("./output/samples/", "./output/samples.zip");
+    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", $"{ROOT_PATH}/output/samples/");
+    Zip ($"{ROOT_PATH}/output/samples/", $"{ROOT_PATH}/output/samples.zip");
 
     // create the preview samples archive
-    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", PREVIEW_NUGET_SUFFIX);
-    Zip ("./output/samples-preview/", "./output/samples-preview.zip");
+    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", $"{ROOT_PATH}/output/samples-preview/", PREVIEW_NUGET_SUFFIX);
+    Zip ($"{ROOT_PATH}/output/samples-preview/", $"{ROOT_PATH}/output/samples-preview.zip");
 });
 
 Task ("samples-prepare")
@@ -49,12 +49,12 @@ Task ("samples-run")
 
     // discover all samples: solutions for dotnet build, run.ps1 for Docker
     var solutions =
-        GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
-        GetFiles ($"./output/{actualSamples}/**/*.slnf")).Union (
-        GetFiles ($"./output/{actualSamples}/**/*.slnx"))
+        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.sln").Union (
+        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.slnf")).Union (
+        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.slnx"))
         .OrderBy (x => x.FullPath)
         .ToArray ();
-    var dockerRuns = GetFiles ($"./output/{actualSamples}/**/run.ps1")
+    var dockerRuns = GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/run.ps1")
         .OrderBy (x => x.FullPath)
         .ToArray ();
 
@@ -197,10 +197,10 @@ Task ("samples-run")
         Information ("All samples built successfully.");
     }
 
-    CleanDir ("./output/samples/");
-    DeleteDir ("./output/samples/");
-    CleanDir ("./output/samples-preview/");
-    DeleteDir ("./output/samples-preview/");
+    CleanDir ($"{ROOT_PATH}/output/samples/");
+    DeleteDir ($"{ROOT_PATH}/output/samples/");
+    CleanDir ($"{ROOT_PATH}/output/samples-preview/");
+    DeleteDir ($"{ROOT_PATH}/output/samples-preview/");
 });
 
 Task ("samples")
