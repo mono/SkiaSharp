@@ -12163,20 +12163,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpencoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+		internal static partial bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpencoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+		internal static extern bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpencoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+			internal delegate bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
 		}
 		private static Delegates.sk_webpencoder_encode_animated sk_webpencoder_encode_animated_delegate;
-		internal static bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpencoderFrame* src, Int32 count, SKWebpEncoderOptions* options) =>
+		internal static bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options) =>
 			(sk_webpencoder_encode_animated_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode_animated> ("sk_webpencoder_encode_animated")).Invoke (dst, src, count, options);
 		#endif
 
@@ -20701,33 +20701,25 @@ namespace SkiaSharp {
 
 	// sk_webpencoder_frame_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKWebpencoderFrame : IEquatable<SKWebpencoderFrame> {
+	internal unsafe partial struct SKWebpEncoderFrameNative : IEquatable<SKWebpEncoderFrameNative> {
 		// public const sk_pixmap_t* pixmap
-		private sk_pixmap_t pixmap;
-		public sk_pixmap_t Pixmap {
-			readonly get => pixmap;
-			set => pixmap = value;
-		}
+		public sk_pixmap_t pixmap;
 
 		// public int duration
-		private Int32 duration;
-		public Int32 Duration {
-			readonly get => duration;
-			set => duration = value;
-		}
+		public Int32 duration;
 
-		public readonly bool Equals (SKWebpencoderFrame obj) =>
+		public readonly bool Equals (SKWebpEncoderFrameNative obj) =>
 #pragma warning disable CS8909
 			pixmap == obj.pixmap && duration == obj.duration;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
-			obj is SKWebpencoderFrame f && Equals (f);
+			obj is SKWebpEncoderFrameNative f && Equals (f);
 
-		public static bool operator == (SKWebpencoderFrame left, SKWebpencoderFrame right) =>
+		public static bool operator == (SKWebpEncoderFrameNative left, SKWebpEncoderFrameNative right) =>
 			left.Equals (right);
 
-		public static bool operator != (SKWebpencoderFrame left, SKWebpencoderFrame right) =>
+		public static bool operator != (SKWebpEncoderFrameNative left, SKWebpEncoderFrameNative right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()
