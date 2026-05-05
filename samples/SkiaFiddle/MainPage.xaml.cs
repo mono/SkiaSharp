@@ -2,6 +2,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 using SkiaFiddle.Fiddle;
 using SkiaSharp;
@@ -58,13 +59,16 @@ public sealed partial class MainPage : Page
     {
         if (SamplesCombo.SelectedItem is ComboBoxItem item && item.Tag is FiddleSample sample)
         {
-            SetupEditor.Text = sample.Setup;
-            DrawEditor.Text = sample.Draw;
-            _ = RunAsync();
+            DispatcherQueue.TryEnqueue(() => 
+            {
+                SetupEditor.Text = sample.Setup;
+                DrawEditor.Text = sample.Draw;
+                _ = RunAsync();
+            });
         }
     }
 
-    private async void OnRunClicked(object sender, RoutedEventArgs e) => await RunAsync();
+    private void OnRunClicked(object sender, RoutedEventArgs e) => DispatcherQueue.TryEnqueue(() => _ = RunAsync());
 
     // Monaco's onDidChangeContent → managed CodeEditor.Text round-trip is unreliable
     // under Uno WASM (the property lags behind keystrokes), so we ask Monaco directly
