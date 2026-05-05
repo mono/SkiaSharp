@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
 using SkiaFiddle.Fiddle;
@@ -74,7 +75,7 @@ public sealed partial class MainPage : Page
         try
         {
             var json = WebAssemblyRuntime.InvokeJS("globalThis.skiaFiddleGetMonacoValues ? globalThis.skiaFiddleGetMonacoValues() : '[]'");
-            var values = JsonSerializer.Deserialize<string[]>(json) ?? Array.Empty<string>();
+            var values = JsonSerializer.Deserialize(json, FiddleJsonContext.Default.StringArray) ?? Array.Empty<string>();
             var setup = values.Length > 0 ? values[0] : SetupEditor.Text ?? string.Empty;
             var draw = values.Length > 1 ? values[1] : DrawEditor.Text ?? string.Empty;
             return (setup, draw);
@@ -130,4 +131,7 @@ public sealed partial class MainPage : Page
             RunButton.IsEnabled = true;
         }
     }
+
+    [JsonSerializable(typeof(string[]))]
+    internal partial class FiddleJsonContext : JsonSerializerContext;
 }
