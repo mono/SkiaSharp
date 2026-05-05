@@ -86,21 +86,26 @@ network:
   allowed:
     - github
     - chromium.googlesource.com
+    - dotnet
 permissions:
   contents: read
   pull-requests: read
+pre-agent-steps:
+  - name: Write env file for post-step
+    run: |
+      mkdir -p /tmp/gh-aw/agent
+      cat > /tmp/gh-aw/agent/autobump-env.sh << 'ENVEOF'
+      TARGET=${{ needs.pre_activation.outputs.target }}
+      CURRENT=${{ needs.pre_activation.outputs.current }}
+      ENVEOF
 post-steps:
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+      TARGET: ${{ needs.pre_activation.outputs.target }}
+      CURRENT: ${{ needs.pre_activation.outputs.current }}
     run: |
       set -euo pipefail
-
-      if [ ! -f /tmp/gh-aw/agent/autobump-env.sh ]; then
-        echo "No autobump-env.sh — agent determined no work needed"
-        exit 0
-      fi
-      source /tmp/gh-aw/agent/autobump-env.sh
 
       if [ -z "${TARGET:-}" ]; then
         echo "TARGET is empty — skipping"
@@ -108,8 +113,10 @@ post-steps:
       fi
 
       BRANCH="autobump/skia-m${TARGET}"
-      SUMMARY=""
-      [ -f /tmp/gh-aw/agent/autobump-summary.md ] && SUMMARY=$(cat /tmp/gh-aw/agent/autobump-summary.md)
+      SKIA_SUMMARY=""
+      SS_SUMMARY=""
+      [ -f /tmp/gh-aw/agent/autobump-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/autobump-skia-summary.md)
+      [ -f /tmp/gh-aw/agent/autobump-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/autobump-skiasharp-summary.md)
 
       # --- mono/skia: push submodule branch and create/update PR ---
       cd externals/skia
@@ -127,7 +134,7 @@ post-steps:
             --draft \
             --body "Automated upstream merge of \`chrome/m${TARGET}\`.
 
-      ${SUMMARY}
+      ${SKIA_SUMMARY}
 
       Created by [auto-skia-track](https://github.com/$GITHUB_REPOSITORY/actions/workflows/auto-skia-track.lock.yml)." || echo "::warning::Failed to create mono/skia PR"
         else
@@ -135,7 +142,7 @@ post-steps:
           gh pr edit "$SKIA_PR" --repo mono/skia \
             --body "Automated upstream merge of \`chrome/m${TARGET}\`.
 
-      ${SUMMARY}
+      ${SKIA_SUMMARY}
 
       Updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
         fi
@@ -165,7 +172,7 @@ post-steps:
 
       $SKIA_PR_LINK
 
-      ${SUMMARY}
+      ${SS_SUMMARY}
 
       Created by [auto-skia-track](https://github.com/$GITHUB_REPOSITORY/actions/workflows/auto-skia-track.lock.yml)." || echo "::warning::Failed to create mono/SkiaSharp PR"
         else
@@ -175,7 +182,7 @@ post-steps:
 
       $SKIA_PR_LINK
 
-      ${SUMMARY}
+      ${SS_SUMMARY}
 
       Updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
         fi
@@ -203,7 +210,7 @@ Read and follow `.agents/skills/update-skia/SKILL.md` for detailed instructions 
 
 ## Step 1 — Breaking change analysis and validation
 
-Follow **Phases 2–3** of the skill. Save the analysis — it goes into the PR description.
+Follow **Phases 2–3** of the skill. Save the analysis — it goes into the PR descriptions.
 
 ## Step 2 — Merge upstream in submodule
 
@@ -258,19 +265,18 @@ Follow **Phases 6–9** of the skill:
 
 Commit all SkiaSharp changes on the `autobump/skia-m${{ needs.pre_activation.outputs.target }}` branch.
 
-## Step 5 — Write env and summary files
+## Step 5 — Write PR summaries
 
-Write these files — the post-step uses them to push and create PRs:
+Write two separate summary files for the post-step to use in PR descriptions:
 
-1. `/tmp/gh-aw/agent/autobump-env.sh`:
-   ```bash
-   TARGET=${{ needs.pre_activation.outputs.target }}
-   CURRENT=${{ needs.pre_activation.outputs.current }}
-   ```
+1. `/tmp/gh-aw/agent/autobump-skia-summary.md` — for the **mono/skia** PR:
+   - Upstream merge details (commits merged, conflicts resolved)
+   - C API shim fixes applied
+   - Files changed in the submodule
 
-2. `/tmp/gh-aw/agent/autobump-summary.md` — markdown summary including:
-   - Breaking change analysis
-   - Conflicts resolved
-   - C API / C# fixes applied
+2. `/tmp/gh-aw/agent/autobump-skiasharp-summary.md` — for the **mono/SkiaSharp** PR:
+   - Breaking change analysis table
+   - Version and binding updates
+   - C# wrapper changes
    - Build and test results
-   - Issues needing human attention
+   - Items needing human attention
