@@ -26,10 +26,12 @@ public class TextToPathSample : CanvasSampleBase
 
 	public override string Title => "Text to Path";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
+
 	public override string Description =>
 		"Convert text to an SKPath using SKFont.GetTextPath, then compute the stroked outline with GetFillPath.";
 
-	public override string Category => SampleCategories.Text;
+	public override string Category => SampleManager.Text;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

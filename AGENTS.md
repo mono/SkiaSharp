@@ -88,8 +88,7 @@ Single source of truth for all commands:
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
-| **Fetch release notes** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --last 5` |
-| **Fetch unreleased PRs** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --unreleased` |
+| **Diff branch for release notes** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main` |
 | **Update release notes TOC** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc` |
 
 ### When to Use Which Bootstrap
@@ -342,11 +341,12 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Test release | `/release-testing` | "test the release", "verify packages" |
 | Publish release | `/release-publish` | "push to nuget", "tag release" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
-| Audit release notes | `/release-notes-audit` | "compare Skia changes", "API gap analysis" |
+| Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "changelog", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |
 | PR commit message | `/pr-commit-message` | "write commit message for PR" |
 | Validate samples | `/validate-samples` | "build samples", "test sample projects" |
+| Scout GM samples | `/sample-scout` | "find demos to port", "what samples are we missing", "gallery ideas" |
 | Create/improve skill | `/skill-creator` | "create a new skill", "improve skill X" |
 
 ### Issue Pipeline (3 steps)

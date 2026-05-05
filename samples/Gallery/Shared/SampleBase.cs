@@ -10,7 +10,9 @@ public abstract class SampleBase
 
 	public virtual string Description { get; } = string.Empty;
 
-	public virtual string Category { get; } = SampleCategories.General;
+	public virtual string Category { get; } = SampleManager.General;
+
+	public virtual DateOnly? DateAdded { get; }
 
 
 	public virtual bool IsSupported => true;

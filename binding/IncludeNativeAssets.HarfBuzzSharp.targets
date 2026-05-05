@@ -63,8 +63,13 @@
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libHarfBuzzSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_HarfBuzzSharpNativeBinaryType>
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_HarfBuzzSharpNativeBinaryType>
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_HarfBuzzSharpNativeBinaryType),simd</_HarfBuzzSharpNativeBinaryType>
+  </PropertyGroup>
   <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\**\*.a" Visible="false" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\*\$(_HarfBuzzSharpNativeBinaryType)\*.a" Visible="false" />
   </ItemGroup>
 
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">

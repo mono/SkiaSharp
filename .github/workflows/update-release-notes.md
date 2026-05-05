@@ -1,114 +1,74 @@
 ---
-description: "Update the upcoming version's release notes when PRs merge to main."
+description: "Update website release notes when code changes land on main, release branches, or tags are pushed."
 on:
   push:
-    branches: [main]
+    branches: [main, "release/**"]
+    tags: ["v*"]
     paths-ignore:
-      - "documentation/docfx/releases/*.md"
-      - ".github/**"
+      - "documentation/docfx/releases/**"
   workflow_dispatch:
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
-  group: update-release-notes
+  group: update-release-notes-${{ github.ref }}
   cancel-in-progress: true
 timeout-minutes: 10
 permissions:
   contents: read
 tools:
-  bash: ["python3", "gh", "git", "cat", "grep"]
+  bash: ["python3", "git", "cat", "grep", "sort", "head", "tail", "sed", "awk"]
   edit:
-network:
-  allowed:
-    - defaults
+network: {}
 safe-outputs:
   create-pull-request:
     title-prefix: "[docs] "
     labels: [documentation]
     draft: false
+    allowed-base-branches: [main]
+    preserve-branch-name: true
+    recreate-ref: true
 ---
 
-# Update Upcoming Release Notes
+# Update Release Notes
 
-When code merges to main, update the upcoming version's release notes page with a
-polished summary of all changes since the last release.
+Automatically update website release notes when code changes land on `main`,
+`release/*` branches, or when release tags are pushed.
 
-## Step 1 — Set up
-
-Determine the upcoming version and ensure the file exists:
+## Step 1 — Determine the branch
 
 ```bash
-grep 'SKIASHARP_VERSION:' scripts/azure-templates-variables.yml
+echo "Ref: $GITHUB_REF"
 ```
 
-Extract the version number (e.g., `4.133.0`). Then ensure the version file and TOC exist:
+Determine the branch name based on the ref type:
 
 ```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc
+if echo "$GITHUB_REF" | grep -q "^refs/tags/"; then
+  # Tag push — derive release branch from tag
+  TAG=${GITHUB_REF#refs/tags/}
+  TAG_NO_V=${TAG#v}
+  if echo "$TAG_NO_V" | grep -qE "\-preview\.[0-9]+\.[0-9]+$"; then
+    BRANCH="release/$(echo "$TAG_NO_V" | sed 's|\.[0-9]*$||')"
+  else
+    BRANCH="release/${TAG_NO_V}"
+  fi
+else
+  # Branch push — extract branch name directly
+  BRANCH="${GITHUB_REF#refs/heads/}"
+fi
 ```
 
-This creates `documentation/docfx/releases/{version}.md` if missing and regenerates
-`TOC.yml` and `index.md`. Read the version file to see its current content.
+## Step 2 — Generate release notes using the skill
 
-## Step 2 — Get raw change data
+Use the **release-notes** skill (`.agents/skills/release-notes/SKILL.md`) to generate
+polished release notes for the branch determined above. Pass the branch name to the skill.
 
-Fetch the list of changes since the last release:
+The skill handles everything: running the script, reading the template, writing the
+polished file, and regenerating the TOC.
 
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --unreleased --output /tmp/unreleased-raw.md
-```
+## Step 3 — Create or update the pull request
 
-This uses git commit ancestry (not dates) to find all PRs on main that are not in the last
-release tag. Read `/tmp/unreleased-raw.md` to capture the raw content.
+Always use `dev/release-notes-{VERSION}` as the branch name when creating the pull request.
+This ensures each workflow run updates the **same PR** for a given version instead of
+opening duplicates.
 
-## Step 3 — Read the template
-
-Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished release
-notes page. Use it as the style reference — match its structure, tone, and formatting.
-
-The upcoming version adapts the template for unreleased status:
-- Use `> **Upcoming release** · In development · Not yet available on NuGet` as the header
-- Omit the Links section (no NuGet, no changelog, no API diff yet)
-- Omit Preview sections (no tagged previews yet)
-- Keep everything else: Highlights, Breaking Changes, New Features, Security, Bug Fixes,
-  Platform Support, Community Contributors
-
-## Step 4 — Write polished content
-
-Rewrite the raw PR list into polished release notes following the template:
-
-1. **Highlights** — 1-3 sentences. What's the story of this version? Lead with the biggest
-   changes. Mention community contributors by linked name.
-
-2. **Skia engine** — The version number encodes the Skia milestone (e.g., 4.**133**.0 = Skia m133).
-   Search for the merged bump PR: `gh pr list --repo mono/SkiaSharp --state merged --search "bump skia milestone {N}" --json number,title --limit 1`
-   If found, list it first under an **Engine** category. If the raw data already contains
-   a "Bump skia" PR, use that directly.
-
-3. **Categorize features** — Group by what they affect. Use sub-headers like:
-   Engine, GPU & Rendering, API Surface, Text & Fonts, Platform, Security, etc.
-   Each item: **bold title** — description. ❤️ [@contributor](https://github.com/contributor) ([#NNN](url))
-
-4. **Community contributors** — Anyone not `@mattleibow`. Mark with ❤️ inline AND list
-   in a Contributors table. **ALWAYS** link usernames: `[@user](https://github.com/user)`.
-   Never write bare `@user` anywhere.
-
-5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow changes,
-   skill file edits. If many, mention as: "Plus several CI and documentation improvements."
-
-6. **Breaking changes** — If any PR has a `breaking` label or "BREAKING" in the title,
-   list under `### ⚠️ Breaking Changes` right after Highlights.
-
-7. **PR links** — Every item links to its PR: `([#NNN](url))`.
-
-If there are no user-facing changes, write: `*No user-facing changes yet.*`
-
-## Step 5 — Write the version file
-
-Use the `edit` tool to **replace the entire content** of `documentation/docfx/releases/{version}.md`
-with the polished release notes from Step 4.
-
-The file should follow the template structure exactly — title, blockquote header
-(`> **Upcoming release** · In development · Not yet available on NuGet`),
-then the polished sections (Highlights, Breaking Changes, New Features, etc.).
-
-No fence markers or placeholders needed — the workflow overwrites the whole file each run.
+The PR targets `main` — release notes always live on main for the docs site.

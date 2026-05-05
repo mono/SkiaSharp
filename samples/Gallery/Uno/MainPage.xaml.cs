@@ -59,5 +59,5 @@ public sealed partial class MainPage : Page
     }
 
     private void UpdateThemeIcon() =>
-        ThemeToggleIcon.Text = isDark ? CategoryColors.IconMoonStars : CategoryColors.IconSun;
+        ThemeToggleIcon.Text = isDark ? SampleManager.IconMoonStars : SampleManager.IconSun;
 }
