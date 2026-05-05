@@ -221,12 +221,15 @@ milestone numbers and paste your breaking change analysis table. The default exp
 
 ### Phase 5: Update SkiaSharp Version Files
 
+> **⚠️ This MUST be done before any native build.** The build scripts verify version
+> consistency — if VERSIONS.txt still says the old milestone, the build will fail.
+
+**Before running the script**, reset `SK_C_INCREMENT` to `0` in `externals/skia/include/c/sk_types.h`
+if it's not already 0. The script will verify this.
+
 > 📋 **This phase is handled by a script.** The script updates VERSIONS.txt, cgmanifest.json,
 > azure-pipelines-variables.yml, and verifies SK_C_INCREMENT — then runs the mandatory
 > verification greps. It exits non-zero if any stale references remain.
-
-> **⚠️ This MUST be done before any native build.** The build scripts verify version
-> consistency — if VERSIONS.txt still says the old milestone, the build will fail.
 
 In the **SkiaSharp parent repo**, run:
 ```bash
@@ -268,9 +271,8 @@ must be updated when the underlying C++ APIs change.
    | New header required | Add `#include` in the relevant `.cpp` |
    | Legacy flag breaks C API | Update C API to use replacement API (see gotcha #6). Do not just comment out the flag without a plan |
 
-3. **Update `sk_types.h`** for any new enums or type changes:
-   - **Reset `SK_C_INCREMENT` to `0`** in `externals/skia/include/c/sk_types.h` for the new milestone
-   - Only bump it later if you add new C API functions in the same milestone
+3. **Update `sk_types.h`** for any new enums or type changes
+   - Only bump `SK_C_INCREMENT` if you add new C API functions in this milestone
    - The build enforces that `SK_C_INCREMENT` matches `libSkiaSharp increment` in `VERSIONS.txt`
 
 4. **Build again** — iterate until clean compilation
