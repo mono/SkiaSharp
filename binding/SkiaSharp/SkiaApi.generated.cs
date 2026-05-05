@@ -12158,6 +12158,28 @@ namespace SkiaSharp
 			(sk_webpencoder_encode_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode> ("sk_webpencoder_encode")).Invoke (dst, src, options);
 		#endif
 
+		// bool sk_webpencoder_encode_animated(sk_wstream_t* dst, const sk_webpencoder_frame_t* src, int count, const sk_webpencoder_options_t* options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpencoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpencoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpencoderFrame* src, Int32 count, SKWebpEncoderOptions* options);
+		}
+		private static Delegates.sk_webpencoder_encode_animated sk_webpencoder_encode_animated_delegate;
+		internal static bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpencoderFrame* src, Int32 count, SKWebpEncoderOptions* options) =>
+			(sk_webpencoder_encode_animated_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode_animated> ("sk_webpencoder_encode_animated")).Invoke (dst, src, count, options);
+		#endif
+
 		#endregion
 
 		#region sk_region.h
@@ -14429,6 +14451,25 @@ namespace SkiaSharp
 		private static Delegates.sk_stream_fork sk_stream_fork_delegate;
 		internal static sk_stream_t sk_stream_fork (sk_stream_t cstream) =>
 			(sk_stream_fork_delegate ??= GetSymbol<Delegates.sk_stream_fork> ("sk_stream_fork")).Invoke (cstream);
+		#endif
+
+		// sk_data_t* sk_stream_get_data(sk_stream_t* cstream)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		}
+		private static Delegates.sk_stream_get_data sk_stream_get_data_delegate;
+		internal static sk_data_t sk_stream_get_data (sk_stream_t cstream) =>
+			(sk_stream_get_data_delegate ??= GetSymbol<Delegates.sk_stream_get_data> ("sk_stream_get_data")).Invoke (cstream);
 		#endif
 
 		// size_t sk_stream_get_length(sk_stream_t* cstream)
@@ -20658,6 +20699,47 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_webpencoder_frame_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKWebpencoderFrame : IEquatable<SKWebpencoderFrame> {
+		// public const sk_pixmap_t* pixmap
+		private sk_pixmap_t pixmap;
+		public sk_pixmap_t Pixmap {
+			readonly get => pixmap;
+			set => pixmap = value;
+		}
+
+		// public int duration
+		private Int32 duration;
+		public Int32 Duration {
+			readonly get => duration;
+			set => duration = value;
+		}
+
+		public readonly bool Equals (SKWebpencoderFrame obj) =>
+#pragma warning disable CS8909
+			pixmap == obj.pixmap && duration == obj.duration;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKWebpencoderFrame f && Equals (f);
+
+		public static bool operator == (SKWebpencoderFrame left, SKWebpencoderFrame right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKWebpencoderFrame left, SKWebpencoderFrame right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (pixmap);
+			hash.Add (duration);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_webpencoder_options_t
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKWebpEncoderOptions : IEquatable<SKWebpEncoderOptions> {
@@ -21009,20 +21091,22 @@ namespace SkiaSharp {
 		R8g8Unorm = 19,
 		// A16_FLOAT_SK_COLORTYPE = 20
 		A16Float = 20,
-		// R16G16_FLOAT_SK_COLORTYPE = 21
-		R16g16Float = 21,
-		// A16_UNORM_SK_COLORTYPE = 22
-		A16Unorm = 22,
-		// R16_UNORM_SK_COLORTYPE = 23
-		R16Unorm = 23,
-		// R16G16_UNORM_SK_COLORTYPE = 24
-		R16g16Unorm = 24,
-		// R16G16B16A16_UNORM_SK_COLORTYPE = 25
-		R16g16b16a16Unorm = 25,
-		// SRGBA_8888_SK_COLORTYPE = 26
-		Srgba8888 = 26,
-		// R8_UNORM_SK_COLORTYPE = 27
-		R8Unorm = 27,
+		// R16_FLOAT_SK_COLORTYPE = 21
+		R16Float = 21,
+		// R16G16_FLOAT_SK_COLORTYPE = 22
+		R16g16Float = 22,
+		// A16_UNORM_SK_COLORTYPE = 23
+		A16Unorm = 23,
+		// R16_UNORM_SK_COLORTYPE = 24
+		R16Unorm = 24,
+		// R16G16_UNORM_SK_COLORTYPE = 25
+		R16g16Unorm = 25,
+		// R16G16B16A16_UNORM_SK_COLORTYPE = 26
+		R16g16b16a16Unorm = 26,
+		// SRGBA_8888_SK_COLORTYPE = 27
+		Srgba8888 = 27,
+		// R8_UNORM_SK_COLORTYPE = 28
+		R8Unorm = 28,
 	}
 
 	// sk_encoded_image_format_t
