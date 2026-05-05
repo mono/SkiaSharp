@@ -29,8 +29,8 @@
   <PropertyGroup>
     <!-- Roslyn emits IL at runtime; the runtime must be able to execute it. -->
     <RunAOTCompilation>false</RunAOTCompilation>
-    <!-- Roslyn relies on reflection-heavy code paths; trimming would strip them. -->
-    <PublishTrimmed>false</PublishTrimmed>
+    <!-- ILLink.Descriptors.xml roots Roslyn + reflection-heavy assemblies so their members survive trimming. -->
+    <PublishTrimmed>true</PublishTrimmed>
     <!-- Roslyn diagnostics use culture data. -->
     <InvariantGlobalization>false</InvariantGlobalization>
     <!-- AssemblyExtensions.TryGetRawMetadata uses pointers; we wrap it in our own unsafe block. -->
@@ -49,6 +49,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\MonacoFocusGuard.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
   </ItemGroup>
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
