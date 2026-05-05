@@ -11,9 +11,21 @@ Task("externals-interop")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    RunProcess("pwsh", $"{ROOT_PATH}/utils/generate.ps1");
+    RunProcess("pwsh", new ProcessSettings {
+        Arguments = $"{ROOT_PATH}/utils/generate.ps1",
+        WorkingDirectory = ROOT_PATH,
+    });
 
-    RunProcess("git", "diff --name-only binding/*/*.generated.cs", out var files);
+    var settings = new ProcessSettings {
+        Arguments = "diff --name-only binding/*/*.generated.cs",
+        WorkingDirectory = ROOT_PATH,
+        RedirectStandardOutput = true,
+    };
+    var result = StartProcess("git", settings, out var filesOutput);
+    var files = filesOutput.ToArray();
+    if (result != 0) {
+        throw new Exception($"Process 'git' failed with error: {result}");
+    }
 
     if (files.Any()) {
         Information("Generated files have changed:");

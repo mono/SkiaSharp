@@ -39,7 +39,6 @@ Task ("nuget-normal")
 
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
-    .IsDependentOn ("nuget-normal")
     .Does (() =>
 {
     EnsureDirectoryExists ($"{OUTPUT_SPECIAL_NUGETS_PATH}");

@@ -26,7 +26,7 @@ Setup(context =>
     if (string.IsNullOrEmpty(TEST_APP)) {
         FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
         var configuration = "Release";
-        var tfm = "net10.0-android36.0";
+        var tfm = "net10.0-android";
         var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString().ToLower();
         TEST_APP = ROOT_PATH + $"/tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
 
