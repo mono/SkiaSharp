@@ -29,7 +29,7 @@ public class WorldTextSample : CanvasSampleBase
 
 	public override string Title => "World Text";
 
-	public override DateOnly DateAdded => new DateOnly(2026, 3, 27);
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
 
 	public override string Category => SampleManager.Text;
 

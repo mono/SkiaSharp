@@ -24,7 +24,7 @@ public class VariableFontSample : CanvasSampleBase
 
 	public override string Title => "Variable Fonts";
 
-	public override DateOnly DateAdded => new DateOnly(2026, 4, 26);
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 26);
 
 	public override string Description =>
 		"Explore OpenType variable font axes — adjust weight and optical size in real time using Inter.";

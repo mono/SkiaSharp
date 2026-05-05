@@ -30,7 +30,7 @@ public class SmartTextUnderlineSample : CanvasSampleBase
 
 	public override string Title => "Smart Underline";
 
-	public override DateOnly DateAdded => new DateOnly(2026, 4, 27);
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
 
 	public override string Description =>
 		"Text underlines that intelligently break around descenders using GetIntercepts().";

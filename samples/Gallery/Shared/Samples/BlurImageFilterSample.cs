@@ -12,7 +12,7 @@ public class BlurImageFilterSample : CanvasSampleBase
 
 	public override string Title => "Blur Image Filter";
 
-	public override DateOnly DateAdded => new DateOnly(2018, 2, 8);
+	public override DateOnly? DateAdded => new DateOnly(2018, 2, 8);
 
 	public override string Category => SampleManager.ImageFilters;
 

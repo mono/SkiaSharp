@@ -37,7 +37,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	public override string Category => SampleManager.BitmapDecoding;
 
-	public override DateOnly DateAdded => new DateOnly(2026, 5, 5);
+	public override DateOnly? DateAdded => new DateOnly(2026, 5, 5);
 
 	public override bool IsAnimated => _codec != null && _codec.FrameCount > 1;
 

@@ -17,7 +17,7 @@ public class PathBuilderSample : CanvasSampleBase
 
 	public override string Title => "Path Builder";
 
-	public override DateOnly DateAdded => new DateOnly(2026, 3, 27);
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
 
 	public override string Category => SampleManager.Paths;
 

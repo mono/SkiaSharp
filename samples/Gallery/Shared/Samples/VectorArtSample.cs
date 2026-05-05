@@ -14,7 +14,7 @@ public class VectorArtSample : CanvasSampleBase
 
 	public override string Title => "Vector Art";
 
-	public override DateOnly DateAdded => new DateOnly(2026, 3, 27);
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
 
 	public override string Description => "Render complex Bézier path artwork with rotation, scale, and color theme controls.";
 

@@ -20,7 +20,7 @@ public class GifPlayerSample : CanvasSampleBase
 
 	public override string Title => "GIF Player";
 
-	public override DateOnly DateAdded => new DateOnly(2026, 3, 27);
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
 
 	public override string Category => SampleManager.BitmapDecoding;
 

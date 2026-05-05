@@ -17,7 +17,7 @@ public class GradientSample : CanvasSampleBase
 
 	public override string Title => "Gradient";
 
-	public override DateOnly DateAdded => new DateOnly(2018, 2, 8);
+	public override DateOnly? DateAdded => new DateOnly(2018, 2, 8);
 
 	public override string Category => SampleManager.Shaders;
 

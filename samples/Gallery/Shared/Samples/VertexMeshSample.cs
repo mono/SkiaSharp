@@ -14,7 +14,7 @@ public class VertexMeshSample : CanvasSampleBase
 
 	public override string Title => "Vertex Mesh";
 
-	public override DateOnly DateAdded => new DateOnly(2026, 3, 27);
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
 
 	public override string Category => SampleManager.General;
 
