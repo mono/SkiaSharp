@@ -164,6 +164,9 @@ var TRACKED_NUGETS = SUPPORTED_NUGETS
 // LOGGING
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Ensure working directory is always the repo root
+System.IO.Directory.SetCurrentDirectory(ROOT_PATH.FullPath);
+
 Information("Arguments:");
 foreach (var arg in Arguments()) {
     foreach (var val in arg.Value) {
@@ -193,7 +196,7 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
     }
 
     cake = MakeAbsolute(cake);
-    var cmd = $"cake {cake} --working=\"{ROOT_PATH}\"";
+    var cmd = $"cake {cake}";
 
     foreach (var arg in args) {
         cmd += $@" --{arg.Key}=""{arg.Value}""";
