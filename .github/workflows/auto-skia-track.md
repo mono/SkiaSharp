@@ -185,9 +185,6 @@ post-steps:
       else
         echo "No SkiaSharp branch $BRANCH — skipping"
       fi
-safe-outputs:
-  create-pull-request:
-    if-no-changes: ignore
 ---
 
 # Skia Upstream Sync
