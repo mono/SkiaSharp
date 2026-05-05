@@ -225,8 +225,8 @@ milestone numbers and paste your breaking change analysis table. The default exp
 > **⚠️ This MUST be done before any native build.** The build scripts verify version
 > consistency — if VERSIONS.txt still says the old milestone, the build will fail.
 
-**Before running the script**, verify that `SK_C_INCREMENT` in `externals/skia/include/c/sk_types.h`
-is appropriate. The script will automatically reset it to `0` when the milestone changes.
+> **Note:** The script automatically resets `SK_C_INCREMENT` to `0` when the milestone changes.
+> If you had a pending increment that must survive, capture it before running.
 
 > 📋 **This phase is handled by a script.** The script updates VERSIONS.txt, cgmanifest.json,
 > azure-pipelines-variables.yml, and verifies SK_C_INCREMENT — then runs the mandatory
@@ -315,7 +315,8 @@ the build succeeds.
 **Step 1: Review new generated bindings for unwrapped functions:**
 ```bash
 # Show only NEW functions added by the regeneration
-git diff binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
+# Use HEAD~1 in case the regenerated file was already committed
+git diff HEAD~1 -- binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
 ```
 
 For each new function, check whether a C# wrapper exists:

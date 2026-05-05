@@ -115,8 +115,9 @@ Current: m${{ needs.pre_activation.outputs.current }}. Target: m${{ needs.pre_ac
   If so, check it out, check for new upstream commits with `git log HEAD..upstream/chrome/m${{ needs.pre_activation.outputs.target }}`, and merge if any. Stop if there are none.
   Even when current == target, there may be new upstream bug-fix commits — a matching milestone does NOT mean no work.
 - **Phase 6 platform**: build on Linux x64 (`dotnet cake --target=externals-linux --arch=x64`).
+- **Phase 9 platform**: if rebuilding native, use the same Linux x64 target — don't follow the skill's macOS default.
 - **Phase 8 reminder**: a green C# build is NOT sufficient — run the new-function diff check from Phase 8 Step 1.
-- **Phase 10 is handled by a post-step.** Do NOT create PRs yourself. Instead, after Phase 9, write these files:
+- **Phase 10 is handled by a post-step.** Do NOT push branches or create PRs yourself — both are handled by the post-step. Just commit locally. After Phase 9, write these files:
 
 1. `/tmp/gh-aw/agent/skia-sync-env.sh`:
    ```bash

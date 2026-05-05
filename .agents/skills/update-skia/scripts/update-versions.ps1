@@ -1,10 +1,10 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Phase 6: Update all SkiaSharp version files for a Skia milestone update.
+    Phase 5: Update all SkiaSharp version files for a Skia milestone update.
 
 .DESCRIPTION
-    Performs ALL version updates required by Phase 6 of the update-skia skill:
+    Performs ALL version updates required by Phase 5 of the update-skia skill:
     - scripts/VERSIONS.txt (milestone, increment, soname, assembly, file, all nuget lines)
     - cgmanifest.json (commitHash, version, chrome_milestone, upstream_merge_commit)
     - scripts/azure-pipelines-variables.yml (if it exists)
@@ -33,7 +33,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = git rev-parse --show-toplevel
 
-Write-Host "`n=== Phase 6: Update Version Files (m$Current -> m$Target) ===" -ForegroundColor Cyan
+Write-Host "`n=== Phase 5: Update Version Files (m$Current -> m$Target) ===" -ForegroundColor Cyan
 
 # --- Step 1: VERSIONS.txt ---
 Write-Host "`n--- Updating scripts/VERSIONS.txt ---" -ForegroundColor Yellow
