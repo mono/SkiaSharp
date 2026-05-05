@@ -84,9 +84,14 @@ tools:
   edit:
 network:
   allowed:
+    - defaults
     - github
-    - chromium.googlesource.com
     - dotnet
+    - "chromium.googlesource.com"
+    - "skia.googlesource.com"
+    - "android.googlesource.com"
+    - "dawn.googlesource.com"
+    - "swiftshader.googlesource.com"
 permissions:
   contents: read
   pull-requests: read
@@ -94,97 +99,7 @@ post-steps:
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-    run: |
-      set -euo pipefail
-
-      if [ ! -f /tmp/gh-aw/agent/skia-sync-env.sh ]; then
-        echo "No skia-sync-env.sh — agent determined no work needed"
-        exit 0
-      fi
-      source /tmp/gh-aw/agent/skia-sync-env.sh
-
-      if [ -z "${TARGET:-}" ]; then
-        echo "TARGET is empty — skipping"
-        exit 0
-      fi
-
-      BRANCH="skia-sync/m${TARGET}"
-      SKIA_SUMMARY=""
-      SS_SUMMARY=""
-      [ -f /tmp/gh-aw/agent/skia-sync-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skia-summary.md)
-      [ -f /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md)
-
-      # --- mono/skia: push submodule branch and create/update PR ---
-      cd externals/skia
-      if git rev-parse --verify "$BRANCH" &>/dev/null; then
-        echo "Pushing $BRANCH to mono/skia..."
-        git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/skia.git"
-        git push origin "$BRANCH" --force-with-lease 2>/dev/null || git push origin "$BRANCH" --force
-
-        SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
-        if [ -z "$SKIA_PR" ]; then
-          echo "Creating mono/skia PR..."
-          gh pr create --repo mono/skia \
-            --head "$BRANCH" --base skiasharp \
-            --title "[skia-sync] Merge upstream chrome/m${TARGET}" \
-            --draft \
-            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
-
-      ${SKIA_SUMMARY}
-
-      Created by [skia-upstream-sync](https://github.com/$GITHUB_REPOSITORY/actions/workflows/skia-upstream-sync.lock.yml)." || echo "::warning::Failed to create mono/skia PR"
-        else
-          echo "Updating mono/skia PR #${SKIA_PR}..."
-          gh pr edit "$SKIA_PR" --repo mono/skia \
-            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
-
-      ${SKIA_SUMMARY}
-
-      Updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
-        fi
-      else
-        echo "No submodule branch $BRANCH — skipping mono/skia"
-      fi
-
-      # --- mono/SkiaSharp: push parent branch and create/update PR ---
-      cd "$GITHUB_WORKSPACE"
-      if git rev-parse --verify "$BRANCH" &>/dev/null; then
-        echo "Pushing $BRANCH to mono/SkiaSharp..."
-        git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp.git"
-        git push origin "$BRANCH" --force-with-lease 2>/dev/null || git push origin "$BRANCH" --force
-
-        SKIA_PR=$(gh pr list --repo mono/skia --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
-        SKIA_PR_LINK=""
-        [ -n "$SKIA_PR" ] && SKIA_PR_LINK="**Companion skia PR:** https://github.com/mono/skia/pull/$SKIA_PR"
-
-        SS_PR=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
-        if [ -z "$SS_PR" ]; then
-          echo "Creating mono/SkiaSharp PR..."
-          gh pr create --repo mono/SkiaSharp \
-            --head "$BRANCH" --base main \
-            --title "[skia-sync] Update skia to milestone ${TARGET}" \
-            --draft \
-            --body "Automated Skia milestone bump from m${CURRENT} to m${TARGET}.
-
-      $SKIA_PR_LINK
-
-      ${SS_SUMMARY}
-
-      Created by [skia-upstream-sync](https://github.com/$GITHUB_REPOSITORY/actions/workflows/skia-upstream-sync.lock.yml)." || echo "::warning::Failed to create mono/SkiaSharp PR"
-        else
-          echo "Updating mono/SkiaSharp PR #${SS_PR}..."
-          gh pr edit "$SS_PR" --repo mono/SkiaSharp \
-            --body "Automated Skia milestone bump from m${CURRENT} to m${TARGET}.
-
-      $SKIA_PR_LINK
-
-      ${SS_SUMMARY}
-
-      Updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
-        fi
-      else
-        echo "No SkiaSharp branch $BRANCH — skipping"
-      fi
+    run: bash scripts/skia-sync-push-prs.sh
 ---
 
 # Skia Upstream Sync
