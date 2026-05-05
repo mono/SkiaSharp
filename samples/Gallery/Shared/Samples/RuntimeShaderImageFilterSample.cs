@@ -139,6 +139,9 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 		if (builder.Effect == null)
 			return;
 
+		// bind the "child" input to the source image (null = implicit source)
+		builder.Inputs["child"] = null;
+
 		switch (selectedShader)
 		{
 			case 2: // Sepia
