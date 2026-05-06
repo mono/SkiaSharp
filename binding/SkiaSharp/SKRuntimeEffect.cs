@@ -511,28 +511,28 @@ namespace SkiaSharp
 
 	public class SKRuntimeEffectImageFilterInputs : IEnumerable<string>, IDisposable
 	{
-		private readonly string[] names;
+		private readonly HashSet<string> validNames;
 		private readonly Dictionary<string, SKImageFilter?> inputs;
 
 		public SKRuntimeEffectImageFilterInputs (SKRuntimeEffect effect)
 		{
 			_ = effect ?? throw new ArgumentNullException (nameof (effect));
 
-			names = effect.Children.ToArray ();
+			validNames = new HashSet<string> (effect.Children);
 			inputs = new Dictionary<string, SKImageFilter?> ();
 		}
 
 		public IReadOnlyList<string> Names =>
-			names;
+			inputs.Keys.ToList ();
 
 		public int Count =>
-			names.Length;
+			inputs.Count;
 
 		public void Reset () =>
 			inputs.Clear ();
 
 		public bool Contains (string name) =>
-			Array.IndexOf (names, name) != -1;
+			inputs.ContainsKey (name);
 
 		public SKImageFilter? this[string name] {
 			set => Add (name, value);
@@ -540,7 +540,7 @@ namespace SkiaSharp
 
 		public void Add (string name, SKImageFilter? value)
 		{
-			if (Array.IndexOf (names, name) == -1)
+			if (!validNames.Contains (name))
 				throw new ArgumentOutOfRangeException (name, $"Child was not found for name: '{name}'.");
 
 			inputs[name] = value;
@@ -562,7 +562,7 @@ namespace SkiaSharp
 			GetEnumerator ();
 
 		public IEnumerator<string> GetEnumerator () =>
-			((IEnumerable<string>)names).GetEnumerator ();
+			inputs.Keys.GetEnumerator ();
 
 		public void Dispose ()
 		{
