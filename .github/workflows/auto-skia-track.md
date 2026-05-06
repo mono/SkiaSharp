@@ -145,6 +145,7 @@ steps:
       mkdir -p /tmp/gh-aw/agent
       echo "TARGET=${{ needs.pre_activation.outputs.target }}" > /tmp/gh-aw/agent/skia-sync-env.sh
       echo "CURRENT=${{ needs.pre_activation.outputs.current }}" >> /tmp/gh-aw/agent/skia-sync-env.sh
+      cp scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
 
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Pushes branches and creates/updates PRs
@@ -153,7 +154,7 @@ post-steps:
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-    run: bash scripts/skia-sync-push-prs.sh
+    run: bash /tmp/gh-aw/skia-sync-push-prs.sh
 ---
 
 # Skia Upstream Sync
