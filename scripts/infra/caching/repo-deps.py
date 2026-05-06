@@ -79,6 +79,16 @@ def _collect_with_provenance(node, prefix, paths, subs, provenance):
         _collect_with_provenance(child_node, f"{prefix}/{child_name}", paths, subs, provenance)
 
 
+def _provenance_tree(node, prefix, provenance):
+    """Build provenance labels for a tree (for virtual 'all' job)."""
+    for p in node.get("include", []):
+        provenance.setdefault(p, prefix)
+    for s in node.get("submodules", []):
+        provenance.setdefault(s, prefix)
+    for child_name, child_node in (node.get("children") or {}).items():
+        _provenance_tree(child_node, f"{prefix}/{child_name}", provenance)
+
+
 def walk_tree(config, node, prefix="", parent_paths=None, parent_subs=None):
     """Walk the job tree, yielding (full_path, accumulated_paths, accumulated_submodules) for each node."""
     paths = list(parent_paths or []) + list(node.get("include", []))
@@ -99,14 +109,29 @@ def walk_tree(config, node, prefix="", parent_paths=None, parent_subs=None):
 
 
 def resolve_job(config, job_path):
-    """Find a job by its slash-separated path and return (paths, submodules).
-    Also builds provenance: which source contributed each path/submodule."""
+    """Find a job by its slash-separated path and return (paths, submodules, provenance).
+    Special job 'all' creates a virtual node that depends on all root jobs."""
     accumulated_paths = list(config.get("include", []))
     accumulated_subs = []
-    provenance = {}  # path_or_sub -> source label
+    provenance = {}
 
     for p in accumulated_paths:
         provenance[p] = "global"
+
+    # Virtual "all" job — depends on every root job
+    if job_path == "all":
+        for root_name, root_node in config["jobs"].items():
+            dp, ds = collect_all(root_node)
+            accumulated_paths.extend(dp)
+            accumulated_subs.extend(ds)
+            # Build provenance with child tree
+            for p in root_node.get("include", []):
+                provenance.setdefault(p, root_name)
+            for s in root_node.get("submodules", []):
+                provenance.setdefault(s, root_name)
+            for child_name, child_node in (root_node.get("children") or {}).items():
+                _provenance_tree(child_node, f"{root_name}/{child_name}", provenance)
+        return accumulated_paths, accumulated_subs, provenance
 
     parts = job_path.strip("/").split("/")
     node = config["jobs"]
@@ -275,34 +300,52 @@ def cmd_cache_key(config, args):
         print(f"  {flag}global")
         print_items("global", 2)
 
-    # Print job path hierarchy
-    job_parts = args.job.strip("/").split("/")
-    current = ""
-    for i, part in enumerate(job_parts):
-        current = f"{current}/{part}" if current else part
-        if current not in all_sources and not any(o == current for o, _ in deps):
-            continue
-        indent = i + 1
-        flag = "* " if is_dirty(current) else "  "
-        print(f"{'  ' * indent}{flag}{part}")
-        print_items(current, indent + 1)
-
-        # Print dependsOn trees nested under this node
-        for (owner, dep_root), dep_list in sorted(deps.items()):
-            if owner != current:
+    if args.job == "all":
+        # For "all" job, render all direct sources as a tree based on / nesting
+        rendered = {"global"}
+        for source in sorted(direct.keys()):
+            if source in rendered:
                 continue
-            any_dirty = any(is_dirty(s) for s in dep_list)
-            flag = "* " if any_dirty else "  "
-            print(f"{'  ' * (indent + 1)}{flag}{dep_root} (dependsOn)")
+            parts = source.split("/")
+            indent = len(parts)
+            flag = "* " if is_dirty(source) else "  "
+            print(f"{'  ' * indent}{flag}{parts[-1]}")
+            print_items(source, indent + 1)
+            rendered.add(source)
+    else:
+        # Print job path hierarchy
+        job_parts = args.job.strip("/").split("/")
+        current = ""
+        for i, part in enumerate(job_parts):
+            current = f"{current}/{part}" if current else part
+            if current not in all_sources and not any(o == current for o, _ in deps):
+                continue
+            indent = i + 1
+            flag = "* " if is_dirty(current) else "  "
+            print(f"{'  ' * indent}{flag}{part}")
+            print_items(current, indent + 1)
 
-            # Root dep source
-            root_src = f"{owner} → {dep_root}"
-            if root_src in all_sources:
-                print_items(root_src, indent + 2)
+            # Print dependsOn trees nested under this node
+            for (owner, dep_root), dep_list in sorted(deps.items()):
+                if owner != current:
+                    continue
+                any_dirty = any(is_dirty(s) for s in dep_list)
+                flag = "* " if any_dirty else "  "
+                print(f"{'  ' * (indent + 1)}{flag}{dep_root} (dependsOn)")
 
-            # Child dep sources
-            for dep_src in sorted(dep_list):
-                if dep_src == root_src:
+                root_src = f"{owner} → {dep_root}"
+                if root_src in all_sources:
+                    print_items(root_src, indent + 2)
+
+                for dep_src in sorted(dep_list):
+                    if dep_src == root_src:
+                        continue
+                    dep_path = dep_src.split(" → ", 1)[1]
+                    child = dep_path.split("/", 1)[1] if "/" in dep_path else None
+                    if child:
+                        flag = "* " if is_dirty(dep_src) else "  "
+                        print(f"{'  ' * (indent + 2)}{flag}{child}")
+                        print_items(dep_src, indent + 3)
                     continue
                 dep_path = dep_src.split(" → ", 1)[1]
                 child = dep_path.split("/", 1)[1] if "/" in dep_path else None
