@@ -417,6 +417,17 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                 import.Remove();
             }
 
+            // substitute <SkiaSharpVersion> (used by Uno.Sdk to override the version of its
+            // implicitly-referenced SkiaSharp package; not a <PackageReference> so not handled above)
+            foreach (var ve in xdoc.Descendants().Where(e => e.Name.LocalName == "SkiaSharpVersion").ToArray()) {
+                var skiaVersion = GetVersion("SkiaSharp");
+                if (!string.IsNullOrWhiteSpace(skiaVersion)) {
+                    skiaVersion += string.IsNullOrEmpty(versionSuffix) ? "" : $"-{versionSuffix}";
+                    Debug($"Substituting SkiaSharpVersion for {skiaVersion}.");
+                    ve.Value = skiaVersion;
+                }
+            }
+
             // save the project
             EnsureDirectoryExists(dest.GetDirectory());
             xdoc.Save(dest.FullPath);
