@@ -217,20 +217,6 @@ namespace SkiaSharp
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, SKImageFilter? input, float maxSampleRadius) =>
 			ToImageFilterSingle (uniforms, children, childShaderName, maxSampleRadius, input);
 
-		// ToImageFilter - multi-child
-
-		public SKImageFilter ToImageFilter (string[] childShaderNames, SKImageFilter?[] inputs) =>
-			ToImageFilterMulti (null, null, childShaderNames, childShaderNames.Length, inputs, 0);
-
-		public SKImageFilter ToImageFilter (string[] childShaderNames, SKImageFilter?[] inputs, float maxSampleRadius) =>
-			ToImageFilterMulti (null, null, childShaderNames, childShaderNames.Length, inputs, maxSampleRadius);
-
-		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string[] childShaderNames, SKImageFilter?[] inputs) =>
-			ToImageFilterMulti (uniforms, children, childShaderNames, childShaderNames.Length, inputs, 0);
-
-		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string[] childShaderNames, SKImageFilter?[] inputs, float maxSampleRadius) =>
-			ToImageFilterMulti (uniforms, children, childShaderNames, childShaderNames.Length, inputs, maxSampleRadius);
-
 		// ToImageFilter - with SKRuntimeEffectImageFilterInputs
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKRuntimeEffectImageFilterInputs inputs) =>
@@ -265,11 +251,6 @@ namespace SkiaSharp
 
 		private SKImageFilter ToImageFilterMulti (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string[] childShaderNames, int count, SKImageFilter?[] inputs, float maxSampleRadius)
 		{
-			if (childShaderNames == null)
-				throw new ArgumentNullException (nameof (childShaderNames));
-			if (inputs == null)
-				throw new ArgumentNullException (nameof (inputs));
-
 			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
 			using var inputHandles = Utils.RentHandlesArray (inputs, true);
