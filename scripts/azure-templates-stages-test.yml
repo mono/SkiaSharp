@@ -70,7 +70,7 @@ stages:
             displayName: Managed (Windows)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: libs
-            cacheJob: managed
+            cacheJob: managed/libs
             enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
@@ -84,7 +84,7 @@ stages:
             displayName: Managed (macOS)
             buildAgent: ${{ parameters.buildAgentMac }}
             target: libs
-            cacheJob: managed
+            cacheJob: managed/libs
             enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
@@ -99,7 +99,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: libs
-            cacheJob: managed
+            cacheJob: managed/libs
             enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
