@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-"""Build caching tool — cache keys, change analysis, and validation.
+"""Build caching tool — cache keys and validation.
 
-Reads the job tree from repo-deps.json and provides three commands:
+Reads the job tree from repo-deps.json and provides two commands:
 
   cache-key   Compute a cache key for a job (hashes files + submodule SHAs)
-  analyze     Determine which jobs need to run based on changed files
-  validate    Check all tracked files are covered by a job or ignore pattern
+  validate    Check all tracked files are covered by a job or exclude pattern
 
 Usage:
-  python3 scripts/infra/caching/repo-deps.py cache-key --job native/ios --name native_ios_macos
-  python3 scripts/infra/caching/repo-deps.py analyze --base HEAD~1
+  python3 scripts/infra/caching/repo-deps.py cache-key --job managed/package --name package_normal_windows
+  python3 scripts/infra/caching/repo-deps.py cache-key --job managed/package --name test --base HEAD~1
   python3 scripts/infra/caching/repo-deps.py validate
 """
 
@@ -318,92 +317,6 @@ def cmd_cache_key(config, args):
     return 0
 
 
-def cmd_analyze(config, args):
-    base = args.base
-    if not base:
-        target = os.environ.get("SYSTEM_PULLREQUEST_TARGETBRANCH", "")
-        if target:
-            target = target.replace("refs/heads/", "origin/")
-            base = git("merge-base", target, "HEAD")
-            if not base:
-                print(f"Cannot determine merge-base with {target} (shallow checkout?)")
-                print("Run with --base <ref> or use a deeper fetch")
-                return 0
-        else:
-            base = "HEAD~1"
-
-    # Protected branches always run everything
-    branch = os.environ.get("BUILD_SOURCEBRANCH", "")
-    is_protected = branch in ("refs/heads/main",) or branch.startswith("refs/heads/release/") or branch.startswith("refs/heads/develop")
-
-    if is_protected:
-        print(f"Protected branch '{branch}' — all jobs run")
-        return 0
-
-    all_changed = git("diff", "--name-only", base, "HEAD").splitlines()
-    if not all_changed:
-        print(f"No changed files between {base[:10]} and HEAD")
-        return 0
-
-    # Separate existing files from deleted ones
-    # Deleted files still trigger their job but shouldn't cause "unmatched" errors
-    changed = [f for f in all_changed if os.path.exists(f)]
-    deleted = [f for f in all_changed if not os.path.exists(f)]
-
-    print(f"Base: {base}")
-    print(f"Changed: {len(changed)} files, {len(deleted)} deleted\n")
-
-    jobs = all_jobs(config)
-    ignore = [p for p in config.get("exclude", []) if not p.startswith("#")]
-
-    # Match ALL changed files (including deleted) to jobs
-    # A deleted file in native/ios/ should still trigger native/ios
-    results = {}
-    for job_path, (paths, subs) in jobs.items():
-        matched = any(match_any(f, paths) for f in all_changed)
-        if not matched:
-            matched = any(f == s or f.startswith(s + "/") for f in changed for s in subs)
-        results[job_path] = matched
-
-    # Propagate: if a parent is triggered, all children are too
-    for job_path in sorted(results.keys(), key=len):
-        if results[job_path]:
-            for other in results:
-                if other.startswith(job_path + "/"):
-                    results[other] = True
-
-    # Check unmatched — only for files that still exist (deleted files are fine)
-    all_patterns = []
-    all_subs = []
-    for paths, subs in jobs.values():
-        all_patterns.extend(paths)
-        all_subs.extend(subs)
-
-    unmatched = []
-    for f in changed:  # only existing files, not deleted
-        if match_any(f, all_patterns + ignore):
-            continue
-        if any(f == s or f.startswith(s + "/") for s in all_subs):
-            continue
-        unmatched.append(f)
-
-    if unmatched:
-        print("❌ UNMATCHED FILES (not covered by any job or exclude):")
-        for f in unmatched:
-            print(f"{f}")
-        print(f"\nAdd to a job or exclude list in repo-deps.json")
-        return 1
-
-    # Output
-    print("\n=== Job Analysis ===")
-    for job_path in sorted(results.keys()):
-        run = results[job_path]
-        icon = "🔨" if run else "⏭️"
-        label = "RUN" if run else "SKIP"
-        print(f"{icon} {job_path:<30} {label}")
-    return 0
-
-
 def cmd_validate(config, args):
     tracked = git("ls-files", "-z").split("\0")
     tracked = [f.strip('"').encode().decode("unicode_escape") if f.startswith('"') else f
@@ -490,13 +403,10 @@ def main():
     sub = parser.add_subparsers(dest="command")
 
     ck = sub.add_parser("cache-key", help="Compute cache key for a job")
-    ck.add_argument("--job", required=True, help="Job path (e.g. shared/native/ios)")
+    ck.add_argument("--job", required=True, help="Job path (e.g. managed/package)")
     ck.add_argument("--name", required=True, help="ADO job name")
     ck.add_argument("--docker", default="", help="Docker context directory")
     ck.add_argument("--base", default="", help="Base ref to diff — marks changed paths with *")
-
-    an = sub.add_parser("analyze", help="Analyze which jobs to run")
-    an.add_argument("--base", default="", help="Base SHA for diff")
 
     sub.add_parser("validate", help="Check all files are covered")
 
@@ -510,8 +420,6 @@ def main():
 
     if args.command == "cache-key":
         return cmd_cache_key(config, args)
-    elif args.command == "analyze":
-        return cmd_analyze(config, args)
     elif args.command == "validate":
         return cmd_validate(config, args)
 
