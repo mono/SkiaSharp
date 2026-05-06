@@ -11,14 +11,14 @@ SkiaSharp is a cross-platform 2D graphics API for .NET wrapping Google's Skia li
 
 These rules are **non-negotiable**. Violating them causes broken builds, crashes, or downstream breakage.
 
-### 1. Bootstrap First — But Only If You Are Not Touching Native Code
+### 1. Bootstrap First
 
 Before C# code can build, native binaries must exist in `output/native/`. **How** you produce them depends on what you're changing:
 
 | You are changing… | Bootstrap with |
 |---|---|
 | **Only C# code** (no files under `externals/skia/`, no `DEPS`, no submodule bump) | `dotnet cake --target=externals-download` (downloads pre-built natives from the **current** milestone) |
-| **Native code, C API, `DEPS`, or the Skia submodule** (incl. milestone updates) | `dotnet cake --target=externals-{platform} --arch={arch}` — **build from source.** `externals-download` is FORBIDDEN here (see Rule #2). |
+| **Native code, C API, `DEPS`, or the Skia submodule** (incl. milestone updates) | `dotnet cake --target=externals-{platform} --arch={arch}` — build from source. |
 
 > **🛑 If you are doing a Skia milestone update, a C API change, or anything under `externals/skia/`, STOP. Do not run `externals-download` — ever. The downloaded binaries are from the OLD milestone and do not contain your changes; using them produces silently-wrong builds and `EntryPointNotFoundException` at runtime.** When source builds fail (missing `gn`, network errors, etc.), debug the source build — do not fall back to download.
 
