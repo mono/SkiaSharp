@@ -248,6 +248,9 @@ The script handles all of these (so you don't have to do them manually):
 > 🛑 **GATE**: Script exits with ✅. If it exits with ❌, fix the reported stale references
 > and re-run until it passes.
 
+> **Note:** The SK_C_INCREMENT reset modifies a file in the submodule (`externals/skia/`).
+> Don't commit it separately — it will be committed with Phase 6's C API fixes.
+
 ### Phase 6: Fix C API Shim Layer
 
 This is where most of the work happens. The C API (`src/c/`, `include/c/`) wraps Skia C++ and
@@ -269,7 +272,7 @@ must be updated when the underlying C++ APIs change.
    |-----------|-------------|
    | Missing type | Add/update typedef in `sk_types.h` |
    | Renamed function | Update call in `*.cpp` |
-   | Removed enum value | Remove from `sk_enums.cpp` + `sk_types.h`. Flag as a C# breaking change — Phase 8 must add `[Obsolete]` or document removal |
+   | Removed enum value | Remove from `sk_enums.cpp` + `sk_types.h`. Note this for Phase 8 — it needs `[Obsolete]` or documented removal |
    | Changed signature | Update C wrapper function signature |
    | New header required | Add `#include` in the relevant `.cpp` |
    | Legacy flag breaks C API | Update C API to use replacement API (see gotcha #6). Do not just comment out the flag without a plan |
@@ -357,7 +360,7 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
 
 **Step 1 — Smoke tests (fast gate, ~100ms):**
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console.sln --filter "Category=Smoke"
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "Category=Smoke"
 ```
 Smoke tests verify basic native interop: version compatibility, object creation, drawing,
 image loading, fonts, codecs, effects, and more. If these fail, something fundamental is
@@ -369,7 +372,7 @@ broken — go back and fix before wasting time on the full suite.
 
 **Step 2 — Full test suite (required before any PR):**
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console.sln
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
 self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
