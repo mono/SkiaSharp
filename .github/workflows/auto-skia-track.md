@@ -188,13 +188,31 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-9.** Notes specific to this automated workflow:
 
-- **Before anything else**, run a font diagnostic and save to artifacts:
+- **Before anything else**, run a font/environment diagnostic and save to artifacts:
   ```bash
-  fc-list | head -20 > /tmp/gh-aw/agent/fc-list.txt 2>&1
-  fc-list | wc -l >> /tmp/gh-aw/agent/fc-list.txt
-  echo "FONTCONFIG_PATH=$FONTCONFIG_PATH" >> /tmp/gh-aw/agent/fc-list.txt
-  echo "XDG_DATA_HOME=$XDG_DATA_HOME" >> /tmp/gh-aw/agent/fc-list.txt
-  ls /usr/share/fonts/ >> /tmp/gh-aw/agent/fc-list.txt 2>&1
+  {
+    echo "=== whoami / pwd ==="
+    whoami; pwd
+    echo "=== /etc/fonts/ ==="
+    ls -la /etc/fonts/ 2>&1 | head -10
+    cat /etc/fonts/fonts.conf 2>&1 | head -20
+    echo "=== fc-list count ==="
+    fc-list 2>&1 | wc -l
+    fc-list 2>&1 | grep -i dejavu | head -5
+    echo "=== fontconfig env ==="
+    echo "FONTCONFIG_PATH=$FONTCONFIG_PATH"
+    echo "FONTCONFIG_FILE=$FONTCONFIG_FILE"
+    echo "XDG_DATA_HOME=$XDG_DATA_HOME"
+    echo "HOME=$HOME"
+    echo "=== ldd libSkiaSharp ==="
+    find output/native -name "libSkiaSharp.so" -exec ldd {} \; 2>&1 | grep -i font || echo "no native lib yet"
+    echo "=== /usr/share/fonts ==="
+    ls /usr/share/fonts/ 2>&1
+    echo "=== fontconfig cache ==="
+    ls -la /var/cache/fontconfig/ 2>&1 | head -5
+    ls -la ~/.cache/fontconfig/ 2>&1 | head -5
+  } > /tmp/gh-aw/agent/font-diagnostic.txt 2>&1
+  cat /tmp/gh-aw/agent/font-diagnostic.txt
   ```
 - **Phase 1 is pre-computed** (above). Skip it.
 - **Phase 4 branch name**: use `skia-sync/m${{ needs.pre_activation.outputs.target }}` (not `dev/update-skia-{TARGET}`).
@@ -208,6 +226,11 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 - **Submodule alignment**: the pre-agent step already checked out the submodule to the correct SHA.
   When creating your submodule feature branch, branch from the current HEAD.
 - **Phase 8 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 8 Step 1.
+- **Before running tests (Phase 9)**, run `ldd` on the built native lib and save to artifacts:
+  ```bash
+  ldd output/native/linux/x64/libSkiaSharp.so > /tmp/gh-aw/agent/ldd-libSkiaSharp.txt 2>&1
+  cat /tmp/gh-aw/agent/ldd-libSkiaSharp.txt
+  ```
 - **Phase 10 is handled by a post-step.** Do NOT push branches, create PRs, or create issues yourself — all GitHub artifacts are handled by the post-step.
   Just commit locally. Do NOT call `create_issue` or `create_pull_request`. After Phase 9, write these files:
 
