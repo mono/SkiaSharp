@@ -138,34 +138,40 @@ if ($Current -ne $Target) {
 # --- Step 5: Mandatory Verification ---
 Write-Host "`n=== Verification ===" -ForegroundColor Cyan
 
-$staleVersions = Select-String -Path $versionsPath -Pattern "$Current" |
-    Where-Object { $_.Line -notmatch '^\s*#' -and $_.Line -notmatch 'HarfBuzz' }
-
-$staleCgmanifest = Select-String -Path $cgPath -Pattern "m$Current|`"$Current`""
-
-$failures = @()
-
-if ($staleVersions) {
-    $failures += "VERSIONS.txt still contains '$Current':"
-    foreach ($match in $staleVersions) {
-        $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
-    }
-}
-
-if ($staleCgmanifest) {
-    $failures += "cgmanifest.json still contains '$Current':"
-    foreach ($match in $staleCgmanifest) {
-        $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
-    }
-}
-
-if ($failures.Count -gt 0) {
-    Write-Host "`n❌ GATE FAILED — stale references found:" -ForegroundColor Red
-    foreach ($f in $failures) { Write-Host "  $f" -ForegroundColor Red }
-    exit 1
+if ($Current -eq $Target) {
+    Write-Host "  Same-milestone sync (m$Current -> m$Target) — skipping stale-reference check" -ForegroundColor Yellow
+    Write-Host "  (only commitHash/upstream_merge_commit were updated)" -ForegroundColor Yellow
+    Write-Host "`n✅ GATE PASSED — same-milestone sync, version numbers unchanged" -ForegroundColor Green
 } else {
-    Write-Host "`n✅ GATE PASSED — no stale milestone references found" -ForegroundColor Green
-    Write-Host "  SK_C_INCREMENT: 0" -ForegroundColor Green
-    Write-Host "  VERSIONS.txt: clean" -ForegroundColor Green
-    Write-Host "  cgmanifest.json: clean" -ForegroundColor Green
+    $staleVersions = Select-String -Path $versionsPath -Pattern "$Current" |
+        Where-Object { $_.Line -notmatch '^\s*#' -and $_.Line -notmatch 'HarfBuzz' }
+
+    $staleCgmanifest = Select-String -Path $cgPath -Pattern "m$Current|`"$Current`""
+
+    $failures = @()
+
+    if ($staleVersions) {
+        $failures += "VERSIONS.txt still contains '$Current':"
+        foreach ($match in $staleVersions) {
+            $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
+        }
+    }
+
+    if ($staleCgmanifest) {
+        $failures += "cgmanifest.json still contains '$Current':"
+        foreach ($match in $staleCgmanifest) {
+            $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
+        }
+    }
+
+    if ($failures.Count -gt 0) {
+        Write-Host "`n❌ GATE FAILED — stale references found:" -ForegroundColor Red
+        foreach ($f in $failures) { Write-Host "  $f" -ForegroundColor Red }
+        exit 1
+    } else {
+        Write-Host "`n✅ GATE PASSED — no stale milestone references found" -ForegroundColor Green
+        Write-Host "  SK_C_INCREMENT: 0" -ForegroundColor Green
+        Write-Host "  VERSIONS.txt: clean" -ForegroundColor Green
+        Write-Host "  cgmanifest.json: clean" -ForegroundColor Green
+    }
 }

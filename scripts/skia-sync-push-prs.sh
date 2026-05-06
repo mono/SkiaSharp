@@ -30,6 +30,15 @@ SS_SUMMARY=""
 [ -f /tmp/gh-aw/agent/skia-sync-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skia-summary.md)
 [ -f /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md)
 
+# --- Determine PR titles based on same-milestone or milestone bump ---
+if [ "$CURRENT" = "$TARGET" ]; then
+    SS_TITLE="[skia-sync] Merge upstream chrome/m${TARGET} bug fixes"
+    SS_BODY_INTRO="Automated upstream bug-fix sync for m${TARGET}."
+else
+    SS_TITLE="[skia-sync] Update skia to milestone ${TARGET}"
+    SS_BODY_INTRO="Automated Skia milestone bump from m${CURRENT} to m${TARGET}."
+fi
+
 WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-track.lock.yml)"
 
 # --- mono/skia: push submodule branch and create/update PR ---
@@ -90,9 +99,9 @@ push_skiasharp() {
         echo "Creating mono/SkiaSharp PR..."
         gh pr create --repo mono/SkiaSharp \
             --head "$BRANCH" --base main \
-            --title "[skia-sync] Update skia to milestone ${TARGET}" \
+            --title "$SS_TITLE" \
             --draft \
-            --body "Automated Skia milestone bump from m${CURRENT} to m${TARGET}.
+            --body "${SS_BODY_INTRO}
 
 $skia_pr_link
 
@@ -102,7 +111,7 @@ Created by ${WORKFLOW_LINK}." || echo "::warning::Failed to create mono/SkiaShar
     else
         echo "Updating mono/SkiaSharp PR #${ss_pr}..."
         gh pr edit "$ss_pr" --repo mono/SkiaSharp \
-            --body "Automated Skia milestone bump from m${CURRENT} to m${TARGET}.
+            --body "${SS_BODY_INTRO}
 
 $skia_pr_link
 

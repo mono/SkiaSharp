@@ -168,14 +168,24 @@ milestone numbers and paste your breaking change analysis table. The default exp
 
 ### Phase 4: Upstream Merge (mono/skia)
 
-1. **Create feature branch**:
+1. **Create feature branch** (start from the correct base):
    ```bash
    cd externals/skia
-   git checkout skiasharp
-   git pull origin skiasharp
+   ```
+   First, ensure you're starting from the SHA that the parent repo's `origin/main` expects:
+   ```bash
+   MAIN_SUB_SHA=$(git -C ../.. ls-tree origin/main -- externals/skia | awk '{print $3}')
+   git checkout "$MAIN_SUB_SHA"
+   ```
+   Then create the feature branch:
+   ```bash
    git checkout -b dev/update-skia-{TARGET}
    ```
    > **Note:** Automated workflows may use a different branch name (e.g. `skia-sync/m{TARGET}`).
+   >
+   > ⚠️ **Do NOT skip the SHA alignment step.** If the submodule is checked out at a different
+   > SHA than `origin/main` expects (e.g. from a different branch), the merge will produce
+   > phantom diffs — functions that already exist on `main` will appear as new or removed.
 
 2. **Merge upstream** — use `--no-commit` for manual conflict resolution:
    ```bash
@@ -260,8 +270,9 @@ must be updated when the underlying C++ APIs change.
 > binaries from the OLD milestone that don't contain your C API changes. Always build from
 > source with `externals-{platform}`.
 
-1. **Attempt to build** to identify all compilation errors:
+1. **Restore tools and attempt to build** to identify all compilation errors:
    ```bash
+   dotnet tool restore
    dotnet cake --target=externals-{platform} --arch={arch}
    ```
    Replace `{platform}` with your OS (`macos`, `linux`, `windows`) and `{arch}` with your architecture (`arm64`, `x64`).
@@ -372,10 +383,26 @@ broken — go back and fix before wasting time on the full suite.
 
 **Step 2 — Full test suite (required before any PR):**
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/test-output.txt
+tail -5 /tmp/test-output.txt
 ```
 This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
 self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
+
+> **⚠️ Always capture test output with `2>&1 | tee /tmp/test-output.txt`.** Do NOT pipe to
+> `tail` or `grep` alone — you lose the failure details. After the run, inspect failures with:
+> ```bash
+> grep '^  Failed' /tmp/test-output.txt
+> ```
+
+**Known CI environment failures:** On Linux CI (GitHub Actions, Docker), tests in
+`SKFontManagerTest`, `SKTypefaceTest`, and `SKFontStyleSetTest` may fail with
+`TypeInitializationException` if fonts are not installed. These tests require
+`fonts-dejavu-core` (provides "DejaVu Sans") and `ttf-ancient-fonts` (provides "Symbola").
+If ALL failures are in these font-related test classes and the runner lacks these packages,
+note them as **pre-existing environment issues** in the PR summary and continue.
+Do NOT spend time investigating font failures, installing packages mid-run, reading C# source
+for SKFontManager/SKTypeface, or attempting `externals-download` for "baseline comparison."
 
 Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
 before the update can be considered complete. Do not create PRs with only smoke tests passing.
