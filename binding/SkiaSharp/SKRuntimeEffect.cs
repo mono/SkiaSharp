@@ -275,15 +275,13 @@ namespace SkiaSharp
 
 			var uniformsHandle = uniforms?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children, true);
+			using var inputHandles = Utils.RentHandlesArray (inputs, true);
 
-			var inputPtrs = stackalloc IntPtr[count];
-			for (var i = 0; i < count; i++)
-				inputPtrs[i] = inputs[i]?.Handle ?? IntPtr.Zero;
-
-			fixed (IntPtr* ch = childrenHandles) {
+			fixed (IntPtr* ch = childrenHandles)
+			fixed (IntPtr* ih = inputHandles) {
 				return SKImageFilter.GetObject (SkiaApi.sk_runtimeeffect_make_image_filter_with_children (
 					Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length,
-					maxSampleRadius, childShaderNames, inputPtrs, count));
+					maxSampleRadius, childShaderNames, ih, count));
 			}
 		}
 
