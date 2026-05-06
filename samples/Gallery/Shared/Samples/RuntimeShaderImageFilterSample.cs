@@ -68,6 +68,7 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 	private static readonly string[] ShaderSources = { InvertShader, GrayscaleShader, SepiaShader, VignetteShader, EdgeDetectShader };
 
 	private SKBitmap? sourceBitmap;
+	private SKRuntimeImageFilterBuilder?[] cachedBuilders = new SKRuntimeImageFilterBuilder?[5];
 	private int selectedShader;
 	private float intensity = 0.8f;
 	private float radius = 0.7f;
@@ -95,6 +96,8 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 	{
 		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
 		sourceBitmap = SKBitmap.Decode(stream);
+		for (var i = 0; i < ShaderSources.Length; i++)
+			cachedBuilders[i] = SKRuntimeEffect.BuildImageFilter(ShaderSources[i]);
 		return Task.CompletedTask;
 	}
 
@@ -102,6 +105,11 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 	{
 		sourceBitmap?.Dispose();
 		sourceBitmap = null;
+		for (var i = 0; i < cachedBuilders.Length; i++)
+		{
+			cachedBuilders[i]?.Dispose();
+			cachedBuilders[i] = null;
+		}
 	}
 
 	protected override void OnControlChanged(string id, object value)
@@ -133,10 +141,8 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 
 		canvas.Clear(SKColors.Black);
 
-		var src = ShaderSources[selectedShader];
-
-		using var builder = SKRuntimeEffect.BuildImageFilter(src);
-		if (builder.Effect == null)
+		var builder = cachedBuilders[selectedShader];
+		if (builder == null)
 			return;
 
 		switch (selectedShader)

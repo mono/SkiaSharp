@@ -762,6 +762,26 @@ namespace SkiaSharp.Tests
 			}
 
 			[SkippableFact]
+			public void AutoDetectWithMaxSampleRadius()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						half4 c = child.eval(p);
+						c += child.eval(p + float2(1, 0));
+						c += child.eval(p + float2(-1, 0));
+						return c / 3;
+					}
+					""";
+
+				// no Inputs set, auto-detect + radius
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build(1.0f);
+
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
 			public void SingleChildRendersCorrectly()
 			{
 				var src = """

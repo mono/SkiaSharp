@@ -240,7 +240,7 @@ namespace SkiaSharp
 			fixed (IntPtr* ch = childrenHandles) {
 				return SKImageFilter.GetObject (SkiaApi.sk_runtimeeffect_make_image_filter (
 					Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length,
-					childShaderName ?? string.Empty, input?.Handle ?? IntPtr.Zero));
+					maxSampleRadius, childShaderName ?? string.Empty, input?.Handle ?? IntPtr.Zero));
 			}
 		}
 

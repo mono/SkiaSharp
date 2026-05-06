@@ -19,6 +19,7 @@ public class UnsharpMaskSample : CanvasSampleBase
 		""";
 
 	private SKBitmap? sourceBitmap;
+	private SKRuntimeImageFilterBuilder? builder;
 	private float blurRadius = 1.0f;
 	private float strength = 4.0f;
 
@@ -40,6 +41,7 @@ public class UnsharpMaskSample : CanvasSampleBase
 	{
 		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
 		sourceBitmap = SKBitmap.Decode(stream);
+		builder = SKRuntimeEffect.BuildImageFilter(UnsharpShader);
 		return Task.CompletedTask;
 	}
 
@@ -47,6 +49,8 @@ public class UnsharpMaskSample : CanvasSampleBase
 	{
 		sourceBitmap?.Dispose();
 		sourceBitmap = null;
+		builder?.Dispose();
+		builder = null;
 	}
 
 	protected override void OnControlChanged(string id, object value)
@@ -69,13 +73,13 @@ public class UnsharpMaskSample : CanvasSampleBase
 
 		canvas.Clear(SKColors.Black);
 
-		using var builder = SKRuntimeEffect.BuildImageFilter(UnsharpShader);
-		if (builder.Effect == null)
+		if (builder == null)
 			return;
 
 		builder.Uniforms["strength"] = strength;
 
 		using var blur = SKImageFilter.CreateBlur(blurRadius, blurRadius);
+		builder.Inputs.Reset();
 		builder.Inputs["content"] = null;
 		builder.Inputs["blurred"] = blur;
 		using var filter = builder.Build();
