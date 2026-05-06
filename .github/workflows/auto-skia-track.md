@@ -145,9 +145,16 @@ steps:
     run: |
       # The checkout uses the workflow branch, so the submodule may be at a
       # different SHA than what origin/main expects. Fix it before the agent runs.
+      # Note: the submodule tracks the `skiasharp` branch in mono/skia, so this
+      # SHA should be a commit on origin/skiasharp.
       MAIN_SUB_SHA=$(git ls-tree origin/main -- externals/skia | awk '{print $3}')
       echo "origin/main submodule SHA: $MAIN_SUB_SHA"
+      git -C externals/skia fetch origin skiasharp 2>&1
       git -C externals/skia checkout "$MAIN_SUB_SHA" 2>&1
+      echo "Verifying SHA is on skiasharp branch:"
+      git -C externals/skia branch -r --contains "$MAIN_SUB_SHA" | grep -q 'origin/skiasharp' \
+        && echo "  ✅ SHA is on origin/skiasharp" \
+        || echo "  ⚠️ SHA is NOT on origin/skiasharp — submodule pointer may be stale"
   - name: Copy push script for post-step
     run: |
       mkdir -p /tmp/gh-aw/agent
@@ -180,7 +187,8 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
   Even when current == target, there may be new upstream bug-fix commits - a matching milestone does NOT mean no work.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
-- **Submodule alignment**: the pre-agent step already checked out the submodule to the SHA that `origin/main` expects.
+- **Submodule alignment**: the pre-agent step already checked out the submodule to the SHA that `origin/main` expects
+  (a commit on the `skiasharp` branch in mono/skia).
   When creating your submodule feature branch, branch from the current HEAD (do NOT `git checkout skiasharp` or any other ref).
 - **Phase 8 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 8 Step 1.
 - **Phase 10 is handled by a post-step.** Do NOT push branches, create PRs, or create issues yourself — all GitHub artifacts are handled by the post-step.

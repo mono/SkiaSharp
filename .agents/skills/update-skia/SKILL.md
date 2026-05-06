@@ -172,10 +172,17 @@ milestone numbers and paste your breaking change analysis table. The default exp
    ```bash
    cd externals/skia
    ```
-   First, ensure you're starting from the SHA that the parent repo's `origin/main` expects:
+   The submodule tracks the `skiasharp` branch in mono/skia (NOT `main`).
+   Ensure you're starting from the SHA that the parent repo's `origin/main` expects
+   (which should be a commit on `origin/skiasharp`):
    ```bash
    MAIN_SUB_SHA=$(git -C ../.. ls-tree origin/main -- externals/skia | awk '{print $3}')
+   git fetch origin skiasharp
    git checkout "$MAIN_SUB_SHA"
+   ```
+   Verify this SHA is on `origin/skiasharp`:
+   ```bash
+   git branch -r --contains "$MAIN_SUB_SHA" | grep 'origin/skiasharp'
    ```
    Then create the feature branch:
    ```bash
@@ -186,6 +193,9 @@ milestone numbers and paste your breaking change analysis table. The default exp
    > ⚠️ **Do NOT skip the SHA alignment step.** If the submodule is checked out at a different
    > SHA than `origin/main` expects (e.g. from a different branch), the merge will produce
    > phantom diffs — functions that already exist on `main` will appear as new or removed.
+   >
+   > The mono/skia PR targets `skiasharp` (not `main`). The parent repo's submodule pointer
+   > should always reference a commit on `origin/skiasharp`.
 
 2. **Merge upstream** — use `--no-commit` for manual conflict resolution:
    ```bash
