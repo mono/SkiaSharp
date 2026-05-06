@@ -167,7 +167,11 @@ def cmd_analyze(config, args):
         target = os.environ.get("SYSTEM_PULLREQUEST_TARGETBRANCH", "")
         if target:
             target = target.replace("refs/heads/", "origin/")
-            base = git("merge-base", target, "HEAD") or "HEAD~1"
+            base = git("merge-base", target, "HEAD")
+            if not base:
+                print(f"Cannot determine merge-base with {target} (shallow checkout?)")
+                print("Run with --base <ref> or use a deeper fetch")
+                return 0
         else:
             base = "HEAD~1"
 
@@ -181,9 +185,7 @@ def cmd_analyze(config, args):
 
     all_changed = git("diff", "--name-only", base, "HEAD").splitlines()
     if not all_changed:
-        print("No changed files detected — unable to determine cache usage")
-        print("This is expected for direct branch builds (not PRs)")
-        print("Cache decisions are made per-job by the cache key, not by this analysis")
+        print(f"No changed files between {base[:10]} and HEAD")
         return 0
 
     # Separate existing files from deleted ones
@@ -305,11 +307,11 @@ def cmd_validate(config, args):
         print(f"{job_path:<30} {count:>4} files{sub_str}")
 
     if overlaps:
-        print(f"\n⚠️  {len(overlaps)} files match BOTH include and exclude (bug?):")
+        print(f"\nℹ️  {len(overlaps)} files match both include and exclude (include wins):")
         for f in overlaps[:10]:
-            print(f"{f}")
+            print(f"  {f}")
         if len(overlaps) > 10:
-            print(f"... +{len(overlaps) - 10} more")
+            print(f"  ... +{len(overlaps) - 10} more")
 
     if uncovered:
         print(f"\n❌ UNCOVERED FILES:")
