@@ -238,11 +238,12 @@ namespace SkiaSharp
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKRuntimeEffectImageFilterInputs inputs, float maxSampleRadius)
 		{
-			if (!inputs.HasExplicitInputs)
+			inputs.ToArrays (out var inputNames, out var filterInputs);
+
+			if (inputNames.Length == 0)
 				return ToImageFilterSingle (uniforms.ToData (), children.ToArray (), null, maxSampleRadius, null);
 
-			inputs.ToArrays (out var names, out var filterInputs);
-			return ToImageFilterMulti (uniforms.ToData (), children.ToArray (), names, filterInputs, maxSampleRadius);
+			return ToImageFilterMulti (uniforms.ToData (), children.ToArray (), inputNames, filterInputs, maxSampleRadius);
 		}
 
 		// ToImageFilter - private implementations
@@ -511,15 +512,14 @@ namespace SkiaSharp
 	public class SKRuntimeEffectImageFilterInputs : IEnumerable<string>, IDisposable
 	{
 		private readonly string[] names;
-		private readonly SKImageFilter?[] inputs;
+		private readonly Dictionary<string, SKImageFilter?> inputs;
 
 		public SKRuntimeEffectImageFilterInputs (SKRuntimeEffect effect)
 		{
 			_ = effect ?? throw new ArgumentNullException (nameof (effect));
 
-			// collect all child names (C++ validates shader type at creation time)
 			names = effect.Children.ToArray ();
-			inputs = new SKImageFilter?[names.Length];
+			inputs = new Dictionary<string, SKImageFilter?> ();
 		}
 
 		public IReadOnlyList<string> Names =>
@@ -529,7 +529,7 @@ namespace SkiaSharp
 			names.Length;
 
 		public void Reset () =>
-			Array.Clear (inputs, 0, inputs.Length);
+			inputs.Clear ();
 
 		public bool Contains (string name) =>
 			Array.IndexOf (names, name) != -1;
@@ -538,31 +538,24 @@ namespace SkiaSharp
 			set => Add (name, value);
 		}
 
-		internal bool HasExplicitInputs { get; private set; }
-
 		public void Add (string name, SKImageFilter? value)
 		{
-			var index = Array.IndexOf (names, name);
-
-			if (index == -1)
+			if (Array.IndexOf (names, name) == -1)
 				throw new ArgumentOutOfRangeException (name, $"Child was not found for name: '{name}'.");
 
-			inputs[index] = value;
-			HasExplicitInputs = true;
+			inputs[name] = value;
 		}
 
 		internal void ToArrays (out string[] childShaderNames, out SKImageFilter?[] filterInputs)
 		{
-			var setNames = new List<string> ();
-			var setInputs = new List<SKImageFilter?> ();
-			for (var i = 0; i < names.Length; i++) {
-				if (HasExplicitInputs) {
-					setNames.Add (names[i]);
-					setInputs.Add (inputs[i]);
-				}
+			childShaderNames = new string[inputs.Count];
+			filterInputs = new SKImageFilter?[inputs.Count];
+			var i = 0;
+			foreach (var kvp in inputs) {
+				childShaderNames[i] = kvp.Key;
+				filterInputs[i] = kvp.Value;
+				i++;
 			}
-			childShaderNames = setNames.ToArray ();
-			filterInputs = setInputs.ToArray ();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator () =>
