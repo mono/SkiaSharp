@@ -224,15 +224,10 @@ namespace SkiaSharp
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKRuntimeEffectImageFilterInputs inputs, float maxSampleRadius)
 		{
-			var count = inputs.Count;
-
-			if (count == 0)
+			if (inputs.Count == 0)
 				return ToImageFilterSingle (uniforms, children, null, null, maxSampleRadius);
 
-			using var nameRental = Utils.RentArray<string> (count);
-			using var filterRental = Utils.RentArray<SKImageFilter?> (count);
-			inputs.WriteTo (nameRental.Array, filterRental.Array);
-			return ToImageFilterMulti (uniforms, children, nameRental.Array, count, filterRental.Array, maxSampleRadius);
+			return ToImageFilterMulti (uniforms, children, inputs, maxSampleRadius);
 		}
 
 		// ToImageFilter - private implementations
@@ -249,17 +244,21 @@ namespace SkiaSharp
 			}
 		}
 
-		private SKImageFilter ToImageFilterMulti (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string[] childShaderNames, int count, SKImageFilter?[] inputs, float maxSampleRadius)
+		private SKImageFilter ToImageFilterMulti (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKRuntimeEffectImageFilterInputs inputs, float maxSampleRadius)
 		{
+			var count = inputs.Count;
 			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
-			using var inputHandles = Utils.RentHandlesArray (inputs, true);
+			using var nameRental = Utils.RentArray<string> (count);
+			using var filterRental = Utils.RentArray<SKImageFilter?> (count);
+			inputs.WriteTo (nameRental.Array, filterRental.Array);
+			using var inputHandles = Utils.RentHandlesArray (filterRental.Array, true);
 
 			fixed (IntPtr* ch = childrenHandles)
 			fixed (IntPtr* ih = inputHandles) {
 				return SKImageFilter.GetObject (SkiaApi.sk_runtimeeffect_make_image_filter_with_children (
 					Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length,
-					maxSampleRadius, childShaderNames, ih, count));
+					maxSampleRadius, nameRental.Array, ih, count));
 			}
 		}
 
