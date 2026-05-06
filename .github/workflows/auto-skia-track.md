@@ -1,5 +1,9 @@
 ---
 description: "Daily upstream Skia milestone tracking — merges new commits, resolves conflicts, builds, tests, and creates PRs."
+
+# ── Triggers ──────────────────────────────────────────────────────────
+# Three daily crons: current (7 AM), next (12 PM), latest (5 PM UTC).
+# Manual dispatch with mode selector.
 on:
   schedule:
     - cron: "0 7 * * *"
@@ -13,6 +17,11 @@ on:
         type: choice
         default: next
         options: [current, next, latest]
+
+  # ── Pre-activation step ───────────────────────────────────────────
+  # Runs BEFORE the agent job. Detects the target milestone.
+  # Exit 1 = skip the entire workflow (upstream branch doesn't exist).
+  # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
     - name: Detect milestone
       id: detect
@@ -59,6 +68,9 @@ on:
         fi
 
         echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
+
+  # ── Pre-activation outputs ──────────────────────────────────────────
+  # Expose detect step outputs for use in the prompt and other jobs.
 jobs:
   pre-activation:
     outputs:
@@ -67,7 +79,12 @@ jobs:
       latest: ${{ steps.detect.outputs.latest }}
       target: ${{ steps.detect.outputs.target }}
       mode: ${{ steps.detect.outputs.mode }}
+
+# ── Agent job gate ──────────────────────────────────────────────────
+# Only run the agent if pre-activation succeeded (milestone detected).
 if: needs.pre_activation.outputs.detect_result == 'success'
+
+# ── Checkout ────────────────────────────────────────────────────────
 checkout:
   - fetch-depth: 0
     submodules: recursive
@@ -75,6 +92,8 @@ timeout-minutes: 120
 concurrency:
   group: skia-upstream-sync-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
   cancel-in-progress: true
+
+# ── Agent tools ─────────────────────────────────────────────────────
 tools:
   github:
     toolsets: [repos, pull_requests]
@@ -82,6 +101,9 @@ tools:
     min-integrity: none
   bash: ["*"]
   edit:
+
+# ── Network allowlist ───────────────────────────────────────────────
+# Skia build fetches deps from *.googlesource.com and GN from storage/cipd.
 network:
   allowed:
     - defaults
@@ -95,12 +117,19 @@ network:
     - "chrome-infra-packages.appspot.com"
     - "gn.googlesource.com"
     - "storage.googleapis.com"
+
+# ── Environment ─────────────────────────────────────────────────────
+# Clang is required for the Linux native build (retpoline flag).
 env:
   CC: clang
   CXX: clang++
 permissions:
   contents: read
   pull-requests: read
+
+# ── Pre-agent steps ─────────────────────────────────────────────────
+# Run in the agent job AFTER checkout, BEFORE the AI executes.
+# Install native build deps and write the env file for the post-step.
 steps:
   - name: Install build dependencies
     run: |
@@ -109,6 +138,15 @@ steps:
       dotnet workload install android --skip-sign-check
     env:
       DEBIAN_FRONTEND: noninteractive
+  - name: Write env for post-step
+    run: |
+      mkdir -p /tmp/gh-aw/agent
+      echo "TARGET=${{ needs.pre_activation.outputs.target }}" > /tmp/gh-aw/agent/skia-sync-env.sh
+      echo "CURRENT=${{ needs.pre_activation.outputs.current }}" >> /tmp/gh-aw/agent/skia-sync-env.sh
+
+# ── Post-agent steps ───────────────────────────────────────────────
+# Run AFTER the AI finishes. Pushes branches and creates/updates PRs
+# using the SKIASHARP_AUTOBUMP_TOKEN (has write access to mono/skia).
 post-steps:
   - name: Push branches and create PRs
     env:
@@ -129,18 +167,12 @@ Current: m${{ needs.pre_activation.outputs.current }}. Target: m${{ needs.pre_ac
   Even when current == target, there may be new upstream bug-fix commits — a matching milestone does NOT mean no work.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
 - **Phase 8 reminder**: a green C# build is NOT sufficient — run the new-function diff check from Phase 8 Step 1.
-- **Phase 10 is handled by a post-step.** Do NOT push branches or create PRs yourself — both are handled by the post-step. Just commit locally. After Phase 9, write these files:
+- **Phase 10 is handled by a post-step.** Do NOT push branches or create PRs yourself — both are handled by the post-step. Just commit locally. After Phase 9, write these summary files:
 
-1. `/tmp/gh-aw/agent/skia-sync-env.sh`:
-   ```bash
-   TARGET=${{ needs.pre_activation.outputs.target }}
-   CURRENT=${{ needs.pre_activation.outputs.current }}
-   ```
-
-2. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` — for the mono/skia PR:
+1. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` — for the mono/skia PR:
    - Upstream merge details, conflicts resolved, C API fixes, items needing human attention
 
-3. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` — for the mono/SkiaSharp PR:
+2. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` — for the mono/SkiaSharp PR:
    - Breaking change analysis, version/binding updates, C# changes, build/test results, items needing human attention
 
 Commit submodule changes inside `externals/skia` on `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
