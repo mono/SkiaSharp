@@ -155,6 +155,14 @@ steps:
       git -C externals/skia branch -r --contains "$MAIN_SUB_SHA" | grep -q 'origin/skiasharp' \
         && echo "  ✅ SHA is on origin/skiasharp" \
         || echo "  ⚠️ SHA is NOT on origin/skiasharp — submodule pointer may be stale"
+  - name: Verify fonts are visible
+    run: |
+      echo "=== Font verification ==="
+      fc-list | grep -i "dejavu\|symbola" | head -5 || echo "⚠️ No DejaVu/Symbola fonts found by fc-list"
+      echo "=== Font cache ==="
+      fc-cache -f -v 2>&1 | tail -5
+      echo "=== Fontconfig paths ==="
+      fc-list : file family | grep -i dejavu | head -3 || echo "⚠️ DejaVu not in fc-list output"
   - name: Copy push script for post-step
     run: |
       mkdir -p /tmp/gh-aw/agent

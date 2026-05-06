@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"923b92dedb33adfe55bbe158f3efadbaf8e242f17ecf6ef6c503fc47a560ee9f","compiler_version":"v0.71.4","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"8ad30b93f36e70b73022236580767afa4dd75253568d841025b28cc1a5e5557f","compiler_version":"v0.71.4","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","SKIASHARP_AUTOBUMP_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"f8495a686e66770ae977f82732f34d7340ee42a4","version":"v0.71.4"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.35"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.35"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.35"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.3"},{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -251,23 +251,23 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_68c9b5d7808e540f_EOF'
+          cat << 'GH_AW_PROMPT_895760732e8b9683_EOF'
           <system>
-          GH_AW_PROMPT_68c9b5d7808e540f_EOF
+          GH_AW_PROMPT_895760732e8b9683_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_68c9b5d7808e540f_EOF'
+          cat << 'GH_AW_PROMPT_895760732e8b9683_EOF'
           <safe-output-tools>
           Tools: create_issue
-          GH_AW_PROMPT_68c9b5d7808e540f_EOF
+          GH_AW_PROMPT_895760732e8b9683_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_auto_create_issue.md"
-          cat << 'GH_AW_PROMPT_68c9b5d7808e540f_EOF'
+          cat << 'GH_AW_PROMPT_895760732e8b9683_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_68c9b5d7808e540f_EOF
+          GH_AW_PROMPT_895760732e8b9683_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_68c9b5d7808e540f_EOF'
+          cat << 'GH_AW_PROMPT_895760732e8b9683_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -299,12 +299,12 @@ jobs:
             - **Note**: If a branch you need is not in the list above and is not listed as an additional fetched ref, it has NOT been checked out. For private repositories you cannot fetch it without proper authentication. If the branch is required and not available, exit with an error and ask the user to add it to the `fetch:` option of the `checkout:` configuration (e.g., `fetch: ["refs/pulls/open/*"]` for all open PR refs, or `fetch: ["main", "feature/my-branch"]` for specific branches).
           </github-context>
           
-          GH_AW_PROMPT_68c9b5d7808e540f_EOF
+          GH_AW_PROMPT_895760732e8b9683_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_68c9b5d7808e540f_EOF'
+          cat << 'GH_AW_PROMPT_895760732e8b9683_EOF'
           </system>
           {{#runtime-import .github/workflows/auto-skia-track.md}}
-          GH_AW_PROMPT_68c9b5d7808e540f_EOF
+          GH_AW_PROMPT_895760732e8b9683_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -453,6 +453,8 @@ jobs:
           dotnet tool restore
       - name: Align submodule to origin/main
         run: "# The checkout uses the workflow branch, so the submodule may be at a\n# different SHA than what origin/main expects. Fix it before the agent runs.\n# Note: the submodule tracks the `skiasharp` branch in mono/skia, so this\n# SHA should be a commit on origin/skiasharp.\nMAIN_SUB_SHA=$(git ls-tree origin/main -- externals/skia | awk '{print $3}')\necho \"origin/main submodule SHA: $MAIN_SUB_SHA\"\ngit -C externals/skia fetch origin skiasharp 2>&1\ngit -C externals/skia checkout \"$MAIN_SUB_SHA\" 2>&1\necho \"Verifying SHA is on skiasharp branch:\"\ngit -C externals/skia branch -r --contains \"$MAIN_SUB_SHA\" | grep -q 'origin/skiasharp' \\\n  && echo \"  ✅ SHA is on origin/skiasharp\" \\\n  || echo \"  ⚠️ SHA is NOT on origin/skiasharp — submodule pointer may be stale\"\n"
+      - name: Verify fonts are visible
+        run: "echo \"=== Font verification ===\"\nfc-list | grep -i \"dejavu\\|symbola\" | head -5 || echo \"⚠️ No DejaVu/Symbola fonts found by fc-list\"\necho \"=== Font cache ===\"\nfc-cache -f -v 2>&1 | tail -5\necho \"=== Fontconfig paths ===\"\nfc-list : file family | grep -i dejavu | head -3 || echo \"⚠️ DejaVu not in fc-list output\"\n"
       - name: Copy push script for post-step
         run: |-
           mkdir -p /tmp/gh-aw/agent
@@ -516,9 +518,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_1d447276176028a4_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_c337f82521e7bf8c_EOF'
           {"create_issue":{"labels":["auto-skia-track"],"max":1,"title_prefix":"[auto-skia-track]"}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_1d447276176028a4_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_c337f82521e7bf8c_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -643,7 +645,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_16a5c6d13ff174b7_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_95d93b675103190a_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -691,7 +693,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_16a5c6d13ff174b7_EOF
+          GH_AW_MCP_CONFIG_95d93b675103190a_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
