@@ -68,7 +68,7 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 	private static readonly string[] ShaderSources = { InvertShader, GrayscaleShader, SepiaShader, VignetteShader, EdgeDetectShader };
 
 	private SKBitmap? sourceBitmap;
-	private SKRuntimeImageFilterBuilder?[] cachedBuilders = new SKRuntimeImageFilterBuilder?[5];
+	private SKRuntimeImageFilterBuilder?[] cachedBuilders = new SKRuntimeImageFilterBuilder?[ShaderSources.Length];
 	private int selectedShader;
 	private float intensity = 0.8f;
 	private float radius = 0.7f;

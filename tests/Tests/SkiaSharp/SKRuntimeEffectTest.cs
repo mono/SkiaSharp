@@ -1091,7 +1091,9 @@ namespace SkiaSharp.Tests
 			[SkippableFact]
 			public void SettingInputNullDiffersFromNotSetting()
 			{
-				// Shader that returns the child eval, or transparent black if child is unbound
+				// Shader adds a.eval + b.eval. Unbound children return transparent black.
+				// "b" not listed → b stays unbound (transparent black)
+				// "b" set to null → b gets implicit source (blue canvas)
 				var src = """
 					uniform shader a;
 					uniform shader b;
@@ -1100,20 +1102,48 @@ namespace SkiaSharp.Tests
 					}
 					""";
 
-				// Set only "a" to red — "b" is not listed, so b.eval returns transparent black
-				using var builder1 = SKRuntimeEffect.BuildImageFilter(src);
 				using var redShader = SKShader.CreateColor(SKColors.Red);
 				using var redInput = SKImageFilter.CreateShader(redShader);
+
+				// Only set "a" — "b" is not listed, so b.eval returns transparent black
+				// Result: red + black = red
+				using var builder1 = SKRuntimeEffect.BuildImageFilter(src);
 				builder1.Inputs["a"] = redInput;
 				using var filter1 = builder1.Build();
-				Assert.NotNull(filter1);
 
-				// Set both "a" to red and "b" to null — "b" gets implicit source image
+				using var surface1 = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas1 = surface1.Canvas;
+				using var paint1 = new SKPaint();
+				paint1.ImageFilter = filter1;
+				canvas1.SaveLayer(paint1);
+				canvas1.Clear(SKColors.Blue);
+				canvas1.Restore();
+
+				using var snap1 = surface1.Snapshot();
+				using var pix1 = snap1.PeekPixels();
+				var color1 = pix1.GetPixelColor(50, 50);
+
+				// Set "a" to red and "b" to null — "b" gets implicit source (blue)
+				// Result: red + blue = magenta
 				using var builder2 = SKRuntimeEffect.BuildImageFilter(src);
 				builder2.Inputs["a"] = redInput;
 				builder2.Inputs["b"] = null;
 				using var filter2 = builder2.Build();
-				Assert.NotNull(filter2);
+
+				using var surface2 = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas2 = surface2.Canvas;
+				using var paint2 = new SKPaint();
+				paint2.ImageFilter = filter2;
+				canvas2.SaveLayer(paint2);
+				canvas2.Clear(SKColors.Blue);
+				canvas2.Restore();
+
+				using var snap2 = surface2.Snapshot();
+				using var pix2 = snap2.PeekPixels();
+				var color2 = pix2.GetPixelColor(50, 50);
+
+				// The two should differ — unset vs null produce different results
+				Assert.NotEqual(color1, color2);
 			}
 		}
 

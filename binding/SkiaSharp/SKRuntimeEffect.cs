@@ -234,7 +234,8 @@ namespace SkiaSharp
 
 		private SKImageFilter ToImageFilterSingle (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, SKImageFilter? input, float maxSampleRadius)
 		{
-			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
+			using var uniformData = uniforms?.ToData ();
+			var uniformsHandle = uniformData?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
 
 			fixed (IntPtr* ch = childrenHandles) {
@@ -247,7 +248,8 @@ namespace SkiaSharp
 		private SKImageFilter ToImageFilterMulti (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKRuntimeEffectImageFilterInputs inputs, float maxSampleRadius)
 		{
 			var count = inputs.Count;
-			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
+			using var uniformData = uniforms?.ToData ();
+			var uniformsHandle = uniformData?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
 			using var nameRental = Utils.RentArray<string> (count);
 			using var filterRental = Utils.RentArray<SKImageFilter?> (count);
@@ -503,8 +505,8 @@ namespace SkiaSharp
 			inputs = new Dictionary<string, SKImageFilter?> ();
 		}
 
-		public IReadOnlyList<string> Names =>
-			inputs.Keys.ToList ();
+		public IReadOnlyCollection<string> Names =>
+			inputs.Keys;
 
 		public int Count =>
 			inputs.Count;
@@ -522,7 +524,7 @@ namespace SkiaSharp
 		public void Add (string name, SKImageFilter? value)
 		{
 			if (!validNames.Contains (name))
-				throw new ArgumentOutOfRangeException (name, $"Child was not found for name: '{name}'.");
+				throw new ArgumentOutOfRangeException (nameof (name), name, $"Child was not found for name: '{name}'.");
 
 			inputs[name] = value;
 		}
