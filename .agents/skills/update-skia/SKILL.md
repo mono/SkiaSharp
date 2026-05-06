@@ -405,15 +405,6 @@ self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
 > grep '^  Failed' /tmp/test-output.txt
 > ```
 
-**Known CI environment failures:** On Linux CI (GitHub Actions, Docker), tests in
-`SKFontManagerTest`, `SKTypefaceTest`, and `SKFontStyleSetTest` may fail with
-`TypeInitializationException` if fonts are not installed. These tests require
-`fonts-dejavu-core` (provides "DejaVu Sans") and `ttf-ancient-fonts` (provides "Symbola").
-If ALL failures are in these font-related test classes and the runner lacks these packages,
-note them as **pre-existing environment issues** in the PR summary and continue.
-Do NOT spend time investigating font failures, installing packages mid-run, reading C# source
-for SKFontManager/SKTypeface, or attempting `externals-download` for "baseline comparison."
-
 Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
 before the update can be considered complete. Do not create PRs with only smoke tests passing.
 
