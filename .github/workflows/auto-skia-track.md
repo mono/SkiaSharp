@@ -93,9 +93,14 @@ network:
     - "dawn.googlesource.com"
     - "swiftshader.googlesource.com"
     - "chrome-infra-packages.appspot.com"
+    - "gn.googlesource.com"
+    - "storage.googleapis.com"
 permissions:
   contents: read
   pull-requests: read
+steps:
+  - name: Install Android workload
+    run: dotnet workload install android --skip-sign-check
 post-steps:
   - name: Push branches and create PRs
     env:
