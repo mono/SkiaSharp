@@ -238,12 +238,15 @@ namespace SkiaSharp
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKRuntimeEffectImageFilterInputs inputs, float maxSampleRadius)
 		{
-			inputs.ToArrays (out var inputNames, out var filterInputs);
+			var count = inputs.Count;
 
-			if (inputNames.Length == 0)
+			if (count == 0)
 				return ToImageFilterSingle (uniforms.ToData (), children.ToArray (), null, maxSampleRadius, null);
 
-			return ToImageFilterMulti (uniforms.ToData (), children.ToArray (), inputNames, filterInputs, maxSampleRadius);
+			using var nameRental = Utils.RentArray<string> (count);
+			using var filterRental = Utils.RentArray<SKImageFilter?> (count);
+			inputs.WriteTo (nameRental.Array, filterRental.Array);
+			return ToImageFilterMulti (uniforms.ToData (), children.ToArray (), nameRental.Array, count, filterRental.Array, maxSampleRadius);
 		}
 
 		// ToImageFilter - private implementations
@@ -260,19 +263,19 @@ namespace SkiaSharp
 			}
 		}
 
-		private SKImageFilter ToImageFilterMulti (SKData uniforms, SKObject[] children, string[] childShaderNames, SKImageFilter?[] inputs, float maxSampleRadius)
+		private SKImageFilter ToImageFilterMulti (SKData uniforms, SKObject[] children, string[] childShaderNames, SKImageFilter?[] inputs, float maxSampleRadius) =>
+			ToImageFilterMulti (uniforms, children, childShaderNames, childShaderNames.Length, inputs, maxSampleRadius);
+
+		private SKImageFilter ToImageFilterMulti (SKData uniforms, SKObject[] children, string[] childShaderNames, int count, SKImageFilter?[] inputs, float maxSampleRadius)
 		{
 			if (childShaderNames == null)
 				throw new ArgumentNullException (nameof (childShaderNames));
 			if (inputs == null)
 				throw new ArgumentNullException (nameof (inputs));
-			if (childShaderNames.Length != inputs.Length)
-				throw new ArgumentException ("childShaderNames and inputs must have the same length.");
 
 			var uniformsHandle = uniforms?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children, true);
 
-			var count = childShaderNames.Length;
 			var inputPtrs = stackalloc IntPtr[count];
 			for (var i = 0; i < count; i++)
 				inputPtrs[i] = inputs[i]?.Handle ?? IntPtr.Zero;
@@ -546,16 +549,15 @@ namespace SkiaSharp
 			inputs[name] = value;
 		}
 
-		internal void ToArrays (out string[] childShaderNames, out SKImageFilter?[] filterInputs)
+		internal int WriteTo (string[] names, SKImageFilter?[] filters)
 		{
-			childShaderNames = new string[inputs.Count];
-			filterInputs = new SKImageFilter?[inputs.Count];
 			var i = 0;
 			foreach (var kvp in inputs) {
-				childShaderNames[i] = kvp.Key;
-				filterInputs[i] = kvp.Value;
+				names[i] = kvp.Key;
+				filters[i] = kvp.Value;
 				i++;
 			}
+			return inputs.Count;
 		}
 
 		IEnumerator IEnumerable.GetEnumerator () =>
