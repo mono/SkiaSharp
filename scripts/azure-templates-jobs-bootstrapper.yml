@@ -91,6 +91,12 @@ jobs:
           submodules: false
           fetchDepth: 1
         - pwsh: |
+            # Fetch the source branch commit for stable submodule SHA resolution
+            if ($env:SYSTEM_PULLREQUEST_SOURCECOMMITID) {
+                git fetch origin $env:SYSTEM_PULLREQUEST_SOURCECOMMITID --depth=1 2>$null
+            }
+          displayName: Fetch source commit
+        - pwsh: |
             python3 scripts/infra/caching/repo-deps.py cache-key `
               --name '${{ parameters.name }}' `
               --job '${{ parameters.cacheJob }}' `

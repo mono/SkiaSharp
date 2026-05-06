@@ -102,9 +102,22 @@ def git(*args):
 
 
 def get_submodule_sha(path):
-    line = git("ls-tree", "HEAD", path)
+    # For PR builds, use the source branch commit (stable across re-merges).
+    # The merge commit changes with every push even if content is identical,
+    # but the source branch tip only changes when we actually push new code.
+    # For non-PR builds, HEAD is the branch tip (already stable).
+    source_sha = os.environ.get("SYSTEM_PULLREQUEST_SOURCECOMMITID", "")
+    ref = source_sha if source_sha else "HEAD"
+    line = git("ls-tree", ref, path)
     m = re.search(r"([0-9a-f]{40})", line)
-    return m.group(1) if m else "unknown"
+    if m:
+        return m.group(1)
+    # Fallback to HEAD if source commit doesn't have the tree (shallow)
+    if ref != "HEAD":
+        line = git("ls-tree", "HEAD", path)
+        m = re.search(r"([0-9a-f]{40})", line)
+        return m.group(1) if m else "unknown"
+    return "unknown"
 
 # ---------------------------------------------------------------------------
 # Commands
