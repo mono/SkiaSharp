@@ -414,7 +414,6 @@ namespace SkiaSharp
 			return SKData.CreateCopy (data.Data, data.Size);
 		}
 
-
 		IEnumerator IEnumerable.GetEnumerator () =>
 			GetEnumerator ();
 
@@ -501,7 +500,6 @@ namespace SkiaSharp
 
 		public SKObject[] ToArray () =>
 			children.ToArray ();
-
 
 		IEnumerator IEnumerable.GetEnumerator () =>
 			GetEnumerator ();

@@ -999,6 +999,98 @@ namespace SkiaSharp.Tests
 				using var pixmap = snapshot.PeekPixels();
 				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
 			}
+
+			[SkippableFact]
+			public void InputsNamesAndCountReflectSetState()
+			{
+				var src = """
+					uniform shader a;
+					uniform shader b;
+					half4 main(float2 p) {
+						return a.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				Assert.Equal(0, builder.Inputs.Count);
+				Assert.Empty(builder.Inputs.Names);
+
+				builder.Inputs["a"] = null;
+				Assert.Equal(1, builder.Inputs.Count);
+				Assert.Contains("a", builder.Inputs.Names);
+				Assert.True(builder.Inputs.Contains("a"));
+				Assert.False(builder.Inputs.Contains("b"));
+
+				builder.Inputs["b"] = null;
+				Assert.Equal(2, builder.Inputs.Count);
+
+				builder.Inputs.Reset();
+				Assert.Equal(0, builder.Inputs.Count);
+				Assert.Empty(builder.Inputs.Names);
+			}
+
+			[SkippableFact]
+			public void InputsThrowsOnInvalidName()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return child.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				Assert.Throws<ArgumentOutOfRangeException>(() => builder.Inputs["invalid"] = null);
+			}
+
+			[SkippableFact]
+			public void InputsResetClearsAll()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return child.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				builder.Inputs["child"] = SKImageFilter.CreateBlur(1, 1);
+				Assert.Equal(1, builder.Inputs.Count);
+
+				builder.Inputs.Reset();
+				Assert.Equal(0, builder.Inputs.Count);
+
+				// after reset, Build() should auto-detect again
+				using var filter = builder.Build();
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void SettingInputNullDiffersFromNotSetting()
+			{
+				// Shader that returns the child eval, or transparent black if child is unbound
+				var src = """
+					uniform shader a;
+					uniform shader b;
+					half4 main(float2 p) {
+						return a.eval(p) + b.eval(p);
+					}
+					""";
+
+				// Set only "a" to red — "b" is not listed, so b.eval returns transparent black
+				using var builder1 = SKRuntimeEffect.BuildImageFilter(src);
+				var redInput = SKImageFilter.CreateShader(SKShader.CreateColor(SKColors.Red));
+				builder1.Inputs["a"] = redInput;
+				using var filter1 = builder1.Build();
+				Assert.NotNull(filter1);
+
+				// Set both "a" to red and "b" to null — "b" gets implicit source image
+				using var builder2 = SKRuntimeEffect.BuildImageFilter(src);
+				builder2.Inputs["a"] = redInput;
+				builder2.Inputs["b"] = null;
+				using var filter2 = builder2.Build();
+				Assert.NotNull(filter2);
+			}
 		}
 
 		public abstract class TestEffectTests : SKRuntimeEffectTest
