@@ -140,11 +140,9 @@ steps:
       dotnet tool restore
     env:
       DEBIAN_FRONTEND: noninteractive
-  - name: Write env for post-step
+  - name: Copy push script for post-step
     run: |
       mkdir -p /tmp/gh-aw/agent
-      echo "TARGET=${{ needs.pre_activation.outputs.target }}" > /tmp/gh-aw/agent/skia-sync-env.sh
-      echo "CURRENT=${{ needs.pre_activation.outputs.current }}" >> /tmp/gh-aw/agent/skia-sync-env.sh
       cp scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
 
 # -- Post-agent steps -----------------------------------------------
@@ -174,12 +172,21 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
 - **Phase 8 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 8 Step 1.
 - **Phase 10 is handled by a post-step.** Do NOT push branches or create PRs yourself - both are handled by the post-step.
-  Just commit locally. After Phase 9, write these summary files:
+  Just commit locally. After Phase 9, write these files:
 
-1. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` - for the mono/skia PR:
+1. `/tmp/gh-aw/agent/skia-sync-env.sh` — **required** for the post-step to know what to push:
+   ```bash
+   mkdir -p /tmp/gh-aw/agent
+   cat > /tmp/gh-aw/agent/skia-sync-env.sh << EOF
+   TARGET=${{ needs.pre_activation.outputs.target }}
+   CURRENT=${{ needs.pre_activation.outputs.current }}
+   EOF
+   ```
+
+2. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` - for the mono/skia PR:
    - Upstream merge details, conflicts resolved, C API fixes, items needing human attention
 
-2. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` - for the mono/SkiaSharp PR:
+3. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` - for the mono/SkiaSharp PR:
    - Breaking change analysis, version/binding updates, C# changes, build/test results, items needing human attention
 
 Commit submodule changes inside `externals/skia` on `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
