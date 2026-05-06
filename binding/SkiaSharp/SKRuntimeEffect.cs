@@ -492,7 +492,7 @@ namespace SkiaSharp
 		}
 	}
 
-	public class SKRuntimeEffectImageFilterInputs : IEnumerable<string>, IDisposable
+	public unsafe class SKRuntimeEffectImageFilterInputs : IEnumerable<string>, IDisposable
 	{
 		private readonly HashSet<string> validNames;
 		private readonly Dictionary<string, SKImageFilter?> inputs;
@@ -501,7 +501,14 @@ namespace SkiaSharp
 		{
 			_ = effect ?? throw new ArgumentNullException (nameof (effect));
 
-			validNames = new HashSet<string> (effect.Children);
+			validNames = new HashSet<string> ();
+			var allChildren = effect.Children;
+			for (var i = 0; i < allChildren.Count; i++) {
+				SKRuntimeEffectChildNative child;
+				SkiaApi.sk_runtimeeffect_get_child_from_index (effect.Handle, i, &child);
+				if (child.fType == SKRuntimeEffectChildTypeNative.Shader)
+					validNames.Add (allChildren[i]);
+			}
 			inputs = new Dictionary<string, SKImageFilter?> ();
 		}
 
@@ -524,7 +531,7 @@ namespace SkiaSharp
 		public void Add (string name, SKImageFilter? value)
 		{
 			if (!validNames.Contains (name))
-				throw new ArgumentOutOfRangeException (nameof (name), name, $"Child was not found for name: '{name}'.");
+				throw new ArgumentOutOfRangeException (nameof (name), name, $"Shader child was not found for name: '{name}'.");
 
 			inputs[name] = value;
 		}
