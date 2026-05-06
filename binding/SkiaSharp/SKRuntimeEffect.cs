@@ -200,22 +200,22 @@ namespace SkiaSharp
 		// ToImageFilter - single-child
 
 		public SKImageFilter ToImageFilter () =>
-			ToImageFilterSingle (null, null, null, 0, null);
+			ToImageFilterSingle (null, null, null, null, 0);
 
 		public SKImageFilter ToImageFilter (string? childShaderName, SKImageFilter? input) =>
-			ToImageFilterSingle (null, null, childShaderName, 0, input);
+			ToImageFilterSingle (null, null, childShaderName, input, 0);
 
 		public SKImageFilter ToImageFilter (string? childShaderName, SKImageFilter? input, float maxSampleRadius) =>
-			ToImageFilterSingle (null, null, childShaderName, maxSampleRadius, input);
+			ToImageFilterSingle (null, null, childShaderName, input, maxSampleRadius);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
-			ToImageFilterSingle (uniforms, children, null, 0, null);
+			ToImageFilterSingle (uniforms, children, null, null, 0);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, SKImageFilter? input) =>
-			ToImageFilterSingle (uniforms, children, childShaderName, 0, input);
+			ToImageFilterSingle (uniforms, children, childShaderName, input, 0);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, SKImageFilter? input, float maxSampleRadius) =>
-			ToImageFilterSingle (uniforms, children, childShaderName, maxSampleRadius, input);
+			ToImageFilterSingle (uniforms, children, childShaderName, input, maxSampleRadius);
 
 		// ToImageFilter - with SKRuntimeEffectImageFilterInputs
 
@@ -227,7 +227,7 @@ namespace SkiaSharp
 			var count = inputs.Count;
 
 			if (count == 0)
-				return ToImageFilterSingle (uniforms, children, null, maxSampleRadius, null);
+				return ToImageFilterSingle (uniforms, children, null, null, maxSampleRadius);
 
 			using var nameRental = Utils.RentArray<string> (count);
 			using var filterRental = Utils.RentArray<SKImageFilter?> (count);
@@ -237,7 +237,7 @@ namespace SkiaSharp
 
 		// ToImageFilter - private implementations
 
-		private SKImageFilter ToImageFilterSingle (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, float maxSampleRadius, SKImageFilter? input)
+		private SKImageFilter ToImageFilterSingle (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, SKImageFilter? input, float maxSampleRadius)
 		{
 			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
