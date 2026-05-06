@@ -151,8 +151,7 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 				builder.Uniforms["intensity"] = intensity;
 				break;
 			case 3: // Vignette
-				Span<float> res = stackalloc float[] { width, height };
-				builder.Uniforms["resolution"] = (ReadOnlySpan<float>)res;
+				builder.Uniforms["resolution"] = new float[] { width, height };
 				builder.Uniforms["radius"] = radius;
 				builder.Uniforms["softness"] = softness;
 				break;
