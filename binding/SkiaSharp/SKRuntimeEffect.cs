@@ -235,24 +235,29 @@ namespace SkiaSharp
 		private SKImageFilter ToImageFilterSingle (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, SKImageFilter? input, float maxSampleRadius)
 		{
 			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
+			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
 
-			return SKImageFilter.GetObject (SkiaApi.sk_runtimeeffect_make_image_filter (
-				Handle, uniformsHandle,
-				childShaderName ?? string.Empty, input?.Handle ?? IntPtr.Zero));
+			fixed (IntPtr* ch = childrenHandles) {
+				return SKImageFilter.GetObject (SkiaApi.sk_runtimeeffect_make_image_filter (
+					Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length,
+					childShaderName ?? string.Empty, input?.Handle ?? IntPtr.Zero));
+			}
 		}
 
 		private SKImageFilter ToImageFilterMulti (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKRuntimeEffectImageFilterInputs inputs, float maxSampleRadius)
 		{
 			var count = inputs.Count;
 			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
+			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
 			using var nameRental = Utils.RentArray<string> (count);
 			using var filterRental = Utils.RentArray<SKImageFilter?> (count);
 			inputs.WriteTo (nameRental.Array, filterRental.Array);
 			using var inputHandles = Utils.RentHandlesArray (filterRental.Array, true);
 
+			fixed (IntPtr* ch = childrenHandles)
 			fixed (IntPtr* ih = inputHandles) {
 				return SKImageFilter.GetObject (SkiaApi.sk_runtimeeffect_make_image_filter_with_children (
-					Handle, uniformsHandle,
+					Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length,
 					maxSampleRadius, nameRental.Array, ih, count));
 			}
 		}
