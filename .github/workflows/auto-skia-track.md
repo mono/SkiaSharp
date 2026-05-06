@@ -128,19 +128,10 @@ permissions:
   contents: read
   pull-requests: read
 
-# -- Pre-agent steps -------------------------------------------------
-# Run in the agent job AFTER checkout, BEFORE the AI executes.
-# Install native build deps and write the env file for the post-step.
+# -- Pre-agent steps (host) ------------------------------------------
+# Run in the agent job AFTER checkout, BEFORE the container starts.
+# Only host-level setup that doesn't need to be visible inside the container.
 steps:
-  - name: Install build dependencies
-    run: |
-      sudo apt-get update -qq
-      sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
-      fc-cache -f
-      dotnet workload install android --skip-sign-check
-      dotnet tool restore
-    env:
-      DEBIAN_FRONTEND: noninteractive
   - name: Align submodule to origin/main
     run: |
       # The checkout uses the workflow branch, so the submodule may be at a
@@ -155,18 +146,27 @@ steps:
       git -C externals/skia branch -r --contains "$MAIN_SUB_SHA" | grep -q 'origin/skiasharp' \
         && echo "  ✅ SHA is on origin/skiasharp" \
         || echo "  ⚠️ SHA is NOT on origin/skiasharp — submodule pointer may be stale"
-  - name: Verify fonts are visible
-    run: |
-      echo "=== Font verification ==="
-      fc-list | grep -i "dejavu\|symbola" | head -5 || echo "⚠️ No DejaVu/Symbola fonts found by fc-list"
-      echo "=== Font cache ==="
-      fc-cache -f -v 2>&1 | tail -5
-      echo "=== Fontconfig paths ==="
-      fc-list : file family | grep -i dejavu | head -3 || echo "⚠️ DejaVu not in fc-list output"
   - name: Copy push script for post-step
     run: |
       mkdir -p /tmp/gh-aw/agent
       cp scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
+
+# -- Pre-agent steps (container) -------------------------------------
+# Run INSIDE the agent container, immediately before AI execution.
+# All packages, fonts, and tools must be installed here to be visible to the agent.
+pre-agent-steps:
+  - name: Install native build dependencies
+    run: |
+      sudo apt-get update -qq
+      sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
+      fc-cache -f
+      fc-list | grep -i "dejavu\|symbola" | head -5 || echo "⚠️ No DejaVu/Symbola fonts found"
+    env:
+      DEBIAN_FRONTEND: noninteractive
+  - name: Install dotnet workload and restore tools
+    run: |
+      dotnet workload install android --skip-sign-check
+      dotnet tool restore
 
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Pushes branches and creates/updates PRs

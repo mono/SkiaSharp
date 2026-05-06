@@ -280,9 +280,8 @@ must be updated when the underlying C++ APIs change.
 > binaries from the OLD milestone that don't contain your C API changes. Always build from
 > source with `externals-{platform}`.
 
-1. **Restore tools and attempt to build** to identify all compilation errors:
+1. **Attempt to build** to identify all compilation errors:
    ```bash
-   dotnet tool restore
    dotnet cake --target=externals-{platform} --arch={arch}
    ```
    Replace `{platform}` with your OS (`macos`, `linux`, `windows`) and `{arch}` with your architecture (`arm64`, `x64`).
