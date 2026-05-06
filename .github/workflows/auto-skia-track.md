@@ -188,6 +188,14 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-9.** Notes specific to this automated workflow:
 
+- **Before anything else**, run a font diagnostic and save to artifacts:
+  ```bash
+  fc-list | head -20 > /tmp/gh-aw/agent/fc-list.txt 2>&1
+  fc-list | wc -l >> /tmp/gh-aw/agent/fc-list.txt
+  echo "FONTCONFIG_PATH=$FONTCONFIG_PATH" >> /tmp/gh-aw/agent/fc-list.txt
+  echo "XDG_DATA_HOME=$XDG_DATA_HOME" >> /tmp/gh-aw/agent/fc-list.txt
+  ls /usr/share/fonts/ >> /tmp/gh-aw/agent/fc-list.txt 2>&1
+  ```
 - **Phase 1 is pre-computed** (above). Skip it.
 - **Phase 4 branch name**: use `skia-sync/m${{ needs.pre_activation.outputs.target }}` (not `dev/update-skia-{TARGET}`).
   Create the parent repo branch from `origin/main`: `git checkout -b skia-sync/m{N} origin/main`.
