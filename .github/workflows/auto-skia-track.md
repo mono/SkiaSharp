@@ -135,7 +135,7 @@ steps:
   - name: Install build dependencies
     run: |
       sudo apt-get update -qq
-      sudo apt-get install -y clang libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
+      sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
       fc-cache -f
       dotnet workload install android --skip-sign-check
       dotnet tool restore
