@@ -200,36 +200,36 @@ namespace SkiaSharp
 		// ToImageFilter - single-child
 
 		public SKImageFilter ToImageFilter () =>
-			ToImageFilterSingle ((SKData)null, null, null, 0, null);
+			ToImageFilterSingle (null, null, null, 0, null);
 
 		public SKImageFilter ToImageFilter (string? childShaderName, SKImageFilter? input) =>
-			ToImageFilterSingle ((SKData)null, null, childShaderName, 0, input);
+			ToImageFilterSingle (null, null, childShaderName, 0, input);
 
 		public SKImageFilter ToImageFilter (string? childShaderName, SKImageFilter? input, float maxSampleRadius) =>
-			ToImageFilterSingle ((SKData)null, null, childShaderName, maxSampleRadius, input);
+			ToImageFilterSingle (null, null, childShaderName, maxSampleRadius, input);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
-			ToImageFilterSingle (uniforms.ToData (), children.ToArray (), null, 0, null);
+			ToImageFilterSingle (uniforms, children, null, 0, null);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, SKImageFilter? input) =>
-			ToImageFilterSingle (uniforms.ToData (), children.ToArray (), childShaderName, 0, input);
+			ToImageFilterSingle (uniforms, children, childShaderName, 0, input);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, SKImageFilter? input, float maxSampleRadius) =>
-			ToImageFilterSingle (uniforms.ToData (), children.ToArray (), childShaderName, maxSampleRadius, input);
+			ToImageFilterSingle (uniforms, children, childShaderName, maxSampleRadius, input);
 
 		// ToImageFilter - multi-child
 
 		public SKImageFilter ToImageFilter (string[] childShaderNames, SKImageFilter?[] inputs) =>
-			ToImageFilterMulti ((SKData)null, null, childShaderNames, inputs, 0);
+			ToImageFilterMulti (null, null, childShaderNames, childShaderNames.Length, inputs, 0);
 
 		public SKImageFilter ToImageFilter (string[] childShaderNames, SKImageFilter?[] inputs, float maxSampleRadius) =>
-			ToImageFilterMulti ((SKData)null, null, childShaderNames, inputs, maxSampleRadius);
+			ToImageFilterMulti (null, null, childShaderNames, childShaderNames.Length, inputs, maxSampleRadius);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string[] childShaderNames, SKImageFilter?[] inputs) =>
-			ToImageFilterMulti (uniforms.ToData (), children.ToArray (), childShaderNames, inputs, 0);
+			ToImageFilterMulti (uniforms, children, childShaderNames, childShaderNames.Length, inputs, 0);
 
 		public SKImageFilter ToImageFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string[] childShaderNames, SKImageFilter?[] inputs, float maxSampleRadius) =>
-			ToImageFilterMulti (uniforms.ToData (), children.ToArray (), childShaderNames, inputs, maxSampleRadius);
+			ToImageFilterMulti (uniforms, children, childShaderNames, childShaderNames.Length, inputs, maxSampleRadius);
 
 		// ToImageFilter - with SKRuntimeEffectImageFilterInputs
 
@@ -241,20 +241,20 @@ namespace SkiaSharp
 			var count = inputs.Count;
 
 			if (count == 0)
-				return ToImageFilterSingle (uniforms.ToData (), children.ToArray (), null, maxSampleRadius, null);
+				return ToImageFilterSingle (uniforms, children, null, maxSampleRadius, null);
 
 			using var nameRental = Utils.RentArray<string> (count);
 			using var filterRental = Utils.RentArray<SKImageFilter?> (count);
 			inputs.WriteTo (nameRental.Array, filterRental.Array);
-			return ToImageFilterMulti (uniforms.ToData (), children.ToArray (), nameRental.Array, count, filterRental.Array, maxSampleRadius);
+			return ToImageFilterMulti (uniforms, children, nameRental.Array, count, filterRental.Array, maxSampleRadius);
 		}
 
 		// ToImageFilter - private implementations
 
-		private SKImageFilter ToImageFilterSingle (SKData uniforms, SKObject[] children, string? childShaderName, float maxSampleRadius, SKImageFilter? input)
+		private SKImageFilter ToImageFilterSingle (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string? childShaderName, float maxSampleRadius, SKImageFilter? input)
 		{
-			var uniformsHandle = uniforms?.Handle ?? IntPtr.Zero;
-			using var childrenHandles = Utils.RentHandlesArray (children, true);
+			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
+			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
 
 			fixed (IntPtr* ch = childrenHandles) {
 				return SKImageFilter.GetObject (SkiaApi.sk_runtimeeffect_make_image_filter (
@@ -263,18 +263,15 @@ namespace SkiaSharp
 			}
 		}
 
-		private SKImageFilter ToImageFilterMulti (SKData uniforms, SKObject[] children, string[] childShaderNames, SKImageFilter?[] inputs, float maxSampleRadius) =>
-			ToImageFilterMulti (uniforms, children, childShaderNames, childShaderNames.Length, inputs, maxSampleRadius);
-
-		private SKImageFilter ToImageFilterMulti (SKData uniforms, SKObject[] children, string[] childShaderNames, int count, SKImageFilter?[] inputs, float maxSampleRadius)
+		private SKImageFilter ToImageFilterMulti (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, string[] childShaderNames, int count, SKImageFilter?[] inputs, float maxSampleRadius)
 		{
 			if (childShaderNames == null)
 				throw new ArgumentNullException (nameof (childShaderNames));
 			if (inputs == null)
 				throw new ArgumentNullException (nameof (inputs));
 
-			var uniformsHandle = uniforms?.Handle ?? IntPtr.Zero;
-			using var childrenHandles = Utils.RentHandlesArray (children, true);
+			var uniformsHandle = uniforms?.ToData ()?.Handle ?? IntPtr.Zero;
+			using var childrenHandles = Utils.RentHandlesArray (children?.AsArray (), true);
 			using var inputHandles = Utils.RentHandlesArray (inputs, true);
 
 			fixed (IntPtr* ch = childrenHandles)
@@ -412,6 +409,7 @@ namespace SkiaSharp
 			return SKData.CreateCopy (data.Data, data.Size);
 		}
 
+
 		IEnumerator IEnumerable.GetEnumerator () =>
 			GetEnumerator ();
 
@@ -498,6 +496,8 @@ namespace SkiaSharp
 
 		public SKObject[] ToArray () =>
 			children.ToArray ();
+
+		internal SKObject[] AsArray () => children;
 
 		IEnumerator IEnumerable.GetEnumerator () =>
 			GetEnumerator ();
