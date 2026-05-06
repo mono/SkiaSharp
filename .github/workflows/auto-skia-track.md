@@ -165,6 +165,7 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 
 - **Phase 1 is pre-computed** (above). Skip it.
 - **Phase 4 branch name**: use `skia-sync/m${{ needs.pre_activation.outputs.target }}` (not `dev/update-skia-{TARGET}`).
+  Create the parent repo branch from `origin/main`: `git checkout -b skia-sync/m{N} origin/main`.
   Before creating a fresh branch, check if `origin/skia-sync/m${{ needs.pre_activation.outputs.target }}` already exists.
   If so, check it out, check for new upstream commits with `git log HEAD..upstream/chrome/m${{ needs.pre_activation.outputs.target }}`,
   and merge if any. Stop if there are none.
