@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"7f86e22fe8979847b4d321853a9d099c850052becce281e4c709bb2e9e36ffe7","compiler_version":"v0.71.4","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"227688a598b8bd15ebb2aea40246936972f3ea14eda8cdad8822ec50de367d2e","compiler_version":"v0.71.4","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","SKIASHARP_AUTOBUMP_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"f8495a686e66770ae977f82732f34d7340ee42a4","version":"v0.71.4"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.35"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.35"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.35"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.3"},{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -22,7 +22,7 @@
 #
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
-# Daily upstream Skia milestone tracking — merges new commits, resolves conflicts, builds, tests, and creates PRs.
+# Daily upstream Skia milestone tracking - merges new commits, resolves conflicts, builds, tests, and creates PRs.
 #
 # Frontmatter env variables:
 #   - CC: (main workflow)
@@ -251,23 +251,23 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_83a4a5db847fc569_EOF'
+          cat << 'GH_AW_PROMPT_5a818c06edc73014_EOF'
           <system>
-          GH_AW_PROMPT_83a4a5db847fc569_EOF
+          GH_AW_PROMPT_5a818c06edc73014_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_83a4a5db847fc569_EOF'
+          cat << 'GH_AW_PROMPT_5a818c06edc73014_EOF'
           <safe-output-tools>
           Tools: create_issue
-          GH_AW_PROMPT_83a4a5db847fc569_EOF
+          GH_AW_PROMPT_5a818c06edc73014_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_auto_create_issue.md"
-          cat << 'GH_AW_PROMPT_83a4a5db847fc569_EOF'
+          cat << 'GH_AW_PROMPT_5a818c06edc73014_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_83a4a5db847fc569_EOF
+          GH_AW_PROMPT_5a818c06edc73014_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_83a4a5db847fc569_EOF'
+          cat << 'GH_AW_PROMPT_5a818c06edc73014_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -299,12 +299,12 @@ jobs:
             - **Note**: If a branch you need is not in the list above and is not listed as an additional fetched ref, it has NOT been checked out. For private repositories you cannot fetch it without proper authentication. If the branch is required and not available, exit with an error and ask the user to add it to the `fetch:` option of the `checkout:` configuration (e.g., `fetch: ["refs/pulls/open/*"]` for all open PR refs, or `fetch: ["main", "feature/my-branch"]` for specific branches).
           </github-context>
           
-          GH_AW_PROMPT_83a4a5db847fc569_EOF
+          GH_AW_PROMPT_5a818c06edc73014_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_83a4a5db847fc569_EOF'
+          cat << 'GH_AW_PROMPT_5a818c06edc73014_EOF'
           </system>
           {{#runtime-import .github/workflows/auto-skia-track.md}}
-          GH_AW_PROMPT_83a4a5db847fc569_EOF
+          GH_AW_PROMPT_5a818c06edc73014_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -516,9 +516,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_071f186e3222e720_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_207cfdefbd66c28b_EOF'
           {"create_issue":{"labels":["auto-skia-track"],"max":1,"title_prefix":"[auto-skia-track]"}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_071f186e3222e720_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_207cfdefbd66c28b_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -643,7 +643,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_e862904775f5b315_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_f256f64015bd7910_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -691,7 +691,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_e862904775f5b315_EOF
+          GH_AW_MCP_CONFIG_f256f64015bd7910_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
