@@ -137,6 +137,7 @@ steps:
       sudo apt-get update -qq
       sudo apt-get install -y clang libfontconfig1-dev ninja-build
       dotnet workload install android --skip-sign-check
+      dotnet tool restore
     env:
       DEBIAN_FRONTEND: noninteractive
   - name: Write env for post-step
