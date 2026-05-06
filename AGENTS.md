@@ -11,23 +11,36 @@ SkiaSharp is a cross-platform 2D graphics API for .NET wrapping Google's Skia li
 
 These rules are **non-negotiable**. Violating them causes broken builds, crashes, or downstream breakage.
 
-### 1. Bootstrap First
+### 1. Bootstrap First — But Only If You Are Not Touching Native Code
 
-Before any other command works, ensure native binaries exist:
+Before C# code can build, native binaries must exist in `output/native/`. **How** you produce them depends on what you're changing:
 
-```bash
-# Run if output/native/ is empty
-dotnet cake --target=externals-download
-```
+| You are changing… | Bootstrap with |
+|---|---|
+| **Only C# code** (no files under `externals/skia/`, no `DEPS`, no submodule bump) | `dotnet cake --target=externals-download` (downloads pre-built natives from the **current** milestone) |
+| **Native code, C API, `DEPS`, or the Skia submodule** (incl. milestone updates) | `dotnet cake --target=externals-{platform} --arch={arch}` — **build from source.** `externals-download` is FORBIDDEN here (see Rule #2). |
 
-### 2. Never Edit Generated Files
+> **🛑 If you are doing a Skia milestone update, a C API change, or anything under `externals/skia/`, STOP. Do not run `externals-download` — ever. The downloaded binaries are from the OLD milestone and do not contain your changes; using them produces silently-wrong builds and `EntryPointNotFoundException` at runtime.** When source builds fail (missing `gn`, network errors, etc.), debug the source build — do not fall back to download.
+
+### 2. Never `externals-download` After Native Changes
+
+If you have modified **any** of the following, `externals-download` is FORBIDDEN until your changes ship to the pre-built artifact server (which only happens after merge):
+
+- `externals/skia/**` (including the submodule SHA)
+- `externals/skia/src/c/**`, `externals/skia/include/c/**`
+- `externals/skia/DEPS`
+- Any milestone bump or version file (`VERSIONS.txt`, `sk_types.h SK_C_INCREMENT`)
+
+Falling back to `externals-download` because a native build failed is the #1 way agents corrupt milestone updates. Fix the source build instead.
+
+### 3. Never Edit Generated Files
 
 Files matching `*.generated.cs` and `docs/` are auto-generated.
 
 - **NEVER** manually edit these files
 - **ALWAYS** regenerate after C API changes (see [Commands](#commands))
 
-### 3. ABI Stability
+### 4. ABI Stability
 
 SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 
@@ -37,11 +50,11 @@ SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 | Add new methods | Remove public APIs |
 | Add new classes | Change return types |
 
-### 4. Tests Are Mandatory
+### 5. Tests Are Mandatory
 
 **Building alone is NOT sufficient.** Run tests before claiming completion (see [Commands](#commands)).
 
-### 5. Branch Protection (COMPLIANCE REQUIRED)
+### 6. Branch Protection (COMPLIANCE REQUIRED)
 
 **Direct commits to protected branches are a policy violation.**
 
@@ -79,7 +92,7 @@ Single source of truth for all commands:
 
 | Task | Command |
 |------|---------|
-| **Bootstrap (C#-only work)** | `dotnet cake --target=externals-download` |
+| **Bootstrap (C#-only work — see Rule #1, FORBIDDEN for native changes)** | `dotnet cake --target=externals-download` |
 | **Build Native (macOS ARM64)** | `dotnet cake --target=externals-macos --arch=arm64` |
 | **Build Native (macOS Intel)** | `dotnet cake --target=externals-macos --arch=x64` |
 | **Build Native (Windows x64)** | `dotnet cake --target=externals-windows --arch=x64` |
@@ -96,8 +109,9 @@ Single source of truth for all commands:
 | What You Changed | Command Required |
 |------------------|------------------|
 | C# code only (`binding/SkiaSharp/*.cs`) | `externals-download` (pre-built natives) |
-| C API (`externals/skia/src/c/`, `externals/skia/include/c/`) | **`externals-{platform}` (MUST rebuild natives)** |
-| Dependencies (`externals/skia/DEPS`) | **`externals-{platform}` (MUST rebuild natives)** |
+| C API (`externals/skia/src/c/`, `externals/skia/include/c/`) | **`externals-{platform}` (MUST rebuild natives — `externals-download` is FORBIDDEN)** |
+| Dependencies (`externals/skia/DEPS`) | **`externals-{platform}` (MUST rebuild natives — `externals-download` is FORBIDDEN)** |
+| Skia submodule SHA / milestone update | **`externals-{platform}` (MUST rebuild natives — `externals-download` is FORBIDDEN)** |
 
 > **CRITICAL:** If you modify ANY native code (C API headers/implementations), you MUST rebuild
 > the native library with `dotnet cake --target=externals-{platform}`. Using `externals-download`
@@ -110,8 +124,11 @@ Single source of truth for all commands:
 
 | Problem | Command |
 |---------|---------|
-| Clean rebuild | `dotnet cake --target=clean && dotnet cake --target=externals-download` |
+| Clean rebuild (**C#-only work**) | `dotnet cake --target=clean && dotnet cake --target=externals-download` |
+| Clean rebuild (**any native or milestone work**) | `dotnet cake --target=clean && dotnet cake --target=externals-{platform} --arch={arch}` |
 | Reset submodule | `git submodule update --init --recursive` |
+
+> **Native build failing?** Do **NOT** "fall back" to `externals-download`. Common causes: missing `gn`/`ninja`, missing depot_tools on PATH, missing network access to `chromium.googlesource.com`. Diagnose and fix the source build. Using `externals-download` to make the failure go away will produce a build that runs against stale binaries and silently corrupts milestone updates.
 
 ---
 
