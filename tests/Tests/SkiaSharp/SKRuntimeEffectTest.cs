@@ -916,8 +916,10 @@ namespace SkiaSharp.Tests
 					""";
 
 				using var builder = SKRuntimeEffect.BuildImageFilter(src);
-				var redInput = SKImageFilter.CreateShader(SKShader.CreateColor(SKColors.Red));
-				var blueInput = SKImageFilter.CreateShader(SKShader.CreateColor(SKColors.Blue));
+				using var redShader = SKShader.CreateColor(SKColors.Red);
+				using var redInput = SKImageFilter.CreateShader(redShader);
+				using var blueShader = SKShader.CreateColor(SKColors.Blue);
+				using var blueInput = SKImageFilter.CreateShader(blueShader);
 				builder.Inputs["a"] = redInput;
 				builder.Inputs["b"] = blueInput;
 				using var filter = builder.Build();
@@ -1054,7 +1056,8 @@ namespace SkiaSharp.Tests
 					""";
 
 				using var builder = SKRuntimeEffect.BuildImageFilter(src);
-				builder.Inputs["child"] = SKImageFilter.CreateBlur(1, 1);
+				using var blur = SKImageFilter.CreateBlur(1, 1);
+				builder.Inputs["child"] = blur;
 				Assert.Equal(1, builder.Inputs.Count);
 
 				builder.Inputs.Reset();
@@ -1079,7 +1082,8 @@ namespace SkiaSharp.Tests
 
 				// Set only "a" to red — "b" is not listed, so b.eval returns transparent black
 				using var builder1 = SKRuntimeEffect.BuildImageFilter(src);
-				var redInput = SKImageFilter.CreateShader(SKShader.CreateColor(SKColors.Red));
+				using var redShader = SKShader.CreateColor(SKColors.Red);
+				using var redInput = SKImageFilter.CreateShader(redShader);
 				builder1.Inputs["a"] = redInput;
 				using var filter1 = builder1.Build();
 				Assert.NotNull(filter1);
