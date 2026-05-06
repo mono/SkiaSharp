@@ -132,6 +132,9 @@ permissions:
 # Run in the agent job AFTER checkout, BEFORE the container starts.
 # Only host-level setup that doesn't need to be visible inside the container.
 steps:
+  - name: Set up agent output directory
+    run: |
+      mkdir -p /tmp/gh-aw/agent
   - name: Align submodule to origin/main
     run: |
       # The checkout uses the workflow branch, so the submodule may be at a
@@ -148,7 +151,6 @@ steps:
         || echo "  ⚠️ SHA is NOT on origin/skiasharp — submodule pointer may be stale"
   - name: Copy push script for post-step
     run: |
-      mkdir -p /tmp/gh-aw/agent
       cp scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
 
 # -- Pre-agent steps (container) -------------------------------------
@@ -215,6 +217,9 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 
 3. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` - for the mono/SkiaSharp PR:
    - Breaking change analysis, version/binding updates, C# changes, build/test results, items needing human attention
+
+All files written to `/tmp/gh-aw/agent/` are automatically uploaded as workflow artifacts.
+Write test output there too (`/tmp/gh-aw/agent/test-output.txt`) so failures can be inspected after the run.
 
 Commit submodule changes inside `externals/skia` on `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 Commit parent repo changes on `skia-sync/m${{ needs.pre_activation.outputs.target }}` in the parent.
