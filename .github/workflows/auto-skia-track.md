@@ -187,9 +187,8 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
   Even when current == target, there may be new upstream bug-fix commits - a matching milestone does NOT mean no work.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
-- **Submodule alignment**: the pre-agent step already checked out the submodule to the SHA that `origin/main` expects
-  (a commit on the `skiasharp` branch in mono/skia).
-  When creating your submodule feature branch, branch from the current HEAD (do NOT `git checkout skiasharp` or any other ref).
+- **Submodule alignment**: the pre-agent step already checked out the submodule to the correct SHA.
+  When creating your submodule feature branch, branch from the current HEAD.
 - **Phase 8 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 8 Step 1.
 - **Phase 10 is handled by a post-step.** Do NOT push branches, create PRs, or create issues yourself — all GitHub artifacts are handled by the post-step.
   Just commit locally. Do NOT call `create_issue` or `create_pull_request`. After Phase 9, write these files:
