@@ -124,7 +124,6 @@ network:
 env:
   CC: clang
   CXX: clang++
-  FONTCONFIG_FILE: /tmp/gh-aw/fonts.conf
 permissions:
   contents: read
   pull-requests: read
@@ -140,12 +139,14 @@ steps:
       mkdir -p /tmp/gh-aw/agent
   - name: Create fontconfig for AWF chroot
     run: |
-      # The AWF chroot overlays /etc/ from the container image, so /etc/fonts/fonts.conf
-      # is missing. Skia's SkFontMgr_fontconfig calls FcInitLoadConfigAndFonts() which
-      # needs fonts.conf. Write it to /tmp/gh-aw/ (shared with chroot) and set FONTCONFIG_FILE.
-      printf '<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n<fontconfig>\n  <dir>/usr/share/fonts</dir>\n  <dir>/usr/local/share/fonts</dir>\n  <dir prefix="xdg">fonts</dir>\n  <cachedir>/var/cache/fontconfig</cachedir>\n  <cachedir prefix="xdg">fontconfig</cachedir>\n</fontconfig>\n' > /tmp/gh-aw/fonts.conf
-      echo "Created /tmp/gh-aw/fonts.conf"
-      cat /tmp/gh-aw/fonts.conf
+      # The AWF chroot overlays /etc/ so /etc/fonts/fonts.conf is missing.
+      # Write fonts.conf to the workspace (always writable in chroot) and
+      # set FONTCONFIG_FILE to point to it.
+      printf '<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n<fontconfig>\n  <dir>/usr/share/fonts</dir>\n  <dir>/usr/local/share/fonts</dir>\n  <dir prefix="xdg">fonts</dir>\n  <cachedir>/tmp/fc-cache</cachedir>\n</fontconfig>\n' > "${GITHUB_WORKSPACE}/.fontconfig-fonts.conf"
+      mkdir -p /tmp/fc-cache
+      echo "Created ${GITHUB_WORKSPACE}/.fontconfig-fonts.conf"
+      FONTCONFIG_FILE="${GITHUB_WORKSPACE}/.fontconfig-fonts.conf" fc-list | wc -l
+      echo "FONTCONFIG_FILE=${GITHUB_WORKSPACE}/.fontconfig-fonts.conf" >> "$GITHUB_ENV"
   - name: Align submodule to origin/main
     run: |
       # The checkout uses the workflow branch, so the submodule may be at a

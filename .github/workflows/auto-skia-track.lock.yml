@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"77f33807c5dda9ccb22ba33641ccf6e870edde2d3201ed0a5c0ede435b3b580a","compiler_version":"v0.71.5","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"116307b6400442d59aab0a25e408042e053cd2be12ca19877e58ae1a223076e8","compiler_version":"v0.71.5","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","SKIASHARP_AUTOBUMP_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"b8068426813005612b960b5ab0b8bd2c27142323","version":"v0.71.5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.40","digest":"sha256:14ff567e8d9d4c2fbc5e55c973488381c71d7e0fdbe72d30ee7b8a738fd86504","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.25.40@sha256:14ff567e8d9d4c2fbc5e55c973488381c71d7e0fdbe72d30ee7b8a738fd86504"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.40","digest":"sha256:2883ca3e5ae9f330cafdd9345bfd4ae17fc8da36c96d4c9a1f76e922b4c45280","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.40@sha256:2883ca3e5ae9f330cafdd9345bfd4ae17fc8da36c96d4c9a1f76e922b4c45280"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.40","digest":"sha256:b084f4a2c771f584ee68084ced52fa6b3245197a1889645d817462d307d3ac51","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.25.40@sha256:b084f4a2c771f584ee68084ced52fa6b3245197a1889645d817462d307d3ac51"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.6","digest":"sha256:2bb8eef86006a4c5963c55616a9c51c32f27bfdecb023b8aa6f91f6718d9171c","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.6@sha256:2bb8eef86006a4c5963c55616a9c51c32f27bfdecb023b8aa6f91f6718d9171c"},{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -27,7 +27,6 @@
 # Frontmatter env variables:
 #   - CC: (main workflow)
 #   - CXX: (main workflow)
-#   - FONTCONFIG_FILE: (main workflow)
 #
 # Secrets used:
 #   - COPILOT_GITHUB_TOKEN
@@ -131,7 +130,6 @@ run-name: "Skia Upstream Sync"
 env:
   CC: clang
   CXX: clang++
-  FONTCONFIG_FILE: /tmp/gh-aw/fonts.conf
 
 jobs:
   activation:
@@ -254,23 +252,23 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_b17ffa65227231a6_EOF'
+          cat << 'GH_AW_PROMPT_489c6d3b16cb6189_EOF'
           <system>
-          GH_AW_PROMPT_b17ffa65227231a6_EOF
+          GH_AW_PROMPT_489c6d3b16cb6189_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_b17ffa65227231a6_EOF'
+          cat << 'GH_AW_PROMPT_489c6d3b16cb6189_EOF'
           <safe-output-tools>
           Tools: create_issue
-          GH_AW_PROMPT_b17ffa65227231a6_EOF
+          GH_AW_PROMPT_489c6d3b16cb6189_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_auto_create_issue.md"
-          cat << 'GH_AW_PROMPT_b17ffa65227231a6_EOF'
+          cat << 'GH_AW_PROMPT_489c6d3b16cb6189_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_b17ffa65227231a6_EOF
+          GH_AW_PROMPT_489c6d3b16cb6189_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_b17ffa65227231a6_EOF'
+          cat << 'GH_AW_PROMPT_489c6d3b16cb6189_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -302,12 +300,12 @@ jobs:
             - **Note**: If a branch you need is not in the list above and is not listed as an additional fetched ref, it has NOT been checked out. For private repositories you cannot fetch it without proper authentication. If the branch is required and not available, exit with an error and ask the user to add it to the `fetch:` option of the `checkout:` configuration (e.g., `fetch: ["refs/pulls/open/*"]` for all open PR refs, or `fetch: ["main", "feature/my-branch"]` for specific branches).
           </github-context>
           
-          GH_AW_PROMPT_b17ffa65227231a6_EOF
+          GH_AW_PROMPT_489c6d3b16cb6189_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_b17ffa65227231a6_EOF'
+          cat << 'GH_AW_PROMPT_489c6d3b16cb6189_EOF'
           </system>
           {{#runtime-import .github/workflows/auto-skia-track.md}}
-          GH_AW_PROMPT_b17ffa65227231a6_EOF
+          GH_AW_PROMPT_489c6d3b16cb6189_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -450,7 +448,7 @@ jobs:
         run: |
           mkdir -p /tmp/gh-aw/agent
       - name: Create fontconfig for AWF chroot
-        run: "# The AWF chroot overlays /etc/ from the container image, so /etc/fonts/fonts.conf\n# is missing. Skia's SkFontMgr_fontconfig calls FcInitLoadConfigAndFonts() which\n# needs fonts.conf. Write it to /tmp/gh-aw/ (shared with chroot) and set FONTCONFIG_FILE.\nprintf '<?xml version=\"1.0\"?>\\n<!DOCTYPE fontconfig SYSTEM \"urn:fontconfig:fonts.dtd\">\\n<fontconfig>\\n  <dir>/usr/share/fonts</dir>\\n  <dir>/usr/local/share/fonts</dir>\\n  <dir prefix=\"xdg\">fonts</dir>\\n  <cachedir>/var/cache/fontconfig</cachedir>\\n  <cachedir prefix=\"xdg\">fontconfig</cachedir>\\n</fontconfig>\\n' > /tmp/gh-aw/fonts.conf\necho \"Created /tmp/gh-aw/fonts.conf\"\ncat /tmp/gh-aw/fonts.conf\n"
+        run: "# The AWF chroot overlays /etc/ so /etc/fonts/fonts.conf is missing.\n# Write fonts.conf to the workspace (always writable in chroot) and\n# set FONTCONFIG_FILE to point to it.\nprintf '<?xml version=\"1.0\"?>\\n<!DOCTYPE fontconfig SYSTEM \"urn:fontconfig:fonts.dtd\">\\n<fontconfig>\\n  <dir>/usr/share/fonts</dir>\\n  <dir>/usr/local/share/fonts</dir>\\n  <dir prefix=\"xdg\">fonts</dir>\\n  <cachedir>/tmp/fc-cache</cachedir>\\n</fontconfig>\\n' > \"${GITHUB_WORKSPACE}/.fontconfig-fonts.conf\"\nmkdir -p /tmp/fc-cache\necho \"Created ${GITHUB_WORKSPACE}/.fontconfig-fonts.conf\"\nFONTCONFIG_FILE=\"${GITHUB_WORKSPACE}/.fontconfig-fonts.conf\" fc-list | wc -l\necho \"FONTCONFIG_FILE=${GITHUB_WORKSPACE}/.fontconfig-fonts.conf\" >> \"$GITHUB_ENV\"\n"
       - name: Align submodule to origin/main
         run: "# The checkout uses the workflow branch, so the submodule may be at a\n# different SHA than what origin/main expects. Fix it before the agent runs.\n# Note: the submodule tracks the `skiasharp` branch in mono/skia, so this\n# SHA should be a commit on origin/skiasharp.\nMAIN_SUB_SHA=$(git ls-tree origin/main -- externals/skia | awk '{print $3}')\necho \"origin/main submodule SHA: $MAIN_SUB_SHA\"\ngit -C externals/skia fetch origin skiasharp 2>&1\ngit -C externals/skia checkout \"$MAIN_SUB_SHA\" 2>&1\necho \"Verifying SHA is on skiasharp branch:\"\ngit -C externals/skia branch -r --contains \"$MAIN_SUB_SHA\" | grep -q 'origin/skiasharp' \\\n  && echo \"  ✅ SHA is on origin/skiasharp\" \\\n  || echo \"  ⚠️ SHA is NOT on origin/skiasharp — submodule pointer may be stale\"\n"
       - name: Copy push script for post-step
@@ -523,9 +521,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_413765cf602ac8f0_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_a4f45c7fe221d0bd_EOF'
           {"create_issue":{"labels":["auto-skia-track"],"max":1,"title_prefix":"[auto-skia-track]"}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_413765cf602ac8f0_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_a4f45c7fe221d0bd_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -650,7 +648,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_67e9ce2cbd50d411_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_26bf5de1927cb848_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -698,7 +696,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_67e9ce2cbd50d411_EOF
+          GH_AW_MCP_CONFIG_26bf5de1927cb848_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
