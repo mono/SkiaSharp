@@ -168,41 +168,59 @@ milestone numbers and paste your breaking change analysis table. The default exp
 
 ### Phase 4: Upstream Merge (mono/skia)
 
-1. **Create feature branch** (start from the correct base):
-   ```bash
-   cd externals/skia
-   ```
-   The submodule tracks the `skiasharp` branch in mono/skia (NOT `main`).
-   Ensure you're starting from the SHA that the parent repo's `origin/main` expects
-   (which should be a commit on `origin/skiasharp`):
-   ```bash
-   MAIN_SUB_SHA=$(git -C ../.. ls-tree origin/main -- externals/skia | awk '{print $3}')
-   git fetch origin skiasharp
-   git checkout "$MAIN_SUB_SHA"
-   ```
-   Verify this SHA is on `origin/skiasharp`:
-   ```bash
-   git branch -r --contains "$MAIN_SUB_SHA" | grep 'origin/skiasharp'
-   ```
-   Then create the feature branch:
-   ```bash
-   git checkout -b dev/update-skia-{TARGET}
-   ```
-   > **Note:** Automated workflows may use a different branch name (e.g. `skia-sync/m{TARGET}`).
-   >
-   > ⚠️ **Do NOT skip the SHA alignment step.** If the submodule is checked out at a different
-   > SHA than `origin/main` expects (e.g. from a different branch), the merge will produce
-   > phantom diffs — functions that already exist on `main` will appear as new or removed.
-   >
-   > The mono/skia PR targets `skiasharp` (not `main`). The parent repo's submodule pointer
-   > should always reference a commit on `origin/skiasharp`.
+> ⚠️ **Create BOTH branches before making ANY changes.** You may be on a workflow branch,
+> a feature branch, or a detached HEAD — none of which is the right base. Creating the
+> branches first ensures all subsequent work lands on clean `origin/main`-based branches.
 
-2. **Merge upstream** — use `--no-commit` for manual conflict resolution:
+**Step A — Create the parent repo branch** (SkiaSharp):
+```bash
+git fetch origin main
+git checkout -b dev/update-skia-{TARGET} origin/main
+```
+> **Note:** Automated workflows may use a different branch name (e.g. `skia-sync/m{TARGET}`).
+
+If your branch already exists locally or on the remote, check it out instead:
+```bash
+git checkout dev/update-skia-{TARGET}
+# or: git fetch origin dev/update-skia-{TARGET} && git checkout dev/update-skia-{TARGET}
+```
+
+You are now on the correct parent branch. All Phases 5–9 work will be committed here.
+
+**Step B — Create the submodule branch** (mono/skia):
+```bash
+cd externals/skia
+```
+The submodule tracks the `skiasharp` branch in mono/skia (NOT `main`).
+Ensure you're starting from the SHA that the parent repo's `origin/main` expects
+(which should be a commit on `origin/skiasharp`):
+```bash
+MAIN_SUB_SHA=$(git -C ../.. ls-tree origin/main -- externals/skia | awk '{print $3}')
+git fetch origin skiasharp
+git checkout "$MAIN_SUB_SHA"
+```
+Verify this SHA is on `origin/skiasharp`:
+```bash
+git branch -r --contains "$MAIN_SUB_SHA" | grep 'origin/skiasharp'
+```
+Then create the feature branch:
+```bash
+git checkout -b dev/update-skia-{TARGET}
+```
+
+> ⚠️ **Do NOT skip the SHA alignment step.** If the submodule is checked out at a different
+> SHA than `origin/main` expects (e.g. from a different branch), the merge will produce
+> phantom diffs — functions that already exist on `main` will appear as new or removed.
+>
+> The mono/skia PR targets `skiasharp` (not `main`). The parent repo's submodule pointer
+> should always reference a commit on `origin/skiasharp`.
+
+**Step C — Merge upstream** — use `--no-commit` for manual conflict resolution:
    ```bash
    git merge --no-commit upstream/chrome/m{TARGET}
    ```
 
-3. **Resolve conflicts** — each conflict must be resolved individually.
+**Step D — Resolve conflicts** — each conflict must be resolved individually.
    Never use `git merge -s ours` or `git read-tree --reset` — this destroys `git blame` attribution.
 
    **⚠️ MANDATORY: Before resolving ANY conflict, check file history for fork-specific patches.**
@@ -217,17 +235,17 @@ milestone numbers and paste your breaking change analysis table. The default exp
    | C API (`include/c/`, `src/c/`) | **Keep SkiaSharp** — adapt includes/API calls in post-merge commits |
    | Other upstream source (`src/`, `include/`) | **Check history first** — see [gotcha #15](references/known-gotchas.md) |
 
-4. **Commit the merge**:
+**Step E — Commit the merge**:
    ```bash
    git commit  # Creates proper two-parent merge
    ```
 
-5. **Verify our C API files survived the merge**:
+**Step F — Verify our C API files survived the merge**:
    ```bash
    ls src/c/*.cpp include/c/*.h  # All files should still exist
    ```
 
-6. **Source file verification** — Check for added/deleted upstream files:
+**Step G — Source file verification** — Check for added/deleted upstream files:
    ```bash
    git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=AD --name-only -- src/ include/
    ```
