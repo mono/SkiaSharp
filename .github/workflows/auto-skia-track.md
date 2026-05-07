@@ -138,10 +138,8 @@ sandbox:
       - "/etc/fonts:/etc/fonts:ro"
 
 # -- Pre-agent steps (host) ------------------------------------------
-# Run in the agent job AFTER checkout, BEFORE the container starts.
-# NOTE: Both steps: and pre-agent-steps: run on the HOST, not inside the container.
-# The agent runs in an AWF chroot where /etc/ is overlaid from the container image.
-# Use FONTCONFIG_FILE to point fontconfig at a config in the shared workspace.
+# Both steps: and pre-agent-steps: run on the HOST, not inside the AWF container.
+# The agent runs in an AWF chroot. sandbox.agent.mounts handles /etc/fonts.
 steps:
   - name: Set up agent output directory
     run: |
@@ -173,8 +171,6 @@ pre-agent-steps:
       sudo apt-get update -qq
       sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
       fc-cache -f
-      echo "FONTCONFIG_FILE=$FONTCONFIG_FILE"
-      fc-list | grep -i "dejavu\|symbola" | head -5 || echo "⚠️ No DejaVu/Symbola fonts found"
     env:
       DEBIAN_FRONTEND: noninteractive
   - name: Install dotnet workload and restore tools

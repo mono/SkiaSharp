@@ -392,17 +392,16 @@ broken — go back and fix before wasting time on the full suite.
 
 **Step 2 — Full test suite (required before any PR):**
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/gh-aw/agent/test-output.txt
-tail -5 /tmp/gh-aw/agent/test-output.txt
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/test-output.txt
+tail -5 /tmp/test-output.txt
 ```
 This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
 self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
 
-> **⚠️ Always write test output to `/tmp/gh-aw/agent/test-output.txt`** — this path is
-> included in the workflow artifacts so test results can be inspected after the run.
-> After the run, inspect failures with:
+> **⚠️ Always capture test output with `2>&1 | tee`.** Do NOT pipe to `tail` or `grep`
+> alone — you lose the failure details. After the run, inspect failures with:
 > ```bash
-> grep '^  Failed' /tmp/gh-aw/agent/test-output.txt
+> grep '^  Failed' /tmp/test-output.txt
 > ```
 
 Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
