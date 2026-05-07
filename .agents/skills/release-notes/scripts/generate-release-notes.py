@@ -581,26 +581,33 @@ def get_prs_from_diff(from_ref, to_ref):
 
 def format_pr_list(prs, metadata):
     # type: (list[dict], dict) -> str
-    """Format the PR list as markdown with metadata header."""
+    """Format the PR list as markdown with raw data in an HTML comment.
+
+    The raw PR data is preserved inside an HTML comment block so that AI
+    can regenerate polished notes from it at any time. Below the comment,
+    a skeleton placeholder is written for AI to fill in.
+    """
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    version = metadata["version"]
+
+    # Build the raw data comment block
     lines = [
         "<!--",
+        "  RAW PR DATA — Do not remove this comment block.",
+        "  AI uses this data to generate the polished release notes below.",
+        "  Re-run the script to refresh this data from git history.",
+        "",
         "  Generated: {} by generate-release-notes.py".format(now),
-        "",
-        "  This is raw PR data. Rewrite this entire file with polished release",
-        "  notes using documentation/docfx/releases/TEMPLATE.md as the reference.",
-        "",
-        "  version: {}".format(metadata["version"]),
-        "  status:  {}".format(metadata["status"]),
-        "  branch:  {}".format(metadata["branch"]),
-        "  diff:    {}..{}".format(metadata["from"], metadata["to"]),
-        "  prs:     {}".format(len(prs)),
-        "-->",
+        "  version:   {}".format(version),
+        "  status:    {}".format(metadata["status"]),
+        "  branch:    {}".format(metadata["branch"]),
+        "  diff:      {}..{}".format(metadata["from"], metadata["to"]),
+        "  prs:       {}".format(len(prs)),
         "",
     ]
 
     if not prs:
-        lines.append("*No changes found.*")
+        lines.append("  *No changes found.*")
     else:
         for pr in prs:
             title = pr.get("title", "")
@@ -616,10 +623,41 @@ def format_pr_list(prs, metadata):
             skia_pr = pr.get("skiaPr")
             skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
 
-            lines.append("- {} by @{} in {}{}{}{}".format(
+            lines.append("  - {} by @{} in {}{}{}{}".format(
                 title, author, url, community_str, effort, skia_str))
 
+    lines.append("-->")
     lines.append("")
+
+    # Add skeleton content for AI to polish
+    lines.append("# Version {}".format(version))
+    lines.append("")
+
+    # Status-appropriate header
+    status = metadata["status"]
+    if status == "unreleased":
+        lines.append(
+            "> **Upcoming release** · In development "
+            "· Not yet available on NuGet")
+    elif status == "preview":
+        lines.append(
+            "> **Preview release** · Preview only "
+            "· [NuGet](https://www.nuget.org/packages/SkiaSharp/"
+            "{}-preview)".format(version))
+    else:
+        lines.append(
+            "> [NuGet](https://www.nuget.org/packages/SkiaSharp/{})".format(
+                version))
+    lines.append("")
+
+    lines.append(
+        "<!-- AI: Use the raw PR data in the comment above to write polished")
+    lines.append(
+        "     release notes here. Follow documentation/docfx/releases/"
+        "TEMPLATE.md")
+    lines.append("     for structure and tone. -->")
+    lines.append("")
+
     return "\n".join(lines)
 
 
