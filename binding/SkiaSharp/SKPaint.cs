@@ -891,3 +891,4 @@ namespace SkiaSharp
 			handle == IntPtr.Zero ? null : new SKPaint (handle, true);
 	}
 }
+// Cache scenario 2: binding file change
