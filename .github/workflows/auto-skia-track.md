@@ -162,21 +162,19 @@ steps:
     run: |
       cp scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
 
-# -- Pre-agent steps (container) -------------------------------------
-# Run INSIDE the agent container, immediately before AI execution.
-# All packages, fonts, and tools must be installed here to be visible to the agent.
+# -- Pre-agent steps ---------------------------------------------------
+# Run on the host before the agent starts. Packages installed here are visible
+# in the AWF chroot (shared host filesystem), but dotnet tool restore does NOT
+# carry into the chroot — the agent must run it itself.
 pre-agent-steps:
   - name: Install native build dependencies
     run: |
       sudo apt-get update -qq
       sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
       fc-cache -f
+      dotnet workload install android --skip-sign-check
     env:
       DEBIAN_FRONTEND: noninteractive
-  - name: Install dotnet workload and restore tools
-    run: |
-      dotnet workload install android --skip-sign-check
-      dotnet tool restore
 
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Pushes branches and creates/updates PRs
