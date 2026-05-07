@@ -143,18 +143,9 @@ steps:
       # The AWF chroot overlays /etc/ from the container image, so /etc/fonts/fonts.conf
       # is missing. Skia's SkFontMgr_fontconfig calls FcInitLoadConfigAndFonts() which
       # needs fonts.conf. Write it to /tmp/gh-aw/ (shared with chroot) and set FONTCONFIG_FILE.
-      cat > /tmp/gh-aw/fonts.conf << 'FONTCONF'
-      <?xml version="1.0"?>
-      <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
-      <fontconfig>
-        <dir>/usr/share/fonts</dir>
-        <dir>/usr/local/share/fonts</dir>
-        <dir prefix="xdg">fonts</dir>
-        <cachedir>/var/cache/fontconfig</cachedir>
-        <cachedir prefix="xdg">fontconfig</cachedir>
-      </fontconfig>
-      FONTCONF
+      printf '<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n<fontconfig>\n  <dir>/usr/share/fonts</dir>\n  <dir>/usr/local/share/fonts</dir>\n  <dir prefix="xdg">fonts</dir>\n  <cachedir>/var/cache/fontconfig</cachedir>\n  <cachedir prefix="xdg">fontconfig</cachedir>\n</fontconfig>\n' > /tmp/gh-aw/fonts.conf
       echo "Created /tmp/gh-aw/fonts.conf"
+      cat /tmp/gh-aw/fonts.conf
   - name: Align submodule to origin/main
     run: |
       # The checkout uses the workflow branch, so the submodule may be at a
