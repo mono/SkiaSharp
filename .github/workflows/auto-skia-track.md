@@ -124,17 +124,37 @@ network:
 env:
   CC: clang
   CXX: clang++
+  FONTCONFIG_FILE: /tmp/gh-aw/fonts.conf
 permissions:
   contents: read
   pull-requests: read
 
 # -- Pre-agent steps (host) ------------------------------------------
 # Run in the agent job AFTER checkout, BEFORE the container starts.
-# Only host-level setup that doesn't need to be visible inside the container.
+# NOTE: Both steps: and pre-agent-steps: run on the HOST, not inside the container.
+# The agent runs in an AWF chroot where /etc/ is overlaid from the container image.
+# Use FONTCONFIG_FILE to point fontconfig at a config in the shared workspace.
 steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
+  - name: Create fontconfig for AWF chroot
+    run: |
+      # The AWF chroot overlays /etc/ from the container image, so /etc/fonts/fonts.conf
+      # is missing. Skia's SkFontMgr_fontconfig calls FcInitLoadConfigAndFonts() which
+      # needs fonts.conf. Write it to /tmp/gh-aw/ (shared with chroot) and set FONTCONFIG_FILE.
+      cat > /tmp/gh-aw/fonts.conf << 'FONTCONF'
+      <?xml version="1.0"?>
+      <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+      <fontconfig>
+        <dir>/usr/share/fonts</dir>
+        <dir>/usr/local/share/fonts</dir>
+        <dir prefix="xdg">fonts</dir>
+        <cachedir>/var/cache/fontconfig</cachedir>
+        <cachedir prefix="xdg">fontconfig</cachedir>
+      </fontconfig>
+      FONTCONF
+      echo "Created /tmp/gh-aw/fonts.conf"
   - name: Align submodule to origin/main
     run: |
       # The checkout uses the workflow branch, so the submodule may be at a
@@ -161,26 +181,9 @@ pre-agent-steps:
     run: |
       sudo apt-get update -qq
       sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
-      # The AWF chroot may not have /etc/fonts/ — Skia's fontconfig needs it.
-      # Create it if missing so SkFontMgr can discover fonts at runtime.
-      if [ ! -f /etc/fonts/fonts.conf ]; then
-        echo "Creating /etc/fonts/fonts.conf (missing in AWF chroot)"
-        sudo mkdir -p /etc/fonts
-        sudo tee /etc/fonts/fonts.conf > /dev/null << 'FONTCONF'
-      <?xml version="1.0"?>
-      <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
-      <fontconfig>
-        <dir>/usr/share/fonts</dir>
-        <dir>/usr/local/share/fonts</dir>
-        <dir prefix="xdg">fonts</dir>
-        <cachedir>/var/cache/fontconfig</cachedir>
-        <cachedir prefix="xdg">fontconfig</cachedir>
-      </fontconfig>
-      FONTCONF
-      fi
       fc-cache -f
+      echo "FONTCONFIG_FILE=$FONTCONFIG_FILE"
       fc-list | grep -i "dejavu\|symbola" | head -5 || echo "⚠️ No DejaVu/Symbola fonts found"
-      echo "/etc/fonts/fonts.conf exists: $(test -f /etc/fonts/fonts.conf && echo YES || echo NO)"
     env:
       DEBIAN_FRONTEND: noninteractive
   - name: Install dotnet workload and restore tools
