@@ -71,3 +71,4 @@ Task("Default")
     .IsDependentOn("libHarfBuzzSharp");
 
 RunTarget(TARGET);
+// Cache scenario 3: native android file change
