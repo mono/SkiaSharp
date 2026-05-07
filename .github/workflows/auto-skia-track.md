@@ -161,8 +161,26 @@ pre-agent-steps:
     run: |
       sudo apt-get update -qq
       sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
+      # The AWF chroot may not have /etc/fonts/ — Skia's fontconfig needs it.
+      # Create it if missing so SkFontMgr can discover fonts at runtime.
+      if [ ! -f /etc/fonts/fonts.conf ]; then
+        echo "Creating /etc/fonts/fonts.conf (missing in AWF chroot)"
+        sudo mkdir -p /etc/fonts
+        sudo tee /etc/fonts/fonts.conf > /dev/null << 'FONTCONF'
+      <?xml version="1.0"?>
+      <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+      <fontconfig>
+        <dir>/usr/share/fonts</dir>
+        <dir>/usr/local/share/fonts</dir>
+        <dir prefix="xdg">fonts</dir>
+        <cachedir>/var/cache/fontconfig</cachedir>
+        <cachedir prefix="xdg">fontconfig</cachedir>
+      </fontconfig>
+      FONTCONF
+      fi
       fc-cache -f
       fc-list | grep -i "dejavu\|symbola" | head -5 || echo "⚠️ No DejaVu/Symbola fonts found"
+      echo "/etc/fonts/fonts.conf exists: $(test -f /etc/fonts/fonts.conf && echo YES || echo NO)"
     env:
       DEBIAN_FRONTEND: noninteractive
   - name: Install dotnet workload and restore tools
@@ -188,32 +206,6 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-9.** Notes specific to this automated workflow:
 
-- **Before anything else**, run a font/environment diagnostic and save to artifacts:
-  ```bash
-  {
-    echo "=== whoami / pwd ==="
-    whoami; pwd
-    echo "=== /etc/fonts/ ==="
-    ls -la /etc/fonts/ 2>&1 | head -10
-    cat /etc/fonts/fonts.conf 2>&1 | head -20
-    echo "=== fc-list count ==="
-    fc-list 2>&1 | wc -l
-    fc-list 2>&1 | grep -i dejavu | head -5
-    echo "=== fontconfig env ==="
-    echo "FONTCONFIG_PATH=$FONTCONFIG_PATH"
-    echo "FONTCONFIG_FILE=$FONTCONFIG_FILE"
-    echo "XDG_DATA_HOME=$XDG_DATA_HOME"
-    echo "HOME=$HOME"
-    echo "=== ldd libSkiaSharp ==="
-    find output/native -name "libSkiaSharp.so" -exec ldd {} \; 2>&1 | grep -i font || echo "no native lib yet"
-    echo "=== /usr/share/fonts ==="
-    ls /usr/share/fonts/ 2>&1
-    echo "=== fontconfig cache ==="
-    ls -la /var/cache/fontconfig/ 2>&1 | head -5
-    ls -la ~/.cache/fontconfig/ 2>&1 | head -5
-  } > /tmp/gh-aw/agent/font-diagnostic.txt 2>&1
-  cat /tmp/gh-aw/agent/font-diagnostic.txt
-  ```
 - **Phase 1 is pre-computed** (above). Skip it.
 - **Phase 4 branch name**: use `skia-sync/m${{ needs.pre_activation.outputs.target }}` (not `dev/update-skia-{TARGET}`).
   Create the parent repo branch from `origin/main`: `git checkout -b skia-sync/m{N} origin/main`.
@@ -226,11 +218,6 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 - **Submodule alignment**: the pre-agent step already checked out the submodule to the correct SHA.
   When creating your submodule feature branch, branch from the current HEAD.
 - **Phase 8 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 8 Step 1.
-- **Before running tests (Phase 9)**, run `ldd` on the built native lib and save to artifacts:
-  ```bash
-  ldd output/native/linux/x64/libSkiaSharp.so > /tmp/gh-aw/agent/ldd-libSkiaSharp.txt 2>&1
-  cat /tmp/gh-aw/agent/ldd-libSkiaSharp.txt
-  ```
 - **Phase 10 is handled by a post-step.** Do NOT push branches, create PRs, or create issues yourself — all GitHub artifacts are handled by the post-step.
   Just commit locally. Do NOT call `create_issue` or `create_pull_request`. After Phase 9, write these files:
 
