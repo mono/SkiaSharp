@@ -188,43 +188,18 @@ post-steps:
 
 # Skia Upstream Sync
 
-Current: m${{ needs.pre_activation.outputs.current }}.
-Target: m${{ needs.pre_activation.outputs.target }}.
-Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
-
-**⚠️ FIRST: Switch to the correct branch before doing ANY work.**
-The workflow checks out the workflow file's branch, NOT `origin/main`. You MUST create or checkout the
-target branch immediately — before reading the skill, before analysis, before any file changes:
-
-```bash
-# Restore dotnet tools (required — pre-agent-steps can't do this for the chroot)
-dotnet tool restore
-
-# Check if the branch already exists on the remote
-git fetch origin skia-sync/m${{ needs.pre_activation.outputs.target }} 2>/dev/null && EXISTING=true || EXISTING=false
-
-if [ "$EXISTING" = "true" ]; then
-  git checkout skia-sync/m${{ needs.pre_activation.outputs.target }}
-  # Check for new upstream commits — stop if none
-  git -C externals/skia fetch upstream 2>/dev/null || git -C externals/skia remote add upstream https://github.com/google/skia.git && git -C externals/skia fetch upstream
-  NEW_COMMITS=$(git -C externals/skia log HEAD..upstream/chrome/m${{ needs.pre_activation.outputs.target }} --oneline 2>/dev/null | wc -l)
-  if [ "$NEW_COMMITS" -eq 0 ]; then
-    echo "No new upstream commits — nothing to do."
-    exit 0
-  fi
-else
-  git checkout -b skia-sync/m${{ needs.pre_activation.outputs.target }} origin/main
-fi
-```
-
-Only after you are on `skia-sync/m${{ needs.pre_activation.outputs.target }}` should you proceed.
+Current: `m${{ needs.pre_activation.outputs.current }}`.  
+Target: `m${{ needs.pre_activation.outputs.target }}`.  
+Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.  
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-9.** Notes specific to this automated workflow:
 
 - **Phase 1 is pre-computed** (above). Skip it.
-- **Phase 4 Step A**: you already created the parent branch above. Skip Step A. Use
-  `skia-sync/m${{ needs.pre_activation.outputs.target }}` as the branch name (not `dev/update-skia-{TARGET}`).
-  Even when current == target, there may be new upstream bug-fix commits - a matching milestone does NOT mean no work.
+- **First thing**: run `dotnet tool restore` (pre-agent-steps can't do this for the chroot).
+- **Phase 4 Step A branch name**: use `skia-sync/m${{ needs.pre_activation.outputs.target }}` (not `dev/update-skia-{TARGET}`).
+  Before creating a fresh branch, check if `origin/skia-sync/m${{ needs.pre_activation.outputs.target }}` already exists.
+  If so, check it out and check for new upstream commits. Stop if there are none.
+  Even when current == target, there may be new upstream bug-fix commits — a matching milestone does NOT mean no work.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
 - **Submodule alignment**: the pre-agent step already checked out the submodule to the correct SHA.
