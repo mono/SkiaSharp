@@ -128,6 +128,15 @@ permissions:
   contents: read
   pull-requests: read
 
+# -- Sandbox -----------------------------------------------------------
+# Mount host /etc/fonts into the AWF chroot so Skia's fontconfig can find fonts.
+# Without this, /etc/fonts/fonts.conf doesn't exist in the chroot and
+# SKTypeface.Default is empty (46 test failures).
+sandbox:
+  agent:
+    mounts:
+      - "/etc/fonts:/etc/fonts:ro"
+
 # -- Pre-agent steps (host) ------------------------------------------
 # Run in the agent job AFTER checkout, BEFORE the container starts.
 # NOTE: Both steps: and pre-agent-steps: run on the HOST, not inside the container.
@@ -137,16 +146,6 @@ steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
-  - name: Create fontconfig for AWF chroot
-    run: |
-      # The AWF chroot overlays /etc/ so /etc/fonts/fonts.conf is missing.
-      # Write fonts.conf to the workspace (always writable in chroot) and
-      # set FONTCONFIG_FILE to point to it.
-      printf '<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n<fontconfig>\n  <dir>/usr/share/fonts</dir>\n  <dir>/usr/local/share/fonts</dir>\n  <dir prefix="xdg">fonts</dir>\n  <cachedir>/tmp/fc-cache</cachedir>\n</fontconfig>\n' > "${GITHUB_WORKSPACE}/.fontconfig-fonts.conf"
-      mkdir -p /tmp/fc-cache
-      echo "Created ${GITHUB_WORKSPACE}/.fontconfig-fonts.conf"
-      FONTCONFIG_FILE="${GITHUB_WORKSPACE}/.fontconfig-fonts.conf" fc-list | wc -l
-      echo "FONTCONFIG_FILE=${GITHUB_WORKSPACE}/.fontconfig-fonts.conf" >> "$GITHUB_ENV"
   - name: Align submodule to origin/main
     run: |
       # The checkout uses the workflow branch, so the submodule may be at a
