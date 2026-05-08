@@ -1,0 +1,331 @@
+# Issue Triage Report — #2436
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-04T18:30:00Z |
+| Type | type/bug (0.80 (80%)) |
+| Area | area/SkiaSharp (0.72 (72%)) |
+| Suggested action | needs-info (0.88 (88%)) |
+
+**Issue Summary:** Application crashes without diagnostic information when rendering a Skottie/Lottie animation via SKElement.PaintSurface in a WPF .NET Framework 4.8 application using SkiaSharp 2.88.3.
+
+**Analysis:** Reporter describes a crash with no stack trace, no exception type, and no error message. The code pattern captures an Animation object in a PaintSurface lambda and calls Render on every paint. Without diagnostics it is unclear whether the crash is in Skottie native rendering, a memory management issue (e.g., a specific problematic Lottie file), or a usage error. Insufficient diagnostic information to determine root cause.
+
+**Recommendations:** **needs-info** — No stack trace, no exception type, no repro project, and no known-good version. Cannot determine root cause without basic diagnostics.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Open a file stream with File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read)
+2. Call Animation.TryCreate(stream, out var animation)
+3. Call animation.Seek(0)
+4. Subscribe to SKElement.PaintSurface and call animation.Render(canvas, rect) inside the handler
+
+**Environment:** WPF, .NET Framework 4.8, Windows PC, SkiaSharp 2.88.3
+
+**Repository links:**
+- https://www.dropbox.com/s/nwa3hrjonlaj8vm/test.json?dl=0 — Reporter-provided Lottie JSON file (external Dropbox link)
+
+**Code snippets:**
+
+```csharp
+using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+if (Animation.TryCreate(stream, out var _animation))
+{
+    _animation.Seek(0);
+    SkElement.PaintSurface += (sender, e) => _animation.Render(e.Surface.Canvas,
+        new SKRect(0, 0, _animation.Size.Width, _animation.Size.Height));
+}
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | crash |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | net472 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | Reporter lists 'last known good version: ???', so no regression baseline is established. Issue is over 2 years old and filed against a deprecated 2.88.x release. |
+
+## Analysis
+
+### Technical Summary
+
+Reporter describes a crash with no stack trace, no exception type, and no error message. The code pattern captures an Animation object in a PaintSurface lambda and calls Render on every paint. Without diagnostics it is unclear whether the crash is in Skottie native rendering, a memory management issue (e.g., a specific problematic Lottie file), or a usage error. Insufficient diagnostic information to determine root cause.
+
+### Rationale
+
+The issue is classified as type/bug because a crash is an observable broken behavior. Area is SkiaSharp because the Skottie binding (Animation.TryCreate, Seek, Render) is the primary component in play, even though SKElement from SkiaSharp.Views.WPF provides the rendering surface. The area/SkiaSharp label is used since there is no area/SkiaSharp.Skottie. The suggestedAction is needs-info because there is no stack trace, no exception details, no repro project, and no known-good version. The Lottie file is on an external Dropbox link rather than attached to the issue.
+
+### Key Signals
+
+- "Actual Behavior: Crash" — **issue body** (No exception type, no stack trace, no error message provided — makes root cause diagnosis impossible from triage alone.)
+- "Last known good version: ???" — **issue body** (Reporter does not know if this ever worked, so no regression baseline exists.)
+- "Platform: Windows Classic — WPF, .NET Framework 4.8" — **issue body** (Specific to Windows Classic with WPF. .NET Framework 4.8 is a supported TFM via NuGet fallback. No cross-platform comparison available.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp.Skottie/Animation.cs` | 51-57 | direct | TryCreate(Stream) creates a SKData from the stream with 'using var data', then calls TryCreate(SKData). The SKData is disposed after the native call returns, which is safe only if the native Skottie library copies the JSON bytes internally. If Skottie keeps a raw pointer into the data buffer, disposing SKData would cause a use-after-free on subsequent Render calls. |
+| `binding/SkiaSharp.Skottie/Animation.cs` | 106-107 | direct | Render(SKCanvas, SKRect) passes canvas.Handle and a pointer to the SKRect struct to the native skottie_animation_render function. If the native Skottie library has a bug rendering a specific malformed Lottie file, this is where a native crash would occur. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs` | 45-88 | related | SKElement.OnRender creates an SKSurface backed by a WriteableBitmap, locks it, raises PaintSurface, then disposes the surface. The canvas passed to the event handler is valid only within the using block. The reporter's code calls animation.Render inside the PaintSurface handler, which is within the using scope, so the canvas is still valid at the point of Render. |
+
+### Workarounds
+
+- Use AnimationBuilder (Animation.CreateBuilder().Build(stream)) instead of Animation.TryCreate to check if the crash is specific to the TryCreate overload.
+- Try loading the Lottie file as a string with Animation.TryParse(json) to rule out stream-related memory issues.
+- Catch AccessViolationException or use a try/catch around the Render call to get more diagnostic information.
+
+### Next Questions
+
+- What is the full exception type and stack trace (or Windows Event Log entry if it is a native crash)?
+- Does the crash occur immediately on Seek(0) or only when PaintSurface fires?
+- Does the issue reproduce with a publicly shareable minimal repro project?
+- Does the crash reproduce with a simple test Lottie JSON (e.g., the lottie-web sample files)?
+- Is this still reproducible on the latest SkiaSharp release (3.x)?
+
+### Resolution Proposals
+
+**Hypothesis:** The crash is most likely in native Skottie rendering of a specific Lottie file, but could also be a use-after-free if the native library retains a pointer to the JSON data after TryCreate returns. Cannot confirm without a stack trace.
+
+1. **Request diagnostics** — investigation, confidence 0.90 (90%), cost/xs, validated=untested
+   - Ask reporter to provide a stack trace, exception type, or Windows Event Log crash details, along with a publicly shareable minimal repro project.
+
+**Recommended proposal:** Request diagnostics
+
+**Why:** Not enough information to diagnose or fix — diagnostics are prerequisite to any code investigation.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.88 (88%) |
+| Reason | No stack trace, no exception type, no repro project, and no known-good version. Cannot determine root cause without basic diagnostics. |
+| Suggested repro platform | windows |
+
+### Missing Info
+
+- Full exception type and stack trace (or Windows Event Log entry for native crash)
+- Whether crash occurs on Seek(0) or on the first Render call
+- Minimal self-contained repro project (not just a Dropbox Lottie file)
+- Whether issue reproduces on SkiaSharp 3.x
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.88 (88%) | Apply type/bug, area/SkiaSharp, os/Windows-Classic labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic |
+| add-comment | medium | 0.88 (88%) | Request stack trace, exception details, and minimal repro project | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for filing this! To help investigate the crash, could you provide:
+
+1. **Stack trace or exception details** — If it's a managed exception, paste the full stack trace. If it's a native crash, check the Windows Event Log (Event Viewer → Windows Logs → Application) for the faulting module and exception code.
+2. **Minimal repro project** — A small, self-contained project (GitHub repo or zip) that reproduces the crash, rather than just the Lottie file.
+3. **When exactly it crashes** — Does it crash immediately on `Animation.TryCreate(stream, ...)`, on `_animation.Seek(0)`, or when `PaintSurface` first fires?
+4. **Reproducibility with other Lottie files** — Does the crash occur with any Lottie file, or only with this specific one?
+5. **SkiaSharp 3.x** — Does this still reproduce with the latest SkiaSharp release?
+
+In the meantime, as a diagnostic step, you could try `Animation.TryParse(File.ReadAllText(filePath))` instead of `TryCreate(stream, ...)` to rule out stream-related memory issues.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2436,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-04T18:30:00Z"
+  },
+  "summary": "Application crashes without diagnostic information when rendering a Skottie/Lottie animation via SKElement.PaintSurface in a WPF .NET Framework 4.8 application using SkiaSharp 2.88.3.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.8
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.72
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net472"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open a file stream with File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read)",
+        "Call Animation.TryCreate(stream, out var animation)",
+        "Call animation.Seek(0)",
+        "Subscribe to SKElement.PaintSurface and call animation.Render(canvas, rect) inside the handler"
+      ],
+      "codeSnippets": [
+        "using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);\nif (Animation.TryCreate(stream, out var _animation))\n{\n    _animation.Seek(0);\n    SkElement.PaintSurface += (sender, e) => _animation.Render(e.Surface.Canvas,\n        new SKRect(0, 0, _animation.Size.Width, _animation.Size.Height));\n}"
+      ],
+      "environmentDetails": "WPF, .NET Framework 4.8, Windows PC, SkiaSharp 2.88.3",
+      "repoLinks": [
+        {
+          "url": "https://www.dropbox.com/s/nwa3hrjonlaj8vm/test.json?dl=0",
+          "description": "Reporter-provided Lottie JSON file (external Dropbox link)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "unknown",
+      "relevanceReason": "Reporter lists 'last known good version: ???', so no regression baseline is established. Issue is over 2 years old and filed against a deprecated 2.88.x release."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter describes a crash with no stack trace, no exception type, and no error message. The code pattern captures an Animation object in a PaintSurface lambda and calls Render on every paint. Without diagnostics it is unclear whether the crash is in Skottie native rendering, a memory management issue (e.g., a specific problematic Lottie file), or a usage error. Insufficient diagnostic information to determine root cause.",
+    "rationale": "The issue is classified as type/bug because a crash is an observable broken behavior. Area is SkiaSharp because the Skottie binding (Animation.TryCreate, Seek, Render) is the primary component in play, even though SKElement from SkiaSharp.Views.WPF provides the rendering surface. The area/SkiaSharp label is used since there is no area/SkiaSharp.Skottie. The suggestedAction is needs-info because there is no stack trace, no exception details, no repro project, and no known-good version. The Lottie file is on an external Dropbox link rather than attached to the issue.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.Skottie/Animation.cs",
+        "lines": "51-57",
+        "finding": "TryCreate(Stream) creates a SKData from the stream with 'using var data', then calls TryCreate(SKData). The SKData is disposed after the native call returns, which is safe only if the native Skottie library copies the JSON bytes internally. If Skottie keeps a raw pointer into the data buffer, disposing SKData would cause a use-after-free on subsequent Render calls.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.Skottie/Animation.cs",
+        "lines": "106-107",
+        "finding": "Render(SKCanvas, SKRect) passes canvas.Handle and a pointer to the SKRect struct to the native skottie_animation_render function. If the native Skottie library has a bug rendering a specific malformed Lottie file, this is where a native crash would occur.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "45-88",
+        "finding": "SKElement.OnRender creates an SKSurface backed by a WriteableBitmap, locks it, raises PaintSurface, then disposes the surface. The canvas passed to the event handler is valid only within the using block. The reporter's code calls animation.Render inside the PaintSurface handler, which is within the using scope, so the canvas is still valid at the point of Render.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Actual Behavior: Crash",
+        "source": "issue body",
+        "interpretation": "No exception type, no stack trace, no error message provided — makes root cause diagnosis impossible from triage alone."
+      },
+      {
+        "text": "Last known good version: ???",
+        "source": "issue body",
+        "interpretation": "Reporter does not know if this ever worked, so no regression baseline exists."
+      },
+      {
+        "text": "Platform: Windows Classic — WPF, .NET Framework 4.8",
+        "source": "issue body",
+        "interpretation": "Specific to Windows Classic with WPF. .NET Framework 4.8 is a supported TFM via NuGet fallback. No cross-platform comparison available."
+      }
+    ],
+    "nextQuestions": [
+      "What is the full exception type and stack trace (or Windows Event Log entry if it is a native crash)?",
+      "Does the crash occur immediately on Seek(0) or only when PaintSurface fires?",
+      "Does the issue reproduce with a publicly shareable minimal repro project?",
+      "Does the crash reproduce with a simple test Lottie JSON (e.g., the lottie-web sample files)?",
+      "Is this still reproducible on the latest SkiaSharp release (3.x)?"
+    ],
+    "workarounds": [
+      "Use AnimationBuilder (Animation.CreateBuilder().Build(stream)) instead of Animation.TryCreate to check if the crash is specific to the TryCreate overload.",
+      "Try loading the Lottie file as a string with Animation.TryParse(json) to rule out stream-related memory issues.",
+      "Catch AccessViolationException or use a try/catch around the Render call to get more diagnostic information."
+    ],
+    "resolution": {
+      "hypothesis": "The crash is most likely in native Skottie rendering of a specific Lottie file, but could also be a use-after-free if the native library retains a pointer to the JSON data after TryCreate returns. Cannot confirm without a stack trace.",
+      "proposals": [
+        {
+          "title": "Request diagnostics",
+          "description": "Ask reporter to provide a stack trace, exception type, or Windows Event Log crash details, along with a publicly shareable minimal repro project.",
+          "category": "investigation",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Request diagnostics",
+      "recommendedReason": "Not enough information to diagnose or fix — diagnostics are prerequisite to any code investigation."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.88,
+      "reason": "No stack trace, no exception type, no repro project, and no known-good version. Cannot determine root cause without basic diagnostics.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Full exception type and stack trace (or Windows Event Log entry for native crash)",
+      "Whether crash occurs on Seek(0) or on the first Render call",
+      "Minimal self-contained repro project (not just a Dropbox Lottie file)",
+      "Whether issue reproduces on SkiaSharp 3.x"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, os/Windows-Classic labels",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request stack trace, exception details, and minimal repro project",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for filing this! To help investigate the crash, could you provide:\n\n1. **Stack trace or exception details** — If it's a managed exception, paste the full stack trace. If it's a native crash, check the Windows Event Log (Event Viewer → Windows Logs → Application) for the faulting module and exception code.\n2. **Minimal repro project** — A small, self-contained project (GitHub repo or zip) that reproduces the crash, rather than just the Lottie file.\n3. **When exactly it crashes** — Does it crash immediately on `Animation.TryCreate(stream, ...)`, on `_animation.Seek(0)`, or when `PaintSurface` first fires?\n4. **Reproducibility with other Lottie files** — Does the crash occur with any Lottie file, or only with this specific one?\n5. **SkiaSharp 3.x** — Does this still reproduce with the latest SkiaSharp release?\n\nIn the meantime, as a diagnostic step, you could try `Animation.TryParse(File.ReadAllText(filePath))` instead of `TryCreate(stream, ...)` to rule out stream-related memory issues."
+      }
+    ]
+  }
+}
+```
+
+</details>

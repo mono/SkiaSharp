@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #2660 (needs-info)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 2660, "repo": "mono/SkiaSharp", "analyzedAt": "2026-05-04T20:16:04Z", "currentLabels": ["type/bug"]}, "summary": "Reporter observes linear memory growth when calling canvas.DrawPath() in a GPU (hardware-accelerated) rendering context on Windows, which stops when DrawPath is commented out; claimed regression from 2.88.2 to 2.88.3.", "classification": {"type": {"value": "type/bug", "confidence": 0.88}, "area": {"value": "area/SkiaSharp", "confidence": 0.8}, "platforms": ["os/Windows-Classic"], "backends": ["backend/OpenGL"]}, "evidence": {"bugSignals": {"severity": "medium", "regressionClaimed": true, "errorType": "memory-leak", "errorMessage": "Memory increases linearly when calling canvas.DrawPath() in GPU context", "reproQuality": "partial", "targetFrameworks": []}, "reproEvidence": {"stepsToReproduce": ["Run application in GPU context (hardware-accelerated)", "Call canvas.DrawPath(path, paintFill) in a rendering loop", "Observe memory usage increasing linearly", "Comment out canvas.DrawPath line — memory becomes constant"], "codeSnippets": ["using (var paintFill = new SKPaint { IsAntialias = true })\n{\n    paintFill.StrokeWidth = 0;\n    paintFill.Style = SKPaintStyle.Fill;\n    paintFill.PathEffect = null;\n    paintFill.Shader = null;\n    paintFill.Color = fillColor.ToSkia(opacity);\n    canvas.DrawPath(path, paintFill); // this line cause memory leak in GPU context\n}"], "environmentDetails": "Windows 10, Visual Studio, SkiaSharp 2.88.3", "relatedIssues": [2848], "repoLinks": []}, "versionAnalysis": {"mentionedVersions": ["2.88.3", "2.88.2"], "workedIn": "2.88.2", "brokeIn": "2.88.3", "currentRelevance": "unknown", "relevanceReason": "Current SkiaSharp is 3.x; unclear if memory leak persists in current GPU code paths."}, "regression": {"isRegression": true, "confidence": 0.7, "reason": "Reporter explicitly states memory was constant in 2.88.2 and leaks in 2.88.3.", "workedInVersion": "2.88.2", "brokeInVersion": "2.88.3"}}, "analysis": {"summary": "Memory leak in GPU context when calling DrawPath. The C# binding for DrawPath delegates directly to sk_canvas_draw_path with no intermediate allocations; the leak is likely in GPU cache management or tessellation buffers within Skia's GPU backend that are not being flushed/released.", "rationale": "Issue reports GPU-context-specific memory growth isolated to DrawPath. The C# wrapper itself has no allocations beyond the native call, pointing to a Skia GPU backend or surface flush issue. A related follow-up issue (#2848) confirms this affects Windows 11 as well with 2.88.8, indicating it is not a one-off regression. The reporter lacks a minimal repro project and provides no stack trace or memory profile, but the bisected nature (comment out DrawPath = no leak) gives medium repro quality.", "codeInvestigation": [{"file": "binding/SkiaSharp/SKCanvas.cs", "lines": "403-412", "finding": "DrawPath validates path/paint are non-null then calls SkiaApi.sk_canvas_draw_path(Handle, path.Handle, paint.Handle) — no C# allocations; any leak is in the native Skia layer.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKCanvas.cs", "lines": "405-411", "finding": "No Flush() or surface submission calls surround DrawPath in the C# wrapper; GPU command buffers may accumulate without explicit flush in GPU context.", "relevance": "related"}], "keySignals": [{"text": "when in CPU context, the memory usage is constant, but in GPU context, memory increase linearly", "source": "issue body", "interpretation": "Leak is specific to GPU command submission path, not SKPath allocation."}, {"text": "when I commented the canvas.DrawPath code line, the memory usage is constant again", "source": "issue body", "interpretation": "Strongly isolates the leak to the DrawPath invocation in GPU context."}, {"text": "Last Known Good Version of SkiaSharp: 2.88.2 (Previous)", "source": "issue body", "interpretation": "Regression introduced between 2.88.2 and 2.88.3."}], "nextQuestions": ["Which GPU backend is in use (OpenGL / Vulkan / Direct3D)?", "Is GRContext.Flush() or surface.Flush() being called between frames?", "What is the rendering surface type (SKGLControl, SKSurface from GRContext, or other)?", "Does the leak occur with simple paths (e.g., a single line) or only complex paths?", "Does the issue reproduce on current 3.x SkiaSharp?"], "workarounds": ["Call grContext.Flush() or surface.Flush() after each frame to force GPU command buffer submission and release GPU-side tessellation caches.", "Call grContext.PurgeUnlockedResources(false) periodically to evict unused GPU resources.", "Use CPU-based SKSurface as a temporary workaround (confirmed by reporter to not leak)."], "resolution": {"hypothesis": "GPU-side tessellation or path effect caches for DrawPath are not being evicted between frames; calling GRContext.Flush() or PurgeUnlockedResources should release them.", "proposals": [{"title": "Flush GPU context after frame", "description": "Call grContext.Flush() (or surface.Flush()) after each render frame to ensure GPU command buffers and intermediate tessellation caches are released.", "category": "workaround", "confidence": 0.75, "effort": "cost/xs", "validated": "untested"}, {"title": "Investigate Skia GPU path tessellation cache between 2.88.2 and 2.88.3", "description": "Diff the Skia upstream commits between the two SkiaSharp releases to identify changes in GPU path rendering or cache management.", "category": "investigation", "confidence": 0.7, "effort": "cost/m", "validated": "untested"}], "recommendedProposal": "Flush GPU context after frame", "recommendedReason": "Simplest actionable workaround for the reporter while deeper investigation proceeds."}}, "output": {"actionability": {"suggestedAction": "needs-info", "confidence": 0.78, "reason": "No minimal repro project, no GPU backend specified, no memory profile attached; need more details before repro can proceed.", "suggestedReproPlatform": "windows"}, "missingInfo": ["Which GPU backend is used (OpenGL/Vulkan/Direct3D)?", "What rendering surface type is being used (SKGLControl, custom GRContext)?", "Is GRContext.Flush() or surface.Flush() called between frames?", "Minimal reproducible project or detailed steps with memory profiler output", "Does the issue reproduce on SkiaSharp 3.x?"], "actions": [{"type": "update-labels", "description": "Apply bug, area/SkiaSharp, os/Windows-Classic, backend/OpenGL labels", "risk": "low", "confidence": 0.85, "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "backend/OpenGL"]}, {"type": "add-comment", "description": "Request GPU backend details and suggest flush workaround", "risk": "medium", "confidence": 0.78, "comment": "Thanks for reporting this. A few questions to help investigate:\n\n1. **Which GPU backend** are you using? (OpenGL, Vulkan, Direct3D)\n2. **What surface type** creates the GPU canvas? (e.g., `SKGLControl`, `SKSurface.Create(grContext, ...)`, etc.)\n3. Are you calling `grContext.Flush()` or `surface.Flush()` after each frame?\n4. Does the issue still occur with **SkiaSharp 3.x** (latest)?\n5. A minimal reproducible project would greatly help track this down.\n\n**Possible workaround in the meantime:**\n\nTry explicitly flushing the GR context after each frame:\n\n```csharp\ncanvas.DrawPath(path, paint);\n// After drawing frame:\ngrContext.Flush();\n// Periodically:\ngrContext.PurgeUnlockedResources(false);\n```\n\nGPU-backed canvases accumulate tessellation caches that may not be released automatically between frames; an explicit flush often resolves this."}, {"type": "link-related", "description": "Link to follow-up report #2848 (same bug on Windows 11 / 2.88.8)", "risk": "low", "confidence": 0.9, "linkedIssue": 2848}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

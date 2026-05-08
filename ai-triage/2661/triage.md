@@ -1,0 +1,289 @@
+# Issue Triage Report — #2661
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-04T21:15:34Z |
+| Type | type/feature-request (0.95 (95%)) |
+| Area | area/SkiaSharp (0.95 (95%)) |
+| Suggested action | keep-open (0.85 (85%)) |
+
+**Issue Summary:** Request to add an `ensurePixelData` overload to `SKImage.FromEncodedData` that forces eager pixel decoding, bypassing Skia's lazy-loaded encoded image behavior.
+
+**Analysis:** SKImage.FromEncodedData creates a lazy-decoded image; PeekPixels returns null until pixels are materialized. The existing ToRasterImage(true) workaround achieves the desired effect, but the reporter wants a single-step API. The feature request is to add an overload like FromEncodedData(path, ensurePixelData: true) as a convenience wrapper around FromEncodedData + ToRasterImage(true).
+
+**Recommendations:** **keep-open** — Valid convenience API enhancement. Workaround exists via ToRasterImage(true). Low urgency; keep open for future API iteration.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/feature-request |
+
+## Evidence
+
+### Reproduction
+
+**Related issues:** #1097, #445
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1097 — RasterImage has no Pixmap — prior report of PeekPixels returning null after ToRasterImage; resolved by adding ToRasterImage(bool ensurePixelData)
+- https://github.com/mono/SkiaSharp/issues/445 — PeekPixels returns null on decoded SKImage — original report of this lazy-loading caveat
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The lazy-loading behavior of SKImage.FromEncodedData and the absence of an ensurePixelData overload remain unchanged in current code. |
+
+## Analysis
+
+### Technical Summary
+
+SKImage.FromEncodedData creates a lazy-decoded image; PeekPixels returns null until pixels are materialized. The existing ToRasterImage(true) workaround achieves the desired effect, but the reporter wants a single-step API. The feature request is to add an overload like FromEncodedData(path, ensurePixelData: true) as a convenience wrapper around FromEncodedData + ToRasterImage(true).
+
+### Rationale
+
+This is a valid convenience API request. The underlying behavior (lazy decoding via sk_image_new_from_encoded vs eager decoding via sk_image_make_raster_image) already exists. The workaround using ToRasterImage(true) is functional but verbose. Issue #1097 comment from maintainer confirms the pattern and shows the established workaround. No platform-specific issue involved — all platforms use the same code path.
+
+### Key Signals
+
+- "in some cases calling PeekPixels on SKImage results in null references returned from a function due to how it works" — **issue body** (Reporter understands the lazy-loading behavior and wants a way to force eager loading at creation time.)
+- "Would be great to have an optional parameter for SKImage.FromEncodedData(path, ensurePixelData: true)" — **issue body** (Clear API enhancement request — new overload pattern already established by ToRasterImage(bool).)
+- "Currently the only alternative is to copy pixels into a preallocated buffer object which is really inefficient in some complex scenarios" — **issue body** (Reporter may not be aware that ToRasterImage(true) is the idiomatic workaround — it does not require manual buffer allocation.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKImage.cs` | 166-233 | direct | All FromEncodedData overloads ultimately call sk_image_new_from_encoded, which creates a lazy-decoded image. None offer an ensurePixelData path. |
+| `binding/SkiaSharp/SKImage.cs` | 554-562 | direct | ToRasterImage(bool ensurePixelData) already exists: true calls sk_image_make_raster_image (eager), false calls sk_image_make_non_texture_image. This is the workaround the reporter needs. |
+| `binding/SkiaSharp/SKImage.cs` | 452-470 | related | PeekPixels() returns null when called on a lazy image — confirming the reporter's use case. |
+
+### Workarounds
+
+- Call image.ToRasterImage(ensurePixelData: true) immediately after FromEncodedData to get a fully materialized raster image with non-null PeekPixels.
+- Use image.ReadPixels(pixmap, 0, 0) to copy decoded pixels into a pre-created pixmap without needing PeekPixels.
+
+### Next Questions
+
+- Should the new overload return a new SKImage (like ToRasterImage(true)) or should it be a helper that chains the two calls?
+- Are there memory/performance implications worth documenting in the API comment (the result is a decoded copy, not a wrapper)?
+
+### Resolution Proposals
+
+**Hypothesis:** The requested feature can be implemented as a new overload of each FromEncodedData variant, chaining the existing call with ToRasterImage(true). Alternatively, it could be a single static helper method.
+
+1. **Use existing ToRasterImage(true) workaround** — workaround, confidence 0.95 (95%), cost/xs, validated=untested
+   - Call image.ToRasterImage(ensurePixelData: true) right after FromEncodedData. This immediately materializes the pixel data, making PeekPixels return non-null. No API change required.
+
+```csharp
+using var lazyImage = SKImage.FromEncodedData(path);
+using var rasterImage = lazyImage.ToRasterImage(ensurePixelData: true);
+using var pixmap = rasterImage.PeekPixels(); // non-null
+```
+2. **Add FromEncodedData overloads with ensurePixelData parameter** — fix, confidence 0.85 (85%), cost/s, validated=untested
+   - Add new overloads of FromEncodedData (at least for string filename and SKData) that accept a bool ensurePixelData parameter, chaining with ToRasterImage(true) internally when true. This provides the exact API the reporter wants.
+
+**Recommended proposal:** Use existing ToRasterImage(true) workaround
+
+**Why:** The workaround requires no code change and is immediately actionable. The feature request can remain open for a future convenience overload.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.85 (85%) |
+| Reason | Valid convenience API enhancement. Workaround exists via ToRasterImage(true). Low urgency; keep open for future API iteration. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Confirm type/feature-request label; add area/SkiaSharp | labels=type/feature-request, area/SkiaSharp |
+| add-comment | medium | 0.90 (90%) | Acknowledge request and share the existing ToRasterImage(true) workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the request! The immediate workaround is to chain `ToRasterImage(ensurePixelData: true)` right after `FromEncodedData` — this forces Skia to materialize the pixel data so `PeekPixels()` returns a non-null pixmap:
+
+```csharp
+using var lazyImage = SKImage.FromEncodedData(path);
+using var rasterImage = lazyImage.ToRasterImage(ensurePixelData: true);
+using var pixmap = rasterImage.PeekPixels(); // non-null
+```
+
+Note that this creates a decoded copy of the image in memory (not a wrapper), which is the same cost that an `ensurePixelData` overload on `FromEncodedData` would incur.
+
+The feature request to surface this as a single `FromEncodedData(path, ensurePixelData: true)` overload is a valid convenience enhancement — keeping this open for tracking. Related prior reports: #445, #1097.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2661,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-04T21:15:34Z",
+    "currentLabels": [
+      "type/feature-request"
+    ]
+  },
+  "summary": "Request to add an `ensurePixelData` overload to `SKImage.FromEncodedData` that forces eager pixel decoding, bypassing Skia's lazy-loaded encoded image behavior.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [
+        1097,
+        445
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1097",
+          "description": "RasterImage has no Pixmap — prior report of PeekPixels returning null after ToRasterImage; resolved by adding ToRasterImage(bool ensurePixelData)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/445",
+          "description": "PeekPixels returns null on decoded SKImage — original report of this lazy-loading caveat"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The lazy-loading behavior of SKImage.FromEncodedData and the absence of an ensurePixelData overload remain unchanged in current code."
+    }
+  },
+  "analysis": {
+    "summary": "SKImage.FromEncodedData creates a lazy-decoded image; PeekPixels returns null until pixels are materialized. The existing ToRasterImage(true) workaround achieves the desired effect, but the reporter wants a single-step API. The feature request is to add an overload like FromEncodedData(path, ensurePixelData: true) as a convenience wrapper around FromEncodedData + ToRasterImage(true).",
+    "rationale": "This is a valid convenience API request. The underlying behavior (lazy decoding via sk_image_new_from_encoded vs eager decoding via sk_image_make_raster_image) already exists. The workaround using ToRasterImage(true) is functional but verbose. Issue #1097 comment from maintainer confirms the pattern and shows the established workaround. No platform-specific issue involved — all platforms use the same code path.",
+    "keySignals": [
+      {
+        "text": "in some cases calling PeekPixels on SKImage results in null references returned from a function due to how it works",
+        "source": "issue body",
+        "interpretation": "Reporter understands the lazy-loading behavior and wants a way to force eager loading at creation time."
+      },
+      {
+        "text": "Would be great to have an optional parameter for SKImage.FromEncodedData(path, ensurePixelData: true)",
+        "source": "issue body",
+        "interpretation": "Clear API enhancement request — new overload pattern already established by ToRasterImage(bool)."
+      },
+      {
+        "text": "Currently the only alternative is to copy pixels into a preallocated buffer object which is really inefficient in some complex scenarios",
+        "source": "issue body",
+        "interpretation": "Reporter may not be aware that ToRasterImage(true) is the idiomatic workaround — it does not require manual buffer allocation."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "166-233",
+        "finding": "All FromEncodedData overloads ultimately call sk_image_new_from_encoded, which creates a lazy-decoded image. None offer an ensurePixelData path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "554-562",
+        "finding": "ToRasterImage(bool ensurePixelData) already exists: true calls sk_image_make_raster_image (eager), false calls sk_image_make_non_texture_image. This is the workaround the reporter needs.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "452-470",
+        "finding": "PeekPixels() returns null when called on a lazy image — confirming the reporter's use case.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Call image.ToRasterImage(ensurePixelData: true) immediately after FromEncodedData to get a fully materialized raster image with non-null PeekPixels.",
+      "Use image.ReadPixels(pixmap, 0, 0) to copy decoded pixels into a pre-created pixmap without needing PeekPixels."
+    ],
+    "nextQuestions": [
+      "Should the new overload return a new SKImage (like ToRasterImage(true)) or should it be a helper that chains the two calls?",
+      "Are there memory/performance implications worth documenting in the API comment (the result is a decoded copy, not a wrapper)?"
+    ],
+    "resolution": {
+      "hypothesis": "The requested feature can be implemented as a new overload of each FromEncodedData variant, chaining the existing call with ToRasterImage(true). Alternatively, it could be a single static helper method.",
+      "proposals": [
+        {
+          "title": "Use existing ToRasterImage(true) workaround",
+          "description": "Call image.ToRasterImage(ensurePixelData: true) right after FromEncodedData. This immediately materializes the pixel data, making PeekPixels return non-null. No API change required.",
+          "category": "workaround",
+          "codeSnippet": "using var lazyImage = SKImage.FromEncodedData(path);\nusing var rasterImage = lazyImage.ToRasterImage(ensurePixelData: true);\nusing var pixmap = rasterImage.PeekPixels(); // non-null",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Add FromEncodedData overloads with ensurePixelData parameter",
+          "description": "Add new overloads of FromEncodedData (at least for string filename and SKData) that accept a bool ensurePixelData parameter, chaining with ToRasterImage(true) internally when true. This provides the exact API the reporter wants.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use existing ToRasterImage(true) workaround",
+      "recommendedReason": "The workaround requires no code change and is immediately actionable. The feature request can remain open for a future convenience overload."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Valid convenience API enhancement. Workaround exists via ToRasterImage(true). Low urgency; keep open for future API iteration.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm type/feature-request label; add area/SkiaSharp",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge request and share the existing ToRasterImage(true) workaround",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the request! The immediate workaround is to chain `ToRasterImage(ensurePixelData: true)` right after `FromEncodedData` — this forces Skia to materialize the pixel data so `PeekPixels()` returns a non-null pixmap:\n\n```csharp\nusing var lazyImage = SKImage.FromEncodedData(path);\nusing var rasterImage = lazyImage.ToRasterImage(ensurePixelData: true);\nusing var pixmap = rasterImage.PeekPixels(); // non-null\n```\n\nNote that this creates a decoded copy of the image in memory (not a wrapper), which is the same cost that an `ensurePixelData` overload on `FromEncodedData` would incur.\n\nThe feature request to surface this as a single `FromEncodedData(path, ensurePixelData: true)` overload is a valid convenience enhancement — keeping this open for tracking. Related prior reports: #445, #1097."
+      }
+    ]
+  }
+}
+```
+
+</details>
