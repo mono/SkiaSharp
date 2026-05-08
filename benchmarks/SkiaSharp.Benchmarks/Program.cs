@@ -6,6 +6,8 @@ public class Program
 {
 	public static void Main(string[] args)
 	{
-		var summary = BenchmarkRunner.Run<TheBenchmark>();
+		BenchmarkSwitcher
+			.FromAssembly(typeof(Program).Assembly)
+			.Run(args);
 	}
 }

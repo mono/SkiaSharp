@@ -72,3 +72,10 @@ stages:
         buildAgentMac: ${{ parameters.buildAgentMac }}
         buildAgentLinux: ${{ parameters.buildAgentLinux }}
         buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+
+  - ${{ if in(parameters.buildPipelineType, 'complete') }}:
+    - template: /scripts/azure-templates-stages-benchmark.yml@self
+      parameters:
+        buildAgentWindows: ${{ parameters.buildAgentWindows }}
+        buildAgentMac: ${{ parameters.buildAgentMac }}
+        buildAgentLinux: ${{ parameters.buildAgentLinux }}

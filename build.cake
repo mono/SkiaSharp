@@ -746,6 +746,42 @@ Task ("nuget-special")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// BENCHMARKS - run performance and memory benchmarks
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("benchmarks")
+    .Description ("Run benchmarks and produce reports.")
+    .IsDependentOn ("externals")
+    .Does (() =>
+{
+    var benchmarkProject = "./benchmarks/SkiaSharp.Benchmarks/SkiaSharp.Benchmarks.csproj";
+    var artifactsDir = MakeAbsolute (Directory ("./output/benchmarks")).FullPath;
+    var benchmarkFilter = Argument ("benchmarkFilter", "*");
+    var tfm = Argument ("tfm", Argument ("targetFramework", "net10.0"));
+    var arch = Argument ("arch", "");
+    var platform = arch == "x86" ? "x86" : null;
+
+    EnsureDirectoryExists (artifactsDir);
+
+    var settings = new DotNetRunSettings {
+        Configuration = "Release",
+        Framework = tfm,
+    };
+    if (!string.IsNullOrEmpty (platform))
+        settings.ArgumentCustomization = args => args.Append ($"/p:Platform=\"{platform}\"");
+
+    Information ("Benchmark target framework: {0}", tfm);
+    Information ("Benchmark platform: {0}", platform ?? "default");
+
+    var args = $"--filter \"{benchmarkFilter}\" --artifacts \"{artifactsDir}\" --exporters html github json";
+    var extraArgs = Argument ("benchmarkArgs", "");
+    if (!string.IsNullOrEmpty (extraArgs))
+        args += " " + extraArgs;
+
+    DotNetRun (benchmarkProject, args, settings);
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - creating the xml, markdown and other documentation
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
