@@ -1,0 +1,332 @@
+# Issue Triage Report — #1693
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-23T19:50:00Z |
+| Type | type/question (0.92 (92%)) |
+| Area | area/SkiaSharp (0.95 (95%)) |
+| Suggested action | close-as-not-a-bug (0.88 (88%)) |
+
+**Issue Summary:** Reporter asks why SkiaSharp JPEG decode+encode is approximately 3x slower than invoking libjpeg-turbo command-line tools directly, noting Skia is supposed to use libjpeg-turbo internally.
+
+**Analysis:** The performance gap is an expected architectural artifact. SkiaSharp uses BGRA8888 as its intermediate pixel representation. Decoding a JPEG converts YCbCr → BGRA8888 (color space conversion overhead), and re-encoding converts BGRA8888 → YCbCr again. The libjpeg-turbo command-line pipeline (djpeg | cjpeg) can operate closer to the native YCbCr space without the intermediate BGRA round-trip, explaining the ~2x decode overhead and ~5x encode overhead. Additionally, SkiaSharp introduces abstraction layers (SKCodec, SKDynamicMemoryWStream) not present in the raw command-line tools. A workaround using SKImage.FromEncodedData + SKImage.Encode() (no args) can avoid re-encoding entirely for pass-through scenarios.
+
+**Recommendations:** **close-as-not-a-bug** — Performance overhead is by-design architectural behavior (BGRA8888 intermediate format). Reporter already self-resolved by using libjpeg-turbo directly. Workarounds exist. No code defect present.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/performance |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Load a JPEG file using SKData.Create(path)
+2. Decode in a loop: SKBitmap.Decode(data)
+3. Encode with SKBitmap.Encode(SKEncodedImageFormat.Jpeg, 90)
+4. Compare elapsed time against 'djpeg | cjpeg' pipeline
+
+**Environment:** WSL2 (Linux) and Windows, SkiaSharp (version unspecified, ~2021)
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2757 — Related: encoding 3-4x slower than System.Drawing (similar performance concern)
+
+**Code snippets:**
+
+```csharp
+SKBitmap bitmap = SKBitmap.Decode(data);
+var outputData = bitmap.Encode(SKEncodedImageFormat.Jpeg, 90);
+```
+
+## Analysis
+
+### Technical Summary
+
+The performance gap is an expected architectural artifact. SkiaSharp uses BGRA8888 as its intermediate pixel representation. Decoding a JPEG converts YCbCr → BGRA8888 (color space conversion overhead), and re-encoding converts BGRA8888 → YCbCr again. The libjpeg-turbo command-line pipeline (djpeg | cjpeg) can operate closer to the native YCbCr space without the intermediate BGRA round-trip, explaining the ~2x decode overhead and ~5x encode overhead. Additionally, SkiaSharp introduces abstraction layers (SKCodec, SKDynamicMemoryWStream) not present in the raw command-line tools. A workaround using SKImage.FromEncodedData + SKImage.Encode() (no args) can avoid re-encoding entirely for pass-through scenarios.
+
+### Rationale
+
+Title explicitly uses [QUESTION]. Reporter is asking why, not reporting a defect. The overhead is explained by Skia's intermediate pixel format (BGRA8888) requiring two color space conversions. The reporter confirmed self-resolution by switching to libjpeg-turbo directly. Behavior is by design — not a bug.
+
+### Key Signals
+
+- "So encoding + decoding is 3 times slower in SkiaSharp?" — **issue body** (Performance question, not a crash or broken behavior.)
+- "How is this possible? Because Skia uses libjpeg-turbo internally no?" — **issue body** (Reporter correctly identifies libjpeg-turbo is used; overhead is from abstraction layers and color space conversion.)
+- "No, we decided to use libjpeg-turbo directly" — **comment by ziriax (OP), 2022-05-24** (Reporter self-resolved by bypassing SkiaSharp's JPEG codec entirely. Issue is effectively answered.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKBitmap.cs` | 434-458 | direct | SKBitmap.Decode(SKCodec) decodes into the platform default color type (BGRA8888 on most platforms) via codec.GetPixels(). JPEG's native YCbCr must be converted to BGRA8888 during decode, adding color conversion overhead not present in raw libjpeg-turbo command-line tools. |
+| `binding/SkiaSharp/SKPixmap.cs` | 235-289 | direct | SKPixmap.Encode(SKWStream, SKJpegEncoderOptions) calls SkiaApi.sk_jpegencoder_encode which encodes the BGRA8888 pixmap back to JPEG — requiring BGRA8888 → YCbCr conversion inside the encoder. This is a second color space conversion not needed in a direct libjpeg-turbo roundtrip. |
+| `binding/SkiaSharp/SKImage.cs` | 355-373 | related | SKImage.Encode() (no args) returns EncodedData directly if the image was created from encoded bytes (via SKImage.FromEncodedData). This provides a potential zero-decode/encode workaround for pure pass-through use cases. |
+
+### Workarounds
+
+- For pass-through (no pixel modification): use SKImage.FromEncodedData(data); image.Encode() returns original encoded bytes without re-encoding.
+- For decode-modify-encode: reduce color conversion overhead by requesting RGB888x color type explicitly in SKImageInfo, avoiding the BGRA alpha channel overhead.
+- For maximum JPEG performance: use a dedicated library such as ImageSharp (SixLabors.ImageSharp) or direct LibJpegTurbo .NET bindings which avoid the intermediate BGRA representation.
+
+### Next Questions
+
+- Was the reporter doing pixel modification between decode and encode? If not, SKImage pass-through avoids both conversions entirely.
+- Is performance a concern only for batch/server scenarios, or also interactive use?
+
+### Resolution Proposals
+
+**Hypothesis:** Performance overhead is caused by two mandatory color space conversions (YCbCr→BGRA8888 on decode, BGRA8888→YCbCr on encode) introduced by Skia's intermediate pixel representation, plus abstraction-layer overhead not present in the raw libjpeg-turbo command-line tools.
+
+1. **Use SKImage pass-through for JPEG re-encode** — workaround, confidence 0.90 (90%), cost/xs, validated=yes
+   - When modifying the image is not required, load with SKImage.FromEncodedData and call Encode() with no arguments to return original encoded bytes directly without decoding or re-encoding.
+
+```csharp
+using var data = SKData.Create("/path/to/photo.jpg");
+using var image = SKImage.FromEncodedData(data);
+using var result = image.Encode(); // returns original encoded bytes if unmodified
+```
+2. **Request RGB color type to reduce decode overhead** — workaround, confidence 0.75 (75%), cost/s, validated=yes
+   - Specify SKColorType.Rgb888x when decoding to avoid unnecessary alpha channel handling, reducing one layer of color conversion overhead.
+
+```csharp
+using var codec = SKCodec.Create(data);
+var info = codec.Info.WithColorType(SKColorType.Rgb888x);
+var bitmap = new SKBitmap(info);
+codec.GetPixels(info, bitmap.GetPixels(out _));
+```
+3. **Use a dedicated JPEG library for performance-critical paths** — alternative, confidence 0.85 (85%), cost/m, validated=untested
+   - For bulk JPEG processing where performance is critical, use SixLabors.ImageSharp or native LibJpegTurbo .NET wrappers that can operate closer to JPEG's native YCbCr pipeline.
+
+**Recommended proposal:** Use SKImage pass-through for JPEG re-encode
+
+**Why:** Zero decode/encode overhead for unmodified images. Uses existing SkiaSharp API, no external dependencies.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.88 (88%) |
+| Reason | Performance overhead is by-design architectural behavior (BGRA8888 intermediate format). Reporter already self-resolved by using libjpeg-turbo directly. Workarounds exist. No code defect present. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply question and performance tenet labels | labels=type/question, area/SkiaSharp, tenet/performance |
+| add-comment | medium | 0.88 (88%) | Explain performance overhead and provide workarounds | — |
+| close-issue | medium | 0.85 (85%) | Close as answered — behavior is by design, workarounds provided, reporter already self-resolved | stateReason=completed |
+| link-related | low | 0.80 (80%) | Cross-reference similar performance concern in #2757 | linkedIssue=#2757 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+The performance difference is an expected consequence of SkiaSharp's architecture. Skia uses BGRA8888 as its intermediate pixel representation, so decoding a JPEG requires a YCbCr → BGRA8888 color conversion, and re-encoding requires BGRA8888 → YCbCr again. The `djpeg | cjpeg` pipeline can stay closer to JPEG's native YCbCr space without that round-trip, which explains roughly 2x decode overhead and ~5x encode overhead.
+
+If you're re-encoding a JPEG without modifying pixel data, here's a workaround that avoids both conversions entirely:
+
+```csharp
+using var data = SKData.Create("/path/to/photo.jpg");
+using var image = SKImage.FromEncodedData(data);
+using var result = image.Encode(); // returns original encoded bytes — no decode/re-encode
+```
+
+If pixel manipulation is required, requesting `SKColorType.Rgb888x` instead of the default BGRA8888 can reduce some overhead by avoiding the alpha channel:
+
+```csharp
+using var codec = SKCodec.Create(data);
+var info = codec.Info.WithColorType(SKColorType.Rgb888x);
+var bitmap = new SKBitmap(info);
+codec.GetPixels(info, bitmap.GetPixels(out _));
+```
+
+For bulk JPEG processing where raw throughput is the priority, using `SixLabors.ImageSharp` or direct libjpeg-turbo .NET bindings (as you found) will always outperform SkiaSharp's general-purpose pipeline for this specific workload.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1693,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T19:50:00Z"
+  },
+  "summary": "Reporter asks why SkiaSharp JPEG decode+encode is approximately 3x slower than invoking libjpeg-turbo command-line tools directly, noting Skia is supposed to use libjpeg-turbo internally.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load a JPEG file using SKData.Create(path)",
+        "Decode in a loop: SKBitmap.Decode(data)",
+        "Encode with SKBitmap.Encode(SKEncodedImageFormat.Jpeg, 90)",
+        "Compare elapsed time against 'djpeg | cjpeg' pipeline"
+      ],
+      "environmentDetails": "WSL2 (Linux) and Windows, SkiaSharp (version unspecified, ~2021)",
+      "codeSnippets": [
+        "SKBitmap bitmap = SKBitmap.Decode(data);\nvar outputData = bitmap.Encode(SKEncodedImageFormat.Jpeg, 90);"
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2757",
+          "description": "Related: encoding 3-4x slower than System.Drawing (similar performance concern)"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The performance gap is an expected architectural artifact. SkiaSharp uses BGRA8888 as its intermediate pixel representation. Decoding a JPEG converts YCbCr → BGRA8888 (color space conversion overhead), and re-encoding converts BGRA8888 → YCbCr again. The libjpeg-turbo command-line pipeline (djpeg | cjpeg) can operate closer to the native YCbCr space without the intermediate BGRA round-trip, explaining the ~2x decode overhead and ~5x encode overhead. Additionally, SkiaSharp introduces abstraction layers (SKCodec, SKDynamicMemoryWStream) not present in the raw command-line tools. A workaround using SKImage.FromEncodedData + SKImage.Encode() (no args) can avoid re-encoding entirely for pass-through scenarios.",
+    "rationale": "Title explicitly uses [QUESTION]. Reporter is asking why, not reporting a defect. The overhead is explained by Skia's intermediate pixel format (BGRA8888) requiring two color space conversions. The reporter confirmed self-resolution by switching to libjpeg-turbo directly. Behavior is by design — not a bug.",
+    "keySignals": [
+      {
+        "text": "So encoding + decoding is 3 times slower in SkiaSharp?",
+        "source": "issue body",
+        "interpretation": "Performance question, not a crash or broken behavior."
+      },
+      {
+        "text": "How is this possible? Because Skia uses libjpeg-turbo internally no?",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identifies libjpeg-turbo is used; overhead is from abstraction layers and color space conversion."
+      },
+      {
+        "text": "No, we decided to use libjpeg-turbo directly",
+        "source": "comment by ziriax (OP), 2022-05-24",
+        "interpretation": "Reporter self-resolved by bypassing SkiaSharp's JPEG codec entirely. Issue is effectively answered."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "434-458",
+        "finding": "SKBitmap.Decode(SKCodec) decodes into the platform default color type (BGRA8888 on most platforms) via codec.GetPixels(). JPEG's native YCbCr must be converted to BGRA8888 during decode, adding color conversion overhead not present in raw libjpeg-turbo command-line tools.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPixmap.cs",
+        "lines": "235-289",
+        "finding": "SKPixmap.Encode(SKWStream, SKJpegEncoderOptions) calls SkiaApi.sk_jpegencoder_encode which encodes the BGRA8888 pixmap back to JPEG — requiring BGRA8888 → YCbCr conversion inside the encoder. This is a second color space conversion not needed in a direct libjpeg-turbo roundtrip.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "355-373",
+        "finding": "SKImage.Encode() (no args) returns EncodedData directly if the image was created from encoded bytes (via SKImage.FromEncodedData). This provides a potential zero-decode/encode workaround for pure pass-through use cases.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "For pass-through (no pixel modification): use SKImage.FromEncodedData(data); image.Encode() returns original encoded bytes without re-encoding.",
+      "For decode-modify-encode: reduce color conversion overhead by requesting RGB888x color type explicitly in SKImageInfo, avoiding the BGRA alpha channel overhead.",
+      "For maximum JPEG performance: use a dedicated library such as ImageSharp (SixLabors.ImageSharp) or direct LibJpegTurbo .NET bindings which avoid the intermediate BGRA representation."
+    ],
+    "nextQuestions": [
+      "Was the reporter doing pixel modification between decode and encode? If not, SKImage pass-through avoids both conversions entirely.",
+      "Is performance a concern only for batch/server scenarios, or also interactive use?"
+    ],
+    "resolution": {
+      "hypothesis": "Performance overhead is caused by two mandatory color space conversions (YCbCr→BGRA8888 on decode, BGRA8888→YCbCr on encode) introduced by Skia's intermediate pixel representation, plus abstraction-layer overhead not present in the raw libjpeg-turbo command-line tools.",
+      "proposals": [
+        {
+          "title": "Use SKImage pass-through for JPEG re-encode",
+          "description": "When modifying the image is not required, load with SKImage.FromEncodedData and call Encode() with no arguments to return original encoded bytes directly without decoding or re-encoding.",
+          "category": "workaround",
+          "codeSnippet": "using var data = SKData.Create(\"/path/to/photo.jpg\");\nusing var image = SKImage.FromEncodedData(data);\nusing var result = image.Encode(); // returns original encoded bytes if unmodified",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Request RGB color type to reduce decode overhead",
+          "description": "Specify SKColorType.Rgb888x when decoding to avoid unnecessary alpha channel handling, reducing one layer of color conversion overhead.",
+          "category": "workaround",
+          "codeSnippet": "using var codec = SKCodec.Create(data);\nvar info = codec.Info.WithColorType(SKColorType.Rgb888x);\nvar bitmap = new SKBitmap(info);\ncodec.GetPixels(info, bitmap.GetPixels(out _));",
+          "confidence": 0.75,
+          "effort": "cost/s",
+          "validated": "yes"
+        },
+        {
+          "title": "Use a dedicated JPEG library for performance-critical paths",
+          "description": "For bulk JPEG processing where performance is critical, use SixLabors.ImageSharp or native LibJpegTurbo .NET wrappers that can operate closer to JPEG's native YCbCr pipeline.",
+          "category": "alternative",
+          "confidence": 0.85,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKImage pass-through for JPEG re-encode",
+      "recommendedReason": "Zero decode/encode overhead for unmodified images. Uses existing SkiaSharp API, no external dependencies."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "Performance overhead is by-design architectural behavior (BGRA8888 intermediate format). Reporter already self-resolved by using libjpeg-turbo directly. Workarounds exist. No code defect present.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and performance tenet labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain performance overhead and provide workarounds",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "The performance difference is an expected consequence of SkiaSharp's architecture. Skia uses BGRA8888 as its intermediate pixel representation, so decoding a JPEG requires a YCbCr → BGRA8888 color conversion, and re-encoding requires BGRA8888 → YCbCr again. The `djpeg | cjpeg` pipeline can stay closer to JPEG's native YCbCr space without that round-trip, which explains roughly 2x decode overhead and ~5x encode overhead.\n\nIf you're re-encoding a JPEG without modifying pixel data, here's a workaround that avoids both conversions entirely:\n\n```csharp\nusing var data = SKData.Create(\"/path/to/photo.jpg\");\nusing var image = SKImage.FromEncodedData(data);\nusing var result = image.Encode(); // returns original encoded bytes — no decode/re-encode\n```\n\nIf pixel manipulation is required, requesting `SKColorType.Rgb888x` instead of the default BGRA8888 can reduce some overhead by avoiding the alpha channel:\n\n```csharp\nusing var codec = SKCodec.Create(data);\nvar info = codec.Info.WithColorType(SKColorType.Rgb888x);\nvar bitmap = new SKBitmap(info);\ncodec.GetPixels(info, bitmap.GetPixels(out _));\n```\n\nFor bulk JPEG processing where raw throughput is the priority, using `SixLabors.ImageSharp` or direct libjpeg-turbo .NET bindings (as you found) will always outperform SkiaSharp's general-purpose pipeline for this specific workload."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — behavior is by design, workarounds provided, reporter already self-resolved",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference similar performance concern in #2757",
+        "risk": "low",
+        "confidence": 0.8,
+        "linkedIssue": 2757
+      }
+    ]
+  }
+}
+```
+
+</details>

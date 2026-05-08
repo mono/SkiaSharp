@@ -1,0 +1,310 @@
+# Issue Triage Report — #2517
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-23T21:49:42Z |
+| Type | type/feature-request (0.95 (95%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | keep-open (0.82 (82%)) |
+
+**Issue Summary:** Feature request to add EXIF metadata read/write support for JPEG images in SkiaSharp, enabling users to read and modify EXIF tags (orientation, GPS, camera info, XMP) from encoded images.
+
+**Analysis:** SkiaSharp does not expose any EXIF metadata read or write API for JPEG images. The `SKJpegEncoderOptions` struct contains internal fields `xmpMetadata`, `fOrigin`, and `fHasOrigin` that are not exposed as public properties, suggesting partial infrastructure exists at the native/C level but is not surfaced to users. The related issue #1139 (XMP metadata when encoding) is similar but focuses on encoding only, while this request covers both reading and writing EXIF.
+
+**Recommendations:** **keep-open** — Valid feature request with 12 upvotes and community support. Full EXIF read/write requires design work to determine scope (orientation-only vs full EXIF, standalone vs. extension package). Related to #1139 but broader in scope.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** No platform specified; feature request is cross-platform
+
+**Related issues:** #1139
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1139 — Related: Adding metadata properties to JPEG images when using SKPixmap.Encode() — XMP metadata request
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | No EXIF read/write API has been added; the feature is still missing as of the latest SkiaSharp release. |
+
+## Analysis
+
+### Technical Summary
+
+SkiaSharp does not expose any EXIF metadata read or write API for JPEG images. The `SKJpegEncoderOptions` struct contains internal fields `xmpMetadata`, `fOrigin`, and `fHasOrigin` that are not exposed as public properties, suggesting partial infrastructure exists at the native/C level but is not surfaced to users. The related issue #1139 (XMP metadata when encoding) is similar but focuses on encoding only, while this request covers both reading and writing EXIF.
+
+### Rationale
+
+This is clearly a feature request for new functionality that does not exist in the current public API. The reporter and community (12 upvotes, 5 comments) want to read and write EXIF metadata from JPEG images — currently impossible via SkiaSharp. Skia itself has limited EXIF/XMP support (orientation tags via `SkEncodedOrigin`, XMP embedding), but full EXIF read/write is not part of the Skia C++ API, making this a significant feature that would likely require either a new C API layer or integration with a dedicated EXIF library.
+
+### Key Signals
+
+- "Please add support for reading/writing of EXIF metadata from JPG images" — **issue body** (Clear feature request — both read and write, specifically targeting JPEG.)
+- "System.Drawing.Common.dll is no more cross-platform (from .NET 7.0+) ... the possibility to read and write the EXIF in jpeg files has become main functionality" — **comment by lucasnaidero** (Migration pressure from System.Drawing.Common deprecation increases urgency — users expect SkiaSharp to fill the gap.)
+- "This is a duplicate of #1139" — **comment by BenMcLean** (Community members consider it a duplicate, but #1139 focuses on XMP encoding only while this issue covers full EXIF read/write.)
+- "As I understand the real issue here is that skia doesn't have these features" — **comment by groege** (Correctly identifies that Skia C++ itself lacks full EXIF read/write APIs, meaning implementation would require a new layer or integration.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/Definitions.cs` | 545-585 | direct | SKJpegEncoderOptions struct has internal fields xmpMetadata (sk_data_t), fOrigin (SKEncodedOrigin), and fHasOrigin, but none are exposed as public properties. This means XMP metadata and orientation can be set at the C API level but SkiaSharp does not expose them. |
+| `binding/SkiaSharp/SKCodec.cs` | — | direct | SKCodec exposes EncodedFormat, FrameInfo, GetPixels, and StartIncrementalDecode but has no methods for reading EXIF or other metadata from decoded images. |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | — | related | The generated P/Invoke bindings contain no EXIF-specific C API functions. No sk_codec_get_exif or equivalent function exists in the generated surface. |
+
+### Workarounds
+
+- Use MetadataExtractor NuGet package (https://github.com/drewnoakes/metadata-extractor-dotnet) for reading EXIF metadata from JPEG streams without SkiaSharp involvement.
+- Use ExifLibNet or similar EXIF library to read/write EXIF tags before passing the image data to SkiaSharp for rendering.
+- For orientation specifically, read SKCodec.EncodedOrigin to determine the EXIF orientation tag (limited — read-only, not full EXIF).
+
+### Next Questions
+
+- Does the Skia C++ API expose EXIF read via SkCodec or SkJpegMetadataDecoder in the target milestone?
+- Should EXIF support be scoped to orientation-only (feasible with current internals) vs. full arbitrary EXIF tags (requires third-party library)?
+- Is #1139 a true duplicate or a related subset of this request?
+
+### Resolution Proposals
+
+**Hypothesis:** Full EXIF read/write is outside Skia C++'s native scope; SkiaSharp would need to either expose the limited XMP/orientation fields already in SKJpegEncoderOptions, or integrate a dedicated EXIF library as a thin wrapper.
+
+1. **Use MetadataExtractor for reading EXIF** — workaround, confidence 0.90 (90%), cost/xs, validated=untested
+   - Recommend the MetadataExtractor NuGet package as the cross-platform solution for reading EXIF metadata. Read EXIF tags from the JPEG stream before passing to SkiaSharp.
+2. **Expose xmpMetadata and fOrigin in SKJpegEncoderOptions** — fix, confidence 0.75 (75%), cost/s, validated=untested
+   - Add public XmpMetadata (SKData) and Origin (SKEncodedOrigin?) properties to SKJpegEncoderOptions to let users embed XMP metadata and set orientation tag when encoding JPEG. This is a smaller, achievable first step.
+3. **Full EXIF library integration** — alternative, confidence 0.50 (50%), cost/xl, validated=untested
+   - Add a new SkiaSharp.Metadata optional package (or extension methods on SKCodec/SKData) backed by a dedicated EXIF library like ExifLibNet. This is a larger, design-first effort.
+
+**Recommended proposal:** Use MetadataExtractor for reading EXIF
+
+**Why:** Immediate, cross-platform, well-maintained. Addresses the reading use case today without requiring SkiaSharp changes.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.82 (82%) |
+| Reason | Valid feature request with 12 upvotes and community support. Full EXIF read/write requires design work to determine scope (orientation-only vs full EXIF, standalone vs. extension package). Related to #1139 but broader in scope. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply feature-request and SkiaSharp area labels | labels=type/feature-request, area/SkiaSharp, tenet/compatibility |
+| link-related | low | 0.88 (88%) | Link to related issue #1139 (XMP metadata when encoding JPEG) | linkedIssue=#1139 |
+| add-comment | medium | 0.82 (82%) | Post response explaining current state, workaround, and scope discussion | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the request! EXIF read/write is not currently supported in SkiaSharp — Skia itself doesn't expose full EXIF APIs, so this would require work either at the C API shim layer or as a separate integration.
+
+**Workaround for reading EXIF today:** Use the [MetadataExtractor](https://github.com/drewnoakes/metadata-extractor-dotnet) NuGet package, which is cross-platform and works alongside SkiaSharp:
+
+```csharp
+using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+
+var directories = ImageMetadataReader.ReadMetadata("photo.jpg");
+var exif = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
+var orientation = exif?.GetString(ExifDirectoryBase.TagOrientation);
+```
+
+**For orientation specifically**, `SKCodec.EncodedOrigin` already exposes the EXIF orientation tag for read-only use.
+
+This issue is related to #1139 (XMP metadata when encoding). We're keeping both open to track the full metadata story. Contributions and design proposals are welcome!
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2517,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T21:49:42Z"
+  },
+  "summary": "Feature request to add EXIF metadata read/write support for JPEG images in SkiaSharp, enabling users to read and modify EXIF tags (orientation, GPS, camera info, XMP) from encoded images.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "No platform specified; feature request is cross-platform",
+      "relatedIssues": [
+        1139
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1139",
+          "description": "Related: Adding metadata properties to JPEG images when using SKPixmap.Encode() — XMP metadata request"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "No EXIF read/write API has been added; the feature is still missing as of the latest SkiaSharp release."
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp does not expose any EXIF metadata read or write API for JPEG images. The `SKJpegEncoderOptions` struct contains internal fields `xmpMetadata`, `fOrigin`, and `fHasOrigin` that are not exposed as public properties, suggesting partial infrastructure exists at the native/C level but is not surfaced to users. The related issue #1139 (XMP metadata when encoding) is similar but focuses on encoding only, while this request covers both reading and writing EXIF.",
+    "rationale": "This is clearly a feature request for new functionality that does not exist in the current public API. The reporter and community (12 upvotes, 5 comments) want to read and write EXIF metadata from JPEG images — currently impossible via SkiaSharp. Skia itself has limited EXIF/XMP support (orientation tags via `SkEncodedOrigin`, XMP embedding), but full EXIF read/write is not part of the Skia C++ API, making this a significant feature that would likely require either a new C API layer or integration with a dedicated EXIF library.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "lines": "545-585",
+        "finding": "SKJpegEncoderOptions struct has internal fields xmpMetadata (sk_data_t), fOrigin (SKEncodedOrigin), and fHasOrigin, but none are exposed as public properties. This means XMP metadata and orientation can be set at the C API level but SkiaSharp does not expose them.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "finding": "SKCodec exposes EncodedFormat, FrameInfo, GetPixels, and StartIncrementalDecode but has no methods for reading EXIF or other metadata from decoded images.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "The generated P/Invoke bindings contain no EXIF-specific C API functions. No sk_codec_get_exif or equivalent function exists in the generated surface.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Please add support for reading/writing of EXIF metadata from JPG images",
+        "source": "issue body",
+        "interpretation": "Clear feature request — both read and write, specifically targeting JPEG."
+      },
+      {
+        "text": "System.Drawing.Common.dll is no more cross-platform (from .NET 7.0+) ... the possibility to read and write the EXIF in jpeg files has become main functionality",
+        "source": "comment by lucasnaidero",
+        "interpretation": "Migration pressure from System.Drawing.Common deprecation increases urgency — users expect SkiaSharp to fill the gap."
+      },
+      {
+        "text": "This is a duplicate of #1139",
+        "source": "comment by BenMcLean",
+        "interpretation": "Community members consider it a duplicate, but #1139 focuses on XMP encoding only while this issue covers full EXIF read/write."
+      },
+      {
+        "text": "As I understand the real issue here is that skia doesn't have these features",
+        "source": "comment by groege",
+        "interpretation": "Correctly identifies that Skia C++ itself lacks full EXIF read/write APIs, meaning implementation would require a new layer or integration."
+      }
+    ],
+    "workarounds": [
+      "Use MetadataExtractor NuGet package (https://github.com/drewnoakes/metadata-extractor-dotnet) for reading EXIF metadata from JPEG streams without SkiaSharp involvement.",
+      "Use ExifLibNet or similar EXIF library to read/write EXIF tags before passing the image data to SkiaSharp for rendering.",
+      "For orientation specifically, read SKCodec.EncodedOrigin to determine the EXIF orientation tag (limited — read-only, not full EXIF)."
+    ],
+    "nextQuestions": [
+      "Does the Skia C++ API expose EXIF read via SkCodec or SkJpegMetadataDecoder in the target milestone?",
+      "Should EXIF support be scoped to orientation-only (feasible with current internals) vs. full arbitrary EXIF tags (requires third-party library)?",
+      "Is #1139 a true duplicate or a related subset of this request?"
+    ],
+    "resolution": {
+      "hypothesis": "Full EXIF read/write is outside Skia C++'s native scope; SkiaSharp would need to either expose the limited XMP/orientation fields already in SKJpegEncoderOptions, or integrate a dedicated EXIF library as a thin wrapper.",
+      "proposals": [
+        {
+          "title": "Use MetadataExtractor for reading EXIF",
+          "description": "Recommend the MetadataExtractor NuGet package as the cross-platform solution for reading EXIF metadata. Read EXIF tags from the JPEG stream before passing to SkiaSharp.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Expose xmpMetadata and fOrigin in SKJpegEncoderOptions",
+          "description": "Add public XmpMetadata (SKData) and Origin (SKEncodedOrigin?) properties to SKJpegEncoderOptions to let users embed XMP metadata and set orientation tag when encoding JPEG. This is a smaller, achievable first step.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Full EXIF library integration",
+          "description": "Add a new SkiaSharp.Metadata optional package (or extension methods on SKCodec/SKData) backed by a dedicated EXIF library like ExifLibNet. This is a larger, design-first effort.",
+          "category": "alternative",
+          "confidence": 0.5,
+          "effort": "cost/xl",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use MetadataExtractor for reading EXIF",
+      "recommendedReason": "Immediate, cross-platform, well-maintained. Addresses the reading use case today without requiring SkiaSharp changes."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.82,
+      "reason": "Valid feature request with 12 upvotes and community support. Full EXIF read/write requires design work to determine scope (orientation-only vs full EXIF, standalone vs. extension package). Related to #1139 but broader in scope.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and SkiaSharp area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related issue #1139 (XMP metadata when encoding JPEG)",
+        "risk": "low",
+        "confidence": 0.88,
+        "linkedIssue": 1139
+      },
+      {
+        "type": "add-comment",
+        "description": "Post response explaining current state, workaround, and scope discussion",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the request! EXIF read/write is not currently supported in SkiaSharp — Skia itself doesn't expose full EXIF APIs, so this would require work either at the C API shim layer or as a separate integration.\n\n**Workaround for reading EXIF today:** Use the [MetadataExtractor](https://github.com/drewnoakes/metadata-extractor-dotnet) NuGet package, which is cross-platform and works alongside SkiaSharp:\n\n```csharp\nusing MetadataExtractor;\nusing MetadataExtractor.Formats.Exif;\n\nvar directories = ImageMetadataReader.ReadMetadata(\"photo.jpg\");\nvar exif = directories.OfType<ExifIfd0Directory>().FirstOrDefault();\nvar orientation = exif?.GetString(ExifDirectoryBase.TagOrientation);\n```\n\n**For orientation specifically**, `SKCodec.EncodedOrigin` already exposes the EXIF orientation tag for read-only use.\n\nThis issue is related to #1139 (XMP metadata when encoding). We're keeping both open to track the full metadata story. Contributions and design proposals are welcome!"
+      }
+    ]
+  }
+}
+```
+
+</details>

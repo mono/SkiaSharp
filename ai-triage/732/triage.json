@@ -1,0 +1,148 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 732,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T21:04:18Z",
+    "currentLabels": [
+      "type/enhancement",
+      "area/SkiaSharp.Views",
+      "area/SkiaSharp.Views.Forms"
+    ]
+  },
+  "summary": "Request to expose a ColorSpace property on SKCanvasView so that surfaces are created with a specified SKColorSpace rather than always defaulting to no colorspace, enabling Skia's color-corrected rendering pipeline.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.9
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKCanvasView in a Xamarin.Forms or MAUI app",
+        "Try to use color-corrected drawing with a specific color space",
+        "Observe that there is no API to set the colorspace on the canvas view surface"
+      ],
+      "environmentDetails": "All platforms (Android, iOS, macOS) \u2014 Xamarin.Forms, no version info given. Filed Dec 2018."
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "Code investigation confirms the issue still exists. SurfaceFactory.cs and SKCGSurfaceFactory.cs still create SKImageInfo without a ColorSpace parameter. MAUI views also have no ColorSpace property."
+    }
+  },
+  "analysis": {
+    "summary": "SKCanvasView creates its internal drawing surface with no SKColorSpace, bypassing Skia's color management pipeline. While SKImageInfo already supports a ColorSpace property and constructor overload, none of the platform SKCanvasView implementations expose it. The maintainer acknowledged the request and designed a proposed XAML-friendly API (a ColorSpace bindable property that triggers a surface refresh), but the feature has not been implemented.",
+    "rationale": "The issue clearly requests adding a ColorSpace property to SKCanvasView across all platforms. Code investigation confirms the gap: SurfaceFactory.CreateInfo and SKCGSurfaceFactory.CreateInfo both hardcode no colorspace. SKImageInfo already supports it (binding/SkiaSharp/SKImageInfo.cs). The maintainer validated the approach and provided a design sketch in comments. This is type/enhancement improving existing surface creation behavior.",
+    "keySignals": [
+      {
+        "text": "SKCanvasView always get created using an SKImageInfo that lacks colorspace specification",
+        "source": "issue body",
+        "interpretation": "Core gap: surface creation omits colorspace, disabling Skia color management."
+      },
+      {
+        "text": "new SKImageInfo(0, 0, SKColorType.Rgba8888, SKAlphaType.Premul) \u2014 no colorspace at the end",
+        "source": "comment by reporter",
+        "interpretation": "Exact code path confirmed \u2014 the SurfaceFactory CreateInfo method does not pass ColorSpace."
+      },
+      {
+        "text": "A property might work because I technically only guarantee the surface during the draw method. If you change the colorspace, all we have to do is nuke the surface and invalidate.",
+        "source": "maintainer comment (mattleibow)",
+        "interpretation": "Maintainer validated that a bindable ColorSpace property is technically feasible."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SurfaceFactory.cs",
+        "lines": "89-90",
+        "finding": "CreateInfo() returns `new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul)` with no ColorSpace \u2014 the gap the reporter describes.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKCGSurfaceFactory.cs",
+        "lines": "113-114",
+        "finding": "Apple platforms share the same pattern: `new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul)` \u2014 no ColorSpace.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "95-101",
+        "finding": "SKImageInfo has a full constructor accepting SKColorSpace and a WithColorSpace() helper \u2014 the building blocks to fix this are already in place.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SKCanvasView.cs",
+        "finding": "MAUI SKCanvasView has no ColorSpace property or BindableProperty for it \u2014 the gap exists in MAUI views as well.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "As a workaround, users can post-process the drawing surface in the PaintSurface callback by manually converting colors using SKColorSpace.CreateSrgb() and SKPaint.ColorFilter with an SKColorFilter.CreateColorSpace() \u2014 but this is complex and not equivalent to setting colorspace at surface creation.",
+      "For specific cases (e.g., linear sRGB), users can apply gamma correction manually via shader or paint filter in the PaintSurface handler."
+    ],
+    "nextQuestions": [
+      "Should this be a BindableProperty (for MAUI/Xamarin.Forms XAML) or just a regular property on the platform views?",
+      "Should the API accept SKColorSpace directly (potentially not XAML-serializable) or a helper enum/class as the maintainer sketched?",
+      "How should null/default behave \u2014 no colorspace (current), sRGB, or display P3?"
+    ],
+    "resolution": {
+      "hypothesis": "Add a ColorSpace property to SKCanvasView on all platforms that is used by SurfaceFactory.CreateInfo() and SKCGSurfaceFactory.CreateInfo() when constructing SKImageInfo.",
+      "proposals": [
+        {
+          "title": "Add ColorSpace property to platform SKCanvasView implementations",
+          "description": "Expose a `SKColorSpace ColorSpace { get; set; }` property on Android SKCanvasView and Apple SKCanvasView platform views. When set, pass the colorspace to SKImageInfo in CreateInfo(). Setting it triggers Invalidate()/surface re-creation. For MAUI, add a BindableProperty.",
+          "category": "fix",
+          "confidence": 0.8,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Use workaround in PaintSurface callback with color filter",
+          "description": "Apply a color space conversion filter in the PaintSurface callback as a stop-gap until the property is implemented. Less clean but works today.",
+          "category": "workaround",
+          "confidence": 0.6,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add ColorSpace property to platform SKCanvasView implementations",
+      "recommendedReason": "The maintainer already validated this approach. The binding layer (SKImageInfo) already supports it. Implementing a ColorSpace property on each platform view and wiring it through SurfaceFactory is a clean, maintainable solution."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Valid, well-understood enhancement with maintainer buy-in. The implementation path is clear but requires coordinated changes across all platform views. No regression risk; currently open with no associated PR.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct labels: keep type/enhancement, area/SkiaSharp.Views, add tenet/compatibility; remove stale area/SkiaSharp.Views.Forms (Xamarin.Forms is superseded by MAUI)",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Summarize current state, confirm gap still exists, outline implementation approach",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for filing this. The gap is confirmed: `SurfaceFactory.CreateInfo()` (Android) and `SKCGSurfaceFactory.CreateInfo()` (Apple/iOS/macOS) both create `SKImageInfo` without a `ColorSpace`, so Skia's color management pipeline is never activated for canvas views.\n\nThe `SKImageInfo` binding already has the full constructor accepting `SKColorSpace` and a `WithColorSpace()` helper \u2014 the pieces are in place.\n\nA `ColorSpace` property on each platform view (and a `BindableProperty` in MAUI) that is passed through to `CreateInfo()` would fix this. Setting it would nuke and re-create the surface on next paint. The MAUI migration also means the Xamarin.Forms-specific API design questions from 2018 are less of a concern today.\n\nThis is a valid enhancement; keeping it open for a future PR."
+      }
+    ]
+  }
+}

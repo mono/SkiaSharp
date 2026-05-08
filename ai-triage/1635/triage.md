@@ -1,0 +1,378 @@
+# Issue Triage Report — #1635
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-23T19:17:37Z |
+| Type | type/bug (0.82 (82%)) |
+| Area | area/libSkiaSharp.native (0.92 (92%)) |
+| Suggested action | close-as-not-a-bug (0.90 (90%)) |
+
+**Issue Summary:** SkiaSharp 2.80.3-preview.40 crashes in AWS Lambda with 'undefined symbol: FcConfigGetSysRoot' because the standard SkiaSharp.NativeAssets.Linux package requires fontconfig which is not installed in the Lambda environment; fixed by switching to SkiaSharp.NativeAssets.Linux.NoDependencies.
+
+**Analysis:** The SkiaSharp.NativeAssets.Linux package is dynamically linked against fontconfig (libfontconfig.so.1) for system font discovery. AWS Lambda's minimal Linux environment does not include fontconfig, causing a symbol lookup failure on startup. The NoDependencies variant of the package builds libSkiaSharp.so without the fontconfig linkage and is designed exactly for minimal/serverless containers. The reporter resolved this by switching packages. A separate concern raised in comments — SKTypeface.Default returning an empty FamilyName and MeasureText returning 0 in .NET Core 3.1 with NoDependencies — is expected: without fontconfig or system fonts, no font families are discovered. Explicit font loading via SKTypeface.FromFile/FromData is required.
+
+**Recommendations:** **close-as-not-a-bug** — The crash is caused by using SkiaSharp.NativeAssets.Linux (which requires fontconfig) in an environment without fontconfig. The NoDependencies variant resolves the issue, as confirmed by the reporter. This is documented behavior.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create an AWS Lambda function targeting ASP.NET Core 2.1
+2. Add SkiaSharp 2.80.3-preview.40 and SkiaSharp.NativeAssets.Linux 2.80.3-preview.40
+3. Use SKSurface/SKCanvas to draw and encode an image
+4. Deploy and invoke the function — observe crash in CloudWatch Logs
+
+**Environment:** AWS Lambda, .NET Core 2.1, SkiaSharp 2.80.3-preview.40, SkiaSharp.NativeAssets.Linux 2.80.3-preview.40
+
+**Related issues:** #964, #833
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1635#issuecomment-798896169 — Maintainer suggests NoDependencies package
+- https://github.com/mono/SkiaSharp/issues/1635#issuecomment-802542634 — Reporter confirms NoDependencies resolves the issue
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | crash |
+| Error message | dotnet: symbol lookup error: /var/task/libSkiaSharp.so: undefined symbol: FcConfigGetSysRoot |
+| Repro quality | complete |
+| Target frameworks | netcoreapp2.1 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.3-preview.40, 1.68.3 |
+| Worked in | 1.68.3 |
+| Broke in | 2.80.3-preview.40 |
+| Current relevance | unlikely |
+| Relevance reason | Reporter confirmed the issue is resolved by using SkiaSharp.NativeAssets.Linux.NoDependencies. The workaround is now documented in packages.md. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.75 (75%) |
+| Reason | SkiaSharp 1.68.3 worked on AWS Lambda; 2.80.x added fontconfig as a runtime dependency in the standard Linux native assets package. The NoDependencies variant was introduced to handle this split. |
+| Worked in version | 1.68.3 |
+| Broke in version | 2.80.3-preview.40 |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | True |
+| Confidence | 0.95 (95%) |
+| Reason | Reporter confirmed issue resolved by switching to SkiaSharp.NativeAssets.Linux.NoDependencies v2.80.2. This package intentionally excludes the fontconfig dependency. |
+| Related PRs | — |
+| Related commits | — |
+| Fixed in version | — |
+
+## Analysis
+
+### Technical Summary
+
+The SkiaSharp.NativeAssets.Linux package is dynamically linked against fontconfig (libfontconfig.so.1) for system font discovery. AWS Lambda's minimal Linux environment does not include fontconfig, causing a symbol lookup failure on startup. The NoDependencies variant of the package builds libSkiaSharp.so without the fontconfig linkage and is designed exactly for minimal/serverless containers. The reporter resolved this by switching packages. A separate concern raised in comments — SKTypeface.Default returning an empty FamilyName and MeasureText returning 0 in .NET Core 3.1 with NoDependencies — is expected: without fontconfig or system fonts, no font families are discovered. Explicit font loading via SKTypeface.FromFile/FromData is required.
+
+### Rationale
+
+Bug classification is warranted because the behavior changed between 1.68.3 and 2.80.x due to fontconfig being added as a dynamic dependency. close-as-not-a-bug is appropriate because: (1) the NoDependencies package resolves it, (2) the reporter confirmed the fix, (3) the behavior is intentional and documented. The codeInvestigation confirms the build is intentionally split into two variants.
+
+### Key Signals
+
+- "dotnet: symbol lookup error: /var/task/libSkiaSharp.so: undefined symbol: FcConfigGetSysRoot" — **issue body (CloudWatch screenshot)** (The standard libSkiaSharp.so is dynamically linked against fontconfig; FcConfigGetSysRoot is a fontconfig API. AWS Lambda has no fontconfig installed.)
+- "Seems like regression in latest" — **issue body** (In 1.68.x, SkiaSharp.NativeAssets.Linux did not require fontconfig. Starting in 2.x, the standard package was linked against fontconfig for better system font support, and the NoDependencies variant was introduced for minimal environments.)
+- "I have removed SkiaSharp.NativeAssets.Linux from my project. Then installed Sharp.NativeAssets.Linux.NoDependencies v2.80.2. Now working fine." — **comment by reporter** (Confirmed workaround. The NoDependencies package resolves the AWS Lambda crash.)
+- "FamilyName returns empty string and MeasureText returns 0 in .NET Core 3.1" — **comment by RamarajMarimuthu** (Separate concern: without system fonts and no fontconfig, SKTypeface.Default has no font family. Fonts must be explicitly loaded in minimal container environments.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp.NativeAssets.Linux.NoDependencies/SkiaSharp.NativeAssets.Linux.NoDependencies.csproj` | — | direct | Package notes explicitly state that fontconfig is an excluded dependency and the NoDependencies variant only requires libc/libm/libpthread/libdl. This package is designed for minimal container environments. |
+| `native/linux/build.cake` | 98 | direct | The bionic (NoDependencies) build variant passes skia_use_fontconfig=false to the Skia build system, confirming fontconfig is intentionally excluded. |
+| `documentation/dev/packages.md` | 86-87 | context | documentation/dev/packages.md explicitly documents that SkiaSharp.NativeAssets.Linux 'Requires fontconfig (libfontconfig.so.1) for system font enumeration' and that the NoDependencies variant is 'Designed for minimal containers'. AWS Lambda falls squarely in this category. |
+
+### Workarounds
+
+- Replace SkiaSharp.NativeAssets.Linux with SkiaSharp.NativeAssets.Linux.NoDependencies
+- For text rendering after switching to NoDependencies, load fonts explicitly using SKTypeface.FromFile() or SKTypeface.FromData() since system fonts are not available in AWS Lambda
+
+### Next Questions
+
+- The secondary question about SKTypeface.Default returning empty FamilyName in .NET 3.1 with NoDependencies — is this a .NET runtime version difference or expected behavior in all versions?
+- Should there be a documentation note or NuGet package description hint pointing Lambda/container users to NoDependencies?
+
+### Resolution Proposals
+
+**Hypothesis:** The standard SkiaSharp.NativeAssets.Linux package has a runtime dependency on fontconfig which is absent in AWS Lambda. The NoDependencies variant was created for exactly this scenario.
+
+1. **Switch to NoDependencies package** — workaround, confidence 0.98 (98%), cost/xs, validated=yes
+   - Replace SkiaSharp.NativeAssets.Linux with SkiaSharp.NativeAssets.Linux.NoDependencies in the application project. For text/font operations, load fonts explicitly using SKTypeface.FromFile() or SKTypeface.FromData().
+2. **Install fontconfig in Lambda layer** — alternative, confidence 0.80 (80%), cost/m, validated=untested
+   - Add a Lambda layer that includes fontconfig (libfontconfig.so.1) so the standard package can load. This is more complex and not recommended for minimal serverless deployments.
+
+**Recommended proposal:** Switch to NoDependencies package
+
+**Why:** Confirmed working by reporter. Minimal effort, zero external dependencies, and aligns with AWS Lambda's minimal execution environment.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.90 (90%) |
+| Reason | The crash is caused by using SkiaSharp.NativeAssets.Linux (which requires fontconfig) in an environment without fontconfig. The NoDependencies variant resolves the issue, as confirmed by the reporter. This is documented behavior. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, native Linux, and compatibility labels | labels=type/bug, area/libSkiaSharp.native, os/Linux, tenet/compatibility |
+| add-comment | medium | 0.90 (90%) | Explain root cause and provide confirmed workaround, address secondary font issue | — |
+| close-issue | medium | 0.88 (88%) | Close as not a bug — resolved by NoDependencies package | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and for following up with the fix!
+
+The root cause is that `SkiaSharp.NativeAssets.Linux` is dynamically linked against **fontconfig** (`libfontconfig.so.1`) for system font enumeration. AWS Lambda's minimal environment does not include fontconfig, causing the `FcConfigGetSysRoot` symbol lookup failure.
+
+In SkiaSharp 1.x the standard Linux package did not require fontconfig; starting in 2.x fontconfig was added for improved font support, and the `SkiaSharp.NativeAssets.Linux.NoDependencies` package was introduced for minimal/serverless environments.
+
+**Confirmed fix:** Replace `SkiaSharp.NativeAssets.Linux` with **`SkiaSharp.NativeAssets.Linux.NoDependencies`** — this build excludes all third-party dependencies (only requires libc/libm/libpthread/libdl).
+
+**Note on `MeasureText` returning 0 / empty `SKTypeface.Default.FamilyName` in .NET Core 3.1:** When using NoDependencies in a container without any system fonts, `SKFontManager` finds no font families, so `SKTypeface.Default` has no underlying typeface. To measure or render text, load a font explicitly:
+```csharp
+using var typeface = SKTypeface.FromFile("/path/to/your-font.ttf");
+using var paint = new SKPaint { Typeface = typeface };
+float width = paint.MeasureText("Simple");
+```
+You can embed a font as an embedded resource and load it via `SKTypeface.FromData(SKData.CreateCopy(bytes))`.
+
+Closing as by-design — the `NoDependencies` package is the supported solution for Lambda/container deployments.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1635,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T19:17:37Z"
+  },
+  "summary": "SkiaSharp 2.80.3-preview.40 crashes in AWS Lambda with 'undefined symbol: FcConfigGetSysRoot' because the standard SkiaSharp.NativeAssets.Linux package requires fontconfig which is not installed in the Lambda environment; fixed by switching to SkiaSharp.NativeAssets.Linux.NoDependencies.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.82
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "dotnet: symbol lookup error: /var/task/libSkiaSharp.so: undefined symbol: FcConfigGetSysRoot",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "netcoreapp2.1"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an AWS Lambda function targeting ASP.NET Core 2.1",
+        "Add SkiaSharp 2.80.3-preview.40 and SkiaSharp.NativeAssets.Linux 2.80.3-preview.40",
+        "Use SKSurface/SKCanvas to draw and encode an image",
+        "Deploy and invoke the function — observe crash in CloudWatch Logs"
+      ],
+      "environmentDetails": "AWS Lambda, .NET Core 2.1, SkiaSharp 2.80.3-preview.40, SkiaSharp.NativeAssets.Linux 2.80.3-preview.40",
+      "relatedIssues": [
+        964,
+        833
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1635#issuecomment-798896169",
+          "description": "Maintainer suggests NoDependencies package"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1635#issuecomment-802542634",
+          "description": "Reporter confirms NoDependencies resolves the issue"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.3-preview.40",
+        "1.68.3"
+      ],
+      "workedIn": "1.68.3",
+      "brokeIn": "2.80.3-preview.40",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Reporter confirmed the issue is resolved by using SkiaSharp.NativeAssets.Linux.NoDependencies. The workaround is now documented in packages.md."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.75,
+      "reason": "SkiaSharp 1.68.3 worked on AWS Lambda; 2.80.x added fontconfig as a runtime dependency in the standard Linux native assets package. The NoDependencies variant was introduced to handle this split.",
+      "workedInVersion": "1.68.3",
+      "brokeInVersion": "2.80.3-preview.40"
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.95,
+      "reason": "Reporter confirmed issue resolved by switching to SkiaSharp.NativeAssets.Linux.NoDependencies v2.80.2. This package intentionally excludes the fontconfig dependency."
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp.NativeAssets.Linux package is dynamically linked against fontconfig (libfontconfig.so.1) for system font discovery. AWS Lambda's minimal Linux environment does not include fontconfig, causing a symbol lookup failure on startup. The NoDependencies variant of the package builds libSkiaSharp.so without the fontconfig linkage and is designed exactly for minimal/serverless containers. The reporter resolved this by switching packages. A separate concern raised in comments — SKTypeface.Default returning an empty FamilyName and MeasureText returning 0 in .NET Core 3.1 with NoDependencies — is expected: without fontconfig or system fonts, no font families are discovered. Explicit font loading via SKTypeface.FromFile/FromData is required.",
+    "rationale": "Bug classification is warranted because the behavior changed between 1.68.3 and 2.80.x due to fontconfig being added as a dynamic dependency. close-as-not-a-bug is appropriate because: (1) the NoDependencies package resolves it, (2) the reporter confirmed the fix, (3) the behavior is intentional and documented. The codeInvestigation confirms the build is intentionally split into two variants.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Linux.NoDependencies/SkiaSharp.NativeAssets.Linux.NoDependencies.csproj",
+        "finding": "Package notes explicitly state that fontconfig is an excluded dependency and the NoDependencies variant only requires libc/libm/libpthread/libdl. This package is designed for minimal container environments.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/linux/build.cake",
+        "lines": "98",
+        "finding": "The bionic (NoDependencies) build variant passes skia_use_fontconfig=false to the Skia build system, confirming fontconfig is intentionally excluded.",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/packages.md",
+        "lines": "86-87",
+        "finding": "documentation/dev/packages.md explicitly documents that SkiaSharp.NativeAssets.Linux 'Requires fontconfig (libfontconfig.so.1) for system font enumeration' and that the NoDependencies variant is 'Designed for minimal containers'. AWS Lambda falls squarely in this category.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "dotnet: symbol lookup error: /var/task/libSkiaSharp.so: undefined symbol: FcConfigGetSysRoot",
+        "source": "issue body (CloudWatch screenshot)",
+        "interpretation": "The standard libSkiaSharp.so is dynamically linked against fontconfig; FcConfigGetSysRoot is a fontconfig API. AWS Lambda has no fontconfig installed."
+      },
+      {
+        "text": "Seems like regression in latest",
+        "source": "issue body",
+        "interpretation": "In 1.68.x, SkiaSharp.NativeAssets.Linux did not require fontconfig. Starting in 2.x, the standard package was linked against fontconfig for better system font support, and the NoDependencies variant was introduced for minimal environments."
+      },
+      {
+        "text": "I have removed SkiaSharp.NativeAssets.Linux from my project. Then installed Sharp.NativeAssets.Linux.NoDependencies v2.80.2. Now working fine.",
+        "source": "comment by reporter",
+        "interpretation": "Confirmed workaround. The NoDependencies package resolves the AWS Lambda crash."
+      },
+      {
+        "text": "FamilyName returns empty string and MeasureText returns 0 in .NET Core 3.1",
+        "source": "comment by RamarajMarimuthu",
+        "interpretation": "Separate concern: without system fonts and no fontconfig, SKTypeface.Default has no font family. Fonts must be explicitly loaded in minimal container environments."
+      }
+    ],
+    "workarounds": [
+      "Replace SkiaSharp.NativeAssets.Linux with SkiaSharp.NativeAssets.Linux.NoDependencies",
+      "For text rendering after switching to NoDependencies, load fonts explicitly using SKTypeface.FromFile() or SKTypeface.FromData() since system fonts are not available in AWS Lambda"
+    ],
+    "nextQuestions": [
+      "The secondary question about SKTypeface.Default returning empty FamilyName in .NET 3.1 with NoDependencies — is this a .NET runtime version difference or expected behavior in all versions?",
+      "Should there be a documentation note or NuGet package description hint pointing Lambda/container users to NoDependencies?"
+    ],
+    "resolution": {
+      "hypothesis": "The standard SkiaSharp.NativeAssets.Linux package has a runtime dependency on fontconfig which is absent in AWS Lambda. The NoDependencies variant was created for exactly this scenario.",
+      "proposals": [
+        {
+          "title": "Switch to NoDependencies package",
+          "description": "Replace SkiaSharp.NativeAssets.Linux with SkiaSharp.NativeAssets.Linux.NoDependencies in the application project. For text/font operations, load fonts explicitly using SKTypeface.FromFile() or SKTypeface.FromData().",
+          "category": "workaround",
+          "confidence": 0.98,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Install fontconfig in Lambda layer",
+          "description": "Add a Lambda layer that includes fontconfig (libfontconfig.so.1) so the standard package can load. This is more complex and not recommended for minimal serverless deployments.",
+          "category": "alternative",
+          "confidence": 0.8,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Switch to NoDependencies package",
+      "recommendedReason": "Confirmed working by reporter. Minimal effort, zero external dependencies, and aligns with AWS Lambda's minimal execution environment."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.9,
+      "reason": "The crash is caused by using SkiaSharp.NativeAssets.Linux (which requires fontconfig) in an environment without fontconfig. The NoDependencies variant resolves the issue, as confirmed by the reporter. This is documented behavior.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native Linux, and compatibility labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Linux",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and provide confirmed workaround, address secondary font issue",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed report and for following up with the fix!\n\nThe root cause is that `SkiaSharp.NativeAssets.Linux` is dynamically linked against **fontconfig** (`libfontconfig.so.1`) for system font enumeration. AWS Lambda's minimal environment does not include fontconfig, causing the `FcConfigGetSysRoot` symbol lookup failure.\n\nIn SkiaSharp 1.x the standard Linux package did not require fontconfig; starting in 2.x fontconfig was added for improved font support, and the `SkiaSharp.NativeAssets.Linux.NoDependencies` package was introduced for minimal/serverless environments.\n\n**Confirmed fix:** Replace `SkiaSharp.NativeAssets.Linux` with **`SkiaSharp.NativeAssets.Linux.NoDependencies`** — this build excludes all third-party dependencies (only requires libc/libm/libpthread/libdl).\n\n**Note on `MeasureText` returning 0 / empty `SKTypeface.Default.FamilyName` in .NET Core 3.1:** When using NoDependencies in a container without any system fonts, `SKFontManager` finds no font families, so `SKTypeface.Default` has no underlying typeface. To measure or render text, load a font explicitly:\n```csharp\nusing var typeface = SKTypeface.FromFile(\"/path/to/your-font.ttf\");\nusing var paint = new SKPaint { Typeface = typeface };\nfloat width = paint.MeasureText(\"Simple\");\n```\nYou can embed a font as an embedded resource and load it via `SKTypeface.FromData(SKData.CreateCopy(bytes))`.\n\nClosing as by-design — the `NoDependencies` package is the supported solution for Lambda/container deployments."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug — resolved by NoDependencies package",
+        "risk": "medium",
+        "confidence": 0.88,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

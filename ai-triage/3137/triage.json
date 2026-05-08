@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3137,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T22:28:08Z",
+    "currentLabels": ["type/feature-request"]
+  },
+  "summary": "Feature request to expose SkImageFilters::RuntimeShader as a new C# API (SKImageFilter.CreateRuntimeShader), enabling runtime-shader-based image filter effects; a PR has been submitted but awaits design alignment.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.92 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "No specific platform; cross-platform SkiaSharp API gap",
+      "relatedIssues": [2373],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2373",
+          "description": "Earlier (2023) request for the same SkImageFilters::RuntimeShader exposure, with 10 upvotes"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "SkImageFilters::RuntimeShader is a Skia C++ API that creates an image filter from a SkRuntimeShaderBuilder, allowing runtime SKSL shaders to be applied as image filters (e.g. in SaveLayer). The SkiaSharp C# binding does not expose this API. SKRuntimeShaderBuilder already exists in C#, and SKImageFilter.CreateShader(SKShader) was recently added, but neither covers the runtime-shader-as-image-filter use case. A contributor (kkwpsv) submitted a PR; the maintainer (mattleibow) reviewed and requested design consistency with the other three builder types (Shader, Blender, ColorFilter).",
+    "rationale": "This is a genuine feature request for missing API coverage of SkImageFilters::RuntimeShader. The C++ capability exists in Skia, SKRuntimeShaderBuilder is already present in C#, and a PR has been filed. The feature is well-specified and has a clear implementation path following existing builder patterns. It is not a duplicate of #2373 (that issue also remains open and partially overlaps, but #3137 is more specific and has an active PR). Classification as type/feature-request is confirmed by the issue title, body, and labels.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKImageFilter.cs",
+        "lines": "426-444",
+        "finding": "SKImageFilter.CreateShader(SKShader) exists and wraps sk_imagefilter_new_shader, but there is no CreateRuntimeShader method taking a SKRuntimeShaderBuilder. The file ends at line 444 with no runtime-shader factory.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKRuntimeEffect.cs",
+        "lines": "57-61, 657-669",
+        "finding": "SKRuntimeShaderBuilder exists as a public class that wraps SKRuntimeEffect and builds a SKShader. It is the direct C# analogue of SkRuntimeShaderBuilder. The class has no method to produce an SKImageFilter.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "sk_imagefilter_new_runtime_shader is absent from the generated C API bindings. The full set of sk_imagefilter_new_* functions does not include a runtime-shader variant, confirming the C shim has not yet been written.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Exposed SkImageFilters::RuntimeShader in C# like other SKImageFilter.CreateXXX.",
+        "source": "issue body",
+        "interpretation": "Clear request for a new static factory method on SKImageFilter using the existing builder pattern."
+      },
+      {
+        "text": "Now SKRuntimeShaderBuilder is implemented in C#. But SkImageFilters::RuntimeShader in C++ requires a SKRuntimeShaderBuilder parameter.",
+        "source": "comment by kkwpsv",
+        "interpretation": "Reporter confirms the prerequisite (SKRuntimeShaderBuilder) is already in place; the missing piece is the C API shim and the C# factory."
+      },
+      {
+        "text": "Speaking of alternatives, You could actually use SKPaint.Shader to achieve the same result, while the API to assign a shader to SKPaint.ImageFilter is missing.",
+        "source": "comment by taublast",
+        "interpretation": "SKPaint.Shader is a partial workaround for simple cases, but it doesn't support using the runtime shader as an image filter composited in a SaveLayer."
+      },
+      {
+        "text": "Thanks for the PR @kkwpsv. I added a review. I think the code is generally OK, but sort of I disagree with the way Google implemented all this API. I am thinking we should follow the way they did the other 3 (Shader, Blender, ColorFilter) just to have it all consistent.",
+        "source": "comment by mattleibow (maintainer)",
+        "interpretation": "A PR exists and is under active review. The maintainer wants the implementation to follow the existing SKRuntime*Builder pattern for consistency."
+      }
+    ],
+    "workarounds": [
+      "For simple cases, assign the SKSL shader to SKPaint.Shader and draw directly — this bypasses the image filter compositing path but works when the effect doesn't need to read the underlying layer pixels.",
+      "Build a SKShader from the effect using SKRuntimeEffect.CreateShader().ToShader() and pass it to SKImageFilter.CreateShader(shader) — this wraps the shader as a basic image filter but does not give access to the layer's pixel content as a uniform, which SkImageFilters::RuntimeShader does support."
+    ],
+    "nextQuestions": [
+      "What is the PR number submitted by kkwpsv?",
+      "Does the Skia C++ API for SkImageFilters::RuntimeShader require the builder or accept a finished SkShader directly?",
+      "Should the C# API expose SKImageFilter.CreateRuntimeShader(SKRuntimeShaderBuilder) or use a different overload pattern?"
+    ],
+    "resolution": {
+      "hypothesis": "Add a new C API function sk_imagefilter_new_runtime_shader wrapping SkImageFilters::RuntimeShader, regenerate bindings, and expose SKImageFilter.CreateRuntimeShader(SKRuntimeShaderBuilder) following the existing Shader/Blender/ColorFilter builder pattern.",
+      "proposals": [
+        {
+          "title": "Add C API + C# wrapper following existing builder pattern",
+          "description": "Create sk_imagefilter_new_runtime_shader in the C shim (externals/skia/src/c/), regenerate bindings, then add SKImageFilter.CreateRuntimeShader(SKRuntimeShaderBuilder builder, SKImageFilter? input = null) to SKImageFilter.cs — mirroring how CreateBlend(SKBlender) was implemented.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SKPaint.Shader as a near-equivalent workaround",
+          "description": "For effects that don't need to read the layer's pixel content, build the shader from SKRuntimeEffect and assign to SKPaint.Shader instead of an image filter. This avoids the missing API for simple overlay effects.",
+          "category": "workaround",
+          "confidence": 0.70,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add C API + C# wrapper following existing builder pattern",
+      "recommendedReason": "A PR is already in progress and the maintainer has reviewed it; the work is well-scoped. This is the canonical path and will benefit all users needing runtime shader image filters."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "A PR has been submitted and reviewed by the maintainer; the design is under discussion. The add-api skill should be used to implement the agreed design.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/feature-request", "area/SkiaSharp"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference earlier request for same API",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 2373
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request, note the existing PR, suggest workaround for interim use",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for filing this, and thanks @kkwpsv for the PR!\n\nThis request is confirmed valid — `SkImageFilters::RuntimeShader` is a Skia C++ API that is not yet exposed in SkiaSharp. `SKRuntimeShaderBuilder` already exists in C#, so the main work is adding the C API shim and the `SKImageFilter.CreateRuntimeShader()` factory method following the same pattern as the existing `Shader`, `Blender`, and `ColorFilter` builder types.\n\n**Interim workaround:** For simple overlay effects where the shader does not need to read the underlying layer pixels, you can use `SKPaint.Shader` directly:\n\n```csharp\nvar effect = SKRuntimeEffect.CreateShader(sksl, out _);\nvar builder = new SKRuntimeShaderBuilder(effect);\n// set uniforms on builder...\nvar shader = builder.Build();\nvar paint = new SKPaint { Shader = shader };\ncanvas.DrawRect(bounds, paint);\n```\n\nNote this does **not** provide access to the layer's pixel content as a uniform — that is the key capability that `SkImageFilters::RuntimeShader` adds."
+      }
+    ]
+  }
+}
