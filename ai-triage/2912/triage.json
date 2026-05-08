@@ -1,0 +1,153 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2912,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-06T07:20:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "SKGLView on Windows (MAUI/WinUI) flashes gray/white momentarily when made visible via IsVisible toggle, due to SwapChainPanel showing a cleared buffer before PaintSurface rendering is committed.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.85 },
+    "platforms": ["os/Windows-WinUI"],
+    "backends": ["backend/OpenGL"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "SKGLView flashes gray/white when IsVisible changes to true on Windows",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-windows10.0.19041"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI app on Windows with SKGLView in a Grid",
+        "Set the Grid or SKGLView IsVisible to false initially",
+        "Toggle IsVisible to true at runtime",
+        "Observe a brief gray/white flash before PaintSurface-drawn content appears"
+      ],
+      "environmentDetails": "Windows 11, SkiaSharp 3.x Alpha, MAUI",
+      "repoLinks": [
+        { "url": "https://github.com/hyvanmielenpelit/GnollHack", "description": "Reporter's project — GamePage CommandCanvas was changed from SKGLView to SKCanvasView as workaround" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.x Alpha"],
+      "currentRelevance": "likely",
+      "relevanceReason": "AngleSwapChainPanel.cs and SKSwapChainPanel.cs have not changed the render/visibility pattern since 3.x alpha — the underlying timing issue between visibility change and first SwapBuffers still exists."
+    }
+  },
+  "analysis": {
+    "summary": "When SKGLView's IsVisible changes to true, the WinUI SwapChainPanel becomes visible before the first complete SkiaSharp frame is swapped. The OnRenderFrame implementation calls glClear() first (resulting in a cleared gray/transparent buffer) then draws and calls SwapBuffers. The SwapChainPanel compositor briefly shows the cleared surface before the first drawn frame is presented, causing the visible flash.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "153-160",
+        "finding": "OnVisibilityChanged calls Invalidate() immediately when visibility changes to Visible, which triggers RenderFrame synchronously. However, SwapChainPanel's compositor makes the panel visible at the OS level before RenderFrame completes, showing whatever is in the swap chain (cleared buffer).",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs",
+        "lines": "41-97",
+        "finding": "OnRenderFrame calls Gles.glClear() unconditionally at the start, clearing the framebuffer to the GL clear color before any user drawing. If the compositor presents the cleared buffer before SwapBuffers completes, the gray/white flash is visible.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "219-226",
+        "finding": "RenderFrame already has special handling for pendingSizeChange that calls SwapBuffers() before drawing — suggesting this class already accounts for timing issues between compositor and rendering, but this logic does not apply to visibility changes.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Windows.cs",
+        "lines": "1-135",
+        "finding": "MauiSKSwapChainPanel wraps SKSwapChainPanel without any additional visibility-change synchronization, inheriting the flash behavior. MapBackground is a no-op (WinUI limitation), so background color cannot be preset to hide the flash.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "the SKGLView randomly flashes in gray / white. This is probably caused by SwapChainPanel's base color being shown momentarily before the PaintSurface finishes drawing",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identifies the root cause: SwapChainPanel compositor shows the cleared/empty buffer before first drawn frame."
+      },
+      {
+        "text": "SKCanvasView and SKGLView on Android and iOS all work fine",
+        "source": "issue body",
+        "interpretation": "Platform-specific to Windows WinUI SwapChainPanel — SKCanvasView uses direct CPU rendering to a XAML Image/WriteableBitmap, avoiding the swap chain timing issue."
+      },
+      {
+        "text": "I now changed it to use SKCanvasView on Windows",
+        "source": "issue body",
+        "interpretation": "Reporter found a working workaround: use SKCanvasView instead of SKGLView on Windows."
+      }
+    ],
+    "rationale": "This is a real rendering timing bug specific to Windows WinUI SwapChainPanel. The OS-level visibility is set on the SwapChainPanel before the first complete SkiaSharp frame is committed to the swap chain, causing the empty/cleared OpenGL framebuffer to flash briefly. The bug is in AngleSwapChainPanel/SKSwapChainPanel and has a known workaround (use SKCanvasView). Severity is medium because it is a cosmetic/transient glitch with a straightforward workaround.",
+    "workarounds": [
+      "Use SKCanvasView instead of SKGLView on Windows; SKCanvasView renders via CPU rasterization without a swap chain and does not exhibit this timing issue."
+    ],
+    "nextQuestions": [
+      "Is the flash reproducible with EnableRenderLoop = true, or only in single-frame (Invalidate) mode?",
+      "Does pre-rendering and calling Invalidate() before setting IsVisible = true mitigate the flash?",
+      "Would setting the SwapChainPanel's background to match the app background hide the flash visually while a proper fix is developed?"
+    ],
+    "resolution": {
+      "hypothesis": "SwapChainPanel becomes compositor-visible before the first SkiaSharp frame is swapped, exposing the cleared OpenGL framebuffer momentarily.",
+      "proposals": [
+        {
+          "title": "Pre-render before making visible",
+          "description": "Override the IsVisible/Visibility change to trigger a render pass and SwapBuffers *before* the SwapChainPanel is made visible in the compositor. This would ensure the first presented frame already contains valid content.",
+          "category": "fix",
+          "confidence": 0.60,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SKCanvasView on Windows (workaround)",
+          "description": "Switch to SKCanvasView for Windows builds. SKCanvasView renders directly to a XAML-compatible surface without a swap chain and does not have this timing issue.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Set GL clear color to match background",
+          "description": "Set the OpenGL clear color in glClear() to match the application background color rather than transparent/gray, so even if the cleared buffer is momentarily shown, it is not visually jarring.",
+          "category": "workaround",
+          "confidence": 0.70,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKCanvasView on Windows (workaround)",
+      "recommendedReason": "Reporter has already validated this approach. A proper fix requires careful coordination with SwapChainPanel's compositor timing, which is complex and may not be fully controllable from managed code."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.80,
+      "reason": "Bug is plausible and well-described; code investigation confirms the timing mechanism. Needs reproduction and investigation into whether SwapChainPanel pre-render or background color approaches can fix the issue properly.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views-maui, windows, opengl labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Windows-WinUI", "backend/OpenGL"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge bug, confirm root cause hypothesis, provide workaround",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed report! Your hypothesis is correct — the flash is caused by `SwapChainPanel` becoming compositor-visible before the first SkiaSharp frame is swapped. When `IsVisible` changes to `true`, the WinUI compositor shows the `SwapChainPanel` immediately, but the underlying OpenGL framebuffer contains only the cleared (gray/transparent) state until `SwapBuffers()` completes after `PaintSurface` finishes.\n\n**Workaround (as you've found):** Use `SKCanvasView` instead of `SKGLView` on Windows. `SKCanvasView` renders directly to a XAML-compatible raster surface without a swap chain, so it does not have this visibility-timing race condition.\n\nThis is a known WinUI `SwapChainPanel` limitation — the compositor does not provide a hook to defer panel visibility until the first frame is ready. We will investigate whether a pre-render pass before showing the panel can mitigate this."
+      }
+    ]
+  }
+}
