@@ -1,0 +1,348 @@
+# Issue Triage Report — #1544
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T11:17:00Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-investigation (0.88 (88%)) |
+
+**Issue Summary:** On macOS with the OpenGL backend, SKSurface's finalizer causes a native segfault in glDeleteBuffers because the GL context is already destroyed by the time the GC finalizer thread runs.
+
+**Analysis:** When the window closes, the OpenGL context is torn down first. SKSurface (holding a GPU-backed Skia surface) is not explicitly disposed, so its finalizer runs later on the GC finalizer thread. At that point, the call to sk_refcnt_safe_unref triggers Skia's internal cleanup which calls glDeleteBuffers — but the GL context no longer exists, causing a segfault. The reporter confirmed a workaround: explicitly dispose SKSurface (and GRContext) in the window destroy event before the GL context is torn down.
+
+**Recommendations:** **needs-investigation** — Real crash with complete stack trace and reproducible sample. Root cause is clear (finalizer runs after GL context destroyed) but a proper fix in SkiaSharp requires investigation of whether GRContext.AbandonContext() can be surfaced more prominently or the disposal path can be hardened.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/macOS |
+| Backends | backend/OpenGL |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a macOS app using OpenTK + Gtk2 + SkiaSharp GL backend
+2. Run the application
+3. Close the window by clicking the red close button
+4. Observe native segfault in glDeleteBuffers from finalizer thread
+
+**Environment:** macOS 10.15.5, Mono 6.12.0, SkiaSharp 2.80.2, Visual Studio for Mac
+
+**Repository links:**
+- https://github.com/ylatuya/OpenTKSkiaGtk2 — Minimal GTK2+OpenTK+SkiaSharp repro application
+- https://github.com/ylatuya/OpenTKSkiaGtk2/commit/92914af5b298764513d20f5a78c2999c67298b80 — Reporter's workaround commit: explicit disposal before window destruction
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | crash |
+| Error message | Got a segv while executing native code in glDeleteBuffers called from SKSurface finalizer |
+| Repro quality | complete |
+| Target frameworks | net472 |
+
+**Stack trace:**
+
+```text
+SKNativeObject.Finalize -> SKSurface.Dispose -> SKObject.DisposeNative -> SafeUnRef -> sk_refcnt_safe_unref -> glDeleteBuffers (segfault)
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The SKObject/SKNativeObject finalizer disposal pattern has not fundamentally changed; SKSurface still calls sk_refcnt_safe_unref from DisposeNative which triggers GL cleanup. The core issue — GL resources freed after GL context teardown — is an application lifecycle concern that SkiaSharp does not currently guard against. |
+
+## Analysis
+
+### Technical Summary
+
+When the window closes, the OpenGL context is torn down first. SKSurface (holding a GPU-backed Skia surface) is not explicitly disposed, so its finalizer runs later on the GC finalizer thread. At that point, the call to sk_refcnt_safe_unref triggers Skia's internal cleanup which calls glDeleteBuffers — but the GL context no longer exists, causing a segfault. The reporter confirmed a workaround: explicitly dispose SKSurface (and GRContext) in the window destroy event before the GL context is torn down.
+
+### Rationale
+
+Clear crash with complete native + managed stack trace and a reproducible sample. The root cause is the classic 'GPU resources outlive the GPU context' lifecycle problem: SKSurface holds OpenGL resources; when the window closes the GL context is destroyed first, but SKSurface is not explicitly disposed, so its GC finalizer runs later and attempts to call GL functions on a dead context. This is a type/bug (not user error) because SkiaSharp provides no mechanism to detect this state and crash-safely skip GPU cleanup. The workaround (explicit disposal) is real and documented by the reporter.
+
+### Key Signals
+
+- "glDeleteBuffers called from finalizer_thread via sk_refcnt_safe_unref" — **native stack trace in issue body** (Skia's GPU resource cleanup (glDeleteBuffers) is executing on the GC finalizer thread after the GL context was already destroyed when the window closed.)
+- "I have found a workaround for the issue which is forcing the disposal of objects in the window destruction" — **issue comment by reporter** (Explicit Dispose() before GL context teardown prevents the crash, confirming the root cause is finalizer running after context destruction.)
+- "This is probably because the graphics context is already disposed at that moment" — **issue comment by reporter** (Reporter correctly identifies the underlying cause: GL context gone before finalizer runs.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKObject.cs` | 229-234 | direct | SKNativeObject.Finalize sets fromFinalizer=true and calls Dispose(false). SKNativeObject.Dispose(bool) calls DisposeNative() when OwnsHandle is true, regardless of whether the GL context is still alive. |
+| `binding/SkiaSharp/SKObject.cs` | 94-98 | direct | SKObject.DisposeNative calls SafeUnRef on ISKReferenceCounted objects (including SKSurface), which invokes sk_refcnt_safe_unref and triggers Skia's native GPU resource cleanup including glDeleteBuffers. |
+| `binding/SkiaSharp/SKSurface.cs` | 8-16 | direct | SKSurface implements ISKReferenceCounted and calls base.Dispose(disposing). There is no guard to skip native cleanup when called from the finalizer thread or when the GL context may no longer be active. |
+
+**Error fingerprint:** `segfault:glDeleteBuffers:sk_refcnt_safe_unref:finalizer_thread:macos:opengl`
+
+### Workarounds
+
+- Explicitly call surface.Dispose(), grContext.Flush(), grContext.Dispose() in the window destroy/close event handler, BEFORE the OpenGL context is torn down.
+- Use a try/finally or IDisposable pattern around the render loop to ensure GPU objects are always disposed while the GL context is still active.
+
+### Next Questions
+
+- Does the same crash occur on Linux (X11/Wayland) with the OpenGL backend?
+- Is GRContext.AbandonContext() a safer way to release GPU resources when the context is being destroyed?
+- Can SkiaSharp add a GRContext.MakeCurrent() check or an abandonContext path to prevent GL calls after context teardown?
+
+### Resolution Proposals
+
+**Hypothesis:** GL-backed SKSurface is not explicitly disposed before the OpenGL context is destroyed; the GC finalizer runs later on a separate thread and calls glDeleteBuffers on a dead context causing a segfault.
+
+1. **Explicit disposal before GL context teardown (workaround)** — workaround, confidence 0.95 (95%), cost/xs, validated=untested
+   - In the window close/destroy handler, dispose the SKSurface and call GRContext.AbandonContext() or Dispose() while the GL context is still active.
+2. **Use GRContext.AbandonContext() for safer teardown** — workaround, confidence 0.85 (85%), cost/xs, validated=untested
+   - Call grContext.AbandonContext() before destroying the GL context. This tells Skia to abandon all GPU resources without issuing GL calls, preventing the crash even if Dispose is called later.
+3. **Guard finalizer-path DisposeNative against dead GL contexts** — fix, confidence 0.55 (55%), cost/l, validated=untested
+   - Investigate adding a fromFinalizer check in SKSurface or SKObject so that when disposed from the finalizer thread, GPU-backed resources attempt AbandonContext instead of full GL cleanup.
+
+**Recommended proposal:** Use GRContext.AbandonContext() for safer teardown
+
+**Why:** AbandonContext() is the Skia-recommended way to release a GrContext when the underlying GL context is being destroyed without issuing GL calls. It is safer than trying to guard the finalizer path.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.88 (88%) |
+| Reason | Real crash with complete stack trace and reproducible sample. Root cause is clear (finalizer runs after GL context destroyed) but a proper fix in SkiaSharp requires investigation of whether GRContext.AbandonContext() can be surfaced more prominently or the disposal path can be hardened. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply bug, SkiaSharp core, macOS, OpenGL, reliability labels | labels=type/bug, area/SkiaSharp, os/macOS, backend/OpenGL, tenet/reliability |
+| add-comment | medium | 0.88 (88%) | Acknowledge the bug, explain root cause, provide workaround with GRContext.AbandonContext() | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed stack trace and the reproduction project!
+
+This is a known lifecycle issue with GPU-backed surfaces: when the window closes, the OpenGL context is destroyed first, but if `SKSurface` and `GRContext` are not explicitly disposed before that happens, the GC finalizer runs later on a background thread and calls `glDeleteBuffers` on the now-dead GL context — causing the segfault.
+
+**Workaround (confirmed by your own commit):** Explicitly dispose GPU objects in your window destroy handler while the GL context is still active:
+
+```csharp
+// In your window Destroy / OnClosed handler, BEFORE the GL context is torn down:
+grContext.AbandonContext(); // tells Skia not to issue GL calls
+surface?.Dispose();
+grContext?.Dispose();
+```
+
+`GRContext.AbandonContext()` is the Skia-recommended API for exactly this scenario — it releases all GPU resources without issuing any GL calls, making it safe even if the GL context is already gone.
+
+We should investigate whether SkiaSharp can handle this more gracefully (e.g., calling `AbandonContext` in the finalizer path), but for now explicit disposal is the reliable fix.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1544,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T11:17:00Z"
+  },
+  "summary": "On macOS with the OpenGL backend, SKSurface's finalizer causes a native segfault in glDeleteBuffers because the GL context is already destroyed by the time the GC finalizer thread runs.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/macOS"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Got a segv while executing native code in glDeleteBuffers called from SKSurface finalizer",
+      "stackTrace": "SKNativeObject.Finalize -> SKSurface.Dispose -> SKObject.DisposeNative -> SafeUnRef -> sk_refcnt_safe_unref -> glDeleteBuffers (segfault)",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net472"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a macOS app using OpenTK + Gtk2 + SkiaSharp GL backend",
+        "Run the application",
+        "Close the window by clicking the red close button",
+        "Observe native segfault in glDeleteBuffers from finalizer thread"
+      ],
+      "environmentDetails": "macOS 10.15.5, Mono 6.12.0, SkiaSharp 2.80.2, Visual Studio for Mac",
+      "repoLinks": [
+        {
+          "url": "https://github.com/ylatuya/OpenTKSkiaGtk2",
+          "description": "Minimal GTK2+OpenTK+SkiaSharp repro application"
+        },
+        {
+          "url": "https://github.com/ylatuya/OpenTKSkiaGtk2/commit/92914af5b298764513d20f5a78c2999c67298b80",
+          "description": "Reporter's workaround commit: explicit disposal before window destruction"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKObject/SKNativeObject finalizer disposal pattern has not fundamentally changed; SKSurface still calls sk_refcnt_safe_unref from DisposeNative which triggers GL cleanup. The core issue — GL resources freed after GL context teardown — is an application lifecycle concern that SkiaSharp does not currently guard against."
+    }
+  },
+  "analysis": {
+    "summary": "When the window closes, the OpenGL context is torn down first. SKSurface (holding a GPU-backed Skia surface) is not explicitly disposed, so its finalizer runs later on the GC finalizer thread. At that point, the call to sk_refcnt_safe_unref triggers Skia's internal cleanup which calls glDeleteBuffers — but the GL context no longer exists, causing a segfault. The reporter confirmed a workaround: explicitly dispose SKSurface (and GRContext) in the window destroy event before the GL context is torn down.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "229-234",
+        "finding": "SKNativeObject.Finalize sets fromFinalizer=true and calls Dispose(false). SKNativeObject.Dispose(bool) calls DisposeNative() when OwnsHandle is true, regardless of whether the GL context is still alive.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "94-98",
+        "finding": "SKObject.DisposeNative calls SafeUnRef on ISKReferenceCounted objects (including SKSurface), which invokes sk_refcnt_safe_unref and triggers Skia's native GPU resource cleanup including glDeleteBuffers.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "lines": "8-16",
+        "finding": "SKSurface implements ISKReferenceCounted and calls base.Dispose(disposing). There is no guard to skip native cleanup when called from the finalizer thread or when the GL context may no longer be active.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "glDeleteBuffers called from finalizer_thread via sk_refcnt_safe_unref",
+        "source": "native stack trace in issue body",
+        "interpretation": "Skia's GPU resource cleanup (glDeleteBuffers) is executing on the GC finalizer thread after the GL context was already destroyed when the window closed."
+      },
+      {
+        "text": "I have found a workaround for the issue which is forcing the disposal of objects in the window destruction",
+        "source": "issue comment by reporter",
+        "interpretation": "Explicit Dispose() before GL context teardown prevents the crash, confirming the root cause is finalizer running after context destruction."
+      },
+      {
+        "text": "This is probably because the graphics context is already disposed at that moment",
+        "source": "issue comment by reporter",
+        "interpretation": "Reporter correctly identifies the underlying cause: GL context gone before finalizer runs."
+      }
+    ],
+    "rationale": "Clear crash with complete native + managed stack trace and a reproducible sample. The root cause is the classic 'GPU resources outlive the GPU context' lifecycle problem: SKSurface holds OpenGL resources; when the window closes the GL context is destroyed first, but SKSurface is not explicitly disposed, so its GC finalizer runs later and attempts to call GL functions on a dead context. This is a type/bug (not user error) because SkiaSharp provides no mechanism to detect this state and crash-safely skip GPU cleanup. The workaround (explicit disposal) is real and documented by the reporter.",
+    "workarounds": [
+      "Explicitly call surface.Dispose(), grContext.Flush(), grContext.Dispose() in the window destroy/close event handler, BEFORE the OpenGL context is torn down.",
+      "Use a try/finally or IDisposable pattern around the render loop to ensure GPU objects are always disposed while the GL context is still active."
+    ],
+    "nextQuestions": [
+      "Does the same crash occur on Linux (X11/Wayland) with the OpenGL backend?",
+      "Is GRContext.AbandonContext() a safer way to release GPU resources when the context is being destroyed?",
+      "Can SkiaSharp add a GRContext.MakeCurrent() check or an abandonContext path to prevent GL calls after context teardown?"
+    ],
+    "errorFingerprint": "segfault:glDeleteBuffers:sk_refcnt_safe_unref:finalizer_thread:macos:opengl",
+    "resolution": {
+      "hypothesis": "GL-backed SKSurface is not explicitly disposed before the OpenGL context is destroyed; the GC finalizer runs later on a separate thread and calls glDeleteBuffers on a dead context causing a segfault.",
+      "proposals": [
+        {
+          "title": "Explicit disposal before GL context teardown (workaround)",
+          "description": "In the window close/destroy handler, dispose the SKSurface and call GRContext.AbandonContext() or Dispose() while the GL context is still active.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Use GRContext.AbandonContext() for safer teardown",
+          "description": "Call grContext.AbandonContext() before destroying the GL context. This tells Skia to abandon all GPU resources without issuing GL calls, preventing the crash even if Dispose is called later.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Guard finalizer-path DisposeNative against dead GL contexts",
+          "description": "Investigate adding a fromFinalizer check in SKSurface or SKObject so that when disposed from the finalizer thread, GPU-backed resources attempt AbandonContext instead of full GL cleanup.",
+          "category": "fix",
+          "confidence": 0.55,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use GRContext.AbandonContext() for safer teardown",
+      "recommendedReason": "AbandonContext() is the Skia-recommended way to release a GrContext when the underlying GL context is being destroyed without issuing GL calls. It is safer than trying to guard the finalizer path."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Real crash with complete stack trace and reproducible sample. Root cause is clear (finalizer runs after GL context destroyed) but a proper fix in SkiaSharp requires investigation of whether GRContext.AbandonContext() can be surfaced more prominently or the disposal path can be hardened.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp core, macOS, OpenGL, reliability labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/macOS",
+          "backend/OpenGL",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, explain root cause, provide workaround with GRContext.AbandonContext()",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed stack trace and the reproduction project!\n\nThis is a known lifecycle issue with GPU-backed surfaces: when the window closes, the OpenGL context is destroyed first, but if `SKSurface` and `GRContext` are not explicitly disposed before that happens, the GC finalizer runs later on a background thread and calls `glDeleteBuffers` on the now-dead GL context — causing the segfault.\n\n**Workaround (confirmed by your own commit):** Explicitly dispose GPU objects in your window destroy handler while the GL context is still active:\n\n```csharp\n// In your window Destroy / OnClosed handler, BEFORE the GL context is torn down:\ngrContext.AbandonContext(); // tells Skia not to issue GL calls\nsurface?.Dispose();\ngrContext?.Dispose();\n```\n\n`GRContext.AbandonContext()` is the Skia-recommended API for exactly this scenario — it releases all GPU resources without issuing any GL calls, making it safe even if the GL context is already gone.\n\nWe should investigate whether SkiaSharp can handle this more gracefully (e.g., calling `AbandonContext` in the finalizer path), but for now explicit disposal is the reliable fix."
+      }
+    ]
+  }
+}
+```
+
+</details>

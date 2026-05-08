@@ -1,0 +1,326 @@
+# Issue Triage Report — #2190
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T15:25:00Z |
+| Type | type/bug (0.90 (90%)) |
+| Area | area/SkiaSharp.Views.Maui (0.92 (92%)) |
+| Suggested action | needs-investigation (0.82 (82%)) |
+
+**Issue Summary:** SKGLView renders 100k lines 7-8x slower in MAUI (500-600ms) than Xamarin (70-80ms) on iOS, with a reproduction project attached and results confirmed on both emulators and real devices.
+
+**Analysis:** MAUI's SKGLView handler dispatches each display request via BeginInvokeOnMainThread, adding async queueing overhead per frame. Xamarin iOS SKGLView uses GLKView directly with a synchronous render callback, avoiding this overhead. The MAUI handler architecture introduces an extra indirection layer that likely accounts for the observed 7-8x slowdown.
+
+**Recommendations:** **needs-investigation** — Credible performance regression with complete reproduction project. Root cause hypothesis (BeginInvokeOnMainThread dispatch overhead in MAUI handler) needs verification on a real iOS device. The HasRenderLoop workaround should be tested first.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Maui |
+| Platforms | os/iOS |
+| Backends | — |
+| Tenets | tenet/performance |
+| Partner | partner/maui |
+
+## Evidence
+
+### Reproduction
+
+1. Open the attached SKGLViewPerformance.zip project
+2. Run on iPhone 13 Pro MAX (iOS 15.5) or iOS emulator
+3. Observe PaintSurface timing: MAUI ~500-600ms vs Xamarin ~70-80ms for 100k lines
+
+**Environment:** SkiaSharp 2.88.0, MAUI, iOS 15.4/15.5, iPhone 13 Pro MAX, Visual Studio for Mac 17.3 Preview build 2083
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/files/9228966/SKGLViewPerformance.zip — Full reproduction project comparing Xamarin and MAUI SKGLView performance
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | performance |
+| Error message | — |
+| Repro quality | complete |
+| Target frameworks | net6.0-ios |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.0 |
+| Worked in | Xamarin Forms 5.0.0.2196 |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The MAUI handler architecture introducing BeginInvokeOnMainThread dispatch overhead has not changed fundamentally since 2.88.0. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.85 (85%) |
+| Reason | Same drawing code performs 7-8x slower after migrating from Xamarin.Forms to MAUI with the same SkiaSharp version. |
+| Worked in version | Xamarin Forms 5.0.0.2196 |
+| Broke in version | 2.88.0 (MAUI) |
+
+## Analysis
+
+### Technical Summary
+
+MAUI's SKGLView handler dispatches each display request via BeginInvokeOnMainThread, adding async queueing overhead per frame. Xamarin iOS SKGLView uses GLKView directly with a synchronous render callback, avoiding this overhead. The MAUI handler architecture introduces an extra indirection layer that likely accounts for the observed 7-8x slowdown.
+
+### Rationale
+
+Reporter provides a concrete benchmark (100k lines, 70-80ms vs 500-600ms) with a full attached repro project and confirms results on both real device and emulator. The code investigation shows MAUI's RequestDisplay() queues every invalidation via BeginInvokeOnMainThread, whereas Xamarin's GLKView invokes DrawInRect directly from the display refresh loop. This indirection and dispatch latency accumulates significantly for workloads that issue many draw calls per frame.
+
+### Key Signals
+
+- "It takes about 70-80ms in Xamarin and 500-600 in MAUI" — **issue body** (7-8x slowdown measured at PaintSurface callback level; not just perceived lag but measured elapsed time.)
+- "Results are the same on emulators and real device (iPhone 13 Pro MAX, iOS 15.5)" — **issue body** (Not an emulator artifact; occurs on real hardware.)
+- "this might depend on the capabilities of the windowing/render backend used... on windows, on MAUI redrawing (or resizing) is very slow, but on WPF it is insanely fast" — **comment by mgood7123** (Corroborates the pattern: MAUI's rendering pipeline has overhead on multiple platforms compared to predecessor frameworks.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.iOS.cs` | 136-148 | direct | RequestDisplay() wraps nativeView.Display() inside BeginInvokeOnMainThread, adding an async dispatch per invalidation. Each render cycle is queued via the main thread run loop rather than called synchronously from the GL display callback. This introduces overhead that compounds across many draw calls. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs` | 86-102 | related | The underlying Xamarin iOS SKGLView extends GLKView and sets DrawableMultisample=Sample4x. The DrawInRect (render callback) is invoked directly by GLKit at display refresh time with no async dispatch. MAUI wraps this same view but adds the BeginInvokeOnMainThread indirection in the handler layer. |
+
+### Workarounds
+
+- Enable HasRenderLoop=true on the SKGLView control: this uses CADisplayLink directly and bypasses the BeginInvokeOnMainThread dispatch overhead for each frame.
+- Reduce draw call overhead: batch geometry, reuse SKPaint objects across frames, and avoid per-call property changes inside tight loops.
+
+### Next Questions
+
+- Does enabling HasRenderLoop=true (which uses CADisplayLink directly) improve MAUI performance to match Xamarin?
+- Is the overhead present in later SkiaSharp versions (3.x) where the MAUI handler may have been optimized?
+- Does the same code with SKCanvasView (CPU backend) show similar performance regression in MAUI vs Xamarin?
+
+### Resolution Proposals
+
+**Hypothesis:** MAUI's SKGLViewHandler.iOS.cs dispatches each display request via BeginInvokeOnMainThread, adding one async run-loop cycle of overhead per frame. This indirection is absent in Xamarin's GLKView-based SKGLView which invokes the draw callback synchronously. The fix would be to call nativeView.Display() synchronously when already on the main thread, or to always use CADisplayLink (HasRenderLoop path) for invalidation.
+
+1. **Enable HasRenderLoop as workaround** — workaround, confidence 0.75 (75%), cost/xs, validated=untested
+   - Set HasRenderLoop=true on the MAUI SKGLView. This uses CADisplayLink which calls Display() directly each frame without the BeginInvokeOnMainThread overhead. The render loop fires at screen refresh rate; call InvalidateSurface() to update the flag when content should redraw.
+2. **Fix RequestDisplay to avoid async dispatch when on main thread** — fix, confidence 0.70 (70%), cost/s, validated=untested
+   - In SKGLViewHandler.iOS.cs RequestDisplay(), check NSThread.IsMain before wrapping with BeginInvokeOnMainThread. If already on the main thread, call nativeView.Display() directly. This would eliminate the async queuing overhead for same-thread invalidations.
+
+**Recommended proposal:** Enable HasRenderLoop as workaround
+
+**Why:** Immediate workaround available with no code changes on the SkiaSharp side; using CADisplayLink is already the correct pattern for animation and avoids async dispatch entirely.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.82 (82%) |
+| Reason | Credible performance regression with complete reproduction project. Root cause hypothesis (BeginInvokeOnMainThread dispatch overhead in MAUI handler) needs verification on a real iOS device. The HasRenderLoop workaround should be tested first. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply type/bug, area/SkiaSharp.Views.Maui, os/iOS, tenet/performance, partner/maui labels | labels=type/bug, area/SkiaSharp.Views.Maui, os/iOS, tenet/performance, partner/maui |
+| add-comment | medium | 0.82 (82%) | Ask reporter to test with HasRenderLoop=true as a workaround and confirm whether a newer SkiaSharp version is affected | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed benchmark and reproduction project!
+
+A few things worth trying:
+
+1. **Try `HasRenderLoop=true`:** MAUI's `SKGLView.InvalidateSurface()` currently dispatches each render via `BeginInvokeOnMainThread`, which adds async queuing overhead per frame. Enabling `HasRenderLoop=true` uses `CADisplayLink` directly and avoids this indirection:
+   ```csharp
+   skGLView.HasRenderLoop = true;
+   ```
+   Does this bring the MAUI rendering time closer to the Xamarin baseline?
+
+2. **Test on a newer SkiaSharp version:** You're on 2.88.0 which is an early MAUI release. Later versions (2.88.3+, 3.x) may have addressed rendering pipeline overhead.
+
+The underlying issue is that MAUI's handler architecture adds a layer of dispatch overhead that isn't present in Xamarin's direct GLKView integration — we need to verify whether the `HasRenderLoop` path bypasses this and whether a fix is needed in the non-loop `RequestDisplay()` path.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2190,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T15:25:00Z"
+  },
+  "summary": "SKGLView renders 100k lines 7-8x slower in MAUI (500-600ms) than Xamarin (70-80ms) on iOS, with a reproduction project attached and results confirmed on both emulators and real devices.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "performance",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net6.0-ios"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open the attached SKGLViewPerformance.zip project",
+        "Run on iPhone 13 Pro MAX (iOS 15.5) or iOS emulator",
+        "Observe PaintSurface timing: MAUI ~500-600ms vs Xamarin ~70-80ms for 100k lines"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.0, MAUI, iOS 15.4/15.5, iPhone 13 Pro MAX, Visual Studio for Mac 17.3 Preview build 2083",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/9228966/SKGLViewPerformance.zip",
+          "description": "Full reproduction project comparing Xamarin and MAUI SKGLView performance"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.0"
+      ],
+      "workedIn": "Xamarin Forms 5.0.0.2196",
+      "currentRelevance": "likely",
+      "relevanceReason": "The MAUI handler architecture introducing BeginInvokeOnMainThread dispatch overhead has not changed fundamentally since 2.88.0."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Same drawing code performs 7-8x slower after migrating from Xamarin.Forms to MAUI with the same SkiaSharp version.",
+      "workedInVersion": "Xamarin Forms 5.0.0.2196",
+      "brokeInVersion": "2.88.0 (MAUI)"
+    }
+  },
+  "analysis": {
+    "summary": "MAUI's SKGLView handler dispatches each display request via BeginInvokeOnMainThread, adding async queueing overhead per frame. Xamarin iOS SKGLView uses GLKView directly with a synchronous render callback, avoiding this overhead. The MAUI handler architecture introduces an extra indirection layer that likely accounts for the observed 7-8x slowdown.",
+    "rationale": "Reporter provides a concrete benchmark (100k lines, 70-80ms vs 500-600ms) with a full attached repro project and confirms results on both real device and emulator. The code investigation shows MAUI's RequestDisplay() queues every invalidation via BeginInvokeOnMainThread, whereas Xamarin's GLKView invokes DrawInRect directly from the display refresh loop. This indirection and dispatch latency accumulates significantly for workloads that issue many draw calls per frame.",
+    "keySignals": [
+      {
+        "text": "It takes about 70-80ms in Xamarin and 500-600 in MAUI",
+        "source": "issue body",
+        "interpretation": "7-8x slowdown measured at PaintSurface callback level; not just perceived lag but measured elapsed time."
+      },
+      {
+        "text": "Results are the same on emulators and real device (iPhone 13 Pro MAX, iOS 15.5)",
+        "source": "issue body",
+        "interpretation": "Not an emulator artifact; occurs on real hardware."
+      },
+      {
+        "text": "this might depend on the capabilities of the windowing/render backend used... on windows, on MAUI redrawing (or resizing) is very slow, but on WPF it is insanely fast",
+        "source": "comment by mgood7123",
+        "interpretation": "Corroborates the pattern: MAUI's rendering pipeline has overhead on multiple platforms compared to predecessor frameworks."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.iOS.cs",
+        "lines": "136-148",
+        "finding": "RequestDisplay() wraps nativeView.Display() inside BeginInvokeOnMainThread, adding an async dispatch per invalidation. Each render cycle is queued via the main thread run loop rather than called synchronously from the GL display callback. This introduces overhead that compounds across many draw calls.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+        "lines": "86-102",
+        "finding": "The underlying Xamarin iOS SKGLView extends GLKView and sets DrawableMultisample=Sample4x. The DrawInRect (render callback) is invoked directly by GLKit at display refresh time with no async dispatch. MAUI wraps this same view but adds the BeginInvokeOnMainThread indirection in the handler layer.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "Does enabling HasRenderLoop=true (which uses CADisplayLink directly) improve MAUI performance to match Xamarin?",
+      "Is the overhead present in later SkiaSharp versions (3.x) where the MAUI handler may have been optimized?",
+      "Does the same code with SKCanvasView (CPU backend) show similar performance regression in MAUI vs Xamarin?"
+    ],
+    "workarounds": [
+      "Enable HasRenderLoop=true on the SKGLView control: this uses CADisplayLink directly and bypasses the BeginInvokeOnMainThread dispatch overhead for each frame.",
+      "Reduce draw call overhead: batch geometry, reuse SKPaint objects across frames, and avoid per-call property changes inside tight loops."
+    ],
+    "resolution": {
+      "hypothesis": "MAUI's SKGLViewHandler.iOS.cs dispatches each display request via BeginInvokeOnMainThread, adding one async run-loop cycle of overhead per frame. This indirection is absent in Xamarin's GLKView-based SKGLView which invokes the draw callback synchronously. The fix would be to call nativeView.Display() synchronously when already on the main thread, or to always use CADisplayLink (HasRenderLoop path) for invalidation.",
+      "proposals": [
+        {
+          "title": "Enable HasRenderLoop as workaround",
+          "description": "Set HasRenderLoop=true on the MAUI SKGLView. This uses CADisplayLink which calls Display() directly each frame without the BeginInvokeOnMainThread overhead. The render loop fires at screen refresh rate; call InvalidateSurface() to update the flag when content should redraw.",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Fix RequestDisplay to avoid async dispatch when on main thread",
+          "description": "In SKGLViewHandler.iOS.cs RequestDisplay(), check NSThread.IsMain before wrapping with BeginInvokeOnMainThread. If already on the main thread, call nativeView.Display() directly. This would eliminate the async queuing overhead for same-thread invalidations.",
+          "category": "fix",
+          "confidence": 0.7,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Enable HasRenderLoop as workaround",
+      "recommendedReason": "Immediate workaround available with no code changes on the SkiaSharp side; using CADisplayLink is already the correct pattern for animation and avoids async dispatch entirely."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Credible performance regression with complete reproduction project. Root cause hypothesis (BeginInvokeOnMainThread dispatch overhead in MAUI handler) needs verification on a real iOS device. The HasRenderLoop workaround should be tested first.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views.Maui, os/iOS, tenet/performance, partner/maui labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Maui",
+          "os/iOS",
+          "tenet/performance",
+          "partner/maui"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask reporter to test with HasRenderLoop=true as a workaround and confirm whether a newer SkiaSharp version is affected",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed benchmark and reproduction project!\n\nA few things worth trying:\n\n1. **Try `HasRenderLoop=true`:** MAUI's `SKGLView.InvalidateSurface()` currently dispatches each render via `BeginInvokeOnMainThread`, which adds async queuing overhead per frame. Enabling `HasRenderLoop=true` uses `CADisplayLink` directly and avoids this indirection:\n   ```csharp\n   skGLView.HasRenderLoop = true;\n   ```\n   Does this bring the MAUI rendering time closer to the Xamarin baseline?\n\n2. **Test on a newer SkiaSharp version:** You're on 2.88.0 which is an early MAUI release. Later versions (2.88.3+, 3.x) may have addressed rendering pipeline overhead.\n\nThe underlying issue is that MAUI's handler architecture adds a layer of dispatch overhead that isn't present in Xamarin's direct GLKView integration — we need to verify whether the `HasRenderLoop` path bypasses this and whether a fix is needed in the non-loop `RequestDisplay()` path."
+      }
+    ]
+  }
+}
+```
+
+</details>

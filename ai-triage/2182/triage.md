@@ -1,0 +1,286 @@
+# Issue Triage Report — #2182
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T16:02:53Z |
+| Type | type/bug (0.82 (82%)) |
+| Area | area/SkiaSharp (0.95 (95%)) |
+| Suggested action | close-as-not-a-bug (0.88 (88%)) |
+
+**Issue Summary:** Reporter finds that SKPath.ArcTo (SVG arc variant) draws no arc when the start and end points are identical, but a tiny offset of 0.0005 on both coordinates causes the arc to render — this is documented by-design behavior from Skia's native API.
+
+**Analysis:** When SKPath.ArcTo is called with start and end points that are identical, Skia's native C++ SkPath::arcTo() draws a straight line segment to the endpoint instead of an arc. This is documented upstream behavior: 'arcTo() appends line to (x, y) if last SkPath SkPoint equals (x, y).' SkiaSharp correctly delegates to the native API without modification, so the behavior is by-design from Skia. The reporter already discovered the workaround (tiny coordinate offset). The SVG arc specification similarly defines this as a degenerate case where the arc should be omitted.
+
+**Recommendations:** **close-as-not-a-bug** — Documented behavior from Skia's native API: arcTo() draws a line segment when start equals end point. SkiaSharp passes through correctly. Workaround is available and confirmed by reporter.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create an SKPath
+2. Call MoveTo(68.404f, 187.938f)
+3. Call ArcTo(100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise, 68.404f, 187.938f)
+4. Observe that no arc is drawn — start and end points are identical
+
+**Environment:** No specific platform/version mentioned
+
+**Code snippets:**
+
+```csharp
+path.MoveTo(new SKPoint(68.404f, 187.938f));
+path.ArcTo(100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise, 68.404f, 187.938f);
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | low |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | ArcTo draws a line (or nothing) when start point equals end point |
+| Repro quality | complete |
+| Target frameworks | — |
+
+## Analysis
+
+### Technical Summary
+
+When SKPath.ArcTo is called with start and end points that are identical, Skia's native C++ SkPath::arcTo() draws a straight line segment to the endpoint instead of an arc. This is documented upstream behavior: 'arcTo() appends line to (x, y) if last SkPath SkPoint equals (x, y).' SkiaSharp correctly delegates to the native API without modification, so the behavior is by-design from Skia. The reporter already discovered the workaround (tiny coordinate offset). The SVG arc specification similarly defines this as a degenerate case where the arc should be omitted.
+
+### Rationale
+
+Classified as type/bug because the reporter experiences unexpected output. However, code investigation confirms SkiaSharp passes the call directly to Skia's native sk_pathbuilder_arc_to, which documents this behavior. A community member already clarified this in the comments. Close-as-not-a-bug is appropriate with a workaround comment.
+
+### Key Signals
+
+- "this wont work … modifying the end point by 0.0005 in x and y seems to work" — **issue body** (Reporter already found the workaround — an epsilon offset bypasses Skia's same-point detection.)
+- "This is not a SkiaSharp bug, this works exactly as the native skia api is documented: Arc sweep is always less than 360 degrees. arcTo() appends line to (x, y) if … last SkPath SkPoint equals (x, y)." — **comment by themcoo** (Community correctly identifies this as upstream-documented behavior.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKPathBuilder.cs` | — | direct | ArcTo(rx, ry, xAxisRotate, largeArc, sweep, x, y) calls SkiaApi.sk_pathbuilder_arc_to with all parameters passed through unchanged — no start==end guard at the SkiaSharp layer. |
+| `binding/SkiaSharp/SKPath.cs` | — | direct | SKPath.ArcTo(float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y) delegates directly to _builder.ArcTo with no additional logic. |
+
+### Workarounds
+
+- Offset the end-point by a small epsilon (e.g., 0.0005) so it differs from the start point: ArcTo(rx, ry, rotation, largeArc, sweep, x + 0.0005f, y + 0.0005f). The visual difference is imperceptible.
+- Use two half-arc segments (each 180 degrees) using the oval overload of ArcTo to draw a full circle or large arc without hitting the degenerate case.
+
+### Resolution Proposals
+
+**Hypothesis:** Upstream Skia documents that arcTo() draws a straight line to (x, y) when the current point equals (x, y). This matches the SVG arc specification for degenerate arcs. No change to SkiaSharp is required.
+
+1. **Add XML doc note to ArcTo** — alternative, confidence 0.75 (75%), cost/xs, validated=untested
+   - Add a <remarks> XML doc comment to the SVG-arc overloads of ArcTo noting that if the start and end point are equal, Skia draws a line segment instead of an arc (by spec).
+2. **Use epsilon offset workaround** — workaround, confidence 0.92 (92%), cost/xs, validated=untested
+   - Offset the end coordinate by a small epsilon value (e.g., 0.0001f–0.0005f). The visual difference is negligible at any normal drawing scale.
+
+```csharp
+// Workaround: offset by epsilon to avoid degenerate same-point arc
+path.MoveTo(new SKPoint(68.404f, 187.938f));
+path.ArcTo(100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise, 68.404f + 0.0005f, 187.938f + 0.0005f);
+```
+
+**Recommended proposal:** Use epsilon offset workaround
+
+**Why:** Reporter already confirmed this workaround works. It is trivial to apply and imposes no visual degradation.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.88 (88%) |
+| Reason | Documented behavior from Skia's native API: arcTo() draws a line segment when start equals end point. SkiaSharp passes through correctly. Workaround is available and confirmed by reporter. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply type/bug and area/SkiaSharp labels | labels=type/bug, area/SkiaSharp, tenet/reliability |
+| add-comment | high | 0.88 (88%) | Explain by-design behavior and offer epsilon workaround | — |
+| close-issue | medium | 0.88 (88%) | Close as not a bug — by-design Skia behavior | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! This is actually documented behavior from Skia's native C++ API:
+
+> `arcTo()` appends a line to `(x, y)` if the last path point equals `(x, y)`. Arc sweep is always less than 360°.
+
+When the start and end points are identical the arc degenerates into a zero-sweep arc, so Skia draws a straight line segment to that point instead. This also matches the [SVG arc specification](https://www.w3.org/TR/SVG/paths.html#ArcImplementationNotes) for this degenerate case.
+
+The easiest workaround — which you already discovered — is to offset the end coordinates by a tiny epsilon:
+
+```csharp
+path.MoveTo(new SKPoint(68.404f, 187.938f));
+path.ArcTo(100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise,
+    68.404f + 0.0005f, 187.938f + 0.0005f);
+```
+
+The visual difference is imperceptible at any normal drawing scale.
+
+Closing as not a bug — the behavior is correct per the Skia and SVG specifications.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2182,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T16:02:53Z"
+  },
+  "summary": "Reporter finds that SKPath.ArcTo (SVG arc variant) draws no arc when the start and end points are identical, but a tiny offset of 0.0005 on both coordinates causes the arc to render — this is documented by-design behavior from Skia's native API.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.82
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "ArcTo draws a line (or nothing) when start point equals end point",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKPath",
+        "Call MoveTo(68.404f, 187.938f)",
+        "Call ArcTo(100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise, 68.404f, 187.938f)",
+        "Observe that no arc is drawn — start and end points are identical"
+      ],
+      "codeSnippets": [
+        "path.MoveTo(new SKPoint(68.404f, 187.938f));\npath.ArcTo(100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise, 68.404f, 187.938f);"
+      ],
+      "environmentDetails": "No specific platform/version mentioned"
+    }
+  },
+  "analysis": {
+    "summary": "When SKPath.ArcTo is called with start and end points that are identical, Skia's native C++ SkPath::arcTo() draws a straight line segment to the endpoint instead of an arc. This is documented upstream behavior: 'arcTo() appends line to (x, y) if last SkPath SkPoint equals (x, y).' SkiaSharp correctly delegates to the native API without modification, so the behavior is by-design from Skia. The reporter already discovered the workaround (tiny coordinate offset). The SVG arc specification similarly defines this as a degenerate case where the arc should be omitted.",
+    "rationale": "Classified as type/bug because the reporter experiences unexpected output. However, code investigation confirms SkiaSharp passes the call directly to Skia's native sk_pathbuilder_arc_to, which documents this behavior. A community member already clarified this in the comments. Close-as-not-a-bug is appropriate with a workaround comment.",
+    "keySignals": [
+      {
+        "text": "this wont work … modifying the end point by 0.0005 in x and y seems to work",
+        "source": "issue body",
+        "interpretation": "Reporter already found the workaround — an epsilon offset bypasses Skia's same-point detection."
+      },
+      {
+        "text": "This is not a SkiaSharp bug, this works exactly as the native skia api is documented: Arc sweep is always less than 360 degrees. arcTo() appends line to (x, y) if … last SkPath SkPoint equals (x, y).",
+        "source": "comment by themcoo",
+        "interpretation": "Community correctly identifies this as upstream-documented behavior."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPathBuilder.cs",
+        "finding": "ArcTo(rx, ry, xAxisRotate, largeArc, sweep, x, y) calls SkiaApi.sk_pathbuilder_arc_to with all parameters passed through unchanged — no start==end guard at the SkiaSharp layer.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPath.cs",
+        "finding": "SKPath.ArcTo(float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y) delegates directly to _builder.ArcTo with no additional logic.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Offset the end-point by a small epsilon (e.g., 0.0005) so it differs from the start point: ArcTo(rx, ry, rotation, largeArc, sweep, x + 0.0005f, y + 0.0005f). The visual difference is imperceptible.",
+      "Use two half-arc segments (each 180 degrees) using the oval overload of ArcTo to draw a full circle or large arc without hitting the degenerate case."
+    ],
+    "resolution": {
+      "hypothesis": "Upstream Skia documents that arcTo() draws a straight line to (x, y) when the current point equals (x, y). This matches the SVG arc specification for degenerate arcs. No change to SkiaSharp is required.",
+      "proposals": [
+        {
+          "title": "Add XML doc note to ArcTo",
+          "description": "Add a <remarks> XML doc comment to the SVG-arc overloads of ArcTo noting that if the start and end point are equal, Skia draws a line segment instead of an arc (by spec).",
+          "category": "alternative",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Use epsilon offset workaround",
+          "description": "Offset the end coordinate by a small epsilon value (e.g., 0.0001f–0.0005f). The visual difference is negligible at any normal drawing scale.",
+          "category": "workaround",
+          "codeSnippet": "// Workaround: offset by epsilon to avoid degenerate same-point arc\npath.MoveTo(new SKPoint(68.404f, 187.938f));\npath.ArcTo(100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise, 68.404f + 0.0005f, 187.938f + 0.0005f);",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use epsilon offset workaround",
+      "recommendedReason": "Reporter already confirmed this workaround works. It is trivial to apply and imposes no visual degradation."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "Documented behavior from Skia's native API: arcTo() draws a line segment when start equals end point. SkiaSharp passes through correctly. Workaround is available and confirmed by reporter.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain by-design behavior and offer epsilon workaround",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "Thanks for the report! This is actually documented behavior from Skia's native C++ API:\n\n> `arcTo()` appends a line to `(x, y)` if the last path point equals `(x, y)`. Arc sweep is always less than 360°.\n\nWhen the start and end points are identical the arc degenerates into a zero-sweep arc, so Skia draws a straight line segment to that point instead. This also matches the [SVG arc specification](https://www.w3.org/TR/SVG/paths.html#ArcImplementationNotes) for this degenerate case.\n\nThe easiest workaround — which you already discovered — is to offset the end coordinates by a tiny epsilon:\n\n```csharp\npath.MoveTo(new SKPoint(68.404f, 187.938f));\npath.ArcTo(100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise,\n    68.404f + 0.0005f, 187.938f + 0.0005f);\n```\n\nThe visual difference is imperceptible at any normal drawing scale.\n\nClosing as not a bug — the behavior is correct per the Skia and SVG specifications."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug — by-design Skia behavior",
+        "risk": "medium",
+        "confidence": 0.88,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

@@ -1,0 +1,356 @@
+# Issue Triage Report — #1557
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T12:58:52Z |
+| Type | type/bug (0.90 (90%)) |
+| Area | area/libHarfBuzzSharp.native (0.88 (88%)) |
+| Suggested action | needs-investigation (0.78 (78%)) |
+
+**Issue Summary:** iOS native linker fails with MT5214 (undefined symbols: _hb_feature_to_string and others) when using SkiaSharp.HarfBuzz 2.80.2 / HarfBuzzSharp 2.6.17; downgrading to 1.x resolves the error.
+
+**Analysis:** The iOS native library libHarfBuzzSharp.framework shipped with HarfBuzzSharp 2.6.17 does not export all the HarfBuzz C symbols (e.g. hb_feature_to_string) that the corresponding managed bindings reference via P/Invoke, causing Xamarin.iOS's native linker to fail at build time. The 1.x native library matched its older binding surface; the 2.x binding added new symbols that were not exported from the rebuilt framework.
+
+**Recommendations:** **needs-investigation** — Real build failure confirmed by two users; root cause points to missing symbol exports in the 2.x iOS native framework. Needs verification in current 3.x versions before any close decision.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libHarfBuzzSharp.native |
+| Platforms | os/iOS |
+| Backends | — |
+| Tenets | tenet/reliability, tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a cross-platform (iOS/Android) Xamarin project
+2. Reference a multiplatform library that depends on SkiaSharp.HarfBuzz 2.80.2 / HarfBuzzSharp 2.6.17
+3. Build the iOS app target
+4. Observe MT5214 native linking errors for multiple _hb_* symbols
+
+**Environment:** Visual Studio for Mac 8.8.3, Mono 6.12.0.107, Xamarin.iOS 14.6.0.15, SkiaSharp.HarfBuzz 2.80.2, HarfBuzzSharp 2.6.17
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | build-error |
+| Error message | MTOUCH: error MT5214: Native linking failed, undefined symbol: _hb_feature_to_string |
+| Repro quality | partial |
+| Target frameworks | xamarinios |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2, 2.6.17, 1.68.0, 1.4.6.2 |
+| Worked in | 1.68.0 / HarfBuzzSharp 1.4.6.2 |
+| Broke in | 2.80.2 / HarfBuzzSharp 2.6.17 |
+| Current relevance | unknown |
+| Relevance reason | Issue filed in 2020 against a 2.x version; the codebase has since moved to 3.x with significant HarfBuzz rebinding. No explicit fix commit or maintainer confirmation found. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.85 (85%) |
+| Reason | Working in version 1.68.0/1.4.6.2 and failing in 2.80.2/2.6.17 on identical project. |
+| Worked in version | HarfBuzzSharp 1.4.6.2 |
+| Broke in version | HarfBuzzSharp 2.6.17 |
+
+## Analysis
+
+### Technical Summary
+
+The iOS native library libHarfBuzzSharp.framework shipped with HarfBuzzSharp 2.6.17 does not export all the HarfBuzz C symbols (e.g. hb_feature_to_string) that the corresponding managed bindings reference via P/Invoke, causing Xamarin.iOS's native linker to fail at build time. The 1.x native library matched its older binding surface; the 2.x binding added new symbols that were not exported from the rebuilt framework.
+
+### Rationale
+
+The error is a native linker error (MT5214), not a runtime DllNotFoundException, confirming the library IS being found but is missing specific symbols. All failing symbols start with _hb and are called from HarfBuzzSharp.HarfBuzzApi — the generated P/Invoke class. Code inspection shows hb_feature_to_string is used in Feature.ToString() and is declared in HarfBuzzApi.generated.cs as an extern P/Invoke. The iOS framework path is @rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp, and the native header in native/ios is empty — no explicit export list.
+
+### Key Signals
+
+- "MTOUCH: error MT5214: Native linking failed, undefined symbol: _hb_feature_to_string" — **issue body** (Build-time linker failure — the .framework is found but missing symbol exports.)
+- "All the failed symbols begin with _hb and is from HarfBuzzSharp.HarfBuzzApi" — **issue body** (Systematic missing exports — not a single symbol but an entire set of new HarfBuzz APIs added in the 2.x binding.)
+- "I tried to downgrade pkg's version to 1.68.0(SkiaSharp.HarfBuzz)/1.4.6.2(HarfBuzzSharp), then it can build successfully." — **issue body** (Clear regression: works in 1.x, fails in 2.x — confirms mismatch between new binding symbols and native library exports.)
+- "SkiaSharp.HarfBuzz pkg is used by a multiplatform library, and the library is referenced by the ios app project." — **issue body** (Transitive reference chain — native assets must flow through to the app project for Xamarin.iOS linking to work.)
+- "The same on my side :/" — **comment by SeRgI1982** (Confirmed by a second user — not a project-specific misconfiguration.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/HarfBuzzSharp/HarfBuzzApi.cs` | 9-10 | direct | iOS/tvOS uses @rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp as the native library path — framework must be linked into the app and export all referenced _hb_* symbols. |
+| `binding/HarfBuzzSharp/Feature.cs` | 51-58 | direct | Feature.ToString() calls HarfBuzzApi.hb_feature_to_string() directly — this is one of the undefined symbols reported. If the native framework lacks this export the iOS linker will fail. |
+| `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` | — | direct | hb_feature_to_string is declared as an extern DllImport (or delegate-based P/Invoke). The symbol MUST be exported by the native framework for the iOS static linker to resolve it at build time. |
+| `native/ios/libHarfBuzzSharp/libHarfBuzzSharp/libHarfBuzzSharp.h` | — | related | Header file is empty — no explicit public symbol export list. Whether the framework exports all required _hb_* symbols depends entirely on the build configuration used to compile the .a/framework. |
+| `binding/HarfBuzzSharp.NativeAssets.iOS/HarfBuzzSharp.NativeAssets.iOS.csproj` | — | related | NativeAssets.iOS package bundles output/native/ios/libHarfBuzzSharp.framework. The framework must be present and correctly built for all symbols to resolve. |
+
+### Workarounds
+
+- Downgrade to SkiaSharp.HarfBuzz 1.68.0 / HarfBuzzSharp 1.4.6.2 (confirmed working by reporter).
+- Ensure HarfBuzzSharp.NativeAssets.iOS is explicitly referenced in the iOS app project (not just the library), as Xamarin.iOS requires native frameworks to be linked from the application project.
+
+### Next Questions
+
+- Is this still reproducible with current SkiaSharp 3.x on modern .NET iOS?
+- Does explicitly adding HarfBuzzSharp.NativeAssets.iOS to the iOS app project resolve the error with 2.x?
+- Are all _hb_* symbols that are P/Invoked in HarfBuzzApi.generated.cs present in the 2.x libHarfBuzzSharp.framework?
+
+### Resolution Proposals
+
+**Hypothesis:** The libHarfBuzzSharp.framework for iOS in HarfBuzzSharp 2.6.17 was not built/exported with all the new HarfBuzz symbols that were added to the 2.x C# bindings, causing build-time linker failures.
+
+1. **Add HarfBuzzSharp.NativeAssets.iOS directly to the iOS app project** — workaround, confidence 0.60 (60%), cost/xs, validated=untested
+   - In Xamarin.iOS/MAUI, native frameworks from transitive dependencies may not always propagate to the app linker. Add HarfBuzzSharp.NativeAssets.iOS as a direct PackageReference in the iOS application (.csproj), not just in the library.
+2. **Verify and rebuild libHarfBuzzSharp.framework with full symbol exports** — fix, confidence 0.80 (80%), cost/m, validated=untested
+   - Audit the iOS Xcode project at native/ios/libHarfBuzzSharp to confirm all _hb_* symbols referenced in HarfBuzzApi.generated.cs are exported. Rebuild and publish a corrected 2.x native assets package if any are missing.
+
+**Recommended proposal:** Add HarfBuzzSharp.NativeAssets.iOS directly to the iOS app project
+
+**Why:** Quickest workaround to try that doesn't require a patch release. Matches the documented pattern for native assets in application vs library projects.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.78 (78%) |
+| Reason | Real build failure confirmed by two users; root cause points to missing symbol exports in the 2.x iOS native framework. Needs verification in current 3.x versions before any close decision. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply type/bug, area/libHarfBuzzSharp.native, os/iOS, tenet/reliability, tenet/compatibility labels | labels=type/bug, area/libHarfBuzzSharp.native, os/iOS, tenet/reliability, tenet/compatibility |
+| add-comment | medium | 0.78 (78%) | Ask reporter to verify with current versions and suggest the direct NativeAssets workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report, and thanks to @SeRgI1982 for confirming.
+
+This looks like the `libHarfBuzzSharp.framework` for iOS in HarfBuzzSharp 2.6.17 was not built with all the `hb_*` symbol exports that the 2.x managed bindings reference via P/Invoke. The 1.x native library matched its older, smaller binding surface; 2.x added new symbols (e.g. `hb_feature_to_string`) that the framework didn't export.
+
+**Workaround to try:**
+Make sure `HarfBuzzSharp.NativeAssets.iOS` is referenced **directly** in your iOS app project (`.csproj`), not only in the intermediate library. Native frameworks in Xamarin.iOS must be linked from the application project to be picked up by the static linker.
+
+```xml
+<!-- In your iOS app .csproj -->
+<PackageReference Include="HarfBuzzSharp.NativeAssets.iOS" Version="2.6.17" />
+```
+
+If that doesn't help, downgrading to 1.68.0 / 1.4.6.2 remains the confirmed working path.
+
+Could you also check whether this is still reproducible with the latest SkiaSharp 3.x and modern `.NET iOS` TFM? That would help us determine whether a fix has already shipped.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1557,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T12:58:52Z"
+  },
+  "summary": "iOS native linker fails with MT5214 (undefined symbols: _hb_feature_to_string and others) when using SkiaSharp.HarfBuzz 2.80.2 / HarfBuzzSharp 2.6.17; downgrading to 1.x resolves the error.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/libHarfBuzzSharp.native",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "tenets": [
+      "tenet/reliability",
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "build-error",
+      "errorMessage": "MTOUCH: error MT5214: Native linking failed, undefined symbol: _hb_feature_to_string",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "xamarinios"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a cross-platform (iOS/Android) Xamarin project",
+        "Reference a multiplatform library that depends on SkiaSharp.HarfBuzz 2.80.2 / HarfBuzzSharp 2.6.17",
+        "Build the iOS app target",
+        "Observe MT5214 native linking errors for multiple _hb_* symbols"
+      ],
+      "environmentDetails": "Visual Studio for Mac 8.8.3, Mono 6.12.0.107, Xamarin.iOS 14.6.0.15, SkiaSharp.HarfBuzz 2.80.2, HarfBuzzSharp 2.6.17"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2",
+        "2.6.17",
+        "1.68.0",
+        "1.4.6.2"
+      ],
+      "workedIn": "1.68.0 / HarfBuzzSharp 1.4.6.2",
+      "brokeIn": "2.80.2 / HarfBuzzSharp 2.6.17",
+      "currentRelevance": "unknown",
+      "relevanceReason": "Issue filed in 2020 against a 2.x version; the codebase has since moved to 3.x with significant HarfBuzz rebinding. No explicit fix commit or maintainer confirmation found."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Working in version 1.68.0/1.4.6.2 and failing in 2.80.2/2.6.17 on identical project.",
+      "workedInVersion": "HarfBuzzSharp 1.4.6.2",
+      "brokeInVersion": "HarfBuzzSharp 2.6.17"
+    }
+  },
+  "analysis": {
+    "summary": "The iOS native library libHarfBuzzSharp.framework shipped with HarfBuzzSharp 2.6.17 does not export all the HarfBuzz C symbols (e.g. hb_feature_to_string) that the corresponding managed bindings reference via P/Invoke, causing Xamarin.iOS's native linker to fail at build time. The 1.x native library matched its older binding surface; the 2.x binding added new symbols that were not exported from the rebuilt framework.",
+    "rationale": "The error is a native linker error (MT5214), not a runtime DllNotFoundException, confirming the library IS being found but is missing specific symbols. All failing symbols start with _hb and are called from HarfBuzzSharp.HarfBuzzApi — the generated P/Invoke class. Code inspection shows hb_feature_to_string is used in Feature.ToString() and is declared in HarfBuzzApi.generated.cs as an extern P/Invoke. The iOS framework path is @rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp, and the native header in native/ios is empty — no explicit export list.",
+    "codeInvestigation": [
+      {
+        "file": "binding/HarfBuzzSharp/HarfBuzzApi.cs",
+        "lines": "9-10",
+        "finding": "iOS/tvOS uses @rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp as the native library path — framework must be linked into the app and export all referenced _hb_* symbols.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/Feature.cs",
+        "lines": "51-58",
+        "finding": "Feature.ToString() calls HarfBuzzApi.hb_feature_to_string() directly — this is one of the undefined symbols reported. If the native framework lacks this export the iOS linker will fail.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs",
+        "finding": "hb_feature_to_string is declared as an extern DllImport (or delegate-based P/Invoke). The symbol MUST be exported by the native framework for the iOS static linker to resolve it at build time.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/ios/libHarfBuzzSharp/libHarfBuzzSharp/libHarfBuzzSharp.h",
+        "finding": "Header file is empty — no explicit public symbol export list. Whether the framework exports all required _hb_* symbols depends entirely on the build configuration used to compile the .a/framework.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/HarfBuzzSharp.NativeAssets.iOS/HarfBuzzSharp.NativeAssets.iOS.csproj",
+        "finding": "NativeAssets.iOS package bundles output/native/ios/libHarfBuzzSharp.framework. The framework must be present and correctly built for all symbols to resolve.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "MTOUCH: error MT5214: Native linking failed, undefined symbol: _hb_feature_to_string",
+        "source": "issue body",
+        "interpretation": "Build-time linker failure — the .framework is found but missing symbol exports."
+      },
+      {
+        "text": "All the failed symbols begin with _hb and is from HarfBuzzSharp.HarfBuzzApi",
+        "source": "issue body",
+        "interpretation": "Systematic missing exports — not a single symbol but an entire set of new HarfBuzz APIs added in the 2.x binding."
+      },
+      {
+        "text": "I tried to downgrade pkg's version to 1.68.0(SkiaSharp.HarfBuzz)/1.4.6.2(HarfBuzzSharp), then it can build successfully.",
+        "source": "issue body",
+        "interpretation": "Clear regression: works in 1.x, fails in 2.x — confirms mismatch between new binding symbols and native library exports."
+      },
+      {
+        "text": "SkiaSharp.HarfBuzz pkg is used by a multiplatform library, and the library is referenced by the ios app project.",
+        "source": "issue body",
+        "interpretation": "Transitive reference chain — native assets must flow through to the app project for Xamarin.iOS linking to work."
+      },
+      {
+        "text": "The same on my side :/",
+        "source": "comment by SeRgI1982",
+        "interpretation": "Confirmed by a second user — not a project-specific misconfiguration."
+      }
+    ],
+    "workarounds": [
+      "Downgrade to SkiaSharp.HarfBuzz 1.68.0 / HarfBuzzSharp 1.4.6.2 (confirmed working by reporter).",
+      "Ensure HarfBuzzSharp.NativeAssets.iOS is explicitly referenced in the iOS app project (not just the library), as Xamarin.iOS requires native frameworks to be linked from the application project."
+    ],
+    "nextQuestions": [
+      "Is this still reproducible with current SkiaSharp 3.x on modern .NET iOS?",
+      "Does explicitly adding HarfBuzzSharp.NativeAssets.iOS to the iOS app project resolve the error with 2.x?",
+      "Are all _hb_* symbols that are P/Invoked in HarfBuzzApi.generated.cs present in the 2.x libHarfBuzzSharp.framework?"
+    ],
+    "resolution": {
+      "hypothesis": "The libHarfBuzzSharp.framework for iOS in HarfBuzzSharp 2.6.17 was not built/exported with all the new HarfBuzz symbols that were added to the 2.x C# bindings, causing build-time linker failures.",
+      "proposals": [
+        {
+          "title": "Add HarfBuzzSharp.NativeAssets.iOS directly to the iOS app project",
+          "description": "In Xamarin.iOS/MAUI, native frameworks from transitive dependencies may not always propagate to the app linker. Add HarfBuzzSharp.NativeAssets.iOS as a direct PackageReference in the iOS application (.csproj), not just in the library.",
+          "category": "workaround",
+          "confidence": 0.6,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Verify and rebuild libHarfBuzzSharp.framework with full symbol exports",
+          "description": "Audit the iOS Xcode project at native/ios/libHarfBuzzSharp to confirm all _hb_* symbols referenced in HarfBuzzApi.generated.cs are exported. Rebuild and publish a corrected 2.x native assets package if any are missing.",
+          "category": "fix",
+          "confidence": 0.8,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add HarfBuzzSharp.NativeAssets.iOS directly to the iOS app project",
+      "recommendedReason": "Quickest workaround to try that doesn't require a patch release. Matches the documented pattern for native assets in application vs library projects."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.78,
+      "reason": "Real build failure confirmed by two users; root cause points to missing symbol exports in the 2.x iOS native framework. Needs verification in current 3.x versions before any close decision.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/libHarfBuzzSharp.native, os/iOS, tenet/reliability, tenet/compatibility labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/libHarfBuzzSharp.native",
+          "os/iOS",
+          "tenet/reliability",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask reporter to verify with current versions and suggest the direct NativeAssets workaround",
+        "risk": "medium",
+        "confidence": 0.78,
+        "comment": "Thanks for the report, and thanks to @SeRgI1982 for confirming.\n\nThis looks like the `libHarfBuzzSharp.framework` for iOS in HarfBuzzSharp 2.6.17 was not built with all the `hb_*` symbol exports that the 2.x managed bindings reference via P/Invoke. The 1.x native library matched its older, smaller binding surface; 2.x added new symbols (e.g. `hb_feature_to_string`) that the framework didn't export.\n\n**Workaround to try:**\nMake sure `HarfBuzzSharp.NativeAssets.iOS` is referenced **directly** in your iOS app project (`.csproj`), not only in the intermediate library. Native frameworks in Xamarin.iOS must be linked from the application project to be picked up by the static linker.\n\n```xml\n<!-- In your iOS app .csproj -->\n<PackageReference Include=\"HarfBuzzSharp.NativeAssets.iOS\" Version=\"2.6.17\" />\n```\n\nIf that doesn't help, downgrading to 1.68.0 / 1.4.6.2 remains the confirmed working path.\n\nCould you also check whether this is still reproducible with the latest SkiaSharp 3.x and modern `.NET iOS` TFM? That would help us determine whether a fix has already shipped."
+      }
+    ]
+  }
+}
+```
+
+</details>
