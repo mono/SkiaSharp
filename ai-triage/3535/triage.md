@@ -1,0 +1,242 @@
+# Issue Triage Report — #3535
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-05T21:41:20Z |
+| Type | type/enhancement (0.97 (97%)) |
+| Area | area/SkiaSharp.Views.Maui (0.95 (95%)) |
+| Suggested action | needs-investigation (0.92 (92%)) |
+
+**Issue Summary:** Add scroll wheel support to SkiaSharp Android MAUI views by handling ACTION_SCROLL events in SKTouchHandler and normalizing AXIS_VSCROLL values to the v120 convention (120 units = 1 discrete mouse wheel notch).
+
+**Analysis:** The Android MAUI SKTouchHandler only handles touch events (Down, Move, Up, PointerDown, PointerUp, Cancel) via the View.Touch event. It does not register for or handle ACTION_SCROLL events, which are delivered through onGenericMotionEvent() on Android. The WheelDelta field in SKTouchEventArgs and the WheelChanged action type already exist in the shared MAUI layer; only the Android-specific handler needs to be updated to hook OnGenericMotionEvent and produce WheelChanged events. The Windows handler provides a clear reference pattern.
+
+**Recommendations:** **needs-investigation** — Well-specified enhancement from a collaborator with clear implementation path. Needs repro/implementation to verify the GenericMotionEvent approach works end-to-end on Android.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp.Views.Maui |
+| Platforms | os/Android |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | partner/maui |
+| Current labels | type/enhancement, os/Android, area/SkiaSharp |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** Android MAUI, any Android version with a connected mouse or trackpad
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/3533 — Parent issue: Standardize WheelDelta to v120 convention across all platforms
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The Android SKTouchHandler does not currently handle ACTION_SCROLL events — the gap is confirmed by source code inspection. |
+
+## Analysis
+
+### Technical Summary
+
+The Android MAUI SKTouchHandler only handles touch events (Down, Move, Up, PointerDown, PointerUp, Cancel) via the View.Touch event. It does not register for or handle ACTION_SCROLL events, which are delivered through onGenericMotionEvent() on Android. The WheelDelta field in SKTouchEventArgs and the WheelChanged action type already exist in the shared MAUI layer; only the Android-specific handler needs to be updated to hook OnGenericMotionEvent and produce WheelChanged events. The Windows handler provides a clear reference pattern.
+
+### Rationale
+
+This is a well-scoped enhancement filed by a collaborator (mattleibow) as a sub-issue of #3533 (v120 standardization across all platforms). The issue is precisely specified with native API references, sign convention documentation, normalization formula, expected results table, and pointers to the reference Windows implementation. The gap is confirmed by reading the Android SKTouchHandler source. The WheelChanged action type and WheelDelta field already exist in the shared layer. Implementation complexity is low — needs a GenericMotion listener registration and one case in the handler.
+
+### Key Signals
+
+- "The Android SKTouchHandler currently does NOT handle ACTION_SCROLL; all SKTouchEventArgs are constructed with wheelDelta = 0" — **issue body** (Confirmed by source code — scroll events are simply not handled on Android.)
+- "ACTION_SCROLL events are delivered through onGenericMotionEvent(), NOT onTouchEvent()" — **issue body** (Requires a separate registration path from the existing View.Touch subscription — a GenericMotion listener must be added.)
+- "float axisValue = motionEvent.GetAxisValue(Axis.Vscroll); int wheelDelta = (int)Math.Round(axisValue * 120.0);" — **issue body** (Normalization formula is already specified and well-justified. Positive AXIS_VSCROLL matches v120 sign convention — no negation needed.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs` | 19-29 | direct | SetEnabled() only subscribes to view.Touch; no registration for generic motion events (ACTION_SCROLL). All SKTouchEventArgs are constructed with wheelDelta = 0. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs` | 35-44 | related | Windows handler registers for PointerWheelChanged event; CommonHandler reads pointerPoint.Properties.MouseWheelDelta for the WheelDelta value. This is the reference pattern for implementing the Android equivalent. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs` | 60-69 | context | SKTouchAction.WheelChanged enum value exists. SKTouchEventArgs.WheelDelta property exists (int). Infrastructure is already in place — only the Android platform handler is missing. |
+
+### Resolution Proposals
+
+**Hypothesis:** Add OnGenericMotionEvent handling to the Android SKTouchHandler to intercept ACTION_SCROLL events and fire WheelChanged with AXIS_VSCROLL * 120 normalization.
+
+1. **Implement ACTION_SCROLL handling in Android SKTouchHandler** — fix, confidence 0.90 (90%), cost/s, validated=untested
+   - Register a GenericMotion event listener on the view in SetEnabled(), unregister in Detach(). In the handler, check for MotionEventActions.Scroll (ACTION_SCROLL), read AXIS_VSCROLL, multiply by 120 and round to int, then fire SKTouchAction.WheelChanged with the normalized wheelDelta. Return args.Handled as the event consumed flag.
+
+**Recommended proposal:** Implement ACTION_SCROLL handling in Android SKTouchHandler
+
+**Why:** Well-specified with full normalization formula, reference implementation on Windows, and confirmed gap in source. Low complexity change that completes Android as part of the cross-platform v120 effort.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.92 (92%) |
+| Reason | Well-specified enhancement from a collaborator with clear implementation path. Needs repro/implementation to verify the GenericMotionEvent approach works end-to-end on Android. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Correct labels to area/SkiaSharp.Views.Maui, add tenet/compatibility and partner/maui | labels=type/enhancement, area/SkiaSharp.Views.Maui, os/Android, tenet/compatibility, partner/maui |
+| link-related | low | 0.99 (99%) | Link to parent issue #3533 (v120 standardization) | linkedIssue=#3533 |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3535,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T21:41:20Z",
+    "currentLabels": [
+      "type/enhancement",
+      "os/Android",
+      "area/SkiaSharp"
+    ]
+  },
+  "summary": "Add scroll wheel support to SkiaSharp Android MAUI views by handling ACTION_SCROLL events in SKTouchHandler and normalizing AXIS_VSCROLL values to the v120 convention (120 units = 1 discrete mouse wheel notch).",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Android"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Android MAUI, any Android version with a connected mouse or trackpad",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3533",
+          "description": "Parent issue: Standardize WheelDelta to v120 convention across all platforms"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Android SKTouchHandler does not currently handle ACTION_SCROLL events — the gap is confirmed by source code inspection."
+    }
+  },
+  "analysis": {
+    "summary": "The Android MAUI SKTouchHandler only handles touch events (Down, Move, Up, PointerDown, PointerUp, Cancel) via the View.Touch event. It does not register for or handle ACTION_SCROLL events, which are delivered through onGenericMotionEvent() on Android. The WheelDelta field in SKTouchEventArgs and the WheelChanged action type already exist in the shared MAUI layer; only the Android-specific handler needs to be updated to hook OnGenericMotionEvent and produce WheelChanged events. The Windows handler provides a clear reference pattern.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
+        "lines": "19-29",
+        "finding": "SetEnabled() only subscribes to view.Touch; no registration for generic motion events (ACTION_SCROLL). All SKTouchEventArgs are constructed with wheelDelta = 0.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+        "lines": "35-44",
+        "finding": "Windows handler registers for PointerWheelChanged event; CommonHandler reads pointerPoint.Properties.MouseWheelDelta for the WheelDelta value. This is the reference pattern for implementing the Android equivalent.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+        "lines": "60-69",
+        "finding": "SKTouchAction.WheelChanged enum value exists. SKTouchEventArgs.WheelDelta property exists (int). Infrastructure is already in place — only the Android platform handler is missing.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The Android SKTouchHandler currently does NOT handle ACTION_SCROLL; all SKTouchEventArgs are constructed with wheelDelta = 0",
+        "source": "issue body",
+        "interpretation": "Confirmed by source code — scroll events are simply not handled on Android."
+      },
+      {
+        "text": "ACTION_SCROLL events are delivered through onGenericMotionEvent(), NOT onTouchEvent()",
+        "source": "issue body",
+        "interpretation": "Requires a separate registration path from the existing View.Touch subscription — a GenericMotion listener must be added."
+      },
+      {
+        "text": "float axisValue = motionEvent.GetAxisValue(Axis.Vscroll); int wheelDelta = (int)Math.Round(axisValue * 120.0);",
+        "source": "issue body",
+        "interpretation": "Normalization formula is already specified and well-justified. Positive AXIS_VSCROLL matches v120 sign convention — no negation needed."
+      }
+    ],
+    "rationale": "This is a well-scoped enhancement filed by a collaborator (mattleibow) as a sub-issue of #3533 (v120 standardization across all platforms). The issue is precisely specified with native API references, sign convention documentation, normalization formula, expected results table, and pointers to the reference Windows implementation. The gap is confirmed by reading the Android SKTouchHandler source. The WheelChanged action type and WheelDelta field already exist in the shared layer. Implementation complexity is low — needs a GenericMotion listener registration and one case in the handler.",
+    "resolution": {
+      "hypothesis": "Add OnGenericMotionEvent handling to the Android SKTouchHandler to intercept ACTION_SCROLL events and fire WheelChanged with AXIS_VSCROLL * 120 normalization.",
+      "proposals": [
+        {
+          "title": "Implement ACTION_SCROLL handling in Android SKTouchHandler",
+          "description": "Register a GenericMotion event listener on the view in SetEnabled(), unregister in Detach(). In the handler, check for MotionEventActions.Scroll (ACTION_SCROLL), read AXIS_VSCROLL, multiply by 120 and round to int, then fire SKTouchAction.WheelChanged with the normalized wheelDelta. Return args.Handled as the event consumed flag.",
+          "category": "fix",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Implement ACTION_SCROLL handling in Android SKTouchHandler",
+      "recommendedReason": "Well-specified with full normalization formula, reference implementation on Windows, and confirmed gap in source. Low complexity change that completes Android as part of the cross-platform v120 effort."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Well-specified enhancement from a collaborator with clear implementation path. Needs repro/implementation to verify the GenericMotionEvent approach works end-to-end on Android.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct labels to area/SkiaSharp.Views.Maui, add tenet/compatibility and partner/maui",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views.Maui",
+          "os/Android",
+          "tenet/compatibility",
+          "partner/maui"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to parent issue #3533 (v120 standardization)",
+        "risk": "low",
+        "confidence": 0.99,
+        "linkedIssue": 3533
+      }
+    ]
+  }
+}
+```
+
+</details>

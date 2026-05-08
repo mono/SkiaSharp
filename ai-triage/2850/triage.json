@@ -1,0 +1,148 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2850,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T18:45:55Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "CR2 (Canon RAW) image orientation is incorrectly reported as SKEncodedOrigin.TopLeft instead of SKEncodedOrigin.LeftBottom by SKCodec.EncodedOrigin on Linux and macOS, causing thumbnails to be generated with wrong rotation.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.80 },
+    "platforms": ["os/Linux", "os/macOS"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "codec.EncodedOrigin returns SKEncodedOrigin.TopLeft (1) instead of SKEncodedOrigin.LeftBottom (8) for a CR2 file with EXIF orientation Rotate 270 CW",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load a CR2 file whose EXIF orientation is 'Left side, bottom (Rotate 270 CW)' using SKCodec.Create()",
+        "Read codec.EncodedOrigin",
+        "Observe it returns SKEncodedOrigin.TopLeft (default) instead of SKEncodedOrigin.LeftBottom"
+      ],
+      "environmentDetails": ".NET 8.0, SkiaSharp 2.88.8, Linux and macOS",
+      "repoLinks": [
+        { "url": "https://drive.google.com/file/d/1dVffxdpPy0yYM3eScQqOleisoAqwglT8/view?usp=sharing", "description": "Sample CR2 file uploaded by reporter (LV1_3765.CR2.zip)" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/1517", "description": "Related issue by same author: JPEG orientation wrong for some images (closed/completed)" }
+      ],
+      "relatedIssues": [1517]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.8"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The EncodedOrigin property directly calls sk_codec_get_origin (native). No changes to this code path in recent releases suggest the issue is still present."
+    }
+  },
+  "analysis": {
+    "summary": "SKCodec.EncodedOrigin returns TopLeft (default) for a CR2 RAW image that has EXIF orientation 8 (LeftBottom / Rotate 270 CW). The C# binding correctly calls the native sk_codec_get_origin function, so the root cause is in the native Skia RAW codec's handling of EXIF orientation tags inside CR2 files. CR2 uses an EXIF-based orientation tag but Skia's dng_sdk or piex-based RAW decoder may not parse this tag correctly for Canon CR2 files, or may return the default when the orientation sub-IFD is located at a Canon-specific offset.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "36-37",
+        "finding": "EncodedOrigin property calls SkiaApi.sk_codec_get_origin(Handle) directly with no transformation — the C# layer is correct and transparent",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "3599-3615",
+        "finding": "sk_codec_get_origin is a direct P/Invoke to the native symbol. No caching or conversion applied. If native returns 1 (TopLeft), that is what C# sees.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "21061-21079",
+        "finding": "SKEncodedOrigin enum: TopLeft=1 (same as Default), LeftBottom=8. Matches EXIF standard. The enum mapping is correct.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "ExifTool correctly shows the orientation as: Orientation = Left side, bottom (Rotate 270 CW)",
+        "source": "issue body",
+        "interpretation": "Third-party tool correctly reads EXIF orientation tag from the CR2 file, confirming orientation data is present. The fault is in Skia's RAW codec parsing, not missing EXIF data."
+      },
+      {
+        "text": "The image orientation is evaluated as SKEncodedOrigin.TopLeft",
+        "source": "issue body",
+        "interpretation": "TopLeft is the SKEncodedOrigin.Default value (1). Skia's RAW codec is falling back to the default, not reading the EXIF tag."
+      },
+      {
+        "text": ".Net 8.0 on Linux, macOS",
+        "source": "issue body",
+        "interpretation": "Bug is cross-platform (Linux and macOS) suggesting it is in the native Skia codec logic, not a platform-specific interop issue."
+      }
+    ],
+    "rationale": "The C# layer correctly passes through what the native sk_codec_get_origin returns. The bug is in Skia's native RAW/CR2 codec failing to read the EXIF orientation tag. The same reporter had a similar JPEG orientation issue (#1517) which was resolved. CR2 is a proprietary Canon RAW format; Skia uses piex (preview extractor) or dng_sdk, which may not handle Canon-specific EXIF IFD layouts for orientation. This is a native codec limitation, not a SkiaSharp binding bug.",
+    "workarounds": [
+      "Use a dedicated EXIF library (e.g., MetadataExtractor NuGet package) to read the orientation tag from the CR2 file independently, then apply the rotation manually using SKBitmap.RotateCW() or a matrix transform.",
+      "Use ImageMagick or ExifTool to pre-rotate the image and then process with SkiaSharp."
+    ],
+    "nextQuestions": [
+      "Does the issue affect all Canon CR2 files or only specific camera models/firmware?",
+      "Does the issue affect DNG files or only Canon's proprietary CR2?",
+      "Which version of Skia (milestone) is bundled with SkiaSharp 2.88.8 — does upstream Skia have a fix?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia's RAW codec (piex/dng_sdk) does not read the EXIF orientation tag from Canon CR2 files, falling back to the default TopLeft orientation. A fix would require updating the Skia RAW codec to handle the Canon EXIF orientation sub-IFD.",
+      "proposals": [
+        {
+          "title": "Use MetadataExtractor to read EXIF orientation",
+          "description": "Read EXIF orientation using the MetadataExtractor NuGet package, then apply rotation as a workaround until the upstream Skia RAW codec is fixed.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Fix in upstream Skia RAW codec",
+          "description": "Investigate and fix Skia's RAW codec (likely in src/codec/SkRawCodec.cpp or piex) to properly parse the EXIF orientation tag from Canon CR2 files and return the correct SkEncodedOrigin.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use MetadataExtractor to read EXIF orientation",
+      "recommendedReason": "A native Skia fix requires upstream cooperation and substantial investigation of the proprietary CR2 format. The workaround unblocks the reporter immediately."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Real bug with sample code and external image file. Root cause is in the native Skia RAW codec which is inaccessible without the checked-out submodule. Needs investigation against actual CR2 file to confirm behavior and trace through native codec.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, Linux and macOS labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Linux", "os/macOS", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge bug, explain root cause hypothesis, provide workaround using MetadataExtractor",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed report and sample file!\n\nThe `SKCodec.EncodedOrigin` property directly returns the value from Skia's native RAW codec. Since ExifTool correctly reads the orientation as `LeftBottom` (Rotate 270 CW), the issue is that Skia's RAW codec isn't parsing the EXIF orientation tag from Canon CR2 files — it falls back to `TopLeft` (the default).\n\nThis appears to be a limitation in the upstream Skia native RAW codec rather than in the SkiaSharp C# bindings.\n\n**Workaround:** Use the [MetadataExtractor](https://www.nuget.org/packages/MetadataExtractor) NuGet package to read the EXIF orientation independently:\n\n```csharp\nusing MetadataExtractor;\nusing MetadataExtractor.Formats.Exif;\n\nvar directories = ImageMetadataReader.ReadMetadata(source.FullName);\nvar exifDir = directories.OfType<ExifIfd0Directory>().FirstOrDefault();\nint orientation = exifDir?.GetInt32(ExifDirectoryBase.TagOrientation) ?? 1;\n// Map EXIF orientation (1-8) to your rotation logic\n```\n\nWe'll investigate whether this can be fixed in the native Skia RAW codec."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related JPEG orientation issue by same reporter",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 1517
+      }
+    ]
+  }
+}

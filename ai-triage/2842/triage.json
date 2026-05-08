@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2842,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T19:16:35Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "On iOS, pages containing SKGLView exhibit slow, wobbly layout settling over the first ~100ms after becoming visible, whereas SKCanvasView performs the same layout instantly — affecting all tested SkiaSharp versions from 2.80.3 through 3.0.0-preview3.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.80 },
+    "platforms": ["os/iOS"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/performance", "tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "performance",
+      "errorMessage": "Page layout wobbles/adjusts slowly over ~100ms when SKGLView is present; SKCanvasView is instantaneous",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-ios"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI page with a title, subtitle, SKGLView, and a buttons grid",
+        "Navigate to the page (or switch data shown on the page)",
+        "Observe that UI elements shift around over ~100ms before settling",
+        "Replace SKGLView with SKCanvasView and observe that layout is instant"
+      ],
+      "environmentDetails": "iOS 17.4.1, iPad 11,7, all iOS devices; Visual Studio on Windows; SkiaSharp 2.80.3–3.0.0-preview3",
+      "repoLinks": [
+        { "url": "https://github.com/hyvanmielenpelit/GnollHack", "description": "Large project where this issue is reproducible on the GamePage menu grid" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.3", "3.0.0-preview3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKGLView iOS implementation has not changed substantially between these versions and still uses GLKView/OpenGL ES, which is the likely root cause."
+    }
+  },
+  "analysis": {
+    "summary": "SKGLView on iOS inherits from GLKView (OpenGL ES, deprecated since iOS 12), which uses a CAEAGLLayer backing layer. GLKView layout needs the drawable size to be established before the GL framebuffer can be created, causing multiple layout/render passes on first appearance. By contrast, SKCanvasView inherits from UIView with a standard CALayer and renders synchronously via Core Graphics in Draw(CGRect), giving instant layout. The wobbly effect is a structural consequence of GLKit's deferred framebuffer setup and the async display request path in the MAUI handler.",
+    "rationale": "The performance delta between SKGLView and SKCanvasView is due to the underlying rendering technology: GLKView (OpenGL ES, deprecated iOS 12+) vs UIView/Core Graphics. GLKView requires the drawable size to be known before setting up the GL context and framebuffer; the MAUI handler also routes redraws through BeginInvokeOnMainThread, adding async latency. The issue has been present since at least 2.80.3, suggesting it is structural rather than a regression.",
+    "keySignals": [
+      {
+        "text": "On iOS in all SkiaSharp versions from 2.80.3 to 3.00.0 Preview 3.1",
+        "source": "issue body",
+        "interpretation": "Long-standing structural issue, not a regression introduced in a specific version."
+      },
+      {
+        "text": "If I change the SKGLView to an SKCanvasView, the layout ordering is instant without any wobbliness",
+        "source": "issue body",
+        "interpretation": "The issue is specific to the GLKit/OpenGL ES rendering path used by SKGLView, not the layout system itself."
+      },
+      {
+        "text": "On Android or with an SKCanvasView, the page data and the layout are changed instantaneously",
+        "source": "issue body",
+        "interpretation": "Android is not affected, confirming this is an iOS-specific OpenGL ES / GLKit behavior."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+        "lines": "23-102",
+        "finding": "SKGLView extends GLKView (GLKit) with OpenGL ES2. The code is annotated [ObsoletedOSPlatform(\"ios12.0\", \"Use Metal instead\")]. GL context and framebuffer are initialized lazily on first DrawInRect call, requiring the drawable size to be set — this triggers a layout pass before the first frame is committed.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.iOS.cs",
+        "lines": "136-148",
+        "finding": "RequestDisplay() in RenderLoopManager routes nativeView.Display() through BeginInvokeOnMainThread asynchronously, adding at least one frame of latency before the first GL render. This means layout completes before SKGLView renders its first frame, causing visible unsettled layout.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs",
+        "lines": "14-153",
+        "finding": "SKCanvasView extends UIView directly and renders synchronously in Draw(CGRect) using Core Graphics. No async dispatch, no GL context setup cost, no CAEAGLLayer layout delay. Layout and rendering are tightly coupled in the same pass.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Replace SKGLView with SKCanvasView for immediate layout (uses CPU raster rendering instead of GPU)",
+      "If GPU rendering is required, migrate to SKMetalView (Metal-based, not deprecated, avoids GLKit layout overhead)"
+    ],
+    "nextQuestions": [
+      "Is the reporter using MAUI, Xamarin.Forms, or bare iOS? (affects which handler is involved)",
+      "Does the wobble persist if HasRenderLoop=true (display link active before page appears)?",
+      "Would migrating from SKGLView to SKMetalView resolve the issue for the reporter?"
+    ],
+    "resolution": {
+      "hypothesis": "The wobble is caused by GLKView's CAEAGLLayer requiring drawable size discovery before the GL framebuffer is created, combined with the async display request path in the MAUI handler, resulting in 1-2 visible layout passes before the first GL frame is committed.",
+      "proposals": [
+        {
+          "title": "Migrate to SKMetalView",
+          "description": "Switch from SKGLView (GLKit/OpenGL ES, deprecated iOS 12+) to SKMetalView (Metal). Metal views use CAMetalLayer which integrates with the layout system without the GLKit deferred framebuffer setup delay.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SKCanvasView",
+          "description": "For non-GPU use cases, replace SKGLView with SKCanvasView which renders synchronously via Core Graphics and has no layout settle delay.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate eager GL context initialization",
+          "description": "Initialize the EAGLContext and set up an initial framebuffer synchronously during LayoutSubviews so the first DrawInRect doesn't need to do GL setup. This may reduce the number of layout passes.",
+          "category": "investigation",
+          "confidence": 0.55,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Migrate to SKMetalView",
+      "recommendedReason": "SKGLView is officially deprecated on iOS 12+ in favor of Metal. Migrating to SKMetalView resolves the root cause (GLKit layout overhead) while preserving GPU rendering."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.78,
+      "reason": "Repro links to a large project rather than a minimal case, but the code investigation clearly identifies the structural cause (GLKit/CAEAGLLayer vs UIView/CALayer). Needs a minimal repro and confirmation that SKMetalView resolves the issue before deciding on a fix or close path.",
+      "suggestedReproPlatform": "macos"
+    },
+    "missingInfo": [
+      "Which MAUI/Xamarin.Forms version is being used?",
+      "Is HasRenderLoop enabled?",
+      "A minimal reproducible project (not the full GnollHack repo)"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area, platform, backend, and tenet labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/iOS", "backend/OpenGL", "tenet/performance"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request minimal repro and suggest SKMetalView as workaround",
+        "risk": "medium",
+        "confidence": 0.78,
+        "comment": "Thanks for the detailed report! The likely root cause is that `SKGLView` on iOS extends `GLKView` (OpenGL ES), which is [deprecated since iOS 12](https://developer.apple.com/documentation/glkit/glkview) in favour of Metal. `GLKView` uses a `CAEAGLLayer` backing layer that requires the drawable size to be known before the GL framebuffer can be set up, triggering additional layout passes on first appearance — unlike `SKCanvasView`, which uses a standard `UIView`/`CALayer` and renders synchronously.\n\n**Recommended workaround:** Consider migrating from `SKGLView` to `SKMetalView`, which uses Metal and `CAMetalLayer` (no deprecated GLKit overhead) and should give instant layout comparable to `SKCanvasView`.\n\nTo help investigate further, could you provide:\n1. A **minimal reproducible project** (not the full GnollHack repo) that shows the wobble?\n2. Which **MAUI / Xamarin.Forms version** you are targeting?\n3. Whether `HasRenderLoop` is enabled on the view?"
+      }
+    ]
+  }
+}

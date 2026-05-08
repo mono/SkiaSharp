@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3540,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T20:48:00Z",
+    "currentLabels": ["type/enhancement", "os/Linux", "area/SkiaSharp"]
+  },
+  "summary": "Add scroll wheel event handling to SkiaSharp's GTK3 and GTK4 SKDrawingArea views, normalizing values to the v120 standard (120 units per discrete mouse notch), as the sub-issue of the cross-platform WheelDelta standardization effort (#3533).",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.92 },
+    "platforms": ["os/Linux"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "GTK3 (GtkSharp) and GTK4 (GirCore.Gtk-4.0 v0.7.0), Linux, SkiaSharp.Views.Gtk",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/3533", "description": "Parent issue: Standardize WheelDelta to v120 convention across all platforms" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3527", "description": "PR that added GTK4 SKDrawingArea (rendering only, no scroll events)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "GTK4 SKDrawingArea was merged in #3527; neither GTK3 nor GTK4 views have any input event handling. The issue accurately describes the current codebase state."
+    }
+  },
+  "analysis": {
+    "summary": "Both GTK3 and GTK4 SKDrawingArea implementations exist but only handle rendering (PaintSurface). Neither has scroll event wiring or SKTouchHandler infrastructure. The issue provides complete implementation guidance for both platforms using GTK4 EventControllerScroll and GTK3 GdkEventScroll, including sign convention normalization and libinput background. This is sub-issue #7 of the cross-platform v120 WheelDelta standardization effort (#3533), labeled as lowest priority.",
+    "rationale": "Classified as type/enhancement because scroll wheel functionality is being added to existing GTK views (rendering already works). Platform parity — scroll support exists on other platforms (Windows MAUI) and is being standardized per #3533. Area is area/SkiaSharp.Views since GTK views are part of that package family. tenet/compatibility applies because this aligns with the cross-platform WheelDelta standard.",
+    "keySignals": [
+      { "text": "Neither has any SKTouchHandler or touch event infrastructure", "source": "issue body", "interpretation": "Confirms no input handling infrastructure exists in GTK views at all — this is new capability." },
+      { "text": "GTK4 is the preferred target for adding scroll support. It uses GirCore bindings which provide access to Gtk.EventControllerScroll", "source": "issue body", "interpretation": "Implementation path is clear and uses existing GirCore dependency." },
+      { "text": "Priority is lower than MAUI platforms", "source": "issue body", "interpretation": "Sub-issue #7 of #3533 — lowest implementation priority in the cross-platform rollout." },
+      { "text": "Parent issue: #3533", "source": "issue body", "interpretation": "Tracked as part of a structured cross-platform effort with design decisions already made at the parent level." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk4/SKDrawingArea.cs", "lines": "1-107", "finding": "GTK4 SKDrawingArea only sets up SetDrawFunc for rendering. Constructor has no scroll controller, no touch event wiring, no input handling of any kind. Dispose() only calls FreeDrawingObjects().", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk3/SKDrawingArea.cs", "lines": "1-104", "finding": "GTK3 SKDrawingArea similarly only overrides OnDrawn for rendering. No scroll event mask, no GdkEventScroll handler, no input handling.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs", "finding": "SKTouchHandler pattern exists in MAUI platforms (Android, Apple, Windows, Tizen) but has no GTK equivalent — confirming the GTK views need this infrastructure built from scratch.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "Should GTK views get an SKTouchHandler class similar to MAUI, or integrate directly into SKDrawingArea?",
+      "Should SKTouchEventArgs.WheelDelta be the event surface or a new GTK-specific event?",
+      "Is GTK3 support still a maintenance priority given GTK4 is the preferred target?"
+    ],
+    "resolution": {
+      "hypothesis": "Add Gtk.EventControllerScroll to GTK4 SKDrawingArea constructor, wire OnScroll to compute wheelDelta = (int)Math.Round(-dy * 120.0), and fire it via an SKTouch event. GTK3 needs GdkEventScroll handler with direction enum + smooth delta branching.",
+      "proposals": [
+        {
+          "title": "Add EventControllerScroll to GTK4 SKDrawingArea",
+          "description": "Create a Gtk.EventControllerScroll in the SKDrawingArea constructor and attach via AddController(). Wire OnScroll to normalize dy to v120 and raise a touch/scroll event. Clean up in Dispose().",
+          "category": "fix",
+          "confidence": 0.88,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Add scroll event mask to GTK3 SKDrawingArea",
+          "description": "Set widget.Events |= EventMask.ScrollMask and connect a ScrollEvent handler. Handle both GDK_SCROLL_SMOOTH (use gdk_event_get_scroll_deltas) and discrete direction enums (UP/DOWN → ±1.0). Normalize to v120.",
+          "category": "fix",
+          "confidence": 0.82,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add EventControllerScroll to GTK4 SKDrawingArea",
+      "recommendedReason": "GTK4 is the preferred target per the issue, uses cleaner EventControllerScroll API via existing GirCore dependency, and abstracts X11/Wayland differences. GTK3 should follow as a parity task."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Well-specified enhancement with clear implementation path. Requires implementation work and testing on X11 and Wayland backends. Part of the tracked cross-platform #3533 effort.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct area label from area/SkiaSharp to area/SkiaSharp.Views; add tenet/compatibility",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/enhancement", "os/Linux", "area/SkiaSharp.Views", "tenet/compatibility"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to parent cross-platform standardization issue #3533",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3533
+      }
+    ]
+  }
+}

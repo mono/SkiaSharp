@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3537,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T21:13:57Z",
+    "currentLabels": ["type/enhancement", "os/iOS", "area/SkiaSharp"]
+  },
+  "summary": "Add scroll wheel support to SkiaSharp's iOS/iPadOS and Mac Catalyst MAUI views using UIPanGestureRecognizer with allowedScrollTypesMask, normalized to the v120 standard (120 units = one discrete mouse wheel notch).",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.95 },
+    "platforms": ["os/iOS", "os/macOS"],
+    "tenets": ["tenet/compatibility"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use a MAUI app with SKCanvasView/SKGLView on iOS/iPadOS 13.4+ or Mac Catalyst",
+        "Connect a Bluetooth mouse or use a Magic Keyboard trackpad",
+        "Scroll the mouse wheel over the canvas view",
+        "Observe that no SKTouchAction.WheelChanged events are fired"
+      ],
+      "environmentDetails": "iOS/iPadOS 13.4+, Mac Catalyst, MAUI with SkiaSharp.Views.Maui",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/3533", "description": "Parent issue: Standardize WheelDelta to v120 convention across all platforms" }
+      ],
+      "relatedIssues": [3533, 3534, 3535, 3536, 3538, 3539, 3540]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Apple SKTouchHandler has no scroll/wheel gesture recognizer and the feature has never been implemented."
+    }
+  },
+  "analysis": {
+    "summary": "Scroll wheel support is entirely absent from the Apple (iOS/iPadOS/Mac Catalyst) SKTouchHandler in SkiaSharp.Views.Maui. The handler only processes UITouch events (TouchesBegan, TouchesMoved, TouchesEnded, TouchesCancelled) and has no UIPanGestureRecognizer for scroll input. This is a sub-issue of #3533 which aims to standardize WheelDelta to the v120 convention across all platforms. Implementation requires adding a UIPanGestureRecognizer with allowedScrollTypesMask = [.discrete, .continuous] and normalizing translation deltas to v120 units.",
+    "rationale": "Classified as type/enhancement because scroll wheel support has never existed on this platform — this is entirely new functionality, not a regression or broken behavior. Area is area/SkiaSharp.Views.Maui because the change is entirely within the MAUI views layer (Apple platform handler). The author (a maintainer) filed this as a well-scoped sub-task with clear implementation guidance. Platforms are os/iOS (covers iPadOS) and os/macOS (Mac Catalyst). Partner is partner/maui since this is exclusively a MAUI views concern.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "1-112",
+        "finding": "The Apple SKTouchHandler extends UIGestureRecognizer and handles only UITouch events via TouchesBegan, TouchesMoved, TouchesEnded, TouchesCancelled. There is no UIPanGestureRecognizer, no allowedScrollTypesMask configuration, and no scroll/wheel delta handling. SKTouchAction.WheelChanged is never fired from this handler.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "15-21",
+        "finding": "Constructor accepts onTouchAction callback and scalePixels converter — both would be reused by a scroll gesture handler. No scroll-specific infrastructure exists.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Does NOT have any scroll/wheel gesture recognizer",
+        "source": "issue body — Current State section",
+        "interpretation": "Confirms the feature is entirely missing, not regressed."
+      },
+      {
+        "text": "allowedScrollTypesMask is a filter that configures which scroll types the recognizer accepts — it is NOT a per-event classifier",
+        "source": "issue body — Scroll Type Distinction section",
+        "interpretation": "Implementation caveat: cannot distinguish discrete vs continuous per-event, normalization must work for both."
+      },
+      {
+        "text": "The PointsPerNotch value is an initial estimate. It has been reported as anywhere from 22 to 60 depending on the mouse and iOS version.",
+        "source": "issue body — Normalization Logic section",
+        "interpretation": "Empirical calibration on real hardware is required before finalizing the implementation."
+      },
+      {
+        "text": "Minimum iOS version: 13.4 (when allowedScrollTypesMask was introduced)",
+        "source": "issue body — Implementation Notes",
+        "interpretation": "Need runtime availability check or compile-time guard for the API."
+      }
+    ],
+    "nextQuestions": [
+      "What is the correct PointsPerNotch calibration constant on real iOS/iPadOS hardware with a Bluetooth mouse?",
+      "Should Mac Catalyst use UIPanGestureRecognizer or NSEvent bridging for more precise control?",
+      "Should the scroll recognizer be implemented as a separate gesture recognizer or integrated into the existing SKTouchHandler class?",
+      "How should the iOS 13.4 availability guard be implemented — conditional compilation or runtime check?"
+    ],
+    "resolution": {
+      "hypothesis": "Add a UIPanGestureRecognizer with allowedScrollTypesMask=[discrete,continuous] to SKTouchHandler, fire SKTouchAction.WheelChanged with normalized v120 delta, guarded behind iOS 13.4+ availability.",
+      "proposals": [
+        {
+          "title": "Add scroll UIPanGestureRecognizer to SKTouchHandler",
+          "description": "Add a secondary UIPanGestureRecognizer with allowedScrollTypesMask and allowedTouchTypes=[] to SKTouchHandler. On gesture changed, compute incremental translation delta, negate Y, multiply by 120/PointsPerNotch, and fire SKTouchAction.WheelChanged with SKTouchDeviceType.Mouse.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Use NSEvent bridging on Mac Catalyst",
+          "description": "On Mac Catalyst, directly handle NSEvent scroll wheel events via AppKit bridging for more precise per-event discrete/continuous classification. Requires platform-specific code path.",
+          "category": "alternative",
+          "confidence": 0.60,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add scroll UIPanGestureRecognizer to SKTouchHandler",
+      "recommendedReason": "The UIPanGestureRecognizer approach works for both iOS and Mac Catalyst with a single code path, aligns with Apple's recommended approach, and reuses existing handler infrastructure."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Well-specified enhancement from a maintainer with clear implementation path, but requires empirical calibration on real hardware to determine PointsPerNotch constant before implementation can be finalized.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct area label from area/SkiaSharp to area/SkiaSharp.Views.Maui, add os/macOS for Mac Catalyst, tenet/compatibility, partner/maui",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views.Maui", "os/iOS", "os/macOS", "tenet/compatibility", "partner/maui"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to parent issue #3533 (WheelDelta v120 standardization)",
+        "risk": "low",
+        "confidence": 0.99,
+        "linkedIssue": 3533
+      }
+    ]
+  }
+}
