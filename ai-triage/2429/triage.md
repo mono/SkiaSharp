@@ -1,0 +1,407 @@
+# Issue Triage Report — #2429
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-22T12:10:23Z |
+| Type | type/bug (0.92 (92%)) |
+| Area | area/SkiaSharp (0.88 (88%)) |
+| Suggested action | needs-investigation (0.85 (85%)) |
+
+**Issue Summary:** SKBitmap.Decode and SKCodec.Create both return null for a specific JPEG image on Linux and Windows (versions 2.80.4 and 2.88.3), even though the image opens successfully in other viewers; Java Android bindings also fail, pointing to an upstream Skia JPEG codec limitation.
+
+**Analysis:** The specific JPEG image triggers a silent null return from Skia's native codec (`sk_codec_new_from_stream` / `sk_codec_new_from_data`), meaning the Skia JPEG decoder refuses to process the file's format — not a SkiaSharp wrapper bug. The reporter confirms Java Android bindings also fail, confirming this is an upstream Skia issue. The fix from PR #2265 (which resolved the ArgumentNullException in #1551) addressed stream-wrapping null pointer passing but does not help when Skia itself decides the image format is unrecognized or unsupported.
+
+**Recommendations:** **needs-investigation** — Real bug with reproduction file attached, cross-platform and cross-language confirmation, but root cause requires analysis of the specific JPEG file structure to determine whether it's a Skia upstream codec limitation or an addressable issue
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Linux, os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Download the attached image.zip and extract the JPEG
+2. Call SKBitmap.Decode(stream) with a stream of the JPEG file
+3. Observe null return
+4. Call SKCodec.Create(stream) directly — also returns null
+5. Try workaround from #1621/#1551 (SKManagedStream + SKData path) — still returns null
+
+**Environment:** SkiaSharp 2.80.4 and 2.88.3, Linux Debian 11 (bullseye-slim Docker) and Windows 10 (10.0.19045), x64
+
+**Related issues:** #1551, #1621, #2359
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1551 — Related: SKCodec.Create throws null buffer exception for some images — fixed in v2.88.3 via PR #2265, but different failure mode
+- https://github.com/mono/SkiaSharp/issues/1621 — Related: SKBitmap.Decode fails for some images but SKImage.FromEncodedData works — duplicate of #1551, fixed in v2.88.3
+- https://github.com/mono/SkiaSharp/issues/2359 — Related: SKBitmap.Decode fails for some images on Windows — open, no repro file attached
+
+**Attachments:**
+- image.zip — https://github.com/mono/SkiaSharp/files/11087936/image.zip
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | missing-output |
+| Error message | SKBitmap.Decode and SKCodec.Create return null for a specific JPEG image |
+| Repro quality | complete |
+| Target frameworks | net6.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.4, 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Both tested versions fail; no 'last known good version' reported; decode path unchanged since; related issues #1551/#1621 were fixed for a different failure mode (exception vs graceful null) |
+
+## Analysis
+
+### Technical Summary
+
+The specific JPEG image triggers a silent null return from Skia's native codec (`sk_codec_new_from_stream` / `sk_codec_new_from_data`), meaning the Skia JPEG decoder refuses to process the file's format — not a SkiaSharp wrapper bug. The reporter confirms Java Android bindings also fail, confirming this is an upstream Skia issue. The fix from PR #2265 (which resolved the ArgumentNullException in #1551) addressed stream-wrapping null pointer passing but does not help when Skia itself decides the image format is unrecognized or unsupported.
+
+### Rationale
+
+Classified as type/bug because a valid, displayable JPEG returning null from the decode API constitutes broken behavior — the API contract is violated. Classified as area/SkiaSharp (not area/libSkiaSharp.native) because the issue is likely rooted in Skia's JPEG codec not supporting a specific JPEG subformat (CMYK, unusual chroma sampling, non-standard JFIF/Exif combo), but investigation of the image file is needed to confirm whether a SkiaSharp-level workaround is feasible. The platform is both Linux and Windows, ruling out a platform-native codec issue. Severity is medium because the image opens in other tools and there may exist alternative decode paths, but no confirmed SkiaSharp workaround exists yet.
+
+### Key Signals
+
+- "Cannot create Bitmap or Codec of a specific jpg image" — **issue body** (Both the Bitmap and Codec creation paths fail — the root failure is SKCodec.Create returning null, not a bitmap-specific issue.)
+- "this workaround does not work [SKManagedStream + SKData approach from #1551]" — **issue body** (The fix for #1551 (PR #2265 buffer passing) does not address this case, confirming this is a different failure — Skia refuses the image entirely rather than crashing on null buffer.)
+- "It does not work for Java bindings too. Looks like the problem may be in the Skia code." — **comment by olegbaslak** (Cross-language confirmation that the failure is in the underlying Skia JPEG codec, not in the .NET wrapper.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKBitmap.cs` | 461-471 | direct | SKBitmap.Decode(Stream) calls SKCodec.Create(stream) and returns null immediately if the codec is null. The null return from Decode is by design as a factory null-on-failure — the real failure is inside SKCodec.Create. |
+| `binding/SkiaSharp/SKCodec.cs` | 252-264 | direct | SKCodec.Create(SKStream) calls native sk_codec_new_from_stream; when Skia's codec cannot detect/decode the format, it returns a null pointer — which GetObject() maps to C# null. No exception is thrown by the C# wrapper; null is the documented failure signal. |
+| `binding/SkiaSharp/SKCodec.cs` | 268-273 | direct | SKCodec.Create(SKData) calls native sk_codec_new_from_data — same native codec path, also returns null for this image. Reporter confirmed this alternative also fails. |
+| `binding/SkiaSharp/SKCodec.cs` | 278-290 | related | WrapManagedStream wraps seekable streams as SKManagedStream and non-seekable streams as SKFrontBufferedManagedStream. The stream is properly wrapped. The failure is not in stream handling. |
+
+**Error fingerprint:** `SKCodec.Create-returns-null-specific-jpeg`
+
+### Workarounds
+
+- Use System.Drawing (Windows) or ImageSharp/SixLabors to decode the JPEG first, then convert pixel data to SKBitmap via InstallPixels or via byte array
+- Try SKImage.FromEncodedData(stream) instead of SKBitmap.Decode(stream) — in some related cases this path succeeded when the codec path failed, though reporter did not explicitly test this path
+
+### Next Questions
+
+- What JPEG subformat does the attached image use? (CMYK vs RGB, progressive vs baseline, unusual chroma sampling, embedded ICC profile?)
+- Does SKImage.FromEncodedData() also return null for this image, or does it succeed?
+- Has this specific image been tested with the latest SkiaSharp version (3.x)?
+- Is this a Skia upstream bug or a libjpeg-turbo version issue that could be fixed by updating the dependency?
+
+### Resolution Proposals
+
+**Hypothesis:** A specific JPEG encoding variant (likely CMYK color space, unusual chroma subsampling, or non-standard metadata combination) triggers Skia's JPEG codec to reject the image entirely rather than attempt partial decoding.
+
+1. **Try SKImage.FromEncodedData as alternative path** — workaround, confidence 0.55 (55%), cost/xs, validated=untested
+   - SKImage.FromEncodedData uses a different internal code path (SkImages::DeferredFromEncodedData) that may handle some edge cases the codec stream path does not.
+
+```csharp
+using var stream = File.OpenRead("image.jpg");
+using var data = SKData.Create(stream);
+using var image = SKImage.FromEncodedData(data);
+if (image != null)
+{
+    using var bitmap = SKBitmap.FromImage(image);
+    // use bitmap
+}
+```
+2. **Use external library to re-encode to standard JPEG before decoding** — workaround, confidence 0.80 (80%), cost/s, validated=untested
+   - Decode with ImageSharp (SixLabors.ImageSharp) or System.Drawing first, then copy pixel data to SKBitmap. This avoids SkiaSharp's codec for problematic images.
+3. **Investigate and fix Skia JPEG codec support** — fix, confidence 0.65 (65%), cost/l, validated=untested
+   - Examine the specific image structure (CMYK, sampling factor, ICC profile) and determine if Skia's libjpeg-turbo can be updated or if a codec config change is needed. May require a fix in externals/skia.
+
+**Recommended proposal:** Try SKImage.FromEncodedData as alternative path
+
+**Why:** Zero-dependency workaround within SkiaSharp itself. If it fails, the use-external-library workaround is the next best option while the upstream codec issue is investigated.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.85 (85%) |
+| Reason | Real bug with reproduction file attached, cross-platform and cross-language confirmation, but root cause requires analysis of the specific JPEG file structure to determine whether it's a Skia upstream codec limitation or an addressable issue |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, core, Linux, Windows, compatibility labels | labels=type/bug, area/SkiaSharp, os/Linux, os/Windows-Classic, tenet/compatibility |
+| add-comment | medium | 0.85 (85%) | Acknowledge the report and provide investigative suggestions plus potential workaround | — |
+| link-related | low | 0.90 (90%) | Cross-reference related stream decode issue #1551 | linkedIssue=#1551 |
+| link-related | low | 0.90 (90%) | Cross-reference related issue #1621 | linkedIssue=#1621 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and the attached image file.
+
+This is a different issue from the stream-reading bug fixed in v2.88.3 (#1551). When `SKCodec.Create` returns `null` (rather than throwing), it means Skia's native JPEG codec is silently refusing to process the image — not a SkiaSharp wrapper issue. Your observation that Java bindings also fail confirms the root cause is in the Skia JPEG codec itself.
+
+**Potential workaround to try while we investigate:**
+
+```csharp
+// Try via SKImage.FromEncodedData — uses a different internal path
+using var fileStream = File.OpenRead("image.jpg");
+using var data = SKData.Create(fileStream);
+using var image = SKImage.FromEncodedData(data);
+if (image != null)
+{
+    using var bitmap = SKBitmap.FromImage(image);
+    // use bitmap here
+}
+```
+
+If that also returns null, the image likely uses a JPEG encoding variant (CMYK color space, unusual chroma subsampling, or non-standard metadata) that Skia's libjpeg-turbo refuses. In that case, decoding with an external library like [ImageSharp](https://github.com/SixLabors/ImageSharp) and then copying pixel data to an `SKBitmap` is the most reliable fallback.
+
+**To help us investigate further:**
+1. Does `SKImage.FromEncodedData` also return null for your image?
+2. Have you tested with SkiaSharp 3.x?
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2429,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T12:10:23Z"
+  },
+  "summary": "SKBitmap.Decode and SKCodec.Create both return null for a specific JPEG image on Linux and Windows (versions 2.80.4 and 2.88.3), even though the image opens successfully in other viewers; Java Android bindings also fail, pointing to an upstream Skia JPEG codec limitation.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/Linux",
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "missing-output",
+      "errorMessage": "SKBitmap.Decode and SKCodec.Create return null for a specific JPEG image",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net6.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Download the attached image.zip and extract the JPEG",
+        "Call SKBitmap.Decode(stream) with a stream of the JPEG file",
+        "Observe null return",
+        "Call SKCodec.Create(stream) directly — also returns null",
+        "Try workaround from #1621/#1551 (SKManagedStream + SKData path) — still returns null"
+      ],
+      "environmentDetails": "SkiaSharp 2.80.4 and 2.88.3, Linux Debian 11 (bullseye-slim Docker) and Windows 10 (10.0.19045), x64",
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/11087936/image.zip",
+          "filename": "image.zip"
+        }
+      ],
+      "relatedIssues": [
+        1551,
+        1621,
+        2359
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1551",
+          "description": "Related: SKCodec.Create throws null buffer exception for some images — fixed in v2.88.3 via PR #2265, but different failure mode"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1621",
+          "description": "Related: SKBitmap.Decode fails for some images but SKImage.FromEncodedData works — duplicate of #1551, fixed in v2.88.3"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2359",
+          "description": "Related: SKBitmap.Decode fails for some images on Windows — open, no repro file attached"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.4",
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Both tested versions fail; no 'last known good version' reported; decode path unchanged since; related issues #1551/#1621 were fixed for a different failure mode (exception vs graceful null)"
+    }
+  },
+  "analysis": {
+    "summary": "The specific JPEG image triggers a silent null return from Skia's native codec (`sk_codec_new_from_stream` / `sk_codec_new_from_data`), meaning the Skia JPEG decoder refuses to process the file's format — not a SkiaSharp wrapper bug. The reporter confirms Java Android bindings also fail, confirming this is an upstream Skia issue. The fix from PR #2265 (which resolved the ArgumentNullException in #1551) addressed stream-wrapping null pointer passing but does not help when Skia itself decides the image format is unrecognized or unsupported.",
+    "rationale": "Classified as type/bug because a valid, displayable JPEG returning null from the decode API constitutes broken behavior — the API contract is violated. Classified as area/SkiaSharp (not area/libSkiaSharp.native) because the issue is likely rooted in Skia's JPEG codec not supporting a specific JPEG subformat (CMYK, unusual chroma sampling, non-standard JFIF/Exif combo), but investigation of the image file is needed to confirm whether a SkiaSharp-level workaround is feasible. The platform is both Linux and Windows, ruling out a platform-native codec issue. Severity is medium because the image opens in other tools and there may exist alternative decode paths, but no confirmed SkiaSharp workaround exists yet.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "461-471",
+        "finding": "SKBitmap.Decode(Stream) calls SKCodec.Create(stream) and returns null immediately if the codec is null. The null return from Decode is by design as a factory null-on-failure — the real failure is inside SKCodec.Create.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "252-264",
+        "finding": "SKCodec.Create(SKStream) calls native sk_codec_new_from_stream; when Skia's codec cannot detect/decode the format, it returns a null pointer — which GetObject() maps to C# null. No exception is thrown by the C# wrapper; null is the documented failure signal.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "268-273",
+        "finding": "SKCodec.Create(SKData) calls native sk_codec_new_from_data — same native codec path, also returns null for this image. Reporter confirmed this alternative also fails.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "278-290",
+        "finding": "WrapManagedStream wraps seekable streams as SKManagedStream and non-seekable streams as SKFrontBufferedManagedStream. The stream is properly wrapped. The failure is not in stream handling.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Cannot create Bitmap or Codec of a specific jpg image",
+        "source": "issue body",
+        "interpretation": "Both the Bitmap and Codec creation paths fail — the root failure is SKCodec.Create returning null, not a bitmap-specific issue."
+      },
+      {
+        "text": "this workaround does not work [SKManagedStream + SKData approach from #1551]",
+        "source": "issue body",
+        "interpretation": "The fix for #1551 (PR #2265 buffer passing) does not address this case, confirming this is a different failure — Skia refuses the image entirely rather than crashing on null buffer."
+      },
+      {
+        "text": "It does not work for Java bindings too. Looks like the problem may be in the Skia code.",
+        "source": "comment by olegbaslak",
+        "interpretation": "Cross-language confirmation that the failure is in the underlying Skia JPEG codec, not in the .NET wrapper."
+      }
+    ],
+    "workarounds": [
+      "Use System.Drawing (Windows) or ImageSharp/SixLabors to decode the JPEG first, then convert pixel data to SKBitmap via InstallPixels or via byte array",
+      "Try SKImage.FromEncodedData(stream) instead of SKBitmap.Decode(stream) — in some related cases this path succeeded when the codec path failed, though reporter did not explicitly test this path"
+    ],
+    "nextQuestions": [
+      "What JPEG subformat does the attached image use? (CMYK vs RGB, progressive vs baseline, unusual chroma sampling, embedded ICC profile?)",
+      "Does SKImage.FromEncodedData() also return null for this image, or does it succeed?",
+      "Has this specific image been tested with the latest SkiaSharp version (3.x)?",
+      "Is this a Skia upstream bug or a libjpeg-turbo version issue that could be fixed by updating the dependency?"
+    ],
+    "errorFingerprint": "SKCodec.Create-returns-null-specific-jpeg",
+    "resolution": {
+      "hypothesis": "A specific JPEG encoding variant (likely CMYK color space, unusual chroma subsampling, or non-standard metadata combination) triggers Skia's JPEG codec to reject the image entirely rather than attempt partial decoding.",
+      "proposals": [
+        {
+          "title": "Try SKImage.FromEncodedData as alternative path",
+          "description": "SKImage.FromEncodedData uses a different internal code path (SkImages::DeferredFromEncodedData) that may handle some edge cases the codec stream path does not.",
+          "category": "workaround",
+          "codeSnippet": "using var stream = File.OpenRead(\"image.jpg\");\nusing var data = SKData.Create(stream);\nusing var image = SKImage.FromEncodedData(data);\nif (image != null)\n{\n    using var bitmap = SKBitmap.FromImage(image);\n    // use bitmap\n}",
+          "confidence": 0.55,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Use external library to re-encode to standard JPEG before decoding",
+          "description": "Decode with ImageSharp (SixLabors.ImageSharp) or System.Drawing first, then copy pixel data to SKBitmap. This avoids SkiaSharp's codec for problematic images.",
+          "category": "workaround",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate and fix Skia JPEG codec support",
+          "description": "Examine the specific image structure (CMYK, sampling factor, ICC profile) and determine if Skia's libjpeg-turbo can be updated or if a codec config change is needed. May require a fix in externals/skia.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Try SKImage.FromEncodedData as alternative path",
+      "recommendedReason": "Zero-dependency workaround within SkiaSharp itself. If it fails, the use-external-library workaround is the next best option while the upstream codec issue is investigated."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Real bug with reproduction file attached, cross-platform and cross-language confirmation, but root cause requires analysis of the specific JPEG file structure to determine whether it's a Skia upstream codec limitation or an addressable issue",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core, Linux, Windows, compatibility labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Linux",
+          "os/Windows-Classic",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report and provide investigative suggestions plus potential workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report and the attached image file.\n\nThis is a different issue from the stream-reading bug fixed in v2.88.3 (#1551). When `SKCodec.Create` returns `null` (rather than throwing), it means Skia's native JPEG codec is silently refusing to process the image — not a SkiaSharp wrapper issue. Your observation that Java bindings also fail confirms the root cause is in the Skia JPEG codec itself.\n\n**Potential workaround to try while we investigate:**\n\n```csharp\n// Try via SKImage.FromEncodedData — uses a different internal path\nusing var fileStream = File.OpenRead(\"image.jpg\");\nusing var data = SKData.Create(fileStream);\nusing var image = SKImage.FromEncodedData(data);\nif (image != null)\n{\n    using var bitmap = SKBitmap.FromImage(image);\n    // use bitmap here\n}\n```\n\nIf that also returns null, the image likely uses a JPEG encoding variant (CMYK color space, unusual chroma subsampling, or non-standard metadata) that Skia's libjpeg-turbo refuses. In that case, decoding with an external library like [ImageSharp](https://github.com/SixLabors/ImageSharp) and then copying pixel data to an `SKBitmap` is the most reliable fallback.\n\n**To help us investigate further:**\n1. Does `SKImage.FromEncodedData` also return null for your image?\n2. Have you tested with SkiaSharp 3.x?"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related stream decode issue #1551",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 1551
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related issue #1621",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 1621
+      }
+    ]
+  }
+}
+```
+
+</details>

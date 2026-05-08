@@ -1,0 +1,318 @@
+# Issue Triage Report — #686
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-22T15:41:15Z |
+| Type | type/feature-request (0.95 (95%)) |
+| Area | area/libSkiaSharp.native (0.90 (90%)) |
+| Suggested action | keep-open (0.80 (80%)) |
+
+**Issue Summary:** Feature request to switch the UWP native Skia library compilation from MSVC to Clang, since Google only optimizes Skia for the Clang compiler, resulting in significantly slower rendering on UWP compared to other platforms.
+
+**Analysis:** Google only optimizes Skia for the Clang compiler. UWP native library builds currently use MSVC (CI passes --llvm=msvc). Win32/x64 Windows builds have partial Clang support infrastructure via the clang_win GN argument, but UWP did not receive the same treatment. Users report notably slower rendering on UWP vs Android or Win32. UWP is declining in favor of WinUI 3, but there is still an active user base.
+
+**Recommendations:** **keep-open** — Valid, long-standing performance improvement request with clear root cause (MSVC vs Clang). Win32 already benefited from this change (#758). UWP is declining but still has active users. The llvm-mingw approach provides a viable implementation path.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Windows-Universal-UWP |
+| Backends | — |
+| Tenets | tenet/performance |
+| Partner | — |
+| Current labels | os/Windows-Universal-UWP, area/libSkiaSharp.native, area/Build, type/feature-request |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** UWP (Windows Universal Platform), SkiaSharp 1.x/2.x, MSVC compiler
+
+**Repository links:**
+- https://groups.google.com/forum/#!topic/skia-discuss/ZZ7Ol3alB-I — Google Skia discussion: MSVC vs Clang performance on Windows
+- https://groups.google.com/forum/#!topic/skia-discuss/P4tg5eBVIiU — Google Skia discussion: Clang performance optimizations on Linux
+- https://github.com/mono/SkiaSharp/issues/758 — Related: SKCanvas rendering rotated image slow (4x) on Win32 — closed as fixed via Clang migration
+- https://code.videolan.org/videolan/docker-images/-/tree/master/vlc-debian-llvm-uwp — Suggested approach: llvm-mingw for UWP cross-compilation (linked in comment #654700660)
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 1.x, 2.x |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Win32/x64 Windows builds have gained Clang support (clang_win GN arg in native/windows/build.cake), but UWP-specific compilation path was not updated — the issue remains unresolved for UWP users. |
+
+## Analysis
+
+### Technical Summary
+
+Google only optimizes Skia for the Clang compiler. UWP native library builds currently use MSVC (CI passes --llvm=msvc). Win32/x64 Windows builds have partial Clang support infrastructure via the clang_win GN argument, but UWP did not receive the same treatment. Users report notably slower rendering on UWP vs Android or Win32. UWP is declining in favor of WinUI 3, but there is still an active user base.
+
+### Rationale
+
+This is a long-standing feature request filed by the maintainer. Win32/x64 Windows builds have gained Clang support since the issue was filed (see #758 closed as fixed), but UWP was explicitly deferred. The llvm-mingw toolchain has been proposed as a viable approach for UWP cross-compilation. The request remains valid and has ongoing interest (last community comment Jan 2022). UWP is declining but not abandoned — NuGet packages remain. Classified as type/feature-request because there is no existing Clang build path for UWP.
+
+### Key Signals
+
+- "Google has indicated that they only optimize for the clang compiler" — **issue body** (Performance gap is by design from Google's perspective — Skia is not optimized for MSVC, making this a significant issue for UWP users.)
+- "We are moving Win32 to Clang. Noticing vast improvements already... Need a little more time for UWP, but that can come later" — **mattleibow comment #552596131 (2019-11-11)** (Maintainer confirmed intent to add Clang support for UWP, but explicitly deferred it. Win32 Clang migration completed (#1007) but UWP never followed.)
+- "This landed recently, thought you might find it useful (it uses llvm-mingw)" — **mfkl comment #654700660 (2020-07-07) — linking llvm-mingw UWP Docker image** (A concrete implementation path (llvm-mingw) was proposed for UWP cross-compilation.)
+- "I'm also still struggling with this on UWP. It's unfortunate that my desktop is slower than my Android phone" — **daltonks comment #1024626142 (2022-01-28)** (Active user impact confirmed — UWP rendering performance is noticeably worse than Android even on desktop hardware.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `native/windows/build.cake` | 1-10 | direct | Windows (Win32/x64/ARM64) builds support Clang via the 'clang_win' GN argument if LLVM_HOME is set. In CI (azure-templates-stages-native-windows.yml lines 108-127), --llvm=msvc is passed, meaning CI uses MSVC for Windows builds. There is no separate UWP build target in native/ (no native/uwp/ directory). |
+| `scripts/azure-templates-stages-native-windows.yml` | 108-127 | direct | CI builds for Windows x86, x64, and ARM64 all pass additionalArgs '--llvm=msvc' and installLlvm: false, confirming that MSVC (not Clang) is currently used in production CI even for Win32 builds. UWP builds are not listed as a separate CI stage. |
+| `scripts/install-llvm.ps1` | 10-28 | related | Infrastructure exists to install LLVM/Clang on Windows build agents. The script downloads a specified LLVM version and installs it — this could support a future UWP Clang build step. |
+| `build.cake` | 145-154 | context | SkiaSharp.NativeAssets.UWP, SkiaSharp.Views.NativeAssets.UWP, and HarfBuzzSharp.NativeAssets.UWP packages are still referenced, confirming UWP NuGet packages remain part of the release. |
+
+### Workarounds
+
+- Migrate from UWP to WinUI 3 (which may have better performance characteristics and a clearer upgrade path for Clang support).
+- For rotated image rendering specifically, pre-rotate bitmaps to avoid per-frame transformation overhead.
+- Use GPU-accelerated backend (Direct3D/OpenGL via ANGLE) instead of software raster to reduce CPU-bound rendering.
+
+### Next Questions
+
+- Does the current CI/release pipeline still build a UWP-specific native binary, or has it been merged into the Windows build?
+- Does the llvm-mingw toolchain fully support UWP APIs required by Skia?
+- Is WinUI 3 (winui/) already using Clang or MSVC? If WinUI already benefits from Clang, UWP users could be migrated there.
+
+### Resolution Proposals
+
+**Hypothesis:** The UWP native library is compiled with MSVC, which Google does not optimize Skia for. Switching to Clang (via llvm-mingw or the LLVM toolchain already used for Win32) would improve rendering performance significantly — as demonstrated by the Win32 fix in #758.
+
+1. **Adopt llvm-mingw for UWP Clang builds** — fix, confidence 0.65 (65%), cost/l, validated=untested
+   - Use the llvm-mingw Docker image (linked in issue comments) to cross-compile the UWP native library with Clang. This approach has been validated for UWP targets by the VLC project.
+2. **Migrate users to WinUI 3** — alternative, confidence 0.75 (75%), cost/xs, validated=untested
+   - Since UWP is declining and WinUI 3 is the recommended successor, guide users to migrate. This avoids the UWP Clang toolchain complexity.
+
+**Recommended proposal:** Adopt llvm-mingw for UWP Clang builds
+
+**Why:** Directly addresses the performance issue for the existing UWP user base without requiring migration. The VLC project has validated this approach.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.80 (80%) |
+| Reason | Valid, long-standing performance improvement request with clear root cause (MSVC vs Clang). Win32 already benefited from this change (#758). UWP is declining but still has active users. The llvm-mingw approach provides a viable implementation path. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Labels are already mostly correct. Add tenet/performance to surface the performance nature of the request. | labels=type/feature-request, area/libSkiaSharp.native, os/Windows-Universal-UWP, tenet/performance |
+| add-comment | medium | 0.80 (80%) | Provide status update noting that Win32 already migrated to Clang, UWP remains pending, and suggest llvm-mingw as a path forward. Also note WinUI 3 migration as an alternative for interested users. | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the continued interest in this. Quick status update:
+
+**What's been done:** The Win32/x64/ARM64 Windows builds moved to Clang after this issue was filed (see #758), which resolved the performance gap for those targets.
+
+**UWP status:** UWP-specific Clang builds were deferred at the time and haven't been revisited. The [llvm-mingw toolchain](https://code.videolan.org/videolan/docker-images/-/tree/master/vlc-debian-llvm-uwp) suggested by @mfkl remains the most viable path — it has been validated for UWP targets by the VLC project.
+
+**Alternative:** If migrating to WinUI 3 is an option for your project, that platform uses the more modern build infrastructure and is the direction Windows app development is heading.
+
+This is still on the backlog. Contributions or detailed benchmarking with llvm-mingw would be very welcome to help prioritize this work.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 686,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T15:41:15Z",
+    "currentLabels": [
+      "os/Windows-Universal-UWP",
+      "area/libSkiaSharp.native",
+      "area/Build",
+      "type/feature-request"
+    ]
+  },
+  "summary": "Feature request to switch the UWP native Skia library compilation from MSVC to Clang, since Google only optimizes Skia for the Clang compiler, resulting in significantly slower rendering on UWP compared to other platforms.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Universal-UWP"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "UWP (Windows Universal Platform), SkiaSharp 1.x/2.x, MSVC compiler",
+      "repoLinks": [
+        {
+          "url": "https://groups.google.com/forum/#!topic/skia-discuss/ZZ7Ol3alB-I",
+          "description": "Google Skia discussion: MSVC vs Clang performance on Windows"
+        },
+        {
+          "url": "https://groups.google.com/forum/#!topic/skia-discuss/P4tg5eBVIiU",
+          "description": "Google Skia discussion: Clang performance optimizations on Linux"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/758",
+          "description": "Related: SKCanvas rendering rotated image slow (4x) on Win32 — closed as fixed via Clang migration"
+        },
+        {
+          "url": "https://code.videolan.org/videolan/docker-images/-/tree/master/vlc-debian-llvm-uwp",
+          "description": "Suggested approach: llvm-mingw for UWP cross-compilation (linked in comment #654700660)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.x",
+        "2.x"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Win32/x64 Windows builds have gained Clang support (clang_win GN arg in native/windows/build.cake), but UWP-specific compilation path was not updated — the issue remains unresolved for UWP users."
+    }
+  },
+  "analysis": {
+    "summary": "Google only optimizes Skia for the Clang compiler. UWP native library builds currently use MSVC (CI passes --llvm=msvc). Win32/x64 Windows builds have partial Clang support infrastructure via the clang_win GN argument, but UWP did not receive the same treatment. Users report notably slower rendering on UWP vs Android or Win32. UWP is declining in favor of WinUI 3, but there is still an active user base.",
+    "rationale": "This is a long-standing feature request filed by the maintainer. Win32/x64 Windows builds have gained Clang support since the issue was filed (see #758 closed as fixed), but UWP was explicitly deferred. The llvm-mingw toolchain has been proposed as a viable approach for UWP cross-compilation. The request remains valid and has ongoing interest (last community comment Jan 2022). UWP is declining but not abandoned — NuGet packages remain. Classified as type/feature-request because there is no existing Clang build path for UWP.",
+    "codeInvestigation": [
+      {
+        "file": "native/windows/build.cake",
+        "lines": "1-10",
+        "finding": "Windows (Win32/x64/ARM64) builds support Clang via the 'clang_win' GN argument if LLVM_HOME is set. In CI (azure-templates-stages-native-windows.yml lines 108-127), --llvm=msvc is passed, meaning CI uses MSVC for Windows builds. There is no separate UWP build target in native/ (no native/uwp/ directory).",
+        "relevance": "direct"
+      },
+      {
+        "file": "scripts/azure-templates-stages-native-windows.yml",
+        "lines": "108-127",
+        "finding": "CI builds for Windows x86, x64, and ARM64 all pass additionalArgs '--llvm=msvc' and installLlvm: false, confirming that MSVC (not Clang) is currently used in production CI even for Win32 builds. UWP builds are not listed as a separate CI stage.",
+        "relevance": "direct"
+      },
+      {
+        "file": "scripts/install-llvm.ps1",
+        "lines": "10-28",
+        "finding": "Infrastructure exists to install LLVM/Clang on Windows build agents. The script downloads a specified LLVM version and installs it — this could support a future UWP Clang build step.",
+        "relevance": "related"
+      },
+      {
+        "file": "build.cake",
+        "lines": "145-154",
+        "finding": "SkiaSharp.NativeAssets.UWP, SkiaSharp.Views.NativeAssets.UWP, and HarfBuzzSharp.NativeAssets.UWP packages are still referenced, confirming UWP NuGet packages remain part of the release.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Google has indicated that they only optimize for the clang compiler",
+        "source": "issue body",
+        "interpretation": "Performance gap is by design from Google's perspective — Skia is not optimized for MSVC, making this a significant issue for UWP users."
+      },
+      {
+        "text": "We are moving Win32 to Clang. Noticing vast improvements already... Need a little more time for UWP, but that can come later",
+        "source": "mattleibow comment #552596131 (2019-11-11)",
+        "interpretation": "Maintainer confirmed intent to add Clang support for UWP, but explicitly deferred it. Win32 Clang migration completed (#1007) but UWP never followed."
+      },
+      {
+        "text": "This landed recently, thought you might find it useful (it uses llvm-mingw)",
+        "source": "mfkl comment #654700660 (2020-07-07) — linking llvm-mingw UWP Docker image",
+        "interpretation": "A concrete implementation path (llvm-mingw) was proposed for UWP cross-compilation."
+      },
+      {
+        "text": "I'm also still struggling with this on UWP. It's unfortunate that my desktop is slower than my Android phone",
+        "source": "daltonks comment #1024626142 (2022-01-28)",
+        "interpretation": "Active user impact confirmed — UWP rendering performance is noticeably worse than Android even on desktop hardware."
+      }
+    ],
+    "nextQuestions": [
+      "Does the current CI/release pipeline still build a UWP-specific native binary, or has it been merged into the Windows build?",
+      "Does the llvm-mingw toolchain fully support UWP APIs required by Skia?",
+      "Is WinUI 3 (winui/) already using Clang or MSVC? If WinUI already benefits from Clang, UWP users could be migrated there."
+    ],
+    "workarounds": [
+      "Migrate from UWP to WinUI 3 (which may have better performance characteristics and a clearer upgrade path for Clang support).",
+      "For rotated image rendering specifically, pre-rotate bitmaps to avoid per-frame transformation overhead.",
+      "Use GPU-accelerated backend (Direct3D/OpenGL via ANGLE) instead of software raster to reduce CPU-bound rendering."
+    ],
+    "resolution": {
+      "hypothesis": "The UWP native library is compiled with MSVC, which Google does not optimize Skia for. Switching to Clang (via llvm-mingw or the LLVM toolchain already used for Win32) would improve rendering performance significantly — as demonstrated by the Win32 fix in #758.",
+      "proposals": [
+        {
+          "title": "Adopt llvm-mingw for UWP Clang builds",
+          "description": "Use the llvm-mingw Docker image (linked in issue comments) to cross-compile the UWP native library with Clang. This approach has been validated for UWP targets by the VLC project.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Migrate users to WinUI 3",
+          "description": "Since UWP is declining and WinUI 3 is the recommended successor, guide users to migrate. This avoids the UWP Clang toolchain complexity.",
+          "category": "alternative",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Adopt llvm-mingw for UWP Clang builds",
+      "recommendedReason": "Directly addresses the performance issue for the existing UWP user base without requiring migration. The VLC project has validated this approach."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.8,
+      "reason": "Valid, long-standing performance improvement request with clear root cause (MSVC vs Clang). Win32 already benefited from this change (#758). UWP is declining but still has active users. The llvm-mingw approach provides a viable implementation path.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already mostly correct. Add tenet/performance to surface the performance nature of the request.",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/feature-request",
+          "area/libSkiaSharp.native",
+          "os/Windows-Universal-UWP",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Provide status update noting that Win32 already migrated to Clang, UWP remains pending, and suggest llvm-mingw as a path forward. Also note WinUI 3 migration as an alternative for interested users.",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the continued interest in this. Quick status update:\n\n**What's been done:** The Win32/x64/ARM64 Windows builds moved to Clang after this issue was filed (see #758), which resolved the performance gap for those targets.\n\n**UWP status:** UWP-specific Clang builds were deferred at the time and haven't been revisited. The [llvm-mingw toolchain](https://code.videolan.org/videolan/docker-images/-/tree/master/vlc-debian-llvm-uwp) suggested by @mfkl remains the most viable path — it has been validated for UWP targets by the VLC project.\n\n**Alternative:** If migrating to WinUI 3 is an option for your project, that platform uses the more modern build infrastructure and is the direction Windows app development is heading.\n\nThis is still on the backlog. Contributions or detailed benchmarking with llvm-mingw would be very welcome to help prioritize this work."
+      }
+    ]
+  }
+}
+```
+
+</details>

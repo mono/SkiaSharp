@@ -1,0 +1,191 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2771,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T16:10:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "DrawText performance is significantly slower than expected on Android GL surfaces, with multiple users reporting progressive regression across SkiaSharp versions (1.68.3 \u2192 3.x); caching SKTextBlob instances is the effective workaround.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Android",
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "performance",
+      "errorMessage": "DrawText renders only 10K calls/sec; need 50K/sec (5x faster)",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0-android"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a GL-accelerated SKSurface on Android",
+        "In each frame, call skCanvas.DrawText('5Char', x, y, paint) ~200 times",
+        "Measure frame time \u2014 observe only ~50 FPS is achievable, limiting to ~10K text draws/sec"
+      ],
+      "codeSnippets": [
+        "skCanvas.DrawText(\"5Char\", x, y, paint);  // Called 200 times per frame"
+      ],
+      "environmentDetails": "Android 12, SkiaSharp 2.88.3, Visual Studio (Windows), GL SKSurface",
+      "relatedIssues": [],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2771#issuecomment-2777501695",
+          "description": "Craig-TSS benchmarks showing progressive regression across SkiaSharp 1.68.3, 2.80.4, 2.88.9, 3.116.1, and 3.119.0"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.3",
+        "2.80.4",
+        "2.80.8",
+        "2.88.3",
+        "2.88.9",
+        "3.116.1",
+        "3.119.0"
+      ],
+      "workedIn": "2.80.4",
+      "brokeIn": "2.88.9",
+      "currentRelevance": "likely",
+      "relevanceReason": "Benchmark data from Craig-TSS in 3.119.0 shows improvement on Windows SKGLView (from 40ms to 20ms) but Android GL performance still shows no improvement."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.82,
+      "reason": "Craig-TSS provided detailed benchmarks showing SKGLView DrawText render time has grown from 10.7ms in 1.68.3 to 39.5ms in 3.116.1 for 640 strings. With SKTextBlob caching, 2.80.4 achieved 3.4ms vs 19.4ms in 3.116.1 \u2014 a 5.7x regression.",
+      "workedInVersion": "2.80.4",
+      "brokeInVersion": "2.88.9"
+    }
+  },
+  "analysis": {
+    "summary": "The string-based DrawText overload creates a new SKTextBlob on every call (binding/SkiaSharp/SKCanvas.cs line 655: `using var blob = SKTextBlob.Create(text, font)`), paying full text-layout cost each frame. Users who cache and reuse SKTextBlob instances via DrawText(SKTextBlob,...) see dramatically faster rendering. Benchmark data from the community also reveals a progressive per-version regression in underlying GL text rendering performance since 2.80.4.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "639-660",
+        "finding": "DrawText(string, float, float, SKTextAlign, SKFont, SKPaint) creates a fresh SKTextBlob via `SKTextBlob.Create(text, font)` on every invocation and disposes it at end of scope. No caching.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "604-614",
+        "finding": "DrawText(SKTextBlob, float, float, SKPaint) calls the C API directly (`sk_canvas_draw_text_blob`) with no allocation overhead \u2014 this is the fast path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTextBlob.cs",
+        "lines": "31-49",
+        "finding": "SKTextBlob.Create(string, SKFont) does UTF-16 encoding and native blob construction. Reusing the result avoids repeated layout on subsequent frames.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "5-per-msec, which means 100 of them takes up 20 msec all by itself",
+        "source": "issue body",
+        "interpretation": "Reporter quantifies the bottleneck: 200 DrawText calls per frame at 60 FPS needs 12K calls/sec but only achieves ~5-10K/sec."
+      },
+      {
+        "text": "3.119.0 TSSPOS SKGLView: 20.9ms (was 39.5ms in 3.116.1)",
+        "source": "comment #2846668386",
+        "interpretation": "There was a meaningful improvement on Windows in 3.119.0, but commenter confirms no observable difference on Android."
+      },
+      {
+        "text": "In SkiaSharp 2.80.4, the DrawText with SKTextBlob on the SKGLView is insanely fast (3.4ms vs 19.4ms in 3.116.1)",
+        "source": "comment #2777501695",
+        "interpretation": "SKTextBlob caching shows 5\u20137x speed improvement; the 2.80.4\u21922.88.x change introduced a GL-path regression."
+      }
+    ],
+    "rationale": "This is a genuine performance bug with community-provided benchmark data spanning multiple releases. The immediate cause is per-call SKTextBlob allocation in the string DrawText overload. A deeper regression in GL text rendering path is also present since 2.80.4. The issue has concrete repro data, a known workaround, and is still actively affecting users on Android.",
+    "workarounds": [
+      "Cache SKTextBlob instances keyed by text+font and reuse them with DrawText(SKTextBlob, x, y, paint) instead of calling DrawText(string, x, y, paint) each frame.",
+      "Pre-render all text labels to a shared SKImage atlas, then use DrawImageRect to draw each label \u2014 avoids text rendering overhead per-frame entirely."
+    ],
+    "nextQuestions": [
+      "What changed in the Skia upstream GL text pipeline between m80 (SkiaSharp 2.80.x) and m88 (SkiaSharp 2.88.x) that caused the regression?",
+      "Is the 3.119.0 improvement on Windows also applicable to the Android OpenGL backend or is it Windows-specific (Direct3D or ANGLE)?",
+      "Would adding an optional text blob cache at the C# wrapper level (e.g., LRU dictionary on SKCanvas or SKFont) be feasible without breaking ABI?"
+    ],
+    "resolution": {
+      "hypothesis": "The per-call SKTextBlob creation in DrawText(string,...) is the primary performance problem. The secondary issue is a GL rendering regression since 2.80.4 that affects Android more than Windows.",
+      "proposals": [
+        {
+          "title": "Cache and reuse SKTextBlob instances",
+          "description": "Instead of calling DrawText(string,...) per frame, create SKTextBlob once per unique (text, font) pair and cache it. Call DrawText(SKTextBlob, x, y, paint) for subsequent frames.",
+          "category": "workaround",
+          "effort": "cost/s",
+          "validated": "yes",
+          "codeSnippet": "// Cache: Dictionary<string, SKTextBlob> _textBlobCache = new();\n\n// Per-frame draw (reuses cached blob):\nif (!_textBlobCache.TryGetValue(label, out var blob))\n{\n    blob = SKTextBlob.Create(label, font);\n    _textBlobCache[label] = blob;\n}\nif (blob != null)\n    canvas.DrawText(blob, x, y, paint);\n\n// Dispose blobs when no longer needed (e.g., on font change or app shutdown):\nforeach (var b in _textBlobCache.Values) b?.Dispose();\n_textBlobCache.Clear();"
+        },
+        {
+          "title": "Pre-render labels to a shared image atlas",
+          "description": "Draw each unique text label into a region of an SKBitmap/SKImage atlas once, then use DrawImageRect each frame to blit the cached label. Eliminates all text layout cost at draw time.",
+          "category": "alternative",
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate GL text rendering regression since 2.80.4",
+          "description": "Diff the Skia upstream changes between m80 and m88 in the GL text shading/atlas path to identify what increased render time by ~3x. May be upstream Skia change or a SkiaSharp GL surface configuration change.",
+          "category": "investigation",
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "workaround-textblob-cache",
+      "recommendedReason": "Small code change with confirmed 5\u20137x speedup. Users can apply immediately without waiting for a SkiaSharp release."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.8,
+      "reason": "The issue has benchmark data confirming a real performance regression across SkiaSharp versions. A workaround (SKTextBlob caching) exists and gives immediate relief, but the root cause GL regression since 2.80.4 needs investigation \u2014 especially since Android is not showing the same improvement seen on Windows in 3.119.0.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add tenet/performance and os/Android labels; backend/OpenGL is relevant",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "tenet/performance",
+          "os/Android",
+          "backend/OpenGL"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain SKTextBlob caching workaround with code example and note the ongoing GL regression investigation",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report and benchmarks!\n\n**Immediate workaround \u2014 cache `SKTextBlob` instances:**\n\nThe `DrawText(string, ...)` overload currently creates a new `SKTextBlob` on every call, which incurs text layout overhead each frame. Caching blobs gives a reported 5\u20137x speedup:\n\n```csharp\n// One-time setup per screen/component:\nvar _textBlobCache = new Dictionary<string, SKTextBlob?>();\n\n// Per-frame drawing (fast path):\nif (!_textBlobCache.TryGetValue(label, out var blob))\n{\n    blob = SKTextBlob.Create(label, font);\n    _textBlobCache[label] = blob;\n}\nif (blob != null)\n    canvas.DrawText(blob, x, y, paint);\n\n// Cleanup when done:\nforeach (var b in _textBlobCache.Values) b?.Dispose();\n_textBlobCache.Clear();\n```\n\n**Note:** If your font or text size changes, invalidate the cached blob for that key.\n\nWe're also tracking a deeper GL rendering regression from the 2.80.x era \u2014 the raw per-call cost has grown roughly 3\u20134x on Android/GL from version 1.68.3 to 3.x. The 3.119.0 release brought improvements on Windows but Android hasn't seen the same gains yet."
+      }
+    ]
+  }
+}

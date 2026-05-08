@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #2771 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 2771, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-22T16:10:00Z", "currentLabels": ["type/bug"]}, "summary": "DrawText performance is significantly slower than expected on Android GL surfaces, with multiple users reporting progressive regression across SkiaSharp versions (1.68.3 → 3.x); caching SKTextBlob instances is the effective workaround.", "classification": {"type": {"value": "type/bug", "confidence": 0.9}, "area": {"value": "area/SkiaSharp", "confidence": 0.9}, "platforms": ["os/Android", "os/Windows-Classic"], "backends": ["backend/OpenGL"], "tenets": ["tenet/performance"]}, "evidence": {"bugSignals": {"severity": "medium", "regressionClaimed": true, "errorType": "performance", "errorMessage": "DrawText renders only 10K calls/sec; need 50K/sec (5x faster)", "reproQuality": "partial", "targetFrameworks": ["net8.0-android"]}, "reproEvidence": {"stepsToReproduce": ["Create a GL-accelerated SKSurface on Android", "In each frame, call skCanvas.DrawText('5Char', x, y, paint) ~200 times", "Measure frame time — observe only ~50 FPS is achievable, limiting to ~10K text draws/sec"], "codeSnippets": ["skCanvas.DrawText(\"5Char\", x, y, paint);  // Called 200 times per frame"], "environmentDetails": "Android 12, SkiaSharp 2.88.3, Visual Studio (Windows), GL SKSurface", "relatedIssues": [], "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/2771#issuecomment-2777501695", "description": "Craig-TSS benchmarks showing progressive regression across SkiaSharp 1.68.3, 2.80.4, 2.88.9, 3.116.1, and 3.119.0"}]}, "versionAnalysis": {"mentionedVersions": ["1.68.3", "2.80.4", "2.80.8", "2.88.3", "2.88.9", "3.116.1", "3.119.0"], "workedIn": "2.80.4", "brokeIn": "2.88.9", "currentRelevance": "likely", "relevanceReason": "Benchmark data from Craig-TSS in 3.119.0 shows improvement on Windows SKGLView (from 40ms to 20ms) but Android GL performance still shows no improvement."}, "regression": {"isRegression": true, "confidence": 0.82, "reason": "Craig-TSS provided detailed benchmarks showing SKGLView DrawText render time has grown from 10.7ms in 1.68.3 to 39.5ms in 3.116.1 for 640 strings. With SKTextBlob caching, 2.80.4 achieved 3.4ms vs 19.4ms in 3.116.1 — a 5.7x regression.", "workedInVersion": "2.80.4", "brokeInVersion": "2.88.9"}}, "analysis": {"summary": "The string-based DrawText overload creates a new SKTextBlob on every call (binding/SkiaSharp/SKCanvas.cs line 655: `using var blob = SKTextBlob.Create(text, font)`), paying full text-layout cost each frame. Users who cache and reuse SKTextBlob instances via DrawText(SKTextBlob,...) see dramatically faster rendering. Benchmark data from the community also reveals a progressive per-version regression in underlying GL text rendering performance since 2.80.4.", "codeInvestigation": [{"file": "binding/SkiaSharp/SKCanvas.cs", "lines": "639-660", "finding": "DrawText(string, float, float, SKTextAlign, SKFont, SKPaint) creates a fresh SKTextBlob via `SKTextBlob.Create(text, font)` on every invocation and disposes it at end of scope. No caching.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKCanvas.cs", "lines": "604-614", "finding": "DrawText(SKTextBlob, float, float, SKPaint) calls the C API directly (`sk_canvas_draw_text_blob`) with no allocation overhead — this is the fast path.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKTextBlob.cs", "lines": "31-49", "finding": "SKTextBlob.Create(string, SKFont) does UTF-16 encoding and native blob construction. Reusing the result avoids repeated layout on subsequent frames.", "relevance": "related"}], "keySignals": [{"text": "5-per-msec, which means 100 of them takes up 20 msec all by itself", "source": "issue body", "interpretation": "Reporter quantifies the bottleneck: 200 DrawText calls per frame at 60 FPS needs 12K calls/sec but only achieves ~5-10K/sec."}, {"text": "3.119.0 TSSPOS SKGLView: 20.9ms (was 39.5ms in 3.116.1)", "source": "comment #2846668386", "interpretation": "There was a meaningful improvement on Windows in 3.119.0, but commenter confirms no observable difference on Android."}, {"text": "In SkiaSharp 2.80.4, the DrawText with SKTextBlob on the SKGLView is insanely fast (3.4ms vs 19.4ms in 3.116.1)", "source": "comment #2777501695", "interpretation": "SKTextBlob caching shows 5–7x speed improvement; the 2.80.4→2.88.x change introduced a GL-path regression."}], "rationale": "This is a genuine performance bug with community-provided benchmark data spanning multiple releases. The immediate cause is per-call SKTextBlob allocation in the string DrawText overload. A deeper regression in GL text rendering path is also present since 2.80.4. The issue has concrete repro data, a known workaround, and is still actively affecting users on Android.", "workarounds": ["Cache SKTextBlob instances keyed by text+font and reuse them with DrawText(SKTextBlob, x, y, paint) instead of calling DrawText(string, x, y, paint) each frame.", "Pre-render all text labels to a shared SKImage atlas, then use DrawImageRect to draw each label — avoids text rendering overhead per-frame entirely."], "nextQuestions": ["What changed in the Skia upstream GL text pipeline between m80 (SkiaSharp 2.80.x) and m88 (SkiaSharp 2.88.x) that caused the regression?", "Is the 3.119.0 improvement on Windows also applicable to the Android OpenGL backend or is it Windows-specific (Direct3D or ANGLE)?", "Would adding an optional text blob cache at the C# wrapper level (e.g., LRU dictionary on SKCanvas or SKFont) be feasible without breaking ABI?"], "resolution": {"hypothesis": "The per-call SKTextBlob creation in DrawText(string,...) is the primary performance problem. The secondary issue is a GL rendering regression since 2.80.4 that affects Android more than Windows.", "proposals": [{"title": "Cache and reuse SKTextBlob instances", "description": "Instead of calling DrawText(string,...) per frame, create SKTextBlob once per unique (text, font) pair and cache it. Call DrawText(SKTextBlob, x, y, paint) for subsequent frames.", "category": "workaround", "effort": "cost/s", "validated": "yes", "codeSnippet": "// Cache: Dictionary<string, SKTextBlob> _textBlobCache = new();\n\n// Per-frame draw (reuses cached blob):\nif (!_textBlobCache.TryGetValue(label, out var blob))\n{\n    blob = SKTextBlob.Create(label, font);\n    _textBlobCache[label] = blob;\n}\nif (blob != null)\n    canvas.DrawText(blob, x, y, paint);\n\n// Dispose blobs when no longer needed (e.g., on font change or app shutdown):\nforeach (var b in _textBlobCache.Values) b?.Dispose();\n_textBlobCache.Clear();"}, {"title": "Pre-render labels to a shared image atlas", "description": "Draw each unique text label into a region of an SKBitmap/SKImage atlas once, then use DrawImageRect each frame to blit the cached label. Eliminates all text layout cost at draw time.", "category": "alternative", "effort": "cost/m", "validated": "untested"}, {"title": "Investigate GL text rendering regression since 2.80.4", "description": "Diff the Skia upstream changes between m80 and m88 in the GL text shading/atlas path to identify what increased render time by ~3x. May be upstream Skia change or a SkiaSharp GL surface configuration change.", "category": "investigation", "effort": "cost/l", "validated": "untested"}], "recommendedProposal": "workaround-textblob-cache", "recommendedReason": "Small code change with confirmed 5–7x speedup. Users can apply immediately without waiting for a SkiaSharp release."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.8, "reason": "The issue has benchmark data confirming a real performance regression across SkiaSharp versions. A workaround (SKTextBlob caching) exists and gives immediate relief, but the root cause GL regression since 2.80.4 needs investigation — especially since Android is not showing the same improvement seen on Windows in 3.119.0.", "suggestedReproPlatform": "linux"}, "actions": [{"type": "update-labels", "description": "Add tenet/performance and os/Android labels; backend/OpenGL is relevant", "risk": "low", "confidence": 0.9, "labels": ["tenet/performance", "os/Android", "backend/OpenGL"]}, {"type": "add-comment", "description": "Explain SKTextBlob caching workaround with code example and note the ongoing GL regression investigation", "risk": "medium", "confidence": 0.85, "comment": "Thanks for the detailed report and benchmarks!\n\n**Immediate workaround — cache `SKTextBlob` instances:**\n\nThe `DrawText(string, ...)` overload currently creates a new `SKTextBlob` on every call, which incurs text layout overhead each frame. Caching blobs gives a reported 5–7x speedup:\n\n```csharp\n// One-time setup per screen/component:\nvar _textBlobCache = new Dictionary<string, SKTextBlob?>();\n\n// Per-frame drawing (fast path):\nif (!_textBlobCache.TryGetValue(label, out var blob))\n{\n    blob = SKTextBlob.Create(label, font);\n    _textBlobCache[label] = blob;\n}\nif (blob != null)\n    canvas.DrawText(blob, x, y, paint);\n\n// Cleanup when done:\nforeach (var b in _textBlobCache.Values) b?.Dispose();\n_textBlobCache.Clear();\n```\n\n**Note:** If your font or text size changes, invalidate the cached blob for that key.\n\nWe're also tracking a deeper GL rendering regression from the 2.80.x era — the raw per-call cost has grown roughly 3–4x on Android/GL from version 1.68.3 to 3.x. The 3.119.0 release brought improvements on Windows but Android hasn't seen the same gains yet."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>
