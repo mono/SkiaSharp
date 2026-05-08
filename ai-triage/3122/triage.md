@@ -1,0 +1,400 @@
+# Issue Triage Report — #3122
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-23T05:20:00Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | ready-to-fix (0.88 (88%)) |
+
+**Issue Summary:** On x86 Windows, text drawn with DrawText(string, float, float, SKFont, SKPaint) becomes corrupted or disappears after a few invalidations in SkiaSharp 3.116.x, a regression from 2.88.x; the root cause is that the overload reads paint.TextAlign from native code via sk_compatpaint_get_text_align, which returns a garbage/non-zero value on x86 causing wrong x-offset calculations.
+
+**Analysis:** The DrawText(string, float, float, SKFont, SKPaint) overload delegates to DrawText(string, float, float, SKTextAlign, SKFont, SKPaint) using paint.TextAlign. On x86 Windows, the native P/Invoke call sk_compatpaint_get_text_align returns a non-zero (non-Left) value, causing the x-offset to be incorrectly adjusted on every call. The fix is for these overloads to use SKTextAlign.Left instead of paint.TextAlign, as indicated by an existing TODO comment in the source.
+
+**Recommendations:** **ready-to-fix** — Root cause is clear: non-obsolete DrawText(SKFont) overloads incorrectly read paint.TextAlign from native code. The fix is known (replace with SKTextAlign.Left per existing TODO comments), a repro is available, and a workaround has been confirmed by the community.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/compatibility, tenet/reliability |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a WinForms or WPF app targeting x86 with SkiaSharp 3.116.0 or later
+2. In SKPaintSurface handler, call canvas.DrawText("text", x, y, font, paint) in a loop triggered by mouse movement
+3. Move the mouse cursor rapidly over the control
+4. Observe that text disappears or moves to wrong position after a few invalidations
+5. Switch to AnyCPU or x64 profile — the issue does not occur
+
+**Environment:** Windows, Visual Studio, x86 profile, SkiaSharp 3.116.x; also reproduced with Mapsui.Wpf 5.0.0-beta.7
+
+**Repository links:**
+- https://github.com/user-attachments/files/18306621/appSkiaSharpTest.zip — Minimal WinForms repro project attached to issue comment
+- https://github.com/user-attachments/assets/170c68a2-5112-4815-9b1c-8b2a049e4412 — Video demonstrating the font disappearance bug on x86
+- https://github.com/user-attachments/assets/c5a21ea8-b097-4aec-bec5-d38d86699396 — Screenshot: x64 rendering (correct)
+- https://github.com/user-attachments/assets/0085ab14-d3b9-400e-b7e0-fc933e6efe03 — Screenshot: x86 rendering (corrupted)
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | wrong-output |
+| Error message | Text disappears or moves to wrong position after a few invalidations on x86 profile only |
+| Repro quality | complete |
+| Target frameworks | net8.0-windows, net9.0-windows |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.0, 3.116.1, 2.88.9 |
+| Worked in | 2.88.9 |
+| Broke in | 3.116.0 |
+| Current relevance | likely |
+| Relevance reason | The DrawText overloads that call paint.TextAlign internally still exist with TODO comments in current main |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.95 (95%) |
+| Reason | OP explicitly states it worked in 2.88.9 and broke in 3.116.x. Community members confirmed same regression. |
+| Worked in version | 2.88.9 |
+| Broke in version | 3.116.0 |
+
+## Analysis
+
+### Technical Summary
+
+The DrawText(string, float, float, SKFont, SKPaint) overload delegates to DrawText(string, float, float, SKTextAlign, SKFont, SKPaint) using paint.TextAlign. On x86 Windows, the native P/Invoke call sk_compatpaint_get_text_align returns a non-zero (non-Left) value, causing the x-offset to be incorrectly adjusted on every call. The fix is for these overloads to use SKTextAlign.Left instead of paint.TextAlign, as indicated by an existing TODO comment in the source.
+
+### Rationale
+
+Multiple affected users, a repro project is available, and a community member already isolated the root cause: the DrawText(font) overloads that should ignore TextAlign are reading it from native code, returning garbage on x86. The TODO comment in SKCanvas.cs line 635 acknowledges this should be replaced with SKTextAlign.Left.
+
+### Key Signals
+
+- "After a few invalidations, the text is no longer drawn correctly" — **issue comment by maiad** (Progressive corruption on repeated draw calls — consistent with an x offset being accumulated incorrectly)
+- "Stepping through the code showed that the DrawText method is using the obsolete SKPaint.TextAlign, when I replaced this with SKTextAlign left this solved the problem in release mode" — **issue comment by pauldendulk** (Root cause confirmed by community investigation — using the non-TextAlign overload is the workaround)
+- "there is a suppression of the warning, which suggests it was not made obsolete for a reason" — **issue comment by pauldendulk** (The TODO comment and pragma suppress in SKCanvas.cs acknowledge the problem but the fix has not been implemented yet)
+- "The bug only shows using x86 and only on two of three machines" — **issue comment by pauldendulk** (x86-specific calling convention or data alignment issue in native P/Invoke causing incorrect enum value to be read)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKCanvas.cs` | 634-637 | direct | DrawText(string, float, float, SKFont, SKPaint) calls DrawText(text, x, y, paint.TextAlign, font, paint) with a #pragma warning suppress and a TODO comment: 'replace paint.TextAlign with SKTextAlign.Left'. This means the overload that takes an explicit SKFont still reads the deprecated TextAlign from native code, which returns incorrect values on x86. |
+| `binding/SkiaSharp/SKCanvas.cs` | 626-629 | direct | DrawText(string, SKPoint, SKFont, SKPaint) has the same pattern — uses paint.TextAlign with a pragma suppression and TODO comment instead of defaulting to SKTextAlign.Left. |
+| `binding/SkiaSharp/SKCanvas.cs` | 639-660 | direct | In DrawText(string, float, float, SKTextAlign, SKFont, SKPaint), if textAlign != Left, it calls font.MeasureText(text) and adjusts x. If paint.TextAlign returns a garbage non-zero value on x86, this causes the text to be drawn at the wrong position on every invalidation. |
+| `binding/SkiaSharp/SKPaint.cs` | 229-233 | related | SKPaint.TextAlign is marked [Obsolete] and reads from native sk_compatpaint_get_text_align. The native call on x86 may return a non-zero/garbage value, causing the wrong alignment to be applied. |
+
+### Workarounds
+
+- Use DrawText(text, x, y, SKTextAlign.Left, font, paint) instead of DrawText(text, x, y, font, paint)
+- Explicitly set paint.TextAlign = SKTextAlign.Left before calling DrawText with the font overload (deprecated but works around the native read issue)
+
+### Next Questions
+
+- Does the same x86 corruption affect DrawTextOnPath overloads that also use paint.TextAlign?
+- Is the native sk_compatpaint_get_text_align returning garbage specifically on x86 due to struct alignment or calling convention differences?
+- Can the fix (replacing paint.TextAlign with SKTextAlign.Left in the non-obsolete overloads) be implemented without a breaking change?
+
+### Resolution Proposals
+
+**Hypothesis:** The non-obsolete DrawText overloads that accept an explicit SKFont are incorrectly reading paint.TextAlign from native code via P/Invoke, which returns a garbage non-zero value on x86, causing the text position to be offset on every draw call.
+
+1. **Replace paint.TextAlign with SKTextAlign.Left in the non-obsolete DrawText overloads** — fix, confidence 0.90 (90%), cost/xs, validated=yes
+   - Remove the #pragma warning suppress blocks in SKCanvas.cs and replace `paint.TextAlign` with `SKTextAlign.Left` for the DrawText and DrawTextOnPath overloads that already accept an explicit SKFont. The TODO comments in the code already document this intent.
+
+```csharp
+// Change line 634-637 in SKCanvas.cs from:
+public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
+    DrawText (text, x, y, paint.TextAlign, font, paint);
+
+// To:
+public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
+    DrawText (text, x, y, SKTextAlign.Left, font, paint);
+```
+2. **Use the explicit SKTextAlign overload as workaround** — workaround, confidence 0.95 (95%), cost/xs, validated=yes
+   - Call DrawText with explicit SKTextAlign.Left to bypass the native paint.TextAlign read on x86.
+
+```csharp
+// Instead of:
+e.Surface.Canvas.DrawText("Hallo from skia !", 100, 100, font, p);
+
+// Use:
+e.Surface.Canvas.DrawText("Hallo from skia !", 100, 100, SKTextAlign.Left, font, p);
+```
+
+**Recommended proposal:** Replace paint.TextAlign with SKTextAlign.Left in the non-obsolete DrawText overloads
+
+**Why:** Simple one-line fix that resolves the root cause. The TODO comments already acknowledge this is the intended fix.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.88 (88%) |
+| Reason | Root cause is clear: non-obsolete DrawText(SKFont) overloads incorrectly read paint.TextAlign from native code. The fix is known (replace with SKTextAlign.Left per existing TODO comments), a repro is available, and a workaround has been confirmed by the community. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug classification, Windows platform, and SkiaSharp area labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, tenet/compatibility, tenet/reliability |
+| add-comment | medium | 0.88 (88%) | Post analysis with workaround and root cause explanation | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and for providing a repro!
+
+**Root cause identified** (credit to @pauldendulk for the investigation):
+
+The `DrawText(string, float, float, SKFont, SKPaint)` overload internally calls the deprecated `paint.TextAlign` via a native P/Invoke (`sk_compatpaint_get_text_align`). On x86 Windows, this native call returns a garbage non-zero value instead of `SKTextAlign.Left`, causing the text x-position to be incorrectly offset on every draw call. On x64, the native call happens to return `0` (Left), so the bug doesn't manifest.
+
+There is already a `TODO` comment in `SKCanvas.cs` acknowledging this should be replaced with `SKTextAlign.Left`.
+
+**Workaround** (confirmed working):
+
+```csharp
+// Instead of:
+canvas.DrawText("Hallo from skia !", 100, 100, font, paint);
+
+// Use the explicit alignment overload:
+canvas.DrawText("Hallo from skia !", 100, 100, SKTextAlign.Left, font, paint);
+```
+
+**Fix:** Remove the `#pragma warning` blocks in `SKCanvas.cs` and replace `paint.TextAlign` with `SKTextAlign.Left` in the non-obsolete `DrawText` and `DrawTextOnPath` overloads that accept an explicit `SKFont`.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3122,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T05:20:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "On x86 Windows, text drawn with DrawText(string, float, float, SKFont, SKPaint) becomes corrupted or disappears after a few invalidations in SkiaSharp 3.116.x, a regression from 2.88.x; the root cause is that the overload reads paint.TextAlign from native code via sk_compatpaint_get_text_align, which returns a garbage/non-zero value on x86 causing wrong x-offset calculations.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility",
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Text disappears or moves to wrong position after a few invalidations on x86 profile only",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0-windows",
+        "net9.0-windows"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a WinForms or WPF app targeting x86 with SkiaSharp 3.116.0 or later",
+        "In SKPaintSurface handler, call canvas.DrawText(\"text\", x, y, font, paint) in a loop triggered by mouse movement",
+        "Move the mouse cursor rapidly over the control",
+        "Observe that text disappears or moves to wrong position after a few invalidations",
+        "Switch to AnyCPU or x64 profile — the issue does not occur"
+      ],
+      "environmentDetails": "Windows, Visual Studio, x86 profile, SkiaSharp 3.116.x; also reproduced with Mapsui.Wpf 5.0.0-beta.7",
+      "repoLinks": [
+        {
+          "url": "https://github.com/user-attachments/files/18306621/appSkiaSharpTest.zip",
+          "description": "Minimal WinForms repro project attached to issue comment"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/170c68a2-5112-4815-9b1c-8b2a049e4412",
+          "description": "Video demonstrating the font disappearance bug on x86"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/c5a21ea8-b097-4aec-bec5-d38d86699396",
+          "description": "Screenshot: x64 rendering (correct)"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/0085ab14-d3b9-400e-b7e0-fc933e6efe03",
+          "description": "Screenshot: x86 rendering (corrupted)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "3.116.1",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The DrawText overloads that call paint.TextAlign internally still exist with TODO comments in current main"
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.95,
+      "reason": "OP explicitly states it worked in 2.88.9 and broke in 3.116.x. Community members confirmed same regression.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "The DrawText(string, float, float, SKFont, SKPaint) overload delegates to DrawText(string, float, float, SKTextAlign, SKFont, SKPaint) using paint.TextAlign. On x86 Windows, the native P/Invoke call sk_compatpaint_get_text_align returns a non-zero (non-Left) value, causing the x-offset to be incorrectly adjusted on every call. The fix is for these overloads to use SKTextAlign.Left instead of paint.TextAlign, as indicated by an existing TODO comment in the source.",
+    "rationale": "Multiple affected users, a repro project is available, and a community member already isolated the root cause: the DrawText(font) overloads that should ignore TextAlign are reading it from native code, returning garbage on x86. The TODO comment in SKCanvas.cs line 635 acknowledges this should be replaced with SKTextAlign.Left.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "634-637",
+        "finding": "DrawText(string, float, float, SKFont, SKPaint) calls DrawText(text, x, y, paint.TextAlign, font, paint) with a #pragma warning suppress and a TODO comment: 'replace paint.TextAlign with SKTextAlign.Left'. This means the overload that takes an explicit SKFont still reads the deprecated TextAlign from native code, which returns incorrect values on x86.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "626-629",
+        "finding": "DrawText(string, SKPoint, SKFont, SKPaint) has the same pattern — uses paint.TextAlign with a pragma suppression and TODO comment instead of defaulting to SKTextAlign.Left.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "639-660",
+        "finding": "In DrawText(string, float, float, SKTextAlign, SKFont, SKPaint), if textAlign != Left, it calls font.MeasureText(text) and adjusts x. If paint.TextAlign returns a garbage non-zero value on x86, this causes the text to be drawn at the wrong position on every invalidation.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "229-233",
+        "finding": "SKPaint.TextAlign is marked [Obsolete] and reads from native sk_compatpaint_get_text_align. The native call on x86 may return a non-zero/garbage value, causing the wrong alignment to be applied.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "After a few invalidations, the text is no longer drawn correctly",
+        "source": "issue comment by maiad",
+        "interpretation": "Progressive corruption on repeated draw calls — consistent with an x offset being accumulated incorrectly"
+      },
+      {
+        "text": "Stepping through the code showed that the DrawText method is using the obsolete SKPaint.TextAlign, when I replaced this with SKTextAlign left this solved the problem in release mode",
+        "source": "issue comment by pauldendulk",
+        "interpretation": "Root cause confirmed by community investigation — using the non-TextAlign overload is the workaround"
+      },
+      {
+        "text": "there is a suppression of the warning, which suggests it was not made obsolete for a reason",
+        "source": "issue comment by pauldendulk",
+        "interpretation": "The TODO comment and pragma suppress in SKCanvas.cs acknowledge the problem but the fix has not been implemented yet"
+      },
+      {
+        "text": "The bug only shows using x86 and only on two of three machines",
+        "source": "issue comment by pauldendulk",
+        "interpretation": "x86-specific calling convention or data alignment issue in native P/Invoke causing incorrect enum value to be read"
+      }
+    ],
+    "workarounds": [
+      "Use DrawText(text, x, y, SKTextAlign.Left, font, paint) instead of DrawText(text, x, y, font, paint)",
+      "Explicitly set paint.TextAlign = SKTextAlign.Left before calling DrawText with the font overload (deprecated but works around the native read issue)"
+    ],
+    "nextQuestions": [
+      "Does the same x86 corruption affect DrawTextOnPath overloads that also use paint.TextAlign?",
+      "Is the native sk_compatpaint_get_text_align returning garbage specifically on x86 due to struct alignment or calling convention differences?",
+      "Can the fix (replacing paint.TextAlign with SKTextAlign.Left in the non-obsolete overloads) be implemented without a breaking change?"
+    ],
+    "resolution": {
+      "hypothesis": "The non-obsolete DrawText overloads that accept an explicit SKFont are incorrectly reading paint.TextAlign from native code via P/Invoke, which returns a garbage non-zero value on x86, causing the text position to be offset on every draw call.",
+      "proposals": [
+        {
+          "title": "Replace paint.TextAlign with SKTextAlign.Left in the non-obsolete DrawText overloads",
+          "description": "Remove the #pragma warning suppress blocks in SKCanvas.cs and replace `paint.TextAlign` with `SKTextAlign.Left` for the DrawText and DrawTextOnPath overloads that already accept an explicit SKFont. The TODO comments in the code already document this intent.",
+          "codeSnippet": "// Change line 634-637 in SKCanvas.cs from:\npublic void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>\n    DrawText (text, x, y, paint.TextAlign, font, paint);\n\n// To:\npublic void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>\n    DrawText (text, x, y, SKTextAlign.Left, font, paint);",
+          "category": "fix",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use the explicit SKTextAlign overload as workaround",
+          "description": "Call DrawText with explicit SKTextAlign.Left to bypass the native paint.TextAlign read on x86.",
+          "codeSnippet": "// Instead of:\ne.Surface.Canvas.DrawText(\"Hallo from skia !\", 100, 100, font, p);\n\n// Use:\ne.Surface.Canvas.DrawText(\"Hallo from skia !\", 100, 100, SKTextAlign.Left, font, p);",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Replace paint.TextAlign with SKTextAlign.Left in the non-obsolete DrawText overloads",
+      "recommendedReason": "Simple one-line fix that resolves the root cause. The TODO comments already acknowledge this is the intended fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.88,
+      "reason": "Root cause is clear: non-obsolete DrawText(SKFont) overloads incorrectly read paint.TextAlign from native code. The fix is known (replace with SKTextAlign.Left per existing TODO comments), a repro is available, and a workaround has been confirmed by the community.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug classification, Windows platform, and SkiaSharp area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/compatibility",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workaround and root cause explanation",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed report and for providing a repro!\n\n**Root cause identified** (credit to @pauldendulk for the investigation):\n\nThe `DrawText(string, float, float, SKFont, SKPaint)` overload internally calls the deprecated `paint.TextAlign` via a native P/Invoke (`sk_compatpaint_get_text_align`). On x86 Windows, this native call returns a garbage non-zero value instead of `SKTextAlign.Left`, causing the text x-position to be incorrectly offset on every draw call. On x64, the native call happens to return `0` (Left), so the bug doesn't manifest.\n\nThere is already a `TODO` comment in `SKCanvas.cs` acknowledging this should be replaced with `SKTextAlign.Left`.\n\n**Workaround** (confirmed working):\n\n```csharp\n// Instead of:\ncanvas.DrawText(\"Hallo from skia !\", 100, 100, font, paint);\n\n// Use the explicit alignment overload:\ncanvas.DrawText(\"Hallo from skia !\", 100, 100, SKTextAlign.Left, font, paint);\n```\n\n**Fix:** Remove the `#pragma warning` blocks in `SKCanvas.cs` and replace `paint.TextAlign` with `SKTextAlign.Left` in the non-obsolete `DrawText` and `DrawTextOnPath` overloads that accept an explicit `SKFont`."
+      }
+    ]
+  }
+}
+```
+
+</details>

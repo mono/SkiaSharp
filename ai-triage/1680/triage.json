@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1680,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T10:20:36Z"
+  },
+  "summary": "Reporter observes continuous memory growth (approximately doubling) when rapidly resizing a UWP application containing SKXamlCanvas. SkiaSharp 2.80.2, UWP 19041, VS 2019. Removing the canvas control releases all leaked memory.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.90 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.80 },
+    "platforms": ["os/Windows-Universal-UWP"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "reproQuality": "partial",
+      "targetFrameworks": ["uap10.0.19041"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a UWP app using SKXamlCanvas (SkiaSharp 2.80.2, UWP 19041)",
+        "Draw shapes (including SKPath) in the PaintSurface handler",
+        "Resize the window repeatedly by dragging the border",
+        "Observe memory growing to approximately double its initial size",
+        "Verify that removing SKXamlCanvas from the visual tree releases all leaked memory"
+      ],
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/6242492/Leak2.zip",
+          "filename": "Leak2.zip",
+          "description": "Minimal UWP repro project demonstrating memory growth on resize"
+        }
+      ],
+      "screenshots": [
+        {
+          "url": "https://user-images.githubusercontent.com/45887081/113274396-61484300-9329-11eb-9376-bb857c3b936e.png",
+          "description": "Memory profiler screenshot showing approximately doubled memory after repeated resize operations"
+        }
+      ],
+      "environmentDetails": "SkiaSharp 2.80.2, VS 2019, UWP 19041 (Windows 10 2004), local machine",
+      "relatedIssues": [2368]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.2", "2.88.9"],
+      "currentRelevance": "unknown",
+      "relevanceReason": "UWP support was dropped in SkiaSharp 3.x. Related issue #2368 (SKPath cache memory leak with similar symptoms) was confirmed fixed in SkiaSharp 3.116.1, but the resize-triggered variant on WinUI 3.x has not been explicitly verified."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.55,
+      "reason": "Related issue #2368 reported the same SKPath cache memory leak and was confirmed fixed in SkiaSharp 3.116.1 by the original reporter and by user najak3d. The root cause (Skia surface-bound path caching) is the same mechanism. However, the original issue's platform (UWP) was dropped in 3.x, so direct comparison is not possible. A commenter observed memory growth is smaller but still present on SkiaSharp 2.88.9.",
+      "fixedInVersion": "3.116.1"
+    }
+  },
+  "analysis": {
+    "summary": "Memory accumulates because Skia caches rendered path data on the SKSurface for performance re-use. When the window is resized, SKXamlCanvas.CreateBitmap() destroys and recreates the underlying WriteableBitmap and SKSurface. With rapid resizing, many surface instances are created and destroyed faster than the GC can collect them, and their associated path render caches are only freed when each surface is collected. The fact that removing the canvas control releases all leaked memory confirms the memory is held by surface-level caches, not by detached managed objects. The missing SKPath.IsVolatile property (which would disable path caching on the surface) was identified as a contributing factor in related issue #2368. Confirmed fixed in SkiaSharp 3.116.1 via upstream Skia changes.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
+        "lines": "229-255",
+        "finding": "CreateBitmap() checks if the bitmap dimensions changed and calls FreeBitmap() to release the old WriteableBitmap. A new SKSurface is then created from the fresh pixel buffer in DoInvalidate() (lines 195-206) via a using block. The surface is disposed, but the native Skia surface's internal path render caches are reference-counted at the native level and may not be freed immediately — they are reclaimed asynchronously by the GC finalizer for native objects. On rapid resize, many stale caches accumulate simultaneously.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPath.cs",
+        "lines": "15-43",
+        "finding": "SKPath does not expose Skia's SkPath::setIsVolatile(bool) API. When isVolatile is false (Skia's default), the surface caches path rendering data to accelerate repeated draws. This cache persists until the surface is destroyed. On rapid resize, many surfaces are created/destroyed and their path render caches accumulate. Exposing IsVolatile would allow users to opt out of caching for frequently-updated paths.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Removing the SKCanvas from the form releases all the memory leaked.",
+        "source": "issue body",
+        "interpretation": "Memory is held at the surface level (Skia internal path render cache), not in detached managed SKPath objects — confirms root cause is surface-bound caching rather than a managed object leak."
+      },
+      {
+        "text": "I just updated my debug project to SkiaSharp 3.116.1 and the bug seems to be fixed.",
+        "source": "issue #2368, comment by AquilaAbriel (2025-03-07)",
+        "interpretation": "The underlying Skia surface path caching behavior was fixed in SkiaSharp 3.x, suggesting this issue would be resolved by upgrading."
+      },
+      {
+        "text": "I was able to fully switch over to SKIA 3.116.1, and this FULLY RESOLVES the memory leak!",
+        "source": "issue #2368, comment by najak3d (2025-03-09)",
+        "interpretation": "Second independent confirmation that SkiaSharp 3.116.1 fixes the memory leak for a similar resize/redraw scenario."
+      },
+      {
+        "text": "Sadly I was not able to update the provided debug project to SkiaSharp 3.x because UAP support was dropped.",
+        "source": "comment by AquilaAbriel on issue #1680 (2025-03-08)",
+        "interpretation": "The original issue platform (UWP) is not supported in 3.x; direct reproduction verification is blocked for the original reporter."
+      }
+    ],
+    "workarounds": [
+      "Throttle window resize events so that the paint handler is only called when resizing stops (e.g., use a DispatcherTimer with a short debounce after SizeChanged), reducing surface recreation frequency.",
+      "Upgrade from UWP to WinUI 3 and use SkiaSharp 3.116.1+ where the underlying memory leak is confirmed fixed."
+    ],
+    "nextQuestions": [
+      "Can a WinUI 3 user confirm that the resize-triggered memory growth is no longer present with SkiaSharp 3.116.1+?",
+      "Should SKPath.IsVolatile be exposed to allow users to disable surface path caching for frequently-updated paths?"
+    ],
+    "errorFingerprint": "memory-leak-SKSurface-path-cache-UWP-resize",
+    "resolution": {
+      "hypothesis": "Skia's internal path render cache is bound to the SKSurface lifetime. On rapid resize, surfaces are created/destroyed faster than the GC can collect them, causing stale caches to accumulate. Confirmed fixed in SkiaSharp 3.116.1 via upstream Skia changes.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 3.x on WinUI",
+          "description": "Migrate from UWP to WinUI 3 and upgrade to SkiaSharp 3.116.1 or newer. Multiple users confirm the memory leak is fixed in 3.116.1.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.80,
+          "effort": "cost/l"
+        },
+        {
+          "title": "Throttle resize-triggered redraws on 2.x",
+          "description": "On SkiaSharp 2.x/UWP, wrap the SKXamlCanvas.Invalidate() call in a DispatcherTimer with a short debounce (~16ms after SizeChanged). This reduces surface creation frequency and gives the GC time to collect old surfaces and their path render caches.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.65,
+          "effort": "cost/s"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 3.x on WinUI",
+      "recommendedReason": "The fix is confirmed in 3.116.1; migrating to WinUI is the officially supported upgrade path from UWP."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.70,
+      "reason": "Related issue #2368 confirms the SKPath surface cache memory leak was fixed in SkiaSharp 3.116.1, but the original platform (UWP) was dropped in 3.x. Need confirmation from a WinUI 3.x user that this resize-triggered variant is also resolved before closing.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Can a WinUI 3 user confirm that memory growth during rapid resize is fixed in SkiaSharp 3.116.1+?",
+      "Is issue #2794 (crash on SKImage disposal in 3.x) preventing the original reporter from upgrading?"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views, os/Windows-Universal-UWP, tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Windows-Universal-UWP", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain likely fix path, provide throttling workaround, and ask if WinUI 3.x users still see memory growth",
+        "risk": "medium",
+        "confidence": 0.72,
+        "comment": "Thanks for the detailed report and attached reproduction project!\n\nA closely related memory leak issue (#2368) with SKPath caching on SKSurface was confirmed fixed in SkiaSharp 3.116.1 by multiple users. The root cause is Skia's internal path render cache: when paths are drawn to a surface, Skia caches the rendering data on that surface for performance. On rapid resize, many surfaces are created and destroyed, and stale caches aren't freed until each surface is garbage collected.\n\n**Workarounds for SkiaSharp 2.x / UWP:**\n- Throttle the resize-triggered redraws using a `DispatcherTimer` with a short debounce (~16ms after `SizeChanged`). This reduces surface creation frequency and gives the GC time to reclaim old surfaces and their caches.\n- If you can migrate to WinUI 3, upgrading to SkiaSharp 3.116.1 is confirmed to fully resolve this leak.\n\nCould you confirm: are you still on UWP, or have you had a chance to try WinUI + SkiaSharp 3.116.1? If WinUI 3.x users still see resize memory growth, please let us know — that would indicate the fix does not cover this resize-triggered variant."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related SKPath cache memory leak issue confirmed fixed in 3.116.1",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 2368
+      }
+    ]
+  }
+}

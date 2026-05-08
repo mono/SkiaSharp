@@ -1,0 +1,158 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1814,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T06:10:00Z"
+  },
+  "summary": "SKTouchEventArgs.Pressure is always 1 on Windows (UWP/WinUI) and iOS when using a pen or stylus, because the Windows and Apple platform touch handlers do not read pressure data from the underlying pointer/touch APIs — only the Android handler correctly passes pressure.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.90 },
+    "platforms": ["os/Windows-Classic", "os/Windows-Universal-UWP", "os/iOS"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "Pressure is always 1 even when an actual pen is used",
+      "reproQuality": "complete",
+      "targetFrameworks": ["uap10.0.19041", "net-ios", "net-windows"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a SKCanvasView with EnableTouchEvents=true in a UWP or MAUI Windows app",
+        "Handle the Touch event",
+        "Use a Surface Pen or Wacom stylus",
+        "Read args.Pressure — it is always 1.0 regardless of applied pressure"
+      ],
+      "codeSnippets": [
+        "private void OnTouch(object sender, SKTouchEventArgs args)\n{\n    var penIsUsed = args.DeviceType == SKTouchDeviceType.Pen;\n    float pressure = 10;\n    if (penIsUsed)\n    {\n        pressure = args.Pressure * 10; // always 10 — Pressure is always 1\n    }\n}"
+      ],
+      "environmentDetails": "SkiaSharp 2.80.3, UWP 19041, MS Surface; also confirmed on iOS and MAUI with Wacom tablet (.NET 10)",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/1814#issuecomment-925745614", "description": "Reporter's WinAPI workaround using GetPointerPenInfo P/Invoke" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/1814#issuecomment-1030737071", "description": "Reporter confirms iOS also doesn't set pressure (UITouch.Force not used); notes MAUI variant does set it" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/1814#issuecomment-3634327378", "description": "2025 confirmation: Android works, Windows (Wacom tablet, .NET 10 MAUI) still pressure=1" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Code investigation confirms Windows and Apple MAUI handlers still use constructors defaulting pressure to 1; Android handler was separately fixed and works."
+    }
+  },
+  "analysis": {
+    "summary": "The Windows (MAUI/WinUI) and Apple (iOS/MAUI) SKTouchHandler implementations omit pressure when constructing SKTouchEventArgs, causing Pressure to always default to 1. The Windows handler should read pointerPoint.Properties.Pressure; the Apple handler should read UITouch.Force / UITouch.MaximumPossibleForce. The Android handler correctly reads evt.GetPressure(pointer) and works as expected.",
+    "rationale": "Source code inspection of all platform SKTouchHandler files confirms the root cause. Windows CommonHandler calls SKTouchEventArgs(id, touchActionType, mouse, device, skPoint, isInContact, wheelDelta) — the 7-argument constructor that defaults pressure to 1. Apple FireEvent calls SKTouchEventArgs(id, actionType, point, inContact) — the 4-argument overload that also defaults to 1. Android passes evt.GetPressure(pointer) as the 8th argument and works correctly. This is a clear missing feature/implementation bug on Windows and iOS.",
+    "keySignals": [
+      {
+        "text": "The pressure is always at 1 even when an actual pen is used and even recognised as SKTouchDeviceType.Pen",
+        "source": "issue body",
+        "interpretation": "Pen device type detection works; only pressure is missing — confirms the platform handler reads device type but skips pressure."
+      },
+      {
+        "text": "pressure is not even used in the iOS implementation, so it never gets even set",
+        "source": "comment #issuecomment-1030737071",
+        "interpretation": "Reporter independently discovered the same code gap in Apple handler — UITouch.Force is unused."
+      },
+      {
+        "text": "Pressure works as intended on my Android device (Samsung Fold 5 with S Pen). Pressure does not work at all in Windows using a Wacom tablet",
+        "source": "comment #issuecomment-3634327378",
+        "interpretation": "Confirms the Android fix is working; Windows bug persists into .NET 10 / MAUI era."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+        "lines": "106-127",
+        "finding": "CommonHandler constructs SKTouchEventArgs with 7-arg constructor (no pressure argument), defaulting pressure to 1. pointerPoint.Properties.Pressure from WinUI/WinRT PointerPointProperties is never read.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "97-110",
+        "finding": "FireEvent constructs SKTouchEventArgs with 4-arg constructor, defaulting pressure to 1. UITouch.Force and UITouch.MaximumPossibleForce are never read.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
+        "lines": "59",
+        "finding": "Android correctly reads evt.GetPressure(pointer) and passes it as the 8th argument to the full SKTouchEventArgs constructor.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+        "lines": "9-16",
+        "finding": "The 4-arg and 7-arg constructors both hardcode pressure=1 via this(…, 1). The 8-arg constructor accepts real pressure. Android uses 8-arg; Windows and Apple use shorter overloads.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "On Windows: P/Invoke GetPointerPenInfo from user32.dll using args.Id as pointerId to read real pressure (reported by original reporter — works but suboptimal perf)",
+      "On iOS: No known pure-managed workaround; UITouch.Force requires subclassing the gesture recognizer"
+    ],
+    "nextQuestions": [
+      "Does macOS (Pencil/tablet input) also fail? Tizen also uses the pressure-defaulting constructor.",
+      "Should the fix also cover the Tizen handler?",
+      "For iOS, should pressure only be set when UITouch.Type == UITouchType.Pencil to avoid returning Force for finger touches?"
+    ],
+    "resolution": {
+      "hypothesis": "The fix requires two platform-level changes: (1) Windows handler reads pointerPoint.Properties.Pressure; (2) Apple handler reads touch.Force / touch.MaximumPossibleForce (guarded for Pencil type).",
+      "proposals": [
+        {
+          "title": "Read pressure in Windows handler",
+          "description": "In CommonHandler, read pointerPoint.Properties.Pressure and pass it to the SKTouchEventArgs constructor.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Read pressure in Apple/iOS handler",
+          "description": "In FireEvent, compute pressure as (float)(touch.Force / touch.MaximumPossibleForce) when MaximumPossibleForce > 0, else default to 1. Pass to SKTouchEventArgs.",
+          "category": "fix",
+          "confidence": 0.88,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "WinAPI workaround (Windows only)",
+          "description": "Use P/Invoke GetPointerPenInfo from user32.dll with the pointer ID from SKTouchEventArgs.Id to read pen pressure as a stop-gap.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Read pressure in Windows handler",
+      "recommendedReason": "Windows is the most-affected platform per comments; fix is a one-liner reading pointerPoint.Properties.Pressure already available in scope."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.90,
+      "reason": "Root cause is clear from code inspection: Windows and Apple handlers omit pressure from SKTouchEventArgs. Both platform APIs expose pressure natively. Fix path is straightforward for both platforms.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views-maui, windows, ios labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Windows-Classic", "os/Windows-Universal-UWP", "os/iOS", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post triage findings and confirm root cause in code",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "Thanks for the detailed report and animated screenshots!\n\nAfter investigating the source, the root cause is confirmed: the Windows and iOS `SKTouchHandler` implementations do not read pressure from the underlying platform APIs when constructing `SKTouchEventArgs`, so `Pressure` always defaults to `1`.\n\n- **Windows** (`Platform/Windows/SKTouchHandler.cs`): `pointerPoint.Properties.Pressure` is available from WinUI's `PointerPointProperties` but is never read.\n- **iOS** (`Platform/Apple/SKTouchHandler.cs`): `UITouch.Force / UITouch.MaximumPossibleForce` is available for Apple Pencil input but is never read.\n- **Android** works correctly — it already reads `evt.GetPressure(pointer)`.\n\nThis is a straightforward fix for both platforms. As a workaround on Windows, you can P/Invoke `GetPointerPenInfo` from `user32.dll` using `args.Id` as the pointer ID (as you discovered).\n\nA fix PR adding pressure reads to both the Windows and Apple handlers would be welcome!"
+      }
+    ]
+  }
+}
