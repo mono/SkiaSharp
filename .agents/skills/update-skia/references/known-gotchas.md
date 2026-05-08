@@ -29,7 +29,7 @@ Platform font manager calls (e.g., `SkFontMgr_New_FontConfig`) must be guarded b
 
 ### 5. `git-sync-deps` emsdk Failure
 
-Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since SkiaSharp comments out emsdk in DEPS, this call fails. Set `GIT_SYNC_DEPS_SKIP_EMSDK=1` in `scripts/cake/native-shared.cake`.
+Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since SkiaSharp comments out emsdk in DEPS, this call fails. Set `GIT_SYNC_DEPS_SKIP_EMSDK=1` in `scripts/infra/native/shared/native-shared.cake`.
 
 ### 6. `BUILD.gn` Legacy Flags
 

@@ -346,13 +346,6 @@ def cmd_cache_key(config, args):
                         flag = "* " if is_dirty(dep_src) else "  "
                         print(f"{'  ' * (indent + 2)}{flag}{child}")
                         print_items(dep_src, indent + 3)
-                    continue
-                dep_path = dep_src.split(" → ", 1)[1]
-                child = dep_path.split("/", 1)[1] if "/" in dep_path else None
-                if child:
-                    flag = "* " if is_dirty(dep_src) else "  "
-                    print(f"{'  ' * (indent + 2)}{flag}{child}")
-                    print_items(dep_src, indent + 3)
 
     if os.environ.get("BUILD_BUILDID"):
         print(f"##vso[task.setvariable variable=CACHE_KEY]{cache_key}")
