@@ -1,0 +1,383 @@
+# Issue Triage Report — #3038
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-23T15:09:25Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/libHarfBuzzSharp.native (0.95 (95%)) |
+| Suggested action | needs-investigation (0.88 (88%)) |
+
+**Issue Summary:** libHarfBuzzSharp.so on Linux causes SIGSEGV when loaded alongside GtkSharp (or any library using RTLD_GLOBAL) because the ELF global symbol namespace causes internal hb_* calls inside libHarfBuzzSharp to resolve to the system libharfbuzz.so.0 instead; the RTLD_DEEPBIND workaround from PR #2247 is only active for netfx builds and is absent in .NET 6+ builds.
+
+**Analysis:** The root cause is that libHarfBuzzSharp.so exports all hb_* symbols globally (via --version-script with 'global: hb_*; local: *;') and the Linux ELF loader allows globally-loaded libraries (RTLD_GLOBAL) to override these symbols in libHarfBuzzSharp's own internal calls. The fix (RTLD_DEEPBIND when loading libHarfBuzzSharp) was present for netfx via LibraryLoader but was not ported to .NET 6+. Two native-side fixes are proposed: compile with -Bsymbolic/-Bsymbolic-functions to force local symbol resolution, or rename all exported symbols with a unique prefix.
+
+**Recommendations:** **needs-investigation** — Clear regression with a known root cause and viable fix path. The -Bsymbolic-functions approach needs to be tested on a Linux build to confirm it resolves the SIGSEGV without side effects before committing to the fix.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libHarfBuzzSharp.native |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a .NET 6+ console app on Linux
+2. Reference both GtkSharp and HarfBuzzSharp NuGet packages
+3. Call Gtk.Application.Init() to trigger loading of libgtk.so.3 with RTLD_GLOBAL (which pulls in system libharfbuzz.so.0 into the global ELF namespace)
+4. Create a HarfBuzzSharp.Font and call TryGetGlyph
+5. Observe SIGSEGV
+
+**Environment:** Linux, .NET 6+, GtkSharp, system libharfbuzz.so.0 present
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/pull/2247 — Original fix: added RTLD_DEEPBIND to LibraryLoader.Linux.dlopen — only active for netfx USE_DELEGATES builds
+- https://github.com/mono/SkiaSharp/pull/2917 — Related PR by @maxkatz6 referenced in discussion (may affect net6+ native loading path)
+- https://github.com/GtkSharp/GtkSharp/issues/443 — GtkSharp uses RTLD_GLOBAL when loading libgtk.so.3, causing system harfbuzz to pollute global ELF namespace
+
+**Code snippets:**
+
+```csharp
+Gtk.Application.Init();
+var font = new HarfBuzzSharp.Font(new Face((_, _) => null));
+font.TryGetGlyph(65, out _);
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | crash |
+| Error message | SIGSEGV in libHarfBuzzSharp.so internal hb_* call resolved to system libharfbuzz.so.0 |
+| Repro quality | complete |
+| Target frameworks | net8.0, net6.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.x |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The netfx RTLD_DEEPBIND path in LibraryLoader.cs still exists but is guarded by USE_DELEGATES which is only defined for net4* TFMs. No equivalent protection exists for .NET 6+. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.92 (92%) |
+| Reason | Bug was fixed in PR #2247 via RTLD_DEEPBIND, but that fix only works for netfx. When .NET 6+ support was added and the library loading was migrated away from USE_DELEGATES/LibraryLoader to [DllImport]/[LibraryImport], the RTLD_DEEPBIND protection was lost. |
+| Worked in version | netfx builds (RTLD_DEEPBIND active) |
+| Broke in version | — |
+
+## Analysis
+
+### Technical Summary
+
+The root cause is that libHarfBuzzSharp.so exports all hb_* symbols globally (via --version-script with 'global: hb_*; local: *;') and the Linux ELF loader allows globally-loaded libraries (RTLD_GLOBAL) to override these symbols in libHarfBuzzSharp's own internal calls. The fix (RTLD_DEEPBIND when loading libHarfBuzzSharp) was present for netfx via LibraryLoader but was not ported to .NET 6+. Two native-side fixes are proposed: compile with -Bsymbolic/-Bsymbolic-functions to force local symbol resolution, or rename all exported symbols with a unique prefix.
+
+### Rationale
+
+Classified as type/bug in area/libHarfBuzzSharp.native because the crash occurs due to the native .so being built without protection against ELF global symbol hijacking. The regression is in the .NET 6+ code path not applying RTLD_DEEPBIND. Severity is high: crash (SIGSEGV) on a common Linux scenario (desktop apps using GTK), with a known but glibc-only user-space workaround.
+
+### Key Signals
+
+- "LibraryLoader is only used for netfx builds, net6.0 build doesn't contain it anymore." — **issue body** (Reporter correctly identifies that the RTLD_DEEPBIND fix from PR #2247 is not active for .NET 6+ builds, making the regression specific to modern .NET.)
+- "Linux shared library loader overrides all calls to Bar in libA.so to use Bar from libB.so" — **comment by kekekeks** (Precise technical explanation of ELF global namespace symbol hijacking — internal calls within libHarfBuzzSharp get re-routed to the system libharfbuzz.so.0.)
+- "GtkSharp uses RTLD_GLOBAL flag when loading libgtk.so.3" — **comment by kekekeks** (The trigger is GtkSharp's use of RTLD_GLOBAL, which exposes system libharfbuzz into the global namespace. Any other library using RTLD_GLOBAL that pulls in system harfbuzz would also trigger the issue.)
+- "The workaround I'm currently using is to load libHarfBuzzSharp.so with NativeLibrary API, extract the path via dlinfo+RTLD_DI_ORIGIN, unload, load again with RTLD_DEEPBIND" — **comment by kekekeks** (User has a glibc-only workaround. The two proposed native fixes are: (1) -Bsymbolic linker flag, (2) unique symbol prefix.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/Binding.Shared/LibraryLoader.cs` | 209-221 | direct | Linux.dlopen passes RTLD_DEEPBIND flag when loading shared libraries. This prevents ELF symbol hijacking by ensuring libHarfBuzzSharp resolves its own hb_* calls internally. However this code is inside '#if USE_DELEGATES || USE_LIBRARY_LOADER' which is only defined for net4* targets (HarfBuzzSharp.csproj: DefineConstants USE_DELEGATES for net4*). |
+| `binding/HarfBuzzSharp/HarfBuzzSharp.csproj` | 12-14 | direct | USE_DELEGATES is only defined when TargetFramework starts with 'net4'. For .NET 6+ there is no USE_LIBRARY_LOADER either, so LibraryLoader (and RTLD_DEEPBIND) is never used. |
+| `native/linux/libHarfBuzzSharp/libHarfBuzzSharp.map` | 1-6 | direct | The ELF version script exports 'hb_*' as global and hides everything else as local. This means all public HarfBuzz API symbols are globally visible and can be overridden by any RTLD_GLOBAL-loaded library that exports symbols with the same names. |
+| `native/linux/build.cake` | Task libHarfBuzzSharp section | direct | extra_ldflags includes '--version-script' but NOT '-Bsymbolic' or '-Bsymbolic-functions'. Adding -Bsymbolic-functions would force internal function calls within libHarfBuzzSharp to always resolve to the library's own definitions, even when a same-named symbol exists in the global namespace. |
+
+### Workarounds
+
+- Load libHarfBuzzSharp.so manually via NativeLibrary API: find its path via dlinfo+RTLD_DI_ORIGIN, unload, reload with RTLD_DEEPBIND using a custom DllImportResolver. Works on glibc-based Linux only.
+- Ensure libgtk.so.3 or other GTK-pulling libraries are loaded WITHOUT RTLD_GLOBAL before initializing HarfBuzzSharp (not always possible due to GtkSharp's internal behavior).
+
+### Next Questions
+
+- Can -Bsymbolic-functions be added to the Linux native build for libHarfBuzzSharp without breaking other scenarios?
+- Does the same issue affect libSkiaSharp.so (which also bundles HarfBuzz internally)?
+- Is the issue reproducible on musl libc (Alpine) or only glibc?
+- Would a NativeLibrary.SetDllImportResolver approach work for .NET 6+ to apply RTLD_DEEPBIND at load time?
+
+### Resolution Proposals
+
+**Hypothesis:** libHarfBuzzSharp.so needs to be linked with -Bsymbolic-functions so that internal HarfBuzz function calls always resolve locally, preventing the ELF global namespace from hijacking them.
+
+1. **Add -Bsymbolic-functions to Linux libHarfBuzzSharp linker flags** — fix, confidence 0.80 (80%), cost/s, validated=untested
+   - In native/linux/build.cake, add '-Wl,-Bsymbolic-functions' to extra_ldflags for the libHarfBuzzSharp target. This forces all internal function call references within the .so to resolve to its own definitions, even if a same-named symbol is present in the global ELF namespace via RTLD_GLOBAL.
+2. **Apply RTLD_DEEPBIND in .NET 6+ via NativeLibrary.SetDllImportResolver** — fix, confidence 0.70 (70%), cost/m, validated=untested
+   - Register a DllImportResolver for the HarfBuzzSharp assembly that uses dlopen with RTLD_DEEPBIND on Linux. This would restore the protection that existed in LibraryLoader for netfx, now via the standard .NET 6+ API.
+3. **Prefix all exported symbols with HBSharp_ or similar** — fix, confidence 0.95 (95%), cost/xl, validated=untested
+   - Rename every exported symbol in the libHarfBuzzSharp C API shim to use a unique prefix, eliminating any possibility of name collision with the system libharfbuzz.
+
+**Recommended proposal:** Add -Bsymbolic-functions to Linux libHarfBuzzSharp linker flags
+
+**Why:** Minimal change to the native build, directly addresses the ELF symbol hijacking at the library level. Should be tested to confirm it does not break any existing functionality.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.88 (88%) |
+| Reason | Clear regression with a known root cause and viable fix path. The -Bsymbolic-functions approach needs to be tested on a Linux build to confirm it resolves the SIGSEGV without side effects before committing to the fix. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply bug, native HarfBuzz area, Linux platform, and reliability tenet labels | labels=type/bug, area/libHarfBuzzSharp.native, os/Linux, tenet/reliability |
+| add-comment | medium | 0.88 (88%) | Acknowledge the regression, explain the root cause, outline the two fix paths, and ask if reporter can test -Bsymbolic-functions | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed analysis! You've correctly identified the root cause:
+
+**Root cause:** `libHarfBuzzSharp.so` exports all `hb_*` symbols globally (via `--version-script`). When GtkSharp loads `libgtk.so.3` with `RTLD_GLOBAL`, the system `libharfbuzz.so.0` is injected into the global ELF namespace, and the dynamic linker re-routes `libHarfBuzzSharp`'s internal `hb_*` calls to the system library — causing the SIGSEGV.
+
+The `RTLD_DEEPBIND` fix from PR #2247 only applies to `netfx` builds (via `USE_DELEGATES`/`LibraryLoader`). For .NET 6+, `[DllImport]`/`[LibraryImport]` is used directly and the protection is absent.
+
+**Two viable native-side fixes:**
+1. **`-Bsymbolic-functions`** linker flag — forces internal function references in `libHarfBuzzSharp.so` to always resolve locally. This is a small change to the Linux build script.
+2. **Symbol prefix** — rename all exported `hb_*` symbols to a unique prefix (e.g., `HBSharp_`). High confidence but significant effort.
+
+We're leaning toward option 1 as the minimal fix. Are you able to build `libHarfBuzzSharp.so` with `-Bsymbolic-functions` and confirm it resolves the SIGSEGV in your repro scenario?
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3038,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T15:09:25Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "libHarfBuzzSharp.so on Linux causes SIGSEGV when loaded alongside GtkSharp (or any library using RTLD_GLOBAL) because the ELF global symbol namespace causes internal hb_* calls inside libHarfBuzzSharp to resolve to the system libharfbuzz.so.0 instead; the RTLD_DEEPBIND workaround from PR #2247 is only active for netfx builds and is absent in .NET 6+ builds.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/libHarfBuzzSharp.native",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "SIGSEGV in libHarfBuzzSharp.so internal hb_* call resolved to system libharfbuzz.so.0",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0",
+        "net6.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET 6+ console app on Linux",
+        "Reference both GtkSharp and HarfBuzzSharp NuGet packages",
+        "Call Gtk.Application.Init() to trigger loading of libgtk.so.3 with RTLD_GLOBAL (which pulls in system libharfbuzz.so.0 into the global ELF namespace)",
+        "Create a HarfBuzzSharp.Font and call TryGetGlyph",
+        "Observe SIGSEGV"
+      ],
+      "environmentDetails": "Linux, .NET 6+, GtkSharp, system libharfbuzz.so.0 present",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2247",
+          "description": "Original fix: added RTLD_DEEPBIND to LibraryLoader.Linux.dlopen — only active for netfx USE_DELEGATES builds"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2917",
+          "description": "Related PR by @maxkatz6 referenced in discussion (may affect net6+ native loading path)"
+        },
+        {
+          "url": "https://github.com/GtkSharp/GtkSharp/issues/443",
+          "description": "GtkSharp uses RTLD_GLOBAL when loading libgtk.so.3, causing system harfbuzz to pollute global ELF namespace"
+        }
+      ],
+      "codeSnippets": [
+        "Gtk.Application.Init();\nvar font = new HarfBuzzSharp.Font(new Face((_, _) => null));\nfont.TryGetGlyph(65, out _);"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.x"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The netfx RTLD_DEEPBIND path in LibraryLoader.cs still exists but is guarded by USE_DELEGATES which is only defined for net4* TFMs. No equivalent protection exists for .NET 6+."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.92,
+      "reason": "Bug was fixed in PR #2247 via RTLD_DEEPBIND, but that fix only works for netfx. When .NET 6+ support was added and the library loading was migrated away from USE_DELEGATES/LibraryLoader to [DllImport]/[LibraryImport], the RTLD_DEEPBIND protection was lost.",
+      "workedInVersion": "netfx builds (RTLD_DEEPBIND active)"
+    }
+  },
+  "analysis": {
+    "summary": "The root cause is that libHarfBuzzSharp.so exports all hb_* symbols globally (via --version-script with 'global: hb_*; local: *;') and the Linux ELF loader allows globally-loaded libraries (RTLD_GLOBAL) to override these symbols in libHarfBuzzSharp's own internal calls. The fix (RTLD_DEEPBIND when loading libHarfBuzzSharp) was present for netfx via LibraryLoader but was not ported to .NET 6+. Two native-side fixes are proposed: compile with -Bsymbolic/-Bsymbolic-functions to force local symbol resolution, or rename all exported symbols with a unique prefix.",
+    "rationale": "Classified as type/bug in area/libHarfBuzzSharp.native because the crash occurs due to the native .so being built without protection against ELF global symbol hijacking. The regression is in the .NET 6+ code path not applying RTLD_DEEPBIND. Severity is high: crash (SIGSEGV) on a common Linux scenario (desktop apps using GTK), with a known but glibc-only user-space workaround.",
+    "codeInvestigation": [
+      {
+        "file": "binding/Binding.Shared/LibraryLoader.cs",
+        "lines": "209-221",
+        "finding": "Linux.dlopen passes RTLD_DEEPBIND flag when loading shared libraries. This prevents ELF symbol hijacking by ensuring libHarfBuzzSharp resolves its own hb_* calls internally. However this code is inside '#if USE_DELEGATES || USE_LIBRARY_LOADER' which is only defined for net4* targets (HarfBuzzSharp.csproj: DefineConstants USE_DELEGATES for net4*).",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/HarfBuzzSharp.csproj",
+        "lines": "12-14",
+        "finding": "USE_DELEGATES is only defined when TargetFramework starts with 'net4'. For .NET 6+ there is no USE_LIBRARY_LOADER either, so LibraryLoader (and RTLD_DEEPBIND) is never used.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/linux/libHarfBuzzSharp/libHarfBuzzSharp.map",
+        "lines": "1-6",
+        "finding": "The ELF version script exports 'hb_*' as global and hides everything else as local. This means all public HarfBuzz API symbols are globally visible and can be overridden by any RTLD_GLOBAL-loaded library that exports symbols with the same names.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/linux/build.cake",
+        "lines": "Task libHarfBuzzSharp section",
+        "finding": "extra_ldflags includes '--version-script' but NOT '-Bsymbolic' or '-Bsymbolic-functions'. Adding -Bsymbolic-functions would force internal function calls within libHarfBuzzSharp to always resolve to the library's own definitions, even when a same-named symbol exists in the global namespace.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "LibraryLoader is only used for netfx builds, net6.0 build doesn't contain it anymore.",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identifies that the RTLD_DEEPBIND fix from PR #2247 is not active for .NET 6+ builds, making the regression specific to modern .NET."
+      },
+      {
+        "text": "Linux shared library loader overrides all calls to Bar in libA.so to use Bar from libB.so",
+        "source": "comment by kekekeks",
+        "interpretation": "Precise technical explanation of ELF global namespace symbol hijacking — internal calls within libHarfBuzzSharp get re-routed to the system libharfbuzz.so.0."
+      },
+      {
+        "text": "GtkSharp uses RTLD_GLOBAL flag when loading libgtk.so.3",
+        "source": "comment by kekekeks",
+        "interpretation": "The trigger is GtkSharp's use of RTLD_GLOBAL, which exposes system libharfbuzz into the global namespace. Any other library using RTLD_GLOBAL that pulls in system harfbuzz would also trigger the issue."
+      },
+      {
+        "text": "The workaround I'm currently using is to load libHarfBuzzSharp.so with NativeLibrary API, extract the path via dlinfo+RTLD_DI_ORIGIN, unload, load again with RTLD_DEEPBIND",
+        "source": "comment by kekekeks",
+        "interpretation": "User has a glibc-only workaround. The two proposed native fixes are: (1) -Bsymbolic linker flag, (2) unique symbol prefix."
+      }
+    ],
+    "workarounds": [
+      "Load libHarfBuzzSharp.so manually via NativeLibrary API: find its path via dlinfo+RTLD_DI_ORIGIN, unload, reload with RTLD_DEEPBIND using a custom DllImportResolver. Works on glibc-based Linux only.",
+      "Ensure libgtk.so.3 or other GTK-pulling libraries are loaded WITHOUT RTLD_GLOBAL before initializing HarfBuzzSharp (not always possible due to GtkSharp's internal behavior)."
+    ],
+    "nextQuestions": [
+      "Can -Bsymbolic-functions be added to the Linux native build for libHarfBuzzSharp without breaking other scenarios?",
+      "Does the same issue affect libSkiaSharp.so (which also bundles HarfBuzz internally)?",
+      "Is the issue reproducible on musl libc (Alpine) or only glibc?",
+      "Would a NativeLibrary.SetDllImportResolver approach work for .NET 6+ to apply RTLD_DEEPBIND at load time?"
+    ],
+    "resolution": {
+      "hypothesis": "libHarfBuzzSharp.so needs to be linked with -Bsymbolic-functions so that internal HarfBuzz function calls always resolve locally, preventing the ELF global namespace from hijacking them.",
+      "proposals": [
+        {
+          "title": "Add -Bsymbolic-functions to Linux libHarfBuzzSharp linker flags",
+          "description": "In native/linux/build.cake, add '-Wl,-Bsymbolic-functions' to extra_ldflags for the libHarfBuzzSharp target. This forces all internal function call references within the .so to resolve to its own definitions, even if a same-named symbol is present in the global ELF namespace via RTLD_GLOBAL.",
+          "category": "fix",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Apply RTLD_DEEPBIND in .NET 6+ via NativeLibrary.SetDllImportResolver",
+          "description": "Register a DllImportResolver for the HarfBuzzSharp assembly that uses dlopen with RTLD_DEEPBIND on Linux. This would restore the protection that existed in LibraryLoader for netfx, now via the standard .NET 6+ API.",
+          "category": "fix",
+          "confidence": 0.7,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Prefix all exported symbols with HBSharp_ or similar",
+          "description": "Rename every exported symbol in the libHarfBuzzSharp C API shim to use a unique prefix, eliminating any possibility of name collision with the system libharfbuzz.",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "cost/xl",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add -Bsymbolic-functions to Linux libHarfBuzzSharp linker flags",
+      "recommendedReason": "Minimal change to the native build, directly addresses the ELF symbol hijacking at the library level. Should be tested to confirm it does not break any existing functionality."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Clear regression with a known root cause and viable fix path. The -Bsymbolic-functions approach needs to be tested on a Linux build to confirm it resolves the SIGSEGV without side effects before committing to the fix.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native HarfBuzz area, Linux platform, and reliability tenet labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/bug",
+          "area/libHarfBuzzSharp.native",
+          "os/Linux",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the regression, explain the root cause, outline the two fix paths, and ask if reporter can test -Bsymbolic-functions",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed analysis! You've correctly identified the root cause:\n\n**Root cause:** `libHarfBuzzSharp.so` exports all `hb_*` symbols globally (via `--version-script`). When GtkSharp loads `libgtk.so.3` with `RTLD_GLOBAL`, the system `libharfbuzz.so.0` is injected into the global ELF namespace, and the dynamic linker re-routes `libHarfBuzzSharp`'s internal `hb_*` calls to the system library — causing the SIGSEGV.\n\nThe `RTLD_DEEPBIND` fix from PR #2247 only applies to `netfx` builds (via `USE_DELEGATES`/`LibraryLoader`). For .NET 6+, `[DllImport]`/`[LibraryImport]` is used directly and the protection is absent.\n\n**Two viable native-side fixes:**\n1. **`-Bsymbolic-functions`** linker flag — forces internal function references in `libHarfBuzzSharp.so` to always resolve locally. This is a small change to the Linux build script.\n2. **Symbol prefix** — rename all exported `hb_*` symbols to a unique prefix (e.g., `HBSharp_`). High confidence but significant effort.\n\nWe're leaning toward option 1 as the minimal fix. Are you able to build `libHarfBuzzSharp.so` with `-Bsymbolic-functions` and confirm it resolves the SIGSEGV in your repro scenario?"
+      }
+    ]
+  }
+}
+```
+
+</details>

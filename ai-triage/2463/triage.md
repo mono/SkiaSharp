@@ -1,0 +1,310 @@
+# Issue Triage Report — #2463
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-23T14:19:16Z |
+| Type | type/question (0.95 (95%)) |
+| Area | area/libSkiaSharp.native (0.90 (90%)) |
+| Suggested action | close-as-not-a-bug (0.85 (85%)) |
+
+**Issue Summary:** WPF app developer asks how to include the native libSkiaSharp.dll in a Windows installer — the app works fine in development but crashes at runtime after installation with DllNotFoundException because the installer tool omits the runtimes/ directory containing the platform-specific native binary.
+
+**Analysis:** The installer omits the native libSkiaSharp.dll which lives in the runtimes/win-{arch}/native/ directory produced by the NuGet package. The LibraryLoader searches for the native DLL in the assembly directory, current directory, and app domain base — none of which include the runtimes subdirectory if the installer does not include it. The fix is to include the arch-specific libSkiaSharp.dll (from e.g. runtimes/win-x64/native/) in the installer's application folder, or to publish the app first and package the publish output.
+
+**Recommendations:** **close-as-not-a-bug** — Well-known deployment question with a documented answer. The LibraryLoader behavior is correct: it cannot find a DLL that was never deployed. The fix is a packaging step, not a SkiaSharp code change. A community member already identified the root cause in comments.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a WPF app referencing SkiaSharp via NuGet
+2. Build and run from Visual Studio or build output folder — works fine
+3. Create an installer (e.g. Visual Studio Installer Projects / WiX) that includes only the managed .dll files
+4. Install and run — DllNotFoundException for libSkiaSharp is thrown
+
+**Environment:** WPF / Windows-Classic, net462 or similar non-platform TFM, SkiaSharp installed via NuGet
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2463#issuecomment-1552859118 — Community member ojb500 correctly identifies the missing runtimes directory as the root cause
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The LibraryLoader.LoadLocalLibrary pattern that searches for native binaries has not changed. The deployment requirement for the runtimes directory persists in all recent versions. |
+
+## Analysis
+
+### Technical Summary
+
+The installer omits the native libSkiaSharp.dll which lives in the runtimes/win-{arch}/native/ directory produced by the NuGet package. The LibraryLoader searches for the native DLL in the assembly directory, current directory, and app domain base — none of which include the runtimes subdirectory if the installer does not include it. The fix is to include the arch-specific libSkiaSharp.dll (from e.g. runtimes/win-x64/native/) in the installer's application folder, or to publish the app first and package the publish output.
+
+### Rationale
+
+The issue title says [QUESTION] and the body is a how-to question about packaging. There is no broken SkiaSharp behavior — the library loader correctly throws DllNotFoundException when the native binary is absent. The root cause is that many installer tools (Visual Studio Installer Projects, WiX, InnoSetup) scan only managed assemblies and miss the NuGet runtimes/ subdirectory. This is a well-known Windows deployment pattern for native NuGet assets. A community member already provided the key hint in comments.
+
+### Key Signals
+
+- "Unable to load library 'libSkiaSharp'." — **issue body stack trace** (Native DLL not found by the custom library loader — not in any of its search paths.)
+- "I copied libSkiaSharp.dll and libSkiaSharp.dylib from my build output directory to my installed application folder and it was able to load the DLL" — **comment #1** (Confirms the fix: the native DLL just needs to be in the application folder. The .dylib is irrelevant on Windows.)
+- "your installer is missing the contents of the runtimes directory which is where the platform-specific libSkiaSharp.dll can be found" — **comment #3 (ojb500)** (Correct diagnosis — installer tools typically don't auto-include the runtimes/ NuGet layout.)
+- "SkiaSharp.Views.Gtk.dll" — **issue body — included DLLs list** (Reporter is unnecessarily including the GTK views assembly in their WPF app, causing GTK dependency warnings. This assembly is not needed for WPF.)
+- ".net framework is 4.6.2, platform is anycpu" — **comment #5 (yuanrui)** (Second reporter confirms the same issue on net462/AnyCPU. The native DLL must be in the right subdirectory (x64/ or x86/) alongside the managed assembly.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/Binding.Shared/LibraryLoader.cs` | 44-87 | direct | LoadLocalLibrary searches for libSkiaSharp.dll in: (1) assembly directory + arch subdir, (2) current directory + arch subdir, (3) app domain RelativeSearchPath, (4) app domain BaseDirectory. It does NOT walk the runtimes/ NuGet layout. If the installer places only managed DLLs in the application folder without the native libSkiaSharp.dll, the loader fails. |
+| `binding/Binding.Shared/LibraryLoader.cs` | 89-119 | direct | CheckLibraryPath checks: {root}/{arch}/libWithExt then {root}/libWithExt. So placing libSkiaSharp.dll in either the app root or an x64/ subdirectory alongside the app is sufficient. |
+
+### Workarounds
+
+- Manually include libSkiaSharp.dll from the build output's x64/ (or x86/) subdirectory in the installer's application folder
+- Use 'dotnet publish' for the target RID and package the publish output — publish flattens the runtimes/ layout into the output directory
+- Add a post-build MSBuild target to copy the native DLL to the output directory so the installer tool picks it up automatically
+
+### Resolution Proposals
+
+**Hypothesis:** Installer tools do not auto-include NuGet native assets from the runtimes/ subdirectory. The application folder must contain libSkiaSharp.dll directly (or in an x64/ subdirectory), which the LibraryLoader will find.
+
+1. **Include native DLL from runtimes directory** — workaround, confidence 0.95 (95%), cost/xs, validated=untested
+   - Add the appropriate libSkiaSharp.dll from the build output's runtimes/win-x64/native/ (or runtimes/win-x86/native/, runtimes/win-arm64/native/) to the installer. The LibraryLoader will find it in the application folder or an arch-named subdirectory.
+2. **Use dotnet publish and package publish output** — fix, confidence 0.90 (90%), cost/s, validated=untested
+   - Run 'dotnet publish -r win-x64 --self-contained false' (or true) before packaging. The publish output will contain libSkiaSharp.dll alongside the managed assemblies, so the installer tool can include it automatically.
+3. **Remove unnecessary SkiaSharp.Views.Gtk.dll** — alternative, confidence 0.98 (98%), cost/xs, validated=untested
+   - The WPF app does not need SkiaSharp.Views.Gtk.dll. Removing it from the installer avoids the GTK dependency warnings.
+
+**Recommended proposal:** Use dotnet publish and package publish output
+
+**Why:** Publishing with a target RID produces a clean output directory where all native assets are alongside the managed assemblies — no manual file tracking needed, works for all architectures.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.85 (85%) |
+| Reason | Well-known deployment question with a documented answer. The LibraryLoader behavior is correct: it cannot find a DLL that was never deployed. The fix is a packaging step, not a SkiaSharp code change. A community member already identified the root cause in comments. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply question, native, and Windows platform labels | labels=type/question, area/libSkiaSharp.native, os/Windows-Classic |
+| add-comment | medium | 0.90 (90%) | Post answer explaining the runtimes directory and dotnet publish solution | — |
+| close-issue | medium | 0.80 (80%) | Close as answered — deployment packaging question with documented solution | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report!
+
+The issue is that your installer tool is not including the **native** `libSkiaSharp.dll` from the NuGet package's `runtimes/` directory. The managed assemblies you listed (`SkiaSharp.dll`, etc.) are all correct, but SkiaSharp also needs a platform-specific native binary.
+
+**Where to find it:** After building, look in your project's output for:
+- `runtimes/win-x64/native/libSkiaSharp.dll` (64-bit)
+- `runtimes/win-x86/native/libSkiaSharp.dll` (32-bit)
+- `runtimes/win-arm64/native/libSkiaSharp.dll` (ARM64)
+
+The SkiaSharp library loader searches for `libSkiaSharp.dll` alongside the managed assembly (or in an `x64`/`x86` subdirectory). If the installer does not include it, you get `DllNotFoundException`.
+
+**Recommended fix — use `dotnet publish` and package the publish output:**
+```
+dotnet publish -r win-x64 -c Release
+```
+The publish output flattens all native assets into a single directory, which installer tools can include automatically.
+
+**Quick workaround:** Explicitly add `libSkiaSharp.dll` from the `runtimes/win-x64/native/` (or whichever arch you target) folder to your installer's application folder.
+
+**Note:** You can also safely remove `SkiaSharp.Views.Gtk.dll` from your WPF installer — GTK views are not needed for WPF applications, and it's causing those GTK-Sharp dependency warnings.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2463,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T14:19:16Z"
+  },
+  "summary": "WPF app developer asks how to include the native libSkiaSharp.dll in a Windows installer — the app works fine in development but crashes at runtime after installation with DllNotFoundException because the installer tool omits the runtimes/ directory containing the platform-specific native binary.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a WPF app referencing SkiaSharp via NuGet",
+        "Build and run from Visual Studio or build output folder — works fine",
+        "Create an installer (e.g. Visual Studio Installer Projects / WiX) that includes only the managed .dll files",
+        "Install and run — DllNotFoundException for libSkiaSharp is thrown"
+      ],
+      "environmentDetails": "WPF / Windows-Classic, net462 or similar non-platform TFM, SkiaSharp installed via NuGet",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2463#issuecomment-1552859118",
+          "description": "Community member ojb500 correctly identifies the missing runtimes directory as the root cause"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The LibraryLoader.LoadLocalLibrary pattern that searches for native binaries has not changed. The deployment requirement for the runtimes directory persists in all recent versions."
+    }
+  },
+  "analysis": {
+    "summary": "The installer omits the native libSkiaSharp.dll which lives in the runtimes/win-{arch}/native/ directory produced by the NuGet package. The LibraryLoader searches for the native DLL in the assembly directory, current directory, and app domain base — none of which include the runtimes subdirectory if the installer does not include it. The fix is to include the arch-specific libSkiaSharp.dll (from e.g. runtimes/win-x64/native/) in the installer's application folder, or to publish the app first and package the publish output.",
+    "rationale": "The issue title says [QUESTION] and the body is a how-to question about packaging. There is no broken SkiaSharp behavior — the library loader correctly throws DllNotFoundException when the native binary is absent. The root cause is that many installer tools (Visual Studio Installer Projects, WiX, InnoSetup) scan only managed assemblies and miss the NuGet runtimes/ subdirectory. This is a well-known Windows deployment pattern for native NuGet assets. A community member already provided the key hint in comments.",
+    "codeInvestigation": [
+      {
+        "file": "binding/Binding.Shared/LibraryLoader.cs",
+        "lines": "44-87",
+        "finding": "LoadLocalLibrary searches for libSkiaSharp.dll in: (1) assembly directory + arch subdir, (2) current directory + arch subdir, (3) app domain RelativeSearchPath, (4) app domain BaseDirectory. It does NOT walk the runtimes/ NuGet layout. If the installer places only managed DLLs in the application folder without the native libSkiaSharp.dll, the loader fails.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/Binding.Shared/LibraryLoader.cs",
+        "lines": "89-119",
+        "finding": "CheckLibraryPath checks: {root}/{arch}/libWithExt then {root}/libWithExt. So placing libSkiaSharp.dll in either the app root or an x64/ subdirectory alongside the app is sufficient.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Unable to load library 'libSkiaSharp'.",
+        "source": "issue body stack trace",
+        "interpretation": "Native DLL not found by the custom library loader — not in any of its search paths."
+      },
+      {
+        "text": "I copied libSkiaSharp.dll and libSkiaSharp.dylib from my build output directory to my installed application folder and it was able to load the DLL",
+        "source": "comment #1",
+        "interpretation": "Confirms the fix: the native DLL just needs to be in the application folder. The .dylib is irrelevant on Windows."
+      },
+      {
+        "text": "your installer is missing the contents of the runtimes directory which is where the platform-specific libSkiaSharp.dll can be found",
+        "source": "comment #3 (ojb500)",
+        "interpretation": "Correct diagnosis — installer tools typically don't auto-include the runtimes/ NuGet layout."
+      },
+      {
+        "text": "SkiaSharp.Views.Gtk.dll",
+        "source": "issue body — included DLLs list",
+        "interpretation": "Reporter is unnecessarily including the GTK views assembly in their WPF app, causing GTK dependency warnings. This assembly is not needed for WPF."
+      },
+      {
+        "text": ".net framework is 4.6.2, platform is anycpu",
+        "source": "comment #5 (yuanrui)",
+        "interpretation": "Second reporter confirms the same issue on net462/AnyCPU. The native DLL must be in the right subdirectory (x64/ or x86/) alongside the managed assembly."
+      }
+    ],
+    "workarounds": [
+      "Manually include libSkiaSharp.dll from the build output's x64/ (or x86/) subdirectory in the installer's application folder",
+      "Use 'dotnet publish' for the target RID and package the publish output — publish flattens the runtimes/ layout into the output directory",
+      "Add a post-build MSBuild target to copy the native DLL to the output directory so the installer tool picks it up automatically"
+    ],
+    "resolution": {
+      "hypothesis": "Installer tools do not auto-include NuGet native assets from the runtimes/ subdirectory. The application folder must contain libSkiaSharp.dll directly (or in an x64/ subdirectory), which the LibraryLoader will find.",
+      "proposals": [
+        {
+          "title": "Include native DLL from runtimes directory",
+          "description": "Add the appropriate libSkiaSharp.dll from the build output's runtimes/win-x64/native/ (or runtimes/win-x86/native/, runtimes/win-arm64/native/) to the installer. The LibraryLoader will find it in the application folder or an arch-named subdirectory.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Use dotnet publish and package publish output",
+          "description": "Run 'dotnet publish -r win-x64 --self-contained false' (or true) before packaging. The publish output will contain libSkiaSharp.dll alongside the managed assemblies, so the installer tool can include it automatically.",
+          "category": "fix",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Remove unnecessary SkiaSharp.Views.Gtk.dll",
+          "description": "The WPF app does not need SkiaSharp.Views.Gtk.dll. Removing it from the installer avoids the GTK dependency warnings.",
+          "category": "alternative",
+          "confidence": 0.98,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use dotnet publish and package publish output",
+      "recommendedReason": "Publishing with a target RID produces a clean output directory where all native assets are alongside the managed assemblies — no manual file tracking needed, works for all architectures."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.85,
+      "reason": "Well-known deployment question with a documented answer. The LibraryLoader behavior is correct: it cannot find a DLL that was never deployed. The fix is a packaging step, not a SkiaSharp code change. A community member already identified the root cause in comments.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question, native, and Windows platform labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/question",
+          "area/libSkiaSharp.native",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer explaining the runtimes directory and dotnet publish solution",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed report!\n\nThe issue is that your installer tool is not including the **native** `libSkiaSharp.dll` from the NuGet package's `runtimes/` directory. The managed assemblies you listed (`SkiaSharp.dll`, etc.) are all correct, but SkiaSharp also needs a platform-specific native binary.\n\n**Where to find it:** After building, look in your project's output for:\n- `runtimes/win-x64/native/libSkiaSharp.dll` (64-bit)\n- `runtimes/win-x86/native/libSkiaSharp.dll` (32-bit)\n- `runtimes/win-arm64/native/libSkiaSharp.dll` (ARM64)\n\nThe SkiaSharp library loader searches for `libSkiaSharp.dll` alongside the managed assembly (or in an `x64`/`x86` subdirectory). If the installer does not include it, you get `DllNotFoundException`.\n\n**Recommended fix — use `dotnet publish` and package the publish output:**\n```\ndotnet publish -r win-x64 -c Release\n```\nThe publish output flattens all native assets into a single directory, which installer tools can include automatically.\n\n**Quick workaround:** Explicitly add `libSkiaSharp.dll` from the `runtimes/win-x64/native/` (or whichever arch you target) folder to your installer's application folder.\n\n**Note:** You can also safely remove `SkiaSharp.Views.Gtk.dll` from your WPF installer — GTK views are not needed for WPF applications, and it's causing those GTK-Sharp dependency warnings."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — deployment packaging question with documented solution",
+        "risk": "medium",
+        "confidence": 0.8,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>

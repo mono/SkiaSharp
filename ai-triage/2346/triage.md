@@ -1,0 +1,374 @@
+# Issue Triage Report — #2346
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-23T12:24:30Z |
+| Type | type/bug (0.75 (75%)) |
+| Area | area/libSkiaSharp.native (0.90 (90%)) |
+| Suggested action | close-as-not-a-bug (0.82 (82%)) |
+
+**Issue Summary:** SkiaSharp throws an exception in Docker (.NET 6/7 on Linux) while working normally on Windows, because the Linux native assets package is not automatically included and must be explicitly referenced.
+
+**Analysis:** The reporter and additional commenters cannot use SkiaSharp in Docker (Linux containers) with .NET 6/7. The root cause is well-known: Linux NativeAssets packages (`SkiaSharp.NativeAssets.Linux` or `SkiaSharp.NativeAssets.Linux.NoDependencies`) are NOT auto-included for generic TFMs and must be explicitly added to the application (executable) project. The behavior is by design and documented.
+
+**Recommendations:** **close-as-not-a-bug** — Behavior is correct and by-design — Linux native assets must be manually referenced. Well-documented in packages.md. Clear workaround exists with a one-line fix.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a .NET 6/7 app using SkiaSharp
+2. Run the app in a Docker container (Linux base image)
+3. Observe exception on stream/image processing operations
+
+**Environment:** .NET 6.0 / 7.0, Docker (Linux container), Windows host works fine
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2215 — Unable to load shared library 'libSkiaSharp' - Alpine Linux 3.16 (closed)
+- https://github.com/mono/SkiaSharp/issues/1341 — Unable to load shared library 'libSkiaSharp' - azure app service on Linux (closed)
+- https://github.com/mono/SkiaSharp/issues/2438 — DllNotFoundException running Azure function on Docker container (open)
+- https://github.com/mono/SkiaSharp/issues/2440 — DllNotFoundException on Docker with Windows container (open)
+- https://github.com/mono/SkiaSharp/issues/2653 — SKiaSharp on linux can't find liblibSkiaSharp.so (open)
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | platform-specific |
+| Error message | — |
+| Repro quality | none |
+| Target frameworks | net6.0, net7.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | net6.0, net7.0 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Linux native assets must be manually referenced regardless of .NET version — this design has not changed. |
+
+## Analysis
+
+### Technical Summary
+
+The reporter and additional commenters cannot use SkiaSharp in Docker (Linux containers) with .NET 6/7. The root cause is well-known: Linux NativeAssets packages (`SkiaSharp.NativeAssets.Linux` or `SkiaSharp.NativeAssets.Linux.NoDependencies`) are NOT auto-included for generic TFMs and must be explicitly added to the application (executable) project. The behavior is by design and documented.
+
+### Rationale
+
+Issue body is empty (template only) with no stack trace or repro code, but the title and comments clearly point to the well-known Docker/Linux native library loading issue. This is a known gap in the NuGet package dependency graph — Linux natives require an explicit package reference in the executable project. The behavior is correct by design, documented in packages.md, and consistent with numerous prior issues.
+
+### Key Signals
+
+- "The. net7.0 framework cannot run SkiaSharp in Docker, but it runs normally in Windows" — **issue title** (Platform-specific failure: works on Windows (auto-included native), fails on Linux (must add manually))
+- "dependency that causes exceptions in stream processing" — **comment #1354806228** (Points to DllNotFoundException or similar error when libSkiaSharp.so cannot be found or its dependencies are missing)
+- "Also having the same issue with net6.0" — **comment #1359297045** (The issue affects all generic TFMs (net6.0, net7.0) running in Linux containers, not just net7.0)
+- "experiencing the same issue under net6.0" — **comment #1383126332** (Confirms this is a common pattern across multiple users and versions)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `build.cake` | — | direct | SkiaSharp.NativeAssets.Linux and SkiaSharp.NativeAssets.Linux.NoDependencies are distinct packages listed separately from other platform NativeAssets, confirming Linux packages are not bundled automatically |
+| `documentation/dev/packages.md` | — | direct | Explicitly documents that Linux NativeAssets (SkiaSharp.NativeAssets.Linux and .NoDependencies) 'Must be added manually' and are not auto-included for any TFM. Container deployment section recommends SkiaSharp.NativeAssets.Linux.NoDependencies for Docker containers. |
+
+### Workarounds
+
+- Add `<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.*" />` to the executable (.csproj) project for Docker/minimal container deployments
+- Add `<PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.*" />` and install `libfontconfig1` in the Dockerfile for full font support
+- Ensure the NativeAssets reference is in the **application** project, not a class library project
+
+### Next Questions
+
+- What exact error/exception message is reported (screenshot is unclear)?
+- Which Docker base image is being used (Debian/Ubuntu/Alpine)?
+- Is the NativeAssets package referenced in the executable project or a library project?
+
+### Resolution Proposals
+
+**Hypothesis:** The reporter is missing an explicit reference to SkiaSharp.NativeAssets.Linux or SkiaSharp.NativeAssets.Linux.NoDependencies in their application project. The .NET runtime cannot find libSkiaSharp.so in the Docker container because Linux native assets are not auto-included.
+
+1. **Add SkiaSharp.NativeAssets.Linux.NoDependencies** — workaround, confidence 0.90 (90%), cost/xs, validated=yes
+   - Add the NoDependencies package to the executable project. This package has zero external dependencies and works in all minimal Linux containers including Alpine.
+
+```csharp
+<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
+```
+2. **Add SkiaSharp.NativeAssets.Linux with fontconfig** — alternative, confidence 0.88 (88%), cost/s, validated=yes
+   - For full font enumeration support, add NativeAssets.Linux and install libfontconfig in the Dockerfile.
+
+```csharp
+# In Dockerfile:
+RUN apt-get update && apt-get install -y libfontconfig1
+# In .csproj:
+# <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.8" />
+```
+
+**Recommended proposal:** Add SkiaSharp.NativeAssets.Linux.NoDependencies
+
+**Why:** Simplest fix with no system dependencies. Designed specifically for minimal Docker containers.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.82 (82%) |
+| Reason | Behavior is correct and by-design — Linux native assets must be manually referenced. Well-documented in packages.md. Clear workaround exists with a one-line fix. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Exact error message / exception stack trace from Docker container
+- Docker base image (Debian/Ubuntu/Alpine/distroless)
+- Whether SkiaSharp.NativeAssets.Linux or .NoDependencies is already referenced
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply bug, native, Linux labels | labels=type/bug, area/libSkiaSharp.native, os/Linux, tenet/compatibility |
+| add-comment | high | 0.82 (82%) | Post explanation of Linux native assets requirement with workaround | — |
+| close-issue | medium | 0.75 (75%) | Close as not a bug — documented behavior with clear workaround | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! This is a known setup requirement for Linux/Docker deployments.
+
+SkiaSharp's Linux native library (`libSkiaSharp.so`) is **not automatically included** when targeting generic TFMs like `net6.0` or `net7.0` in a Linux container. You need to explicitly add a native assets package to your **application** (executable) project:
+
+**For Docker containers (recommended — no system dependencies):**
+```xml
+<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
+```
+
+**For standard Linux servers with full font support:**
+```xml
+<PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.8" />
+```
+And add to your Dockerfile:
+```dockerfile
+RUN apt-get update && apt-get install -y libfontconfig1
+```
+
+⚠️ Make sure the package is referenced in the **executable project** (`.csproj` that produces the output binary), not in a class library project — otherwise the native binary won't be copied to the container's output directory.
+
+See [packages.md — Container Deployment](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md#container-deployment) for the full guide.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2346,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T12:24:30Z"
+  },
+  "summary": "SkiaSharp throws an exception in Docker (.NET 6/7 on Linux) while working normally on Windows, because the Linux native assets package is not automatically included and must be explicitly referenced.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.75
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "platform-specific",
+      "reproQuality": "none",
+      "targetFrameworks": [
+        "net6.0",
+        "net7.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET 6/7 app using SkiaSharp",
+        "Run the app in a Docker container (Linux base image)",
+        "Observe exception on stream/image processing operations"
+      ],
+      "environmentDetails": ".NET 6.0 / 7.0, Docker (Linux container), Windows host works fine",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2215",
+          "description": "Unable to load shared library 'libSkiaSharp' - Alpine Linux 3.16 (closed)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1341",
+          "description": "Unable to load shared library 'libSkiaSharp' - azure app service on Linux (closed)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2438",
+          "description": "DllNotFoundException running Azure function on Docker container (open)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2440",
+          "description": "DllNotFoundException on Docker with Windows container (open)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2653",
+          "description": "SKiaSharp on linux can't find liblibSkiaSharp.so (open)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "net6.0",
+        "net7.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Linux native assets must be manually referenced regardless of .NET version — this design has not changed."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter and additional commenters cannot use SkiaSharp in Docker (Linux containers) with .NET 6/7. The root cause is well-known: Linux NativeAssets packages (`SkiaSharp.NativeAssets.Linux` or `SkiaSharp.NativeAssets.Linux.NoDependencies`) are NOT auto-included for generic TFMs and must be explicitly added to the application (executable) project. The behavior is by design and documented.",
+    "rationale": "Issue body is empty (template only) with no stack trace or repro code, but the title and comments clearly point to the well-known Docker/Linux native library loading issue. This is a known gap in the NuGet package dependency graph — Linux natives require an explicit package reference in the executable project. The behavior is correct by design, documented in packages.md, and consistent with numerous prior issues.",
+    "keySignals": [
+      {
+        "text": "The. net7.0 framework cannot run SkiaSharp in Docker, but it runs normally in Windows",
+        "source": "issue title",
+        "interpretation": "Platform-specific failure: works on Windows (auto-included native), fails on Linux (must add manually)"
+      },
+      {
+        "text": "dependency that causes exceptions in stream processing",
+        "source": "comment #1354806228",
+        "interpretation": "Points to DllNotFoundException or similar error when libSkiaSharp.so cannot be found or its dependencies are missing"
+      },
+      {
+        "text": "Also having the same issue with net6.0",
+        "source": "comment #1359297045",
+        "interpretation": "The issue affects all generic TFMs (net6.0, net7.0) running in Linux containers, not just net7.0"
+      },
+      {
+        "text": "experiencing the same issue under net6.0",
+        "source": "comment #1383126332",
+        "interpretation": "Confirms this is a common pattern across multiple users and versions"
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "build.cake",
+        "finding": "SkiaSharp.NativeAssets.Linux and SkiaSharp.NativeAssets.Linux.NoDependencies are distinct packages listed separately from other platform NativeAssets, confirming Linux packages are not bundled automatically",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/packages.md",
+        "finding": "Explicitly documents that Linux NativeAssets (SkiaSharp.NativeAssets.Linux and .NoDependencies) 'Must be added manually' and are not auto-included for any TFM. Container deployment section recommends SkiaSharp.NativeAssets.Linux.NoDependencies for Docker containers.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Add `<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"2.88.*\" />` to the executable (.csproj) project for Docker/minimal container deployments",
+      "Add `<PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"2.88.*\" />` and install `libfontconfig1` in the Dockerfile for full font support",
+      "Ensure the NativeAssets reference is in the **application** project, not a class library project"
+    ],
+    "nextQuestions": [
+      "What exact error/exception message is reported (screenshot is unclear)?",
+      "Which Docker base image is being used (Debian/Ubuntu/Alpine)?",
+      "Is the NativeAssets package referenced in the executable project or a library project?"
+    ],
+    "resolution": {
+      "hypothesis": "The reporter is missing an explicit reference to SkiaSharp.NativeAssets.Linux or SkiaSharp.NativeAssets.Linux.NoDependencies in their application project. The .NET runtime cannot find libSkiaSharp.so in the Docker container because Linux native assets are not auto-included.",
+      "proposals": [
+        {
+          "title": "Add SkiaSharp.NativeAssets.Linux.NoDependencies",
+          "description": "Add the NoDependencies package to the executable project. This package has zero external dependencies and works in all minimal Linux containers including Alpine.",
+          "category": "workaround",
+          "codeSnippet": "<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"2.88.8\" />",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Add SkiaSharp.NativeAssets.Linux with fontconfig",
+          "description": "For full font enumeration support, add NativeAssets.Linux and install libfontconfig in the Dockerfile.",
+          "category": "alternative",
+          "codeSnippet": "# In Dockerfile:\nRUN apt-get update && apt-get install -y libfontconfig1\n# In .csproj:\n# <PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"2.88.8\" />",
+          "confidence": 0.88,
+          "effort": "cost/s",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Add SkiaSharp.NativeAssets.Linux.NoDependencies",
+      "recommendedReason": "Simplest fix with no system dependencies. Designed specifically for minimal Docker containers."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.82,
+      "reason": "Behavior is correct and by-design — Linux native assets must be manually referenced. Well-documented in packages.md. Clear workaround exists with a one-line fix.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Exact error message / exception stack trace from Docker container",
+      "Docker base image (Debian/Ubuntu/Alpine/distroless)",
+      "Whether SkiaSharp.NativeAssets.Linux or .NoDependencies is already referenced"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native, Linux labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Linux",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation of Linux native assets requirement with workaround",
+        "risk": "high",
+        "confidence": 0.82,
+        "comment": "Thanks for the report! This is a known setup requirement for Linux/Docker deployments.\n\nSkiaSharp's Linux native library (`libSkiaSharp.so`) is **not automatically included** when targeting generic TFMs like `net6.0` or `net7.0` in a Linux container. You need to explicitly add a native assets package to your **application** (executable) project:\n\n**For Docker containers (recommended — no system dependencies):**\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"2.88.8\" />\n```\n\n**For standard Linux servers with full font support:**\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"2.88.8\" />\n```\nAnd add to your Dockerfile:\n```dockerfile\nRUN apt-get update && apt-get install -y libfontconfig1\n```\n\n⚠️ Make sure the package is referenced in the **executable project** (`.csproj` that produces the output binary), not in a class library project — otherwise the native binary won't be copied to the container's output directory.\n\nSee [packages.md — Container Deployment](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md#container-deployment) for the full guide."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug — documented behavior with clear workaround",
+        "risk": "medium",
+        "confidence": 0.75,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>
