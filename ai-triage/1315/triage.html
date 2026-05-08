@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #1315 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 1315, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-24T12:40:00Z", "currentLabels": ["type/bug", "os/Windows-Universal-UWP", "backend/OpenGL"]}, "summary": "On UWP, having multiple SKGLViews on a page and removing one of them causes a crash when the remaining view next redraws (e.g., on window resize).", "classification": {"type": {"value": "type/bug", "confidence": 0.97}, "area": {"value": "area/SkiaSharp.Views", "confidence": 0.95}, "platforms": ["os/Windows-Universal-UWP"], "backends": ["backend/OpenGL"], "tenets": ["tenet/reliability"]}, "evidence": {"bugSignals": {"severity": "high", "regressionClaimed": false, "errorType": "crash", "reproQuality": "complete", "targetFrameworks": ["uap10.0"]}, "reproEvidence": {"stepsToReproduce": ["Add two SKGLViews to a UWP/Xamarin.Forms page", "Remove the second SKGLView", "Trigger a redraw on the first SKGLView (e.g., resize the window)"], "attachments": [{"url": "https://github.com/mono/SkiaSharp/files/4717772/SKGLViewCrash.zip", "filename": "SKGLViewCrash.zip", "description": "Minimal repro project"}], "environmentDetails": "VS2019, SkiaSharp.Views 1.68.3, SkiaSharp.Views.Forms 1.68.3, Xamarin.Forms 4.6.0.800, UWP 1803", "relatedIssues": [1490], "repoLinks": [{"url": "https://github.com/Mapsui/Mapsui/issues/935", "description": "Mapsui issue where the crash was first discovered"}, {"url": "https://github.com/mono/SkiaSharp/issues/1490", "description": "Related: AccessViolationException in UWP when navigating with DrawInBackground=true"}], "screenshots": [{"url": "https://user-images.githubusercontent.com/3455312/83532334-f462e300-a4a2-11ea-859e-332822632d0f.png", "description": "Crash screenshot"}]}, "versionAnalysis": {"mentionedVersions": ["1.68.3", "2.80.1"], "currentRelevance": "likely", "relevanceReason": "The AngleSwapChainPanel/GlesContext code still uses the same static eglDisplay pattern. No fix has been committed for this scenario."}}, "analysis": {"summary": "Crash caused by a shared static EGLDisplay in GlesContext: all AngleSwapChainPanel instances (one per SKGLView) share the same EGL display, creating a race condition when one context is disposed (via GC finalizer or Unloaded event) while the other's render loop is still active.", "rationale": "The reporter provides a complete repro project and clear steps. The crash occurs only on UWP/ANGLE (Android and iOS are unaffected), pointing to the Windows-specific GlesContext implementation. Code inspection confirms that GlesContext.eglDisplay is static — all instances share it. When the second view is removed (OnUnloaded → Dispose), its EGL context is destroyed via the shared display. If the first view's render loop or the GC finalizer runs concurrently, ANGLE's D3D11 state machine encounters unsynchronized EGL calls, resulting in a memory access violation.", "keySignals": [{"text": "removing one will cause a crash", "source": "issue body", "interpretation": "Crash is tied to disposal of the second SKGLView while the first is still active."}, {"text": "I tested this on Android and iOS without issue, it appears to only be within the UWP project", "source": "issue body", "interpretation": "Platform-specific — implicates the UWP ANGLE/EGL path exclusively."}, {"text": "Just going to mention that I tried the latest 2.80.1 and this is still a problem", "source": "comment by joshminor", "interpretation": "Not fixed in 2.80.1 — persists across at least two minor releases."}, {"text": "I think this could be the same problem as #1490 (or at least the underlying cause could be the same)", "source": "comment by MartinZikmund (CONTRIBUTOR)", "interpretation": "A contributor explicitly links this to #1490, pointing to a shared root cause in GlesContext lifecycle."}, {"text": "The only trigger at the moment is when the form is Garbage collected", "source": "comment by radev8", "interpretation": "GC finalizer path confirms GlesContext.~GlesContext() is a trigger, consistent with the threading race."}], "codeInvestigation": [{"file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs", "lines": "29", "finding": "eglDisplay is declared as 'private static EGLDisplay eglDisplay = Egl.EGL_NO_DISPLAY'. This shared static field means ALL GlesContext instances across all AngleSwapChainPanel instances use the same EGL display object.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs", "lines": "66-69", "finding": "~GlesContext() finalizer calls Dispose(false), which calls DestroySurface() then Cleanup(). Cleanup() calls eglDestroyContext(eglDisplay, eglContext). The GC finalizer thread can run this concurrently while the render loop thread calls eglMakeCurrent(eglDisplay, ...) on the remaining view, causing unsynchronized EGL calls on the shared display.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs", "lines": "137-151", "finding": "OnUnloaded calls UpdateRenderLoop(false) to cancel the render loop, then DestroyRenderSurface(), then glesContext.Dispose(). However, renderLoopWorker.Cancel() is not awaited — the background render thread may still be executing RenderFrame() when Dispose() is called on the context.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs", "lines": "213-238", "finding": "RenderFrame() checks glesContext?.HasSurface but does not acquire any lock. The glesContext reference and its EGL state can be accessed from the background render thread simultaneously with OnUnloaded's disposal path on the UI thread.", "relevance": "related"}], "nextQuestions": ["Does the crash occur even with DrawInBackground=false (synchronous rendering)?", "Does using SKCanvasView (raster/CPU backend) instead of SKGLView avoid the crash?", "Is the eglDisplay static field intentional for sharing ANGLE's D3D device, or an oversight?"], "workarounds": ["Use SKCanvasView instead of SKGLView where multiple views need to be dynamically added or removed — avoids ANGLE/EGL context management entirely.", "Avoid placing multiple SKGLViews on the same page in UWP; use a single SKGLView and swap content programmatically.", "Ensure the second SKGLView is fully removed and GC'd (call GC.Collect() after removal) before triggering a redraw on the first view — reduces (but does not eliminate) the race window."], "resolution": {"hypothesis": "The static eglDisplay in GlesContext causes concurrent EGL access when multiple views are active. Fix requires either making eglDisplay instance-scoped (separate ANGLE D3D devices per view) or adding synchronization around all EGL calls that touch the shared display.", "proposals": [{"title": "Use SKCanvasView instead of SKGLView (workaround)", "description": "Replace SKGLView with SKCanvasView in scenarios where views are dynamically added/removed. SKCanvasView uses the raster (CPU) backend and avoids ANGLE/EGL entirely.", "category": "workaround", "confidence": 0.9, "effort": "cost/s", "validated": "untested"}, {"title": "Make eglDisplay instance-scoped", "description": "Remove the 'static' keyword from eglDisplay in GlesContext and initialize a separate EGL display per instance. Each view gets its own ANGLE D3D device, eliminating the shared-state race. Trade-off: slightly higher D3D resource usage per view.", "category": "fix", "confidence": 0.7, "effort": "cost/m", "validated": "untested"}, {"title": "Add synchronization around EGL calls", "description": "Introduce a static lock object in GlesContext and acquire it around all EGL API calls (eglMakeCurrent, eglDestroyContext, eglDestroySurface, eglCreateWindowSurface). This serializes EGL access across all instances sharing the same display.", "category": "fix", "confidence": 0.65, "effort": "cost/m", "validated": "untested"}], "recommendedProposal": "Use SKCanvasView instead of SKGLView (workaround)", "recommendedReason": "Immediately actionable for the reporter. The proper fix (instance-scoped display or EGL synchronization) requires deeper investigation to avoid breaking existing ANGLE rendering behavior on UWP."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.88, "reason": "Real crash with complete repro project. Related to #1490 (same root cause suspected). Needs investigation to confirm whether making eglDisplay instance-scoped or adding EGL synchronization is the correct fix.", "suggestedReproPlatform": "windows"}, "actions": [{"type": "update-labels", "description": "Add missing area/SkiaSharp.Views and tenet/reliability labels", "risk": "low", "confidence": 0.97, "labels": ["type/bug", "area/SkiaSharp.Views", "os/Windows-Universal-UWP", "backend/OpenGL", "tenet/reliability"]}, {"type": "link-related", "description": "Cross-reference issue #1490 which has the same underlying GlesContext lifecycle root cause", "risk": "low", "confidence": 0.85, "linkedIssue": 1490}, {"type": "add-comment", "description": "Acknowledge the report, provide workaround (SKCanvasView), and explain the root cause hypothesis", "risk": "medium", "confidence": 0.85, "comment": "Thanks for the detailed repro! This looks like a threading/lifecycle bug in the UWP `GlesContext` implementation.\n\n**Root cause hypothesis:** `GlesContext.eglDisplay` is a `static` field shared by all `AngleSwapChainPanel` (SKGLView) instances. When the second view is removed, its EGL context is destroyed via the shared display. If the GC finalizer (running on a GC thread) or the `Unloaded` event handler races with the first view's render loop, ANGLE's D3D11 state machine gets concurrent EGL calls on the shared display — causing the crash. This is likely the same underlying issue as #1490.\n\n**Immediate workaround:** Replace `SKGLView` with `SKCanvasView` if your scenario involves dynamically adding/removing views. `SKCanvasView` uses the CPU raster backend and avoids ANGLE/EGL entirely.\n\nWe'll investigate whether making `eglDisplay` instance-scoped or adding synchronization around EGL calls is the right fix."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

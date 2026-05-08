@@ -1,0 +1,306 @@
+# Issue Triage Report — #921
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T12:46:58Z |
+| Type | type/question (0.92 (92%)) |
+| Area | area/libSkiaSharp.native (0.88 (88%)) |
+| Suggested action | keep-open (0.75 (75%)) |
+
+**Issue Summary:** Reporter using SkiaSharp in Unity asks how to get it working on iOS without Xamarin.iOS; using the .NetStandard1.3 package throws DllNotFoundException: Unable to load DLL 'libSkiaSharp' on device even with the framework linked.
+
+**Analysis:** The DllNotFoundException occurs because SkiaApi.cs (lines 9-13) uses @rpath/libSkiaSharp.framework/libSkiaSharp as the P/Invoke DLL name only when the __IOS__ compiler symbol is defined at build time. The pre-built .NetStandard1.3 NuGet package is compiled without __IOS__, so P/Invoke looks for the generic name 'libSkiaSharp' which does not match an iOS framework path. Unity's build system does not inject __IOS__ when consuming third-party .NetStandard assemblies. The reporter's workaround (copying Bindings source and building with __IOS__ + __UNIFIED__ definitions) directly solves the root cause. A community-maintained package (SkiaForUnity) now provides complete Unity integration.
+
+**Recommendations:** **keep-open** — Valid ongoing question about Unity integration that lacks official SkiaSharp documentation or samples. The issue has become a reference hub for Unity+SkiaSharp usage with multiple working community solutions in the comments. No first-party documentation or sample exists for Unity integration.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/iOS, os/Android |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/question, os/iOS, os/Android, area/libSkiaSharp.native, triage/triaged |
+
+## Evidence
+
+### Reproduction
+
+1. Use SkiaSharp .NetStandard1.3 NuGet package in a Unity project
+2. Link libSkiaSharp.framework in the generated Xcode project
+3. Run on an iOS device
+4. Observe DllNotFoundException: Unable to load DLL 'libSkiaSharp'
+
+**Environment:** Unity Engine, iOS device, SkiaSharp .NetStandard1.3 package, libSkiaSharp.framework linked in Xcode
+
+**Repository links:**
+- https://github.com/FaizanDurrani/SkiaSharp-Unity-Test — Community Unity project setup showing SkiaSharp Android integration by the original reporter
+- https://github.com/ammariqais/SkiaForUnity — Dedicated community package SkiaForUnity providing full Unity integration for SkiaSharp on all platforms including iOS
+
+**Code snippets:**
+
+```csharp
+DllNotFoundException: Unable to load DLL 'libSkiaSharp': The specified module could not be found.
+  at SkiaSharp.SkiaApi.sk_surface_new_raster
+  at SkiaSharp.SKSurface.Create (SkiaSharp.SKImageInfo info)
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The conditional compile approach in SkiaApi.cs (__IOS__ guard for @rpath) still exists in the current codebase and Unity still does not set __IOS__ when consuming a pre-built .NetStandard assembly. |
+
+## Analysis
+
+### Technical Summary
+
+The DllNotFoundException occurs because SkiaApi.cs (lines 9-13) uses @rpath/libSkiaSharp.framework/libSkiaSharp as the P/Invoke DLL name only when the __IOS__ compiler symbol is defined at build time. The pre-built .NetStandard1.3 NuGet package is compiled without __IOS__, so P/Invoke looks for the generic name 'libSkiaSharp' which does not match an iOS framework path. Unity's build system does not inject __IOS__ when consuming third-party .NetStandard assemblies. The reporter's workaround (copying Bindings source and building with __IOS__ + __UNIFIED__ definitions) directly solves the root cause. A community-maintained package (SkiaForUnity) now provides complete Unity integration.
+
+### Rationale
+
+This is a 'type/question' because the reporter explicitly asks how to use SkiaSharp in Unity on iOS and the behavior is a consequence of how Unity handles .NetStandard libraries rather than a SkiaSharp defect. The area is 'area/libSkiaSharp.native' because the issue is about native library loading via P/Invoke. The root cause is documented in source code and multiple workarounds exist in the issue comments, including a dedicated community project.
+
+### Key Signals
+
+- "Is there any way to get it to work on iOS without using Xamarin.iOS?" — **issue body** (Usage question about Unity+iOS integration, not a bug report.)
+- "DllNotFoundException: Unable to load DLL 'libSkiaSharp': The specified module could not be found." — **issue body stack trace** (P/Invoke name mismatch: iOS framework needs @rpath path, .NetStandard package uses plain 'libSkiaSharp'.)
+- "I just copied the whole Bindings' source over to my unity project and built the unity project using __IOS__ and __UNIFIED__ definitions." — **comment by FaizanDurrani (issue author)** (Confirmed workaround: recompiling bindings with __IOS__ symbol fixes the P/Invoke path.)
+- "SkiaForUnity - github.com/ammariqais/SkiaForUnity - unity forum thread: free-skiasharp-for-unity-with-skottie" — **comment by ammariqais, 2023** (A maintained community package now exists that handles Unity integration across all platforms.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SkiaApi.cs` | 9-13 | direct | P/Invoke DLL constant is '@rpath/libSkiaSharp.framework/libSkiaSharp' when __IOS__ or __TVOS__ is defined, otherwise 'libSkiaSharp'. The pre-built .NetStandard NuGet assembly does not have __IOS__ defined, so iOS devices see the plain name which does not resolve to the linked framework. |
+
+### Workarounds
+
+- Copy the SkiaSharp Bindings source folder into the Unity project and build with __IOS__ and __UNIFIED__ compiler definitions (confirmed working by multiple users in comments)
+- Use the community-maintained SkiaForUnity package (https://github.com/ammariqais/SkiaForUnity) which provides proper Unity integration for iOS, Android, and other platforms
+- Try Mono DLL mapping via SkiaSharp.dll.config: <dllmap dll='libSkiaSharp' target='@rpath/libSkiaSharp.framework/libSkiaSharp' /> (suggested by maintainer; effectiveness in Unity's Mono runtime unverified)
+
+### Resolution Proposals
+
+**Hypothesis:** The .NetStandard pre-built assembly lacks __IOS__ compile-time conditioning, so P/Invoke emits the wrong DLL name on iOS. The issue requires either recompiling bindings with iOS defines or using a Unity-specific distribution of SkiaSharp.
+
+1. **Use SkiaForUnity community package** — alternative, confidence 0.85 (85%), cost/xs, validated=untested
+   - The community-maintained SkiaForUnity package (https://github.com/ammariqais/SkiaForUnity) provides a complete Unity integration including iOS support, removing the need for manual setup.
+2. **Rebuild bindings with __IOS__ compiler define** — workaround, confidence 0.92 (92%), cost/m, validated=untested
+   - Copy the SkiaSharp Bindings source into the Unity project and configure the Unity build with __IOS__ and __UNIFIED__ compiler definitions. This makes SkiaApi.cs emit the correct @rpath DLL name for iOS P/Invoke.
+3. **Use Mono DLL mapping config** — workaround, confidence 0.45 (45%), cost/xs, validated=untested
+   - Create a SkiaSharp.dll.config file alongside the DLL with a <dllmap> entry mapping 'libSkiaSharp' to '@rpath/libSkiaSharp.framework/libSkiaSharp'. This is a Mono runtime feature that may work in Unity's Mono scripting backend.
+
+**Recommended proposal:** Use SkiaForUnity community package
+
+**Why:** The dedicated SkiaForUnity project handles all Unity platform integration including iOS with ongoing community maintenance, avoiding manual binding setup.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.75 (75%) |
+| Reason | Valid ongoing question about Unity integration that lacks official SkiaSharp documentation or samples. The issue has become a reference hub for Unity+SkiaSharp usage with multiple working community solutions in the comments. No first-party documentation or sample exists for Unity integration. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply type/question, area/libSkiaSharp.native, os/iOS, os/Android labels | labels=type/question, area/libSkiaSharp.native, os/iOS, os/Android |
+| add-comment | medium | 0.82 (82%) | Post answer explaining the root cause and pointing to workarounds including SkiaForUnity | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report!
+
+The core issue is that SkiaSharp's pre-built .NetStandard package doesn't know it's running on iOS at P/Invoke time. In `SkiaApi.cs`, the native DLL name switches to `@rpath/libSkiaSharp.framework/libSkiaSharp` only when compiled with `__IOS__` defined — but the pre-built .NetStandard assembly doesn't have that define, so P/Invoke looks for plain `libSkiaSharp` which can't find the framework.
+
+**Best option:** Use the community-maintained [SkiaForUnity](https://github.com/ammariqais/SkiaForUnity) package which provides complete Unity integration for all platforms including iOS (see also the [Unity forum thread](https://forum.unity.com/threads/free-skiasharp-for-unity-with-skottie.1455973/)).
+
+**Manual iOS workaround:**
+1. Copy the SkiaSharp `binding/SkiaSharp/` source folder into your Unity project
+2. In Unity's build settings, add `__IOS__` and `__UNIFIED__` compiler definitions
+3. This makes SkiaApi.cs use the correct `@rpath/libSkiaSharp.framework/libSkiaSharp` DLL path
+
+**Android setup:** Copy the `.so` files into `Assets/Plugins/Android/` and import the `.dll` into the same folder. See also https://github.com/FaizanDurrani/SkiaSharp-Unity-Test for a reference setup.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 921,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T12:46:58Z",
+    "currentLabels": [
+      "type/question",
+      "os/iOS",
+      "os/Android",
+      "area/libSkiaSharp.native",
+      "triage/triaged"
+    ]
+  },
+  "summary": "Reporter using SkiaSharp in Unity asks how to get it working on iOS without Xamarin.iOS; using the .NetStandard1.3 package throws DllNotFoundException: Unable to load DLL 'libSkiaSharp' on device even with the framework linked.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/iOS",
+      "os/Android"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SkiaSharp .NetStandard1.3 NuGet package in a Unity project",
+        "Link libSkiaSharp.framework in the generated Xcode project",
+        "Run on an iOS device",
+        "Observe DllNotFoundException: Unable to load DLL 'libSkiaSharp'"
+      ],
+      "codeSnippets": [
+        "DllNotFoundException: Unable to load DLL 'libSkiaSharp': The specified module could not be found.\n  at SkiaSharp.SkiaApi.sk_surface_new_raster\n  at SkiaSharp.SKSurface.Create (SkiaSharp.SKImageInfo info)"
+      ],
+      "environmentDetails": "Unity Engine, iOS device, SkiaSharp .NetStandard1.3 package, libSkiaSharp.framework linked in Xcode",
+      "repoLinks": [
+        {
+          "url": "https://github.com/FaizanDurrani/SkiaSharp-Unity-Test",
+          "description": "Community Unity project setup showing SkiaSharp Android integration by the original reporter"
+        },
+        {
+          "url": "https://github.com/ammariqais/SkiaForUnity",
+          "description": "Dedicated community package SkiaForUnity providing full Unity integration for SkiaSharp on all platforms including iOS"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "currentRelevance": "likely",
+      "relevanceReason": "The conditional compile approach in SkiaApi.cs (__IOS__ guard for @rpath) still exists in the current codebase and Unity still does not set __IOS__ when consuming a pre-built .NetStandard assembly."
+    }
+  },
+  "analysis": {
+    "summary": "The DllNotFoundException occurs because SkiaApi.cs (lines 9-13) uses @rpath/libSkiaSharp.framework/libSkiaSharp as the P/Invoke DLL name only when the __IOS__ compiler symbol is defined at build time. The pre-built .NetStandard1.3 NuGet package is compiled without __IOS__, so P/Invoke looks for the generic name 'libSkiaSharp' which does not match an iOS framework path. Unity's build system does not inject __IOS__ when consuming third-party .NetStandard assemblies. The reporter's workaround (copying Bindings source and building with __IOS__ + __UNIFIED__ definitions) directly solves the root cause. A community-maintained package (SkiaForUnity) now provides complete Unity integration.",
+    "rationale": "This is a 'type/question' because the reporter explicitly asks how to use SkiaSharp in Unity on iOS and the behavior is a consequence of how Unity handles .NetStandard libraries rather than a SkiaSharp defect. The area is 'area/libSkiaSharp.native' because the issue is about native library loading via P/Invoke. The root cause is documented in source code and multiple workarounds exist in the issue comments, including a dedicated community project.",
+    "keySignals": [
+      {
+        "text": "Is there any way to get it to work on iOS without using Xamarin.iOS?",
+        "source": "issue body",
+        "interpretation": "Usage question about Unity+iOS integration, not a bug report."
+      },
+      {
+        "text": "DllNotFoundException: Unable to load DLL 'libSkiaSharp': The specified module could not be found.",
+        "source": "issue body stack trace",
+        "interpretation": "P/Invoke name mismatch: iOS framework needs @rpath path, .NetStandard package uses plain 'libSkiaSharp'."
+      },
+      {
+        "text": "I just copied the whole Bindings' source over to my unity project and built the unity project using __IOS__ and __UNIFIED__ definitions.",
+        "source": "comment by FaizanDurrani (issue author)",
+        "interpretation": "Confirmed workaround: recompiling bindings with __IOS__ symbol fixes the P/Invoke path."
+      },
+      {
+        "text": "SkiaForUnity - github.com/ammariqais/SkiaForUnity - unity forum thread: free-skiasharp-for-unity-with-skottie",
+        "source": "comment by ammariqais, 2023",
+        "interpretation": "A maintained community package now exists that handles Unity integration across all platforms."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaApi.cs",
+        "lines": "9-13",
+        "finding": "P/Invoke DLL constant is '@rpath/libSkiaSharp.framework/libSkiaSharp' when __IOS__ or __TVOS__ is defined, otherwise 'libSkiaSharp'. The pre-built .NetStandard NuGet assembly does not have __IOS__ defined, so iOS devices see the plain name which does not resolve to the linked framework.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Copy the SkiaSharp Bindings source folder into the Unity project and build with __IOS__ and __UNIFIED__ compiler definitions (confirmed working by multiple users in comments)",
+      "Use the community-maintained SkiaForUnity package (https://github.com/ammariqais/SkiaForUnity) which provides proper Unity integration for iOS, Android, and other platforms",
+      "Try Mono DLL mapping via SkiaSharp.dll.config: <dllmap dll='libSkiaSharp' target='@rpath/libSkiaSharp.framework/libSkiaSharp' /> (suggested by maintainer; effectiveness in Unity's Mono runtime unverified)"
+    ],
+    "resolution": {
+      "hypothesis": "The .NetStandard pre-built assembly lacks __IOS__ compile-time conditioning, so P/Invoke emits the wrong DLL name on iOS. The issue requires either recompiling bindings with iOS defines or using a Unity-specific distribution of SkiaSharp.",
+      "proposals": [
+        {
+          "title": "Use SkiaForUnity community package",
+          "description": "The community-maintained SkiaForUnity package (https://github.com/ammariqais/SkiaForUnity) provides a complete Unity integration including iOS support, removing the need for manual setup.",
+          "category": "alternative",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Rebuild bindings with __IOS__ compiler define",
+          "description": "Copy the SkiaSharp Bindings source into the Unity project and configure the Unity build with __IOS__ and __UNIFIED__ compiler definitions. This makes SkiaApi.cs emit the correct @rpath DLL name for iOS P/Invoke.",
+          "category": "workaround",
+          "confidence": 0.92,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Use Mono DLL mapping config",
+          "description": "Create a SkiaSharp.dll.config file alongside the DLL with a <dllmap> entry mapping 'libSkiaSharp' to '@rpath/libSkiaSharp.framework/libSkiaSharp'. This is a Mono runtime feature that may work in Unity's Mono scripting backend.",
+          "category": "workaround",
+          "confidence": 0.45,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SkiaForUnity community package",
+      "recommendedReason": "The dedicated SkiaForUnity project handles all Unity platform integration including iOS with ongoing community maintenance, avoiding manual binding setup."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.75,
+      "reason": "Valid ongoing question about Unity integration that lacks official SkiaSharp documentation or samples. The issue has become a reference hub for Unity+SkiaSharp usage with multiple working community solutions in the comments. No first-party documentation or sample exists for Unity integration.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/question, area/libSkiaSharp.native, os/iOS, os/Android labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/question",
+          "area/libSkiaSharp.native",
+          "os/iOS",
+          "os/Android"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer explaining the root cause and pointing to workarounds including SkiaForUnity",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed report!\n\nThe core issue is that SkiaSharp's pre-built .NetStandard package doesn't know it's running on iOS at P/Invoke time. In `SkiaApi.cs`, the native DLL name switches to `@rpath/libSkiaSharp.framework/libSkiaSharp` only when compiled with `__IOS__` defined — but the pre-built .NetStandard assembly doesn't have that define, so P/Invoke looks for plain `libSkiaSharp` which can't find the framework.\n\n**Best option:** Use the community-maintained [SkiaForUnity](https://github.com/ammariqais/SkiaForUnity) package which provides complete Unity integration for all platforms including iOS (see also the [Unity forum thread](https://forum.unity.com/threads/free-skiasharp-for-unity-with-skottie.1455973/)).\n\n**Manual iOS workaround:**\n1. Copy the SkiaSharp `binding/SkiaSharp/` source folder into your Unity project\n2. In Unity's build settings, add `__IOS__` and `__UNIFIED__` compiler definitions\n3. This makes SkiaApi.cs use the correct `@rpath/libSkiaSharp.framework/libSkiaSharp` DLL path\n\n**Android setup:** Copy the `.so` files into `Assets/Plugins/Android/` and import the `.dll` into the same folder. See also https://github.com/FaizanDurrani/SkiaSharp-Unity-Test for a reference setup."
+      }
+    ]
+  }
+}
+```
+
+</details>
