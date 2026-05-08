@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3325,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T18:36:18Z",
+    "currentLabels": ["type/feature-request"]
+  },
+  "summary": "Reporter requests a Visual Studio project template or downloadable starter solution for cross-platform SkiaSharp development, citing difficulty getting started and repeated failures over multiple years.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.90 },
+    "area": { "value": "area/Docs", "confidence": 0.78 },
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Not specified — reporter is asking for project setup guidance, not reporting a runtime failure",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/3325#issuecomment-3828700467", "description": "Maintainer (mattleibow) response: acknowledges the ask, says a template isn't strictly necessary, commits to looking at a tutorial" }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Reporter wants a Visual Studio 'File → New' template or a downloadable starter project that wires up a shared SkiaSharp rendering library and per-platform host projects. Basic multi-platform samples already exist in samples/Basic/ (MAUI, WPF, Windows Forms, iOS, Android, etc.), but they are not prominently surfaced as getting-started guidance. The maintainer acknowledged the gap and expressed intent to create a tutorial.",
+    "rationale": "This is a feature-request for improved developer onboarding — specifically a VS template and/or prominent getting-started documentation. It is not a bug: SkiaSharp functions correctly once set up. Existing samples/Basic/ already demonstrate the multi-platform pattern, but they are buried in the full repository and not linked from the main README 'Using SkiaSharp' section. The maintainer confirmed interest in a tutorial, making keep-open the right action.",
+    "keySignals": [
+      { "text": "I'd like to be able to open VS, create new project, and select 'Cross Platform Skia'.", "source": "issue body", "interpretation": "Explicit request for a Visual Studio dotnet new / VSIX project template." },
+      { "text": "Every 6 months or so, for the last several years, I pop in here to see if this one basic setup scenario has been addressed. So far, no.", "source": "issue body", "interpretation": "Long-standing, recurring pain point — high user-friction for onboarding." },
+      { "text": "I will still have a look at a tutorial. A template should not be needed as there is just the package and then add the view.", "source": "comment by mattleibow (COLLABORATOR)", "interpretation": "Maintainer acknowledges the documentation gap and plans a tutorial; considers a full VS template lower priority." },
+      { "text": "A single, easy-to-find 'Getting Started' page that shows the recommended way to create a new cross-platform SkiaSharp solution", "source": "follow-up comment by reporter", "interpretation": "Reporter broadened the ask: documentation discoverability is the highest-impact fix." }
+    ],
+    "codeInvestigation": [
+      { "file": "samples/Basic/Maui/README.md", "finding": "A comprehensive MAUI sample already exists with CPU (SKCanvasView radial gradient), GPU (SKGLView metaball shader with touch), and Drawing (freehand path) pages — covers the multi-platform pattern the reporter wants, but lives inside the full repo.", "relevance": "direct" },
+      { "file": "samples/README.md", "finding": "Samples README documents Basic samples for many platforms (MAUI, WPF, Android, iOS, etc.) but still references legacy Xamarin.Forms and UWP terminology; not linked from root README 'Using SkiaSharp' section.", "relevance": "related" },
+      { "file": "README.md", "lines": "42-57", "finding": "'Using SkiaSharp' section shows only nuget install command and EAP feed URL — no link to samples, no getting-started walkthrough, no mention of SKCanvasView. This is the main discoverability gap.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Install SkiaSharp.Views.Maui.Controls NuGet package, add UseMauiApp<App>().UseSkiaSharp() in MauiProgram.cs, and add <skia:SKCanvasView PaintSurface=\"OnPaint\" /> in XAML — documented pattern used in samples/Basic/Maui.",
+      "Use the existing samples/Basic/Maui sample as a starter: clone the repo, open samples/Basic/Maui/SkiaSharpSample.sln, restore NuGet, and run — this is effectively the starter project being requested.",
+      "For non-MAUI platforms: each platform has its own sample under samples/Basic/ (WPF, Windows Forms, Console, Android, iOS, etc.)."
+    ],
+    "resolution": {
+      "hypothesis": "The requested feature (VS template) is not strictly necessary because samples/Basic/Maui already demonstrates the setup, but the discoverability is poor. A tutorial page and README link would address most of the friction.",
+      "proposals": [
+        {
+          "title": "Add Getting Started guide to README",
+          "description": "Add a 'Getting Started' section to the root README.md linking to the MAUI basic sample and providing a 3-step quick start: install NuGet, register UseSkiaSharp(), add SKCanvasView with PaintSurface handler.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Publish dotnet new template via NuGet",
+          "description": "Package the samples/Basic/Maui structure as a dotnet new template and publish to NuGet. Users could run 'dotnet new skiasharp-maui' to scaffold a working project.",
+          "category": "fix",
+          "confidence": 0.70,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Write a dedicated getting-started tutorial",
+          "description": "Publish a step-by-step tutorial (as a GitHub Discussion or docs page) showing: create a MAUI app, add SkiaSharp packages, wire up UseSkiaSharp(), draw a circle. Link it from README and from GitHub Discussions.",
+          "category": "alternative",
+          "confidence": 0.80,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add Getting Started guide to README",
+      "recommendedReason": "Lowest effort, highest immediate impact. The samples already exist — linking and summarizing them costs less than a VS template and unblocks most users. The maintainer has indicated they are open to a tutorial."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.82,
+      "reason": "Valid feature request acknowledged by maintainer. Existing Basic samples partially fulfil the ask but the discoverability gap is real. Keeping open to track tutorial/template work.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and docs labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/feature-request", "area/Docs", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Point reporter to existing Basic/Maui sample and outline the planned tutorial",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed feedback — and for coming back repeatedly to check on this. Apologies for the friction.\n\nWhile a full Visual Studio template isn't available yet, the repository already contains a multi-platform starter sample that covers exactly the use case you're describing:\n\n**samples/Basic/Maui** — includes CPU rendering (`SKCanvasView`), GPU/shader rendering (`SKGLView`), and a freehand drawing canvas, all wired up for Android, iOS, Mac Catalyst, and Windows in a single MAUI solution.\n\nTo use it as a starter today:\n1. Clone the repo\n2. Open `samples/Basic/Maui/SkiaSharpSample.sln`\n3. Restore NuGet and run on your target platform\n\nThe minimum setup for a new MAUI project is:\n```csharp\n// MauiProgram.cs\nbuilder.UseMauiApp<App>().UseSkiaSharp();\n```\n```xml\n<!-- YourPage.xaml -->\n<skia:SKCanvasView PaintSurface=\"OnPaint\" />\n```\n```csharp\nvoid OnPaint(object sender, SKPaintSurfaceEventArgs e)\n{\n    var canvas = e.Surface.Canvas;\n    canvas.Clear(SKColors.White);\n    canvas.DrawCircle(e.Info.Width / 2f, e.Info.Height / 2f, 100, new SKPaint { Color = SKColors.Red });\n}\n```\n\nWe agree that this should be more discoverable — a proper Getting Started page and/or `dotnet new` template would remove significant friction. Keeping this open to track that work."
+      }
+    ]
+  }
+}

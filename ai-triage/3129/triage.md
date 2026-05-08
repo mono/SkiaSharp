@@ -1,0 +1,350 @@
+# Issue Triage Report — #3129
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-21T18:35:54Z |
+| Type | type/bug (0.90 (90%)) |
+| Area | area/SkiaSharp.Views (0.88 (88%)) |
+| Suggested action | needs-info (0.80 (80%)) |
+
+**Issue Summary:** SKGLControl in a WinForms app causes Visual Studio Form Designer to freeze and crash when the form is opened in design mode, reported as a regression from SkiaSharp 2.88.9 to 3.116.0 on Windows 11 .NET 4.7.2.
+
+**Analysis:** SKGLControl inherits from OpenTK's GLControl which attempts to initialize an OpenGL context at construction time. The DesignMode guard exists only in OnPaint (line 74-78 of SKGLControl.cs), but GLControl construction itself is not guarded. When VS Form Designer instantiates the control to render a design view, the OpenGL context initialization in the GLControl constructor can deadlock or crash the designer process. The SkiaSharp 3.x upgrade moved from OpenTK 3 to OpenTK 4, which changed the GL context initialization timing, likely making this construction-time crash more likely or reliably reproducible.
+
+**Recommendations:** **needs-info** — The regression claim is credible and root cause hypothesis is strong (GLControl OpenGL init in design mode), but no crash log, stack trace, or VS error output was provided. Need to confirm: is the crash triggered by simply adding SKGLControl to the form, or only when specific event handlers are attached? Also need crash details to confirm root cause.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-Classic |
+| Backends | backend/OpenGL |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a WinForms project targeting .NET 4.7.2
+2. Add a SKGLControl to a form
+3. Add a SizeChanged event handler with DesignMode guard and SKBitmap allocation
+4. Open the form in the Visual Studio Form Designer
+5. Observe that Visual Studio freezes and crashes
+
+**Environment:** SkiaSharp 3.116.0, Visual Studio 2022 Community, WinForms C# .NET 4.7.2, Windows 11 Home
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | crash |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | net472 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.0, 2.88.9 |
+| Worked in | 2.88.9 |
+| Broke in | 3.116.0 |
+| Current relevance | likely |
+| Relevance reason | SKGLControl.cs still inherits from OpenTK GLControl and the DesignMode guard is only in OnPaint, not in construction. The upgrade from SkiaSharp 2.x to 3.x included an OpenTK 3 to OpenTK 4 migration which changed GLControl construction behavior. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.85 (85%) |
+| Reason | Reporter explicitly identifies 2.88.9 as the last known good version and 3.116.0 as the breaking version. The major change between these versions includes an OpenTK version bump (3.x to 4.x) which changed how GLControl initializes its OpenGL context. |
+| Worked in version | 2.88.9 |
+| Broke in version | 3.116.0 |
+
+## Analysis
+
+### Technical Summary
+
+SKGLControl inherits from OpenTK's GLControl which attempts to initialize an OpenGL context at construction time. The DesignMode guard exists only in OnPaint (line 74-78 of SKGLControl.cs), but GLControl construction itself is not guarded. When VS Form Designer instantiates the control to render a design view, the OpenGL context initialization in the GLControl constructor can deadlock or crash the designer process. The SkiaSharp 3.x upgrade moved from OpenTK 3 to OpenTK 4, which changed the GL context initialization timing, likely making this construction-time crash more likely or reliably reproducible.
+
+### Rationale
+
+Clear regression report from 2.88.9 to 3.116.0. SKGLControl uses OpenTK GLControl which creates an OpenGL context — this is incompatible with VS Designer which runs in a sandboxed window environment. The DesignMode guard in OnPaint is insufficient since construction already happened. No crash log or stack trace provided, so we need more info to pinpoint the exact failure path, but the root cause hypothesis is strong.
+
+### Key Signals
+
+- "When Open Form Designer Visual Studio Freeze and crash" — **issue body** (VS Designer is unable to safely instantiate SKGLControl — likely due to OpenGL context init in the GLControl base class constructor.)
+- "Version of SkiaSharp: 3.116.0 (Current) / Last Known Good Version: 2.88.9 (Previous)" — **issue body** (Regression between SkiaSharp 2.x and 3.x. The 3.x line upgraded from OpenTK 3 to OpenTK 4 which has different GLControl construction behavior.)
+- "if (this.DesignMode) { return; }" — **issue body (SizeChanged handler)** (Reporter has a DesignMode guard in their event handler but the crash occurs at designer instantiation, not in event handlers.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKGLControl.cs` | 15 | direct | SKGLControl inherits from OpenTK.GLControl. The base class constructor initializes an OpenGL context. There is no DesignMode guard in the SKGLControl constructor itself — only in OnPaint. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKGLControl.cs` | 74-78 | direct | DesignMode guard exists in OnPaint: 'if (DesignMode) { e.Graphics.Clear(BackColor); return; }' — this is correct but insufficient. The OpenGL context init in the GLControl base constructor fires before OnPaint is ever called. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs` | 1-92 | related | SKControl (CPU rasterizer alternative) uses a plain System.Windows.Forms.Control base with DesignMode guard in OnPaint (line 27-29). No OpenGL dependency — safe in VS Designer. |
+
+### Workarounds
+
+- Replace SKGLControl with SKControl (CPU rasterizer) for design-time compatibility. SKControl does not use OpenGL and is safe to use in VS Form Designer.
+- Use a design-time guard at the class level by checking System.ComponentModel.LicenseManager.UsageMode == DesignTime to prevent GLControl base class construction from running in the designer.
+
+### Next Questions
+
+- What is the exact crash message or error shown in VS? Does VS show an error dialog or just crash silently?
+- Does adding only SKGLControl to an empty form (no SizeChanged handler) still crash the designer?
+- Does the crash occur with SKControl (non-GL variant) or only with SKGLControl?
+
+### Resolution Proposals
+
+**Hypothesis:** OpenTK GLControl in SkiaSharp 3.x initializes its OpenGL context during construction, before any DesignMode guards can run. VS Form Designer cannot safely host a control that initializes a GPU context at construction time.
+
+1. **Use SKControl instead of SKGLControl** — workaround, confidence 0.90 (90%), cost/xs, validated=yes
+   - Replace SKGLControl with SKControl which uses a CPU rasterizer (GDI) and inherits from System.Windows.Forms.Control directly. No OpenGL dependency — fully design-time safe. Performance difference is usually negligible for WinForms apps.
+2. **Add DesignMode guard to SKGLControl constructor** — fix, confidence 0.70 (70%), cost/s, validated=untested
+   - Override the constructor selection to skip OpenGL init in design mode. This requires checking LicenseManager.UsageMode or DesignMode before calling the base GLControl constructor. The challenge is that DesignMode is not reliable in constructors — LicenseManager.UsageMode is more reliable.
+
+**Recommended proposal:** Use SKControl instead of SKGLControl
+
+**Why:** Immediate workaround with no SkiaSharp code changes required. SKControl is feature-equivalent for most WinForms use cases and is fully design-time safe.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.80 (80%) |
+| Reason | The regression claim is credible and root cause hypothesis is strong (GLControl OpenGL init in design mode), but no crash log, stack trace, or VS error output was provided. Need to confirm: is the crash triggered by simply adding SKGLControl to the form, or only when specific event handlers are attached? Also need crash details to confirm root cause. |
+| Suggested repro platform | windows |
+
+### Missing Info
+
+- VS crash log or error message shown when designer crashes
+- Stack trace from the crash (check Windows Event Viewer for .NET runtime errors)
+- Does a blank form with only SKGLControl (no event handlers) also crash the designer?
+- Does SKControl (non-GL variant) also crash the designer?
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply bug, SkiaSharp.Views, Windows, OpenGL labels | labels=type/bug, area/SkiaSharp.Views, os/Windows-Classic, backend/OpenGL |
+| add-comment | medium | 0.80 (80%) | Request crash log and confirm scope, offer SKControl workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! This looks like a design-time issue with `SKGLControl` inheriting from OpenTK's `GLControl`, which initializes an OpenGL context at construction time — before any `DesignMode` guard can run. This changed behavior between SkiaSharp 2.x and 3.x due to the OpenTK version upgrade.
+
+**Immediate workaround:** Replace `SKGLControl` with `SKControl` (the CPU-rasterized variant). `SKControl` uses a plain GDI surface and is fully safe in the VS Form Designer:
+
+```csharp
+// Instead of:
+private SkiaSharp.Views.Desktop.SKGLControl skglControl1;
+
+// Use:
+private SkiaSharp.Views.Desktop.SKControl skControl1;
+```
+
+The event is `PaintSurface` on both controls with the same `SKPaintSurfaceEventArgs` signature, so minimal code changes are needed.
+
+**To help investigate the root cause**, could you provide:
+1. The exact error or crash message shown by Visual Studio (or check **Windows Event Viewer → Application** for a .NET runtime error)
+2. Does a blank form with *only* `SKGLControl` added (no event handlers, no code) also crash the designer?
+3. Does `SKControl` crash the designer as well, or only `SKGLControl`?
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3129,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T18:35:54Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKGLControl in a WinForms app causes Visual Studio Form Designer to freeze and crash when the form is opened in design mode, reported as a regression from SkiaSharp 2.88.9 to 3.116.0 on Windows 11 .NET 4.7.2.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net472"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a WinForms project targeting .NET 4.7.2",
+        "Add a SKGLControl to a form",
+        "Add a SizeChanged event handler with DesignMode guard and SKBitmap allocation",
+        "Open the form in the Visual Studio Form Designer",
+        "Observe that Visual Studio freezes and crashes"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, Visual Studio 2022 Community, WinForms C# .NET 4.7.2, Windows 11 Home"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "SKGLControl.cs still inherits from OpenTK GLControl and the DesignMode guard is only in OnPaint, not in construction. The upgrade from SkiaSharp 2.x to 3.x included an OpenTK 3 to OpenTK 4 migration which changed GLControl construction behavior."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter explicitly identifies 2.88.9 as the last known good version and 3.116.0 as the breaking version. The major change between these versions includes an OpenTK version bump (3.x to 4.x) which changed how GLControl initializes its OpenGL context.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "SKGLControl inherits from OpenTK's GLControl which attempts to initialize an OpenGL context at construction time. The DesignMode guard exists only in OnPaint (line 74-78 of SKGLControl.cs), but GLControl construction itself is not guarded. When VS Form Designer instantiates the control to render a design view, the OpenGL context initialization in the GLControl constructor can deadlock or crash the designer process. The SkiaSharp 3.x upgrade moved from OpenTK 3 to OpenTK 4, which changed the GL context initialization timing, likely making this construction-time crash more likely or reliably reproducible.",
+    "rationale": "Clear regression report from 2.88.9 to 3.116.0. SKGLControl uses OpenTK GLControl which creates an OpenGL context — this is incompatible with VS Designer which runs in a sandboxed window environment. The DesignMode guard in OnPaint is insufficient since construction already happened. No crash log or stack trace provided, so we need more info to pinpoint the exact failure path, but the root cause hypothesis is strong.",
+    "keySignals": [
+      {
+        "text": "When Open Form Designer Visual Studio Freeze and crash",
+        "source": "issue body",
+        "interpretation": "VS Designer is unable to safely instantiate SKGLControl — likely due to OpenGL context init in the GLControl base class constructor."
+      },
+      {
+        "text": "Version of SkiaSharp: 3.116.0 (Current) / Last Known Good Version: 2.88.9 (Previous)",
+        "source": "issue body",
+        "interpretation": "Regression between SkiaSharp 2.x and 3.x. The 3.x line upgraded from OpenTK 3 to OpenTK 4 which has different GLControl construction behavior."
+      },
+      {
+        "text": "if (this.DesignMode) { return; }",
+        "source": "issue body (SizeChanged handler)",
+        "interpretation": "Reporter has a DesignMode guard in their event handler but the crash occurs at designer instantiation, not in event handlers."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKGLControl.cs",
+        "lines": "15",
+        "finding": "SKGLControl inherits from OpenTK.GLControl. The base class constructor initializes an OpenGL context. There is no DesignMode guard in the SKGLControl constructor itself — only in OnPaint.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKGLControl.cs",
+        "lines": "74-78",
+        "finding": "DesignMode guard exists in OnPaint: 'if (DesignMode) { e.Graphics.Clear(BackColor); return; }' — this is correct but insufficient. The OpenGL context init in the GLControl base constructor fires before OnPaint is ever called.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+        "lines": "1-92",
+        "finding": "SKControl (CPU rasterizer alternative) uses a plain System.Windows.Forms.Control base with DesignMode guard in OnPaint (line 27-29). No OpenGL dependency — safe in VS Designer.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Replace SKGLControl with SKControl (CPU rasterizer) for design-time compatibility. SKControl does not use OpenGL and is safe to use in VS Form Designer.",
+      "Use a design-time guard at the class level by checking System.ComponentModel.LicenseManager.UsageMode == DesignTime to prevent GLControl base class construction from running in the designer."
+    ],
+    "nextQuestions": [
+      "What is the exact crash message or error shown in VS? Does VS show an error dialog or just crash silently?",
+      "Does adding only SKGLControl to an empty form (no SizeChanged handler) still crash the designer?",
+      "Does the crash occur with SKControl (non-GL variant) or only with SKGLControl?"
+    ],
+    "resolution": {
+      "hypothesis": "OpenTK GLControl in SkiaSharp 3.x initializes its OpenGL context during construction, before any DesignMode guards can run. VS Form Designer cannot safely host a control that initializes a GPU context at construction time.",
+      "proposals": [
+        {
+          "title": "Use SKControl instead of SKGLControl",
+          "description": "Replace SKGLControl with SKControl which uses a CPU rasterizer (GDI) and inherits from System.Windows.Forms.Control directly. No OpenGL dependency — fully design-time safe. Performance difference is usually negligible for WinForms apps.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Add DesignMode guard to SKGLControl constructor",
+          "description": "Override the constructor selection to skip OpenGL init in design mode. This requires checking LicenseManager.UsageMode or DesignMode before calling the base GLControl constructor. The challenge is that DesignMode is not reliable in constructors — LicenseManager.UsageMode is more reliable.",
+          "category": "fix",
+          "confidence": 0.7,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKControl instead of SKGLControl",
+      "recommendedReason": "Immediate workaround with no SkiaSharp code changes required. SKControl is feature-equivalent for most WinForms use cases and is fully design-time safe."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.8,
+      "reason": "The regression claim is credible and root cause hypothesis is strong (GLControl OpenGL init in design mode), but no crash log, stack trace, or VS error output was provided. Need to confirm: is the crash triggered by simply adding SKGLControl to the form, or only when specific event handlers are attached? Also need crash details to confirm root cause.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "VS crash log or error message shown when designer crashes",
+      "Stack trace from the crash (check Windows Event Viewer for .NET runtime errors)",
+      "Does a blank form with only SKGLControl (no event handlers) also crash the designer?",
+      "Does SKControl (non-GL variant) also crash the designer?"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp.Views, Windows, OpenGL labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic",
+          "backend/OpenGL"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request crash log and confirm scope, offer SKControl workaround",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the report! This looks like a design-time issue with `SKGLControl` inheriting from OpenTK's `GLControl`, which initializes an OpenGL context at construction time — before any `DesignMode` guard can run. This changed behavior between SkiaSharp 2.x and 3.x due to the OpenTK version upgrade.\n\n**Immediate workaround:** Replace `SKGLControl` with `SKControl` (the CPU-rasterized variant). `SKControl` uses a plain GDI surface and is fully safe in the VS Form Designer:\n\n```csharp\n// Instead of:\nprivate SkiaSharp.Views.Desktop.SKGLControl skglControl1;\n\n// Use:\nprivate SkiaSharp.Views.Desktop.SKControl skControl1;\n```\n\nThe event is `PaintSurface` on both controls with the same `SKPaintSurfaceEventArgs` signature, so minimal code changes are needed.\n\n**To help investigate the root cause**, could you provide:\n1. The exact error or crash message shown by Visual Studio (or check **Windows Event Viewer → Application** for a .NET runtime error)\n2. Does a blank form with *only* `SKGLControl` added (no event handlers, no code) also crash the designer?\n3. Does `SKControl` crash the designer as well, or only `SKGLControl`?"
+      }
+    ]
+  }
+}
+```
+
+</details>

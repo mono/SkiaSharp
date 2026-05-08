@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #3174 (needs-info)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 3174, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-21T18:36:00Z"}, "summary": "iOS Hot Restart fails with type resolution error for 'SkiaSharp.GRBackendRenderTargetDesc' from SkiaSharp 2.88.0.0 when using SkiaSharp.Extended.UI.Maui 2.0.0; upgrading to SkiaSharp 3.0-preview.13 resolves the issue.", "classification": {"type": {"value": "type/bug", "confidence": 0.88}, "area": {"value": "area/SkiaSharp", "confidence": 0.8}, "platforms": ["os/iOS"], "tenets": ["tenet/compatibility"], "partner": "partner/maui"}, "evidence": {"bugSignals": {"severity": "medium", "regressionClaimed": true, "errorType": "exception", "errorMessage": "Could not resolve type with token 0100002b from typeref (expected class 'SkiaSharp.GRBackendRenderTargetDesc' in assembly 'SkiaSharp, Version=2.88.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756')", "stackTrace": "Xamarin.iOS.HotRestart.Application.ForceLoadingAssemblies -> System.Reflection.MonoMethodInfo.GetParametersInfo -> RuntimeConstructorInfo.GetParametersInternal", "reproQuality": "partial", "targetFrameworks": ["net9.0-ios"]}, "reproEvidence": {"stepsToReproduce": ["Create a .NET MAUI app referencing SkiaSharp.Extended.UI.Maui 2.0.0", "Deploy to iOS device using Hot Restart from Windows 11", "Observe runtime type resolution failure on startup"], "environmentDetails": ".NET MAUI 9.0.30 SR3, SkiaSharp.Extended.UI.Maui 2.0.0, Windows 11, Hot Restart to iOS", "repoLinks": [{"url": "https://github.com/dotnet/maui/issues/28026", "description": "Original issue in dotnet/maui repo — transferred here"}]}, "versionAnalysis": {"mentionedVersions": ["2.88.0.0", "3.0.0-preview.13"], "workedIn": "unknown", "brokeIn": "unknown", "currentRelevance": "likely", "relevanceReason": "GRBackendRenderTargetDesc does not exist in the current SkiaSharp 3.x binding; the type was removed when deprecated SKSurface.Create overloads were cleaned up in v3.0.0."}, "regression": {"isRegression": true, "confidence": 0.65, "reason": "Reporter states 'this used to work in .NET MAUI'. The error references SkiaSharp 2.88.0.0, suggesting a version mismatch between SkiaSharp.Extended.UI.Maui 2.0.0 (compiled against SkiaSharp 2.88) and the loaded SkiaSharp assembly.", "brokeInVersion": "unknown"}, "fixStatus": {"likelyFixed": true, "confidence": 0.7, "reason": "Reporter confirms upgrading to SkiaSharp 3.0.0-preview.13 resolves the issue, most likely because SkiaSharp.Extended.UI.Maui was updated to target SkiaSharp 3.x which removed the problematic GRBackendRenderTargetDesc references.", "fixedInVersion": "3.0.0-preview.13"}}, "analysis": {"summary": "Hot Restart on iOS fails because SkiaSharp.Extended.UI.Maui 2.0.0 (compiled against SkiaSharp 2.88) references the type GRBackendRenderTargetDesc. Xamarin.iOS.HotRestart.ForceLoadingAssemblies scans all types and tries to resolve their constructor parameters via reflection; it cannot resolve GRBackendRenderTargetDesc, causing a fatal exception. GRBackendRenderTargetDesc was removed from the SkiaSharp codebase in v3.x (confirmed: no such class exists in the current binding/ directory), so the fix is to use an updated SkiaSharp.Extended.UI.Maui targeting SkiaSharp 3.x.", "rationale": "Classified as type/bug because this is a runtime crash that blocks the developer's debug workflow (Hot Restart). Classified area/SkiaSharp because the missing type (GRBackendRenderTargetDesc) is a SkiaSharp type. The root cause is an ABI incompatibility: SkiaSharp removed GRBackendRenderTargetDesc in v3.x while SkiaSharp.Extended.UI.Maui 2.0.0 still depends on it. Suggested action is needs-info because no minimal repro was provided and the exact SkiaSharp NuGet version used in the failing scenario is unclear.", "codeInvestigation": [{"file": "binding/SkiaSharp/GRBackendRenderTarget.cs", "finding": "GRBackendRenderTargetDesc is not referenced anywhere in this file. The type does not exist in the current SkiaSharp binding code, confirming it was removed in v3.x.", "relevance": "direct"}, {"file": "changelogs/SkiaSharp/3.0.0/SkiaSharp.breaking.md", "lines": "741,756", "finding": "SKSurface.Create(GRContext, GRBackendRenderTargetDesc) overloads were removed as obsolete in v3.0.0. This confirms GRBackendRenderTargetDesc was present in v2.88 and removed in v3.0.", "relevance": "direct"}, {"file": "changelogs/SkiaSharp/3.0.0/SkiaSharp.md", "lines": "15", "finding": "GRBackendRenderTarget(GRBackend, GRBackendRenderTargetDesc) was listed as a new constructor in v3.0.0 changelog, suggesting GRBackendRenderTargetDesc type existed in v2.88 and persisted at least briefly in v3.0 transition.", "relevance": "related"}], "keySignals": [{"text": "Could not resolve type with token 0100002b from typeref (expected class 'SkiaSharp.GRBackendRenderTargetDesc' in assembly 'SkiaSharp, Version=2.88.0.0')", "source": "issue body / log output", "interpretation": "The Hot Restart assembly scanner encounters a type reference to GRBackendRenderTargetDesc from a SkiaSharp 2.88 assembly and cannot resolve it at runtime."}, {"text": "at Xamarin.iOS.HotRestart.Application.ForceLoadingAssemblies", "source": "stack trace", "interpretation": "The crash is in Hot Restart's assembly pre-loading step which scans all types and their constructors via reflection."}, {"text": "upgrading to a preview version 3.0.0.0-preview.13 seems to fix it", "source": "issue body", "interpretation": "The SkiaSharp 3.0 preview either updated the Extended.UI.Maui library to not reference GRBackendRenderTargetDesc, or the v3 assembly handles type scanning differently."}, {"text": "SkiaShart.Extended.UI.Maui 2.0.0", "source": "issue body", "interpretation": "Third-party extension library compiled against SkiaSharp 2.88 that contains GRBackendRenderTargetDesc references; updating this library is the likely fix."}], "nextQuestions": ["What exact SkiaSharp NuGet version is specified in the .csproj (not just the assembly version reported in the error)?", "Does upgrading SkiaSharp.Extended.UI.Maui to the latest 3.x version while keeping SkiaSharp 3.x stable resolve the issue permanently?", "Does the error occur with a plain SkiaSharp MAUI app (no Extended.UI.Maui) via Hot Restart?"], "workarounds": ["Upgrade SkiaSharp.Extended.UI.Maui to a version that targets SkiaSharp 3.x (reporter confirms 3.0.0-preview.13 works)", "Use regular device deployment instead of Hot Restart for debugging"], "resolution": {"hypothesis": "SkiaSharp.Extended.UI.Maui 2.0.0 contains a type that has a constructor or method signature referencing GRBackendRenderTargetDesc (removed in SkiaSharp v3.x). Xamarin.iOS.HotRestart.ForceLoadingAssemblies scans all constructor signatures via reflection and fails when it can't resolve this type from the loaded SkiaSharp assembly.", "proposals": [{"title": "Upgrade SkiaSharp.Extended.UI.Maui to 3.x", "description": "Replace SkiaSharp.Extended.UI.Maui 2.0.0 with the latest version targeting SkiaSharp 3.x. The reporter confirms SkiaSharp 3.0.0-preview.13 resolves it.", "category": "workaround", "confidence": 0.85, "effort": "cost/xs", "validated": "untested"}, {"title": "Use regular deploy instead of Hot Restart", "description": "Disable Hot Restart and use standard iOS device deployment for debugging. This avoids the ForceLoadingAssemblies scanning step.", "category": "workaround", "confidence": 0.9, "effort": "cost/xs", "validated": "untested"}], "recommendedProposal": "Upgrade SkiaSharp.Extended.UI.Maui to 3.x", "recommendedReason": "Directly addresses the root cause — the outdated library referencing removed SkiaSharp types. Reporter has confirmed it works."}}, "output": {"actionability": {"suggestedAction": "needs-info", "confidence": 0.75, "reason": "No minimal repro project available. Root cause points to SkiaSharp.Extended.UI.Maui 2.0.0 using the removed GRBackendRenderTargetDesc type, but exact SkiaSharp NuGet version in the failing scenario is unspecified. Need to confirm if this is reproduced with a plain SkiaSharp MAUI app or only with the Extended library.", "suggestedReproPlatform": "macos"}, "missingInfo": ["Exact SkiaSharp NuGet package version referenced in the project (.csproj)", "Does the issue reproduce with a plain SkiaSharp MAUI app (without SkiaSharp.Extended.UI.Maui)?", "Minimal reproduction project showing the failure"], "actions": [{"type": "update-labels", "description": "Apply bug, core SkiaSharp, iOS, compatibility, and MAUI partner labels", "risk": "low", "confidence": 0.88, "labels": ["type/bug", "area/SkiaSharp", "os/iOS", "tenet/compatibility", "partner/maui"]}, {"type": "add-comment", "description": "Request repro info and clarify SkiaSharp version; provide workarounds", "risk": "medium", "confidence": 0.8, "comment": "Thanks for the report and for providing the stack trace!\n\nBased on the error, `Xamarin.iOS.HotRestart.Application.ForceLoadingAssemblies` is trying to scan constructor signatures via reflection and encountering a reference to `SkiaSharp.GRBackendRenderTargetDesc` — a type that was removed from SkiaSharp in v3.x.\n\nThis appears to originate from `SkiaSharp.Extended.UI.Maui 2.0.0`, which was compiled against SkiaSharp 2.88.x and still references that removed type. Upgrading to a version of `SkiaSharp.Extended.UI.Maui` that targets SkiaSharp 3.x should resolve the issue (which aligns with your observation that the 3.0.0-preview.13 package fixes it).\n\n**Workarounds while waiting for a stable release:**\n1. Upgrade `SkiaSharp.Extended.UI.Maui` to the latest 3.x preview version\n2. Use standard device deployment instead of Hot Restart for debugging\n\nTo help us investigate further, could you provide:\n- The exact `SkiaSharp` NuGet version in your `.csproj`\n- Does the issue reproduce without `SkiaSharp.Extended.UI.Maui` (plain SkiaSharp only)?"}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>
