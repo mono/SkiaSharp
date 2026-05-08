@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #822 (keep-open)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 822, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-25T18:03:04Z", "currentLabels": ["type/enhancement", "type/question", "type/feature-request"]}, "summary": "Reporter asks how to implement fling/velocity gesture detection using touch events in SKGLView on iOS and Android, and requests that higher-level gesture events (single tap, double tap, long tap, fling with velocity) be added to SKGLView and SKCanvasView.", "classification": {"type": {"value": "type/feature-request", "confidence": 0.88}, "area": {"value": "area/SkiaSharp.Views", "confidence": 0.9}, "platforms": ["os/iOS", "os/Android"]}, "evidence": {"reproEvidence": {"stepsToReproduce": ["Use SKGLView in Xamarin.Forms on iOS or Android", "Try to detect a fling (velocity-based swipe) gesture", "On Android: workaround is to re-convert touch events into native MotionEvents and use platform GestureDetector (complex)", "On iOS: adding a UIGestureRecognizer to the native view overrides the touches within SKGLView — no workaround found"], "environmentDetails": "SkiaSharp.Views.Forms, Xamarin.Forms, iOS and Android", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp.Extended/pull/79/files#diff-9fc0fb5f255e13c0c4d03a22334523f9", "description": "SkiaSharp.Extended PR #79 — gesture recognizer implementations for fling, scale, rotate (referenced by maintainer mattleibow)"}]}, "versionAnalysis": {"mentionedVersions": [], "currentRelevance": "likely", "relevanceReason": "SKTouchEventArgs still does not expose velocity or gesture-derived data in the current codebase. The feature request remains valid."}}, "analysis": {"summary": "The current SKTouchEventArgs API provides only primitive touch data (ActionType, Location, InContact, Pressure) — no velocity, no gesture recognition. Implementing fling requires tracking touch history to compute velocity. On iOS the SKTouchHandler is itself a UIGestureRecognizer, which conflicts with adding additional gesture recognizers to the native view. The maintainer pointed to SkiaSharp.Extended PR #79 as a potential implementation path, suggesting gesture support might live in an extension package rather than core.", "rationale": "This is a feature request to add higher-level gesture events (fling, tap, long-press with velocity) to SKGLView/SKCanvasView. The existing touch API only provides raw touch events with no velocity data. The iOS conflict with UIGestureRecognizer is a real platform constraint. Classified as feature-request because this adds entirely new functionality (gesture recognition layer) not currently in any form in the views package.", "keySignals": [{"text": "When I add the gesture recognizer to the native view it overrides the touches within the SKGLView", "source": "issue body", "interpretation": "iOS SKTouchHandler is itself a UIGestureRecognizer — adding a second recognizer without proper coordination causes conflict."}, {"text": "Maybe adding some gestures to the SKGLView and SKCanvasView would be enable more people to utilize the skia views in forms easily", "source": "issue body", "interpretation": "Core feature request: add gesture events to the views API."}, {"text": "I previously started some ideas that did gestures such as fling, scale and rotate: https://github.com/mono/SkiaSharp.Extended/pull/79", "source": "comment by mattleibow (maintainer)", "interpretation": "Maintainer has explored this in SkiaSharp.Extended — suggests the feature may be intentionally kept in an extension package."}], "codeInvestigation": [{"file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs", "lines": "1-86", "finding": "SKTouchEventArgs exposes Id, ActionType (Pressed/Moved/Released/Cancelled/WheelChanged), Location, InContact, WheelDelta, Pressure — no velocity or gesture-derived data exists anywhere in the current API.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs", "lines": "10-111", "finding": "iOS SKTouchHandler extends UIGestureRecognizer and fires only primitive Pressed/Moved/Released/Cancelled events. No velocity tracking. Being a UIGestureRecognizer itself is why adding additional gesture recognizers to the native view conflicts.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs", "lines": "1-139", "finding": "Android SKTouchHandler hooks View.Touch and processes MotionEventActions (Down/Move/Up/Cancel). The underlying MotionEvent has velocity data via VelocityTracker but it is never extracted or surfaced in SKTouchEventArgs.", "relevance": "direct"}], "workarounds": ["Track touch history manually: store (timestamp, location) on each Moved event, compute velocity on Released using the last N samples over a time window.", "On Android: use VelocityTracker directly in a custom renderer — the raw MotionEvent velocity is available but not exposed by SKTouchHandler.", "Refer to SkiaSharp.Extended PR #79 for a community gesture recognizer implementation that wraps the primitive touch events."], "nextQuestions": ["Is gesture support planned for SkiaSharp.Views.Maui or will it remain in SkiaSharp.Extended only?", "Should velocity be added to SKTouchEventArgs itself, or should a separate SKGestureEventArgs be introduced?", "Does the iOS UIGestureRecognizer conflict need to be resolved before gesture support can be added on that platform?"], "resolution": {"hypothesis": "Velocity tracking can be computed from existing touch events. For a first-class solution, velocity could be added to SKTouchEventArgs (Android via VelocityTracker, iOS via UITouch.estimatedProperties or manual tracking) or a new gesture event layer could be added above the raw touch API.", "proposals": [{"title": "Compute velocity from touch history (userland workaround)", "description": "Track (timestamp, location) pairs in the SKTouch handler. On Released, compute dx/dt and dy/dt over the last 100ms to derive fling velocity. No library changes needed.", "category": "workaround", "confidence": 0.85, "effort": "cost/s", "validated": "untested"}, {"title": "Add velocity fields to SKTouchEventArgs", "description": "Extend SKTouchEventArgs with VelocityX and VelocityY properties. Populate from VelocityTracker on Android and manual tracking on iOS. This is an additive ABI-safe change.", "category": "fix", "confidence": 0.7, "effort": "cost/m", "validated": "untested"}, {"title": "Use SkiaSharp.Extended gesture recognizers", "description": "Reference the gesture recognizer implementation in SkiaSharp.Extended PR #79 (fling, scale, rotate) as a standalone helper that wraps primitive SKTouchEventArgs events.", "category": "alternative", "confidence": 0.8, "effort": "cost/s", "validated": "untested"}], "recommendedProposal": "Compute velocity from touch history (userland workaround)", "recommendedReason": "No library changes needed, works today, and the maintainer's own reference (SkiaSharp.Extended) demonstrates this pattern is viable."}}, "output": {"actionability": {"suggestedAction": "keep-open", "confidence": 0.8, "reason": "Valid feature request with community interest. Maintainer has explored gesture support in SkiaSharp.Extended. The feature has not been implemented in core SkiaSharp.Views. Keep open to track interest and design decision.", "suggestedReproPlatform": "linux"}, "actions": [{"type": "update-labels", "description": "Correct labels: single type/feature-request, area/SkiaSharp.Views, platforms", "risk": "low", "confidence": 0.9, "labels": ["type/feature-request", "area/SkiaSharp.Views", "os/iOS", "os/Android"]}, {"type": "add-comment", "description": "Explain workaround and point to SkiaSharp.Extended implementation", "risk": "medium", "confidence": 0.82, "comment": "Thanks for the detailed report! You can implement fling velocity today by tracking touch history manually:\n\n```csharp\n// Track points and times in your touch handler\nvar history = new List<(SKPoint pt, DateTime time)>();\n\nvoid OnTouch(object sender, SKTouchEventArgs e)\n{\n    switch (e.ActionType)\n    {\n        case SKTouchAction.Pressed:\n            history.Clear();\n            history.Add((e.Location, DateTime.UtcNow));\n            break;\n        case SKTouchAction.Moved:\n            history.Add((e.Location, DateTime.UtcNow));\n            // Keep only last 100ms\n            var cutoff = DateTime.UtcNow.AddMilliseconds(-100);\n            history.RemoveAll(h => h.time < cutoff);\n            break;\n        case SKTouchAction.Released:\n            if (history.Count >= 2)\n            {\n                var oldest = history[0];\n                var newest = history[^1];\n                var dt = (float)(newest.time - oldest.time).TotalSeconds;\n                if (dt > 0)\n                {\n                    float vx = (newest.pt.X - oldest.pt.X) / dt;\n                    float vy = (newest.pt.Y - oldest.pt.Y) / dt;\n                    // vx, vy are pixels/second fling velocity\n                }\n            }\n            break;\n    }\n    e.Handled = true;\n}\n```\n\nFor a more complete solution, @mattleibow previously started gesture recognizer implementations (fling, scale, rotate) in [SkiaSharp.Extended PR #79](https://github.com/mono/SkiaSharp.Extended/pull/79) — that may be worth tracking for a higher-level API.\n\nAdding velocity directly to `SKTouchEventArgs` or a new gesture event layer is a valid enhancement for the library itself."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

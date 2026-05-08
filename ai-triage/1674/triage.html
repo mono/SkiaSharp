@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #1674 (close-as-duplicate)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 1674, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-25T16:45:00Z"}, "summary": "Windows 10 users experience intermittent crashes with exception code 0x80000004 (STATUS_SINGLE_STEP) inside HandleDictionary.RegisterHandle when creating SKFont or SKCanvas objects; stack trace signature matches the known alertable ReaderWriterLockSlim re-entrancy issue tracked in #1383.", "classification": {"type": {"value": "type/bug", "confidence": 0.95}, "area": {"value": "area/SkiaSharp", "confidence": 0.95}, "platforms": ["os/Windows-Classic"], "tenets": ["tenet/reliability"]}, "evidence": {"bugSignals": {"severity": "high", "regressionClaimed": false, "errorType": "crash", "errorMessage": "Exception Code: 0x80000004 (STATUS_SINGLE_STEP) in HandleDictionary.RegisterHandle", "stackTrace": "[Managed to Native Transition]\nSkiaSharp.dll!SkiaSharp.HandleDictionary.RegisterHandle\nSkiaSharp.dll!SkiaSharp.SKObject.RegisterHandle\nSkiaSharp.dll!SkiaSharp.SKObject.Handle.set\nSkiaSharp.dll!SkiaSharp.SKFont..ctor", "reproQuality": "partial", "targetFrameworks": ["net48"]}, "reproEvidence": {"stepsToReproduce": ["Run a Windows 10 app using SkiaSharp 2.80.2 with text rendering (e.g. via RichTextKit)", "Observe intermittent crash with exception 0x80000004 during SKFont or SKCanvas construction"], "environmentDetails": "Windows 10 build 19041/19042, CLR 4.8.4300-4341, Visual Studio 16.9 Preview, x64, SkiaSharp 2.80.2", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/1383", "description": "Canonical tracking issue: HandleDictionary alertable lock re-entrancy on Windows (same root cause)"}, {"url": "https://www.dropbox.com/s/wlozoysbm06th9p/sectorsedge.exe.2544.zip?dl=0", "description": "Crash dump provided by reporter in comment 3"}]}, "versionAnalysis": {"mentionedVersions": ["2.80.2"], "currentRelevance": "unlikely", "relevanceReason": "PlatformLock.cs was introduced in the codebase explicitly to fix issue #1383 (same root cause) by replacing the alertable ReaderWriterLockSlim with a non-alertable Win32 CRITICAL_SECTION on Windows. Versions after the fix was merged are not expected to reproduce this crash."}, "fixStatus": {"likelyFixed": true, "confidence": 0.8, "reason": "PlatformLock.cs replaces the alertable ReaderWriterLockSlim with a Win32 CRITICAL_SECTION on Windows, directly preventing the re-entrant lock crash seen in this issue. This fix was created for issue #1383 which has the same root cause.", "relatedPRs": []}}, "analysis": {"summary": "Crash in HandleDictionary.RegisterHandle on Windows 10 caused by the alertable nature of ReaderWriterLockSlim under the Windows STA threading model. While the UI thread holds or waits for the dictionary write lock, Windows dispatches a message (WM_PAINT or a COM callback) alertably, which re-enters SkiaSharp code and attempts to acquire the same lock, producing a deadlock or access violation that manifests as exception 0x80000004. This is the identical root cause documented in #1383; the fix (PlatformLock.cs) was already committed to the repository.", "rationale": "Multiple crash dumps all show the same call chain terminating at HandleDictionary.RegisterHandle under a [Managed to Native Transition] frame — the hallmark of re-entrant Windows message dispatch during a .NET lock wait. The contributor toptensoftware independently confirmed: single-thread rendering, no OpenGL requirement, and the 0x80000004 exception code all align with the alertable-lock pattern. Issue #1383 describes the same mechanism and is tracked as the canonical bug. The fix (non-alertable Win32 CRITICAL_SECTION) already exists in PlatformLock.cs.", "codeInvestigation": [{"file": "binding/SkiaSharp/HandleDictionary.cs", "lines": "135-171", "finding": "RegisterHandle acquires the write lock via instancesLock.EnterWriteLock(). If the underlying IPlatformLock is a ReaderWriterLockSlim (pre-fix, on Windows), this wait is alertable and allows Windows to dispatch messages re-entrantly, causing the crash.", "relevance": "direct"}, {"file": "binding/SkiaSharp/PlatformLock.cs", "lines": "1-176", "finding": "PlatformLock.cs was introduced explicitly as a fix for issue #1383. On Windows it replaces ReaderWriterLockSlim with a non-alertable Win32 CRITICAL_SECTION (EnterCriticalSection/LeaveCriticalSection), preventing re-entrant message dispatch during lock acquisition. Versions predating this fix (including 2.80.2) would have used the alertable ReaderWriterLockSlim and could reproduce this crash.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKObject.cs", "lines": "59-70", "finding": "SKObject.Handle setter calls RegisterHandle on assignment, which is the entry point shown in all three crash stack traces. The second crash dump additionally shows SKCanvas.GetOrAddObject calling a factory inside an UpgradeableReadLock, which itself sets Handle — compounding the lock re-entrancy window.", "relevance": "related"}], "keySignals": [{"text": "[Managed to Native Transition]\nSkiaSharp.dll!SkiaSharp.HandleDictionary.RegisterHandle", "source": "issue body — crash dump 1", "interpretation": "A managed-to-native transition frame above purely managed code is the fingerprint of Windows message pump re-entrancy: the thread re-entered SKObject construction while already waiting for the HandleDictionary lock."}, {"text": "Exception Code: 0x80000004 (STATUS_SINGLE_STEP)", "source": "issue body — crash dump metadata", "interpretation": "This exception code is raised by some antivirus / Windows security layers when a re-entrancy or debug-trap condition is detected during a .NET P/Invoke transition — consistent with the alertable lock scenario."}, {"text": "don't think this is threading related as all rendering in my case is done on a single UI thread", "source": "comment by toptensoftware", "interpretation": "On a Windows STA UI thread, ReaderWriterLockSlim waits are alertable: even on a single thread, Windows can dispatch WM_PAINT while the lock is being awaited, causing re-entrant entry into the same lock — exactly the issue fixed in #1383."}, {"text": "I've seen this in cases where OpenGL is not involved - just plain rendering to a Canvas", "source": "comment by toptensoftware", "interpretation": "Confirms the crash is not backend-specific; it occurs in the core HandleDictionary locking path regardless of rendering backend."}], "errorFingerprint": "HandleDictionary.RegisterHandle|STATUS_SINGLE_STEP|Windows-STA-alertable-lock", "nextQuestions": ["Did the fix from #1383 (PlatformLock.cs) get included in a 2.80.x patch release or only in 2.88.x+?", "Can the reporter confirm whether upgrading to a 2.88.x or later version resolves the crash?"], "resolution": {"hypothesis": "This is the same alertable-lock re-entrancy bug as #1383. The fix was introduced in PlatformLock.cs (replacing ReaderWriterLockSlim with Win32 CRITICAL_SECTION on Windows). Upgrading to a version that includes that fix should eliminate this crash.", "proposals": [{"title": "Upgrade SkiaSharp past the #1383 fix", "description": "Upgrade to a SkiaSharp version that contains the PlatformLock.cs non-alertable CRITICAL_SECTION fix. Check the #1383 issue for the version it was merged in.", "category": "workaround", "confidence": 0.82, "effort": "cost/xs", "validated": "untested"}], "recommendedProposal": "Upgrade SkiaSharp past the #1383 fix", "recommendedReason": "The fix already exists in the codebase and directly addresses the root cause; upgrading is the only reliable solution for this version-specific crash."}}, "output": {"actionability": {"suggestedAction": "close-as-duplicate", "confidence": 0.82, "reason": "Identical root cause (alertable HandleDictionary lock on Windows) as #1383 which is the canonical tracking issue. The same fix (PlatformLock.cs) addresses both. Consolidating here avoids fragmented tracking.", "suggestedReproPlatform": "windows"}, "actions": [{"type": "update-labels", "description": "Apply bug, core SkiaSharp, Windows Classic, and reliability labels", "risk": "low", "confidence": 0.95, "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/reliability"]}, {"type": "link-duplicate", "description": "Mark as duplicate of #1383 (canonical alertable HandleDictionary lock issue)", "risk": "medium", "confidence": 0.82, "linkedIssue": 1383}, {"type": "add-comment", "description": "Inform reporter of root cause and existing fix in newer versions", "risk": "medium", "confidence": 0.82, "comment": "Thank you for the detailed crash dumps. The stack trace and exception pattern here match a known issue in the SkiaSharp handle dictionary locking code on Windows: `ReaderWriterLockSlim` uses alertable waits under the Windows STA threading model, which allows the Windows message pump to dispatch messages (e.g. `WM_PAINT`) while SkiaSharp is in the middle of acquiring a lock. This re-entrant call into SkiaSharp then attempts to acquire the same lock, resulting in a deadlock or crash. The root cause is tracked in #1383, and the fix (`PlatformLock.cs`) replaces `ReaderWriterLockSlim` with a non-alertable Win32 `CRITICAL_SECTION` on Windows. If you can upgrade to a SkiaSharp version that includes this fix, the crash should be resolved. See #1383 for the full analysis and status."}, {"type": "close-issue", "description": "Close as duplicate of #1383", "risk": "medium", "confidence": 0.82, "stateReason": "not_planned"}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

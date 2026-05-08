@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2939,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T16:02:17Z"
+  },
+  "summary": "Feature request to bind SkGraphics::SetOpenTypeSVGDecoderFactory() in SKGraphics to enable OT-SVG colour font rendering support.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "backends": [
+      "backend/SVG"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/kyamagu/skia-python/blob/e0b030c14e33f70880cfcc502eaeed898a77fc3c/src/skia/main.cpp#L82",
+          "description": "skia-python reference implementation registering SkSVGOpenTypeSVGDecoder factory"
+        },
+        {
+          "url": "https://github.com/HinTak/skia-building-fun/blob/main/download-and-build-skia.sh",
+          "description": "Shell script for Skia build options referenced by reporter"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2689",
+          "description": "Related issue: SkSVGDOM bindings (SVG module), noted as possible prerequisite"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The reporter requests exposing SkGraphics::SetOpenTypeSVGDecoderFactory() so that OT-SVG colour fonts (a Skia feature available since ~m103) can be enabled in SkiaSharp. No such binding exists in the current codebase. The reporter (who authored the skia-python equivalent) points to SKGraphics.cs as the logical home, and notes the SVG module must be built into libSkiaSharp as a prerequisite.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKGraphics.cs",
+        "finding": "SKGraphics class wraps sk_graphics_* C API calls (Init, font cache, resource cache, DumpMemoryStatistics). There is no SetOpenTypeSVGDecoderFactory method or any OT-SVG / SVGDecoder binding.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "Generated P/Invoke bindings cover sk_graphics_init, sk_graphics_purge_*, sk_graphics_get/set_font_cache_*, sk_graphics_get/set_resource_cache_*, sk_graphics_dump_memory_statistics. No sk_graphics_set_opentype_svg_decoder or similar function is present.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The line switches on OT-SVG colour font support within skia.",
+        "source": "issue body",
+        "interpretation": "A single factory registration call at load time activates the feature"
+      },
+      {
+        "text": "Seems the logical place for adding this is in https://github.com/mono/SkiaSharp/blob/main/binding/SkiaSharp/SKGraphics.cs",
+        "source": "comment by HinTak (2024-10-23)",
+        "interpretation": "Reporter has identified the exact file where the C# binding should be added"
+      },
+      {
+        "text": "you need the svg module for the functionality I mentioned. The svg module became non-experimental in m88.",
+        "source": "comment by HinTak (2024-07-13)",
+        "interpretation": "Enabling the SVG module in the native build is a prerequisite; related to #2689"
+      }
+    ],
+    "rationale": "This is a feature request: an existing Skia C++ API (SkGraphics::SetOpenTypeSVGDecoderFactory) is not exposed in SkiaSharp. The request is clearly scoped, the reporter identified the target file, and there is a skia-python reference implementation. The main uncertainty is whether the SVG module is currently compiled into libSkiaSharp.native (needed as prerequisite). Classified as type/feature-request / area/SkiaSharp / backend/SVG, action needs-investigation to confirm the SVG module build flag and design the C API shim.",
+    "resolution": {
+      "hypothesis": "Adding OT-SVG colour font support requires: (1) confirming the SVG module is enabled in the libSkiaSharp native build, (2) adding a C API function sk_graphics_set_opentype_svg_decoder_factory in externals/skia/src/c/ that calls SkGraphics::SetOpenTypeSVGDecoderFactory with SkSVGOpenTypeSVGDecoder::Factory, (3) regenerating bindings, and (4) adding a C# wrapper method to SKGraphics.",
+      "proposals": [
+        {
+          "title": "Implement full binding: C API shim + C# wrapper in SKGraphics",
+          "category": "fix",
+          "effort": "cost/s",
+          "validated": "untested",
+          "description": "Add sk_graphics_set_opentype_svg_decoder_factory() to the C shim, regenerate P/Invoke bindings, then add SKGraphics.SetOpenTypeSVGDecoderFactory() in SKGraphics.cs. This mirrors the skia-python approach. Prerequisite: verify SVG module is included in the Skia native build (same concern as #2689)."
+        },
+        {
+          "title": "Investigate and link SVG module prerequisite (#2689)",
+          "category": "investigation",
+          "effort": "cost/xs",
+          "validated": "untested",
+          "description": "Before implementing, confirm whether the Skia native build already includes the SVG module (MODULE.bazel / BUILD.bazel / GN args). If not, this feature blocks on resolving #2689 first."
+        }
+      ],
+      "recommendedProposal": "proposal-1",
+      "recommendedReason": "The binding is well-understood and low-effort; the SVG module concern can be validated in parallel."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Well-scoped feature request with a clear reference implementation (skia-python). Needs investigation to confirm SVG module availability in the native build before implementing the C API shim and C# wrapper.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/feature-request, area/SkiaSharp, backend/SVG",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp",
+          "backend/SVG"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related issue #2689 (SkSVGDOM bindings / SVG module prerequisite)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 2689
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the feature request, confirm no binding exists, explain the two-step path (SVG module + C API shim + C# wrapper), reference skia-python as the implementation guide.",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed request and for pointing to the skia-python reference implementation!\n\nWe've confirmed that `SkGraphics::SetOpenTypeSVGDecoderFactory()` is not yet bound in SkiaSharp. Adding it would require:\n\n1. **Confirming the SVG module is included** in the `libSkiaSharp` native build (this is also tracked in #2689)\n2. **Adding a C API shim** in `externals/skia/src/c/` \u2014 something like:\n   ```cpp\n   void sk_graphics_set_opentype_svg_decoder_factory() {\n       SkGraphics::SetOpenTypeSVGDecoderFactory(SkSVGOpenTypeSVGDecoder::Factory);\n   }\n   ```\n3. **Regenerating bindings** (`pwsh ./utils/generate.ps1`)\n4. **Adding the C# wrapper** to `binding/SkiaSharp/SKGraphics.cs`\n\nThis is tracked as a feature request. If you'd like to contribute a PR following the [adding APIs guide](../documentation/dev/adding-apis.md), that would be very welcome!"
+      }
+    ]
+  }
+}
