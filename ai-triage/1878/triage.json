@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1878,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T02:52:13Z"
+  },
+  "summary": "SKSwapChainPanel crashes on startup with TypeLoadException for Windows.UI.Core.UIAsyncOperation when used in an Uno Platform 4.0 WASM application, because Uno 4.0 changed the return type of CoreDispatcher.RunAsync from UIAsyncOperation to IAsyncAction, breaking binary compatibility with older SkiaSharp builds.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp.Views.Uno", "confidence": 0.97 },
+    "platforms": ["os/WASM"],
+    "tenets": ["tenet/compatibility"],
+    "partner": "partner/unoplatform"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "System.TypeLoadException: Could not resolve type with token 0100005f from typeref (expected class 'Windows.UI.Core.UIAsyncOperation' in assembly 'Uno, Version=255.255.255.255')",
+      "stackTrace": "at SkiaSharp.Views.UWP.SKSwapChainPanel.OnDpiChanged → Initialize → .ctor",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net6.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a blank Uno Platform WebAssembly project",
+        "Add SkiaSharp packages (2.80.3 or 2.88.0-preview.171)",
+        "Add SKSwapChainPanel to a page",
+        "Run the WASM application with Uno 4.0"
+      ],
+      "environmentDetails": "Uno 4.0 WASM on .net6.0, Visual Studio 2022 Preview",
+      "relatedIssues": [1877],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/files/7643543/repro.zip", "description": "Minimal Uno WASM repro project (zip)" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/1873", "description": "PR #1873 - referenced in comments as the fix" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.3", "2.88.0-preview.171"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Current source shows Invalidate() uses '_ = Dispatcher.RunAsync(...)' which discards the return value and no longer references the UIAsyncOperation type. Related issue #1877 was closed as completed on 2021-12-21."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.90,
+      "reason": "Contributor jeromelaban commented 'this will be fixed by #1873'. Related issue #1877 (same root cause in SKXamlCanvas) was closed as completed. Current source code no longer captures the UIAsyncOperation return value.",
+      "relatedPRs": [1873]
+    }
+  },
+  "analysis": {
+    "summary": "SKSwapChainPanel.Invalidate() called Dispatcher.RunAsync() and captured the result in a UIAsyncOperation-typed variable. Uno 4.0 changed the return type of CoreDispatcher.RunAsync from UIAsyncOperation to IAsyncAction for UWP API conformance, causing a TypeLoadException at runtime. The fix (in PR #1873) was to use '_ =' to discard the return value, avoiding the type reference. The issue is still open but is almost certainly fixed in current code.",
+    "rationale": "Clear TypeLoadException with stack trace pointing to Invalidate() → Dispatcher.RunAsync() in the Uno-targeting code. Root cause is a Uno 4.0 binary breaking change. Related issue #1877 was closed as fixed, and current source code confirms the fix is in place. This issue was never closed despite the fix.",
+    "keySignals": [
+      {
+        "text": "System.TypeLoadException: Could not resolve type with token 0100005f from typeref (expected class 'Windows.UI.Core.UIAsyncOperation')",
+        "source": "issue body",
+        "interpretation": "SkiaSharp binary was compiled against Uno 3.x which returned UIAsyncOperation; Uno 4.0 changed the return type to IAsyncAction."
+      },
+      {
+        "text": "Thanks for the report, this will be fixed by #1873",
+        "source": "comment by jeromelaban",
+        "interpretation": "Uno maintainer confirms this is a known issue with a pending fix in PR #1873."
+      },
+      {
+        "text": "Version with issue: 2.80.3 but i have also tested it with 2.88.0-preview.171",
+        "source": "issue body",
+        "interpretation": "Both stable and preview builds were affected, confirming it was a systematic build-time issue."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Shared/SKSwapChainPanel.cs",
+        "lines": "87-90",
+        "finding": "Current Invalidate() uses '_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate)' — the discard pattern avoids capturing the return type, eliminating the UIAsyncOperation reference that caused the TypeLoadException on Uno 4.0.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Shared/SKSwapChainPanel.cs",
+        "lines": "108-113",
+        "finding": "OnDpiChanged calls Invalidate() which triggers Dispatcher.RunAsync. The stack trace in the issue shows the crash originates here. Current code is safe.",
+        "relevance": "direct"
+      }
+    ],
+    "nextQuestions": [
+      "Was a fixed NuGet package released after PR #1873 was merged?",
+      "Is issue #1878 safe to close as completed now?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.88,
+      "reason": "PR #1873 was referenced as the fix by the Uno maintainer, related issue #1877 was closed as completed, and current source code confirms the UIAsyncOperation reference has been removed from Invalidate().",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Uno views, WASM, compatibility, and partner labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Uno", "os/WASM", "tenet/compatibility", "partner/unoplatform"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter the issue was fixed by PR #1873 and suggest upgrading to the fixed release",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "This issue was addressed by #1873, which removed the binary dependency on `Windows.UI.Core.UIAsyncOperation` in `Invalidate()`. Please upgrade to a SkiaSharp.Views.Uno release that includes that fix. If you're still seeing this with a recent version, please reopen with updated version info."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as completed — fix is in source and related issue #1877 was already closed",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1002,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T07:20:00Z"
+  },
+  "summary": "Developer asks why manual modifications to C# classes are still needed if all classes are auto-generated, and whether those edits will be lost on regeneration — already answered by the maintainer.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.95 },
+    "area": { "value": "area/Build", "confidence": 0.82 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/pull/992", "description": "PR that introduced auto-generation of P/Invoke interop layer referenced in the issue" },
+        { "url": "https://github.com/mono/SkiaSharp/commit/29d87a1a932cb2c716ba9449ac1402641221351b", "description": "Manual modification commit to generated C# classes that prompted the question" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The question was about the 2019 state of the generation tooling. The maintainer answered it fully in comment #569015184, clarifying that only SkiaApi.generated.cs is auto-generated, not the wrapper classes."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter confused two distinct layers: SkiaApi.generated.cs (the auto-generated P/Invoke interop layer produced by PR #992) and the manually-written C# wrapper classes (e.g. SKImage.cs, SKCanvas.cs). The maintainer confirmed that only the P/Invoke declarations are generated; the higher-level C# API classes are hand-crafted for API stability and compatibility, and manual edits to them are not lost on regeneration.",
+    "rationale": "Title and body clearly indicate a how/why architecture question, not a defect. The maintainer provided a complete explanation in the single comment. Issue is in 'open' state but is functionally resolved.",
+    "keySignals": [
+      {
+        "text": "Why do we still need to manually modify the generated C# classes like this?",
+        "source": "issue body",
+        "interpretation": "Reporter misunderstands the layered generation: only SkiaApi.generated.cs is auto-generated; the C# wrapper classes are deliberately hand-written."
+      },
+      {
+        "text": "So, this is partially true - the C# interop is generated, but not the classes.",
+        "source": "maintainer comment by mattleibow",
+        "interpretation": "Directly addresses and resolves the confusion: P/Invoke layer is generated, wrapper classes are not."
+      },
+      {
+        "text": "If the C# API is 100% generated, this may be harder to preserve [compatibility].",
+        "source": "maintainer comment by mattleibow",
+        "interpretation": "Explains the intentional design decision to keep wrapper classes hand-written for ABI stability."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "File begins with standard using directives and type aliases; the entire file is auto-generated P/Invoke declarations. No business logic or API design — confirms it is the generated layer being discussed.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "finding": "Manually-written C# wrapper class with deliberate API design, parameter validation, and helper methods. Not auto-generated — illustrates the hand-crafted layer that absorbs C++ API changes.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "The concern is unfounded: manual edits to the wrapper classes (SKImage.cs, SKCanvas.cs, etc.) are safe and will not be overwritten by the generator. Only SkiaApi.generated.cs is regenerated."
+    ],
+    "resolution": {
+      "hypothesis": "Reporter misunderstood the two-layer code generation architecture. The P/Invoke interop (SkiaApi.generated.cs) is generated; the C# wrapper classes are hand-written and preserve API compatibility.",
+      "proposals": [
+        {
+          "title": "Answer and close as not a bug",
+          "description": "Summarize the maintainer's existing answer: only SkiaApi.generated.cs is auto-generated. The C# wrapper classes are intentionally hand-crafted for stability and compatibility. Manual edits to wrapper classes are safe.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Answer and close as not a bug",
+      "recommendedReason": "The question is already fully answered by the maintainer. Closing avoids backlog noise."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "The question has been fully answered by the maintainer in December 2019. Only the P/Invoke layer is generated; C# wrapper classes are hand-crafted by design for ABI stability.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and build-area labels",
+        "risk": "low",
+        "confidence": 0.93,
+        "labels": ["type/question", "area/Build"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post clarifying answer summarizing the two-layer architecture",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "Thanks for the question! To clarify the architecture: **only `SkiaApi.generated.cs`** (the P/Invoke interop declarations) is auto-generated by the tooling from PR #992. The higher-level C# wrapper classes (`SKImage.cs`, `SKCanvas.cs`, etc.) are deliberately hand-crafted.\n\nThis is intentional — the hand-written API layer absorbs the wild changes Google makes to the underlying Skia C++ library and maintains a stable, compatible public API for SkiaSharp consumers. Regenerating `SkiaApi.generated.cs` will **not** overwrite or lose any manual edits to the wrapper classes.\n\nThe maintainer's comment above explains the full picture: full generation of the C# API layer is a long-term goal, but requires a significantly smarter generator to preserve compatibility guarantees."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close the answered question",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

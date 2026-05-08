@@ -1,0 +1,330 @@
+# Issue Triage Report — #989
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T08:10:00Z |
+| Type | type/bug (0.72 (72%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-info (0.75 (75%)) |
+
+**Issue Summary:** Custom Arabic/Kurdish font loaded from Android Assets via SKTypeface.FromStream renders as empty boxes on Android, while the same code works on iOS; contributor comment confirms SKTypeface.FromData is a working cross-platform alternative.
+
+**Analysis:** Reporter loads a custom Arabic/Kurdish font from Android Assets into a MemoryStream and passes it to SKTypeface.FromStream. On Android the typeface appears to be created (non-null) but text renders as empty boxes. iOS works fine with the same approach. A contributor confirmed that using SKData.Create(stream) + SKTypeface.FromData(data) is a reliable cross-platform alternative, implying the SKManagedStream-to-native-memory-stream conversion path used by FromStream may have a platform-specific issue on Android.
+
+**Recommendations:** **needs-info** — The SkiaSharp version is unspecified, the complete drawing code is not shown, and there is no confirmation from the reporter that the SKTypeface.FromData workaround resolved the issue. These are needed to determine if the bug is still reproducible in current versions or if it was already fixed.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Android, os/iOS |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Open font file from Android Assets as an InputStream via CrossCurrentActivity
+2. Copy to MemoryStream, flush, and reset Position to 0
+3. Call SKTypeface.FromStream(memoryStream)
+4. Use the returned SKTypeface to draw Kurdish/Arabic text
+5. Observe empty boxes on Android; the same approach on iOS renders text correctly
+
+**Environment:** Android 9.0/7.0/5.1, iOS 13.1, devices: Pixel 2/C, Nexus 7, iPhone 11. Visual Studio for Mac. SkiaSharp version reported as 'Latest Version' (filed Oct 2019).
+
+**Code snippets:**
+
+```csharp
+var fontStream = new MemoryStream(); asset.CopyTo(fontStream); fontStream.Position = 0; typeFace = SKTypeface.FromStream(fontStream);
+```
+
+```csharp
+customFont = SKFontManager.Default.MatchCharacter('\u0643'); // fallback for Android
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | monoandroid90, monoandroid70, monoandroid51, xamarinios13 |
+
+## Analysis
+
+### Technical Summary
+
+Reporter loads a custom Arabic/Kurdish font from Android Assets into a MemoryStream and passes it to SKTypeface.FromStream. On Android the typeface appears to be created (non-null) but text renders as empty boxes. iOS works fine with the same approach. A contributor confirmed that using SKData.Create(stream) + SKTypeface.FromData(data) is a reliable cross-platform alternative, implying the SKManagedStream-to-native-memory-stream conversion path used by FromStream may have a platform-specific issue on Android.
+
+### Rationale
+
+Classified as type/bug because SKTypeface.FromStream should work cross-platform but exhibits different behavior on Android vs iOS. Area/SkiaSharp because the issue is in the core SKTypeface/SKFontManager API. Confidence is moderate (0.72) because the reporter's SkiaSharp version is unspecified and the complete drawing code is not provided, leaving open the possibility of a HarfBuzz/shaping usage error. The SKTypeface.FromData workaround is confirmed working by a contributor.
+
+### Key Signals
+
+- "the font loads when I debug it but it even can't show the letters it just shows empty boxes" — **issue body** (The typeface object is non-null on Android, so FromStream does not return null — the issue is that the loaded typeface has no usable glyph data or is incorrectly linked to the font file.)
+- "Although in iOS there's no problem" — **issue body** (Clear platform divergence — same API call, same font file, different outcomes. Points to an Android-specific issue in the SKManagedStream stream conversion path or in the Android font manager backend.)
+- "SKTypeface.FromData works on Android, iOS and WPF" — **comment by michaldobrodenka (contributor)** (Skipping the SKManagedStream path by using SKData.Create(stream) + SKTypeface.FromData(data) resolves the issue, confirming the stream conversion is where the problem lies.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKTypeface.cs` | 92-93 | direct | SKTypeface.FromStream(Stream) delegates directly to SKFontManager.Default.CreateTypeface(stream). No Android-specific branch exists in this file. |
+| `binding/SkiaSharp/SKFontManager.cs` | 100-121 | direct | CreateTypeface(Stream) wraps the managed stream in SKManagedStream then converts via ToMemoryStream() before calling the native sk_fontmgr_create_from_stream. By contrast, CreateTypeface(SKData) directly calls sk_fontmgr_create_from_data without the stream conversion step. The extra indirection through SKManagedStream.ToMemoryStream() may be where the Android inconsistency originates. |
+| `binding/SkiaSharp/SKManagedStream.cs` | 48-53 | related | ToMemoryStream() copies the managed stream's content through SKDynamicMemoryWStream and calls DetachAsStream(). This is a managed-to-native copy; any Android-specific JVM/JNI interop subtlety in older SkiaSharp versions could cause data truncation or corruption here. |
+
+### Workarounds
+
+- Use SKData.Create(stream) to read font bytes into native memory, then call SKTypeface.FromData(data). This bypasses the SKManagedStream path and works on Android, iOS, and WPF.
+- Load font as an embedded assembly resource with Assembly.GetManifestResourceStream(), then wrap in SKData.Create(stream) and call SKTypeface.FromData(data).
+
+### Next Questions
+
+- Exact SkiaSharp NuGet package version — 'Latest Version' (Oct 2019) is ambiguous between 1.68.x and 2.x.
+- Does SKTypeface.FromStream return null or a non-null typeface on Android? The reporter implies non-null but shows empty boxes.
+- What does the complete text drawing code look like — SKShaper usage, glyph run, SKCanvas.DrawText calls?
+- Did the reporter try the SKTypeface.FromData workaround, and if so, did it resolve the empty-boxes issue?
+
+### Resolution Proposals
+
+**Hypothesis:** SKTypeface.FromStream on Android goes through SKManagedStream.ToMemoryStream() which may have produced a broken or empty font stream on older SkiaSharp versions, while SKTypeface.FromData (using native SKData memory directly) works reliably across platforms.
+
+1. **Use SKTypeface.FromData instead of SKTypeface.FromStream** — workaround, confidence 0.90 (90%), cost/xs, validated=yes
+   - Load font bytes into native SKData first using SKData.Create(stream), then create the typeface with SKTypeface.FromData(data). This bypasses the managed stream conversion and is confirmed to work on Android, iOS, and WPF.
+
+```csharp
+SKTypeface IAssetHelper.GetCustomFont(string name)
+{
+    using (var asset = Plugin.CurrentActivity.CrossCurrentActivity.Current.Activity.Assets.Open(name))
+    using (var data = SKData.Create(asset))
+    {
+        return SKTypeface.FromData(data);
+    }
+}
+```
+
+**Recommended proposal:** Use SKTypeface.FromData instead of SKTypeface.FromStream
+
+**Why:** Confirmed working by a contributor in the issue thread. Requires only a small code change and uses a more direct code path that avoids the managed stream conversion entirely.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.75 (75%) |
+| Reason | The SkiaSharp version is unspecified, the complete drawing code is not shown, and there is no confirmation from the reporter that the SKTypeface.FromData workaround resolved the issue. These are needed to determine if the bug is still reproducible in current versions or if it was already fixed. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Exact SkiaSharp NuGet package version number (not 'Latest Version')
+- Whether SKTypeface.FromStream returns null or a non-null object on Android
+- Complete text rendering code (SKShaper / HarfBuzz buffer usage and SKCanvas drawing calls)
+- Confirmation of whether SKTypeface.FromData resolves the empty-boxes issue
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply type/bug, area/SkiaSharp, and os/Android labels | labels=type/bug, area/SkiaSharp, os/Android |
+| add-comment | medium | 0.85 (85%) | Share the FromData workaround and request version/drawing code | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report!
+
+A confirmed workaround for loading fonts from Android Assets is to use `SKTypeface.FromData` instead of `SKTypeface.FromStream`. Load the font bytes into a native `SKData` first:
+
+```csharp
+SKTypeface IAssetHelper.GetCustomFont(string name)
+{
+    using (var asset = activity.Assets.Open(name))
+    using (var data = SKData.Create(asset))
+    {
+        return SKTypeface.FromData(data);
+    }
+}
+```
+
+This approach works on Android, iOS, and WPF because it bypasses the managed-stream conversion path.
+
+Could you try this and confirm whether it resolves the empty-boxes issue? Also, could you provide:
+1. The exact SkiaSharp NuGet version you are using
+2. Whether `SKTypeface.FromStream` returns `null` or a non-null object on Android
+3. Your complete text-drawing code (how you use the typeface with HarfBuzz/SKShaper and `SKCanvas`)
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 989,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T08:10:00Z"
+  },
+  "summary": "Custom Arabic/Kurdish font loaded from Android Assets via SKTypeface.FromStream renders as empty boxes on Android, while the same code works on iOS; contributor comment confirms SKTypeface.FromData is a working cross-platform alternative.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.72
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Android",
+      "os/iOS"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "monoandroid90",
+        "monoandroid70",
+        "monoandroid51",
+        "xamarinios13"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open font file from Android Assets as an InputStream via CrossCurrentActivity",
+        "Copy to MemoryStream, flush, and reset Position to 0",
+        "Call SKTypeface.FromStream(memoryStream)",
+        "Use the returned SKTypeface to draw Kurdish/Arabic text",
+        "Observe empty boxes on Android; the same approach on iOS renders text correctly"
+      ],
+      "environmentDetails": "Android 9.0/7.0/5.1, iOS 13.1, devices: Pixel 2/C, Nexus 7, iPhone 11. Visual Studio for Mac. SkiaSharp version reported as 'Latest Version' (filed Oct 2019).",
+      "codeSnippets": [
+        "var fontStream = new MemoryStream(); asset.CopyTo(fontStream); fontStream.Position = 0; typeFace = SKTypeface.FromStream(fontStream);",
+        "customFont = SKFontManager.Default.MatchCharacter('\\u0643'); // fallback for Android"
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Reporter loads a custom Arabic/Kurdish font from Android Assets into a MemoryStream and passes it to SKTypeface.FromStream. On Android the typeface appears to be created (non-null) but text renders as empty boxes. iOS works fine with the same approach. A contributor confirmed that using SKData.Create(stream) + SKTypeface.FromData(data) is a reliable cross-platform alternative, implying the SKManagedStream-to-native-memory-stream conversion path used by FromStream may have a platform-specific issue on Android.",
+    "rationale": "Classified as type/bug because SKTypeface.FromStream should work cross-platform but exhibits different behavior on Android vs iOS. Area/SkiaSharp because the issue is in the core SKTypeface/SKFontManager API. Confidence is moderate (0.72) because the reporter's SkiaSharp version is unspecified and the complete drawing code is not provided, leaving open the possibility of a HarfBuzz/shaping usage error. The SKTypeface.FromData workaround is confirmed working by a contributor.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "92-93",
+        "finding": "SKTypeface.FromStream(Stream) delegates directly to SKFontManager.Default.CreateTypeface(stream). No Android-specific branch exists in this file.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "100-121",
+        "finding": "CreateTypeface(Stream) wraps the managed stream in SKManagedStream then converts via ToMemoryStream() before calling the native sk_fontmgr_create_from_stream. By contrast, CreateTypeface(SKData) directly calls sk_fontmgr_create_from_data without the stream conversion step. The extra indirection through SKManagedStream.ToMemoryStream() may be where the Android inconsistency originates.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKManagedStream.cs",
+        "lines": "48-53",
+        "finding": "ToMemoryStream() copies the managed stream's content through SKDynamicMemoryWStream and calls DetachAsStream(). This is a managed-to-native copy; any Android-specific JVM/JNI interop subtlety in older SkiaSharp versions could cause data truncation or corruption here.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "the font loads when I debug it but it even can't show the letters it just shows empty boxes",
+        "source": "issue body",
+        "interpretation": "The typeface object is non-null on Android, so FromStream does not return null — the issue is that the loaded typeface has no usable glyph data or is incorrectly linked to the font file."
+      },
+      {
+        "text": "Although in iOS there's no problem",
+        "source": "issue body",
+        "interpretation": "Clear platform divergence — same API call, same font file, different outcomes. Points to an Android-specific issue in the SKManagedStream stream conversion path or in the Android font manager backend."
+      },
+      {
+        "text": "SKTypeface.FromData works on Android, iOS and WPF",
+        "source": "comment by michaldobrodenka (contributor)",
+        "interpretation": "Skipping the SKManagedStream path by using SKData.Create(stream) + SKTypeface.FromData(data) resolves the issue, confirming the stream conversion is where the problem lies."
+      }
+    ],
+    "workarounds": [
+      "Use SKData.Create(stream) to read font bytes into native memory, then call SKTypeface.FromData(data). This bypasses the SKManagedStream path and works on Android, iOS, and WPF.",
+      "Load font as an embedded assembly resource with Assembly.GetManifestResourceStream(), then wrap in SKData.Create(stream) and call SKTypeface.FromData(data)."
+    ],
+    "nextQuestions": [
+      "Exact SkiaSharp NuGet package version — 'Latest Version' (Oct 2019) is ambiguous between 1.68.x and 2.x.",
+      "Does SKTypeface.FromStream return null or a non-null typeface on Android? The reporter implies non-null but shows empty boxes.",
+      "What does the complete text drawing code look like — SKShaper usage, glyph run, SKCanvas.DrawText calls?",
+      "Did the reporter try the SKTypeface.FromData workaround, and if so, did it resolve the empty-boxes issue?"
+    ],
+    "resolution": {
+      "hypothesis": "SKTypeface.FromStream on Android goes through SKManagedStream.ToMemoryStream() which may have produced a broken or empty font stream on older SkiaSharp versions, while SKTypeface.FromData (using native SKData memory directly) works reliably across platforms.",
+      "proposals": [
+        {
+          "title": "Use SKTypeface.FromData instead of SKTypeface.FromStream",
+          "description": "Load font bytes into native SKData first using SKData.Create(stream), then create the typeface with SKTypeface.FromData(data). This bypasses the managed stream conversion and is confirmed to work on Android, iOS, and WPF.",
+          "category": "workaround",
+          "codeSnippet": "SKTypeface IAssetHelper.GetCustomFont(string name)\n{\n    using (var asset = Plugin.CurrentActivity.CrossCurrentActivity.Current.Activity.Assets.Open(name))\n    using (var data = SKData.Create(asset))\n    {\n        return SKTypeface.FromData(data);\n    }\n}",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use SKTypeface.FromData instead of SKTypeface.FromStream",
+      "recommendedReason": "Confirmed working by a contributor in the issue thread. Requires only a small code change and uses a more direct code path that avoids the managed stream conversion entirely."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.75,
+      "reason": "The SkiaSharp version is unspecified, the complete drawing code is not shown, and there is no confirmation from the reporter that the SKTypeface.FromData workaround resolved the issue. These are needed to determine if the bug is still reproducible in current versions or if it was already fixed.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Exact SkiaSharp NuGet package version number (not 'Latest Version')",
+      "Whether SKTypeface.FromStream returns null or a non-null object on Android",
+      "Complete text rendering code (SKShaper / HarfBuzz buffer usage and SKCanvas drawing calls)",
+      "Confirmation of whether SKTypeface.FromData resolves the empty-boxes issue"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, and os/Android labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Android"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Share the FromData workaround and request version/drawing code",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report!\n\nA confirmed workaround for loading fonts from Android Assets is to use `SKTypeface.FromData` instead of `SKTypeface.FromStream`. Load the font bytes into a native `SKData` first:\n\n```csharp\nSKTypeface IAssetHelper.GetCustomFont(string name)\n{\n    using (var asset = activity.Assets.Open(name))\n    using (var data = SKData.Create(asset))\n    {\n        return SKTypeface.FromData(data);\n    }\n}\n```\n\nThis approach works on Android, iOS, and WPF because it bypasses the managed-stream conversion path.\n\nCould you try this and confirm whether it resolves the empty-boxes issue? Also, could you provide:\n1. The exact SkiaSharp NuGet version you are using\n2. Whether `SKTypeface.FromStream` returns `null` or a non-null object on Android\n3. Your complete text-drawing code (how you use the typeface with HarfBuzz/SKShaper and `SKCanvas`)"
+      }
+    ]
+  }
+}
+```
+
+</details>

@@ -1,0 +1,348 @@
+# Issue Triage Report — #2002
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T05:30:45Z |
+| Type | type/bug (0.92 (92%)) |
+| Area | area/SkiaSharp.Views (0.90 (90%)) |
+| Suggested action | needs-investigation (0.85 (85%)) |
+
+**Issue Summary:** Creating SkiaSharp objects (e.g. SKFont, SKTypeface) inside a custom control's constructor that inherits from SKControl throws DllNotFoundException (unable to load libSkiaSharp) in Visual Studio design mode for .NET Framework projects.
+
+**Analysis:** SKControl.cs guards OnPaint() with a DesignMode check, but provides no protection for SkiaSharp object construction in derived control constructors. The WinForms DesignMode property is unreliable in constructors (Site is set after construction), so users cannot guard native calls themselves. The EnvironmentExtensions.IsValidEnvironment pattern used on other platforms (catch DllNotFoundException from a probe call) is absent from the WinForms implementation, and the native libSkiaSharp.dll is not on the probing path in the VS designer process for .NET Framework projects.
+
+**Recommendations:** **needs-investigation** — Real bug with complete repro project. The constructor design-mode gap in SKControl is clear from source inspection. Needs a fix in the Windows Forms views package.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a Windows Forms .NET Framework project
+2. Add SkiaSharp.Views.WindowsForms package (2.80.3)
+3. Create a custom control inheriting from SKControl that instantiates SKFont/SKTypeface in its constructor
+4. Drop the custom control onto a form in Visual Studio designer
+5. Observe DllNotFoundException: Unable to load library 'libSkiaSharp'
+
+**Environment:** Visual Studio 2022 17.2.0 Preview 2.1, .NET Framework, Windows 10, SkiaSharp 2.80.3
+
+**Related issues:** #2033
+
+**Repository links:**
+- https://github.com/jonchardy/SkiaSharpDesignModeRepro — Minimal repro project by the reporter
+- https://github.com/mono/SkiaSharp/issues/2033 — Related issue: WinForms designer crashes for multi-target projects (same author, same root cause)
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | exception |
+| Error message | DllNotFoundException: Unable to load library 'libSkiaSharp' in Visual Studio Design Mode |
+| Repro quality | complete |
+| Target frameworks | net462 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | SKControl.cs has not gained a design-mode guard in the constructor since this was filed; the DesignMode check is only in OnPaint. |
+
+## Analysis
+
+### Technical Summary
+
+SKControl.cs guards OnPaint() with a DesignMode check, but provides no protection for SkiaSharp object construction in derived control constructors. The WinForms DesignMode property is unreliable in constructors (Site is set after construction), so users cannot guard native calls themselves. The EnvironmentExtensions.IsValidEnvironment pattern used on other platforms (catch DllNotFoundException from a probe call) is absent from the WinForms implementation, and the native libSkiaSharp.dll is not on the probing path in the VS designer process for .NET Framework projects.
+
+### Rationale
+
+This is a real bug because the public base class (SKControl) gives no mechanism for subclass constructors to detect design mode before calling native SkiaSharp APIs. The DesignMode property is documented to be unreliable in constructors. Other SkiaSharp view implementations (iOS, macOS) use EnvironmentExtensions.IsValidEnvironment to probe native availability — the Windows Forms control lacks an equivalent. Reporter provides a minimal repro repo, the reproduction steps are clear, and a related sibling issue #2033 confirms the pattern.
+
+### Key Signals
+
+- "An exception is thrown when dropping the custom control onto a form in .NET Framework." — **issue body** (Design-time instantiation triggers native library load which fails in the VS designer process for .NET Framework.)
+- "This only seems to apply to .NET Framework projects." — **issue body** (The .NET Framework designer runs a different process/probing path than .NET (modern) — native assets are not found.)
+- "SKControl.cs line 28: if (DesignMode) return;" — **source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs:28** (Design mode is only guarded in OnPaint, not in the constructor or at native library load time.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs` | 15-29 | direct | SKControl constructor does not check DesignMode or probe native library availability. The DesignMode guard exists only in OnPaint(). Derived control constructors have no reliable way to detect design mode before calling SkiaSharp APIs. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Shared/Extensions.cs` | 7-26 | related | EnvironmentExtensions.IsValidEnvironment probes native availability via SKPMColor.PreMultiply(), catching DllNotFoundException. This pattern is used by iOS/macOS view implementations but is not available in the Windows Forms package. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs` | 59-59 | related | iOS SKCanvasView sets designMode using both Site?.DesignMode and !EnvironmentExtensions.IsValidEnvironment — a dual guard that WinForms SKControl lacks. |
+
+### Workarounds
+
+- Use LicenseManager.UsageMode == LicenseUsageMode.Designtime (from System.ComponentModel) to detect design mode in constructors — this works where DesignMode does not.
+- Use lazy initialization: defer SKFont/SKTypeface construction to OnHandleCreated or first OnPaintSurface call, after verifying not in design mode.
+- Wrap SkiaSharp constructor calls in a try/catch for DllNotFoundException and suppress the exception in design mode.
+
+### Next Questions
+
+- Does the same failure occur in modern .NET (net6.0-windows) projects or only .NET Framework?
+- Is the related issue #2033 (multi-target) the same root cause or a different designer loading failure?
+
+### Resolution Proposals
+
+**Hypothesis:** Add design-mode detection to SKControl (and SKGLControl) that mirrors the iOS/macOS EnvironmentExtensions pattern — probe native library availability in the constructor and expose a protected IsDesignMode property that subclasses can use to guard SkiaSharp object creation.
+
+1. **Expose IsDesignMode helper in SKControl** — fix, confidence 0.75 (75%), cost/s, validated=untested
+   - Add a protected static bool IsInDesignMode property to SKControl using LicenseManager.UsageMode check, so subclass constructors can guard SkiaSharp instantiation. Document it in XML docs.
+2. **Lazy-initialization workaround for library authors** — workaround, confidence 0.90 (90%), cost/xs, validated=untested
+   - Document the LicenseManager.UsageMode pattern as the recommended guard for constructor-time SkiaSharp usage in Windows Forms design mode. Add to SkiaSharp Views docs.
+
+**Recommended proposal:** Expose IsDesignMode helper in SKControl
+
+**Why:** Fixes the root cause for library authors without requiring them to know the LicenseManager workaround. Low effort and non-breaking.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.85 (85%) |
+| Reason | Real bug with complete repro project. The constructor design-mode gap in SKControl is clear from source inspection. Needs a fix in the Windows Forms views package. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, views, and windows-classic labels | labels=type/bug, area/SkiaSharp.Views, os/Windows-Classic, tenet/compatibility |
+| add-comment | medium | 0.88 (88%) | Acknowledge the bug and provide workaround using LicenseManager.UsageMode | — |
+| link-related | low | 0.90 (90%) | Cross-reference related designer crash issue #2033 | linkedIssue=#2033 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed repro! This is a known limitation of the Windows Forms `DesignMode` property — it is only reliable after the control's `Site` is set, which happens *after* the constructor runs. So `if (DesignMode) return;` in the constructor doesn't protect against this.
+
+**Workaround:** Use `System.ComponentModel.LicenseManager.UsageMode` instead, which is constructor-safe:
+
+```csharp
+using System.ComponentModel;
+
+public MyCustomControl()
+{
+    InitializeComponent();
+
+    if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)
+    {
+        myFont = new SKFont
+        {
+            Typeface = SKTypeface.FromFamilyName("Segoe UI"),
+            Subpixel = true
+        };
+    }
+}
+```
+
+Alternatively, you can lazily initialize `myFont` on the first `OnPaintSurface` call (skipping when `DesignMode` is true) to avoid any native calls at construction time.
+
+A longer-term fix would be to expose a constructor-safe `IsDesignMode` helper in `SKControl` itself. Related issue: #2033.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2002,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T05:30:45Z"
+  },
+  "summary": "Creating SkiaSharp objects (e.g. SKFont, SKTypeface) inside a custom control's constructor that inherits from SKControl throws DllNotFoundException (unable to load libSkiaSharp) in Visual Studio design mode for .NET Framework projects.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "DllNotFoundException: Unable to load library 'libSkiaSharp' in Visual Studio Design Mode",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net462"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Windows Forms .NET Framework project",
+        "Add SkiaSharp.Views.WindowsForms package (2.80.3)",
+        "Create a custom control inheriting from SKControl that instantiates SKFont/SKTypeface in its constructor",
+        "Drop the custom control onto a form in Visual Studio designer",
+        "Observe DllNotFoundException: Unable to load library 'libSkiaSharp'"
+      ],
+      "environmentDetails": "Visual Studio 2022 17.2.0 Preview 2.1, .NET Framework, Windows 10, SkiaSharp 2.80.3",
+      "repoLinks": [
+        {
+          "url": "https://github.com/jonchardy/SkiaSharpDesignModeRepro",
+          "description": "Minimal repro project by the reporter"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2033",
+          "description": "Related issue: WinForms designer crashes for multi-target projects (same author, same root cause)"
+        }
+      ],
+      "relatedIssues": [
+        2033
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKControl.cs has not gained a design-mode guard in the constructor since this was filed; the DesignMode check is only in OnPaint."
+    }
+  },
+  "analysis": {
+    "summary": "SKControl.cs guards OnPaint() with a DesignMode check, but provides no protection for SkiaSharp object construction in derived control constructors. The WinForms DesignMode property is unreliable in constructors (Site is set after construction), so users cannot guard native calls themselves. The EnvironmentExtensions.IsValidEnvironment pattern used on other platforms (catch DllNotFoundException from a probe call) is absent from the WinForms implementation, and the native libSkiaSharp.dll is not on the probing path in the VS designer process for .NET Framework projects.",
+    "rationale": "This is a real bug because the public base class (SKControl) gives no mechanism for subclass constructors to detect design mode before calling native SkiaSharp APIs. The DesignMode property is documented to be unreliable in constructors. Other SkiaSharp view implementations (iOS, macOS) use EnvironmentExtensions.IsValidEnvironment to probe native availability — the Windows Forms control lacks an equivalent. Reporter provides a minimal repro repo, the reproduction steps are clear, and a related sibling issue #2033 confirms the pattern.",
+    "keySignals": [
+      {
+        "text": "An exception is thrown when dropping the custom control onto a form in .NET Framework.",
+        "source": "issue body",
+        "interpretation": "Design-time instantiation triggers native library load which fails in the VS designer process for .NET Framework."
+      },
+      {
+        "text": "This only seems to apply to .NET Framework projects.",
+        "source": "issue body",
+        "interpretation": "The .NET Framework designer runs a different process/probing path than .NET (modern) — native assets are not found."
+      },
+      {
+        "text": "SKControl.cs line 28: if (DesignMode) return;",
+        "source": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs:28",
+        "interpretation": "Design mode is only guarded in OnPaint, not in the constructor or at native library load time."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+        "lines": "15-29",
+        "finding": "SKControl constructor does not check DesignMode or probe native library availability. The DesignMode guard exists only in OnPaint(). Derived control constructors have no reliable way to detect design mode before calling SkiaSharp APIs.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Shared/Extensions.cs",
+        "lines": "7-26",
+        "finding": "EnvironmentExtensions.IsValidEnvironment probes native availability via SKPMColor.PreMultiply(), catching DllNotFoundException. This pattern is used by iOS/macOS view implementations but is not available in the Windows Forms package.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs",
+        "lines": "59-59",
+        "finding": "iOS SKCanvasView sets designMode using both Site?.DesignMode and !EnvironmentExtensions.IsValidEnvironment — a dual guard that WinForms SKControl lacks.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use LicenseManager.UsageMode == LicenseUsageMode.Designtime (from System.ComponentModel) to detect design mode in constructors — this works where DesignMode does not.",
+      "Use lazy initialization: defer SKFont/SKTypeface construction to OnHandleCreated or first OnPaintSurface call, after verifying not in design mode.",
+      "Wrap SkiaSharp constructor calls in a try/catch for DllNotFoundException and suppress the exception in design mode."
+    ],
+    "nextQuestions": [
+      "Does the same failure occur in modern .NET (net6.0-windows) projects or only .NET Framework?",
+      "Is the related issue #2033 (multi-target) the same root cause or a different designer loading failure?"
+    ],
+    "resolution": {
+      "hypothesis": "Add design-mode detection to SKControl (and SKGLControl) that mirrors the iOS/macOS EnvironmentExtensions pattern — probe native library availability in the constructor and expose a protected IsDesignMode property that subclasses can use to guard SkiaSharp object creation.",
+      "proposals": [
+        {
+          "title": "Expose IsDesignMode helper in SKControl",
+          "description": "Add a protected static bool IsInDesignMode property to SKControl using LicenseManager.UsageMode check, so subclass constructors can guard SkiaSharp instantiation. Document it in XML docs.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Lazy-initialization workaround for library authors",
+          "description": "Document the LicenseManager.UsageMode pattern as the recommended guard for constructor-time SkiaSharp usage in Windows Forms design mode. Add to SkiaSharp Views docs.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Expose IsDesignMode helper in SKControl",
+      "recommendedReason": "Fixes the root cause for library authors without requiring them to know the LicenseManager workaround. Low effort and non-breaking."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Real bug with complete repro project. The constructor design-mode gap in SKControl is clear from source inspection. Needs a fix in the Windows Forms views package.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, and windows-classic labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug and provide workaround using LicenseManager.UsageMode",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed repro! This is a known limitation of the Windows Forms `DesignMode` property — it is only reliable after the control's `Site` is set, which happens *after* the constructor runs. So `if (DesignMode) return;` in the constructor doesn't protect against this.\n\n**Workaround:** Use `System.ComponentModel.LicenseManager.UsageMode` instead, which is constructor-safe:\n\n```csharp\nusing System.ComponentModel;\n\npublic MyCustomControl()\n{\n    InitializeComponent();\n\n    if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)\n    {\n        myFont = new SKFont\n        {\n            Typeface = SKTypeface.FromFamilyName(\"Segoe UI\"),\n            Subpixel = true\n        };\n    }\n}\n```\n\nAlternatively, you can lazily initialize `myFont` on the first `OnPaintSurface` call (skipping when `DesignMode` is true) to avoid any native calls at construction time.\n\nA longer-term fix would be to expose a constructor-safe `IsDesignMode` helper in `SKControl` itself. Related issue: #2033."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related designer crash issue #2033",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 2033
+      }
+    ]
+  }
+}
+```
+
+</details>

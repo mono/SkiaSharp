@@ -1,0 +1,328 @@
+# Issue Triage Report — #1065
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T09:49:00Z |
+| Type | type/feature-request (0.97 (97%)) |
+| Area | area/SkiaSharp.Views.Forms (0.90 (90%)) |
+| Suggested action | close-as-fixed (0.85 (85%)) |
+
+**Issue Summary:** Maintainer-filed feature request to split the SkiaSharp.Views.Forms DLL into a shared assembly and a platform-specific assembly, in order to avoid the conflict between the WPF package (issue #1011) and the netstandard-only usage (issue #1047).
+
+**Analysis:** Maintainer-filed tracking issue requesting that SkiaSharp.Views.Forms be restructured from a single assembly into two: one shared (netstandard) assembly containing the common types and one platform-specific assembly containing the renderers. This was needed to resolve a conflict between the WPF package fix (#1011/#1012) and the netstandard-only usage (#1047). The new SkiaSharp.Views.Maui packages introduced in 3.x already implement this exact split (Core + Controls).
+
+**Recommendations:** **close-as-fixed** — The requested dual-assembly split was implemented in SkiaSharp.Views.Maui (SkiaSharp.Views.Maui.Core + SkiaSharp.Views.Maui.Controls) shipped in 3.x. The original SkiaSharp.Views.Forms package is retired at 2.88.9 and is no longer being developed.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/SkiaSharp.Views.Forms |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Use SkiaSharp.Views.Forms with a platform-specific package (e.g. WPF) — see #1011 for how it crashes
+2. Move netstandard dll to ref-only as done in #1012 — fixes #1011 but breaks netstandard-only usage (#1047)
+3. The two requirements (shared bits + platform bits) conflict when stored in a single assembly
+
+**Environment:** Xamarin.Forms cross-platform app requiring both shared and platform-specific rendering
+
+**Related issues:** #1011, #1047, #1089
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1011 — WPF package crashes because SkiaSharp.Views.Forms provides conflicting netstandard DLL
+- https://github.com/mono/SkiaSharp/issues/1047 — Regression: SkiaSharp.Views.Forms stopped providing netstandard binaries after fix for #1011
+- https://github.com/mono/SkiaSharp/issues/1089 — PR adding GTK views for Forms; partially addressed the problem by adding GTK support
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 1.68.1, 1.68.2 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unlikely |
+| Relevance reason | The SkiaSharp.Views.Forms package was superseded by SkiaSharp.Views.Maui (3.x), which already implements the exact split requested: SkiaSharp.Views.Maui.Core (shared) + SkiaSharp.Views.Maui.Controls (platform-specific). The Forms package stopped at 2.88.9. |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | True |
+| Confidence | 0.88 (88%) |
+| Reason | The SkiaSharp.Views.Maui architecture (introduced in 3.x) implements the requested split: SkiaSharp.Views.Maui.Core contains shared types and SkiaSharp.Views.Maui.Controls contains platform handlers. SkiaSharp.Views.Forms was not updated to this pattern but is no longer maintained. |
+| Related PRs | — |
+| Related commits | — |
+| Fixed in version | 3.0.0 |
+
+## Analysis
+
+### Technical Summary
+
+Maintainer-filed tracking issue requesting that SkiaSharp.Views.Forms be restructured from a single assembly into two: one shared (netstandard) assembly containing the common types and one platform-specific assembly containing the renderers. This was needed to resolve a conflict between the WPF package fix (#1011/#1012) and the netstandard-only usage (#1047). The new SkiaSharp.Views.Maui packages introduced in 3.x already implement this exact split (Core + Controls).
+
+### Rationale
+
+This is a maintainer-initiated feature request with clear technical motivation. The request was explicitly deferred from v1.68.2. Code investigation confirms that SkiaSharp.Views.Forms no longer exists as an active project (last release 2.88.9); it has been superseded by SkiaSharp.Views.Maui, which already provides the split architecture requested here. The original problem is therefore solved in the new generation of packages.
+
+### Key Signals
+
+- "Moving this out of v1.68.2 as this is a bit more work (because the code was designed to be in a single dll) and it not particularly necessary at the moment with the bits in #1089" — **comment by mattleibow** (Maintainer deferred it; partial mitigation via GTK PR was deemed sufficient for the time.)
+- "we need 2 assemblies - 1 for the shared bits and 1 for the platform bits" — **issue body** (Exact split requested is now implemented in SkiaSharp.Views.Maui.Core (shared) + SkiaSharp.Views.Maui.Controls (platform).)
+- "Although this may seem like a smaller issue, the code was originally designed to be a single dll" — **issue body** (Acknowledged complexity, but the rewrite for MAUI resolved this by design.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SkiaSharp.Views.Maui.Core.csproj` | — | direct | SkiaSharp.Views.Maui.Core is the 'shared bits' assembly: contains ISKCanvasView, ISKGLView, SKPaintSurfaceEventArgs, etc. targeting MauiTargetFrameworks. This is exactly the shared assembly the issue requested. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SkiaSharp.Views.Maui.Controls.csproj` | — | direct | SkiaSharp.Views.Maui.Controls is the 'platform bits' assembly: has a ProjectReference to SkiaSharp.Views.Maui.Core and includes platform-specific handler files (iOS, Android, Windows, Tizen). This is the platform assembly the issue requested. |
+| `changelogs/SkiaSharp.Views.Forms/` | — | related | SkiaSharp.Views.Forms changelog ends at 2.88.9 — no further releases. The package was not split; instead it was retired when MAUI packages were introduced. |
+| `changelogs/SkiaSharp.Views.Maui.Controls/` | — | related | SkiaSharp.Views.Maui.Controls changelog starts from 3.x and exists alongside SkiaSharp.Views.Maui.Core, confirming the split-package architecture was shipped in the 3.x generation. |
+
+### Workarounds
+
+- Migrate from SkiaSharp.Views.Forms to SkiaSharp.Views.Maui.Controls (requires upgrading from Xamarin.Forms to .NET MAUI). SkiaSharp.Views.Maui already implements the dual-assembly split.
+- For projects that cannot migrate to MAUI: remain on SkiaSharp 2.88.x and use explicit ExcludeAssets on conflicting packages (workaround documented in #1011).
+
+### Next Questions
+
+- Should this issue be closed as superseded by the MAUI packages, or kept open as a historical tracking issue?
+- Is there still any active user base depending on SkiaSharp.Views.Forms that would benefit from a backported split?
+
+### Resolution Proposals
+
+**Hypothesis:** The requested dual-assembly architecture was implemented in the SkiaSharp.Views.Maui generation (3.x). The original Xamarin.Forms package was retired rather than restructured.
+
+1. **Close as superseded by SkiaSharp.Views.Maui** — alternative, confidence 0.88 (88%), cost/xs, validated=untested
+   - Close this issue noting that SkiaSharp.Views.Maui.Core + SkiaSharp.Views.Maui.Controls implement the exact split requested. SkiaSharp.Views.Forms is no longer maintained.
+2. **Migrate to SkiaSharp.Views.Maui** — workaround, confidence 0.90 (90%), cost/m, validated=untested
+   - Users experiencing the original conflict should migrate from Xamarin.Forms to .NET MAUI and use SkiaSharp.Views.Maui.Controls (platform) + SkiaSharp.Views.Maui.Core (shared).
+
+**Recommended proposal:** Close as superseded by SkiaSharp.Views.Maui
+
+**Why:** The problem this issue tracks was architecturally solved in the 3.x MAUI packages. SkiaSharp.Views.Forms is no longer maintained and will not receive a backport.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-fixed |
+| Confidence | 0.85 (85%) |
+| Reason | The requested dual-assembly split was implemented in SkiaSharp.Views.Maui (SkiaSharp.Views.Maui.Core + SkiaSharp.Views.Maui.Controls) shipped in 3.x. The original SkiaSharp.Views.Forms package is retired at 2.88.9 and is no longer being developed. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply feature-request, Views.Forms area, and compatibility tenet labels | labels=type/feature-request, area/SkiaSharp.Views.Forms, tenet/compatibility |
+| add-comment | high | 0.85 (85%) | Post a comment explaining the issue is superseded by SkiaSharp.Views.Maui | — |
+| close-issue | medium | 0.85 (85%) | Close the issue as the architecture was implemented in SkiaSharp.Views.Maui | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+This feature request has been superseded by the .NET MAUI generation of SkiaSharp Views packages introduced in SkiaSharp 3.x. The architecture you described — one shared assembly and one platform assembly — is exactly what we implemented:
+
+- **`SkiaSharp.Views.Maui.Core`** — shared types (interfaces, event args, etc.)
+- **`SkiaSharp.Views.Maui.Controls`** — platform-specific handlers (Android, iOS, Windows, Tizen)
+
+`SkiaSharp.Views.Forms` (Xamarin.Forms) is no longer maintained (last release: 2.88.9). To get the split-assembly architecture, please migrate to .NET MAUI and use the `SkiaSharp.Views.Maui.Controls` package.
+
+Closing as fixed in the MAUI generation.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1065,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T09:49:00Z"
+  },
+  "summary": "Maintainer-filed feature request to split the SkiaSharp.Views.Forms DLL into a shared assembly and a platform-specific assembly, in order to avoid the conflict between the WPF package (issue #1011) and the netstandard-only usage (issue #1047).",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Forms",
+      "confidence": 0.9
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SkiaSharp.Views.Forms with a platform-specific package (e.g. WPF) — see #1011 for how it crashes",
+        "Move netstandard dll to ref-only as done in #1012 — fixes #1011 but breaks netstandard-only usage (#1047)",
+        "The two requirements (shared bits + platform bits) conflict when stored in a single assembly"
+      ],
+      "environmentDetails": "Xamarin.Forms cross-platform app requiring both shared and platform-specific rendering",
+      "relatedIssues": [
+        1011,
+        1047,
+        1089
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1011",
+          "description": "WPF package crashes because SkiaSharp.Views.Forms provides conflicting netstandard DLL"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1047",
+          "description": "Regression: SkiaSharp.Views.Forms stopped providing netstandard binaries after fix for #1011"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1089",
+          "description": "PR adding GTK views for Forms; partially addressed the problem by adding GTK support"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.1",
+        "1.68.2"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The SkiaSharp.Views.Forms package was superseded by SkiaSharp.Views.Maui (3.x), which already implements the exact split requested: SkiaSharp.Views.Maui.Core (shared) + SkiaSharp.Views.Maui.Controls (platform-specific). The Forms package stopped at 2.88.9."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.88,
+      "reason": "The SkiaSharp.Views.Maui architecture (introduced in 3.x) implements the requested split: SkiaSharp.Views.Maui.Core contains shared types and SkiaSharp.Views.Maui.Controls contains platform handlers. SkiaSharp.Views.Forms was not updated to this pattern but is no longer maintained.",
+      "fixedInVersion": "3.0.0"
+    }
+  },
+  "analysis": {
+    "summary": "Maintainer-filed tracking issue requesting that SkiaSharp.Views.Forms be restructured from a single assembly into two: one shared (netstandard) assembly containing the common types and one platform-specific assembly containing the renderers. This was needed to resolve a conflict between the WPF package fix (#1011/#1012) and the netstandard-only usage (#1047). The new SkiaSharp.Views.Maui packages introduced in 3.x already implement this exact split (Core + Controls).",
+    "rationale": "This is a maintainer-initiated feature request with clear technical motivation. The request was explicitly deferred from v1.68.2. Code investigation confirms that SkiaSharp.Views.Forms no longer exists as an active project (last release 2.88.9); it has been superseded by SkiaSharp.Views.Maui, which already provides the split architecture requested here. The original problem is therefore solved in the new generation of packages.",
+    "keySignals": [
+      {
+        "text": "Moving this out of v1.68.2 as this is a bit more work (because the code was designed to be in a single dll) and it not particularly necessary at the moment with the bits in #1089",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer deferred it; partial mitigation via GTK PR was deemed sufficient for the time."
+      },
+      {
+        "text": "we need 2 assemblies - 1 for the shared bits and 1 for the platform bits",
+        "source": "issue body",
+        "interpretation": "Exact split requested is now implemented in SkiaSharp.Views.Maui.Core (shared) + SkiaSharp.Views.Maui.Controls (platform)."
+      },
+      {
+        "text": "Although this may seem like a smaller issue, the code was originally designed to be a single dll",
+        "source": "issue body",
+        "interpretation": "Acknowledged complexity, but the rewrite for MAUI resolved this by design."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SkiaSharp.Views.Maui.Core.csproj",
+        "finding": "SkiaSharp.Views.Maui.Core is the 'shared bits' assembly: contains ISKCanvasView, ISKGLView, SKPaintSurfaceEventArgs, etc. targeting MauiTargetFrameworks. This is exactly the shared assembly the issue requested.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SkiaSharp.Views.Maui.Controls.csproj",
+        "finding": "SkiaSharp.Views.Maui.Controls is the 'platform bits' assembly: has a ProjectReference to SkiaSharp.Views.Maui.Core and includes platform-specific handler files (iOS, Android, Windows, Tizen). This is the platform assembly the issue requested.",
+        "relevance": "direct"
+      },
+      {
+        "file": "changelogs/SkiaSharp.Views.Forms/",
+        "finding": "SkiaSharp.Views.Forms changelog ends at 2.88.9 — no further releases. The package was not split; instead it was retired when MAUI packages were introduced.",
+        "relevance": "related"
+      },
+      {
+        "file": "changelogs/SkiaSharp.Views.Maui.Controls/",
+        "finding": "SkiaSharp.Views.Maui.Controls changelog starts from 3.x and exists alongside SkiaSharp.Views.Maui.Core, confirming the split-package architecture was shipped in the 3.x generation.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Migrate from SkiaSharp.Views.Forms to SkiaSharp.Views.Maui.Controls (requires upgrading from Xamarin.Forms to .NET MAUI). SkiaSharp.Views.Maui already implements the dual-assembly split.",
+      "For projects that cannot migrate to MAUI: remain on SkiaSharp 2.88.x and use explicit ExcludeAssets on conflicting packages (workaround documented in #1011)."
+    ],
+    "nextQuestions": [
+      "Should this issue be closed as superseded by the MAUI packages, or kept open as a historical tracking issue?",
+      "Is there still any active user base depending on SkiaSharp.Views.Forms that would benefit from a backported split?"
+    ],
+    "resolution": {
+      "hypothesis": "The requested dual-assembly architecture was implemented in the SkiaSharp.Views.Maui generation (3.x). The original Xamarin.Forms package was retired rather than restructured.",
+      "proposals": [
+        {
+          "title": "Close as superseded by SkiaSharp.Views.Maui",
+          "description": "Close this issue noting that SkiaSharp.Views.Maui.Core + SkiaSharp.Views.Maui.Controls implement the exact split requested. SkiaSharp.Views.Forms is no longer maintained.",
+          "category": "alternative",
+          "confidence": 0.88,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Migrate to SkiaSharp.Views.Maui",
+          "description": "Users experiencing the original conflict should migrate from Xamarin.Forms to .NET MAUI and use SkiaSharp.Views.Maui.Controls (platform) + SkiaSharp.Views.Maui.Core (shared).",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Close as superseded by SkiaSharp.Views.Maui",
+      "recommendedReason": "The problem this issue tracks was architecturally solved in the 3.x MAUI packages. SkiaSharp.Views.Forms is no longer maintained and will not receive a backport."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.85,
+      "reason": "The requested dual-assembly split was implemented in SkiaSharp.Views.Maui (SkiaSharp.Views.Maui.Core + SkiaSharp.Views.Maui.Controls) shipped in 3.x. The original SkiaSharp.Views.Forms package is retired at 2.88.9 and is no longer being developed.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request, Views.Forms area, and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp.Views.Forms",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post a comment explaining the issue is superseded by SkiaSharp.Views.Maui",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "This feature request has been superseded by the .NET MAUI generation of SkiaSharp Views packages introduced in SkiaSharp 3.x. The architecture you described — one shared assembly and one platform assembly — is exactly what we implemented:\n\n- **`SkiaSharp.Views.Maui.Core`** — shared types (interfaces, event args, etc.)\n- **`SkiaSharp.Views.Maui.Controls`** — platform-specific handlers (Android, iOS, Windows, Tizen)\n\n`SkiaSharp.Views.Forms` (Xamarin.Forms) is no longer maintained (last release: 2.88.9). To get the split-assembly architecture, please migrate to .NET MAUI and use the `SkiaSharp.Views.Maui.Controls` package.\n\nClosing as fixed in the MAUI generation."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close the issue as the architecture was implemented in SkiaSharp.Views.Maui",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>

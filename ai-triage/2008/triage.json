@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2008,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T06:22:00Z"
+  },
+  "summary": "Setting SKPaint.IsAntialias = true in version 2.88.0-preview.187 triggered GetFont() and UpdateFontEdging(), which lazily allocated a ConcurrentDictionary via OwnedObjects \u2014 making SKPaint construction unexpectedly expensive when IsAntialias is set.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "performance",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0-windows10"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a new SKPaint with IsAntialias = true",
+        "Observe that GetFont() is called, which calls OwnedBy(), which lazily allocates a ConcurrentDictionary"
+      ],
+      "environmentDetails": "VS2022, Windows Classic 10, SkiaSharp 2.88.0-preview.187"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.0-preview.187",
+        "2.80.3"
+      ],
+      "workedIn": "2.80.3",
+      "brokeIn": "2.88.0-preview.187",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Current SKPaint.IsAntialias setter calls sk_compatpaint_set_is_antialias directly without invoking GetFont() or UpdateFontEdging(). The dedicated C API was added to handle this case efficiently."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.8,
+      "reason": "Reporter explicitly states this was introduced by PR #1802. The IsAntialias code path changed to route through font update logic.",
+      "workedInVersion": "2.80.3",
+      "brokeInVersion": "2.88.0-preview.187"
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.8,
+      "reason": "Current SKPaint.cs line 107 shows IsAntialias setter calls SkiaApi.sk_compatpaint_set_is_antialias(Handle, value) directly \u2014 no GetFont() call in this path. The dedicated sk_compatpaint_set_is_antialias C API function was added to handle this cleanly."
+    }
+  },
+  "analysis": {
+    "summary": "Setting SKPaint.IsAntialias triggered a GetFont() \u2192 OwnedBy() \u2192 OwnedObjects chain that lazily allocated a ConcurrentDictionary in SKObject. The current code addresses this with sk_compatpaint_set_is_antialias which bypasses the font update path entirely.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "105-108",
+        "finding": "IsAntialias setter now calls SkiaApi.sk_compatpaint_set_is_antialias(Handle, value) directly \u2014 no GetFont() or font edging update in the current code path",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "885-886",
+        "finding": "GetFont() lazily wraps sk_compatpaint_get_font result via OwnedBy(), which accesses OwnedObjects (ConcurrentDictionary). This is still called from many deprecated property accessors but NOT from IsAntialias",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "14-26",
+        "finding": "OwnedObjects is a lazily-initialized ConcurrentDictionary<IntPtr, SKObject>. First access allocates the dictionary, confirming the allocation concern described in the issue",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Since #1802 setting `IsAntiAlias` causes `UpdateFontEdging()` & `GetFont()` to be called, which might allocate a `ConcurrentDictionary`",
+        "source": "issue body",
+        "interpretation": "Performance regression introduced by PR #1802 \u2014 IsAntialias was routed through font update logic unnecessarily"
+      },
+      {
+        "text": "This is a fairly significant overhead if we just want to use the SKPaint for drawing antialiased lines/paths",
+        "source": "issue body",
+        "interpretation": "Reporter uses SKPaint for non-text drawing \u2014 font properties are irrelevant, so the font update is wasted work"
+      }
+    ],
+    "rationale": "This is a genuine performance regression introduced in PR #1802 where IsAntialias setter triggered GetFont()/UpdateFontEdging() resulting in ConcurrentDictionary allocation. Code inspection of the current codebase shows IsAntialias setter now calls sk_compatpaint_set_is_antialias directly, bypassing the font path. The issue appears fixed in the current version, though no explicit version number can be confirmed due to shallow git history.",
+    "workarounds": [
+      "Cache and reuse SKPaint instances instead of creating new ones each frame",
+      "Upgrade to the latest SkiaSharp version which uses sk_compatpaint_set_is_antialias for IsAntialias"
+    ],
+    "nextQuestions": [
+      "Which version introduced the sk_compatpaint_set_is_antialias fix?",
+      "Is there still measurable overhead from ConcurrentDictionary allocation in other SKPaint property setters?"
+    ],
+    "resolution": {
+      "hypothesis": "The dedicated sk_compatpaint_set_is_antialias C API was added to handle the antialias property without going through the font edging update path, fixing the performance regression.",
+      "proposals": [
+        {
+          "title": "Close as fixed",
+          "description": "The current code in SKPaint.cs routes IsAntialias through sk_compatpaint_set_is_antialias, not GetFont(). The reported regression is no longer present.",
+          "category": "fix",
+          "confidence": 0.8,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: cache SKPaint",
+          "description": "Cache SKPaint instances and reset with paint.Reset() instead of creating new ones per frame to avoid any allocation overhead.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Close as fixed",
+      "recommendedReason": "Current code path no longer calls GetFont() from IsAntialias setter. The dedicated API was added to handle this case."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.75,
+      "reason": "The specific code path reported (IsAntialias \u2192 UpdateFontEdging \u2192 GetFont \u2192 ConcurrentDictionary) no longer exists. Current SKPaint.cs uses sk_compatpaint_set_is_antialias which is a direct native call without font overhead.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area/SkiaSharp, os/Windows-Classic, tenet/performance labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter that the specific code path has been fixed in current versions",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "Thanks for reporting this! After investigating the current codebase, the specific performance issue you described (IsAntialias \u2192 UpdateFontEdging \u2192 GetFont \u2192 ConcurrentDictionary allocation) has been addressed. The `SKPaint.IsAntialias` setter now calls `sk_compatpaint_set_is_antialias` directly, bypassing the font update path entirely. Could you verify whether the issue is still present in the latest release (3.x)? If you're still seeing performance overhead, a cached `SKPaint` approach is a good workaround: create the paint once and reuse it, calling `Reset()` when needed."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed \u2014 the regression is no longer present in the current code",
+        "risk": "medium",
+        "confidence": 0.75,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
