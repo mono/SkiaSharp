@@ -1,0 +1,193 @@
+# Issue Triage Report — #3638
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-21T18:16:54Z |
+| Type | type/question (0.85 (85%)) |
+| Area | area/SkiaSharp (0.70 (70%)) |
+| Suggested action | close-as-not-a-bug (0.92 (92%)) |
+
+**Issue Summary:** Reporter warns that the third-party website skiasharp.com is infected with malware served via Cloudfront. This site has no connection to the official mono/SkiaSharp repository.
+
+**Analysis:** The reporter is alerting the community that skiasharp.com (a WordPress site not affiliated with this project) was serving malware injected from oundhertobeconsist.org via a Cloudfront CDN script. The official SkiaSharp project is hosted on GitHub at mono/SkiaSharp with documentation at docs.microsoft.com — skiasharp.com is not the official project site and is not referenced anywhere in the repository.
+
+**Recommendations:** **close-as-not-a-bug** — The issue concerns an unaffiliated third-party website (skiasharp.com), not the SkiaSharp open-source library. No code changes or library investigation is relevant.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** Third-party site skiasharp.com served malicious script from d33f51dyacx7bd.cloudfront.net on approximately April 2nd, 2026
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/3638 — Original issue report
+
+## Analysis
+
+### Technical Summary
+
+The reporter is alerting the community that skiasharp.com (a WordPress site not affiliated with this project) was serving malware injected from oundhertobeconsist.org via a Cloudfront CDN script. The official SkiaSharp project is hosted on GitHub at mono/SkiaSharp with documentation at docs.microsoft.com — skiasharp.com is not the official project site and is not referenced anywhere in the repository.
+
+### Rationale
+
+The issue reports malware on an unaffiliated third-party website (skiasharp.com). This has no bearing on the SkiaSharp open-source library, its code, or its official documentation. A grep of the repository confirms zero references to skiasharp.com. The action should be close-as-not-a-bug with a polite acknowledgment that the project cannot address external website issues.
+
+### Key Signals
+
+- "I dont know who runs the skiasharp.com wordpress site" — **issue body** (Reporter acknowledges this is an unknown third-party site, not the official SkiaSharp project.)
+- "infected with oundhertobeconsist.org ... served to me by cloudfront" — **issue body** (External website compromised with injected malicious JavaScript — outside SkiaSharp project scope.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `README.md` | 11-13 | context | Official documentation links point to docs.microsoft.com/dotnet/api/SkiaSharp and docs.microsoft.com/xamarin/graphics-games/skiasharp — skiasharp.com is not referenced anywhere in the README or project files |
+| `README.md` | 18-19 | context | Project is described as a .NET binding of Google's Skia library (skia.org); the project codebase contains zero references to skiasharp.com, confirming the reported site is entirely unaffiliated |
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.92 (92%) |
+| Reason | The issue concerns an unaffiliated third-party website (skiasharp.com), not the SkiaSharp open-source library. No code changes or library investigation is relevant. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply question label | labels=type/question, area/SkiaSharp |
+| add-comment | high | 0.90 (90%) | Thank reporter and explain issue is out of scope for this project | — |
+| close-issue | medium | 0.92 (92%) | Close as not a bug — out of scope for this project | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for alerting the community! Unfortunately, the GitHub issue tracker for mono/SkiaSharp is scoped to the open-source library itself and cannot address issues with third-party sites.
+
+For reference:
+- The **official SkiaSharp documentation** is at https://docs.microsoft.com/dotnet/api/SkiaSharp
+- The **official NuGet packages** are published at https://www.nuget.org/packages/SkiaSharp
+- The **source code** lives here: https://github.com/mono/SkiaSharp
+
+The site `skiasharp.com` has no affiliation with this project. If you know the owner of that site, you may want to contact them or report the malware through Google Safe Browsing (https://safebrowsing.google.com/safebrowsing/report_badware/). Closing this issue as it's outside the scope of this tracker.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3638,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T18:16:54Z"
+  },
+  "summary": "Reporter warns that the third-party website skiasharp.com is infected with malware served via Cloudfront. This site has no connection to the official mono/SkiaSharp repository.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.7
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Third-party site skiasharp.com served malicious script from d33f51dyacx7bd.cloudfront.net on approximately April 2nd, 2026",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3638",
+          "description": "Original issue report"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The reporter is alerting the community that skiasharp.com (a WordPress site not affiliated with this project) was serving malware injected from oundhertobeconsist.org via a Cloudfront CDN script. The official SkiaSharp project is hosted on GitHub at mono/SkiaSharp with documentation at docs.microsoft.com — skiasharp.com is not the official project site and is not referenced anywhere in the repository.",
+    "codeInvestigation": [
+      {
+        "file": "README.md",
+        "lines": "11-13",
+        "finding": "Official documentation links point to docs.microsoft.com/dotnet/api/SkiaSharp and docs.microsoft.com/xamarin/graphics-games/skiasharp — skiasharp.com is not referenced anywhere in the README or project files",
+        "relevance": "context"
+      },
+      {
+        "file": "README.md",
+        "lines": "18-19",
+        "finding": "Project is described as a .NET binding of Google's Skia library (skia.org); the project codebase contains zero references to skiasharp.com, confirming the reported site is entirely unaffiliated",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "I dont know who runs the skiasharp.com wordpress site",
+        "source": "issue body",
+        "interpretation": "Reporter acknowledges this is an unknown third-party site, not the official SkiaSharp project."
+      },
+      {
+        "text": "infected with oundhertobeconsist.org ... served to me by cloudfront",
+        "source": "issue body",
+        "interpretation": "External website compromised with injected malicious JavaScript — outside SkiaSharp project scope."
+      }
+    ],
+    "rationale": "The issue reports malware on an unaffiliated third-party website (skiasharp.com). This has no bearing on the SkiaSharp open-source library, its code, or its official documentation. A grep of the repository confirms zero references to skiasharp.com. The action should be close-as-not-a-bug with a polite acknowledgment that the project cannot address external website issues."
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.92,
+      "reason": "The issue concerns an unaffiliated third-party website (skiasharp.com), not the SkiaSharp open-source library. No code changes or library investigation is relevant.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question label",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Thank reporter and explain issue is out of scope for this project",
+        "risk": "high",
+        "confidence": 0.9,
+        "comment": "Thank you for alerting the community! Unfortunately, the GitHub issue tracker for mono/SkiaSharp is scoped to the open-source library itself and cannot address issues with third-party sites.\n\nFor reference:\n- The **official SkiaSharp documentation** is at https://docs.microsoft.com/dotnet/api/SkiaSharp\n- The **official NuGet packages** are published at https://www.nuget.org/packages/SkiaSharp\n- The **source code** lives here: https://github.com/mono/SkiaSharp\n\nThe site `skiasharp.com` has no affiliation with this project. If you know the owner of that site, you may want to contact them or report the malware through Google Safe Browsing (https://safebrowsing.google.com/safebrowsing/report_badware/). Closing this issue as it's outside the scope of this tracker."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug — out of scope for this project",
+        "risk": "medium",
+        "confidence": 0.92,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

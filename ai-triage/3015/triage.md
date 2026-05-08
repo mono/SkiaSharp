@@ -1,0 +1,333 @@
+# Issue Triage Report — #3015
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-21T18:16:47Z |
+| Type | type/bug (0.90 (90%)) |
+| Area | area/libSkiaSharp.native (0.88 (88%)) |
+| Suggested action | needs-info (0.80 (80%)) |
+
+**Issue Summary:** DllNotFoundException (libSkiaSharp) when using SkiaSharp in a WASI WASM Console app — SkiaSharp.NativeAssets.WebAssembly targets only handle Blazor and Uno WASM SDKs and have no condition for the wasi-wasm RuntimeIdentifier.
+
+**Analysis:** The SkiaSharp.NativeAssets.WebAssembly targets file only injects NativeFileReference items when the project uses the Blazor WebAssembly SDK (UsingMicrosoftNETSdkBlazorWebAssembly) or the standard WebAssembly SDK (UsingMicrosoftNETSdkWebAssembly), or Uno Platform (IsUnoHead). WASI apps use the standard Microsoft.NET.Sdk with RuntimeIdentifier=wasi-wasm, which matches none of those conditions, so libSkiaSharp.a is never linked into the output wasm binary, causing DllNotFoundException at runtime.
+
+**Recommendations:** **needs-info** — Reporter already tried 3.0.0-preview.4.1 (based on csproj) but the maintainer suggested testing 3.x. Need confirmation if the stable 3.x release resolves the issue, and whether the Emscripten WASM binary is ABI-compatible with WASI. Additionally the reporter hasn't confirmed the exact 3.x version tried.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/WASM |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a .NET Console project targeting net9.0 with RuntimeIdentifier=wasi-wasm
+2. Add PackageReference for SkiaSharp and SkiaSharp.NativeAssets.WebAssembly (3.0.0-preview.4.1)
+3. Enable WasmSingleFileBundle=true and PublishTrimmed=true
+4. Build and run with wasitime — observe DllNotFoundException for libSkiaSharp
+
+**Environment:** Visual Studio on Windows, .NET 9 preview 6, wasi-wasm RuntimeIdentifier
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/3016 — Related issue: similar DllNotFoundException in Unity (different platform, same symptom class)
+
+**Attachments:**
+- WasiSkiaSharpRepro.zip — https://github.com/user-attachments/files/17092944/WasiSkiaSharpRepro.zip
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | exception |
+| Error message | System.TypeInitializationException: TypeInitialization_Type, SkiaSharp.SKImageInfo --- System.DllNotFoundException: libSkiaSharp at SkiaSharp.SKImageInfo..cctor() |
+| Repro quality | complete |
+| Target frameworks | net9.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.2, 2.88.3, 3.0.0-preview.4.1 |
+| Worked in | 2.88.2 |
+| Broke in | 2.88.3 |
+| Current relevance | likely |
+| Relevance reason | The current targets file still only checks for Blazor/Uno WASM SDK conditions — no wasi-wasm RuntimeIdentifier condition exists. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.70 (70%) |
+| Reason | Reporter states last known good was 2.88.2. However, 2.88.2 may have coincidentally worked due to different .NET SDK behavior rather than explicit WASI support, making this a platform-coverage gap rather than a clean regression. |
+| Worked in version | 2.88.2 |
+| Broke in version | 2.88.3 |
+
+## Analysis
+
+### Technical Summary
+
+The SkiaSharp.NativeAssets.WebAssembly targets file only injects NativeFileReference items when the project uses the Blazor WebAssembly SDK (UsingMicrosoftNETSdkBlazorWebAssembly) or the standard WebAssembly SDK (UsingMicrosoftNETSdkWebAssembly), or Uno Platform (IsUnoHead). WASI apps use the standard Microsoft.NET.Sdk with RuntimeIdentifier=wasi-wasm, which matches none of those conditions, so libSkiaSharp.a is never linked into the output wasm binary, causing DllNotFoundException at runtime.
+
+### Rationale
+
+The issue is clearly a missing targets condition for WASI WASM. Code investigation confirms the targets file has no branch for wasi-wasm. However there is an additional open question: whether the Emscripten-compiled libSkiaSharp.a is ABI-compatible with the wasi-wasm toolchain (wasm32-wasi, not wasm32-emscripten), which may require a separate native build for WASI.
+
+### Key Signals
+
+- "The NativeAssets has build targets for Blazor, but seems to be missing them for Wasi Wasm apps." — **issue body** (Reporter correctly identified the missing MSBuild targets condition for wasi-wasm as the root cause.)
+- "The 3.x series should be including the native assets. Have you tried that yet?" — **comment by mattleibow** (Maintainer suggests awareness of the gap and that 3.x may address it, but the reporter's csproj already shows 3.0.0-preview.4.1 — so the issue may still exist in the preview series.)
+- "<RuntimeIdentifier>wasi-wasm</RuntimeIdentifier>" — **issue body csproj** (Reporter uses wasi-wasm RID, which sets neither UsingMicrosoftNETSdkBlazorWebAssembly nor UsingMicrosoftNETSdkWebAssembly — confirming why the targets condition is never met.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets` | — | direct | NativeFileReference inclusion is gated on UsingMicrosoftNETSdkBlazorWebAssembly == 'true' OR UsingMicrosoftNETSdkWebAssembly == 'true'. WASI apps use Microsoft.NET.Sdk with RuntimeIdentifier=wasi-wasm and set neither property, so no native library is linked. |
+| `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets` | — | direct | A separate ItemGroup handles Uno Platform (IsUnoHead == 'True' and UnoRuntimeIdentifier == 'WebAssembly') but no equivalent exists for wasi-wasm. The three supported WASM paths (Blazor, Uno, standard WebAssembly SDK) all require a different SDK or property — WASI is a fourth path not covered. |
+| `binding/SkiaSharp.NativeAssets.WebAssembly/SkiaSharp.NativeAssets.WebAssembly.csproj` | — | related | Package includes libSkiaSharp.a files from output/native/wasm/ alongside props/targets files, but packaging structure does not distinguish Emscripten vs WASI ABI. WASI requires wasm32-wasi ABI (wasi-sdk), not wasm32-emscripten. |
+
+### Next Questions
+
+- Is the Emscripten-compiled libSkiaSharp.a ABI-compatible with wasi-sdk (wasm32-wasi), or does a dedicated WASI native build need to be produced?
+- Did the reporter try the final 3.x stable release? The maintainer suggested 3.x should handle this.
+- Is there a NativeFileReference mechanism in the WASI SDK analogous to the Blazor WasmBuildNative pipeline?
+
+### Resolution Proposals
+
+**Hypothesis:** WASI apps use a different SDK and RID than Blazor WASM, so the existing NativeFileReference injection conditions never fire. The fix requires either (a) adding a WASI-specific condition to the targets file to inject the static library, or (b) building a wasm32-wasi variant of libSkiaSharp.a if the Emscripten ABI is incompatible.
+
+1. **Add wasi-wasm condition to NativeAssets targets** — fix, confidence 0.60 (60%), cost/m, validated=untested
+   - Add a new ItemGroup condition for RuntimeIdentifier == 'wasi-wasm' in SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets to inject the static library for WASI apps — contingent on ABI compatibility.
+2. **Investigate 3.x stable release** — investigation, confidence 0.75 (75%), cost/xs, validated=untested
+   - Ask the reporter to test the stable 3.x SkiaSharp release (not a preview), as the maintainer indicated 3.x should include native assets improvements.
+
+**Recommended proposal:** Investigate 3.x stable release
+
+**Why:** Maintainer has already indicated 3.x should address this. Confirming whether the stable 3.x release fixes it is the fastest path to resolution with lowest risk. If it does, the issue can be closed-as-fixed.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.80 (80%) |
+| Reason | Reporter already tried 3.0.0-preview.4.1 (based on csproj) but the maintainer suggested testing 3.x. Need confirmation if the stable 3.x release resolves the issue, and whether the Emscripten WASM binary is ABI-compatible with WASI. Additionally the reporter hasn't confirmed the exact 3.x version tried. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Did the reporter try the stable SkiaSharp 3.x release (not a preview)?
+- Does the wasi-sdk toolchain accept Emscripten-compiled .a files, or is a separate WASI build of libSkiaSharp needed?
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Add area/libSkiaSharp.native and os/WASM labels | labels=type/bug, area/libSkiaSharp.native, os/WASM |
+| add-comment | medium | 0.80 (80%) | Ask reporter to test stable 3.x release and clarify WASI ABI compatibility | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed repro and attached project! The `SkiaSharp.NativeAssets.WebAssembly` targets currently only inject the native static library for Blazor WebAssembly, standard WebAssembly SDK, and Uno Platform apps — there's no condition for the `wasi-wasm` RuntimeIdentifier, which is why `libSkiaSharp` is never linked into the output.
+
+Could you test with the **stable SkiaSharp 3.x** release (e.g. `3.116.x`)? The 2.88.x line is in maintenance mode and the 3.x series has improved native asset handling. If 3.x still fails, that helps us scope whether a WASI-specific build target needs to be added or whether a separate `wasm32-wasi` ABI build of `libSkiaSharp.a` is required (Emscripten-compiled `.a` files may not be directly usable by the WASI SDK linker).
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3015,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T18:16:47Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "DllNotFoundException (libSkiaSharp) when using SkiaSharp in a WASI WASM Console app — SkiaSharp.NativeAssets.WebAssembly targets only handle Blazor and Uno WASM SDKs and have no condition for the wasi-wasm RuntimeIdentifier.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "System.TypeInitializationException: TypeInitialization_Type, SkiaSharp.SKImageInfo --- System.DllNotFoundException: libSkiaSharp at SkiaSharp.SKImageInfo..cctor()",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net9.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET Console project targeting net9.0 with RuntimeIdentifier=wasi-wasm",
+        "Add PackageReference for SkiaSharp and SkiaSharp.NativeAssets.WebAssembly (3.0.0-preview.4.1)",
+        "Enable WasmSingleFileBundle=true and PublishTrimmed=true",
+        "Build and run with wasitime — observe DllNotFoundException for libSkiaSharp"
+      ],
+      "attachments": [
+        {
+          "url": "https://github.com/user-attachments/files/17092944/WasiSkiaSharpRepro.zip",
+          "filename": "WasiSkiaSharpRepro.zip"
+        }
+      ],
+      "environmentDetails": "Visual Studio on Windows, .NET 9 preview 6, wasi-wasm RuntimeIdentifier",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3016",
+          "description": "Related issue: similar DllNotFoundException in Unity (different platform, same symptom class)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.2",
+        "2.88.3",
+        "3.0.0-preview.4.1"
+      ],
+      "workedIn": "2.88.2",
+      "brokeIn": "2.88.3",
+      "currentRelevance": "likely",
+      "relevanceReason": "The current targets file still only checks for Blazor/Uno WASM SDK conditions — no wasi-wasm RuntimeIdentifier condition exists."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.7,
+      "reason": "Reporter states last known good was 2.88.2. However, 2.88.2 may have coincidentally worked due to different .NET SDK behavior rather than explicit WASI support, making this a platform-coverage gap rather than a clean regression.",
+      "workedInVersion": "2.88.2",
+      "brokeInVersion": "2.88.3"
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp.NativeAssets.WebAssembly targets file only injects NativeFileReference items when the project uses the Blazor WebAssembly SDK (UsingMicrosoftNETSdkBlazorWebAssembly) or the standard WebAssembly SDK (UsingMicrosoftNETSdkWebAssembly), or Uno Platform (IsUnoHead). WASI apps use the standard Microsoft.NET.Sdk with RuntimeIdentifier=wasi-wasm, which matches none of those conditions, so libSkiaSharp.a is never linked into the output wasm binary, causing DllNotFoundException at runtime.",
+    "rationale": "The issue is clearly a missing targets condition for WASI WASM. Code investigation confirms the targets file has no branch for wasi-wasm. However there is an additional open question: whether the Emscripten-compiled libSkiaSharp.a is ABI-compatible with the wasi-wasm toolchain (wasm32-wasi, not wasm32-emscripten), which may require a separate native build for WASI.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "NativeFileReference inclusion is gated on UsingMicrosoftNETSdkBlazorWebAssembly == 'true' OR UsingMicrosoftNETSdkWebAssembly == 'true'. WASI apps use Microsoft.NET.Sdk with RuntimeIdentifier=wasi-wasm and set neither property, so no native library is linked.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "A separate ItemGroup handles Uno Platform (IsUnoHead == 'True' and UnoRuntimeIdentifier == 'WebAssembly') but no equivalent exists for wasi-wasm. The three supported WASM paths (Blazor, Uno, standard WebAssembly SDK) all require a different SDK or property — WASI is a fourth path not covered.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/SkiaSharp.NativeAssets.WebAssembly.csproj",
+        "finding": "Package includes libSkiaSharp.a files from output/native/wasm/ alongside props/targets files, but packaging structure does not distinguish Emscripten vs WASI ABI. WASI requires wasm32-wasi ABI (wasi-sdk), not wasm32-emscripten.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The NativeAssets has build targets for Blazor, but seems to be missing them for Wasi Wasm apps.",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identified the missing MSBuild targets condition for wasi-wasm as the root cause."
+      },
+      {
+        "text": "The 3.x series should be including the native assets. Have you tried that yet?",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer suggests awareness of the gap and that 3.x may address it, but the reporter's csproj already shows 3.0.0-preview.4.1 — so the issue may still exist in the preview series."
+      },
+      {
+        "text": "<RuntimeIdentifier>wasi-wasm</RuntimeIdentifier>",
+        "source": "issue body csproj",
+        "interpretation": "Reporter uses wasi-wasm RID, which sets neither UsingMicrosoftNETSdkBlazorWebAssembly nor UsingMicrosoftNETSdkWebAssembly — confirming why the targets condition is never met."
+      }
+    ],
+    "nextQuestions": [
+      "Is the Emscripten-compiled libSkiaSharp.a ABI-compatible with wasi-sdk (wasm32-wasi), or does a dedicated WASI native build need to be produced?",
+      "Did the reporter try the final 3.x stable release? The maintainer suggested 3.x should handle this.",
+      "Is there a NativeFileReference mechanism in the WASI SDK analogous to the Blazor WasmBuildNative pipeline?"
+    ],
+    "resolution": {
+      "hypothesis": "WASI apps use a different SDK and RID than Blazor WASM, so the existing NativeFileReference injection conditions never fire. The fix requires either (a) adding a WASI-specific condition to the targets file to inject the static library, or (b) building a wasm32-wasi variant of libSkiaSharp.a if the Emscripten ABI is incompatible.",
+      "proposals": [
+        {
+          "title": "Add wasi-wasm condition to NativeAssets targets",
+          "description": "Add a new ItemGroup condition for RuntimeIdentifier == 'wasi-wasm' in SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets to inject the static library for WASI apps — contingent on ABI compatibility.",
+          "category": "fix",
+          "confidence": 0.6,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate 3.x stable release",
+          "description": "Ask the reporter to test the stable 3.x SkiaSharp release (not a preview), as the maintainer indicated 3.x should include native assets improvements.",
+          "category": "investigation",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Investigate 3.x stable release",
+      "recommendedReason": "Maintainer has already indicated 3.x should address this. Confirming whether the stable 3.x release fixes it is the fastest path to resolution with lowest risk. If it does, the issue can be closed-as-fixed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.8,
+      "reason": "Reporter already tried 3.0.0-preview.4.1 (based on csproj) but the maintainer suggested testing 3.x. Need confirmation if the stable 3.x release resolves the issue, and whether the Emscripten WASM binary is ABI-compatible with WASI. Additionally the reporter hasn't confirmed the exact 3.x version tried.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Did the reporter try the stable SkiaSharp 3.x release (not a preview)?",
+      "Does the wasi-sdk toolchain accept Emscripten-compiled .a files, or is a separate WASI build of libSkiaSharp needed?"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/libSkiaSharp.native and os/WASM labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask reporter to test stable 3.x release and clarify WASI ABI compatibility",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed repro and attached project! The `SkiaSharp.NativeAssets.WebAssembly` targets currently only inject the native static library for Blazor WebAssembly, standard WebAssembly SDK, and Uno Platform apps — there's no condition for the `wasi-wasm` RuntimeIdentifier, which is why `libSkiaSharp` is never linked into the output.\n\nCould you test with the **stable SkiaSharp 3.x** release (e.g. `3.116.x`)? The 2.88.x line is in maintenance mode and the 3.x series has improved native asset handling. If 3.x still fails, that helps us scope whether a WASI-specific build target needs to be added or whether a separate `wasm32-wasi` ABI build of `libSkiaSharp.a` is required (Emscripten-compiled `.a` files may not be directly usable by the WASI SDK linker)."
+      }
+    ]
+  }
+}
+```
+
+</details>

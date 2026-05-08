@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #3159 (close-as-not-a-bug)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 3159, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-21T18:16:24Z", "currentLabels": ["type/bug"]}, "summary": "SKBitmap.ScalePixels quality regression when downscaling in v3.116.x: using SKSamplingOptions(SKCubicResampler.Mitchell) as the v3 equivalent of SKFilterQuality.High produces larger file sizes and inferior quality compared to v2.88.9, because the old API had implicit smart behavior that switched to bilinear+mipmaps for downscaling.", "classification": {"type": {"value": "type/bug", "confidence": 0.9}, "area": {"value": "area/SkiaSharp", "confidence": 0.95}, "platforms": ["os/Windows-Classic", "os/macOS"], "tenets": ["tenet/compatibility"]}, "evidence": {"bugSignals": {"severity": "medium", "regressionClaimed": true, "errorType": "wrong-output", "errorMessage": "Downsized image is larger and of inferior quality compared to v2.88.9 output", "reproQuality": "partial", "targetFrameworks": []}, "reproEvidence": {"stepsToReproduce": ["Load a large image (1440x720) as SKBitmap", "Create a smaller SKBitmap (480x240)", "Call bitmapSrc.ScalePixels(bitmapDst, new SKSamplingOptions(SKCubicResampler.Mitchell))", "Encode to WebP with quality 75", "Compare output with v2.88.9 equivalent using SKFilterQuality.High"], "environmentDetails": "SkiaSharp 3.116.0/3.116.1, Windows 11 24H2 and macOS 15.1.1, Visual Studio", "repoLinks": [{"url": "https://ptdt.azureedge.net/data/test/large.png", "description": "Original image (1440x720)"}, {"url": "https://ptdt.azureedge.net/data/test/small_v2.webp", "description": "v2.88.9 output (480x240)"}, {"url": "https://ptdt.azureedge.net/data/test/small_v3.webp", "description": "v3.116.1 output (480x240, lower quality)"}], "codeSnippets": ["// v2.88.9 (old API)\nbitmapSrc.ScalePixels(bitmapDst, SKFilterQuality.High);\n\n// v3.116.1 (new API, migrated from obsolete)\nSKSamplingOptions samplingOptions = new SKSamplingOptions(resampler: SKCubicResampler.Mitchell);\nbitmapSrc.ScalePixels(bitmapDst, samplingOptions);"]}, "versionAnalysis": {"mentionedVersions": ["2.88.9", "3.116.0", "3.116.1"], "workedIn": "2.88.9", "brokeIn": "3.116.0", "currentRelevance": "likely", "relevanceReason": "The SKSamplingOptions API and ToSamplingOptions() mapping have not changed since 3.116.0. The behavioral difference is inherent to Skia's new API design."}, "regression": {"isRegression": true, "confidence": 0.85, "reason": "Reporter confirmed working in 2.88.9 and broken in 3.116.x. Root cause is that SKFilterQuality.High in the old Skia had smart behavior: for downscaling it internally used Medium quality (bilinear+mipmaps), not cubic. Migrating to SKSamplingOptions(Mitchell cubic) does not preserve this smart behavior.", "workedInVersion": "2.88.9", "brokeInVersion": "3.116.0"}}, "analysis": {"summary": "Old SKFilterQuality.High had implicit scale-direction-aware behavior in Skia: for downscaling it used Medium quality (bilinear+linear mipmap) internally, switching to cubic only for upscaling. The v3 migration guidance maps High→Mitchell cubic unconditionally. Users who migrate to new SKSamplingOptions following this guidance get cubic resampling for downscaling, which produces worse visual quality (and larger encoded size) than the old bilinear+mipmap approach used internally for downscaling.", "rationale": "This is a by-design behavior change in the Skia C++ library — the new API is more explicit. The bug manifests as a confusing and undocumented migration footgun: ToSamplingOptions() naively maps SKFilterQuality.High→Mitchell cubic without documenting that the old High had smart downscaling behavior. A community comment (gnattu) already identified the root cause with high confidence.", "keySignals": [{"text": "Although SKFilterQuality.High used to imply SKCubicResampler.Mitchell, but this is only the case for up-sampling. If you specified SKFilterQuality.High and you are actually down-sampling, skia would switch back to SKFilterQuality.Medium internally.", "source": "comment #2888746726 by gnattu", "interpretation": "Root cause: old Skia had smart scale-direction-aware behavior that new explicit API doesn't replicate. The compat mapping is lossy for downscaling."}, {"text": "Resized using v2.88.9 (480X240) vs Resized using v3.116.1 (480X240) - image links show visible quality difference", "source": "issue body", "interpretation": "Regression is visually confirmed with reference images. Reported on two platforms (Windows, Mac Catalyst)."}, {"text": "After changing our code to use new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) when downscaling, we are getting the results same as the old API.", "source": "comment #2888746726 by gnattu", "interpretation": "Workaround confirmed working — use Linear+Linear mipmap for downscaling."}], "codeInvestigation": [{"file": "binding/SkiaSharp/SKPaint.cs", "lines": "28-35", "finding": "ToSamplingOptions() maps SKFilterQuality.High unconditionally to new SKSamplingOptions(SKCubicResampler.Mitchell). Does not preserve old Skia's smart behavior of using Medium (Linear+LinearMipmap) for downscaling. This mapping is the root cause of the quality regression.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKBitmap.cs", "lines": "683-710", "finding": "Deprecated ScalePixels(bitmap, SKFilterQuality) delegates to ScalePixels(bitmap, quality.ToSamplingOptions()). The same lossy compat mapping applies here, affecting users who haven't yet migrated away from the obsolete API.", "relevance": "related"}, {"file": "binding/SkiaSharp/Definitions.cs", "lines": "610-657", "finding": "SKCubicResampler.Mitchell, SKSamplingOptions(SKFilterMode, SKMipmapMode), and SKSamplingOptions(SKCubicResampler) constructors all exist and are valid. The workaround using SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) for downscaling is API-correct.", "relevance": "context"}], "workarounds": ["For downscaling: use new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) instead of Mitchell cubic", "For upscaling: use new SKSamplingOptions(SKCubicResampler.Mitchell) as recommended", "Detect scale direction and select sampling options accordingly: check if target dimensions are smaller than source to choose downscale path"], "nextQuestions": ["Should ToSamplingOptions() document that High does NOT preserve the smart downscale behavior?", "Should SkiaSharp add a helper/note in documentation explaining the High→new API migration nuance?"], "resolution": {"hypothesis": "Users migrating from SKFilterQuality.High to SKSamplingOptions(Mitchell cubic) get inferior downscale quality because the old API had implicit bilinear+mipmap downscale behavior. The fix is to document the migration path and use Linear+LinearMipmap for downscaling.", "proposals": [{"title": "Use direction-aware sampling options for downscaling", "description": "Check whether the operation is downscaling (target < source) and select the appropriate sampling options. Use Mitchell cubic only for upscaling; use Linear+LinearMipmap for downscaling to match v2.88.9 behavior.", "category": "workaround", "codeSnippet": "// Determine scale direction\nbool isDownscaling = bitmapDst.Width < bitmapSrc.Width || bitmapDst.Height < bitmapSrc.Height;\n\n// Select sampling options matching v2 behavior\nSKSamplingOptions samplingOptions = isDownscaling\n    ? new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)   // matches old SKFilterQuality.High for downscale\n    : new SKSamplingOptions(SKCubicResampler.Mitchell);                  // matches old SKFilterQuality.High for upscale\n\nbitmapSrc.ScalePixels(bitmapDst, samplingOptions);", "confidence": 0.95, "effort": "cost/xs", "validated": "yes"}, {"title": "Document the migration nuance in ToSamplingOptions() and obsolete comments", "description": "Update the XML doc comments on ToSamplingOptions() and ScalePixels obsolete overloads to note that High quality had smart direction-aware behavior and recommend the user inspect scale direction to pick the right options.", "category": "fix", "confidence": 0.9, "effort": "cost/xs", "validated": "untested"}], "recommendedProposal": "Use direction-aware sampling options for downscaling", "recommendedReason": "Provides an immediate, API-correct workaround requiring minimal code change. Community has verified it produces equivalent v2 results."}}, "output": {"actionability": {"suggestedAction": "close-as-not-a-bug", "confidence": 0.8, "reason": "The new Skia API is explicitly direction-agnostic and the behavior is by-design. The old SKFilterQuality.High had implicit smart behavior that is not preserved in the compat mapping. A confirmed workaround exists (use Linear+Linear for downscaling). The issue is better resolved by documentation and a comment with the workaround.", "suggestedReproPlatform": "linux"}, "actions": [{"type": "update-labels", "description": "Add area/SkiaSharp, os/Windows-Classic, os/macOS, tenet/compatibility labels (type/bug already applied)", "risk": "low", "confidence": 0.95, "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "os/macOS", "tenet/compatibility"]}, {"type": "add-comment", "description": "Post explanation of root cause and confirmed workaround for direction-aware sampling", "risk": "medium", "confidence": 0.9, "comment": "Thanks for the detailed report, and thanks to @gnattu for identifying the root cause!\n\nThis is a subtle behavioral difference between the old `SKFilterQuality` API and the new explicit `SKSamplingOptions` API in Skia.\n\n**Root cause:** In the old Skia (≤2.88.x), `SKFilterQuality.High` had smart scale-direction awareness:\n- **Downscaling**: internally used `SKFilterQuality.Medium` (bilinear + linear mipmaps)\n- **Upscaling**: used cubic resampling (Mitchell)\n\nThe new API is explicit, and the compat mapping `High → SKCubicResampler.Mitchell` is unconditional — it does not preserve this smart downscale behavior.\n\n**Workaround** (matches v2.88.x quality for both up and down scaling):\n\n```csharp\nbool isDownscaling = bitmapDst.Width < bitmapSrc.Width || bitmapDst.Height < bitmapSrc.Height;\n\nSKSamplingOptions samplingOptions = isDownscaling\n    ? new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)  // matches old High for downscale\n    : new SKSamplingOptions(SKCubicResampler.Mitchell);                 // matches old High for upscale\n\nbitmapSrc.ScalePixels(bitmapDst, samplingOptions);\n```\n\nWe will look at improving the XML documentation on `ToSamplingOptions()` to make this migration nuance clearer."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>
