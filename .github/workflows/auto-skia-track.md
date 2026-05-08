@@ -17,6 +17,10 @@ on:
         type: choice
         default: next
         options: [current, next, latest]
+      milestone:
+        description: "Exact milestone number (e.g. 148) — overrides mode if set"
+        required: false
+        type: string
 
   # -- Pre-activation step -------------------------------------------
   # Runs BEFORE the agent job. Detects the target milestone.
@@ -27,6 +31,7 @@ on:
       id: detect
       env:
         INPUT_MODE: ${{ github.event.inputs.mode }}
+        INPUT_MILESTONE: ${{ github.event.inputs.milestone }}
         SCHEDULE: ${{ github.event.schedule }}
         GH_TOKEN: ${{ github.token }}
       run: |
@@ -53,7 +58,11 @@ on:
           | sort -n | tail -1)
         echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
 
-        if [ "$MODE" = "latest" ]; then
+        # Explicit milestone input overrides mode
+        if [ -n "$INPUT_MILESTONE" ]; then
+          TARGET="$INPUT_MILESTONE"
+          MODE="explicit"
+        elif [ "$MODE" = "latest" ]; then
           TARGET="$LATEST"
         elif [ "$MODE" = "current" ]; then
           TARGET="$CURRENT"
