@@ -1,0 +1,274 @@
+# Issue Triage Report — #2535
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-02T10:35:00Z |
+| Type | type/feature-request (0.90 (90%)) |
+| Area | area/SkiaSharp (0.80 (80%)) |
+| Suggested action | needs-investigation (0.72 (72%)) |
+
+**Issue Summary:** Feature request to expose lottie_autoPlay and lottie_loop as attributes in SkiaSharp's Skottie API, needed when integrating SkiaSharp alongside the Zoom Meeting SDK on Android.
+
+**Analysis:** The reporter needs lottie_autoPlay and lottie_loop attributes for an Android project combining SkiaSharp.Skottie with the Zoom Meeting SDK. The Zoom SDK bundles Airbnb Lottie which expects these Android XML resource attributes. SkiaSharp's Skottie C# API (Animation class) does not expose autoplay or loop properties, and the Android Views attrs.xml only defines ignorePixelScaling for SKCanvasView. The workaround the reporter found is adding blank boolean attributes manually.
+
+**Recommendations:** **needs-investigation** — The request is vague — unclear whether it's a build-time XML attribute conflict or a request for C# API additions. Needs clarification on the exact failure mode and scope.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/SkiaSharp |
+| Platforms | os/Android |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Add SkiaSharp.Skottie and Zoom Meeting SDK to an Android project
+2. Observe build failure due to missing lottie_autoPlay and lottie_loop attributes
+
+**Environment:** Android, Zoom Meeting SDK integration, SkiaSharp Skottie
+
+## Analysis
+
+### Technical Summary
+
+The reporter needs lottie_autoPlay and lottie_loop attributes for an Android project combining SkiaSharp.Skottie with the Zoom Meeting SDK. The Zoom SDK bundles Airbnb Lottie which expects these Android XML resource attributes. SkiaSharp's Skottie C# API (Animation class) does not expose autoplay or loop properties, and the Android Views attrs.xml only defines ignorePixelScaling for SKCanvasView. The workaround the reporter found is adding blank boolean attributes manually.
+
+### Rationale
+
+This is a feature request: SkiaSharp's Skottie animation API and Android views do not expose autoplay or loop controls. The Animation class in binding/SkiaSharp.Skottie/Animation.cs has no AutoPlay or Loop members. The source/SkiaSharp.Views Android attrs.xml only defines ignorePixelScaling. The reporter's workaround of manually adding XML attribute declarations confirms this is a missing integration feature, not a defect.
+
+### Key Signals
+
+- "the two referenced attributes are missing from the Skottie API" — **issue body** (Reporter wants lottie_autoPlay and lottie_loop exposed, likely as Android XML attributes or C# API properties.)
+- "I need to bind the zoom meeting sdk" — **issue body** (The Zoom Meeting SDK depends on Airbnb Lottie for Android, which defines these attributes. Integration may require SkiaSharp to either avoid conflicting or define compatible declarations.)
+- "Adding them as blank boolean attributes in an xml resources file in my referencing project" — **issue body** (Valid workaround: manually declaring them in the app's resource file resolves the build conflict.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp.Skottie/Animation.cs` | 104-158 | direct | Animation class exposes Duration, Fps, InPoint, OutPoint, Version, Size — no AutoPlay or Loop properties. Loop/autoplay logic must be implemented manually by the consumer (as shown in LottiePlayerSample.cs). |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/Resources/values/attrs.xml` | 1-6 | direct | Android attrs.xml only declares ignorePixelScaling for SKCanvasView. There are no lottie_autoPlay or lottie_loop attributes defined anywhere in SkiaSharp. |
+| `samples/Gallery/Shared/Samples/LottiePlayerSample.cs` | 1-60 | related | The gallery sample manually implements loop-like playback using a Stopwatch, confirming loop is not natively supported in the API layer. |
+
+### Workarounds
+
+- Add a custom attrs.xml to the Android project declaring lottie_autoPlay (boolean) and lottie_loop (boolean) attributes to satisfy the build.
+
+### Next Questions
+
+- Is the specific issue a build error due to duplicate/missing attribute declarations, or a request for SkiaSharp to expose loop/autoplay as a C# API?
+- Is there an SKLottieView or SKSkottieView planned for Android that would use these attributes?
+- Which version of SkiaSharp and Zoom SDK is the reporter using?
+
+### Resolution Proposals
+
+**Hypothesis:** SkiaSharp does not define lottie_autoPlay or lottie_loop XML attributes on Android, and the Animation C# class does not expose loop/autoplay properties. These could be added either as Android resource attribute declarations (if an Android Skottie view is added) or as C# properties on the Animation class.
+
+1. **Manual XML attribute workaround** — workaround, confidence 0.90 (90%), cost/xs, validated=untested
+   - Add a values/attrs.xml to the Android app project with blank boolean declarations for lottie_autoPlay and lottie_loop to satisfy the Zoom SDK's Lottie dependency.
+2. **Add AutoPlay and Loop to SkiaSharp Skottie C# API** — fix, confidence 0.70 (70%), cost/m, validated=untested
+   - Expose AutoPlay and Loop as properties or parameters on the Animation class or a new AnimationPlayer class, implementing the loop logic in managed code.
+
+**Recommended proposal:** Manual XML attribute workaround
+
+**Why:** The reporter's workaround is valid and already working. A proper API addition requires more design discussion and is orthogonal to the immediate build issue.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.72 (72%) |
+| Reason | The request is vague — unclear whether it's a build-time XML attribute conflict or a request for C# API additions. Needs clarification on the exact failure mode and scope. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Exact build error message or runtime error when integrating with the Zoom SDK
+- SkiaSharp version used
+- Whether the XML attribute workaround fully resolves the issue or if C# API additions are also needed
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply feature-request, SkiaSharp area, and Android platform labels | labels=type/feature-request, area/SkiaSharp, os/Android |
+| add-comment | medium | 0.80 (80%) | Acknowledge the request, provide the XML workaround, and ask for clarification on the exact failure | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! SkiaSharp's Skottie binding currently doesn't define `lottie_autoPlay` or `lottie_loop` as Android XML attributes, and the `Animation` C# class doesn't expose loop/autoplay properties.
+
+**Workaround:** Until this is implemented, you can add the following to your Android app project's `Resources/values/attrs.xml`:
+
+```xml
+<resources>
+    <attr name="lottie_autoPlay" format="boolean" />
+    <attr name="lottie_loop" format="boolean" />
+</resources>
+```
+
+Could you clarify:
+1. Are you seeing a **build error** due to missing/duplicate attribute declarations?
+2. Or do you also need `AutoPlay`/`Loop` as **C# API** on the `Animation` class?
+3. Which version of SkiaSharp are you using?
+
+This will help us understand the right solution.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2535,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T10:35:00Z"
+  },
+  "summary": "Feature request to expose lottie_autoPlay and lottie_loop as attributes in SkiaSharp's Skottie API, needed when integrating SkiaSharp alongside the Zoom Meeting SDK on Android.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.8
+    },
+    "platforms": [
+      "os/Android"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Android, Zoom Meeting SDK integration, SkiaSharp Skottie",
+      "stepsToReproduce": [
+        "Add SkiaSharp.Skottie and Zoom Meeting SDK to an Android project",
+        "Observe build failure due to missing lottie_autoPlay and lottie_loop attributes"
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The reporter needs lottie_autoPlay and lottie_loop attributes for an Android project combining SkiaSharp.Skottie with the Zoom Meeting SDK. The Zoom SDK bundles Airbnb Lottie which expects these Android XML resource attributes. SkiaSharp's Skottie C# API (Animation class) does not expose autoplay or loop properties, and the Android Views attrs.xml only defines ignorePixelScaling for SKCanvasView. The workaround the reporter found is adding blank boolean attributes manually.",
+    "rationale": "This is a feature request: SkiaSharp's Skottie animation API and Android views do not expose autoplay or loop controls. The Animation class in binding/SkiaSharp.Skottie/Animation.cs has no AutoPlay or Loop members. The source/SkiaSharp.Views Android attrs.xml only defines ignorePixelScaling. The reporter's workaround of manually adding XML attribute declarations confirms this is a missing integration feature, not a defect.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.Skottie/Animation.cs",
+        "lines": "104-158",
+        "finding": "Animation class exposes Duration, Fps, InPoint, OutPoint, Version, Size — no AutoPlay or Loop properties. Loop/autoplay logic must be implemented manually by the consumer (as shown in LottiePlayerSample.cs).",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/Resources/values/attrs.xml",
+        "lines": "1-6",
+        "finding": "Android attrs.xml only declares ignorePixelScaling for SKCanvasView. There are no lottie_autoPlay or lottie_loop attributes defined anywhere in SkiaSharp.",
+        "relevance": "direct"
+      },
+      {
+        "file": "samples/Gallery/Shared/Samples/LottiePlayerSample.cs",
+        "lines": "1-60",
+        "finding": "The gallery sample manually implements loop-like playback using a Stopwatch, confirming loop is not natively supported in the API layer.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "the two referenced attributes are missing from the Skottie API",
+        "source": "issue body",
+        "interpretation": "Reporter wants lottie_autoPlay and lottie_loop exposed, likely as Android XML attributes or C# API properties."
+      },
+      {
+        "text": "I need to bind the zoom meeting sdk",
+        "source": "issue body",
+        "interpretation": "The Zoom Meeting SDK depends on Airbnb Lottie for Android, which defines these attributes. Integration may require SkiaSharp to either avoid conflicting or define compatible declarations."
+      },
+      {
+        "text": "Adding them as blank boolean attributes in an xml resources file in my referencing project",
+        "source": "issue body",
+        "interpretation": "Valid workaround: manually declaring them in the app's resource file resolves the build conflict."
+      }
+    ],
+    "workarounds": [
+      "Add a custom attrs.xml to the Android project declaring lottie_autoPlay (boolean) and lottie_loop (boolean) attributes to satisfy the build."
+    ],
+    "nextQuestions": [
+      "Is the specific issue a build error due to duplicate/missing attribute declarations, or a request for SkiaSharp to expose loop/autoplay as a C# API?",
+      "Is there an SKLottieView or SKSkottieView planned for Android that would use these attributes?",
+      "Which version of SkiaSharp and Zoom SDK is the reporter using?"
+    ],
+    "resolution": {
+      "hypothesis": "SkiaSharp does not define lottie_autoPlay or lottie_loop XML attributes on Android, and the Animation C# class does not expose loop/autoplay properties. These could be added either as Android resource attribute declarations (if an Android Skottie view is added) or as C# properties on the Animation class.",
+      "proposals": [
+        {
+          "title": "Manual XML attribute workaround",
+          "description": "Add a values/attrs.xml to the Android app project with blank boolean declarations for lottie_autoPlay and lottie_loop to satisfy the Zoom SDK's Lottie dependency.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Add AutoPlay and Loop to SkiaSharp Skottie C# API",
+          "description": "Expose AutoPlay and Loop as properties or parameters on the Animation class or a new AnimationPlayer class, implementing the loop logic in managed code.",
+          "category": "fix",
+          "confidence": 0.7,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Manual XML attribute workaround",
+      "recommendedReason": "The reporter's workaround is valid and already working. A proper API addition requires more design discussion and is orthogonal to the immediate build issue."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.72,
+      "reason": "The request is vague — unclear whether it's a build-time XML attribute conflict or a request for C# API additions. Needs clarification on the exact failure mode and scope.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Exact build error message or runtime error when integrating with the Zoom SDK",
+      "SkiaSharp version used",
+      "Whether the XML attribute workaround fully resolves the issue or if C# API additions are also needed"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request, SkiaSharp area, and Android platform labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp",
+          "os/Android"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request, provide the XML workaround, and ask for clarification on the exact failure",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the report! SkiaSharp's Skottie binding currently doesn't define `lottie_autoPlay` or `lottie_loop` as Android XML attributes, and the `Animation` C# class doesn't expose loop/autoplay properties.\n\n**Workaround:** Until this is implemented, you can add the following to your Android app project's `Resources/values/attrs.xml`:\n\n```xml\n<resources>\n    <attr name=\"lottie_autoPlay\" format=\"boolean\" />\n    <attr name=\"lottie_loop\" format=\"boolean\" />\n</resources>\n```\n\nCould you clarify:\n1. Are you seeing a **build error** due to missing/duplicate attribute declarations?\n2. Or do you also need `AutoPlay`/`Loop` as **C# API** on the `Animation` class?\n3. Which version of SkiaSharp are you using?\n\nThis will help us understand the right solution."
+      }
+    ]
+  }
+}
+```
+
+</details>

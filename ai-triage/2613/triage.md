@@ -1,0 +1,251 @@
+# Issue Triage Report — #2613
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-02T08:51:00Z |
+| Type | type/feature-request (0.98 (98%)) |
+| Area | area/SkiaSharp (0.98 (98%)) |
+| Suggested action | close-as-fixed (0.97 (97%)) |
+
+**Issue Summary:** Reporter requests `SetRectRadii` overloads accepting `ReadOnlySpan<SKPoint>` or a pointer for better performance; the `ReadOnlySpan<SKPoint>` overload was subsequently added and is present in SkiaSharp 3.116.0+.
+
+**Analysis:** The feature request asked for `SetRectRadii` span/pointer overloads. The `ReadOnlySpan<SKPoint>` overload was added in SkiaSharp 3.116.0. The array overload now delegates to the span overload internally, confirming full implementation.
+
+**Recommendations:** **close-as-fixed** — SetRectRadii(SKRect, ReadOnlySpan<SKPoint>) is present in binding/SkiaSharp/SKRoundRect.cs and was shipped in SkiaSharp 3.116.0.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/performance |
+| Partner | — |
+| Current labels | area/SkiaSharp, type/feature-request, tenet/performance |
+
+## Evidence
+
+### Reproduction
+
+1. Call SKRoundRect.SetRectRadii with a ReadOnlySpan<SKPoint> (not yet available at time of filing)
+
+**Environment:** Filed 2023-09-18; no version info given
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unlikely |
+| Relevance reason | The requested ReadOnlySpan<SKPoint> overload is present in the current codebase (3.116.0+). The pointer overload was not added, but the span overload covers the performance use-case. |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | True |
+| Confidence | 0.98 (98%) |
+| Reason | binding/SkiaSharp/SKRoundRect.cs now contains public void SetRectRadii(SKRect rect, ReadOnlySpan<SKPoint> radii). Changelog entry in changelogs/SkiaSharp/3.116.0/SkiaSharp.md confirms the overload shipped in 3.116.0. |
+| Related PRs | — |
+| Related commits | — |
+| Fixed in version | 3.116.0 |
+
+## Analysis
+
+### Technical Summary
+
+The feature request asked for `SetRectRadii` span/pointer overloads. The `ReadOnlySpan<SKPoint>` overload was added in SkiaSharp 3.116.0. The array overload now delegates to the span overload internally, confirming full implementation.
+
+### Rationale
+
+Code investigation confirms the `ReadOnlySpan<SKPoint>` overload for `SetRectRadii` exists in the current main branch (binding/SkiaSharp/SKRoundRect.cs lines 129-137) and is listed in the 3.116.0 changelog. The pointer overload was not added, but spans are the idiomatic .NET approach and cover the performance use-case. The issue should be closed as fixed.
+
+### Key Signals
+
+- "Currently, `SetRectRadii` accepts overload with array only." — **issue body** (Feature was missing at time of filing; now implemented.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKRoundRect.cs` | 121-137 | direct | Two overloads exist: `SetRectRadii(SKRect, SKPoint[])` (delegates to span overload) and `SetRectRadii(SKRect, ReadOnlySpan<SKPoint>)` which pins the span and calls the native API directly. |
+| `changelogs/SkiaSharp/3.116.0/SkiaSharp.md` | — | direct | Changelog lists `public void SetRectRadii(SKRect rect, System.ReadOnlySpan<SKPoint> radii)` as a new API in 3.116.0. |
+
+### Resolution Proposals
+
+**Hypothesis:** The feature was implemented in 3.116.0 with the ReadOnlySpan<SKPoint> overload.
+
+1. **Close issue as fixed — span overload ships in 3.116.0+** — fix, cost/xs, validated=yes
+   - The `ReadOnlySpan<SKPoint>` overload was added in SkiaSharp 3.116.0. No further action required.
+
+**Recommended proposal:** close-fixed
+
+**Why:** Implementation confirmed in source and changelog.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-fixed |
+| Confidence | 0.97 (97%) |
+| Reason | SetRectRadii(SKRect, ReadOnlySpan<SKPoint>) is present in binding/SkiaSharp/SKRoundRect.cs and was shipped in SkiaSharp 3.116.0. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.98 (98%) | Labels already set correctly; confirm triage/triaged | labels=type/feature-request, area/SkiaSharp, tenet/performance |
+| close-issue | low | 0.97 (97%) | Close as completed — ReadOnlySpan overload shipped in 3.116.0 | stateReason=completed |
+| add-comment | low | 0.97 (97%) | Notify reporter that the span overload was added in 3.116.0 | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the request! This has already been implemented — `SetRectRadii(SKRect rect, ReadOnlySpan<SKPoint> radii)` was added in **SkiaSharp 3.116.0**.
+
+The array overload now delegates to the span overload internally, so you can pass a `ReadOnlySpan<SKPoint>` directly for zero-allocation performance:
+
+```csharp
+SKPoint[] radii = { new(4,4), new(4,4), new(4,4), new(4,4) };
+rrect.SetRectRadii(rect, radii.AsSpan()); // or pass any ReadOnlySpan<SKPoint>
+```
+
+Please upgrade to 3.116.0 or later to use this overload.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2613,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T08:51:00Z",
+    "currentLabels": [
+      "area/SkiaSharp",
+      "type/feature-request",
+      "tenet/performance"
+    ]
+  },
+  "summary": "Reporter requests `SetRectRadii` overloads accepting `ReadOnlySpan<SKPoint>` or a pointer for better performance; the `ReadOnlySpan<SKPoint>` overload was subsequently added and is present in SkiaSharp 3.116.0+.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.98
+    },
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call SKRoundRect.SetRectRadii with a ReadOnlySpan<SKPoint> (not yet available at time of filing)"
+      ],
+      "environmentDetails": "Filed 2023-09-18; no version info given"
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.98,
+      "reason": "binding/SkiaSharp/SKRoundRect.cs now contains public void SetRectRadii(SKRect rect, ReadOnlySpan<SKPoint> radii). Changelog entry in changelogs/SkiaSharp/3.116.0/SkiaSharp.md confirms the overload shipped in 3.116.0.",
+      "fixedInVersion": "3.116.0"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The requested ReadOnlySpan<SKPoint> overload is present in the current codebase (3.116.0+). The pointer overload was not added, but the span overload covers the performance use-case."
+    }
+  },
+  "analysis": {
+    "summary": "The feature request asked for `SetRectRadii` span/pointer overloads. The `ReadOnlySpan<SKPoint>` overload was added in SkiaSharp 3.116.0. The array overload now delegates to the span overload internally, confirming full implementation.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKRoundRect.cs",
+        "lines": "121-137",
+        "finding": "Two overloads exist: `SetRectRadii(SKRect, SKPoint[])` (delegates to span overload) and `SetRectRadii(SKRect, ReadOnlySpan<SKPoint>)` which pins the span and calls the native API directly.",
+        "relevance": "direct"
+      },
+      {
+        "file": "changelogs/SkiaSharp/3.116.0/SkiaSharp.md",
+        "finding": "Changelog lists `public void SetRectRadii(SKRect rect, System.ReadOnlySpan<SKPoint> radii)` as a new API in 3.116.0.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Currently, `SetRectRadii` accepts overload with array only.",
+        "source": "issue body",
+        "interpretation": "Feature was missing at time of filing; now implemented."
+      }
+    ],
+    "rationale": "Code investigation confirms the `ReadOnlySpan<SKPoint>` overload for `SetRectRadii` exists in the current main branch (binding/SkiaSharp/SKRoundRect.cs lines 129-137) and is listed in the 3.116.0 changelog. The pointer overload was not added, but spans are the idiomatic .NET approach and cover the performance use-case. The issue should be closed as fixed.",
+    "resolution": {
+      "hypothesis": "The feature was implemented in 3.116.0 with the ReadOnlySpan<SKPoint> overload.",
+      "proposals": [
+        {
+          "title": "Close issue as fixed — span overload ships in 3.116.0+",
+          "category": "fix",
+          "description": "The `ReadOnlySpan<SKPoint>` overload was added in SkiaSharp 3.116.0. No further action required.",
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "close-fixed",
+      "recommendedReason": "Implementation confirmed in source and changelog."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.97,
+      "reason": "SetRectRadii(SKRect, ReadOnlySpan<SKPoint>) is present in binding/SkiaSharp/SKRoundRect.cs and was shipped in SkiaSharp 3.116.0.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels already set correctly; confirm triage/triaged",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as completed — ReadOnlySpan overload shipped in 3.116.0",
+        "risk": "low",
+        "confidence": 0.97,
+        "stateReason": "completed"
+      },
+      {
+        "type": "add-comment",
+        "description": "Notify reporter that the span overload was added in 3.116.0",
+        "risk": "low",
+        "confidence": 0.97,
+        "comment": "Thanks for the request! This has already been implemented — `SetRectRadii(SKRect rect, ReadOnlySpan<SKPoint> radii)` was added in **SkiaSharp 3.116.0**.\n\nThe array overload now delegates to the span overload internally, so you can pass a `ReadOnlySpan<SKPoint>` directly for zero-allocation performance:\n\n```csharp\nSKPoint[] radii = { new(4,4), new(4,4), new(4,4), new(4,4) };\nrrect.SetRectRadii(rect, radii.AsSpan()); // or pass any ReadOnlySpan<SKPoint>\n```\n\nPlease upgrade to 3.116.0 or later to use this overload."
+      }
+    ]
+  }
+}
+```
+
+</details>

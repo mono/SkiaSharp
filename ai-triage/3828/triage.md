@@ -1,0 +1,229 @@
+# Issue Triage Report — #3828
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-02T11:22:23Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/Build (0.92 (92%)) |
+| Suggested action | needs-investigation (0.88 (88%)) |
+
+**Issue Summary:** The Auto Skia Track agentic workflow fails to create a PR because the changeset exceeds the 100-file limit imposed by the safe-outputs `create_pull_request` action.
+
+**Analysis:** The Auto Skia Track workflow invokes the safe-outputs `create_pull_request` action but the Skia update produces more than 100 changed files (183 on first run, 340 on retry). The safe-outputs system enforces a hard 100-file limit per PR creation request (E003), causing the action to fail and abort subsequent safe outputs. The fix path is either to split the changeset into smaller batches or to have the workflow cherry-pick / chunk large updates.
+
+**Recommendations:** **needs-investigation** — The root cause (changeset > 100 files) is clear, but the fix requires either a workflow change to chunk the PR or an infrastructure change to raise the limit. A human needs to decide which approach to take.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/actions/runs/25231912194 — Failed workflow run (183 files)
+- https://github.com/mono/SkiaSharp/actions/runs/25250183194 — Second failed workflow run (340 files)
+- https://github.com/mono/SkiaSharp/pull/3825 — Target PR that the workflow tried to create/update
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | other |
+| Error message | E003: Cannot create pull request with more than 100 files (received 183 / 340) |
+| Repro quality | complete |
+| Target frameworks | — |
+
+## Analysis
+
+### Technical Summary
+
+The Auto Skia Track workflow invokes the safe-outputs `create_pull_request` action but the Skia update produces more than 100 changed files (183 on first run, 340 on retry). The safe-outputs system enforces a hard 100-file limit per PR creation request (E003), causing the action to fail and abort subsequent safe outputs. The fix path is either to split the changeset into smaller batches or to have the workflow cherry-pick / chunk large updates.
+
+### Rationale
+
+Classified as type/bug in area/Build because the auto-skia-track agentic workflow fails due to a hard infrastructure limit (100 files per PR) being exceeded by a large Skia update changeset. This is a reproducible, blocking failure affecting the automated Skia update pipeline. Severity is high because it fully blocks automated Skia updates with no automatic workaround.
+
+### Key Signals
+
+- "E003: Cannot create pull request with more than 100 files (received 183)" — **issue body** (Hard limit in safe-outputs create_pull_request enforces max 100 files per PR.)
+- "E003: Cannot create pull request with more than 100 files (received 340)" — **issue comment by mattleibow** (Issue is recurring across multiple workflow runs, file count growing with each attempt.)
+- "PR is behind base branch - may need to be updated; Branch was updated - workflow started at 19782e5, PR head is now da05f99" — **issue body** (The PR branch was updated between workflow runs, causing the divergence and potentially growing the diff.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `.agents/agents/agentic-workflows.agent.md` | — | direct | The agentic-workflows agent definition was inspected; no explicit chunking or file-limit handling was found for the auto-skia-track workflow. |
+| `https://github.com/mono/SkiaSharp/actions/runs/25231912194 (workflow run log)` | — | direct | Workflow run log shows create_pull_request failing with E003 for 183 files on the first occurrence and 340 files on the second run (comment #4363646487), confirming the issue is reproducible across runs. |
+
+### Next Questions
+
+- Is the large file count inherent to a major Skia milestone update, or is there a way to split the update into smaller PRs?
+- Can the safe-outputs `create_pull_request` limit be raised, or is 100 a hard system constraint?
+- Is the growing file count (183 → 340) due to the branch falling further behind main on each retry?
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.88 (88%) |
+| Reason | The root cause (changeset > 100 files) is clear, but the fix requires either a workflow change to chunk the PR or an infrastructure change to raise the limit. A human needs to decide which approach to take. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply classification labels: type/bug, area/Build | labels=type/bug, area/Build |
+| add-comment | medium | 0.88 (88%) | Explain the root cause and suggest investigation paths | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+## Triage Analysis
+
+The **Auto Skia Track** workflow fails because the Skia update generates more than 100 changed files, exceeding the hard limit enforced by the safe-outputs `create_pull_request` action (E003). This has now failed twice — with 183 files on the first run and 340 files on a subsequent retry (the growing count suggests the PR branch is falling further behind `main` with each attempt).
+
+**Root cause:** A large Skia milestone bump touches hundreds of generated/upstream files in a single commit, which cannot be batched into a single PR by the current workflow.
+
+**Possible fixes to investigate:**
+1. **Chunk the changeset** — split the Skia update into multiple PRs (e.g., separate PRs for generated bindings vs. upstream files).
+2. **Raise the safe-outputs limit** — if the limit is configurable, increase it for this workflow.
+3. **Squash before pushing** — ensure the auto-skia-track workflow creates a minimal diff rather than replaying all intermediate commits.
+
+Assigning for investigation.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3828,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T11:22:23Z"
+  },
+  "summary": "The Auto Skia Track agentic workflow fails to create a PR because the changeset exceeds the 100-file limit imposed by the safe-outputs `create_pull_request` action.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.92
+    }
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "other",
+      "errorMessage": "E003: Cannot create pull request with more than 100 files (received 183 / 340)",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/actions/runs/25231912194",
+          "description": "Failed workflow run (183 files)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/actions/runs/25250183194",
+          "description": "Second failed workflow run (340 files)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3825",
+          "description": "Target PR that the workflow tried to create/update"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The Auto Skia Track workflow invokes the safe-outputs `create_pull_request` action but the Skia update produces more than 100 changed files (183 on first run, 340 on retry). The safe-outputs system enforces a hard 100-file limit per PR creation request (E003), causing the action to fail and abort subsequent safe outputs. The fix path is either to split the changeset into smaller batches or to have the workflow cherry-pick / chunk large updates.",
+    "codeInvestigation": [
+      {
+        "file": ".agents/agents/agentic-workflows.agent.md",
+        "finding": "The agentic-workflows agent definition was inspected; no explicit chunking or file-limit handling was found for the auto-skia-track workflow.",
+        "relevance": "direct"
+      },
+      {
+        "file": "https://github.com/mono/SkiaSharp/actions/runs/25231912194 (workflow run log)",
+        "finding": "Workflow run log shows create_pull_request failing with E003 for 183 files on the first occurrence and 340 files on the second run (comment #4363646487), confirming the issue is reproducible across runs.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "E003: Cannot create pull request with more than 100 files (received 183)",
+        "source": "issue body",
+        "interpretation": "Hard limit in safe-outputs create_pull_request enforces max 100 files per PR."
+      },
+      {
+        "text": "E003: Cannot create pull request with more than 100 files (received 340)",
+        "source": "issue comment by mattleibow",
+        "interpretation": "Issue is recurring across multiple workflow runs, file count growing with each attempt."
+      },
+      {
+        "text": "PR is behind base branch - may need to be updated; Branch was updated - workflow started at 19782e5, PR head is now da05f99",
+        "source": "issue body",
+        "interpretation": "The PR branch was updated between workflow runs, causing the divergence and potentially growing the diff."
+      }
+    ],
+    "rationale": "Classified as type/bug in area/Build because the auto-skia-track agentic workflow fails due to a hard infrastructure limit (100 files per PR) being exceeded by a large Skia update changeset. This is a reproducible, blocking failure affecting the automated Skia update pipeline. Severity is high because it fully blocks automated Skia updates with no automatic workaround.",
+    "nextQuestions": [
+      "Is the large file count inherent to a major Skia milestone update, or is there a way to split the update into smaller PRs?",
+      "Can the safe-outputs `create_pull_request` limit be raised, or is 100 a hard system constraint?",
+      "Is the growing file count (183 → 340) due to the branch falling further behind main on each retry?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "The root cause (changeset > 100 files) is clear, but the fix requires either a workflow change to chunk the PR or an infrastructure change to raise the limit. A human needs to decide which approach to take.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply classification labels: type/bug, area/Build",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/Build"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the root cause and suggest investigation paths",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "## Triage Analysis\n\nThe **Auto Skia Track** workflow fails because the Skia update generates more than 100 changed files, exceeding the hard limit enforced by the safe-outputs `create_pull_request` action (E003). This has now failed twice — with 183 files on the first run and 340 files on a subsequent retry (the growing count suggests the PR branch is falling further behind `main` with each attempt).\n\n**Root cause:** A large Skia milestone bump touches hundreds of generated/upstream files in a single commit, which cannot be batched into a single PR by the current workflow.\n\n**Possible fixes to investigate:**\n1. **Chunk the changeset** — split the Skia update into multiple PRs (e.g., separate PRs for generated bindings vs. upstream files).\n2. **Raise the safe-outputs limit** — if the limit is configurable, increase it for this workflow.\n3. **Squash before pushing** — ensure the auto-skia-track workflow creates a minimal diff rather than replaying all intermediate commits.\n\nAssigning for investigation."
+      }
+    ]
+  }
+}
+```
+
+</details>
