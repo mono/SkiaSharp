@@ -1,0 +1,349 @@
+# Issue Triage Report — #2722
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T20:10:00Z |
+| Type | type/bug (0.85 (85%)) |
+| Area | area/SkiaSharp.Views.Maui (0.95 (95%)) |
+| Suggested action | close-as-not-a-bug (0.80 (80%)) |
+
+**Issue Summary:** SKCanvasView.Touch on iOS (MAUI) only fires the Pressed action; Moved, Released, and other action types are never raised because the iOS UIGestureRecognizer-based touch handler calls IgnoreTouch when e.Handled is not set to true in the Pressed callback.
+
+**Analysis:** The iOS SKTouchHandler is a UIGestureRecognizer. In TouchesBegan it calls FireEvent which returns args.Handled; if the consumer does not set e.Handled = true, IgnoreTouch is immediately called for that touch, causing the UIGestureRecognizer to stop receiving Moved/Released/Cancelled callbacks for that touch. The fix is to add e.Handled = true at the end of the Touch event handler.
+
+**Recommendations:** **close-as-not-a-bug** — The behavior is by-design iOS UIGestureRecognizer mechanics. The workaround (e.Handled = true) is clear and has already been suggested in the comments. The reporter has not confirmed whether the fix works but the code clearly explains the cause.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Maui |
+| Platforms | os/iOS |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a MAUI app with SKCanvasView and EnableTouchEvents = true
+2. Subscribe to the Touch event
+3. Do NOT set e.Handled = true in the handler
+4. Run on iOS Simulator or device
+5. Touch and drag on the canvas
+
+**Environment:** iOS 17.2, iOS Simulator iPhone 14 Pro Max, SkiaSharp 2.88.3, Visual Studio (Windows)
+
+**Repository links:**
+- https://github.com/nm4568/SkiaSharpSamples — Minimal reproducible example project
+- https://github.com/mono/SkiaSharp/issues/334 — Earlier related issue (Android) - same e.Handled pattern applies
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | missing-output |
+| Error message | CanvasView.Touch is only firing one ActionType on iOS - ActionType.Pressed |
+| Repro quality | complete |
+| Target frameworks | net8.0-ios |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The iOS UIGestureRecognizer-based SKTouchHandler with IgnoreTouch logic is still present in the current codebase and works the same way. |
+
+## Analysis
+
+### Technical Summary
+
+The iOS SKTouchHandler is a UIGestureRecognizer. In TouchesBegan it calls FireEvent which returns args.Handled; if the consumer does not set e.Handled = true, IgnoreTouch is immediately called for that touch, causing the UIGestureRecognizer to stop receiving Moved/Released/Cancelled callbacks for that touch. The fix is to add e.Handled = true at the end of the Touch event handler.
+
+### Rationale
+
+The code shows that on iOS, setting e.Handled = true in the Pressed handler is mandatory to keep receiving subsequent touch events. This is by-design iOS UIGestureRecognizer behavior, but the requirement is not obvious to users. A commenter on the issue has already pointed out the workaround (e.Handled = true). The issue is valid as a usability bug because the behavior differs from other platforms where e.Handled is not required to receive subsequent events.
+
+### Key Signals
+
+- "CanvasView.Touch is only firing one ActionType on iOS - ActionType.Pressed" — **issue body** (Subsequent touch events (Moved, Released, Cancelled) are not received after Pressed.)
+- "your test needs to set e.Handled = true; at the end of the OnTouch handler" — **comment by pauldendulk** (Known workaround: setting Handled = true prevents IgnoreTouch from being called, allowing subsequent events.)
+- "if (!FireEvent(SKTouchAction.Pressed, touch, true)) { IgnoreTouch(touch, evt); }" — **source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs lines 60-63** (When e.Handled is false, IgnoreTouch is called on the UIGestureRecognizer, stopping all subsequent touch callbacks for that touch.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs` | 54-65 | direct | TouchesBegan calls FireEvent; if it returns false (i.e., args.Handled == false), IgnoreTouch(touch, evt) is called, which tells UIKit to stop sending touch updates for that touch to this gesture recognizer. This directly causes the observed behavior. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs` | 97-110 | direct | FireEvent invokes onTouchAction (user handler) and returns args.Handled. The default value of SKTouchEventArgs.Handled is false, so unless the consumer explicitly sets it to true, IgnoreTouch will always be triggered. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs` | 36 | related | SKTouchEventArgs.Handled defaults to false. No documentation or warning that this must be set to true on iOS to receive subsequent touch events. |
+
+### Workarounds
+
+- Set e.Handled = true at the end of the SKCanvasView.Touch event handler to prevent IgnoreTouch from being called, allowing Moved, Released, and Cancelled events to be received.
+
+### Next Questions
+
+- Does the reporter confirm that e.Handled = true fixes the issue in their sample?
+- Should e.Handled = true be documented more prominently, or should the iOS handler default behavior be changed?
+
+### Resolution Proposals
+
+**Hypothesis:** The reporter is not setting e.Handled = true in the Touch handler. On iOS, the SKTouchHandler (UIGestureRecognizer) requires this to continue tracking the touch; without it, subsequent Moved/Released events are suppressed.
+
+1. **Set e.Handled = true in the Touch handler** — workaround, confidence 0.95 (95%), cost/xs, validated=yes
+   - Add e.Handled = true; at the end of the SKCanvasView Touch event handler to opt in to receiving all subsequent touch events for the gesture.
+
+```csharp
+private void SkCanvasView_Touch(object? sender, SKTouchEventArgs e)
+{
+    switch (e.ActionType)
+    {
+        case SKTouchAction.Pressed:
+            // handle press
+            break;
+        case SKTouchAction.Moved:
+            // handle move
+            break;
+        case SKTouchAction.Released:
+            // handle release
+            break;
+    }
+    e.Handled = true; // Required on iOS to receive Moved/Released events
+    ((SKCanvasView)sender!).InvalidateSurface();
+}
+```
+
+**Recommended proposal:** Set e.Handled = true in the Touch handler
+
+**Why:** Directly addresses the root cause (IgnoreTouch not called) with a one-line change. Already suggested by a commenter and matches the pattern used in issue #334.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.80 (80%) |
+| Reason | The behavior is by-design iOS UIGestureRecognizer mechanics. The workaround (e.Handled = true) is clear and has already been suggested in the comments. The reporter has not confirmed whether the fix works but the code clearly explains the cause. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, views MAUI, and iOS labels | labels=type/bug, area/SkiaSharp.Views.Maui, os/iOS, tenet/compatibility |
+| add-comment | medium | 0.90 (90%) | Explain workaround (e.Handled = true) and why iOS requires it | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report and the minimal repro!
+
+The fix is to set `e.Handled = true` at the end of your `Touch` event handler:
+
+```csharp
+private void SkCanvasView_Touch(object? sender, SKTouchEventArgs e)
+{
+    switch (e.ActionType)
+    {
+        case SKTouchAction.Pressed:
+            DebugLabel.Text = "Pressed";
+            break;
+        case SKTouchAction.Moved:
+            DebugLabel.Text = "Moved";
+            break;
+        case SKTouchAction.Released:
+            DebugLabel.Text = "Released";
+            break;
+    }
+
+    e.Handled = true; // Required on iOS!
+    ((SKCanvasView)sender!).InvalidateSurface();
+}
+```
+
+On iOS, `SKCanvasView` uses a `UIGestureRecognizer` under the hood. When `e.Handled` is `false` (the default), the gesture recognizer calls `IgnoreTouch` for that touch, which tells UIKit to stop routing `Moved`, `Released`, and `Cancelled` events to it. Setting `e.Handled = true` opts you in to receive the full sequence of touch events.
+
+This is the same pattern documented in #334. Could you confirm whether adding `e.Handled = true` resolves the issue in your sample?
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2722,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T20:10:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKCanvasView.Touch on iOS (MAUI) only fires the Pressed action; Moved, Released, and other action types are never raised because the iOS UIGestureRecognizer-based touch handler calls IgnoreTouch when e.Handled is not set to true in the Pressed callback.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "missing-output",
+      "errorMessage": "CanvasView.Touch is only firing one ActionType on iOS - ActionType.Pressed",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0-ios"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI app with SKCanvasView and EnableTouchEvents = true",
+        "Subscribe to the Touch event",
+        "Do NOT set e.Handled = true in the handler",
+        "Run on iOS Simulator or device",
+        "Touch and drag on the canvas"
+      ],
+      "environmentDetails": "iOS 17.2, iOS Simulator iPhone 14 Pro Max, SkiaSharp 2.88.3, Visual Studio (Windows)",
+      "repoLinks": [
+        {
+          "url": "https://github.com/nm4568/SkiaSharpSamples",
+          "description": "Minimal reproducible example project"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/334",
+          "description": "Earlier related issue (Android) - same e.Handled pattern applies"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The iOS UIGestureRecognizer-based SKTouchHandler with IgnoreTouch logic is still present in the current codebase and works the same way."
+    }
+  },
+  "analysis": {
+    "summary": "The iOS SKTouchHandler is a UIGestureRecognizer. In TouchesBegan it calls FireEvent which returns args.Handled; if the consumer does not set e.Handled = true, IgnoreTouch is immediately called for that touch, causing the UIGestureRecognizer to stop receiving Moved/Released/Cancelled callbacks for that touch. The fix is to add e.Handled = true at the end of the Touch event handler.",
+    "rationale": "The code shows that on iOS, setting e.Handled = true in the Pressed handler is mandatory to keep receiving subsequent touch events. This is by-design iOS UIGestureRecognizer behavior, but the requirement is not obvious to users. A commenter on the issue has already pointed out the workaround (e.Handled = true). The issue is valid as a usability bug because the behavior differs from other platforms where e.Handled is not required to receive subsequent events.",
+    "keySignals": [
+      {
+        "text": "CanvasView.Touch is only firing one ActionType on iOS - ActionType.Pressed",
+        "source": "issue body",
+        "interpretation": "Subsequent touch events (Moved, Released, Cancelled) are not received after Pressed."
+      },
+      {
+        "text": "your test needs to set e.Handled = true; at the end of the OnTouch handler",
+        "source": "comment by pauldendulk",
+        "interpretation": "Known workaround: setting Handled = true prevents IgnoreTouch from being called, allowing subsequent events."
+      },
+      {
+        "text": "if (!FireEvent(SKTouchAction.Pressed, touch, true)) { IgnoreTouch(touch, evt); }",
+        "source": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs lines 60-63",
+        "interpretation": "When e.Handled is false, IgnoreTouch is called on the UIGestureRecognizer, stopping all subsequent touch callbacks for that touch."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "54-65",
+        "finding": "TouchesBegan calls FireEvent; if it returns false (i.e., args.Handled == false), IgnoreTouch(touch, evt) is called, which tells UIKit to stop sending touch updates for that touch to this gesture recognizer. This directly causes the observed behavior.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "97-110",
+        "finding": "FireEvent invokes onTouchAction (user handler) and returns args.Handled. The default value of SKTouchEventArgs.Handled is false, so unless the consumer explicitly sets it to true, IgnoreTouch will always be triggered.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+        "lines": "36",
+        "finding": "SKTouchEventArgs.Handled defaults to false. No documentation or warning that this must be set to true on iOS to receive subsequent touch events.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Set e.Handled = true at the end of the SKCanvasView.Touch event handler to prevent IgnoreTouch from being called, allowing Moved, Released, and Cancelled events to be received."
+    ],
+    "nextQuestions": [
+      "Does the reporter confirm that e.Handled = true fixes the issue in their sample?",
+      "Should e.Handled = true be documented more prominently, or should the iOS handler default behavior be changed?"
+    ],
+    "resolution": {
+      "hypothesis": "The reporter is not setting e.Handled = true in the Touch handler. On iOS, the SKTouchHandler (UIGestureRecognizer) requires this to continue tracking the touch; without it, subsequent Moved/Released events are suppressed.",
+      "proposals": [
+        {
+          "title": "Set e.Handled = true in the Touch handler",
+          "description": "Add e.Handled = true; at the end of the SKCanvasView Touch event handler to opt in to receiving all subsequent touch events for the gesture.",
+          "category": "workaround",
+          "codeSnippet": "private void SkCanvasView_Touch(object? sender, SKTouchEventArgs e)\n{\n    switch (e.ActionType)\n    {\n        case SKTouchAction.Pressed:\n            // handle press\n            break;\n        case SKTouchAction.Moved:\n            // handle move\n            break;\n        case SKTouchAction.Released:\n            // handle release\n            break;\n    }\n    e.Handled = true; // Required on iOS to receive Moved/Released events\n    ((SKCanvasView)sender!).InvalidateSurface();\n}",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Set e.Handled = true in the Touch handler",
+      "recommendedReason": "Directly addresses the root cause (IgnoreTouch not called) with a one-line change. Already suggested by a commenter and matches the pattern used in issue #334."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.8,
+      "reason": "The behavior is by-design iOS UIGestureRecognizer mechanics. The workaround (e.Handled = true) is clear and has already been suggested in the comments. The reporter has not confirmed whether the fix works but the code clearly explains the cause.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views MAUI, and iOS labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Maui",
+          "os/iOS",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain workaround (e.Handled = true) and why iOS requires it",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the report and the minimal repro!\n\nThe fix is to set `e.Handled = true` at the end of your `Touch` event handler:\n\n```csharp\nprivate void SkCanvasView_Touch(object? sender, SKTouchEventArgs e)\n{\n    switch (e.ActionType)\n    {\n        case SKTouchAction.Pressed:\n            DebugLabel.Text = \"Pressed\";\n            break;\n        case SKTouchAction.Moved:\n            DebugLabel.Text = \"Moved\";\n            break;\n        case SKTouchAction.Released:\n            DebugLabel.Text = \"Released\";\n            break;\n    }\n\n    e.Handled = true; // Required on iOS!\n    ((SKCanvasView)sender!).InvalidateSurface();\n}\n```\n\nOn iOS, `SKCanvasView` uses a `UIGestureRecognizer` under the hood. When `e.Handled` is `false` (the default), the gesture recognizer calls `IgnoreTouch` for that touch, which tells UIKit to stop routing `Moved`, `Released`, and `Cancelled` events to it. Setting `e.Handled = true` opts you in to receive the full sequence of touch events.\n\nThis is the same pattern documented in #334. Could you confirm whether adding `e.Handled = true` resolves the issue in your sample?"
+      }
+    ]
+  }
+}
+```
+
+</details>

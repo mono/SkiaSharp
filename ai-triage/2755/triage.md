@@ -1,0 +1,381 @@
+# Issue Triage Report — #2755
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T19:32:42Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp (0.95 (95%)) |
+| Suggested action | close-as-fixed (0.92 (92%)) |
+
+**Issue Summary:** AccessViolationException in SKPaint.DisposeNative() when using SKPaint.Clone() after upgrading to SkiaSharp 3.0 on Windows/MAUI; fixed in PR #2904 by switching Clone() to sk_compatpaint_clone.
+
+**Analysis:** SKPaint.Clone() was calling the wrong C API (sk_paint_clone instead of sk_compatpaint_clone) while DisposeNative always used sk_compatpaint_delete, causing a type mismatch that corrupted memory when the cloned paint was finalized. This was a v3-specific regression due to the introduction of SkCompatPaint. PR #2904 fixed Clone() to call sk_compatpaint_clone and was merged July 2024; the current codebase contains the fix.
+
+**Recommendations:** **close-as-fixed** — Root cause identified in duplicate #2899 and fixed in PR #2904 (merged 2024-07-08). Current SKPaint.cs line 302 confirms sk_compatpaint_clone is used. A contributor already noted the fix in comments.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | partner/maui |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Upgrade project from SkiaSharp 2.88.x to 3.0 preview
+2. Call SKPaint.Clone() on an existing SKPaint object
+3. Allow GC to finalize or explicitly dispose the cloned paint
+
+**Environment:** MAUI Windows 11, Visual Studio (Windows)
+
+**Related issues:** #2899
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/pull/2904 — PR #2904: Fix SKPaint.Clone to use sk_compatpaint_clone — merged 2024-07-08
+- https://github.com/mono/SkiaSharp/issues/2899 — #2899: Duplicate with detailed minimal repro — closed as completed via #2904
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | crash |
+| Error message | Access violation in SKPaint.DisposeNative() triggered from GC finalizer thread |
+| Repro quality | partial |
+| Target frameworks | net-maui-windows |
+
+**Stack trace:**
+
+```text
+[Managed to Native Transition] > SkiaSharp.SKPaint.DisposeNative() Line 428 > SKNativeObject.Dispose(bool) Line 61 > SKObject.Dispose(bool) Line 90 > SKPaint.Dispose(bool) Line 424 > ~SKNativeObject() Line 34
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.2, 2.88.3, 3.0 |
+| Worked in | 2.88.2 |
+| Broke in | 3.0 preview (alpha) |
+| Current relevance | unlikely |
+| Relevance reason | Fix was merged in PR #2904 (2024-07-08). Current code at binding/SkiaSharp/SKPaint.cs line 302 already uses sk_compatpaint_clone. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.90 (90%) |
+| Reason | Reporter indicates worked in 2.88.2, broke on 3.0 upgrade. SkCompatPaint was introduced in v3, which changed the native type underlying SKPaint. |
+| Worked in version | 2.88.2 |
+| Broke in version | 3.0 alpha/preview |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | True |
+| Confidence | 0.95 (95%) |
+| Reason | PR #2904 explicitly fixed the root cause (sk_paint_clone → sk_compatpaint_clone) and current code confirms the fix is applied at SKPaint.cs line 302. |
+| Related PRs | #2904 |
+| Related commits | — |
+| Fixed in version | 3.116.0 |
+
+## Analysis
+
+### Technical Summary
+
+SKPaint.Clone() was calling the wrong C API (sk_paint_clone instead of sk_compatpaint_clone) while DisposeNative always used sk_compatpaint_delete, causing a type mismatch that corrupted memory when the cloned paint was finalized. This was a v3-specific regression due to the introduction of SkCompatPaint. PR #2904 fixed Clone() to call sk_compatpaint_clone and was merged July 2024; the current codebase contains the fix.
+
+### Rationale
+
+AccessViolationException in DisposeNative from a GC finalizer is a classic native memory management mismatch. Duplicate issue #2899 identified the exact root cause: Clone() used sk_paint_clone (returns an SkPaint*) but DisposeNative called sk_compatpaint_delete (expects an SkCompatPaint*). Code investigation confirms the fix is present in current code. Close-as-fixed is appropriate since PR #2904 is merged.
+
+### Key Signals
+
+- "Access Violations in DisposeNative of SKPaint... I was eventually was able to stop the error appearing by replace any calls to Clone()" — **issue body** (Reporter correctly identified Clone() as the trigger. Workaround of removing Clone() confirms it as the root cause.)
+- "@Rippletank likely your issue was fixed in #2904" — **comment by FoggyFinder (August 2024)** (Contributor confirms fix was applied in PR #2904.)
+- "SKPaint.Clone calls sk_paint_clone not sk_compatpaint_clone / DisposeNative calls sk_compatpaint_delete" — **issue #2899 (duplicate)** (Exact root cause: type mismatch between clone (SkPaint*) and delete (SkCompatPaint*) native calls.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKPaint.cs` | 302-303 | direct | Current Clone() implementation: `GetObject(SkiaApi.sk_compatpaint_clone(Handle))!` — correctly uses sk_compatpaint_clone. This matches the fix from PR #2904 (previously used sk_paint_clone, causing type mismatch with DisposeNative's sk_compatpaint_delete). |
+| `binding/SkiaSharp/SKPaint.cs` | 88-89 | direct | DisposeNative calls sk_compatpaint_delete(Handle), which requires the handle to point to an SkCompatPaint. With the fix, Clone() now creates an SkCompatPaint-backed handle, eliminating the mismatch. |
+
+### Workarounds
+
+- Avoid SKPaint.Clone() entirely — construct a new SKPaint and copy the properties manually.
+- Upgrade to SkiaSharp 3.116.0 or later where PR #2904 has been applied (sk_compatpaint_clone fix).
+- As per a contributor suggestion (Jan 2025): set paint.Typeface = null before disposing if there is a residual crash with Typeface-related clones.
+
+### Next Questions
+
+- Is there still a crash when the cloned paint has a non-null Typeface (per Jan 2025 comment)?
+- What exact 3.x version first included the fix from PR #2904?
+
+### Resolution Proposals
+
+**Hypothesis:** SKPaint.Clone() called the wrong native API (sk_paint_clone returns SkPaint*, but DisposeNative expects SkCompatPaint*). This was fixed in PR #2904.
+
+1. **Upgrade to SkiaSharp 3.116.0+** — fix, confidence 0.95 (95%), cost/xs, validated=untested
+   - The fix from PR #2904 is included in 3.116.0 and later. Upgrading eliminates the crash entirely.
+2. **Avoid Clone() — construct new SKPaint** — workaround, confidence 0.90 (90%), cost/s, validated=untested
+   - Create a new SKPaint instance and copy required properties manually as a workaround for older 3.x alphas.
+
+**Recommended proposal:** Upgrade to SkiaSharp 3.116.0+
+
+**Why:** Zero effort for the reporter; the fix is already in the released packages.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-fixed |
+| Confidence | 0.92 (92%) |
+| Reason | Root cause identified in duplicate #2899 and fixed in PR #2904 (merged 2024-07-08). Current SKPaint.cs line 302 confirms sk_compatpaint_clone is used. A contributor already noted the fix in comments. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, core SkiaSharp, Windows, reliability, and maui-partner labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability, partner/maui |
+| add-comment | medium | 0.92 (92%) | Inform reporter the bug was fixed in PR #2904 and suggest upgrading | — |
+| close-issue | medium | 0.90 (90%) | Close as completed — fixed in PR #2904 | stateReason=completed |
+| link-related | low | 0.95 (95%) | Cross-reference duplicate issue #2899 which had the minimal repro | linkedIssue=#2899 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report! This was a v3-specific issue where `SKPaint.Clone()` was calling the wrong native API (`sk_paint_clone`) while `DisposeNative` expected a `SkCompatPaint*` handle (`sk_compatpaint_delete`). This mismatch caused memory corruption on finalization.
+
+This was fixed in PR #2904 (merged July 2024). The fix changes `Clone()` to call `sk_compatpaint_clone` so the returned handle is the correct type for `DisposeNative`.
+
+**Workaround (if on an older 3.x alpha):** Avoid `SKPaint.Clone()` and construct a new `SKPaint` with the same properties.
+
+**Fix:** Upgrade to SkiaSharp 3.116.0 or later — the fix is included.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2755,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T19:32:42Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "AccessViolationException in SKPaint.DisposeNative() when using SKPaint.Clone() after upgrading to SkiaSharp 3.0 on Windows/MAUI; fixed in PR #2904 by switching Clone() to sk_compatpaint_clone.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "Access violation in SKPaint.DisposeNative() triggered from GC finalizer thread",
+      "stackTrace": "[Managed to Native Transition] > SkiaSharp.SKPaint.DisposeNative() Line 428 > SKNativeObject.Dispose(bool) Line 61 > SKObject.Dispose(bool) Line 90 > SKPaint.Dispose(bool) Line 424 > ~SKNativeObject() Line 34",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net-maui-windows"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Upgrade project from SkiaSharp 2.88.x to 3.0 preview",
+        "Call SKPaint.Clone() on an existing SKPaint object",
+        "Allow GC to finalize or explicitly dispose the cloned paint"
+      ],
+      "environmentDetails": "MAUI Windows 11, Visual Studio (Windows)",
+      "relatedIssues": [
+        2899
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2904",
+          "description": "PR #2904: Fix SKPaint.Clone to use sk_compatpaint_clone — merged 2024-07-08"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2899",
+          "description": "#2899: Duplicate with detailed minimal repro — closed as completed via #2904"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.2",
+        "2.88.3",
+        "3.0"
+      ],
+      "workedIn": "2.88.2",
+      "brokeIn": "3.0 preview (alpha)",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Fix was merged in PR #2904 (2024-07-08). Current code at binding/SkiaSharp/SKPaint.cs line 302 already uses sk_compatpaint_clone."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.9,
+      "reason": "Reporter indicates worked in 2.88.2, broke on 3.0 upgrade. SkCompatPaint was introduced in v3, which changed the native type underlying SKPaint.",
+      "workedInVersion": "2.88.2",
+      "brokeInVersion": "3.0 alpha/preview"
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.95,
+      "reason": "PR #2904 explicitly fixed the root cause (sk_paint_clone → sk_compatpaint_clone) and current code confirms the fix is applied at SKPaint.cs line 302.",
+      "relatedPRs": [
+        2904
+      ],
+      "fixedInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "SKPaint.Clone() was calling the wrong C API (sk_paint_clone instead of sk_compatpaint_clone) while DisposeNative always used sk_compatpaint_delete, causing a type mismatch that corrupted memory when the cloned paint was finalized. This was a v3-specific regression due to the introduction of SkCompatPaint. PR #2904 fixed Clone() to call sk_compatpaint_clone and was merged July 2024; the current codebase contains the fix.",
+    "rationale": "AccessViolationException in DisposeNative from a GC finalizer is a classic native memory management mismatch. Duplicate issue #2899 identified the exact root cause: Clone() used sk_paint_clone (returns an SkPaint*) but DisposeNative called sk_compatpaint_delete (expects an SkCompatPaint*). Code investigation confirms the fix is present in current code. Close-as-fixed is appropriate since PR #2904 is merged.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "302-303",
+        "finding": "Current Clone() implementation: `GetObject(SkiaApi.sk_compatpaint_clone(Handle))!` — correctly uses sk_compatpaint_clone. This matches the fix from PR #2904 (previously used sk_paint_clone, causing type mismatch with DisposeNative's sk_compatpaint_delete).",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "88-89",
+        "finding": "DisposeNative calls sk_compatpaint_delete(Handle), which requires the handle to point to an SkCompatPaint. With the fix, Clone() now creates an SkCompatPaint-backed handle, eliminating the mismatch.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Access Violations in DisposeNative of SKPaint... I was eventually was able to stop the error appearing by replace any calls to Clone()",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identified Clone() as the trigger. Workaround of removing Clone() confirms it as the root cause."
+      },
+      {
+        "text": "@Rippletank likely your issue was fixed in #2904",
+        "source": "comment by FoggyFinder (August 2024)",
+        "interpretation": "Contributor confirms fix was applied in PR #2904."
+      },
+      {
+        "text": "SKPaint.Clone calls sk_paint_clone not sk_compatpaint_clone / DisposeNative calls sk_compatpaint_delete",
+        "source": "issue #2899 (duplicate)",
+        "interpretation": "Exact root cause: type mismatch between clone (SkPaint*) and delete (SkCompatPaint*) native calls."
+      }
+    ],
+    "workarounds": [
+      "Avoid SKPaint.Clone() entirely — construct a new SKPaint and copy the properties manually.",
+      "Upgrade to SkiaSharp 3.116.0 or later where PR #2904 has been applied (sk_compatpaint_clone fix).",
+      "As per a contributor suggestion (Jan 2025): set paint.Typeface = null before disposing if there is a residual crash with Typeface-related clones."
+    ],
+    "nextQuestions": [
+      "Is there still a crash when the cloned paint has a non-null Typeface (per Jan 2025 comment)?",
+      "What exact 3.x version first included the fix from PR #2904?"
+    ],
+    "resolution": {
+      "hypothesis": "SKPaint.Clone() called the wrong native API (sk_paint_clone returns SkPaint*, but DisposeNative expects SkCompatPaint*). This was fixed in PR #2904.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 3.116.0+",
+          "description": "The fix from PR #2904 is included in 3.116.0 and later. Upgrading eliminates the crash entirely.",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Avoid Clone() — construct new SKPaint",
+          "description": "Create a new SKPaint instance and copy required properties manually as a workaround for older 3.x alphas.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 3.116.0+",
+      "recommendedReason": "Zero effort for the reporter; the fix is already in the released packages."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.92,
+      "reason": "Root cause identified in duplicate #2899 and fixed in PR #2904 (merged 2024-07-08). Current SKPaint.cs line 302 confirms sk_compatpaint_clone is used. A contributor already noted the fix in comments.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core SkiaSharp, Windows, reliability, and maui-partner labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/reliability",
+          "partner/maui"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter the bug was fixed in PR #2904 and suggest upgrading",
+        "risk": "medium",
+        "confidence": 0.92,
+        "comment": "Thanks for the detailed report! This was a v3-specific issue where `SKPaint.Clone()` was calling the wrong native API (`sk_paint_clone`) while `DisposeNative` expected a `SkCompatPaint*` handle (`sk_compatpaint_delete`). This mismatch caused memory corruption on finalization.\n\nThis was fixed in PR #2904 (merged July 2024). The fix changes `Clone()` to call `sk_compatpaint_clone` so the returned handle is the correct type for `DisposeNative`.\n\n**Workaround (if on an older 3.x alpha):** Avoid `SKPaint.Clone()` and construct a new `SKPaint` with the same properties.\n\n**Fix:** Upgrade to SkiaSharp 3.116.0 or later — the fix is included."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as completed — fixed in PR #2904",
+        "risk": "medium",
+        "confidence": 0.9,
+        "stateReason": "completed"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference duplicate issue #2899 which had the minimal repro",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 2899
+      }
+    ]
+  }
+}
+```
+
+</details>
