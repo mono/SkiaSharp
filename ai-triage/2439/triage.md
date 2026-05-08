@@ -1,0 +1,348 @@
+# Issue Triage Report — #2439
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T11:44:43Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/Build (0.92 (92%)) |
+| Suggested action | close-as-fixed (0.72 (72%)) |
+
+**Issue Summary:** SkiaSharp.NativeAssets.Win32 2.88.0 includes native DLLs as MSBuild Content items, causing NU5118/NU5100 errors when GeneratePackageOnBuild=true is set in a project that references SkiaSharp.
+
+**Analysis:** The SkiaSharp.NativeAssets.Win32 2.88.0 package shipped build targets that include native DLLs as MSBuild <Content> items. When NuGet pack runs (GeneratePackageOnBuild=true), it picks up these content items and generates NU5118 (duplicate file) and NU5100 (not in lib/) errors. The current source code already uses <None> instead of <Content>, which is the correct fix — <None> items are copied to output but not included in NuGet packages.
+
+**Recommendations:** **close-as-fixed** — The fix (using <None> instead of <Content> in Win32 native asset build targets) is already present in the current main branch code. Users on 2.88.x have confirmed workarounds. The issue is effectively resolved in newer releases.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a .NET 6 or net472 project referencing SkiaSharp 2.88.0 (and HarfBuzzSharp)
+2. Add <GeneratePackageOnBuild>true</GeneratePackageOnBuild> to the csproj
+3. Build the project
+4. Observe 24 NU5118/NU5100 MSBuild errors
+
+**Environment:** Visual Studio 2022 17.4, .NET SDK 6.0.407, Windows, SkiaSharp 2.88.0
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2439 — Original issue report
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | build-error |
+| Error message | NU5118: File 'libSkiaSharp.dll' is not added because the package already contains file 'content\libSkiaSharp.dll' |
+| Repro quality | complete |
+| Target frameworks | net472, net6.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.0, 2.88.6 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unlikely |
+| Relevance reason | The current main branch targets file for SkiaSharp.NativeAssets.Win32 already uses <None> instead of <Content>, which is exactly the fix the reporter suggested. December 2023 comment still reports issue with 2.88.6, suggesting the fix is in main but not yet released in a 2.88.x patch. |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | True |
+| Confidence | 0.80 (80%) |
+| Reason | The current binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets and HarfBuzzSharp.NativeAssets.Win32 equivalent already use <None> instead of <Content> for native DLL items — exactly the fix suggested in the issue. The Pack attribute is not set, but <None> items are not included in NuGet packages by default, which resolves the NU5118 conflict. |
+| Related PRs | — |
+| Related commits | — |
+| Fixed in version | — |
+
+## Analysis
+
+### Technical Summary
+
+The SkiaSharp.NativeAssets.Win32 2.88.0 package shipped build targets that include native DLLs as MSBuild <Content> items. When NuGet pack runs (GeneratePackageOnBuild=true), it picks up these content items and generates NU5118 (duplicate file) and NU5100 (not in lib/) errors. The current source code already uses <None> instead of <Content>, which is the correct fix — <None> items are copied to output but not included in NuGet packages.
+
+### Rationale
+
+This is clearly a build-system bug: the 2.88.0 targets file incorrectly used <Content> which NuGet pack includes, while the correct approach is <None> which only affects build output. The fix is already present in main. The bug affects any Windows .NET/net4x project that references SkiaSharp and packs a NuGet package. Multiple reporters confirm the issue (at least 3 users affected). Workaround exists via property flags.
+
+### Key Signals
+
+- "NU5118: File 'libSkiaSharp.dll' is not added because the package already contains file 'content\libSkiaSharp.dll'" — **issue body** (NuGet pack is collecting the <Content> items from SkiaSharp.NativeAssets.Win32's build targets and trying to include them in the consumer's package — once from content/ (old-style) and once from the runtimes/ path.)
+- "ShouldIncludeNativeSkiaSharp=False / ShouldIncludeNativeHarfBuzzSharp=False" — **issue body workaround** (The targets file has a guard property. Setting it to False skips the entire ItemGroup, preventing the Content/None items from being added at all. This stops the pack errors but also prevents the native DLLs from being copied to output on the developer machine.)
+- "I have added the following code to Directory.Build.targets: <Content Update="@(_NativeSkiaSharpFile)"><Pack>False</Pack></Content>" — **comment by SimonWeinbergerEnscape** (A more targeted workaround that keeps native DLLs in the output directory while excluding them from pack. This is needed when ShouldIncludeNativeSkiaSharp=False is not acceptable (because the native DLLs are needed at runtime).)
+- "This problem still occurs when building NuGet-Packages. I'm using version 2.88.6." — **comment by SebastianSchumann (Dec 2023)** (Confirms the fix was not shipped in the 2.88.x patch series. The fix in main (using <None>) has not been published as a 2.88.x update.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets` | 22-27 | direct | Current code uses <None Include="@(_NativeSkiaSharpFile)"> with CopyToOutputDirectory=PreserveNewest. This is the fixed form — <None> items are not packaged by NuGet. The 2.88.0 package shipped with <Content> instead, which NuGet pack includes, causing NU5118 duplicate and NU5100 non-lib placement errors. |
+| `binding/HarfBuzzSharp.NativeAssets.Win32/buildTransitive/net4/HarfBuzzSharp.targets` | 22-27 | direct | Same pattern as SkiaSharp targets: uses <None> in current code. Both SkiaSharp and HarfBuzz Win32 native asset packages had the same <Content> vs <None> issue in 2.88.0, confirming both were fixed together. |
+
+### Workarounds
+
+- Set <ShouldIncludeNativeSkiaSharp>False</ShouldIncludeNativeSkiaSharp> and <ShouldIncludeNativeHarfBuzzSharp>False</ShouldIncludeNativeHarfBuzzSharp> in your csproj (note: this also prevents native DLLs from being copied to output directory, so the app must be run from an install that has the runtime package)
+- Add to Directory.Build.targets: <Content Update="@(_NativeSkiaSharpFile)"><Pack>False</Pack></Content> (keeps native DLLs in output, excludes from pack)
+- Upgrade to SkiaSharp 3.x which uses <None> items and does not have this issue
+
+### Resolution Proposals
+
+**Hypothesis:** The 2.88.0 (and subsequent 2.88.x) packages shipped targets that use <Content> for native DLLs, which NuGet pack collects into the consumer's package. The main branch already has the fix (<None> instead of <Content>). The issue is fixed in unreleased code.
+
+1. **Immediate: Use Pack=False workaround in Directory.Build.targets** — workaround, confidence 0.85 (85%), cost/xs, validated=yes
+   - Add a Content Update item to set Pack=False on the native SkiaSharp files. This keeps the DLLs in the output directory for local development and testing, but excludes them from NuGet pack.
+
+```csharp
+<ItemGroup>
+  <Content Update="@(_NativeSkiaSharpFile)">
+    <Pack>False</Pack>
+  </Content>
+  <Content Update="@(_NativeHarfBuzzSharpFile)">
+    <Pack>False</Pack>
+  </Content>
+</ItemGroup>
+```
+2. **Upgrade to SkiaSharp 3.x** — fix, confidence 0.90 (90%), cost/m, validated=untested
+   - The main branch (targeting SkiaSharp 3.x releases) already uses <None> for native assets, which resolves the issue permanently. Upgrading to a 3.x release will fix this without workarounds.
+
+**Recommended proposal:** Immediate: Use Pack=False workaround in Directory.Build.targets
+
+**Why:** Provides the minimal-impact fix for users still on 2.88.x: keeps native DLLs available locally while excluding them from the NuGet package being built. The upgrade to 3.x is the permanent fix.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-fixed |
+| Confidence | 0.72 (72%) |
+| Reason | The fix (using <None> instead of <Content> in Win32 native asset build targets) is already present in the current main branch code. Users on 2.88.x have confirmed workarounds. The issue is effectively resolved in newer releases. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply type/bug, area/Build, os/Windows-Classic, tenet/compatibility labels | labels=type/bug, area/Build, os/Windows-Classic, tenet/compatibility |
+| add-comment | medium | 0.80 (80%) | Inform reporter of fix in current code and provide workarounds for 2.88.x | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report! This issue is caused by the `SkiaSharp.NativeAssets.Win32` (and `HarfBuzzSharp.NativeAssets.Win32`) build targets in the 2.88.0 package using `<Content>` items for native DLLs. NuGet pack collects `<Content>` items into the consumer's package, leading to the NU5118/NU5100 errors.
+
+The fix (using `<None>` instead of `<Content>`) is already present in the current source code and will ship in a future release.
+
+**Workarounds for SkiaSharp 2.88.x:**
+
+**Option 1** — Add `Pack=False` to the native content items in `Directory.Build.targets` (keeps native DLLs in output directory for local use):
+```xml
+<ItemGroup>
+  <Content Update="@(_NativeSkiaSharpFile)">
+    <Pack>False</Pack>
+  </Content>
+  <Content Update="@(_NativeHarfBuzzSharpFile)">
+    <Pack>False</Pack>
+  </Content>
+</ItemGroup>
+```
+
+**Option 2** — Disable native asset inclusion entirely (if you only need to produce a NuGet package and run from a runtime-installed environment):
+```xml
+<ShouldIncludeNativeSkiaSharp>False</ShouldIncludeNativeSkiaSharp>
+<ShouldIncludeNativeHarfBuzzSharp>False</ShouldIncludeNativeHarfBuzzSharp>
+```
+
+**Permanent fix** — Upgrade to SkiaSharp 3.x where this is resolved.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2439,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T11:44:43Z"
+  },
+  "summary": "SkiaSharp.NativeAssets.Win32 2.88.0 includes native DLLs as MSBuild Content items, causing NU5118/NU5100 errors when GeneratePackageOnBuild=true is set in a project that references SkiaSharp.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "NU5118: File 'libSkiaSharp.dll' is not added because the package already contains file 'content\\libSkiaSharp.dll'",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net472",
+        "net6.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET 6 or net472 project referencing SkiaSharp 2.88.0 (and HarfBuzzSharp)",
+        "Add <GeneratePackageOnBuild>true</GeneratePackageOnBuild> to the csproj",
+        "Build the project",
+        "Observe 24 NU5118/NU5100 MSBuild errors"
+      ],
+      "environmentDetails": "Visual Studio 2022 17.4, .NET SDK 6.0.407, Windows, SkiaSharp 2.88.0",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2439",
+          "description": "Original issue report"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.0",
+        "2.88.6"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The current main branch targets file for SkiaSharp.NativeAssets.Win32 already uses <None> instead of <Content>, which is exactly the fix the reporter suggested. December 2023 comment still reports issue with 2.88.6, suggesting the fix is in main but not yet released in a 2.88.x patch."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.8,
+      "reason": "The current binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets and HarfBuzzSharp.NativeAssets.Win32 equivalent already use <None> instead of <Content> for native DLL items — exactly the fix suggested in the issue. The Pack attribute is not set, but <None> items are not included in NuGet packages by default, which resolves the NU5118 conflict."
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp.NativeAssets.Win32 2.88.0 package shipped build targets that include native DLLs as MSBuild <Content> items. When NuGet pack runs (GeneratePackageOnBuild=true), it picks up these content items and generates NU5118 (duplicate file) and NU5100 (not in lib/) errors. The current source code already uses <None> instead of <Content>, which is the correct fix — <None> items are copied to output but not included in NuGet packages.",
+    "rationale": "This is clearly a build-system bug: the 2.88.0 targets file incorrectly used <Content> which NuGet pack includes, while the correct approach is <None> which only affects build output. The fix is already present in main. The bug affects any Windows .NET/net4x project that references SkiaSharp and packs a NuGet package. Multiple reporters confirm the issue (at least 3 users affected). Workaround exists via property flags.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets",
+        "lines": "22-27",
+        "finding": "Current code uses <None Include=\"@(_NativeSkiaSharpFile)\"> with CopyToOutputDirectory=PreserveNewest. This is the fixed form — <None> items are not packaged by NuGet. The 2.88.0 package shipped with <Content> instead, which NuGet pack includes, causing NU5118 duplicate and NU5100 non-lib placement errors.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/HarfBuzzSharp.NativeAssets.Win32/buildTransitive/net4/HarfBuzzSharp.targets",
+        "lines": "22-27",
+        "finding": "Same pattern as SkiaSharp targets: uses <None> in current code. Both SkiaSharp and HarfBuzz Win32 native asset packages had the same <Content> vs <None> issue in 2.88.0, confirming both were fixed together.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "NU5118: File 'libSkiaSharp.dll' is not added because the package already contains file 'content\\libSkiaSharp.dll'",
+        "source": "issue body",
+        "interpretation": "NuGet pack is collecting the <Content> items from SkiaSharp.NativeAssets.Win32's build targets and trying to include them in the consumer's package — once from content/ (old-style) and once from the runtimes/ path."
+      },
+      {
+        "text": "ShouldIncludeNativeSkiaSharp=False / ShouldIncludeNativeHarfBuzzSharp=False",
+        "source": "issue body workaround",
+        "interpretation": "The targets file has a guard property. Setting it to False skips the entire ItemGroup, preventing the Content/None items from being added at all. This stops the pack errors but also prevents the native DLLs from being copied to output on the developer machine."
+      },
+      {
+        "text": "I have added the following code to Directory.Build.targets: <Content Update=\"@(_NativeSkiaSharpFile)\"><Pack>False</Pack></Content>",
+        "source": "comment by SimonWeinbergerEnscape",
+        "interpretation": "A more targeted workaround that keeps native DLLs in the output directory while excluding them from pack. This is needed when ShouldIncludeNativeSkiaSharp=False is not acceptable (because the native DLLs are needed at runtime)."
+      },
+      {
+        "text": "This problem still occurs when building NuGet-Packages. I'm using version 2.88.6.",
+        "source": "comment by SebastianSchumann (Dec 2023)",
+        "interpretation": "Confirms the fix was not shipped in the 2.88.x patch series. The fix in main (using <None>) has not been published as a 2.88.x update."
+      }
+    ],
+    "workarounds": [
+      "Set <ShouldIncludeNativeSkiaSharp>False</ShouldIncludeNativeSkiaSharp> and <ShouldIncludeNativeHarfBuzzSharp>False</ShouldIncludeNativeHarfBuzzSharp> in your csproj (note: this also prevents native DLLs from being copied to output directory, so the app must be run from an install that has the runtime package)",
+      "Add to Directory.Build.targets: <Content Update=\"@(_NativeSkiaSharpFile)\"><Pack>False</Pack></Content> (keeps native DLLs in output, excludes from pack)",
+      "Upgrade to SkiaSharp 3.x which uses <None> items and does not have this issue"
+    ],
+    "resolution": {
+      "hypothesis": "The 2.88.0 (and subsequent 2.88.x) packages shipped targets that use <Content> for native DLLs, which NuGet pack collects into the consumer's package. The main branch already has the fix (<None> instead of <Content>). The issue is fixed in unreleased code.",
+      "proposals": [
+        {
+          "title": "Immediate: Use Pack=False workaround in Directory.Build.targets",
+          "description": "Add a Content Update item to set Pack=False on the native SkiaSharp files. This keeps the DLLs in the output directory for local development and testing, but excludes them from NuGet pack.",
+          "category": "workaround",
+          "codeSnippet": "<ItemGroup>\n  <Content Update=\"@(_NativeSkiaSharpFile)\">\n    <Pack>False</Pack>\n  </Content>\n  <Content Update=\"@(_NativeHarfBuzzSharpFile)\">\n    <Pack>False</Pack>\n  </Content>\n</ItemGroup>",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Upgrade to SkiaSharp 3.x",
+          "description": "The main branch (targeting SkiaSharp 3.x releases) already uses <None> for native assets, which resolves the issue permanently. Upgrading to a 3.x release will fix this without workarounds.",
+          "category": "fix",
+          "confidence": 0.9,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Immediate: Use Pack=False workaround in Directory.Build.targets",
+      "recommendedReason": "Provides the minimal-impact fix for users still on 2.88.x: keeps native DLLs available locally while excluding them from the NuGet package being built. The upgrade to 3.x is the permanent fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.72,
+      "reason": "The fix (using <None> instead of <Content> in Win32 native asset build targets) is already present in the current main branch code. Users on 2.88.x have confirmed workarounds. The issue is effectively resolved in newer releases.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/Build, os/Windows-Classic, tenet/compatibility labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "os/Windows-Classic",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter of fix in current code and provide workarounds for 2.88.x",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed report! This issue is caused by the `SkiaSharp.NativeAssets.Win32` (and `HarfBuzzSharp.NativeAssets.Win32`) build targets in the 2.88.0 package using `<Content>` items for native DLLs. NuGet pack collects `<Content>` items into the consumer's package, leading to the NU5118/NU5100 errors.\n\nThe fix (using `<None>` instead of `<Content>`) is already present in the current source code and will ship in a future release.\n\n**Workarounds for SkiaSharp 2.88.x:**\n\n**Option 1** — Add `Pack=False` to the native content items in `Directory.Build.targets` (keeps native DLLs in output directory for local use):\n```xml\n<ItemGroup>\n  <Content Update=\"@(_NativeSkiaSharpFile)\">\n    <Pack>False</Pack>\n  </Content>\n  <Content Update=\"@(_NativeHarfBuzzSharpFile)\">\n    <Pack>False</Pack>\n  </Content>\n</ItemGroup>\n```\n\n**Option 2** — Disable native asset inclusion entirely (if you only need to produce a NuGet package and run from a runtime-installed environment):\n```xml\n<ShouldIncludeNativeSkiaSharp>False</ShouldIncludeNativeSkiaSharp>\n<ShouldIncludeNativeHarfBuzzSharp>False</ShouldIncludeNativeHarfBuzzSharp>\n```\n\n**Permanent fix** — Upgrade to SkiaSharp 3.x where this is resolved."
+      }
+    ]
+  }
+}
+```
+
+</details>

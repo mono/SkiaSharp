@@ -1,0 +1,386 @@
+# Issue Triage Report — #3435
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T13:20:00Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/SkiaSharp.Views.Blazor (0.93 (93%)) |
+| Suggested action | close-as-duplicate (0.90 (90%)) |
+
+**Issue Summary:** Reporter gets System.DllNotFoundException: libSkiaSharp when using SkiaSharp in a Blazor WASM app after upgrading from .NET 9 to .NET 10; this is a duplicate of #3422 which tracks the same failure for Blazor WASM on .NET 10.
+
+**Analysis:** Blazor WASM projects targeting net10.0 fail with DllNotFoundException for libSkiaSharp because the .NET 10 WASM static-link toolchain has a compatibility issue with how SkiaSharp packages its native .a assets, or the WASM workload is missing/outdated. Identical symptom and environment to #3422.
+
+**Recommendations:** **close-as-duplicate** — Community confirmed duplicate of #3422 — same Blazor WASM .NET 10 DllNotFoundException failure with same SkiaSharp versions. Multiple reporters on both issues confirm identical symptoms.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Blazor |
+| Platforms | os/WASM |
+| Backends | — |
+| Tenets | tenet/compatibility, tenet/reliability |
+| Partner | — |
+| Current labels | type/bug, os/Windows-Classic, area/libSkiaSharp.native, tenet/reliability |
+
+## Evidence
+
+### Reproduction
+
+1. Create or upgrade a Blazor WASM project to target net10.0
+2. Add SkiaSharp 3.116.1 or 3.119.2-preview1
+3. Run the application
+4. Observe System.DllNotFoundException: libSkiaSharp at runtime
+
+**Environment:** Blazor WASM, .NET 10, SkiaSharp 3.116.1 and 3.119.2-preview1
+
+**Related issues:** #3422
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/3422 — Primary tracking issue for Blazor WASM .NET 10 failures — same root cause, multiple reporters
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | exception |
+| Error message | System.DllNotFoundException: libSkiaSharp |
+| Repro quality | partial |
+| Target frameworks | net10.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.1, 3.119.2-preview1 |
+| Worked in | 3.116.0 with .NET 9 |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Issue #3422 tracking the same .NET 10 / Blazor WASM problem is still open as of April 2026. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.85 (85%) |
+| Reason | Reporter states .NET 9 app worked with 3.116.1; same version fails after upgrading to .NET 10. Multiple commenters on #3422 confirm .NET 8 and .NET 9 work while .NET 10 does not. |
+| Worked in version | 3.116.1 on .NET 9 |
+| Broke in version | 3.116.1 on .NET 10 |
+
+## Analysis
+
+### Technical Summary
+
+Blazor WASM projects targeting net10.0 fail with DllNotFoundException for libSkiaSharp because the .NET 10 WASM static-link toolchain has a compatibility issue with how SkiaSharp packages its native .a assets, or the WASM workload is missing/outdated. Identical symptom and environment to #3422.
+
+### Rationale
+
+The reporter's platform is clearly Blazor WASM (not Windows-Classic as the prior auto-triage incorrectly labeled). The DllNotFoundException for libSkiaSharp in WASM context means the static library was not linked into dotnet.wasm at build time. Issue #3422 tracks the exact same failure scenario — Blazor WASM + .NET 10 — and has multiple users confirming workarounds. A community member explicitly called out the duplicate relationship. Closing as duplicate of #3422 is the appropriate action.
+
+### Key Signals
+
+- "Started getting this runtime error after upgrading Blazor app from .Net 9 to .Net 10" — **issue body** (Regression introduced by .NET 10 Blazor WASM toolchain changes — not a SkiaSharp version regression.)
+- "System.DllNotFoundException: libSkiaSharp" — **issue body** (In WASM, libSkiaSharp is statically linked via NativeFileReference. DllNotFoundException means the .a was not linked into dotnet.wasm.)
+- "Duplicate of https://github.com/mono/SkiaSharp/issues/3422" — **comment by Webreaper** (Community member who also reported #3422 confirmed the duplicate relationship.)
+- "Been trying to use this since .NET9 still doesn't work on .NET10 either. (Blazor WASM) System.DllNotFoundException: libSkiaSharp" — **comment by tolzy88** (Multiple users with the same exact error on .NET 10 Blazor WASM.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj` | 42-44 | direct | SkiaSharp.Views.Blazor only adds a ProjectReference to SkiaSharp.NativeAssets.WebAssembly when NOT building inside Visual Studio. This means in some build environments the transitive auto-inclusion of native assets may not function as expected, potentially leaving the .a static library out of the link. |
+| `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.props` | 1-12 | direct | The WASM native assets package sets SkiaSharpStaticLibraryPath and exposes libSkiaSharp.a as a SkiaSharpStaticLibrary item. If this props file is not evaluated by the consuming WASM project (e.g., because the WASM workload or NativeFileReference infrastructure is missing), libSkiaSharp will not be linked and the DllNotFoundException will occur at runtime. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/nuget/buildTransitive/SkiaSharp.Views.Blazor.props` | 1-11 | related | This props file contains EmccExtraLDFlags for a known dotnet/runtime workaround. If the build system doesn't correctly process these props (e.g., due to a missing or outdated wasm-tools workload), the Emscripten linker flags may not be applied, causing native linking failures. |
+
+### Workarounds
+
+- Run 'dotnet workload restore' to ensure the wasm-tools workload is installed for .NET 10, then rebuild (works for some users).
+- Explicitly add both SkiaSharp.NativeAssets.WebAssembly and SkiaSharp.Views.Blazor as direct PackageReferences in the Blazor WASM application project (not just a transitive reference).
+- If using <WasmBuildNative>false</WasmBuildNative> in the project file, remove it. If missing <RunAOTCompilation>false</RunAOTCompilation>, add it.
+- Roll back to .NET 9 / .NET 8 with the same SkiaSharp version as a temporary workaround while the .NET 10 compatibility issue is tracked in #3422.
+
+### Next Questions
+
+- Is the reporter using <WasmBuildNative>false</WasmBuildNative> or other WASM build flags?
+- Has the reporter tried 'dotnet workload restore' for .NET 10?
+- Is the reporter referencing SkiaSharp.NativeAssets.WebAssembly explicitly in their project?
+
+### Resolution Proposals
+
+**Hypothesis:** This issue is a duplicate of #3422. The root cause is a .NET 10 WASM toolchain incompatibility with SkiaSharp's native asset linking. The static library libSkiaSharp.a is not being linked into dotnet.wasm at build time.
+
+1. **Close as duplicate of #3422** — investigation, confidence 0.90 (90%), cost/xs, validated=untested
+   - Mark this issue as a duplicate of #3422 which is the primary tracking issue for Blazor WASM .NET 10 failures. Direct reporters to follow that issue for updates and to try the documented workarounds.
+2. **Try explicit NativeAssets package reference** — workaround, confidence 0.70 (70%), cost/xs, validated=untested
+   - Add SkiaSharp.NativeAssets.WebAssembly explicitly to the Blazor WASM app project and run dotnet workload restore.
+
+```csharp
+<PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.119.2" />
+<PackageReference Include="SkiaSharp.Views.Blazor" Version="3.119.2" />
+```
+
+**Recommended proposal:** Close as duplicate of #3422
+
+**Why:** Community member and multiple reporters confirmed the same failure. #3422 is the primary tracking issue with active discussion and workarounds documented.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-duplicate |
+| Confidence | 0.90 (90%) |
+| Reason | Community confirmed duplicate of #3422 — same Blazor WASM .NET 10 DllNotFoundException failure with same SkiaSharp versions. Multiple reporters on both issues confirm identical symptoms. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Correct labels: replace wrong os/Windows-Classic and area/libSkiaSharp.native with os/WASM and area/SkiaSharp.Views.Blazor, add tenet/compatibility | labels=type/bug, os/WASM, area/SkiaSharp.Views.Blazor, tenet/compatibility, tenet/reliability |
+| link-duplicate | medium | 0.90 (90%) | Link to primary tracking issue #3422 for Blazor WASM .NET 10 failures | linkedIssue=#3422 |
+| add-comment | medium | 0.88 (88%) | Post duplicate notice with workarounds from #3422 | — |
+| close-issue | medium | 0.90 (90%) | Close as duplicate of #3422 | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! This appears to be a duplicate of #3422 which tracks SkiaSharp failures in Blazor WASM on .NET 10.
+
+While the root cause is being investigated in #3422, there are a few workarounds that have helped some reporters:
+
+1. **Restore the WASM workload** for .NET 10:
+   ```
+   dotnet workload restore
+   ```
+
+2. **Explicitly reference the WebAssembly native assets** in your Blazor WASM project:
+   ```xml
+   <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.119.2" />
+   <PackageReference Include="SkiaSharp.Views.Blazor" Version="3.119.2" />
+   ```
+
+3. **Check your build flags** — if you have `<WasmBuildNative>false</WasmBuildNative>` in your project, try removing it. If you don't have `<RunAOTCompilation>false</RunAOTCompilation>`, try adding it.
+
+Please follow #3422 for updates on a proper fix. I'll close this issue as a duplicate to consolidate discussion there.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3435,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T13:20:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "area/libSkiaSharp.native",
+      "tenet/reliability"
+    ]
+  },
+  "summary": "Reporter gets System.DllNotFoundException: libSkiaSharp when using SkiaSharp in a Blazor WASM app after upgrading from .NET 9 to .NET 10; this is a duplicate of #3422 which tracks the same failure for Blazor WASM on .NET 10.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.93
+    },
+    "platforms": [
+      "os/WASM"
+    ],
+    "tenets": [
+      "tenet/compatibility",
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "System.DllNotFoundException: libSkiaSharp",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net10.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create or upgrade a Blazor WASM project to target net10.0",
+        "Add SkiaSharp 3.116.1 or 3.119.2-preview1",
+        "Run the application",
+        "Observe System.DllNotFoundException: libSkiaSharp at runtime"
+      ],
+      "environmentDetails": "Blazor WASM, .NET 10, SkiaSharp 3.116.1 and 3.119.2-preview1",
+      "relatedIssues": [
+        3422
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3422",
+          "description": "Primary tracking issue for Blazor WASM .NET 10 failures — same root cause, multiple reporters"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.1",
+        "3.119.2-preview1"
+      ],
+      "workedIn": "3.116.0 with .NET 9",
+      "currentRelevance": "likely",
+      "relevanceReason": "Issue #3422 tracking the same .NET 10 / Blazor WASM problem is still open as of April 2026."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter states .NET 9 app worked with 3.116.1; same version fails after upgrading to .NET 10. Multiple commenters on #3422 confirm .NET 8 and .NET 9 work while .NET 10 does not.",
+      "workedInVersion": "3.116.1 on .NET 9",
+      "brokeInVersion": "3.116.1 on .NET 10"
+    }
+  },
+  "analysis": {
+    "summary": "Blazor WASM projects targeting net10.0 fail with DllNotFoundException for libSkiaSharp because the .NET 10 WASM static-link toolchain has a compatibility issue with how SkiaSharp packages its native .a assets, or the WASM workload is missing/outdated. Identical symptom and environment to #3422.",
+    "rationale": "The reporter's platform is clearly Blazor WASM (not Windows-Classic as the prior auto-triage incorrectly labeled). The DllNotFoundException for libSkiaSharp in WASM context means the static library was not linked into dotnet.wasm at build time. Issue #3422 tracks the exact same failure scenario — Blazor WASM + .NET 10 — and has multiple users confirming workarounds. A community member explicitly called out the duplicate relationship. Closing as duplicate of #3422 is the appropriate action.",
+    "keySignals": [
+      {
+        "text": "Started getting this runtime error after upgrading Blazor app from .Net 9 to .Net 10",
+        "source": "issue body",
+        "interpretation": "Regression introduced by .NET 10 Blazor WASM toolchain changes — not a SkiaSharp version regression."
+      },
+      {
+        "text": "System.DllNotFoundException: libSkiaSharp",
+        "source": "issue body",
+        "interpretation": "In WASM, libSkiaSharp is statically linked via NativeFileReference. DllNotFoundException means the .a was not linked into dotnet.wasm."
+      },
+      {
+        "text": "Duplicate of https://github.com/mono/SkiaSharp/issues/3422",
+        "source": "comment by Webreaper",
+        "interpretation": "Community member who also reported #3422 confirmed the duplicate relationship."
+      },
+      {
+        "text": "Been trying to use this since .NET9 still doesn't work on .NET10 either. (Blazor WASM) System.DllNotFoundException: libSkiaSharp",
+        "source": "comment by tolzy88",
+        "interpretation": "Multiple users with the same exact error on .NET 10 Blazor WASM."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "lines": "42-44",
+        "finding": "SkiaSharp.Views.Blazor only adds a ProjectReference to SkiaSharp.NativeAssets.WebAssembly when NOT building inside Visual Studio. This means in some build environments the transitive auto-inclusion of native assets may not function as expected, potentially leaving the .a static library out of the link.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.props",
+        "lines": "1-12",
+        "finding": "The WASM native assets package sets SkiaSharpStaticLibraryPath and exposes libSkiaSharp.a as a SkiaSharpStaticLibrary item. If this props file is not evaluated by the consuming WASM project (e.g., because the WASM workload or NativeFileReference infrastructure is missing), libSkiaSharp will not be linked and the DllNotFoundException will occur at runtime.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/nuget/buildTransitive/SkiaSharp.Views.Blazor.props",
+        "lines": "1-11",
+        "finding": "This props file contains EmccExtraLDFlags for a known dotnet/runtime workaround. If the build system doesn't correctly process these props (e.g., due to a missing or outdated wasm-tools workload), the Emscripten linker flags may not be applied, causing native linking failures.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Run 'dotnet workload restore' to ensure the wasm-tools workload is installed for .NET 10, then rebuild (works for some users).",
+      "Explicitly add both SkiaSharp.NativeAssets.WebAssembly and SkiaSharp.Views.Blazor as direct PackageReferences in the Blazor WASM application project (not just a transitive reference).",
+      "If using <WasmBuildNative>false</WasmBuildNative> in the project file, remove it. If missing <RunAOTCompilation>false</RunAOTCompilation>, add it.",
+      "Roll back to .NET 9 / .NET 8 with the same SkiaSharp version as a temporary workaround while the .NET 10 compatibility issue is tracked in #3422."
+    ],
+    "nextQuestions": [
+      "Is the reporter using <WasmBuildNative>false</WasmBuildNative> or other WASM build flags?",
+      "Has the reporter tried 'dotnet workload restore' for .NET 10?",
+      "Is the reporter referencing SkiaSharp.NativeAssets.WebAssembly explicitly in their project?"
+    ],
+    "resolution": {
+      "hypothesis": "This issue is a duplicate of #3422. The root cause is a .NET 10 WASM toolchain incompatibility with SkiaSharp's native asset linking. The static library libSkiaSharp.a is not being linked into dotnet.wasm at build time.",
+      "proposals": [
+        {
+          "title": "Close as duplicate of #3422",
+          "description": "Mark this issue as a duplicate of #3422 which is the primary tracking issue for Blazor WASM .NET 10 failures. Direct reporters to follow that issue for updates and to try the documented workarounds.",
+          "category": "investigation",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Try explicit NativeAssets package reference",
+          "description": "Add SkiaSharp.NativeAssets.WebAssembly explicitly to the Blazor WASM app project and run dotnet workload restore.",
+          "category": "workaround",
+          "codeSnippet": "<PackageReference Include=\"SkiaSharp.NativeAssets.WebAssembly\" Version=\"3.119.2\" />\n<PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"3.119.2\" />",
+          "confidence": 0.7,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Close as duplicate of #3422",
+      "recommendedReason": "Community member and multiple reporters confirmed the same failure. #3422 is the primary tracking issue with active discussion and workarounds documented."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-duplicate",
+      "confidence": 0.9,
+      "reason": "Community confirmed duplicate of #3422 — same Blazor WASM .NET 10 DllNotFoundException failure with same SkiaSharp versions. Multiple reporters on both issues confirm identical symptoms.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct labels: replace wrong os/Windows-Classic and area/libSkiaSharp.native with os/WASM and area/SkiaSharp.Views.Blazor, add tenet/compatibility",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "os/WASM",
+          "area/SkiaSharp.Views.Blazor",
+          "tenet/compatibility",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "link-duplicate",
+        "description": "Link to primary tracking issue #3422 for Blazor WASM .NET 10 failures",
+        "risk": "medium",
+        "confidence": 0.9,
+        "linkedIssue": 3422
+      },
+      {
+        "type": "add-comment",
+        "description": "Post duplicate notice with workarounds from #3422",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the report! This appears to be a duplicate of #3422 which tracks SkiaSharp failures in Blazor WASM on .NET 10.\n\nWhile the root cause is being investigated in #3422, there are a few workarounds that have helped some reporters:\n\n1. **Restore the WASM workload** for .NET 10:\n   ```\n   dotnet workload restore\n   ```\n\n2. **Explicitly reference the WebAssembly native assets** in your Blazor WASM project:\n   ```xml\n   <PackageReference Include=\"SkiaSharp.NativeAssets.WebAssembly\" Version=\"3.119.2\" />\n   <PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"3.119.2\" />\n   ```\n\n3. **Check your build flags** — if you have `<WasmBuildNative>false</WasmBuildNative>` in your project, try removing it. If you don't have `<RunAOTCompilation>false</RunAOTCompilation>`, try adding it.\n\nPlease follow #3422 for updates on a proper fix. I'll close this issue as a duplicate to consolidate discussion there."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as duplicate of #3422",
+        "risk": "medium",
+        "confidence": 0.9,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

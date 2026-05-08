@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #2405 (close-as-not-a-bug)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 2405, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-25T12:01:12Z"}, "summary": "User asks how to perform grayscale and binary (threshold) image processing using SkiaSharp.", "classification": {"type": {"value": "type/question", "confidence": 0.98}, "area": {"value": "area/SkiaSharp", "confidence": 0.95}}, "evidence": {"reproEvidence": {"stepsToReproduce": ["User asked: 'How to achieve grayscale processing and binary processing of images?'"], "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/2405#issuecomment-1457716029", "description": "Community answer with grayscale color matrix code snippet"}]}}, "analysis": {"summary": "Usage question about grayscale and binary image processing. Already answered in comments using SKColorFilter.CreateColorMatrix with luminance weights. APIs confirmed to exist in source code. Issue should be closed as answered.", "rationale": "Issue is explicitly tagged [QUESTION] and asks how to accomplish a common image processing task. A community member provided a correct grayscale solution using SKColorFilter.CreateColorMatrix. The original reporter acknowledged ('Thanks'). A third party noted in March 2024 the issue should be closed. The relevant APIs (CreateColorMatrix, CreateTable) are confirmed in source code.", "keySignals": [{"text": "How to achieve grayscale processing and binary processing of images?", "source": "issue body", "interpretation": "Classic how-to usage question — no broken behavior reported."}, {"text": "Something like this should work for grayscale.", "source": "comment #issuecomment-1457716029", "interpretation": "Community member provided a working code answer using SKColorFilter.CreateColorMatrix with ITU-R BT.709 luminance weights."}, {"text": "This issue can be marked as solved and be closed.", "source": "comment #issuecomment-2007062613", "interpretation": "Third-party observer confirms the question was answered and issue is ready to close."}], "codeInvestigation": [{"file": "binding/SkiaSharp/SKColorFilter.cs", "lines": "71-85", "finding": "SKColorFilter.CreateColorMatrix(float[]) and CreateColorMatrix(ReadOnlySpan<float>) are public APIs requiring a 20-element matrix. This enables grayscale conversion by applying luminance weights (e.g., 0.2126, 0.7152, 0.0722) across RGB channels.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKColorFilter.cs", "lines": "101-141", "finding": "SKColorFilter.CreateTable(byte[]) and CreateTable(tableA, tableR, tableG, tableB) accept 256-entry lookup tables. Binary/threshold processing can be achieved by composing grayscale matrix with a threshold table mapping values below threshold to 0 and above to 255.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKColorFilter.cs", "lines": "149-156", "finding": "SKColorFilter.CreateHighContrast(bool grayscale, SKHighContrastConfigInvertStyle, float contrast) offers an alternative one-call grayscale API.", "relevance": "related"}, {"file": "binding/SkiaSharp/SKBitmap.cs", "lines": "539-551", "finding": "SKBitmap.Decode(string filename) is a valid public API for loading images from file paths, confirming the community code example is correct.", "relevance": "context"}], "workarounds": ["Use SKColorFilter.CreateColorMatrix with luminance weights (0.2126, 0.7152, 0.0722) for grayscale conversion.", "Use SKColorFilter.CreateHighContrast(grayscale: true, SKHighContrastConfigInvertStyle.NoInvert, 0) as a simpler one-call grayscale approach.", "Chain grayscale matrix filter with SKColorFilter.CreateTable threshold table for binary (black/white) output."], "resolution": {"hypothesis": "User wants to convert color images to grayscale or binary (black-and-white threshold) representations using SkiaSharp's color filter APIs.", "proposals": [{"title": "Grayscale via CreateColorMatrix", "description": "Apply a 5x4 color matrix with ITU-R BT.709 luminance weights to convert any image to grayscale. Draw the bitmap to a new destination bitmap using SKPaint with the filter to avoid in-place mutation.", "category": "fix", "codeSnippet": "using var sourceBitmap = SKBitmap.Decode(\"path/to/image\");\nusing var grayBitmap = new SKBitmap(sourceBitmap.Width, sourceBitmap.Height);\nusing var canvas = new SKCanvas(grayBitmap);\nusing var paint = new SKPaint();\npaint.ColorFilter = SKColorFilter.CreateColorMatrix(new float[]\n{\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0,       0,       0,       1, 0\n});\ncanvas.DrawBitmap(sourceBitmap, 0, 0, paint);", "confidence": 0.95, "effort": "cost/xs", "validated": "yes"}, {"title": "Binary (threshold) via composed color filters", "description": "Compose grayscale matrix with a threshold CreateTable filter to produce a binary black-and-white image. Values above threshold become white (255), below become black (0).", "category": "fix", "codeSnippet": "var threshold = 128;\nvar thresholdTable = new byte[256];\nfor (int i = 0; i < 256; i++) thresholdTable[i] = (byte)(i >= threshold ? 255 : 0);\n\nvar grayscaleFilter = SKColorFilter.CreateColorMatrix(new float[]\n{\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0,       0,       0,       1, 0\n});\nvar tableFilter = SKColorFilter.CreateTable(null, thresholdTable, thresholdTable, thresholdTable);\nvar composedFilter = SKColorFilter.CreateCompose(tableFilter, grayscaleFilter);\n\nusing var sourceBitmap = SKBitmap.Decode(\"path/to/image\");\nusing var binaryBitmap = new SKBitmap(sourceBitmap.Width, sourceBitmap.Height);\nusing var canvas = new SKCanvas(binaryBitmap);\nusing var paint = new SKPaint { ColorFilter = composedFilter };\ncanvas.DrawBitmap(sourceBitmap, 0, 0, paint);", "confidence": 0.9, "effort": "cost/s", "validated": "yes"}], "recommendedProposal": "Grayscale via CreateColorMatrix", "recommendedReason": "Simplest approach, directly matches the answer already provided in comments. Use composed filter for binary output."}}, "output": {"actionability": {"suggestedAction": "close-as-not-a-bug", "confidence": 0.92, "reason": "Question is a usage how-to. Already answered in comments with working code. Reporter confirmed with thanks. Third party also noted the issue should be closed. APIs confirmed in source code.", "suggestedReproPlatform": "linux"}, "actions": [{"type": "update-labels", "description": "Apply question and SkiaSharp area labels", "risk": "low", "confidence": 0.98, "labels": ["type/question", "area/SkiaSharp"]}, {"type": "add-comment", "description": "Post answer with grayscale and binary code examples and close note", "risk": "high", "confidence": 0.92, "comment": "Thanks for the question! SkiaSharp provides color filter APIs that handle both cases.\n\n**Grayscale** — use `SKColorFilter.CreateColorMatrix` with ITU-R BT.709 luminance weights:\n\n```csharp\nusing var sourceBitmap = SKBitmap.Decode(\"path/to/image\");\nusing var grayBitmap = new SKBitmap(sourceBitmap.Width, sourceBitmap.Height);\nusing var canvas = new SKCanvas(grayBitmap);\nusing var paint = new SKPaint();\npaint.ColorFilter = SKColorFilter.CreateColorMatrix(new float[]\n{\n    0.2126f, 0.7152f, 0.0722f, 0, 0,  // red output\n    0.2126f, 0.7152f, 0.0722f, 0, 0,  // green output\n    0.2126f, 0.7152f, 0.0722f, 0, 0,  // blue output\n    0,       0,       0,       1, 0   // alpha unchanged\n});\ncanvas.DrawBitmap(sourceBitmap, 0, 0, paint);\n```\n\n**Binary (threshold)** — compose grayscale with a lookup-table filter:\n\n```csharp\nvar threshold = 128;\nvar thresholdTable = new byte[256];\nfor (int i = 0; i < 256; i++) thresholdTable[i] = (byte)(i >= threshold ? 255 : 0);\n\nvar grayscaleFilter = SKColorFilter.CreateColorMatrix(new float[]\n{\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0.2126f, 0.7152f, 0.0722f, 0, 0,\n    0,       0,       0,       1, 0\n});\nvar tableFilter = SKColorFilter.CreateTable(null, thresholdTable, thresholdTable, thresholdTable);\nvar composedFilter = SKColorFilter.CreateCompose(tableFilter, grayscaleFilter);\n\nusing var sourceBitmap = SKBitmap.Decode(\"path/to/image\");\nusing var binaryBitmap = new SKBitmap(sourceBitmap.Width, sourceBitmap.Height);\nusing var canvas = new SKCanvas(binaryBitmap);\nusing var paint = new SKPaint { ColorFilter = composedFilter };\ncanvas.DrawBitmap(sourceBitmap, 0, 0, paint);\n```\n\nClosing as answered."}, {"type": "close-issue", "description": "Close as answered usage question", "risk": "medium", "confidence": 0.9, "stateReason": "completed"}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

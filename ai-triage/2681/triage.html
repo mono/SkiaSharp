@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #2681 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 2681, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-25T14:08:53Z", "currentLabels": ["type/bug"]}, "summary": "Reporter receives System.AccessViolationException when calling SKBitmap.ExtractSubset followed by SKBitmap.Resize in a loop over many images; the crash is non-deterministic and worsens under GC pressure.", "classification": {"type": {"value": "type/bug", "confidence": 0.95}, "area": {"value": "area/SkiaSharp", "confidence": 0.92}, "platforms": ["os/Windows-Classic"], "tenets": ["tenet/reliability"]}, "evidence": {"bugSignals": {"severity": "high", "regressionClaimed": true, "errorType": "crash", "errorMessage": "System.AccessViolationException", "reproQuality": "partial", "targetFrameworks": ["net6.0-windows"]}, "reproEvidence": {"stepsToReproduce": ["Load a bitmap of decent size into SKBitmap bmp", "Create a pre-allocated SKBitmap subset with new SKBitmap(rect.Width, rect.Height, ...)", "Call bmp.ExtractSubset(subset, rect) to make subset share bmp's pixel memory", "Call subset.Resize(new SKImageInfo(bmp.Width*3, bmp.Height*3, ...), SKFilterQuality.High)", "Repeat the above in a loop over many images — crash occurs after several iterations"], "environmentDetails": "Windows 11, Visual Studio, SkiaSharp 2.88.3", "relatedIssues": [2634, 2645, 2456], "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/2456", "description": "Same reporter's earlier issue: AccessViolation on SKBitmap.Copy() in multithreaded MAUI context"}, {"url": "https://github.com/mono/SkiaSharp/issues/2634", "description": "Related: SKBitmap.Decode crash in 2.88.6"}, {"url": "https://github.com/mono/SkiaSharp/issues/2645", "description": "Related: AccessViolationException in SKCodec.GetScaledDimensions in 2.88.6"}]}, "versionAnalysis": {"mentionedVersions": ["2.88.3", "2.88.2"], "workedIn": "2.88.2", "brokeIn": "2.88.3", "currentRelevance": "unknown", "relevanceReason": "Reporter later stated 'It doesn't seem to matter which version of SkiaSharp I use', contradicting the initial regression claim. The bug may be a pre-existing memory management issue exposed by usage pattern."}, "regression": {"isRegression": false, "confidence": 0.7, "reason": "Reporter retracted the version claim in a follow-up comment, indicating the version attribution was incorrect. The crash is non-deterministic and version-independent."}}, "analysis": {"summary": "AccessViolationException likely caused by native memory pressure or a use-after-free when calling ExtractSubset on a pre-allocated SKBitmap: the original pixel allocation is replaced but may not be fully freed, and the subset shares pixel memory with the source bitmap without explicit lifetime management. GC finalization race or accumulated memory pressure across loop iterations causes the eventual crash.", "rationale": "Reporter provides repro code showing ExtractSubset called on a pre-allocated SKBitmap (which creates a memory ownership ambiguity), followed by Resize in a loop. The non-deterministic crash behavior, the fact that manual Dispose+GC.Collect delays the crash, and the reporter's link to their own multithreaded issue #2456 all point to memory management rather than a version regression. The code investigation confirms ExtractSubset replaces the destination bitmap's pixels with a shared reference to the source's PixelRef — if the source is GC-finalized while the subset is still in scope, native Skia's ref-counting should protect pixels, but accumulated leaks or threading hazards can still cause crashes over many iterations.", "keySignals": [{"text": "It doesn't happen the first time, but if run it in a loop for several images, it will occur.", "source": "issue body", "interpretation": "Non-deterministic crash under GC/memory pressure — consistent with resource exhaustion or a GC finalization race rather than a deterministic code path bug."}, {"text": "It doesn't seem to matter which version of SkiaSharp I use.", "source": "comment by gktval", "interpretation": "Contradicts the initial regression claim (2.88.2 → 2.88.3). The bug is likely a pre-existing memory management hazard."}, {"text": "if I manually dispose and garbage collect after resizing the image it will mostly fix the issue", "source": "comment by gktval", "interpretation": "Manual disposal reduces native memory pressure and delays the crash — confirms memory leak or accumulated unreleased resources as a contributing factor."}, {"text": "the error will not occur now after a few dozen iterations. Instead, I can process about a thousand images before I get an AccessViolation error", "source": "comment by gktval", "interpretation": "Workaround shifts the failure point but doesn't eliminate it — another memory leak exists elsewhere in the caller's code."}], "codeInvestigation": [{"file": "binding/SkiaSharp/SKBitmap.cs", "lines": "214-222", "finding": "ExtractSubset delegates directly to sk_bitmap_extract_subset(Handle, destination.Handle, &subset). When destination is a pre-allocated SKBitmap (as in the reporter's code), the native call replaces destination's PixelRef with a shared reference to the source's PixelRef. The original pixel allocation made during 'new SKBitmap(width, height)' is discarded at the native C++ level, but no explicit C# tracking of this shared ownership is performed.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKBitmap.cs", "lines": "643-651", "finding": "PeekPixels sets pixmap.pixelSource = this to keep the bitmap alive during pixel access. However, no analogous mechanism exists between the source bmp and the extracted subset after ExtractSubset — if bmp is GC-eligible, its finalizer can run concurrently with subset operations, even though the underlying C++ PixelRef refcount should prevent the memory from being freed.", "relevance": "related"}, {"file": "binding/SkiaSharp/SKBitmap.cs", "lines": "664-676", "finding": "Resize(SKImageInfo, SKSamplingOptions) creates a new SKBitmap and calls ScalePixels → PeekPixels on the subset. The pixelSource reference keeps subset alive for the duration of PeekPixels, but does not extend the lifetime of the source bmp whose PixelRef the subset shares.", "relevance": "related"}], "workarounds": ["Explicitly dispose both bmp and subset after each iteration: subset.Dispose(); bmp.Dispose();", "Use SKImage instead of SKBitmap for the source: var image = SKImage.FromBitmap(bmp); var croppedImage = image.Subset(rect); then scale via SKImage or canvas instead of SKBitmap.Resize", "Copy the subset pixels to an independent bitmap before disposing the source: use SKBitmap.Copy() on the subset to produce a fully independent bitmap with its own pixel allocation before calling Resize"], "nextQuestions": ["Is the bitmap processing multithreaded? The reporter's earlier issue #2456 involved multithreaded MAUI bitmap operations.", "Does the crash have a stack trace? None was provided — a stack trace would confirm whether it originates in ExtractSubset, Resize, or GC finalization.", "Does replacing ExtractSubset with a Copy() approach (creating an independent bitmap) eliminate the crash?", "Does the crash reproduce on Linux or macOS, or is it Windows-specific?"], "resolution": {"hypothesis": "The reporter pre-allocates a SKBitmap with its own pixels, then calls ExtractSubset which replaces those pixels with a shared reference to the source bitmap's PixelRef. The original pixel allocation is abandoned (potential memory leak per iteration). Under high iteration counts, accumulated native memory pressure or a finalization race causes the AccessViolationException.", "proposals": [{"title": "Explicit disposal of both bitmaps per iteration", "description": "Dispose both the source bitmap and the subset bitmap after each iteration, before the GC has a chance to finalize them non-deterministically.", "category": "workaround", "codeSnippet": "using (SKBitmap bmp = LoadBitmap())\nusing (SKBitmap subset = new SKBitmap())\n{\n    bmp.ExtractSubset(subset, rect);\n    using var resized = subset.Resize(\n        new SKImageInfo(bmp.Width * 3, bmp.Height * 3,\n            SKImageInfo.PlatformColorType, SKAlphaType.Unpremul),\n        SKSamplingOptions.Default);\n    // use resized...\n}", "validated": "untested", "confidence": 0.75, "effort": "cost/xs"}, {"title": "Copy subset to independent bitmap before resizing", "description": "After ExtractSubset, call Copy() on the subset to produce a fully independent bitmap with its own pixel allocation. This breaks the shared-memory dependency on the source bitmap, eliminating the lifetime hazard.", "category": "workaround", "codeSnippet": "using (SKBitmap bmp = LoadBitmap())\n{\n    var rect = new SKRectI(20, 20, 240, 240);\n    SKBitmap shared = new SKBitmap();\n    bmp.ExtractSubset(shared, rect);\n    using SKBitmap subset = shared.Copy();  // independent copy\n    shared.Dispose();\n    using var resized = subset.Resize(\n        new SKImageInfo(subset.Width * 3, subset.Height * 3,\n            SKImageInfo.PlatformColorType, SKAlphaType.Unpremul),\n        SKSamplingOptions.Default);\n    // use resized...\n}", "validated": "untested", "confidence": 0.8, "effort": "cost/s"}, {"title": "Investigate native memory leak in pre-allocated ExtractSubset", "description": "Audit the C++ sk_bitmap_extract_subset implementation to confirm whether replacing a pre-allocated bitmap's PixelRef properly releases the old allocation. If there is a native memory leak per call, fix it in the C API layer.", "category": "investigation", "validated": "untested", "confidence": 0.65, "effort": "cost/m"}], "recommendedProposal": "Copy subset to independent bitmap before resizing", "recommendedReason": "Creating an independent copy of the subset pixels eliminates the shared-memory lifetime dependency on the source bitmap entirely, which is the safest approach. The explicit disposal pattern also helps but does not remove the shared-memory hazard during the resize operation itself."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.82, "reason": "Real crash with partial repro code. Root cause (memory leak in pre-allocated ExtractSubset vs. finalization race) requires deeper native investigation. Workarounds exist but the underlying cause is unconfirmed.", "suggestedReproPlatform": "linux"}, "missingInfo": ["Stack trace from the AccessViolationException", "Whether the code is running in a multithreaded context", "Whether the crash reproduces with explicit using blocks (ensuring deterministic disposal)"], "actions": [{"type": "update-labels", "description": "Apply bug, core area, Windows platform, and reliability tenet labels", "risk": "low", "confidence": 0.92, "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/reliability"]}, {"type": "add-comment", "description": "Post analysis with workarounds and ask for stack trace and threading context", "risk": "medium", "confidence": 0.82, "comment": "Thank you for the detailed report and the workaround you found!\n\nThe `AccessViolationException` is most likely caused by a shared-memory lifetime hazard in how `ExtractSubset` is used. When you call `bmp.ExtractSubset(subset, rect)`, the `subset` bitmap shares the underlying pixel memory of `bmp` without making a copy. Over many iterations, either accumulated memory pressure (from the abandoned original pixel allocation in `subset`) or a GC finalization race can corrupt the shared pixel buffer.\n\n**Workaround — break the shared-memory dependency:**\n\n```csharp\nusing (SKBitmap bmp = LoadBitmap())\n{\n    var rect = new SKRectI(20, 20, 240, 240);\n    // Extract a shared subset, then immediately copy to an independent bitmap\n    SKBitmap sharedSubset = new SKBitmap();\n    bmp.ExtractSubset(sharedSubset, rect);\n    using SKBitmap subset = sharedSubset.Copy();  // independent pixel buffer\n    sharedSubset.Dispose();\n\n    using var resized = subset.Resize(\n        new SKImageInfo(subset.Width * 3, subset.Height * 3,\n            SKImageInfo.PlatformColorType, SKAlphaType.Unpremul),\n        SKSamplingOptions.Default);\n    // use resized...\n}\n```\n\nAlternatively, as you found, explicit `Dispose()` after each iteration helps. Using `using` blocks ensures this happens deterministically rather than relying on the GC.\n\nTo help investigate the root cause, could you share:\n1. The full stack trace from the `AccessViolationException`?\n2. Is the bitmap processing running on multiple threads simultaneously?\n3. Does the crash go away when you use the `Copy()` approach above?"}, {"type": "link-related", "description": "Cross-reference reporter's own related issue #2456 (same symptom, multithreaded context)", "risk": "low", "confidence": 0.85, "linkedIssue": 2456}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>
