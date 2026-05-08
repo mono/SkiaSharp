@@ -1,0 +1,320 @@
+# Issue Triage Report — #2725
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-27T23:10:00Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp (0.80 (80%)) |
+| Suggested action | needs-investigation (0.78 (78%)) |
+
+**Issue Summary:** Unity IL2CPP build fails on UWP/ARM64 with a C++ type mismatch error (C2664) for SKTextBlob.CreatePositioned in generated Svg.Skia.cpp, caused by inconsistent ReadOnlySpan<SKPoint> type hashes across IL2CPP codegen.
+
+**Analysis:** Unity's IL2CPP code generator produces two different type hash identifiers for ReadOnlySpan<SKPoint> within the same generated file (Svg.Skia.cpp): the method declaration at line 4493 uses hash `t6EC0A...` while the call site at line 11638 uses hash `t72A99...`. This mismatch causes a C2664 error during the C++ compile step of the IL2CPP build. The root cause is likely in Unity's IL2CPP type resolution when SKPoint (from SkiaSharp.dll) is referenced across multiple assemblies (SkiaSharp and Svg.Skia), generating inconsistent generic instantiation hashes. A workaround exists (manually correcting the declaration hash) but must be repeated each build.
+
+**Recommendations:** **needs-investigation** — Reproducible build error with a clear error log and known workaround. Root cause is likely in Unity IL2CPP, but SkiaSharp may be able to mitigate. Needs deeper investigation to determine ownership.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Universal-UWP |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a Unity UWP project targeting ARM64 and HoloLens2
+2. Add SkiaSharp 2.88.3 and Svg.Skia dependency
+3. Build with IL2CPP scripting backend for UWP release
+4. Observe C2664 compilation error in generated Svg.Skia.cpp at line 11638
+
+**Environment:** SkiaSharp 2.88.3, Unity with IL2CPP, UWP ARM64, Visual Studio 2022 17.x, Windows SDK 10.0.22621
+
+**Related issues:** #2147
+
+**Repository links:**
+- https://github.com/wieslawsoltes/Svg.Skia/issues/203 — Upstream Svg.Skia issue tracking the same build failure
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | build-error |
+| Error message | error C2664: 'SKTextBlob_CreatePositioned_m...(..., ReadOnlySpan_1_t6EC0A...,...)': cannot convert argument 3 from 'ReadOnlySpan_1_t72A99...' to 'ReadOnlySpan_1_t6EC0A...' |
+| Repro quality | complete |
+| Target frameworks | net4.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The SKTextBlob.CreatePositioned API signature using ReadOnlySpan<SKPoint> is unchanged in later 2.88.x releases; the IL2CPP codegen issue depends on Unity version and may still be present. |
+
+## Analysis
+
+### Technical Summary
+
+Unity's IL2CPP code generator produces two different type hash identifiers for ReadOnlySpan<SKPoint> within the same generated file (Svg.Skia.cpp): the method declaration at line 4493 uses hash `t6EC0A...` while the call site at line 11638 uses hash `t72A99...`. This mismatch causes a C2664 error during the C++ compile step of the IL2CPP build. The root cause is likely in Unity's IL2CPP type resolution when SKPoint (from SkiaSharp.dll) is referenced across multiple assemblies (SkiaSharp and Svg.Skia), generating inconsistent generic instantiation hashes. A workaround exists (manually correcting the declaration hash) but must be repeated each build.
+
+### Rationale
+
+This is a type/bug because the build completely fails with a reproducible C++ type mismatch. The area is area/SkiaSharp since the affected method SKTextBlob.CreatePositioned is part of the core SkiaSharp API and SkiaSharp could potentially mitigate by providing array-based overloads. The root cause may be in Unity IL2CPP's code generation, making this a close-as-external candidate, but investigation is needed to determine if SkiaSharp can help.
+
+### Key Signals
+
+- "error C2664: 'ReadOnlySpan_1_t6EC0A...' ... cannot convert argument 3 from 'ReadOnlySpan_1_t72A99...'" — **issue body — build log** (IL2CPP generated two different C++ type names for ReadOnlySpan<SKPoint> — one in the method declaration, another at the call site.)
+- "a workaround is to change line 4493 of Svg.Skia.cpp ... But it needs to be done at every build" — **comment by reporter** (Manually aligning both type hashes in the generated file resolves the compilation error, confirming the type hash mismatch is the direct cause.)
+- "It happens in svg.skia.cpp but on a skiasharp method" — **issue body** (The affected call is SKTextBlob.CreatePositioned; Svg.Skia calls SkiaSharp directly — the type mismatch spans both assemblies when compiled by IL2CPP.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKTextBlob.cs` | 107-114 | direct | SKTextBlob.CreatePositioned(string, SKFont, ReadOnlySpan<SKPoint>) is a public API that delegates to an internal overload via a fixed pointer. The public surface uses ReadOnlySpan<SKPoint> as a parameter type — generic types can produce hash mismatches in Unity IL2CPP when the same generic instantiation is resolved from multiple assemblies. |
+| `binding/SkiaSharp/SKTextBlob.cs` | 107-125 | related | All public CreatePositioned overloads accept ReadOnlySpan<SKPoint> for the positions parameter. There is no SKPoint[] array overload that would avoid the ReadOnlySpan<T> generic codegen path in IL2CPP. |
+
+### Workarounds
+
+- Edit the generated Svg.Skia.cpp at the declaration line (noted as line 4493 in the reporter's build): change the ReadOnlySpan type hash in the function declaration to match the hash used at the call site. Must be repeated each build.
+
+### Next Questions
+
+- Does the issue reproduce with a newer Unity LTS version (2023.x or 2022.x LTS)?
+- Does the same error appear with the latest SkiaSharp (3.x)?
+- Would adding a SKPoint[] overload for CreatePositioned avoid the IL2CPP hash mismatch?
+
+### Resolution Proposals
+
+**Hypothesis:** Unity IL2CPP generates inconsistent C++ type identifiers for ReadOnlySpan<SKPoint> when the same generic instantiation is resolved across assemblies (SkiaSharp.dll and Svg.Skia.dll). SkiaSharp could provide SKPoint[] array overloads as an IL2CPP-friendly alternative, and Svg.Skia could then call those instead. Alternatively, Unity needs to fix the hash consistency in their IL2CPP toolchain.
+
+1. **Add SKPoint[] overload for CreatePositioned** — workaround, confidence 0.65 (65%), cost/xs, validated=untested
+   - Add a public overload CreatePositioned(string, SKFont, SKPoint[]) that delegates to the ReadOnlySpan overload. This gives Svg.Skia (and users) a non-generic call target that avoids IL2CPP's generic ReadOnlySpan type hash instability.
+2. **Report upstream to Unity** — investigation, confidence 0.80 (80%), cost/s, validated=untested
+   - File a Unity IL2CPP bug: two ReadOnlySpan<SKPoint> instantiations within the same generated file have different type hashes. The fix should be in Unity's code generator to ensure stable hash assignment for generic types shared across assemblies.
+
+**Recommended proposal:** Report upstream to Unity
+
+**Why:** The type hash mismatch is a Unity IL2CPP code generation defect. SkiaSharp should monitor but also consider adding SKPoint[] overloads to offer a stable call target.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.78 (78%) |
+| Reason | Reproducible build error with a clear error log and known workaround. Root cause is likely in Unity IL2CPP, but SkiaSharp may be able to mitigate. Needs deeper investigation to determine ownership. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, SkiaSharp, UWP, and compatibility labels | labels=type/bug, area/SkiaSharp, os/Windows-Universal-UWP, tenet/compatibility |
+| link-related | low | 0.80 (80%) | Cross-reference #2147 (similar SKTextBlob.CreatePositioned issue on iOS with MissingMethodException) | linkedIssue=#2147 |
+| add-comment | medium | 0.78 (78%) | Acknowledge the bug, explain the root cause hypothesis, and note the upstream Unity IL2CPP tracking needed | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed build log and for sharing the workaround!
+
+The error is caused by Unity's IL2CPP code generator producing two different internal C++ type identifiers for `ReadOnlySpan<SKPoint>` within the same generated file — one for the declaration and a different one at the call site. This is an IL2CPP code generation inconsistency when a generic type (`ReadOnlySpan<T>`) is shared across multiple assemblies (SkiaSharp and Svg.Skia).
+
+The workaround you found (editing the declaration at line 4493 to align the type hash) is the correct short-term fix, though it's painful to repeat every build.
+
+For a longer-term resolution, please also report this to Unity's IL2CPP issue tracker — the hash stability bug is in their code generator. We'll track whether adding `SKPoint[]` array overloads to `SKTextBlob.CreatePositioned` could provide a more stable call target that avoids the generic instantiation issue.
+
+Related: #2147 is a similar `SKTextBlob.CreatePositioned` issue on iOS (MissingMethodException rather than a build error, but the same API is involved).
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2725,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-27T23:10:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Unity IL2CPP build fails on UWP/ARM64 with a C++ type mismatch error (C2664) for SKTextBlob.CreatePositioned in generated Svg.Skia.cpp, caused by inconsistent ReadOnlySpan<SKPoint> type hashes across IL2CPP codegen.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.8
+    },
+    "platforms": [
+      "os/Windows-Universal-UWP"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "error C2664: 'SKTextBlob_CreatePositioned_m...(..., ReadOnlySpan_1_t6EC0A...,...)': cannot convert argument 3 from 'ReadOnlySpan_1_t72A99...' to 'ReadOnlySpan_1_t6EC0A...'",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net4.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Unity UWP project targeting ARM64 and HoloLens2",
+        "Add SkiaSharp 2.88.3 and Svg.Skia dependency",
+        "Build with IL2CPP scripting backend for UWP release",
+        "Observe C2664 compilation error in generated Svg.Skia.cpp at line 11638"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Unity with IL2CPP, UWP ARM64, Visual Studio 2022 17.x, Windows SDK 10.0.22621",
+      "relatedIssues": [
+        2147
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/wieslawsoltes/Svg.Skia/issues/203",
+          "description": "Upstream Svg.Skia issue tracking the same build failure"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKTextBlob.CreatePositioned API signature using ReadOnlySpan<SKPoint> is unchanged in later 2.88.x releases; the IL2CPP codegen issue depends on Unity version and may still be present."
+    }
+  },
+  "analysis": {
+    "summary": "Unity's IL2CPP code generator produces two different type hash identifiers for ReadOnlySpan<SKPoint> within the same generated file (Svg.Skia.cpp): the method declaration at line 4493 uses hash `t6EC0A...` while the call site at line 11638 uses hash `t72A99...`. This mismatch causes a C2664 error during the C++ compile step of the IL2CPP build. The root cause is likely in Unity's IL2CPP type resolution when SKPoint (from SkiaSharp.dll) is referenced across multiple assemblies (SkiaSharp and Svg.Skia), generating inconsistent generic instantiation hashes. A workaround exists (manually correcting the declaration hash) but must be repeated each build.",
+    "rationale": "This is a type/bug because the build completely fails with a reproducible C++ type mismatch. The area is area/SkiaSharp since the affected method SKTextBlob.CreatePositioned is part of the core SkiaSharp API and SkiaSharp could potentially mitigate by providing array-based overloads. The root cause may be in Unity IL2CPP's code generation, making this a close-as-external candidate, but investigation is needed to determine if SkiaSharp can help.",
+    "keySignals": [
+      {
+        "text": "error C2664: 'ReadOnlySpan_1_t6EC0A...' ... cannot convert argument 3 from 'ReadOnlySpan_1_t72A99...'",
+        "source": "issue body — build log",
+        "interpretation": "IL2CPP generated two different C++ type names for ReadOnlySpan<SKPoint> — one in the method declaration, another at the call site."
+      },
+      {
+        "text": "a workaround is to change line 4493 of Svg.Skia.cpp ... But it needs to be done at every build",
+        "source": "comment by reporter",
+        "interpretation": "Manually aligning both type hashes in the generated file resolves the compilation error, confirming the type hash mismatch is the direct cause."
+      },
+      {
+        "text": "It happens in svg.skia.cpp but on a skiasharp method",
+        "source": "issue body",
+        "interpretation": "The affected call is SKTextBlob.CreatePositioned; Svg.Skia calls SkiaSharp directly — the type mismatch spans both assemblies when compiled by IL2CPP."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKTextBlob.cs",
+        "lines": "107-114",
+        "finding": "SKTextBlob.CreatePositioned(string, SKFont, ReadOnlySpan<SKPoint>) is a public API that delegates to an internal overload via a fixed pointer. The public surface uses ReadOnlySpan<SKPoint> as a parameter type — generic types can produce hash mismatches in Unity IL2CPP when the same generic instantiation is resolved from multiple assemblies.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTextBlob.cs",
+        "lines": "107-125",
+        "finding": "All public CreatePositioned overloads accept ReadOnlySpan<SKPoint> for the positions parameter. There is no SKPoint[] array overload that would avoid the ReadOnlySpan<T> generic codegen path in IL2CPP.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "Does the issue reproduce with a newer Unity LTS version (2023.x or 2022.x LTS)?",
+      "Does the same error appear with the latest SkiaSharp (3.x)?",
+      "Would adding a SKPoint[] overload for CreatePositioned avoid the IL2CPP hash mismatch?"
+    ],
+    "workarounds": [
+      "Edit the generated Svg.Skia.cpp at the declaration line (noted as line 4493 in the reporter's build): change the ReadOnlySpan type hash in the function declaration to match the hash used at the call site. Must be repeated each build."
+    ],
+    "resolution": {
+      "hypothesis": "Unity IL2CPP generates inconsistent C++ type identifiers for ReadOnlySpan<SKPoint> when the same generic instantiation is resolved across assemblies (SkiaSharp.dll and Svg.Skia.dll). SkiaSharp could provide SKPoint[] array overloads as an IL2CPP-friendly alternative, and Svg.Skia could then call those instead. Alternatively, Unity needs to fix the hash consistency in their IL2CPP toolchain.",
+      "proposals": [
+        {
+          "title": "Add SKPoint[] overload for CreatePositioned",
+          "description": "Add a public overload CreatePositioned(string, SKFont, SKPoint[]) that delegates to the ReadOnlySpan overload. This gives Svg.Skia (and users) a non-generic call target that avoids IL2CPP's generic ReadOnlySpan type hash instability.",
+          "category": "workaround",
+          "confidence": 0.65,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Report upstream to Unity",
+          "description": "File a Unity IL2CPP bug: two ReadOnlySpan<SKPoint> instantiations within the same generated file have different type hashes. The fix should be in Unity's code generator to ensure stable hash assignment for generic types shared across assemblies.",
+          "category": "investigation",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Report upstream to Unity",
+      "recommendedReason": "The type hash mismatch is a Unity IL2CPP code generation defect. SkiaSharp should monitor but also consider adding SKPoint[] overloads to offer a stable call target."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.78,
+      "reason": "Reproducible build error with a clear error log and known workaround. Root cause is likely in Unity IL2CPP, but SkiaSharp may be able to mitigate. Needs deeper investigation to determine ownership.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, UWP, and compatibility labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Universal-UWP",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2147 (similar SKTextBlob.CreatePositioned issue on iOS with MissingMethodException)",
+        "risk": "low",
+        "confidence": 0.8,
+        "linkedIssue": 2147
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, explain the root cause hypothesis, and note the upstream Unity IL2CPP tracking needed",
+        "risk": "medium",
+        "confidence": 0.78,
+        "comment": "Thanks for the detailed build log and for sharing the workaround!\n\nThe error is caused by Unity's IL2CPP code generator producing two different internal C++ type identifiers for `ReadOnlySpan<SKPoint>` within the same generated file — one for the declaration and a different one at the call site. This is an IL2CPP code generation inconsistency when a generic type (`ReadOnlySpan<T>`) is shared across multiple assemblies (SkiaSharp and Svg.Skia).\n\nThe workaround you found (editing the declaration at line 4493 to align the type hash) is the correct short-term fix, though it's painful to repeat every build.\n\nFor a longer-term resolution, please also report this to Unity's IL2CPP issue tracker — the hash stability bug is in their code generator. We'll track whether adding `SKPoint[]` array overloads to `SKTextBlob.CreatePositioned` could provide a more stable call target that avoids the generic instantiation issue.\n\nRelated: #2147 is a similar `SKTextBlob.CreatePositioned` issue on iOS (MissingMethodException rather than a build error, but the same API is involved)."
+      }
+    ]
+  }
+}
+```
+
+</details>

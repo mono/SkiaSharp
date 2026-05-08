@@ -1,0 +1,345 @@
+# Issue Triage Report — #2752
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-27T21:33:10Z |
+| Type | type/bug (0.90 (90%)) |
+| Area | area/SkiaSharp (0.72 (72%)) |
+| Suggested action | close-as-external (0.82 (82%)) |
+
+**Issue Summary:** Reporter observes that SVG files with multiple <clipPath> elements render incorrectly to PNG when using the deprecated SkiaSharp.Extended.Svg library with SkiaSharp 2.88.3; single <clipPath> works correctly, and the issue is claimed as a regression from 2.88.2.
+
+**Analysis:** The bug involves SVG with multiple <clipPath> elements rendering incorrectly to PNG. The reporter uses SkiaSharp.Extended.Svg (SKSvg), a deprecated library from the separate mono/SkiaSharp.Extended repository that has been unsupported for several years. The root cause is most likely in the deprecated library's SVG-to-SKPicture translation when handling multiple clipPath references, or alternatively a native Skia behavior change in 2.88.3. A community comment already directed the reporter to use Svg.Skia as the supported alternative.
+
+**Recommendations:** **close-as-external** — The bug uses SkiaSharp.Extended.Svg which is a deprecated, unsupported package in a separate repository (mono/SkiaSharp.Extended). The SkiaSharp.Extended maintainer has already closed similar issues stating the library is no longer supported and recommending Svg.Skia. This issue is not actionable in mono/SkiaSharp.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Linux |
+| Backends | backend/Raster |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/bug, os/Linux, area/SkiaSharp, backend/Raster, tenet/compatibility, triage/triaged |
+
+## Evidence
+
+### Reproduction
+
+1. Create SVG with two <clipPath> elements (clip0 and clip1)
+2. Load SVG using SkiaSharp.Extended.Svg.SKSvg().Load(stream)
+3. Call SKImage.FromPicture(pict, dimen, matrix)
+4. Encode the result as PNG
+5. Observe that only content from one clipPath region is shown correctly; the other appears clipped/wrong
+
+**Environment:** SkiaSharp 2.88.3, Visual Studio Code, Linux
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp.Extended/issues/141#issuecomment-1703198253 — SkiaSharp.Extended maintainer confirming SKSvg is no longer supported and recommending Svg.Skia
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | wrong-output |
+| Error message | Result PNG is clipped (wrong output) when SVG has multiple <clipPath> elements |
+| Repro quality | partial |
+| Target frameworks | — |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.2, 2.88.3 |
+| Worked in | 2.88.2 |
+| Broke in | 2.88.3 |
+| Current relevance | unknown |
+| Relevance reason | Cannot determine if the root cause is in the deprecated SkiaSharp.Extended.Svg parsing layer or in a native Skia regression introduced in 2.88.3. The SkiaSharp 2.88.3 C# API changelog shows no changes, suggesting a native library difference. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.65 (65%) |
+| Reason | Reporter explicitly states 2.88.2 produced correct output and 2.88.3 broke it. However, the SkiaSharp.Extended.Svg library is a separate deprecated package, making the exact root cause ambiguous. |
+| Worked in version | 2.88.2 |
+| Broke in version | 2.88.3 |
+
+## Analysis
+
+### Technical Summary
+
+The bug involves SVG with multiple <clipPath> elements rendering incorrectly to PNG. The reporter uses SkiaSharp.Extended.Svg (SKSvg), a deprecated library from the separate mono/SkiaSharp.Extended repository that has been unsupported for several years. The root cause is most likely in the deprecated library's SVG-to-SKPicture translation when handling multiple clipPath references, or alternatively a native Skia behavior change in 2.88.3. A community comment already directed the reporter to use Svg.Skia as the supported alternative.
+
+### Rationale
+
+Classified as type/bug because the output is wrong (clipped incorrectly). Area is area/SkiaSharp because while the SVG parsing layer is in the deprecated SkiaSharp.Extended.Svg package, the core SkiaSharp SKImage.FromPicture rendering pipeline is involved. The suggestedAction is close-as-external because the direct dependency (SkiaSharp.Extended.Svg) is deprecated, unsupported, lives in a separate repository, and the maintainer has already stated it will not be fixed. A working alternative (Svg.Skia) exists.
+
+### Key Signals
+
+- "var svg = new SkiaSharp.Extended.Svg.SKSvg(); var pict = svg.Load(stream);" — **issue body** (Reporter is using SkiaSharp.Extended.Svg (SKSvg class) which is from the deprecated mono/SkiaSharp.Extended repository, not core SkiaSharp.)
+- "Result png is wrong (clipped). If I change SVG to use one <clipPath> - result are perfect." — **issue body** (Multiple clipPath elements trigger the wrong behavior; single clipPath works. This pattern is consistent with a bug in SVG clipPath reference resolution or clip save/restore in the picture recording layer.)
+- "SkiaSharp.Extended.Svg has been obsolete for several years... Closing this as SkiaSharp.Extended.Svg is no longer supported. Using Svg.Skia is way better." — **comment by charlesroddie** (Community member has already identified this as an issue with the deprecated library and pointed to the supported alternative (Svg.Skia).)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKImage.cs` | — | related | SKImage.FromPicture(SKPicture, SKSizeI, SKMatrix) delegates to the private overload which calls SkiaApi.sk_image_new_from_picture. The C# binding layer is straightforward and unchanged between 2.88.2 and 2.88.3 per the changelog (no API changes in SkiaSharp.dll for 2.88.3). |
+| `binding/SkiaSharp/SKCanvas.cs` | — | related | SKCanvas.ClipPath() calls SkiaApi.sk_canvas_clip_path_with_operation with Intersect operation by default. No custom logic or C# changes that would cause a regression — clip path behavior is delegated entirely to the native Skia library. |
+| `changelogs/SkiaSharp/2.88.3/SkiaSharp.md` | — | direct | The 2.88.3 changelog for SkiaSharp.dll explicitly states 'No changes.' — confirming the C# binding layer was unchanged. Any regression between 2.88.2 and 2.88.3 must originate in the native libSkiaSharp or in the separate SkiaSharp.Extended.Svg package. |
+
+### Workarounds
+
+- Migrate from SkiaSharp.Extended.Svg (deprecated) to Svg.Skia (https://github.com/wieslawsoltes/Svg.Skia) which is actively maintained and handles complex SVG features including multiple clipPaths.
+- As a temporary workaround within SVG file, consolidate multiple clipPath elements into one if the SVG content allows it (reporter noted single clipPath works).
+
+### Resolution Proposals
+
+**Hypothesis:** The root cause is either (a) a bug in SkiaSharp.Extended.Svg's handling of multiple clipPath elements during SVG-to-SKPicture recording, or (b) a behavior change in the native Skia library between 2.88.2 and 2.88.3 that affects how clip regions are applied during picture playback. Since SkiaSharp.Extended.Svg is deprecated and unsupported in a separate repository, the fix path is to use Svg.Skia.
+
+1. **Migrate to Svg.Skia** — workaround, confidence 0.90 (90%), cost/s, validated=untested
+   - Replace SkiaSharp.Extended.Svg with the actively maintained Svg.Skia package. It handles complex SVG features including multiple clipPaths correctly.
+
+**Recommended proposal:** Migrate to Svg.Skia
+
+**Why:** SkiaSharp.Extended.Svg is deprecated and unsupported. The maintainer recommends Svg.Skia as the replacement. No fix will come from SkiaSharp core for an issue in a deprecated external package.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-external |
+| Confidence | 0.82 (82%) |
+| Reason | The bug uses SkiaSharp.Extended.Svg which is a deprecated, unsupported package in a separate repository (mono/SkiaSharp.Extended). The SkiaSharp.Extended maintainer has already closed similar issues stating the library is no longer supported and recommending Svg.Skia. This issue is not actionable in mono/SkiaSharp. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, area, platform, backend, and compatibility labels | labels=type/bug, area/SkiaSharp, os/Linux, backend/Raster, tenet/compatibility |
+| add-comment | medium | 0.85 (85%) | Inform reporter that SkiaSharp.Extended.Svg is deprecated and recommend Svg.Skia as the supported alternative | — |
+| close-issue | medium | 0.80 (80%) | Close as external — root cause is in deprecated SkiaSharp.Extended.Svg | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for the detailed report and screenshots!
+
+This issue uses `SkiaSharp.Extended.Svg` (`SKSvg`), which is part of the [SkiaSharp.Extended](https://github.com/mono/SkiaSharp.Extended) package that has been deprecated and is no longer supported. Bug fixes for that library are not planned.
+
+The recommended alternative is **[Svg.Skia](https://github.com/wieslawsoltes/Svg.Skia)**, which is actively maintained, has better SVG compliance, and handles complex SVG features such as multiple `<clipPath>` elements correctly.
+
+Example migration:
+```csharp
+// Install: dotnet add package Svg.Skia
+using Svg.Skia;
+
+var svg = new SKSvg();
+var picture = svg.Load(stream);
+if (picture?.Drawable?.Bounds is { } bounds)
+{
+    var bitmap = new SKBitmap((int)bounds.Width, (int)bounds.Height);
+    using var canvas = new SKCanvas(bitmap);
+    canvas.DrawPicture(picture.Picture);
+    using var image = SKImage.FromBitmap(bitmap);
+    using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+    data.SaveTo(outputStream);
+}
+```
+
+We're closing this as the issue is in the deprecated external library rather than in SkiaSharp itself.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2752,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-27T21:33:10Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Linux",
+      "area/SkiaSharp",
+      "backend/Raster",
+      "tenet/compatibility",
+      "triage/triaged"
+    ]
+  },
+  "summary": "Reporter observes that SVG files with multiple <clipPath> elements render incorrectly to PNG when using the deprecated SkiaSharp.Extended.Svg library with SkiaSharp 2.88.3; single <clipPath> works correctly, and the issue is claimed as a regression from 2.88.2.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.72
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "backends": [
+      "backend/Raster"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Result PNG is clipped (wrong output) when SVG has multiple <clipPath> elements",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create SVG with two <clipPath> elements (clip0 and clip1)",
+        "Load SVG using SkiaSharp.Extended.Svg.SKSvg().Load(stream)",
+        "Call SKImage.FromPicture(pict, dimen, matrix)",
+        "Encode the result as PNG",
+        "Observe that only content from one clipPath region is shown correctly; the other appears clipped/wrong"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Visual Studio Code, Linux",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp.Extended/issues/141#issuecomment-1703198253",
+          "description": "SkiaSharp.Extended maintainer confirming SKSvg is no longer supported and recommending Svg.Skia"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.2",
+        "2.88.3"
+      ],
+      "workedIn": "2.88.2",
+      "brokeIn": "2.88.3",
+      "currentRelevance": "unknown",
+      "relevanceReason": "Cannot determine if the root cause is in the deprecated SkiaSharp.Extended.Svg parsing layer or in a native Skia regression introduced in 2.88.3. The SkiaSharp 2.88.3 C# API changelog shows no changes, suggesting a native library difference."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.65,
+      "reason": "Reporter explicitly states 2.88.2 produced correct output and 2.88.3 broke it. However, the SkiaSharp.Extended.Svg library is a separate deprecated package, making the exact root cause ambiguous.",
+      "workedInVersion": "2.88.2",
+      "brokeInVersion": "2.88.3"
+    }
+  },
+  "analysis": {
+    "summary": "The bug involves SVG with multiple <clipPath> elements rendering incorrectly to PNG. The reporter uses SkiaSharp.Extended.Svg (SKSvg), a deprecated library from the separate mono/SkiaSharp.Extended repository that has been unsupported for several years. The root cause is most likely in the deprecated library's SVG-to-SKPicture translation when handling multiple clipPath references, or alternatively a native Skia behavior change in 2.88.3. A community comment already directed the reporter to use Svg.Skia as the supported alternative.",
+    "rationale": "Classified as type/bug because the output is wrong (clipped incorrectly). Area is area/SkiaSharp because while the SVG parsing layer is in the deprecated SkiaSharp.Extended.Svg package, the core SkiaSharp SKImage.FromPicture rendering pipeline is involved. The suggestedAction is close-as-external because the direct dependency (SkiaSharp.Extended.Svg) is deprecated, unsupported, lives in a separate repository, and the maintainer has already stated it will not be fixed. A working alternative (Svg.Skia) exists.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "finding": "SKImage.FromPicture(SKPicture, SKSizeI, SKMatrix) delegates to the private overload which calls SkiaApi.sk_image_new_from_picture. The C# binding layer is straightforward and unchanged between 2.88.2 and 2.88.3 per the changelog (no API changes in SkiaSharp.dll for 2.88.3).",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "SKCanvas.ClipPath() calls SkiaApi.sk_canvas_clip_path_with_operation with Intersect operation by default. No custom logic or C# changes that would cause a regression — clip path behavior is delegated entirely to the native Skia library.",
+        "relevance": "related"
+      },
+      {
+        "file": "changelogs/SkiaSharp/2.88.3/SkiaSharp.md",
+        "finding": "The 2.88.3 changelog for SkiaSharp.dll explicitly states 'No changes.' — confirming the C# binding layer was unchanged. Any regression between 2.88.2 and 2.88.3 must originate in the native libSkiaSharp or in the separate SkiaSharp.Extended.Svg package.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "var svg = new SkiaSharp.Extended.Svg.SKSvg(); var pict = svg.Load(stream);",
+        "source": "issue body",
+        "interpretation": "Reporter is using SkiaSharp.Extended.Svg (SKSvg class) which is from the deprecated mono/SkiaSharp.Extended repository, not core SkiaSharp."
+      },
+      {
+        "text": "Result png is wrong (clipped). If I change SVG to use one <clipPath> - result are perfect.",
+        "source": "issue body",
+        "interpretation": "Multiple clipPath elements trigger the wrong behavior; single clipPath works. This pattern is consistent with a bug in SVG clipPath reference resolution or clip save/restore in the picture recording layer."
+      },
+      {
+        "text": "SkiaSharp.Extended.Svg has been obsolete for several years... Closing this as SkiaSharp.Extended.Svg is no longer supported. Using Svg.Skia is way better.",
+        "source": "comment by charlesroddie",
+        "interpretation": "Community member has already identified this as an issue with the deprecated library and pointed to the supported alternative (Svg.Skia)."
+      }
+    ],
+    "workarounds": [
+      "Migrate from SkiaSharp.Extended.Svg (deprecated) to Svg.Skia (https://github.com/wieslawsoltes/Svg.Skia) which is actively maintained and handles complex SVG features including multiple clipPaths.",
+      "As a temporary workaround within SVG file, consolidate multiple clipPath elements into one if the SVG content allows it (reporter noted single clipPath works)."
+    ],
+    "resolution": {
+      "hypothesis": "The root cause is either (a) a bug in SkiaSharp.Extended.Svg's handling of multiple clipPath elements during SVG-to-SKPicture recording, or (b) a behavior change in the native Skia library between 2.88.2 and 2.88.3 that affects how clip regions are applied during picture playback. Since SkiaSharp.Extended.Svg is deprecated and unsupported in a separate repository, the fix path is to use Svg.Skia.",
+      "proposals": [
+        {
+          "title": "Migrate to Svg.Skia",
+          "description": "Replace SkiaSharp.Extended.Svg with the actively maintained Svg.Skia package. It handles complex SVG features including multiple clipPaths correctly.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Migrate to Svg.Skia",
+      "recommendedReason": "SkiaSharp.Extended.Svg is deprecated and unsupported. The maintainer recommends Svg.Skia as the replacement. No fix will come from SkiaSharp core for an issue in a deprecated external package."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-external",
+      "confidence": 0.82,
+      "reason": "The bug uses SkiaSharp.Extended.Svg which is a deprecated, unsupported package in a separate repository (mono/SkiaSharp.Extended). The SkiaSharp.Extended maintainer has already closed similar issues stating the library is no longer supported and recommending Svg.Skia. This issue is not actionable in mono/SkiaSharp.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area, platform, backend, and compatibility labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Linux",
+          "backend/Raster",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter that SkiaSharp.Extended.Svg is deprecated and recommend Svg.Skia as the supported alternative",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thank you for the detailed report and screenshots!\n\nThis issue uses `SkiaSharp.Extended.Svg` (`SKSvg`), which is part of the [SkiaSharp.Extended](https://github.com/mono/SkiaSharp.Extended) package that has been deprecated and is no longer supported. Bug fixes for that library are not planned.\n\nThe recommended alternative is **[Svg.Skia](https://github.com/wieslawsoltes/Svg.Skia)**, which is actively maintained, has better SVG compliance, and handles complex SVG features such as multiple `<clipPath>` elements correctly.\n\nExample migration:\n```csharp\n// Install: dotnet add package Svg.Skia\nusing Svg.Skia;\n\nvar svg = new SKSvg();\nvar picture = svg.Load(stream);\nif (picture?.Drawable?.Bounds is { } bounds)\n{\n    var bitmap = new SKBitmap((int)bounds.Width, (int)bounds.Height);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.DrawPicture(picture.Picture);\n    using var image = SKImage.FromBitmap(bitmap);\n    using var data = image.Encode(SKEncodedImageFormat.Png, 100);\n    data.SaveTo(outputStream);\n}\n```\n\nWe're closing this as the issue is in the deprecated external library rather than in SkiaSharp itself."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as external — root cause is in deprecated SkiaSharp.Extended.Svg",
+        "risk": "medium",
+        "confidence": 0.8,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

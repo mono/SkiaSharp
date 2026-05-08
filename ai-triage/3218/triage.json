@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3218,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-28T01:45:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "libSkiaSharp.dll on Windows does not enable Control Flow Guard (CFG), causing BinSkim rule BA2008 failures in security-conscious environments.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.95 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "other",
+      "errorMessage": "BA2008: EnableControlFlowGuard — /guard:cf missing on compiler and linker command lines",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-windows"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Download SkiaSharp 3.116.0 NuGet package",
+        "Run BinSkim on libSkiaSharp.dll",
+        "Observe BA2008 rule failure: /guard:cf not present"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, Windows, Visual Studio",
+      "relatedIssues": [3281],
+      "repoLinks": [
+        { "url": "https://github.com/microsoft/binskim/blob/main/docs/BinSkimRules.md#rule-BA2008EnableControlFlowGuard", "description": "BinSkim BA2008 rule documentation" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "native/windows/build.cake already includes /guard:cf in extra_cflags and extra_ldflags; fix is in source but awaiting stable release."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.90,
+      "reason": "native/windows/build.cake now passes /guard:cf on both compiler and linker; libHarfBuzzSharp.vcxproj and SkiaSharp.Views.WinUI.Native.vcxproj also contain ControlFlowGuard=Guard settings. Community comment notes this was fixed by PR #3281."
+    }
+  },
+  "analysis": {
+    "summary": "The Windows native build scripts did not pass /guard:cf (Control Flow Guard) on the MSVC compiler and linker, causing BinSkim BA2008 failures. The fix is already present in the current source tree.",
+    "rationale": "This is a native build configuration issue affecting Windows binary security compliance. The reporter correctly identified the fix (pass /guard:cf on compiler and linker). Code investigation confirms the fix has since been applied to native/windows/build.cake and the related vcxproj files. The issue is likely fixed in source but not yet in a published stable release as of December 2025.",
+    "keySignals": [
+      { "text": "pass /guard:cf on both the compiler and linker command lines", "source": "issue body", "interpretation": "Reporter correctly identifies the exact fix needed per BinSkim BA2008 guidance." },
+      { "text": "It seems like this was fixed by PR #3281, but there is still no published stable version of SkiaSharp with this.", "source": "comment by azchohfi (2025-12-13)", "interpretation": "Community confirms fix was merged but awaits a stable release." }
+    ],
+    "codeInvestigation": [
+      { "file": "native/windows/build.cake", "lines": "79-80", "finding": "extra_cflags includes '/guard:cf' and extra_ldflags includes '/guard:cf' for the libSkiaSharp.dll GN build — CFG is now enabled at both compile and link time.", "relevance": "direct" },
+      { "file": "native/windows/libHarfBuzzSharp/libHarfBuzzSharp.vcxproj", "finding": "Multiple configurations include ControlFlowGuard=Guard and ControlFlowGuard=true — libHarfBuzzSharp.dll also has CFG enabled.", "relevance": "related" },
+      { "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.vcxproj", "lines": "115-122", "finding": "ControlFlowGuard=Guard present in release configuration — WinUI native component has CFG enabled.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "Has a preview or stable NuGet package been published with the CFG fix included?",
+      "Does the libSkiaSharp.dll in the latest preview NuGet pass BinSkim BA2008?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.85,
+      "reason": "CFG flags (/guard:cf) are present in the current native/windows/build.cake and all relevant vcxproj files. Community confirms fix was merged. Issue is fixed in source; stable release is pending.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply native library and Windows labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/libSkiaSharp.native", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter the fix is in source and pending stable release",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "The Control Flow Guard (`/guard:cf`) flag has been added to the Windows native build configuration (`native/windows/build.cake`) for `libSkiaSharp.dll`, and CFG settings have also been applied to `libHarfBuzzSharp.vcxproj` and `SkiaSharp.Views.WinUI.Native.vcxproj`. The fix should be included in the next stable release. Watch the [releases page](https://github.com/mono/SkiaSharp/releases) for the next published version."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed — CFG is now enabled in the build scripts",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      },
+      {
+        "type": "link-related",
+        "description": "Link related issue #3281 which covers the same CFG problem on additional DLLs",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 3281
+      }
+    ]
+  }
+}

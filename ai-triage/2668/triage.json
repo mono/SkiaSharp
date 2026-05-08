@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2668,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-27T23:32:46Z",
+    "currentLabels": ["type/feature-request"]
+  },
+  "summary": "Request for SkiaSharp PDF output to preserve 1bpp (monochrome) image color depth instead of upsampling to 24bpp, which causes a ~10× file size increase in scanned-document workflows.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.93 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.85 },
+    "backends": ["backend/PDF"],
+    "tenets": ["tenet/performance"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Take a scanned PDF containing 1bpp images (~4 MB).",
+        "Print it to XPS, retaining 1bpp.",
+        "Modify the XPS file while keeping 1bpp images.",
+        "Use SkiaSharp to re-encode the XPS to a new PDF.",
+        "Observe the output PDF is 40+ MB because images are stored as 24bpp."
+      ],
+      "environmentDetails": "SkiaSharp PDF backend; XPS→PDF workflow on Windows",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/848", "description": "Related: PDF output size request for general PDF compression options" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKDocumentPdfMetadata still has no color-depth controls; the issue is architectural rather than version-specific."
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp's PDF pipeline always rasterizes through its full-color canvas (BGRA8888 or similar), losing the original 1bpp depth. No API currently lets callers request monochrome or grayscale-only PDF image encoding. Skia's PDF backend does have internal paths for encoding lower-depth images (e.g., CCITTFax for 1bpp), but none are surfaced in the C API or SkiaSharp metadata struct. Implementing this would require Skia-level changes plus a new SKDocumentPdfMetadata field.",
+    "rationale": "This is a feature request because the current behavior is by design: Skia's canvas model normalizes all pixel data through its color pipeline, discarding the source bit depth. No existing SkiaSharp or Skia API allows round-tripping 1bpp images through PDF. The issue is valid and has community interest (+3 reactions, original author follow-up in 2025), but requires upstream Skia changes to expose CCITTFax/monochrome image embedding to SkiaSharp.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKDocument.cs",
+        "lines": "78-177",
+        "finding": "All CreatePdf() overloads ultimately pass only SKDocumentPdfMetadata to sk_document_create_pdf_from_stream_with_metadata. No color-depth or pixel-format parameter exists on this code path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "lines": "385-496",
+        "finding": "SKDocumentPdfMetadata exposes Title, Author, Subject, Keywords, Creator, Producer, Creation, Modified, RasterDpi, PdfA, and EncodingQuality. There is no color-type, bit-depth, or grayscale option. Adding a new field (e.g., PreferGrayscale or ImageColorDepth) would be the correct extension point.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "lines": "36-79",
+        "finding": "SKColorType includes Gray8 (8bpp grayscale) but no 1bpp monochrome type. Skia has no kMono_SkColorType; true 1bpp output would require embedding pre-encoded CCITTFax image data rather than going through the pixel pipeline.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "18779-18813",
+        "finding": "SKDocumentPdfMetadataInternal mirrors the C sk_document_pdf_metadata_t struct: fTitle, fAuthor, fSubject, fKeywords, fCreator, fProducer, fCreation, fModified, fRasterDPI, fPDFA, fEncodingQuality. No color-depth field exists at the native boundary.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "the resulting pdf file now has a file size of 40+mb because all the 1bpp images are automatically converted to 24bpp by SkiaSharp",
+        "source": "issue body",
+        "interpretation": "Core of the request: SkiaSharp's PDF rasterizer normalizes bit depth to 24bpp, inflating scanned-document PDFs by ~10×."
+      },
+      {
+        "text": "input (PDF) --> printed (XPS) --> changes (XPS) --> save with SkiaSharp (PDF) / 1 bpp --> 1 bpp --> 1 bpp --> 24 bpp",
+        "source": "issue body",
+        "interpretation": "The full pipeline preserves 1bpp everywhere except the final SkiaSharp PDF step, confirming the issue is in SKDocument/PDF encoding."
+      },
+      {
+        "text": "Any updates on this? As PDF files made with SkiaSharp really grow a lot this way.",
+        "source": "comment by wstaelens (2025-09-17)",
+        "interpretation": "Original reporter bumped after ~2 years; still unresolved and actively impacting them."
+      }
+    ],
+    "workarounds": [
+      "Use SKColorType.Gray8 when drawing the canvas surface to reduce from 24bpp to 8bpp. This cuts image data to 1/3 the size but not to 1bpp.",
+      "Lower EncodingQuality in SKDocumentPdfMetadata (e.g., 50-75) to apply JPEG compression to images. This reduces file size at the cost of sharpness — not acceptable for scanned documents per reporter.",
+      "Use an alternative PDF library (e.g., PDFSharp, iText7, or Windows WIC/Direct2D PDF APIs) that supports CCITT/G4 1bpp image encoding natively for the final PDF save step."
+    ],
+    "nextQuestions": [
+      "Does Skia's C++ SkPDF::MakeDocument support a metadata flag or image-encoding hint for monochrome/CCITTFax encoding?",
+      "Is there a way to embed a pre-encoded CCITT image as an opaque PDF image via SkiaSharp without going through the canvas pixel pipeline?",
+      "Would a new SKDocumentPdfMetadata.Grayscale bool (similar to how SkPaint uses SKHighContrastConfig) be sufficient to request grayscale PDF output?"
+    ],
+    "resolution": {
+      "hypothesis": "The SkiaSharp PDF backend would need to expose a color-depth hint (e.g., grayscale/monochrome mode) in SKDocumentPdfMetadata, backed by a new field in the Skia C API, that tells the PDF image encoder to use lower-bit encodings (e.g., CCITTFax G4 for 1bpp).",
+      "proposals": [
+        {
+          "title": "Workaround: draw using Gray8 surface",
+          "description": "Create the PDF canvas surface with SKColorType.Gray8 and SKAlphaType.Opaque. This halves depth from 24bpp to 8bpp/grayscale, reducing file size by ~3×. Won't achieve 1bpp but is an immediate improvement for monochrome scans.",
+          "category": "workaround",
+          "confidence": 0.70,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Feature: add color-depth/grayscale option to SKDocumentPdfMetadata",
+          "description": "Add a new field (e.g., bool Grayscale or enum ImageDepth) to SKDocumentPdfMetadata and the underlying sk_document_pdf_metadata_t C struct. The Skia PDF backend would use this hint to select a lower-depth image encoding path (Gray8 or CCITTFax). Requires changes to the native C API shim and Skia's PDF backend.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Alternative: use a dedicated PDF library for the save step",
+          "description": "Replace the SkiaSharp PDF save step with a library that natively supports CCITT/G4 compression (PDFSharp 6.x, iText7, or Windows WIC PDF). This avoids the color-depth limitation entirely for the final save step.",
+          "category": "alternative",
+          "confidence": 0.90,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Alternative: use a dedicated PDF library for the save step",
+      "recommendedReason": "Highest confidence and immediately actionable. SkiaSharp's canvas model is not designed for round-trip PDF image manipulation; a purpose-built PDF library is the correct tool for lossless 1bpp PDF encoding."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.82,
+      "reason": "Valid feature request with community interest (+3 reactions, author follow-up). The request requires upstream Skia C API changes plus SkiaSharp wrapper updates; keeping open to track the enhancement.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/feature-request, area/SkiaSharp, backend/PDF, tenet/performance labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/feature-request", "area/SkiaSharp", "backend/PDF", "tenet/performance"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference issue #848 (PDF output size, general compression)",
+        "risk": "low",
+        "confidence": 0.88,
+        "linkedIssue": 848
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge request, explain root cause, provide workarounds",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed description and the pipeline diagram — that makes the issue very clear.\n\n**Root cause:** SkiaSharp's PDF canvas normalises all pixel data through Skia's full-colour rendering pipeline, which does not preserve the original 1bpp depth of the source images. The `SKDocumentPdfMetadata` struct currently has no option to request a lower-depth image encoding.\n\n**Workarounds you can try now:**\n\n1. **Gray8 canvas** — create your drawing surface with `SKColorType.Gray8` and `SKAlphaType.Opaque`. This reduces image data from 24bpp to 8bpp (a 3× saving), though not to 1bpp:\n   ```csharp\n   // Example: draw into a grayscale surface\n   var info = new SKImageInfo(width, height, SKColorType.Gray8, SKAlphaType.Opaque);\n   using var surface = SKSurface.Create(info);\n   // ... draw on surface.Canvas ...\n   ```\n2. **Lower JPEG quality** — set `EncodingQuality` in `SKDocumentPdfMetadata` (e.g. `80`) to apply JPEG compression. This reduces file size but at the cost of sharpness, which you've noted is not acceptable.\n3. **Alternative PDF library** — for a lossless 1bpp/CCITT-G4 PDF save step, a dedicated PDF library (PDFSharp 6.x, iText7, or the Windows WIC PDF APIs) is the right tool. SkiaSharp's canvas model is a general 2D drawing API and isn't designed for lossless PDF round-tripping.\n\nA proper fix would require adding a `Grayscale` (or `MonochromeImageEncoding`) flag to `SKDocumentPdfMetadata` and exposing CCITTFax image embedding in the Skia C API — a non-trivial upstream change. Keeping this open to track the enhancement."
+      }
+    ]
+  }
+}
