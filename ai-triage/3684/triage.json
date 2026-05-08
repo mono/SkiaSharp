@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3684,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-27T13:24:46Z",
+    "currentLabels": ["upgrading/4.x"]
+  },
+  "summary": "Maintainer-created release tracking issue for SkiaSharp v4 stable, with milestone schedule from Preview 1 (Apr 28) through GA (Jun 30), outstanding items, and go/no-go criteria.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "SkiaSharp v4 (new Skia engine m133), API deprecation pass, dependency updates",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/pull/3491", "description": "Outstanding PR for v4 (referenced in issue body and comment)" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3674", "description": "Outstanding PR for v4 (referenced in issue body)" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/2397", "description": "Variable font support feature request flagged for v4" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/3734", "description": "Breaking changes documentation for Skia m132 upgrade (added in comment)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["4.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Active release planning issue with future milestone dates (Apr–Jun 2026). The main branch currently targets Skia m133."
+    }
+  },
+  "analysis": {
+    "summary": "This is an active, maintainer-authored release tracking issue coordinating the SkiaSharp v4 GA release. It documents the milestone schedule (Preview 1–3, RC 1–2, GA), outstanding PRs and issues that must land before GA, and go/no-go criteria. The issue is not a bug report or a user question — it is a project management artifact that should remain open until the GA ships.",
+    "rationale": "Issue content is unambiguously an organisational tracking ticket authored by the lead maintainer. No error messages, no user-reported failure — just a structured schedule and checklist. type/enhancement is chosen because v4 represents a major improvement of existing functionality (new Skia engine, API deprecation pass, dependency updates) rather than a net-new capability. area/SkiaSharp covers the core library that is the primary subject of the release. tenet/compatibility is warranted because the issue explicitly mentions API deprecation pass and behavioral breaking changes from the Skia engine upgrade.",
+    "keySignals": [
+      { "text": "Tracking issue for the SkiaSharp v4 stable release. This is a major version bump that includes a new Skia engine, API deprecation pass, and dependency updates.", "source": "issue body", "interpretation": "Maintainer release planning artifact — keep-open until GA." },
+      { "text": "Stable ships when: Vendors and partner teams have had adequate testing time on the new Skia engine … No critical regressions remain", "source": "issue body", "interpretation": "Explicit go/no-go criteria — issue should remain open during preview/RC phases." },
+      { "text": "Added #3734 — documents all known behavioral breaking changes from the Skia m132 upgrade", "source": "comment by mattleibow", "interpretation": "Maintainer is actively updating the tracking issue; it is current and in progress." }
+    ],
+    "codeInvestigation": [
+      { "file": "scripts/VERSIONS.txt", "finding": "Native Skia version is 'm133' and HarfBuzz is '8.3.1' — confirms the v4 release involves the latest Skia engine bump referenced by the tracking issue.", "relevance": "context" },
+      { "file": "documentation/dev/versioning.md", "finding": "Versioning docs explain that 'major' in SkiaSharp version numbers represents a radically changed API and/or behavior — consistent with the v4 designation for this release.", "relevance": "context" }
+    ],
+    "nextQuestions": [
+      "Which specific API deprecations are planned for Preview 3?",
+      "Is PR #3491 still open or was it merged?",
+      "Has Preview 1 shipped on schedule (April 28)?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "Active maintainer-managed release tracking issue. The milestone schedule runs through June 30 2026; closing or actioning it automatically would be inappropriate.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and SkiaSharp area labels; add compatibility tenet. The upgrading/4.x label is already present.",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/enhancement", "area/SkiaSharp", "tenet/compatibility"]
+      }
+    ]
+  }
+}

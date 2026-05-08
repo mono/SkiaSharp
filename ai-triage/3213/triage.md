@@ -1,0 +1,318 @@
+# Issue Triage Report — #3213
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-27T15:02:17Z |
+| Type | type/bug (0.80 (80%)) |
+| Area | area/SkiaSharp (0.92 (92%)) |
+| Suggested action | needs-investigation (0.75 (75%)) |
+
+**Issue Summary:** SKTypeface.CreateDefault() is reported as very slow on Android at app startup, with the reporter suspecting the first call to native Skia interop triggers expensive font enumeration.
+
+**Analysis:** SKTypeface.CreateDefault() is slow on Android because it calls sk_fontmgr_legacy_create_typeface (which traverses Android's font manager to find 'sans-serif'/'Roboto') on every invocation without caching. The SKTypeface.Default property, by contrast, caches the result in a static field at class initialization time. The root cause is either the uncached call or the inherent cost of Android font system initialization on first native interop.
+
+**Recommendations:** **needs-investigation** — Performance issue on Android with partial repro evidence and a plausible code-level explanation. Needs profiling to confirm whether the cost is in the uncached native call or in Android library/JIT initialization. A workaround exists (use Default).
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Android |
+| Backends | — |
+| Tenets | tenet/performance |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** SkiaSharp 3.116.1, MAUI 9.0.22, Android, Visual Studio Windows
+
+**Repository links:**
+- https://github.com/taublast/DrawnUi.Maui/issues/159#issuecomment-2746857215 — External issue where the slow startup was initially discovered
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | performance |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | net9.0-android |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.0, 3.116.1 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | CreateDefault() still calls sk_fontmgr_legacy_create_typeface uncached in current code — the performance issue likely still exists. |
+
+## Analysis
+
+### Technical Summary
+
+SKTypeface.CreateDefault() is slow on Android because it calls sk_fontmgr_legacy_create_typeface (which traverses Android's font manager to find 'sans-serif'/'Roboto') on every invocation without caching. The SKTypeface.Default property, by contrast, caches the result in a static field at class initialization time. The root cause is either the uncached call or the inherent cost of Android font system initialization on first native interop.
+
+### Rationale
+
+Classified as type/bug with tenet/performance because CreateDefault() performs an expensive uncached native call that produces the same result every time, while the existing Default property already caches the same lookup. The code comment in the static constructor explicitly documents the Android-specific font search path. The reporter's self-comment acknowledges the 'first P/Invoke call' hypothesis, suggesting startup JIT and library loading may also contribute.
+
+### Key Signals
+
+- "looks to take too much execution time at app startup" — **issue body** (Performance degradation visible at startup — a high-frequency path or expensive initialization.)
+- "maybe it's just the first call to skia interop at app startup that is always the slowest one" — **comment #1 (reporter)** (Reporter suspects JIT/library loading overhead on first P/Invoke; this is plausible but CreateDefault() is also uncached, compounding the issue.)
+- "SkiaSharp.Views.Maui.Controls 3.116.1, SkiaSharp.Skottie 3.116.1" — **issue body (package references)** (MAUI app using both rendering and animation libraries — startup likely involves multiple Skia init paths.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKTypeface.cs` | 16-65 | direct | The static constructor creates and caches a defaultTypeface via sk_fontmgr_legacy_create_typeface(null). However, CreateDefault() at lines 58-65 re-calls sk_fontmgr_legacy_create_typeface on every invocation — there is no caching. The Default property (line 52) returns the cached instance. |
+| `binding/SkiaSharp/SKFontManager.cs` | 15-23 | related | SKFontManager.Default is itself initialized lazily via the static constructor using sk_fontmgr_create_default(). Accessing SKFontManager.Default for the first time triggers its static constructor, which calls into native code. CreateDefault() accesses SKFontManager.Default on each call, which after first initialization is just a field read, but still triggers the full sk_fontmgr_legacy_create_typeface call each time. |
+
+### Workarounds
+
+- Use SKTypeface.Default instead of SKTypeface.CreateDefault() — Default returns a pre-cached instance created once at class initialization time, avoiding repeated native calls.
+- Cache the result of CreateDefault() in a static or instance field to prevent repeated font manager traversal.
+
+### Next Questions
+
+- How much time does SKTypeface.Default take vs CreateDefault() on Android — is the delta purely from the extra native call or also from Android font enumeration?
+- Is the slow startup time isolated to the first ever call (library load + JIT) or does CreateDefault() remain slow on subsequent calls?
+- Does the issue reproduce on Android emulator vs physical device?
+
+### Resolution Proposals
+
+**Hypothesis:** CreateDefault() performs an uncached sk_fontmgr_legacy_create_typeface call every time, while the same result is already cached in SKTypeface.Default. Switching callers to use Default, or caching within CreateDefault(), would eliminate redundant native calls.
+
+1. **Use SKTypeface.Default as immediate workaround** — workaround, confidence 0.90 (90%), cost/xs, validated=yes
+   - Replace calls to SKTypeface.CreateDefault() with SKTypeface.Default. The Default property returns a static cached instance created once at class initialization. This avoids all repeated native calls.
+
+```csharp
+// Instead of:
+var typeface = SKTypeface.CreateDefault();
+
+// Use:
+var typeface = SKTypeface.Default;
+```
+2. **Make CreateDefault() return the cached Default** — fix, confidence 0.75 (75%), cost/xs, validated=untested
+   - Change CreateDefault() to return SKTypeface.Default directly, since both produce the default platform typeface. This makes CreateDefault() a zero-cost alias for Default.
+
+**Recommended proposal:** Use SKTypeface.Default as immediate workaround
+
+**Why:** Immediate fix with no API changes required. Switching to Default avoids the redundant native call entirely.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.75 (75%) |
+| Reason | Performance issue on Android with partial repro evidence and a plausible code-level explanation. Needs profiling to confirm whether the cost is in the uncached native call or in Android library/JIT initialization. A workaround exists (use Default). |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, area, Android, performance labels | labels=type/bug, area/SkiaSharp, os/Android, tenet/performance |
+| add-comment | medium | 0.82 (82%) | Acknowledge report, explain code-level findings, provide workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report and the profiling screenshot!
+
+Looking at the source, `SKTypeface.CreateDefault()` calls `sk_fontmgr_legacy_create_typeface` on every invocation without caching — this traverses Android's font manager to find the default typeface (searching for "sans-serif"/Roboto) each time. The `SKTypeface.Default` property, by contrast, caches the result once in the class static constructor.
+
+**Workaround (immediate):** Replace `SKTypeface.CreateDefault()` with `SKTypeface.Default`:
+```csharp
+// Instead of:
+var typeface = SKTypeface.CreateDefault();
+
+// Use:
+var typeface = SKTypeface.Default;
+```
+
+`Default` returns the same pre-cached instance at no additional cost.
+
+It's also possible that part of the startup cost is the initial native library load and JIT compilation of P/Invoke stubs on Android — that overhead would appear on any first call to native code. If you see slowness on the *first* call only and subsequent calls are fast, that's the likely explanation.
+
+Could you let us know:
+1. Does `SKTypeface.Default` exhibit the same slowness?
+2. Is the slow call always the first one, or consistently slow on every call?
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3213,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-27T15:02:17Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKTypeface.CreateDefault() is reported as very slow on Android at app startup, with the reporter suspecting the first call to native Skia interop triggers expensive font enumeration.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.8
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Android"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "performance",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net9.0-android"
+      ]
+    },
+    "reproEvidence": {
+      "environmentDetails": "SkiaSharp 3.116.1, MAUI 9.0.22, Android, Visual Studio Windows",
+      "repoLinks": [
+        {
+          "url": "https://github.com/taublast/DrawnUi.Maui/issues/159#issuecomment-2746857215",
+          "description": "External issue where the slow startup was initially discovered"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "3.116.1"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "CreateDefault() still calls sk_fontmgr_legacy_create_typeface uncached in current code — the performance issue likely still exists."
+    }
+  },
+  "analysis": {
+    "summary": "SKTypeface.CreateDefault() is slow on Android because it calls sk_fontmgr_legacy_create_typeface (which traverses Android's font manager to find 'sans-serif'/'Roboto') on every invocation without caching. The SKTypeface.Default property, by contrast, caches the result in a static field at class initialization time. The root cause is either the uncached call or the inherent cost of Android font system initialization on first native interop.",
+    "rationale": "Classified as type/bug with tenet/performance because CreateDefault() performs an expensive uncached native call that produces the same result every time, while the existing Default property already caches the same lookup. The code comment in the static constructor explicitly documents the Android-specific font search path. The reporter's self-comment acknowledges the 'first P/Invoke call' hypothesis, suggesting startup JIT and library loading may also contribute.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "16-65",
+        "finding": "The static constructor creates and caches a defaultTypeface via sk_fontmgr_legacy_create_typeface(null). However, CreateDefault() at lines 58-65 re-calls sk_fontmgr_legacy_create_typeface on every invocation — there is no caching. The Default property (line 52) returns the cached instance.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "15-23",
+        "finding": "SKFontManager.Default is itself initialized lazily via the static constructor using sk_fontmgr_create_default(). Accessing SKFontManager.Default for the first time triggers its static constructor, which calls into native code. CreateDefault() accesses SKFontManager.Default on each call, which after first initialization is just a field read, but still triggers the full sk_fontmgr_legacy_create_typeface call each time.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "looks to take too much execution time at app startup",
+        "source": "issue body",
+        "interpretation": "Performance degradation visible at startup — a high-frequency path or expensive initialization."
+      },
+      {
+        "text": "maybe it's just the first call to skia interop at app startup that is always the slowest one",
+        "source": "comment #1 (reporter)",
+        "interpretation": "Reporter suspects JIT/library loading overhead on first P/Invoke; this is plausible but CreateDefault() is also uncached, compounding the issue."
+      },
+      {
+        "text": "SkiaSharp.Views.Maui.Controls 3.116.1, SkiaSharp.Skottie 3.116.1",
+        "source": "issue body (package references)",
+        "interpretation": "MAUI app using both rendering and animation libraries — startup likely involves multiple Skia init paths."
+      }
+    ],
+    "workarounds": [
+      "Use SKTypeface.Default instead of SKTypeface.CreateDefault() — Default returns a pre-cached instance created once at class initialization time, avoiding repeated native calls.",
+      "Cache the result of CreateDefault() in a static or instance field to prevent repeated font manager traversal."
+    ],
+    "nextQuestions": [
+      "How much time does SKTypeface.Default take vs CreateDefault() on Android — is the delta purely from the extra native call or also from Android font enumeration?",
+      "Is the slow startup time isolated to the first ever call (library load + JIT) or does CreateDefault() remain slow on subsequent calls?",
+      "Does the issue reproduce on Android emulator vs physical device?"
+    ],
+    "resolution": {
+      "hypothesis": "CreateDefault() performs an uncached sk_fontmgr_legacy_create_typeface call every time, while the same result is already cached in SKTypeface.Default. Switching callers to use Default, or caching within CreateDefault(), would eliminate redundant native calls.",
+      "proposals": [
+        {
+          "title": "Use SKTypeface.Default as immediate workaround",
+          "description": "Replace calls to SKTypeface.CreateDefault() with SKTypeface.Default. The Default property returns a static cached instance created once at class initialization. This avoids all repeated native calls.",
+          "category": "workaround",
+          "codeSnippet": "// Instead of:\nvar typeface = SKTypeface.CreateDefault();\n\n// Use:\nvar typeface = SKTypeface.Default;",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Make CreateDefault() return the cached Default",
+          "description": "Change CreateDefault() to return SKTypeface.Default directly, since both produce the default platform typeface. This makes CreateDefault() a zero-cost alias for Default.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKTypeface.Default as immediate workaround",
+      "recommendedReason": "Immediate fix with no API changes required. Switching to Default avoids the redundant native call entirely."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "Performance issue on Android with partial repro evidence and a plausible code-level explanation. Needs profiling to confirm whether the cost is in the uncached native call or in Android library/JIT initialization. A workaround exists (use Default).",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area, Android, performance labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Android",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge report, explain code-level findings, provide workaround",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the report and the profiling screenshot!\n\nLooking at the source, `SKTypeface.CreateDefault()` calls `sk_fontmgr_legacy_create_typeface` on every invocation without caching — this traverses Android's font manager to find the default typeface (searching for \"sans-serif\"/Roboto) each time. The `SKTypeface.Default` property, by contrast, caches the result once in the class static constructor.\n\n**Workaround (immediate):** Replace `SKTypeface.CreateDefault()` with `SKTypeface.Default`:\n```csharp\n// Instead of:\nvar typeface = SKTypeface.CreateDefault();\n\n// Use:\nvar typeface = SKTypeface.Default;\n```\n\n`Default` returns the same pre-cached instance at no additional cost.\n\nIt's also possible that part of the startup cost is the initial native library load and JIT compilation of P/Invoke stubs on Android — that overhead would appear on any first call to native code. If you see slowness on the *first* call only and subsequent calls are fast, that's the likely explanation.\n\nCould you let us know:\n1. Does `SKTypeface.Default` exhibit the same slowness?\n2. Is the slow call always the first one, or consistently slow on every call?"
+      }
+    ]
+  }
+}
+```
+
+</details>
