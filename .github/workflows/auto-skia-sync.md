@@ -169,7 +169,7 @@ steps:
         || echo "  ⚠️ SHA is NOT on origin/skiasharp — submodule pointer may be stale"
   - name: Copy push script for post-step
     run: |
-      cp scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
+      cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
 
 # -- Pre-agent steps ---------------------------------------------------
 # Run on the host before the agent starts. Packages installed here are visible
