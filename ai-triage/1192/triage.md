@@ -1,0 +1,263 @@
+# Issue Triage Report — #1192
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-30T18:52:05Z |
+| Type | type/question (0.88 (88%)) |
+| Area | area/SkiaSharp (0.95 (95%)) |
+| Suggested action | close-as-not-a-bug (0.88 (88%)) |
+
+**Issue Summary:** Reporter expects MeasureText to shift returned bounds based on TextAlign setting, but this is by design — MeasureText always returns bounds relative to the origin regardless of alignment.
+
+**Analysis:** The reporter misunderstands the semantic contract of MeasureText: it returns the tight bounding box of glyphs relative to the draw origin (0,0) regardless of TextAlign. TextAlign is a rendering hint that shifts where the text is drawn — it does not affect the returned bounds. A contributor confirmed this in the comments. SKPaint.TextAlign and SKPaint.MeasureText are both marked [Obsolete] in the current codebase; the replacement SKFont.MeasureText() makes no reference to alignment at all.
+
+**Recommendations:** **close-as-not-a-bug** — MeasureText intentionally does not apply TextAlign offset to returned bounds. TextAlign is a rendering positioning hint. Confirmed by contributor comment and code inspection.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Universal-UWP |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create SKPaint with TextAlign = SKTextAlign.Right
+2. Call MeasureText with a bounds ref
+3. Observe bounds.Left == 0.0f instead of bounds.Right == 0.0f
+
+**Code snippets:**
+
+```csharp
+var paint = new SKPaint() { TextAlign = SKTextAlign.Right };
+SKRect bounds = default;
+paint.MeasureText("blablabla", ref bounds);
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 1.68.1.1 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unlikely |
+| Relevance reason | SKPaint.TextAlign and MeasureText are now marked Obsolete; modern API (SKFont.MeasureText) explicitly excludes alignment from measurement. The behavior is by design in both old and new API. |
+
+## Analysis
+
+### Technical Summary
+
+The reporter misunderstands the semantic contract of MeasureText: it returns the tight bounding box of glyphs relative to the draw origin (0,0) regardless of TextAlign. TextAlign is a rendering hint that shifts where the text is drawn — it does not affect the returned bounds. A contributor confirmed this in the comments. SKPaint.TextAlign and SKPaint.MeasureText are both marked [Obsolete] in the current codebase; the replacement SKFont.MeasureText() makes no reference to alignment at all.
+
+### Rationale
+
+MeasureText returns the tight glyph bounding box relative to the draw origin, regardless of TextAlign. TextAlign shifts where text is rendered, not how bounds are measured. The modern API (SKFont.MeasureText) makes this clearer by not accepting alignment at all. No code fix is warranted — the correct approach is for the user to adjust their draw coordinate based on the measured width.
+
+### Key Signals
+
+- "TextAlign has nothing to do with the coordinate system. Also, TextAlign is only used for positioning text within some bounds so I don't see why this would affect MeasureText." — **Contributor @Gillibald comment on issue #1192** (Confirms this is by-design behavior, not a bug.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKPaint.cs` | 252-256 | direct | SKPaint.TextAlign is marked [Obsolete] with message 'Use SKTextAlign method overloads instead.' It reads/writes via sk_compatpaint_get/set_text_align. It is a separate property from measurement. |
+| `binding/SkiaSharp/SKPaint.cs` | 305-353 | direct | All SKPaint.MeasureText overloads are marked [Obsolete] and delegate to SKFont.MeasureText(). None of them pass TextAlign into the measurement. |
+| `binding/SkiaSharp/SKFont.cs` | 313-321 | direct | Internal SKFont.MeasureText calls sk_font_measure_text_no_return with only the paint handle (for stroke width/style), not alignment. No TextAlign offset is applied to bounds. |
+
+### Workarounds
+
+- To right-align text at point X, pass x - paint.MeasureText(text) as the draw X coordinate. Do not expect MeasureText bounds to shift.
+- Use SKFont.MeasureText() directly (the non-obsolete API) for the same behavior with a clearer contract.
+
+### Resolution Proposals
+
+**Hypothesis:** This is a misunderstanding of the MeasureText API. The behavior is by design.
+
+1. **Close as not-a-bug with explanation** — workaround, cost/xs, validated=untested
+   - Close the issue explaining that MeasureText measures relative to the origin; callers must offset their draw coordinate using the returned width.
+
+**Recommended proposal:** p1
+
+**Why:** The behavior is by design and confirmed by a contributor. The workaround is straightforward.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.88 (88%) |
+| Reason | MeasureText intentionally does not apply TextAlign offset to returned bounds. TextAlign is a rendering positioning hint. Confirmed by contributor comment and code inspection. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply type/question and area/SkiaSharp labels | labels=type/question, area/SkiaSharp, os/Windows-Universal-UWP |
+| add-comment | medium | 0.88 (88%) | Explain MeasureText does not apply alignment offsets; provide workaround | — |
+| close-issue | medium | 0.85 (85%) | Close as not-a-bug — behavior is by design | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! This is actually by design — `MeasureText` returns the tight bounding box of the glyphs relative to the draw origin (0,0), and does **not** apply any `TextAlign` offset to the returned bounds.
+
+`TextAlign` is a rendering hint that shifts where text is *drawn* on the canvas (e.g., right-align shifts the draw position left by the text width). It does not affect how bounds are measured.
+
+To right-align text at a specific X coordinate, compute the draw position manually:
+
+```csharp
+SKRect bounds = default;
+var width = paint.MeasureText("blablabla", ref bounds);
+// Draw so that text ends at x=200:
+canvas.DrawText("blablabla", 200 - width, y, paint);
+```
+
+Note: `SKPaint.MeasureText` and `SKPaint.TextAlign` are both marked `[Obsolete]` in recent versions. The replacement is `SKFont.MeasureText()` which makes this contract explicit.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1192,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-30T18:52:05Z"
+  },
+  "summary": "Reporter expects MeasureText to shift returned bounds based on TextAlign setting, but this is by design — MeasureText always returns bounds relative to the origin regardless of alignment.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Universal-UWP"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "var paint = new SKPaint() { TextAlign = SKTextAlign.Right };\nSKRect bounds = default;\npaint.MeasureText(\"blablabla\", ref bounds);"
+      ],
+      "stepsToReproduce": [
+        "Create SKPaint with TextAlign = SKTextAlign.Right",
+        "Call MeasureText with a bounds ref",
+        "Observe bounds.Left == 0.0f instead of bounds.Right == 0.0f"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.1.1"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "SKPaint.TextAlign and MeasureText are now marked Obsolete; modern API (SKFont.MeasureText) explicitly excludes alignment from measurement. The behavior is by design in both old and new API."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter misunderstands the semantic contract of MeasureText: it returns the tight bounding box of glyphs relative to the draw origin (0,0) regardless of TextAlign. TextAlign is a rendering hint that shifts where the text is drawn — it does not affect the returned bounds. A contributor confirmed this in the comments. SKPaint.TextAlign and SKPaint.MeasureText are both marked [Obsolete] in the current codebase; the replacement SKFont.MeasureText() makes no reference to alignment at all.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "252-256",
+        "finding": "SKPaint.TextAlign is marked [Obsolete] with message 'Use SKTextAlign method overloads instead.' It reads/writes via sk_compatpaint_get/set_text_align. It is a separate property from measurement.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "305-353",
+        "finding": "All SKPaint.MeasureText overloads are marked [Obsolete] and delegate to SKFont.MeasureText(). None of them pass TextAlign into the measurement.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "lines": "313-321",
+        "finding": "Internal SKFont.MeasureText calls sk_font_measure_text_no_return with only the paint handle (for stroke width/style), not alignment. No TextAlign offset is applied to bounds.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "TextAlign has nothing to do with the coordinate system. Also, TextAlign is only used for positioning text within some bounds so I don't see why this would affect MeasureText.",
+        "source": "Contributor @Gillibald comment on issue #1192",
+        "interpretation": "Confirms this is by-design behavior, not a bug."
+      }
+    ],
+    "rationale": "MeasureText returns the tight glyph bounding box relative to the draw origin, regardless of TextAlign. TextAlign shifts where text is rendered, not how bounds are measured. The modern API (SKFont.MeasureText) makes this clearer by not accepting alignment at all. No code fix is warranted — the correct approach is for the user to adjust their draw coordinate based on the measured width.",
+    "workarounds": [
+      "To right-align text at point X, pass x - paint.MeasureText(text) as the draw X coordinate. Do not expect MeasureText bounds to shift.",
+      "Use SKFont.MeasureText() directly (the non-obsolete API) for the same behavior with a clearer contract."
+    ],
+    "resolution": {
+      "hypothesis": "This is a misunderstanding of the MeasureText API. The behavior is by design.",
+      "proposals": [
+        {
+          "title": "Close as not-a-bug with explanation",
+          "category": "workaround",
+          "description": "Close the issue explaining that MeasureText measures relative to the origin; callers must offset their draw coordinate using the returned width.",
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "p1",
+      "recommendedReason": "The behavior is by design and confirmed by a contributor. The workaround is straightforward."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "MeasureText intentionally does not apply TextAlign offset to returned bounds. TextAlign is a rendering positioning hint. Confirmed by contributor comment and code inspection.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/question and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp",
+          "os/Windows-Universal-UWP"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain MeasureText does not apply alignment offsets; provide workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the report! This is actually by design — `MeasureText` returns the tight bounding box of the glyphs relative to the draw origin (0,0), and does **not** apply any `TextAlign` offset to the returned bounds.\n\n`TextAlign` is a rendering hint that shifts where text is *drawn* on the canvas (e.g., right-align shifts the draw position left by the text width). It does not affect how bounds are measured.\n\nTo right-align text at a specific X coordinate, compute the draw position manually:\n\n```csharp\nSKRect bounds = default;\nvar width = paint.MeasureText(\"blablabla\", ref bounds);\n// Draw so that text ends at x=200:\ncanvas.DrawText(\"blablabla\", 200 - width, y, paint);\n```\n\nNote: `SKPaint.MeasureText` and `SKPaint.TextAlign` are both marked `[Obsolete]` in recent versions. The replacement is `SKFont.MeasureText()` which makes this contract explicit."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not-a-bug — behavior is by design",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

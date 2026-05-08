@@ -1,0 +1,357 @@
+# Issue Triage Report — #3109
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-30T17:20:00Z |
+| Type | type/bug (0.93 (93%)) |
+| Area | area/SkiaSharp (0.88 (88%)) |
+| Suggested action | needs-investigation (0.85 (85%)) |
+
+**Issue Summary:** Performance regression of ~90% when using SKShader.CreateLinearGradient with DrawRect, observed from SkiaSharp 2.88.9 to 3.116.0 on Windows, confirmed still present in 2025.
+
+**Analysis:** A significant performance regression in gradient shader rendering affects DrawRect calls using SKShader.CreateLinearGradient. The issue was introduced between SkiaSharp 2.88.9 and 3.116.0 (corresponding to a major Skia milestone bump) and persists as of the latest build in 2025. The C# wrapper code for CreateLinearGradient and DrawRect appears correct and passes through directly to native Skia; the regression is most likely in the native Skia library itself — possibly a change in the gradient rendering pipeline, color space handling, or loss of a fast-path optimization in the newer Skia milestone.
+
+**Recommendations:** **needs-investigation** — Regression is confirmed across multiple SkiaSharp 3.x versions and persists through 2025. Code provided shows correct API usage. Root cause is in native Skia layer, requires profiling to pinpoint.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/performance |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create an SKPaint with a linear gradient shader using SKShader.CreateLinearGradient with two color stops
+2. Call canvas.DrawRect on a surface covering the full canvas area using that paint inside PaintSurface
+3. Observe slow rendering (90% slower than without the shader)
+
+**Environment:** Windows, Visual Studio, SkiaSharp 3.116.0; later confirmed on .NET 10 with latest SkiaSharp build (Nov 2025)
+
+**Code snippets:**
+
+```csharp
+BG = new SKPaint { Shader = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(0, FireField.Height), [SKColors.DarkBlue, SKColors.Black], [0, 0.75f], SKShaderTileMode.Clamp) }; canvas.DrawRect(0, 0, FireField.Width, FireField.Height, BG);
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | performance |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | net10.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.9, 3.116.0, 3.118.0 |
+| Worked in | 2.88.9 |
+| Broke in | 3.116.0 |
+| Current relevance | likely |
+| Relevance reason | Reporter confirmed in Nov 2025 that the issue persists in the latest build with .NET 10; no fix has been committed. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.90 (90%) |
+| Reason | Reporter explicitly states gradient worked well in 2.88.9 and became 90% slower in 3.116.0. The comment from Nov 2025 confirms the issue still exists. |
+| Worked in version | 2.88.9 |
+| Broke in version | 3.116.0 |
+
+## Analysis
+
+### Technical Summary
+
+A significant performance regression in gradient shader rendering affects DrawRect calls using SKShader.CreateLinearGradient. The issue was introduced between SkiaSharp 2.88.9 and 3.116.0 (corresponding to a major Skia milestone bump) and persists as of the latest build in 2025. The C# wrapper code for CreateLinearGradient and DrawRect appears correct and passes through directly to native Skia; the regression is most likely in the native Skia library itself — possibly a change in the gradient rendering pipeline, color space handling, or loss of a fast-path optimization in the newer Skia milestone.
+
+### Rationale
+
+The reporter provides code showing correct API usage: creating an SKPaint with a linear gradient shader and calling DrawRect each frame. The same code was fast in 2.88.9. The SkiaSharp C# wrappers for CreateLinearGradient and DrawRect are thin passthroughs to native code (verified in binding/SkiaSharp/SKShader.cs and binding/SkiaSharp/SKCanvas.cs), so the regression almost certainly originates in the upstream Skia native library. Between 2.88.x and 3.116.x, Skia upgraded multiple Chrome milestones, which can introduce changes to gradient shader rasterization paths. Classified as type/bug because the performance contract is broken: same code, same behavior, dramatically worse performance on the same hardware.
+
+### Key Signals
+
+- "Having a gradient background was no issue with Version=2.88.9. Using latest one or even the preview (3.118), the performance is down by 90%." — **issue body** (Clear regression claim spanning multiple 3.x releases.)
+- "Simply commenting out the Shader block, it returns fast... but flat." — **issue body** (Confirms the performance issue is isolated to the gradient shader path, not DrawRect itself.)
+- "Issue already present in the latest build, and project moved to Net10." — **comment, Nov 2025** (Confirms the bug is not fixed and persists even after migration to .NET 10 and the latest SkiaSharp.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKShader.cs` | 125-137 | direct | CreateLinearGradient is a thin P/Invoke wrapper; allocates stack memory for points, pins color and position arrays, then calls sk_shader_new_linear_gradient. No C# overhead that could explain a 90% regression. |
+| `binding/SkiaSharp/SKCanvas.cs` | 330-340 | direct | DrawRect validates the paint parameter then calls sk_canvas_draw_rect directly. No buffering or extra processing; any performance issue would be in native code. |
+
+### Workarounds
+
+- Pre-render the gradient to an SKBitmap once, then draw the bitmap each frame instead of using a live shader — avoids gradient rasterization per frame.
+- Use SKSurface.CreateAsTarget with a GPU-backed surface (SKGLControl/SKGLView) if available — GPU path may avoid the regression.
+- Downgrade to SkiaSharp 2.88.9 as a temporary workaround (not recommended long-term).
+
+### Next Questions
+
+- Is the surface hardware-accelerated (GL/Direct3D) or software raster? The regression might be GPU-backend-specific.
+- What is the frame render loop — is the gradient SKPaint reused across frames or recreated?
+- Does the regression occur on Linux or macOS, or only on Windows?
+- Is this reproducible with a minimal standalone console/WinForms app (to exclude MAUI/WPF overhead)?
+
+### Resolution Proposals
+
+**Hypothesis:** The upstream Skia native library changed its gradient shader rasterization pipeline between the Skia milestone used in 2.88.x and that used in 3.116.x, eliminating a fast path or adding expensive color space conversions for gradient fills.
+
+1. **Pre-render gradient to bitmap** — workaround, confidence 0.85 (85%), cost/xs, validated=untested
+   - Create the gradient once by drawing it to an SKBitmap, then draw the bitmap each frame. This moves the expensive rasterization out of the per-frame render loop.
+2. **Investigate Skia native regression** — investigation, confidence 0.70 (70%), cost/l, validated=untested
+   - Profile the native sk_canvas_draw_rect call with a gradient shader across the two Skia versions to identify where the extra time is spent (gradient evaluation, color space conversion, AA, etc.), then report upstream or patch the C API shim.
+
+**Recommended proposal:** Pre-render gradient to bitmap
+
+**Why:** Immediately actionable with minimal code change; avoids per-frame shader rasterization cost regardless of the root cause.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.85 (85%) |
+| Reason | Regression is confirmed across multiple SkiaSharp 3.x versions and persists through 2025. Code provided shows correct API usage. Root cause is in native Skia layer, requires profiling to pinpoint. |
+| Suggested repro platform | windows |
+
+### Missing Info
+
+- Exact Windows OS version and whether it is ARM64 or x64
+- Whether the rendering surface is GPU-backed (GL/Direct3D) or CPU raster
+- Whether the SKPaint/SKShader is reused across frames or recreated each frame
+- Minimal self-contained repro project (console or WinForms) to isolate from MAUI/WPF
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.93 (93%) | Apply performance tenet, Windows platform, and ensure type/bug and area/SkiaSharp are set | labels=type/bug, area/SkiaSharp, os/Windows-Classic, tenet/performance |
+| add-comment | medium | 0.85 (85%) | Ask for repro details and provide bitmap pre-render workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report and for confirming this still occurs on .NET 10.
+
+A few questions to help narrow down the root cause:
+
+1. Is the surface hardware-accelerated (e.g., using `SKGLControl`/`SKGLView` with OpenGL or Direct3D) or CPU-raster (`SKCanvasView`/`SKCanvas` backed by a bitmap)?
+2. What Windows version and architecture (x64 or ARM64)?
+3. Is the `SKPaint`/`SKShader` object reused across frames, or created on every `PaintSurface` call?
+
+**Workaround (while we investigate):** Pre-render the gradient once to an `SKBitmap` and draw the bitmap each frame — this avoids the per-frame shader rasterization cost:
+
+```csharp
+// Create once:
+var gradientBitmap = new SKBitmap((int)FireField.Width, (int)FireField.Height);
+using (var c = new SKCanvas(gradientBitmap))
+using (var paint = new SKPaint { Shader = SKShader.CreateLinearGradient(...) })
+    c.DrawRect(0, 0, FireField.Width, FireField.Height, paint);
+
+// Draw each frame:
+canvas.DrawBitmap(gradientBitmap, 0, 0);
+```
+
+This is a known workaround for expensive per-frame gradient rasterization.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3109,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-30T17:20:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Performance regression of ~90% when using SKShader.CreateLinearGradient with DrawRect, observed from SkiaSharp 2.88.9 to 3.116.0 on Windows, confirmed still present in 2025.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.93
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "performance",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net10.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKPaint with a linear gradient shader using SKShader.CreateLinearGradient with two color stops",
+        "Call canvas.DrawRect on a surface covering the full canvas area using that paint inside PaintSurface",
+        "Observe slow rendering (90% slower than without the shader)"
+      ],
+      "codeSnippets": [
+        "BG = new SKPaint { Shader = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(0, FireField.Height), [SKColors.DarkBlue, SKColors.Black], [0, 0.75f], SKShaderTileMode.Clamp) }; canvas.DrawRect(0, 0, FireField.Width, FireField.Height, BG);"
+      ],
+      "environmentDetails": "Windows, Visual Studio, SkiaSharp 3.116.0; later confirmed on .NET 10 with latest SkiaSharp build (Nov 2025)"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.9",
+        "3.116.0",
+        "3.118.0"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "Reporter confirmed in Nov 2025 that the issue persists in the latest build with .NET 10; no fix has been committed."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.9,
+      "reason": "Reporter explicitly states gradient worked well in 2.88.9 and became 90% slower in 3.116.0. The comment from Nov 2025 confirms the issue still exists.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "A significant performance regression in gradient shader rendering affects DrawRect calls using SKShader.CreateLinearGradient. The issue was introduced between SkiaSharp 2.88.9 and 3.116.0 (corresponding to a major Skia milestone bump) and persists as of the latest build in 2025. The C# wrapper code for CreateLinearGradient and DrawRect appears correct and passes through directly to native Skia; the regression is most likely in the native Skia library itself — possibly a change in the gradient rendering pipeline, color space handling, or loss of a fast-path optimization in the newer Skia milestone.",
+    "rationale": "The reporter provides code showing correct API usage: creating an SKPaint with a linear gradient shader and calling DrawRect each frame. The same code was fast in 2.88.9. The SkiaSharp C# wrappers for CreateLinearGradient and DrawRect are thin passthroughs to native code (verified in binding/SkiaSharp/SKShader.cs and binding/SkiaSharp/SKCanvas.cs), so the regression almost certainly originates in the upstream Skia native library. Between 2.88.x and 3.116.x, Skia upgraded multiple Chrome milestones, which can introduce changes to gradient shader rasterization paths. Classified as type/bug because the performance contract is broken: same code, same behavior, dramatically worse performance on the same hardware.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKShader.cs",
+        "lines": "125-137",
+        "finding": "CreateLinearGradient is a thin P/Invoke wrapper; allocates stack memory for points, pins color and position arrays, then calls sk_shader_new_linear_gradient. No C# overhead that could explain a 90% regression.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "330-340",
+        "finding": "DrawRect validates the paint parameter then calls sk_canvas_draw_rect directly. No buffering or extra processing; any performance issue would be in native code.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Having a gradient background was no issue with Version=2.88.9. Using latest one or even the preview (3.118), the performance is down by 90%.",
+        "source": "issue body",
+        "interpretation": "Clear regression claim spanning multiple 3.x releases."
+      },
+      {
+        "text": "Simply commenting out the Shader block, it returns fast... but flat.",
+        "source": "issue body",
+        "interpretation": "Confirms the performance issue is isolated to the gradient shader path, not DrawRect itself."
+      },
+      {
+        "text": "Issue already present in the latest build, and project moved to Net10.",
+        "source": "comment, Nov 2025",
+        "interpretation": "Confirms the bug is not fixed and persists even after migration to .NET 10 and the latest SkiaSharp."
+      }
+    ],
+    "nextQuestions": [
+      "Is the surface hardware-accelerated (GL/Direct3D) or software raster? The regression might be GPU-backend-specific.",
+      "What is the frame render loop — is the gradient SKPaint reused across frames or recreated?",
+      "Does the regression occur on Linux or macOS, or only on Windows?",
+      "Is this reproducible with a minimal standalone console/WinForms app (to exclude MAUI/WPF overhead)?"
+    ],
+    "workarounds": [
+      "Pre-render the gradient to an SKBitmap once, then draw the bitmap each frame instead of using a live shader — avoids gradient rasterization per frame.",
+      "Use SKSurface.CreateAsTarget with a GPU-backed surface (SKGLControl/SKGLView) if available — GPU path may avoid the regression.",
+      "Downgrade to SkiaSharp 2.88.9 as a temporary workaround (not recommended long-term)."
+    ],
+    "resolution": {
+      "hypothesis": "The upstream Skia native library changed its gradient shader rasterization pipeline between the Skia milestone used in 2.88.x and that used in 3.116.x, eliminating a fast path or adding expensive color space conversions for gradient fills.",
+      "proposals": [
+        {
+          "title": "Pre-render gradient to bitmap",
+          "description": "Create the gradient once by drawing it to an SKBitmap, then draw the bitmap each frame. This moves the expensive rasterization out of the per-frame render loop.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate Skia native regression",
+          "description": "Profile the native sk_canvas_draw_rect call with a gradient shader across the two Skia versions to identify where the extra time is spent (gradient evaluation, color space conversion, AA, etc.), then report upstream or patch the C API shim.",
+          "category": "investigation",
+          "confidence": 0.7,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Pre-render gradient to bitmap",
+      "recommendedReason": "Immediately actionable with minimal code change; avoids per-frame shader rasterization cost regardless of the root cause."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Regression is confirmed across multiple SkiaSharp 3.x versions and persists through 2025. Code provided shows correct API usage. Root cause is in native Skia layer, requires profiling to pinpoint.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Exact Windows OS version and whether it is ARM64 or x64",
+      "Whether the rendering surface is GPU-backed (GL/Direct3D) or CPU raster",
+      "Whether the SKPaint/SKShader is reused across frames or recreated each frame",
+      "Minimal self-contained repro project (console or WinForms) to isolate from MAUI/WPF"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply performance tenet, Windows platform, and ensure type/bug and area/SkiaSharp are set",
+        "risk": "low",
+        "confidence": 0.93,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask for repro details and provide bitmap pre-render workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the report and for confirming this still occurs on .NET 10.\n\nA few questions to help narrow down the root cause:\n\n1. Is the surface hardware-accelerated (e.g., using `SKGLControl`/`SKGLView` with OpenGL or Direct3D) or CPU-raster (`SKCanvasView`/`SKCanvas` backed by a bitmap)?\n2. What Windows version and architecture (x64 or ARM64)?\n3. Is the `SKPaint`/`SKShader` object reused across frames, or created on every `PaintSurface` call?\n\n**Workaround (while we investigate):** Pre-render the gradient once to an `SKBitmap` and draw the bitmap each frame — this avoids the per-frame shader rasterization cost:\n\n```csharp\n// Create once:\nvar gradientBitmap = new SKBitmap((int)FireField.Width, (int)FireField.Height);\nusing (var c = new SKCanvas(gradientBitmap))\nusing (var paint = new SKPaint { Shader = SKShader.CreateLinearGradient(...) })\n    c.DrawRect(0, 0, FireField.Width, FireField.Height, paint);\n\n// Draw each frame:\ncanvas.DrawBitmap(gradientBitmap, 0, 0);\n```\n\nThis is a known workaround for expensive per-frame gradient rasterization."
+      }
+    ]
+  }
+}
+```
+
+</details>
