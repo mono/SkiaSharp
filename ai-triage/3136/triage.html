@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #3136 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 3136, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-22T00:30:00Z", "currentLabels": ["type/bug"]}, "summary": "MAUI app crashes on Windows IoT Enterprise (and systems with old GPU drivers) when instantiating SKCanvasView, due to REGDB_E_CLASSNOTREG failure while activating the WinRT class SkiaSharp.Views.WinUI.Native.BufferExtensions — caused by missing MSVC C++ runtime on the target machine.", "classification": {"type": {"value": "type/bug", "confidence": 0.98}, "area": {"value": "area/SkiaSharp.Views", "confidence": 0.92}, "platforms": ["os/Windows-WinUI"], "tenets": ["tenet/reliability"], "partner": "partner/maui"}, "evidence": {"bugSignals": {"severity": "high", "regressionClaimed": false, "errorType": "exception", "errorMessage": "The type initializer for 'SkiaSharp.Views.WinUI.Native.BufferExtensions' threw an exception. Inner: COMException Class not registered (0x80040154 REGDB_E_CLASSNOTREG)", "stackTrace": "BufferExtensions..cctor() -> WinRT.BaseActivationFactory..ctor -> REGDB_E_CLASSNOTREG in SkiaSharp_Views_WinUI_Native_Projection; SKXamlCanvas.CreateBitmap() -> SKXamlCanvas.DoInvalidate()", "reproQuality": "complete", "targetFrameworks": ["net8.0-windows10.0.19041.0"]}, "reproEvidence": {"stepsToReproduce": ["Create a .NET MAUI 8 application targeting Windows (WinUI)", "Add SkiaSharp.Views.Maui.Controls package", "Run on Windows IoT Enterprise or a system without MSVC C++ 2015+ Redistributable", "Instantiate SKCanvasView — app immediately crashes"], "environmentDetails": "Windows IoT Enterprise / old Ryzen+Radeon GPU systems; SkiaSharp 3.116.0–3.116.1 and 2.88.9; .NET MAUI 8.0", "repoLinks": [{"url": "https://github.com/mattleibow/ComCrashTestApp", "description": "Maintainer-created repro test app to isolate COM crash"}], "relatedIssues": [2648, 3113]}, "versionAnalysis": {"mentionedVersions": ["3.116.0", "3.116.1", "2.88.9"], "currentRelevance": "likely", "relevanceReason": "Maintainer confirmed the fix (static MSVC runtime linking) was pending pipeline signing issues as of August 2025 but no release has addressed it yet; April 2026 follow-up confirms still unfixed."}}, "analysis": {"summary": "The WinRT native component SkiaSharp.Views.WinUI.Native.dll fails to activate its BufferExtensions class on Windows IoT Enterprise and certain GPU driver environments. The C# WinRT projection (SkiaSharp_Views_WinUI_Native_Projection) calls RoActivateInstance to resolve IBufferExtensionsStatics, but this fails with REGDB_E_CLASSNOTREG because the DLL cannot load (missing MSVC C++ runtime). The maintainer identified the root cause as a build issue: the native DLL was not statically linking the MSVC runtime. The fix is to compile SkiaSharp.Views.WinUI.Native.dll with /MT (static CRT) so it has no external MSVC runtime dependency.", "rationale": "Crash is confirmed with a full WinDbg dump, stack trace points directly to the WinRT activation factory for BufferExtensions in the native projection DLL. The maintainer (@mattleibow) explicitly confirmed this is a known issue caused by not statically linking the runtime, and said a fix was in progress. Affected platforms limited to Windows IoT / minimal Windows installations. Workaround (install VC++ redistributable) confirmed effective by community. Classified as high severity because it is a hard crash with no SkiaSharp-level workaround on systems users don't control.", "keySignals": [{"text": "Class not registered (0x80040154 (REGDB_E_CLASSNOTREG)) in SkiaSharp.Views.WinUI.Native.BufferExtensions..cctor()", "source": "WinDbg crash dump in issue body", "interpretation": "WinRT activation of the native component fails — DLL cannot be loaded/registered, most likely due to missing VC++ runtime"}, {"text": "I think that I was building the interop and not statically linking the runtime. Try installing the msvc runtime. That fixed it for my tests.", "source": "comment by maintainer mattleibow (August 2025)", "interpretation": "Root cause confirmed: shipped binaries were built without static MSVC runtime linkage; fix is known"}, {"text": "I found out that the system with old Ryzen / Radeon GPUs has the same problem with this regardless of the Windows edition.", "source": "comment by airtaxi", "interpretation": "Issue is not strictly limited to IoT edition — also affects systems with outdated GPU drivers that may ship without VC++ runtime"}, {"text": "For those affected, it seems to be fixed by manually installing VC as @mattleibow suggested above. winget install Microsoft.VCRedist.2015+.x64", "source": "comment by Inrego", "interpretation": "Workaround confirmed effective — validates that missing MSVC runtime is the root cause"}], "codeInvestigation": [{"file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.vcxproj", "lines": "127-135", "finding": "vcxproj shows Release config uses RuntimeLibrary=MultiThreaded (/MT — static CRT). This is correct for static linking. However, maintainer statement suggests historically shipped binaries may have been built differently (dynamic CRT). The current project file shows the intended fix configuration.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/UWPExtensions.cs", "lines": "176-180", "finding": "GetPixels() on WriteableBitmap calls PixelBuffer.GetByteBuffer() which calls BufferExtensions.GetByteBuffer(buffer) — the WinRT static method that triggers activation of SkiaSharp.Views.WinUI.Native.BufferExtensions. This is the call site that crashes.", "relevance": "direct"}, {"file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/BufferExtensions.idl", "lines": "1-7", "finding": "BufferExtensions is declared as a WinRT runtimeclass with a static method GetByteBuffer. As a WinRT runtimeclass, it requires activation factory registration — explaining why REGDB_E_CLASSNOTREG can occur if the DLL fails to load.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs", "lines": "229-254", "finding": "CreateBitmap() creates a WriteableBitmap and calls bitmap.GetPixels() on line 240. This call triggers the BufferExtensions WinRT activation. The crash occurs on the first paint/invalidation cycle, matching the reported behavior of crashing immediately on SKCanvasView instantiation.", "relevance": "direct"}], "workarounds": ["Install Microsoft Visual C++ 2015-2022 Redistributable (x64): winget install Microsoft.VCRedist.2015+.x64", "Include VC++ runtime installer in your application's deployment package/installer so end users don't need to install it manually"], "nextQuestions": ["Has the fix (static MSVC runtime linking) been applied to the build pipeline and released in any version since August 2025?", "Does the issue also affect ARM64 builds of the WinUI native component?", "Is the crash reproducible with the latest preview builds of SkiaSharp?"], "resolution": {"hypothesis": "The released SkiaSharp.Views.WinUI.Native.dll was compiled with dynamic MSVC runtime linkage (/MD), causing it to depend on VCRUNTIME140.dll/MSVCP140.dll which are absent on Windows IoT Enterprise and minimal Windows installations. Building with /MT (static CRT) removes this dependency.", "proposals": [{"title": "Include VC++ Redistributable in app deployment", "description": "Package the Microsoft Visual C++ 2015–2022 Redistributable with your application installer so end users on Windows IoT or stripped-down Windows environments have the runtime present.", "category": "workaround", "confidence": 0.95, "effort": "cost/s", "validated": "yes"}, {"title": "Fix SkiaSharp build to statically link MSVC runtime", "description": "Ensure SkiaSharp.Views.WinUI.Native.vcxproj consistently uses RuntimeLibrary=MultiThreaded (/MT) in all build configurations including the CI/CD pipeline so shipped binaries have no dynamic CRT dependency. Maintainer has confirmed this is the planned fix.", "category": "fix", "confidence": 0.9, "effort": "cost/s", "validated": "untested"}], "recommendedProposal": "Fix SkiaSharp build to statically link MSVC runtime", "recommendedReason": "This is the correct permanent fix identified by the maintainer. The workaround requires users to modify their deployment which is not always possible (e.g., locked-down IoT environments)."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.85, "reason": "Root cause is identified (missing static MSVC runtime in shipped binaries) and maintainer confirmed a fix was planned. However, as of April 2026 the fix has not been released. Issue needs tracking to confirm whether a fixed build has been published or if the pipeline signing issues are still blocking.", "suggestedReproPlatform": "windows"}, "missingInfo": ["Which SkiaSharp version (if any) contains the fix with statically-linked MSVC runtime?", "Is the pipeline signing issue that was blocking the fix now resolved?"], "actions": [{"type": "update-labels", "description": "Apply area, platform, tenet, and partner labels", "risk": "low", "confidence": 0.95, "labels": ["type/bug", "area/SkiaSharp.Views", "os/Windows-WinUI", "tenet/reliability", "partner/maui"]}, {"type": "add-comment", "description": "Provide workaround and status update", "risk": "medium", "confidence": 0.85, "comment": "Thanks for the detailed WinDbg analysis. The root cause is that the `SkiaSharp.Views.WinUI.Native.dll` was shipped without statically linking the MSVC C++ runtime, so it fails to load on systems without the Visual C++ Redistributable installed (which includes Windows IoT Enterprise and some OEM systems with older GPU drivers).\n\n**Immediate workaround:** Install the Microsoft Visual C++ 2015–2022 Redistributable on the target machine:\n```\nwinget install Microsoft.VCRedist.2015+.x64\n```\n\nAlternatively, include the VC++ runtime installer in your application's deployment package.\n\nA fix (statically linking the runtime in the build pipeline) is in progress. We'll update this issue when a fixed release is available."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

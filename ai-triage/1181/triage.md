@@ -1,0 +1,400 @@
+# Issue Triage Report — #1181
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-21T22:57:39Z |
+| Type | type/bug (0.92 (92%)) |
+| Area | area/libSkiaSharp.native (0.82 (82%)) |
+| Suggested action | needs-investigation (0.82 (82%)) |
+
+**Issue Summary:** SKTypeface.Default.FamilyName returns null and SKTypeface.FromFamilyName("Sans") returns null on some Linux configurations (snap containers, certain distros like Manjaro/Debian/CentOS, and non-C locales such as LANG=ja_JP.UTF-8), while SKTypeface.FromFile() still works correctly.
+
+**Analysis:** The native libSkiaSharp on Linux uses fontconfig for font enumeration and name-based matching. In some environments (snap containers with restricted font directory access, certain Linux distros, or non-C locales like LANG=ja_JP.UTF-8), fontconfig's matching returns null even when fonts are installed. SKTypeface.FromFile() succeeds because it bypasses fontconfig entirely and loads a font directly from disk. Setting LANG=C fixes the issue in the locale case, suggesting fontconfig's FcFontMatch behaves differently with Unicode locale settings.
+
+**Recommendations:** **needs-investigation** — Bug is real and confirmed across multiple reporters and environments (snap, Manjaro, CentOS 7, Debian 10, locale issue). Root cause is unclear — could be fontconfig version incompatibility, locale handling, or sandbox font directory access. Needs deeper investigation of the native Skia fontconfig manager code.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Run a .NET application using SkiaSharp on Linux inside a snap container OR on Manjaro/CentOS/Debian 10 with certain fontconfig configurations
+2. Call SKTypeface.Default.FamilyName
+3. Observe null is returned
+4. Call SKTypeface.FromFamilyName("Sans")
+5. Observe null is returned
+
+**Environment:** Linux (Manjaro, CentOS 7, Debian 10), snap packages, also LANG=ja_JP.UTF-8 locale. fc-match CLI works, fonts are installed on the system.
+
+**Repository links:**
+- https://github.com/AvaloniaUI/Avalonia/issues/3679 — Avalonia snap package repro - reproducible on any machine
+- https://github.com/AvaloniaUI/Avalonia/issues/3694 — CentOS 7 repro
+- https://github.com/AvaloniaUI/Avalonia/issues/3701 — Additional repro case
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | SKTypeface.Default.FamilyName returns null; SKTypeface.FromFamilyName("Sans") returns null |
+| Repro quality | partial |
+| Target frameworks | — |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The fontconfig-based font manager code path has not changed structurally; a 2022 comment confirms the issue still occurs on non-C locales. |
+
+## Analysis
+
+### Technical Summary
+
+The native libSkiaSharp on Linux uses fontconfig for font enumeration and name-based matching. In some environments (snap containers with restricted font directory access, certain Linux distros, or non-C locales like LANG=ja_JP.UTF-8), fontconfig's matching returns null even when fonts are installed. SKTypeface.FromFile() succeeds because it bypasses fontconfig entirely and loads a font directly from disk. Setting LANG=C fixes the issue in the locale case, suggesting fontconfig's FcFontMatch behaves differently with Unicode locale settings.
+
+### Rationale
+
+This is clearly a bug: fc-match CLI finds fonts, fonts are installed, but SkiaSharp's native fontconfig integration fails to enumerate or match them. The C# wrapper correctly calls the native API; the fault lies in the native fontconfig integration. Classified as libSkiaSharp.native because the fix requires changes to how the native Skia font manager interacts with fontconfig, or how libSkiaSharp is built/configured. The medium severity reflects that SKTypeface.FromFile() works as a workaround.
+
+### Key Signals
+
+- "SKTypeface.Default.FamilyName returns null; SKTypeface.FromFamilyName("Sans") returns null" — **issue body** (Font name matching via fontconfig returns null in the native layer, not a C# wrapper issue.)
+- "Fonts are loadable via SKTypeface.FromFile. fc-match command line utility is able to locate the font that corresponds to the "Sans" name." — **comment by kekekeks** (Fonts exist and fontconfig CLI works — the issue is specific to SkiaSharp's internal fontconfig usage.)
+- "SKTypeface.Default.FamilyName returns null for me when using japanese (LANG=ja_JP.UTF-8). Setting LANG to C solves the problem." — **comment by KiruyaMomochi** (Strong signal that fontconfig locale handling is the root cause, not just snap/container restrictions.)
+- "Maybe newer Fontconfig has changed in a way that breaks the SKFontmanagerImpl" — **comment by Gillibald** (Fontconfig API or behavior change in newer versions may have broken font matching in the native Skia implementation.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKTypeface.cs` | 15-22 | direct | defaultTypeface is initialized from SkiaApi.sk_typeface_ref_default(); if the native default typeface has no family name (fontconfig returned empty), FamilyName will be null. The static constructor has no null-guard or fallback. |
+| `binding/SkiaSharp/SKTypeface.cs` | 60-72 | direct | FromFamilyName(string, SKFontStyle) calls sk_typeface_create_from_name which delegates to the native fontconfig-based font manager. Returns null (via GetObject on null handle) when fontconfig matching fails. |
+| `binding/SkiaSharp/SKFontManager.cs` | 13-23 | related | SKFontManager.Default is initialized from sk_fontmgr_ref_default(). On Linux, this uses fontconfig. FontFamilyCount can be 0 if fontconfig can't enumerate fonts (e.g., in snap container without font access). |
+| `binding/SkiaSharp/SKTypeface.cs` | 81-90 | related | SKTypeface.FromFile bypasses fontconfig entirely by loading directly from disk path — explains why FromFile works while FromFamilyName does not. |
+
+### Workarounds
+
+- Use SKTypeface.FromFile("/path/to/font.ttf") to load fonts directly by path, bypassing fontconfig entirely.
+- Set environment variable LANG=C before running the application when the issue is locale-related.
+- For snap packages: add 'plugs: [home, desktop]' or 'layout:' to the snapcraft.yaml to grant access to system font directories.
+- Embed fonts as resources and load them via SKTypeface.FromData(SKData.CreateCopy(fontBytes)) for fully portable font loading.
+
+### Next Questions
+
+- Does SKFontManager.Default.FontFamilyCount return 0 on the affected machines?
+- Does the issue reproduce with the standard fontconfig-linked libSkiaSharp, or also with NoDependencies (which has its own bundled font handling)?
+- Is this a fontconfig version compatibility issue in the Skia C++ code (SkFontMgr_fontconfig)?
+- Does the fix need to be in the Skia native code (upstream fontconfig manager) or can a C# wrapper mitigation help (e.g., falling back to a built-in font)?
+
+### Resolution Proposals
+
+**Hypothesis:** On some Linux environments, fontconfig's FcFontMatch returns null or empty results due to: (a) sandbox restrictions preventing access to /etc/fonts or font directories, (b) locale-dependent behavior (LANG=ja_JP.UTF-8) where fontconfig fails to match family names, or (c) API changes in newer fontconfig versions that break Skia's native SkFontMgr_fontconfig implementation.
+
+1. **Load font from file as workaround** — workaround, confidence 0.90 (90%), cost/xs, validated=untested
+   - Use SKTypeface.FromFile to load a specific system font by path. This bypasses fontconfig entirely.
+
+```csharp
+// Workaround: load a known system font by path
+var typeface = SKTypeface.FromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+// or search common paths
+var paths = new[] {
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/TTF/DejaVuSans.ttf",
+    "/usr/share/fonts/dejavu/DejaVuSans.ttf"
+};
+var typeface = paths.Select(SKTypeface.FromFile).FirstOrDefault(t => t != null);
+```
+2. **Embed and load font from resources** — alternative, confidence 0.95 (95%), cost/s, validated=untested
+   - Bundle a font file as an embedded resource and load it via SKTypeface.FromData for fully portable behavior.
+
+```csharp
+// Add font as EmbeddedResource in .csproj, then:
+using var stream = Assembly.GetExecutingAssembly()
+    .GetManifestResourceStream("MyApp.Fonts.OpenSans-Regular.ttf");
+using var data = SKData.Create(stream);
+var typeface = SKTypeface.FromData(data);
+```
+3. **Set LANG=C as environment variable** — workaround, confidence 0.75 (75%), cost/xs, validated=untested
+   - For locale-specific cases: set LANG=C before starting the process. This resolves the fontconfig locale interaction.
+4. **Investigate Skia native fontconfig manager** — investigation, confidence 0.70 (70%), cost/l, validated=untested
+   - Review the native SkFontMgr_fontconfig implementation in the Skia submodule and check for fontconfig API compatibility issues or locale handling bugs.
+
+**Recommended proposal:** Embed and load font from resources
+
+**Why:** The most portable and reliable workaround. Not dependent on system font paths or fontconfig working correctly. The FromFile approach is simpler for cases where system fonts are known.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.82 (82%) |
+| Reason | Bug is real and confirmed across multiple reporters and environments (snap, Manjaro, CentOS 7, Debian 10, locale issue). Root cause is unclear — could be fontconfig version incompatibility, locale handling, or sandbox font directory access. Needs deeper investigation of the native Skia fontconfig manager code. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, native, and linux labels | labels=type/bug, area/libSkiaSharp.native, os/Linux, tenet/reliability |
+| add-comment | medium | 0.82 (82%) | Post analysis with workarounds and diagnostic instructions | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed reports! This is a confirmed bug in SkiaSharp's fontconfig integration on Linux — fontconfig CLI (`fc-match`) works, but SkiaSharp's internal font matching fails in certain environments.
+
+**Confirmed affected environments:**
+- Snap packages (reproducible on any machine)
+- Manjaro Linux (non-snap, some setups)
+- CentOS 7, Debian 10
+- Non-C locales: `LANG=ja_JP.UTF-8` (setting `LANG=C` fixes it)
+
+**Root cause hypothesis:** The native Skia fontconfig manager (`SkFontMgr_fontconfig`) may be failing due to fontconfig version compatibility, locale-dependent font matching, or sandbox restrictions on font directory access.
+
+**Workarounds you can use now:**
+
+1. Load fonts by file path directly (bypasses fontconfig):
+```csharp
+var typeface = SKTypeface.FromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+```
+
+2. Embed a font as an assembly resource (most portable):
+```csharp
+using var stream = Assembly.GetExecutingAssembly()
+    .GetManifestResourceStream("MyApp.Fonts.OpenSans-Regular.ttf");
+using var data = SKData.Create(stream);
+var typeface = SKTypeface.FromData(data);
+```
+
+3. If locale is the trigger: set `LANG=C` before starting your app.
+
+**Diagnostic:** Can you run `SKFontManager.Default.FontFamilyCount` and share the result? If it returns 0, fontconfig cannot enumerate any fonts at all. This helps narrow down whether it's an enumeration or matching issue.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1181,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T22:57:39Z"
+  },
+  "summary": "SKTypeface.Default.FamilyName returns null and SKTypeface.FromFamilyName(\"Sans\") returns null on some Linux configurations (snap containers, certain distros like Manjaro/Debian/CentOS, and non-C locales such as LANG=ja_JP.UTF-8), while SKTypeface.FromFile() still works correctly.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.82
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "SKTypeface.Default.FamilyName returns null; SKTypeface.FromFamilyName(\"Sans\") returns null",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run a .NET application using SkiaSharp on Linux inside a snap container OR on Manjaro/CentOS/Debian 10 with certain fontconfig configurations",
+        "Call SKTypeface.Default.FamilyName",
+        "Observe null is returned",
+        "Call SKTypeface.FromFamilyName(\"Sans\")",
+        "Observe null is returned"
+      ],
+      "environmentDetails": "Linux (Manjaro, CentOS 7, Debian 10), snap packages, also LANG=ja_JP.UTF-8 locale. fc-match CLI works, fonts are installed on the system.",
+      "repoLinks": [
+        {
+          "url": "https://github.com/AvaloniaUI/Avalonia/issues/3679",
+          "description": "Avalonia snap package repro - reproducible on any machine"
+        },
+        {
+          "url": "https://github.com/AvaloniaUI/Avalonia/issues/3694",
+          "description": "CentOS 7 repro"
+        },
+        {
+          "url": "https://github.com/AvaloniaUI/Avalonia/issues/3701",
+          "description": "Additional repro case"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The fontconfig-based font manager code path has not changed structurally; a 2022 comment confirms the issue still occurs on non-C locales."
+    }
+  },
+  "analysis": {
+    "summary": "The native libSkiaSharp on Linux uses fontconfig for font enumeration and name-based matching. In some environments (snap containers with restricted font directory access, certain Linux distros, or non-C locales like LANG=ja_JP.UTF-8), fontconfig's matching returns null even when fonts are installed. SKTypeface.FromFile() succeeds because it bypasses fontconfig entirely and loads a font directly from disk. Setting LANG=C fixes the issue in the locale case, suggesting fontconfig's FcFontMatch behaves differently with Unicode locale settings.",
+    "rationale": "This is clearly a bug: fc-match CLI finds fonts, fonts are installed, but SkiaSharp's native fontconfig integration fails to enumerate or match them. The C# wrapper correctly calls the native API; the fault lies in the native fontconfig integration. Classified as libSkiaSharp.native because the fix requires changes to how the native Skia font manager interacts with fontconfig, or how libSkiaSharp is built/configured. The medium severity reflects that SKTypeface.FromFile() works as a workaround.",
+    "keySignals": [
+      {
+        "text": "SKTypeface.Default.FamilyName returns null; SKTypeface.FromFamilyName(\"Sans\") returns null",
+        "source": "issue body",
+        "interpretation": "Font name matching via fontconfig returns null in the native layer, not a C# wrapper issue."
+      },
+      {
+        "text": "Fonts are loadable via SKTypeface.FromFile. fc-match command line utility is able to locate the font that corresponds to the \"Sans\" name.",
+        "source": "comment by kekekeks",
+        "interpretation": "Fonts exist and fontconfig CLI works — the issue is specific to SkiaSharp's internal fontconfig usage."
+      },
+      {
+        "text": "SKTypeface.Default.FamilyName returns null for me when using japanese (LANG=ja_JP.UTF-8). Setting LANG to C solves the problem.",
+        "source": "comment by KiruyaMomochi",
+        "interpretation": "Strong signal that fontconfig locale handling is the root cause, not just snap/container restrictions."
+      },
+      {
+        "text": "Maybe newer Fontconfig has changed in a way that breaks the SKFontmanagerImpl",
+        "source": "comment by Gillibald",
+        "interpretation": "Fontconfig API or behavior change in newer versions may have broken font matching in the native Skia implementation."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "15-22",
+        "finding": "defaultTypeface is initialized from SkiaApi.sk_typeface_ref_default(); if the native default typeface has no family name (fontconfig returned empty), FamilyName will be null. The static constructor has no null-guard or fallback.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "60-72",
+        "finding": "FromFamilyName(string, SKFontStyle) calls sk_typeface_create_from_name which delegates to the native fontconfig-based font manager. Returns null (via GetObject on null handle) when fontconfig matching fails.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "13-23",
+        "finding": "SKFontManager.Default is initialized from sk_fontmgr_ref_default(). On Linux, this uses fontconfig. FontFamilyCount can be 0 if fontconfig can't enumerate fonts (e.g., in snap container without font access).",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "81-90",
+        "finding": "SKTypeface.FromFile bypasses fontconfig entirely by loading directly from disk path — explains why FromFile works while FromFamilyName does not.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKTypeface.FromFile(\"/path/to/font.ttf\") to load fonts directly by path, bypassing fontconfig entirely.",
+      "Set environment variable LANG=C before running the application when the issue is locale-related.",
+      "For snap packages: add 'plugs: [home, desktop]' or 'layout:' to the snapcraft.yaml to grant access to system font directories.",
+      "Embed fonts as resources and load them via SKTypeface.FromData(SKData.CreateCopy(fontBytes)) for fully portable font loading."
+    ],
+    "nextQuestions": [
+      "Does SKFontManager.Default.FontFamilyCount return 0 on the affected machines?",
+      "Does the issue reproduce with the standard fontconfig-linked libSkiaSharp, or also with NoDependencies (which has its own bundled font handling)?",
+      "Is this a fontconfig version compatibility issue in the Skia C++ code (SkFontMgr_fontconfig)?",
+      "Does the fix need to be in the Skia native code (upstream fontconfig manager) or can a C# wrapper mitigation help (e.g., falling back to a built-in font)?"
+    ],
+    "resolution": {
+      "hypothesis": "On some Linux environments, fontconfig's FcFontMatch returns null or empty results due to: (a) sandbox restrictions preventing access to /etc/fonts or font directories, (b) locale-dependent behavior (LANG=ja_JP.UTF-8) where fontconfig fails to match family names, or (c) API changes in newer fontconfig versions that break Skia's native SkFontMgr_fontconfig implementation.",
+      "proposals": [
+        {
+          "title": "Load font from file as workaround",
+          "description": "Use SKTypeface.FromFile to load a specific system font by path. This bypasses fontconfig entirely.",
+          "category": "workaround",
+          "codeSnippet": "// Workaround: load a known system font by path\nvar typeface = SKTypeface.FromFile(\"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf\");\n// or search common paths\nvar paths = new[] {\n    \"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf\",\n    \"/usr/share/fonts/TTF/DejaVuSans.ttf\",\n    \"/usr/share/fonts/dejavu/DejaVuSans.ttf\"\n};\nvar typeface = paths.Select(SKTypeface.FromFile).FirstOrDefault(t => t != null);",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Embed and load font from resources",
+          "description": "Bundle a font file as an embedded resource and load it via SKTypeface.FromData for fully portable behavior.",
+          "category": "alternative",
+          "codeSnippet": "// Add font as EmbeddedResource in .csproj, then:\nusing var stream = Assembly.GetExecutingAssembly()\n    .GetManifestResourceStream(\"MyApp.Fonts.OpenSans-Regular.ttf\");\nusing var data = SKData.Create(stream);\nvar typeface = SKTypeface.FromData(data);",
+          "confidence": 0.95,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Set LANG=C as environment variable",
+          "description": "For locale-specific cases: set LANG=C before starting the process. This resolves the fontconfig locale interaction.",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate Skia native fontconfig manager",
+          "description": "Review the native SkFontMgr_fontconfig implementation in the Skia submodule and check for fontconfig API compatibility issues or locale handling bugs.",
+          "category": "investigation",
+          "confidence": 0.7,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Embed and load font from resources",
+      "recommendedReason": "The most portable and reliable workaround. Not dependent on system font paths or fontconfig working correctly. The FromFile approach is simpler for cases where system fonts are known."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Bug is real and confirmed across multiple reporters and environments (snap, Manjaro, CentOS 7, Debian 10, locale issue). Root cause is unclear — could be fontconfig version incompatibility, locale handling, or sandbox font directory access. Needs deeper investigation of the native Skia fontconfig manager code.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native, and linux labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Linux",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workarounds and diagnostic instructions",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed reports! This is a confirmed bug in SkiaSharp's fontconfig integration on Linux — fontconfig CLI (`fc-match`) works, but SkiaSharp's internal font matching fails in certain environments.\n\n**Confirmed affected environments:**\n- Snap packages (reproducible on any machine)\n- Manjaro Linux (non-snap, some setups)\n- CentOS 7, Debian 10\n- Non-C locales: `LANG=ja_JP.UTF-8` (setting `LANG=C` fixes it)\n\n**Root cause hypothesis:** The native Skia fontconfig manager (`SkFontMgr_fontconfig`) may be failing due to fontconfig version compatibility, locale-dependent font matching, or sandbox restrictions on font directory access.\n\n**Workarounds you can use now:**\n\n1. Load fonts by file path directly (bypasses fontconfig):\n```csharp\nvar typeface = SKTypeface.FromFile(\"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf\");\n```\n\n2. Embed a font as an assembly resource (most portable):\n```csharp\nusing var stream = Assembly.GetExecutingAssembly()\n    .GetManifestResourceStream(\"MyApp.Fonts.OpenSans-Regular.ttf\");\nusing var data = SKData.Create(stream);\nvar typeface = SKTypeface.FromData(data);\n```\n\n3. If locale is the trigger: set `LANG=C` before starting your app.\n\n**Diagnostic:** Can you run `SKFontManager.Default.FontFamilyCount` and share the result? If it returns 0, fontconfig cannot enumerate any fonts at all. This helps narrow down whether it's an enumeration or matching issue."
+      }
+    ]
+  }
+}
+```
+
+</details>

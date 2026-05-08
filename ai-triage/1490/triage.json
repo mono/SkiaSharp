@@ -1,0 +1,161 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1490,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T22:36:00Z"
+  },
+  "summary": "AccessViolationException crash in UWP/WinUI SKGLView when navigating to/from a page with DrawInBackground=true, caused by a race condition between the background render thread and EGL context disposal during page unload.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
+    "platforms": ["os/Windows-Universal-UWP", "os/Windows-WinUI"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.",
+      "reproQuality": "complete",
+      "targetFrameworks": ["uap10.0.16299"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a UWP/Xamarin.Forms app with two pages: one native, one with SKGLView",
+        "Set DrawInBackground = true on the SKGLView",
+        "Navigate forward and back between pages multiple times",
+        "Observe AccessViolationException"
+      ],
+      "environmentDetails": "Windows 2004 (OS Build 19041.450), Visual Studio 2019 v16.6.1, UWP SDK 16299",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/files/5182897/MemoryViolationRepro.zip", "description": "Minimal UWP repro project" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3291", "description": "PR adding SKAutoCanvasRestore disposal safety — partial mitigation, merged 2025-06-24" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/706", "description": "Related: SKGLView invalid memory exception when calling InvalidateSurface (closed)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["1.68.0", "1.68.3", "2.80.1"],
+      "workedIn": "1.68.0",
+      "brokeIn": "1.68.3",
+      "currentRelevance": "likely",
+      "relevanceReason": "The AngleSwapChainPanel threading model with DrawInBackground has not been fundamentally fixed; PR #3291 only addressed SKAutoCanvasRestore — the race condition in OnUnloaded vs background render threads remains."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.90,
+      "reason": "Reporter confirms the last known good version is 1.68.0. A commenter (kerego) identified the introducing commit as 8039d0d0bbb135e8013be121cddf8716e7b8ce96. Issue spans 1.68.3 through at least 2.80.1 and persists in v3 WinUI per later comments.",
+      "workedInVersion": "1.68.0",
+      "brokeInVersion": "1.68.3"
+    }
+  },
+  "analysis": {
+    "summary": "Race condition in AngleSwapChainPanel: when DrawInBackground=true, background render threads (ThreadPool.RunAsync) continue executing RenderFrame/MakeCurrent after OnUnloaded has destroyed the EGL surface and context, causing an access violation in native ANGLE/EGL code. OnUnloaded cancels the render loop worker but does not await its completion before disposing glesContext.",
+    "rationale": "This is a clear threading race condition: the disposal path in OnUnloaded does not synchronize with in-flight background render threads. The bug was introduced in commit 8039d0d and affects both UWP and WinUI. Setting DrawInBackground=false is a confirmed workaround. The issue is still open with active community engagement including a partial fix PR (#3291).",
+    "keySignals": [
+      { "text": "DrawInBackground is set to true ... Navigate forward and back a few times ... App crashes", "source": "issue body", "interpretation": "Crash only manifests on the background-thread render path, confirming a threading/lifecycle race." },
+      { "text": "the issue was first introduced with commit 8039d0d0bbb135e8013be121cddf8716e7b8ce96 ... after destroying the eglContext it tends to fail on the next call to MakeCurrent()", "source": "comment by kerego", "interpretation": "Precise regression commit identified; MakeCurrent called on a destroyed context = use-after-free." },
+      { "text": "The exception occurs when ThreadPool.RunAsync(RenderOnce) or ThreadPool.RunAsync(RenderLoop) plan the new AngleSwapChainPanel work on a thread that was already used before", "source": "comment by MartinZikmund", "interpretation": "Thread-pool thread reuse exposes the stale EGL state from the previous context." },
+      { "text": "Windows hardware-accelerated rendering using double-buffering, while our current disposal logic is for a one-buffer. So when we dispose an object that is still used by another buffer, we get a crash", "source": "comment by taublast", "interpretation": "Root cause framed as double-buffer lifecycle mismatch — disposal occurs while GPU still holds reference." },
+      { "text": "Setting DrawInBackground = false, fixes the issue, but severely affects performance.", "source": "issue body", "interpretation": "Confirmed workaround; the foreground-thread path serializes rendering and disposal correctly." }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "137-151",
+        "finding": "OnUnloaded calls UpdateRenderLoop(false) which cancels the IAsyncAction but does NOT await completion. It then immediately calls DestroyRenderSurface() and glesContext.Dispose(). A background thread executing RenderFrame() -> glesContext.MakeCurrent() can race with this disposal.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "244-262",
+        "finding": "UpdateRenderLoop(false): calls renderLoopWorker.Cancel() and nulls the reference but does not wait for the in-flight IAsyncAction to complete before returning. The cancel is asynchronous.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "213-238",
+        "finding": "RenderFrame() calls glesContext.MakeCurrent() without any disposed/null guard. If the context is destroyed concurrently, this crashes into native EGL code.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs",
+        "lines": "136-142",
+        "finding": "MakeCurrent() calls eglMakeCurrent with stored eglSurface/eglContext. After Cleanup() destroys eglContext and DestroySurface() clears eglSurface, calling MakeCurrent from a still-running thread passes EGL_NO_CONTEXT / EGL_NO_SURFACE which triggers the native crash.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs",
+        "lines": "57-79",
+        "finding": "OnRenderFrame disposes and recreates renderTarget/surface when IsValid fails. If this runs concurrently with OnDestroyingContext (which also disposes these objects), double-dispose or use-after-free of GRBackendRenderTarget/SKSurface can occur.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Set DrawInBackground = false on the SKGLView/SKSwapChainPanel — confirmed by reporter to fix the crash, but reduces rendering performance.",
+      "Use a custom handler (as posted by taublast in comments) that defers disposal of the SKSurface/renderTarget using a 'trash bag' collection to prevent use-after-free during double-buffer GPU teardown."
+    ],
+    "nextQuestions": [
+      "Does the crash reproduce in current SkiaSharp 3.x WinUI builds (PR #3291 merged June 2025)?",
+      "Can OnUnloaded be made to await render thread completion using a CancellationToken + SemaphoreSlim before disposing glesContext?",
+      "Does calling context.Flush() + surface.Flush() before disposal prevent the crash on teardown?"
+    ],
+    "resolution": {
+      "hypothesis": "Background render threads started via ThreadPool.RunAsync are not awaited before EGL context/surface disposal in OnUnloaded, causing use-after-free when the thread's next MakeCurrent() call runs against a destroyed context.",
+      "proposals": [
+        {
+          "title": "Set DrawInBackground = false as temporary workaround",
+          "description": "Setting DrawInBackground = false forces rendering on the UI thread, serializing it with disposal. This eliminates the race at the cost of UI thread blocking during rendering.",
+          "category": "workaround",
+          "confidence": 0.98,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Await render thread completion in OnUnloaded",
+          "description": "Add a CancellationTokenSource and a completion signal (e.g. ManualResetEventSlim) to AngleSwapChainPanel. RenderFrame/RenderLoop set the signal on exit. OnUnloaded cancels and waits on the signal with a timeout before destroying the surface and context.",
+          "category": "fix",
+          "confidence": 0.82,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Deferred disposal (trash-bag pattern)",
+          "description": "Rather than immediately disposing SKSurface and GRBackendRenderTarget in OnDestroyingContext, collect them in a 'trash' list and dispose them at the start of the next RenderFrame call (on the render thread, when it's safe). This is the pattern proposed by taublast in comments.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Set DrawInBackground = false as temporary workaround",
+      "recommendedReason": "Zero code change for users needing immediate relief. The proper fix (awaiting render thread) requires changes to AngleSwapChainPanel and is tracked for a future release."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Real crash with a complete repro project, a confirmed regression commit, deep community analysis, and a proposed fix path. Needs investigation to verify current state after PR #3291 and to implement proper thread synchronization in OnUnloaded.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views, os/Windows-Universal-UWP, os/Windows-WinUI, backend/OpenGL, tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Windows-Universal-UWP", "os/Windows-WinUI", "backend/OpenGL", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge regression, confirm workaround, summarize root cause, and ask for repro on latest version",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thank you for the detailed report and reproduction project!\n\n**Root cause:** This is a race condition in `AngleSwapChainPanel`. When `DrawInBackground = true`, rendering runs on a background thread pool thread. During page navigation, `OnUnloaded` cancels the render loop and disposes the EGL context/surface — but it does **not** wait for the background render thread to finish. If the thread calls `MakeCurrent()` after the context has been destroyed, the native ANGLE/EGL code crashes with an `AccessViolationException`.\n\n**Immediate workaround:** Setting `DrawInBackground = false` forces rendering on the UI thread, which serializes it with the disposal lifecycle. This eliminates the race condition at the cost of some rendering performance.\n\n**Status:** A partial related fix was merged in PR #3291 (safety checks in `SKAutoCanvasRestore`). The core threading issue in `AngleSwapChainPanel.OnUnloaded` still needs a proper fix (awaiting render thread completion before disposal).\n\nCould you confirm whether you still see this crash on the latest SkiaSharp 3.x release? That would help us understand the current scope of the issue."
+      }
+    ]
+  }
+}

@@ -1,0 +1,409 @@
+# Issue Triage Report — #2721
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-22T01:10:00Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-investigation (0.85 (85%)) |
+
+**Issue Summary:** ArgumentException 'Cannot pass a GCHandle across AppDomains' thrown randomly when using SKData.Create(Stream) in an ASP.NET MVC app hosted under IIS with multiple sites sharing one application pool and .NET Framework 4.8.
+
+**Analysis:** SKAbstractManagedStream stores a GCHandle (via DelegateProxies.CreateUserData) as an opaque IntPtr context pointer passed to native Skia. When the native destroy callback fires, SKManagedStreamDestroyProxyImplementation calls GCHandle.FromIntPtr(context) to recover the managed object. In IIS multi-site/single-pool configurations, .NET Framework creates a separate AppDomain per site, so the GCHandle created in AppDomain A is dereferenced from AppDomain B, violating .NET's AppDomain isolation rules and throwing ArgumentException.
+
+**Recommendations:** **needs-investigation** — Real bug with complete repro, clear root cause (cross-AppDomain GCHandle), and a confirmed workaround. Root cause of the 2.88.2→2.88.3 regression needs to be identified before a proper fix can be implemented.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+| Current labels | type/bug, status/help-wanted |
+
+## Evidence
+
+### Reproduction
+
+1. Set up IIS with multiple sites sharing a single application pool on .NET Framework 4.8
+2. Deploy ASP.NET MVC app that calls SKData.Create(fileStream) in a controller action
+3. Browse both sites simultaneously — exception occurs randomly
+
+**Environment:** Windows 11 Enterprise 23H2, Visual Studio 2022, SkiaSharp 2.88.7, .NET Framework 4.8, IIS with multiple sites under one application pool
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/files/13989281/MVCSample.zip — Minimal reproduction MVC project provided by reporter
+
+**Code snippets:**
+
+```csharp
+using (SKData skImgData = SKData.Create(imageData))
+{
+    skImgData.SaveTo(outputStream);
+}
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | exception |
+| Error message | System.ArgumentException: Cannot pass a GCHandle across AppDomains. Parameter name: handle |
+| Repro quality | complete |
+| Target frameworks | net48 |
+
+**Stack trace:**
+
+```text
+SkiaSharp.SKAbstractManagedStream.DisposeNative() in SKAbstractManagedStream.cs:52
+SkiaSharp.SKNativeObject.Dispose(Boolean disposing) in SKObject.cs:287
+SkiaSharp.SKManagedStream.Dispose(Boolean disposing) in SKManagedStream.cs:53
+SkiaSharp.SKNativeObject.Dispose() in SKObject.cs:298
+SkiaSharp.SKData.Create(Stream stream, Int64 length) in SKData.cs:141
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.2, 2.88.3, 2.88.7 |
+| Worked in | 2.88.2 |
+| Broke in | 2.88.3 |
+| Current relevance | likely |
+| Relevance reason | The GCHandle-based delegate proxying pattern in SKAbstractManagedStream is still present in the current codebase and the underlying .NET Framework AppDomain isolation constraint has not changed. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.80 (80%) |
+| Reason | Reporter explicitly states it worked in 2.88.2 and broke in 2.88.3. Multiple commenters confirm the same failure across versions up to 2.88.7. |
+| Worked in version | 2.88.2 |
+| Broke in version | 2.88.3 |
+
+## Analysis
+
+### Technical Summary
+
+SKAbstractManagedStream stores a GCHandle (via DelegateProxies.CreateUserData) as an opaque IntPtr context pointer passed to native Skia. When the native destroy callback fires, SKManagedStreamDestroyProxyImplementation calls GCHandle.FromIntPtr(context) to recover the managed object. In IIS multi-site/single-pool configurations, .NET Framework creates a separate AppDomain per site, so the GCHandle created in AppDomain A is dereferenced from AppDomain B, violating .NET's AppDomain isolation rules and throwing ArgumentException.
+
+### Rationale
+
+This is a real bug specific to .NET Framework multi-AppDomain hosting (IIS multi-site, single pool). It is NOT a usage error — the reporter's code is standard and correct. The root cause is that GCHandle.FromIntPtr fails when called from a different AppDomain than the one that called GCHandle.Alloc. This constraint does not exist in .NET Core / .NET 5+ which do not support multiple AppDomains. The regression from 2.88.2 likely corresponds to a change in how DelegateProxies.CreateUserData allocates or passes GCHandles.
+
+### Key Signals
+
+- "Cannot pass a GCHandle across AppDomains. Parameter name: handle" — **issue body stack trace** (GCHandle.FromIntPtr called from a different AppDomain than the one that allocated it.)
+- "multiple sites(Use same folder for all the sites) in the local IIS Server under one application pool" — **issue body** (.NET Framework assigns each IIS site its own AppDomain when sharing a pool, triggering the cross-AppDomain GCHandle violation.)
+- "Last Known Good Version: 2.88.2" — **issue body** (Something changed in the GCHandle or delegate proxy wiring between 2.88.2 and 2.88.3 that introduced or exposed this problem.)
+- "SkiaSharp is using GCHandles to get direct access to memory" — **comment by mattleibow** (Maintainer confirms GCHandle usage is the root mechanism. A fix or workaround must address the cross-AppDomain constraint.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/Binding.Shared/DelegateProxies.shared.cs` | 29-39 | direct | DelegateProxies.Create() calls GCHandle.Alloc(managedDel) and stores the handle as an IntPtr. GCHandle.Alloc on .NET Framework is AppDomain-bound; the IntPtr cannot be passed back via GCHandle.FromIntPtr from a different AppDomain. |
+| `binding/SkiaSharp/DelegateProxies.stream.cs` | 39-47 | direct | SKManagedStreamDestroyProxyImplementation calls GetUserData<SKAbstractManagedStream>((IntPtr)context, out var gch) then gch.Free(). GetUserData calls GCHandle.FromIntPtr(contextPtr) which throws 'Cannot pass a GCHandle across AppDomains' when executed from a different AppDomain than the one where the GCHandle was allocated. |
+| `binding/SkiaSharp/SKAbstractManagedStream.cs` | 39-43 | direct | Constructor calls DelegateProxies.CreateUserData(this, true) which allocates the cross-AppDomain-incompatible GCHandle and passes it as the context pointer to the native managed stream. |
+| `binding/SkiaSharp/SKData.cs` | 109-150 | direct | SKData.Create(Stream) and its length-specific overloads all create a transient SKManagedStream internally and call using(...) to dispose it. This is the exact code path in the reporter's stack trace, where Dispose calls DisposeNative -> sk_managedstream_destroy -> fDestroy callback -> GCHandle.FromIntPtr. |
+
+### Workarounds
+
+- Read the stream to a byte[] first and use SKData.CreateCopy(byte[]) — this bypasses SKManagedStream and GCHandle allocation entirely.
+- Configure each IIS site to use its own dedicated application pool instead of sharing one — prevents cross-AppDomain GCHandle access.
+
+### Next Questions
+
+- What changed in SKAbstractManagedStream or DelegateProxies between 2.88.2 and 2.88.3 that introduced the regression?
+- Does the issue affect .NET Framework 4.8 only, or also older target frameworks?
+- Could the GCHandle allocation be made AppDomain-aware using AppDomain.CurrentDomain identity checks or by marshaling through the target AppDomain?
+
+### Resolution Proposals
+
+**Hypothesis:** GCHandle.Alloc and GCHandle.FromIntPtr are AppDomain-bound in .NET Framework. The fix must either avoid GCHandles in the managed stream callback path or add a guard that detects and handles cross-AppDomain access.
+
+1. **Workaround: use byte array instead of stream** — workaround, confidence 0.95 (95%), cost/xs, validated=yes
+   - Read the input stream to a byte[] before calling SkiaSharp APIs. SKData.CreateCopy(byte[]) uses no managed stream wrapper and no GCHandle, so it is safe in multi-AppDomain IIS setups.
+
+```csharp
+byte[] imageBytes;
+using (var ms = new MemoryStream())
+{
+    imageData.CopyTo(ms);
+    imageBytes = ms.ToArray();
+}
+using (SKData skImgData = SKData.CreateCopy(imageBytes))
+{
+    skImgData.SaveTo(outputStream);
+}
+```
+2. **Fix: add AppDomain guard in GetUserData / gch.Free** — fix, confidence 0.55 (55%), cost/m, validated=untested
+   - Before calling GCHandle.FromIntPtr, check whether the current AppDomain matches the allocating AppDomain. If not, skip the free (accept a handle leak) or marshal the free back to the correct AppDomain. This is only needed on .NET Framework; .NET 5+ is unaffected.
+3. **Fix: replace GCHandle with a ConcurrentDictionary keyed by IntPtr** — fix, confidence 0.50 (50%), cost/l, validated=untested
+   - Store managed objects in a static ConcurrentDictionary<IntPtr, WeakReference> instead of GCHandles. This is AppDomain-transparent since the dictionary is in a shared AppDomain or accessed through a static field. Requires generating a unique stable IntPtr key per instance.
+
+**Recommended proposal:** Workaround: use byte array instead of stream
+
+**Why:** Immediately actionable by the reporter with no SkiaSharp changes required and full confidence. The architectural fix should also be investigated but requires deeper design work.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.85 (85%) |
+| Reason | Real bug with complete repro, clear root cause (cross-AppDomain GCHandle), and a confirmed workaround. Root cause of the 2.88.2→2.88.3 regression needs to be identified before a proper fix can be implemented. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability |
+| add-comment | medium | 0.90 (90%) | Explain root cause and provide byte-array workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and reproduction sample.
+
+**Root cause:** SkiaSharp uses `GCHandle.Alloc` to store a reference to the managed stream object and passes the resulting `IntPtr` to native Skia code as a callback context. When the native destroy callback fires, it calls `GCHandle.FromIntPtr` to recover the managed object. On .NET Framework, `GCHandle` is AppDomain-bound — a handle allocated in AppDomain A cannot be resolved from AppDomain B. When IIS hosts multiple sites in a single application pool, .NET Framework creates a separate AppDomain per site, so the callback can arrive from a different AppDomain than the one that allocated the handle, causing the `ArgumentException`.
+
+**Workaround (immediate):** Avoid passing a `Stream` directly to `SKData.Create`. Instead, read the stream to a `byte[]` first and use `SKData.CreateCopy`, which does not create a managed stream wrapper and therefore does not allocate any `GCHandle`:
+
+```csharp
+byte[] imageBytes;
+using (var ms = new MemoryStream())
+{
+    imageData.CopyTo(ms);
+    imageBytes = ms.ToArray();
+}
+using (SKData skImgData = SKData.CreateCopy(imageBytes))
+{
+    skImgData.SaveTo(outputStream);
+}
+```
+
+**Alternative configuration workaround:** Configure each IIS site to use its own dedicated application pool. This prevents multiple AppDomains from sharing the same native module and eliminates the cross-domain GCHandle access.
+
+We'll investigate the regression from 2.88.2 to 2.88.3 to understand what changed and whether a proper fix can be made in the library. Note that this issue is specific to .NET Framework — .NET 5+ does not support multiple AppDomains and is unaffected.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2721,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T01:10:00Z",
+    "currentLabels": [
+      "type/bug",
+      "status/help-wanted"
+    ]
+  },
+  "summary": "ArgumentException 'Cannot pass a GCHandle across AppDomains' thrown randomly when using SKData.Create(Stream) in an ASP.NET MVC app hosted under IIS with multiple sites sharing one application pool and .NET Framework 4.8.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "System.ArgumentException: Cannot pass a GCHandle across AppDomains. Parameter name: handle",
+      "stackTrace": "SkiaSharp.SKAbstractManagedStream.DisposeNative() in SKAbstractManagedStream.cs:52\nSkiaSharp.SKNativeObject.Dispose(Boolean disposing) in SKObject.cs:287\nSkiaSharp.SKManagedStream.Dispose(Boolean disposing) in SKManagedStream.cs:53\nSkiaSharp.SKNativeObject.Dispose() in SKObject.cs:298\nSkiaSharp.SKData.Create(Stream stream, Int64 length) in SKData.cs:141",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net48"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Set up IIS with multiple sites sharing a single application pool on .NET Framework 4.8",
+        "Deploy ASP.NET MVC app that calls SKData.Create(fileStream) in a controller action",
+        "Browse both sites simultaneously — exception occurs randomly"
+      ],
+      "environmentDetails": "Windows 11 Enterprise 23H2, Visual Studio 2022, SkiaSharp 2.88.7, .NET Framework 4.8, IIS with multiple sites under one application pool",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/13989281/MVCSample.zip",
+          "description": "Minimal reproduction MVC project provided by reporter"
+        }
+      ],
+      "codeSnippets": [
+        "using (SKData skImgData = SKData.Create(imageData))\n{\n    skImgData.SaveTo(outputStream);\n}"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.2",
+        "2.88.3",
+        "2.88.7"
+      ],
+      "workedIn": "2.88.2",
+      "brokeIn": "2.88.3",
+      "currentRelevance": "likely",
+      "relevanceReason": "The GCHandle-based delegate proxying pattern in SKAbstractManagedStream is still present in the current codebase and the underlying .NET Framework AppDomain isolation constraint has not changed."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.8,
+      "reason": "Reporter explicitly states it worked in 2.88.2 and broke in 2.88.3. Multiple commenters confirm the same failure across versions up to 2.88.7.",
+      "workedInVersion": "2.88.2",
+      "brokeInVersion": "2.88.3"
+    }
+  },
+  "analysis": {
+    "summary": "SKAbstractManagedStream stores a GCHandle (via DelegateProxies.CreateUserData) as an opaque IntPtr context pointer passed to native Skia. When the native destroy callback fires, SKManagedStreamDestroyProxyImplementation calls GCHandle.FromIntPtr(context) to recover the managed object. In IIS multi-site/single-pool configurations, .NET Framework creates a separate AppDomain per site, so the GCHandle created in AppDomain A is dereferenced from AppDomain B, violating .NET's AppDomain isolation rules and throwing ArgumentException.",
+    "rationale": "This is a real bug specific to .NET Framework multi-AppDomain hosting (IIS multi-site, single pool). It is NOT a usage error — the reporter's code is standard and correct. The root cause is that GCHandle.FromIntPtr fails when called from a different AppDomain than the one that called GCHandle.Alloc. This constraint does not exist in .NET Core / .NET 5+ which do not support multiple AppDomains. The regression from 2.88.2 likely corresponds to a change in how DelegateProxies.CreateUserData allocates or passes GCHandles.",
+    "keySignals": [
+      {
+        "text": "Cannot pass a GCHandle across AppDomains. Parameter name: handle",
+        "source": "issue body stack trace",
+        "interpretation": "GCHandle.FromIntPtr called from a different AppDomain than the one that allocated it."
+      },
+      {
+        "text": "multiple sites(Use same folder for all the sites) in the local IIS Server under one application pool",
+        "source": "issue body",
+        "interpretation": ".NET Framework assigns each IIS site its own AppDomain when sharing a pool, triggering the cross-AppDomain GCHandle violation."
+      },
+      {
+        "text": "Last Known Good Version: 2.88.2",
+        "source": "issue body",
+        "interpretation": "Something changed in the GCHandle or delegate proxy wiring between 2.88.2 and 2.88.3 that introduced or exposed this problem."
+      },
+      {
+        "text": "SkiaSharp is using GCHandles to get direct access to memory",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer confirms GCHandle usage is the root mechanism. A fix or workaround must address the cross-AppDomain constraint."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/Binding.Shared/DelegateProxies.shared.cs",
+        "lines": "29-39",
+        "finding": "DelegateProxies.Create() calls GCHandle.Alloc(managedDel) and stores the handle as an IntPtr. GCHandle.Alloc on .NET Framework is AppDomain-bound; the IntPtr cannot be passed back via GCHandle.FromIntPtr from a different AppDomain.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/DelegateProxies.stream.cs",
+        "lines": "39-47",
+        "finding": "SKManagedStreamDestroyProxyImplementation calls GetUserData<SKAbstractManagedStream>((IntPtr)context, out var gch) then gch.Free(). GetUserData calls GCHandle.FromIntPtr(contextPtr) which throws 'Cannot pass a GCHandle across AppDomains' when executed from a different AppDomain than the one where the GCHandle was allocated.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKAbstractManagedStream.cs",
+        "lines": "39-43",
+        "finding": "Constructor calls DelegateProxies.CreateUserData(this, true) which allocates the cross-AppDomain-incompatible GCHandle and passes it as the context pointer to the native managed stream.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKData.cs",
+        "lines": "109-150",
+        "finding": "SKData.Create(Stream) and its length-specific overloads all create a transient SKManagedStream internally and call using(...) to dispose it. This is the exact code path in the reporter's stack trace, where Dispose calls DisposeNative -> sk_managedstream_destroy -> fDestroy callback -> GCHandle.FromIntPtr.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Read the stream to a byte[] first and use SKData.CreateCopy(byte[]) — this bypasses SKManagedStream and GCHandle allocation entirely.",
+      "Configure each IIS site to use its own dedicated application pool instead of sharing one — prevents cross-AppDomain GCHandle access."
+    ],
+    "nextQuestions": [
+      "What changed in SKAbstractManagedStream or DelegateProxies between 2.88.2 and 2.88.3 that introduced the regression?",
+      "Does the issue affect .NET Framework 4.8 only, or also older target frameworks?",
+      "Could the GCHandle allocation be made AppDomain-aware using AppDomain.CurrentDomain identity checks or by marshaling through the target AppDomain?"
+    ],
+    "resolution": {
+      "hypothesis": "GCHandle.Alloc and GCHandle.FromIntPtr are AppDomain-bound in .NET Framework. The fix must either avoid GCHandles in the managed stream callback path or add a guard that detects and handles cross-AppDomain access.",
+      "proposals": [
+        {
+          "title": "Workaround: use byte array instead of stream",
+          "description": "Read the input stream to a byte[] before calling SkiaSharp APIs. SKData.CreateCopy(byte[]) uses no managed stream wrapper and no GCHandle, so it is safe in multi-AppDomain IIS setups.",
+          "category": "workaround",
+          "codeSnippet": "byte[] imageBytes;\nusing (var ms = new MemoryStream())\n{\n    imageData.CopyTo(ms);\n    imageBytes = ms.ToArray();\n}\nusing (SKData skImgData = SKData.CreateCopy(imageBytes))\n{\n    skImgData.SaveTo(outputStream);\n}",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Fix: add AppDomain guard in GetUserData / gch.Free",
+          "description": "Before calling GCHandle.FromIntPtr, check whether the current AppDomain matches the allocating AppDomain. If not, skip the free (accept a handle leak) or marshal the free back to the correct AppDomain. This is only needed on .NET Framework; .NET 5+ is unaffected.",
+          "category": "fix",
+          "confidence": 0.55,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Fix: replace GCHandle with a ConcurrentDictionary keyed by IntPtr",
+          "description": "Store managed objects in a static ConcurrentDictionary<IntPtr, WeakReference> instead of GCHandles. This is AppDomain-transparent since the dictionary is in a shared AppDomain or accessed through a static field. Requires generating a unique stable IntPtr key per instance.",
+          "category": "fix",
+          "confidence": 0.5,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Workaround: use byte array instead of stream",
+      "recommendedReason": "Immediately actionable by the reporter with no SkiaSharp changes required and full confidence. The architectural fix should also be investigated but requires deeper design work."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Real bug with complete repro, clear root cause (cross-AppDomain GCHandle), and a confirmed workaround. Root cause of the 2.88.2→2.88.3 regression needs to be identified before a proper fix can be implemented.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and provide byte-array workaround",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed report and reproduction sample.\n\n**Root cause:** SkiaSharp uses `GCHandle.Alloc` to store a reference to the managed stream object and passes the resulting `IntPtr` to native Skia code as a callback context. When the native destroy callback fires, it calls `GCHandle.FromIntPtr` to recover the managed object. On .NET Framework, `GCHandle` is AppDomain-bound — a handle allocated in AppDomain A cannot be resolved from AppDomain B. When IIS hosts multiple sites in a single application pool, .NET Framework creates a separate AppDomain per site, so the callback can arrive from a different AppDomain than the one that allocated the handle, causing the `ArgumentException`.\n\n**Workaround (immediate):** Avoid passing a `Stream` directly to `SKData.Create`. Instead, read the stream to a `byte[]` first and use `SKData.CreateCopy`, which does not create a managed stream wrapper and therefore does not allocate any `GCHandle`:\n\n```csharp\nbyte[] imageBytes;\nusing (var ms = new MemoryStream())\n{\n    imageData.CopyTo(ms);\n    imageBytes = ms.ToArray();\n}\nusing (SKData skImgData = SKData.CreateCopy(imageBytes))\n{\n    skImgData.SaveTo(outputStream);\n}\n```\n\n**Alternative configuration workaround:** Configure each IIS site to use its own dedicated application pool. This prevents multiple AppDomains from sharing the same native module and eliminates the cross-domain GCHandle access.\n\nWe'll investigate the regression from 2.88.2 to 2.88.3 to understand what changed and whether a proper fix can be made in the library. Note that this issue is specific to .NET Framework — .NET 5+ does not support multiple AppDomains and is unaffected."
+      }
+    ]
+  }
+}
+```
+
+</details>
