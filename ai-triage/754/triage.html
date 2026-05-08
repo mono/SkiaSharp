@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #754 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 754, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-23T23:59:11Z", "currentLabels": ["type/bug"]}, "summary": "SKBitmap.Decode(codec, imageInfo) returns null when the target imageInfo specifies SKColorType.Gray8, a regression introduced in 1.68.0 where decoding grayscale PNGs to a 1-byte-per-pixel format no longer works.", "classification": {"type": {"value": "type/bug", "confidence": 0.97}, "area": {"value": "area/SkiaSharp", "confidence": 0.95}, "tenets": ["tenet/compatibility", "tenet/reliability"]}, "evidence": {"bugSignals": {"severity": "medium", "regressionClaimed": true, "errorType": "wrong-output", "errorMessage": "bitmap == null when using SKBitmap.Decode(codec, imageInfo) with SKColorType.Gray8", "reproQuality": "partial", "targetFrameworks": ["netcoreapp3.0"]}, "reproEvidence": {"stepsToReproduce": ["Read a grayscale PNG file as bytes", "Create SKCodec from MemoryStream of the bytes", "Build SKImageInfo with codec dimensions and SKColorType.Gray8", "Call SKBitmap.Decode(codec, imageInfo)", "Observe that the returned bitmap is null"], "codeSnippets": ["var stream = new MemoryStream(bytes);\nvar codec = SKCodec.Create(stream);\nvar imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Gray8);\nvar bitmap = SKBitmap.Decode(codec, imageInfo); // returns null"], "environmentDetails": "SkiaSharp 1.68.0, Visual Studio Code, netcoreapp3.0. Confirmed still broken in 3.119.1 (Jan 2026).", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/694#issuecomment-441078401", "description": "Maintainer comment on #694 suggesting the codec-based Gray8 decode pattern — same pattern now broken"}, {"url": "https://github.com/mono/SkiaSharp/issues/754", "description": "This issue"}]}, "versionAnalysis": {"mentionedVersions": ["1.60.3", "1.68.0", "3.119.1"], "workedIn": "1.60.3", "brokeIn": "1.68.0", "currentRelevance": "likely", "relevanceReason": "User confirmed still broken in 3.119.1 as of January 2026. No fix or related PR has been identified."}, "regression": {"isRegression": true, "confidence": 0.9, "reason": "Reporter explicitly states 1.60.3 worked (BytesPerPixel==1 returned naturally), 1.68.0 broke it. Additionally the explicit Gray8 override suggested in #694 also returns null in 1.68.0+.", "workedInVersion": "1.60.3", "brokeInVersion": "1.68.0"}}, "analysis": {"summary": "SKBitmap.Decode(SKCodec, SKImageInfo) with Gray8 target returns null because the native sk_codec_get_pixels call returns a non-success error code when asked to decode to SKColorType.Gray8, causing the C# wrapper to dispose the bitmap and return null. This is a regression: 1.60.3 automatically returned a Gray8 bitmap for grayscale PNGs, but 1.68.0 changed the default to RGBA and also broke the explicit Gray8 override path suggested in #694.", "rationale": "The bug is clearly in SKBitmap.Decode(SKCodec, SKImageInfo) at lines 446-459 of SKBitmap.cs. The check at line 454 disposes and nulls the bitmap if GetPixels returns anything other than Success or IncompleteInput. When the target format is Gray8, the native Skia codec likely returns an error (InvalidConversion) for format conversion that was previously handled differently. This is confirmed as a regression by the reporter and acknowledged by the maintainer (mattleibow) who said they reproduce the null result. Confirmed open in 3.119.1.", "keySignals": [{"text": "In 1.60.3 loading an 8bit png would result in a bitmap with BytesPerPixel == 1. In 1.68.0, BytesPerPixel == 4", "source": "issue body", "interpretation": "Default decoding behavior changed between versions — Gray8 PNGs are now decoded to RGBA by default."}, {"text": "var bitmap = SKBitmap.Decode(codec, imageInfo); // bitmap == null", "source": "issue body", "interpretation": "Explicit Gray8 override via codec also fails, meaning the workaround from #694 is now broken too."}, {"text": "I also get the null result when I believe it should be working.", "source": "maintainer comment (mattleibow), comment #454655102", "interpretation": "Maintainer confirmed the null result, indicating this is a genuine bug not a usage error."}, {"text": "This issue still persists in version 3.119.1.", "source": "comment #3815168179 (Jan 2026)", "interpretation": "Not fixed in recent releases — still an active open issue."}], "codeInvestigation": [{"file": "binding/SkiaSharp/SKBitmap.cs", "lines": "446-459", "finding": "Decode(SKCodec, SKImageInfo) creates a bitmap with the requested info, calls codec.GetPixels(), and returns null if result != Success and result != IncompleteInput. When bitmapInfo uses Gray8, the native codec returns an error and bitmap is disposed and nulled.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKCodec.cs", "lines": "119-137", "finding": "GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) delegates directly to native sk_codec_get_pixels with the target format. No Gray8 special-casing exists — the format is passed through to native Skia which may reject the conversion.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKBitmap.cs", "lines": "434-444", "finding": "The Decode(SKCodec) overload uses codec.Info directly (which would give the native pixel format for the image). For grayscale PNGs this may have changed from Gray8 to RGBA between 1.60.3 and 1.68.0, consistent with reporter observation.", "relevance": "related"}], "nextQuestions": ["What SKCodecResult value is returned by GetPixels when target is Gray8? (InvalidConversion? Unimplemented?)", "Does sk_codec_get_pixels support Gray8 as target format in any supported Skia version?", "Would decoding to RGBA then CopyTo(Gray8) work as a workaround?"], "errorFingerprint": "SKBitmap.Decode(codec, Gray8info) returns null", "resolution": {"hypothesis": "The Skia native codec does not support direct decode to Gray8 format via sk_codec_get_pixels in 1.68.0+. The SkiaSharp wrapper should either: (a) implement a decode-then-convert path when the target format is Gray8, or (b) detect the unsupported conversion and return a better error.", "proposals": [{"title": "Decode to native format then convert to Gray8", "description": "As a workaround, decode to the codec's native format (likely RGBA), then use SKBitmap.CopyTo to convert to Gray8. This avoids the failing native codec conversion path.", "category": "workaround", "codeSnippet": "var stream = new MemoryStream(bytes);\nusing var codec = SKCodec.Create(stream);\nusing var rgbaBitmap = SKBitmap.Decode(codec);\nvar gray8Bitmap = new SKBitmap(rgbaBitmap.Width, rgbaBitmap.Height, SKColorType.Gray8, SKAlphaType.Opaque);\nif (rgbaBitmap.CopyTo(gray8Bitmap, SKColorType.Gray8))\n{\n    // gray8Bitmap.BytesPerPixel == 1\n}", "confidence": 0.7, "effort": "cost/xs", "validated": "untested"}, {"title": "Fix SKBitmap.Decode to fall back to decode-then-convert for unsupported target formats", "description": "In Decode(SKCodec, SKImageInfo), after getting a non-success result, check if the failure is due to unsupported format and attempt a decode-then-convert fallback using the codec's native format followed by CopyTo.", "category": "fix", "confidence": 0.65, "effort": "cost/s", "validated": "untested"}], "recommendedProposal": "Decode to native format then convert to Gray8", "recommendedReason": "Users can apply this workaround immediately without waiting for a fix. The fix proposal needs deeper investigation into why the codec rejects Gray8 before implementation."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.88, "reason": "Bug is confirmed by maintainer and persists in 3.119.1. Root cause is in SKBitmap.Decode interaction with native codec for Gray8 target. Repro code and input image provided. Investigation needed to determine exact error code returned and best fix path.", "suggestedReproPlatform": "linux"}, "actions": [{"type": "update-labels", "description": "Apply bug, core API, and tenet labels", "risk": "low", "confidence": 0.95, "labels": ["type/bug", "area/SkiaSharp", "tenet/compatibility", "tenet/reliability"]}, {"type": "add-comment", "description": "Post analysis and workaround", "risk": "medium", "confidence": 0.88, "comment": "Thanks for reporting this. The issue is in `SKBitmap.Decode(SKCodec, SKImageInfo)` — when the target `SKImageInfo` uses `SKColorType.Gray8`, the native Skia codec returns an error code and the wrapper returns `null`.\n\nThis is a confirmed regression from 1.60.3 to 1.68.0, and it still reproduces in 3.119.1.\n\n**Workaround:** Decode to the codec's native format (RGBA) first, then convert:\n\n```csharp\nvar stream = new MemoryStream(bytes);\nusing var codec = SKCodec.Create(stream);\nusing var rgbaBitmap = SKBitmap.Decode(codec);\nvar gray8Bitmap = new SKBitmap(rgbaBitmap.Width, rgbaBitmap.Height, SKColorType.Gray8, SKAlphaType.Opaque);\nif (rgbaBitmap.CopyTo(gray8Bitmap, SKColorType.Gray8))\n{\n    // gray8Bitmap.BytesPerPixel == 1\n}\n```\n\nNote: `CopyTo` for Gray8 support may vary — please verify this workaround works for your use case."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+# Issue Triage Report — #3235
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T01:49:22Z |
+| Type | type/bug (0.93 (93%)) |
+| Area | area/libSkiaSharp.native (0.95 (95%)) |
+| Suggested action | needs-info (0.87 (87%)) |
+
+**Issue Summary:** DllNotFoundException for libSkiaSharp on AWS Elastic Beanstalk (Linux), reporting liblibSkiaSharp not found, despite using SkiaSharp.NativeAssets.Linux.NoDependencies — native binary is not being deployed to the publish output.
+
+**Analysis:** The liblibSkiaSharp error pattern always indicates that the libSkiaSharp.so binary was not found in any RID-based resolution path during publish. When .NET cannot find the native binary via runtime path lookup, it falls back to the OS loader which adds a lib prefix, resulting in the liblibSkiaSharp name. The reporter references SkiaSharp.NativeAssets.Linux.NoDependencies but key deployment details are missing: whether the package is in the application project vs a library project, and whether the publish command specifies a runtime identifier.
+
+**Recommendations:** **needs-info** — The liblibSkiaSharp error is a deployment misconfiguration pattern, but the specific cause (library vs app project reference, publish command, RID) cannot be determined without more details from the reporter. Key info is missing: publish configuration and project structure.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create an ASP.NET Core application targeting .NET 6.0 (title) / .NET 8.0 (body — inconsistent)
+2. Add SkiaSharp and SkiaSharp.NativeAssets.Linux.NoDependencies NuGet packages
+3. Use SKBitmap, SKCanvas, SKImage to draw shapes and encode to PNG
+4. Publish and deploy to AWS Elastic Beanstalk
+5. Invoke the endpoint — TypeInitializationException for SKImageInfo is thrown
+
+**Environment:** AWS Elastic Beanstalk (Linux), .NET 6.0 (title) / .NET 8.0 (body), SkiaSharp 3.116.1, IDE: Visual Studio 2022 on Windows
+
+**Related issues:** #1629, #2653, #2385
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | exception |
+| Error message | System.DllNotFoundException: Unable to load shared library 'libSkiaSharp' or one of its dependencies. liblibSkiaSharp: cannot open shared object file: No such file or directory |
+| Repro quality | partial |
+| Target frameworks | net6.0 |
+
+**Stack trace:**
+
+```text
+at SkiaSharp.SkiaApi.sk_colortype_get_default_8888() at SkiaSharp.SKImageInfo..cctor()
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.1, 2.88.9 |
+| Worked in | 2.88.9 |
+| Broke in | 3.116.1 |
+| Current relevance | likely |
+| Relevance reason | Issue is about deployment/native loading, not a SkiaSharp API bug. The liblibSkiaSharp pattern is still present in v3.x as confirmed by other reports in #2653. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | False |
+| Confidence | 0.75 (75%) |
+| Reason | The 'worked in 2.88.9' claim likely reflects a correct deployment configuration in the older version. The loading mechanism changed in v3.x but the underlying deployment requirement (NativeAssets in the app project with a RID) is unchanged. The issue is most likely a deployment configuration gap, not a code regression. |
+| Worked in version | — |
+| Broke in version | — |
+
+## Analysis
+
+### Technical Summary
+
+The liblibSkiaSharp error pattern always indicates that the libSkiaSharp.so binary was not found in any RID-based resolution path during publish. When .NET cannot find the native binary via runtime path lookup, it falls back to the OS loader which adds a lib prefix, resulting in the liblibSkiaSharp name. The reporter references SkiaSharp.NativeAssets.Linux.NoDependencies but key deployment details are missing: whether the package is in the application project vs a library project, and whether the publish command specifies a runtime identifier.
+
+### Rationale
+
+Classified type/bug because the app fails completely with a DllNotFoundException on a supported configuration. Area is area/libSkiaSharp.native because the issue is about native library deployment, not the SkiaSharp managed API. The liblibSkiaSharp pattern is a well-known indicator that the .so binary was not found in the RID-resolved output path. Needs-info is chosen because the publish configuration (RID flag, project vs library reference) is missing and is the most likely root cause.
+
+### Key Signals
+
+- "liblibSkiaSharp: cannot open shared object file: No such file or directory" — **issue body log output** (Double lib prefix proves the .so was not found via the RID-based runtimes/ path. The OS loader searched for liblibSkiaSharp as the final fallback.)
+- "NuGet: SkiaSharp.NativeAssets.Linux.NoDependencies" — **issue body** (Reporter is using the correct Linux package for container/server deployment. However, whether it is referenced in the application project (not a library) and whether publish includes -r linux-x64 is unknown.)
+- "This issue not occur in .NET8.0 application" — **issue body Additional Information** (Possible that .NET 8 publish behavior differs from .NET 6 for RID-agnostic framework-dependent deployments. May also reflect different deployment tooling used for the .NET 8 app.)
+- "I am facing the same issue in AWS Lambda function environment" — **comment by MathanKumarVP** (Confirms the issue is reproducible by multiple users in AWS environments, suggesting an AWS deployment tooling interaction.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/Binding.Shared/LibraryLoader.cs` | 34-90 | direct | LoadLocalLibrary<T> tries to find libSkiaSharp.so alongside the managed assembly, in the current directory, and in the AppDomain paths. If all attempts fail it calls LoadLibrary with a constructed path, and ultimately the OS loader is invoked. When the OS loader receives libSkiaSharp (without .so), Linux prepends lib to form liblibSkiaSharp.so — the error seen in the issue. |
+| `binding/SkiaSharp/SkiaApi.cs` | 10-17 | direct | SKIA constant is 'libSkiaSharp'. With USE_DELEGATES, the library is loaded via LibraryLoader.LoadLocalLibrary<SkiaApi>(SKIA). The first P/Invoke call (sk_colortype_get_default_8888) triggers loading on first access in the SKImageInfo static constructor, matching the stack trace in the issue. |
+| `binding/SkiaSharp.NativeAssets.Linux.NoDependencies/SkiaSharp.NativeAssets.Linux.NoDependencies.csproj` | — | direct | Package correctly places libSkiaSharp*.so at runtimes/linux-x64/native/ (glibc) and runtimes/linux-musl-x64/native/ (musl/Alpine). These RID-specific paths are only copied to publish output when a runtime identifier is specified or in self-contained publish. Framework-dependent publish without -r may not include these files. |
+
+### Workarounds
+
+- Ensure SkiaSharp.NativeAssets.Linux.NoDependencies is referenced in the application (executable) project, not a library project
+- Add -r linux-x64 (or linux-arm64 for ARM) to the dotnet publish command to force RID-specific output
+- Verify runtimes/linux-x64/native/libSkiaSharp.so is present in the publish output directory
+
+### Next Questions
+
+- Is SkiaSharp.NativeAssets.Linux.NoDependencies referenced in the application (executable) project or a class library?
+- What dotnet publish command is used? Does it include -r linux-x64 or --self-contained?
+- Is libSkiaSharp.so present in the deploy/publish output directory under runtimes/linux-x64/native/?
+- What Linux distribution does AWS Elastic Beanstalk use — glibc or musl (Alpine)?
+- Is the .NET target framework net6.0 or net8.0? Title says .NET 6.0 but body says .NET 8.0.
+
+### Resolution Proposals
+
+**Hypothesis:** The libSkiaSharp.so native binary is not being copied to the AWS Elastic Beanstalk publish output. Most likely cause: NativeAssets package is referenced in a library project rather than the application project, or publish is framework-dependent without a runtime identifier specified.
+
+1. **Move NativeAssets to application project** — workaround, confidence 0.82 (82%), cost/xs, validated=untested
+   - Reference SkiaSharp.NativeAssets.Linux.NoDependencies in the executable/application project (.csproj that produces the runnable binary), not in any class library projects.
+2. **Specify runtime identifier in publish** — workaround, confidence 0.85 (85%), cost/xs, validated=untested
+   - Add --runtime linux-x64 (or linux-arm64 for ARM Elastic Beanstalk) to the dotnet publish command. This forces .NET to copy RID-specific native assets from runtimes/linux-x64/native/ into the publish output.
+
+```csharp
+dotnet publish -c Release -r linux-x64 --self-contained false
+```
+3. **Investigate v3 vs v2 native loading behavior change** — investigation, confidence 0.60 (60%), cost/m, validated=untested
+   - Investigate whether the library loading mechanism changed between v2.88.x and v3.116.x in a way that affects framework-dependent Linux deployments. The reporter states the issue works in v2.88.9 but not v3.116.1.
+
+**Recommended proposal:** Specify runtime identifier in publish
+
+**Why:** Most common root cause for liblibSkiaSharp errors is framework-dependent publish without RID. Adding -r linux-x64 forces native asset copy to output.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.87 (87%) |
+| Reason | The liblibSkiaSharp error is a deployment misconfiguration pattern, but the specific cause (library vs app project reference, publish command, RID) cannot be determined without more details from the reporter. Key info is missing: publish configuration and project structure. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Is SkiaSharp.NativeAssets.Linux.NoDependencies referenced in the application (executable) project or a class library project?
+- What dotnet publish command or deployment pipeline step is used — does it include -r linux-x64 or --self-contained?
+- Is libSkiaSharp.so present in the publish output under runtimes/linux-x64/native/?
+- Clarify the .NET version — title says .NET 6.0 but issue body describes a .NET 8.0 application
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, libSkiaSharp.native, Linux, reliability labels | labels=type/bug, area/libSkiaSharp.native, os/Linux, tenet/reliability |
+| link-related | low | 0.88 (88%) | Link to #2653 (same liblibSkiaSharp error on Linux, status/needs-attention) | linkedIssue=#2653 |
+| link-related | low | 0.85 (85%) | Link to #1629 (same reporter, same AWS Lambda issue, also open) | linkedIssue=#1629 |
+| add-comment | medium | 0.87 (87%) | Ask for publish configuration and project structure details, and provide checklist | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report! The `liblibSkiaSharp` error indicates that `libSkiaSharp.so` was not found in the expected RID-based path in your publish output — the OS loader then searched for `liblibSkiaSharp.so` as a fallback (Linux adds a `lib` prefix when the name doesn't resolve via the normal path).
+
+To help diagnose this, could you check the following:
+
+1. **Project reference location** — Is `SkiaSharp.NativeAssets.Linux.NoDependencies` referenced in the **application/executable** project (the one that builds the runnable binary), not a class library project?
+
+2. **Publish command** — What `dotnet publish` command or deployment step do you use? Does it include `-r linux-x64` (or `-r linux-arm64` for ARM)? Without a runtime identifier, framework-dependent publish may not include the native binary.
+
+3. **Verify publish output** — After publishing locally, check whether `runtimes/linux-x64/native/libSkiaSharp.so` is present in your publish directory.
+
+A quick workaround to try:
+```
+dotnet publish -c Release -r linux-x64 --self-contained false
+```
+
+Also, could you clarify the .NET target version? The issue title says .NET 6.0, but the body mentions .NET 8.0 — please confirm which is the affected version.
+
+Related: this is a known category of issue tracked in #2653.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3235,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T01:49:22Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "DllNotFoundException for libSkiaSharp on AWS Elastic Beanstalk (Linux), reporting liblibSkiaSharp not found, despite using SkiaSharp.NativeAssets.Linux.NoDependencies — native binary is not being deployed to the publish output.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.93
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "System.DllNotFoundException: Unable to load shared library 'libSkiaSharp' or one of its dependencies. liblibSkiaSharp: cannot open shared object file: No such file or directory",
+      "stackTrace": "at SkiaSharp.SkiaApi.sk_colortype_get_default_8888() at SkiaSharp.SKImageInfo..cctor()",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an ASP.NET Core application targeting .NET 6.0 (title) / .NET 8.0 (body — inconsistent)",
+        "Add SkiaSharp and SkiaSharp.NativeAssets.Linux.NoDependencies NuGet packages",
+        "Use SKBitmap, SKCanvas, SKImage to draw shapes and encode to PNG",
+        "Publish and deploy to AWS Elastic Beanstalk",
+        "Invoke the endpoint — TypeInitializationException for SKImageInfo is thrown"
+      ],
+      "environmentDetails": "AWS Elastic Beanstalk (Linux), .NET 6.0 (title) / .NET 8.0 (body), SkiaSharp 3.116.1, IDE: Visual Studio 2022 on Windows",
+      "relatedIssues": [
+        1629,
+        2653,
+        2385
+      ],
+      "repoLinks": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.1",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.1",
+      "currentRelevance": "likely",
+      "relevanceReason": "Issue is about deployment/native loading, not a SkiaSharp API bug. The liblibSkiaSharp pattern is still present in v3.x as confirmed by other reports in #2653."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.75,
+      "reason": "The 'worked in 2.88.9' claim likely reflects a correct deployment configuration in the older version. The loading mechanism changed in v3.x but the underlying deployment requirement (NativeAssets in the app project with a RID) is unchanged. The issue is most likely a deployment configuration gap, not a code regression."
+    }
+  },
+  "analysis": {
+    "summary": "The liblibSkiaSharp error pattern always indicates that the libSkiaSharp.so binary was not found in any RID-based resolution path during publish. When .NET cannot find the native binary via runtime path lookup, it falls back to the OS loader which adds a lib prefix, resulting in the liblibSkiaSharp name. The reporter references SkiaSharp.NativeAssets.Linux.NoDependencies but key deployment details are missing: whether the package is in the application project vs a library project, and whether the publish command specifies a runtime identifier.",
+    "codeInvestigation": [
+      {
+        "file": "binding/Binding.Shared/LibraryLoader.cs",
+        "lines": "34-90",
+        "finding": "LoadLocalLibrary<T> tries to find libSkiaSharp.so alongside the managed assembly, in the current directory, and in the AppDomain paths. If all attempts fail it calls LoadLibrary with a constructed path, and ultimately the OS loader is invoked. When the OS loader receives libSkiaSharp (without .so), Linux prepends lib to form liblibSkiaSharp.so — the error seen in the issue.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.cs",
+        "lines": "10-17",
+        "finding": "SKIA constant is 'libSkiaSharp'. With USE_DELEGATES, the library is loaded via LibraryLoader.LoadLocalLibrary<SkiaApi>(SKIA). The first P/Invoke call (sk_colortype_get_default_8888) triggers loading on first access in the SKImageInfo static constructor, matching the stack trace in the issue.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Linux.NoDependencies/SkiaSharp.NativeAssets.Linux.NoDependencies.csproj",
+        "finding": "Package correctly places libSkiaSharp*.so at runtimes/linux-x64/native/ (glibc) and runtimes/linux-musl-x64/native/ (musl/Alpine). These RID-specific paths are only copied to publish output when a runtime identifier is specified or in self-contained publish. Framework-dependent publish without -r may not include these files.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "liblibSkiaSharp: cannot open shared object file: No such file or directory",
+        "source": "issue body log output",
+        "interpretation": "Double lib prefix proves the .so was not found via the RID-based runtimes/ path. The OS loader searched for liblibSkiaSharp as the final fallback."
+      },
+      {
+        "text": "NuGet: SkiaSharp.NativeAssets.Linux.NoDependencies",
+        "source": "issue body",
+        "interpretation": "Reporter is using the correct Linux package for container/server deployment. However, whether it is referenced in the application project (not a library) and whether publish includes -r linux-x64 is unknown."
+      },
+      {
+        "text": "This issue not occur in .NET8.0 application",
+        "source": "issue body Additional Information",
+        "interpretation": "Possible that .NET 8 publish behavior differs from .NET 6 for RID-agnostic framework-dependent deployments. May also reflect different deployment tooling used for the .NET 8 app."
+      },
+      {
+        "text": "I am facing the same issue in AWS Lambda function environment",
+        "source": "comment by MathanKumarVP",
+        "interpretation": "Confirms the issue is reproducible by multiple users in AWS environments, suggesting an AWS deployment tooling interaction."
+      }
+    ],
+    "rationale": "Classified type/bug because the app fails completely with a DllNotFoundException on a supported configuration. Area is area/libSkiaSharp.native because the issue is about native library deployment, not the SkiaSharp managed API. The liblibSkiaSharp pattern is a well-known indicator that the .so binary was not found in the RID-resolved output path. Needs-info is chosen because the publish configuration (RID flag, project vs library reference) is missing and is the most likely root cause.",
+    "workarounds": [
+      "Ensure SkiaSharp.NativeAssets.Linux.NoDependencies is referenced in the application (executable) project, not a library project",
+      "Add -r linux-x64 (or linux-arm64 for ARM) to the dotnet publish command to force RID-specific output",
+      "Verify runtimes/linux-x64/native/libSkiaSharp.so is present in the publish output directory"
+    ],
+    "nextQuestions": [
+      "Is SkiaSharp.NativeAssets.Linux.NoDependencies referenced in the application (executable) project or a class library?",
+      "What dotnet publish command is used? Does it include -r linux-x64 or --self-contained?",
+      "Is libSkiaSharp.so present in the deploy/publish output directory under runtimes/linux-x64/native/?",
+      "What Linux distribution does AWS Elastic Beanstalk use — glibc or musl (Alpine)?",
+      "Is the .NET target framework net6.0 or net8.0? Title says .NET 6.0 but body says .NET 8.0."
+    ],
+    "resolution": {
+      "hypothesis": "The libSkiaSharp.so native binary is not being copied to the AWS Elastic Beanstalk publish output. Most likely cause: NativeAssets package is referenced in a library project rather than the application project, or publish is framework-dependent without a runtime identifier specified.",
+      "proposals": [
+        {
+          "title": "Move NativeAssets to application project",
+          "description": "Reference SkiaSharp.NativeAssets.Linux.NoDependencies in the executable/application project (.csproj that produces the runnable binary), not in any class library projects.",
+          "category": "workaround",
+          "confidence": 0.82,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Specify runtime identifier in publish",
+          "description": "Add --runtime linux-x64 (or linux-arm64 for ARM Elastic Beanstalk) to the dotnet publish command. This forces .NET to copy RID-specific native assets from runtimes/linux-x64/native/ into the publish output.",
+          "codeSnippet": "dotnet publish -c Release -r linux-x64 --self-contained false",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate v3 vs v2 native loading behavior change",
+          "description": "Investigate whether the library loading mechanism changed between v2.88.x and v3.116.x in a way that affects framework-dependent Linux deployments. The reporter states the issue works in v2.88.9 but not v3.116.1.",
+          "category": "investigation",
+          "confidence": 0.6,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Specify runtime identifier in publish",
+      "recommendedReason": "Most common root cause for liblibSkiaSharp errors is framework-dependent publish without RID. Adding -r linux-x64 forces native asset copy to output."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.87,
+      "reason": "The liblibSkiaSharp error is a deployment misconfiguration pattern, but the specific cause (library vs app project reference, publish command, RID) cannot be determined without more details from the reporter. Key info is missing: publish configuration and project structure.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Is SkiaSharp.NativeAssets.Linux.NoDependencies referenced in the application (executable) project or a class library project?",
+      "What dotnet publish command or deployment pipeline step is used — does it include -r linux-x64 or --self-contained?",
+      "Is libSkiaSharp.so present in the publish output under runtimes/linux-x64/native/?",
+      "Clarify the .NET version — title says .NET 6.0 but issue body describes a .NET 8.0 application"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, libSkiaSharp.native, Linux, reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Linux",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to #2653 (same liblibSkiaSharp error on Linux, status/needs-attention)",
+        "risk": "low",
+        "confidence": 0.88,
+        "linkedIssue": 2653
+      },
+      {
+        "type": "link-related",
+        "description": "Link to #1629 (same reporter, same AWS Lambda issue, also open)",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 1629
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask for publish configuration and project structure details, and provide checklist",
+        "risk": "medium",
+        "confidence": 0.87,
+        "comment": "Thanks for the detailed report! The `liblibSkiaSharp` error indicates that `libSkiaSharp.so` was not found in the expected RID-based path in your publish output — the OS loader then searched for `liblibSkiaSharp.so` as a fallback (Linux adds a `lib` prefix when the name doesn't resolve via the normal path).\n\nTo help diagnose this, could you check the following:\n\n1. **Project reference location** — Is `SkiaSharp.NativeAssets.Linux.NoDependencies` referenced in the **application/executable** project (the one that builds the runnable binary), not a class library project?\n\n2. **Publish command** — What `dotnet publish` command or deployment step do you use? Does it include `-r linux-x64` (or `-r linux-arm64` for ARM)? Without a runtime identifier, framework-dependent publish may not include the native binary.\n\n3. **Verify publish output** — After publishing locally, check whether `runtimes/linux-x64/native/libSkiaSharp.so` is present in your publish directory.\n\nA quick workaround to try:\n```\ndotnet publish -c Release -r linux-x64 --self-contained false\n```\n\nAlso, could you clarify the .NET target version? The issue title says .NET 6.0, but the body mentions .NET 8.0 — please confirm which is the affected version.\n\nRelated: this is a known category of issue tracked in #2653."
+      }
+    ]
+  }
+}
+```
+
+</details>

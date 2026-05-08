@@ -1,0 +1,368 @@
+# Issue Triage Report — #1535
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T12:07:52Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | close-as-fixed (0.88 (88%)) |
+
+**Issue Summary:** On certain hardware Android devices, SKBitmap.Decode() produces a Gray8 bitmap from hardware-accelerated JPEG decoders, causing subsequent WebP encoding to output a grayscale image instead of a color image; fixed in SkiaSharp 3.x.
+
+**Analysis:** Hardware JPEG decoders on certain Android devices return a Gray8 color type from SKCodec. SKBitmap.Decode() uses the codec's native info directly (binding/SkiaSharp/SKBitmap.cs:439 — `var info = codec.Info;`), so the decoded bitmap has ColorType=Gray8 on affected devices. The WebP encoder then faithfully encodes the gray pixmap. Software JPEG decoders (used by emulators and iOS) return a full-color type, so they are unaffected. The issue was resolved in Skia/SkiaSharp 3.x (likely through a Skia library update that improved hardware decoder color type handling).
+
+**Recommendations:** **close-as-fixed** — Community user confirmed fix in 3.0.0-preview.2.1; SkiaSharp 3.x stable is available. The 2.x line is in maintenance. Users should upgrade.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Android |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Load a color JPEG using SKBitmap.Decode(stream) on a hardware Android device (e.g. Xiaomi Mi5, Mi9, Samsung Galaxy Tab A, Pixel 6)
+2. Call .Encode(SKEncodedImageFormat.Webp, 65) on the decoded bitmap
+3. Observe that the resulting WebP image is grayscale
+
+**Environment:** Version 2.80.2 through 2.88.6; Android hardware devices; iOS and Android emulator are unaffected
+
+**Code snippets:**
+
+```csharp
+var d = SKBitmap.Decode(stream).Encode(SKEncodedImageFormat.Webp, 65);
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | wrong-output |
+| Error message | Image conversion from JPEG to WebP produces grayscale image on hardware Android devices |
+| Repro quality | partial |
+| Target frameworks | net9.0-android, monoandroid9.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2, 1.68.3, 2.88.6, 3.0.0-preview.2.1 |
+| Worked in | 1.68.3 |
+| Broke in | 2.80.2 |
+| Current relevance | unlikely |
+| Relevance reason | A community user confirmed the issue is resolved in 3.0.0-preview.2.1, and SkiaSharp 3.x stable (3.0.0, 3.116.x, 3.119.x) has since been released. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.85 (85%) |
+| Reason | Reporter states it worked in 1.68.3 and broke in 2.80.2. |
+| Worked in version | 1.68.3 |
+| Broke in version | 2.80.2 |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | True |
+| Confidence | 0.90 (90%) |
+| Reason | Community commenter (Wuz3t, 2024-03-08) explicitly confirmed: 'After updating to 3.0.0-preview.2.1 problem is solved.' SkiaSharp 3.x stable is now available (latest: 3.119.3). |
+| Related PRs | — |
+| Related commits | — |
+| Fixed in version | 3.0.0-preview.2.1 |
+
+## Analysis
+
+### Technical Summary
+
+Hardware JPEG decoders on certain Android devices return a Gray8 color type from SKCodec. SKBitmap.Decode() uses the codec's native info directly (binding/SkiaSharp/SKBitmap.cs:439 — `var info = codec.Info;`), so the decoded bitmap has ColorType=Gray8 on affected devices. The WebP encoder then faithfully encodes the gray pixmap. Software JPEG decoders (used by emulators and iOS) return a full-color type, so they are unaffected. The issue was resolved in Skia/SkiaSharp 3.x (likely through a Skia library update that improved hardware decoder color type handling).
+
+### Rationale
+
+Multiple reporters across multiple devices and Android versions reproduce this consistently on hardware but not on emulator or iOS. The decode/encode pipeline in the C# binding passes the codec native color type through without forced conversion. A community user confirmed the fix in 3.0.0-preview.2.1 and stable 3.x is available, making this a close-as-fixed case.
+
+### Key Signals
+
+- "Works fine on IOS and Android-Emulator, doesn't work (grayscale) on bunch of hardware Android phones." — **issue body** (Confirms hardware vs software JPEG decoder difference — hardware decoders on some Android devices produce Gray8 natively.)
+- "After updating to 3.0.0-preview.2.1 problem is solved." — **comment by Wuz3t, 2024-03-08** (Direct confirmation that the fix is in SkiaSharp 3.x.)
+- "We are encountering the same issue with Version 2.88.6." — **comment by iglak, 2024-03-07** (Still present in the 2.88.x stable line, confirming the bug persists throughout 2.x.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKBitmap.cs` | 434-444 | direct | SKBitmap.Decode(SKCodec codec) uses `codec.Info` directly to determine the output color type. On hardware Android JPEG decoders that natively decode to Gray8, the decoded bitmap will have ColorType=Gray8 — no forced conversion to RGBA/BGRA. |
+| `binding/SkiaSharp/SKPixmap.cs` | 264-268 | direct | SKPixmap.Encode(SKWStream, SKWebpEncoderOptions) calls sk_webpencoder_encode with the current pixmap handle — it encodes whatever color type is present without conversion. If the pixmap is Gray8, the WebP output will be grayscale. |
+| `binding/SkiaSharp/SKBitmap.cs` | 730-750 | related | SKBitmap.Encode() delegates to the underlying SKPixmap.Encode(), passing no explicit color type — confirms no conversion happens at the encoding stage either. |
+
+### Workarounds
+
+- Upgrade to SkiaSharp 3.x (3.0.0 or later) — confirmed to fix the issue.
+- For 2.x users: copy the bitmap to a forced RGBA color type before encoding: `using var rgba = bitmap.Copy(SKColorType.Rgba8888); var d = rgba.Encode(SKEncodedImageFormat.Webp, 65);`
+- Alternatively, specify explicit color type at decode time: `SKBitmap.Decode(stream, new SKImageInfo(w, h, SKColorType.Rgba8888, SKAlphaType.Premul))`
+
+### Next Questions
+
+- What specific Skia/SkiaSharp change in 3.x fixed this? (Skia upstream hardware decoder handling or SkiaSharp wrapper fix?)
+
+### Resolution Proposals
+
+**Hypothesis:** The hardware JPEG codec on affected Android devices returns Gray8 as the native color type. SKBitmap.Decode respects this natively, producing a gray bitmap. Encoding this to WebP correctly produces a grayscale file. The fix in 3.x likely involves Skia properly handling hardware JPEG decoder output color types, or forcing a color type conversion during decode.
+
+1. **Upgrade to SkiaSharp 3.x** — fix, confidence 0.92 (92%), cost/xs, validated=untested
+   - The issue is confirmed resolved in 3.0.0-preview.2.1 and all subsequent 3.x releases. Users should upgrade from 2.88.x.
+2. **Copy bitmap to RGBA before encoding (2.x workaround)** — workaround, confidence 0.88 (88%), cost/xs, validated=untested
+   - For users stuck on 2.x, copy the bitmap to a forced RGBA color type before encoding to WebP to ensure color channels are present.
+
+```csharp
+using var source = SKBitmap.Decode(stream);
+using var rgba = source.Copy(SKColorType.Rgba8888);
+var d = rgba?.Encode(SKEncodedImageFormat.Webp, 65);
+```
+
+**Recommended proposal:** Upgrade to SkiaSharp 3.x
+
+**Why:** The fix is already in place in stable 3.x releases. Upgrading eliminates the root cause rather than working around it.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-fixed |
+| Confidence | 0.88 (88%) |
+| Reason | Community user confirmed fix in 3.0.0-preview.2.1; SkiaSharp 3.x stable is available. The 2.x line is in maintenance. Users should upgrade. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply type/bug, area/SkiaSharp, os/Android, tenet/reliability labels | labels=type/bug, area/SkiaSharp, os/Android, tenet/reliability |
+| add-comment | medium | 0.88 (88%) | Post response confirming fix in 3.x and providing 2.x workaround | — |
+| close-issue | medium | 0.85 (85%) | Close as fixed in SkiaSharp 3.x | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for reporting this! The root cause is that hardware JPEG decoders on certain Android devices (Xiaomi, Samsung Galaxy, Pixel) natively decode JPEGs as `Gray8` color type. `SKBitmap.Decode()` respects the codec's native format, so the bitmap ends up as gray — and the WebP encoder faithfully encodes it as grayscale.
+
+**This issue is fixed in SkiaSharp 3.x.** If you upgrade to `3.0.0` or later, the problem is resolved (confirmed by @Wuz3t in the comments above).
+
+**Workaround for SkiaSharp 2.x users:** Copy the bitmap to RGBA before encoding:
+
+```csharp
+using var source = SKBitmap.Decode(stream);
+using var rgba = source.Copy(SKColorType.Rgba8888);
+var d = rgba?.Encode(SKEncodedImageFormat.Webp, 65);
+```
+
+Closing as fixed in 3.x. Please reopen if you encounter this on SkiaSharp 3.x.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1535,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T12:07:52Z"
+  },
+  "summary": "On certain hardware Android devices, SKBitmap.Decode() produces a Gray8 bitmap from hardware-accelerated JPEG decoders, causing subsequent WebP encoding to output a grayscale image instead of a color image; fixed in SkiaSharp 3.x.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Android"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Image conversion from JPEG to WebP produces grayscale image on hardware Android devices",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net9.0-android",
+        "monoandroid9.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load a color JPEG using SKBitmap.Decode(stream) on a hardware Android device (e.g. Xiaomi Mi5, Mi9, Samsung Galaxy Tab A, Pixel 6)",
+        "Call .Encode(SKEncodedImageFormat.Webp, 65) on the decoded bitmap",
+        "Observe that the resulting WebP image is grayscale"
+      ],
+      "environmentDetails": "Version 2.80.2 through 2.88.6; Android hardware devices; iOS and Android emulator are unaffected",
+      "repoLinks": [],
+      "codeSnippets": [
+        "var d = SKBitmap.Decode(stream).Encode(SKEncodedImageFormat.Webp, 65);"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2",
+        "1.68.3",
+        "2.88.6",
+        "3.0.0-preview.2.1"
+      ],
+      "workedIn": "1.68.3",
+      "brokeIn": "2.80.2",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "A community user confirmed the issue is resolved in 3.0.0-preview.2.1, and SkiaSharp 3.x stable (3.0.0, 3.116.x, 3.119.x) has since been released."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter states it worked in 1.68.3 and broke in 2.80.2.",
+      "workedInVersion": "1.68.3",
+      "brokeInVersion": "2.80.2"
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.9,
+      "reason": "Community commenter (Wuz3t, 2024-03-08) explicitly confirmed: 'After updating to 3.0.0-preview.2.1 problem is solved.' SkiaSharp 3.x stable is now available (latest: 3.119.3).",
+      "fixedInVersion": "3.0.0-preview.2.1"
+    }
+  },
+  "analysis": {
+    "summary": "Hardware JPEG decoders on certain Android devices return a Gray8 color type from SKCodec. SKBitmap.Decode() uses the codec's native info directly (binding/SkiaSharp/SKBitmap.cs:439 — `var info = codec.Info;`), so the decoded bitmap has ColorType=Gray8 on affected devices. The WebP encoder then faithfully encodes the gray pixmap. Software JPEG decoders (used by emulators and iOS) return a full-color type, so they are unaffected. The issue was resolved in Skia/SkiaSharp 3.x (likely through a Skia library update that improved hardware decoder color type handling).",
+    "rationale": "Multiple reporters across multiple devices and Android versions reproduce this consistently on hardware but not on emulator or iOS. The decode/encode pipeline in the C# binding passes the codec native color type through without forced conversion. A community user confirmed the fix in 3.0.0-preview.2.1 and stable 3.x is available, making this a close-as-fixed case.",
+    "keySignals": [
+      {
+        "text": "Works fine on IOS and Android-Emulator, doesn't work (grayscale) on bunch of hardware Android phones.",
+        "source": "issue body",
+        "interpretation": "Confirms hardware vs software JPEG decoder difference — hardware decoders on some Android devices produce Gray8 natively."
+      },
+      {
+        "text": "After updating to 3.0.0-preview.2.1 problem is solved.",
+        "source": "comment by Wuz3t, 2024-03-08",
+        "interpretation": "Direct confirmation that the fix is in SkiaSharp 3.x."
+      },
+      {
+        "text": "We are encountering the same issue with Version 2.88.6.",
+        "source": "comment by iglak, 2024-03-07",
+        "interpretation": "Still present in the 2.88.x stable line, confirming the bug persists throughout 2.x."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "434-444",
+        "finding": "SKBitmap.Decode(SKCodec codec) uses `codec.Info` directly to determine the output color type. On hardware Android JPEG decoders that natively decode to Gray8, the decoded bitmap will have ColorType=Gray8 — no forced conversion to RGBA/BGRA.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPixmap.cs",
+        "lines": "264-268",
+        "finding": "SKPixmap.Encode(SKWStream, SKWebpEncoderOptions) calls sk_webpencoder_encode with the current pixmap handle — it encodes whatever color type is present without conversion. If the pixmap is Gray8, the WebP output will be grayscale.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "730-750",
+        "finding": "SKBitmap.Encode() delegates to the underlying SKPixmap.Encode(), passing no explicit color type — confirms no conversion happens at the encoding stage either.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.x (3.0.0 or later) — confirmed to fix the issue.",
+      "For 2.x users: copy the bitmap to a forced RGBA color type before encoding: `using var rgba = bitmap.Copy(SKColorType.Rgba8888); var d = rgba.Encode(SKEncodedImageFormat.Webp, 65);`",
+      "Alternatively, specify explicit color type at decode time: `SKBitmap.Decode(stream, new SKImageInfo(w, h, SKColorType.Rgba8888, SKAlphaType.Premul))`"
+    ],
+    "nextQuestions": [
+      "What specific Skia/SkiaSharp change in 3.x fixed this? (Skia upstream hardware decoder handling or SkiaSharp wrapper fix?)"
+    ],
+    "resolution": {
+      "hypothesis": "The hardware JPEG codec on affected Android devices returns Gray8 as the native color type. SKBitmap.Decode respects this natively, producing a gray bitmap. Encoding this to WebP correctly produces a grayscale file. The fix in 3.x likely involves Skia properly handling hardware JPEG decoder output color types, or forcing a color type conversion during decode.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 3.x",
+          "description": "The issue is confirmed resolved in 3.0.0-preview.2.1 and all subsequent 3.x releases. Users should upgrade from 2.88.x.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Copy bitmap to RGBA before encoding (2.x workaround)",
+          "description": "For users stuck on 2.x, copy the bitmap to a forced RGBA color type before encoding to WebP to ensure color channels are present.",
+          "category": "workaround",
+          "codeSnippet": "using var source = SKBitmap.Decode(stream);\nusing var rgba = source.Copy(SKColorType.Rgba8888);\nvar d = rgba?.Encode(SKEncodedImageFormat.Webp, 65);",
+          "confidence": 0.88,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 3.x",
+      "recommendedReason": "The fix is already in place in stable 3.x releases. Upgrading eliminates the root cause rather than working around it."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.88,
+      "reason": "Community user confirmed fix in 3.0.0-preview.2.1; SkiaSharp 3.x stable is available. The 2.x line is in maintenance. Users should upgrade.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, os/Android, tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Android",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post response confirming fix in 3.x and providing 2.x workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for reporting this! The root cause is that hardware JPEG decoders on certain Android devices (Xiaomi, Samsung Galaxy, Pixel) natively decode JPEGs as `Gray8` color type. `SKBitmap.Decode()` respects the codec's native format, so the bitmap ends up as gray — and the WebP encoder faithfully encodes it as grayscale.\n\n**This issue is fixed in SkiaSharp 3.x.** If you upgrade to `3.0.0` or later, the problem is resolved (confirmed by @Wuz3t in the comments above).\n\n**Workaround for SkiaSharp 2.x users:** Copy the bitmap to RGBA before encoding:\n\n```csharp\nusing var source = SKBitmap.Decode(stream);\nusing var rgba = source.Copy(SKColorType.Rgba8888);\nvar d = rgba?.Encode(SKEncodedImageFormat.Webp, 65);\n```\n\nClosing as fixed in 3.x. Please reopen if you encounter this on SkiaSharp 3.x."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in SkiaSharp 3.x",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>

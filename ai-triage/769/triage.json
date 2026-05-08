@@ -1,0 +1,177 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 769,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T04:08:15Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "area/SkiaSharp.Views",
+      "status/needs-attention"
+    ]
+  },
+  "summary": "SKBitmap.SetPixel premultiplies RGB channel values when the bitmap is configured with SKAlphaType.Unpremul, causing incorrect pixel bytes on read-back; confirmed fixed in SkiaSharp 3.x.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "bytes[0] == 100 instead of 255 when alpha=100 and RGB=255 on SKAlphaType.Unpremul bitmap",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        ".NETFramework",
+        "net-windows"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create SKBitmap(16,16, SKColorType.Rgba8888, SKAlphaType.Unpremul)",
+        "Call SetPixel(0, 0, new SKColor(red:255, green:255, blue:255, alpha:100))",
+        "Read Bytes[] \u2014 RGB channels are 100 instead of 255"
+      ],
+      "environmentDetails": "SkiaSharp 1.60.3, Visual Studio, Windows 10, Full .NET Framework",
+      "repoLinks": [
+        {
+          "url": "https://devdiv.visualstudio.com/DevDiv/_workitems/edit/782039",
+          "description": "VS internal bug #782039 cross-reference"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.60.3",
+        "2.88.8"
+      ],
+      "brokeIn": "1.60.3",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Maintainer confirmed fixed in SkiaSharp 3.x; community member verified the fix in June 2024."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.92,
+      "reason": "Maintainer mattleibow commented 'This appears to be fixed in SkiaSharp 3.x releases' in May 2024; user neptuwunium confirmed 'It does appear to be fixed' in June 2024. Current SetPixel uses SKCanvas.DrawPoint which properly respects bitmap alpha type.",
+      "fixedInVersion": "3.x"
+    }
+  },
+  "analysis": {
+    "summary": "SKBitmap.SetPixel was incorrectly premultiplying pixel RGB channels when the bitmap alpha type was SKAlphaType.Unpremul; this caused stored bytes to reflect premultiplied values (e.g., 255*100/255\u2248100) rather than the raw channel values. The bug was present through SkiaSharp 2.88.8 and is confirmed fixed in SkiaSharp 3.x, likely due to a rewrite of SetPixel to use SKCanvas.DrawPoint which correctly handles the alpha type.",
+    "rationale": "Bug classification is clear: reproducible code, specific wrong-output symptom, confirmed versions. Area is area/SkiaSharp (SKBitmap is core, not views; the existing area/SkiaSharp.Views label is incorrect). Action is close-as-fixed because both the maintainer and a community reporter have confirmed resolution in SkiaSharp 3.x.",
+    "keySignals": [
+      {
+        "text": "bytes[0] == 255 //Blue. Expected 255, result 100",
+        "source": "issue body",
+        "interpretation": "RGB channels premultiplied by alpha (255 * 100/255 \u2248 100), indicating Unpremul setting is not respected by SetPixel."
+      },
+      {
+        "text": "This issue still happens five years later on SkiaSharp 2.88.8",
+        "source": "comment by neptuwunium, 2024-05-31",
+        "interpretation": "Bug persisted across all 2.x releases, not just the original report version."
+      },
+      {
+        "text": "This appears to be fixed in SkiaSharp 3.x releases.",
+        "source": "comment by mattleibow, 2024-05-31",
+        "interpretation": "Maintainer confirms fix in SkiaSharp 3.x."
+      },
+      {
+        "text": "It does appear to be fixed.",
+        "source": "comment by neptuwunium, 2024-06-02",
+        "interpretation": "Community confirmation that SkiaSharp 3.x resolves the issue."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "131-141",
+        "finding": "SetPixel currently creates an SKCanvas and calls canvas.DrawPoint(x, y, color). Canvas drawing in Skia respects the bitmap's alpha type, so this implementation should correctly store unpremultiplied values on an Unpremul bitmap. This is likely the fixed implementation in SkiaSharp 3.x.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "320-326",
+        "finding": "Bytes property uses GetPixelSpan().ToArray() which reads raw pixel memory directly. If SetPixel correctly writes unpremultiplied values, Bytes will return the correct raw bytes. The fix in SetPixel would make Bytes return correct data.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "439-442",
+        "finding": "Decode() overrides Unpremul to Premul when decoding from codec \u2014 intentional design decision for codec decode path, unrelated to SetPixel.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.x where the issue is fixed.",
+      "On SkiaSharp 2.x: write pixel bytes directly via GetPixelSpan() or use Marshal/unsafe to write to the raw pixel buffer instead of calling SetPixel."
+    ],
+    "nextQuestions": [
+      "Was SetPixel previously calling a native sk_bitmap_set_pixel that did not respect alpha type?"
+    ],
+    "resolution": {
+      "hypothesis": "In SkiaSharp 2.x, SetPixel likely called a native function that internally converted color through premultiplied paths, ignoring the bitmap's declared alpha type. The rewrite to canvas.DrawPoint in SkiaSharp 3.x correctly routes through Skia's alpha-aware drawing pipeline.",
+      "proposals": [
+        {
+          "title": "Close as fixed in SkiaSharp 3.x",
+          "description": "The issue is confirmed fixed in SkiaSharp 3.x by both the maintainer and a community reporter. Close with a note directing users to upgrade.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Close as fixed in SkiaSharp 3.x",
+      "recommendedReason": "Both maintainer and user have confirmed the fix is present in 3.x. The issue should be closed to reduce backlog noise."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.9,
+      "reason": "Maintainer confirmed fix in SkiaSharp 3.x in May 2024; community reporter confirmed fix in June 2024. Current code in main uses canvas-based SetPixel that correctly handles alpha types.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct area label from area/SkiaSharp.Views to area/SkiaSharp; add tenet/reliability",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform users the fix is in SkiaSharp 3.x and close the issue",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "This issue was fixed in SkiaSharp 3.x. `SKBitmap.SetPixel` now correctly stores unpremultiplied pixel values when the bitmap is created with `SKAlphaType.Unpremul`.\n\nIf you are still on SkiaSharp 2.x, you can work around this by writing pixel data directly via `GetPixelSpan()` rather than using `SetPixel`.\n\nPlease upgrade to SkiaSharp 3.x to get the fix. Closing this issue."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed \u2014 confirmed resolved in SkiaSharp 3.x",
+        "risk": "medium",
+        "confidence": 0.9,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

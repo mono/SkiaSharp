@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1320,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T11:18:58Z"
+  },
+  "summary": "On .NET Framework 4.8 with SkiaSharp 1.68.3, calling SKPixmap.Encode() throws System.IO.FileLoadException because SkiaSharp was compiled against System.Buffers 4.0.2.0 but the runtime finds a different version (4.0.3.0+), caused by .NET Framework strict assembly version binding.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "System.IO.FileLoadException: Could not load file or assembly 'System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' or one of its dependencies. The located assembly's manifest definition does not match the assembly reference.",
+      "stackTrace": "at SkiaSharp.SKManagedWStream.OnWrite(IntPtr buffer, IntPtr size)\n   at SkiaSharp.SKAbstractManagedWStream.WriteInternal(IntPtr s, Void* context, Void* buffer, IntPtr size)\n   at SkiaSharp.SkiaApi.sk_jpegencoder_encode(IntPtr dst, IntPtr src, SKJpegEncoderOptions* options)\n   at SkiaSharp.SKPixmap.Encode(SKWStream dst, SKJpegEncoderOptions options)",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net48"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET 4.8 unit test project",
+        "Reference SkiaSharp 1.68.3 and SixLabors.ImageSharp (which pulls System.Buffers 4.0.3.0)",
+        "Call SKPixmap.Encode() saving as JPEG or PNG",
+        "Observe System.IO.FileLoadException for System.Buffers Version=4.0.2.0"
+      ],
+      "environmentDetails": ".NET Framework 4.8, Windows 10 2004, Visual Studio 2019, SkiaSharp 1.68.3",
+      "repoLinks": [
+        { "url": "https://github.com/dotnet/runtime/issues/27117", "description": "Upstream dotnet/runtime issue about System.Buffers version conflicts on .NET Framework" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["1.68.3"],
+      "currentRelevance": "unknown",
+      "relevanceReason": "Issue filed against 1.68.3 (2020). Current codebase still uses ArrayPool<T> from System.Buffers in Util.cs and SKManagedWStream.cs, but the SkiaSharp.csproj no longer has an explicit System.Buffers PackageReference. Unclear whether the NuGet package metadata still locks to a specific version."
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp 1.68.3's NuGet package encoded a hard dependency on System.Buffers 4.0.2.0 in its assembly references. On .NET Framework, the CLR checks assembly identity strictly and rejects 4.0.3.0 as a substitute unless assembly binding redirects are configured. The reporter's project had SixLabors.ImageSharp pulling in System.Buffers 4.0.3.0, causing the mismatch at runtime when SKManagedWStream.OnWrite tried to use ArrayPool<T>.",
+    "rationale": "Stack trace clearly points to SKManagedWStream.OnWrite failing at load time due to a .NET Framework assembly version mismatch, not a logic error. The HRESULT 0x80131040 (COR_E_FILELOAD / FUSLOGVW manifest mismatch) is characteristic of this class of problem. The current codebase still uses System.Buffers in the same code path (Util.cs/ArrayPool<T>.Shared.Rent), so the issue may still affect .NET Framework consumers if the NuGet package metadata has not been updated.",
+    "keySignals": [
+      {
+        "text": "System.IO.FileLoadException: Could not load file or assembly 'System.Buffers, Version=4.0.2.0' ... manifest definition does not match the assembly reference",
+        "source": "issue body",
+        "interpretation": ".NET Framework CLR found System.Buffers with a different assembly version than SkiaSharp was compiled against. Binding redirects would normally fix this but apparently did not take effect."
+      },
+      {
+        "text": "the System.Buffers assembly in my build directory has assembly version 4.0.3.0, so it is very strange that this minor revision is not picked up automatically",
+        "source": "comment by ziriax",
+        "interpretation": "Confirms the mismatch direction: user has 4.0.3.0, SkiaSharp embedded ref to 4.0.2.0. Unlike .NET Core, .NET Framework does not auto-redirect minor assembly versions."
+      },
+      {
+        "text": "My issue turned out to be a corrupted dll in my NuGet cache... I had to remove the NuGet package, delete all bin folders, delete NuGet Cache. Then re-add buffers 4.5.1. It finally worked.",
+        "source": "comment by erebuswolf (2023)",
+        "interpretation": "A separate root cause — corrupted cache — mimics the same error. Suggests issue body and later comments describe distinct problems with the same symptom."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKManagedWStream.cs",
+        "lines": "4,45-55",
+        "finding": "File imports System.Buffers (line 4) and uses Utils.RentArray<byte>(count) in OnWrite — this is the exact method in the reporter's stack trace. The ArrayPool<T> call will fail if System.Buffers assembly cannot be loaded.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Util.cs",
+        "lines": "4,77-103",
+        "finding": "RentedArray<T> struct directly calls ArrayPool<T>.Shared.Rent(length) and ArrayPool<T>.Shared.Return(Array). System.Buffers is a required assembly for this code path. The csproj does NOT list System.Buffers as an explicit PackageReference, meaning in current SkiaSharp it likely arrives as a transitive dependency.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "finding": "No explicit PackageReference for System.Buffers found. The project uses $(AllTargetFrameworks) and has net4x-specific conditions. Without an explicit System.Buffers reference, newer NuGet resolution may handle version selection differently than 1.68.3.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Add AppDomain.CurrentDomain.AssemblyResolve handler to redirect System.Buffers 4.0.2.0 requests to the installed version (provided by reporter).",
+      "Add or correct assembly binding redirects in App.config/packages.config for System.Buffers to cover the range up to 4.0.3.0 or higher.",
+      "Clear the NuGet cache (`%USERPROFILE%\\.nuget\\packages\\system.buffers`) and reinstall System.Buffers 4.5.1 explicitly in the project."
+    ],
+    "nextQuestions": [
+      "Does this error still occur with current SkiaSharp (2.88.x or 3.x) on .NET Framework 4.8?",
+      "Does the SkiaSharp NuGet package still emit a System.Buffers version-pinned dependency in its nuspec for .NET Framework targets?",
+      "Does adding an explicit <PackageReference Include='System.Buffers' Version='4.5.1'/> to the project resolve the issue without the AssemblyResolve hack?"
+    ],
+    "resolution": {
+      "hypothesis": "SkiaSharp 1.68.3's NuGet package encoded System.Buffers 4.0.2.0 in its dependency metadata, and no binding redirect was generated to handle the version difference. Current SkiaSharp may have improved handling through updated NuGet metadata or transitive resolution.",
+      "proposals": [
+        {
+          "title": "AssemblyResolve workaround (immediate)",
+          "description": "Register an AppDomain.AssemblyResolve handler that redirects System.Buffers 4.0.2.0 requests to the installed version. This is the reporter's own confirmed workaround.",
+          "category": "workaround",
+          "codeSnippet": "AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>\n{\n    switch (args.Name)\n    {\n        case \"System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51\":\n            return typeof(System.Buffers.ArrayPool<>).Assembly;\n        default:\n            return null;\n    }\n};",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Explicit System.Buffers package reference",
+          "description": "Add System.Buffers 4.5.1 as a direct PackageReference in the consuming project. This forces NuGet to resolve the highest version and should generate the correct binding redirects.",
+          "category": "workaround",
+          "codeSnippet": "<PackageReference Include=\"System.Buffers\" Version=\"4.5.1\" />",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate whether current SkiaSharp still requires version-pinned System.Buffers",
+          "description": "Examine the generated NuGet .nupkg for the .NET Framework target to confirm whether System.Buffers is listed as a versioned dependency. If so, update the NuGet metadata to allow a range (e.g., [4.0.1,)) instead of an exact version.",
+          "category": "investigation",
+          "confidence": 0.70,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "AssemblyResolve workaround (immediate)",
+      "recommendedReason": "Confirmed working by the original reporter. The investigation proposal is worth pursuing to determine if the underlying issue is fixed in newer SkiaSharp."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.78,
+      "reason": "The issue is clearly reproducible in 1.68.3 and a workaround exists. However, the issue is from 2020 and current SkiaSharp has changed its dependency structure. Repro against current version (3.x) is needed to determine if the root cause still exists.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Standalone minimal repro project (reporter acknowledged this was not ready yet)",
+      "Confirmation whether the issue reproduces with current SkiaSharp (2.88.x / 3.x) on .NET Framework 4.8"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, os/Windows-Classic, tenet/compatibility",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the issue, provide confirmed workaround, ask for repro against current version",
+        "risk": "medium",
+        "confidence": 0.78,
+        "comment": "Thanks for the detailed report and for providing the `AssemblyResolve` workaround.\n\nThis is a classic .NET Framework assembly binding issue: SkiaSharp 1.68.3 was compiled against `System.Buffers 4.0.2.0` and the CLR won't automatically redirect to `4.0.3.0`.\n\n**Confirmed workaround (from issue body):** Register an `AssemblyResolve` handler as shown.\n\n**Alternative — add an explicit package reference:**\n```xml\n<PackageReference Include=\"System.Buffers\" Version=\"4.5.1\" />\n```\nThis forces NuGet to select a higher version and should generate the correct binding redirects in `app.config`.\n\nSince this was filed against 1.68.3, could you or anyone on this thread confirm whether the issue still reproduces with the current SkiaSharp (3.x) on .NET Framework 4.8? That would help us determine whether a fix is still needed in the NuGet package metadata."
+      }
+    ]
+  }
+}

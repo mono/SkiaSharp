@@ -1,0 +1,344 @@
+# Issue Triage Report — #3398
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T01:02:00Z |
+| Type | type/bug (0.90 (90%)) |
+| Area | area/SkiaSharp (0.75 (75%)) |
+| Suggested action | needs-investigation (0.75 (75%)) |
+
+**Issue Summary:** Hard crash in sk_canvas_draw_path native call when Mapsui's GetMapInfo() renders path geometry from an Avalonia PointerMoved event, claimed regression from SkiaSharp 2.88.9 to 3.116.0 on .NET 9 / Windows 11.
+
+**Analysis:** Hard crash in native sk_canvas_draw_path triggered by Mapsui's GetMapInfo() rendering paths from a PointerMoved event, likely a threading violation where an SKCanvas is accessed concurrently — a pattern known to cause hard crashes in Skia. The regression from 2.88.9 may reflect Skia upstream changes that made concurrent canvas access more reliably fatal.
+
+**Recommendations:** **needs-investigation** — Full stack trace provided with regression claim. Root cause is likely concurrent SKCanvas access from Mapsui's GetMapInfo, but needs confirmation. The close-as-external path requires verifying the threading violation is in Mapsui rather than SkiaSharp.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+| Current labels | type/bug, os/Windows-Classic, tenet/reliability |
+
+## Evidence
+
+### Reproduction
+
+1. Run an Avalonia desktop application using Mapsui for map rendering (backed by SkiaSharp 3.116.0)
+2. Move the mouse pointer over the map to trigger PointerMoved events
+3. Observe intermittent hard crash in sk_canvas_draw_path
+
+**Environment:** .NET 9.0.7, SkiaSharp 3.116.0, Avalonia 11.3.7, Mapsui, Windows 11, Visual Studio
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | crash |
+| Error message | The process was terminated due to an unhandled exception at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr) |
+| Repro quality | partial |
+| Target frameworks | net9.0 |
+
+**Stack trace:**
+
+```text
+at SkiaSharp.SkiaApi.sk_canvas_draw_path
+at SkiaSharp.SKCanvas.DrawPath
+at Mapsui.Rendering.Skia.Extensions.SkCanvasExtensions.DrawPath
+at Mapsui.Rendering.Skia.LineStringRenderer.Draw
+at Mapsui.Rendering.Skia.MapRenderer.GetMapInfo
+at Mapsui.UI.Avalonia.MapControl.GetMapInfo
+at FlightControlViewModel.MapControl_PointerMoved
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.0, 2.88.9, 2.88.8 |
+| Worked in | 2.88.9 |
+| Broke in | 3.116.0 |
+| Current relevance | likely |
+| Relevance reason | The SKCanvas.DrawPath code path has not changed significantly and the crash is in the native layer, which did change between 2.88.x and 3.116.x. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.70 (70%) |
+| Reason | Reporter explicitly states last good version was 2.88.9 and DLL version is 2.88.8.0, but the crash occurs with 3.116.0. However, the root cause is likely a threading violation in Mapsui's GetMapInfo pattern that may have become more reliably fatal after the Skia upstream upgrade. |
+| Worked in version | 2.88.9 |
+| Broke in version | 3.116.0 |
+
+## Analysis
+
+### Technical Summary
+
+Hard crash in native sk_canvas_draw_path triggered by Mapsui's GetMapInfo() rendering paths from a PointerMoved event, likely a threading violation where an SKCanvas is accessed concurrently — a pattern known to cause hard crashes in Skia. The regression from 2.88.9 may reflect Skia upstream changes that made concurrent canvas access more reliably fatal.
+
+### Rationale
+
+The stack trace shows the crash entry point is in sk_canvas_draw_path (native). Mapsui's GetMapInfo() iterates layers and renders feature geometry — it re-uses the same rendering infrastructure from a PointerMoved event, which fires on the input/UI thread, while Avalonia's main rendering may be occurring concurrently on the render thread. Skia is explicitly not thread-safe, and sharing an SKCanvas across threads produces undefined behavior including hard crashes. A community member also noted this looks more like a Mapsui issue. The regression could be timing-related: the native Skia upgrade in 3.116.0 may have altered internal locking or path rendering to expose the race condition more frequently.
+
+### Key Signals
+
+- "at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)" — **comment by reporter** (Hard crash in the native layer — not a managed exception. Points to memory corruption or concurrent access at the native Skia level.)
+- "It was retrieving MapInfo in the PointerMoved event" — **issue body** (GetMapInfo() is called on the input thread from PointerMoved while the canvas may be in use on the render thread — classic threading violation.)
+- "Looks more like a Mapsui issue?" — **comment by molesmoke** (Community consensus that the concurrent use of SKCanvas from GetMapInfo is an architectural problem in Mapsui, not a SkiaSharp defect.)
+- "Last Known Good Version of SkiaSharp: 2.88.9 (Previous)" — **issue body** (Regression claim, though this may be a timing issue exposed by native Skia changes rather than a SkiaSharp wrapper regression.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKCanvas.cs` | 405-412 | direct | SKCanvas.DrawPath validates non-null path and paint, then calls SkiaApi.sk_canvas_draw_path(Handle, path.Handle, paint.Handle). No thread-safety guard. Native crash here is consistent with concurrent canvas access from multiple threads. |
+| `binding/SkiaSharp/SKCanvas.cs` | 403-411 | related | DrawPath has null checks for path and paint but no disposal or thread-safety checks. If Handle is invalid due to concurrent disposal or the canvas is shared across threads, the native call will crash. |
+
+### Workarounds
+
+- Avoid calling Mapsui's GetMapInfo() directly from PointerMoved — instead, dispatch the call to the same thread/context as the render loop, or use a snapshot/copy of the canvas for hit-testing.
+- If GetMapInfo() must be called from PointerMoved, ensure it uses a separate SKCanvas/surface from the main rendering surface to avoid concurrent native access.
+- Downgrade to SkiaSharp 2.88.9 as a temporary workaround, though this hides the underlying threading issue.
+
+### Next Questions
+
+- Does Mapsui's GetMapInfo() use the same SKCanvas instance as the main render path?
+- Is the crash reproducible with a minimal project without Mapsui (using a direct SKCanvas.DrawPath from PointerMoved)?
+- Does the crash occur with Direct3D backend disabled (software rasterizer) on Windows?
+- Is there a Mapsui issue tracking this concurrent rendering pattern?
+
+### Resolution Proposals
+
+**Hypothesis:** Mapsui's GetMapInfo() renders geometry via SKCanvas from the UI/input thread concurrently with Avalonia's render thread, causing a native race condition. SkiaSharp 3.116.0 / newer Skia makes this race reliably fatal.
+
+1. **Document threading requirements and redirect to Mapsui** — investigation, confidence 0.75 (75%), cost/xs, validated=untested
+   - This is most likely a threading violation in Mapsui's GetMapInfo usage. The SkiaSharp documentation already notes that SKCanvas is not thread-safe. The fix belongs in Mapsui's rendering architecture.
+2. **Suggest workaround: separate hit-test canvas** — workaround, confidence 0.70 (70%), cost/m, validated=untested
+   - User can create a separate off-screen SKBitmap/SKCanvas for the hit-test rendering in GetMapInfo, isolated from the main render surface.
+
+**Recommended proposal:** Document threading requirements and redirect to Mapsui
+
+**Why:** The crash pattern (native sk_canvas_draw_path from an event handler) and community feedback strongly suggest this is a Mapsui threading issue. The SkiaSharp team should confirm the diagnosis and redirect the reporter to Mapsui's issue tracker.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.75 (75%) |
+| Reason | Full stack trace provided with regression claim. Root cause is likely concurrent SKCanvas access from Mapsui's GetMapInfo, but needs confirmation. The close-as-external path requires verifying the threading violation is in Mapsui rather than SkiaSharp. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply bug, core area, Windows, and reliability labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability |
+| add-comment | medium | 0.75 (75%) | Post analysis noting likely threading violation in Mapsui and asking for confirmation | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed stack trace. The crash is in the native `sk_canvas_draw_path` call, which is typically caused by accessing an `SKCanvas` from multiple threads simultaneously — Skia is explicitly not thread-safe.
+
+Looking at the stack trace, `GetMapInfo()` is triggered from your `PointerMoved` event handler, which runs on the input/UI thread. Meanwhile, Avalonia's render loop may be drawing on the same canvas on a different thread. This concurrent access can cause hard crashes in the native layer.
+
+Could you confirm:
+1. Is Mapsui's `GetMapInfo()` using the same `SKCanvas` instance as the main render loop?
+2. Does the crash reproduce if you avoid calling `GetMapInfo()` from `PointerMoved` (e.g., throttle it or move it off the hot path)?
+
+This may be better tracked as a Mapsui issue, since `GetMapInfo()` appears to re-render geometry using the same canvas/surface from an input event. The regression from 2.88.9 to 3.116.0 may reflect upstream Skia changes that make this race condition more reliably fatal rather than a SkiaSharp wrapper bug.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3398,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T01:02:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "tenet/reliability"
+    ]
+  },
+  "summary": "Hard crash in sk_canvas_draw_path native call when Mapsui's GetMapInfo() renders path geometry from an Avalonia PointerMoved event, claimed regression from SkiaSharp 2.88.9 to 3.116.0 on .NET 9 / Windows 11.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.75
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "The process was terminated due to an unhandled exception at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)",
+      "stackTrace": "at SkiaSharp.SkiaApi.sk_canvas_draw_path\nat SkiaSharp.SKCanvas.DrawPath\nat Mapsui.Rendering.Skia.Extensions.SkCanvasExtensions.DrawPath\nat Mapsui.Rendering.Skia.LineStringRenderer.Draw\nat Mapsui.Rendering.Skia.MapRenderer.GetMapInfo\nat Mapsui.UI.Avalonia.MapControl.GetMapInfo\nat FlightControlViewModel.MapControl_PointerMoved",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net9.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run an Avalonia desktop application using Mapsui for map rendering (backed by SkiaSharp 3.116.0)",
+        "Move the mouse pointer over the map to trigger PointerMoved events",
+        "Observe intermittent hard crash in sk_canvas_draw_path"
+      ],
+      "environmentDetails": ".NET 9.0.7, SkiaSharp 3.116.0, Avalonia 11.3.7, Mapsui, Windows 11, Visual Studio"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "2.88.9",
+        "2.88.8"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKCanvas.DrawPath code path has not changed significantly and the crash is in the native layer, which did change between 2.88.x and 3.116.x."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.7,
+      "reason": "Reporter explicitly states last good version was 2.88.9 and DLL version is 2.88.8.0, but the crash occurs with 3.116.0. However, the root cause is likely a threading violation in Mapsui's GetMapInfo pattern that may have become more reliably fatal after the Skia upstream upgrade.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "Hard crash in native sk_canvas_draw_path triggered by Mapsui's GetMapInfo() rendering paths from a PointerMoved event, likely a threading violation where an SKCanvas is accessed concurrently — a pattern known to cause hard crashes in Skia. The regression from 2.88.9 may reflect Skia upstream changes that made concurrent canvas access more reliably fatal.",
+    "rationale": "The stack trace shows the crash entry point is in sk_canvas_draw_path (native). Mapsui's GetMapInfo() iterates layers and renders feature geometry — it re-uses the same rendering infrastructure from a PointerMoved event, which fires on the input/UI thread, while Avalonia's main rendering may be occurring concurrently on the render thread. Skia is explicitly not thread-safe, and sharing an SKCanvas across threads produces undefined behavior including hard crashes. A community member also noted this looks more like a Mapsui issue. The regression could be timing-related: the native Skia upgrade in 3.116.0 may have altered internal locking or path rendering to expose the race condition more frequently.",
+    "keySignals": [
+      {
+        "text": "at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)",
+        "source": "comment by reporter",
+        "interpretation": "Hard crash in the native layer — not a managed exception. Points to memory corruption or concurrent access at the native Skia level."
+      },
+      {
+        "text": "It was retrieving MapInfo in the PointerMoved event",
+        "source": "issue body",
+        "interpretation": "GetMapInfo() is called on the input thread from PointerMoved while the canvas may be in use on the render thread — classic threading violation."
+      },
+      {
+        "text": "Looks more like a Mapsui issue?",
+        "source": "comment by molesmoke",
+        "interpretation": "Community consensus that the concurrent use of SKCanvas from GetMapInfo is an architectural problem in Mapsui, not a SkiaSharp defect."
+      },
+      {
+        "text": "Last Known Good Version of SkiaSharp: 2.88.9 (Previous)",
+        "source": "issue body",
+        "interpretation": "Regression claim, though this may be a timing issue exposed by native Skia changes rather than a SkiaSharp wrapper regression."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "405-412",
+        "finding": "SKCanvas.DrawPath validates non-null path and paint, then calls SkiaApi.sk_canvas_draw_path(Handle, path.Handle, paint.Handle). No thread-safety guard. Native crash here is consistent with concurrent canvas access from multiple threads.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "403-411",
+        "finding": "DrawPath has null checks for path and paint but no disposal or thread-safety checks. If Handle is invalid due to concurrent disposal or the canvas is shared across threads, the native call will crash.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Avoid calling Mapsui's GetMapInfo() directly from PointerMoved — instead, dispatch the call to the same thread/context as the render loop, or use a snapshot/copy of the canvas for hit-testing.",
+      "If GetMapInfo() must be called from PointerMoved, ensure it uses a separate SKCanvas/surface from the main rendering surface to avoid concurrent native access.",
+      "Downgrade to SkiaSharp 2.88.9 as a temporary workaround, though this hides the underlying threading issue."
+    ],
+    "nextQuestions": [
+      "Does Mapsui's GetMapInfo() use the same SKCanvas instance as the main render path?",
+      "Is the crash reproducible with a minimal project without Mapsui (using a direct SKCanvas.DrawPath from PointerMoved)?",
+      "Does the crash occur with Direct3D backend disabled (software rasterizer) on Windows?",
+      "Is there a Mapsui issue tracking this concurrent rendering pattern?"
+    ],
+    "resolution": {
+      "hypothesis": "Mapsui's GetMapInfo() renders geometry via SKCanvas from the UI/input thread concurrently with Avalonia's render thread, causing a native race condition. SkiaSharp 3.116.0 / newer Skia makes this race reliably fatal.",
+      "proposals": [
+        {
+          "title": "Document threading requirements and redirect to Mapsui",
+          "description": "This is most likely a threading violation in Mapsui's GetMapInfo usage. The SkiaSharp documentation already notes that SKCanvas is not thread-safe. The fix belongs in Mapsui's rendering architecture.",
+          "category": "investigation",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Suggest workaround: separate hit-test canvas",
+          "description": "User can create a separate off-screen SKBitmap/SKCanvas for the hit-test rendering in GetMapInfo, isolated from the main render surface.",
+          "category": "workaround",
+          "confidence": 0.7,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Document threading requirements and redirect to Mapsui",
+      "recommendedReason": "The crash pattern (native sk_canvas_draw_path from an event handler) and community feedback strongly suggest this is a Mapsui threading issue. The SkiaSharp team should confirm the diagnosis and redirect the reporter to Mapsui's issue tracker."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "Full stack trace provided with regression claim. Root cause is likely concurrent SKCanvas access from Mapsui's GetMapInfo, but needs confirmation. The close-as-external path requires verifying the threading violation is in Mapsui rather than SkiaSharp.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core area, Windows, and reliability labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis noting likely threading violation in Mapsui and asking for confirmation",
+        "risk": "medium",
+        "confidence": 0.75,
+        "comment": "Thanks for the detailed stack trace. The crash is in the native `sk_canvas_draw_path` call, which is typically caused by accessing an `SKCanvas` from multiple threads simultaneously — Skia is explicitly not thread-safe.\n\nLooking at the stack trace, `GetMapInfo()` is triggered from your `PointerMoved` event handler, which runs on the input/UI thread. Meanwhile, Avalonia's render loop may be drawing on the same canvas on a different thread. This concurrent access can cause hard crashes in the native layer.\n\nCould you confirm:\n1. Is Mapsui's `GetMapInfo()` using the same `SKCanvas` instance as the main render loop?\n2. Does the crash reproduce if you avoid calling `GetMapInfo()` from `PointerMoved` (e.g., throttle it or move it off the hot path)?\n\nThis may be better tracked as a Mapsui issue, since `GetMapInfo()` appears to re-render geometry using the same canvas/surface from an input event. The regression from 2.88.9 to 3.116.0 may reflect upstream Skia changes that make this race condition more reliably fatal rather than a SkiaSharp wrapper bug."
+      }
+    ]
+  }
+}
+```
+
+</details>
