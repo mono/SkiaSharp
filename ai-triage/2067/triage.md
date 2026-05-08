@@ -1,0 +1,243 @@
+# Issue Triage Report — #2067
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-03T16:29:01Z |
+| Type | type/enhancement (0.98 (98%)) |
+| Area | area/SkiaSharp.Views.Uno (0.97 (97%)) |
+| Suggested action | keep-open (0.93 (93%)) |
+
+**Issue Summary:** Enhancement request to enable C# Nullable Reference Types (NRT) annotations in the SkiaSharp.Views.Uno package, part of a cross-package nullable annotation epic (#2055).
+
+**Analysis:** The SkiaSharp.Views.Uno package does not yet have Nullable Reference Types (NRT) enabled. No <Nullable>enable</Nullable> in the csproj files and no #nullable enable in the C# source files. This is a tracked work item in the NRT epic (#2055).
+
+**Recommendations:** **keep-open** — Valid long-term enhancement tracked as part of the nullable epic (#2055). No additional information needed; work just needs to be scheduled.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp.Views.Uno |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | partner/unoplatform |
+| Current labels | type/enhancement, status/long-term |
+
+## Evidence
+
+### Reproduction
+
+**Related issues:** #2055, #2057, #2058, #2059, #2060, #2061, #2062, #2063, #2064, #2065, #2066, #2068, #2069, #2070, #2071, #2072, #2073, #2074, #2075
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2055 — Parent epic: Enable Nullable Reference Types across all SkiaSharp packages
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The SkiaSharp.Views.Uno.WinUI.csproj does not contain a <Nullable>enable</Nullable> property and none of the source files use #nullable enable directives, confirming this enhancement has not yet been implemented. |
+
+## Analysis
+
+### Technical Summary
+
+The SkiaSharp.Views.Uno package does not yet have Nullable Reference Types (NRT) enabled. No <Nullable>enable</Nullable> in the csproj files and no #nullable enable in the C# source files. This is a tracked work item in the NRT epic (#2055).
+
+### Rationale
+
+The issue is clearly an enhancement request (not a bug) filed by the maintainer (mattleibow) to enable nullable annotations in SkiaSharp.Views.Uno as part of a broader effort to add NRT throughout the codebase. Code investigation confirms the feature is absent: neither the csproj nor the C# source files contain nullable enablement. The `status/long-term` label indicates this is a known long-running task.
+
+### Key Signals
+
+- "Enable Nullable Reference Types (SkiaSharp.Views.Uno)" — **issue title** (Maintainer-filed enhancement to enable NRT annotations for the Uno Platform views package.)
+- "status/long-term" — **issue labels** (Acknowledged as valid but deferred — tracked as long-term work.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI/SkiaSharp.Views.Uno.WinUI.csproj` | — | direct | No <Nullable>enable</Nullable> or equivalent property group entry found. NRT is not enabled at the project level. |
+| `source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Shared/SKXamlCanvas.cs` | — | direct | No #nullable enable directive present. Fields and parameters lack nullable annotations (e.g., private fields, event handlers). Confirms NRT is not yet applied to this file. |
+
+### Next Questions
+
+- Is there a priority order among the NRT epic sub-issues?
+- Does enabling NRT in SkiaSharp.Views.Uno require coordinating with Uno Platform's own NRT rollout?
+
+### Resolution Proposals
+
+**Hypothesis:** Add <Nullable>enable</Nullable> to all SkiaSharp.Views.Uno.WinUI project files and annotate all public APIs and internal members with proper nullable reference type annotations.
+
+1. **Enable NRT in csproj and annotate source files** — fix, confidence 0.92 (92%), cost/m, validated=untested
+   - Add <Nullable>enable</Nullable> to the PropertyGroup in SkiaSharp.Views.Uno.WinUI.csproj, SkiaSharp.Views.Uno.WinUI.Skia.csproj, and SkiaSharp.Views.Uno.WinUI.Wasm.csproj. Then add nullable annotations to all C# source files under SkiaSharp.Views.Uno.WinUI.Shared/, SkiaSharp.Views.Uno.WinUI/, etc.
+
+**Recommended proposal:** Enable NRT in csproj and annotate source files
+
+**Why:** Standard approach used for other packages in the NRT epic. Straightforward project-level setting change with annotation work across source files.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.93 (93%) |
+| Reason | Valid long-term enhancement tracked as part of the nullable epic (#2055). No additional information needed; work just needs to be scheduled. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply enhancement, Uno area, and unoplatform partner labels | labels=type/enhancement, area/SkiaSharp.Views.Uno, partner/unoplatform, tenet/compatibility |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2067,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T16:29:01Z",
+    "currentLabels": [
+      "type/enhancement",
+      "status/long-term"
+    ]
+  },
+  "summary": "Enhancement request to enable C# Nullable Reference Types (NRT) annotations in the SkiaSharp.Views.Uno package, part of a cross-package nullable annotation epic (#2055).",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Uno",
+      "confidence": 0.97
+    },
+    "partner": "partner/unoplatform",
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [
+        2055,
+        2057,
+        2058,
+        2059,
+        2060,
+        2061,
+        2062,
+        2063,
+        2064,
+        2065,
+        2066,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2055",
+          "description": "Parent epic: Enable Nullable Reference Types across all SkiaSharp packages"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SkiaSharp.Views.Uno.WinUI.csproj does not contain a <Nullable>enable</Nullable> property and none of the source files use #nullable enable directives, confirming this enhancement has not yet been implemented."
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp.Views.Uno package does not yet have Nullable Reference Types (NRT) enabled. No <Nullable>enable</Nullable> in the csproj files and no #nullable enable in the C# source files. This is a tracked work item in the NRT epic (#2055).",
+    "rationale": "The issue is clearly an enhancement request (not a bug) filed by the maintainer (mattleibow) to enable nullable annotations in SkiaSharp.Views.Uno as part of a broader effort to add NRT throughout the codebase. Code investigation confirms the feature is absent: neither the csproj nor the C# source files contain nullable enablement. The `status/long-term` label indicates this is a known long-running task.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI/SkiaSharp.Views.Uno.WinUI.csproj",
+        "finding": "No <Nullable>enable</Nullable> or equivalent property group entry found. NRT is not enabled at the project level.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Shared/SKXamlCanvas.cs",
+        "finding": "No #nullable enable directive present. Fields and parameters lack nullable annotations (e.g., private fields, event handlers). Confirms NRT is not yet applied to this file.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Enable Nullable Reference Types (SkiaSharp.Views.Uno)",
+        "source": "issue title",
+        "interpretation": "Maintainer-filed enhancement to enable NRT annotations for the Uno Platform views package."
+      },
+      {
+        "text": "status/long-term",
+        "source": "issue labels",
+        "interpretation": "Acknowledged as valid but deferred — tracked as long-term work."
+      }
+    ],
+    "nextQuestions": [
+      "Is there a priority order among the NRT epic sub-issues?",
+      "Does enabling NRT in SkiaSharp.Views.Uno require coordinating with Uno Platform's own NRT rollout?"
+    ],
+    "resolution": {
+      "hypothesis": "Add <Nullable>enable</Nullable> to all SkiaSharp.Views.Uno.WinUI project files and annotate all public APIs and internal members with proper nullable reference type annotations.",
+      "proposals": [
+        {
+          "title": "Enable NRT in csproj and annotate source files",
+          "description": "Add <Nullable>enable</Nullable> to the PropertyGroup in SkiaSharp.Views.Uno.WinUI.csproj, SkiaSharp.Views.Uno.WinUI.Skia.csproj, and SkiaSharp.Views.Uno.WinUI.Wasm.csproj. Then add nullable annotations to all C# source files under SkiaSharp.Views.Uno.WinUI.Shared/, SkiaSharp.Views.Uno.WinUI/, etc.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Enable NRT in csproj and annotate source files",
+      "recommendedReason": "Standard approach used for other packages in the NRT epic. Straightforward project-level setting change with annotation work across source files."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.93,
+      "reason": "Valid long-term enhancement tracked as part of the nullable epic (#2055). No additional information needed; work just needs to be scheduled.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, Uno area, and unoplatform partner labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views.Uno",
+          "partner/unoplatform",
+          "tenet/compatibility"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>

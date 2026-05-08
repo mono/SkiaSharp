@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2062,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T14:55:00Z",
+    "currentLabels": ["type/enhancement", "status/long-term"]
+  },
+  "summary": "Request to enable Nullable Reference Types (NRT) in the SkiaSharp.Views.WPF project, which currently lacks the <Nullable>enable</Nullable> csproj setting that other SkiaSharp projects already have.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.98 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "SkiaSharp.Views.WPF project targeting net4x and Windows Desktop TFMs"
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp.Views.WPF project does not have Nullable Reference Types enabled. The csproj file has no <Nullable>enable</Nullable> setting, and source files (SKElement.cs, SKGLElement.cs) use nullable-unaware patterns such as uninitialized reference-type fields (bitmap, grContext, surface, canvas). Other SkiaSharp projects like SkiaSharp.Views.Blazor, SkiaSharp.Views.Maui.Core, and SkiaSharp.Direct3D.Vortice have already adopted NRT. Enabling NRT would require annotating fields, parameters, and return types in SKElement.cs and SKGLElement.cs, and should be straightforward given the small file count.",
+    "rationale": "This is clearly a type/enhancement — no broken behavior is described. The request is to improve code quality and developer experience by adopting NRT, a feature already enabled in peer projects. The WPF project has not adopted NRT yet, confirmed by code investigation. The status/long-term label from the maintainer indicates it is accepted but not immediately scheduled.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+        "finding": "No <Nullable>enable</Nullable> property group entry. The project targets net4x and Windows Desktop TFMs via shared properties.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "22-23",
+        "finding": "Fields 'private WriteableBitmap bitmap' declared without null annotation (e.g., WriteableBitmap? bitmap). Enabling NRT would require annotating this and related usages.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+        "lines": "36-41",
+        "finding": "Multiple nullable reference fields (GRContext grContext, GRBackendRenderTarget renderTarget, SKSurface surface, SKCanvas canvas) used without null annotations. The null-checks already present (lines 110, 129, 143, 167) indicate null-aware logic exists but lacks NRT annotations.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "finding": "Has <Nullable>enable</Nullable> — confirms NRT has been adopted in peer View projects, so the WPF gap is intentional technical debt.",
+        "relevance": "context"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SkiaSharp.Views.Maui.Core.csproj",
+        "finding": "Has <Nullable>Enable</Nullable> — further confirms NRT adoption pattern in the codebase.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Enable Nullable Reference Types (SkiaSharp.Views.WPF)",
+        "source": "issue title",
+        "interpretation": "Explicit NRT adoption request, scope-limited to the WPF views project."
+      }
+    ],
+    "resolution": {
+      "hypothesis": "Add <Nullable>enable</Nullable> to the WPF csproj and annotate reference-type fields, parameters, and return types in SKElement.cs and SKGLElement.cs.",
+      "proposals": [
+        {
+          "title": "Enable NRT and annotate WPF source files",
+          "description": "Add <Nullable>enable</Nullable> to SkiaSharp.Views.WPF.csproj and add ? annotations to nullable fields (bitmap, grContext, renderTarget, surface, canvas) in SKElement.cs and SKGLElement.cs. Existing null-checks already guard most code paths.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Enable NRT and annotate WPF source files",
+      "recommendedReason": "Small scope (2 files + csproj), existing null-checks already in place, matches pattern used in Blazor and MAUI view projects."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.90,
+      "reason": "Valid enhancement already accepted by maintainer (status/long-term). Straightforward to implement but requires scheduling.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and area/SkiaSharp.Views, os/Windows-Classic labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views", "os/Windows-Classic", "tenet/compatibility"]
+      }
+    ]
+  }
+}

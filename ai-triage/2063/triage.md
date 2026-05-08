@@ -1,0 +1,234 @@
+# Issue Triage Report — #2063
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-03T15:10:00Z |
+| Type | type/enhancement (0.98 (98%)) |
+| Area | area/SkiaSharp.Views (0.95 (95%)) |
+| Suggested action | keep-open (0.90 (90%)) |
+
+**Issue Summary:** Enhancement request to enable Nullable Reference Types (NRT) annotations in the SkiaSharp.Views.WindowsForms package, part of a broader nullable annotation epic.
+
+**Analysis:** The SkiaSharp.Views.WindowsForms project (SKControl.cs, SKGLControl.cs, Extensions.Desktop.cs) lacks Nullable Reference Type annotations. The csproj does not set <Nullable>enable</Nullable>, unlike other packages such as binding/SkiaSharp and SkiaSharp.Views.Blazor which already have NRT enabled. This is part of a broader tracked epic to annotate all SkiaSharp packages.
+
+**Recommendations:** **keep-open** — Valid enhancement, part of the long-term nullable annotations epic. Already acknowledged by maintainer with status/long-term. No urgent trigger; should stay open until the epic is addressed.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/enhancement, status/long-term |
+
+## Evidence
+
+### Reproduction
+
+**Related issues:** #2057, #2058, #2059, #2060, #2061, #2062, #2064, #2065, #2066, #2067, #2068, #2069, #2070, #2071, #2072, #2073, #2074, #2075
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2058 — Parent issue tracking nullable annotations for SkiaSharp.Views (triaged)
+
+## Analysis
+
+### Technical Summary
+
+The SkiaSharp.Views.WindowsForms project (SKControl.cs, SKGLControl.cs, Extensions.Desktop.cs) lacks Nullable Reference Type annotations. The csproj does not set <Nullable>enable</Nullable>, unlike other packages such as binding/SkiaSharp and SkiaSharp.Views.Blazor which already have NRT enabled. This is part of a broader tracked epic to annotate all SkiaSharp packages.
+
+### Rationale
+
+Issue is clearly an enhancement to add NRT annotations, not a bug or question. It is one of many sibling issues in the nullable epic and already labeled status/long-term by the maintainer. The fix requires adding <Nullable>enable</Nullable> to the csproj and annotating public APIs in the three .cs files. This is a compatibility tenet issue because adding NRT annotations is a source-breaking change for callers who use nullable warnings.
+
+### Key Signals
+
+- "Enable Nullable Reference Types (SkiaSharp.Views.WindowsForms)" — **issue title** (Explicit enhancement to add NRT annotations to WindowsForms views package.)
+- "status/long-term" — **issue labels** (Maintainer has acknowledged this as a planned but not immediately scheduled enhancement.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SkiaSharp.Views.WindowsForms.csproj` | — | direct | No <Nullable>enable</Nullable> property group entry. Nullable Reference Types are not enabled for this project. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs` | — | direct | No #nullable enable pragma at file top. Reference type parameters and return values are unannotated. |
+| `binding/SkiaSharp/SkiaSharp.csproj` | 7 | related | <Nullable>enable</Nullable> is already set in the core SkiaSharp binding project, establishing the pattern to follow. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj` | 8 | related | <Nullable>enable</Nullable> is set in SkiaSharp.Views.Blazor, showing NRT has been done for some Views packages already. |
+
+### Resolution Proposals
+
+**Hypothesis:** Add <Nullable>enable</Nullable> to the csproj and add appropriate ? annotations to all public APIs in SKControl.cs, SKGLControl.cs, and Extensions.Desktop.cs.
+
+1. **Enable NRT in project and annotate public APIs** — fix, confidence 0.92 (92%), cost/m, validated=untested
+   - Add <Nullable>enable</Nullable> to SkiaSharp.Views.WindowsForms.csproj. Then annotate all reference-type parameters, properties, and return values in SKControl.cs, SKGLControl.cs, and Extensions.Desktop.cs with ? where null is valid.
+
+**Recommended proposal:** Enable NRT in project and annotate public APIs
+
+**Why:** Direct fix following the established pattern used in binding/SkiaSharp and SkiaSharp.Views.Blazor. Medium effort due to needing to audit all three files for correct nullable semantics.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.90 (90%) |
+| Reason | Valid enhancement, part of the long-term nullable annotations epic. Already acknowledged by maintainer with status/long-term. No urgent trigger; should stay open until the epic is addressed. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply enhancement, area/SkiaSharp.Views, Windows-Classic, and compatibility tenet labels | labels=type/enhancement, area/SkiaSharp.Views, os/Windows-Classic, tenet/compatibility |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2063,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T15:10:00Z",
+    "currentLabels": [
+      "type/enhancement",
+      "status/long-term"
+    ]
+  },
+  "summary": "Enhancement request to enable Nullable Reference Types (NRT) annotations in the SkiaSharp.Views.WindowsForms package, part of a broader nullable annotation epic.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [
+        2057,
+        2058,
+        2059,
+        2060,
+        2061,
+        2062,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2058",
+          "description": "Parent issue tracking nullable annotations for SkiaSharp.Views (triaged)"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp.Views.WindowsForms project (SKControl.cs, SKGLControl.cs, Extensions.Desktop.cs) lacks Nullable Reference Type annotations. The csproj does not set <Nullable>enable</Nullable>, unlike other packages such as binding/SkiaSharp and SkiaSharp.Views.Blazor which already have NRT enabled. This is part of a broader tracked epic to annotate all SkiaSharp packages.",
+    "rationale": "Issue is clearly an enhancement to add NRT annotations, not a bug or question. It is one of many sibling issues in the nullable epic and already labeled status/long-term by the maintainer. The fix requires adding <Nullable>enable</Nullable> to the csproj and annotating public APIs in the three .cs files. This is a compatibility tenet issue because adding NRT annotations is a source-breaking change for callers who use nullable warnings.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SkiaSharp.Views.WindowsForms.csproj",
+        "finding": "No <Nullable>enable</Nullable> property group entry. Nullable Reference Types are not enabled for this project.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+        "finding": "No #nullable enable pragma at file top. Reference type parameters and return values are unannotated.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "lines": "7",
+        "finding": "<Nullable>enable</Nullable> is already set in the core SkiaSharp binding project, establishing the pattern to follow.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "lines": "8",
+        "finding": "<Nullable>enable</Nullable> is set in SkiaSharp.Views.Blazor, showing NRT has been done for some Views packages already.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Enable Nullable Reference Types (SkiaSharp.Views.WindowsForms)",
+        "source": "issue title",
+        "interpretation": "Explicit enhancement to add NRT annotations to WindowsForms views package."
+      },
+      {
+        "text": "status/long-term",
+        "source": "issue labels",
+        "interpretation": "Maintainer has acknowledged this as a planned but not immediately scheduled enhancement."
+      }
+    ],
+    "resolution": {
+      "hypothesis": "Add <Nullable>enable</Nullable> to the csproj and add appropriate ? annotations to all public APIs in SKControl.cs, SKGLControl.cs, and Extensions.Desktop.cs.",
+      "proposals": [
+        {
+          "title": "Enable NRT in project and annotate public APIs",
+          "description": "Add <Nullable>enable</Nullable> to SkiaSharp.Views.WindowsForms.csproj. Then annotate all reference-type parameters, properties, and return values in SKControl.cs, SKGLControl.cs, and Extensions.Desktop.cs with ? where null is valid.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Enable NRT in project and annotate public APIs",
+      "recommendedReason": "Direct fix following the established pattern used in binding/SkiaSharp and SkiaSharp.Views.Blazor. Medium effort due to needing to audit all three files for correct nullable semantics."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.9,
+      "reason": "Valid enhancement, part of the long-term nullable annotations epic. Already acknowledged by maintainer with status/long-term. No urgent trigger; should stay open until the epic is addressed.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, area/SkiaSharp.Views, Windows-Classic, and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic",
+          "tenet/compatibility"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>
