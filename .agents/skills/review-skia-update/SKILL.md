@@ -126,7 +126,7 @@ This copies the JSON to `output/ai/repos/mono-skia/ai-review/` and generates an 
 alongside it. The HTML is a self-contained file (Bootstrap 5 + diff2html) suitable for attaching
 to a PR/issue or uploading as a gist.
 
-To push to the data-cache branch separately: `pwsh scripts/infra/persist-to-cache.ps1`
+To push to the data-cache branch separately, use the `persist-aw-data` GitHub Actions workflow.
 
 ### 3. Present summary
 

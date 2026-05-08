@@ -61,7 +61,7 @@ var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
 };
 
 var DATE_TIME_NOW = DateTime.Now;
-var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_hhmmss");
+var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_HHmmss");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // WELL-KNOWN PATHS

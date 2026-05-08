@@ -17,7 +17,7 @@ Task ("Default")
     IProcess serverProc = null;
     try {
         var wasmProj = MakeAbsolute (File ($"{ROOT_PATH}/tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj")).FullPath;
-        serverProc = RunAndReturnProcess ("dotnet", $"run --project {wasmProj} --no-build -c {CONFIGURATION}");
+        serverProc = RunAndReturnProcess ("dotnet", $"run --project \"{wasmProj}\" --no-build -c {CONFIGURATION}");
         DotNetRun ($"{ROOT_PATH}/utils/WasmTestRunner/WasmTestRunner.csproj",
             $"--output=\"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}/\" " +
             (string.IsNullOrEmpty (CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
