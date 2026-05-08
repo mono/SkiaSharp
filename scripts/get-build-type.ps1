@@ -19,36 +19,36 @@ if ($intBuildId -gt 0) {
     exit 0
 }
 
-# if this is a PR and we are requesting last-build artifacts
-if (("$ExternalsBuildId" -eq 'latest') -and ("$env:BUILD_REASON" -eq 'PullRequest')) {
-    Write-Host "All changes:"
-    $all = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD)
-    if ($?) {
-        foreach ($d in $all) {
-            Write-Host " - $d"
-        }
+# # if this is a PR and we are requesting last-build artifacts
+# if (("$ExternalsBuildId" -eq 'latest') -and ("$env:BUILD_REASON" -eq 'PullRequest')) {
+#     Write-Host "All changes:"
+#     $all = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD)
+#     if ($?) {
+#         foreach ($d in $all) {
+#             Write-Host " - $d"
+#         }
 
-        Write-Host "Matching changes:"
-        $matching = @(
-            'externals',
-            'native',
-            'scripts',
-            '.gitmodules'
-        )
-        $requiresFull = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD @matching)
-        if ($?) {
-            foreach ($d in $requiresFull) {
-                Write-Host " - $d"
-            }
+#         Write-Host "Matching changes:"
+#         $matching = @(
+#             'externals',
+#             'native',
+#             'scripts',
+#             '.gitmodules'
+#         )
+#         $requiresFull = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD @matching)
+#         if ($?) {
+#             foreach ($d in $requiresFull) {
+#                 Write-Host " - $d"
+#             }
 
-            if (-not $requiresFull) {
-                Write-Host "Download-only build."
-                Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]latest"
-                exit 0
-            }
-        }
-    }
-}
+#             if (-not $requiresFull) {
+#                 Write-Host "Download-only build."
+#                 Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]latest"
+#                 exit 0
+#             }
+#         }
+#     }
+# }
 
 # either not a PR, native files changed or explicit build-all
 Write-Host "Full build."

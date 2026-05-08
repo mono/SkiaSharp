@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, "release/**"]
     tags: ["v*"]
+    paths-ignore:
+      - "documentation/docfx/releases/**"
   workflow_dispatch:
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
@@ -23,6 +25,7 @@ safe-outputs:
     draft: false
     allowed-base-branches: [main]
     preserve-branch-name: true
+    recreate-ref: true
 ---
 
 # Update Release Notes

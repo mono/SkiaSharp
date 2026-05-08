@@ -12,7 +12,7 @@ Search in this order. Stop as soon as you find a viable workaround, but always c
 
 | Priority | Source | Why first | When to skip |
 |----------|--------|-----------|-------------|
-| 1 | Existing triages (`output/ai/repos/mono-SkiaSharp/ai-triage/`) | Already analyzed, has `analysis.workarounds` and `analysis.resolution.proposals` | On a clean checkout this directory won't exist — the grep commands below use `2>/dev/null` so they'll return empty results gracefully. Always run the check. |
+| 1 | Existing triages (`output/ai-triage/`) | Already analyzed, has `analysis.workarounds` and `analysis.resolution.proposals` | On a clean checkout this directory won't exist — the grep commands below use `2>/dev/null` so they'll return empty results gracefully. Always run the check. |
 | 2 | Closed issues with comments (GitHub via `gh` or MCP) | Reporters post "I solved it by..." | Never — always check |
 | 3 | Known patterns (`references/skia-patterns.md`, `documentation/dev/packages.md`) | Curated heuristics for common traps | Never — always check |
 | 4 | SkiaSharp source code (`binding/SkiaSharp/*.cs`) | Alternative APIs visible in the class | Skip if issue is deployment/packaging |
@@ -40,15 +40,15 @@ Use both C# names (`SKImage`) and C API names (`sk_image`) since issues may refe
 
 ```bash
 # Find triages with workarounds
-grep -rl '"workarounds"' output/ai/repos/mono-SkiaSharp/ai-triage/ 2>/dev/null
+grep -rl '"workarounds"' output/ai-triage/ 2>/dev/null
 
 # Keyword search across triage files
-grep -li "SKImage\|FromEncoded\|DllNotFound" output/ai/repos/mono-SkiaSharp/ai-triage/*.json 2>/dev/null
+grep -rli "SKImage\|FromEncoded\|DllNotFound" output/ai-triage/*/triage.json 2>/dev/null
 
 # Extract workaround details from matching triages
 python3 -c "
 import json, glob
-for f in glob.glob('output/ai/repos/mono-SkiaSharp/ai-triage/*.json'):
+for f in glob.glob('output/ai-triage/*/triage.json'):
     with open(f) as fh:
         d = json.load(fh)
     blob = json.dumps(d).lower()

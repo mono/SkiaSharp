@@ -25,9 +25,17 @@ namespace SkiaSharp
 		// reads path.Handle directly and P/Invokes with it. If mutations have been batched
 		// into _builder but not yet flushed, base.Handle points at a stale native SkPath.
 		// Flushing in the getter keeps every reader — internal or external — honest.
+		//
+		// Skip the flush once disposal has begun. SKPathBuilder is itself an SKObject with
+		// its own finalizer, so on the finalizer thread it may already have been collected
+		// (its Handle is IntPtr.Zero, native pointer freed). Touching it here would call
+		// sk_pathbuilder_detach_path on a null/dangling handle. The pending mutations are
+		// going to be discarded with the path anyway, and DisposeNative cleans up _builder
+		// defensively.
 		public override IntPtr Handle {
 			get {
-				FlushBuilder ();
+				if (!IsDisposed)
+					FlushBuilder ();
 				return base.Handle;
 			}
 			protected set => base.Handle = value;
