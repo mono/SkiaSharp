@@ -26,15 +26,15 @@ Update Google Skia to a new Chrome milestone in SkiaSharp's mono/skia fork.
 ## Key References
 
 - **[references/breaking-changes-checklist.md](references/breaking-changes-checklist.md)** — How to analyze breaking changes between milestones
-- **[references/known-gotchas.md](references/known-gotchas.md)** — 10 hard-won lessons and troubleshooting table
+- **[references/known-gotchas.md](references/known-gotchas.md)** — Hard-won lessons and troubleshooting table
 - **[references/typical-changes.md](references/typical-changes.md)** — Files typically changed during an update
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency tracking and cgmanifest.json format
 - **[RELEASE_NOTES.md in upstream Skia](https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md)** — Official Skia release notes
 
 ## Scripts
 
-- **`scripts/update-versions.ps1`** — Phase 5: Updates all version files and runs verification (replaces manual sed/grep)
-- **`scripts/regenerate-bindings.ps1`** — Phase 7: Regenerates bindings, reverts HarfBuzz, reports new functions
+- **`scripts/update-versions.ps1`** — Phase 6: Updates all version files and runs verification
+- **`scripts/regenerate-bindings.ps1`** — Phase 8: Regenerates bindings, reverts HarfBuzz, reports new functions
 
 ## Overview
 
@@ -49,7 +49,7 @@ Updating Skia is the **highest-risk operation** in SkiaSharp. It touches:
 
 ## ⚠️ Follow Every Phase In Order
 
-This is a 10-phase workflow where each phase builds on the previous one. The phases exist
+This is an 11-phase workflow where each phase builds on the previous one. The phases exist
 because Skia updates touch four layers (C++ → C API → generated bindings → C# wrappers)
 and two repositories (mono/skia + mono/SkiaSharp). Skipping a phase doesn't just risk a
 build failure — it risks shipping broken binaries to customers who won't see the problem
@@ -61,12 +61,28 @@ are project-specific and easy to get wrong from memory.
 
 ### What You're About to Do
 
-The workflow follows this shape:
-1. **Research** (Phases 1–3): Understand what changed in Skia, validate the analysis
-2. **Merge** (Phase 4): Merge upstream, resolve conflicts
-3. **Update & Build** (Phases 5–6): Version files first, then build native and fix C API
-4. **Regenerate & Verify** (Phases 7–9): Bindings, C# wrappers, build, test
-5. **Ship** (Phase 10): Create cross-linked PRs in both repos
+```
+A. Research (Phases 1–3)
+   1. Discovery & Current State
+   2. Breaking Change Analysis
+   3. Validation
+
+B. Branch & Merge (Phases 4–5)
+   4. Branch Setup
+   5. Upstream Merge
+
+C. Update & Build (Phases 6–7)
+   6. Update Version Files
+   7. Fix C API Shim & Build Native
+
+D. Regenerate & Verify (Phases 8–10)
+   8. Regenerate Bindings
+   9. Fix C# Wrappers
+  10. Build & Test
+
+E. Ship (Phase 11)
+  11. Create PRs
+```
 
 ## Critical Rules
 
@@ -91,7 +107,7 @@ The workflow follows this shape:
 
 ---
 
-## Workflow
+## A. Research (Phases 1–3)
 
 ### Phase 1: Discovery & Current State
 
@@ -102,9 +118,9 @@ The workflow follows this shape:
    grep chrome_milestone cgmanifest.json
    ```
 
-2. **Identify target milestone** from user request
+2. **Identify target milestone** from user request.
 
-3. **Check for existing PRs** — Search both mono/SkiaSharp and mono/skia for open update PRs
+3. **Check for existing PRs** — Search both mono/SkiaSharp and mono/skia for open update PRs.
 
 4. **Verify upstream branches exist**:
    ```bash
@@ -166,61 +182,91 @@ milestone numbers and paste your breaking change analysis table. The default exp
 > 🛑 **GATE**: Validation agent has run and confirmed analysis. If it found missed items,
 > update the analysis and re-present to user before proceeding.
 
-### Phase 4: Upstream Merge (mono/skia)
+> ✅ **Before proceeding to B (Branch & Merge):**
+> - Current and target milestones confirmed
+> - Breaking change analysis complete
+> - Validation passed
 
-> ⚠️ **Create BOTH branches before making ANY changes.** You may be on a workflow branch,
-> a feature branch, or a detached HEAD — none of which is the right base. Creating the
-> branches first ensures all subsequent work lands on clean `origin/main`-based branches.
+---
 
-**Step A — Create the parent repo branch** (SkiaSharp):
-```bash
-git fetch origin main
-git checkout -b dev/update-skia-{TARGET} origin/main
-```
-> **Note:** Automated workflows may use a different branch name (e.g. `skia-sync/m{TARGET}`).
+## B. Branch & Merge (Phases 4–5)
 
-If your branch already exists locally or on the remote, check it out instead:
-```bash
-git checkout dev/update-skia-{TARGET}
-# or: git fetch origin dev/update-skia-{TARGET} && git checkout dev/update-skia-{TARGET}
-```
+### Phase 4: Branch Setup
 
-You are now on the correct parent branch. All Phases 5–9 work will be committed here.
+> ⚠️ **This phase creates BOTH branches before making ANY changes.** You may be on a
+> workflow branch, a feature branch, or a detached HEAD — none of which is the right base.
+> You MUST branch from `origin/main` (parent) and `origin/skiasharp` (submodule).
 
-**Step B — Create the submodule branch** (mono/skia):
-```bash
-cd externals/skia
-```
-The submodule tracks the `skiasharp` branch in mono/skia (NOT `main`).
-Ensure you're starting from the SHA that the parent repo's `origin/main` expects
-(which should be a commit on `origin/skiasharp`):
-```bash
-MAIN_SUB_SHA=$(git -C ../.. ls-tree origin/main -- externals/skia | awk '{print $3}')
-git fetch origin skiasharp
-git checkout "$MAIN_SUB_SHA"
-```
-Verify this SHA is on `origin/skiasharp`:
-```bash
-git branch -r --contains "$MAIN_SUB_SHA" | grep 'origin/skiasharp'
-```
-Then create the feature branch:
-```bash
-git checkout -b dev/update-skia-{TARGET}
-```
+**Parent repo (SkiaSharp):**
 
-> ⚠️ **Do NOT skip the SHA alignment step.** If the submodule is checked out at a different
-> SHA than `origin/main` expects (e.g. from a different branch), the merge will produce
-> phantom diffs — functions that already exist on `main` will appear as new or removed.
->
-> The mono/skia PR targets `skiasharp` (not `main`). The parent repo's submodule pointer
-> should always reference a commit on `origin/skiasharp`.
+1. **Fetch the latest `main`:**
+   ```bash
+   git fetch origin main
+   ```
 
-**Step C — Merge upstream** — use `--no-commit` for manual conflict resolution:
+2. **Create the feature branch from `origin/main`:**
+   ```bash
+   git checkout -b skia-sync/m{TARGET} origin/main
+   ```
+   If the branch already exists on the remote, check it out instead:
+   ```bash
+   git fetch origin skia-sync/m{TARGET} && git checkout skia-sync/m{TARGET}
+   ```
+
+3. **Verify you are on the correct branch and it is based on `origin/main`:**
+   ```bash
+   git log --oneline -1 origin/main
+   git log --oneline -1 HEAD
+   ```
+   These should show the same commit (or HEAD should be ahead by only your own commits).
+
+**Submodule (mono/skia):**
+
+4. **Enter the submodule:**
+   ```bash
+   cd externals/skia
+   ```
+
+5. **Align to the SHA that `origin/main` expects** (the submodule tracks the `skiasharp`
+   branch in mono/skia, NOT `main`):
+   ```bash
+   MAIN_SUB_SHA=$(git -C ../.. ls-tree origin/main -- externals/skia | awk '{print $3}')
+   git fetch origin skiasharp
+   git checkout "$MAIN_SUB_SHA"
+   ```
+   Verify this SHA is on `origin/skiasharp`:
+   ```bash
+   git branch -r --contains "$MAIN_SUB_SHA" | grep 'origin/skiasharp'
+   ```
+
+6. **Create the submodule feature branch:**
+   ```bash
+   git checkout -b skia-sync/m{TARGET}
+   ```
+
+> ⚠️ **Do NOT skip the SHA alignment step (step 5).** If the submodule is at a different
+> SHA than `origin/main` expects, the merge will produce phantom diffs — functions that
+> already exist on `main` will appear as new or removed.
+
+> 🛑 **GATE**: Both branches created. Verify:
+> ```bash
+> # In parent repo:
+> git rev-parse --abbrev-ref HEAD          # → skia-sync/m{TARGET}
+> git merge-base HEAD origin/main          # → should match origin/main tip
+> # In submodule:
+> git -C externals/skia rev-parse --abbrev-ref HEAD  # → skia-sync/m{TARGET}
+> ```
+
+### Phase 5: Upstream Merge (mono/skia)
+
+You should still be inside `externals/skia` from Phase 4.
+
+1. **Merge upstream** — use `--no-commit` for manual conflict resolution:
    ```bash
    git merge --no-commit upstream/chrome/m{TARGET}
    ```
 
-**Step D — Resolve conflicts** — each conflict must be resolved individually.
+2. **Resolve conflicts** — each conflict must be resolved individually.
    Never use `git merge -s ours` or `git read-tree --reset` — this destroys `git blame` attribution.
 
    **⚠️ MANDATORY: Before resolving ANY conflict, check file history for fork-specific patches.**
@@ -235,17 +281,17 @@ git checkout -b dev/update-skia-{TARGET}
    | C API (`include/c/`, `src/c/`) | **Keep SkiaSharp** — adapt includes/API calls in post-merge commits |
    | Other upstream source (`src/`, `include/`) | **Check history first** — see [gotcha #15](references/known-gotchas.md) |
 
-**Step E — Commit the merge**:
+3. **Commit the merge**:
    ```bash
    git commit  # Creates proper two-parent merge
    ```
 
-**Step F — Verify our C API files survived the merge**:
+4. **Verify our C API files survived the merge**:
    ```bash
    ls src/c/*.cpp include/c/*.h  # All files should still exist
    ```
 
-**Step G — Source file verification** — Check for added/deleted upstream files:
+5. **Source file verification** — Check for added/deleted upstream files:
    ```bash
    git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=AD --name-only -- src/ include/
    ```
@@ -258,7 +304,17 @@ git checkout -b dev/update-skia-{TARGET}
 > git blame src/c/sk_canvas.cpp | head -20         # Attribution shows original commits, not just merge
 > ```
 
-### Phase 5: Update SkiaSharp Version Files
+> ✅ **Before proceeding to C (Update & Build):**
+> - Parent branch is based on `origin/main`
+> - Submodule branch is based on `origin/main`'s expected SHA
+> - Upstream merge committed with proper two-parent history
+> - C API files intact, zero conflict markers
+
+---
+
+## C. Update & Build (Phases 6–7)
+
+### Phase 6: Update SkiaSharp Version Files
 
 > **⚠️ This MUST be done before any native build.** The build scripts verify version
 > consistency — if VERSIONS.txt still says the old milestone, the build will fail.
@@ -272,7 +328,7 @@ git checkout -b dev/update-skia-{TARGET}
 
 In the **SkiaSharp parent repo**, run:
 ```bash
-cd ../..  # back to parent repo (Phase 4 ends inside externals/skia)
+cd ../..  # back to parent repo (Phase 5 ends inside externals/skia)
 pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
 ```
 
@@ -287,9 +343,9 @@ The script handles all of these (so you don't have to do them manually):
 > and re-run until it passes.
 
 > **Note:** The SK_C_INCREMENT reset modifies a file in the submodule (`externals/skia/`).
-> Don't commit it separately — it will be committed with Phase 6's C API fixes.
+> Don't commit it separately — it will be committed with Phase 7's C API fixes.
 
-### Phase 6: Fix C API Shim Layer
+### Phase 7: Fix C API Shim & Build Native
 
 This is where most of the work happens. The C API (`src/c/`, `include/c/`) wraps Skia C++ and
 must be updated when the underlying C++ APIs change.
@@ -311,22 +367,30 @@ must be updated when the underlying C++ APIs change.
    |-----------|-------------|
    | Missing type | Add/update typedef in `sk_types.h` |
    | Renamed function | Update call in `*.cpp` |
-   | Removed enum value | Remove from `sk_enums.cpp` + `sk_types.h`. Note this for Phase 8 — it needs `[Obsolete]` or documented removal |
+   | Removed enum value | Remove from `sk_enums.cpp` + `sk_types.h`. Note this for Phase 9 — it needs `[Obsolete]` or documented removal |
    | Changed signature | Update C wrapper function signature |
    | New header required | Add `#include` in the relevant `.cpp` |
    | Legacy flag breaks C API | Update C API to use replacement API (see gotcha #6). Do not just comment out the flag without a plan |
 
-3. **Update `sk_types.h`** for any new enums or type changes
-   - Phase 5 reset `SK_C_INCREMENT` to 0. Only bump it if you add new C API functions in this milestone.
-   - The build enforces that `SK_C_INCREMENT` matches `libSkiaSharp increment` in `VERSIONS.txt`
+3. **Update `sk_types.h`** for any new enums or type changes.
+   Phase 6 reset `SK_C_INCREMENT` to 0. Only bump it if you add new C API functions in this milestone.
+   The build enforces that `SK_C_INCREMENT` matches `libSkiaSharp increment` in `VERSIONS.txt`.
 
-4. **Build again** — iterate until clean compilation
+4. **Build again** — iterate until clean compilation.
 
 > 🛑 **GATE**: Native library builds successfully on at least one platform.
 
-### Phase 7: Regenerate Bindings
+> ✅ **Before proceeding to D (Regenerate & Verify):**
+> - Version files updated (Phase 6 script passed)
+> - Native library builds cleanly
 
-> **Prerequisite:** Phase 6's native build must have completed at least once — it runs
+---
+
+## D. Regenerate & Verify (Phases 8–10)
+
+### Phase 8: Regenerate Bindings
+
+> **Prerequisite:** Phase 7's native build must have completed at least once — it runs
 > `git-sync-deps`, which fetches HarfBuzz and other headers the generator needs.
 
 > 📋 **This phase is handled by a script.** The script runs the generator, IMMEDIATELY
@@ -341,94 +405,96 @@ The script handles all of these (so you don't forget any):
 - Runs `pwsh ./utils/generate.ps1`
 - Reverts `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` (proactively, not reactively)
 - Reports the binding diff summary
-- Lists NEW generated functions that may need C# wrappers in Phase 8
+- Lists NEW generated functions that may need C# wrappers in Phase 9
 
 After the script completes, build C# to verify compilation:
 ```bash
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
-### Phase 8: Fix C# Wrappers
+### Phase 9: Fix C# Wrappers
 
 The C# build can pass with 0 errors while new C API functions remain invisible to users.
 New functions compile fine as unused `internal static` methods in the generated file, but
 without C# wrappers they're not part of the public API. This phase applies even when
 the build succeeds.
 
-**Step 1: Review new generated bindings for unwrapped functions:**
-```bash
-# Show only NEW functions added by the regeneration (compare against main/skiasharp)
-git diff origin/main -- binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
-```
+1. **Review new generated bindings for unwrapped functions:**
+   ```bash
+   git diff origin/main -- binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
+   ```
+   > ⚠️ The `git diff origin/main` may show additional changes beyond new functions (e.g.
+   > struct renames, type changes from Phase 7 shim work). These are expected and correct.
+   > Only investigate `+internal static` lines — ignore other diff noise.
 
-For each new function, check whether a C# wrapper exists:
-```bash
-# Example: if sk_foo_bar was added, check for a wrapper
-grep -rn "sk_foo_bar" binding/SkiaSharp/*.cs | grep -v generated
-```
-New functions from our custom C API additions typically need wrappers.
-New functions from upstream changes are usually additive and can be deferred.
+2. **Check whether each new function has a C# wrapper:**
+   ```bash
+   # Example: if sk_foo_bar was added, check for a wrapper
+   grep -rn "sk_foo_bar" binding/SkiaSharp/*.cs | grep -v generated
+   ```
+   New functions from our custom C API additions typically need wrappers.
+   New functions from upstream changes are usually additive and can be deferred.
 
-**Step 2:** Fix files in `binding/SkiaSharp/` based on the breaking change analysis:
+3. **Fix files in `binding/SkiaSharp/`** based on the breaking change analysis:
 
-| File | When to Update |
-|------|---------------|
-| `Definitions.cs` | New enums, types, or constants |
-| `EnumMappings.cs` | New enum values that need C#↔C mapping |
-| `GRDefinitions.cs` | Graphics context changes (Ganesh) |
-| `SKImage.cs` | SkImage factory changes |
-| `SKTypeface.cs` | SkTypeface API changes |
-| `SKFont.cs` | SkFont API changes |
-| `SKCanvas.cs` | Canvas drawing API changes |
+   | File | When to Update |
+   |------|---------------|
+   | `Definitions.cs` | New enums, types, or constants |
+   | `EnumMappings.cs` | New enum values that need C#↔C mapping |
+   | `GRDefinitions.cs` | Graphics context changes (Ganesh) |
+   | `SKImage.cs` | SkImage factory changes |
+   | `SKTypeface.cs` | SkTypeface API changes |
+   | `SKFont.cs` | SkFont API changes |
+   | `SKCanvas.cs` | Canvas drawing API changes |
 
 **Key rules:**
 - **Add new overloads**, never modify existing signatures (ABI stability)
 - Use `[Obsolete]` for deprecated APIs with migration guidance
 - Return `null` from factory methods on failure (don't throw)
 
-### Phase 9: Build & Test
+### Phase 10: Build & Test
 
 ```bash
-# Rebuild native only if you touched C API files in Phase 8
-# (Phase 6 already built — skip if no native changes since then)
+# Rebuild native only if you touched C API files in Phase 9
+# (Phase 7 already built — skip if no native changes since then)
 dotnet cake --target=externals-{platform} --arch={arch}
 
 # Build C#
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
-**Step 1 — Smoke tests (fast gate, ~100ms):**
-```bash
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "Category=Smoke"
-```
-Smoke tests verify basic native interop: version compatibility, object creation, drawing,
-image loading, fonts, codecs, effects, and more. If these fail, something fundamental is
-broken — go back and fix before wasting time on the full suite.
+1. **Smoke tests (fast gate, ~100ms):**
+   ```bash
+   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "Category=Smoke"
+   ```
+   Smoke tests verify basic native interop: version compatibility, object creation, drawing,
+   image loading, fonts, codecs, effects, and more. If these fail, something fundamental is
+   broken — go back and fix before wasting time on the full suite.
 
-> ⚠️ If the version compatibility smoke test fails with "incompatible native library",
-> you missed a version update — go back to Phase 5 and verify ALL version lines.
-> Do NOT work around this with `--no-incremental` or by copying native libs manually.
+   > ⚠️ If the version compatibility smoke test fails with "incompatible native library",
+   > you missed a version update — go back to Phase 6 and verify ALL version lines.
+   > Do NOT work around this with `--no-incremental` or by copying native libs manually.
 
-**Step 2 — Full test suite (required before any PR):**
-```bash
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/test-output.txt
-```
-Wait for it to finish (takes 5–7 min). Then read the summary:
-```bash
-tail -5 /tmp/test-output.txt
-```
-The last line will look like: `Passed!  - Failed:     0, Passed:  5435, Skipped:   171, Total:  5606`
+2. **Full test suite (required before any PR):**
+   ```bash
+   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/test-output.txt
+   ```
+   Wait for it to finish (takes 5–7 min). Then read the summary:
+   ```bash
+   tail -5 /tmp/test-output.txt
+   ```
+   The last line will look like: `Passed!  - Failed:     0, Passed:  5435, Skipped:   171, Total:  5606`
 
-This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
-self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
+   This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
+   self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
 
-> **⚠️ These MUST be two separate commands.** Do NOT combine them into a single pipeline
-> like `| tee ... | tail` — the piped tail runs immediately and will show nothing useful
-> while tests are still running. Capture with `tee` first, wait for completion, then `tail`
-> the output file. After the run, inspect failures with:
-> ```bash
-> grep '^  Failed' /tmp/test-output.txt
-> ```
+   > **⚠️ These MUST be two separate commands.** Do NOT combine them into a single pipeline
+   > like `| tee ... | tail` — the piped tail runs immediately and will show nothing useful
+   > while tests are still running. Capture with `tee` first, wait for completion, then `tail`
+   > the output file. After the run, inspect failures with:
+   > ```bash
+   > grep '^  Failed' /tmp/test-output.txt
+   > ```
 
 Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
 before the update can be considered complete. Do not create PRs with only smoke tests passing.
@@ -436,24 +502,30 @@ before the update can be considered complete. Do not create PRs with only smoke 
 > 🛑 **GATE**: ALL tests pass (full suite, not just smoke). Do NOT skip failing tests.
 > Do NOT proceed with failures.
 
-### Phase 10: Create PRs
+> ✅ **Before proceeding to E (Ship):**
+> - Bindings regenerated (Phase 8 script passed)
+> - C# builds with 0 errors
+> - ALL tests pass (full suite)
+
+---
+
+## E. Ship (Phase 11)
+
+### Phase 11: Create PRs
 
 #### PR 1: mono/skia (submodule)
 
 | Field | Value |
 |-------|-------|
-| Branch | `dev/update-skia-{TARGET}` |
+| Branch | `skia-sync/m{TARGET}` |
 | Target | `skiasharp` |
 | Title | `Update skia to milestone {TARGET}` |
-
-> **Note:** Automated workflows may use a different branch naming convention
-> (e.g. `skia-sync/m{TARGET}`). Adjust the checklist below accordingly.
 
 #### PR 2: mono/SkiaSharp (parent)
 
 | Field | Value |
 |-------|-------|
-| Branch | `dev/update-skia-{TARGET}` |
+| Branch | `skia-sync/m{TARGET}` |
 | Target | `main` |
 | Title | `Bump skia to milestone {TARGET} (#ISSUE)` |
 
@@ -464,11 +536,11 @@ before the update can be considered complete. Do not create PRs with only smoke 
 After creating BOTH PRs, update the earlier PR's description to include a link to the later one.
 Both PRs must reference each other.
 
-#### Phase 10 Completion Checklist
+#### Phase 11 Completion Checklist
 
 Before proceeding to merge, verify ALL of these:
 
-- [ ] Branch names follow `dev/update-skia-{TARGET}` convention in BOTH repos
+- [ ] Branch names follow `skia-sync/m{TARGET}` convention in BOTH repos
 - [ ] mono/skia PR targets `skiasharp` branch
 - [ ] mono/SkiaSharp PR targets `main` branch
 - [ ] **SkiaSharp's `externals/skia` submodule points to the mono/skia PR branch** (`git submodule status`)
@@ -509,6 +581,6 @@ Before proceeding past each step, verify:
 These files contain lookup information — consult them when you hit a problem or need context,
 not necessarily upfront:
 
-- **[references/known-gotchas.md](references/known-gotchas.md)** — 10 hard-won lessons from past updates (DEF_STRUCT_MAP, emsdk, BUILD.gn flags, HarfBuzz, DEPS forks, etc.) and a troubleshooting table
+- **[references/known-gotchas.md](references/known-gotchas.md)** — Hard-won lessons from past updates (DEF_STRUCT_MAP, emsdk, BUILD.gn flags, HarfBuzz, DEPS forks, etc.) and a troubleshooting table
 - **[references/typical-changes.md](references/typical-changes.md)** — Files typically changed in each repository during an update
 - **[references/breaking-changes-checklist.md](references/breaking-changes-checklist.md)** — How to analyze breaking changes between milestones
