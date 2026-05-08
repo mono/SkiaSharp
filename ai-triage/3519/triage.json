@@ -1,0 +1,164 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3519,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T15:26:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "os/Linux", "area/libSkiaSharp.native", "tenet/reliability", "triage/triaged"]
+  },
+  "summary": "Native asset NuGet packages for libSkiaSharp in 3.119.2 are dramatically larger than 3.119.1, with Win32 growing from ~13 MB to ~75 MB and Linux from ~39 MB to ~54 MB, because PDB/debug symbol files were included in the main runtime package instead of (or in addition to) the symbols package.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.95 },
+    "platforms": ["os/Windows-Classic", "os/Linux"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "PDB files present in runtimes\\**\\*.pdb inside the main libSkiaSharp NuGet package",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Install SkiaSharp 3.119.2 NuGet package",
+        "Build/publish the project",
+        "Observe large .pdb files in the output/publish runtimes directory"
+      ],
+      "environmentDetails": "Windows, Visual Studio; also reproducible on Linux",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3519#issuecomment-3940956859",
+          "description": "Community workaround: MSBuild target to remove PDB files from runtimes after build/publish"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.1", "3.119.2"],
+      "workedIn": "3.119.1",
+      "brokeIn": "3.119.2",
+      "currentRelevance": "likely",
+      "relevanceReason": "No fix has been landed; 3.119.3 changelog directory exists but no specific PDB-removal fix was found in source."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.90,
+      "reason": "Reporter provides concrete size comparison table: Win32 went from 13 051 KB to 75 014 KB and Linux from 39 466 KB to 53 908 KB. macOS was unchanged, suggesting a platform-specific packaging change.",
+      "workedInVersion": "3.119.1",
+      "brokeInVersion": "3.119.2"
+    }
+  },
+  "analysis": {
+    "summary": "PDB (debug symbol) files for the Windows and Linux native libraries are being included in the main runtime NuGet packages in 3.119.2, causing a 5-6x size increase on Windows and ~36% increase on Linux. The `NativeAssets.Build.targets` file (lines 50-52) explicitly filters PDB files from `_BuildOutputInPackage` and routes them to `_TargetPathsToSymbols`, but the Windows build script copies `.pdb` files to the output directory alongside the DLL. The community confirms PDB files are present at `runtimes\\**\\*.pdb` after install. A packaging pipeline change in 3.119.2 appears to have caused these symbol files to land in the primary package.",
+    "rationale": "Reporter shows a quantified size regression with a concrete before/after version table. A community commenter confirmed PDB files are in the installed package and provided a workaround. Code investigation shows the intent is to exclude PDB from main packages (NativeAssets.Build.targets line 50), but Windows build.cake explicitly copies .pdb to the output directory, suggesting the filtering may not be working correctly or IncludeSymbols=true is causing them to be bundled into the main nupkg.",
+    "keySignals": [
+      {
+        "text": "Win32|13,051|75,014",
+        "source": "issue body table",
+        "interpretation": "Win32 package grew ~5.75x, strongly suggesting large binary files (PDB symbols) were added"
+      },
+      {
+        "text": "MacOS|6,934|6,934",
+        "source": "issue body table",
+        "interpretation": "macOS size is unchanged, which rules out a Skia upstream size increase and points to a Windows/Linux-specific packaging change"
+      },
+      {
+        "text": "It seems that the new version includes pdb files in package",
+        "source": "comment by Jack251970",
+        "interpretation": "Community confirms root cause: .pdb files in runtimes\\**\\*.pdb inside the main package"
+      },
+      {
+        "text": "Whatever change happened seemed to land before preview 1",
+        "source": "issue body",
+        "interpretation": "Regression was introduced early in the 3.119.2 preview cycle"
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/NativeAssets.Build.targets",
+        "lines": "49-53",
+        "finding": "Line 50 explicitly excludes `.pdb` and `.dbg` from `_BuildOutputInPackage` (the main package); line 52 routes them to `_TargetPathsToSymbols` (symbols package). However, line 30 sets `IncludeSymbols=true` which may cause the symbols to be double-included via NuGet's symbol packaging path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/windows/build.cake",
+        "lines": "83-88",
+        "finding": "Build output step copies both `libSkiaSharp.dll` AND `libSkiaSharp.pdb` to the native output directory (line 86). Similarly `libHarfBuzzSharp.pdb` is copied at line 108. If the packaging targets later pick up all files in that directory unconditionally, PDB files would be bundled.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/NativeAssets.Build.targets",
+        "lines": "28-31",
+        "finding": "`IncludeSymbols=true` is set on native assets projects. This could interact with NuGet packaging to include symbols in both the main `.nupkg` and the `.snupkg`, potentially inflating the installed size.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "What specific change between 3.119.1 and 3.119.2-preview1 added PDB files to the main package?",
+      "Is the `_BuildOutputInPackage` filter in NativeAssets.Build.targets actually being applied to the packages published to NuGet?",
+      "Are the PDB files in the `.nupkg` itself or in a co-installed `.snupkg` symbols package?",
+      "Does the size regression also affect libHarfBuzzSharp.native packages?"
+    ],
+    "workarounds": [
+      "Add MSBuild targets to delete PDB files from runtimes directory after Build and Publish (workaround by Jack251970 in issue comments)"
+    ],
+    "resolution": {
+      "hypothesis": "A packaging pipeline change in 3.119.2 caused .pdb files to be included in the main native NuGet packages (runtimes/**/*.pdb), circumventing the intended filter in NativeAssets.Build.targets.",
+      "proposals": [
+        {
+          "title": "Investigate and fix packaging pipeline to exclude PDB from main package",
+          "description": "Trace what changed in the NuGet packaging pipeline between 3.119.1 and 3.119.2 that allowed PDB files past the NativeAssets.Build.targets filter. Fix the pipeline to restore 3.119.1 behavior.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Remove PDB file copy step from Windows build script",
+          "description": "In native/windows/build.cake, remove the CopyFileToDirectory calls for .pdb files (lines 86 and 108) to prevent them from entering the packaging input directory entirely.",
+          "category": "fix",
+          "confidence": 0.70,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "MSBuild workaround to delete PDB files post-build/publish",
+          "description": "Users can add MSBuild targets to remove runtimes/**/*.pdb after Build and Publish steps as a short-term workaround (community-provided in issue comments).",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Investigate and fix packaging pipeline to exclude PDB from main package",
+      "recommendedReason": "The root cause should be fixed at the packaging level so downstream users don't need workarounds. The targets file already has the correct intent (filter .pdb from main package); fixing the pipeline change that bypassed it is the right approach."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Clear regression with quantified size data and confirmed root cause (PDB files in main package). Needs investigation into which packaging pipeline change in 3.119.2 caused this and a proper fix.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native, windows, linux, reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/libSkiaSharp.native", "os/Windows-Classic", "os/Linux", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge regression, confirm PDB root cause, share workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed size comparison! This is a real regression — the Win32 package grew ~5.75× between 3.119.1 and 3.119.2, which is consistent with `.pdb` debug symbol files being accidentally included in the main NuGet package (confirmed by the community comment above).\n\nThe `NativeAssets.Build.targets` file has a filter to exclude `.pdb` files from the primary package and route them to the symbols package instead, but something in the 3.119.2 packaging pipeline bypassed that filter.\n\n**Workaround** (from @Jack251970 above) — add these MSBuild targets to your `.csproj` to strip the PDB files after build/publish:\n\n```xml\n<!-- Workaround for https://github.com/mono/SkiaSharp/issues/3519 -->\n<Target Name=\"RemoveUnnecessaryPdbFilesAfterBuild\" AfterTargets=\"Build\">\n  <ItemGroup>\n    <PdbFilesToRemoveBuild Include=\"$(OutputPath)runtimes\\**\\*.pdb\" />\n  </ItemGroup>\n  <Delete Files=\"@(PdbFilesToRemoveBuild)\" />\n</Target>\n<Target Name=\"RemoveUnnecessaryPdbFilesAfterPublish\" AfterTargets=\"Publish\">\n  <ItemGroup>\n    <PdbFilesToRemovePublish Include=\"$(PublishDir)runtimes\\**\\*.pdb\" />\n  </ItemGroup>\n  <Delete Files=\"@(PdbFilesToRemovePublish)\" />\n</Target>\n```\n\nWe will investigate the packaging pipeline change that caused this and issue a fix."
+      }
+    ]
+  }
+}

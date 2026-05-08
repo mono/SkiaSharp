@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3420,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T15:11:28Z",
+    "currentLabels": ["type/bug", "os/Android", "area/libSkiaSharp.native", "partner/maui", "tenet/compatibility", "triage/triaged"]
+  },
+  "summary": "libSkiaSharp.so in SkiaSharp.NativeAssets.Android was built with 4 KB memory page alignment instead of the 16 KB alignment required by Google Play for Android 16+ 64-bit libraries; the fix (-Wl,-z,max-page-size=16384) was included in 3.118.0.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.97 },
+    "platforms": ["os/Android"],
+    "tenets": ["tenet/compatibility"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "platform-specific",
+      "errorMessage": "libSkiaSharp.so shows 4 KB page size; Google Play requires 16 KB for Android 16+ 64-bit libs",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net9.0-android"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET MAUI Android app targeting Android 16",
+        "Build AAB using SkiaSharp 3.116.0 / MAUI workload",
+        "Run page size check on .so files",
+        "libSkiaSharp.so shows 4 KB page size"
+      ],
+      "environmentDetails": "SkiaSharp.NativeAssets.Android v3.116.0 (described as 2.88.6 in body but 3.116.0 in version field), .NET MAUI 9.0, Android 16+",
+      "repoLinks": [
+        { "url": "https://developer.android.com/guide/practices/page-sizes", "description": "Google official guide on 16 KB page size requirement" },
+        { "url": "https://github.com/dotnet/maui/discussions/30428", "description": "MAUI community discussion on the same requirement" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/3025", "description": "Related issue: libSkiaSharp.so alignment warning, closed as completed in milestone 3.118.0" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9", "2.88.6"],
+      "workedIn": "3.118.0",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The linker flag -Wl,-z,max-page-size=16384 is already present in native/android/build.cake (line 42), meaning the fix was shipped in 3.118.0. Reporter used 3.116.0 which predates the fix."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.90,
+      "reason": "native/android/build.cake already contains extra_ldflags=[ '-Wl,-z,max-page-size=16384' ] ensuring 16 KB alignment. Related issue #3025 was closed as 'completed' in milestone 3.118.0.",
+      "fixedInVersion": "3.118.0"
+    }
+  },
+  "analysis": {
+    "summary": "The Android native build script now passes -Wl,-z,max-page-size=16384 to the linker (native/android/build.cake:42), which forces ELF segment alignment to 16 KB. This fix was part of milestone 3.118.0, closing related issue #3025. The reporter was on 3.116.0, which predates the fix; upgrading to 3.118.0 or later resolves the compliance issue.",
+    "codeInvestigation": [
+      {
+        "file": "native/android/build.cake",
+        "lines": "42",
+        "finding": "extra_ldflags contains '-Wl,-z,max-page-size=16384' — this linker flag sets ELF load segment alignment to 16 KB, satisfying Google Play's Android 16+ requirement for 64-bit native libraries.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/android/build.cake",
+        "lines": "27-44",
+        "finding": "The libSkiaSharp GN/Ninja build target passes the 16 KB page-size flag to all Android architectures (x86, x86_64, armeabi-v7a, arm64-v8a), meaning the fix is broad and not architecture-gated.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "libSkiaSharp.so included in SkiaSharp.NativeAssets.Android v2.88.6 has a 4 KB page size",
+        "source": "issue body",
+        "interpretation": "Reporter identifies the root cause as the linker alignment setting at build time."
+      },
+      {
+        "text": "Google Play now requires all 64-bit native libraries to use 16 KB memory page size starting with Android 16+",
+        "source": "issue body",
+        "interpretation": "This is a Google Play Store compliance requirement, not a runtime crash — it blocks publishing."
+      },
+      {
+        "text": "extra_ldflags=[ '-Wl,-z,max-page-size=16384' ]",
+        "source": "native/android/build.cake:42",
+        "interpretation": "Fix is already in the current codebase. The 16 KB alignment flag was added before this issue was filed (shipped in 3.118.0)."
+      },
+      {
+        "text": "Have you tried the 3.x series of SkiaSharp?",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer hinting the fix may be present in a newer 3.x release."
+      }
+    ],
+    "rationale": "This is a native build compliance bug: the Android shared library was linked without the 16 KB page alignment flag required by Google Play for Android 16+ 64-bit apps. Code investigation confirms the fix (-Wl,-z,max-page-size=16384) is present in the current build script. Related issue #3025 (same alignment problem) was closed as completed in 3.118.0. The reporter was on 3.116.0, so upgrading should resolve it. Suggested action is close-as-fixed with a comment pointing to 3.118.0+.",
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.118.0 or later — the 16 KB page-size linker flag is included.",
+      "If stuck on 2.88.x, manually recompile the Android native library with -Wl,-z,max-page-size=16384 (complex, not recommended)."
+    ],
+    "resolution": {
+      "hypothesis": "The fix (max-page-size=16384 linker flag) was shipped in 3.118.0 in response to issue #3025, which described the same alignment problem. The reporter needs to upgrade from 3.116.0 to 3.118.0 or later.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 3.118.0 or later",
+          "description": "Upgrade the SkiaSharp.NativeAssets.Android package to 3.118.0 or newer. The linker flag -Wl,-z,max-page-size=16384 was added to native/android/build.cake in that release, ensuring Google Play Android 16+ compliance.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 3.118.0 or later",
+      "recommendedReason": "Zero-effort fix — just a package version bump. The underlying code change is already in the current release."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.85,
+      "reason": "The 16 KB page-size linker flag is present in the current native/android/build.cake. Issue #3025 (same root cause) was closed as completed in milestone 3.118.0. Reporter needs to upgrade from 3.116.0.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels already correctly applied; confirm existing set",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/bug", "area/libSkiaSharp.native", "os/Android", "tenet/compatibility", "partner/maui"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter that the fix shipped in 3.118.0 and they should upgrade",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report! This issue was resolved in **SkiaSharp 3.118.0** — the Android native library is now built with the `-Wl,-z,max-page-size=16384` linker flag, which sets ELF segment alignment to 16 KB to satisfy Google Play's Android 16+ requirement.\n\nPlease upgrade your `SkiaSharp.NativeAssets.Android` (and related SkiaSharp packages) to **3.118.0 or later** and the warning/error should disappear.\n\nThis was also tracked in #3025 which was closed as completed in 3.118.0.\n\nIf you're still seeing the issue after upgrading to 3.118.0+, please reopen with details."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the earlier related issue that was closed as completed",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3025
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed — the fix was shipped in 3.118.0",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

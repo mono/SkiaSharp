@@ -1,0 +1,391 @@
+# Issue Triage Report — #3110
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T14:46:42Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/libSkiaSharp.native (0.95 (95%)) |
+| Suggested action | needs-investigation (0.85 (85%)) |
+
+**Issue Summary:** The libSkiaSharp.framework.dSYM debug symbol bundle is not included in the iOS NuGet package or in the resulting IPA archive, causing Apple App Store warnings and in some cases blocking submission validation since SkiaSharp 3.116.0.
+
+**Analysis:** The iOS native build pipeline in xcode.cake strips debug symbols from libSkiaSharp.framework using `strip -x -S` (in StripSign) but never extracts them into a dSYM bundle first. The NuGet packaging project (SkiaSharp.NativeAssets.iOS.csproj) only includes the .framework directory with no dSYM. This contrasts with the Android pipeline (ndk.cake) which does extract symbols via llvm-objcopy before stripping. The fix requires extracting dSYM from xcarchives and including them in the NuGet package.
+
+**Recommendations:** **needs-investigation** — The root cause is confirmed in code — dSYM files are stripped without extraction in the iOS build pipeline and never packaged. PR #3184 was started but not merged. The fix path is known but needs implementation and testing on macOS.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/iOS |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/bug, os/iOS, area/libSkiaSharp.native, tenet/compatibility, triage/triaged |
+
+## Evidence
+
+### Reproduction
+
+1. Create a MAUI or Xamarin.iOS app that depends on SkiaSharp 3.116.0+
+2. Build and archive the app for iOS distribution (Release, device)
+3. Validate or upload the IPA via Xcode Organizer or Transporter
+4. Observe warning: 'The archive did not include a dSYM for the libSkiaSharp.framework'
+
+**Environment:** SkiaSharp 3.116.0–3.119.0; iOS; Visual Studio on Windows; also reported with MAUI; Apple App Store Connect validation
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/pull/3184 — PR #3184 by mattleibow attempting to switch to xcframework format to embed debug symbols — not yet merged
+- https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_build/results?buildId=136992 — CI artifact with xcframework-based fix for testing (from maintainer comment)
+
+**Attachments:**
+- dsym-warning-xcode.png — https://github.com/user-attachments/assets/5c812036-0102-4ec3-b84a-8fdf6f7d9201 — Screenshot of dSYM warning from Xcode/Transporter
+- testflight-dsym-failure.png — https://github.com/user-attachments/assets/c14ba207-7555-41f7-a951-a62e251f0eb3 — Screenshot of TestFlight validation failure: dSYM UUID not found
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | missing-output |
+| Error message | Upload Symbols Failed: The archive did not include a dSYM for the libSkiaSharp.framework |
+| Repro quality | partial |
+| Target frameworks | net9.0-ios, net8.0-ios |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.9, 3.116.0, 3.118.0-preview.2.3, 3.119.0 |
+| Worked in | 2.88.9 |
+| Broke in | 3.116.0 |
+| Current relevance | likely |
+| Relevance reason | The NuGet packaging code for iOS still only includes the .framework directory without any dSYM; the xcframework fix from PR #3184 has not been merged into the current codebase. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.85 (85%) |
+| Reason | Reporter explicitly states last known good version was 2.88.9. Confirmed still present in 3.119.0 (comment from 2025-09-02). |
+| Worked in version | 2.88.9 |
+| Broke in version | 3.116.0 |
+
+## Analysis
+
+### Technical Summary
+
+The iOS native build pipeline in xcode.cake strips debug symbols from libSkiaSharp.framework using `strip -x -S` (in StripSign) but never extracts them into a dSYM bundle first. The NuGet packaging project (SkiaSharp.NativeAssets.iOS.csproj) only includes the .framework directory with no dSYM. This contrasts with the Android pipeline (ndk.cake) which does extract symbols via llvm-objcopy before stripping. The fix requires extracting dSYM from xcarchives and including them in the NuGet package.
+
+### Rationale
+
+Multiple users across different SkiaSharp versions (3.116.0–3.119.0) and IDE setups all report the same symptom. The maintainer acknowledged the issue (March 2025) and opened PR #3184 to switch to xcframework format. Code inspection confirms dSYM files are never extracted from xcarchives and never packaged. The bug is in area/libSkiaSharp.native because the issue is in the native iOS build and packaging pipeline.
+
+### Key Signals
+
+- "The archive did not include a dSYM for the libSkiaSharp.framework with the UUIDs [F72282BC-1846-3669-A974-5CFF7806A45D]" — **comment by Danvdh87, 2025-09-02** (Concrete UUID mismatch — Apple's tooling cannot find the dSYM for the framework binary included in the IPA.)
+- "I got the symbols in the packages so hopefully once #3184 finishes building you can test the artifacts? I am switching to the different xcframework format which can contain the debug symbols and the release binaries." — **maintainer comment by mattleibow, 2025-03-06** (Maintainer confirmed the root cause and proposed fix via xcframework format, but PR was not merged.)
+- "Last Known Good Version of SkiaSharp: 2.88.9" — **issue body** (Regression introduced between 2.88.9 and 3.116.0 — likely during the rewrite of the native build pipeline for SkiaSharp 3.x.)
+- "It is just the Skia symbols; Apple is blocking the uploads without the symbols." — **comment by NeuralDynamics, 2025-03-06** (Confirms scope is only libSkiaSharp dSYM, not app symbols — the problem is isolated to the native SkiaSharp framework packaging.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `scripts/cake/xcode.cake` | 30-50 | direct | StripSign() runs `strip -x -S` on the iOS framework binary to remove debug symbols and then re-signs — it strips symbols without first extracting them to a .dSYM bundle, unlike the Android pipeline in ndk.cake. |
+| `scripts/cake/xcode.cake` | 87-99 | direct | CreateFatFramework() extracts framework binaries from xcarchive directories and lipo-merges them, but never touches the dSYM directories (*.xcarchive/dSYMs/*.dSYM) that Xcode generates alongside each archive. |
+| `binding/SkiaSharp.NativeAssets.iOS/SkiaSharp.NativeAssets.iOS.csproj` | 8-9 | direct | PackageFile includes only `output/native/ios/libSkiaSharp.framework/**` and `output/native/iossimulator/libSkiaSharp.framework/**`. No dSYM or debug symbol content is referenced, confirming dSYMs are never included in the NuGet package. |
+| `scripts/cake/ndk.cake` | 38-65 | related | ExtractAndStripSymbols() shows the correct pattern for Android: symbols extracted with llvm-objcopy --only-keep-debug before stripping, and a gnu-debuglink added. No equivalent exists in the iOS/xcode pipeline. |
+
+### Workarounds
+
+- Set `<IpaThinning>None</IpaThinning>` in the .csproj — reported to allow deployment via Transporter while bypassing the warning (workaround by issue reporter ltemimi)
+- Some users report the warning is non-blocking for App Store Connect acceptance (build still processes); try uploading and monitoring for processing completion
+
+### Next Questions
+
+- Has PR #3184 been revived, or is there a newer branch with the xcframework approach?
+- Are tvOS, watchOS, and macCatalyst affected by the same missing dSYM issue?
+- Is there a way to extract dSYM from xcarchive without switching to full xcframework format (simpler fix path)?
+
+### Resolution Proposals
+
+**Hypothesis:** The iOS build pipeline strips debug symbols without extracting them to a dSYM bundle, and the NuGet packaging never includes dSYM files. Adding dSYM extraction in CreateFatFramework (analogous to Android's ExtractAndStripSymbols) and including the dSYM in the NuGet package would resolve the issue.
+
+1. **Extract dSYM from xcarchives and include in NuGet** — fix, confidence 0.75 (75%), cost/m, validated=untested
+   - In xcode.cake's CreateFatFramework, after lipo-merging, collect the dSYM directories from xcarchive/dSYMs/, merge with dsymutil or copy the arm64 one, and write to output. Then add a PackageFile entry for the dSYM in SkiaSharp.NativeAssets.iOS.csproj.
+2. **Switch to xcframework format (PR #3184 approach)** — fix, confidence 0.70 (70%), cost/l, validated=untested
+   - Complete and merge the xcframework migration started in PR #3184, which embeds both release binaries and debug symbols in a single xcframework bundle understood natively by Apple tooling.
+3. **Use IpaThinning=None workaround** — workaround, confidence 0.60 (60%), cost/xs, validated=untested
+   - Add `<IpaThinning>None</IpaThinning>` to the iOS project file to disable IPA thinning. This allows deployment but may increase IPA size and add unnecessary permission entries.
+
+**Recommended proposal:** Extract dSYM from xcarchives and include in NuGet
+
+**Why:** More targeted fix that preserves the existing build pipeline structure and parallels the working Android dSYM extraction pattern already in the codebase.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.85 (85%) |
+| Reason | The root cause is confirmed in code — dSYM files are stripped without extraction in the iOS build pipeline and never packaged. PR #3184 was started but not merged. The fix path is known but needs implementation and testing on macOS. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Confirm existing labels are correct: type/bug, os/iOS, area/libSkiaSharp.native, tenet/compatibility | labels=type/bug, os/iOS, area/libSkiaSharp.native, tenet/compatibility |
+| add-comment | medium | 0.85 (85%) | Post analysis summarizing root cause, workaround, and fix path | — |
+| link-related | low | 0.90 (90%) | Cross-reference PR #3184 (xcframework approach for dSYM fix) | linkedIssue=#3184 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+**Triage analysis:** The root cause is confirmed in the build pipeline. `scripts/cake/xcode.cake`'s `StripSign()` strips debug symbols from `libSkiaSharp.framework` without first extracting them to a `.dSYM` bundle, and `SkiaSharp.NativeAssets.iOS.csproj` only packages the `.framework` directory — no dSYM is ever produced or included.
+
+**Workaround (interim):** Setting `<IpaThinning>None</IpaThinning>` in your iOS project has been reported to allow Transporter uploads to succeed. Note this increases IPA size.
+
+**Fix path:** The fix requires extracting dSYM from the xcarchives in `CreateFatFramework()` (analogous to how Android handles this in `ndk.cake` via `ExtractAndStripSymbols`) and adding the dSYM to the NuGet package. PR #3184 attempted a broader xcframework migration — that work should be revisited or a targeted dSYM extraction approach implemented.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3110,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T14:46:42Z",
+    "currentLabels": [
+      "type/bug",
+      "os/iOS",
+      "area/libSkiaSharp.native",
+      "tenet/compatibility",
+      "triage/triaged"
+    ]
+  },
+  "summary": "The libSkiaSharp.framework.dSYM debug symbol bundle is not included in the iOS NuGet package or in the resulting IPA archive, causing Apple App Store warnings and in some cases blocking submission validation since SkiaSharp 3.116.0.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "missing-output",
+      "errorMessage": "Upload Symbols Failed: The archive did not include a dSYM for the libSkiaSharp.framework",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net9.0-ios",
+        "net8.0-ios"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI or Xamarin.iOS app that depends on SkiaSharp 3.116.0+",
+        "Build and archive the app for iOS distribution (Release, device)",
+        "Validate or upload the IPA via Xcode Organizer or Transporter",
+        "Observe warning: 'The archive did not include a dSYM for the libSkiaSharp.framework'"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0–3.119.0; iOS; Visual Studio on Windows; also reported with MAUI; Apple App Store Connect validation",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3184",
+          "description": "PR #3184 by mattleibow attempting to switch to xcframework format to embed debug symbols — not yet merged"
+        },
+        {
+          "url": "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_build/results?buildId=136992",
+          "description": "CI artifact with xcframework-based fix for testing (from maintainer comment)"
+        }
+      ],
+      "attachments": [
+        {
+          "filename": "dsym-warning-xcode.png",
+          "url": "https://github.com/user-attachments/assets/5c812036-0102-4ec3-b84a-8fdf6f7d9201",
+          "description": "Screenshot of dSYM warning from Xcode/Transporter"
+        },
+        {
+          "filename": "testflight-dsym-failure.png",
+          "url": "https://github.com/user-attachments/assets/c14ba207-7555-41f7-a951-a62e251f0eb3",
+          "description": "Screenshot of TestFlight validation failure: dSYM UUID not found"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.9",
+        "3.116.0",
+        "3.118.0-preview.2.3",
+        "3.119.0"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The NuGet packaging code for iOS still only includes the .framework directory without any dSYM; the xcframework fix from PR #3184 has not been merged into the current codebase."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter explicitly states last known good version was 2.88.9. Confirmed still present in 3.119.0 (comment from 2025-09-02).",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "The iOS native build pipeline in xcode.cake strips debug symbols from libSkiaSharp.framework using `strip -x -S` (in StripSign) but never extracts them into a dSYM bundle first. The NuGet packaging project (SkiaSharp.NativeAssets.iOS.csproj) only includes the .framework directory with no dSYM. This contrasts with the Android pipeline (ndk.cake) which does extract symbols via llvm-objcopy before stripping. The fix requires extracting dSYM from xcarchives and including them in the NuGet package.",
+    "rationale": "Multiple users across different SkiaSharp versions (3.116.0–3.119.0) and IDE setups all report the same symptom. The maintainer acknowledged the issue (March 2025) and opened PR #3184 to switch to xcframework format. Code inspection confirms dSYM files are never extracted from xcarchives and never packaged. The bug is in area/libSkiaSharp.native because the issue is in the native iOS build and packaging pipeline.",
+    "keySignals": [
+      {
+        "text": "The archive did not include a dSYM for the libSkiaSharp.framework with the UUIDs [F72282BC-1846-3669-A974-5CFF7806A45D]",
+        "source": "comment by Danvdh87, 2025-09-02",
+        "interpretation": "Concrete UUID mismatch — Apple's tooling cannot find the dSYM for the framework binary included in the IPA."
+      },
+      {
+        "text": "I got the symbols in the packages so hopefully once #3184 finishes building you can test the artifacts? I am switching to the different xcframework format which can contain the debug symbols and the release binaries.",
+        "source": "maintainer comment by mattleibow, 2025-03-06",
+        "interpretation": "Maintainer confirmed the root cause and proposed fix via xcframework format, but PR was not merged."
+      },
+      {
+        "text": "Last Known Good Version of SkiaSharp: 2.88.9",
+        "source": "issue body",
+        "interpretation": "Regression introduced between 2.88.9 and 3.116.0 — likely during the rewrite of the native build pipeline for SkiaSharp 3.x."
+      },
+      {
+        "text": "It is just the Skia symbols; Apple is blocking the uploads without the symbols.",
+        "source": "comment by NeuralDynamics, 2025-03-06",
+        "interpretation": "Confirms scope is only libSkiaSharp dSYM, not app symbols — the problem is isolated to the native SkiaSharp framework packaging."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "scripts/cake/xcode.cake",
+        "lines": "30-50",
+        "finding": "StripSign() runs `strip -x -S` on the iOS framework binary to remove debug symbols and then re-signs — it strips symbols without first extracting them to a .dSYM bundle, unlike the Android pipeline in ndk.cake.",
+        "relevance": "direct"
+      },
+      {
+        "file": "scripts/cake/xcode.cake",
+        "lines": "87-99",
+        "finding": "CreateFatFramework() extracts framework binaries from xcarchive directories and lipo-merges them, but never touches the dSYM directories (*.xcarchive/dSYMs/*.dSYM) that Xcode generates alongside each archive.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.iOS/SkiaSharp.NativeAssets.iOS.csproj",
+        "lines": "8-9",
+        "finding": "PackageFile includes only `output/native/ios/libSkiaSharp.framework/**` and `output/native/iossimulator/libSkiaSharp.framework/**`. No dSYM or debug symbol content is referenced, confirming dSYMs are never included in the NuGet package.",
+        "relevance": "direct"
+      },
+      {
+        "file": "scripts/cake/ndk.cake",
+        "lines": "38-65",
+        "finding": "ExtractAndStripSymbols() shows the correct pattern for Android: symbols extracted with llvm-objcopy --only-keep-debug before stripping, and a gnu-debuglink added. No equivalent exists in the iOS/xcode pipeline.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "Has PR #3184 been revived, or is there a newer branch with the xcframework approach?",
+      "Are tvOS, watchOS, and macCatalyst affected by the same missing dSYM issue?",
+      "Is there a way to extract dSYM from xcarchive without switching to full xcframework format (simpler fix path)?"
+    ],
+    "workarounds": [
+      "Set `<IpaThinning>None</IpaThinning>` in the .csproj — reported to allow deployment via Transporter while bypassing the warning (workaround by issue reporter ltemimi)",
+      "Some users report the warning is non-blocking for App Store Connect acceptance (build still processes); try uploading and monitoring for processing completion"
+    ],
+    "resolution": {
+      "hypothesis": "The iOS build pipeline strips debug symbols without extracting them to a dSYM bundle, and the NuGet packaging never includes dSYM files. Adding dSYM extraction in CreateFatFramework (analogous to Android's ExtractAndStripSymbols) and including the dSYM in the NuGet package would resolve the issue.",
+      "proposals": [
+        {
+          "title": "Extract dSYM from xcarchives and include in NuGet",
+          "description": "In xcode.cake's CreateFatFramework, after lipo-merging, collect the dSYM directories from xcarchive/dSYMs/, merge with dsymutil or copy the arm64 one, and write to output. Then add a PackageFile entry for the dSYM in SkiaSharp.NativeAssets.iOS.csproj.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Switch to xcframework format (PR #3184 approach)",
+          "description": "Complete and merge the xcframework migration started in PR #3184, which embeds both release binaries and debug symbols in a single xcframework bundle understood natively by Apple tooling.",
+          "category": "fix",
+          "confidence": 0.7,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Use IpaThinning=None workaround",
+          "description": "Add `<IpaThinning>None</IpaThinning>` to the iOS project file to disable IPA thinning. This allows deployment but may increase IPA size and add unnecessary permission entries.",
+          "category": "workaround",
+          "confidence": 0.6,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Extract dSYM from xcarchives and include in NuGet",
+      "recommendedReason": "More targeted fix that preserves the existing build pipeline structure and parallels the working Android dSYM extraction pattern already in the codebase."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "The root cause is confirmed in code — dSYM files are stripped without extraction in the iOS build pipeline and never packaged. PR #3184 was started but not merged. The fix path is known but needs implementation and testing on macOS.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm existing labels are correct: type/bug, os/iOS, area/libSkiaSharp.native, tenet/compatibility",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "os/iOS",
+          "area/libSkiaSharp.native",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis summarizing root cause, workaround, and fix path",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "**Triage analysis:** The root cause is confirmed in the build pipeline. `scripts/cake/xcode.cake`'s `StripSign()` strips debug symbols from `libSkiaSharp.framework` without first extracting them to a `.dSYM` bundle, and `SkiaSharp.NativeAssets.iOS.csproj` only packages the `.framework` directory — no dSYM is ever produced or included.\n\n**Workaround (interim):** Setting `<IpaThinning>None</IpaThinning>` in your iOS project has been reported to allow Transporter uploads to succeed. Note this increases IPA size.\n\n**Fix path:** The fix requires extracting dSYM from the xcarchives in `CreateFatFramework()` (analogous to how Android handles this in `ndk.cake` via `ExtractAndStripSymbols`) and adding the dSYM to the NuGet package. PR #3184 attempted a broader xcframework migration — that work should be revisited or a targeted dSYM extraction approach implemented."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference PR #3184 (xcframework approach for dSYM fix)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 3184
+      }
+    ]
+  }
+}
+```
+
+</details>

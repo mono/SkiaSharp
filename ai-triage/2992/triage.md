@@ -1,0 +1,269 @@
+# Issue Triage Report — #2992
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T14:21:59Z |
+| Type | type/feature-request (0.97 (97%)) |
+| Area | area/SkiaSharp (0.92 (92%)) |
+| Suggested action | keep-open (0.88 (88%)) |
+
+**Issue Summary:** Request to expose SkiaSharp API for registering custom image codecs, enabling support for image formats not covered by built-in Skia codecs, which currently requires a C++ object pointer that SkiaSharp does not provide access to.
+
+**Analysis:** The SkiaSharp SKCodec class does not expose any codec registration API. The underlying Skia C++ SkCodec::Register method requires passing a C++ object pointer, which is difficult to wrap directly in C#. A reporter-identified upstream commit in google/skia (ec70dfbaa) that exports this method is missing from the mono/skia fork. The maintainer (mattleibow) has engaged and proposed a higher-level C# interface design using ISKCodecDecoder/ISKCodecEncoder abstractions instead of raw C++ pointer wrapping. The feature is non-trivial: it requires native shim changes, new C API functions, managed callback support, and upstream mono/skia cherry-pick.
+
+**Recommendations:** **keep-open** — Valid feature request with an identified upstream blocker and active maintainer engagement on API design. Needs design finalization before implementation can begin.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/feature-request |
+
+## Evidence
+
+### Reproduction
+
+1. Attempt to register a custom image codec with SkiaSharp
+2. Observe that SKCodec has no Register method and SkCodec::Register is not exported in the native shim
+
+**Environment:** SkiaSharp (any version), any platform
+
+**Repository links:**
+- https://github.com/google/skia/blob/06cd203d0607e1c7b3e25d9f08eb2c67c11c268c/include/codec/SkCodec.h#L1064 — Upstream Skia SkCodec::Register method declaration
+- https://github.com/google/skia/blob/06cd203d0607e1c7b3e25d9f08eb2c67c11c268c/src/codec/SkCodec.cpp#L135 — Upstream Skia SkCodec::Register method definition
+- https://github.com/google/skia/commit/ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf — Upstream Skia commit that fixed and exports SkCodec::Register - missing from mono/skia fork
+
+## Analysis
+
+### Technical Summary
+
+The SkiaSharp SKCodec class does not expose any codec registration API. The underlying Skia C++ SkCodec::Register method requires passing a C++ object pointer, which is difficult to wrap directly in C#. A reporter-identified upstream commit in google/skia (ec70dfbaa) that exports this method is missing from the mono/skia fork. The maintainer (mattleibow) has engaged and proposed a higher-level C# interface design using ISKCodecDecoder/ISKCodecEncoder abstractions instead of raw C++ pointer wrapping. The feature is non-trivial: it requires native shim changes, new C API functions, managed callback support, and upstream mono/skia cherry-pick.
+
+### Rationale
+
+Clearly a valid feature request: the underlying Skia functionality exists, a specific upstream commit is identified that unblocks the export, the maintainer has engaged and proposed a C# API design. Classification is type/feature-request in area/SkiaSharp. The suggestedAction is keep-open since the design discussion is ongoing and significant implementation work is needed before it can proceed to fix.
+
+### Key Signals
+
+- "There is no C# API and the C++ API has been excluded from the native library." — **issue body** (Gap is at both the C# layer and the native shim layer — double-blocked.)
+- "I dug into things and found that the non-exported method isn't a decision made by the SkiaSharp team, but a result of the mono/skia repo missing this upstream bug fix: google/skia@ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf" — **comment by TomEdwardsEnscape** (Root cause is a missing cherry-pick in mono/skia, not a deliberate SkiaSharp design decision. Unblocks the feature.)
+- "How would the perfect C# API look?" — **comment by mattleibow** (Maintainer is receptive and actively designing the API — strong signal to keep open.)
+- "Looking at the code for SKCodec, there are quite a few things that we will need to first expose before you can possibly inherit from SKCodec." — **comment by mattleibow** (Implementation is complex and multi-step; full API surface needs work before the feature can land.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKCodec.cs` | — | direct | SKCodec class has no Register or codec factory registration method. Constructor is internal and class uses ISKSkipObjectRegistration, with no public API path for custom codec registration. |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | — | direct | No sk_codec_register or any codec-registration-related P/Invoke binding exists in the generated API surface. Confirms the C API shim does not expose SkCodec::Register. |
+
+### Next Questions
+
+- Has the upstream commit ec70dfbaa been cherry-picked into mono/skia?
+- Which milestone should this target?
+- Should encoding and decoding be in the same interface or separate?
+- How should managed codec callbacks interact with Skia's thread model?
+
+### Resolution Proposals
+
+**Hypothesis:** Implementing this feature requires: (1) cherry-picking the upstream Skia fix into mono/skia, (2) adding C API shim functions for codec registration with managed callbacks, (3) adding C# ISKCodecDecoder/ISKCodecEncoder interfaces, and (4) wiring managed delegates through P/Invoke.
+
+1. **Cherry-pick upstream fix and expose raw C API** — fix, confidence 0.75 (75%), cost/l, validated=untested
+   - Pick google/skia@ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf into mono/skia, add sk_codec_register_decoder/sk_codec_register_encoder to the C API shim, and expose via P/Invoke. Minimal C# surface — advanced users can call the C API from a small native library.
+2. **High-level C# managed codec interface** — fix, confidence 0.65 (65%), cost/xl, validated=untested
+   - After the native fix, implement ISKCodecDecoder/ISKCodecEncoder interfaces in C# with managed callbacks, as proposed by mattleibow. Provides a pure-C# API for custom codec registration without requiring users to write any native code.
+
+**Recommended proposal:** Cherry-pick upstream fix and expose raw C API
+
+**Why:** Lower effort entry point; unblocks power users immediately and provides the foundation for the higher-level managed interface in a follow-up.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.88 (88%) |
+| Reason | Valid feature request with an identified upstream blocker and active maintainer engagement on API design. Needs design finalization before implementation can begin. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply feature-request and area/SkiaSharp labels | labels=type/feature-request, area/SkiaSharp |
+| add-comment | medium | 0.82 (82%) | Acknowledge the investigation findings and the upstream blocker; summarize the implementation path | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed investigation and for identifying the upstream commit!
+
+To summarize the current state:
+- `SkCodec::Register` is not exported in the mono/skia fork because the upstream fix [`ec70dfba`](https://github.com/google/skia/commit/ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf) hasn't been cherry-picked yet.
+- The C# `SKCodec` class has no registration API, and there are no corresponding P/Invoke bindings.
+
+The implementation plan would be:
+1. Cherry-pick `ec70dfba` into `mono/skia` to export the native symbol
+2. Add C API shim functions for codec registration
+3. Implement a C# `ISKCodecDecoder`/`ISKCodecEncoder` interface as discussed above
+
+This is a meaningful feature that requires several layers of changes. We're keeping this open to track the work.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2992,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T14:21:59Z",
+    "currentLabels": [
+      "type/feature-request"
+    ]
+  },
+  "summary": "Request to expose SkiaSharp API for registering custom image codecs, enabling support for image formats not covered by built-in Skia codecs, which currently requires a C++ object pointer that SkiaSharp does not provide access to.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Attempt to register a custom image codec with SkiaSharp",
+        "Observe that SKCodec has no Register method and SkCodec::Register is not exported in the native shim"
+      ],
+      "environmentDetails": "SkiaSharp (any version), any platform",
+      "repoLinks": [
+        {
+          "url": "https://github.com/google/skia/blob/06cd203d0607e1c7b3e25d9f08eb2c67c11c268c/include/codec/SkCodec.h#L1064",
+          "description": "Upstream Skia SkCodec::Register method declaration"
+        },
+        {
+          "url": "https://github.com/google/skia/blob/06cd203d0607e1c7b3e25d9f08eb2c67c11c268c/src/codec/SkCodec.cpp#L135",
+          "description": "Upstream Skia SkCodec::Register method definition"
+        },
+        {
+          "url": "https://github.com/google/skia/commit/ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf",
+          "description": "Upstream Skia commit that fixed and exports SkCodec::Register - missing from mono/skia fork"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp SKCodec class does not expose any codec registration API. The underlying Skia C++ SkCodec::Register method requires passing a C++ object pointer, which is difficult to wrap directly in C#. A reporter-identified upstream commit in google/skia (ec70dfbaa) that exports this method is missing from the mono/skia fork. The maintainer (mattleibow) has engaged and proposed a higher-level C# interface design using ISKCodecDecoder/ISKCodecEncoder abstractions instead of raw C++ pointer wrapping. The feature is non-trivial: it requires native shim changes, new C API functions, managed callback support, and upstream mono/skia cherry-pick.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "finding": "SKCodec class has no Register or codec factory registration method. Constructor is internal and class uses ISKSkipObjectRegistration, with no public API path for custom codec registration.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "No sk_codec_register or any codec-registration-related P/Invoke binding exists in the generated API surface. Confirms the C API shim does not expose SkCodec::Register.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "There is no C# API and the C++ API has been excluded from the native library.",
+        "source": "issue body",
+        "interpretation": "Gap is at both the C# layer and the native shim layer — double-blocked."
+      },
+      {
+        "text": "I dug into things and found that the non-exported method isn't a decision made by the SkiaSharp team, but a result of the mono/skia repo missing this upstream bug fix: google/skia@ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf",
+        "source": "comment by TomEdwardsEnscape",
+        "interpretation": "Root cause is a missing cherry-pick in mono/skia, not a deliberate SkiaSharp design decision. Unblocks the feature."
+      },
+      {
+        "text": "How would the perfect C# API look?",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer is receptive and actively designing the API — strong signal to keep open."
+      },
+      {
+        "text": "Looking at the code for SKCodec, there are quite a few things that we will need to first expose before you can possibly inherit from SKCodec.",
+        "source": "comment by mattleibow",
+        "interpretation": "Implementation is complex and multi-step; full API surface needs work before the feature can land."
+      }
+    ],
+    "rationale": "Clearly a valid feature request: the underlying Skia functionality exists, a specific upstream commit is identified that unblocks the export, the maintainer has engaged and proposed a C# API design. Classification is type/feature-request in area/SkiaSharp. The suggestedAction is keep-open since the design discussion is ongoing and significant implementation work is needed before it can proceed to fix.",
+    "nextQuestions": [
+      "Has the upstream commit ec70dfbaa been cherry-picked into mono/skia?",
+      "Which milestone should this target?",
+      "Should encoding and decoding be in the same interface or separate?",
+      "How should managed codec callbacks interact with Skia's thread model?"
+    ],
+    "resolution": {
+      "hypothesis": "Implementing this feature requires: (1) cherry-picking the upstream Skia fix into mono/skia, (2) adding C API shim functions for codec registration with managed callbacks, (3) adding C# ISKCodecDecoder/ISKCodecEncoder interfaces, and (4) wiring managed delegates through P/Invoke.",
+      "proposals": [
+        {
+          "title": "Cherry-pick upstream fix and expose raw C API",
+          "description": "Pick google/skia@ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf into mono/skia, add sk_codec_register_decoder/sk_codec_register_encoder to the C API shim, and expose via P/Invoke. Minimal C# surface — advanced users can call the C API from a small native library.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "High-level C# managed codec interface",
+          "description": "After the native fix, implement ISKCodecDecoder/ISKCodecEncoder interfaces in C# with managed callbacks, as proposed by mattleibow. Provides a pure-C# API for custom codec registration without requiring users to write any native code.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "cost/xl",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Cherry-pick upstream fix and expose raw C API",
+      "recommendedReason": "Lower effort entry point; unblocks power users immediately and provides the foundation for the higher-level managed interface in a follow-up."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.88,
+      "reason": "Valid feature request with an identified upstream blocker and active maintainer engagement on API design. Needs design finalization before implementation can begin.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the investigation findings and the upstream blocker; summarize the implementation path",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed investigation and for identifying the upstream commit!\n\nTo summarize the current state:\n- `SkCodec::Register` is not exported in the mono/skia fork because the upstream fix [`ec70dfba`](https://github.com/google/skia/commit/ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf) hasn't been cherry-picked yet.\n- The C# `SKCodec` class has no registration API, and there are no corresponding P/Invoke bindings.\n\nThe implementation plan would be:\n1. Cherry-pick `ec70dfba` into `mono/skia` to export the native symbol\n2. Add C API shim functions for codec registration\n3. Implement a C# `ISKCodecDecoder`/`ISKCodecEncoder` interface as discussed above\n\nThis is a meaningful feature that requires several layers of changes. We're keeping this open to track the work."
+      }
+    ]
+  }
+}
+```
+
+</details>
