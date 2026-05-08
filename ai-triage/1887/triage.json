@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1887,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T20:46:02Z"
+  },
+  "summary": "Setting SKPaint.Shader to null can free the previous shader's native memory while it is still referenced, causing a fatal crash in concurrent scenarios.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.97 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Fatal crash when reusing shader after setting brush.Shader = null",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net5.0-windows"]
+    },
+    "reproEvidence": {
+      "codeSnippets": ["var shader = ...;\nusing var brush = StyleFactory.Brush(fillStyle, path);\nbrush.Shader = shader;\nDrawPath(brush, path);\nbrush.Shader = null;\n// shader variable can no longer be safely used"],
+      "screenshots": [{"url": "https://user-images.githubusercontent.com/518177/145419862-3e646124-52ac-4fc5-9bb7-e971c9fc7817.png", "description": "Fatal crash screenshot showing memory corruption"}],
+      "relatedIssues": [1880]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKPaint.Shader setter (binding/SkiaSharp/SKPaint.cs line 204-207) still does not hold a C# reference to the shader object, and the native set operation triggers an unref of the old shader."
+    }
+  },
+  "analysis": {
+    "summary": "When SKPaint.Shader is set to a new value (including null), the native sk_paint_set_shader call decrements the ref count of the previously assigned shader. In a concurrent scenario, if this races with the Skia native rendering using the old shader, the native memory can be freed while still in use, causing a crash. The C# SKShader binding does implement ISKReferenceCounted but the setter does not coordinate GC lifetime or take any mutex. This is closely related to #1880 (same reporter, same root cause — SKPaint not holding a C# reference to its child objects) but the trigger is explicit null-assignment under concurrency rather than GC collection.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "204-207",
+        "finding": "The Shader setter calls sk_paint_set_shader with the new handle directly. There is no C# reference stored to the shader, and no thread-safety. When set to null (IntPtr.Zero) while the shader is still needed on another thread, the native unref can free the underlying Skia object.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKShader.cs",
+        "lines": "1-13",
+        "finding": "SKShader implements ISKReferenceCounted — the C# wrapper increments the native ref count on construction and decrements on dispose. However, a second ref from SKPaint's internal sk_sp<SkShader> is decremented when the paint's shader is replaced, so the native lifetime is correct in a single-threaded scenario. The crash arises only under concurrent access where the native unref races with native usage.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The Shader move operator frees the previous shader, even when the shader is still in use.",
+        "source": "issue body",
+        "interpretation": "Setting SKPaint.Shader = null causes Skia to release the old shader reference; under concurrent usage this can race with active rendering."
+      },
+      {
+        "text": "This is a concurrency issue that only occurs sometimes.",
+        "source": "issue body — Reproduction Link",
+        "interpretation": "The crash is non-deterministic and requires concurrent access to the same paint object to trigger."
+      }
+    ],
+    "rationale": "Classified type/bug with high severity because the reporter sees a fatal crash. The Shader setter in SKPaint.cs does not store a C# reference and does not protect against concurrent replacement. This is a real memory-safety issue related to — but distinct from — #1880 (which focuses on GC collecting unref'd shaders). Because the crash is concurrency-dependent and no minimal repro is provided, needs-investigation is the appropriate action.",
+    "workarounds": [
+      "Avoid sharing an SKPaint instance across threads. Create a separate SKPaint per thread.",
+      "Hold a strong reference to the shader for the full lifetime of drawing operations before nulling out the paint's Shader property.",
+      "Ensure brush.Shader is set to null only after all concurrent drawing calls using that brush have completed."
+    ],
+    "nextQuestions": [
+      "Can the reporter provide a minimal reproducible sample that reliably triggers the crash?",
+      "Is the SKPaint instance shared across threads, or is only the SKShader instance shared?",
+      "Which version of SkiaSharp first introduced this behavior?"
+    ],
+    "resolution": {
+      "hypothesis": "SKPaint.Shader setter should be called only from the thread that owns the paint, or the SKPaint should not be shared across threads. The native Skia ref-counting handles single-threaded lifetimes correctly, but concurrent mutation races with native usage.",
+      "proposals": [
+        {
+          "title": "Use per-thread SKPaint",
+          "category": "workaround",
+          "description": "Do not share SKPaint instances across threads. Give each thread its own SKPaint configured with the desired shader.",
+          "validated": "yes",
+          "effort": "cost/s"
+        },
+        {
+          "title": "Investigate threading model",
+          "category": "investigation",
+          "description": "Trace whether SKPaint is actually shared across threads in the reporter's scenario, or if the crash is caused by GC collecting the unmanaged shader (#1880 root cause).",
+          "validated": "untested",
+          "effort": "cost/m"
+        }
+      ],
+      "recommendedProposal": "Use per-thread SKPaint",
+      "recommendedReason": "Not sharing SKPaint across threads is the simplest and most robust workaround and aligns with Skia's documented threading model."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "The crash is real and reproducible intermittently but no minimal repro exists. The related issue #1880 shares the same root cause and is already tracked. Investigation needs to determine if this is a duplicate of #1880 or a distinct concurrency issue.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to #1880 which reports the same root cause (SKPaint not holding C# references to child objects)",
+        "risk": "low",
+        "confidence": 0.92,
+        "linkedIssue": 1880
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, explain the threading model, provide workaround",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thank you for reporting this!\n\nThis crash is related to #1880 — the `SKPaint.Shader` setter passes the handle directly to native code without coordinating thread safety. When you set `brush.Shader = null` while another thread is still using the same paint (or the underlying native render pipeline still holds a reference), the native unref of the old shader can race with its use and cause a fatal crash.\n\n**Workaround (immediate):** Do not share an `SKPaint` instance across threads. Create a separate `SKPaint` for each thread that needs it:\n\n```csharp\n// Instead of sharing one brush, create per-call:\nusing var brush = new SKPaint { Shader = shader };\nDrawPath(brush, path);\n// brush disposed here — shader lifetime is safe\n```\n\nAlternatively, ensure that `brush.Shader = null` is only called after all rendering operations using that brush have fully completed on all threads.\n\nNote that Skia objects (`SKPaint`, `SKCanvas`, etc.) are **not thread-safe**. Each thread should own its own paint objects."
+      }
+    ]
+  }
+}

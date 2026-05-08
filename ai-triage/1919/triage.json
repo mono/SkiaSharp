@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1919,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T21:04:48Z"
+  },
+  "summary": "DrawShapedText renders wrong characters ('Q' and 'R') instead of the expected digits on Ubuntu 20.04 x64, while working correctly on Windows, using SkiaSharp.HarfBuzz 2.88.0-preview.179.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.HarfBuzz", "confidence": 0.90 },
+    "platforms": ["os/Linux"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "Display 'Q' and 'R' instead of '1', '2', '3'; 'Q' and 'R' overlap",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net-linux"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a GTK2 Linux app using SkiaSharp.Views.Gtk2 and SkiaSharp.HarfBuzz",
+        "Call SKFontManager.Default.MatchCharacter('1') to get a typeface",
+        "Create SKShaper with that typeface and SKPaint with TextSize=64",
+        "Call canvas.DrawShapedText(shaper, \"123\", 100, 200, paint)",
+        "Observe 'Q' and 'R' rendered instead of '1', '2', '3'"
+      ],
+      "environmentDetails": "Ubuntu 20.04 x64, Mono GTK2, SkiaSharp 2.88.0-preview.179, SkiaSharp.HarfBuzz 2.88.0-preview.179",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/files/7821714/SkiaSharpSample.zip", "description": "Attached minimal repro project (zip)" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/1798", "description": "Related issue: DrawShapedText throws exception when Typeface is null" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.0-preview.179"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The DrawShapedText implementation in CanvasExtensions.cs has not changed the glyph-ID assignment logic since this report. The bug pattern of using HarfBuzz-shaped glyph IDs with the obsolete overload persists."
+    }
+  },
+  "analysis": {
+    "summary": "The obsolete DrawShapedText(SKShaper, string, float, float, SKPaint) overload calls paint.GetFont() to retrieve a font, then uses HarfBuzz glyph IDs from SKShaper.Shape() result. On Linux, SKFontManager.Default.MatchCharacter('1') may return a system font whose glyph IDs for digits do not correspond to the visual glyphs the reporter expects, or the font instance used during shaping differs from the one used during rendering, causing wrong characters ('Q'/'R') to be displayed instead of '1'/'2'/'3'.",
+    "rationale": "The reporter provides screenshots, a repro zip, and exact version numbers showing wrong-output behavior on Linux but not Windows. The code path uses the obsolete DrawShapedText overload which calls paint.GetFont() to derive the font rather than using an explicit SKFont. On Linux, system fonts available to MatchCharacter may differ from Windows fonts, and the glyph IDs assigned by HarfBuzz are font-specific. The mismatch between what HarfBuzz produces and what Skia renders is a known platform-specific concern with the font selection path. This is a legitimate platform-specific wrong-output bug in area/SkiaSharp.HarfBuzz.",
+    "keySignals": [
+      { "text": "Display 'Q' and 'R', and 'Q' and 'R' overlap", "source": "issue body", "interpretation": "Wrong glyph IDs are being used — likely mismatch between HarfBuzz-shaped glyph IDs and the font used to render the text blob" },
+      { "text": "Works fine on Windows", "source": "issue body", "interpretation": "Platform-specific font selection (MatchCharacter) returns different typeface on Linux, resulting in different glyph ID mapping" },
+      { "text": "early version crashed with exception: 'double free or corruption (!prev)'", "source": "issue body", "interpretation": "Reporter already experienced instability on Linux with earlier preview versions; this is an ongoing Linux-specific quality issue" }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/CanvasExtensions.cs",
+        "lines": "50-103",
+        "finding": "The obsolete overload DrawShapedText(shaper, text, x, y, paint) calls paint.GetFont() to derive the rendering font. Then font.Typeface is overridden with shaper.Typeface. The glyph IDs from result.Codepoints are placed directly into AllocateRawPositionedRun. If MatchCharacter returns different fonts on Linux vs Windows, the glyph IDs from HarfBuzz shaping would differ, causing wrong visual output.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs",
+        "lines": "83-86",
+        "finding": "After HarfBuzz shaping, info[i].Codepoint stores font-specific glyph IDs (not Unicode codepoints). These are stored as result.Codepoints. The name 'Codepoints' is misleading — post-shaping these are glyph IDs. They are then placed into a raw glyph run in CanvasExtensions, which is the correct usage, but depends on font consistency.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Explicitly specify a well-known font typeface instead of using SKFontManager.Default.MatchCharacter(). For example: SKTypeface.FromFamilyName(\"DejaVu Sans\") or SKTypeface.Default on Linux.",
+      "Use the newer non-obsolete overload DrawShapedText(string text, float x, float y, SKFont font, SKPaint paint) and explicitly construct the SKFont with the desired typeface to avoid the ambiguity in the obsolete paint-based API."
+    ],
+    "nextQuestions": [
+      "Does the issue reproduce with the newer non-obsolete SKFont-based overload, or is it specific to the obsolete paint-based path?",
+      "What typeface does SKFontManager.Default.MatchCharacter('1') return on the affected Ubuntu system — is it a different font than on Windows?",
+      "Does the repro project include font fallback logic or rely on system fonts?"
+    ],
+    "resolution": {
+      "hypothesis": "On Linux, SKFontManager.Default.MatchCharacter('1') selects a system font whose glyph layout differs from what the reporter expects. The HarfBuzz glyph IDs for '1', '2', '3' in that font happen to correspond to the glyphs visually rendered as 'Q' and 'R' in a different font context.",
+      "proposals": [
+        {
+          "title": "Use explicit typeface instead of MatchCharacter",
+          "description": "Replace SKFontManager.Default.MatchCharacter('1') with an explicit typeface such as SKTypeface.FromFamilyName(\"DejaVu Sans\") or SKTypeface.Default to get a consistent cross-platform font with expected glyph IDs.",
+          "category": "workaround",
+          "confidence": 0.80,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Use non-obsolete SKFont-based overload",
+          "description": "Use DrawShapedText(shaper, text, x, y, font, paint) with an explicit SKFont rather than the obsolete SKPaint-based overload, ensuring consistent font usage between shaping and rendering.",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use explicit typeface instead of MatchCharacter",
+      "recommendedReason": "Simplest change — avoids the platform-specific font selection uncertainty that is the root cause of the glyph ID mismatch."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Clear wrong-output bug on Linux with complete repro (screenshots + zip). Root cause likely platform-specific font selection via MatchCharacter, but needs verification whether the non-obsolete API path also affects Linux.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, HarfBuzz area, Linux platform, and reliability tenet labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.HarfBuzz", "os/Linux", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, provide workarounds, ask clarifying question about font",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed report and attached repro!\n\nThis looks like a platform-specific font selection issue on Linux. When `SKFontManager.Default.MatchCharacter('1')` is called on Linux, it may return a system font whose HarfBuzz-shaped glyph IDs for '1', '2', '3' map to different visual glyphs ('Q', 'R') when rendered.\n\n**Workarounds to try:**\n\n1. Use an explicit typeface instead of `MatchCharacter`:\n```csharp\nusing var tf = SKTypeface.FromFamilyName(\"DejaVu Sans\") ?? SKTypeface.Default;\n```\n\n2. Switch to the newer non-obsolete overload with an explicit `SKFont`:\n```csharp\nusing var font = new SKFont(tf, 64);\ncanvas.DrawShapedText(shaper, \"123\", 100, 200, font, paint);\n```\n\nCould you confirm:\n- What font does `SKFontManager.Default.MatchCharacter('1')?.FamilyName` return on your Ubuntu system?\n- Does the issue reproduce with the `SKFont`-based overload, or only with the obsolete `SKPaint` overload?"
+      }
+    ]
+  }
+}
