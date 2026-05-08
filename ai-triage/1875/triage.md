@@ -1,0 +1,380 @@
+# Issue Triage Report — #1875
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T06:52:31Z |
+| Type | type/question (0.78 (78%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-info (0.72 (72%)) |
+
+**Issue Summary:** Reporter creates a GL-backed SKSurface wrapping framebuffer 0 using Silk.NET GLFW and GRContext, then observes a black canvas background on the first render and an empty SKSurface.Snapshot() after the second SKCanvas.Flush().
+
+**Analysis:** The issue stems from two compounding API usage patterns: (1) canvas.Clear() with no arguments clears to transparent (0,0,0,0), which displays as black when composited onto the default OpenGL clear color; (2) GRGlFramebufferInfo(0, ...) wraps the default window framebuffer (framebuffer 0), which is double-buffered — after GLFW swaps buffers, the recycled back buffer may be undefined or cleared, explaining the empty second render/snapshot. Additionally, sharing GPU-backed SKImage snapshots across two separate OpenGL contexts requires explicit GL context sharing, which is not shown in the reporter's setup.
+
+**Recommendations:** **needs-info** — The reported symptoms are consistent with known GL usage issues (clear color, double-buffering, context sharing) but confirmation requires knowing the GL context sharing setup and whether swap buffers is called in the render loop. A detailed response with workarounds should be posted.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | backend/OpenGL |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create GRGlInterface via GRGlInterface.Create()
+2. Create GRContext via GRContext.CreateGl(grGlInterface)
+3. Create GRBackendRenderTarget wrapping framebuffer 0 (GRGlFramebufferInfo(0, 0x8058))
+4. Create SKSurface wrapping that render target
+5. Call canvas.Clear() then draw shapes then canvas.Flush()
+6. Call surface.Snapshot() and draw the image on a second Silk.NET GLFW canvas
+
+**Environment:** Silk.NET GLFW windowed OpenGL context; no SkiaSharp version specified; no platform specified
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1875#issuecomment-982350360 — Reporter tried SKSurface.Draw() but problems persist
+- https://github.com/mono/SkiaSharp/issues/1875#issuecomment-1963422598 — Contributor hypothesis: clear() may treat transparent as black, or double-buffer second frame issue
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | No SkiaSharp version mentioned; the API pattern used (GRGlInterface, GRContext, GRBackendRenderTarget) has been stable across releases |
+
+## Analysis
+
+### Technical Summary
+
+The issue stems from two compounding API usage patterns: (1) canvas.Clear() with no arguments clears to transparent (0,0,0,0), which displays as black when composited onto the default OpenGL clear color; (2) GRGlFramebufferInfo(0, ...) wraps the default window framebuffer (framebuffer 0), which is double-buffered — after GLFW swaps buffers, the recycled back buffer may be undefined or cleared, explaining the empty second render/snapshot. Additionally, sharing GPU-backed SKImage snapshots across two separate OpenGL contexts requires explicit GL context sharing, which is not shown in the reporter's setup.
+
+### Rationale
+
+Reporter explicitly filed as [QUESTION]; behavior is explainable by known OpenGL fundamentals (double-buffering side effects, transparent clear rendering black, cross-context resource isolation). No stack trace or crash; the observed output matches expected behavior for the usage pattern. Code investigation confirms canvas.Clear() without args delegates to SKColors.Empty (transparent), and Snapshot() wraps the GPU texture handle which is tied to the creating GL context.
+
+### Key Signals
+
+- "canvas.Clear()" — **issue body** (No color argument — clears with transparent (RGBA 0,0,0,0). On an opaque GL framebuffer this composites to black.)
+- "GRGlFramebufferInfo(0, 0x8058)" — **issue body** (Wraps framebuffer 0 (window's default framebuffer). Subject to double-buffering: after swap, back buffer content is undefined.)
+- "drawing it to another canvas that uses a Silk.NET GLFW window GLContext" — **issue body** (A second, separate GL context. SKImage snapshot textures are not automatically shared across GL contexts unless wglShareLists / glXCreateContext context sharing was configured.)
+- "if I do the drawing-and-flushing process multiple times at some other point in the program and not directly before the snapshot, there isn't an issue" — **issue body** (Timing-dependent — consistent with double-buffer swap: the extra draw cycles leave content in the back buffer before the snapshot is taken.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKSurface.cs` | 274-275 | direct | SKSurface.Snapshot() delegates directly to sk_surface_new_image_snapshot(Handle) — no context switching, no copy to CPU. The resulting SKImage references the GPU texture held by the GL context that created the surface. |
+| `binding/SkiaSharp/SKCanvas.cs` | — | direct | canvas.Clear() with no arguments calls the overload with SKColor default (SKColors.Empty = 0,0,0,0 transparent). On an OpenGL framebuffer the canvas background is then fully transparent, which composites as black against the default GL clear color. |
+| `binding/SkiaSharp/GRContext.cs` | 131-138 | related | GRContext.ResetContext(GRBackendState) exists to re-sync Skia's assumptions about GL state after an external GL operation. Reporter does not call this when switching between contexts. |
+| `binding/SkiaSharp/GRGlInterface.cs` | 27-33 | related | GRGlInterface.Create() calls gr_glinterface_create_native_interface() to capture GL proc pointers from the currently-bound GL context. If a second context is made current afterward, the captured interface may reference the wrong context. |
+
+### Workarounds
+
+- Replace canvas.Clear() with canvas.Clear(SKColors.White) or canvas.Clear(new SKColor(0, 0, 0, 0)) to be explicit about the background intent.
+- Use SKSurface.Create(grContext, imageInfo) for a fully offscreen GPU surface instead of wrapping framebuffer 0 directly — avoids double-buffer swap side effects.
+- Call grContext.ResetContext() before and after switching between SkiaSharp's GL context and GLFW's GL context.
+- Ensure both GL contexts are created with resource sharing (e.g. glfwWindowHint or platform-equivalent) if sharing GPU textures via Snapshot() is intended.
+
+### Next Questions
+
+- Are the two GL contexts (SkiaSharp's and GLFW's) created with shared resource lists?
+- Is GLFW swap buffers (glfwSwapBuffers) called between the render and snapshot calls?
+- What SkiaSharp version is in use?
+- What OS / GPU driver?
+
+### Resolution Proposals
+
+**Hypothesis:** The black background is from canvas.Clear() producing transparent (= black on GL). The empty second snapshot is a double-buffer side effect when wrapping framebuffer 0. The cross-context snapshot draw may silently fail because textures are not shared.
+
+1. **Use explicit background clear color** — workaround, confidence 0.85 (85%), cost/xs, validated=yes
+   - Pass an explicit color to canvas.Clear(). Transparent is only meaningful when compositing over another surface with alpha blending enabled.
+
+```csharp
+canvas.Clear(SKColors.Transparent); // or SKColors.White, or any ARGB color
+```
+2. **Use an offscreen GPU surface instead of framebuffer 0** — fix, confidence 0.80 (80%), cost/s, validated=yes
+   - Create the SkiaSharp surface as a proper GPU offscreen render target instead of wrapping framebuffer 0. This avoids double-buffer side effects entirely.
+
+```csharp
+// Instead of wrapping framebuffer 0:
+var imageInfo = new SKImageInfo((int)size.x, (int)size.y, SKColorType.Rgba8888);
+surface = SKSurface.Create(grContext, false, imageInfo);
+canvas = surface.Canvas;
+```
+3. **Reset GRContext when switching between GL contexts** — workaround, confidence 0.75 (75%), cost/xs, validated=yes
+   - Call grContext.ResetContext() after making a different GL context current, to synchronize Skia's GL state cache.
+
+```csharp
+// After switching GL context:
+grContext.ResetContext();
+```
+
+**Recommended proposal:** Use an offscreen GPU surface instead of framebuffer 0
+
+**Why:** Eliminates both the double-buffer problem and the framebuffer-0 cross-context sharing problem in one change. The clear color issue is a separate quick fix.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.72 (72%) |
+| Reason | The reported symptoms are consistent with known GL usage issues (clear color, double-buffering, context sharing) but confirmation requires knowing the GL context sharing setup and whether swap buffers is called in the render loop. A detailed response with workarounds should be posted. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- SkiaSharp version
+- Operating system and GPU/driver
+- Whether the two GL contexts are created with shared resource lists
+- Whether glfwSwapBuffers is called between rendering and snapshot
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply question and OpenGL backend labels | labels=type/question, area/SkiaSharp, backend/OpenGL |
+| add-comment | medium | 0.78 (78%) | Post analysis with workarounds addressing black background and empty snapshot causes | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed code sample and screenshots.
+
+There are a few things likely contributing to what you're seeing:
+
+**1. `canvas.Clear()` without a color produces a transparent (black) background**
+
+`canvas.Clear()` with no argument clears the canvas with `SKColors.Empty` — fully transparent (RGBA 0,0,0,0). When rendered to an OpenGL framebuffer without blending, transparent pixels appear black. To set a background colour explicitly:
+
+```csharp
+canvas.Clear(SKColors.Transparent); // or SKColors.White, etc.
+```
+
+**2. `GRGlFramebufferInfo(0, ...)` wraps the window's default framebuffer which is double-buffered**
+
+OpenGL windows use double-buffering: after `SwapBuffers()` (GLFW), the previously visible back buffer becomes the new front buffer, and the old front buffer (potentially undefined or cleared) is recycled as the new back buffer. Rendering directly to framebuffer 0 on the second frame therefore starts with potentially stale/empty content, which would explain the empty snapshot after the second flush.
+
+The recommended fix is to use an offscreen GPU surface instead:
+
+```csharp
+var imageInfo = new SKImageInfo((int)size.x, (int)size.y, SKColorType.Rgba8888);
+var surface = SKSurface.Create(grContext, false, imageInfo);
+var canvas = surface.Canvas;
+```
+
+**3. GPU texture sharing between two separate GL contexts**
+
+When you call `surface.Snapshot()`, the returned `SKImage` references the GPU texture from the context that created the surface. Drawing that image on `target` (a different GL context — GLFW's window context) will only work if the two contexts were created with shared resources (e.g., via `glfwWindowHint(GLFW_CONTEXT_SHARING, ...)` or platform-equivalent). If they are not sharing, `DrawImage` may silently produce nothing.
+
+When switching between contexts, also call:
+
+```csharp
+grContext.ResetContext(); // re-syncs Skia's GL state after an external GL operation
+```
+
+Could you confirm: are both contexts created with resource sharing, and is `glfwSwapBuffers` called in the render loop between the draw and the snapshot?
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1875,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T06:52:31Z"
+  },
+  "summary": "Reporter creates a GL-backed SKSurface wrapping framebuffer 0 using Silk.NET GLFW and GRContext, then observes a black canvas background on the first render and an empty SKSurface.Snapshot() after the second SKCanvas.Flush().",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.78
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "backends": [
+      "backend/OpenGL"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create GRGlInterface via GRGlInterface.Create()",
+        "Create GRContext via GRContext.CreateGl(grGlInterface)",
+        "Create GRBackendRenderTarget wrapping framebuffer 0 (GRGlFramebufferInfo(0, 0x8058))",
+        "Create SKSurface wrapping that render target",
+        "Call canvas.Clear() then draw shapes then canvas.Flush()",
+        "Call surface.Snapshot() and draw the image on a second Silk.NET GLFW canvas"
+      ],
+      "environmentDetails": "Silk.NET GLFW windowed OpenGL context; no SkiaSharp version specified; no platform specified",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1875#issuecomment-982350360",
+          "description": "Reporter tried SKSurface.Draw() but problems persist"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1875#issuecomment-1963422598",
+          "description": "Contributor hypothesis: clear() may treat transparent as black, or double-buffer second frame issue"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unknown",
+      "relevanceReason": "No SkiaSharp version mentioned; the API pattern used (GRGlInterface, GRContext, GRBackendRenderTarget) has been stable across releases"
+    }
+  },
+  "analysis": {
+    "summary": "The issue stems from two compounding API usage patterns: (1) canvas.Clear() with no arguments clears to transparent (0,0,0,0), which displays as black when composited onto the default OpenGL clear color; (2) GRGlFramebufferInfo(0, ...) wraps the default window framebuffer (framebuffer 0), which is double-buffered — after GLFW swaps buffers, the recycled back buffer may be undefined or cleared, explaining the empty second render/snapshot. Additionally, sharing GPU-backed SKImage snapshots across two separate OpenGL contexts requires explicit GL context sharing, which is not shown in the reporter's setup.",
+    "rationale": "Reporter explicitly filed as [QUESTION]; behavior is explainable by known OpenGL fundamentals (double-buffering side effects, transparent clear rendering black, cross-context resource isolation). No stack trace or crash; the observed output matches expected behavior for the usage pattern. Code investigation confirms canvas.Clear() without args delegates to SKColors.Empty (transparent), and Snapshot() wraps the GPU texture handle which is tied to the creating GL context.",
+    "keySignals": [
+      {
+        "text": "canvas.Clear()",
+        "source": "issue body",
+        "interpretation": "No color argument — clears with transparent (RGBA 0,0,0,0). On an opaque GL framebuffer this composites to black."
+      },
+      {
+        "text": "GRGlFramebufferInfo(0, 0x8058)",
+        "source": "issue body",
+        "interpretation": "Wraps framebuffer 0 (window's default framebuffer). Subject to double-buffering: after swap, back buffer content is undefined."
+      },
+      {
+        "text": "drawing it to another canvas that uses a Silk.NET GLFW window GLContext",
+        "source": "issue body",
+        "interpretation": "A second, separate GL context. SKImage snapshot textures are not automatically shared across GL contexts unless wglShareLists / glXCreateContext context sharing was configured."
+      },
+      {
+        "text": "if I do the drawing-and-flushing process multiple times at some other point in the program and not directly before the snapshot, there isn't an issue",
+        "source": "issue body",
+        "interpretation": "Timing-dependent — consistent with double-buffer swap: the extra draw cycles leave content in the back buffer before the snapshot is taken."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "lines": "274-275",
+        "finding": "SKSurface.Snapshot() delegates directly to sk_surface_new_image_snapshot(Handle) — no context switching, no copy to CPU. The resulting SKImage references the GPU texture held by the GL context that created the surface.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "canvas.Clear() with no arguments calls the overload with SKColor default (SKColors.Empty = 0,0,0,0 transparent). On an OpenGL framebuffer the canvas background is then fully transparent, which composites as black against the default GL clear color.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/GRContext.cs",
+        "lines": "131-138",
+        "finding": "GRContext.ResetContext(GRBackendState) exists to re-sync Skia's assumptions about GL state after an external GL operation. Reporter does not call this when switching between contexts.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/GRGlInterface.cs",
+        "lines": "27-33",
+        "finding": "GRGlInterface.Create() calls gr_glinterface_create_native_interface() to capture GL proc pointers from the currently-bound GL context. If a second context is made current afterward, the captured interface may reference the wrong context.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Replace canvas.Clear() with canvas.Clear(SKColors.White) or canvas.Clear(new SKColor(0, 0, 0, 0)) to be explicit about the background intent.",
+      "Use SKSurface.Create(grContext, imageInfo) for a fully offscreen GPU surface instead of wrapping framebuffer 0 directly — avoids double-buffer swap side effects.",
+      "Call grContext.ResetContext() before and after switching between SkiaSharp's GL context and GLFW's GL context.",
+      "Ensure both GL contexts are created with resource sharing (e.g. glfwWindowHint or platform-equivalent) if sharing GPU textures via Snapshot() is intended."
+    ],
+    "nextQuestions": [
+      "Are the two GL contexts (SkiaSharp's and GLFW's) created with shared resource lists?",
+      "Is GLFW swap buffers (glfwSwapBuffers) called between the render and snapshot calls?",
+      "What SkiaSharp version is in use?",
+      "What OS / GPU driver?"
+    ],
+    "resolution": {
+      "hypothesis": "The black background is from canvas.Clear() producing transparent (= black on GL). The empty second snapshot is a double-buffer side effect when wrapping framebuffer 0. The cross-context snapshot draw may silently fail because textures are not shared.",
+      "proposals": [
+        {
+          "title": "Use explicit background clear color",
+          "description": "Pass an explicit color to canvas.Clear(). Transparent is only meaningful when compositing over another surface with alpha blending enabled.",
+          "category": "workaround",
+          "codeSnippet": "canvas.Clear(SKColors.Transparent); // or SKColors.White, or any ARGB color",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use an offscreen GPU surface instead of framebuffer 0",
+          "description": "Create the SkiaSharp surface as a proper GPU offscreen render target instead of wrapping framebuffer 0. This avoids double-buffer side effects entirely.",
+          "category": "fix",
+          "codeSnippet": "// Instead of wrapping framebuffer 0:\nvar imageInfo = new SKImageInfo((int)size.x, (int)size.y, SKColorType.Rgba8888);\nsurface = SKSurface.Create(grContext, false, imageInfo);\ncanvas = surface.Canvas;",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "yes"
+        },
+        {
+          "title": "Reset GRContext when switching between GL contexts",
+          "description": "Call grContext.ResetContext() after making a different GL context current, to synchronize Skia's GL state cache.",
+          "category": "workaround",
+          "codeSnippet": "// After switching GL context:\ngrContext.ResetContext();",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use an offscreen GPU surface instead of framebuffer 0",
+      "recommendedReason": "Eliminates both the double-buffer problem and the framebuffer-0 cross-context sharing problem in one change. The clear color issue is a separate quick fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.72,
+      "reason": "The reported symptoms are consistent with known GL usage issues (clear color, double-buffering, context sharing) but confirmation requires knowing the GL context sharing setup and whether swap buffers is called in the render loop. A detailed response with workarounds should be posted.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "SkiaSharp version",
+      "Operating system and GPU/driver",
+      "Whether the two GL contexts are created with shared resource lists",
+      "Whether glfwSwapBuffers is called between rendering and snapshot"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and OpenGL backend labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp",
+          "backend/OpenGL"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workarounds addressing black background and empty snapshot causes",
+        "risk": "medium",
+        "confidence": 0.78,
+        "comment": "Thanks for the detailed code sample and screenshots.\n\nThere are a few things likely contributing to what you're seeing:\n\n**1. `canvas.Clear()` without a color produces a transparent (black) background**\n\n`canvas.Clear()` with no argument clears the canvas with `SKColors.Empty` — fully transparent (RGBA 0,0,0,0). When rendered to an OpenGL framebuffer without blending, transparent pixels appear black. To set a background colour explicitly:\n\n```csharp\ncanvas.Clear(SKColors.Transparent); // or SKColors.White, etc.\n```\n\n**2. `GRGlFramebufferInfo(0, ...)` wraps the window's default framebuffer which is double-buffered**\n\nOpenGL windows use double-buffering: after `SwapBuffers()` (GLFW), the previously visible back buffer becomes the new front buffer, and the old front buffer (potentially undefined or cleared) is recycled as the new back buffer. Rendering directly to framebuffer 0 on the second frame therefore starts with potentially stale/empty content, which would explain the empty snapshot after the second flush.\n\nThe recommended fix is to use an offscreen GPU surface instead:\n\n```csharp\nvar imageInfo = new SKImageInfo((int)size.x, (int)size.y, SKColorType.Rgba8888);\nvar surface = SKSurface.Create(grContext, false, imageInfo);\nvar canvas = surface.Canvas;\n```\n\n**3. GPU texture sharing between two separate GL contexts**\n\nWhen you call `surface.Snapshot()`, the returned `SKImage` references the GPU texture from the context that created the surface. Drawing that image on `target` (a different GL context — GLFW's window context) will only work if the two contexts were created with shared resources (e.g., via `glfwWindowHint(GLFW_CONTEXT_SHARING, ...)` or platform-equivalent). If they are not sharing, `DrawImage` may silently produce nothing.\n\nWhen switching between contexts, also call:\n\n```csharp\ngrContext.ResetContext(); // re-syncs Skia's GL state after an external GL operation\n```\n\nCould you confirm: are both contexts created with resource sharing, and is `glfwSwapBuffers` called in the render loop between the draw and the snapshot?"
+      }
+    ]
+  }
+}
+```
+
+</details>

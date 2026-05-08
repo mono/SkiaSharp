@@ -1,0 +1,286 @@
+# Issue Triage Report — #1943
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T08:06:00Z |
+| Type | type/question (0.97 (97%)) |
+| Area | area/SkiaSharp.Views (0.88 (88%)) |
+| Suggested action | close-as-not-a-bug (0.88 (88%)) |
+
+**Issue Summary:** User asks whether their approach of creating GPU-backed SKSurface objects (using the shared GRContext from SKGLControl) as layers and compositing them via DrawSurface is correct, and whether it actually uses the GPU.
+
+**Analysis:** The user's layering approach is fundamentally correct: sharing the GRContext from SKGLControl and creating GPU-backed surfaces via SKSurface.Create(context, budgeted, imageInfo) is the right way to produce GPU-accelerated off-screen surfaces. Two resource-management pitfalls exist: the SKSurface layer fields are never disposed, and the SKPaint object inside DrawTextInLayer is allocated per-call and never disposed. An alternative using SKPicture/SKPictureRecorder is more lightweight for static content.
+
+**Recommendations:** **close-as-not-a-bug** — This is a usage question with a clear answer: the approach is correct with minor resource-management improvements needed. No broken behavior exists.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-Classic |
+| Backends | backend/OpenGL |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** WinForms, SKGLControl, SkiaSharp ~2.80.2
+
+**Repository links:**
+- https://stackoverflow.com/questions/64737621/c-sharp-skiasharp-opentk-winform-how-to-draw-from-a-background-thread — Commenter feanor12 suggests using SKPicture objects as an alternative approach for caching draw commands
+
+**Code snippets:**
+
+```csharp
+SKSurface.Create(e.Surface.Context, true, new SKImageInfo(256, 256))
+```
+
+```csharp
+e.Surface.Canvas.DrawSurface(_layer1, 0, 0);
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | SKSurface.Create with GRContext and DrawSurface APIs are stable and still present in current versions. |
+
+## Analysis
+
+### Technical Summary
+
+The user's layering approach is fundamentally correct: sharing the GRContext from SKGLControl and creating GPU-backed surfaces via SKSurface.Create(context, budgeted, imageInfo) is the right way to produce GPU-accelerated off-screen surfaces. Two resource-management pitfalls exist: the SKSurface layer fields are never disposed, and the SKPaint object inside DrawTextInLayer is allocated per-call and never disposed. An alternative using SKPicture/SKPictureRecorder is more lightweight for static content.
+
+### Rationale
+
+Issue title and body both explicitly frame this as a question ('am I doing it correctly?'). No broken behavior is described — the code works for the reporter. Classification as type/question is unambiguous. Area is SkiaSharp.Views because the question centers on SKGLControl integration.
+
+### Key Signals
+
+- "Creating a new context using GRContext.Create(GRBackend.OpenGL) does not seem to work, I have to use the same one from the skGlControl" — **issue body** (Correct observation: a fresh GRContext creates a separate GL context that cannot share GPU resources with the existing one. The reporter found the right solution independently.)
+- "I started by creating a raster surface (I think) and it worked right away but I am under the impression that I won't use the GPU in that case?" — **issue body** (Correct assumption: SKSurface.Create(SKImageInfo) creates a CPU-raster surface; passing a GRContext creates a GPU-backed surface.)
+- "Here is a different approach using SKPicture objects" — **comment by feanor12** (SKPicture/SKPictureRecorder is a lighter alternative for content that doesn't change — records draw commands once and replays them cheaply.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKSurface.cs` | 180-196 | direct | SKSurface.Create(GRContext context, bool budgeted, SKImageInfo info) exists and delegates to GRRecordingContext overload — confirms the reporter's API usage is valid. |
+| `binding/SkiaSharp/SKCanvas.cs` | 589-602 | direct | DrawSurface(SKSurface, float, float, SKPaint) is public and delegates to surface.Draw(canvas, x, y, paint) — confirms the compositing approach used by the reporter is a supported pattern. |
+
+### Workarounds
+
+- Dispose _layer1 and _layer2 in Form.Dispose to avoid GPU memory leaks
+- Reuse a single SKPaint instance (or dispose it after use) instead of allocating one per DrawTextInLayer call
+- Use SKPicture/SKPictureRecorder instead of SKSurface for static layers — cheaper to replay and does not hold GPU texture memory
+
+### Resolution Proposals
+
+**Hypothesis:** The reporter's approach is correct. The main issues are resource disposal (SKSurface and SKPaint) and lack of context-loss handling.
+
+1. **Confirm approach and add disposal** — fix, confidence 0.92 (92%), cost/xs, validated=yes
+   - The SKSurface layer approach with a shared GRContext is valid and GPU-accelerated. Dispose the layer surfaces in Form.Dispose and reuse or dispose SKPaint instances.
+2. **Use SKPicture for static layers** — alternative, confidence 0.88 (88%), cost/s, validated=yes
+   - For layers whose content never changes, use SKPictureRecorder to record the draw commands once, then call DrawPicture on each paint event. This avoids holding a GPU texture per layer.
+
+**Recommended proposal:** Confirm approach and add disposal
+
+**Why:** Reporter's approach is correct for dynamic layers. Adding disposal is the only required fix.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.88 (88%) |
+| Reason | This is a usage question with a clear answer: the approach is correct with minor resource-management improvements needed. No broken behavior exists. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply question, views, windows, opengl labels | labels=type/question, area/SkiaSharp.Views, os/Windows-Classic, backend/OpenGL |
+| add-comment | medium | 0.88 (88%) | Confirm the approach is correct and point out disposal pitfalls and the SKPicture alternative | — |
+| close-issue | medium | 0.85 (85%) | Close as answered — usage question with complete answer | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Your approach is correct. Using `SKSurface.Create(e.Surface.Context, true, imageInfo)` creates a GPU-backed off-screen surface that shares the existing OpenGL context, and `DrawSurface` composites it efficiently — this is the right way to implement GPU-accelerated layers with SKGLControl.
+
+A couple of pitfalls to be aware of:
+
+1. **Dispose your layer surfaces.** `_layer1` and `_layer2` hold GPU texture memory and should be disposed when the form closes (override `Dispose(bool)` or handle `FormClosed`).
+2. **Dispose your SKPaint instances.** The `DrawTextInLayer` method allocates a new `SKPaint` on every call and never disposes it. Either reuse a cached instance or wrap it in `using`.
+3. **Context loss.** If the GL context is ever lost and recreated, your cached surfaces will become invalid. You may want to handle the `GRContext` reset event and recreate the layer surfaces when that happens.
+
+As an alternative for layers whose content never changes, `SKPicture`/`SKPictureRecorder` is more lightweight — it records draw commands once and replays them on each frame without holding a GPU texture per layer. A commenter linked a relevant example: https://stackoverflow.com/questions/64737621
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1943,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T08:06:00Z"
+  },
+  "summary": "User asks whether their approach of creating GPU-backed SKSurface objects (using the shared GRContext from SKGLControl) as layers and compositing them via DrawSurface is correct, and whether it actually uses the GPU.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "SKSurface.Create(e.Surface.Context, true, new SKImageInfo(256, 256))",
+        "e.Surface.Canvas.DrawSurface(_layer1, 0, 0);"
+      ],
+      "environmentDetails": "WinForms, SKGLControl, SkiaSharp ~2.80.2",
+      "repoLinks": [
+        {
+          "url": "https://stackoverflow.com/questions/64737621/c-sharp-skiasharp-opentk-winform-how-to-draw-from-a-background-thread",
+          "description": "Commenter feanor12 suggests using SKPicture objects as an alternative approach for caching draw commands"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKSurface.Create with GRContext and DrawSurface APIs are stable and still present in current versions."
+    }
+  },
+  "analysis": {
+    "summary": "The user's layering approach is fundamentally correct: sharing the GRContext from SKGLControl and creating GPU-backed surfaces via SKSurface.Create(context, budgeted, imageInfo) is the right way to produce GPU-accelerated off-screen surfaces. Two resource-management pitfalls exist: the SKSurface layer fields are never disposed, and the SKPaint object inside DrawTextInLayer is allocated per-call and never disposed. An alternative using SKPicture/SKPictureRecorder is more lightweight for static content.",
+    "rationale": "Issue title and body both explicitly frame this as a question ('am I doing it correctly?'). No broken behavior is described — the code works for the reporter. Classification as type/question is unambiguous. Area is SkiaSharp.Views because the question centers on SKGLControl integration.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "lines": "180-196",
+        "finding": "SKSurface.Create(GRContext context, bool budgeted, SKImageInfo info) exists and delegates to GRRecordingContext overload — confirms the reporter's API usage is valid.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "589-602",
+        "finding": "DrawSurface(SKSurface, float, float, SKPaint) is public and delegates to surface.Draw(canvas, x, y, paint) — confirms the compositing approach used by the reporter is a supported pattern.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Creating a new context using GRContext.Create(GRBackend.OpenGL) does not seem to work, I have to use the same one from the skGlControl",
+        "source": "issue body",
+        "interpretation": "Correct observation: a fresh GRContext creates a separate GL context that cannot share GPU resources with the existing one. The reporter found the right solution independently."
+      },
+      {
+        "text": "I started by creating a raster surface (I think) and it worked right away but I am under the impression that I won't use the GPU in that case?",
+        "source": "issue body",
+        "interpretation": "Correct assumption: SKSurface.Create(SKImageInfo) creates a CPU-raster surface; passing a GRContext creates a GPU-backed surface."
+      },
+      {
+        "text": "Here is a different approach using SKPicture objects",
+        "source": "comment by feanor12",
+        "interpretation": "SKPicture/SKPictureRecorder is a lighter alternative for content that doesn't change — records draw commands once and replays them cheaply."
+      }
+    ],
+    "workarounds": [
+      "Dispose _layer1 and _layer2 in Form.Dispose to avoid GPU memory leaks",
+      "Reuse a single SKPaint instance (or dispose it after use) instead of allocating one per DrawTextInLayer call",
+      "Use SKPicture/SKPictureRecorder instead of SKSurface for static layers — cheaper to replay and does not hold GPU texture memory"
+    ],
+    "resolution": {
+      "hypothesis": "The reporter's approach is correct. The main issues are resource disposal (SKSurface and SKPaint) and lack of context-loss handling.",
+      "proposals": [
+        {
+          "title": "Confirm approach and add disposal",
+          "description": "The SKSurface layer approach with a shared GRContext is valid and GPU-accelerated. Dispose the layer surfaces in Form.Dispose and reuse or dispose SKPaint instances.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use SKPicture for static layers",
+          "description": "For layers whose content never changes, use SKPictureRecorder to record the draw commands once, then call DrawPicture on each paint event. This avoids holding a GPU texture per layer.",
+          "category": "alternative",
+          "confidence": 0.88,
+          "effort": "cost/s",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Confirm approach and add disposal",
+      "recommendedReason": "Reporter's approach is correct for dynamic layers. Adding disposal is the only required fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "This is a usage question with a clear answer: the approach is correct with minor resource-management improvements needed. No broken behavior exists.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question, views, windows, opengl labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic",
+          "backend/OpenGL"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Confirm the approach is correct and point out disposal pitfalls and the SKPicture alternative",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Your approach is correct. Using `SKSurface.Create(e.Surface.Context, true, imageInfo)` creates a GPU-backed off-screen surface that shares the existing OpenGL context, and `DrawSurface` composites it efficiently — this is the right way to implement GPU-accelerated layers with SKGLControl.\n\nA couple of pitfalls to be aware of:\n\n1. **Dispose your layer surfaces.** `_layer1` and `_layer2` hold GPU texture memory and should be disposed when the form closes (override `Dispose(bool)` or handle `FormClosed`).\n2. **Dispose your SKPaint instances.** The `DrawTextInLayer` method allocates a new `SKPaint` on every call and never disposes it. Either reuse a cached instance or wrap it in `using`.\n3. **Context loss.** If the GL context is ever lost and recreated, your cached surfaces will become invalid. You may want to handle the `GRContext` reset event and recreate the layer surfaces when that happens.\n\nAs an alternative for layers whose content never changes, `SKPicture`/`SKPictureRecorder` is more lightweight — it records draw commands once and replays them on each frame without holding a GPU texture per layer. A commenter linked a relevant example: https://stackoverflow.com/questions/64737621"
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — usage question with complete answer",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>

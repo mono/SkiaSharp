@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #1875 (needs-info)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 1875, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-26T06:52:31Z"}, "summary": "Reporter creates a GL-backed SKSurface wrapping framebuffer 0 using Silk.NET GLFW and GRContext, then observes a black canvas background on the first render and an empty SKSurface.Snapshot() after the second SKCanvas.Flush().", "classification": {"type": {"value": "type/question", "confidence": 0.78}, "area": {"value": "area/SkiaSharp", "confidence": 0.9}, "backends": ["backend/OpenGL"]}, "evidence": {"reproEvidence": {"stepsToReproduce": ["Create GRGlInterface via GRGlInterface.Create()", "Create GRContext via GRContext.CreateGl(grGlInterface)", "Create GRBackendRenderTarget wrapping framebuffer 0 (GRGlFramebufferInfo(0, 0x8058))", "Create SKSurface wrapping that render target", "Call canvas.Clear() then draw shapes then canvas.Flush()", "Call surface.Snapshot() and draw the image on a second Silk.NET GLFW canvas"], "environmentDetails": "Silk.NET GLFW windowed OpenGL context; no SkiaSharp version specified; no platform specified", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/1875#issuecomment-982350360", "description": "Reporter tried SKSurface.Draw() but problems persist"}, {"url": "https://github.com/mono/SkiaSharp/issues/1875#issuecomment-1963422598", "description": "Contributor hypothesis: clear() may treat transparent as black, or double-buffer second frame issue"}]}, "versionAnalysis": {"mentionedVersions": [], "currentRelevance": "unknown", "relevanceReason": "No SkiaSharp version mentioned; the API pattern used (GRGlInterface, GRContext, GRBackendRenderTarget) has been stable across releases"}}, "analysis": {"summary": "The issue stems from two compounding API usage patterns: (1) canvas.Clear() with no arguments clears to transparent (0,0,0,0), which displays as black when composited onto the default OpenGL clear color; (2) GRGlFramebufferInfo(0, ...) wraps the default window framebuffer (framebuffer 0), which is double-buffered — after GLFW swaps buffers, the recycled back buffer may be undefined or cleared, explaining the empty second render/snapshot. Additionally, sharing GPU-backed SKImage snapshots across two separate OpenGL contexts requires explicit GL context sharing, which is not shown in the reporter's setup.", "rationale": "Reporter explicitly filed as [QUESTION]; behavior is explainable by known OpenGL fundamentals (double-buffering side effects, transparent clear rendering black, cross-context resource isolation). No stack trace or crash; the observed output matches expected behavior for the usage pattern. Code investigation confirms canvas.Clear() without args delegates to SKColors.Empty (transparent), and Snapshot() wraps the GPU texture handle which is tied to the creating GL context.", "keySignals": [{"text": "canvas.Clear()", "source": "issue body", "interpretation": "No color argument — clears with transparent (RGBA 0,0,0,0). On an opaque GL framebuffer this composites to black."}, {"text": "GRGlFramebufferInfo(0, 0x8058)", "source": "issue body", "interpretation": "Wraps framebuffer 0 (window's default framebuffer). Subject to double-buffering: after swap, back buffer content is undefined."}, {"text": "drawing it to another canvas that uses a Silk.NET GLFW window GLContext", "source": "issue body", "interpretation": "A second, separate GL context. SKImage snapshot textures are not automatically shared across GL contexts unless wglShareLists / glXCreateContext context sharing was configured."}, {"text": "if I do the drawing-and-flushing process multiple times at some other point in the program and not directly before the snapshot, there isn't an issue", "source": "issue body", "interpretation": "Timing-dependent — consistent with double-buffer swap: the extra draw cycles leave content in the back buffer before the snapshot is taken."}], "codeInvestigation": [{"file": "binding/SkiaSharp/SKSurface.cs", "lines": "274-275", "finding": "SKSurface.Snapshot() delegates directly to sk_surface_new_image_snapshot(Handle) — no context switching, no copy to CPU. The resulting SKImage references the GPU texture held by the GL context that created the surface.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKCanvas.cs", "finding": "canvas.Clear() with no arguments calls the overload with SKColor default (SKColors.Empty = 0,0,0,0 transparent). On an OpenGL framebuffer the canvas background is then fully transparent, which composites as black against the default GL clear color.", "relevance": "direct"}, {"file": "binding/SkiaSharp/GRContext.cs", "lines": "131-138", "finding": "GRContext.ResetContext(GRBackendState) exists to re-sync Skia's assumptions about GL state after an external GL operation. Reporter does not call this when switching between contexts.", "relevance": "related"}, {"file": "binding/SkiaSharp/GRGlInterface.cs", "lines": "27-33", "finding": "GRGlInterface.Create() calls gr_glinterface_create_native_interface() to capture GL proc pointers from the currently-bound GL context. If a second context is made current afterward, the captured interface may reference the wrong context.", "relevance": "related"}], "workarounds": ["Replace canvas.Clear() with canvas.Clear(SKColors.White) or canvas.Clear(new SKColor(0, 0, 0, 0)) to be explicit about the background intent.", "Use SKSurface.Create(grContext, imageInfo) for a fully offscreen GPU surface instead of wrapping framebuffer 0 directly — avoids double-buffer swap side effects.", "Call grContext.ResetContext() before and after switching between SkiaSharp's GL context and GLFW's GL context.", "Ensure both GL contexts are created with resource sharing (e.g. glfwWindowHint or platform-equivalent) if sharing GPU textures via Snapshot() is intended."], "nextQuestions": ["Are the two GL contexts (SkiaSharp's and GLFW's) created with shared resource lists?", "Is GLFW swap buffers (glfwSwapBuffers) called between the render and snapshot calls?", "What SkiaSharp version is in use?", "What OS / GPU driver?"], "resolution": {"hypothesis": "The black background is from canvas.Clear() producing transparent (= black on GL). The empty second snapshot is a double-buffer side effect when wrapping framebuffer 0. The cross-context snapshot draw may silently fail because textures are not shared.", "proposals": [{"title": "Use explicit background clear color", "description": "Pass an explicit color to canvas.Clear(). Transparent is only meaningful when compositing over another surface with alpha blending enabled.", "category": "workaround", "codeSnippet": "canvas.Clear(SKColors.Transparent); // or SKColors.White, or any ARGB color", "confidence": 0.85, "effort": "cost/xs", "validated": "yes"}, {"title": "Use an offscreen GPU surface instead of framebuffer 0", "description": "Create the SkiaSharp surface as a proper GPU offscreen render target instead of wrapping framebuffer 0. This avoids double-buffer side effects entirely.", "category": "fix", "codeSnippet": "// Instead of wrapping framebuffer 0:\nvar imageInfo = new SKImageInfo((int)size.x, (int)size.y, SKColorType.Rgba8888);\nsurface = SKSurface.Create(grContext, false, imageInfo);\ncanvas = surface.Canvas;", "confidence": 0.8, "effort": "cost/s", "validated": "yes"}, {"title": "Reset GRContext when switching between GL contexts", "description": "Call grContext.ResetContext() after making a different GL context current, to synchronize Skia's GL state cache.", "category": "workaround", "codeSnippet": "// After switching GL context:\ngrContext.ResetContext();", "confidence": 0.75, "effort": "cost/xs", "validated": "yes"}], "recommendedProposal": "Use an offscreen GPU surface instead of framebuffer 0", "recommendedReason": "Eliminates both the double-buffer problem and the framebuffer-0 cross-context sharing problem in one change. The clear color issue is a separate quick fix."}}, "output": {"actionability": {"suggestedAction": "needs-info", "confidence": 0.72, "reason": "The reported symptoms are consistent with known GL usage issues (clear color, double-buffering, context sharing) but confirmation requires knowing the GL context sharing setup and whether swap buffers is called in the render loop. A detailed response with workarounds should be posted.", "suggestedReproPlatform": "linux"}, "missingInfo": ["SkiaSharp version", "Operating system and GPU/driver", "Whether the two GL contexts are created with shared resource lists", "Whether glfwSwapBuffers is called between rendering and snapshot"], "actions": [{"type": "update-labels", "description": "Apply question and OpenGL backend labels", "risk": "low", "confidence": 0.9, "labels": ["type/question", "area/SkiaSharp", "backend/OpenGL"]}, {"type": "add-comment", "description": "Post analysis with workarounds addressing black background and empty snapshot causes", "risk": "medium", "confidence": 0.78, "comment": "Thanks for the detailed code sample and screenshots.\n\nThere are a few things likely contributing to what you're seeing:\n\n**1. `canvas.Clear()` without a color produces a transparent (black) background**\n\n`canvas.Clear()` with no argument clears the canvas with `SKColors.Empty` — fully transparent (RGBA 0,0,0,0). When rendered to an OpenGL framebuffer without blending, transparent pixels appear black. To set a background colour explicitly:\n\n```csharp\ncanvas.Clear(SKColors.Transparent); // or SKColors.White, etc.\n```\n\n**2. `GRGlFramebufferInfo(0, ...)` wraps the window's default framebuffer which is double-buffered**\n\nOpenGL windows use double-buffering: after `SwapBuffers()` (GLFW), the previously visible back buffer becomes the new front buffer, and the old front buffer (potentially undefined or cleared) is recycled as the new back buffer. Rendering directly to framebuffer 0 on the second frame therefore starts with potentially stale/empty content, which would explain the empty snapshot after the second flush.\n\nThe recommended fix is to use an offscreen GPU surface instead:\n\n```csharp\nvar imageInfo = new SKImageInfo((int)size.x, (int)size.y, SKColorType.Rgba8888);\nvar surface = SKSurface.Create(grContext, false, imageInfo);\nvar canvas = surface.Canvas;\n```\n\n**3. GPU texture sharing between two separate GL contexts**\n\nWhen you call `surface.Snapshot()`, the returned `SKImage` references the GPU texture from the context that created the surface. Drawing that image on `target` (a different GL context — GLFW's window context) will only work if the two contexts were created with shared resources (e.g., via `glfwWindowHint(GLFW_CONTEXT_SHARING, ...)` or platform-equivalent). If they are not sharing, `DrawImage` may silently produce nothing.\n\nWhen switching between contexts, also call:\n\n```csharp\ngrContext.ResetContext(); // re-syncs Skia's GL state after an external GL operation\n```\n\nCould you confirm: are both contexts created with resource sharing, and is `glfwSwapBuffers` called in the render loop between the draw and the snapshot?"}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

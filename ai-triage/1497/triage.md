@@ -1,0 +1,326 @@
+# Issue Triage Report — #1497
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T06:02:30Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/Build (0.90 (90%)) |
+| Suggested action | needs-investigation (0.75 (75%)) |
+
+**Issue Summary:** SkiaSharp.Views.Forms 2.80.2 on Samsung Tizen includes the linux-x86 native folder in the TPK archive even when RuntimeIdentifier is set to tizen-armel, preventing Samsung Store submission.
+
+**Analysis:** In SkiaSharp 2.80.2, the Tizen native asset packaging erroneously included the linux-x86 folder in TPK archives even when RuntimeIdentifier was set to tizen-armel. This was due to a conflict in old MSBuild target files (binding/SkiaSharp.Tizen/nuget/build/tizen40/SkiaSharp.targets) that did not properly gate linux-x86 asset inclusion on the RuntimeIdentifier. The maintainer confirmed the issue and a community workaround (custom MSBuild target) was provided. The current codebase (SkiaSharp.NativeAssets.Tizen) has been restructured to use proper tizen-* RIDs, suggesting this may be fixed in current versions.
+
+**Recommendations:** **needs-investigation** — The old target files causing the issue no longer exist and the current packaging uses proper tizen-* RIDs, but the issue has never been explicitly closed as fixed. Verification with current package versions on a Tizen build environment is needed.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | os/Tizen |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | partner/tizen |
+
+## Evidence
+
+### Reproduction
+
+1. Create a Xamarin.Forms Tizen wearable project targeting Tizen.NET 5.0
+2. Add SkiaSharp.Views.Forms 2.80.2 NuGet package
+3. Set <RuntimeIdentifier>tizen-armel</RuntimeIdentifier> in csproj
+4. Build the TPK package
+5. Observe that linux-x86 folder is still present under bin/runtimes/ in the archive
+
+**Environment:** Visual Studio 2017 15.9.20, Tizen.NET 5.0.0.14629, Tizen.NET.API4 4.0.1.14152, Xamarin.Forms 4.8.0.1269
+
+**Repository links:**
+- https://developer.tizen.org/ko/forums/tizen-.net/unable-publish-c-tizen-.net-wearable-tpk-seller-portal?langswitch=ko — Samsung developer forum discussion on removing x86 folder for Tizen store submission
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | platform-specific |
+| Error message | Samsung Store pre-certification fails: linux-x86 folder included in TPK when RuntimeIdentifier=tizen-armel |
+| Repro quality | complete |
+| Target frameworks | tizen50 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2, 1.68.3 |
+| Worked in | 1.68.3 |
+| Broke in | 2.80.2 |
+| Current relevance | unlikely |
+| Relevance reason | Current codebase has replaced the old SkiaSharp.Tizen target files with SkiaSharp.NativeAssets.Tizen using proper tizen-* RIDs. The linux-x86 folder is now exclusively in SkiaSharp.NativeAssets.Linux and should not be pulled into Tizen packages. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.95 (95%) |
+| Reason | Reporter and maintainer confirmed it worked in 1.68.3 and broke in 2.80.2. The packaging structure changed between those versions. |
+| Worked in version | 1.68.3 |
+| Broke in version | 2.80.2 |
+
+## Analysis
+
+### Technical Summary
+
+In SkiaSharp 2.80.2, the Tizen native asset packaging erroneously included the linux-x86 folder in TPK archives even when RuntimeIdentifier was set to tizen-armel. This was due to a conflict in old MSBuild target files (binding/SkiaSharp.Tizen/nuget/build/tizen40/SkiaSharp.targets) that did not properly gate linux-x86 asset inclusion on the RuntimeIdentifier. The maintainer confirmed the issue and a community workaround (custom MSBuild target) was provided. The current codebase (SkiaSharp.NativeAssets.Tizen) has been restructured to use proper tizen-* RIDs, suggesting this may be fixed in current versions.
+
+### Rationale
+
+Classified as type/bug because a previously working behavior (correct tizen-armel packaging) regressed between versions. Area is Build because the root cause is in MSBuild packaging targets, not the SkiaSharp drawing API itself. The partner/tizen and tenet/compatibility labels apply because this directly blocks Samsung Store certification for Tizen developers.
+
+### Key Signals
+
+- "When I include this line in the .csproj file, it still includes the linux-x86 folder in the archive" — **issue body** (The RuntimeIdentifier=tizen-armel constraint was not being respected by the old packaging targets for linux-x86 assets.)
+- "I can't use the default runtimes folder as the linux-x86 path conflicts with Linux desktop" — **comment by maintainer @mattleibow** (Maintainer acknowledged the structural packaging conflict requiring the old target files to be explicitly updated.)
+- "I've confirmed the problem that the linux-x86 folder is included in the tpk, as you said" — **comment by contributor @rookiejava** (Issue reproduced and confirmed in v2.80.3 as well. A workaround MSBuild target was provided.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp.NativeAssets.Tizen/SkiaSharp.NativeAssets.Tizen.csproj` | — | direct | Current Tizen native assets package exclusively uses tizen-armel, tizen-x86, tizen-x64, tizen-arm64 RIDs. No linux-* paths present. The old SkiaSharp.Tizen/nuget/build/tizen40/SkiaSharp.targets path referenced by the maintainer no longer exists in the codebase. |
+| `binding/SkiaSharp.NativeAssets.Linux/buildTransitive/net4/SkiaSharp.targets` | — | related | Linux native assets targets include linux-x86, linux-x64, linux-arm, linux-arm64 etc. This package is separate from Tizen and should not be referenced in Tizen builds. The conflict reported in 2020 arose from the old shared SkiaSharp.Tizen targets file that did not filter out linux-x86 when building for tizen-armel. |
+
+### Workarounds
+
+- Add the following MSBuild target to your .csproj to explicitly remove linux-x86 assets when building with RuntimeIdentifier=tizen-armel:
+```xml
+<Target Name="__RemoveLinuxX86Asset" AfterTargets="TizenResolveTpkPackageFiles" Condition="'$(RuntimeIdentifier)' == 'tizen-armel'">
+  <ItemGroup>
+    <TizenResolvedFileToTpk Remove="@(TizenResolvedFileToTpk)" Condition="$([System.String]::Copy('%(TizenTpkSubPath)').StartsWith('bin\runtimes\linux-x86\native\'))" />
+  </ItemGroup>
+</Target>
+```
+
+### Next Questions
+
+- Is the issue still reproducible with the current version of SkiaSharp (3.x) and current Tizen SDK?
+- Does the old SkiaSharp.Views.Forms (Xamarin.Forms) package still pull in SkiaSharp.NativeAssets.Linux as a dependency alongside SkiaSharp.NativeAssets.Tizen?
+
+### Resolution Proposals
+
+**Hypothesis:** The old SkiaSharp.Tizen MSBuild targets included linux-x86 assets unconditionally without conditioning on RuntimeIdentifier. The current packaging has been refactored to use separate tizen-* RID packages, which should resolve the conflict. However, verification is needed with the current SkiaSharp.Views.Forms package to confirm the fix.
+
+1. **Use workaround MSBuild target (provided by @rookiejava)** — workaround, confidence 0.95 (95%), cost/xs, validated=yes
+   - Add a custom MSBuild target to explicitly remove linux-x86 assets from the TPK when RuntimeIdentifier=tizen-armel. This is a client-side workaround for old package versions.
+2. **Verify fix in current SkiaSharp versions** — investigation, confidence 0.80 (80%), cost/s, validated=untested
+   - Test whether SkiaSharp 3.x with current SkiaSharp.NativeAssets.Tizen still includes linux-x86 in Tizen TPK archives. If the refactored packaging resolves the issue, close as fixed.
+
+**Recommended proposal:** Verify fix in current SkiaSharp versions
+
+**Why:** The codebase restructuring strongly suggests the root cause is fixed, but verification with the current package is needed before closing.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.75 (75%) |
+| Reason | The old target files causing the issue no longer exist and the current packaging uses proper tizen-* RIDs, but the issue has never been explicitly closed as fixed. Verification with current package versions on a Tizen build environment is needed. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply type/bug, area/Build, os/Tizen, tenet/compatibility, partner/tizen labels | labels=type/bug, area/Build, os/Tizen, tenet/compatibility, partner/tizen |
+| add-comment | medium | 0.80 (80%) | Post analysis with workaround and note that current versions may be fixed | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for reporting this! A workaround was shared by @rookiejava in the comments above — adding a custom MSBuild target to strip the `linux-x86` folder from the TPK when `RuntimeIdentifier=tizen-armel`.
+
+Looking at the current codebase, the old `SkiaSharp.Tizen` target files have been replaced by a `SkiaSharp.NativeAssets.Tizen` package that uses proper `tizen-*` RIDs (not `linux-x86`). This restructuring should prevent the conflict from occurring in newer versions.
+
+Could you test whether this issue still occurs with the latest SkiaSharp release? If it's fixed, we can close this issue.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1497,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T06:02:30Z"
+  },
+  "summary": "SkiaSharp.Views.Forms 2.80.2 on Samsung Tizen includes the linux-x86 native folder in the TPK archive even when RuntimeIdentifier is set to tizen-armel, preventing Samsung Store submission.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Tizen"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ],
+    "partner": "partner/tizen"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "platform-specific",
+      "errorMessage": "Samsung Store pre-certification fails: linux-x86 folder included in TPK when RuntimeIdentifier=tizen-armel",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "tizen50"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Xamarin.Forms Tizen wearable project targeting Tizen.NET 5.0",
+        "Add SkiaSharp.Views.Forms 2.80.2 NuGet package",
+        "Set <RuntimeIdentifier>tizen-armel</RuntimeIdentifier> in csproj",
+        "Build the TPK package",
+        "Observe that linux-x86 folder is still present under bin/runtimes/ in the archive"
+      ],
+      "environmentDetails": "Visual Studio 2017 15.9.20, Tizen.NET 5.0.0.14629, Tizen.NET.API4 4.0.1.14152, Xamarin.Forms 4.8.0.1269",
+      "repoLinks": [
+        {
+          "url": "https://developer.tizen.org/ko/forums/tizen-.net/unable-publish-c-tizen-.net-wearable-tpk-seller-portal?langswitch=ko",
+          "description": "Samsung developer forum discussion on removing x86 folder for Tizen store submission"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2",
+        "1.68.3"
+      ],
+      "workedIn": "1.68.3",
+      "brokeIn": "2.80.2",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Current codebase has replaced the old SkiaSharp.Tizen target files with SkiaSharp.NativeAssets.Tizen using proper tizen-* RIDs. The linux-x86 folder is now exclusively in SkiaSharp.NativeAssets.Linux and should not be pulled into Tizen packages."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.95,
+      "reason": "Reporter and maintainer confirmed it worked in 1.68.3 and broke in 2.80.2. The packaging structure changed between those versions.",
+      "workedInVersion": "1.68.3",
+      "brokeInVersion": "2.80.2"
+    }
+  },
+  "analysis": {
+    "summary": "In SkiaSharp 2.80.2, the Tizen native asset packaging erroneously included the linux-x86 folder in TPK archives even when RuntimeIdentifier was set to tizen-armel. This was due to a conflict in old MSBuild target files (binding/SkiaSharp.Tizen/nuget/build/tizen40/SkiaSharp.targets) that did not properly gate linux-x86 asset inclusion on the RuntimeIdentifier. The maintainer confirmed the issue and a community workaround (custom MSBuild target) was provided. The current codebase (SkiaSharp.NativeAssets.Tizen) has been restructured to use proper tizen-* RIDs, suggesting this may be fixed in current versions.",
+    "rationale": "Classified as type/bug because a previously working behavior (correct tizen-armel packaging) regressed between versions. Area is Build because the root cause is in MSBuild packaging targets, not the SkiaSharp drawing API itself. The partner/tizen and tenet/compatibility labels apply because this directly blocks Samsung Store certification for Tizen developers.",
+    "keySignals": [
+      {
+        "text": "When I include this line in the .csproj file, it still includes the linux-x86 folder in the archive",
+        "source": "issue body",
+        "interpretation": "The RuntimeIdentifier=tizen-armel constraint was not being respected by the old packaging targets for linux-x86 assets."
+      },
+      {
+        "text": "I can't use the default runtimes folder as the linux-x86 path conflicts with Linux desktop",
+        "source": "comment by maintainer @mattleibow",
+        "interpretation": "Maintainer acknowledged the structural packaging conflict requiring the old target files to be explicitly updated."
+      },
+      {
+        "text": "I've confirmed the problem that the linux-x86 folder is included in the tpk, as you said",
+        "source": "comment by contributor @rookiejava",
+        "interpretation": "Issue reproduced and confirmed in v2.80.3 as well. A workaround MSBuild target was provided."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Tizen/SkiaSharp.NativeAssets.Tizen.csproj",
+        "finding": "Current Tizen native assets package exclusively uses tizen-armel, tizen-x86, tizen-x64, tizen-arm64 RIDs. No linux-* paths present. The old SkiaSharp.Tizen/nuget/build/tizen40/SkiaSharp.targets path referenced by the maintainer no longer exists in the codebase.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Linux/buildTransitive/net4/SkiaSharp.targets",
+        "finding": "Linux native assets targets include linux-x86, linux-x64, linux-arm, linux-arm64 etc. This package is separate from Tizen and should not be referenced in Tizen builds. The conflict reported in 2020 arose from the old shared SkiaSharp.Tizen targets file that did not filter out linux-x86 when building for tizen-armel.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Add the following MSBuild target to your .csproj to explicitly remove linux-x86 assets when building with RuntimeIdentifier=tizen-armel:\n```xml\n<Target Name=\"__RemoveLinuxX86Asset\" AfterTargets=\"TizenResolveTpkPackageFiles\" Condition=\"'$(RuntimeIdentifier)' == 'tizen-armel'\">\n  <ItemGroup>\n    <TizenResolvedFileToTpk Remove=\"@(TizenResolvedFileToTpk)\" Condition=\"$([System.String]::Copy('%(TizenTpkSubPath)').StartsWith('bin\\runtimes\\linux-x86\\native\\'))\" />\n  </ItemGroup>\n</Target>\n```"
+    ],
+    "nextQuestions": [
+      "Is the issue still reproducible with the current version of SkiaSharp (3.x) and current Tizen SDK?",
+      "Does the old SkiaSharp.Views.Forms (Xamarin.Forms) package still pull in SkiaSharp.NativeAssets.Linux as a dependency alongside SkiaSharp.NativeAssets.Tizen?"
+    ],
+    "resolution": {
+      "hypothesis": "The old SkiaSharp.Tizen MSBuild targets included linux-x86 assets unconditionally without conditioning on RuntimeIdentifier. The current packaging has been refactored to use separate tizen-* RID packages, which should resolve the conflict. However, verification is needed with the current SkiaSharp.Views.Forms package to confirm the fix.",
+      "proposals": [
+        {
+          "title": "Use workaround MSBuild target (provided by @rookiejava)",
+          "description": "Add a custom MSBuild target to explicitly remove linux-x86 assets from the TPK when RuntimeIdentifier=tizen-armel. This is a client-side workaround for old package versions.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Verify fix in current SkiaSharp versions",
+          "description": "Test whether SkiaSharp 3.x with current SkiaSharp.NativeAssets.Tizen still includes linux-x86 in Tizen TPK archives. If the refactored packaging resolves the issue, close as fixed.",
+          "category": "investigation",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Verify fix in current SkiaSharp versions",
+      "recommendedReason": "The codebase restructuring strongly suggests the root cause is fixed, but verification with the current package is needed before closing."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "The old target files causing the issue no longer exist and the current packaging uses proper tizen-* RIDs, but the issue has never been explicitly closed as fixed. Verification with current package versions on a Tizen build environment is needed.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/Build, os/Tizen, tenet/compatibility, partner/tizen labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "os/Tizen",
+          "tenet/compatibility",
+          "partner/tizen"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workaround and note that current versions may be fixed",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thank you for reporting this! A workaround was shared by @rookiejava in the comments above — adding a custom MSBuild target to strip the `linux-x86` folder from the TPK when `RuntimeIdentifier=tizen-armel`.\n\nLooking at the current codebase, the old `SkiaSharp.Tizen` target files have been replaced by a `SkiaSharp.NativeAssets.Tizen` package that uses proper `tizen-*` RIDs (not `linux-x86`). This restructuring should prevent the conflict from occurring in newer versions.\n\nCould you test whether this issue still occurs with the latest SkiaSharp release? If it's fixed, we can close this issue."
+      }
+    ]
+  }
+}
+```
+
+</details>
