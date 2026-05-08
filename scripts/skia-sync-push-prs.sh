@@ -39,7 +39,7 @@ else
     SS_BODY_INTRO="Automated Skia milestone bump from m${CURRENT} to m${TARGET}."
 fi
 
-WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-track.lock.yml)"
+WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
 
 # --- mono/skia: push submodule branch and create/update PR ---
 push_skia() {

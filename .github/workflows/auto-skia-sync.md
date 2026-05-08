@@ -1,5 +1,5 @@
 ---
-description: "Daily upstream Skia milestone tracking - merges new commits, resolves conflicts, builds, tests, and creates PRs."
+description: "Daily upstream Skia milestone sync - merges new commits, resolves conflicts, builds, tests, and creates PRs."
 
 # -- Triggers ----------------------------------------------------------
 # Three daily crons: current (7 AM), next (12 PM), latest (5 PM UTC).
