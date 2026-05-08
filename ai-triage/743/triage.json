@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 743,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-27T07:15:48Z",
+    "currentLabels": ["type/question"]
+  },
+  "summary": "Reporter asks whether SkiaSharp can be configured to throw .NET-style exceptions on failure instead of returning boolean false, and whether extended error details can be retrieved when operations fail.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Evaluating SkiaSharp as replacement for GDI+/System.Drawing.dll",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/1169", "description": "Closely related follow-up question (#1169) asking same thing — closed by maintainer as completed in 2020" }
+      ],
+      "relatedIssues": [1169]
+    }
+  },
+  "analysis": {
+    "summary": "The reporter is confused by SkiaSharp's C-style boolean error reporting rather than .NET-style exception throwing. The maintainer has already answered this in comments: exception-throwing is a design constraint because (a) SkiaSharp cannot make breaking changes, (b) a duplicate API is not viable, and (c) Skia's native layer often does not provide extended error information. This is by-design behaviour, not a bug.",
+    "rationale": "The issue is a usage question with a clear answer that has already been provided by the maintainer. `SKBitmap.ScalePixels` returns bool as confirmed by code inspection. The pattern is by-design, matching the underlying Skia C API. Related issue #1169 asks the same question and was formally closed as completed. The appropriate action is to provide a summarising answer and close.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "691-711",
+        "finding": "SKBitmap.ScalePixels returns bool reflecting the native Skia API return value; null checks throw ArgumentNullException but operation failure returns false with no extended error information",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "24-29",
+        "finding": "Constructors DO throw InvalidOperationException when the native handle is null, establishing a mixed pattern: constructors throw, operations return bool",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Methods that can fail seem to return false only, like e.g. SKBitmap.ScalePixels",
+        "source": "issue body",
+        "interpretation": "Reporter has correctly identified the boolean-return error handling pattern in SkiaSharp"
+      },
+      {
+        "text": "we can't do breaking changes ... a duplicate API is not really viable ... starting with exceptions now will be very confusing/unexpected",
+        "source": "maintainer comment (mattleibow, 2020-06-10)",
+        "interpretation": "Maintainer confirmed this is by-design and cannot be changed due to ABI and API stability constraints"
+      },
+      {
+        "text": "Often there is no actual data coming from the native API, so this is hard. However, some APIs also have an overload that provides some result or status value.",
+        "source": "maintainer comment (mattleibow, 2020-06-10)",
+        "interpretation": "Partial answer: some APIs do provide richer feedback via overloads with result/status output parameters"
+      }
+    ],
+    "workarounds": [
+      "Check the bool return value and throw your own exception: `if (!bitmap.ScalePixels(dst, options)) throw new InvalidOperationException(\"ScalePixels failed\");`",
+      "Validate inputs before calling (dimensions, color types compatible) to reduce unexpected false returns",
+      "Some SKPixmap/SKImage APIs expose overloads or related methods that return status values with more context"
+    ],
+    "resolution": {
+      "hypothesis": "The reporter wants .NET-style exception throwing. This is a known by-design limitation of SkiaSharp's thin wrapper over Skia's C API. The workaround is to check return values and throw application-level exceptions as needed.",
+      "proposals": [
+        {
+          "title": "Wrap boolean return in your own exception-throwing helper",
+          "description": "Callers can trivially create extension methods or helpers that throw on false, giving them .NET-style error handling at the application layer.",
+          "category": "workaround",
+          "codeSnippet": "public static bool ScalePixelsOrThrow(this SKBitmap src, SKBitmap dst, SKSamplingOptions options)\n{\n    if (!src.ScalePixels(dst, options))\n        throw new InvalidOperationException(\"SKBitmap.ScalePixels failed — check that dimensions and color types are compatible.\");\n    return true;\n}",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Wrap boolean return in your own exception-throwing helper",
+      "recommendedReason": "Simple, ABI-safe, and gives the caller full control over the exception type and message."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "The behaviour is by-design: SkiaSharp follows the Skia C API convention of returning bool/null on failure. The maintainer has already explained this in comments. Related issue #1169 was closed as completed for the same question.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/question and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/question", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer explaining the by-design pattern and providing workaround",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "Thanks for the question! SkiaSharp wraps Google's Skia C API, which uses C-style error reporting (returning `false`/`null` on failure) rather than throwing exceptions. This is by-design for two reasons:\n\n1. **ABI stability** — SkiaSharp cannot change existing method signatures, and adding exception-throwing overloads would duplicate the API in a confusing way.\n2. **Native layer limits** — Skia's native code often does not provide extended error information, so there is nothing more to surface.\n\nThe maintainer addressed this in detail in the comments above (June 2020). See also the related discussion in #1169.\n\n**Workaround** — you can wrap the call in your own helper to get .NET-style exception throwing:\n\n```csharp\npublic static void ScalePixelsOrThrow(this SKBitmap src, SKBitmap dst, SKSamplingOptions options)\n{\n    if (!src.ScalePixels(dst, options))\n        throw new InvalidOperationException(\n            \"SKBitmap.ScalePixels failed — verify that dimensions and color types are compatible.\");\n}\n```\n\nThis gives you full control over the exception type and message without any SkiaSharp API changes."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — behaviour is by-design and workaround provided",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related question #1169 which covers the same topic",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 1169
+      }
+    ]
+  }
+}

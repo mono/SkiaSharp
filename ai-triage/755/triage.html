@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #755 (needs-info)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 755, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-27T08:00:00Z", "currentLabels": ["type/question", "backend/OpenGL"]}, "summary": "Reporter experiences intermittent SystemAccessViolation crashes when using GRContext-based GPU offscreen rendering to build and merge bitmaps on UWP and iOS, and asks for guidance on GPU synchronization, safe bitmap compositing patterns, and crash recovery.", "classification": {"type": {"value": "type/question", "confidence": 0.75}, "area": {"value": "area/SkiaSharp", "confidence": 0.85}, "platforms": ["os/Windows-Universal-UWP", "os/iOS"], "backends": ["backend/OpenGL"], "tenets": ["tenet/reliability"]}, "evidence": {"reproEvidence": {"stepsToReproduce": ["Create a GRContext on UWP or iOS using EGL/OpenGL", "In a single background thread, receive tiles and for each: create GPU surface, render features, call context.Flush(), take snapshot, convert to bitmap", "Maintain two progressively-updated bitmaps (features and markups)", "When merging: draw features bitmap then markup bitmap onto a new canvas", "Under heavy load (rapid pan/zoom), observe intermittent SystemAccessViolation"], "environmentDetails": "UWP and iOS; GPU-accelerated GRContext via EGL/OpenGL; SkiaSharp circa early 2019; single background rendering thread", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/688", "description": "Predecessor question about offscreen GPU rendering, answered by maintainer"}, {"url": "https://github.com/mono/SkiaSharp/issues/976", "description": "Follow-up issue by same reporter: multi-threaded GPU context memory violations"}]}}, "analysis": {"summary": "Reporter is compositing GPU-accelerated offscreen bitmaps using GRContext on UWP and iOS. Intermittent SystemAccessViolation crashes during bitmap merge are likely caused by non-synchronous GPU flush — GRContext.Flush() without synchronous=true submits GPU commands but does not wait for completion, so pixel read-back or subsequent canvas draws may race with pending GPU work. Additional platform complexity: iOS requires OpenGL operations on a designated GL thread; UWP/ANGLE requires the EGL context to be current on the calling thread before GPU API calls. No stack trace was provided, preventing definitive root cause confirmation.", "rationale": "Classified as type/question because the reporter is asking for usage guidance and crash recovery patterns. The crashes are real but the SkiaSharp API is working as designed — the problem is a combination of non-synchronous flush semantics, GPU thread affinity requirements on iOS, and EGL context binding requirements on UWP. The maintainer already asked clarifying questions about threading that were never answered.", "codeInvestigation": [{"file": "binding/SkiaSharp/GRContext.cs", "lines": "140-148", "finding": "GRContext.Flush() and GRContext.Flush(bool submit, bool synchronous=false) both exist. The parameterless overload calls the two-param version with synchronous=false, meaning GPU commands are submitted but the call returns before GPU completion. Flush(submit: true, synchronous: true) is needed to wait for GPU work to finish before CPU read-back.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKSurface.cs", "lines": "274-275", "finding": "SKSurface.Snapshot() returns an SKImage. For GPU-backed surfaces the snapshot may reference GPU-resident texture memory. If a synchronous flush has not been called, reading that memory from CPU via SKBitmap.FromImage races with in-flight GPU commands.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKBitmap.cs", "lines": "715-726", "finding": "SKBitmap.FromImage(SKImage) calls image.ReadPixels() internally and can return null if pixel read-back fails. If the underlying GPU texture data is inaccessible or incomplete the method disposes the bitmap and returns null silently — no exception is thrown.", "relevance": "related"}], "keySignals": [{"text": "I also thought that the flush method would finish guarantee that the GPU has all the instructions it needs to generate the updates to the canvas.", "source": "issue body", "interpretation": "Reporter believes Flush() is synchronous. GRContext.Flush() without synchronous=true is fire-and-forget — GPU work is submitted but completion is not awaited."}, {"text": "Adding in the 'surface.Dispose()' call at the end of the method significantly reduces the number of times this occurs.", "source": "issue body", "interpretation": "Disposing the surface may incidentally flush and synchronize pending GPU work as part of cleanup, explaining why it reduces but does not eliminate the crash."}, {"text": "It is like the markups bitmap hasn't closed yet, and I'm trying to render it to a canvas.", "source": "issue body", "interpretation": "Accurate intuition — the GPU has not finished rendering the markup surface before its pixels are read back to create a bitmap and drawn to the next canvas."}, {"text": "For some reason, I seem to recall that images created with one context can't be used by another", "source": "comment by mattleibow", "interpretation": "Maintainer hint: GPU-backed SKImage/SKBitmap objects are context-bound. Sharing them across rendering passes is unsafe unless pixels are fully materialized to CPU first."}], "nextQuestions": ["Stack trace for the SystemAccessViolation — which SkiaSharp or native method is at the top?", "SkiaSharp version in use.", "Is a single GRContext shared for both the features surface and markup surface, or are separate contexts used?", "Is the background thread where GPU work happens the same thread where the EGL context was created and made-current?", "Is any SkiaSharp object (GRContext, SKSurface, SKCanvas, SKBitmap) accessed from any other thread, even via async/await or dispatcher queues?"], "workarounds": ["Call grContext.Flush(submit: true, synchronous: true) after drawing and before Snapshot()/SKBitmap.FromImage() — this waits for GPU completion. On iOS this must be on the designated GL thread; on UWP/ANGLE the EGL context must be current on the calling thread.", "Use a CPU raster surface (SKSurface.Create(SKImageInfo)) for the bitmap compositing/merge step. Render each tile to a GPU surface for speed, but merge already-rendered bitmaps on a CPU canvas — eliminates GPU sync complexity entirely for the compositing phase.", "Convert GPU surface pixels explicitly to CPU before compositing: call surface.ReadPixels() to pull data into a pre-allocated buffer, then construct an SKBitmap from that buffer to avoid GPU-resident bitmap sharing."], "resolution": {"hypothesis": "Non-synchronous GPU flush causes pixel read-back or bitmap draw to race with pending GPU commands, compounded by GPU thread affinity requirements on iOS and EGL context binding requirements on UWP/ANGLE.", "proposals": [{"title": "Use synchronous flush before snapshot/bitmap operations", "description": "Replace grContext.Flush() with grContext.Flush(submit: true, synchronous: true) before Snapshot() and SKBitmap.FromImage(). Null-check the result. Platform caveats: on iOS must execute on the designated GL thread; on UWP/ANGLE the EGL context must be current on the calling thread. Note SKBitmap.FromImage() returns null on failure.", "category": "workaround", "codeSnippet": "// Ensure GPU work completes before CPU read-back (must be on correct GL thread):\ngrContext.Flush(submit: true, synchronous: true);\nusing var snapshot = surface.Snapshot();\nvar bitmap = SKBitmap.FromImage(snapshot);\nif (bitmap == null) { /* GPU read-back failed — handle error */ return; }\n// Use bitmap here; dispose it when done", "confidence": 0.4, "effort": "cost/xs", "validated": "no"}, {"title": "Use CPU raster surface for the compositing step", "description": "Render individual tiles to GPU surfaces for speed, then composite (merge features + markup bitmaps) using a CPU raster surface created with SKSurface.Create(SKImageInfo). The GPU surfaces produce CPU-resident bitmaps after a synchronous flush; compositing them on a CPU canvas avoids GPU synchronization complexity entirely.", "category": "alternative", "confidence": 0.82, "effort": "cost/s", "validated": "untested"}], "recommendedProposal": "Use CPU raster surface for the compositing step", "recommendedReason": "Avoids GPU synchronization entirely for the merge step. The GPU is still used for individual tile rendering where it provides speed benefit; the compositing phase does not require GPU acceleration and is where the crashes occur."}}, "output": {"actionability": {"suggestedAction": "needs-info", "confidence": 0.75, "reason": "Guidance on GPU flush semantics can be provided, but root cause cannot be confirmed without a stack trace and clarity on threading. The maintainer's unanswered questions from 2019 remain open.", "suggestedReproPlatform": "linux"}, "missingInfo": ["Stack trace for the SystemAccessViolation exception", "SkiaSharp version in use", "Whether a single GRContext is shared between features and markup surface rendering", "Whether any thread boundary is crossed, even via async/await or dispatcher queues"], "actions": [{"type": "update-labels", "description": "Add UWP and iOS platform labels and reliability tenet", "risk": "low", "confidence": 0.9, "labels": ["type/question", "area/SkiaSharp", "os/Windows-Universal-UWP", "os/iOS", "backend/OpenGL", "tenet/reliability"]}, {"type": "add-comment", "description": "Provide guidance on GPU flush semantics and request missing info", "risk": "medium", "confidence": 0.75, "comment": "Thanks for the detailed description. The intermittent crash is most likely a **GPU synchronization issue** combined with **GPU thread-affinity requirements**.\n\n**The core problem:** `grContext.Flush()` (without parameters) submits GPU commands but does **not** wait for them to complete. If you then call `Snapshot()` or draw the resulting bitmap to another canvas, you may be reading memory the GPU is still writing.\n\n**Possible directions to investigate:**\n\n1. **Synchronous flush** — Try flushing synchronously before snapshot/bitmap creation. Note that `SKBitmap.FromImage()` can return null if the GPU read-back fails:\n```csharp\ngrContext.Flush(submit: true, synchronous: true);\nusing var snapshot = surface.Snapshot();\nvar bitmap = SKBitmap.FromImage(snapshot);\nif (bitmap == null) { /* GPU read-back failed */ return; }\n// Use bitmap here; dispose it when done\n```\n> ⚠️ **Platform caveats:** On iOS, all OpenGL ES calls must run on the designated GL render thread. On UWP/ANGLE, the EGL context must be bound (`MakeCurrent`) on the calling thread before any GPU call.\n\n2. **CPU compositing** — For the merge step (drawing features + markup bitmaps together), consider switching to a CPU raster surface (`SKSurface.Create(SKImageInfo)`). You can still use the GPU for individual tile rendering, but compositing two already-rendered bitmaps on a CPU canvas avoids GPU sync complexity entirely for that phase.\n\nTo help diagnose further, could you provide:\n- A stack trace for the `SystemAccessViolation`\n- The SkiaSharp version you're using\n- Whether a single `GRContext` is used for both the features and markup surfaces\n- Whether the rendering thread is the **same thread** where the EGL context was created and made-current\n\nAlso see #976 where the same scenario is explored in a multi-threaded context."}, {"type": "link-related", "description": "Link to predecessor question #688", "risk": "low", "confidence": 0.95, "linkedIssue": 688}, {"type": "link-related", "description": "Link to follow-up multi-thread issue #976", "risk": "low", "confidence": 0.95, "linkedIssue": 976}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

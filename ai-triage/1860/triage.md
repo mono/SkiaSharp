@@ -1,0 +1,322 @@
+# Issue Triage Report — #1860
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T23:44:37Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/Build (0.92 (92%)) |
+| Suggested action | close-as-fixed (0.93 (93%)) |
+
+**Issue Summary:** Strong name signature verification failure when loading SkiaSharp 2.80.3 on .NET 4.8 / Windows — assembly was delay-signed but not fully signed with the private key; fixed in 2.80.4.
+
+**Analysis:** The SkiaSharp 2.80.3 NuGet package shipped with a delay-signed assembly — the strong-name private key signing step was not applied during the release build. On .NET Framework with strong-name verification enabled, Windows refuses to load the assembly with HRESULT 0x80131045. The build system (`source/SkiaSharp.Build.targets`) uses `sn.exe -R` to re-sign assemblies, but this step only runs on Windows with `BuildingInsideVisualStudio != true`; if the condition was not satisfied during the v2.80.3 release pipeline, the published DLL would have been left delay-signed. The identical defect occurred in v1.68.2 (fixed in v1.68.2.1) and again in v2.80.3 (fixed in v2.80.4).
+
+**Recommendations:** **close-as-fixed** — The fix was released in SkiaSharp v2.80.4. Issue #1767 (identical symptom) was closed with milestone v2.80.4. A commenter on this issue confirmed 2.80.4 resolves the error.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** .NET 4.8, Windows 10, VS 2019 Pro, SkiaSharp 2.80.3
+
+**Related issues:** #1267, #1767
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1267 — Prior occurrence of the same strong-name signing bug in v1.68.2, fixed in v1.68.2.1
+- https://github.com/mono/SkiaSharp/issues/1767 — Identical strong-name failure in v2.80.3, fixed in v2.80.4 (milestone v2.80.4, state: completed)
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | exception |
+| Error message | HttpException (0x80004005): Could not load file or assembly 'SkiaSharp, Version=2.80.3.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756' or one of its dependencies. Strong name signature could not be verified. The assembly may have been tampered with, or it was delay signed but not fully signed with the correct private key. |
+| Repro quality | partial |
+| Target frameworks | net48 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.3, 2.80.2 |
+| Worked in | 2.80.2 |
+| Broke in | 2.80.3 |
+| Current relevance | unlikely |
+| Relevance reason | Issue #1767 (identical) was closed with milestone v2.80.4. A commenter on this issue confirmed upgrading to 2.80.4 resolved the error. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.95 (95%) |
+| Reason | Reporter explicitly states last known good version is 2.80.2; same pattern recurred from v1.68.2 regression (issue #1267). |
+| Worked in version | 2.80.2 |
+| Broke in version | 2.80.3 |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | True |
+| Confidence | 0.95 (95%) |
+| Reason | Issue #1767 (identical symptom, same SkiaSharp 2.80.3) was closed as completed with milestone v2.80.4. Commenter on this issue confirmed upgrading to 2.80.4 resolved the error. |
+| Related PRs | — |
+| Related commits | — |
+| Fixed in version | 2.80.4 |
+
+## Analysis
+
+### Technical Summary
+
+The SkiaSharp 2.80.3 NuGet package shipped with a delay-signed assembly — the strong-name private key signing step was not applied during the release build. On .NET Framework with strong-name verification enabled, Windows refuses to load the assembly with HRESULT 0x80131045. The build system (`source/SkiaSharp.Build.targets`) uses `sn.exe -R` to re-sign assemblies, but this step only runs on Windows with `BuildingInsideVisualStudio != true`; if the condition was not satisfied during the v2.80.3 release pipeline, the published DLL would have been left delay-signed. The identical defect occurred in v1.68.2 (fixed in v1.68.2.1) and again in v2.80.3 (fixed in v2.80.4).
+
+### Rationale
+
+This is a packaging/signing regression in SkiaSharp 2.80.3 — the assembly was published delay-signed (only public key embedded) instead of fully signed with the private key. The identical bug occurred in v1.68.2 (#1267, fixed in v1.68.2.1) and in v2.80.3 (#1767, fixed in v2.80.4). Community comments confirm 2.80.4 resolves this issue. The appropriate action is close-as-fixed pointing to v2.80.4, with a note to also reference #1767 as the primary tracking issue.
+
+### Key Signals
+
+- "Could not load file or assembly 'SkiaSharp, Version=2.80.3.0' ... Strong name signature could not be verified" — **issue body** (HRESULT 0x80131045 is the exact error for a delay-signed assembly on .NET Framework with strong-name enforcement. The DLL was not fully signed with the private key before publishing.)
+- "Version with issue: 2.80.3, Last known good version: 2.80.2" — **issue body** (Classic packaging regression — the signing step regressed between releases.)
+- "Problem is known and solved but still not released after months: https://github.com/mono/SkiaSharp/issues/1767" — **comment by nesc58** (Community confirms this is a known defect tracked in #1767, fix pending release in 2.80.4.)
+- "I just upgraded to 2.80.4 and the error went away" — **comment by ndenkha** (Confirms the fix in v2.80.4 resolves the issue for this reporter as well.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Build.targets` | 156-169 | direct | _SignAssembly target uses `sn.exe -R` to re-sign the intermediate assembly with the private key, but is guarded by `$(IsWindows) and '$(BuildingInsideVisualStudio)' != 'true'`. If this condition was not met during the 2.80.3 release pipeline, the output DLL would be left delay-signed (PublicSign=true only), triggering 0x80131045 on .NET Framework. |
+| `source/SkiaSharp.Build.targets` | 183-188 | direct | _SignAssemblyVerify target calls `sn.exe -vf` to verify the final signed assembly in Release configuration. If this verification step was skipped or not run on the v2.80.3 release, a delay-signed assembly could be inadvertently published. |
+| `source/SkiaSharp.Build.props` | 47-49 | related | SignAssembly is set to true globally in SkiaSharp.Build.props. Combined with PublicSign=true in SkiaSharp.Build.targets when the private key is unavailable (non-CI builds), assemblies can end up delay-signed if the _SignAssembly step is missed. |
+
+**Error fingerprint:** `strong-name-0x80131045-net-framework-skiasharp`
+
+### Next Questions
+
+- Should the release pipeline add an explicit CI check to verify strong-name signatures before publishing NuGet packages to prevent future regressions?
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-fixed |
+| Confidence | 0.93 (93%) |
+| Reason | The fix was released in SkiaSharp v2.80.4. Issue #1767 (identical symptom) was closed with milestone v2.80.4. A commenter on this issue confirmed 2.80.4 resolves the error. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, build area, Windows platform, and reliability labels | labels=type/bug, area/Build, os/Windows-Classic, tenet/reliability |
+| link-related | low | 0.95 (95%) | Cross-reference primary tracking issue #1767 (identical bug, closed as fixed in v2.80.4) | linkedIssue=#1767 |
+| add-comment | medium | 0.93 (93%) | Inform reporter that the issue was fixed in v2.80.4 and suggest upgrading | — |
+| close-issue | medium | 0.93 (93%) | Close as fixed in v2.80.4 | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+This strong-name signature error in SkiaSharp 2.80.3 was a known packaging regression — the assembly was inadvertently published with only a delay-signature (public key only) instead of being fully signed with the private key.
+
+The fix was released in **SkiaSharp 2.80.4**. Please upgrade to 2.80.4 or later to resolve this. See also the primary tracking issue #1767.
+
+If you are constrained to a 3rd-party library that requires exactly 2.80.3, consider adding an assembly binding redirect in your `web.config`/`app.config` to redirect `2.80.3.0` to `2.80.4.0`, or ask the library author to relax the version constraint.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1860,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T23:44:37Z"
+  },
+  "summary": "Strong name signature verification failure when loading SkiaSharp 2.80.3 on .NET 4.8 / Windows — assembly was delay-signed but not fully signed with the private key; fixed in 2.80.4.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "HttpException (0x80004005): Could not load file or assembly 'SkiaSharp, Version=2.80.3.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756' or one of its dependencies. Strong name signature could not be verified. The assembly may have been tampered with, or it was delay signed but not fully signed with the correct private key.",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net48"
+      ]
+    },
+    "reproEvidence": {
+      "environmentDetails": ".NET 4.8, Windows 10, VS 2019 Pro, SkiaSharp 2.80.3",
+      "relatedIssues": [
+        1267,
+        1767
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1267",
+          "description": "Prior occurrence of the same strong-name signing bug in v1.68.2, fixed in v1.68.2.1"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1767",
+          "description": "Identical strong-name failure in v2.80.3, fixed in v2.80.4 (milestone v2.80.4, state: completed)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.3",
+        "2.80.2"
+      ],
+      "workedIn": "2.80.2",
+      "brokeIn": "2.80.3",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Issue #1767 (identical) was closed with milestone v2.80.4. A commenter on this issue confirmed upgrading to 2.80.4 resolved the error."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.95,
+      "reason": "Reporter explicitly states last known good version is 2.80.2; same pattern recurred from v1.68.2 regression (issue #1267).",
+      "workedInVersion": "2.80.2",
+      "brokeInVersion": "2.80.3"
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.95,
+      "reason": "Issue #1767 (identical symptom, same SkiaSharp 2.80.3) was closed as completed with milestone v2.80.4. Commenter on this issue confirmed upgrading to 2.80.4 resolved the error.",
+      "relatedPRs": [],
+      "fixedInVersion": "2.80.4"
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp 2.80.3 NuGet package shipped with a delay-signed assembly — the strong-name private key signing step was not applied during the release build. On .NET Framework with strong-name verification enabled, Windows refuses to load the assembly with HRESULT 0x80131045. The build system (`source/SkiaSharp.Build.targets`) uses `sn.exe -R` to re-sign assemblies, but this step only runs on Windows with `BuildingInsideVisualStudio != true`; if the condition was not satisfied during the v2.80.3 release pipeline, the published DLL would have been left delay-signed. The identical defect occurred in v1.68.2 (fixed in v1.68.2.1) and again in v2.80.3 (fixed in v2.80.4).",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Build.targets",
+        "lines": "156-169",
+        "finding": "_SignAssembly target uses `sn.exe -R` to re-sign the intermediate assembly with the private key, but is guarded by `$(IsWindows) and '$(BuildingInsideVisualStudio)' != 'true'`. If this condition was not met during the 2.80.3 release pipeline, the output DLL would be left delay-signed (PublicSign=true only), triggering 0x80131045 on .NET Framework.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Build.targets",
+        "lines": "183-188",
+        "finding": "_SignAssemblyVerify target calls `sn.exe -vf` to verify the final signed assembly in Release configuration. If this verification step was skipped or not run on the v2.80.3 release, a delay-signed assembly could be inadvertently published.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Build.props",
+        "lines": "47-49",
+        "finding": "SignAssembly is set to true globally in SkiaSharp.Build.props. Combined with PublicSign=true in SkiaSharp.Build.targets when the private key is unavailable (non-CI builds), assemblies can end up delay-signed if the _SignAssembly step is missed.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Could not load file or assembly 'SkiaSharp, Version=2.80.3.0' ... Strong name signature could not be verified",
+        "source": "issue body",
+        "interpretation": "HRESULT 0x80131045 is the exact error for a delay-signed assembly on .NET Framework with strong-name enforcement. The DLL was not fully signed with the private key before publishing."
+      },
+      {
+        "text": "Version with issue: 2.80.3, Last known good version: 2.80.2",
+        "source": "issue body",
+        "interpretation": "Classic packaging regression — the signing step regressed between releases."
+      },
+      {
+        "text": "Problem is known and solved but still not released after months: https://github.com/mono/SkiaSharp/issues/1767",
+        "source": "comment by nesc58",
+        "interpretation": "Community confirms this is a known defect tracked in #1767, fix pending release in 2.80.4."
+      },
+      {
+        "text": "I just upgraded to 2.80.4 and the error went away",
+        "source": "comment by ndenkha",
+        "interpretation": "Confirms the fix in v2.80.4 resolves the issue for this reporter as well."
+      }
+    ],
+    "rationale": "This is a packaging/signing regression in SkiaSharp 2.80.3 — the assembly was published delay-signed (only public key embedded) instead of fully signed with the private key. The identical bug occurred in v1.68.2 (#1267, fixed in v1.68.2.1) and in v2.80.3 (#1767, fixed in v2.80.4). Community comments confirm 2.80.4 resolves this issue. The appropriate action is close-as-fixed pointing to v2.80.4, with a note to also reference #1767 as the primary tracking issue.",
+    "nextQuestions": [
+      "Should the release pipeline add an explicit CI check to verify strong-name signatures before publishing NuGet packages to prevent future regressions?"
+    ],
+    "errorFingerprint": "strong-name-0x80131045-net-framework-skiasharp"
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.93,
+      "reason": "The fix was released in SkiaSharp v2.80.4. Issue #1767 (identical symptom) was closed with milestone v2.80.4. A commenter on this issue confirmed 2.80.4 resolves the error.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, build area, Windows platform, and reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "os/Windows-Classic",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference primary tracking issue #1767 (identical bug, closed as fixed in v2.80.4)",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 1767
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter that the issue was fixed in v2.80.4 and suggest upgrading",
+        "risk": "medium",
+        "confidence": 0.93,
+        "comment": "This strong-name signature error in SkiaSharp 2.80.3 was a known packaging regression — the assembly was inadvertently published with only a delay-signature (public key only) instead of being fully signed with the private key.\n\nThe fix was released in **SkiaSharp 2.80.4**. Please upgrade to 2.80.4 or later to resolve this. See also the primary tracking issue #1767.\n\nIf you are constrained to a 3rd-party library that requires exactly 2.80.3, consider adding an assembly binding redirect in your `web.config`/`app.config` to redirect `2.80.3.0` to `2.80.4.0`, or ask the library author to relax the version constraint."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in v2.80.4",
+        "risk": "medium",
+        "confidence": 0.93,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>
