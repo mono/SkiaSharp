@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Persist a validated triage JSON to output/ai/ and render report wrappers.
+"""Persist a validated triage JSON to output/ai-triage/ and render report wrappers.
 
-Copies the triage JSON to output/ai/repos/mono-SkiaSharp/ai-triage/{number}.json
-and generates sidecar {number}.md and {number}.html files.
+Copies the triage JSON to output/ai-triage/{number}/triage.json
+and generates sidecar triage.md and triage.html files.
 
 Usage:
     python3 persist-triage.py /tmp/skiasharp/triage/20260320-164500/3400.json
@@ -42,9 +42,9 @@ def main() -> None:
         print("❌ Validation failed — refusing to persist invalid triage JSON")
         sys.exit(result.returncode)
 
-    dest_dir = Path("output/ai/repos/mono-SkiaSharp/ai-triage")
+    dest_dir = Path(f"output/ai-triage/{number}")
     dest_dir.mkdir(parents=True, exist_ok=True)
-    dest = dest_dir / f"{number}.json"
+    dest = dest_dir / "triage.json"
     shutil.copy2(src, dest)
     print(f"✅ Copied JSON to {dest}")
 
