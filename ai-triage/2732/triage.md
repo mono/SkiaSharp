@@ -1,0 +1,388 @@
+# Issue Triage Report — #2732
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T20:46:55Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/libSkiaSharp.native (0.88 (88%)) |
+| Suggested action | needs-investigation (0.80 (80%)) |
+
+**Issue Summary:** Blazor WebAssembly app throws TypeInitializationException for SKImageInfo with inner DllNotFoundException for libSkiaSharp when using SkiaSharp 2.88.3 and NativeAssets.WebAssembly; a later user reports the same error with 3.119.0 on .NET 8.
+
+**Analysis:** The TypeInitializationException is triggered because SKImageInfo's static constructor immediately calls into native libSkiaSharp (sk_colortype_get_default_8888), and in WASM the native library must be statically linked via NativeFileReference at build time. If this linking step fails or is skipped (missing wasm-tools workload, package in a library project, incorrect .NET version mapping, or broken targets), the symbol is never resolved and the first P/Invoke call throws DllNotFoundException.
+
+**Recommendations:** **needs-investigation** — A September 2025 comment confirms the issue still reproduces with 3.119.0 + .NET 8, and related issue #3224 remains open. The root cause for 3.x needs investigation to confirm whether it's a missing workload/package placement or a remaining targeting gap.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/WASM |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a Blazor WebAssembly project
+2. Add SkiaSharp 2.88.3 and SkiaSharp.NativeAssets.WebAssembly NuGet packages
+3. Instantiate SKImageInfo or call any SkiaSharp API
+4. Run the WASM app in browser
+
+**Environment:** Visual Studio 2022, Windows 11, SkiaSharp 2.88.3, Blazor WASM. Secondary: 3.119.0 + .NET 8.
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2745 — Related: System.DllNotFoundException: libSkiaSharp in Blazor WASM .NET 8.0
+- https://github.com/mono/SkiaSharp/issues/3224 — Related: Blazor Wasm - same TypeInitializationException for SKImageInfo
+- https://github.com/mono/SkiaSharp/issues/3037 — Related (closed): DllNotFoundException in Blazor WASM .NET 9 RC2
+- https://github.com/mono/SkiaSharp/issues/3035 — Related (closed): DllNotFoundException in Blazor WASM .NET 9 RC2
+- https://github.com/mono/SkiaSharp/issues/3068 — Related (closed): net9 SkiaSharp.Views.Blazor app won't start
+- https://github.com/mono/SkiaSharp/issues/1867 — Related (closed): ASP.NET Core Blazor WASM with SkiaSharp
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | exception |
+| Error message | The type initializer for 'SkiaSharp.SKImageInfo' threw an exception. Inner: System.DllNotFoundException: libSkiaSharp |
+| Repro quality | partial |
+| Target frameworks | net8.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3, 3.119.0 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | A September 2025 comment confirms the issue still occurs with 3.119.0 + .NET 8, and issue #3224 remains open with the identical error. |
+
+## Analysis
+
+### Technical Summary
+
+The TypeInitializationException is triggered because SKImageInfo's static constructor immediately calls into native libSkiaSharp (sk_colortype_get_default_8888), and in WASM the native library must be statically linked via NativeFileReference at build time. If this linking step fails or is skipped (missing wasm-tools workload, package in a library project, incorrect .NET version mapping, or broken targets), the symbol is never resolved and the first P/Invoke call throws DllNotFoundException.
+
+### Rationale
+
+The error is a well-established WASM native-linking failure pattern: DllNotFoundException for libSkiaSharp in Blazor WASM means the static .a library was not linked into dotnet.wasm. The maintainer confirmed the 2.x series required manual NativeFileReference and that 3.x should address it via PR #3082; however a September 2025 comment reports it still fails with 3.119.0 + .NET 8, making this a valid open investigation target.
+
+### Key Signals
+
+- "The type initializer for 'SkiaSharp.SKImageInfo' threw an exception with an inner exception of dllnotfound libSkiaSharp" — **issue body** (SKImageInfo static constructor calls P/Invoke immediately on first use; WASM static linking failed, so the symbol is absent from dotnet.wasm.)
+- "For 2.x series, there are a few issues with WebAssembly and the fact we don't automatically include a lot of things. It is hard to keep backporting, so I would encourage you to try give the 3.x series a try." — **maintainer comment (mattleibow, Nov 2024)** (Confirms WASM static linking was not fully automatic in 2.x; 3.x was supposed to fix it with PR #3082.)
+- "Also running into this issue using the latest version (3.119.0) with .NET8." — **comment (tolzy88, September 2025)** (Issue persists in 3.x for at least some configurations; the PR #3082 fix may not cover all cases or may require specific package setup.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKImageInfo.cs` | 46-57 | direct | SKImageInfo static constructor calls SkiaApi.sk_colortype_get_default_8888() and SkiaApi.sk_color_get_bit_shift() as P/Invoke. In WASM, if the native .a library is not statically linked, the very first use of SKImageInfo throws TypeInitializationException wrapping DllNotFoundException. |
+| `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets` | 32-41 | direct | NativeFileReference is set for net6.0 through net9.0+ using versioned .a file paths. net8.0 maps to Emscripten 3.1.34 variant. If TargetFrameworkVersion is not matched or ShouldIncludeNativeSkiaSharp is False, the NativeFileReference is omitted and linking fails. The wasm-tools workload is required to process NativeFileReference items at build time. |
+| `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets` | 43-63 | related | A workaround target (_SkiaSharpRuntimeIssue109289Workaround) reorders libSkiaSharp.a to the end of the linker args to fix a dotnet/runtime issue #109289. If this target doesn't fire correctly, linking can fail silently. |
+
+### Workarounds
+
+- For 2.x: Manually add <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" /> (use mt for multi-threaded) to the Blazor WASM app .csproj
+- For 3.x: Upgrade to 3.119.0+ and ensure the dotnet wasm-tools workload is installed: `dotnet workload install wasm-tools`
+- Ensure SkiaSharp.NativeAssets.WebAssembly is referenced in the executable/app project (not a class library), so MSBuild targets run during the WASM build
+- Try SkiaSharp.Views.Blazor which auto-includes SkiaSharp.NativeAssets.WebAssembly and handles the WASM targets automatically
+
+### Next Questions
+
+- For the September 2025 reporter: Is the wasm-tools workload installed? (`dotnet workload list`)
+- Is SkiaSharp.NativeAssets.WebAssembly referenced in the Blazor app project or a class library?
+- What .NET SDK version is being used? The net8.0 variant targets Emscripten 3.1.34 - is that workload version compatible?
+- Is WasmBuildNative being set correctly or overridden to false somewhere in the build?
+
+### Resolution Proposals
+
+**Hypothesis:** The WASM static library is not being linked because either the wasm-tools workload is missing, the NativeAssets package is in a library project (not the app), or version mapping in the .targets file doesn't cover the user's SDK.
+
+1. **Ensure wasm-tools workload and app-level package reference** — workaround, confidence 0.80 (80%), cost/xs, validated=untested
+   - Install the wasm-tools workload with `dotnet workload install wasm-tools`, and ensure SkiaSharp.NativeAssets.WebAssembly is referenced directly in the Blazor WASM app project.
+2. **Use SkiaSharp.Views.Blazor instead of direct NativeAssets reference** — alternative, confidence 0.75 (75%), cost/xs, validated=untested
+   - Add SkiaSharp.Views.Blazor to the Blazor app project. It auto-includes SkiaSharp.NativeAssets.WebAssembly and the required MSBuild targets for static linking.
+3. **Investigate 3.119.0 + net8.0 WASM linking failure** — investigation, confidence 0.85 (85%), cost/m, validated=untested
+   - Reproduce the September 2025 failure scenario with 3.119.0 and .NET 8 WASM to determine if PR #3082 fully resolves the issue or if there is a remaining gap.
+
+**Recommended proposal:** Ensure wasm-tools workload and app-level package reference
+
+**Why:** Most likely root cause for both 2.x and 3.x failures. Simple to verify and fix.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.80 (80%) |
+| Reason | A September 2025 comment confirms the issue still reproduces with 3.119.0 + .NET 8, and related issue #3224 remains open. The root cause for 3.x needs investigation to confirm whether it's a missing workload/package placement or a remaining targeting gap. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Exact .csproj contents (to verify NativeFileReference or Views.Blazor is referenced in the app project)
+- dotnet workload list output
+- Full .NET SDK version in use
+- Whether the package is referenced in the Blazor app project or a class library
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, native, WASM, and reliability labels | labels=type/bug, area/libSkiaSharp.native, os/WASM, tenet/reliability |
+| add-comment | medium | 0.80 (80%) | Post analysis with workaround instructions for both 2.x and 3.x | — |
+| link-related | low | 0.90 (90%) | Link to related open issue #3224 with same error | linkedIssue=#3224 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report. This error occurs because WebAssembly uses **static linking** — `libSkiaSharp.a` must be linked into `dotnet.wasm` at build time, not loaded at runtime like on other platforms.
+
+**For SkiaSharp 2.88.x** (manual workaround):
+
+Add this to your Blazor WASM app `.csproj`:
+```xml
+<ItemGroup>
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" />
+</ItemGroup>
+```
+Use `mt` instead of `st` if `<WasmEnableThreads>true</WasmEnableThreads>` is set.
+
+**For SkiaSharp 3.x** — this should work automatically, but you need:
+
+1. Install the `wasm-tools` workload: `dotnet workload install wasm-tools`
+2. Reference `SkiaSharp.NativeAssets.WebAssembly` (or `SkiaSharp.Views.Blazor`) **directly in the Blazor app project** (not a class library) — native assets only propagate from the executable project.
+
+For users still hitting this with 3.119.0 + .NET 8, please share your `.csproj` and the output of `dotnet workload list`.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2732,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T20:46:55Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Blazor WebAssembly app throws TypeInitializationException for SKImageInfo with inner DllNotFoundException for libSkiaSharp when using SkiaSharp 2.88.3 and NativeAssets.WebAssembly; a later user reports the same error with 3.119.0 on .NET 8.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/WASM"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "The type initializer for 'SkiaSharp.SKImageInfo' threw an exception. Inner: System.DllNotFoundException: libSkiaSharp",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WebAssembly project",
+        "Add SkiaSharp 2.88.3 and SkiaSharp.NativeAssets.WebAssembly NuGet packages",
+        "Instantiate SKImageInfo or call any SkiaSharp API",
+        "Run the WASM app in browser"
+      ],
+      "environmentDetails": "Visual Studio 2022, Windows 11, SkiaSharp 2.88.3, Blazor WASM. Secondary: 3.119.0 + .NET 8.",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2745",
+          "description": "Related: System.DllNotFoundException: libSkiaSharp in Blazor WASM .NET 8.0"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3224",
+          "description": "Related: Blazor Wasm - same TypeInitializationException for SKImageInfo"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3037",
+          "description": "Related (closed): DllNotFoundException in Blazor WASM .NET 9 RC2"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3035",
+          "description": "Related (closed): DllNotFoundException in Blazor WASM .NET 9 RC2"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3068",
+          "description": "Related (closed): net9 SkiaSharp.Views.Blazor app won't start"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1867",
+          "description": "Related (closed): ASP.NET Core Blazor WASM with SkiaSharp"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3",
+        "3.119.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "A September 2025 comment confirms the issue still occurs with 3.119.0 + .NET 8, and issue #3224 remains open with the identical error."
+    }
+  },
+  "analysis": {
+    "summary": "The TypeInitializationException is triggered because SKImageInfo's static constructor immediately calls into native libSkiaSharp (sk_colortype_get_default_8888), and in WASM the native library must be statically linked via NativeFileReference at build time. If this linking step fails or is skipped (missing wasm-tools workload, package in a library project, incorrect .NET version mapping, or broken targets), the symbol is never resolved and the first P/Invoke call throws DllNotFoundException.",
+    "rationale": "The error is a well-established WASM native-linking failure pattern: DllNotFoundException for libSkiaSharp in Blazor WASM means the static .a library was not linked into dotnet.wasm. The maintainer confirmed the 2.x series required manual NativeFileReference and that 3.x should address it via PR #3082; however a September 2025 comment reports it still fails with 3.119.0 + .NET 8, making this a valid open investigation target.",
+    "keySignals": [
+      {
+        "text": "The type initializer for 'SkiaSharp.SKImageInfo' threw an exception with an inner exception of dllnotfound libSkiaSharp",
+        "source": "issue body",
+        "interpretation": "SKImageInfo static constructor calls P/Invoke immediately on first use; WASM static linking failed, so the symbol is absent from dotnet.wasm."
+      },
+      {
+        "text": "For 2.x series, there are a few issues with WebAssembly and the fact we don't automatically include a lot of things. It is hard to keep backporting, so I would encourage you to try give the 3.x series a try.",
+        "source": "maintainer comment (mattleibow, Nov 2024)",
+        "interpretation": "Confirms WASM static linking was not fully automatic in 2.x; 3.x was supposed to fix it with PR #3082."
+      },
+      {
+        "text": "Also running into this issue using the latest version (3.119.0) with .NET8.",
+        "source": "comment (tolzy88, September 2025)",
+        "interpretation": "Issue persists in 3.x for at least some configurations; the PR #3082 fix may not cover all cases or may require specific package setup."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "46-57",
+        "finding": "SKImageInfo static constructor calls SkiaApi.sk_colortype_get_default_8888() and SkiaApi.sk_color_get_bit_shift() as P/Invoke. In WASM, if the native .a library is not statically linked, the very first use of SKImageInfo throws TypeInitializationException wrapping DllNotFoundException.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "lines": "32-41",
+        "finding": "NativeFileReference is set for net6.0 through net9.0+ using versioned .a file paths. net8.0 maps to Emscripten 3.1.34 variant. If TargetFrameworkVersion is not matched or ShouldIncludeNativeSkiaSharp is False, the NativeFileReference is omitted and linking fails. The wasm-tools workload is required to process NativeFileReference items at build time.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "lines": "43-63",
+        "finding": "A workaround target (_SkiaSharpRuntimeIssue109289Workaround) reorders libSkiaSharp.a to the end of the linker args to fix a dotnet/runtime issue #109289. If this target doesn't fire correctly, linking can fail silently.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "For 2.x: Manually add <NativeFileReference Include=\"$(SkiaSharpStaticLibraryPath)\\3.1.34\\st\\*.a\" /> (use mt for multi-threaded) to the Blazor WASM app .csproj",
+      "For 3.x: Upgrade to 3.119.0+ and ensure the dotnet wasm-tools workload is installed: `dotnet workload install wasm-tools`",
+      "Ensure SkiaSharp.NativeAssets.WebAssembly is referenced in the executable/app project (not a class library), so MSBuild targets run during the WASM build",
+      "Try SkiaSharp.Views.Blazor which auto-includes SkiaSharp.NativeAssets.WebAssembly and handles the WASM targets automatically"
+    ],
+    "nextQuestions": [
+      "For the September 2025 reporter: Is the wasm-tools workload installed? (`dotnet workload list`)",
+      "Is SkiaSharp.NativeAssets.WebAssembly referenced in the Blazor app project or a class library?",
+      "What .NET SDK version is being used? The net8.0 variant targets Emscripten 3.1.34 - is that workload version compatible?",
+      "Is WasmBuildNative being set correctly or overridden to false somewhere in the build?"
+    ],
+    "resolution": {
+      "hypothesis": "The WASM static library is not being linked because either the wasm-tools workload is missing, the NativeAssets package is in a library project (not the app), or version mapping in the .targets file doesn't cover the user's SDK.",
+      "proposals": [
+        {
+          "title": "Ensure wasm-tools workload and app-level package reference",
+          "description": "Install the wasm-tools workload with `dotnet workload install wasm-tools`, and ensure SkiaSharp.NativeAssets.WebAssembly is referenced directly in the Blazor WASM app project.",
+          "category": "workaround",
+          "confidence": 0.8,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SkiaSharp.Views.Blazor instead of direct NativeAssets reference",
+          "description": "Add SkiaSharp.Views.Blazor to the Blazor app project. It auto-includes SkiaSharp.NativeAssets.WebAssembly and the required MSBuild targets for static linking.",
+          "category": "alternative",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate 3.119.0 + net8.0 WASM linking failure",
+          "description": "Reproduce the September 2025 failure scenario with 3.119.0 and .NET 8 WASM to determine if PR #3082 fully resolves the issue or if there is a remaining gap.",
+          "category": "investigation",
+          "confidence": 0.85,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Ensure wasm-tools workload and app-level package reference",
+      "recommendedReason": "Most likely root cause for both 2.x and 3.x failures. Simple to verify and fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.8,
+      "reason": "A September 2025 comment confirms the issue still reproduces with 3.119.0 + .NET 8, and related issue #3224 remains open. The root cause for 3.x needs investigation to confirm whether it's a missing workload/package placement or a remaining targeting gap.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Exact .csproj contents (to verify NativeFileReference or Views.Blazor is referenced in the app project)",
+      "dotnet workload list output",
+      "Full .NET SDK version in use",
+      "Whether the package is referenced in the Blazor app project or a class library"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native, WASM, and reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/WASM",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workaround instructions for both 2.x and 3.x",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the report. This error occurs because WebAssembly uses **static linking** — `libSkiaSharp.a` must be linked into `dotnet.wasm` at build time, not loaded at runtime like on other platforms.\n\n**For SkiaSharp 2.88.x** (manual workaround):\n\nAdd this to your Blazor WASM app `.csproj`:\n```xml\n<ItemGroup>\n    <NativeFileReference Include=\"$(SkiaSharpStaticLibraryPath)\\3.1.34\\st\\*.a\" />\n</ItemGroup>\n```\nUse `mt` instead of `st` if `<WasmEnableThreads>true</WasmEnableThreads>` is set.\n\n**For SkiaSharp 3.x** — this should work automatically, but you need:\n\n1. Install the `wasm-tools` workload: `dotnet workload install wasm-tools`\n2. Reference `SkiaSharp.NativeAssets.WebAssembly` (or `SkiaSharp.Views.Blazor`) **directly in the Blazor app project** (not a class library) — native assets only propagate from the executable project.\n\nFor users still hitting this with 3.119.0 + .NET 8, please share your `.csproj` and the output of `dotnet workload list`."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related open issue #3224 with same error",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 3224
+      }
+    ]
+  }
+}
+```
+
+</details>

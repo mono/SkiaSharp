@@ -1,0 +1,357 @@
+# Issue Triage Report — #3273
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T20:26:43Z |
+| Type | type/bug (0.90 (90%)) |
+| Area | area/SkiaSharp.Views.Blazor (0.95 (95%)) |
+| Suggested action | needs-investigation (0.82 (82%)) |
+
+**Issue Summary:** SKCanvasView in Blazor WASM shows 'No canvas element was provided' error in browser console when running from IDE debug mode, but works correctly with dotnet watch; root cause is stale cached JavaScript files (SKHtmlCanvas.js) after upgrading SkiaSharp versions.
+
+**Analysis:** The 'No canvas element was provided' error originates in SKHtmlCanvas.js (line 18) when document.querySelector('[' + elementId + ']') returns null because stale browser-cached or project-cached JavaScript (from an old SkiaSharp version) doesn't match the current element ID scheme. In NET7+ mode, InitRaster passes element=null and relies entirely on the CSS attribute selector lookup; old cached JS may use a different lookup mechanism. Clearing browser cache and the bin/obj/_framework folder consistently fixes the issue, confirming the root cause is stale static assets with no version/cache-busting.
+
+**Recommendations:** **needs-investigation** — Multiple reporters confirm the issue is real and reproducible after SkiaSharp version upgrades; root cause (stale JS cache) is well-understood but the correct fix location (URL versioning, build pipeline, or hosting guidance) needs confirmation.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Blazor |
+| Platforms | os/WASM |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a Blazor WASM app with SKCanvasView component
+2. Run the app in debug mode from the IDE (not dotnet watch)
+3. Observe 'No canvas element was provided' in browser console
+4. Canvas content does not render
+
+**Environment:** macOS, Blazor WASM, SkiaSharp 3.116.0/3.119.0, VS 17.14.2 (second reporter), IDE debug mode
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/3273#issuecomment-2869649165 — OP: caching issue — switching to interactiveWasm mode + clearing browser cache + project folder + dotnet restore fixed it
+- https://github.com/mono/SkiaSharp/issues/3273#issuecomment-2909810315 — Second reporter: same error on SkiaSharp 3.119.0 + VS 17.14.2 + MudBlazor 8.6.0; resolved after clean rebuild
+- https://github.com/mono/SkiaSharp/issues/3273#issuecomment-3640226549 — Third reporter: triggered after upgrading from 2.88.6 to 3.119.0; workaround works for devs but not for production users who cannot clear caches
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | missing-output |
+| Error message | No canvas element was provided |
+| Repro quality | partial |
+| Target frameworks | net8.0-wasm, net9.0-wasm |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.0, 3.119.0, 2.88.6 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Third reporter in December 2025 confirmed still reproducible after upgrading from 2.88.6 to 3.119.0; issue remains open. |
+
+## Analysis
+
+### Technical Summary
+
+The 'No canvas element was provided' error originates in SKHtmlCanvas.js (line 18) when document.querySelector('[' + elementId + ']') returns null because stale browser-cached or project-cached JavaScript (from an old SkiaSharp version) doesn't match the current element ID scheme. In NET7+ mode, InitRaster passes element=null and relies entirely on the CSS attribute selector lookup; old cached JS may use a different lookup mechanism. Clearing browser cache and the bin/obj/_framework folder consistently fixes the issue, confirming the root cause is stale static assets with no version/cache-busting.
+
+### Rationale
+
+Classified as type/bug because canvas fails to render with a JS error that is not caused by user code. The area is SkiaSharp.Views.Blazor because the error originates in SKHtmlCanvas.js, a static asset bundled with that package. The workaround (clear cache / clean rebuild) consistently fixes it, confirming a cache staleness problem. Three separate reporters from May to December 2025 all confirm the same pattern, particularly after upgrading SkiaSharp versions. The third reporter raises a valid production concern: end-users cannot clear their caches, meaning a proper fix (cache-busting on static assets) is needed.
+
+### Key Signals
+
+- "No canvas element was provided" — **browser console (issue body)** (Exact error from SKHtmlCanvas.js line 18 — element lookup via document.querySelector returns null.)
+- "I made a mistake, I used the interactiveAuto mode in blazor, but when i switched to interactiveWasm, it still doesn't work until I clear all the cache both in browser and the project folder. Then I run dotnet restore before I run it in debug mode, it works." — **issue comment #2869649165** (Cache staleness is the root cause — clearing both browser cache and project output (bin/obj/_framework) restores correct behavior.)
+- "after properly cleaning and rebuilding, I no longer had this issue" — **issue comment #2909810315** (Confirms clean build resolves the issue; stale build output is the cause.)
+- "I encounter the same issue, after updating from 2.88.6 to 3.119.0... my app is running on a server and is accessible for many people, which I can't tell all, how to clear the cache successfully." — **issue comment #3640226549** (Version upgrade from 2.88.x to 3.x is a trigger; production impact because end-users cannot clear browser caches manually.)
+- "When I use dotnet watch command to run my app, it works all fine." — **issue body** (dotnet watch invalidates static assets differently than IDE debug launch, consistently working around the cache problem.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.js` | 14-20 | direct | SKHtmlCanvas.init() first tries the passed element, then falls back to document.querySelector('[' + elementId + ']'). In NET7+ mode element is always null, so the CSS attribute selector is the only lookup mechanism. If the browser serves a stale/old SKHtmlCanvas.js (e.g., from 2.88.x cache), the element lookup scheme may differ from what the current C# interop expects, causing the selector to return null and triggering the 'No canvas element was provided' error. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SKHtmlCanvasInterop.cs` | 46, 72-80 | direct | htmlElementId is constructed as '_bl_' + element.Id. In NET7+ path (line 76), InitRaster is called with element=null and htmlElementId, relying entirely on the JS querySelector fallback. The URL for the JS module is '_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js' with no version fingerprint, meaning browsers can cache it indefinitely across SkiaSharp upgrades. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs` | 23 | related | In NET7+ mode, the JS module is loaded via JSHost.ImportAsync(moduleName, '../' + moduleUrl). There is no cache-busting query parameter or versioned URL; the module path '_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js' is static and will be cached by browsers using standard HTTP caching headers set by the host. |
+
+### Workarounds
+
+- Clear browser cache (hard reload / clear site data) and restart the app
+- Delete the bin/obj/_framework folder, run 'dotnet restore', then rebuild from IDE
+- Use 'dotnet watch' instead of the IDE debug launch button during development
+- For production deployments: configure the web server to send no-cache or short-lived cache headers for _content/SkiaSharp.Views.Blazor/*.js files
+
+### Next Questions
+
+- Does this reproduce on a fresh install with no prior SkiaSharp version ever loaded in the browser, or only after upgrading?
+- Does the IDE debug launch skip running 'dotnet restore', potentially leaving stale bin/obj/_framework fingerprinted assets?
+- Can the JS module URL be fingerprinted/versioned per SkiaSharp release to force cache invalidation on upgrade?
+- Is the ServiceWorker (if any) caching the old SKHtmlCanvas.js file?
+
+### Resolution Proposals
+
+**Hypothesis:** The SkiaSharp.Views.Blazor JavaScript static assets (SKHtmlCanvas.js) are cached by browsers and the build system without version-aware invalidation. When users upgrade SkiaSharp versions the browser continues serving the old JS whose element lookup is incompatible with the new C# interop, causing the canvas initialization to fail. dotnet watch works because it rebuilds assets and may trigger cache invalidation differently.
+
+1. **Clear cache and clean rebuild (immediate workaround)** — workaround, confidence 0.95 (95%), cost/xs, validated=untested
+   - Delete bin/obj/_framework, run dotnet restore, rebuild, and clear browser cache. For production, configure the hosting server to set short-lived Cache-Control headers on _content/SkiaSharp.Views.Blazor/ static assets.
+2. **Add version fingerprint to JS module URL** — fix, confidence 0.75 (75%), cost/s, validated=untested
+   - Append a version query string (e.g., ?v=3.119.0) to the JsFilename constant in JSModuleInterop.cs so the browser treats each SkiaSharp release as a new resource. This forces cache invalidation on upgrade without requiring users to manually clear their caches.
+3. **Improve dotnet publish/serve cache-busting** — investigation, confidence 0.65 (65%), cost/m, validated=untested
+   - Ensure the Blazor build output pipeline fingerprints the _content/ static assets. Investigate whether setting StaticWebAssets fingerprinting in the .csproj file resolves the issue across all hosting scenarios.
+
+**Recommended proposal:** Add version fingerprint to JS module URL
+
+**Why:** Most targeted fix that directly addresses the root cause (stale browser cache of the JS module) without requiring server configuration changes or user intervention.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.82 (82%) |
+| Reason | Multiple reporters confirm the issue is real and reproducible after SkiaSharp version upgrades; root cause (stale JS cache) is well-understood but the correct fix location (URL versioning, build pipeline, or hosting guidance) needs confirmation. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply Blazor views, WASM, and reliability tenet labels | labels=type/bug, area/SkiaSharp.Views.Blazor, os/WASM, tenet/reliability |
+| add-comment | medium | 0.82 (82%) | Acknowledge the caching root cause, provide the clean-rebuild workaround, and note the production concern | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report and the follow-up details from everyone in this thread.
+
+The 'No canvas element was provided' error comes from `SKHtmlCanvas.js` when the JavaScript module cannot locate the canvas element in the DOM. The consistent pattern here — working after a clean rebuild + cache clear but failing after upgrading from 2.88.x to 3.x — points to **stale browser-cached or project-cached JavaScript assets**.
+
+**Immediate workaround:**
+1. Delete the `bin/obj/_framework` folder in your project
+2. Run `dotnet restore`
+3. Rebuild and clear your browser cache (hard reload / clear site data)
+
+For **production deployments** where you can't ask users to clear caches: configure your web server to send short-lived `Cache-Control` headers for `_content/SkiaSharp.Views.Blazor/` static assets, or set `no-cache` so the browser always revalidates.
+
+We're tracking this as a versioning gap — the JS module URL doesn't include a version fingerprint, so browsers can indefinitely cache the old file across SkiaSharp upgrades. We'll investigate adding proper cache-busting.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3273,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T20:26:43Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKCanvasView in Blazor WASM shows 'No canvas element was provided' error in browser console when running from IDE debug mode, but works correctly with dotnet watch; root cause is stale cached JavaScript files (SKHtmlCanvas.js) after upgrading SkiaSharp versions.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "missing-output",
+      "errorMessage": "No canvas element was provided",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0-wasm",
+        "net9.0-wasm"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM app with SKCanvasView component",
+        "Run the app in debug mode from the IDE (not dotnet watch)",
+        "Observe 'No canvas element was provided' in browser console",
+        "Canvas content does not render"
+      ],
+      "environmentDetails": "macOS, Blazor WASM, SkiaSharp 3.116.0/3.119.0, VS 17.14.2 (second reporter), IDE debug mode",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3273#issuecomment-2869649165",
+          "description": "OP: caching issue — switching to interactiveWasm mode + clearing browser cache + project folder + dotnet restore fixed it"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3273#issuecomment-2909810315",
+          "description": "Second reporter: same error on SkiaSharp 3.119.0 + VS 17.14.2 + MudBlazor 8.6.0; resolved after clean rebuild"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3273#issuecomment-3640226549",
+          "description": "Third reporter: triggered after upgrading from 2.88.6 to 3.119.0; workaround works for devs but not for production users who cannot clear caches"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "3.119.0",
+        "2.88.6"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Third reporter in December 2025 confirmed still reproducible after upgrading from 2.88.6 to 3.119.0; issue remains open."
+    }
+  },
+  "analysis": {
+    "summary": "The 'No canvas element was provided' error originates in SKHtmlCanvas.js (line 18) when document.querySelector('[' + elementId + ']') returns null because stale browser-cached or project-cached JavaScript (from an old SkiaSharp version) doesn't match the current element ID scheme. In NET7+ mode, InitRaster passes element=null and relies entirely on the CSS attribute selector lookup; old cached JS may use a different lookup mechanism. Clearing browser cache and the bin/obj/_framework folder consistently fixes the issue, confirming the root cause is stale static assets with no version/cache-busting.",
+    "rationale": "Classified as type/bug because canvas fails to render with a JS error that is not caused by user code. The area is SkiaSharp.Views.Blazor because the error originates in SKHtmlCanvas.js, a static asset bundled with that package. The workaround (clear cache / clean rebuild) consistently fixes it, confirming a cache staleness problem. Three separate reporters from May to December 2025 all confirm the same pattern, particularly after upgrading SkiaSharp versions. The third reporter raises a valid production concern: end-users cannot clear their caches, meaning a proper fix (cache-busting on static assets) is needed.",
+    "keySignals": [
+      {
+        "text": "No canvas element was provided",
+        "source": "browser console (issue body)",
+        "interpretation": "Exact error from SKHtmlCanvas.js line 18 — element lookup via document.querySelector returns null."
+      },
+      {
+        "text": "I made a mistake, I used the interactiveAuto mode in blazor, but when i switched to interactiveWasm, it still doesn't work until I clear all the cache both in browser and the project folder. Then I run dotnet restore before I run it in debug mode, it works.",
+        "source": "issue comment #2869649165",
+        "interpretation": "Cache staleness is the root cause — clearing both browser cache and project output (bin/obj/_framework) restores correct behavior."
+      },
+      {
+        "text": "after properly cleaning and rebuilding, I no longer had this issue",
+        "source": "issue comment #2909810315",
+        "interpretation": "Confirms clean build resolves the issue; stale build output is the cause."
+      },
+      {
+        "text": "I encounter the same issue, after updating from 2.88.6 to 3.119.0... my app is running on a server and is accessible for many people, which I can't tell all, how to clear the cache successfully.",
+        "source": "issue comment #3640226549",
+        "interpretation": "Version upgrade from 2.88.x to 3.x is a trigger; production impact because end-users cannot clear browser caches manually."
+      },
+      {
+        "text": "When I use dotnet watch command to run my app, it works all fine.",
+        "source": "issue body",
+        "interpretation": "dotnet watch invalidates static assets differently than IDE debug launch, consistently working around the cache problem."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.js",
+        "lines": "14-20",
+        "finding": "SKHtmlCanvas.init() first tries the passed element, then falls back to document.querySelector('[' + elementId + ']'). In NET7+ mode element is always null, so the CSS attribute selector is the only lookup mechanism. If the browser serves a stale/old SKHtmlCanvas.js (e.g., from 2.88.x cache), the element lookup scheme may differ from what the current C# interop expects, causing the selector to return null and triggering the 'No canvas element was provided' error.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SKHtmlCanvasInterop.cs",
+        "lines": "46, 72-80",
+        "finding": "htmlElementId is constructed as '_bl_' + element.Id. In NET7+ path (line 76), InitRaster is called with element=null and htmlElementId, relying entirely on the JS querySelector fallback. The URL for the JS module is '_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js' with no version fingerprint, meaning browsers can cache it indefinitely across SkiaSharp upgrades.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs",
+        "lines": "23",
+        "finding": "In NET7+ mode, the JS module is loaded via JSHost.ImportAsync(moduleName, '../' + moduleUrl). There is no cache-busting query parameter or versioned URL; the module path '_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js' is static and will be cached by browsers using standard HTTP caching headers set by the host.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Clear browser cache (hard reload / clear site data) and restart the app",
+      "Delete the bin/obj/_framework folder, run 'dotnet restore', then rebuild from IDE",
+      "Use 'dotnet watch' instead of the IDE debug launch button during development",
+      "For production deployments: configure the web server to send no-cache or short-lived cache headers for _content/SkiaSharp.Views.Blazor/*.js files"
+    ],
+    "nextQuestions": [
+      "Does this reproduce on a fresh install with no prior SkiaSharp version ever loaded in the browser, or only after upgrading?",
+      "Does the IDE debug launch skip running 'dotnet restore', potentially leaving stale bin/obj/_framework fingerprinted assets?",
+      "Can the JS module URL be fingerprinted/versioned per SkiaSharp release to force cache invalidation on upgrade?",
+      "Is the ServiceWorker (if any) caching the old SKHtmlCanvas.js file?"
+    ],
+    "resolution": {
+      "hypothesis": "The SkiaSharp.Views.Blazor JavaScript static assets (SKHtmlCanvas.js) are cached by browsers and the build system without version-aware invalidation. When users upgrade SkiaSharp versions the browser continues serving the old JS whose element lookup is incompatible with the new C# interop, causing the canvas initialization to fail. dotnet watch works because it rebuilds assets and may trigger cache invalidation differently.",
+      "proposals": [
+        {
+          "title": "Clear cache and clean rebuild (immediate workaround)",
+          "description": "Delete bin/obj/_framework, run dotnet restore, rebuild, and clear browser cache. For production, configure the hosting server to set short-lived Cache-Control headers on _content/SkiaSharp.Views.Blazor/ static assets.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Add version fingerprint to JS module URL",
+          "description": "Append a version query string (e.g., ?v=3.119.0) to the JsFilename constant in JSModuleInterop.cs so the browser treats each SkiaSharp release as a new resource. This forces cache invalidation on upgrade without requiring users to manually clear their caches.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Improve dotnet publish/serve cache-busting",
+          "description": "Ensure the Blazor build output pipeline fingerprints the _content/ static assets. Investigate whether setting StaticWebAssets fingerprinting in the .csproj file resolves the issue across all hosting scenarios.",
+          "category": "investigation",
+          "confidence": 0.65,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add version fingerprint to JS module URL",
+      "recommendedReason": "Most targeted fix that directly addresses the root cause (stale browser cache of the JS module) without requiring server configuration changes or user intervention."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Multiple reporters confirm the issue is real and reproducible after SkiaSharp version upgrades; root cause (stale JS cache) is well-understood but the correct fix location (URL versioning, build pipeline, or hosting guidance) needs confirmation.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply Blazor views, WASM, and reliability tenet labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the caching root cause, provide the clean-rebuild workaround, and note the production concern",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the report and the follow-up details from everyone in this thread.\n\nThe 'No canvas element was provided' error comes from `SKHtmlCanvas.js` when the JavaScript module cannot locate the canvas element in the DOM. The consistent pattern here — working after a clean rebuild + cache clear but failing after upgrading from 2.88.x to 3.x — points to **stale browser-cached or project-cached JavaScript assets**.\n\n**Immediate workaround:**\n1. Delete the `bin/obj/_framework` folder in your project\n2. Run `dotnet restore`\n3. Rebuild and clear your browser cache (hard reload / clear site data)\n\nFor **production deployments** where you can't ask users to clear caches: configure your web server to send short-lived `Cache-Control` headers for `_content/SkiaSharp.Views.Blazor/` static assets, or set `no-cache` so the browser always revalidates.\n\nWe're tracking this as a versioning gap — the JS module URL doesn't include a version fingerprint, so browsers can indefinitely cache the old file across SkiaSharp upgrades. We'll investigate adding proper cache-busting."
+      }
+    ]
+  }
+}
+```
+
+</details>

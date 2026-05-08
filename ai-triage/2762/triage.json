@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2762,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T19:46:46Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "SKMetalView inherits MTKView's 'Timed updates' default (continuous rendering on a timer) which is intended for games, causing unbounded memory allocation and out-of-memory crashes in typical SkiaSharp (non-game) apps on iOS and macOS.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.85 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.90 },
+    "platforms": ["os/iOS", "os/macOS"],
+    "backends": ["backend/Metal"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "errorMessage": "Out of memory crashes observed on iPhone/iPad when using SKMetalView in non-game apps",
+      "reproQuality": "partial",
+      "targetFrameworks": ["xamarin.ios", "xamarin.mac"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SKMetalView in a non-game iOS or macOS app without setting Paused/EnableSetNeedsDisplay",
+        "Run the app and observe continuous timer-driven redraws",
+        "Over time, observe memory growing and eventual OOM crashes"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, iOS / macOS, Visual Studio for Mac",
+      "relatedIssues": [3178],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/3178", "description": "Related GC crash with SKMetalView on iOS - GRContext finalized on GC thread" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Initialize() method in SKMetalView.cs still does not set Paused=true or EnableSetNeedsDisplay=true, so the timed-updates default is still active."
+    }
+  },
+  "analysis": {
+    "summary": "SKMetalView.Initialize() does not set Paused=true or EnableSetNeedsDisplay=true, so it inherits MTKView's native default of continuous timed rendering. This is appropriate for games but causes constant redraws and unbounded memory allocation for typical SkiaSharp apps. The MAUI handler (SKGLViewHandler.MacCatalyst.cs) correctly handles this via HasRenderLoop, but the base SKMetalView class does not, leaving direct users of SKMetalView in a problematic default state.",
+    "rationale": "The behavior is technically correct per Apple's MTKView contract, but it is inappropriate as a default for SkiaSharp usage. The MAUI layer already exposes HasRenderLoop to address this, but direct SKMetalView consumers have no similar default protection. The maintainer has expressed reluctance to change the native default but acknowledged the issue.",
+    "keySignals": [
+      {
+        "text": "We were getting out of memory crashes that were very hard to detect and diagnose which went away when setting the expected mode",
+        "source": "issue body",
+        "interpretation": "Confirms that the timer-based default causes real OOM crashes, not just theoretical memory waste."
+      },
+      {
+        "text": "For the platform views, I try not to change defaults. If this default is absolutely the worst option, maybe we can.",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer is open to changing the default if it is clearly harmful — the OOM crash evidence supports this."
+      },
+      {
+        "text": "For the Maui views, I do have an option to disable this behaviour: HasRenderLoop",
+        "source": "comment by mattleibow",
+        "interpretation": "The MAUI layer correctly defaults to non-render-loop mode. The base class should match."
+      },
+      {
+        "text": "I just hit this one too. Fixed it, then found there was a bug filed already!",
+        "source": "comment by jeremy-visionaid",
+        "interpretation": "Multiple independent users encountering the same issue, confirming it is a real widespread problem."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKMetalView.cs",
+        "lines": "79-121",
+        "finding": "Initialize() sets up Metal device, pixel format, sample count, and the MTKView delegate, but does NOT set Paused=true or EnableSetNeedsDisplay=true. MTKView native default is timed-updates (continuous rendering), so SKMetalView inherits this behavior.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.MacCatalyst.cs",
+        "lines": "62-68",
+        "finding": "MapHasRenderLoop sets Paused = !view.HasRenderLoop and EnableSetNeedsDisplay = !view.HasRenderLoop. Since HasRenderLoop defaults to false in ISKGLView, MAUI users are already in Draw-notifications mode (Paused=true) by default — the fix is already implemented for MAUI consumers.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "After constructing SKMetalView, set `base.Paused = true; base.EnableSetNeedsDisplay = true;` to enable draw-notification mode.",
+      "If using MAUI SKGLView, leave HasRenderLoop at its default (false) — MAUI already applies the correct default."
+    ],
+    "nextQuestions": [
+      "Should SKMetalView.Initialize() change the default to Paused=true/EnableSetNeedsDisplay=true to match MAUI's behavior?",
+      "Would changing the default break any existing apps that rely on the timer-based render loop for animation?"
+    ],
+    "resolution": {
+      "hypothesis": "The base SKMetalView class should default to 'draw notifications' mode (Paused=true, EnableSetNeedsDisplay=true) to match the MAUI handler behavior and prevent unbounded memory allocation in typical non-game usage.",
+      "proposals": [
+        {
+          "title": "Change SKMetalView default to draw-notifications mode",
+          "description": "In Initialize(), add `Paused = true; EnableSetNeedsDisplay = true;` after setting up the Metal device. This matches the MAUI handler's behavior.",
+          "category": "fix",
+          "codeSnippet": "// In Initialize(), after setting up the device:\nPaused = true;\nEnableSetNeedsDisplay = true;",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Workaround: manually set draw-notification mode",
+          "description": "Users can immediately fix the issue by setting Paused=true and EnableSetNeedsDisplay=true after constructing or subclassing SKMetalView.",
+          "category": "workaround",
+          "codeSnippet": "var view = new SKMetalView();\nview.Paused = true;\nview.EnableSetNeedsDisplay = true;",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Change SKMetalView default to draw-notifications mode",
+      "recommendedReason": "The MAUI layer already defaults to this behavior. Making the base class consistent prevents OOM crashes by default without requiring user action. Users who explicitly want timer-based rendering can still opt in."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.80,
+      "reason": "Root cause is clear: Initialize() does not set Paused=true/EnableSetNeedsDisplay=true. MAUI already implements the correct behavior. Fix is a 2-line change. A workaround exists for immediate relief.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp.Views, iOS, macOS, Metal, reliability labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/iOS", "os/macOS", "backend/Metal", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workaround and proposed fix",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the report and the clear explanation. The root cause is confirmed: `SKMetalView.Initialize()` does not override MTKView's native default of timed-updates mode, causing continuous redraws and memory accumulation in non-game apps.\n\n**Workaround (immediate):**\n```csharp\nvar view = new SKMetalView();\nview.Paused = true;\nview.EnableSetNeedsDisplay = true;\n```\nThis switches to 'draw notifications' mode, where redraws only happen on demand (e.g., after calling `SetNeedsDisplay()`).\n\n**Note for MAUI users:** If you're using `SKGLView` in MAUI, this is already the default — `HasRenderLoop` defaults to `false`, which sets `Paused=true` automatically.\n\n**Proposed fix:** Change `SKMetalView.Initialize()` to default to draw-notifications mode, aligning with the MAUI handler behavior."
+      }
+    ]
+  }
+}

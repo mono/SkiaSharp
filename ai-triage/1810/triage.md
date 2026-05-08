@@ -1,0 +1,270 @@
+# Issue Triage Report — #1810
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T18:12:41Z |
+| Type | type/enhancement (0.88 (88%)) |
+| Area | area/HarfBuzzSharp (0.95 (95%)) |
+| Suggested action | ready-to-fix (0.88 (88%)) |
+
+**Issue Summary:** HarfBuzzSharp Font.SetPpem / Font.GetPpem wrappers are missing, causing HarfBuzz-shaped text advances to be measured without hinting, producing widths that differ from GDI measurements.
+
+**Analysis:** The HarfBuzzSharp Font class exposes SetScale/GetScale but not SetPpem/GetPpem. Without setting ppem, HarfBuzz shapes glyphs without hinting, causing measured advances to differ from hinted renderers like GDI. The underlying C functions hb_font_set_ppem and hb_font_get_ppem are already bound as internal P/Invoke in HarfBuzzApi.generated.cs but have no public C# wrapper. A contributor confirmed this gap and stated the API needs to be exposed.
+
+**Recommendations:** **ready-to-fix** — Root cause is confirmed (missing public wrapper for hb_font_set_ppem/hb_font_get_ppem), fix path is clear, and P/Invoke binding already exists in generated code.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/HarfBuzzSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create HarfBuzzSharp.Font, call Shape() on a buffer with ASCII text
+2. Sum buffer.GlyphPositions[].XAdvance * (fontSize / xScale) for text width
+3. Compare with GDI MeasureString — values differ noticeably
+
+**Environment:** SkiaSharp.HarfBuzz v2.80.2, Visual Studio, ASP.NET Core, cross-platform (Windows/Linux/Mac target)
+
+**Code snippets:**
+
+```csharp
+hbFont.GetScale(out var xScale, out _);
+var scale = fontsize / xScale;
+return buffer.GlyphPositions.Sum(x => x.XAdvance) * scale;
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Font.cs does not expose SetPpem/GetPpem as of current main; hb_font_set_ppem is only available as internal P/Invoke. |
+
+## Analysis
+
+### Technical Summary
+
+The HarfBuzzSharp Font class exposes SetScale/GetScale but not SetPpem/GetPpem. Without setting ppem, HarfBuzz shapes glyphs without hinting, causing measured advances to differ from hinted renderers like GDI. The underlying C functions hb_font_set_ppem and hb_font_get_ppem are already bound as internal P/Invoke in HarfBuzzApi.generated.cs but have no public C# wrapper. A contributor confirmed this gap and stated the API needs to be exposed.
+
+### Rationale
+
+Classified as type/enhancement because the HarfBuzz C API is present and internally bound; the missing piece is the public C# wrapper on HarfBuzzSharp.Font. A contributor (Gillibald) explicitly acknowledged the gap. The area is area/HarfBuzzSharp because the fix is entirely within the HarfBuzzSharp binding layer.
+
+### Key Signals
+
+- "You actually need to use `hb_font_set_ppem`. I never exposed that API. We need to change that." — **comment by contributor Gillibald (#956465603)** (Confirmed missing API — maintainer acknowledged this needs to be fixed.)
+- "hb_font_set_ppem is bound as internal static partial void hb_font_set_ppem in HarfBuzzApi.generated.cs" — **code investigation: binding/HarfBuzzSharp/HarfBuzzApi.generated.cs** (P/Invoke binding exists; only a public C# wrapper is missing.)
+- "Font.cs exposes SetScale/GetScale but not SetPpem/GetPpem" — **code investigation: binding/HarfBuzzSharp/Font.cs** (Gap in public API surface — SetPpem needs to be added alongside existing scale methods.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` | — | direct | hb_font_set_ppem and hb_font_get_ppem are present as internal P/Invoke bindings (static partial and delegate variants), confirming the native API is available and bound. |
+| `binding/HarfBuzzSharp/Font.cs` | 60-69 | direct | Public Font class exposes GetScale (line 60) and SetScale (line 68) but has no SetPpem or GetPpem methods — the gap identified by the contributor. |
+
+### Workarounds
+
+- There is no public workaround to call hb_font_set_ppem today — the method is internal only.
+- Approximate workaround: set the font scale to the target pixel size (fontsize * face_upem / face_upem) before shaping; this aligns the units but does not apply true hinting.
+
+### Next Questions
+
+- Should GetPpem / SetPpem be exposed as a property pair (like Scale) or separate methods?
+- Does exposing ppem fully resolve the measurement discrepancy with GDI, or is additional hinting configuration needed?
+
+### Resolution Proposals
+
+**Hypothesis:** Adding public Font.SetPpem(uint xPpem, uint yPpem) and Font.GetPpem(out uint xPpem, out uint yPpem) wrappers around the already-bound hb_font_set_ppem / hb_font_get_ppem P/Invokes will allow callers to configure ppem before shaping, giving hinting-aware advance measurements.
+
+1. **Expose SetPpem/GetPpem on HarfBuzzSharp.Font** — fix, confidence 0.90 (90%), cost/xs, validated=untested
+   - Add two public methods to Font.cs wrapping the internal hb_font_set_ppem and hb_font_get_ppem P/Invokes, following the same pattern as SetScale/GetScale.
+
+**Recommended proposal:** Expose SetPpem/GetPpem on HarfBuzzSharp.Font
+
+**Why:** The P/Invoke binding already exists; only the thin public wrapper is missing. Small, low-risk change that directly resolves the issue.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.88 (88%) |
+| Reason | Root cause is confirmed (missing public wrapper for hb_font_set_ppem/hb_font_get_ppem), fix path is clear, and P/Invoke binding already exists in generated code. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply enhancement and HarfBuzzSharp area labels | labels=type/enhancement, area/HarfBuzzSharp, tenet/compatibility |
+| add-comment | medium | 0.88 (88%) | Confirm root cause and outline fix path with code example | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report. The root cause is that `HarfBuzzSharp.Font` does not yet expose `SetPpem` / `GetPpem` wrappers around the underlying `hb_font_set_ppem` / `hb_font_get_ppem` HarfBuzz APIs. Without setting ppem, HarfBuzz shapes glyphs without hinting, which is why the advances differ from GDI's hinted measurements.
+
+The internal P/Invoke binding already exists in `HarfBuzzApi.generated.cs`; we just need to add public methods to `Font.cs`. Once exposed, the fix for your measuring code would be:
+
+```csharp
+hbFont.SetFunctionsOpenType();
+hbFont.SetPpem((uint)fontsize, (uint)fontsize); // set ppem before shaping
+hbFont.Shape(buffer);
+// Now sum advances directly without manual scaling
+```
+
+This is tracked as an enhancement to expose the missing API.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1810,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T18:12:41Z"
+  },
+  "summary": "HarfBuzzSharp Font.SetPpem / Font.GetPpem wrappers are missing, causing HarfBuzz-shaped text advances to be measured without hinting, producing widths that differ from GDI measurements.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/HarfBuzzSharp",
+      "confidence": 0.95
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create HarfBuzzSharp.Font, call Shape() on a buffer with ASCII text",
+        "Sum buffer.GlyphPositions[].XAdvance * (fontSize / xScale) for text width",
+        "Compare with GDI MeasureString — values differ noticeably"
+      ],
+      "codeSnippets": [
+        "hbFont.GetScale(out var xScale, out _);\nvar scale = fontsize / xScale;\nreturn buffer.GlyphPositions.Sum(x => x.XAdvance) * scale;"
+      ],
+      "environmentDetails": "SkiaSharp.HarfBuzz v2.80.2, Visual Studio, ASP.NET Core, cross-platform (Windows/Linux/Mac target)"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Font.cs does not expose SetPpem/GetPpem as of current main; hb_font_set_ppem is only available as internal P/Invoke."
+    }
+  },
+  "analysis": {
+    "summary": "The HarfBuzzSharp Font class exposes SetScale/GetScale but not SetPpem/GetPpem. Without setting ppem, HarfBuzz shapes glyphs without hinting, causing measured advances to differ from hinted renderers like GDI. The underlying C functions hb_font_set_ppem and hb_font_get_ppem are already bound as internal P/Invoke in HarfBuzzApi.generated.cs but have no public C# wrapper. A contributor confirmed this gap and stated the API needs to be exposed.",
+    "rationale": "Classified as type/enhancement because the HarfBuzz C API is present and internally bound; the missing piece is the public C# wrapper on HarfBuzzSharp.Font. A contributor (Gillibald) explicitly acknowledged the gap. The area is area/HarfBuzzSharp because the fix is entirely within the HarfBuzzSharp binding layer.",
+    "keySignals": [
+      {
+        "text": "You actually need to use `hb_font_set_ppem`. I never exposed that API. We need to change that.",
+        "source": "comment by contributor Gillibald (#956465603)",
+        "interpretation": "Confirmed missing API — maintainer acknowledged this needs to be fixed."
+      },
+      {
+        "text": "hb_font_set_ppem is bound as internal static partial void hb_font_set_ppem in HarfBuzzApi.generated.cs",
+        "source": "code investigation: binding/HarfBuzzSharp/HarfBuzzApi.generated.cs",
+        "interpretation": "P/Invoke binding exists; only a public C# wrapper is missing."
+      },
+      {
+        "text": "Font.cs exposes SetScale/GetScale but not SetPpem/GetPpem",
+        "source": "code investigation: binding/HarfBuzzSharp/Font.cs",
+        "interpretation": "Gap in public API surface — SetPpem needs to be added alongside existing scale methods."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs",
+        "finding": "hb_font_set_ppem and hb_font_get_ppem are present as internal P/Invoke bindings (static partial and delegate variants), confirming the native API is available and bound.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/Font.cs",
+        "lines": "60-69",
+        "finding": "Public Font class exposes GetScale (line 60) and SetScale (line 68) but has no SetPpem or GetPpem methods — the gap identified by the contributor.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "There is no public workaround to call hb_font_set_ppem today — the method is internal only.",
+      "Approximate workaround: set the font scale to the target pixel size (fontsize * face_upem / face_upem) before shaping; this aligns the units but does not apply true hinting."
+    ],
+    "nextQuestions": [
+      "Should GetPpem / SetPpem be exposed as a property pair (like Scale) or separate methods?",
+      "Does exposing ppem fully resolve the measurement discrepancy with GDI, or is additional hinting configuration needed?"
+    ],
+    "resolution": {
+      "hypothesis": "Adding public Font.SetPpem(uint xPpem, uint yPpem) and Font.GetPpem(out uint xPpem, out uint yPpem) wrappers around the already-bound hb_font_set_ppem / hb_font_get_ppem P/Invokes will allow callers to configure ppem before shaping, giving hinting-aware advance measurements.",
+      "proposals": [
+        {
+          "title": "Expose SetPpem/GetPpem on HarfBuzzSharp.Font",
+          "description": "Add two public methods to Font.cs wrapping the internal hb_font_set_ppem and hb_font_get_ppem P/Invokes, following the same pattern as SetScale/GetScale.",
+          "category": "fix",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Expose SetPpem/GetPpem on HarfBuzzSharp.Font",
+      "recommendedReason": "The P/Invoke binding already exists; only the thin public wrapper is missing. Small, low-risk change that directly resolves the issue."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.88,
+      "reason": "Root cause is confirmed (missing public wrapper for hb_font_set_ppem/hb_font_get_ppem), fix path is clear, and P/Invoke binding already exists in generated code.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and HarfBuzzSharp area labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/enhancement",
+          "area/HarfBuzzSharp",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Confirm root cause and outline fix path with code example",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed report. The root cause is that `HarfBuzzSharp.Font` does not yet expose `SetPpem` / `GetPpem` wrappers around the underlying `hb_font_set_ppem` / `hb_font_get_ppem` HarfBuzz APIs. Without setting ppem, HarfBuzz shapes glyphs without hinting, which is why the advances differ from GDI's hinted measurements.\n\nThe internal P/Invoke binding already exists in `HarfBuzzApi.generated.cs`; we just need to add public methods to `Font.cs`. Once exposed, the fix for your measuring code would be:\n\n```csharp\nhbFont.SetFunctionsOpenType();\nhbFont.SetPpem((uint)fontsize, (uint)fontsize); // set ppem before shaping\nhbFont.Shape(buffer);\n// Now sum advances directly without manual scaling\n```\n\nThis is tracked as an enhancement to expose the missing API."
+      }
+    ]
+  }
+}
+```
+
+</details>

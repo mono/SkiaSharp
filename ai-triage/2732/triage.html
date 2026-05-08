@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #2732 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 2732, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-24T20:46:55Z", "currentLabels": ["type/bug"]}, "summary": "Blazor WebAssembly app throws TypeInitializationException for SKImageInfo with inner DllNotFoundException for libSkiaSharp when using SkiaSharp 2.88.3 and NativeAssets.WebAssembly; a later user reports the same error with 3.119.0 on .NET 8.", "classification": {"type": {"value": "type/bug", "confidence": 0.95}, "area": {"value": "area/libSkiaSharp.native", "confidence": 0.88}, "platforms": ["os/WASM"], "tenets": ["tenet/reliability"]}, "evidence": {"bugSignals": {"severity": "high", "regressionClaimed": false, "errorType": "exception", "errorMessage": "The type initializer for 'SkiaSharp.SKImageInfo' threw an exception. Inner: System.DllNotFoundException: libSkiaSharp", "reproQuality": "partial", "targetFrameworks": ["net8.0"]}, "reproEvidence": {"stepsToReproduce": ["Create a Blazor WebAssembly project", "Add SkiaSharp 2.88.3 and SkiaSharp.NativeAssets.WebAssembly NuGet packages", "Instantiate SKImageInfo or call any SkiaSharp API", "Run the WASM app in browser"], "environmentDetails": "Visual Studio 2022, Windows 11, SkiaSharp 2.88.3, Blazor WASM. Secondary: 3.119.0 + .NET 8.", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/2745", "description": "Related: System.DllNotFoundException: libSkiaSharp in Blazor WASM .NET 8.0"}, {"url": "https://github.com/mono/SkiaSharp/issues/3224", "description": "Related: Blazor Wasm - same TypeInitializationException for SKImageInfo"}, {"url": "https://github.com/mono/SkiaSharp/issues/3037", "description": "Related (closed): DllNotFoundException in Blazor WASM .NET 9 RC2"}, {"url": "https://github.com/mono/SkiaSharp/issues/3035", "description": "Related (closed): DllNotFoundException in Blazor WASM .NET 9 RC2"}, {"url": "https://github.com/mono/SkiaSharp/issues/3068", "description": "Related (closed): net9 SkiaSharp.Views.Blazor app won't start"}, {"url": "https://github.com/mono/SkiaSharp/issues/1867", "description": "Related (closed): ASP.NET Core Blazor WASM with SkiaSharp"}]}, "versionAnalysis": {"mentionedVersions": ["2.88.3", "3.119.0"], "currentRelevance": "likely", "relevanceReason": "A September 2025 comment confirms the issue still occurs with 3.119.0 + .NET 8, and issue #3224 remains open with the identical error."}}, "analysis": {"summary": "The TypeInitializationException is triggered because SKImageInfo's static constructor immediately calls into native libSkiaSharp (sk_colortype_get_default_8888), and in WASM the native library must be statically linked via NativeFileReference at build time. If this linking step fails or is skipped (missing wasm-tools workload, package in a library project, incorrect .NET version mapping, or broken targets), the symbol is never resolved and the first P/Invoke call throws DllNotFoundException.", "rationale": "The error is a well-established WASM native-linking failure pattern: DllNotFoundException for libSkiaSharp in Blazor WASM means the static .a library was not linked into dotnet.wasm. The maintainer confirmed the 2.x series required manual NativeFileReference and that 3.x should address it via PR #3082; however a September 2025 comment reports it still fails with 3.119.0 + .NET 8, making this a valid open investigation target.", "keySignals": [{"text": "The type initializer for 'SkiaSharp.SKImageInfo' threw an exception with an inner exception of dllnotfound libSkiaSharp", "source": "issue body", "interpretation": "SKImageInfo static constructor calls P/Invoke immediately on first use; WASM static linking failed, so the symbol is absent from dotnet.wasm."}, {"text": "For 2.x series, there are a few issues with WebAssembly and the fact we don't automatically include a lot of things. It is hard to keep backporting, so I would encourage you to try give the 3.x series a try.", "source": "maintainer comment (mattleibow, Nov 2024)", "interpretation": "Confirms WASM static linking was not fully automatic in 2.x; 3.x was supposed to fix it with PR #3082."}, {"text": "Also running into this issue using the latest version (3.119.0) with .NET8.", "source": "comment (tolzy88, September 2025)", "interpretation": "Issue persists in 3.x for at least some configurations; the PR #3082 fix may not cover all cases or may require specific package setup."}], "codeInvestigation": [{"file": "binding/SkiaSharp/SKImageInfo.cs", "lines": "46-57", "finding": "SKImageInfo static constructor calls SkiaApi.sk_colortype_get_default_8888() and SkiaApi.sk_color_get_bit_shift() as P/Invoke. In WASM, if the native .a library is not statically linked, the very first use of SKImageInfo throws TypeInitializationException wrapping DllNotFoundException.", "relevance": "direct"}, {"file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets", "lines": "32-41", "finding": "NativeFileReference is set for net6.0 through net9.0+ using versioned .a file paths. net8.0 maps to Emscripten 3.1.34 variant. If TargetFrameworkVersion is not matched or ShouldIncludeNativeSkiaSharp is False, the NativeFileReference is omitted and linking fails. The wasm-tools workload is required to process NativeFileReference items at build time.", "relevance": "direct"}, {"file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets", "lines": "43-63", "finding": "A workaround target (_SkiaSharpRuntimeIssue109289Workaround) reorders libSkiaSharp.a to the end of the linker args to fix a dotnet/runtime issue #109289. If this target doesn't fire correctly, linking can fail silently.", "relevance": "related"}], "workarounds": ["For 2.x: Manually add <NativeFileReference Include=\"$(SkiaSharpStaticLibraryPath)\\3.1.34\\st\\*.a\" /> (use mt for multi-threaded) to the Blazor WASM app .csproj", "For 3.x: Upgrade to 3.119.0+ and ensure the dotnet wasm-tools workload is installed: `dotnet workload install wasm-tools`", "Ensure SkiaSharp.NativeAssets.WebAssembly is referenced in the executable/app project (not a class library), so MSBuild targets run during the WASM build", "Try SkiaSharp.Views.Blazor which auto-includes SkiaSharp.NativeAssets.WebAssembly and handles the WASM targets automatically"], "nextQuestions": ["For the September 2025 reporter: Is the wasm-tools workload installed? (`dotnet workload list`)", "Is SkiaSharp.NativeAssets.WebAssembly referenced in the Blazor app project or a class library?", "What .NET SDK version is being used? The net8.0 variant targets Emscripten 3.1.34 - is that workload version compatible?", "Is WasmBuildNative being set correctly or overridden to false somewhere in the build?"], "resolution": {"hypothesis": "The WASM static library is not being linked because either the wasm-tools workload is missing, the NativeAssets package is in a library project (not the app), or version mapping in the .targets file doesn't cover the user's SDK.", "proposals": [{"title": "Ensure wasm-tools workload and app-level package reference", "description": "Install the wasm-tools workload with `dotnet workload install wasm-tools`, and ensure SkiaSharp.NativeAssets.WebAssembly is referenced directly in the Blazor WASM app project.", "category": "workaround", "confidence": 0.8, "effort": "cost/xs", "validated": "untested"}, {"title": "Use SkiaSharp.Views.Blazor instead of direct NativeAssets reference", "description": "Add SkiaSharp.Views.Blazor to the Blazor app project. It auto-includes SkiaSharp.NativeAssets.WebAssembly and the required MSBuild targets for static linking.", "category": "alternative", "confidence": 0.75, "effort": "cost/xs", "validated": "untested"}, {"title": "Investigate 3.119.0 + net8.0 WASM linking failure", "description": "Reproduce the September 2025 failure scenario with 3.119.0 and .NET 8 WASM to determine if PR #3082 fully resolves the issue or if there is a remaining gap.", "category": "investigation", "confidence": 0.85, "effort": "cost/m", "validated": "untested"}], "recommendedProposal": "Ensure wasm-tools workload and app-level package reference", "recommendedReason": "Most likely root cause for both 2.x and 3.x failures. Simple to verify and fix."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.8, "reason": "A September 2025 comment confirms the issue still reproduces with 3.119.0 + .NET 8, and related issue #3224 remains open. The root cause for 3.x needs investigation to confirm whether it's a missing workload/package placement or a remaining targeting gap.", "suggestedReproPlatform": "linux"}, "missingInfo": ["Exact .csproj contents (to verify NativeFileReference or Views.Blazor is referenced in the app project)", "dotnet workload list output", "Full .NET SDK version in use", "Whether the package is referenced in the Blazor app project or a class library"], "actions": [{"type": "update-labels", "description": "Apply bug, native, WASM, and reliability labels", "risk": "low", "confidence": 0.95, "labels": ["type/bug", "area/libSkiaSharp.native", "os/WASM", "tenet/reliability"]}, {"type": "add-comment", "description": "Post analysis with workaround instructions for both 2.x and 3.x", "risk": "medium", "confidence": 0.8, "comment": "Thanks for the report. This error occurs because WebAssembly uses **static linking** — `libSkiaSharp.a` must be linked into `dotnet.wasm` at build time, not loaded at runtime like on other platforms.\n\n**For SkiaSharp 2.88.x** (manual workaround):\n\nAdd this to your Blazor WASM app `.csproj`:\n```xml\n<ItemGroup>\n    <NativeFileReference Include=\"$(SkiaSharpStaticLibraryPath)\\3.1.34\\st\\*.a\" />\n</ItemGroup>\n```\nUse `mt` instead of `st` if `<WasmEnableThreads>true</WasmEnableThreads>` is set.\n\n**For SkiaSharp 3.x** — this should work automatically, but you need:\n\n1. Install the `wasm-tools` workload: `dotnet workload install wasm-tools`\n2. Reference `SkiaSharp.NativeAssets.WebAssembly` (or `SkiaSharp.Views.Blazor`) **directly in the Blazor app project** (not a class library) — native assets only propagate from the executable project.\n\nFor users still hitting this with 3.119.0 + .NET 8, please share your `.csproj` and the output of `dotnet workload list`."}, {"type": "link-related", "description": "Link to related open issue #3224 with same error", "risk": "low", "confidence": 0.9, "linkedIssue": 3224}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>
