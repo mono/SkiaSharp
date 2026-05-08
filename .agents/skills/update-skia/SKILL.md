@@ -412,13 +412,20 @@ broken — go back and fix before wasting time on the full suite.
 **Step 2 — Full test suite (required before any PR):**
 ```bash
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/test-output.txt
+```
+Wait for it to finish (takes 5–7 min). Then read the summary:
+```bash
 tail -5 /tmp/test-output.txt
 ```
+The last line will look like: `Passed!  - Failed:     0, Passed:  5435, Skipped:   171, Total:  5606`
+
 This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
 self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
 
-> **⚠️ Always capture test output with `2>&1 | tee`.** Do NOT pipe to `tail` or `grep`
-> alone — you lose the failure details. After the run, inspect failures with:
+> **⚠️ These MUST be two separate commands.** Do NOT combine them into a single pipeline
+> like `| tee ... | tail` — the piped tail runs immediately and will show nothing useful
+> while tests are still running. Capture with `tee` first, wait for completion, then `tail`
+> the output file. After the run, inspect failures with:
 > ```bash
 > grep '^  Failed' /tmp/test-output.txt
 > ```
