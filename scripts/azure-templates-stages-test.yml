@@ -12,6 +12,9 @@ parameters:
     type: object
   - name: buildAgentAndroidTests
     type: object
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
 
@@ -28,13 +31,15 @@ stages:
             displayName: API Diff
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: docs-api-diff
+            cacheJob: managed/package/api_diff
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
             shouldPublish: false
             requiredArtifacts:
               - name: nuget
                 dir: nugets
             preBuildSteps:
-              - pwsh: .\scripts\install-gtk.ps1
+              - pwsh: .\scripts\infra\managed\install-gtk.ps1
                 displayName: Install GTK# 2.12
             publishArtifacts:
               - name: api-diff
@@ -65,6 +70,8 @@ stages:
             displayName: Managed (Windows)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -77,6 +84,8 @@ stages:
             displayName: Managed (macOS)
             buildAgent: ${{ parameters.buildAgentMac }}
             target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -90,6 +99,8 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -226,9 +237,9 @@ stages:
                   echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
                   echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
                 displayName: Set Android AVD home (fix XDG path mismatch)
-              - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
+              - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
-              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
+              - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
                 displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
             postBuildSteps:
               - task: PublishTestResults@2
@@ -330,7 +341,7 @@ stages:
             - tests_netcore_linux
           steps:
             - checkout: self
-            - pwsh: ./scripts/set-build-variables.ps1
+            - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
               displayName: Configure build variables
             - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_windows artifact

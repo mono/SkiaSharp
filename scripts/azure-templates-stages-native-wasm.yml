@@ -1,10 +1,11 @@
 parameters:
-  - name: buildExternals
-    type: string
   - name: buildAgentLinuxNative
     type: object
   - name: use1ESPipelineTemplates
     type: boolean
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
 
@@ -14,8 +15,8 @@ stages:
     jobs:
       - template: /scripts/azure-templates-jobs-wasm-matrix.yml@self # Build Native WASM (Linux)
         parameters:
+          enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           emscripten:
             - 2.0.6:

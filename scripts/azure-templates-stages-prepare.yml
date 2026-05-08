@@ -13,6 +13,17 @@ stages:
           - checkout: self
             submodules: false
             fetchDepth: 1
-            sparseCheckoutDirectories: scripts/set-build-variables.ps1
-          - pwsh: ./scripts/set-build-variables.ps1 -UpdateBuildNumber
+          - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
+          - bash: python3 scripts/infra/caching/repo-deps.py validate
+            displayName: Validate cache config coverage
+          - bash: |
+              BASE=""
+              if [ -n "$SYSTEM_PULLREQUEST_TARGETBRANCH" ]; then
+                TARGET=$(echo "$SYSTEM_PULLREQUEST_TARGETBRANCH" | sed 's|refs/heads/||')
+                git fetch origin "$TARGET" --depth=1 2>/dev/null
+                BASE="origin/$TARGET"
+              fi
+              python3 scripts/infra/caching/repo-deps.py cache-key \
+                --job all --name prepare ${BASE:+--base "$BASE"}
+            displayName: Show dependency tree

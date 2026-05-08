@@ -1,14 +1,10 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/android"));
 
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/ndk.cake"
-
-string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
-bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/native/android/ndk.cake"
 
 Information("Android NDK Path: {0}", ANDROID_NDK_HOME);
-Information("Building Vulkan: {0}", SUPPORT_VULKAN);
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
@@ -36,7 +32,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
-            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
+            $"skia_use_vulkan=true " +
             $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-g', '-ggdb3' ] " +
             $"extra_ldflags=[ '-Wl,-z,max-page-size=16384' ] " +
