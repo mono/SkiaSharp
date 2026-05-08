@@ -202,7 +202,7 @@ python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/{number}.jso
 
 ### 1. Persist
 
-Copy the validated JSON to `output/ai/` for collection, then render companion Markdown and HTML reports that wrap the same JSON data.
+Copy the validated JSON to `output/ai-triage/` for collection, then render companion Markdown and HTML reports that wrap the same JSON data.
 
 ```bash
 python3 .agents/skills/issue-triage/scripts/persist-triage.py /tmp/{number}.json
@@ -210,16 +210,16 @@ python3 .agents/skills/issue-triage/scripts/persist-triage.py /tmp/{number}.json
 
 This produces:
 
-- `output/ai/repos/mono-SkiaSharp/ai-triage/{number}.json`
-- `output/ai/repos/mono-SkiaSharp/ai-triage/{number}.md`
-- `output/ai/repos/mono-SkiaSharp/ai-triage/{number}.html`
+- `output/ai-triage/{number}/triage.json`
+- `output/ai-triage/{number}/triage.md`
+- `output/ai-triage/{number}/triage.html`
 
 ### 2. Present summary
 
 ```
-✅ Triage: ai-triage/{number}.json
-✅ Report: ai-triage/{number}.md
-✅ Viewer: ai-triage/{number}.html
+✅ Triage: ai-triage/{number}/triage.json
+✅ Report: ai-triage/{number}/triage.md
+✅ Viewer: ai-triage/{number}/triage.html
 
 Type:     type/bug (0.98)     Area: area/SkiaSharp
 Severity: critical            Action: needs-investigation
@@ -231,7 +231,7 @@ Actions:
 ```
 
 **Pipeline hint:**
-- If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **issue-repro** (`ai-repro/{number}.json`).
+- If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **issue-repro** (`ai-repro/{number}/repro.json`).
 - If `classification.type.value` is `type/enhancement` or `type/feature-request` and `suggestedAction == "needs-investigation"`: next step is also **issue-repro**, but repro will use `confirmed`/`not-confirmed` instead of `reproduced`/`not-reproduced`.
 - `output.actionability.suggestedReproPlatform` tells CI which runner to use for reproduction:
   - `macos` — for os/iOS, os/macOS, os/tvOS, os/watchOS issues
@@ -259,7 +259,7 @@ See [references/anti-patterns.md](references/anti-patterns.md) — **read this f
 ## Scripts
 
 - **`scripts/validate-triage.py <triage.json>`** — Validate against schema + rationale coverage + action integrity
-- **`scripts/persist-triage.py <triage.json>`** — Copy validated JSON to `output/ai/` and invoke renderer
+- **`scripts/persist-triage.py <triage.json>`** — Copy validated JSON to `output/ai-triage/{number}/` and invoke renderer
 - **`scripts/render-triage-report.py <triage.json>`** — Render validated triage JSON → `.md` + `.html` (uses Jinja2 template for markdown)
 - **`scripts/triage-report.md.jinja2`** — Jinja2 template for the Markdown report
 - **`scripts/viewer.html`** — Bootstrap 5 HTML template for the interactive viewer

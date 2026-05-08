@@ -113,7 +113,7 @@ Never use a tree-override merge (`git merge -s ours`, `git read-tree --reset`). 
 |--------------|----------|
 | `BUILD.gn` | **Combine both** — most complex; keep upstream structure AND SkiaSharp's platform flags/targets |
 | `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
-| `RELEASE_NOTES.md`, `infra/bots/` | **Take upstream** |
+| `RELEASE_NOTES.md`, `infra/` | **Take upstream** |
 | C API headers (`include/c/`) | **Keep SkiaSharp** — these don't exist upstream |
 | C API source (`src/c/`) | **Keep SkiaSharp + adapt** — fix includes and API calls in post-merge commits |
 | Other upstream source (`src/`, `include/`) | **Check history first** — see gotcha #15 |
