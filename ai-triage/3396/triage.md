@@ -1,0 +1,295 @@
+# Issue Triage Report — #3396
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-21T18:50:00Z |
+| Type | type/question (0.88 (88%)) |
+| Area | area/libSkiaSharp.native (0.85 (85%)) |
+| Suggested action | close-as-external (0.78 (78%)) |
+
+**Issue Summary:** User asks how to use SkiaSharp in Unity WebGL, reporting DLLNotFound for libSkiaSharp after manually placing the .a file from the NativeAssets.WebAssembly NuGet package.
+
+**Analysis:** Unity WebGL is not an officially supported SkiaSharp runtime. The NativeAssets.WebAssembly package targets .NET's MSBuild-based Emscripten pipeline (Blazor/Uno) via NativeFileReference, not Unity's IL2CPP/Emscripten build system. The DLLNotFound error occurs because Unity's build pipeline does not use the MSBuild NativeFileReference mechanism to statically link .a files into dotnet.wasm.
+
+**Recommendations:** **close-as-external** — Unity WebGL is not a supported SkiaSharp target. The .NET WASM NativeFileReference MSBuild mechanism does not apply to Unity's IL2CPP build pipeline. The DLLNotFound is caused by Unity's build system not statically linking the .a file — this is outside SkiaSharp's scope.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/WASM |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/question, area/libSkiaSharp.native, type/feature-request, os/WASM, area/SkiaSharp.Views.Uno, triage/triaged |
+
+## Evidence
+
+### Reproduction
+
+1. Download SkiaSharp managed NuGet and Native.WebAssembly NuGet
+2. Place libSkiaSharp.a files in Unity project
+3. Build Unity WebGL target
+4. Observe DLLNotFound for libSkiaSharp in browser console
+
+**Environment:** Unity 2021.2 / 2022.3, WebGL target, libSkiaSharp.a from SkiaSharp.NativeAssets.WebAssembly
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1819 — Related: Does wasm support work only via UNO? (closed)
+- https://github.com/mono/SkiaSharp/issues/1844 — Related: documentation on how to build skia native for wasm + Unity (closed)
+- https://github.com/mono/SkiaSharp/issues/1850 — Related: Mangling error trying to connect wasm .a library in Unity3D (closed)
+
+## Analysis
+
+### Technical Summary
+
+Unity WebGL is not an officially supported SkiaSharp runtime. The NativeAssets.WebAssembly package targets .NET's MSBuild-based Emscripten pipeline (Blazor/Uno) via NativeFileReference, not Unity's IL2CPP/Emscripten build system. The DLLNotFound error occurs because Unity's build pipeline does not use the MSBuild NativeFileReference mechanism to statically link .a files into dotnet.wasm.
+
+### Rationale
+
+The user is asking how to integrate SkiaSharp into an unsupported runtime (Unity WebGL). This is a usage question — SkiaSharp itself works correctly, but Unity's IL2CPP build system is fundamentally different from .NET's WASM toolchain (Blazor/Uno). Documentation/packages.md explicitly notes this is not officially supported. Prior issues (#1819, #1844, #1850) address the same Unity WASM integration problem.
+
+### Key Signals
+
+- "DLLNotFound libSkiaSharp" — **issue body** (Unity's IL2CPP/Emscripten build is not statically linking libSkiaSharp.a — placing the file in Plugins/WebGL alone is insufficient without configuring Unity's native plugin settings.)
+- "I have tried placing all the different libSkiaSharp.a files in Unity" — **issue body** (User correctly identified the static library approach but the DllImport resolution still fails, suggesting the .a file is not being linked at build time.)
+- "I am not sure if this is because the managed C# dll is expecting a dynamic linked library instead of a static one" — **issue body** (User confusion about static vs dynamic linking. For Unity WebGL, the issue is Unity's Emscripten pipeline not picking up the .a file symbols, not a dynamic vs static distinction in C#.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SkiaApi.cs` | 1-20 | direct | DllImport uses 'libSkiaSharp' string constant. For standard .NET WASM, this resolves to statically linked symbols at runtime. Unity's IL2CPP uses a different symbol resolution mechanism that does not automatically pick up manually-placed .a files. |
+| `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets` | — | direct | NativeFileReference MSBuild item tells the .NET WASM build toolchain (Emscripten) to statically link libSkiaSharp.a into dotnet.wasm. This is a .NET/MSBuild-only mechanism — Unity's build system does not process MSBuild .targets files. |
+| `documentation/dev/packages.md` | — | context | Explicitly documents: 'Unity WebGL: Unity WebGL also uses Emscripten. While not officially supported, the same static linking principle applies. Unity-specific integration may require manual configuration beyond the standard NativeFileReference approach.' |
+
+### Workarounds
+
+- In Unity, place libSkiaSharp.a in Assets/Plugins/WebGL/ and set the plugin platform settings to WebGL in the Unity Editor Inspector
+- Ensure the .a file matches the correct Emscripten version Unity uses (check Unity's build logs for emcc version)
+- Note that libjpeg-turbo and other bundled dependencies in libSkiaSharp.a can cause duplicate symbol errors with Unity's built-in libraries — a custom build of libSkiaSharp.a may be required
+
+### Next Questions
+
+- What specific Emscripten version does the Unity version use, and which libSkiaSharp.a variant was placed in the project?
+- Did the user configure the .a file's platform settings in Unity Inspector (WebGL only)?
+- Were there any linker errors beyond DLLNotFound (e.g., duplicate symbols from libjpeg-turbo)?
+
+### Resolution Proposals
+
+**Hypothesis:** Unity WebGL requires manual Emscripten linking configuration. The .a file must be placed in Assets/Plugins/WebGL with the correct Inspector settings, and the Emscripten version must match. Additionally, Unity's IL2CPP WASM compilation does not support .NET P/Invoke DllImport resolution the same way as .NET WASM.
+
+1. **Clarify unsupported status and point to workaround** — workaround, confidence 0.80 (80%), cost/xs, validated=untested
+   - Unity WebGL is not an officially supported SkiaSharp runtime. The NativeAssets.WebAssembly package is for .NET Blazor/Uno WASM targets. Direct Unity WebGL integration requires manual IL2CPP/Emscripten configuration outside of SkiaSharp's scope. Point the user to the existing related closed issues (#1819, #1844, #1850) for community experience, and note the docs mention.
+
+**Recommended proposal:** Clarify unsupported status and point to workaround
+
+**Why:** Unity WebGL is fundamentally incompatible with SkiaSharp's .NET WASM integration mechanism. This is a known limitation documented in packages.md, and prior issues confirm the difficulties.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-external |
+| Confidence | 0.78 (78%) |
+| Reason | Unity WebGL is not a supported SkiaSharp target. The .NET WASM NativeFileReference MSBuild mechanism does not apply to Unity's IL2CPP build pipeline. The DLLNotFound is caused by Unity's build system not statically linking the .a file — this is outside SkiaSharp's scope. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.88 (88%) | Apply correct single type/question label, area/libSkiaSharp.native, os/WASM | labels=type/question, area/libSkiaSharp.native, os/WASM |
+| add-comment | high | 0.78 (78%) | Clarify Unity WebGL is unsupported, explain NativeFileReference limitation, point to related issues | — |
+| close-issue | medium | 0.72 (72%) | Close as external — root cause is Unity's build pipeline incompatibility, not a SkiaSharp issue | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for trying SkiaSharp with Unity WebGL!
+
+Unity WebGL is **not an officially supported platform** for SkiaSharp. The `SkiaSharp.NativeAssets.WebAssembly` package is designed for **.NET's Blazor WebAssembly and Uno Platform WASM targets**, which use an MSBuild `NativeFileReference` mechanism to statically link `libSkiaSharp.a` into `dotnet.wasm` at build time.
+
+Unity uses its own **IL2CPP/Emscripten** pipeline that does not process MSBuild `.targets` files, so placing the `.a` file in `Plugins/WebGL/` won't automatically link it the way .NET WASM does.
+
+A few things that others have tried (see related issues):
+- Place `libSkiaSharp.a` in `Assets/Plugins/WebGL/` and ensure its Inspector settings have **WebGL** checked as the target platform
+- Match the Emscripten version in `libSkiaSharp.a` to the version Unity uses (check Unity's build log for `emcc` version)
+- Be aware that `libSkiaSharp.a` bundles libjpeg-turbo, libpng, freetype, etc. — Unity also bundles some of these, causing **duplicate symbol errors** at link time (see #1844)
+
+Related issues that may have useful context:
+- #1819 — Does WASM support work only via Uno?
+- #1844 — Duplicate symbols with Unity WASM
+- #1850 — Mangling error connecting .a library in Unity
+
+If you find a working configuration, a community contribution documenting it would be very welcome!
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3396,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T18:50:00Z",
+    "currentLabels": [
+      "type/question",
+      "area/libSkiaSharp.native",
+      "type/feature-request",
+      "os/WASM",
+      "area/SkiaSharp.Views.Uno",
+      "triage/triaged"
+    ]
+  },
+  "summary": "User asks how to use SkiaSharp in Unity WebGL, reporting DLLNotFound for libSkiaSharp after manually placing the .a file from the NativeAssets.WebAssembly NuGet package.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Download SkiaSharp managed NuGet and Native.WebAssembly NuGet",
+        "Place libSkiaSharp.a files in Unity project",
+        "Build Unity WebGL target",
+        "Observe DLLNotFound for libSkiaSharp in browser console"
+      ],
+      "environmentDetails": "Unity 2021.2 / 2022.3, WebGL target, libSkiaSharp.a from SkiaSharp.NativeAssets.WebAssembly",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1819",
+          "description": "Related: Does wasm support work only via UNO? (closed)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1844",
+          "description": "Related: documentation on how to build skia native for wasm + Unity (closed)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1850",
+          "description": "Related: Mangling error trying to connect wasm .a library in Unity3D (closed)"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Unity WebGL is not an officially supported SkiaSharp runtime. The NativeAssets.WebAssembly package targets .NET's MSBuild-based Emscripten pipeline (Blazor/Uno) via NativeFileReference, not Unity's IL2CPP/Emscripten build system. The DLLNotFound error occurs because Unity's build pipeline does not use the MSBuild NativeFileReference mechanism to statically link .a files into dotnet.wasm.",
+    "rationale": "The user is asking how to integrate SkiaSharp into an unsupported runtime (Unity WebGL). This is a usage question — SkiaSharp itself works correctly, but Unity's IL2CPP build system is fundamentally different from .NET's WASM toolchain (Blazor/Uno). Documentation/packages.md explicitly notes this is not officially supported. Prior issues (#1819, #1844, #1850) address the same Unity WASM integration problem.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaApi.cs",
+        "lines": "1-20",
+        "finding": "DllImport uses 'libSkiaSharp' string constant. For standard .NET WASM, this resolves to statically linked symbols at runtime. Unity's IL2CPP uses a different symbol resolution mechanism that does not automatically pick up manually-placed .a files.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "NativeFileReference MSBuild item tells the .NET WASM build toolchain (Emscripten) to statically link libSkiaSharp.a into dotnet.wasm. This is a .NET/MSBuild-only mechanism — Unity's build system does not process MSBuild .targets files.",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/packages.md",
+        "finding": "Explicitly documents: 'Unity WebGL: Unity WebGL also uses Emscripten. While not officially supported, the same static linking principle applies. Unity-specific integration may require manual configuration beyond the standard NativeFileReference approach.'",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "DLLNotFound libSkiaSharp",
+        "source": "issue body",
+        "interpretation": "Unity's IL2CPP/Emscripten build is not statically linking libSkiaSharp.a — placing the file in Plugins/WebGL alone is insufficient without configuring Unity's native plugin settings."
+      },
+      {
+        "text": "I have tried placing all the different libSkiaSharp.a files in Unity",
+        "source": "issue body",
+        "interpretation": "User correctly identified the static library approach but the DllImport resolution still fails, suggesting the .a file is not being linked at build time."
+      },
+      {
+        "text": "I am not sure if this is because the managed C# dll is expecting a dynamic linked library instead of a static one",
+        "source": "issue body",
+        "interpretation": "User confusion about static vs dynamic linking. For Unity WebGL, the issue is Unity's Emscripten pipeline not picking up the .a file symbols, not a dynamic vs static distinction in C#."
+      }
+    ],
+    "workarounds": [
+      "In Unity, place libSkiaSharp.a in Assets/Plugins/WebGL/ and set the plugin platform settings to WebGL in the Unity Editor Inspector",
+      "Ensure the .a file matches the correct Emscripten version Unity uses (check Unity's build logs for emcc version)",
+      "Note that libjpeg-turbo and other bundled dependencies in libSkiaSharp.a can cause duplicate symbol errors with Unity's built-in libraries — a custom build of libSkiaSharp.a may be required"
+    ],
+    "nextQuestions": [
+      "What specific Emscripten version does the Unity version use, and which libSkiaSharp.a variant was placed in the project?",
+      "Did the user configure the .a file's platform settings in Unity Inspector (WebGL only)?",
+      "Were there any linker errors beyond DLLNotFound (e.g., duplicate symbols from libjpeg-turbo)?"
+    ],
+    "resolution": {
+      "hypothesis": "Unity WebGL requires manual Emscripten linking configuration. The .a file must be placed in Assets/Plugins/WebGL with the correct Inspector settings, and the Emscripten version must match. Additionally, Unity's IL2CPP WASM compilation does not support .NET P/Invoke DllImport resolution the same way as .NET WASM.",
+      "proposals": [
+        {
+          "title": "Clarify unsupported status and point to workaround",
+          "description": "Unity WebGL is not an officially supported SkiaSharp runtime. The NativeAssets.WebAssembly package is for .NET Blazor/Uno WASM targets. Direct Unity WebGL integration requires manual IL2CPP/Emscripten configuration outside of SkiaSharp's scope. Point the user to the existing related closed issues (#1819, #1844, #1850) for community experience, and note the docs mention.",
+          "category": "workaround",
+          "confidence": 0.8,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Clarify unsupported status and point to workaround",
+      "recommendedReason": "Unity WebGL is fundamentally incompatible with SkiaSharp's .NET WASM integration mechanism. This is a known limitation documented in packages.md, and prior issues confirm the difficulties."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-external",
+      "confidence": 0.78,
+      "reason": "Unity WebGL is not a supported SkiaSharp target. The .NET WASM NativeFileReference MSBuild mechanism does not apply to Unity's IL2CPP build pipeline. The DLLNotFound is caused by Unity's build system not statically linking the .a file — this is outside SkiaSharp's scope.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply correct single type/question label, area/libSkiaSharp.native, os/WASM",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": [
+          "type/question",
+          "area/libSkiaSharp.native",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Clarify Unity WebGL is unsupported, explain NativeFileReference limitation, point to related issues",
+        "risk": "high",
+        "confidence": 0.78,
+        "comment": "Thanks for trying SkiaSharp with Unity WebGL!\n\nUnity WebGL is **not an officially supported platform** for SkiaSharp. The `SkiaSharp.NativeAssets.WebAssembly` package is designed for **.NET's Blazor WebAssembly and Uno Platform WASM targets**, which use an MSBuild `NativeFileReference` mechanism to statically link `libSkiaSharp.a` into `dotnet.wasm` at build time.\n\nUnity uses its own **IL2CPP/Emscripten** pipeline that does not process MSBuild `.targets` files, so placing the `.a` file in `Plugins/WebGL/` won't automatically link it the way .NET WASM does.\n\nA few things that others have tried (see related issues):\n- Place `libSkiaSharp.a` in `Assets/Plugins/WebGL/` and ensure its Inspector settings have **WebGL** checked as the target platform\n- Match the Emscripten version in `libSkiaSharp.a` to the version Unity uses (check Unity's build log for `emcc` version)\n- Be aware that `libSkiaSharp.a` bundles libjpeg-turbo, libpng, freetype, etc. — Unity also bundles some of these, causing **duplicate symbol errors** at link time (see #1844)\n\nRelated issues that may have useful context:\n- #1819 — Does WASM support work only via Uno?\n- #1844 — Duplicate symbols with Unity WASM\n- #1850 — Mangling error connecting .a library in Unity\n\nIf you find a working configuration, a community contribution documenting it would be very welcome!"
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as external — root cause is Unity's build pipeline incompatibility, not a SkiaSharp issue",
+        "risk": "medium",
+        "confidence": 0.72,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

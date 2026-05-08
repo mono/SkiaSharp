@@ -1,0 +1,158 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3343,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T21:53:09Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp.Views.Maui", "tenet/reliability"]
+  },
+  "summary": "Telerik MAUI application crashes on Windows after updating to SkiaSharp 3.116.x because SkiaSharp.Views.WinUI.Native.dll was compiled with dynamic CRT linkage and requires the VC++ Redistributable 2015+ to be installed on end-user machines.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.85 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net9.0"]
+    },
+    "reproEvidence": {
+      "environmentDetails": "Windows 10/11/Server 2019/2022/2025, .NET 9, SkiaSharp 3.116.1 via Telerik MAUI 11.0.0, Visual Studio (Windows)",
+      "relatedIssues": [3136, 3019],
+      "screenshots": [
+        {
+          "url": "https://github.com/user-attachments/assets/42cc4a83-7e5d-465d-9e49-d64ede04da96",
+          "description": "Screenshot showing DLL-related crash information attached by reporter"
+        }
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3136",
+          "description": "Primary tracking issue: MAUI app crash on SKCanvasView creation on Windows IoT — same root cause (WinUI native DLL requires VC++ Redist)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "3.116.1", "2.88.9"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.1",
+      "currentRelevance": "likely",
+      "relevanceReason": "Maintainer confirmed in #3136 the root cause (dynamic CRT linkage) and indicated a fix is pending pipeline signing issues; no fixed release published as of triage date."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.90,
+      "reason": "Reporter states the app worked with SkiaSharp 2.88.9 and broke with 3.116.x. Maintainer confirmed in related issue #3136 that the native WinUI DLL was inadvertently built with dynamic CRT linkage in the 3.116.x series.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.1"
+    }
+  },
+  "analysis": {
+    "summary": "The crash is caused by SkiaSharp.Views.WinUI.Native.dll (included in SkiaSharp.NativeAssets.WinUI) being compiled with dynamic CRT linkage (/MD), which requires the Visual C++ Redistributable 2015+ to be present on the machine. On machines without the redistributable the DLL fails to load, causing the application to crash on startup. The current repo source already specifies MultiThreaded (/MT, static) for Release builds, but the shipped 3.116.x NuGet packages were built before this was corrected. Maintainer @mattleibow confirmed the root cause in #3136 and noted pipeline signing issues are delaying the corrected release.",
+    "rationale": "Clear regression from 2.88.x to 3.116.x with Windows-only occurrence and a confirmed workaround (install VC++ Redist) all point to the WinUI native DLL CRT linkage mode. The same user reported both #3343 and #3136; issue #3136 has a maintainer diagnosis. No stack trace was provided in this issue, but the symptoms and fix match exactly. Area is SkiaSharp.Views.Maui since the reporter reached the bug via Telerik MAUI controls on Windows.",
+    "keySignals": [
+      {
+        "text": "The behavior start occurring when Telerik MAUI controls were updated to 3.116.1 in Telerik Maui 11.0.0 version",
+        "source": "issue body",
+        "interpretation": "Regression introduced in SkiaSharp 3.116.x, manifesting through the Telerik MAUI dependency chain."
+      },
+      {
+        "text": "Fix to crash, run this on machine: winget install Microsoft.VCRedist.2015+.x64",
+        "source": "comment by Inrego",
+        "interpretation": "VC++ Redistributable 2015+ is required but not installed; directly confirms dynamic CRT linkage in the SkiaSharp WinUI native DLL."
+      },
+      {
+        "text": "I think that I was building the interop and not statically linking the runtime. Try installing the msvc runtime. That fixed it for my tests.",
+        "source": "comment by mattleibow on issue #3136",
+        "interpretation": "Maintainer confirmed root cause: WinUI native interop DLL built with /MD (dynamic CRT) instead of /MT (static CRT)."
+      },
+      {
+        "text": "I believe this is related: https://github.com/mono/SkiaSharp/issues/3136",
+        "source": "comment by Inrego on issue #3343",
+        "interpretation": "Community user connected this issue to the known #3136 root cause."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.vcxproj",
+        "lines": "125-140",
+        "finding": "Release configuration uses RuntimeLibrary=MultiThreaded (/MT, static linking). Current source is correct, but the shipped 3.116.x NuGet packages were built with dynamic CRT linkage (/MD), requiring vcruntime140.dll from VC++ Redistributable at runtime.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WinUI/SkiaSharp.NativeAssets.WinUI.csproj",
+        "finding": "NativeAssets.WinUI package bundles SkiaSharp.Views.WinUI.Native.dll, libEGL.dll, and libGLESv2.dll for WinUI 3 / MAUI Windows targets. This is the package containing the problematic DLL.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Install VC++ Redistributable 2015+ x64 on affected machines: `winget install Microsoft.VCRedist.2015+.x64` or download from https://aka.ms/vs/17/release/vc_redist.x64.exe",
+      "Roll back to SkiaSharp 2.88.9 if the VC++ Redist installation is not feasible"
+    ],
+    "nextQuestions": [
+      "Which specific SkiaSharp release will include the statically-linked WinUI native DLL fix?",
+      "Does the reporter see a specific error message or crash dump (e.g., TypeInitializationException with COMException REGDB_E_CLASSNOTREG as seen in #3136)?"
+    ],
+    "errorFingerprint": "crash-WinUI-native-CRT-Windows-3.116.x",
+    "resolution": {
+      "hypothesis": "SkiaSharp.Views.WinUI.Native.dll in the published 3.116.x packages was compiled with /MD (dynamic CRT), requiring the VC++ Redistributable 2015+ on end-user machines. The current repo source already has the fix (/MT static linking). A new release with the corrected build is pending pipeline signing fixes per maintainer.",
+      "proposals": [
+        {
+          "title": "Install VC++ Redistributable 2015+ x64 (immediate workaround)",
+          "description": "Install the Microsoft Visual C++ Redistributable 2015+ x64 on affected machines. This provides the runtime DLLs that SkiaSharp.Views.WinUI.Native.dll currently requires.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Wait for corrected SkiaSharp release with static CRT linkage",
+          "description": "The maintainer has confirmed the root cause and is preparing a fix. Upgrading to the corrected release (once published) will eliminate the VC++ Redist dependency from SkiaSharp.Views.WinUI.Native.dll.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Install VC++ Redistributable 2015+ x64 (immediate workaround)",
+      "recommendedReason": "Immediately resolves the crash while the proper fix (static CRT rebuild) is being released."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Root cause is confirmed (missing VC++ Redist due to dynamic CRT linkage in WinUI native DLL). Fix is in progress per maintainer in #3136 but no corrected release has been published yet. Issue should remain open to track the fix release.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correctly applied; confirm type/bug, area/SkiaSharp.Views.Maui, os/Windows-Classic, tenet/reliability",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to #3136 as the primary tracking issue for this Windows CRT linkage crash — same root cause, same workaround, maintainer actively investigating there",
+        "risk": "low",
+        "confidence": 0.92,
+        "linkedIssue": 3136
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis confirming root cause, providing workaround, and directing reporter to follow #3136 for fix status",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "Thanks for the report.\n\nThis crash is caused by `SkiaSharp.Views.WinUI.Native.dll` (from SkiaSharp 3.116.x) requiring the **Visual C++ Redistributable 2015+** to be installed on the machine. This is a known issue also tracked in #3136.\n\nHere's a workaround you can use while we work on a fix: install the VC++ Redistributable on affected machines:\n\n```\nwinget install Microsoft.VCRedist.2015+.x64\n```\n\nOr download the installer directly from: https://aka.ms/vs/17/release/vc_redist.x64.exe\n\nThe root cause is that `SkiaSharp.Views.WinUI.Native.dll` in the 3.116.x packages was built with dynamic CRT linkage, which requires the redistributable to be present. The maintainer has confirmed the issue and is working on a corrected release that statically links the runtime (eliminating the dependency). Follow #3136 for updates on when that release ships.\n\nIf rolling back is an option, SkiaSharp 2.88.9 does not have this dependency."
+      }
+    ]
+  }
+}

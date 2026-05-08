@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #533 (keep-open)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 533, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-21T21:09:45Z", "currentLabels": ["type/bug", "type/enhancement", "status/help-wanted", "os/Android", "area/SkiaSharp.Views", "backend/OpenGL"]}, "summary": "After upgrading SkiaSharp.Views.Forms from 1.59.3 to 1.60.1 on Android, SKGLView with HasRenderLoop=true fires PaintSurface at uncapped framerate (300–1200fps) instead of the previous ~60fps, because the switch from GLSurfaceView (V-Sync enforced) to GLTextureView (no V-Sync) removed the implicit frame rate cap.", "classification": {"type": {"value": "type/enhancement", "confidence": 0.82}, "area": {"value": "area/SkiaSharp.Views", "confidence": 0.97}, "platforms": ["os/Android"], "backends": ["backend/OpenGL"], "tenets": ["tenet/performance", "tenet/reliability"]}, "evidence": {"reproEvidence": {"stepsToReproduce": ["Create a Xamarin.Forms app using SkiaSharp.Views.Forms", "Add an SKGLView with HasRenderLoop=true", "Measure PaintSurface call frequency via Stopwatch", "Observe ~300fps on Android after upgrading from 1.59.3 to 1.60.1"], "environmentDetails": "Android 7 API 24, Samsung Galaxy S7 Edge, Xamarin.Forms 3.0.0.446417, SkiaSharp.Views.Forms 1.60.1", "codeSnippets": ["Stopwatch sw = Stopwatch.StartNew(); TimeSpan last; private void OnPaint(object sender, SKPaintGLSurfaceEventArgs e) { var c = sw.Elapsed; var ts = c - last; last = c; var fps = 1.0 / ts.TotalSeconds; }"]}, "versionAnalysis": {"mentionedVersions": ["1.59.3", "1.60.1"], "workedIn": "1.59.3", "brokeIn": "1.60.1", "currentRelevance": "likely", "relevanceReason": "The GLTextureView (TextureView-based) renderer is still the Android implementation in current source. No Choreographer-based frame pacing has been added."}, "regression": {"isRegression": true, "confidence": 0.9, "reason": "The maintainer confirmed the change: 1.59.3 used GLSurfaceView (inherits V-Sync behavior), 1.60.1 switched to GLTextureView (TextureView-based, no V-Sync). The frame rate cap was an implicit behavior of GLSurfaceView that was lost.", "workedInVersion": "1.59.3", "brokeInVersion": "1.60.1"}}, "analysis": {"summary": "The implicit 60fps cap from GLSurfaceView's V-Sync was lost when SkiaSharp switched to the custom GLTextureView (TextureView-based) renderer. The fix would be integrating Android's Choreographer API to synchronize render loop callbacks to display VSYNC, or exposing a frame-rate limit API.", "codeInvestigation": [{"file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs", "lines": "147-217", "finding": "GLTextureView exposes RenderMode (Continuously/WhenDirty) via glThread.SetRenderMode, but has no VSYNC or Choreographer integration. In Continuously mode, the GL thread renders as fast as the GPU allows with no frame rate cap.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLSurfaceView.cs", "lines": "9-60", "finding": "SKGLSurfaceView wraps Android's GLSurfaceView which natively enforces VSYNC via EGL swap interval, providing the implicit 60fps cap that existed in SkiaSharp 1.59.3. This is the pre-1.60.1 implementation.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureView.cs", "lines": "36-71", "finding": "SKGLTextureView wraps GLTextureView and uses SKGLTextureViewRenderer. The Initialize() method does not configure any VSYNC or frame rate limiting — rendering is driven by a background GL thread that runs continuously without any display sync.", "relevance": "direct"}, {"file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureViewRenderer.cs", "lines": "43-98", "finding": "OnDrawFrame() renders immediately each time it is called by the GL thread with no rate limiting logic. The entire render path has no Choreographer or VSYNC synchronization.", "relevance": "direct"}], "keySignals": [{"text": "framerate went from a capped 60fps to a ~300fps", "source": "issue body", "interpretation": "Confirms a clear behavioral regression introduced by the GLSurfaceView → GLTextureView migration."}, {"text": "I _see_ the change, and I think it has to do with the fact that we are no longer using the old GLSurfaceView to render the content, but the new TextureView", "source": "maintainer comment #392336322", "interpretation": "Maintainer confirmed root cause: TextureView does not enforce VSYNC unlike GLSurfaceView."}, {"text": "I really need to look at this. Noticing 1.2K FPS in some emulators.", "source": "maintainer comment #664105794", "interpretation": "Issue acknowledged as real and still open after 2 years, confirming it is not resolved."}, {"text": "GLSurfaceView probably uses V-Sync (glSwapInterval call), when TextureView doesn't use that", "source": "community comment #664335967", "interpretation": "Community correctly identified the V-Sync mechanism difference between the two view types."}, {"text": "We might be able to look at Choreographer", "source": "maintainer comment #664527988", "interpretation": "Maintainer proposed Choreographer as the solution to sync rendering to display refresh rate."}], "rationale": "The switch from GLSurfaceView (with implicit VSYNC via EGL swap interval) to GLTextureView (no VSYNC) was intentional for better rendering capabilities, but it inadvertently removed the frame rate cap for HasRenderLoop users. This is correctly classified as type/enhancement rather than type/bug because: (1) the maintainer confirmed the architectural change was intentional, (2) SkiaSharp does not contract to cap frame rate — that was incidental GLSurfaceView behavior, and (3) the resolution requires adding new functionality (Choreographer integration or frame rate API). The issue remains relevant as current code still has no frame pacing. Multiple users are affected and community workarounds exist.", "workarounds": ["Use a time-delta based animation model instead of frame-count based — track elapsed time between PaintSurface calls with a Stopwatch and scale animations by time.", "Implement a manual frame rate limiter using Thread.Sleep: measure frame execution time and sleep for the remaining interval to hit a target FPS (e.g., 16.67ms for 60fps).", "Use Android's Choreographer in a custom subclass to only call RequestRender() on each display VSYNC tick instead of relying on Continuously render mode."], "nextQuestions": ["Does the same uncapped FPS issue affect SkiaSharp.Views.Maui on Android (SKGLViewHandler.Android)?", "Has the Android Frame Pacing Library been considered as an alternative to raw Choreographer?", "Is there appetite to add a MaxFPS or UseVSync property to SKGLView for Android?"], "resolution": {"hypothesis": "Add Choreographer-based VSYNC synchronization to GLTextureView's GL thread so that rendering callbacks align with display refresh rate, preventing >60fps (or >screen-refresh-rate) rendering.", "proposals": [{"title": "Use time-based animation (user workaround)", "description": "The immediate workaround: track elapsed time between PaintSurface calls with Stopwatch and scale all animations by time delta rather than frame count.", "category": "workaround", "confidence": 0.95, "effort": "cost/xs", "validated": "untested"}, {"title": "Manual frame rate limiter (user workaround)", "description": "Measure frame duration and use Thread.Sleep to limit the render loop to a target FPS. Simple but imprecise due to sleep granularity.", "category": "workaround", "confidence": 0.85, "effort": "cost/s", "validated": "untested"}, {"title": "Choreographer integration in GLTextureView", "description": "Integrate Android's Choreographer.IFrameCallback into GLTextureView's GL thread to trigger frames only on display VSYNC signals, naturally capping at the device's screen refresh rate.", "category": "fix", "confidence": 0.75, "effort": "cost/m", "validated": "untested"}], "recommendedProposal": "Choreographer integration in GLTextureView", "recommendedReason": "Aligns rendering with the actual display refresh cycle, avoids wasted GPU/CPU cycles, is the approach already identified by the maintainer, and provides the best battery efficiency for render-loop use cases."}}, "output": {"actionability": {"suggestedAction": "keep-open", "confidence": 0.85, "reason": "Valid enhancement with sustained community interest over 8 years, multiple affected users, and a clear implementation path (Choreographer). The maintainer has already investigated and acknowledged the issue. No fix has been merged.", "suggestedReproPlatform": "linux"}, "actions": [{"type": "update-labels", "description": "Replace type/bug with type/enhancement — the original behavior change was intentional; the ask is adding frame-pacing capability", "risk": "low", "confidence": 0.82, "labels": ["type/enhancement", "area/SkiaSharp.Views", "os/Android", "backend/OpenGL", "tenet/performance", "tenet/reliability"]}, {"type": "add-comment", "description": "Provide context on root cause, current status, and workarounds for affected users", "risk": "medium", "confidence": 0.85, "comment": "**Root cause confirmed:** The switch from `GLSurfaceView` (which enforces V-Sync via EGL swap interval) to the custom `GLTextureView` in 1.60.1 removed the implicit 60fps cap. The GL thread in `GLTextureView` runs continuously with no display-sync.\n\n**Status:** No Choreographer integration has been added yet. The maintainer identified this in 2020 and it is still open.\n\n**Workarounds available now:**\n\n1. **Time-based animations (recommended):** Instead of frame-count-based logic, track elapsed time:\n   ```csharp\n   private Stopwatch _sw = Stopwatch.StartNew();\n   private TimeSpan _last;\n   void OnPaintSurface(object s, SKPaintGLSurfaceEventArgs e) {\n       var elapsed = _sw.Elapsed - _last;\n       _last = _sw.Elapsed;\n       // Use elapsed.TotalSeconds to scale animations\n   }\n   ```\n\n2. **Manual FPS cap:** Add a sleep in your render callback to limit FPS:\n   ```csharp\n   private Stopwatch _sw = Stopwatch.StartNew();\n   private TimeSpan _last;\n   private const double TargetMs = 1000.0 / 60.0;\n   void OnPaintSurface(object s, SKPaintGLSurfaceEventArgs e) {\n       // ... draw ...\n       var elapsed = (_sw.Elapsed - _last).TotalMilliseconds;\n       _last = _sw.Elapsed;\n       var wait = TargetMs - elapsed;\n       if (wait > 0) Thread.Sleep((int)wait);\n   }\n   ```\n\nA proper fix would integrate Android's `Choreographer` to trigger renders only on display VSYNC, naturally capping at the screen's refresh rate and reducing battery usage."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

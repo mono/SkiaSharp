@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #3396 (close-as-external)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 3396, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-21T18:50:00Z", "currentLabels": ["type/question", "area/libSkiaSharp.native", "type/feature-request", "os/WASM", "area/SkiaSharp.Views.Uno", "triage/triaged"]}, "summary": "User asks how to use SkiaSharp in Unity WebGL, reporting DLLNotFound for libSkiaSharp after manually placing the .a file from the NativeAssets.WebAssembly NuGet package.", "classification": {"type": {"value": "type/question", "confidence": 0.88}, "area": {"value": "area/libSkiaSharp.native", "confidence": 0.85}, "platforms": ["os/WASM"]}, "evidence": {"reproEvidence": {"stepsToReproduce": ["Download SkiaSharp managed NuGet and Native.WebAssembly NuGet", "Place libSkiaSharp.a files in Unity project", "Build Unity WebGL target", "Observe DLLNotFound for libSkiaSharp in browser console"], "environmentDetails": "Unity 2021.2 / 2022.3, WebGL target, libSkiaSharp.a from SkiaSharp.NativeAssets.WebAssembly", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/1819", "description": "Related: Does wasm support work only via UNO? (closed)"}, {"url": "https://github.com/mono/SkiaSharp/issues/1844", "description": "Related: documentation on how to build skia native for wasm + Unity (closed)"}, {"url": "https://github.com/mono/SkiaSharp/issues/1850", "description": "Related: Mangling error trying to connect wasm .a library in Unity3D (closed)"}]}}, "analysis": {"summary": "Unity WebGL is not an officially supported SkiaSharp runtime. The NativeAssets.WebAssembly package targets .NET's MSBuild-based Emscripten pipeline (Blazor/Uno) via NativeFileReference, not Unity's IL2CPP/Emscripten build system. The DLLNotFound error occurs because Unity's build pipeline does not use the MSBuild NativeFileReference mechanism to statically link .a files into dotnet.wasm.", "rationale": "The user is asking how to integrate SkiaSharp into an unsupported runtime (Unity WebGL). This is a usage question — SkiaSharp itself works correctly, but Unity's IL2CPP build system is fundamentally different from .NET's WASM toolchain (Blazor/Uno). Documentation/packages.md explicitly notes this is not officially supported. Prior issues (#1819, #1844, #1850) address the same Unity WASM integration problem.", "codeInvestigation": [{"file": "binding/SkiaSharp/SkiaApi.cs", "lines": "1-20", "finding": "DllImport uses 'libSkiaSharp' string constant. For standard .NET WASM, this resolves to statically linked symbols at runtime. Unity's IL2CPP uses a different symbol resolution mechanism that does not automatically pick up manually-placed .a files.", "relevance": "direct"}, {"file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets", "finding": "NativeFileReference MSBuild item tells the .NET WASM build toolchain (Emscripten) to statically link libSkiaSharp.a into dotnet.wasm. This is a .NET/MSBuild-only mechanism — Unity's build system does not process MSBuild .targets files.", "relevance": "direct"}, {"file": "documentation/dev/packages.md", "finding": "Explicitly documents: 'Unity WebGL: Unity WebGL also uses Emscripten. While not officially supported, the same static linking principle applies. Unity-specific integration may require manual configuration beyond the standard NativeFileReference approach.'", "relevance": "context"}], "keySignals": [{"text": "DLLNotFound libSkiaSharp", "source": "issue body", "interpretation": "Unity's IL2CPP/Emscripten build is not statically linking libSkiaSharp.a — placing the file in Plugins/WebGL alone is insufficient without configuring Unity's native plugin settings."}, {"text": "I have tried placing all the different libSkiaSharp.a files in Unity", "source": "issue body", "interpretation": "User correctly identified the static library approach but the DllImport resolution still fails, suggesting the .a file is not being linked at build time."}, {"text": "I am not sure if this is because the managed C# dll is expecting a dynamic linked library instead of a static one", "source": "issue body", "interpretation": "User confusion about static vs dynamic linking. For Unity WebGL, the issue is Unity's Emscripten pipeline not picking up the .a file symbols, not a dynamic vs static distinction in C#."}], "workarounds": ["In Unity, place libSkiaSharp.a in Assets/Plugins/WebGL/ and set the plugin platform settings to WebGL in the Unity Editor Inspector", "Ensure the .a file matches the correct Emscripten version Unity uses (check Unity's build logs for emcc version)", "Note that libjpeg-turbo and other bundled dependencies in libSkiaSharp.a can cause duplicate symbol errors with Unity's built-in libraries — a custom build of libSkiaSharp.a may be required"], "nextQuestions": ["What specific Emscripten version does the Unity version use, and which libSkiaSharp.a variant was placed in the project?", "Did the user configure the .a file's platform settings in Unity Inspector (WebGL only)?", "Were there any linker errors beyond DLLNotFound (e.g., duplicate symbols from libjpeg-turbo)?"], "resolution": {"hypothesis": "Unity WebGL requires manual Emscripten linking configuration. The .a file must be placed in Assets/Plugins/WebGL with the correct Inspector settings, and the Emscripten version must match. Additionally, Unity's IL2CPP WASM compilation does not support .NET P/Invoke DllImport resolution the same way as .NET WASM.", "proposals": [{"title": "Clarify unsupported status and point to workaround", "description": "Unity WebGL is not an officially supported SkiaSharp runtime. The NativeAssets.WebAssembly package is for .NET Blazor/Uno WASM targets. Direct Unity WebGL integration requires manual IL2CPP/Emscripten configuration outside of SkiaSharp's scope. Point the user to the existing related closed issues (#1819, #1844, #1850) for community experience, and note the docs mention.", "category": "workaround", "confidence": 0.8, "effort": "cost/xs", "validated": "untested"}], "recommendedProposal": "Clarify unsupported status and point to workaround", "recommendedReason": "Unity WebGL is fundamentally incompatible with SkiaSharp's .NET WASM integration mechanism. This is a known limitation documented in packages.md, and prior issues confirm the difficulties."}}, "output": {"actionability": {"suggestedAction": "close-as-external", "confidence": 0.78, "reason": "Unity WebGL is not a supported SkiaSharp target. The .NET WASM NativeFileReference MSBuild mechanism does not apply to Unity's IL2CPP build pipeline. The DLLNotFound is caused by Unity's build system not statically linking the .a file — this is outside SkiaSharp's scope.", "suggestedReproPlatform": "linux"}, "actions": [{"type": "update-labels", "description": "Apply correct single type/question label, area/libSkiaSharp.native, os/WASM", "risk": "low", "confidence": 0.88, "labels": ["type/question", "area/libSkiaSharp.native", "os/WASM"]}, {"type": "add-comment", "description": "Clarify Unity WebGL is unsupported, explain NativeFileReference limitation, point to related issues", "risk": "high", "confidence": 0.78, "comment": "Thanks for trying SkiaSharp with Unity WebGL!\n\nUnity WebGL is **not an officially supported platform** for SkiaSharp. The `SkiaSharp.NativeAssets.WebAssembly` package is designed for **.NET's Blazor WebAssembly and Uno Platform WASM targets**, which use an MSBuild `NativeFileReference` mechanism to statically link `libSkiaSharp.a` into `dotnet.wasm` at build time.\n\nUnity uses its own **IL2CPP/Emscripten** pipeline that does not process MSBuild `.targets` files, so placing the `.a` file in `Plugins/WebGL/` won't automatically link it the way .NET WASM does.\n\nA few things that others have tried (see related issues):\n- Place `libSkiaSharp.a` in `Assets/Plugins/WebGL/` and ensure its Inspector settings have **WebGL** checked as the target platform\n- Match the Emscripten version in `libSkiaSharp.a` to the version Unity uses (check Unity's build log for `emcc` version)\n- Be aware that `libSkiaSharp.a` bundles libjpeg-turbo, libpng, freetype, etc. — Unity also bundles some of these, causing **duplicate symbol errors** at link time (see #1844)\n\nRelated issues that may have useful context:\n- #1819 — Does WASM support work only via Uno?\n- #1844 — Duplicate symbols with Unity WASM\n- #1850 — Mangling error connecting .a library in Unity\n\nIf you find a working configuration, a community contribution documenting it would be very welcome!"}, {"type": "close-issue", "description": "Close as external — root cause is Unity's build pipeline incompatibility, not a SkiaSharp issue", "risk": "medium", "confidence": 0.72, "stateReason": "not_planned"}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>
