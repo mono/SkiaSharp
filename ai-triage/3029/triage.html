@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #3029 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 3029, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-21T18:50:40Z", "currentLabels": ["type/bug", "os/iOS", "area/libSkiaSharp.native", "status/needs-attention", "tenet/compatibility", "triage/triaged"]}, "summary": "iOS 18 changed the PingFang SC Chinese system font to a new undocumented format, causing Skia's CoreText glyph lookup to substitute a tofu/box character for the degree symbol ° when it appears adjacent to Chinese characters.", "classification": {"type": {"value": "type/bug", "confidence": 0.95}, "area": {"value": "area/libSkiaSharp.native", "confidence": 0.88}, "platforms": ["os/iOS"], "tenets": ["tenet/compatibility"]}, "evidence": {"bugSignals": {"severity": "medium", "regressionClaimed": true, "errorType": "wrong-output", "errorMessage": "Degree symbol ° rendered as a tofu/box character when mixed with Chinese text on iOS 18", "reproQuality": "complete", "targetFrameworks": ["net8.0-ios"]}, "reproEvidence": {"stepsToReproduce": ["Create a SkiaSharp app targeting iOS", "Draw a string combining Chinese characters and the degree symbol (°) using SKCanvas.DrawText or equivalent", "Run on iOS 18 device or simulator"], "environmentDetails": "iOS/iPadOS 18.0, SkiaSharp 2.88.8; confirmed still present on 3.118.0-preview.1.2", "repoLinks": [{"url": "https://github.com/cho-trackman/SkiaIos18Bug", "description": "Reporter minimal repro project (Xcode/SkiaSharp iOS app)"}, {"url": "https://forums.developer.apple.com/forums/thread/758189?answerId=811700022#811700022", "description": "Apple developer forum: PingFang.ttc moved and converted to new undocumented format in iOS 18"}]}, "versionAnalysis": {"mentionedVersions": ["2.88.8", "3.118.0-preview.1.2"], "currentRelevance": "likely", "relevanceReason": "Reporter confirmed the bug persists on 3.118.0-preview.1.2; no upstream Skia fix for iOS 18 PingFang format change has been identified."}, "regression": {"isRegression": true, "confidence": 0.92, "reason": "Explicitly works on all iOS versions prior to 18 per reporter; iOS 18 changed the PingFang SC font file location and format, breaking Skia's CoreText font access.", "workedInVersion": "iOS 17.5", "brokeInVersion": "iOS 18.0"}}, "analysis": {"summary": "The root cause is an Apple OS change in iOS 18: PingFang.ttc (the Chinese system font) was relocated from /System/Library/Fonts/Core and converted to a new undocumented font format. Skia's CoreText font backend cannot parse or fall back correctly from this new format, resulting in incorrect glyph substitution (tofu/box) for the degree symbol ° when it appears in text that triggers PingFang as the active typeface. This is an upstream Skia issue that requires a fix to the CoreText font loading/fallback path to handle the new iOS 18 font format.", "rationale": "The bug is clearly wrong output (not a usage error): degree symbol rendered correctly on iOS 17 breaks on iOS 18. The reporter confirmed it on both 2.88.8 and 3.118.0-preview.1.2. The Apple developer forum confirms PingFang.ttc changed format. The fact that Japanese/Korean still work on iOS 18 points to PingFang SC specifically. Because the root cause is in the native Skia CoreText backend (not C# bindings), area is area/libSkiaSharp.native.", "codeInvestigation": [{"file": "binding/SkiaSharp/SKCanvas.cs", "finding": "DrawText ultimately calls sk_canvas_draw_text_blob or sk_canvas_draw_simple_text via P/Invoke. No Chinese-specific or iOS-specific glyph fallback logic exists at the C# layer — glyph resolution is fully delegated to native Skia.", "relevance": "context"}, {"file": "binding/SkiaSharp/SKTypeface.cs", "finding": "SKTypeface.FromFamilyName delegates to sk_typeface_create_from_name. On iOS this resolves via CoreText. No iOS 18-specific font handling; relies on upstream Skia's CoreText port to enumerate system fonts including PingFang SC.", "relevance": "related"}, {"file": "externals/skia/ (submodule not initialized — src/ports/SkFontMgr_mac_ct.cpp expected location)", "finding": "Skia submodule is not initialized in this environment. The CoreText font manager (SkFontMgr_mac_ct.cpp) is the expected location of the iOS/macOS font loading logic. The new undocumented PingFang format in iOS 18 would require changes to this file to correctly enumerate or fall back from the reformatted PingFang SC font.", "relevance": "direct"}], "keySignals": [{"text": "I've experiencing this regression on iOS 18 when drawing the degree symbol °", "source": "issue body", "interpretation": "Clear wrong-output regression tied to iOS 18 OS upgrade, not a SkiaSharp version change."}, {"text": "It also works in Japanese and Korean on iOS 18.", "source": "issue body", "interpretation": "Japanese (Hiragino) and Korean (Apple SD Gothic Neo) fonts are unaffected — isolates the problem to PingFang SC (Simplified Chinese)."}, {"text": "PingFang.ttc is no longer in /System/Library/Fonts/Core. iOS 18 has a new Chinese UI font [in a new undocumented format]", "source": "comment by cho-trackman (Apple developer forums reference)", "interpretation": "Apple changed PingFang SC to an undocumented format in iOS 18; Skia's CoreText backend cannot handle it correctly, causing glyph lookup failures that manifest as degree symbol substitution."}, {"text": "Just tested on 3.118.0-preview.1.2 and the issue is still there.", "source": "comment by cho-trackman", "interpretation": "Latest SkiaSharp preview hasn't resolved this — upstream Skia fix is needed."}], "workarounds": ["Use SkiaSharp.HarfBuzz for text shaping (SKShaper), which performs richer font fallback and may correctly handle PingFang SC on iOS 18.", "Explicitly load a custom embedded font that contains both Chinese glyphs and the degree symbol, bypassing system font resolution entirely.", "Use RichTextKit (toptensoftware/RichTextKit) which implements higher-level font fallback similar to UILabel."], "nextQuestions": ["Has upstream Skia (google/skia) received a bug report or fix for iOS 18 PingFang format change in SkFontMgr_mac_ct.cpp?", "Does the issue also affect Mac Catalyst (which shares the CoreText backend) or is it iOS-only?", "Does SkiaSharp.HarfBuzz (SKShaper) successfully work around the issue on iOS 18?"], "resolution": {"hypothesis": "Apple changed PingFang SC in iOS 18 to a new undocumented font format; Skia's CoreText font manager cannot correctly access glyph IDs, causing wrong glyph substitution for the degree symbol in Chinese text strings.", "proposals": [{"title": "Use SkiaSharp.HarfBuzz for text shaping as workaround", "description": "Replace direct SKCanvas.DrawText with SKShaper from SkiaSharp.HarfBuzz. HarfBuzz performs full Unicode text shaping with font fallback, which may correctly select a glyph for the degree symbol from an alternate font when PingFang SC fails.", "category": "workaround", "confidence": 0.72, "effort": "cost/s", "validated": "untested"}, {"title": "Embed a custom font that covers all required glyphs", "description": "Bundle a font (e.g., Noto Sans SC) that includes both Chinese characters and the degree symbol as an embedded resource. Load with SKTypeface.FromData() and use it explicitly. This bypasses system font fallback entirely.", "category": "workaround", "confidence": 0.88, "effort": "cost/s", "validated": "untested"}, {"title": "Upstream Skia fix for iOS 18 PingFang font format", "description": "File a bug against upstream Skia (google/skia) for the SkFontMgr_mac_ct.cpp CoreText font manager to handle the new PingFang SC undocumented format introduced in iOS 18. Once fixed upstream, update SkiaSharp's Skia submodule.", "category": "fix", "confidence": 0.7, "effort": "cost/l", "validated": "untested"}], "recommendedProposal": "Embed a custom font that covers all required glyphs", "recommendedReason": "Most reliable immediate workaround: fully bypasses the system font issue. Embedding a comprehensive Unicode font (Noto Sans SC) is straightforward and platform-independent."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.85, "reason": "Real regression with confirmed repro project, well-understood root cause (Apple iOS 18 PingFang font format change), but fix requires upstream Skia CoreText investigation and possibly an Apple radar. Workarounds exist.", "suggestedReproPlatform": "macos"}, "actions": [{"type": "update-labels", "description": "Apply type/bug, area/libSkiaSharp.native, os/iOS, tenet/compatibility labels", "risk": "low", "confidence": 0.95, "labels": ["type/bug", "area/libSkiaSharp.native", "os/iOS", "tenet/compatibility"]}, {"type": "add-comment", "description": "Post analysis with root cause, workarounds, and upstream investigation path", "risk": "medium", "confidence": 0.85, "comment": "Thanks for the detailed repro and the Apple forums link — that's very helpful!\n\nThe root cause appears to be an Apple OS change in iOS 18: **PingFang SC (the Simplified Chinese system font) was moved and converted to a new undocumented format**, as documented in the [Apple developer forum thread](https://forums.developer.apple.com/forums/thread/758189?answerId=811700022#811700022). Skia's CoreText font backend cannot correctly enumerate glyphs from this new format, causing the degree symbol `°` to be substituted with a tofu/box character when PingFang SC is the active typeface.\n\nThis explains why:\n- ✅ Japanese and Korean work (they use Hiragino / Apple SD Gothic Neo, which are unchanged)\n- ❌ Simplified Chinese breaks (PingFang SC format changed)\n- ❌ The bug persists in 3.118.0-preview.1.2 (upstream Skia hasn't patched the CoreText font manager)\n\n**Workarounds you can use now:**\n\n1. **Embed a custom font** — bundle a font like [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC) that covers both Chinese glyphs and the degree symbol, and load it explicitly with `SKTypeface.FromData()`. This bypasses system font lookup entirely and is the most reliable option.\n\n2. **Use SkiaSharp.HarfBuzz** — the `SKShaper` in [SkiaSharp.HarfBuzz](https://www.nuget.org/packages/SkiaSharp.HarfBuzz) performs richer Unicode text shaping with font fallback, which may correctly select an alternate glyph for `°`. Worth trying if you prefer a quick test.\n\n**Next steps on our end:**\n- Investigate whether upstream Skia has a fix for the iOS 18 PingFang font format change in `SkFontMgr_mac_ct.cpp`\n- Check if the issue also affects Mac Catalyst\n\nCould you confirm: does using `SkiaSharp.HarfBuzz` (`SKShaper`) work around the issue for you?"}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

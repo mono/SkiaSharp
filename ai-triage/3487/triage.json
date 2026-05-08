@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3487,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T18:36:14Z"
+  },
+  "summary": "Copilot-generated draft PR adding SKSamplingOptions overloads to SKSurface.Draw and SKCanvas.DrawSurface (fixing regression #3344), closed by maintainer without merging because it manually edited SkiaApi.generated.cs and the code generator was crashing.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.95 },
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "missing-api",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "relatedIssues": [3344],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/pull/3487", "description": "Draft PR by Copilot attempting to fix #3344 — closed without merging" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The C# wrapper overloads for DrawSurface/SKSurface.Draw with SKSamplingOptions are still missing on main. Only the P/Invoke sk_surface_draw_with_sampling is present in the generated file."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "In v2.88.x, FilterQuality on SKPaint controlled sampling in DrawSurface. After the migration to SKSamplingOptions, no equivalent parameter was added to DrawSurface or SKSurface.Draw.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.90,
+      "reason": "Issue #3344 is still open. The P/Invoke for sk_surface_draw_with_sampling is present in SkiaApi.generated.cs on main, but the C# wrapper overloads (SKSurface.Draw and SKCanvas.DrawSurface with SKSamplingOptions) are not yet present.",
+      "relatedPRs": [3487]
+    }
+  },
+  "analysis": {
+    "summary": "PR #3487 attempted to add the missing SKSamplingOptions parameter to SKSurface.Draw and SKCanvas.DrawSurface to fix regression #3344. The PR was closed as a draft because it manually edited SkiaApi.generated.cs (which must never be manually edited per project guidelines) and the code generator was crashing on typedef parsing. The P/Invoke binding sk_surface_draw_with_sampling now exists in the generated file on main, but the higher-level C# wrapper overloads are still missing.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "lines": "280-286",
+        "finding": "SKSurface.Draw(SKCanvas, float, float, SKPaint) exists but lacks an overload accepting SKSamplingOptions. The method calls sk_surface_draw which does not pass sampling options.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "589-602",
+        "finding": "SKCanvas.DrawSurface has two overloads (with SKPoint and with float x/y) but neither accepts SKSamplingOptions. Both delegate to SKSurface.Draw.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "15164-15180",
+        "finding": "P/Invoke declaration for sk_surface_draw_with_sampling is present in the generated file on main, accepting SKSamplingOptions* — the C API binding already exists. The C# wrapper just needs to call it.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "462-505",
+        "finding": "DrawImage has full SKSamplingOptions overloads with the FilterQuality fallback pattern. This is the established template for adding the same overloads to DrawSurface.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "P/Invoke declarations in SkiaApi.generated.cs (manually added pending generator fix)",
+        "source": "PR #3487 body",
+        "interpretation": "PR explicitly violated the coding standard of never manually editing generated files. This is the primary reason it was closed."
+      },
+      {
+        "text": "Generator runs but crashes on typedef parsing (existing CppAst/ClangSharp issue)",
+        "source": "PR #3487 body",
+        "interpretation": "Code generator was broken at time of PR — but the P/Invoke is now present in the generated file on main, suggesting the generator was later fixed and run."
+      },
+      {
+        "text": "Fixes mono/SkiaSharp#3344",
+        "source": "PR #3487 body",
+        "interpretation": "PR explicitly targets the underlying bug. Issue #3344 remains open, confirming the fix was not accepted."
+      },
+      {
+        "text": "Last Known Good Version: 2.88.9",
+        "source": "issue #3344",
+        "interpretation": "The SKPaint.FilterQuality path that previously controlled sampling quality was removed/deprecated in v3.x without an equivalent DrawSurface+SKSamplingOptions overload being added."
+      }
+    ],
+    "rationale": "This is a type/bug fix attempt for a missing API (SKSamplingOptions overloads for DrawSurface/SKSurface.Draw) representing a compatibility regression from v2.88.x. The PR was correctly scoped to area/SkiaSharp with tenet/compatibility. However it violated the project rule against manually editing generated files and the generator was non-functional. With the P/Invoke now in place on main, the remaining work is straightforward: add C# wrapper overloads following the DrawImage pattern.",
+    "workarounds": [
+      "Snapshot the surface to SKImage and use SKCanvas.DrawImage with SKSamplingOptions: `using var image = surface.Snapshot(); canvas.DrawImage(image, x, y, sampling);`",
+      "Use SKBitmap from the surface and draw via DrawBitmap."
+    ],
+    "nextQuestions": [
+      "Was sk_surface_draw_with_sampling added to the C API header and implementation in the Skia submodule correctly, or only reflected in the generated binding file?",
+      "Is the C API implementation calling SkSurface::draw() with the correct sampling parameter?"
+    ],
+    "resolution": {
+      "hypothesis": "The C API P/Invoke binding sk_surface_draw_with_sampling is already in place in SkiaApi.generated.cs. New C# wrapper overloads following the DrawImage pattern need to be added to SKSurface.Draw and SKCanvas.DrawSurface.",
+      "proposals": [
+        {
+          "title": "Add C# wrapper overloads for DrawSurface with SKSamplingOptions",
+          "description": "Add SKSurface.Draw(SKCanvas, float, float, SKSamplingOptions, SKPaint) and corresponding SKCanvas.DrawSurface overloads following the DrawImage pattern. Use the sk_surface_draw_with_sampling P/Invoke already present in the generated file.",
+          "category": "fix",
+          "confidence": 0.88,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: snapshot to SKImage then DrawImage",
+          "description": "Use SKSurface.Snapshot() to get an SKImage, then use SKCanvas.DrawImage with full SKSamplingOptions support. All APIs are validated as correct and cross-platform safe.",
+          "codeSnippet": "using var image = surface.Snapshot();\ncanvas.DrawImage(image, destX, destY, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));",
+          "category": "workaround",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Add C# wrapper overloads for DrawSurface with SKSamplingOptions",
+      "recommendedReason": "The P/Invoke is already in place. Adding wrapper overloads following the established DrawImage pattern is straightforward and fixes the regression properly for all callers."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.85,
+      "reason": "The P/Invoke layer (sk_surface_draw_with_sampling) is already present in the generated file on main. Only the C# wrapper overloads for SKSurface.Draw and SKCanvas.DrawSurface need to be added, following the existing DrawImage pattern.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area/SkiaSharp, and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp", "tenet/compatibility"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference to the original bug issue #3344",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3344
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis explaining current state and remaining work needed",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "This draft PR was closed without merging because it manually edited `SkiaApi.generated.cs` (which must never be hand-edited per project guidelines) and the code generator was crashing.\n\nCurrent state on `main`:\n- ✅ `sk_surface_draw_with_sampling` P/Invoke is present in `SkiaApi.generated.cs` (regenerated since PR was closed)\n- ❌ C# wrapper overloads — `SKSurface.Draw(SKCanvas, float, float, SKSamplingOptions, SKPaint)` and `SKCanvas.DrawSurface(SKSurface, float, float, SKSamplingOptions, SKPaint)` — are **not** present\n\nTo complete the fix for #3344: add the C# wrapper overloads following the `DrawImage` pattern in `SKCanvas.cs` (lines 462–505), using the existing `sk_surface_draw_with_sampling` P/Invoke.\n\n**Workaround until fixed:**\n```csharp\nusing var image = surface.Snapshot();\ncanvas.DrawImage(image, destX, destY, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));\n```"
+      }
+    ]
+  }
+}

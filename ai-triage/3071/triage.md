@@ -1,0 +1,353 @@
+# Issue Triage Report — #3071
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-21T18:50:00Z |
+| Type | type/bug (0.80 (80%)) |
+| Area | area/SkiaSharp.Views (0.90 (90%)) |
+| Suggested action | needs-info (0.82 (82%)) |
+
+**Issue Summary:** Reporter claims wrong rendering scale on Windows with SkiaSharp 2.88.9 stable on displays with DPI scale != 1.0, affecting both SKCanvasView (SKXamlCanvas) and SKGLView (SKSwapChainPanel), while 2.88.9-preview.2.2 rendered correctly.
+
+**Analysis:** Reporter observes incorrect rendering scale on Windows (WinUI) with displays at a fractional DPI scale (e.g. 1.25). Both SKCanvasView and SKGLView are affected; the bug does not manifest when display scale is 1.0. The maintainer confirmed no code changes between 2.88.9-preview.2.2 and 2.88.9 stable. The issue lacks reproduction code — only the template placeholder is present — making investigation difficult.
+
+**Recommendations:** **needs-info** — No reproduction code provided (only template placeholder), and maintainer confirmed no code changes between the two mentioned versions. Cannot investigate further without minimal repro and display scale details.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-WinUI |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+| Current labels | type/bug, area/SkiaSharp.Views, os/Windows-WinUI, tenet/reliability, triage/triaged |
+
+## Evidence
+
+### Reproduction
+
+1. Use a Windows display with a scaling factor != 1.0 (e.g. 1.25)
+2. Run application using SkiaSharp 2.88.9 stable with SKCanvasView or SKGLView
+3. Observe incorrect rendering scale
+
+**Environment:** Windows, Visual Studio, display rendering scale 1.25
+
+**Repository links:**
+- https://github.com/taublast/DrawnUi.Maui/issues/130 — Reporter's upstream issue with screenshots of the incorrect rendering scale
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | wrong-output |
+| Error message | Incorrect rendering scale on Windows with 2.88.9 stable (not observed with 2.88.9-preview.2.2) |
+| Repro quality | partial |
+| Target frameworks | net8.0-windows10.0.19041 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.9-preview.2.2, 2.88.9, 2.88.8 |
+| Worked in | 2.88.9-preview.2.2 |
+| Broke in | 2.88.9 |
+| Current relevance | unknown |
+| Relevance reason | Maintainer confirmed no code changes between preview.2.2 and 2.88.9 stable; unclear if still reproducible or was a packaging/environment issue. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.55 (55%) |
+| Reason | Reporter claims regression from 2.88.9-preview.2.2 to 2.88.9 stable, but maintainer confirmed the diff shows no relevant source changes between these two releases. |
+| Worked in version | 2.88.9-preview.2.2 |
+| Broke in version | 2.88.9 |
+
+## Analysis
+
+### Technical Summary
+
+Reporter observes incorrect rendering scale on Windows (WinUI) with displays at a fractional DPI scale (e.g. 1.25). Both SKCanvasView and SKGLView are affected; the bug does not manifest when display scale is 1.0. The maintainer confirmed no code changes between 2.88.9-preview.2.2 and 2.88.9 stable. The issue lacks reproduction code — only the template placeholder is present — making investigation difficult.
+
+### Rationale
+
+Classified as type/bug because wrong rendering output is described, with a regression claim. The area is SkiaSharp.Views (WinUI) because both SKCanvasView and SKGLView are affected on Windows. Severity is medium because it only affects non-1.0 display scales, which are common but not universal, and the drawing still functions (just at wrong scale). The suggestedAction is needs-info because the reporter provided no reproduction code and the maintainer was unable to identify any source change.
+
+### Key Signals
+
+- "2.88.9 stable renders with incorrect scale. 2.88.9-preview.2.2 renders fine. The only case when it renders identical between both nugets is a display with a rendering scale of 1.0." — **issue body** (Bug is DPI/scale-specific and only manifests at fractional display scales. The 1.0 exception is the key differentiator.)
+- "Both CanvasView and SKGLView are affected." — **issue body** (Both SKXamlCanvas (software raster) and SKSwapChainPanel (ANGLE/GL) code paths are broken, suggesting the issue may be in a shared abstraction or in the MAUI handler layer.)
+- "Very weird, nothing has changed: https://github.com/mono/SkiaSharp/compare/v2.88.9-preview.2.2...v2.88.9" — **maintainer comment** (Maintainer sees no source-level difference between the two releases, suggesting environment, packaging, or dependency change may be the cause — or the reporter's environment changed.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs` | 101-118 | direct | WinUI path reads DPI from XamlRoot.RasterizationScale in OnXamlRootChanged; this is registered in OnLoaded and responds to XamlRoot.Changed events. If XamlRoot is null at load time or if the event fires before the view is fully sized, the DPI may momentarily be 1.0. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs` | 229-255 | direct | CreateBitmap uses Dpi property for pixel size calculation and brush transform. The brush ScaleTransform (UpdateBrushScale) is only applied when bitmap is newly created; a mismatch between when Dpi is set and when bitmap is created could produce incorrect rendering. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs` | 47-60 | related | ContentsScale initialized from CompositionScaleX in constructor and updated in OnLoaded/OnCompositionChanged. The GL surface rendering dimensions come from glesContext panel dimensions, not from ContentsScale directly. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Windows.cs` | 64-74 | context | MAUI SKCanvasViewHandler wraps SKXamlCanvas and passes paint events through. No explicit scale handling at this layer — relies entirely on SKXamlCanvas for DPI. |
+
+### Next Questions
+
+- Can the reporter provide minimal reproduction code or project?
+- What exact Windows display scale setting triggers the issue (1.25, 1.5, 2.0)?
+- Is this in a MAUI app or a WinUI app directly?
+- Does the issue persist with 2.88.9 after a fresh install (not upgrade)?
+- Does this affect only screen rendering or also image output?
+
+### Resolution Proposals
+
+**Hypothesis:** A fractional display DPI scale is causing the XamlRoot.RasterizationScale to not be applied correctly or at the wrong time in SKXamlCanvas, leading to the bitmap being sized or scaled incorrectly.
+
+1. **Request minimal reproduction** — investigation, confidence 0.90 (90%), cost/xs, validated=untested
+   - Ask reporter to provide minimal WinUI or MAUI repro code on a display with non-1.0 scale to enable investigation.
+2. **Investigate UpdateBrushScale timing in SKXamlCanvas** — investigation, confidence 0.60 (60%), cost/s, validated=untested
+   - Check whether UpdateBrushScale is called before or after the bitmap is created when DPI is known — a race between DPI detection and bitmap creation could yield a 1.0-scale bitmap with wrong transform.
+
+**Recommended proposal:** Request minimal reproduction
+
+**Why:** Without reproduction code and given maintainer confirmation of no changes, the root cause cannot be determined without more data from the reporter.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.82 (82%) |
+| Reason | No reproduction code provided (only template placeholder), and maintainer confirmed no code changes between the two mentioned versions. Cannot investigate further without minimal repro and display scale details. |
+| Suggested repro platform | windows |
+
+### Missing Info
+
+- Minimal reproduction code (project or code snippet) that demonstrates the incorrect scaling
+- Exact Windows display scale factor used (1.25, 1.5, 2.0, etc.)
+- Whether the app is MAUI or WinUI native
+- Whether issue is observed on fresh install vs upgrade
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply bug/area/platform/tenet labels | labels=type/bug, area/SkiaSharp.Views, os/Windows-WinUI, tenet/reliability |
+| add-comment | medium | 0.82 (82%) | Request minimal reproduction and additional environment details | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! To investigate this further, could you please provide:
+
+1. **Minimal reproduction code** — a small self-contained project or code snippet that demonstrates the incorrect scaling
+2. **Exact display scale** — the Windows display scaling percentage where the issue is seen (e.g. 125%, 150%, 200%)
+3. **App type** — is this a MAUI app, WinUI 3 native app, or something else?
+4. **Fresh install check** — does the issue appear after a clean install of 2.88.9, or only when upgrading from the preview?
+
+For reference, the [diff between v2.88.9-preview.2.2 and v2.88.9](https://github.com/mono/SkiaSharp/compare/v2.88.9-preview.2.2...v2.88.9) shows no source changes to the scale/DPI handling code, which makes this tricky to reproduce without more context.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3071,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T18:50:00Z",
+    "currentLabels": [
+      "type/bug",
+      "area/SkiaSharp.Views",
+      "os/Windows-WinUI",
+      "tenet/reliability",
+      "triage/triaged"
+    ]
+  },
+  "summary": "Reporter claims wrong rendering scale on Windows with SkiaSharp 2.88.9 stable on displays with DPI scale != 1.0, affecting both SKCanvasView (SKXamlCanvas) and SKGLView (SKSwapChainPanel), while 2.88.9-preview.2.2 rendered correctly.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.8
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-WinUI"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Incorrect rendering scale on Windows with 2.88.9 stable (not observed with 2.88.9-preview.2.2)",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0-windows10.0.19041"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use a Windows display with a scaling factor != 1.0 (e.g. 1.25)",
+        "Run application using SkiaSharp 2.88.9 stable with SKCanvasView or SKGLView",
+        "Observe incorrect rendering scale"
+      ],
+      "environmentDetails": "Windows, Visual Studio, display rendering scale 1.25",
+      "repoLinks": [
+        {
+          "url": "https://github.com/taublast/DrawnUi.Maui/issues/130",
+          "description": "Reporter's upstream issue with screenshots of the incorrect rendering scale"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.9-preview.2.2",
+        "2.88.9",
+        "2.88.8"
+      ],
+      "workedIn": "2.88.9-preview.2.2",
+      "brokeIn": "2.88.9",
+      "currentRelevance": "unknown",
+      "relevanceReason": "Maintainer confirmed no code changes between preview.2.2 and 2.88.9 stable; unclear if still reproducible or was a packaging/environment issue."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.55,
+      "reason": "Reporter claims regression from 2.88.9-preview.2.2 to 2.88.9 stable, but maintainer confirmed the diff shows no relevant source changes between these two releases.",
+      "workedInVersion": "2.88.9-preview.2.2",
+      "brokeInVersion": "2.88.9"
+    }
+  },
+  "analysis": {
+    "summary": "Reporter observes incorrect rendering scale on Windows (WinUI) with displays at a fractional DPI scale (e.g. 1.25). Both SKCanvasView and SKGLView are affected; the bug does not manifest when display scale is 1.0. The maintainer confirmed no code changes between 2.88.9-preview.2.2 and 2.88.9 stable. The issue lacks reproduction code — only the template placeholder is present — making investigation difficult.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
+        "lines": "101-118",
+        "finding": "WinUI path reads DPI from XamlRoot.RasterizationScale in OnXamlRootChanged; this is registered in OnLoaded and responds to XamlRoot.Changed events. If XamlRoot is null at load time or if the event fires before the view is fully sized, the DPI may momentarily be 1.0.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
+        "lines": "229-255",
+        "finding": "CreateBitmap uses Dpi property for pixel size calculation and brush transform. The brush ScaleTransform (UpdateBrushScale) is only applied when bitmap is newly created; a mismatch between when Dpi is set and when bitmap is created could produce incorrect rendering.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "47-60",
+        "finding": "ContentsScale initialized from CompositionScaleX in constructor and updated in OnLoaded/OnCompositionChanged. The GL surface rendering dimensions come from glesContext panel dimensions, not from ContentsScale directly.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Windows.cs",
+        "lines": "64-74",
+        "finding": "MAUI SKCanvasViewHandler wraps SKXamlCanvas and passes paint events through. No explicit scale handling at this layer — relies entirely on SKXamlCanvas for DPI.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "2.88.9 stable renders with incorrect scale. 2.88.9-preview.2.2 renders fine. The only case when it renders identical between both nugets is a display with a rendering scale of 1.0.",
+        "source": "issue body",
+        "interpretation": "Bug is DPI/scale-specific and only manifests at fractional display scales. The 1.0 exception is the key differentiator."
+      },
+      {
+        "text": "Both CanvasView and SKGLView are affected.",
+        "source": "issue body",
+        "interpretation": "Both SKXamlCanvas (software raster) and SKSwapChainPanel (ANGLE/GL) code paths are broken, suggesting the issue may be in a shared abstraction or in the MAUI handler layer."
+      },
+      {
+        "text": "Very weird, nothing has changed: https://github.com/mono/SkiaSharp/compare/v2.88.9-preview.2.2...v2.88.9",
+        "source": "maintainer comment",
+        "interpretation": "Maintainer sees no source-level difference between the two releases, suggesting environment, packaging, or dependency change may be the cause — or the reporter's environment changed."
+      }
+    ],
+    "rationale": "Classified as type/bug because wrong rendering output is described, with a regression claim. The area is SkiaSharp.Views (WinUI) because both SKCanvasView and SKGLView are affected on Windows. Severity is medium because it only affects non-1.0 display scales, which are common but not universal, and the drawing still functions (just at wrong scale). The suggestedAction is needs-info because the reporter provided no reproduction code and the maintainer was unable to identify any source change.",
+    "nextQuestions": [
+      "Can the reporter provide minimal reproduction code or project?",
+      "What exact Windows display scale setting triggers the issue (1.25, 1.5, 2.0)?",
+      "Is this in a MAUI app or a WinUI app directly?",
+      "Does the issue persist with 2.88.9 after a fresh install (not upgrade)?",
+      "Does this affect only screen rendering or also image output?"
+    ],
+    "resolution": {
+      "hypothesis": "A fractional display DPI scale is causing the XamlRoot.RasterizationScale to not be applied correctly or at the wrong time in SKXamlCanvas, leading to the bitmap being sized or scaled incorrectly.",
+      "proposals": [
+        {
+          "title": "Request minimal reproduction",
+          "description": "Ask reporter to provide minimal WinUI or MAUI repro code on a display with non-1.0 scale to enable investigation.",
+          "category": "investigation",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate UpdateBrushScale timing in SKXamlCanvas",
+          "description": "Check whether UpdateBrushScale is called before or after the bitmap is created when DPI is known — a race between DPI detection and bitmap creation could yield a 1.0-scale bitmap with wrong transform.",
+          "category": "investigation",
+          "confidence": 0.6,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Request minimal reproduction",
+      "recommendedReason": "Without reproduction code and given maintainer confirmation of no changes, the root cause cannot be determined without more data from the reporter."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.82,
+      "reason": "No reproduction code provided (only template placeholder), and maintainer confirmed no code changes between the two mentioned versions. Cannot investigate further without minimal repro and display scale details.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Minimal reproduction code (project or code snippet) that demonstrates the incorrect scaling",
+      "Exact Windows display scale factor used (1.25, 1.5, 2.0, etc.)",
+      "Whether the app is MAUI or WinUI native",
+      "Whether issue is observed on fresh install vs upgrade"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug/area/platform/tenet labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/Windows-WinUI",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request minimal reproduction and additional environment details",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the report! To investigate this further, could you please provide:\n\n1. **Minimal reproduction code** — a small self-contained project or code snippet that demonstrates the incorrect scaling\n2. **Exact display scale** — the Windows display scaling percentage where the issue is seen (e.g. 125%, 150%, 200%)\n3. **App type** — is this a MAUI app, WinUI 3 native app, or something else?\n4. **Fresh install check** — does the issue appear after a clean install of 2.88.9, or only when upgrading from the preview?\n\nFor reference, the [diff between v2.88.9-preview.2.2 and v2.88.9](https://github.com/mono/SkiaSharp/compare/v2.88.9-preview.2.2...v2.88.9) shows no source changes to the scale/DPI handling code, which makes this tricky to reproduce without more context."
+      }
+    ]
+  }
+}
+```
+
+</details>

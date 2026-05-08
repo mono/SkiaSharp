@@ -1,0 +1,377 @@
+# Issue Triage Report — #2845
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-21T18:50:00Z |
+| Type | type/bug (0.88 (88%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-reproduction (0.78 (78%)) |
+
+**Issue Summary:** SKPaint.IsAntialias appears to default to true on Android but false on iOS (specifically for text rendering via SKGLView), causing platform-inconsistent rendering quality in SkiaSharp 2.88.x.
+
+**Analysis:** SKPaint.IsAntialias has inconsistent default behavior between iOS and Android. On Android the text appears antialiased by default (possibly due to OpenGL backend behavior), while on iOS (Metal backend) antialiasing is off unless explicitly set. The reporter found a workaround by always explicitly setting IsAntialias = true. The behavior is specific to text drawing via SKGLView and may reflect a difference in how sk_compatpaint_new initializes the antialias flag across GPU backends.
+
+**Recommendations:** **needs-reproduction** — Cross-platform rendering inconsistency in default SKPaint.IsAntialias behavior needs a minimal reproduction case to identify whether the root cause is in sk_compatpaint_new initialization, the Metal vs OpenGL backend, or SKGLView-specific behavior. Reporter provided app repo but no minimal repro.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/iOS, os/Android |
+| Backends | backend/Metal, backend/OpenGL |
+| Tenets | tenet/compatibility, tenet/reliability |
+| Partner | — |
+| Current labels | type/bug, os/iOS, os/Android, area/SkiaSharp, backend/OpenGL, backend/Metal, tenet/compatibility, tenet/reliability, triage/triaged |
+
+## Evidence
+
+### Reproduction
+
+1. Create a cross-platform app using SkiaSharp 2.88.x with SKGLView
+2. Draw text using SKPaint without explicitly setting IsAntialias
+3. Observe text is rendered with antialiasing on Android but without on iOS
+4. Workaround: set paint.IsAntialias = true before every DrawText call
+
+**Environment:** SkiaSharp 2.88.3, iOS 17.4.1 (iPad 11,7), Visual Studio for Windows
+
+**Repository links:**
+- https://github.com/hyvanmielenpelit/GnollHack — Reporter's application repository demonstrating the issue
+- https://github.com/mono/SkiaSharp/issues/2218 — Related prior issue on iOS antialiasing / font resolution regression
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | wrong-output |
+| Error message | IsAntiAliasing is off (or just does not work) by default for iOS but on for Android |
+| Repro quality | partial |
+| Target frameworks | xamarin.ios, xamarin.android |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3, 2.80.x |
+| Worked in | 2.80.x |
+| Broke in | 2.88.0 |
+| Current relevance | likely |
+| Relevance reason | No code changes to SKPaint.IsAntialias default behavior found in the binding layer since 2.88.x; the issue remains open and unaddressed. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.70 (70%) |
+| Reason | Reporter states antialiasing worked correctly in 2.80.x but is broken on iOS in 2.88.x. Issue #2218 (same reporter, same app) also describes font rendering regression starting at 2.88.0. |
+| Worked in version | 2.80.x |
+| Broke in version | 2.88.0 |
+
+## Analysis
+
+### Technical Summary
+
+SKPaint.IsAntialias has inconsistent default behavior between iOS and Android. On Android the text appears antialiased by default (possibly due to OpenGL backend behavior), while on iOS (Metal backend) antialiasing is off unless explicitly set. The reporter found a workaround by always explicitly setting IsAntialias = true. The behavior is specific to text drawing via SKGLView and may reflect a difference in how sk_compatpaint_new initializes the antialias flag across GPU backends.
+
+### Rationale
+
+This is a genuine cross-platform behavior inconsistency where IsAntialias produces different rendering on iOS vs Android. The issue is specific to the GPU-accelerated view (SKGLView), which uses Metal on iOS and OpenGL on Android — suggesting the two GPU backends may initialize paint state differently. A simple workaround exists (explicitly set IsAntialias = true), making severity medium. The sk_compatpaint_new() initialization of the antialias flag is the most likely root cause but requires access to the C++ source to confirm.
+
+### Key Signals
+
+- "IsAntiAliasing is off (or just does not work) by default for iOS but on for Android" — **issue body** (Platform-inconsistent default — either sk_compatpaint_new initializes differently on each platform, or the Metal vs OpenGL backends handle antialias differently when the flag is false.)
+- "If you switch IsAntialiasing on before DrawText and then switch off after the command, the text seems to be drawn without antialiasing at least on SKGLView" — **comment #1** (On SKGLView, the antialias state is evaluated per-draw. Setting it on and then off means the paint has antialias=false at draw time — confirms behavior is controlled by the flag value.)
+- "Workaround: Set IsAntiAliasing always on before using SKPaint" — **issue body** (Simple workaround exists — always explicitly set IsAntialias = true. This mitigates severity.)
+- "See https://github.com/mono/SkiaSharp/issues/2218 This was an antialiasing problem on iOS" — **issue body** (Reporter links to prior related issue showing this is a recurring iOS-specific antialiasing concern, not an isolated report.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKPaint.cs` | 48-54 | direct | SKPaint() constructor calls sk_compatpaint_new() with no explicit IsAntialias initialization. The default value is determined by the native sk_compatpaint_new() implementation. No platform-specific override exists at this layer. |
+| `binding/SkiaSharp/SKPaint.cs` | 82-85 | direct | IsAntialias property getter delegates to sk_paint_is_antialias() — the value comes entirely from native Skia state. There is no C# wrapper override or platform-specific default. |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | 17042-17058 | related | sk_compatpaint_new() is a P/Invoke to the native library. The skia submodule source was not accessible to verify what IsAntialias defaults to in sk_compatpaint_new vs SkPaint::SkPaint(). Standard Skia SkPaint defaults IsAntialias to false. |
+
+### Workarounds
+
+- Always explicitly set paint.IsAntialias = true before drawing text (or any rendering where AA is desired) — do not rely on the default value.
+- Set IsAntialias = true in the SKPaint constructor initializer rather than after construction to ensure it's set before any draw call.
+
+### Next Questions
+
+- Does sk_compatpaint_new() in the C API shim set IsAntialias to true by default (as opposed to standard SkPaint which defaults to false)?
+- Is the difference only visible on SKGLView (GPU) or also on SKCanvasView (CPU raster)?
+- Does the behavior difference affect drawing of shapes/paths as well, or is it text-specific?
+- Was sk_compatpaint_new() introduced or changed between 2.80.x and 2.88.0?
+
+### Resolution Proposals
+
+**Hypothesis:** The sk_compatpaint_new() C API shim or the native Skia library initializes the IsAntialias paint flag differently between the Metal (iOS) and OpenGL (Android) backends, or the backends interpret a false IsAntialias flag differently when rendering text.
+
+1. **Always explicitly set IsAntialias = true** — workaround, confidence 0.95 (95%), cost/xs, validated=yes
+   - Workaround: set paint.IsAntialias = true in every SKPaint initialization where smooth rendering is desired. Don't rely on the default value.
+
+```csharp
+var paint = new SKPaint { IsAntialias = true, Color = SKColors.Black };
+```
+2. **Investigate sk_compatpaint_new default** — investigation, confidence 0.80 (80%), cost/s, validated=untested
+   - Inspect the sk_compatpaint_new() implementation in the Skia C API shim to determine whether IsAntialias is explicitly set to true on construction, and whether this differs from standard SkPaint default (false). Cross-reference with the 2.88.0 changelog.
+
+**Recommended proposal:** Always explicitly set IsAntialias = true
+
+**Why:** Simple, reliable workaround that the reporter has already validated. The investigation proposal is needed to determine if this is a fixable default in the library, but the workaround unblocks users immediately.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-reproduction |
+| Confidence | 0.78 (78%) |
+| Reason | Cross-platform rendering inconsistency in default SKPaint.IsAntialias behavior needs a minimal reproduction case to identify whether the root cause is in sk_compatpaint_new initialization, the Metal vs OpenGL backend, or SKGLView-specific behavior. Reporter provided app repo but no minimal repro. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, area, platform, backend, and tenet labels | labels=type/bug, area/SkiaSharp, os/iOS, os/Android, backend/Metal, backend/OpenGL, tenet/compatibility, tenet/reliability |
+| add-comment | medium | 0.80 (80%) | Acknowledge issue, provide workaround, and request minimal repro | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for reporting this! The inconsistency in default antialiasing behavior between iOS and Android is a real issue. As a workaround, always explicitly set `IsAntialias = true` on your `SKPaint` instance:
+
+```csharp
+var paint = new SKPaint { IsAntialias = true, Color = SKColors.Black };
+```
+
+Don't rely on the default value — it may differ between platforms and GPU backends.
+
+To help investigate the root cause, could you provide a **minimal reproduction project** (a small standalone app, not the full GnollHack project) that demonstrates the difference? It would help to know:
+1. Does the same behavior occur with `SKCanvasView` (CPU raster), or is it specific to `SKGLView`?
+2. Does it affect shapes/paths or only text?
+
+This appears to be a Metal (iOS) vs OpenGL (Android) backend initialization difference introduced in 2.88.0.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2845,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T18:50:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/iOS",
+      "os/Android",
+      "area/SkiaSharp",
+      "backend/OpenGL",
+      "backend/Metal",
+      "tenet/compatibility",
+      "tenet/reliability",
+      "triage/triaged"
+    ]
+  },
+  "summary": "SKPaint.IsAntialias appears to default to true on Android but false on iOS (specifically for text rendering via SKGLView), causing platform-inconsistent rendering quality in SkiaSharp 2.88.x.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/iOS",
+      "os/Android"
+    ],
+    "backends": [
+      "backend/Metal",
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/compatibility",
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "IsAntiAliasing is off (or just does not work) by default for iOS but on for Android",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "xamarin.ios",
+        "xamarin.android"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a cross-platform app using SkiaSharp 2.88.x with SKGLView",
+        "Draw text using SKPaint without explicitly setting IsAntialias",
+        "Observe text is rendered with antialiasing on Android but without on iOS",
+        "Workaround: set paint.IsAntialias = true before every DrawText call"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, iOS 17.4.1 (iPad 11,7), Visual Studio for Windows",
+      "repoLinks": [
+        {
+          "url": "https://github.com/hyvanmielenpelit/GnollHack",
+          "description": "Reporter's application repository demonstrating the issue"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2218",
+          "description": "Related prior issue on iOS antialiasing / font resolution regression"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3",
+        "2.80.x"
+      ],
+      "workedIn": "2.80.x",
+      "brokeIn": "2.88.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "No code changes to SKPaint.IsAntialias default behavior found in the binding layer since 2.88.x; the issue remains open and unaddressed."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.7,
+      "reason": "Reporter states antialiasing worked correctly in 2.80.x but is broken on iOS in 2.88.x. Issue #2218 (same reporter, same app) also describes font rendering regression starting at 2.88.0.",
+      "workedInVersion": "2.80.x",
+      "brokeInVersion": "2.88.0"
+    }
+  },
+  "analysis": {
+    "summary": "SKPaint.IsAntialias has inconsistent default behavior between iOS and Android. On Android the text appears antialiased by default (possibly due to OpenGL backend behavior), while on iOS (Metal backend) antialiasing is off unless explicitly set. The reporter found a workaround by always explicitly setting IsAntialias = true. The behavior is specific to text drawing via SKGLView and may reflect a difference in how sk_compatpaint_new initializes the antialias flag across GPU backends.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "48-54",
+        "finding": "SKPaint() constructor calls sk_compatpaint_new() with no explicit IsAntialias initialization. The default value is determined by the native sk_compatpaint_new() implementation. No platform-specific override exists at this layer.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "82-85",
+        "finding": "IsAntialias property getter delegates to sk_paint_is_antialias() — the value comes entirely from native Skia state. There is no C# wrapper override or platform-specific default.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "17042-17058",
+        "finding": "sk_compatpaint_new() is a P/Invoke to the native library. The skia submodule source was not accessible to verify what IsAntialias defaults to in sk_compatpaint_new vs SkPaint::SkPaint(). Standard Skia SkPaint defaults IsAntialias to false.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "IsAntiAliasing is off (or just does not work) by default for iOS but on for Android",
+        "source": "issue body",
+        "interpretation": "Platform-inconsistent default — either sk_compatpaint_new initializes differently on each platform, or the Metal vs OpenGL backends handle antialias differently when the flag is false."
+      },
+      {
+        "text": "If you switch IsAntialiasing on before DrawText and then switch off after the command, the text seems to be drawn without antialiasing at least on SKGLView",
+        "source": "comment #1",
+        "interpretation": "On SKGLView, the antialias state is evaluated per-draw. Setting it on and then off means the paint has antialias=false at draw time — confirms behavior is controlled by the flag value."
+      },
+      {
+        "text": "Workaround: Set IsAntiAliasing always on before using SKPaint",
+        "source": "issue body",
+        "interpretation": "Simple workaround exists — always explicitly set IsAntialias = true. This mitigates severity."
+      },
+      {
+        "text": "See https://github.com/mono/SkiaSharp/issues/2218 This was an antialiasing problem on iOS",
+        "source": "issue body",
+        "interpretation": "Reporter links to prior related issue showing this is a recurring iOS-specific antialiasing concern, not an isolated report."
+      }
+    ],
+    "workarounds": [
+      "Always explicitly set paint.IsAntialias = true before drawing text (or any rendering where AA is desired) — do not rely on the default value.",
+      "Set IsAntialias = true in the SKPaint constructor initializer rather than after construction to ensure it's set before any draw call."
+    ],
+    "nextQuestions": [
+      "Does sk_compatpaint_new() in the C API shim set IsAntialias to true by default (as opposed to standard SkPaint which defaults to false)?",
+      "Is the difference only visible on SKGLView (GPU) or also on SKCanvasView (CPU raster)?",
+      "Does the behavior difference affect drawing of shapes/paths as well, or is it text-specific?",
+      "Was sk_compatpaint_new() introduced or changed between 2.80.x and 2.88.0?"
+    ],
+    "rationale": "This is a genuine cross-platform behavior inconsistency where IsAntialias produces different rendering on iOS vs Android. The issue is specific to the GPU-accelerated view (SKGLView), which uses Metal on iOS and OpenGL on Android — suggesting the two GPU backends may initialize paint state differently. A simple workaround exists (explicitly set IsAntialias = true), making severity medium. The sk_compatpaint_new() initialization of the antialias flag is the most likely root cause but requires access to the C++ source to confirm.",
+    "resolution": {
+      "hypothesis": "The sk_compatpaint_new() C API shim or the native Skia library initializes the IsAntialias paint flag differently between the Metal (iOS) and OpenGL (Android) backends, or the backends interpret a false IsAntialias flag differently when rendering text.",
+      "proposals": [
+        {
+          "title": "Always explicitly set IsAntialias = true",
+          "description": "Workaround: set paint.IsAntialias = true in every SKPaint initialization where smooth rendering is desired. Don't rely on the default value.",
+          "codeSnippet": "var paint = new SKPaint { IsAntialias = true, Color = SKColors.Black };",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Investigate sk_compatpaint_new default",
+          "description": "Inspect the sk_compatpaint_new() implementation in the Skia C API shim to determine whether IsAntialias is explicitly set to true on construction, and whether this differs from standard SkPaint default (false). Cross-reference with the 2.88.0 changelog.",
+          "category": "investigation",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Always explicitly set IsAntialias = true",
+      "recommendedReason": "Simple, reliable workaround that the reporter has already validated. The investigation proposal is needed to determine if this is a fixable default in the library, but the workaround unblocks users immediately."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-reproduction",
+      "confidence": 0.78,
+      "reason": "Cross-platform rendering inconsistency in default SKPaint.IsAntialias behavior needs a minimal reproduction case to identify whether the root cause is in sk_compatpaint_new initialization, the Metal vs OpenGL backend, or SKGLView-specific behavior. Reporter provided app repo but no minimal repro.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area, platform, backend, and tenet labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/iOS",
+          "os/Android",
+          "backend/Metal",
+          "backend/OpenGL",
+          "tenet/compatibility",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge issue, provide workaround, and request minimal repro",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for reporting this! The inconsistency in default antialiasing behavior between iOS and Android is a real issue. As a workaround, always explicitly set `IsAntialias = true` on your `SKPaint` instance:\n\n```csharp\nvar paint = new SKPaint { IsAntialias = true, Color = SKColors.Black };\n```\n\nDon't rely on the default value — it may differ between platforms and GPU backends.\n\nTo help investigate the root cause, could you provide a **minimal reproduction project** (a small standalone app, not the full GnollHack project) that demonstrates the difference? It would help to know:\n1. Does the same behavior occur with `SKCanvasView` (CPU raster), or is it specific to `SKGLView`?\n2. Does it affect shapes/paths or only text?\n\nThis appears to be a Metal (iOS) vs OpenGL (Android) backend initialization difference introduced in 2.88.0."
+      }
+    ]
+  }
+}
+```
+
+</details>
