@@ -1,0 +1,343 @@
+# Issue Triage Report — #1728
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-23T01:13:11Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/SkiaSharp (0.88 (88%)) |
+| Suggested action | close-as-external (0.85 (85%)) |
+
+**Issue Summary:** XPS documents produced via SKDocument.CreateXps clip DrawBitmap output to a 1000×1000 pixel area, while the equivalent PDF output renders correctly; root cause is a hardcoded limit in upstream Skia's SkXPSDevice.cpp.
+
+**Analysis:** XPS bitmap rendering clips images to a ~1000×1000 pixel bounding box because upstream Skia's SkXPSDevice.cpp uses a hardcoded limit of 1000 for the VisualBrush Viewport/Viewbox dimensions instead of SK_ScalarMax. WPF's XPS renderer interprets the Viewport as a clipping rectangle unlike the Windows XPS viewer, exposing the bug. A fix exists in Skia chrome/m147.
+
+**Recommendations:** **close-as-external** — Root cause is a confirmed bug in upstream Skia's SkXPSDevice.cpp (hardcoded 1000-pixel limit). The fix exists in Skia chrome/m147. No SkiaSharp-level code change is required; the issue will resolve when the Skia submodule is updated. A PDF workaround is available now.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | backend/XPS |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create an XPS document using SKDocument.CreateXps
+2. Draw a bitmap with DrawBitmap(original, original.Info.Rect, picRect, paint) where picRect is smaller than the original
+3. Open the resulting .xps file in a WPF-based viewer (e.g. XPS Viewer)
+4. Observe that the image is clipped rather than scaled/stretched to fit picRect
+
+**Environment:** SkiaSharp 2.80.2, Windows 10, Visual Studio; confirmed still present in 2.88.8
+
+**Repository links:**
+- https://github.com/google/skia/blob/c30ba7bb38d6f368631db17d76628e89b0fe5004/src/xps/SkXPSDevice.cpp#L685 — Upstream Skia SkXPSDevice.cpp line 685 — hardcoded 1000 limit in VisualBrush Viewport
+- https://github.com/google/skia/blob/c30ba7bb38d6f368631db17d76628e89b0fe5004/src/xps/SkXPSDevice.cpp#L796 — Upstream Skia SkXPSDevice.cpp line 796 — second hardcoded 1000 limit
+- https://github.com/google/skia/commit/bd8b422e09dffab2cfc78217d68ac453a4c1d66c — Upstream Skia fix commit in chrome/m147 branch that may address this issue
+- https://issues.skia.org/issues/360641492 — Upstream Skia bug report filed for this issue
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | Images in XPS documents are clipped — small images render correctly but larger ones are cropped to roughly 500×500 pixels visible area centered on the origin. |
+| Repro quality | complete |
+| Target frameworks | net472 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2, 2.88.8 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The bug is in upstream Skia's SkXPSDevice.cpp and has not been fixed in any SkiaSharp release; a fix appears in the Skia chrome/m147 branch but has not yet been incorporated. |
+
+## Analysis
+
+### Technical Summary
+
+XPS bitmap rendering clips images to a ~1000×1000 pixel bounding box because upstream Skia's SkXPSDevice.cpp uses a hardcoded limit of 1000 for the VisualBrush Viewport/Viewbox dimensions instead of SK_ScalarMax. WPF's XPS renderer interprets the Viewport as a clipping rectangle unlike the Windows XPS viewer, exposing the bug. A fix exists in Skia chrome/m147.
+
+### Rationale
+
+This is clearly a bug (wrong output rather than usage error), confirmed by multiple independent commenters and traced to a specific hardcoded value in upstream Skia source. The fix is outside SkiaSharp's codebase; however, SkiaSharp should track the upstream fix and incorporate it when updating the Skia submodule to m147 or later. The PDF path uses a different device implementation and is unaffected.
+
+### Key Signals
+
+- "Images in PDF are correctly stretched to fit the required rect, but on XPS they seem to be clipped." — **issue body** (Same SkiaSharp API surface, different output backends — strongly points to backend-specific bug in XPS rendering.)
+- "The code alludes to SK_ScalarMax … for some reason they ended up using 1000 instead. The result is that all images get cropped to a 1000 pixel square centred on the origin." — **comment by oatkins** (Root cause identified in upstream Skia SkXPSDevice.cpp — confirmed bug, not API misuse.)
+- "This might be (at least somewhat) fixed with https://github.com/google/skia/commit/bd8b422e09dffab2cfc78217d68ac453a4c1d66c which is in the Skia chrome/m147 branch." — **comment by bungeman (Skia team member)** (Upstream fix exists in Skia m147; SkiaSharp will get the fix when the submodule is updated.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKDocument.cs` | 38-73 | context | SKDocument.CreateXps correctly delegates to sk_document_create_xps_from_stream via P/Invoke. No SkiaSharp-level bug; the XPS rendering path passes through directly to upstream Skia's SkXPSDevice. |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | 5268-5284 | context | sk_document_create_xps_from_stream P/Invoke binding is present and correct. The issue is in the native implementation, not the managed binding. |
+
+### Workarounds
+
+- Use PDF output instead of XPS — canvas.DrawBitmap renders correctly in PDF documents.
+- Post-process the generated XPS file: find the VisualBrush elements in the XAML and replace the Viewport/Viewbox with a much larger bounding box (e.g., 100000×100000) to prevent clipping by WPF's XPS renderer.
+
+### Next Questions
+
+- Has SkiaSharp's Skia submodule been updated to include chrome/m147 yet? If so, is the issue fixed?
+- Does the fix in bd8b422e fully resolve the clipping for all image sizes, or only large images?
+
+### Resolution Proposals
+
+**Hypothesis:** Upstream Skia uses a hardcoded 1000-pixel limit for XPS VisualBrush Viewport/Viewbox dimensions, causing bitmap renders to be clipped at 500px from the origin. The fix in Skia m147 replaces this with SK_ScalarMax.
+
+1. **Use PDF instead of XPS** — workaround, confidence 0.97 (97%), cost/xs, validated=untested
+   - Switch to SKDocument.CreatePdf as a drop-in replacement. PDF rendering is unaffected by this bug and produces identical output.
+2. **Post-process XPS XAML to expand VisualBrush viewport** — workaround, confidence 0.75 (75%), cost/m, validated=untested
+   - After generating the XPS, open the XAML content, locate the VisualBrush elements, and replace their Viewport and Viewbox attribute values with a sufficiently large rectangle (e.g., '0,0,100000,100000'). This prevents WPF's XPS renderer from treating the viewport as a clipping boundary.
+3. **Update Skia submodule to m147+** — fix, confidence 0.82 (82%), cost/l, validated=untested
+   - The upstream Skia fix is available in chrome/m147 (commit bd8b422e09dffab2cfc78217d68ac453a4c1d66c). Updating the Skia submodule to m147 or later should incorporate the fix into SkiaSharp.
+
+**Recommended proposal:** Use PDF instead of XPS
+
+**Why:** PDF output is already correct and requires no workaround code. The long-term fix (submodule update) will happen as part of normal SkiaSharp maintenance.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-external |
+| Confidence | 0.85 (85%) |
+| Reason | Root cause is a confirmed bug in upstream Skia's SkXPSDevice.cpp (hardcoded 1000-pixel limit). The fix exists in Skia chrome/m147. No SkiaSharp-level code change is required; the issue will resolve when the Skia submodule is updated. A PDF workaround is available now. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, core SkiaSharp, XPS backend, and reliability labels | labels=type/bug, area/SkiaSharp, backend/XPS, os/Windows-Classic, tenet/reliability |
+| add-comment | medium | 0.88 (88%) | Explain the upstream root cause, workarounds, and upcoming fix | — |
+| close-issue | medium | 0.82 (82%) | Close as external — fix is in upstream Skia m147, no SkiaSharp code change needed | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and the investigation by @oatkins and @AndreaLabeljoy!
+
+The root cause has been traced to a hardcoded limit in upstream Skia's `SkXPSDevice.cpp` (lines 685 and 796), where a 1000-pixel maximum is used for the `VisualBrush` `Viewport`/`Viewbox` instead of `SK_ScalarMax`. WPF's XPS renderer treats this `Viewport` as a clipping rectangle, causing any content beyond 500 px from the origin to be cropped.
+
+**Workarounds available now:**
+1. **Use PDF instead of XPS** — `SKDocument.CreatePdf` renders bitmaps correctly and is a near drop-in replacement.
+2. **Post-process the XPS XAML** — modify the generated `VisualBrush` `Viewport`/`Viewbox` values to a much larger rectangle (e.g., `0,0,100000,100000`) after generation.
+
+**Upstream fix:** A fix appears to be available in Skia's `chrome/m147` branch via commit [`bd8b422e`](https://github.com/google/skia/commit/bd8b422e09dffab2cfc78217d68ac453a4c1d66c). This will be incorporated into SkiaSharp when the Skia submodule is updated to m147 or later.
+
+Closing this issue as the fix is upstream. It will be automatically resolved in a future SkiaSharp release.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1728,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T01:13:11Z"
+  },
+  "summary": "XPS documents produced via SKDocument.CreateXps clip DrawBitmap output to a 1000×1000 pixel area, while the equivalent PDF output renders correctly; root cause is a hardcoded limit in upstream Skia's SkXPSDevice.cpp.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/XPS"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "Images in XPS documents are clipped — small images render correctly but larger ones are cropped to roughly 500×500 pixels visible area centered on the origin.",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net472"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an XPS document using SKDocument.CreateXps",
+        "Draw a bitmap with DrawBitmap(original, original.Info.Rect, picRect, paint) where picRect is smaller than the original",
+        "Open the resulting .xps file in a WPF-based viewer (e.g. XPS Viewer)",
+        "Observe that the image is clipped rather than scaled/stretched to fit picRect"
+      ],
+      "environmentDetails": "SkiaSharp 2.80.2, Windows 10, Visual Studio; confirmed still present in 2.88.8",
+      "repoLinks": [
+        {
+          "url": "https://github.com/google/skia/blob/c30ba7bb38d6f368631db17d76628e89b0fe5004/src/xps/SkXPSDevice.cpp#L685",
+          "description": "Upstream Skia SkXPSDevice.cpp line 685 — hardcoded 1000 limit in VisualBrush Viewport"
+        },
+        {
+          "url": "https://github.com/google/skia/blob/c30ba7bb38d6f368631db17d76628e89b0fe5004/src/xps/SkXPSDevice.cpp#L796",
+          "description": "Upstream Skia SkXPSDevice.cpp line 796 — second hardcoded 1000 limit"
+        },
+        {
+          "url": "https://github.com/google/skia/commit/bd8b422e09dffab2cfc78217d68ac453a4c1d66c",
+          "description": "Upstream Skia fix commit in chrome/m147 branch that may address this issue"
+        },
+        {
+          "url": "https://issues.skia.org/issues/360641492",
+          "description": "Upstream Skia bug report filed for this issue"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2",
+        "2.88.8"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The bug is in upstream Skia's SkXPSDevice.cpp and has not been fixed in any SkiaSharp release; a fix appears in the Skia chrome/m147 branch but has not yet been incorporated."
+    }
+  },
+  "analysis": {
+    "summary": "XPS bitmap rendering clips images to a ~1000×1000 pixel bounding box because upstream Skia's SkXPSDevice.cpp uses a hardcoded limit of 1000 for the VisualBrush Viewport/Viewbox dimensions instead of SK_ScalarMax. WPF's XPS renderer interprets the Viewport as a clipping rectangle unlike the Windows XPS viewer, exposing the bug. A fix exists in Skia chrome/m147.",
+    "rationale": "This is clearly a bug (wrong output rather than usage error), confirmed by multiple independent commenters and traced to a specific hardcoded value in upstream Skia source. The fix is outside SkiaSharp's codebase; however, SkiaSharp should track the upstream fix and incorporate it when updating the Skia submodule to m147 or later. The PDF path uses a different device implementation and is unaffected.",
+    "keySignals": [
+      {
+        "text": "Images in PDF are correctly stretched to fit the required rect, but on XPS they seem to be clipped.",
+        "source": "issue body",
+        "interpretation": "Same SkiaSharp API surface, different output backends — strongly points to backend-specific bug in XPS rendering."
+      },
+      {
+        "text": "The code alludes to SK_ScalarMax … for some reason they ended up using 1000 instead. The result is that all images get cropped to a 1000 pixel square centred on the origin.",
+        "source": "comment by oatkins",
+        "interpretation": "Root cause identified in upstream Skia SkXPSDevice.cpp — confirmed bug, not API misuse."
+      },
+      {
+        "text": "This might be (at least somewhat) fixed with https://github.com/google/skia/commit/bd8b422e09dffab2cfc78217d68ac453a4c1d66c which is in the Skia chrome/m147 branch.",
+        "source": "comment by bungeman (Skia team member)",
+        "interpretation": "Upstream fix exists in Skia m147; SkiaSharp will get the fix when the submodule is updated."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKDocument.cs",
+        "lines": "38-73",
+        "finding": "SKDocument.CreateXps correctly delegates to sk_document_create_xps_from_stream via P/Invoke. No SkiaSharp-level bug; the XPS rendering path passes through directly to upstream Skia's SkXPSDevice.",
+        "relevance": "context"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "5268-5284",
+        "finding": "sk_document_create_xps_from_stream P/Invoke binding is present and correct. The issue is in the native implementation, not the managed binding.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Use PDF output instead of XPS — canvas.DrawBitmap renders correctly in PDF documents.",
+      "Post-process the generated XPS file: find the VisualBrush elements in the XAML and replace the Viewport/Viewbox with a much larger bounding box (e.g., 100000×100000) to prevent clipping by WPF's XPS renderer."
+    ],
+    "nextQuestions": [
+      "Has SkiaSharp's Skia submodule been updated to include chrome/m147 yet? If so, is the issue fixed?",
+      "Does the fix in bd8b422e fully resolve the clipping for all image sizes, or only large images?"
+    ],
+    "resolution": {
+      "hypothesis": "Upstream Skia uses a hardcoded 1000-pixel limit for XPS VisualBrush Viewport/Viewbox dimensions, causing bitmap renders to be clipped at 500px from the origin. The fix in Skia m147 replaces this with SK_ScalarMax.",
+      "proposals": [
+        {
+          "title": "Use PDF instead of XPS",
+          "description": "Switch to SKDocument.CreatePdf as a drop-in replacement. PDF rendering is unaffected by this bug and produces identical output.",
+          "category": "workaround",
+          "confidence": 0.97,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Post-process XPS XAML to expand VisualBrush viewport",
+          "description": "After generating the XPS, open the XAML content, locate the VisualBrush elements, and replace their Viewport and Viewbox attribute values with a sufficiently large rectangle (e.g., '0,0,100000,100000'). This prevents WPF's XPS renderer from treating the viewport as a clipping boundary.",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Update Skia submodule to m147+",
+          "description": "The upstream Skia fix is available in chrome/m147 (commit bd8b422e09dffab2cfc78217d68ac453a4c1d66c). Updating the Skia submodule to m147 or later should incorporate the fix into SkiaSharp.",
+          "category": "fix",
+          "confidence": 0.82,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use PDF instead of XPS",
+      "recommendedReason": "PDF output is already correct and requires no workaround code. The long-term fix (submodule update) will happen as part of normal SkiaSharp maintenance."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-external",
+      "confidence": 0.85,
+      "reason": "Root cause is a confirmed bug in upstream Skia's SkXPSDevice.cpp (hardcoded 1000-pixel limit). The fix exists in Skia chrome/m147. No SkiaSharp-level code change is required; the issue will resolve when the Skia submodule is updated. A PDF workaround is available now.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core SkiaSharp, XPS backend, and reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "backend/XPS",
+          "os/Windows-Classic",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the upstream root cause, workarounds, and upcoming fix",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed report and the investigation by @oatkins and @AndreaLabeljoy!\n\nThe root cause has been traced to a hardcoded limit in upstream Skia's `SkXPSDevice.cpp` (lines 685 and 796), where a 1000-pixel maximum is used for the `VisualBrush` `Viewport`/`Viewbox` instead of `SK_ScalarMax`. WPF's XPS renderer treats this `Viewport` as a clipping rectangle, causing any content beyond 500 px from the origin to be cropped.\n\n**Workarounds available now:**\n1. **Use PDF instead of XPS** — `SKDocument.CreatePdf` renders bitmaps correctly and is a near drop-in replacement.\n2. **Post-process the XPS XAML** — modify the generated `VisualBrush` `Viewport`/`Viewbox` values to a much larger rectangle (e.g., `0,0,100000,100000`) after generation.\n\n**Upstream fix:** A fix appears to be available in Skia's `chrome/m147` branch via commit [`bd8b422e`](https://github.com/google/skia/commit/bd8b422e09dffab2cfc78217d68ac453a4c1d66c). This will be incorporated into SkiaSharp when the Skia submodule is updated to m147 or later.\n\nClosing this issue as the fix is upstream. It will be automatically resolved in a future SkiaSharp release."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as external — fix is in upstream Skia m147, no SkiaSharp code change needed",
+        "risk": "medium",
+        "confidence": 0.82,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

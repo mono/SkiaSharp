@@ -1,0 +1,139 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2046,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T22:37:54Z"
+  },
+  "summary": "Feature request to expose Skia's tagged PDF accessibility API (PDFTag, SkPDF::Metadata::fStructureElementTreeRoot, SkPDF::SetNodeId) through SkiaSharp's SKDocument wrapper so that developers can produce accessibility-compliant tagged PDF documents.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.92 },
+    "backends": ["backend/PDF"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "No specific platform — cross-platform PDF generation feature",
+      "repoLinks": [
+        {
+          "url": "https://skia-review.googlesource.com/c/skia/+/141138/",
+          "description": "Skia upstream commit from 2018 adding PDFTag, fStructureElementTreeRoot, and SetNodeId APIs"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2865#issuecomment-2121754269",
+          "description": "PR #2865 referenced in issue comments — initial tagged PDF implementation builds by mattleibow (May 2024)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "No tagged PDF C API exists in SkiaApi.generated.cs or SKDocument.cs — the feature is still missing as of the current codebase."
+    }
+  },
+  "analysis": {
+    "summary": "The request is to wrap Skia's existing tagged PDF structure API (PDFTag, fStructureElementTreeRoot, SetNodeId — present in Skia since 2018) into SkiaSharp. The current SKDocument.cs and SKDocumentPdfMetadataInternal have no fStructureElementTreeRoot field and the generated C API layer has no sk_pdf_tag or sk_canvas_set_node_id functions. The maintainer acknowledged feasibility in 2022, started implementation in PR #2865 (May 2024), but those preview packages have since expired and the feature is not yet shipped.",
+    "rationale": "Classified as type/feature-request because tagged PDF is entirely new functionality (not an improvement to an existing SkiaSharp API). area/SkiaSharp because SKDocument is a core SkiaSharp class. backend/PDF is applicable since this is PDF-backend-specific. tenet/compatibility is relevant because this is an accessibility/standards compliance feature. The feature is well-specified and the maintainer has already validated feasibility and started an implementation PR.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKDocument.cs",
+        "lines": "1-178",
+        "finding": "SKDocument exposes CreatePdf and CreateXps methods and wraps SKDocumentPdfMetadata. There is no tagged PDF API (no structure element tree, node IDs, or PDF tags exposed in any form).",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "lines": "385-479",
+        "finding": "SKDocumentPdfMetadata struct includes Title, Author, Subject, Keywords, Creator, Producer, Creation, Modified, RasterDpi, PdfA, EncodingQuality — but no fStructureElementTreeRoot field for tagged PDF support.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "18857-18910",
+        "finding": "SKDocumentPdfMetadataInternal (the native P/Invoke struct) mirrors SKDocumentPdfMetadata with no structure element tree root or node ID fields — confirming the native C API layer has not been extended for tagged PDF.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "5171-5284",
+        "finding": "The sk_document region exposes only sk_document_abort, sk_document_begin_page, sk_document_close, sk_document_end_page, sk_document_create_pdf_from_stream, sk_document_create_pdf_from_stream_with_metadata, sk_document_create_xps_from_stream. No sk_pdf_tag_t, sk_canvas_set_node_id, or structure element functions are present.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "I tried to review the Skia code and found the following commit from 2018. It contains a test as well that describes the usage of the feature.",
+        "source": "issue body",
+        "interpretation": "The reporter has done research and identified the exact upstream Skia APIs to wrap: PDFTag, SkPDF::Metadata.fStructureElementTreeRoot, and SkPDF::SetNodeId."
+      },
+      {
+        "text": "Looking at the API, it appears fairly straight forward.",
+        "source": "comment by mattleibow (2022-05-17)",
+        "interpretation": "Maintainer confirmed feasibility early on and assigned to self."
+      },
+      {
+        "text": "Initial builds are here! See https://github.com/mono/SkiaSharp/pull/2865#issuecomment-2121754269",
+        "source": "comment by mattleibow (2024-05-21)",
+        "interpretation": "Implementation work was started in PR #2865 with initial preview builds available."
+      },
+      {
+        "text": "Would it be possible for you to re-publish the package builds?",
+        "source": "comment by lol768 (2024-10-30)",
+        "interpretation": "The preview packages from PR #2865 have since expired/become unavailable, suggesting PR #2865 has not yet been merged and released."
+      }
+    ],
+    "nextQuestions": [
+      "What is the current status of PR #2865? Is it still active or was it abandoned?",
+      "Does the Skia submodule in the current repo include the C++ tagged PDF API that needs to be wrapped?",
+      "Is a new C API shim (sk_pdf_tag_t, sk_canvas_set_node_id) needed in externals/skia/src/c/, or was that added in PR #2865?"
+    ],
+    "resolution": {
+      "hypothesis": "The feature requires: (1) adding C API shims in externals/skia/src/c/ for PDFTag/fStructureElementTreeRoot/SetNodeId, (2) regenerating bindings, (3) adding C# wrapper classes (SKPdfTag, extending SKDocumentPdfMetadata with StructureElementTreeRoot, adding SKCanvas.SetNodeId). PR #2865 was an initial attempt that has stalled.",
+      "proposals": [
+        {
+          "title": "Resume or rebase PR #2865",
+          "description": "The maintainer (mattleibow) started work in PR #2865. Check if it can be rebased onto current main, fix any conflicts, run regeneration, and complete the implementation.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Fresh implementation via add-api skill",
+          "description": "If PR #2865 is too stale, use the add-api skill workflow to add C API → binding → C# wrapper from scratch, following the Skia upstream commit at https://skia-review.googlesource.com/c/skia/+/141138/ as reference.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Resume or rebase PR #2865",
+      "recommendedReason": "The maintainer already validated the approach and produced initial builds. Rebasing is likely faster than reimplementing from scratch."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.90,
+      "reason": "Valid well-specified feature request. Native Skia API exists since 2018. Maintainer already assigned and started PR #2865. Feature is not yet merged/shipped. Strong community demand (11 reactions, multiple follow-up comments).",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request, SkiaSharp core area, and PDF backend labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/feature-request", "area/SkiaSharp", "backend/PDF", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Update community on status and reference PR #2865",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thank you for the detailed feature request and for identifying the upstream Skia APIs involved!\n\nThis is still on the roadmap. An initial implementation was started in PR #2865 — if you'd like to try experimental builds, please check that PR for the latest status. The preview packages mentioned in the earlier comment appear to have expired.\n\nThe implementation requires wrapping Skia's `PDFTag`, `SkPDF::Metadata::fStructureElementTreeRoot`, and `SkPDF::SetNodeId` through the SkiaSharp C API layer — the maintainer confirmed feasibility and the approach is well understood.\n\nWe'll update this issue when the feature is available in an official release."
+      }
+    ]
+  }
+}

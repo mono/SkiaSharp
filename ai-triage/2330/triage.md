@@ -1,0 +1,375 @@
+# Issue Triage Report — #2330
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-22T23:01:46Z |
+| Type | type/question (0.95 (95%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | close-as-not-a-bug (0.88 (88%)) |
+
+**Issue Summary:** Reporter asks how to implement per-shape hit testing in SkiaSharp — determining which drawn shape contains a mouse-click coordinate, including correct handling of hollow glyphs like the interior of '0'.
+
+**Analysis:** Reporter wants hit testing for shapes drawn with SkiaSharp. SkiaSharp provides SKPath.Contains(x, y) for filled-shape hit testing, SKPaint.GetFillPath() to expand stroked paths to their actual filled outline (enabling accurate stroke-width-aware hit testing), and SKFont.GetTextPath() to get the exact glyph outlines for text — together covering all the reporter's listed cases including hollow glyphs like '0'.
+
+**Recommendations:** **close-as-not-a-bug** — Usage question — the answer exists in SkiaSharp's API. SKPath.Contains() provides the requested hit testing. Full code examples can be given. Multiple community members also confirmed this is not a library bug.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Draw multiple shapes (text, rounded rects, complex curves) on an SKCanvas
+2. Handle a mouse click / touch event
+3. Determine which drawn shape was hit by the click coordinates
+
+**Environment:** No specific version or platform mentioned. Issue filed 2022-12-05, last comment 2024-08-16.
+
+## Analysis
+
+### Technical Summary
+
+Reporter wants hit testing for shapes drawn with SkiaSharp. SkiaSharp provides SKPath.Contains(x, y) for filled-shape hit testing, SKPaint.GetFillPath() to expand stroked paths to their actual filled outline (enabling accurate stroke-width-aware hit testing), and SKFont.GetTextPath() to get the exact glyph outlines for text — together covering all the reporter's listed cases including hollow glyphs like '0'.
+
+### Rationale
+
+This is a how-to question: the reporter believes SkiaSharp lacks a hit testing API, but SKPath.Contains() provides exactly that. No bug is reported. The answer is fully answerable from the existing SkiaSharp API surface. Multiple community members confirmed the question is out-of-scope for a rendering library and suggested approaches. Close as answered.
+
+### Key Signals
+
+- "I realized that skia does not provide such an API and I need to implement it myself" — **issue body** (Reporter is unaware of SKPath.Contains() — a discoverability gap, not a missing feature.)
+- "I can click inside the text with the number '0' and this should not be considered a hit" — **issue body** (Hollow glyph interior handling. SKPath for font glyphs uses opposite winding for interior contours — SKPath.Contains() with Winding fill handles this correctly.)
+- "there are also rectangles with rounded edges, complex curves, different shapes, and there are thousands of them on the canvas" — **issue body** (Needs a per-path hit test approach over a shape list (not bounding-box only). SKPath.Contains() works for arbitrary shapes.)
+- "you could draw the shapes to a new surface, pass a unique color for each shape, then call hittestsurface.ReadPixels(..., mousePos)" — **comment by willn1337** (Valid alternative: color-based hit testing using an off-screen bitmap. Covered in proposals.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKPath.cs` | 178-179 | direct | SKPath.Contains(float x, float y) delegates to sk_path_contains — performs proper point-in-path test respecting the path's FillType (Winding by default). Font glyph paths use opposite winding for interior holes, so Contains() correctly returns false for clicking inside '0'. |
+| `binding/SkiaSharp/SKPaint.cs` | 455-500 | direct | SKPaint.GetFillPath(SKPath src) converts any path with current paint settings (stroke width, effects) into the actual filled outline — enabling hit testing of stroked shapes accounting for stroke width. Can return null on failure; null check required. |
+| `binding/SkiaSharp/SKFont.cs` | 728-729 | direct | SKFont.GetTextPath(string text, SKPoint origin) returns an SKPath with exact glyph outlines including interior contours, enabling per-glyph hit testing for text labels. |
+| `binding/SkiaSharp/SKPath.cs` | 22-30 | related | SKPath has copy constructor SKPath(SKPath path) but no Clone() method — correct pattern for duplicating a path for a hit-test list is new SKPath(original). |
+| `binding/SkiaSharp/SKColor.cs` | 14-26 | related | SKColor constructors accept (uint value) or (byte red, byte green, byte blue, byte alpha). There is no (uint, uint, uint, int) overload — color-based hit testing code must cast values to byte explicitly. |
+
+### Workarounds
+
+- Use SKPath.Contains(x, y) — respects path fill type; font glyph paths correctly mark hollow interiors via opposite-winding contours
+- For stroked shapes, call SKPaint.GetFillPath(path) to get the expanded stroke outline, then call Contains()
+- For text, use SKFont.GetTextPath(text, origin) to get the glyph outline SKPath, then call Contains()
+- Alternative: render each shape to an off-screen SKBitmap with a unique color per shape ID; on click, read the pixel with SKBitmap.GetPixel(x, y) and decode the shape index from the color
+
+### Resolution Proposals
+
+**Hypothesis:** Reporter needs per-shape hit testing for thousands of shapes. SKPath.Contains() is the correct API — it handles filled shapes, correctly treats hollow glyph interiors via fill rule, and when combined with SKPaint.GetFillPath() also handles stroked shapes.
+
+1. **Path-based hit testing with SKPath.Contains** — fix, confidence 0.90 (90%), cost/s, validated=yes
+   - Maintain a list of SKPath objects alongside your draw calls (one per shape, with the same transform applied). On a click, iterate in reverse z-order and return the first shape where Contains(x, y) is true. For stroked shapes, expand to fill path first via SKPaint.GetFillPath(). Null-check the result.
+
+```csharp
+var shapes = new List<(SKPath path, SKPaint paint)>();
+
+// In draw loop — store a copy of each path:
+var shapePath = new SKPath();
+shapePath.AddRoundRect(SKRect.Create(100, 100, 200, 150), 20, 20);
+shapes.Add((shapePath, paint)); // shapePath is now owned by the list
+
+// On click at (clickX, clickY):
+for (int i = shapes.Count - 1; i >= 0; i--) {
+    var (path, p) = shapes[i];
+    SKPath hitPath = p.Style == SKPaintStyle.Stroke
+        ? p.GetFillPath(path) // may return null
+        : path;
+    if (hitPath == null) continue;
+    bool hit = hitPath.Contains(clickX, clickY);
+    if (hitPath != path) hitPath.Dispose();
+    if (hit) { /* shapes[i] was clicked */ break; }
+}
+```
+2. **Text glyph hit testing with SKFont.GetTextPath** — fix, confidence 0.88 (88%), cost/xs, validated=yes
+   - For text labels, use SKFont.GetTextPath() to get the exact glyph outline path, then call Contains(). This correctly handles hollow characters like '0' — clicking inside the hole returns false because font glyph paths define interior holes via opposite-winding contours, and SKPath.Contains() respects this.
+
+```csharp
+using var font = new SKFont(SKTypeface.Default, 48);
+// GetTextPath returns null if text is empty or typeface is unavailable
+using var textPath = font.GetTextPath("Hello 0", new SKPoint(100, 100));
+if (textPath != null) {
+    bool hit = textPath.Contains(mouseX, mouseY);
+}
+```
+3. **Color-based hit testing (alternative for complex scenes)** — alternative, confidence 0.85 (85%), cost/m, validated=yes
+   - Render each shape to an off-screen SKBitmap using a unique opaque color per shape index. On click, read the pixel to identify the hit shape. Useful when iterating thousands of paths per click is too slow.
+
+```csharp
+using var hitmap = new SKBitmap(width, height);
+using var hitmapCanvas = new SKCanvas(hitmap);
+hitmapCanvas.Clear(SKColors.Transparent);
+
+for (int i = 0; i < shapes.Count; i++) {
+    byte r = (byte)(i & 0xFF);
+    byte g = (byte)((i >> 8) & 0xFF);
+    byte b = (byte)((i >> 16) & 0xFF);
+    using var idPaint = new SKPaint { Color = new SKColor(r, g, b, 255), IsAntialias = false };
+    hitmapCanvas.DrawPath(shapes[i], idPaint);
+}
+
+// On click at (x, y):
+SKColor pixel = hitmap.GetPixel((int)x, (int)y);
+if (pixel.Alpha > 0) {
+    int shapeIndex = pixel.Red | (pixel.Green << 8) | (pixel.Blue << 16);
+    // shapeIndex identifies the hit shape
+}
+```
+
+Note: disable antialiasing on idPaint to get clean color boundaries. Supports up to 16 million shapes (24-bit color). Hitmap must be rebuilt when shapes change.
+
+**Recommended proposal:** Path-based hit testing with SKPath.Contains
+
+**Why:** No extra rendering pass. Works correctly for all shape types including stroked shapes and text. Handles the reporter's specific 'hollow 0' concern. Scales to thousands of shapes with a simple list iteration.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.88 (88%) |
+| Reason | Usage question — the answer exists in SkiaSharp's API. SKPath.Contains() provides the requested hit testing. Full code examples can be given. Multiple community members also confirmed this is not a library bug. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply question type and SkiaSharp area labels | labels=type/question, area/SkiaSharp |
+| add-comment | high | 0.88 (88%) | Post answer explaining SKPath.Contains() and related APIs for hit testing | — |
+| close-issue | medium | 0.85 (85%) | Close as answered usage question | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+SkiaSharp does have the APIs you need for shape hit testing — the key is **`SKPath.Contains(x, y)`**.
+
+**For filled shapes (rectangles, circles, custom paths):**
+```csharp
+// Keep a copy of each path alongside your draw calls:
+var shapePath = new SKPath();
+shapePath.AddRoundRect(SKRect.Create(100, 100, 200, 150), 20, 20);
+
+// On mouse click:
+bool hit = shapePath.Contains(mouseX, mouseY);
+```
+
+**For stroked shapes** (stroke width matters for the hit area), expand the stroke to a fill path first:
+```csharp
+SKPath hitPath = paint.Style == SKPaintStyle.Stroke
+    ? paint.GetFillPath(shapePath)  // may return null
+    : shapePath;
+if (hitPath != null && hitPath.Contains(mouseX, mouseY)) { /* hit */ }
+if (hitPath != shapePath) hitPath?.Dispose();
+```
+
+**For text glyphs** (including hollow characters like `'0'`):
+```csharp
+using var font = new SKFont(SKTypeface.Default, 48);
+using var textPath = font.GetTextPath("Hello 0", new SKPoint(100, 100));
+if (textPath != null) {
+    // Clicking inside the hole of '0' correctly returns false —
+    // font glyphs define interior holes via opposite-winding contours
+    bool hit = textPath.Contains(mouseX, mouseY);
+}
+```
+
+**For thousands of shapes**, keep a `List<SKPath>` in z-order. On click, iterate from top to bottom and return the first path where `Contains` is true:
+```csharp
+for (int i = shapes.Count - 1; i >= 0; i--) {
+    if (shapes[i].path.Contains(clickX, clickY)) {
+        // shapes[i] was clicked
+        break;
+    }
+}
+```
+
+As an alternative, a **color-based hit test** (render each shape to an off-screen `SKBitmap` with a unique color per shape index, then read the pixel with `SKBitmap.GetPixel(x, y)`) avoids iterating all paths per click and can be faster for very complex scenes.
+
+Closing as answered — feel free to reopen if you have follow-up questions!
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2330,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T23:01:46Z"
+  },
+  "summary": "Reporter asks how to implement per-shape hit testing in SkiaSharp — determining which drawn shape contains a mouse-click coordinate, including correct handling of hollow glyphs like the interior of '0'.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Draw multiple shapes (text, rounded rects, complex curves) on an SKCanvas",
+        "Handle a mouse click / touch event",
+        "Determine which drawn shape was hit by the click coordinates"
+      ],
+      "environmentDetails": "No specific version or platform mentioned. Issue filed 2022-12-05, last comment 2024-08-16."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter wants hit testing for shapes drawn with SkiaSharp. SkiaSharp provides SKPath.Contains(x, y) for filled-shape hit testing, SKPaint.GetFillPath() to expand stroked paths to their actual filled outline (enabling accurate stroke-width-aware hit testing), and SKFont.GetTextPath() to get the exact glyph outlines for text — together covering all the reporter's listed cases including hollow glyphs like '0'.",
+    "rationale": "This is a how-to question: the reporter believes SkiaSharp lacks a hit testing API, but SKPath.Contains() provides exactly that. No bug is reported. The answer is fully answerable from the existing SkiaSharp API surface. Multiple community members confirmed the question is out-of-scope for a rendering library and suggested approaches. Close as answered.",
+    "keySignals": [
+      {
+        "text": "I realized that skia does not provide such an API and I need to implement it myself",
+        "source": "issue body",
+        "interpretation": "Reporter is unaware of SKPath.Contains() — a discoverability gap, not a missing feature."
+      },
+      {
+        "text": "I can click inside the text with the number '0' and this should not be considered a hit",
+        "source": "issue body",
+        "interpretation": "Hollow glyph interior handling. SKPath for font glyphs uses opposite winding for interior contours — SKPath.Contains() with Winding fill handles this correctly."
+      },
+      {
+        "text": "there are also rectangles with rounded edges, complex curves, different shapes, and there are thousands of them on the canvas",
+        "source": "issue body",
+        "interpretation": "Needs a per-path hit test approach over a shape list (not bounding-box only). SKPath.Contains() works for arbitrary shapes."
+      },
+      {
+        "text": "you could draw the shapes to a new surface, pass a unique color for each shape, then call hittestsurface.ReadPixels(..., mousePos)",
+        "source": "comment by willn1337",
+        "interpretation": "Valid alternative: color-based hit testing using an off-screen bitmap. Covered in proposals."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPath.cs",
+        "lines": "178-179",
+        "finding": "SKPath.Contains(float x, float y) delegates to sk_path_contains — performs proper point-in-path test respecting the path's FillType (Winding by default). Font glyph paths use opposite winding for interior holes, so Contains() correctly returns false for clicking inside '0'.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "455-500",
+        "finding": "SKPaint.GetFillPath(SKPath src) converts any path with current paint settings (stroke width, effects) into the actual filled outline — enabling hit testing of stroked shapes accounting for stroke width. Can return null on failure; null check required.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "lines": "728-729",
+        "finding": "SKFont.GetTextPath(string text, SKPoint origin) returns an SKPath with exact glyph outlines including interior contours, enabling per-glyph hit testing for text labels.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPath.cs",
+        "lines": "22-30",
+        "finding": "SKPath has copy constructor SKPath(SKPath path) but no Clone() method — correct pattern for duplicating a path for a hit-test list is new SKPath(original).",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKColor.cs",
+        "lines": "14-26",
+        "finding": "SKColor constructors accept (uint value) or (byte red, byte green, byte blue, byte alpha). There is no (uint, uint, uint, int) overload — color-based hit testing code must cast values to byte explicitly.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKPath.Contains(x, y) — respects path fill type; font glyph paths correctly mark hollow interiors via opposite-winding contours",
+      "For stroked shapes, call SKPaint.GetFillPath(path) to get the expanded stroke outline, then call Contains()",
+      "For text, use SKFont.GetTextPath(text, origin) to get the glyph outline SKPath, then call Contains()",
+      "Alternative: render each shape to an off-screen SKBitmap with a unique color per shape ID; on click, read the pixel with SKBitmap.GetPixel(x, y) and decode the shape index from the color"
+    ],
+    "resolution": {
+      "hypothesis": "Reporter needs per-shape hit testing for thousands of shapes. SKPath.Contains() is the correct API — it handles filled shapes, correctly treats hollow glyph interiors via fill rule, and when combined with SKPaint.GetFillPath() also handles stroked shapes.",
+      "proposals": [
+        {
+          "title": "Path-based hit testing with SKPath.Contains",
+          "description": "Maintain a list of SKPath objects alongside your draw calls (one per shape, with the same transform applied). On a click, iterate in reverse z-order and return the first shape where Contains(x, y) is true. For stroked shapes, expand to fill path first via SKPaint.GetFillPath(). Null-check the result.\n\n```csharp\nvar shapes = new List<(SKPath path, SKPaint paint)>();\n\n// In draw loop — store a copy of each path:\nvar shapePath = new SKPath();\nshapePath.AddRoundRect(SKRect.Create(100, 100, 200, 150), 20, 20);\nshapes.Add((shapePath, paint)); // shapePath is now owned by the list\n\n// On click at (clickX, clickY):\nfor (int i = shapes.Count - 1; i >= 0; i--) {\n    var (path, p) = shapes[i];\n    SKPath hitPath = p.Style == SKPaintStyle.Stroke\n        ? p.GetFillPath(path) // may return null\n        : path;\n    if (hitPath == null) continue;\n    bool hit = hitPath.Contains(clickX, clickY);\n    if (hitPath != path) hitPath.Dispose();\n    if (hit) { /* shapes[i] was clicked */ break; }\n}\n```",
+          "category": "fix",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "yes"
+        },
+        {
+          "title": "Text glyph hit testing with SKFont.GetTextPath",
+          "description": "For text labels, use SKFont.GetTextPath() to get the exact glyph outline path, then call Contains(). This correctly handles hollow characters like '0' — clicking inside the hole returns false because font glyph paths define interior holes via opposite-winding contours, and SKPath.Contains() respects this.\n\n```csharp\nusing var font = new SKFont(SKTypeface.Default, 48);\n// GetTextPath returns null if text is empty or typeface is unavailable\nusing var textPath = font.GetTextPath(\"Hello 0\", new SKPoint(100, 100));\nif (textPath != null) {\n    bool hit = textPath.Contains(mouseX, mouseY);\n}\n```",
+          "category": "fix",
+          "confidence": 0.88,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Color-based hit testing (alternative for complex scenes)",
+          "description": "Render each shape to an off-screen SKBitmap using a unique opaque color per shape index. On click, read the pixel to identify the hit shape. Useful when iterating thousands of paths per click is too slow.\n\n```csharp\nusing var hitmap = new SKBitmap(width, height);\nusing var hitmapCanvas = new SKCanvas(hitmap);\nhitmapCanvas.Clear(SKColors.Transparent);\n\nfor (int i = 0; i < shapes.Count; i++) {\n    byte r = (byte)(i & 0xFF);\n    byte g = (byte)((i >> 8) & 0xFF);\n    byte b = (byte)((i >> 16) & 0xFF);\n    using var idPaint = new SKPaint { Color = new SKColor(r, g, b, 255), IsAntialias = false };\n    hitmapCanvas.DrawPath(shapes[i], idPaint);\n}\n\n// On click at (x, y):\nSKColor pixel = hitmap.GetPixel((int)x, (int)y);\nif (pixel.Alpha > 0) {\n    int shapeIndex = pixel.Red | (pixel.Green << 8) | (pixel.Blue << 16);\n    // shapeIndex identifies the hit shape\n}\n```\n\nNote: disable antialiasing on idPaint to get clean color boundaries. Supports up to 16 million shapes (24-bit color). Hitmap must be rebuilt when shapes change.",
+          "category": "alternative",
+          "confidence": 0.85,
+          "effort": "cost/m",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Path-based hit testing with SKPath.Contains",
+      "recommendedReason": "No extra rendering pass. Works correctly for all shape types including stroked shapes and text. Handles the reporter's specific 'hollow 0' concern. Scales to thousands of shapes with a simple list iteration."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "Usage question — the answer exists in SkiaSharp's API. SKPath.Contains() provides the requested hit testing. Full code examples can be given. Multiple community members also confirmed this is not a library bug.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question type and SkiaSharp area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer explaining SKPath.Contains() and related APIs for hit testing",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "SkiaSharp does have the APIs you need for shape hit testing — the key is **`SKPath.Contains(x, y)`**.\n\n**For filled shapes (rectangles, circles, custom paths):**\n```csharp\n// Keep a copy of each path alongside your draw calls:\nvar shapePath = new SKPath();\nshapePath.AddRoundRect(SKRect.Create(100, 100, 200, 150), 20, 20);\n\n// On mouse click:\nbool hit = shapePath.Contains(mouseX, mouseY);\n```\n\n**For stroked shapes** (stroke width matters for the hit area), expand the stroke to a fill path first:\n```csharp\nSKPath hitPath = paint.Style == SKPaintStyle.Stroke\n    ? paint.GetFillPath(shapePath)  // may return null\n    : shapePath;\nif (hitPath != null && hitPath.Contains(mouseX, mouseY)) { /* hit */ }\nif (hitPath != shapePath) hitPath?.Dispose();\n```\n\n**For text glyphs** (including hollow characters like `'0'`):\n```csharp\nusing var font = new SKFont(SKTypeface.Default, 48);\nusing var textPath = font.GetTextPath(\"Hello 0\", new SKPoint(100, 100));\nif (textPath != null) {\n    // Clicking inside the hole of '0' correctly returns false —\n    // font glyphs define interior holes via opposite-winding contours\n    bool hit = textPath.Contains(mouseX, mouseY);\n}\n```\n\n**For thousands of shapes**, keep a `List<SKPath>` in z-order. On click, iterate from top to bottom and return the first path where `Contains` is true:\n```csharp\nfor (int i = shapes.Count - 1; i >= 0; i--) {\n    if (shapes[i].path.Contains(clickX, clickY)) {\n        // shapes[i] was clicked\n        break;\n    }\n}\n```\n\nAs an alternative, a **color-based hit test** (render each shape to an off-screen `SKBitmap` with a unique color per shape index, then read the pixel with `SKBitmap.GetPixel(x, y)`) avoids iterating all paths per click and can be faster for very complex scenes.\n\nClosing as answered — feel free to reopen if you have follow-up questions!"
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered usage question",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>

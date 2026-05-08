@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2714,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-23T00:36:00Z",
+    "currentLabels": ["type/feature-request"]
+  },
+  "summary": "Request to make SKNativeObject.IsDisposed public so external callers can check disposal state of SKBitmap and other SkiaSharp objects without reflection or exception-based workarounds.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.95 },
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Try to access skBitmap.IsDisposed from user code outside SkiaSharp assembly",
+        "Observe that IsDisposed is protected internal and inaccessible"
+      ],
+      "environmentDetails": "Any platform, any .NET version"
+    }
+  },
+  "analysis": {
+    "summary": "The IsDisposed property is declared as `protected internal` on SKNativeObject, the abstract base class for all SkiaSharp objects. Changing it to `public` is a straightforward, ABI-safe additive change that would expose disposal state to all consumers.",
+    "rationale": "The property already exists in SKNativeObject; the request is simply to widen its visibility from `protected internal` to `public`. This is an enhancement to existing functionality rather than a new feature. The fix path is clear and the change is ABI-safe (additive). Multiple commenters have confirmed the need, and the workarounds (reflection, try/catch, Handle == IntPtr.Zero check) are all fragile. The race-condition caveat noted in comments is valid but is the consumer's responsibility — not a reason to withhold the API.",
+    "keySignals": [
+      {
+        "text": "it sure would be nice if I could do a safety check with \"skbitmap.IsDisposed\" -- but I cannot, because the getter is Protected, instead of Public.",
+        "source": "issue body",
+        "interpretation": "Direct request to change access modifier on an existing property."
+      },
+      {
+        "text": "reflection is not a reliable option for commercial software that needs to be either obfuscated or machine compiled",
+        "source": "comment by AndreaLabeljoy",
+        "interpretation": "Existing workaround is not viable for production use — confirms the need for a public API."
+      },
+      {
+        "text": "You can try to test `if (skobject.Handle == IntPtr.Zero)` but the race condition still exists.",
+        "source": "comment by ojb500",
+        "interpretation": "Even the Handle check has the same race limitation; exposing IsDisposed does not introduce new problems."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "242",
+        "finding": "`protected internal bool IsDisposed => isDisposed == 1;` is defined on SKNativeObject. Changing to `public` requires modifying only this one line and affects all derived objects (SKBitmap, SKPath, SKCanvas, etc.).",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "212-242",
+        "finding": "SKNativeObject is the root IDisposable base. Its Handle property is already `public virtual`, and Dispose() is public. Making IsDisposed public is consistent with the existing public surface.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/HandleDictionary.cs",
+        "lines": "109,115,147,198,208",
+        "finding": "IsDisposed is already used extensively in internal HandleDictionary code — confirming the property is stable and its semantics are well-understood.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Use reflection to invoke protected getter: `(bool)typeof(SKObject).GetProperty(\"IsDisposed\", BindingFlags.NonPublic|BindingFlags.Instance).GetValue(obj)`",
+      "Check `skObject.Handle == IntPtr.Zero` as a disposal proxy (not perfectly reliable in all cases)",
+      "Wrap access in a try/catch on property access to detect use-after-dispose"
+    ],
+    "nextQuestions": [
+      "Should `OwnsHandle` and `IgnorePublicDispose` also be made public for parity, or is IsDisposed sufficient?"
+    ],
+    "resolution": {
+      "hypothesis": "Change access modifier of `IsDisposed` from `protected internal` to `public` on `SKNativeObject` (line 242 of SKObject.cs). This is an additive, ABI-safe change.",
+      "proposals": [
+        {
+          "title": "Make IsDisposed public on SKNativeObject",
+          "description": "Change `protected internal bool IsDisposed` to `public bool IsDisposed` in SKNativeObject. All SkiaSharp objects inherit this base class so all consumers benefit immediately.",
+          "category": "fix",
+          "codeSnippet": "public bool IsDisposed => isDisposed == 1;",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Make IsDisposed public on SKNativeObject",
+      "recommendedReason": "Single-line change, ABI-safe, affects all objects, consistent with the already-public Handle and Dispose() members."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.93,
+      "reason": "Root cause is clear, fix path is a single-line access modifier change in SKNativeObject, no ABI risk.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct label from feature-request to enhancement and add area/SkiaSharp and tenet/reliability",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": ["type/enhancement", "area/SkiaSharp", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Confirm the enhancement is well-scoped, identify the single-line fix location, and note the race-condition caveat.",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "Thanks for filing this — the request is clear and well-motivated.\n\nThe fix is in `SKNativeObject` (the base class for all SkiaSharp objects), line 242 of `binding/SkiaSharp/SKObject.cs`:\n\n```csharp\n// Current\nprotected internal bool IsDisposed => isDisposed == 1;\n\n// Proposed\npublic bool IsDisposed => isDisposed == 1;\n```\n\nThis is a single-line, ABI-safe change that immediately exposes `IsDisposed` on `SKBitmap`, `SKPath`, `SKCanvas`, and every other SkiaSharp object.\n\n> **Note on thread safety:** As mentioned in comments above, `IsDisposed` is a point-in-time check. Another thread could dispose the object after you read `false`, so callers still need their own synchronization if shared ownership is involved. However, this is no different from `IDisposable` patterns elsewhere in .NET — exposing the property is the right call.\n\nThis will be tracked as a small enhancement for an upcoming release."
+      }
+    ]
+  }
+}
