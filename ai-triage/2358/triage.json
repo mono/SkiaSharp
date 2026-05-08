@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2358,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T21:09:00Z"
+  },
+  "summary": "Reporter asks why writing pixel colors directly to a bitmap span produces moiré patterns compared to using DrawCircle, seeking help with correct span/bitmap usage.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "platforms": ["os/Android", "os/iOS"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Method 1 (DrawCircle): Iterates over spoke data and calls DrawCircle with float x/y coordinates — works correctly",
+        "Method 2 (1x1024 bitmap + RotateDegrees): Writes pixels to 1024x1 bitmap span then rotates/translates canvas — produces moiré",
+        "Method 3 (full 1024x1024 span): Writes pixels by computing integer x/y from polar coordinates — produces moiré"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Android and iOS",
+      "repoLinks": [
+        { "url": "https://user-images.githubusercontent.com/4975613/211543543-de282c1c-00af-4631-acd7-2903278a22a2.png", "description": "Screenshot: Method 1 DrawCircle (correct grey display)" },
+        { "url": "https://user-images.githubusercontent.com/4975613/211543606-222f3c3f-b5a4-4eea-9bd6-2b59373452b2.png", "description": "Screenshot: Method 2 rotate transform (moiré pattern)" },
+        { "url": "https://user-images.githubusercontent.com/4975613/211543656-53f92292-ac8f-4e80-bad3-27cc0b8197e4.png", "description": "Screenshot: Method 3 direct span (moiré pattern)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The reported problem is user code errors, not a SkiaSharp defect. The API has not changed in ways that would affect this."
+    }
+  },
+  "analysis": {
+    "summary": "The moiré patterns stem from user code bugs: Method 3 omits midx/midy center offset when converting polar to Cartesian coordinates, placing the spoke at (0,0) instead of the bitmap center. Method 2 suffers from rotation aliasing (a 1-pixel-wide rotated bitmap cannot perfectly fill adjacent spoke angles). These are usage errors, not SkiaSharp defects.",
+    "rationale": "Reporter explicitly asks 'Any idea of what I do wrong?' — this is a usage question. Code investigation reveals concrete bugs in the user's code: missing center offset in Method 3, and expected rotation aliasing artifacts in Method 2. The DrawCircle method works because it uses floating-point coordinates with anti-aliased rendering. No SkiaSharp API defects were found.",
+    "keySignals": [
+      { "text": "Any idea of what i do wrong?", "source": "issue body", "interpretation": "Reporter is asking for help, not reporting a SkiaSharp defect." },
+      { "text": "int x = (int)(radcos * r); int y = (int)(radsin * r);", "source": "issue body — Method 3 code", "interpretation": "midx and midy center offsets are computed but never added, placing spoke at origin (0,0) instead of center (512,512)." },
+      { "text": "inCanvas.Translate(new SKPoint(512, 512)); inCanvas.RotateDegrees(drawdata.degree); inCanvas.DrawBitmap(lokBmp, 0, 0);", "source": "issue body — Method 2 code", "interpretation": "Rotating a 1px-wide bitmap causes aliasing gaps between adjacent spokes — expected rasterization behavior, not a bug." }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKColor.cs",
+        "lines": "19-21",
+        "finding": "SKColor stores color as uint: (alpha<<24)|(red<<16)|(green<<8)|blue. On little-endian, memory bytes are [Blue, Green, Red, Alpha], matching Bgra8888. So writing SKColor directly to a Bgra8888 span is byte-layout correct.",
+        "relevance": "context"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPixmap.cs",
+        "lines": "129-171",
+        "finding": "GetPixelSpan<T>() validates sizeof(T) == bytesPerPixel; for SKColor (4 bytes) on Bgra8888 (4 bpp) this passes. The span points directly to native pixel memory — correct for direct writes.",
+        "relevance": "context"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "300-304",
+        "finding": "SKBitmap.GetPixelSpan() returns Span<byte> over raw pixel memory. The API is correct for direct pixel manipulation when byte layout is understood.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Method 3 fix: add midx/midy to the x/y calculation — int x = (int)(midx + radcos * r); int y = (int)(midy + radsin * r);",
+      "Method 2 fix: use DrawBitmap with anti-aliased paint (paint.IsAntialias = true) to reduce aliasing when rotating thin bitmaps; or use an SKPaint with FilterQuality set.",
+      "Alternative: Keep Method 1 but optimize by reducing DrawCircle calls with a batch approach, or draw into an off-screen bitmap using canvas operations then blit once."
+    ],
+    "resolution": {
+      "hypothesis": "Method 3 has a missing center offset (midx/midy not added). Method 2 is affected by expected aliasing when rotating a 1px-wide bitmap. Neither is a SkiaSharp bug.",
+      "proposals": [
+        {
+          "title": "Fix center offset in Method 3",
+          "description": "Add the center coordinates when converting polar to Cartesian in the span-based method.",
+          "category": "fix",
+          "codeSnippet": "int x = (int)(midx + radcos * r);\nint y = (int)(midy + radsin * r);\nint spanplac = y * 1024 + x;",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use anti-aliased rendering in Method 2",
+          "description": "When drawing the rotated bitmap, pass a paint with IsAntialias=true to reduce aliasing from rotation.",
+          "category": "workaround",
+          "codeSnippet": "var bitmapPaint = new SKPaint { IsAntialias = true, FilterQuality = SKFilterQuality.High };\ninCanvas.DrawBitmap(lokBmp, 0, 0, bitmapPaint);",
+          "confidence": 0.80,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Fix center offset in Method 3",
+      "recommendedReason": "The missing midx/midy offset is a clear code bug and the primary cause of Method 3's incorrect output."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.90,
+      "reason": "Usage question with identifiable code bugs in the reporter's implementation. No SkiaSharp defect. A helpful answer with the specific code fixes can resolve this.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and platform labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/question", "area/SkiaSharp", "os/Android", "os/iOS"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer explaining the two code bugs and their fixes",
+        "risk": "high",
+        "confidence": 0.90,
+        "comment": "Thanks for the detailed examples and screenshots!\n\nAfter reviewing your three methods, the moiré patterns come from two separate issues in your code — not from SkiaSharp itself.\n\n**Method 3 (direct span) — missing center offset**\n\nYou compute `midx` and `midy`, but never use them when calculating the pixel position:\n\n```csharp\n// Current (broken): spoke centered at (0, 0)\nint x = (int)(radcos * r);\nint y = (int)(radsin * r);\n\n// Fixed: add center offset\nint x = (int)(midx + radcos * r);\nint y = (int)(midy + radsin * r);\nint spanplac = y * 1024 + x;\n```\n\n**Method 2 (rotate transform) — rotation aliasing**\n\nWhen you rotate a 1-pixel-wide bitmap, the rasterizer cannot perfectly fill adjacent spoke angles without leaving gaps. You can reduce this by using an anti-aliased paint:\n\n```csharp\nvar bitmapPaint = new SKPaint { IsAntialias = true, FilterQuality = SKFilterQuality.High };\ninCanvas.DrawBitmap(lokBmp, 0, 0, bitmapPaint);\n```\n\n**Note on Method 2 memory:** `lokBmp` is being created as a `new SKBitmap` inside the loop on every dequeue — it should be allocated once outside the `while` loop and reused (or disposed after the loop).\n\nThe color byte layout (`SKColor` as `Span<SKColor>` over a `Bgra8888` bitmap) is correct — `SKColor` stores bytes as BGRA on little-endian, matching `Bgra8888`."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — usage question with clear code fix",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

@@ -1,0 +1,218 @@
+# Issue Triage Report — #2040
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T17:53:00Z |
+| Type | type/documentation (0.90 (90%)) |
+| Area | area/Docs (0.85 (85%)) |
+| Suggested action | needs-investigation (0.75 (75%)) |
+
+**Issue Summary:** Contributor-provided detailed Windows build instructions (VS 2022, Android NDK 21, Tizen, environment variables, msbuild.cake patches), requesting they be incorporated into official documentation or pinned for visibility.
+
+**Analysis:** Contributor submitted detailed step-by-step Windows build instructions covering VS 2022 setup, MSVC re-targeting for UWP native projects, Android NDK 21 configuration, environment variable setup, Tizen Studio install, and a cake/msbuild.cake patch. A modern `documentation/dev/building.md` now exists covering current Windows build requirements (VS 2022+, MSVC v143+, Android NDK via VS installer, Clang/LLVM scripts). The core ask has been largely addressed, though a few specifics (disk space estimates, VS solution re-targeting steps for UWP native projects) may not yet be in the current docs.
+
+**Recommendations:** **needs-investigation** — documentation/dev/building.md now exists and covers current Windows build requirements, but a review of whether the still-relevant details from this 2022 issue are captured is warranted before closing.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/documentation |
+| Area | area/Docs |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | area/Build, area/Docs |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** Windows, VS 2019/2022, Android NDK r21, Tizen Studio, LLVM; instructions provided by contributor in May 2022
+
+## Analysis
+
+### Technical Summary
+
+Contributor submitted detailed step-by-step Windows build instructions covering VS 2022 setup, MSVC re-targeting for UWP native projects, Android NDK 21 configuration, environment variable setup, Tizen Studio install, and a cake/msbuild.cake patch. A modern `documentation/dev/building.md` now exists covering current Windows build requirements (VS 2022+, MSVC v143+, Android NDK via VS installer, Clang/LLVM scripts). The core ask has been largely addressed, though a few specifics (disk space estimates, VS solution re-targeting steps for UWP native projects) may not yet be in the current docs.
+
+### Rationale
+
+Classified as type/documentation because the reporter is contributing build instructions and explicitly requesting they be added to official docs. area/Docs is the best fit as this is entirely a documentation gap request. The current building.md covers modern Windows build steps, so the issue is at least partially addressed.
+
+### Key Signals
+
+- "[FEATURE] more informative building instructions (for Windows)" — **issue title** (Documentation improvement request — reporter wants Windows build instructions documented more thoroughly.)
+- "i feel like this should be pinned somewhere?" — **comment #1** (Reporter confirms this is a documentation/discoverability request, not a functional bug.)
+- "NOTE: MSVC v143 - VS 2019 C++ build tools (x86/64, ARM, and ARM64) are required for the UWP natives to build" — **issue body** (Specific toolchain requirement that may be worth verifying against current building.md.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `documentation/dev/building.md` | — | direct | Current Windows build documentation exists covering VS 2022+, MSVC v143+, Android NDK via VS Installer or manual download with ANDROID_NDK_ROOT env var, Python 3, and Clang/LLVM via install-llvm.ps1 script. Does not include disk space estimates or VS solution re-targeting steps for UWP native projects mentioned in the 2022 issue. |
+| `CONTRIBUTING.md` | — | related | Directs contributors to documentation/dev/building.md as the canonical build guide, confirming building.md is the intended home for these instructions. |
+
+### Resolution Proposals
+
+**Hypothesis:** The documentation/dev/building.md now exists and covers Windows build requirements at a high level. Remaining value from this issue: disk space estimates, VS solution re-targeting steps for UWP native projects, and specific environment variable setup guidance.
+
+1. **Review building.md against issue content and fill gaps** — investigation, confidence 0.80 (80%), cost/s, validated=untested
+   - Compare documentation/dev/building.md against this issue's instructions to determine if any still-relevant details (disk space estimates, VS solution re-targeting for UWP native projects, detailed env var setup) should be added to the current docs.
+2. **Close as addressed by current building.md** — alternative, confidence 0.70 (70%), cost/xs, validated=untested
+   - The core request for better Windows build documentation has been addressed via documentation/dev/building.md. The 2022 issue contains outdated content (Xamarin SDKs, Android NDK 21, msbuild.cake patches) that is no longer relevant to the current build system.
+
+**Recommended proposal:** Review building.md against issue content and fill gaps
+
+**Why:** While building.md exists, a quick comparison may reveal valuable details worth preserving. The contributor put significant effort into these instructions and the community knowledge should not be lost.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.75 (75%) |
+| Reason | documentation/dev/building.md now exists and covers current Windows build requirements, but a review of whether the still-relevant details from this 2022 issue are captured is warranted before closing. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply documentation type and Windows platform labels | labels=type/documentation, area/Docs, os/Windows-Classic |
+| add-comment | medium | 0.80 (80%) | Acknowledge the contribution and point to current building.md | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for contributing these detailed build instructions! Since this issue was filed, we've added [`documentation/dev/building.md`](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/building.md) which covers Windows build requirements with current tooling (VS 2022+, .NET 8, MSVC v143+, Android NDK via VS Installer, and Clang/LLVM). We'll review whether any still-relevant details from your instructions (such as VS solution re-targeting for UWP native projects or disk space estimates) should be added. Please let us know if you find anything missing from the current documentation!
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2040,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T17:53:00Z",
+    "currentLabels": [
+      "area/Build",
+      "area/Docs"
+    ]
+  },
+  "summary": "Contributor-provided detailed Windows build instructions (VS 2022, Android NDK 21, Tizen, environment variables, msbuild.cake patches), requesting they be incorporated into official documentation or pinned for visibility.",
+  "classification": {
+    "type": {
+      "value": "type/documentation",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/Docs",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Windows, VS 2019/2022, Android NDK r21, Tizen Studio, LLVM; instructions provided by contributor in May 2022"
+    }
+  },
+  "analysis": {
+    "summary": "Contributor submitted detailed step-by-step Windows build instructions covering VS 2022 setup, MSVC re-targeting for UWP native projects, Android NDK 21 configuration, environment variable setup, Tizen Studio install, and a cake/msbuild.cake patch. A modern `documentation/dev/building.md` now exists covering current Windows build requirements (VS 2022+, MSVC v143+, Android NDK via VS installer, Clang/LLVM scripts). The core ask has been largely addressed, though a few specifics (disk space estimates, VS solution re-targeting steps for UWP native projects) may not yet be in the current docs.",
+    "rationale": "Classified as type/documentation because the reporter is contributing build instructions and explicitly requesting they be added to official docs. area/Docs is the best fit as this is entirely a documentation gap request. The current building.md covers modern Windows build steps, so the issue is at least partially addressed.",
+    "codeInvestigation": [
+      {
+        "file": "documentation/dev/building.md",
+        "finding": "Current Windows build documentation exists covering VS 2022+, MSVC v143+, Android NDK via VS Installer or manual download with ANDROID_NDK_ROOT env var, Python 3, and Clang/LLVM via install-llvm.ps1 script. Does not include disk space estimates or VS solution re-targeting steps for UWP native projects mentioned in the 2022 issue.",
+        "relevance": "direct"
+      },
+      {
+        "file": "CONTRIBUTING.md",
+        "finding": "Directs contributors to documentation/dev/building.md as the canonical build guide, confirming building.md is the intended home for these instructions.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "[FEATURE] more informative building instructions (for Windows)",
+        "source": "issue title",
+        "interpretation": "Documentation improvement request — reporter wants Windows build instructions documented more thoroughly."
+      },
+      {
+        "text": "i feel like this should be pinned somewhere?",
+        "source": "comment #1",
+        "interpretation": "Reporter confirms this is a documentation/discoverability request, not a functional bug."
+      },
+      {
+        "text": "NOTE: MSVC v143 - VS 2019 C++ build tools (x86/64, ARM, and ARM64) are required for the UWP natives to build",
+        "source": "issue body",
+        "interpretation": "Specific toolchain requirement that may be worth verifying against current building.md."
+      }
+    ],
+    "resolution": {
+      "hypothesis": "The documentation/dev/building.md now exists and covers Windows build requirements at a high level. Remaining value from this issue: disk space estimates, VS solution re-targeting steps for UWP native projects, and specific environment variable setup guidance.",
+      "proposals": [
+        {
+          "title": "Review building.md against issue content and fill gaps",
+          "description": "Compare documentation/dev/building.md against this issue's instructions to determine if any still-relevant details (disk space estimates, VS solution re-targeting for UWP native projects, detailed env var setup) should be added to the current docs.",
+          "category": "investigation",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Close as addressed by current building.md",
+          "description": "The core request for better Windows build documentation has been addressed via documentation/dev/building.md. The 2022 issue contains outdated content (Xamarin SDKs, Android NDK 21, msbuild.cake patches) that is no longer relevant to the current build system.",
+          "category": "alternative",
+          "confidence": 0.7,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Review building.md against issue content and fill gaps",
+      "recommendedReason": "While building.md exists, a quick comparison may reveal valuable details worth preserving. The contributor put significant effort into these instructions and the community knowledge should not be lost."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "documentation/dev/building.md now exists and covers current Windows build requirements, but a review of whether the still-relevant details from this 2022 issue are captured is warranted before closing.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply documentation type and Windows platform labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/documentation",
+          "area/Docs",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the contribution and point to current building.md",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thank you for contributing these detailed build instructions! Since this issue was filed, we've added [`documentation/dev/building.md`](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/building.md) which covers Windows build requirements with current tooling (VS 2022+, .NET 8, MSVC v143+, Android NDK via VS Installer, and Clang/LLVM). We'll review whether any still-relevant details from your instructions (such as VS solution re-targeting for UWP native projects or disk space estimates) should be added. Please let us know if you find anything missing from the current documentation!"
+      }
+    ]
+  }
+}
+```
+
+</details>

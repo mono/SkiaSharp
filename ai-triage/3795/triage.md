@@ -1,0 +1,170 @@
+# Issue Triage Report — #3795
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T20:42:31Z |
+| Type | type/enhancement (0.72 (72%)) |
+| Area | area/Build (0.80 (80%)) |
+| Suggested action | keep-open (0.95 (95%)) |
+
+**Issue Summary:** Automated tracking issue created by GitHub Agentic Workflows to record no-op runs from CI/CD agentic workflow executions in the repository.
+
+**Analysis:** Issue #3795 is an automatically managed tracking issue created by the GitHub Agentic Workflows bot. It serves as a sink for no-op notifications from agentic CI workflows and is explicitly marked 'Do not close this issue manually' by the bot. This is not a user-reported bug or feature request.
+
+**Recommendations:** **keep-open** — This is an automatically managed tracking issue that must remain open. The bot explicitly states 'Do not close this issue manually'. No user action required.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/Build |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | agentic-workflows |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** Automated GitHub Actions bot issue; not a user-reported bug. Two bot comments recorded: 'Update Release Notes' no-op (2026-04-28) and 'Weekly Sample Scout Report' analysis (2026-04-29).
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/actions/runs/25080938450 — Workflow run: Update Release Notes (no-op)
+- https://github.com/mono/SkiaSharp/actions/runs/25130503419 — Workflow run: Weekly Sample Scout Report
+
+## Analysis
+
+### Technical Summary
+
+Issue #3795 is an automatically managed tracking issue created by the GitHub Agentic Workflows bot. It serves as a sink for no-op notifications from agentic CI workflows and is explicitly marked 'Do not close this issue manually' by the bot. This is not a user-reported bug or feature request.
+
+### Rationale
+
+The issue is auto-created by github-actions[bot] with boilerplate content explaining no-op run aggregation. It has the 'agentic-workflows' label and carries a 'Do not assign to an agent' directive in its body. Type/enhancement fits best as it represents infrastructure tooling, with area/Build for CI automation. No code investigation is needed — this is a workflow infrastructure artifact, not a SkiaSharp API issue.
+
+### Key Signals
+
+- "This issue is automatically managed by GitHub Agentic Workflows. Do not close this issue manually." — **issue body** (Explicitly marked as auto-managed infra — should not be triaged as a user issue.)
+- "No action to take - Do not assign to an agent." — **issue body** (Bot explicitly requests this issue not be assigned for action.)
+- "created by github-actions[bot]" — **issue metadata** (Not a human reporter — automated CI artifact.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `.agents/agents/agentic-workflows.agent.md` | — | context | Repository contains agentic workflow agent definitions. The no-op tracking issue is an automatically managed artifact of this infrastructure. |
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.95 (95%) |
+| Reason | This is an automatically managed tracking issue that must remain open. The bot explicitly states 'Do not close this issue manually'. No user action required. |
+| Suggested repro platform | — |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.80 (80%) | Apply type/enhancement and area/Build labels to classify the automated tracking issue | labels=type/enhancement, area/Build |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3795,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T20:42:31Z",
+    "currentLabels": [
+      "agentic-workflows"
+    ]
+  },
+  "summary": "Automated tracking issue created by GitHub Agentic Workflows to record no-op runs from CI/CD agentic workflow executions in the repository.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.72
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.8
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Automated GitHub Actions bot issue; not a user-reported bug. Two bot comments recorded: 'Update Release Notes' no-op (2026-04-28) and 'Weekly Sample Scout Report' analysis (2026-04-29).",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/actions/runs/25080938450",
+          "description": "Workflow run: Update Release Notes (no-op)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/actions/runs/25130503419",
+          "description": "Workflow run: Weekly Sample Scout Report"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Issue #3795 is an automatically managed tracking issue created by the GitHub Agentic Workflows bot. It serves as a sink for no-op notifications from agentic CI workflows and is explicitly marked 'Do not close this issue manually' by the bot. This is not a user-reported bug or feature request.",
+    "rationale": "The issue is auto-created by github-actions[bot] with boilerplate content explaining no-op run aggregation. It has the 'agentic-workflows' label and carries a 'Do not assign to an agent' directive in its body. Type/enhancement fits best as it represents infrastructure tooling, with area/Build for CI automation. No code investigation is needed — this is a workflow infrastructure artifact, not a SkiaSharp API issue.",
+    "codeInvestigation": [
+      {
+        "file": ".agents/agents/agentic-workflows.agent.md",
+        "finding": "Repository contains agentic workflow agent definitions. The no-op tracking issue is an automatically managed artifact of this infrastructure.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "This issue is automatically managed by GitHub Agentic Workflows. Do not close this issue manually.",
+        "source": "issue body",
+        "interpretation": "Explicitly marked as auto-managed infra — should not be triaged as a user issue."
+      },
+      {
+        "text": "No action to take - Do not assign to an agent.",
+        "source": "issue body",
+        "interpretation": "Bot explicitly requests this issue not be assigned for action."
+      },
+      {
+        "text": "created by github-actions[bot]",
+        "source": "issue metadata",
+        "interpretation": "Not a human reporter — automated CI artifact."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "This is an automatically managed tracking issue that must remain open. The bot explicitly states 'Do not close this issue manually'. No user action required."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement and area/Build labels to classify the automated tracking issue",
+        "risk": "low",
+        "confidence": 0.8,
+        "labels": [
+          "type/enhancement",
+          "area/Build"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>

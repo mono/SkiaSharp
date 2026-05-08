@@ -1,0 +1,284 @@
+# Issue Triage Report — #2351
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-29T20:10:00Z |
+| Type | type/bug (0.75 (75%)) |
+| Area | area/SkiaSharp.Views.Maui (0.65 (65%)) |
+| Suggested action | needs-info (0.90 (90%)) |
+
+**Issue Summary:** MAUI Android release build hangs indefinitely when deploying to device; reporter disabled Trimming and AOT but the hang persists across recent Visual Studio 2022 updates.
+
+**Analysis:** Reporter describes an indefinite hang during Android release mode deployment in a MAUI app using SkiaSharp. The hang appears during the build/deploy pipeline, not at runtime. Critical information is missing: no SkiaSharp version, no MAUI/dotnet version, no error message, no minimal repro. The issue title is also empty.
+
+**Recommendations:** **needs-info** — Critical information is missing: no SkiaSharp version, no .NET/MAUI version, no error output, no minimal repro, and the issue title is empty. Cannot investigate or reproduce without this information.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Maui |
+| Platforms | os/Android |
+| Backends | — |
+| Tenets | — |
+| Partner | partner/maui |
+
+## Evidence
+
+### Reproduction
+
+1. Create a MAUI app using SkiaSharp
+2. Configure release build with AndroidUseAapt2=True, Trimming=false, AOT=false
+3. Deploy to Android device in release mode
+4. Observe indefinite hang
+
+**Environment:** Visual Studio 2022, Android minSdkVersion=21, MAUI, Trimming=false, AOT=false
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2351#issue-1510085424 — Original issue with screenshots showing build/deploy output
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | other |
+| Error message | Endless wait until killing processes manually during release mode Android deployment |
+| Repro quality | partial |
+| Target frameworks | net-android |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | No SkiaSharp or MAUI version numbers were provided in the report. Cannot determine if this is still relevant to current versions. |
+
+## Analysis
+
+### Technical Summary
+
+Reporter describes an indefinite hang during Android release mode deployment in a MAUI app using SkiaSharp. The hang appears during the build/deploy pipeline, not at runtime. Critical information is missing: no SkiaSharp version, no MAUI/dotnet version, no error message, no minimal repro. The issue title is also empty.
+
+### Rationale
+
+The report describes behavior consistent with a real bug (hang during release deployment) but lacks the critical details needed to investigate or reproduce: no SkiaSharp version number, no .NET/MAUI SDK version, no error output, no stack trace, and no minimal reproduction project. The screenshots are not text-searchable. The title is empty. Without these details the issue cannot be progressed. The `needs-info` action is appropriate.
+
+### Key Signals
+
+- "Endless wait until killing processes manually." — **issue body** (The hang is in the build/deployment process, not a runtime crash. Could relate to native library linking, AOT compilation step, or a linker/aapt2 tool hanging.)
+- "We run our Maui release builds currently without Trimming and without AOT." — **issue body** (Reporter already tried disabling trimming and AOT, ruling those out as direct causes.)
+- "We've had this issue for the past few Visual Studio updates. It did work once some time ago." — **issue body** (Regression claim — worked at some prior point, broke with VS updates. No version pinpointed.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Android.cs` | — | context | Android MAUI canvas view handler — no blocking operations or infinite loops visible in handler lifecycle (ConnectHandler/DisconnectHandler). Hang is unlikely to originate from view code itself. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Android.cs` | — | context | GL view handler for Android MAUI. Present as an alternative code path. No obvious hang source visible without build tooling logs. |
+
+### Workarounds
+
+- Try explicitly setting <AndroidLinkTool>r8</AndroidLinkTool> instead of proguard if not already set
+- Try building with DOTNET_CLI_TELEMETRY_OPTOUT=1 to rule out telemetry upload hangs
+- Use `dotnet build -t:Run -f net-android` from CLI to get more verbose output and identify the hanging task
+
+### Next Questions
+
+- Which version of SkiaSharp NuGet package is in use?
+- Which .NET/MAUI SDK version? (dotnet --version, workload list)
+- What does the build output show when it hangs? Any MSBuild task stuck?
+- Is the hang during MSBuild compilation or during device deployment (adb)?
+- Does the issue occur with a minimal project that only uses SkiaSharp, or in the full production app?
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.90 (90%) |
+| Reason | Critical information is missing: no SkiaSharp version, no .NET/MAUI version, no error output, no minimal repro, and the issue title is empty. Cannot investigate or reproduce without this information. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- SkiaSharp NuGet package version (e.g. 2.88.x or 3.x)
+- .NET SDK version and MAUI workload version (`dotnet --version`, `dotnet workload list`)
+- Full MSBuild output showing which task is hanging
+- Whether the hang is during compilation or device deployment (adb step)
+- Minimal reproduction project or steps to isolate from the production app
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.85 (85%) | Apply bug, MAUI views, and Android labels | labels=type/bug, area/SkiaSharp.Views.Maui, os/Android, partner/maui |
+| add-comment | medium | 0.90 (90%) | Request missing version and reproduction information | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for the report! To help investigate the hang during Android release deployment, could you please provide:
+
+1. **SkiaSharp version** — which NuGet package version is referenced in your project?
+2. **.NET SDK and MAUI workload versions** — output of `dotnet --version` and `dotnet workload list`
+3. **Full MSBuild output** — run the build from the CLI with `dotnet build -f net-android -c Release -v d 2>&1 | tee build.log` and share the section where it hangs (which MSBuild task is stuck?)
+4. **Hang location** — does it hang during compilation/linking, or during the device deployment (adb install) step?
+5. **Minimal repro** — does the hang happen in a fresh minimal MAUI project with only SkiaSharp added, or only in the production app?
+
+Also, could you add a title to this issue? The current title is `[BUG] ` with nothing after it.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2351,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-29T20:10:00Z"
+  },
+  "summary": "MAUI Android release build hangs indefinitely when deploying to device; reporter disabled Trimming and AOT but the hang persists across recent Visual Studio 2022 updates.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.75
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.65
+    },
+    "platforms": [
+      "os/Android"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "other",
+      "errorMessage": "Endless wait until killing processes manually during release mode Android deployment",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net-android"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI app using SkiaSharp",
+        "Configure release build with AndroidUseAapt2=True, Trimming=false, AOT=false",
+        "Deploy to Android device in release mode",
+        "Observe indefinite hang"
+      ],
+      "environmentDetails": "Visual Studio 2022, Android minSdkVersion=21, MAUI, Trimming=false, AOT=false",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2351#issue-1510085424",
+          "description": "Original issue with screenshots showing build/deploy output"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unknown",
+      "relevanceReason": "No SkiaSharp or MAUI version numbers were provided in the report. Cannot determine if this is still relevant to current versions."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter describes an indefinite hang during Android release mode deployment in a MAUI app using SkiaSharp. The hang appears during the build/deploy pipeline, not at runtime. Critical information is missing: no SkiaSharp version, no MAUI/dotnet version, no error message, no minimal repro. The issue title is also empty.",
+    "rationale": "The report describes behavior consistent with a real bug (hang during release deployment) but lacks the critical details needed to investigate or reproduce: no SkiaSharp version number, no .NET/MAUI SDK version, no error output, no stack trace, and no minimal reproduction project. The screenshots are not text-searchable. The title is empty. Without these details the issue cannot be progressed. The `needs-info` action is appropriate.",
+    "keySignals": [
+      {
+        "text": "Endless wait until killing processes manually.",
+        "source": "issue body",
+        "interpretation": "The hang is in the build/deployment process, not a runtime crash. Could relate to native library linking, AOT compilation step, or a linker/aapt2 tool hanging."
+      },
+      {
+        "text": "We run our Maui release builds currently without Trimming and without AOT.",
+        "source": "issue body",
+        "interpretation": "Reporter already tried disabling trimming and AOT, ruling those out as direct causes."
+      },
+      {
+        "text": "We've had this issue for the past few Visual Studio updates. It did work once some time ago.",
+        "source": "issue body",
+        "interpretation": "Regression claim — worked at some prior point, broke with VS updates. No version pinpointed."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Android.cs",
+        "finding": "Android MAUI canvas view handler — no blocking operations or infinite loops visible in handler lifecycle (ConnectHandler/DisconnectHandler). Hang is unlikely to originate from view code itself.",
+        "relevance": "context"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Android.cs",
+        "finding": "GL view handler for Android MAUI. Present as an alternative code path. No obvious hang source visible without build tooling logs.",
+        "relevance": "context"
+      }
+    ],
+    "nextQuestions": [
+      "Which version of SkiaSharp NuGet package is in use?",
+      "Which .NET/MAUI SDK version? (dotnet --version, workload list)",
+      "What does the build output show when it hangs? Any MSBuild task stuck?",
+      "Is the hang during MSBuild compilation or during device deployment (adb)?",
+      "Does the issue occur with a minimal project that only uses SkiaSharp, or in the full production app?"
+    ],
+    "workarounds": [
+      "Try explicitly setting <AndroidLinkTool>r8</AndroidLinkTool> instead of proguard if not already set",
+      "Try building with DOTNET_CLI_TELEMETRY_OPTOUT=1 to rule out telemetry upload hangs",
+      "Use `dotnet build -t:Run -f net-android` from CLI to get more verbose output and identify the hanging task"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.9,
+      "reason": "Critical information is missing: no SkiaSharp version, no .NET/MAUI version, no error output, no minimal repro, and the issue title is empty. Cannot investigate or reproduce without this information.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "SkiaSharp NuGet package version (e.g. 2.88.x or 3.x)",
+      ".NET SDK version and MAUI workload version (`dotnet --version`, `dotnet workload list`)",
+      "Full MSBuild output showing which task is hanging",
+      "Whether the hang is during compilation or device deployment (adb step)",
+      "Minimal reproduction project or steps to isolate from the production app"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, MAUI views, and Android labels",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Maui",
+          "os/Android",
+          "partner/maui"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request missing version and reproduction information",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thank you for the report! To help investigate the hang during Android release deployment, could you please provide:\n\n1. **SkiaSharp version** — which NuGet package version is referenced in your project?\n2. **.NET SDK and MAUI workload versions** — output of `dotnet --version` and `dotnet workload list`\n3. **Full MSBuild output** — run the build from the CLI with `dotnet build -f net-android -c Release -v d 2>&1 | tee build.log` and share the section where it hangs (which MSBuild task is stuck?)\n4. **Hang location** — does it hang during compilation/linking, or during the device deployment (adb install) step?\n5. **Minimal repro** — does the hang happen in a fresh minimal MAUI project with only SkiaSharp added, or only in the production app?\n\nAlso, could you add a title to this issue? The current title is `[BUG] ` with nothing after it."
+      }
+    ]
+  }
+}
+```
+
+</details>
