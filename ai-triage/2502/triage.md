@@ -1,0 +1,349 @@
+# Issue Triage Report — #2502
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-30T08:15:00Z |
+| Type | type/bug (0.85 (85%)) |
+| Area | area/libSkiaSharp.native (0.90 (90%)) |
+| Suggested action | needs-investigation (0.80 (80%)) |
+
+**Issue Summary:** Azure Functions local host on macOS (Apple M1, .NET 6.0) fails to load libSkiaSharp.dylib with a double-lib-prefix error (liblibSkiaSharp), while the same project runs correctly on Windows.
+
+**Analysis:** The Azure Functions local host on macOS does not use the standard .NET runtimes/{rid}/native/ directory resolution, causing libSkiaSharp.dylib (placed in runtimes/osx/native/) to not be found. The double-lib prefix in the error (liblibSkiaSharp) is a fallback artifact from the macOS dlopen search. The fix is to ensure the native dylib is copied to the function output directory, typically via CopyLocalLockFileAssemblies or direct file copy.
+
+**Recommendations:** **needs-investigation** — Real bug with clear repro on macOS Azure Functions local host. Workaround exists but should be validated and documented. Root cause is in Azure Functions host behavior not standard SkiaSharp.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/macOS |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create an Azure Functions v3 project targeting net6.0
+2. Add SkiaSharp 2.88.4-preview.76 NuGet package
+3. Use SKImageInfo, SKSurface, SKCanvas in the function handler
+4. Run the function locally on macOS with Apple M1 chip (macOS Ventura 13.2)
+5. Observe DllNotFoundException when function is triggered
+
+**Environment:** macOS Ventura 13.2, Apple M1 (ARM64), .NET 6.0, Azure Functions v3, SkiaSharp 2.88.4-preview.76, Visual Studio 2022 for Mac Preview 17.6
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1001 — Related: Unable to load DLL libSkiaSharp in Azure Functions on Windows
+- https://github.com/mono/SkiaSharp/issues/574 — Related: Azure Functions local macOS libSkiaSharp not found (older version, closed)
+- https://github.com/mono/monodevelop/issues/6673 — Reporter referenced monodevelop issue as similar context
+
+**Attachments:**
+- AzureFunction.zip — https://github.com/mono/SkiaSharp/files/11824555/AzureFunction.zip — Minimal Azure Functions repro project
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | exception |
+| Error message | Unable to load shared library 'libSkiaSharp' or one of its dependencies. dlopen(liblibSkiaSharp, 0x0001): tried: 'liblibSkiaSharp' (no such file) |
+| Repro quality | partial |
+| Target frameworks | net6.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.4-preview.76 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The Azure Functions local host native library resolution mechanism has not changed in SkiaSharp; issue likely persists on current versions. |
+
+## Analysis
+
+### Technical Summary
+
+The Azure Functions local host on macOS does not use the standard .NET runtimes/{rid}/native/ directory resolution, causing libSkiaSharp.dylib (placed in runtimes/osx/native/) to not be found. The double-lib prefix in the error (liblibSkiaSharp) is a fallback artifact from the macOS dlopen search. The fix is to ensure the native dylib is copied to the function output directory, typically via CopyLocalLockFileAssemblies or direct file copy.
+
+### Rationale
+
+Classified as type/bug in area/libSkiaSharp.native because the native binary is included in the package but the Azure Functions local host fails to resolve it on macOS. This is a deployment/hosting interaction issue — the package is correct, but the host does not use standard .NET runtimes/ directory resolution. Severity is medium because it only affects local Azure Functions development on macOS (a specific hosting environment), and workarounds exist.
+
+### Key Signals
+
+- "dlopen(liblibSkiaSharp, 0x0001): tried: 'liblibSkiaSharp' (no such file)" — **issue body** (Double 'lib' prefix indicates .NET runtime is adding 'lib' to the already-prefixed name 'libSkiaSharp' as a fallback. The native binary is simply not on any search path recognized by the Azure Functions local host.)
+- "When running local Azure Function (.NET 6.0) in Windows OS, SkiaSharp works fine without any issue" — **issue body** (Platform-specific: Windows uses libSkiaSharp.dll in a flat directory structure that the Functions host finds. macOS dylib is in runtimes/osx/native/ which the host doesn't resolve.)
+- "Mac mini (Apple M1 chip)" — **issue body** (ARM64 macOS. SkiaSharp.NativeAssets.macOS ships a universal binary (Intel + Apple Silicon), so architecture is not the issue — it is the path resolution.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SkiaApi.cs` | 10-12 | direct | On non-Apple TFMs (net6.0 plain), DllImport uses 'libSkiaSharp'. On Apple-specific TFMs it uses '@rpath/libSkiaSharp.framework/libSkiaSharp'. Azure Functions targeting net6.0 uses the plain name, which requires libSkiaSharp.dylib in the runtime search path. |
+| `documentation/dev/packages.md` | — | direct | SkiaSharp.NativeAssets.macOS is auto-included for non-platform TFMs (net6.0). However, it deploys the dylib into runtimes/osx/native/ which may not be in the Azure Functions local host search path. |
+
+### Workarounds
+
+- Add <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> to the Azure Functions .csproj to copy all native assets into the output bin directory.
+- Manually copy libSkiaSharp.dylib from runtimes/osx-arm64/native/ (or runtimes/osx/native/) into the function output directory so the Azure Functions host can find it.
+- Use a post-build script or MSBuild target to copy the native dylib alongside the function assembly.
+
+### Next Questions
+
+- Does adding <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> resolve the issue for the reporter?
+- Does this also affect deployed Azure Functions on Linux (App Service on Linux / containers)?
+- Which version of the Azure Functions host (func) CLI is being used?
+
+### Resolution Proposals
+
+**Hypothesis:** The Azure Functions local host bypasses standard .NET native library resolution and does not pick up files from runtimes/{rid}/native/. Forcing CopyLocalLockFileAssemblies copies the dylib into the flat output directory where the host can find it.
+
+1. **Add CopyLocalLockFileAssemblies to project** — workaround, confidence 0.80 (80%), cost/xs, validated=untested
+   - Add <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> inside a <PropertyGroup> in the Azure Functions .csproj. This forces the build to copy all native assets (including libSkiaSharp.dylib) to the output directory.
+
+```csharp
+<PropertyGroup>
+  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+</PropertyGroup>
+```
+2. **Add MSBuild target to copy native dylib** — workaround, confidence 0.70 (70%), cost/s, validated=untested
+   - Add an MSBuild AfterBuild target to the .csproj that explicitly copies libSkiaSharp.dylib from the runtimes/osx/native/ NuGet cache to the output bin directory.
+
+**Recommended proposal:** Add CopyLocalLockFileAssemblies to project
+
+**Why:** Single-line fix, well-known workaround for Azure Functions native library loading, minimal side effects.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.80 (80%) |
+| Reason | Real bug with clear repro on macOS Azure Functions local host. Workaround exists but should be validated and documented. Root cause is in Azure Functions host behavior not standard SkiaSharp. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply bug, native, macOS, reliability labels | labels=type/bug, area/libSkiaSharp.native, os/macOS, tenet/reliability |
+| add-comment | medium | 0.80 (80%) | Suggest CopyLocalLockFileAssemblies workaround and link related issues | — |
+| link-related | low | 0.90 (90%) | Cross-reference related Azure Functions native loading issue | linkedIssue=#1001 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report. This is a known issue with the Azure Functions local host on macOS — the host does not use the standard .NET `runtimes/{rid}/native/` resolution path, so `libSkiaSharp.dylib` (which is placed there by `SkiaSharp.NativeAssets.macOS`) is not found.
+
+A common workaround is to add `<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>` to your Azure Functions `.csproj`:
+
+```xml
+<PropertyGroup>
+  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+</PropertyGroup>
+```
+
+This forces the build to copy all native assets (including `libSkiaSharp.dylib`) directly into the function output directory where the host can find them.
+
+See also: #1001 (similar issue on Windows) and #574 (older macOS report).
+
+Could you try this and let us know if it resolves the issue?
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2502,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-30T08:15:00Z"
+  },
+  "summary": "Azure Functions local host on macOS (Apple M1, .NET 6.0) fails to load libSkiaSharp.dylib with a double-lib-prefix error (liblibSkiaSharp), while the same project runs correctly on Windows.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/macOS"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "Unable to load shared library 'libSkiaSharp' or one of its dependencies. dlopen(liblibSkiaSharp, 0x0001): tried: 'liblibSkiaSharp' (no such file)",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an Azure Functions v3 project targeting net6.0",
+        "Add SkiaSharp 2.88.4-preview.76 NuGet package",
+        "Use SKImageInfo, SKSurface, SKCanvas in the function handler",
+        "Run the function locally on macOS with Apple M1 chip (macOS Ventura 13.2)",
+        "Observe DllNotFoundException when function is triggered"
+      ],
+      "environmentDetails": "macOS Ventura 13.2, Apple M1 (ARM64), .NET 6.0, Azure Functions v3, SkiaSharp 2.88.4-preview.76, Visual Studio 2022 for Mac Preview 17.6",
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/11824555/AzureFunction.zip",
+          "filename": "AzureFunction.zip",
+          "description": "Minimal Azure Functions repro project"
+        }
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1001",
+          "description": "Related: Unable to load DLL libSkiaSharp in Azure Functions on Windows"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/574",
+          "description": "Related: Azure Functions local macOS libSkiaSharp not found (older version, closed)"
+        },
+        {
+          "url": "https://github.com/mono/monodevelop/issues/6673",
+          "description": "Reporter referenced monodevelop issue as similar context"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.4-preview.76"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Azure Functions local host native library resolution mechanism has not changed in SkiaSharp; issue likely persists on current versions."
+    }
+  },
+  "analysis": {
+    "summary": "The Azure Functions local host on macOS does not use the standard .NET runtimes/{rid}/native/ directory resolution, causing libSkiaSharp.dylib (placed in runtimes/osx/native/) to not be found. The double-lib prefix in the error (liblibSkiaSharp) is a fallback artifact from the macOS dlopen search. The fix is to ensure the native dylib is copied to the function output directory, typically via CopyLocalLockFileAssemblies or direct file copy.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaApi.cs",
+        "lines": "10-12",
+        "finding": "On non-Apple TFMs (net6.0 plain), DllImport uses 'libSkiaSharp'. On Apple-specific TFMs it uses '@rpath/libSkiaSharp.framework/libSkiaSharp'. Azure Functions targeting net6.0 uses the plain name, which requires libSkiaSharp.dylib in the runtime search path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/packages.md",
+        "finding": "SkiaSharp.NativeAssets.macOS is auto-included for non-platform TFMs (net6.0). However, it deploys the dylib into runtimes/osx/native/ which may not be in the Azure Functions local host search path.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "dlopen(liblibSkiaSharp, 0x0001): tried: 'liblibSkiaSharp' (no such file)",
+        "source": "issue body",
+        "interpretation": "Double 'lib' prefix indicates .NET runtime is adding 'lib' to the already-prefixed name 'libSkiaSharp' as a fallback. The native binary is simply not on any search path recognized by the Azure Functions local host."
+      },
+      {
+        "text": "When running local Azure Function (.NET 6.0) in Windows OS, SkiaSharp works fine without any issue",
+        "source": "issue body",
+        "interpretation": "Platform-specific: Windows uses libSkiaSharp.dll in a flat directory structure that the Functions host finds. macOS dylib is in runtimes/osx/native/ which the host doesn't resolve."
+      },
+      {
+        "text": "Mac mini (Apple M1 chip)",
+        "source": "issue body",
+        "interpretation": "ARM64 macOS. SkiaSharp.NativeAssets.macOS ships a universal binary (Intel + Apple Silicon), so architecture is not the issue — it is the path resolution."
+      }
+    ],
+    "workarounds": [
+      "Add <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> to the Azure Functions .csproj to copy all native assets into the output bin directory.",
+      "Manually copy libSkiaSharp.dylib from runtimes/osx-arm64/native/ (or runtimes/osx/native/) into the function output directory so the Azure Functions host can find it.",
+      "Use a post-build script or MSBuild target to copy the native dylib alongside the function assembly."
+    ],
+    "rationale": "Classified as type/bug in area/libSkiaSharp.native because the native binary is included in the package but the Azure Functions local host fails to resolve it on macOS. This is a deployment/hosting interaction issue — the package is correct, but the host does not use standard .NET runtimes/ directory resolution. Severity is medium because it only affects local Azure Functions development on macOS (a specific hosting environment), and workarounds exist.",
+    "nextQuestions": [
+      "Does adding <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> resolve the issue for the reporter?",
+      "Does this also affect deployed Azure Functions on Linux (App Service on Linux / containers)?",
+      "Which version of the Azure Functions host (func) CLI is being used?"
+    ],
+    "resolution": {
+      "hypothesis": "The Azure Functions local host bypasses standard .NET native library resolution and does not pick up files from runtimes/{rid}/native/. Forcing CopyLocalLockFileAssemblies copies the dylib into the flat output directory where the host can find it.",
+      "proposals": [
+        {
+          "title": "Add CopyLocalLockFileAssemblies to project",
+          "description": "Add <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> inside a <PropertyGroup> in the Azure Functions .csproj. This forces the build to copy all native assets (including libSkiaSharp.dylib) to the output directory.",
+          "category": "workaround",
+          "codeSnippet": "<PropertyGroup>\n  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>\n</PropertyGroup>",
+          "confidence": 0.8,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Add MSBuild target to copy native dylib",
+          "description": "Add an MSBuild AfterBuild target to the .csproj that explicitly copies libSkiaSharp.dylib from the runtimes/osx/native/ NuGet cache to the output bin directory.",
+          "category": "workaround",
+          "confidence": 0.7,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add CopyLocalLockFileAssemblies to project",
+      "recommendedReason": "Single-line fix, well-known workaround for Azure Functions native library loading, minimal side effects."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.8,
+      "reason": "Real bug with clear repro on macOS Azure Functions local host. Workaround exists but should be validated and documented. Root cause is in Azure Functions host behavior not standard SkiaSharp.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native, macOS, reliability labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/macOS",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Suggest CopyLocalLockFileAssemblies workaround and link related issues",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed report. This is a known issue with the Azure Functions local host on macOS — the host does not use the standard .NET `runtimes/{rid}/native/` resolution path, so `libSkiaSharp.dylib` (which is placed there by `SkiaSharp.NativeAssets.macOS`) is not found.\n\nA common workaround is to add `<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>` to your Azure Functions `.csproj`:\n\n```xml\n<PropertyGroup>\n  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>\n</PropertyGroup>\n```\n\nThis forces the build to copy all native assets (including `libSkiaSharp.dylib`) directly into the function output directory where the host can find them.\n\nSee also: #1001 (similar issue on Windows) and #574 (older macOS report).\n\nCould you try this and let us know if it resolves the issue?"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related Azure Functions native loading issue",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 1001
+      }
+    ]
+  }
+}
+```
+
+</details>
