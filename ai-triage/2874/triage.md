@@ -1,0 +1,318 @@
+# Issue Triage Report — #2874
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-22T19:05:00Z |
+| Type | type/bug (0.88 (88%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-investigation (0.82 (82%)) |
+
+**Issue Summary:** SKBitmap.Decode returns null for a PNG with a CRC mismatch in the IEND chunk; SKCodec.GetPixels returns ErrorInInput, while Windows Photo Viewer and Chrome successfully load the same image.
+
+**Analysis:** SKBitmap.Decode strictly rejects images where SKCodec.GetPixels returns ErrorInInput. The reported PNG is technically malformed (CRC mismatch in IEND chunk) but widely accepted by other decoders. Skia currently returns ErrorInInput rather than IncompleteInput for CRC errors, so SkiaSharp's acceptance criteria discard the decoded result. No lenient/permissive decode option is exposed in the current SkiaSharp or Skia C API surface.
+
+**Recommendations:** **needs-investigation** — Confirmed real-world repro with sample file and error code. Root cause is identified (CRC mismatch → ErrorInInput), but a fix requires investigating whether Skia exposes lenient decode options or whether accepting ErrorInInput partial results is safe.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic, os/Linux |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Obtain a PNG image with a CRC mismatch in the IEND chunk (sample attached in issue)
+2. Call SKBitmap.Decode(filename) on the image
+3. Observe that null is returned
+
+**Environment:** SkiaSharp 2.88.8 and 3.0.0-preview.3.1; Windows 11 and Linux containers; .NET 8
+
+**Repository links:**
+- https://github.com/user-attachments/files/15580112/temp.zip — Sample PNG that fails to decode (CRC mismatch in IEND chunk)
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | GetPixels = ErrorInInput |
+| Repro quality | complete |
+| Target frameworks | net8.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.8, 3.0.0-preview.3.1 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The decode logic in SKBitmap.cs has not changed its acceptance criteria (Success or IncompleteInput only) across these versions. |
+
+## Analysis
+
+### Technical Summary
+
+SKBitmap.Decode strictly rejects images where SKCodec.GetPixels returns ErrorInInput. The reported PNG is technically malformed (CRC mismatch in IEND chunk) but widely accepted by other decoders. Skia currently returns ErrorInInput rather than IncompleteInput for CRC errors, so SkiaSharp's acceptance criteria discard the decoded result. No lenient/permissive decode option is exposed in the current SkiaSharp or Skia C API surface.
+
+### Rationale
+
+The behavior is reproducible on two platforms with two SkiaSharp versions, a sample file is attached, and the failure mode is confirmed via SKCodec (ErrorInInput). The distinction from 'by design' is that other Skia-based tools (Chrome) accept the same image, indicating a possible strictness mismatch rather than a fundamentally corrupt image.
+
+### Key Signals
+
+- "GetPixels = ErrorInInput" — **comment #3 by MichaelLogutov** (Skia's PNG decoder rejects the image with an error indicating bad input data, specifically a CRC mismatch.)
+- "The PNG above contains a CRC mismatch in the IEND chunk" — **comment #4 by JimBobSquarePants** (Root cause identified: the IEND chunk CRC is wrong. The image itself may be otherwise valid, making this a strict-vs-lenient validation question.)
+- "Skia in chrome browser somehow ignores CRC mismatch" — **comment #5 by MichaelLogutov** (Chrome's Skia decode path is more permissive for PNG CRC errors. This suggests the behavior is configurable or differs across Skia versions.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKBitmap.cs` | 454-458 | direct | SKBitmap.Decode(SKCodec, SKImageInfo) returns null if result is not Success or IncompleteInput. ErrorInInput (value=2) falls outside this check and causes null return, discarding any partial decode. |
+| `binding/SkiaSharp/SKCodec.cs` | 56-63 | related | SKCodec.Pixels property throws if result is not Success or IncompleteInput — same acceptance criteria as SKBitmap. No lenient mode is exposed. |
+
+### Workarounds
+
+- Use a pre-processing step to fix the PNG CRC before passing to SkiaSharp (e.g., use a .NET PNG library like ImageSharp to re-encode the image first, then decode the re-encoded version).
+- Implement a custom PNG CRC repair routine that corrects the IEND chunk CRC in the byte stream before decoding.
+
+### Next Questions
+
+- Does Skia expose any option (e.g., via SkPngChunkReader or codec options) to suppress CRC validation?
+- Is the pixel data actually populated in the bitmap even when ErrorInInput is returned, or is it zero-filled? If populated, SkiaSharp could expose an overload that accepts ErrorInInput.
+- Does the Skia upstream version used in SkiaSharp match the version in Chrome that behaves more leniently?
+- Is this reproducible with SKImage.FromEncodedData or SKImage.FromFile as an alternative path?
+
+### Resolution Proposals
+
+**Hypothesis:** Skia returns ErrorInInput for PNG CRC mismatches. SKBitmap.Decode discards results with this code. Adding an opt-in lenient mode (e.g., accepting ErrorInInput) or exposing a repair step could resolve the issue.
+
+1. **Pre-process image with ImageSharp or similar to fix CRC then decode** — workaround, confidence 0.85 (85%), cost/s, validated=untested
+   - Load the PNG bytes using an ImageSharp (or any lenient PNG reader), re-encode to a clean PNG stream, then call SKBitmap.Decode on the clean stream. This avoids any SkiaSharp changes.
+2. **Investigate if SKBitmap.Decode could accept ErrorInInput as a partial success** — investigation, confidence 0.60 (60%), cost/m, validated=untested
+   - Check whether the pixel buffer is populated when GetPixels returns ErrorInInput. If so, an overload or flag parameter could allow callers to accept partial/error results.
+
+**Recommended proposal:** Pre-process image with ImageSharp or similar to fix CRC then decode
+
+**Why:** Actionable immediately without SkiaSharp changes. The deeper investigation (whether to accept ErrorInInput) requires examining Skia internals and is better suited for issue-repro/issue-fix.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.82 (82%) |
+| Reason | Confirmed real-world repro with sample file and error code. Root cause is identified (CRC mismatch → ErrorInInput), but a fix requires investigating whether Skia exposes lenient decode options or whether accepting ErrorInInput partial results is safe. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, SkiaSharp area, and platform labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, os/Linux |
+| add-comment | medium | 0.85 (85%) | Explain root cause and provide workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed reproduction and for attaching the sample image!
+
+The root cause has been identified: the PNG has a **CRC mismatch in the IEND chunk**, which causes Skia's PNG decoder to return `ErrorInInput`. SkiaSharp's `SKBitmap.Decode` only accepts `Success` or `IncompleteInput`, so it discards the result and returns `null`.
+
+While this is technically the correct behavior for a malformed PNG, we understand that many other tools (including Chrome) are more lenient about CRC errors.
+
+**Workaround (immediate):** You can pre-process the image using a more lenient PNG library (e.g., ImageSharp) to re-encode it before passing to SkiaSharp:
+
+```csharp
+// Using ImageSharp as a pre-processing step
+using var inputStream = File.OpenRead("temp.png");
+using var image = SixLabors.ImageSharp.Image.Load(inputStream);
+using var cleanStream = new MemoryStream();
+image.SaveAsPng(cleanStream);
+cleanStream.Position = 0;
+using var bitmap = SKBitmap.Decode(cleanStream);
+```
+
+We will investigate whether SkiaSharp can expose an option to tolerate CRC errors in PNG files.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2874,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T19:05:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKBitmap.Decode returns null for a PNG with a CRC mismatch in the IEND chunk; SKCodec.GetPixels returns ErrorInInput, while Windows Photo Viewer and Chrome successfully load the same image.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic",
+      "os/Linux"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "GetPixels = ErrorInInput",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Obtain a PNG image with a CRC mismatch in the IEND chunk (sample attached in issue)",
+        "Call SKBitmap.Decode(filename) on the image",
+        "Observe that null is returned"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.8 and 3.0.0-preview.3.1; Windows 11 and Linux containers; .NET 8",
+      "repoLinks": [
+        {
+          "url": "https://github.com/user-attachments/files/15580112/temp.zip",
+          "description": "Sample PNG that fails to decode (CRC mismatch in IEND chunk)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.8",
+        "3.0.0-preview.3.1"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The decode logic in SKBitmap.cs has not changed its acceptance criteria (Success or IncompleteInput only) across these versions."
+    }
+  },
+  "analysis": {
+    "summary": "SKBitmap.Decode strictly rejects images where SKCodec.GetPixels returns ErrorInInput. The reported PNG is technically malformed (CRC mismatch in IEND chunk) but widely accepted by other decoders. Skia currently returns ErrorInInput rather than IncompleteInput for CRC errors, so SkiaSharp's acceptance criteria discard the decoded result. No lenient/permissive decode option is exposed in the current SkiaSharp or Skia C API surface.",
+    "rationale": "The behavior is reproducible on two platforms with two SkiaSharp versions, a sample file is attached, and the failure mode is confirmed via SKCodec (ErrorInInput). The distinction from 'by design' is that other Skia-based tools (Chrome) accept the same image, indicating a possible strictness mismatch rather than a fundamentally corrupt image.",
+    "keySignals": [
+      {
+        "text": "GetPixels = ErrorInInput",
+        "source": "comment #3 by MichaelLogutov",
+        "interpretation": "Skia's PNG decoder rejects the image with an error indicating bad input data, specifically a CRC mismatch."
+      },
+      {
+        "text": "The PNG above contains a CRC mismatch in the IEND chunk",
+        "source": "comment #4 by JimBobSquarePants",
+        "interpretation": "Root cause identified: the IEND chunk CRC is wrong. The image itself may be otherwise valid, making this a strict-vs-lenient validation question."
+      },
+      {
+        "text": "Skia in chrome browser somehow ignores CRC mismatch",
+        "source": "comment #5 by MichaelLogutov",
+        "interpretation": "Chrome's Skia decode path is more permissive for PNG CRC errors. This suggests the behavior is configurable or differs across Skia versions."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "454-458",
+        "finding": "SKBitmap.Decode(SKCodec, SKImageInfo) returns null if result is not Success or IncompleteInput. ErrorInInput (value=2) falls outside this check and causes null return, discarding any partial decode.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "56-63",
+        "finding": "SKCodec.Pixels property throws if result is not Success or IncompleteInput — same acceptance criteria as SKBitmap. No lenient mode is exposed.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use a pre-processing step to fix the PNG CRC before passing to SkiaSharp (e.g., use a .NET PNG library like ImageSharp to re-encode the image first, then decode the re-encoded version).",
+      "Implement a custom PNG CRC repair routine that corrects the IEND chunk CRC in the byte stream before decoding."
+    ],
+    "nextQuestions": [
+      "Does Skia expose any option (e.g., via SkPngChunkReader or codec options) to suppress CRC validation?",
+      "Is the pixel data actually populated in the bitmap even when ErrorInInput is returned, or is it zero-filled? If populated, SkiaSharp could expose an overload that accepts ErrorInInput.",
+      "Does the Skia upstream version used in SkiaSharp match the version in Chrome that behaves more leniently?",
+      "Is this reproducible with SKImage.FromEncodedData or SKImage.FromFile as an alternative path?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia returns ErrorInInput for PNG CRC mismatches. SKBitmap.Decode discards results with this code. Adding an opt-in lenient mode (e.g., accepting ErrorInInput) or exposing a repair step could resolve the issue.",
+      "proposals": [
+        {
+          "title": "Pre-process image with ImageSharp or similar to fix CRC then decode",
+          "description": "Load the PNG bytes using an ImageSharp (or any lenient PNG reader), re-encode to a clean PNG stream, then call SKBitmap.Decode on the clean stream. This avoids any SkiaSharp changes.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate if SKBitmap.Decode could accept ErrorInInput as a partial success",
+          "description": "Check whether the pixel buffer is populated when GetPixels returns ErrorInInput. If so, an overload or flag parameter could allow callers to accept partial/error results.",
+          "category": "investigation",
+          "confidence": 0.6,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Pre-process image with ImageSharp or similar to fix CRC then decode",
+      "recommendedReason": "Actionable immediately without SkiaSharp changes. The deeper investigation (whether to accept ErrorInInput) requires examining Skia internals and is better suited for issue-repro/issue-fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Confirmed real-world repro with sample file and error code. Root cause is identified (CRC mismatch → ErrorInInput), but a fix requires investigating whether Skia exposes lenient decode options or whether accepting ErrorInInput partial results is safe.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp area, and platform labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "os/Linux"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and provide workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed reproduction and for attaching the sample image!\n\nThe root cause has been identified: the PNG has a **CRC mismatch in the IEND chunk**, which causes Skia's PNG decoder to return `ErrorInInput`. SkiaSharp's `SKBitmap.Decode` only accepts `Success` or `IncompleteInput`, so it discards the result and returns `null`.\n\nWhile this is technically the correct behavior for a malformed PNG, we understand that many other tools (including Chrome) are more lenient about CRC errors.\n\n**Workaround (immediate):** You can pre-process the image using a more lenient PNG library (e.g., ImageSharp) to re-encode it before passing to SkiaSharp:\n\n```csharp\n// Using ImageSharp as a pre-processing step\nusing var inputStream = File.OpenRead(\"temp.png\");\nusing var image = SixLabors.ImageSharp.Image.Load(inputStream);\nusing var cleanStream = new MemoryStream();\nimage.SaveAsPng(cleanStream);\ncleanStream.Position = 0;\nusing var bitmap = SKBitmap.Decode(cleanStream);\n```\n\nWe will investigate whether SkiaSharp can expose an option to tolerate CRC errors in PNG files."
+      }
+    ]
+  }
+}
+```
+
+</details>

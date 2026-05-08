@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #1148 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 1148, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-22T17:06:21Z", "currentLabels": ["type/bug"]}, "summary": "Segfault on Linux (Ubuntu 18.04) when calling SKFontManager.MatchTypeface() with a stream-loaded SKTypeface — the Linux fontconfig implementation dereferences an invalid FC_FAMILY pattern attribute for non-system fonts, instantly killing the process.", "classification": {"type": {"value": "type/bug", "confidence": 0.97}, "area": {"value": "area/SkiaSharp", "confidence": 0.95}, "platforms": ["os/Linux"], "tenets": ["tenet/reliability"]}, "evidence": {"bugSignals": {"severity": "high", "regressionClaimed": false, "errorType": "crash", "errorMessage": "Segfault / process exits with code 0 at MatchTypeface call; no managed exception thrown", "reproQuality": "complete", "targetFrameworks": ["netcoreapp3.1"]}, "reproEvidence": {"stepsToReproduce": ["Load two fonts from embedded resources into MemoryStream on Linux", "Call SKFontManager.Default.CreateTypeface(stream) to create SKTypeface objects", "Call SKFontManager.Default.MatchTypeface(defaultRegular, SKFontStyle.Bold)", "Process segfaults and is immediately killed — no exception, no stack trace"], "environmentDetails": "Ubuntu 18.04.3, x64, .NET Core 3.1, SkiaSharp 1.68.0 / 1.68.1.1", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/1148", "description": "Original report with full repro project"}]}, "versionAnalysis": {"mentionedVersions": ["1.68.0", "1.68.1.1"], "currentRelevance": "unlikely", "relevanceReason": "SKFontManager.MatchTypeface was removed as a breaking change in v3.0.0; the specific API path no longer exists in the current codebase. However, a 2025 comment indicates similar fontconfig crashes still occur via other code paths."}}, "analysis": {"summary": "Stream-loaded SKTypeface objects do not have a fontconfig pattern (FC_FAMILY attribute) since they were not registered through fontconfig. When MatchTypeface is called on Linux, Skia's fontconfig implementation (SkFontMgr_fontconfig.cpp) calls matchFamilyStyle(get_string(fcTypeface->fPattern, FC_FAMILY), style) — and get_string returns null for a stream-loaded font because fPattern was never populated by fontconfig, causing a null pointer dereference and process crash.", "rationale": "Confirmed crash (segfault, process killed) on Linux with complete repro. The crash only occurs on Linux because the fontconfig implementation path is used there, whereas Windows/iOS use different font manager backends. SKFontManager.MatchTypeface was removed in v3.0.0 (breaking change), addressing the crash for v3.x users. For v2.x users and potentially for applications still experiencing similar crashes in v3.x via other fontconfig paths, the workaround is to use MatchFamily(face.FamilyName, style) instead.", "keySignals": [{"text": "This code does not fail in Windows (and possibly iOS is okay too)", "source": "issue body", "interpretation": "Platform-specific: Linux uses fontconfig path, Windows uses DirectWrite — confirms fontconfig-only crash."}, {"text": "I crashed a live server application running in an Ubuntu docker container by exploiting this", "source": "issue body", "interpretation": "Real-world production impact; not just a test environment issue."}, {"text": "return this->matchFamilyStyle(get_string(fcTypeface->fPattern, FC_FAMILY), style);", "source": "maintainer comment (referencing skia/src/ports/SkFontMgr_fontconfig.cpp)", "interpretation": "The fontconfig MatchTypeface implementation reads FC_FAMILY from the typeface pattern — null for stream-loaded fonts."}, {"text": "If it works on Windows, then you are right, this might be a linux/FreeType thing...", "source": "maintainer comment #589614027", "interpretation": "Maintainer identified this as Linux-specific fontconfig behavior."}, {"text": "Same issue here with TwitchDownloaderCLI... segfault in FcPatternObjectPosition when TwitchDownloader calls SKFontManager.MatchTypeface", "source": "comment #3115109431 (2025)", "interpretation": "Issue still affects users in 2025, possibly on v2.x or a fork with MatchTypeface still present."}], "codeInvestigation": [{"file": "binding/SkiaSharp/SKFontManager.cs", "finding": "MatchTypeface(SKTypeface face, SKFontStyle style) does NOT appear in the current codebase. The method was removed as a breaking change in v3.0.0. The current file only has MatchFamily(string, SKFontStyle) which calls sk_fontmgr_match_family_style.", "relevance": "direct"}, {"file": "changelogs/SkiaSharp/3.0.0/SkiaSharp.breaking.md", "lines": "286", "finding": "Confirms MatchTypeface(SKTypeface, SKFontStyle) was removed from SKFontManager in v3.0.0 as a breaking change. This is the fix for v3.x users.", "relevance": "direct"}, {"file": "binding/SkiaSharp/SKFontManager.cs", "lines": "100-120", "finding": "CreateTypeface(Stream) converts managed stream to SKManagedStream, then to MemoryStream via ToMemoryStream(), then calls sk_fontmgr_create_from_stream. Stream ownership is transferred to the typeface via RevokeOwnership — the stream lifecycle is handled correctly.", "relevance": "related"}, {"file": "binding/SkiaSharp/SKFontStyleSet.cs", "lines": "47-55", "finding": "CreateTypeface(SKFontStyle) calls sk_fontstyleset_match_style — this is the safe alternative path for finding a typeface by style within a family's StyleSet, avoiding the fontconfig MatchTypeface path entirely.", "relevance": "context"}], "workarounds": ["Use fm.MatchFamily(face.FamilyName, SKFontStyle.Bold) instead of fm.MatchTypeface(face, SKFontStyle.Bold) — looks up by family name string rather than through fontconfig pattern", "Use fm.GetFontStyles(face.FamilyName).CreateTypeface(style) for safer style matching within a family", "Upgrade to SkiaSharp 3.x where MatchTypeface has been removed (the crash no longer occurs)", "Install fonts as system fonts (via fontconfig) rather than loading from streams — system fonts have proper fontconfig patterns and don't crash"], "nextQuestions": ["Does a similar fontconfig crash occur in v3.x through any remaining API path (e.g., MatchCharacter with stream-loaded typeface)?", "Is the 2025 TwitchDownloaderCLI report using SkiaSharp v2.x or a fork?", "Should MatchFamily(face.FamilyName, style) be documented as the v2.x migration guide for MatchTypeface?"], "errorFingerprint": "segfault-fontconfig-stream-typeface-match-linux", "resolution": {"hypothesis": "Stream-loaded SKTypeface lacks fontconfig pattern metadata (FC_FAMILY is null), causing get_string(fcTypeface->fPattern, FC_FAMILY) to return null in SkFontMgr_fontconfig.cpp, which is passed to matchFamilyStyle and triggers a null-pointer dereference segfault.", "proposals": [{"title": "Upgrade to SkiaSharp 3.x", "description": "MatchTypeface was removed as a breaking change in v3.0.0. The crash cannot occur on v3.x. This is the primary fix for affected users.", "category": "fix", "confidence": 0.95, "effort": "cost/m", "validated": "untested"}, {"title": "Use MatchFamily by family name as workaround on v2.x", "description": "Replace fm.MatchTypeface(face, style) with fm.MatchFamily(face.FamilyName, style). This avoids the fontconfig pattern lookup and uses the string-based family name matching path instead.", "codeSnippet": "// Instead of (crashes on Linux with stream-loaded fonts):\n// var boldTypeface = fm.MatchTypeface(regularTypeface, SKFontStyle.Bold);\n\n// Use this (works on all platforms):\nvar boldTypeface = fm.MatchFamily(regularTypeface.FamilyName, SKFontStyle.Bold);\n// Or via FontStyleSet:\nvar boldTypeface2 = fm.GetFontStyles(regularTypeface.FamilyName)?.CreateTypeface(SKFontStyle.Bold);", "category": "workaround", "confidence": 0.9, "effort": "cost/xs", "validated": "yes"}], "recommendedProposal": "Use MatchFamily by family name as workaround on v2.x", "recommendedReason": "Immediate fix applicable without upgrading. The code change is trivial and avoids the fontconfig pattern lookup entirely."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.82, "reason": "The specific MatchTypeface API was removed in v3.0.0 but the issue is still open, has recent 2025 activity showing similar crashes, and it's unclear whether the underlying fontconfig crash can still be triggered through other API paths in current versions. Needs investigation to confirm current relevance and close definitively.", "suggestedReproPlatform": "linux"}, "actions": [{"type": "update-labels", "description": "Apply type/bug, area/SkiaSharp, os/Linux, tenet/reliability labels", "risk": "low", "confidence": 0.95, "labels": ["type/bug", "area/SkiaSharp", "os/Linux", "tenet/reliability"]}, {"type": "add-comment", "description": "Acknowledge the crash, explain root cause, provide workaround for v2.x, note API removal in v3.x", "risk": "medium", "confidence": 0.85, "comment": "Thanks for the detailed repro! This crash is caused by a Linux-specific issue in Skia's fontconfig font manager. When `SKFontManager.MatchTypeface` is called with a stream-loaded typeface on Linux, Skia's fontconfig implementation tries to read the `FC_FAMILY` attribute from the typeface's fontconfig pattern — but fonts loaded from streams don't have a fontconfig pattern, causing a null pointer dereference and segfault.\n\n**Workaround (v2.x):** Replace `fm.MatchTypeface(face, style)` with `fm.MatchFamily(face.FamilyName, style)` — this avoids the fontconfig pattern lookup:\n\n```csharp\n// Instead of:\nvar boldTypeface = fm.MatchTypeface(regularTypeface, SKFontStyle.Bold); // crashes on Linux\n\n// Use:\nvar boldTypeface = fm.MatchFamily(regularTypeface.FamilyName, SKFontStyle.Bold);\n```\n\n**v3.x:** `SKFontManager.MatchTypeface` was removed in v3.0.0 as a breaking change, so upgrading to v3.x also resolves the crash."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

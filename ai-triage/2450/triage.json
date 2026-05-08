@@ -1,0 +1,171 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2450,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T21:30:31Z"
+  },
+  "summary": "SDK-style .csproj targeting .NET Framework 4.8 gets NETSDK1022 duplicate 'Content' items build error when referencing SkiaSharp, because the NativeAssets.Win32 buildTransitive targets (in 2.88.3) add native DLLs as Content items from both build/ and buildTransitive/ folders simultaneously.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/Build", "confidence": 0.90 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "NETSDK1022: Duplicate 'Content' items were included. The .NET SDK includes 'Content' items from your project directory by default.",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net48"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SDK-style csproj (Microsoft.NET.Sdk or Microsoft.NET.Sdk.Web) targeting net48",
+        "Add PackageReference to SkiaSharp 2.88.3",
+        "Build with Visual Studio 2022 or dotnet build"
+      ],
+      "environmentDetails": "Visual Studio 2022, .NET SDK 7.0.203, SkiaSharp 2.88.3, Windows Enterprise 10",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/2450", "description": "Original issue report" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3", "2.88.6", "2.88.8"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The current main branch Win32 targets uses <None> items instead of <Content> items, which would eliminate the NETSDK1022 trigger. The current folder structure also changed from net462 to net4."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.65,
+      "reason": "The current SkiaSharp.NativeAssets.Win32 buildTransitive/net4/SkiaSharp.targets uses <None Include=...> instead of <Content Include=...>, which avoids the SDK duplicate Content item detection. The 2.88.3 version appears to have used Content items causing NETSDK1022.",
+      "fixedInVersion": "3.x (unconfirmed, needs verification)"
+    }
+  },
+  "analysis": {
+    "summary": "The NETSDK1022 build error occurs because SkiaSharp.NativeAssets.Win32 (v2.88.3) packages the same .targets file into both build/net462/ and buildTransitive/net462/ directories. When an SDK-style net48 project consumes SkiaSharp transitively, both .targets files fire, each adding the Win32 native DLLs as <Content> items, resulting in duplicates detected by the SDK. The current codebase appears to have switched to <None> items for Win32, which would not trigger NETSDK1022.",
+    "rationale": "This is a build packaging bug, not a library defect. The root cause is dual inclusion of the same .targets file (build/ and buildTransitive/) plus using <Content> item type for native DLLs in SDK-style projects. The current Win32 targets file uses <None> items, suggesting it may be fixed in 3.x but no release note confirms this. Multiple community workarounds exist.",
+    "keySignals": [
+      {
+        "text": "NETSDK1022 Duplicate 'Content' items were included... 'skiasharp.nativeassets.win32\\2.88.3\\buildTransitive\\net462\\..\\..\\runtimes\\win-x86\\native\\libSkiaSharp.dll'",
+        "source": "issue body",
+        "interpretation": "The buildTransitive/net462/ targets fired and added native DLLs as Content items, which the SDK detected as duplicates."
+      },
+      {
+        "text": "If I target net7.0 the project build ok. Also using a traditional non-SDK style project targeting .NET framework 4.8 this also compiles.",
+        "source": "issue body",
+        "interpretation": "The issue is specific to SDK-style projects + net4x TFM combination, confirming it's a build targets packaging bug."
+      },
+      {
+        "text": "Maybe the correct bug fix would be removing SkiaSharp.NativeAssets.macOS nuget package dependency for net462 in SkiaSharp.nuspec",
+        "source": "comment by skeller1",
+        "interpretation": "Community correctly identified the nuspec/build targets structure as the root cause."
+      },
+      {
+        "text": "my temporary workaround is to set EnableDefaultContentItems=false",
+        "source": "comment by englebertnicolas (Jan 2025)",
+        "interpretation": "Issue still reproducible as of January 2025, possibly on 2.88.x versions."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets",
+        "finding": "Current targets file uses <None Include=...> (not <Content>) for Win32 native DLLs (libSkiaSharp.dll for x86, x64, arm64). This is the correct item type that avoids NETSDK1022 in SDK-style projects.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Win32/SkiaSharp.NativeAssets.Win32.csproj",
+        "finding": "The csproj packs the SAME buildTransitive/net4/SkiaSharp.targets file into BOTH 'buildTransitive/$(NuGetShortFolderName)/' AND 'build/$(NuGetShortFolderName)/' paths, meaning the targets fires twice for consuming projects. With <None> items this causes duplicate copy operations rather than a build error.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Linux/buildTransitive/net4/SkiaSharp.targets",
+        "lines": "61-65",
+        "finding": "Linux native assets targets still uses <Content> items for the .so files. This could trigger NETSDK1022 if Linux native assets are included in a net48 SDK-style project.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.macOS/buildTransitive/net4/SkiaSharp.targets",
+        "finding": "macOS native assets targets uses <None> items for the .dylib files, consistent with the Win32 fix.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "finding": "The SkiaSharp package includes SkiaSharp.NativeAssets.macOS and SkiaSharp.NativeAssets.Win32 as project references (conditional on TFM), which become transitive package dependencies. This explains why users get the Win32 native assets error even with just a SkiaSharp PackageReference.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Use ExcludeAssets='buildTransitive' on the SkiaSharp PackageReference and manually reference SkiaSharp.NativeAssets.Win32 (v2.88.x workaround from comments)",
+      "Set <EnableDefaultContentItems>false</EnableDefaultContentItems> for the net48 TargetFramework condition (works but requires explicitly re-adding other content items like appsettings.json)",
+      "Use a traditional non-SDK-style project file targeting .NET Framework 4.8 (reporter's workaround)",
+      "Upgrade to SkiaSharp 3.x where the Win32 targets may already be fixed (unconfirmed)"
+    ],
+    "nextQuestions": [
+      "Does SkiaSharp 3.119.x still reproduce NETSDK1022 on net48 SDK-style projects?",
+      "Does the Linux native assets <Content> items issue also trigger NETSDK1022 for Linux-targeting SDK-style net48 projects?",
+      "Was there an intentional fix commit that changed Win32 targets from <Content> to <None>?"
+    ],
+    "resolution": {
+      "hypothesis": "In SkiaSharp 2.88.x, the Win32 native assets targets used <Content> item type for native DLLs, and the same targets file was included in both build/ and buildTransitive/ NuGet package folders. SDK-style projects trigger NETSDK1022 when the same Content item is added multiple times. The current main branch uses <None> for Win32 (fixing this), but the fix needs verification in a released version.",
+      "proposals": [
+        {
+          "title": "Verify fix in current 3.x release",
+          "description": "Test an SDK-style net48 project with SkiaSharp 3.119.x to confirm NETSDK1022 no longer occurs. If confirmed fixed, close the issue with a comment pointing to the fixed version.",
+          "category": "investigation",
+          "confidence": 0.80,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Apply EnableDefaultContentItems workaround",
+          "description": "As an immediate workaround for 2.88.x users, add <EnableDefaultContentItems>false</EnableDefaultContentItems> for the net48 target and re-add required content items explicitly.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Fix Linux native assets targets to use <None> instead of <Content>",
+          "description": "If Linux native assets still uses <Content> items in the net4 targets, change to <None> items (consistent with Win32 and macOS fixes) to prevent the same NETSDK1022 error for Linux-targeting net48 projects.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Verify fix in current 3.x release",
+      "recommendedReason": "The Win32 targets already appear fixed in main branch. Verification effort is minimal and would allow closing this long-standing issue with clear guidance."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.78,
+      "reason": "The root cause is well understood (Content vs None item type in build targets), and the current code appears fixed for Win32, but no maintainer has confirmed this is fixed in a release. Community reports from Jan 2025 suggest it may still affect 2.88.x users. Needs verification against 3.119.x.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Confirmation of whether SkiaSharp 3.119.x still reproduces the issue",
+      "Whether any release notes document the fix"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, build, and platform labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/Build", "os/Windows-Classic", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workarounds and request version confirmation",
+        "risk": "medium",
+        "confidence": 0.80,
+        "comment": "Thanks for the detailed report! This is a known issue with SDK-style projects targeting .NET Framework 4.8 and SkiaSharp 2.88.x.\n\n**Root cause:** In 2.88.x, the `SkiaSharp.NativeAssets.Win32` package's build targets added native DLLs as `<Content>` items from both `build/net462/` and `buildTransitive/net462/` folders, causing NETSDK1022.\n\n**Workarounds (for 2.88.x):**\n\n1. **Disable default content items for net48** (simplest):\n```xml\n<PropertyGroup Condition=\"'$(TargetFramework)' == 'net48'\">\n  <EnableDefaultContentItems>false</EnableDefaultContentItems>\n</PropertyGroup>\n```\nNote: You'll need to re-add any project content items explicitly.\n\n2. **Use ExcludeAssets on SkiaSharp** and manually reference the Win32 native assets:\n```xml\n<PackageReference Include=\"SkiaSharp\" Version=\"2.88.x\" ExcludeAssets=\"buildTransitive\" />\n<PackageReference Include=\"SkiaSharp.NativeAssets.Win32\" Version=\"2.88.x\" />\n```\n\n**Current status:** The current codebase has changed the Win32 targets to use `<None>` items instead of `<Content>` items, which should resolve this. Could anyone confirm whether **SkiaSharp 3.119.x** still reproduces this issue? If confirmed fixed, we can close this with a version reference."
+      }
+    ]
+  }
+}

@@ -1,0 +1,323 @@
+# Issue Triage Report — #2418
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-22T20:33:00Z |
+| Type | type/bug (0.75 (75%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-investigation (0.75 (75%)) |
+
+**Issue Summary:** Reporter observes 30–50fps when drawing 50,000 lines per frame via SkiaSharp + OpenGL (GRContext.CreateGl) on Windows, compared to 60fps in Processing's P2D renderer using the same workload.
+
+**Analysis:** The reporter calls canvas.DrawLine() in a tight loop 50,000 times per frame. Each call is a separate P/Invoke into native Skia, incurring managed-to-native marshalling overhead. Processing's P2D renderer batches geometry differently, making a direct fps comparison misleading. However, the GPU utilisation of only 20–30% combined with a second commenter's report that surface.Flush() is the main bottleneck even for simple scenes suggests genuine CPU-side overhead in the SkiaSharp/Skia pipeline. The most likely workaround is to use canvas.DrawPoints(SKPointMode.Lines, ...) which passes all endpoints in a single native call, eliminating 49,999 extra P/Invoke round-trips.
+
+**Recommendations:** **needs-investigation** — Complete repro code provided and multiple users confirm related performance symptoms. A workaround exists but the underlying Skia/GL flush overhead may warrant a deeper look. The performance gap vs Processing is large enough to be worth investigating.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | backend/OpenGL |
+| Tenets | tenet/performance |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create an OpenGL window with Silk.NET GLFW bindings
+2. Set up GRContext.CreateGl with a GRGlFramebufferInfo and SKSurface
+3. In the draw loop, call canvas.DrawLine 50,000 times with random endpoints and a semi-transparent paint
+4. Call canvas.Flush() then glfw.SwapBuffers()
+5. Measure framerate — observes 30–50fps vs expected 60fps
+
+**Environment:** Windows 11 22H2, 12th Gen i7, Intel Iris Xe integrated + NVIDIA RTX 3050 discrete, SkiaSharp 2.88.3
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/files/10973702/PerformanceTest.zip — Attached repro project (F# with Silk.NET)
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | performance |
+| Error message | — |
+| Repro quality | complete |
+| Target frameworks | net7.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | No regression claimed; the drawing pipeline has not fundamentally changed. A commenter on the same issue also reports inability to upgrade past 2.80.3 due to performance, suggesting the issue pre-dates 2.88.3. |
+
+## Analysis
+
+### Technical Summary
+
+The reporter calls canvas.DrawLine() in a tight loop 50,000 times per frame. Each call is a separate P/Invoke into native Skia, incurring managed-to-native marshalling overhead. Processing's P2D renderer batches geometry differently, making a direct fps comparison misleading. However, the GPU utilisation of only 20–30% combined with a second commenter's report that surface.Flush() is the main bottleneck even for simple scenes suggests genuine CPU-side overhead in the SkiaSharp/Skia pipeline. The most likely workaround is to use canvas.DrawPoints(SKPointMode.Lines, ...) which passes all endpoints in a single native call, eliminating 49,999 extra P/Invoke round-trips.
+
+### Rationale
+
+Classified as type/bug with medium confidence because the reporter presents a concrete, reproducible workload with measurable under-performance versus a reference implementation. The 20–30% GPU utilisation pattern and the flush bottleneck reports from other users point to a real issue beyond normal comparison variability. Severity is medium because a workaround (DrawPoints batching) likely alleviates the symptom.
+
+### Key Signals
+
+- "SkiaSharp performance ranges between 30-50fps … only uses 20-30% of the GPU" — **issue body** (Low GPU utilisation despite high draw count strongly suggests CPU-side bottleneck, not GPU throughput limitation.)
+- "surface flush seems to be the big bottleneck and it's barely doing anything (clear screen, and a simple drawimage)" — **comment by cyraid** (Independent confirming signal that the Skia/GL pipeline incurs overhead beyond what the draw operations themselves explain; warrants deeper investigation.)
+- "we have been unable to upgrade it from 2.80.3 because of performance reasons" — **comment by TommiGustafsson-HMP** (Suggests a possible performance regression introduced between 2.80.3 and later versions, though no bisection data is provided.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKCanvas.cs` | 88-98 | direct | DrawLine(SKPoint, SKPoint, SKPaint) delegates to DrawLine(float, float, float, float, SKPaint), which is a single P/Invoke to sk_canvas_draw_line per call. Calling this 50,000 times per frame results in 50,000 managed-to-native round-trips. No batching at the C# layer. |
+| `binding/SkiaSharp/SKCanvas.cs` | 414-425 | direct | DrawPoints(SKPointMode.Lines, SKPoint[], SKPaint) passes all points in a single P/Invoke using a fixed pointer. SKPointMode.Lines interprets the array as pairs of endpoints. This is the batched alternative to calling DrawLine in a loop. |
+
+### Workarounds
+
+- Replace the DrawLine loop with a single canvas.DrawPoints(SKPointMode.Lines, pointsArray, paint) call, passing all 100,000 endpoints (50,000 line pairs) in one array. This eliminates 49,999 P/Invoke round-trips per frame.
+- Pre-allocate the SKPoint array outside the loop to avoid per-frame GC allocation.
+- Avoid semi-transparent paint (alpha=10) if possible — transparent blending is more expensive on the GPU than opaque strokes.
+
+### Next Questions
+
+- Does using DrawPoints(SKPointMode.Lines, ...) instead of a DrawLine loop close the performance gap?
+- Is the flush overhead present when using a CPU raster surface (no GRContext), or only with the GL backend?
+- Is there a measurable regression between SkiaSharp 2.80.3 and 2.88.3 on the same workload?
+
+### Resolution Proposals
+
+**Hypothesis:** The primary bottleneck is 50,000 separate P/Invoke calls per frame. Batching them into a single DrawPoints call should substantially improve performance. If flush is still slow after batching, the issue is in Skia's GL command submission pipeline.
+
+1. **Batch lines with DrawPoints** — workaround, confidence 0.85 (85%), cost/xs, validated=yes
+   - Replace the DrawLine loop with canvas.DrawPoints(SKPointMode.Lines, points, paint). Build the SKPoint array with all start/end coordinates before calling. This reduces 50,000 native calls to 1.
+2. **Investigate Skia GL flush overhead** — investigation, confidence 0.70 (70%), cost/m, validated=untested
+   - Profile GRContext.Flush() in isolation to determine if overhead is in Skia's GPU command submission or in the OpenGL driver swap. Bisect between Skia milestone versions to identify any regression.
+
+**Recommended proposal:** Batch lines with DrawPoints
+
+**Why:** Directly addresses the most likely root cause (P/Invoke overhead) with minimal code change. Quick to validate by the reporter.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.75 (75%) |
+| Reason | Complete repro code provided and multiple users confirm related performance symptoms. A workaround exists but the underlying Skia/GL flush overhead may warrant a deeper look. The performance gap vs Processing is large enough to be worth investigating. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply performance bug labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, backend/OpenGL, tenet/performance |
+| add-comment | medium | 0.80 (80%) | Suggest DrawPoints batching workaround and ask for bisection data | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed repro!
+
+The most likely explanation for the performance gap is **50,000 separate P/Invoke calls per frame** — each `canvas.DrawLine()` call crosses the managed-to-native boundary individually. Processing's P2D renderer batches geometry internally, which is why the comparison isn't apples-to-apples.
+
+**Workaround to try:** Replace the DrawLine loop with a single `canvas.DrawPoints` call:
+
+```fsharp
+// Build an array of 100,000 points (start/end pairs for each line)
+let points = Array.zeroCreate<SKPoint> 100_000
+for i in 0..49_999 do
+    points.[i * 2]     <- SKPoint(randomFloat (int width), randomFloat (int height))
+    points.[i * 2 + 1] <- SKPoint(randomFloat (int width), randomFloat (int height))
+canvas.DrawPoints(SKPointMode.Lines, points, linePaint)
+```
+
+This passes all endpoints in a single native call, eliminating ~49,999 redundant round-trips.
+
+If you still see poor performance after this change, could you also:
+1. Test with SkiaSharp 2.80.3 on the same workload to check for a regression.
+2. Time `canvas.Flush()` in isolation (without the draw loop) to see how much overhead it contributes.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2418,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T20:33:00Z"
+  },
+  "summary": "Reporter observes 30–50fps when drawing 50,000 lines per frame via SkiaSharp + OpenGL (GRContext.CreateGl) on Windows, compared to 60fps in Processing's P2D renderer using the same workload.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.75
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "performance",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net7.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an OpenGL window with Silk.NET GLFW bindings",
+        "Set up GRContext.CreateGl with a GRGlFramebufferInfo and SKSurface",
+        "In the draw loop, call canvas.DrawLine 50,000 times with random endpoints and a semi-transparent paint",
+        "Call canvas.Flush() then glfw.SwapBuffers()",
+        "Measure framerate — observes 30–50fps vs expected 60fps"
+      ],
+      "environmentDetails": "Windows 11 22H2, 12th Gen i7, Intel Iris Xe integrated + NVIDIA RTX 3050 discrete, SkiaSharp 2.88.3",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/10973702/PerformanceTest.zip",
+          "description": "Attached repro project (F# with Silk.NET)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "No regression claimed; the drawing pipeline has not fundamentally changed. A commenter on the same issue also reports inability to upgrade past 2.80.3 due to performance, suggesting the issue pre-dates 2.88.3."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter calls canvas.DrawLine() in a tight loop 50,000 times per frame. Each call is a separate P/Invoke into native Skia, incurring managed-to-native marshalling overhead. Processing's P2D renderer batches geometry differently, making a direct fps comparison misleading. However, the GPU utilisation of only 20–30% combined with a second commenter's report that surface.Flush() is the main bottleneck even for simple scenes suggests genuine CPU-side overhead in the SkiaSharp/Skia pipeline. The most likely workaround is to use canvas.DrawPoints(SKPointMode.Lines, ...) which passes all endpoints in a single native call, eliminating 49,999 extra P/Invoke round-trips.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "88-98",
+        "finding": "DrawLine(SKPoint, SKPoint, SKPaint) delegates to DrawLine(float, float, float, float, SKPaint), which is a single P/Invoke to sk_canvas_draw_line per call. Calling this 50,000 times per frame results in 50,000 managed-to-native round-trips. No batching at the C# layer.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "414-425",
+        "finding": "DrawPoints(SKPointMode.Lines, SKPoint[], SKPaint) passes all points in a single P/Invoke using a fixed pointer. SKPointMode.Lines interprets the array as pairs of endpoints. This is the batched alternative to calling DrawLine in a loop.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "SkiaSharp performance ranges between 30-50fps … only uses 20-30% of the GPU",
+        "source": "issue body",
+        "interpretation": "Low GPU utilisation despite high draw count strongly suggests CPU-side bottleneck, not GPU throughput limitation."
+      },
+      {
+        "text": "surface flush seems to be the big bottleneck and it's barely doing anything (clear screen, and a simple drawimage)",
+        "source": "comment by cyraid",
+        "interpretation": "Independent confirming signal that the Skia/GL pipeline incurs overhead beyond what the draw operations themselves explain; warrants deeper investigation."
+      },
+      {
+        "text": "we have been unable to upgrade it from 2.80.3 because of performance reasons",
+        "source": "comment by TommiGustafsson-HMP",
+        "interpretation": "Suggests a possible performance regression introduced between 2.80.3 and later versions, though no bisection data is provided."
+      }
+    ],
+    "rationale": "Classified as type/bug with medium confidence because the reporter presents a concrete, reproducible workload with measurable under-performance versus a reference implementation. The 20–30% GPU utilisation pattern and the flush bottleneck reports from other users point to a real issue beyond normal comparison variability. Severity is medium because a workaround (DrawPoints batching) likely alleviates the symptom.",
+    "workarounds": [
+      "Replace the DrawLine loop with a single canvas.DrawPoints(SKPointMode.Lines, pointsArray, paint) call, passing all 100,000 endpoints (50,000 line pairs) in one array. This eliminates 49,999 P/Invoke round-trips per frame.",
+      "Pre-allocate the SKPoint array outside the loop to avoid per-frame GC allocation.",
+      "Avoid semi-transparent paint (alpha=10) if possible — transparent blending is more expensive on the GPU than opaque strokes."
+    ],
+    "nextQuestions": [
+      "Does using DrawPoints(SKPointMode.Lines, ...) instead of a DrawLine loop close the performance gap?",
+      "Is the flush overhead present when using a CPU raster surface (no GRContext), or only with the GL backend?",
+      "Is there a measurable regression between SkiaSharp 2.80.3 and 2.88.3 on the same workload?"
+    ],
+    "resolution": {
+      "hypothesis": "The primary bottleneck is 50,000 separate P/Invoke calls per frame. Batching them into a single DrawPoints call should substantially improve performance. If flush is still slow after batching, the issue is in Skia's GL command submission pipeline.",
+      "proposals": [
+        {
+          "title": "Batch lines with DrawPoints",
+          "description": "Replace the DrawLine loop with canvas.DrawPoints(SKPointMode.Lines, points, paint). Build the SKPoint array with all start/end coordinates before calling. This reduces 50,000 native calls to 1.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Investigate Skia GL flush overhead",
+          "description": "Profile GRContext.Flush() in isolation to determine if overhead is in Skia's GPU command submission or in the OpenGL driver swap. Bisect between Skia milestone versions to identify any regression.",
+          "category": "investigation",
+          "confidence": 0.7,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Batch lines with DrawPoints",
+      "recommendedReason": "Directly addresses the most likely root cause (P/Invoke overhead) with minimal code change. Quick to validate by the reporter."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "Complete repro code provided and multiple users confirm related performance symptoms. A workaround exists but the underlying Skia/GL flush overhead may warrant a deeper look. The performance gap vs Processing is large enough to be worth investigating.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply performance bug labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "backend/OpenGL",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Suggest DrawPoints batching workaround and ask for bisection data",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed repro!\n\nThe most likely explanation for the performance gap is **50,000 separate P/Invoke calls per frame** — each `canvas.DrawLine()` call crosses the managed-to-native boundary individually. Processing's P2D renderer batches geometry internally, which is why the comparison isn't apples-to-apples.\n\n**Workaround to try:** Replace the DrawLine loop with a single `canvas.DrawPoints` call:\n\n```fsharp\n// Build an array of 100,000 points (start/end pairs for each line)\nlet points = Array.zeroCreate<SKPoint> 100_000\nfor i in 0..49_999 do\n    points.[i * 2]     <- SKPoint(randomFloat (int width), randomFloat (int height))\n    points.[i * 2 + 1] <- SKPoint(randomFloat (int width), randomFloat (int height))\ncanvas.DrawPoints(SKPointMode.Lines, points, linePaint)\n```\n\nThis passes all endpoints in a single native call, eliminating ~49,999 redundant round-trips.\n\nIf you still see poor performance after this change, could you also:\n1. Test with SkiaSharp 2.80.3 on the same workload to check for a regression.\n2. Time `canvas.Flush()` in isolation (without the draw loop) to see how much overhead it contributes."
+      }
+    ]
+  }
+}
+```
+
+</details>
