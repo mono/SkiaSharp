@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1982,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-22T10:42:27Z"
+  },
+  "summary": "Memory usage grows continuously on Linux when using SKBitmap, SKCanvas, and related objects, even after calling Dispose() and GC.Collect(), whereas Windows releases memory as expected; root cause is two-fold: SKBitmap.CopyTo() does not dispose the SKShader returned by ToShader(), and Linux's glibc allocator does not return freed memory to the OS as aggressively as Windows.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "platforms": ["os/Linux"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "errorMessage": "Memory footprint always kept at a high level on Linux even when GC.Collect() is called",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net6.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET 6.0 console app on Linux (Debian 10/11 or Ubuntu)",
+        "Repeatedly call SKBitmap.Decode() and new SKCanvas(bitmap) without or with Dispose()",
+        "Call GC.Collect() between iterations",
+        "Observe that Environment.WorkingSet does not decrease on Linux, but does on Windows"
+      ],
+      "environmentDetails": "SkiaSharp 2.80.3 and 2.88.0-preview.179; .NET 6.0; Debian 10 x64, Debian 11 arm64, Ubuntu 20.04; Windows 11 x64 not affected",
+      "repoLinks": [
+        {
+          "url": "https://github.com/dotnet/runtime/issues/13301#issuecomment-535641506",
+          "description": "dotnet/runtime issue documenting Linux glibc malloc behavior and MALLOC_TRIM_THRESHOLD_ workaround"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.3", "2.88.0-preview.179"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKBitmap.CopyTo() shader leak exists in the current codebase (binding/SkiaSharp/SKBitmap.cs line 204). The Linux glibc allocator behavior is inherent to the platform."
+    }
+  },
+  "analysis": {
+    "summary": "SKBitmap.CopyTo() creates an SKShader via ToShader() and assigns it directly to SKPaint.Shader without storing it in a 'using var' local, so the managed wrapper is never explicitly disposed — it leaks until GC finalization. Combined with Linux glibc's allocator behavior of holding freed memory without returning it to the OS, this causes observed working-set growth that does not occur on Windows.",
+    "rationale": "Bug classification is confirmed by code inspection: SKBitmap.CopyTo() at line 204 calls ToShader() inline in an object initializer without tracking the SKShader for disposal. The Pixels setter (lines 350-356) correctly uses 'using var shader = temp.ToShader()' but CopyTo() does not. Secondary cause is the known glibc malloc vs HeapAlloc behavior difference, which is a platform-level issue. Two distinct workarounds exist in the comments confirming the diagnosis.",
+    "keySignals": [
+      {
+        "text": "After setting MALLOC_TRIM_THRESHOLD_, I could control my memory usage in an acceptable range.",
+        "source": "issue comment by reporter",
+        "interpretation": "Confirms glibc malloc holding onto freed memory as a contributing factor."
+      },
+      {
+        "text": "It seems SKShader hangs around and will be finalized by the GC. If I use my own copy implementation which disposes the SKShader, the memory spikes are gone.",
+        "source": "issue comment by sharpSteff",
+        "interpretation": "Directly identifies the SKShader disposal bug in SKBitmap.CopyTo()."
+      },
+      {
+        "text": "using var paint = new SKPaint { Shader = ToShader(), BlendMode = SKBlendMode.Src };",
+        "source": "binding/SkiaSharp/SKBitmap.cs line 203-206",
+        "interpretation": "SKShader returned by ToShader() is not stored in a using-var local and will not be explicitly disposed when the paint is disposed."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "183-212",
+        "finding": "SKBitmap.CopyTo(SKBitmap, SKColorType) calls ToShader() inline in the SKPaint object initializer without assigning to a 'using var' local. The SKShader wrapper object is created but never explicitly Disposed — it relies on GC finalization. This is the primary SkiaSharp-side leak.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "347-358",
+        "finding": "The Pixels property setter correctly uses 'using var shader = temp.ToShader()' — demonstrating the fix pattern is already used elsewhere in the same file.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "181-184",
+        "finding": "SKPaint.Shader setter calls sk_paint_set_shader() which passes the handle to native code but does NOT dispose the managed SKShader wrapper. Disposing the SKPaint does not transitively dispose the shader object.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Set environment variable MALLOC_TRIM_THRESHOLD_=131072 to force glibc to return freed memory to the OS more aggressively (partial workaround for the allocator behavior).",
+      "Avoid SKBitmap.Copy() and use a custom copy implementation that explicitly disposes the shader: 'using var shader = bitmap.ToShader(); using var paint = new SKPaint { Shader = shader, BlendMode = SKBlendMode.Src }; canvas.DrawPaint(paint);'"
+    ],
+    "nextQuestions": [
+      "Are there other sites in the codebase where ToShader() or similar factory methods are called inline in object initializers without explicit disposal?",
+      "Should SKPaint be made to optionally own and dispose its Shader/MaskFilter/ColorFilter/ImageFilter properties?"
+    ],
+    "resolution": {
+      "hypothesis": "The immediate fix is to store the SKShader in a 'using var' local variable in SKBitmap.CopyTo(), matching the pattern already used in the Pixels setter. The Linux glibc allocator behavior is a known .NET runtime issue and not directly fixable in SkiaSharp.",
+      "proposals": [
+        {
+          "title": "Fix SKBitmap.CopyTo() to dispose the shader explicitly",
+          "description": "Change SKBitmap.CopyTo() to store the result of ToShader() in a 'using var shader' local, then assign shader to SKPaint.Shader, matching the pattern used in the Pixels setter.",
+          "category": "fix",
+          "codeSnippet": "using var shader = ToShader();\nusing var paint = new SKPaint {\n    Shader = shader,\n    BlendMode = SKBlendMode.Src\n};\ncanvas.DrawPaint(paint);",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use MALLOC_TRIM_THRESHOLD_ environment variable",
+          "description": "Users on Linux can set MALLOC_TRIM_THRESHOLD_=131072 in their environment to reduce memory retained by glibc after objects are freed.",
+          "category": "workaround",
+          "codeSnippet": "export MALLOC_TRIM_THRESHOLD_=131072",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Fix SKBitmap.CopyTo() to dispose the shader explicitly",
+      "recommendedReason": "Correct fix with minimal risk; matches the existing pattern in SKBitmap.Pixels setter. The environment-variable workaround only partially addresses the symptom."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.90,
+      "reason": "Root cause is identified: SKBitmap.CopyTo() does not dispose the SKShader created by ToShader(). Fix is trivial (one-line change) and confirmed by multiple community commenters. Fix pattern already exists in the same file.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core API, Linux, reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Linux", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workarounds and fix path",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "Thanks for the detailed report and screenshots.\n\nAfter investigating the source code, there are two contributing factors:\n\n1. **SkiaSharp bug in `SKBitmap.CopyTo()`**: The method creates an `SKShader` via `ToShader()` but assigns it inline to `SKPaint.Shader` without storing it in a `using var` local. This means the managed `SKShader` wrapper is never explicitly disposed and must wait for GC finalization. This has been confirmed by [@sharpSteff's comment](https://github.com/mono/SkiaSharp/issues/1982#issuecomment-1322328515).\n\n2. **Linux glibc allocator behavior**: Linux's `malloc` holds freed memory in its own pool and does not immediately return it to the OS, making the process `WorkingSet` stay elevated even when .NET objects are properly freed. This is a known behavior documented in [dotnet/runtime#13301](https://github.com/dotnet/runtime/issues/13301#issuecomment-535641506).\n\n**Immediate workarounds:**\n\n- Set `MALLOC_TRIM_THRESHOLD_=131072` as an environment variable to make glibc return memory more aggressively:\n  ```bash\n  export MALLOC_TRIM_THRESHOLD_=131072\n  ```\n\n- Avoid `bitmap.Copy()` and use a manual copy that disposes the shader explicitly:\n  ```csharp\n  using var shader = bitmap.ToShader();\n  using var paint = new SKPaint { Shader = shader, BlendMode = SKBlendMode.Src };\n  canvas.DrawPaint(paint);\n  ```\n\nThe fix in SkiaSharp itself is to change `SKBitmap.CopyTo()` to use `using var shader = ToShader()` (matching the pattern already used in the `Pixels` setter in the same file). We will track this for an upcoming release."
+      }
+    ]
+  }
+}
