@@ -1,0 +1,286 @@
+# Issue Triage Report — #1375
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T06:05:56Z |
+| Type | type/question (0.85 (85%)) |
+| Area | area/Build (0.82 (82%)) |
+| Suggested action | needs-info (0.78 (78%)) |
+
+**Issue Summary:** Reporter sees NU1202: Package SkiaSharp 1.68.3 is not compatible with .NET Standard 2.0 on some machines but not others; using 1.68.2.1 resolves it and no root cause was ever identified.
+
+**Analysis:** Reporter hit NU1202 (package incompatible with target framework) with SkiaSharp 1.68.3 on some machines but not others, while 1.68.2.1 worked. The maintainer suggested a package cache issue; the reporter confirmed the package bytes were identical, then went silent. No root cause was established. The issue is stale with no reporter response since July 2020 despite a follow-up in October 2020. SkiaSharp has since moved to 3.x and the 1.68.3 package is no longer relevant.
+
+**Recommendations:** **needs-info** — Reporter never responded to the maintainer's October 2020 follow-up. No MSBuild diagnostics were shared. The issue is stale and involves a long-obsolete package version; the reporter needs to confirm whether this is still relevant on current SkiaSharp versions.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/Build |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Add SkiaSharp 1.68.3 to a project targeting .NET Standard 2.0
+2. Build on some machines — NU1202 is reported
+3. Downgrading to 1.68.2.1 resolves the error
+
+**Environment:** SkiaSharp 1.68.3, .NET Standard 2.0 project. Error: NU1202 Package SkiaSharp 1.68.3 is not compatible with .NET Standard 2.0. Occurs on some machines only; 1.68.2.1 works.
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1374 — Identical question opened by same reporter from a different GitHub account; closed immediately.
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 1.68.3, 1.68.2.1 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unlikely |
+| Relevance reason | Issue references SkiaSharp 1.68.3 (released 2020); current release is 3.x. The package structure and NuGet targeting have been substantially reworked since 1.68.x, making the original environment-specific failure unlikely to recur in modern versions. |
+
+## Analysis
+
+### Technical Summary
+
+Reporter hit NU1202 (package incompatible with target framework) with SkiaSharp 1.68.3 on some machines but not others, while 1.68.2.1 worked. The maintainer suggested a package cache issue; the reporter confirmed the package bytes were identical, then went silent. No root cause was established. The issue is stale with no reporter response since July 2020 despite a follow-up in October 2020. SkiaSharp has since moved to 3.x and the 1.68.3 package is no longer relevant.
+
+### Rationale
+
+This is a build environment question: reporter experienced an intermittent NuGet compatibility error with SkiaSharp 1.68.3 that did not affect all machines. The maintainer's package cache hypothesis is plausible given the reporter confirmed the package bytes were identical. The question was never answered and the reporter went silent after July 2020. With the package now at 3.x and 1.68.3 no longer in active use, the issue's current relevance is very low. Suggesting needs-info with a request to confirm if the issue persists on current versions.
+
+### Key Signals
+
+- "error NU1202: Package SkiaSharp 1.68.3 is not compatible with .NET Standard 2.0" — **issue body** (NuGet reports no compatible assets for .NET Standard 2.0. Unusual given that .NET Standard 2.0 was always supported — points to an environment or NuGet client issue rather than a packaging defect.)
+- "On some machines … Using SkiaSharp 1.68.2.1 fixes the issue" — **issue body** (Machine-specific failure with the same package binary suggests a NuGet cache, SDK version, or client-side evaluation difference rather than a deterministic packaging bug.)
+- "the package is 100% binary the same. I'm going to dig deep into the MSBUILD diagnostics output" — **comment by ziriax** (Reporter ruled out package corruption; MSBuild environment difference most likely. MSBuild/NuGet version differences can affect TFM resolution.)
+- "Did you ever find an issue or fix something?" — **comment by mattleibow (Oct 2020)** (Maintainer followed up ~3 months later with no reply — issue is abandoned.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Build.props` | 102-129 | context | Current SkiaSharp packaging includes netstandard2.0 in BasicTargetFrameworks, confirming .NET Standard 2.0 has always been a first-class target. The current packaging logic has been significantly reworked since the 1.68.x era. |
+
+### Workarounds
+
+- Use SkiaSharp 1.68.2.1 (stated by reporter as a confirmed fix for the old version)
+- Clear the NuGet package cache (dotnet nuget locals all --clear) and restore again
+- Upgrade to SkiaSharp 3.x which has reworked packaging and broader TFM support
+
+### Resolution Proposals
+
+**Hypothesis:** Likely a NuGet client-version or package-cache state difference between machines affecting TFM resolution for SkiaSharp 1.68.3; not a deterministic packaging defect.
+
+1. **Clear NuGet cache and restore** — workaround, confidence 0.70 (70%), cost/xs, validated=yes
+   - Delete the local NuGet cache on affected machines and re-run restore. NU1202 can appear when the cache contains a partial or corrupted package expansion.
+
+```csharp
+dotnet nuget locals all --clear
+dotnet restore
+```
+2. **Upgrade to current SkiaSharp (3.x)** — alternative, confidence 0.90 (90%), cost/s, validated=untested
+   - SkiaSharp 1.68.3 is no longer maintained. Upgrading to SkiaSharp 3.x avoids old packaging issues entirely.
+
+**Recommended proposal:** Upgrade to current SkiaSharp (3.x)
+
+**Why:** Version 1.68.3 is 5+ years old. Upgrading sidesteps the historical packaging question entirely.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.78 (78%) |
+| Reason | Reporter never responded to the maintainer's October 2020 follow-up. No MSBuild diagnostics were shared. The issue is stale and involves a long-obsolete package version; the reporter needs to confirm whether this is still relevant on current SkiaSharp versions. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- MSBuild/NuGet diagnostic logs from an affected machine (reporter mentioned collecting these but never shared them)
+- NuGet client and SDK version on affected vs. working machines
+- Whether the issue persists with current SkiaSharp (3.x)
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.88 (88%) | Apply question and build area labels | labels=type/question, area/Build |
+| add-comment | medium | 0.78 (78%) | Ask reporter if still relevant; provide workarounds for the cache issue and note current version availability | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! A few follow-up questions to help diagnose this:
+
+1. Did you ever find the root cause by examining the MSBuild diagnostics output?
+2. Are you still on SkiaSharp 1.68.3, or have you since upgraded? This version is quite old — current SkiaSharp is 3.x.
+
+If you're still hitting this, a common cause of machine-specific NU1202 errors is a corrupted or partial NuGet package cache. You can try clearing it:
+
+```bash
+dotnet nuget locals all --clear
+dotnet restore
+```
+
+If the problem is still present with **SkiaSharp 2.88.x or 3.x**, please reopen with the MSBuild diagnostic log (`dotnet restore --verbosity detailed`) and the SDK/NuGet versions on an affected machine. Otherwise, upgrading to the current release is the recommended path forward.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1375,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T06:05:56Z"
+  },
+  "summary": "Reporter sees NU1202: Package SkiaSharp 1.68.3 is not compatible with .NET Standard 2.0 on some machines but not others; using 1.68.2.1 resolves it and no root cause was ever identified.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.82
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "SkiaSharp 1.68.3, .NET Standard 2.0 project. Error: NU1202 Package SkiaSharp 1.68.3 is not compatible with .NET Standard 2.0. Occurs on some machines only; 1.68.2.1 works.",
+      "stepsToReproduce": [
+        "Add SkiaSharp 1.68.3 to a project targeting .NET Standard 2.0",
+        "Build on some machines — NU1202 is reported",
+        "Downgrading to 1.68.2.1 resolves the error"
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1374",
+          "description": "Identical question opened by same reporter from a different GitHub account; closed immediately."
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.3",
+        "1.68.2.1"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Issue references SkiaSharp 1.68.3 (released 2020); current release is 3.x. The package structure and NuGet targeting have been substantially reworked since 1.68.x, making the original environment-specific failure unlikely to recur in modern versions."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter hit NU1202 (package incompatible with target framework) with SkiaSharp 1.68.3 on some machines but not others, while 1.68.2.1 worked. The maintainer suggested a package cache issue; the reporter confirmed the package bytes were identical, then went silent. No root cause was established. The issue is stale with no reporter response since July 2020 despite a follow-up in October 2020. SkiaSharp has since moved to 3.x and the 1.68.3 package is no longer relevant.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Build.props",
+        "lines": "102-129",
+        "finding": "Current SkiaSharp packaging includes netstandard2.0 in BasicTargetFrameworks, confirming .NET Standard 2.0 has always been a first-class target. The current packaging logic has been significantly reworked since the 1.68.x era.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "error NU1202: Package SkiaSharp 1.68.3 is not compatible with .NET Standard 2.0",
+        "source": "issue body",
+        "interpretation": "NuGet reports no compatible assets for .NET Standard 2.0. Unusual given that .NET Standard 2.0 was always supported — points to an environment or NuGet client issue rather than a packaging defect."
+      },
+      {
+        "text": "On some machines … Using SkiaSharp 1.68.2.1 fixes the issue",
+        "source": "issue body",
+        "interpretation": "Machine-specific failure with the same package binary suggests a NuGet cache, SDK version, or client-side evaluation difference rather than a deterministic packaging bug."
+      },
+      {
+        "text": "the package is 100% binary the same. I'm going to dig deep into the MSBUILD diagnostics output",
+        "source": "comment by ziriax",
+        "interpretation": "Reporter ruled out package corruption; MSBuild environment difference most likely. MSBuild/NuGet version differences can affect TFM resolution."
+      },
+      {
+        "text": "Did you ever find an issue or fix something?",
+        "source": "comment by mattleibow (Oct 2020)",
+        "interpretation": "Maintainer followed up ~3 months later with no reply — issue is abandoned."
+      }
+    ],
+    "rationale": "This is a build environment question: reporter experienced an intermittent NuGet compatibility error with SkiaSharp 1.68.3 that did not affect all machines. The maintainer's package cache hypothesis is plausible given the reporter confirmed the package bytes were identical. The question was never answered and the reporter went silent after July 2020. With the package now at 3.x and 1.68.3 no longer in active use, the issue's current relevance is very low. Suggesting needs-info with a request to confirm if the issue persists on current versions.",
+    "workarounds": [
+      "Use SkiaSharp 1.68.2.1 (stated by reporter as a confirmed fix for the old version)",
+      "Clear the NuGet package cache (dotnet nuget locals all --clear) and restore again",
+      "Upgrade to SkiaSharp 3.x which has reworked packaging and broader TFM support"
+    ],
+    "resolution": {
+      "hypothesis": "Likely a NuGet client-version or package-cache state difference between machines affecting TFM resolution for SkiaSharp 1.68.3; not a deterministic packaging defect.",
+      "proposals": [
+        {
+          "title": "Clear NuGet cache and restore",
+          "description": "Delete the local NuGet cache on affected machines and re-run restore. NU1202 can appear when the cache contains a partial or corrupted package expansion.",
+          "codeSnippet": "dotnet nuget locals all --clear\ndotnet restore",
+          "category": "workaround",
+          "confidence": 0.7,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Upgrade to current SkiaSharp (3.x)",
+          "description": "SkiaSharp 1.68.3 is no longer maintained. Upgrading to SkiaSharp 3.x avoids old packaging issues entirely.",
+          "category": "alternative",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Upgrade to current SkiaSharp (3.x)",
+      "recommendedReason": "Version 1.68.3 is 5+ years old. Upgrading sidesteps the historical packaging question entirely."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.78,
+      "reason": "Reporter never responded to the maintainer's October 2020 follow-up. No MSBuild diagnostics were shared. The issue is stale and involves a long-obsolete package version; the reporter needs to confirm whether this is still relevant on current SkiaSharp versions.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "MSBuild/NuGet diagnostic logs from an affected machine (reporter mentioned collecting these but never shared them)",
+      "NuGet client and SDK version on affected vs. working machines",
+      "Whether the issue persists with current SkiaSharp (3.x)"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and build area labels",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": [
+          "type/question",
+          "area/Build"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask reporter if still relevant; provide workarounds for the cache issue and note current version availability",
+        "risk": "medium",
+        "confidence": 0.78,
+        "comment": "Thanks for the report! A few follow-up questions to help diagnose this:\n\n1. Did you ever find the root cause by examining the MSBuild diagnostics output?\n2. Are you still on SkiaSharp 1.68.3, or have you since upgraded? This version is quite old — current SkiaSharp is 3.x.\n\nIf you're still hitting this, a common cause of machine-specific NU1202 errors is a corrupted or partial NuGet package cache. You can try clearing it:\n\n```bash\ndotnet nuget locals all --clear\ndotnet restore\n```\n\nIf the problem is still present with **SkiaSharp 2.88.x or 3.x**, please reopen with the MSBuild diagnostic log (`dotnet restore --verbosity detailed`) and the SDK/NuGet versions on an affected machine. Otherwise, upgrading to the current release is the recommended path forward."
+      }
+    ]
+  }
+}
+```
+
+</details>

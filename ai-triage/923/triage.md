@@ -1,0 +1,350 @@
+# Issue Triage Report — #923
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T00:59:12Z |
+| Type | type/bug (0.85 (85%)) |
+| Area | area/SkiaSharp (0.92 (92%)) |
+| Suggested action | close-as-not-a-bug (0.80 (80%)) |
+
+**Issue Summary:** SKBitmap.Resize appears to rotate a JPEG image 180 degrees for images whose EXIF orientation tag indicates BottomRight (180° rotation), because SKBitmap.Decode does not auto-apply EXIF orientation metadata.
+
+**Analysis:** SKBitmap.Decode (via SKCodec.GetPixels) decodes raw pixel data without applying the EXIF orientation transformation stored in the JPEG file. Resize then operates on these raw pixels, producing output that appears rotated relative to what viewers which auto-apply EXIF orientation display. The rotation is not introduced by Resize; it is already present in the decoded bitmap. The API exposes SKCodec.EncodedOrigin so callers can apply the transformation manually, but this is not documented prominently and is counterintuitive.
+
+**Recommendations:** **close-as-not-a-bug** — SKBitmap.Decode intentionally does not auto-apply EXIF orientation; this is by-design Skia behavior. The orientation is exposed via SKCodec.EncodedOrigin for callers to handle. The behavior is surprising but correct.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Take a JPEG photo whose EXIF orientation tag is BottomRight (3) or similar non-TopLeft value
+2. Decode with SKBitmap.Decode(stream)
+3. Call original.Resize(new SKImageInfo(width, height, ...), SKFilterQuality.High)
+4. Encode result and observe the image is rotated 180° from expected
+
+**Environment:** SkiaSharp 1.68.0 / 2.80.3, .NET Core / net6.0, Visual Studio 2017
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1517 — Related issue #1517: SkEncodedOrigin wrong for one JPEG — SKCodec.EncodedOrigin not respected by Decode
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | Image resized and rotated 180 degrees for specific JPEG files |
+| Repro quality | partial |
+| Target frameworks | netcoreapp, net6.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 1.68.0, 2.80.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | SKBitmap.Decode still does not apply EXIF orientation automatically; the API surface is unchanged. |
+
+## Analysis
+
+### Technical Summary
+
+SKBitmap.Decode (via SKCodec.GetPixels) decodes raw pixel data without applying the EXIF orientation transformation stored in the JPEG file. Resize then operates on these raw pixels, producing output that appears rotated relative to what viewers which auto-apply EXIF orientation display. The rotation is not introduced by Resize; it is already present in the decoded bitmap. The API exposes SKCodec.EncodedOrigin so callers can apply the transformation manually, but this is not documented prominently and is counterintuitive.
+
+### Rationale
+
+Multiple reporters across multiple versions describe the same unexpected rotation. The behavior is by-design (Skia does not auto-orient), but is a common usability trap. Classified as type/bug with close-as-not-a-bug because the behavior is correct but highly surprising, and a clear workaround using SKCodec.EncodedOrigin exists.
+
+### Key Signals
+
+- "resizing and rotating to 180 degree as well" — **issue body** (The JPEG has EXIF orientation = BottomRight (3), meaning the pixels are stored upside-down. SKBitmap.Decode returns raw unoriented pixels.)
+- "If I save as same image as .PNG, Now I can resize this PNG without issue" — **comment by reporter** (PNG format does not carry EXIF orientation metadata. When the JPEG is re-encoded as PNG via SkiaSharp, the raw pixel data is preserved; the viewer no longer auto-rotates based on EXIF, so it appears correct.)
+- "I can reproduce this with all images with portrait orientation. Images with Landscape orientation remain correctly aligned." — **comment by handcraftedsource** (Confirms the root cause: portrait photos are typically shot with camera physically rotated, stored with EXIF orientation = RightTop (6) or BottomRight (3).)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKBitmap.cs` | — | direct | SKBitmap.Decode(SKCodec codec) calls codec.GetPixels(bitmapInfo, bitmap.GetPixels()), which decodes raw pixel data as stored in the file without applying the EXIF/encoded origin transformation. No orientation adjustment is performed. |
+| `binding/SkiaSharp/SKCodec.cs` | — | related | SKCodec.EncodedOrigin property exposes sk_codec_get_origin(), providing the EXIF orientation value (TopLeft=1 through LeftBottom=8). This is available to callers but is not used by SKBitmap.Decode or Resize. |
+| `binding/SkiaSharp/SKBitmap.cs` | — | direct | SKBitmap.Resize(SKImageInfo info, SKSamplingOptions sampling) performs a pure pixel-level scale using sk_bitmap_resize. It does not read or apply orientation metadata — the rotation artifact comes from the pre-existing orientation in the decoded pixel data. |
+
+### Workarounds
+
+- Use SKCodec directly: check codec.EncodedOrigin after decoding and apply the corresponding transformation matrix using SKCanvas.DrawBitmap with an SKMatrix before resizing.
+- After decoding with SKBitmap.Decode(stream), use SKCodec to get the orientation, then apply a canvas transformation to produce a correctly-oriented intermediate bitmap before resizing.
+
+### Next Questions
+
+- Should SKBitmap.Decode gain an overload or flag to auto-apply EXIF orientation?
+- Is there an existing utility in SkiaSharp to apply SKEncodedOrigin transformations to a bitmap?
+
+### Resolution Proposals
+
+**Hypothesis:** The JPEG file has an EXIF orientation tag (BottomRight = 180°). SKBitmap.Decode returns raw unoriented pixels. The caller must manually apply the orientation using SKCodec.EncodedOrigin before resize.
+
+1. **Apply EXIF orientation manually after decode** — workaround, confidence 0.78 (78%), cost/s, validated=untested
+   - Use SKCodec to decode and retrieve orientation, then draw onto a correctly-sized canvas with the appropriate transform before resizing.
+
+```csharp
+using var codec = SKCodec.Create(stream);
+var info = codec.Info;
+var origin = codec.EncodedOrigin;
+
+using var bitmap = SKBitmap.Decode(codec);
+
+// If origin is not TopLeft, apply the orientation transform
+SKBitmap oriented = bitmap;
+if (origin != SKEncodedOrigin.TopLeft) {
+    bool swapDimensions = origin == SKEncodedOrigin.LeftTop ||
+                          origin == SKEncodedOrigin.RightTop ||
+                          origin == SKEncodedOrigin.RightBottom ||
+                          origin == SKEncodedOrigin.LeftBottom;
+    int w = swapDimensions ? bitmap.Height : bitmap.Width;
+    int h = swapDimensions ? bitmap.Width : bitmap.Height;
+    oriented = new SKBitmap(w, h);
+    using var canvas = new SKCanvas(oriented);
+    canvas.Clear();
+    // SKMatrix.CreateRotationDegrees based on origin value
+    // origin 3 (BottomRight) = 180 degrees
+    var matrix = SKMatrix.CreateRotationDegrees(
+        origin == SKEncodedOrigin.BottomRight ? 180f :
+        origin == SKEncodedOrigin.RightTop ? 90f :
+        origin == SKEncodedOrigin.LeftBottom ? 270f : 0f,
+        bitmap.Width / 2f, bitmap.Height / 2f);
+    canvas.SetMatrix(matrix);
+    canvas.DrawBitmap(bitmap, 0, 0);
+}
+
+using var resized = oriented.Resize(new SKImageInfo(targetWidth, targetHeight), SKSamplingOptions.Default);
+// encode and return resized
+```
+
+**Recommended proposal:** Apply EXIF orientation manually after decode
+
+**Why:** Direct fix available with existing API surface (SKCodec.EncodedOrigin). No library changes needed.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.80 (80%) |
+| Reason | SKBitmap.Decode intentionally does not auto-apply EXIF orientation; this is by-design Skia behavior. The orientation is exposed via SKCodec.EncodedOrigin for callers to handle. The behavior is surprising but correct. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply bug and SkiaSharp core labels | labels=type/bug, area/SkiaSharp, tenet/compatibility |
+| add-comment | high | 0.82 (82%) | Explain EXIF orientation is by-design and provide workaround using SKCodec.EncodedOrigin | — |
+| close-issue | medium | 0.75 (75%) | Close as not a bug — behavior is by-design | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for the report! The rotation you're seeing is not caused by `SKBitmap.Resize` itself — it comes from how JPEG files store images with an EXIF orientation tag.
+
+**Root Cause:** `SKBitmap.Decode` returns raw pixel data exactly as stored in the JPEG file, without applying the EXIF orientation transformation. For portrait photos taken with most cameras, the image pixels are stored rotated (e.g., 180° for `BottomRight` orientation), and the EXIF tag tells viewers to rotate before displaying. SkiaSharp intentionally does not auto-apply this rotation — you need to apply it yourself.
+
+**Workaround:** Use `SKCodec` directly to read the orientation and apply the correct transformation:
+
+```csharp
+using var codec = SKCodec.Create(stream);
+var origin = codec.EncodedOrigin; // Check this value
+using var bitmap = SKBitmap.Decode(codec);
+
+// If origin != SKEncodedOrigin.TopLeft, apply transform before resizing
+// e.g., for origin == SKEncodedOrigin.BottomRight (180°):
+// Draw onto a new canvas with a 180° rotation matrix
+```
+
+The `SKEncodedOrigin` enum values map to EXIF orientation tags. You can create an `SKCanvas` with the appropriate `SKMatrix.CreateRotationDegrees(...)` to produce a correctly-oriented bitmap before resizing.
+
+The fact that saving as PNG 'fixes' the issue is because PNG does not store EXIF orientation metadata, so viewing software doesn't auto-rotate it — the raw pixel layout is used directly.
+
+This behavior may be improved with a helper API in a future release. For now, please use `SKCodec.EncodedOrigin` to handle orientation manually.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 923,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T00:59:12Z"
+  },
+  "summary": "SKBitmap.Resize appears to rotate a JPEG image 180 degrees for images whose EXIF orientation tag indicates BottomRight (180° rotation), because SKBitmap.Decode does not auto-apply EXIF orientation metadata.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "Image resized and rotated 180 degrees for specific JPEG files",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "netcoreapp",
+        "net6.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Take a JPEG photo whose EXIF orientation tag is BottomRight (3) or similar non-TopLeft value",
+        "Decode with SKBitmap.Decode(stream)",
+        "Call original.Resize(new SKImageInfo(width, height, ...), SKFilterQuality.High)",
+        "Encode result and observe the image is rotated 180° from expected"
+      ],
+      "environmentDetails": "SkiaSharp 1.68.0 / 2.80.3, .NET Core / net6.0, Visual Studio 2017",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1517",
+          "description": "Related issue #1517: SkEncodedOrigin wrong for one JPEG — SKCodec.EncodedOrigin not respected by Decode"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.0",
+        "2.80.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKBitmap.Decode still does not apply EXIF orientation automatically; the API surface is unchanged."
+    }
+  },
+  "analysis": {
+    "summary": "SKBitmap.Decode (via SKCodec.GetPixels) decodes raw pixel data without applying the EXIF orientation transformation stored in the JPEG file. Resize then operates on these raw pixels, producing output that appears rotated relative to what viewers which auto-apply EXIF orientation display. The rotation is not introduced by Resize; it is already present in the decoded bitmap. The API exposes SKCodec.EncodedOrigin so callers can apply the transformation manually, but this is not documented prominently and is counterintuitive.",
+    "rationale": "Multiple reporters across multiple versions describe the same unexpected rotation. The behavior is by-design (Skia does not auto-orient), but is a common usability trap. Classified as type/bug with close-as-not-a-bug because the behavior is correct but highly surprising, and a clear workaround using SKCodec.EncodedOrigin exists.",
+    "keySignals": [
+      {
+        "text": "resizing and rotating to 180 degree as well",
+        "source": "issue body",
+        "interpretation": "The JPEG has EXIF orientation = BottomRight (3), meaning the pixels are stored upside-down. SKBitmap.Decode returns raw unoriented pixels."
+      },
+      {
+        "text": "If I save as same image as .PNG, Now I can resize this PNG without issue",
+        "source": "comment by reporter",
+        "interpretation": "PNG format does not carry EXIF orientation metadata. When the JPEG is re-encoded as PNG via SkiaSharp, the raw pixel data is preserved; the viewer no longer auto-rotates based on EXIF, so it appears correct."
+      },
+      {
+        "text": "I can reproduce this with all images with portrait orientation. Images with Landscape orientation remain correctly aligned.",
+        "source": "comment by handcraftedsource",
+        "interpretation": "Confirms the root cause: portrait photos are typically shot with camera physically rotated, stored with EXIF orientation = RightTop (6) or BottomRight (3)."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "SKBitmap.Decode(SKCodec codec) calls codec.GetPixels(bitmapInfo, bitmap.GetPixels()), which decodes raw pixel data as stored in the file without applying the EXIF/encoded origin transformation. No orientation adjustment is performed.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "finding": "SKCodec.EncodedOrigin property exposes sk_codec_get_origin(), providing the EXIF orientation value (TopLeft=1 through LeftBottom=8). This is available to callers but is not used by SKBitmap.Decode or Resize.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "SKBitmap.Resize(SKImageInfo info, SKSamplingOptions sampling) performs a pure pixel-level scale using sk_bitmap_resize. It does not read or apply orientation metadata — the rotation artifact comes from the pre-existing orientation in the decoded pixel data.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Use SKCodec directly: check codec.EncodedOrigin after decoding and apply the corresponding transformation matrix using SKCanvas.DrawBitmap with an SKMatrix before resizing.",
+      "After decoding with SKBitmap.Decode(stream), use SKCodec to get the orientation, then apply a canvas transformation to produce a correctly-oriented intermediate bitmap before resizing."
+    ],
+    "nextQuestions": [
+      "Should SKBitmap.Decode gain an overload or flag to auto-apply EXIF orientation?",
+      "Is there an existing utility in SkiaSharp to apply SKEncodedOrigin transformations to a bitmap?"
+    ],
+    "resolution": {
+      "hypothesis": "The JPEG file has an EXIF orientation tag (BottomRight = 180°). SKBitmap.Decode returns raw unoriented pixels. The caller must manually apply the orientation using SKCodec.EncodedOrigin before resize.",
+      "proposals": [
+        {
+          "title": "Apply EXIF orientation manually after decode",
+          "description": "Use SKCodec to decode and retrieve orientation, then draw onto a correctly-sized canvas with the appropriate transform before resizing.",
+          "category": "workaround",
+          "codeSnippet": "using var codec = SKCodec.Create(stream);\nvar info = codec.Info;\nvar origin = codec.EncodedOrigin;\n\nusing var bitmap = SKBitmap.Decode(codec);\n\n// If origin is not TopLeft, apply the orientation transform\nSKBitmap oriented = bitmap;\nif (origin != SKEncodedOrigin.TopLeft) {\n    bool swapDimensions = origin == SKEncodedOrigin.LeftTop ||\n                          origin == SKEncodedOrigin.RightTop ||\n                          origin == SKEncodedOrigin.RightBottom ||\n                          origin == SKEncodedOrigin.LeftBottom;\n    int w = swapDimensions ? bitmap.Height : bitmap.Width;\n    int h = swapDimensions ? bitmap.Width : bitmap.Height;\n    oriented = new SKBitmap(w, h);\n    using var canvas = new SKCanvas(oriented);\n    canvas.Clear();\n    // SKMatrix.CreateRotationDegrees based on origin value\n    // origin 3 (BottomRight) = 180 degrees\n    var matrix = SKMatrix.CreateRotationDegrees(\n        origin == SKEncodedOrigin.BottomRight ? 180f :\n        origin == SKEncodedOrigin.RightTop ? 90f :\n        origin == SKEncodedOrigin.LeftBottom ? 270f : 0f,\n        bitmap.Width / 2f, bitmap.Height / 2f);\n    canvas.SetMatrix(matrix);\n    canvas.DrawBitmap(bitmap, 0, 0);\n}\n\nusing var resized = oriented.Resize(new SKImageInfo(targetWidth, targetHeight), SKSamplingOptions.Default);\n// encode and return resized",
+          "confidence": 0.78,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Apply EXIF orientation manually after decode",
+      "recommendedReason": "Direct fix available with existing API surface (SKCodec.EncodedOrigin). No library changes needed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.8,
+      "reason": "SKBitmap.Decode intentionally does not auto-apply EXIF orientation; this is by-design Skia behavior. The orientation is exposed via SKCodec.EncodedOrigin for callers to handle. The behavior is surprising but correct.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and SkiaSharp core labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain EXIF orientation is by-design and provide workaround using SKCodec.EncodedOrigin",
+        "risk": "high",
+        "confidence": 0.82,
+        "comment": "Thank you for the report! The rotation you're seeing is not caused by `SKBitmap.Resize` itself — it comes from how JPEG files store images with an EXIF orientation tag.\n\n**Root Cause:** `SKBitmap.Decode` returns raw pixel data exactly as stored in the JPEG file, without applying the EXIF orientation transformation. For portrait photos taken with most cameras, the image pixels are stored rotated (e.g., 180° for `BottomRight` orientation), and the EXIF tag tells viewers to rotate before displaying. SkiaSharp intentionally does not auto-apply this rotation — you need to apply it yourself.\n\n**Workaround:** Use `SKCodec` directly to read the orientation and apply the correct transformation:\n\n```csharp\nusing var codec = SKCodec.Create(stream);\nvar origin = codec.EncodedOrigin; // Check this value\nusing var bitmap = SKBitmap.Decode(codec);\n\n// If origin != SKEncodedOrigin.TopLeft, apply transform before resizing\n// e.g., for origin == SKEncodedOrigin.BottomRight (180°):\n// Draw onto a new canvas with a 180° rotation matrix\n```\n\nThe `SKEncodedOrigin` enum values map to EXIF orientation tags. You can create an `SKCanvas` with the appropriate `SKMatrix.CreateRotationDegrees(...)` to produce a correctly-oriented bitmap before resizing.\n\nThe fact that saving as PNG 'fixes' the issue is because PNG does not store EXIF orientation metadata, so viewing software doesn't auto-rotate it — the raw pixel layout is used directly.\n\nThis behavior may be improved with a helper API in a future release. For now, please use `SKCodec.EncodedOrigin` to handle orientation manually."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug — behavior is by-design",
+        "risk": "medium",
+        "confidence": 0.75,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

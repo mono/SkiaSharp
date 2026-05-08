@@ -1,0 +1,373 @@
+# Issue Triage Report — #1945
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T07:55:00Z |
+| Type | type/bug (0.90 (90%)) |
+| Area | area/SkiaSharp (0.85 (85%)) |
+| Suggested action | needs-info (0.85 (85%)) |
+
+**Issue Summary:** ClearType (subpixel/LCD text rendering) regressed in the SkiaSharp m88 preview; the reporter confirms it worked in 2.80.4 but not in any subsequent release, and the issue body is empty of repro details.
+
+**Analysis:** ClearType / subpixel text rendering regressed when SkiaSharp migrated from Skia m80 (2.80.x) to m88 (2.88.x preview). In m88, Skia restructured the text rendering API, moving LCD/subpixel settings from SKPaint to SKFont.Edging (SKFontEdging.SubpixelAntialias). The old SKPaint.LcdRenderText is now marked Obsolete and delegates to SKFont.Edging via sk_compatpaint_set_lcd_render_text. The issue template is completely empty — no repro code, no screenshots, no version numbers — making it impossible to confirm reproduction or verify a fix.
+
+**Recommendations:** **needs-info** — Issue template is completely empty (no code, no expected/actual behavior, no version numbers). Reporter only confirmed regression persists as of May 2022. A related issue (#2308) with the same regression was closed as completed Dec 2022. Need minimal repro + current version to determine if this is already fixed.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/830 — Related question: how to enable subpixel rendering on Windows
+- https://github.com/mono/SkiaSharp/issues/2308 — Same regression reported again in Nov 2022 with full repro; closed as completed Dec 2022
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | wrong-output |
+| Error message | ClearType isn't working with the m88 preview |
+| Repro quality | none |
+| Target frameworks | — |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.4 |
+| Worked in | 2.80.4 |
+| Broke in | m88 preview (2.88.x) |
+| Current relevance | unknown |
+| Relevance reason | Related issue #2308 (same regression, worked 2.80.4, broke 2.88.x) was closed as completed in December 2022, suggesting a fix may have landed. Current status of the fix relative to this issue is unclear. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.85 (85%) |
+| Reason | Reporter explicitly states it worked in 2.80.4 and broke in m88 preview. Final comment confirms still broken in the then-current release. |
+| Worked in version | 2.80.4 |
+| Broke in version | 2.88.x (m88 preview) |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | False |
+| Confidence | 0.45 (45%) |
+| Reason | Issue #2308 describing the same regression was closed as completed on 2022-12-02, which may mean the fix also applies here. However, the reporter never confirmed a fix and this issue remains open with no maintainer response. |
+| Related PRs | — |
+| Related commits | — |
+| Fixed in version | — |
+
+## Analysis
+
+### Technical Summary
+
+ClearType / subpixel text rendering regressed when SkiaSharp migrated from Skia m80 (2.80.x) to m88 (2.88.x preview). In m88, Skia restructured the text rendering API, moving LCD/subpixel settings from SKPaint to SKFont.Edging (SKFontEdging.SubpixelAntialias). The old SKPaint.LcdRenderText is now marked Obsolete and delegates to SKFont.Edging via sk_compatpaint_set_lcd_render_text. The issue template is completely empty — no repro code, no screenshots, no version numbers — making it impossible to confirm reproduction or verify a fix.
+
+### Rationale
+
+This is a confirmed regression: ClearType/subpixel text rendering stopped working when SkiaSharp migrated Skia from m80 to m88, which moved LCD rendering settings from SKPaint to SKFont.Edging. The issue body is a completely empty template — no code, no steps, no version details — which means it cannot be reproduced as filed. The action is needs-info to ask the reporter for minimal repro and the specific SkiaSharp version, and to note that the new API uses SKFont.Edging = SKFontEdging.SubpixelAntialias.
+
+### Key Signals
+
+- "ClearType isn't working with the current preview it is properly working with the latest stable release." — **issue body** (Regression from 2.80.x to 2.88.x m88 preview; the font rendering API was restructured in m88.)
+- "Still doesn't work with the current release. Using older 2.80.4 works" — **comment #3 (2022-05-26)** (Confirmed regression still present months after filing; last known good version is 2.80.4.)
+- "Related issue #2308 (same regression) closed as completed 2022-12-02" — **GitHub issue search** (A later, more detailed report of the same bug was closed as fixed, suggesting a fix may have landed after the last comment on this issue.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKFont.cs` | 67-70 | direct | SKFont.Edging property wraps sk_font_get/set_edging; SKFontEdging.SubpixelAntialias = 2 is the modern way to request ClearType-style LCD rendering |
+| `binding/SkiaSharp/SKPaint.cs` | 104-108 | direct | SKPaint.LcdRenderText is marked [Obsolete] and delegates to sk_compatpaint_get/set_lcd_render_text; this is the compat shim for code that used the old API |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | 20813-20820 | related | SKFontEdging enum: Alias=0, Antialias=1, SubpixelAntialias=2 — confirms the value exists in the current codebase |
+
+### Workarounds
+
+- Downgrade to SkiaSharp 2.80.4 (confirmed working by reporter)
+- Use SKFont.Edging = SKFontEdging.SubpixelAntialias instead of SKPaint.LcdRenderText = true (m88+ new API)
+
+### Next Questions
+
+- Does the issue reproduce with the latest stable SkiaSharp release?
+- Is the reporter using SKPaint.LcdRenderText (old API) or SKFont.Edging = SubpixelAntialias (new API)?
+- What platform/OS? ClearType is Windows-specific; subpixel rendering behavior differs on other platforms.
+- Was the fix in #2308 (closed Dec 2022) sufficient to resolve this issue too?
+
+### Resolution Proposals
+
+**Hypothesis:** The m88 Skia milestone restructured text rendering. Code using the old SKPaint.LcdRenderText=true pattern may need to be updated to use SKFont.Edging = SKFontEdging.SubpixelAntialias. Additionally the compat shim in SKPaint should still work, but its behavior may have changed in the native layer.
+
+1. **Use updated SKFont.Edging API** — workaround, confidence 0.80 (80%), cost/xs, validated=untested
+   - Update code to use the new m88 API: set SKFont.Edging = SKFontEdging.SubpixelAntialias on the SKFont object, and also set SKFont.Subpixel = true for subpixel positioning.
+2. **Request minimal repro to confirm current status** — investigation, confidence 0.90 (90%), cost/xs, validated=untested
+   - Ask reporter to provide a minimal code sample with exact SkiaSharp version. Cross-reference with #2308 which was closed as completed with a full repro. If fixed, close this issue too.
+
+**Recommended proposal:** Request minimal repro to confirm current status
+
+**Why:** The issue body is empty; the same regression was reported in #2308 and closed as fixed. We need a minimal repro to confirm whether the fix covers this report.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.85 (85%) |
+| Reason | Issue template is completely empty (no code, no expected/actual behavior, no version numbers). Reporter only confirmed regression persists as of May 2022. A related issue (#2308) with the same regression was closed as completed Dec 2022. Need minimal repro + current version to determine if this is already fixed. |
+| Suggested repro platform | windows |
+
+### Missing Info
+
+- Minimal repro code demonstrating the ClearType failure
+- Exact SkiaSharp version(s) affected (beyond 'latest')
+- Platform and target framework (Windows WPF/WinForms/UWP/etc.)
+- Whether the new SKFont.Edging = SKFontEdging.SubpixelAntialias API was tried
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.85 (85%) | Apply bug, area/SkiaSharp, Windows-Classic, and compatibility tenet labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, tenet/compatibility |
+| add-comment | medium | 0.85 (85%) | Request minimal repro, version info, and mention new SKFont.Edging API and related issue #2308 | — |
+| link-related | low | 0.75 (75%) | Cross-reference related subpixel rendering question #830 | linkedIssue=#830 |
+| link-related | low | 0.90 (90%) | Cross-reference related ClearType regression #2308 (closed as completed) | linkedIssue=#2308 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! To help investigate, could you provide:
+
+1. **Minimal repro code** showing how you're enabling ClearType (e.g., are you using `SKPaint.LcdRenderText = true` or `SKFont.Edging = SKFontEdging.SubpixelAntialias`?)
+2. **Exact SkiaSharp version** (e.g., `2.88.0-preview.x` or the latest stable you tested)
+3. **Platform / target framework** (e.g., WPF on Windows 10, net6.0-windows)
+
+Note that in m88 the text rendering settings moved from `SKPaint` to `SKFont`. The new approach is:
+
+```csharp
+var font = new SKFont { Edging = SKFontEdging.SubpixelAntialias, Subpixel = true };
+canvas.DrawText("Hello", x, y, font, paint);
+```
+
+Also see #2308 which reported the same regression with a full repro and was resolved in December 2022 — it may be worth checking whether the latest release fixes this for you.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1945,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T07:55:00Z"
+  },
+  "summary": "ClearType (subpixel/LCD text rendering) regressed in the SkiaSharp m88 preview; the reporter confirms it worked in 2.80.4 but not in any subsequent release, and the issue body is empty of repro details.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "ClearType isn't working with the m88 preview",
+      "reproQuality": "none",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/830",
+          "description": "Related question: how to enable subpixel rendering on Windows"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2308",
+          "description": "Same regression reported again in Nov 2022 with full repro; closed as completed Dec 2022"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.4"
+      ],
+      "workedIn": "2.80.4",
+      "brokeIn": "m88 preview (2.88.x)",
+      "currentRelevance": "unknown",
+      "relevanceReason": "Related issue #2308 (same regression, worked 2.80.4, broke 2.88.x) was closed as completed in December 2022, suggesting a fix may have landed. Current status of the fix relative to this issue is unclear."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter explicitly states it worked in 2.80.4 and broke in m88 preview. Final comment confirms still broken in the then-current release.",
+      "workedInVersion": "2.80.4",
+      "brokeInVersion": "2.88.x (m88 preview)"
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.45,
+      "reason": "Issue #2308 describing the same regression was closed as completed on 2022-12-02, which may mean the fix also applies here. However, the reporter never confirmed a fix and this issue remains open with no maintainer response.",
+      "relatedPRs": []
+    }
+  },
+  "analysis": {
+    "summary": "ClearType / subpixel text rendering regressed when SkiaSharp migrated from Skia m80 (2.80.x) to m88 (2.88.x preview). In m88, Skia restructured the text rendering API, moving LCD/subpixel settings from SKPaint to SKFont.Edging (SKFontEdging.SubpixelAntialias). The old SKPaint.LcdRenderText is now marked Obsolete and delegates to SKFont.Edging via sk_compatpaint_set_lcd_render_text. The issue template is completely empty — no repro code, no screenshots, no version numbers — making it impossible to confirm reproduction or verify a fix.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "lines": "67-70",
+        "finding": "SKFont.Edging property wraps sk_font_get/set_edging; SKFontEdging.SubpixelAntialias = 2 is the modern way to request ClearType-style LCD rendering",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "104-108",
+        "finding": "SKPaint.LcdRenderText is marked [Obsolete] and delegates to sk_compatpaint_get/set_lcd_render_text; this is the compat shim for code that used the old API",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "20813-20820",
+        "finding": "SKFontEdging enum: Alias=0, Antialias=1, SubpixelAntialias=2 — confirms the value exists in the current codebase",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "ClearType isn't working with the current preview it is properly working with the latest stable release.",
+        "source": "issue body",
+        "interpretation": "Regression from 2.80.x to 2.88.x m88 preview; the font rendering API was restructured in m88."
+      },
+      {
+        "text": "Still doesn't work with the current release. Using older 2.80.4 works",
+        "source": "comment #3 (2022-05-26)",
+        "interpretation": "Confirmed regression still present months after filing; last known good version is 2.80.4."
+      },
+      {
+        "text": "Related issue #2308 (same regression) closed as completed 2022-12-02",
+        "source": "GitHub issue search",
+        "interpretation": "A later, more detailed report of the same bug was closed as fixed, suggesting a fix may have landed after the last comment on this issue."
+      }
+    ],
+    "rationale": "This is a confirmed regression: ClearType/subpixel text rendering stopped working when SkiaSharp migrated Skia from m80 to m88, which moved LCD rendering settings from SKPaint to SKFont.Edging. The issue body is a completely empty template — no code, no steps, no version details — which means it cannot be reproduced as filed. The action is needs-info to ask the reporter for minimal repro and the specific SkiaSharp version, and to note that the new API uses SKFont.Edging = SKFontEdging.SubpixelAntialias.",
+    "workarounds": [
+      "Downgrade to SkiaSharp 2.80.4 (confirmed working by reporter)",
+      "Use SKFont.Edging = SKFontEdging.SubpixelAntialias instead of SKPaint.LcdRenderText = true (m88+ new API)"
+    ],
+    "nextQuestions": [
+      "Does the issue reproduce with the latest stable SkiaSharp release?",
+      "Is the reporter using SKPaint.LcdRenderText (old API) or SKFont.Edging = SubpixelAntialias (new API)?",
+      "What platform/OS? ClearType is Windows-specific; subpixel rendering behavior differs on other platforms.",
+      "Was the fix in #2308 (closed Dec 2022) sufficient to resolve this issue too?"
+    ],
+    "resolution": {
+      "hypothesis": "The m88 Skia milestone restructured text rendering. Code using the old SKPaint.LcdRenderText=true pattern may need to be updated to use SKFont.Edging = SKFontEdging.SubpixelAntialias. Additionally the compat shim in SKPaint should still work, but its behavior may have changed in the native layer.",
+      "proposals": [
+        {
+          "title": "Use updated SKFont.Edging API",
+          "description": "Update code to use the new m88 API: set SKFont.Edging = SKFontEdging.SubpixelAntialias on the SKFont object, and also set SKFont.Subpixel = true for subpixel positioning.",
+          "category": "workaround",
+          "confidence": 0.8,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Request minimal repro to confirm current status",
+          "description": "Ask reporter to provide a minimal code sample with exact SkiaSharp version. Cross-reference with #2308 which was closed as completed with a full repro. If fixed, close this issue too.",
+          "category": "investigation",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Request minimal repro to confirm current status",
+      "recommendedReason": "The issue body is empty; the same regression was reported in #2308 and closed as fixed. We need a minimal repro to confirm whether the fix covers this report."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.85,
+      "reason": "Issue template is completely empty (no code, no expected/actual behavior, no version numbers). Reporter only confirmed regression persists as of May 2022. A related issue (#2308) with the same regression was closed as completed Dec 2022. Need minimal repro + current version to determine if this is already fixed.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Minimal repro code demonstrating the ClearType failure",
+      "Exact SkiaSharp version(s) affected (beyond 'latest')",
+      "Platform and target framework (Windows WPF/WinForms/UWP/etc.)",
+      "Whether the new SKFont.Edging = SKFontEdging.SubpixelAntialias API was tried"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area/SkiaSharp, Windows-Classic, and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request minimal repro, version info, and mention new SKFont.Edging API and related issue #2308",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the report! To help investigate, could you provide:\n\n1. **Minimal repro code** showing how you're enabling ClearType (e.g., are you using `SKPaint.LcdRenderText = true` or `SKFont.Edging = SKFontEdging.SubpixelAntialias`?)\n2. **Exact SkiaSharp version** (e.g., `2.88.0-preview.x` or the latest stable you tested)\n3. **Platform / target framework** (e.g., WPF on Windows 10, net6.0-windows)\n\nNote that in m88 the text rendering settings moved from `SKPaint` to `SKFont`. The new approach is:\n\n```csharp\nvar font = new SKFont { Edging = SKFontEdging.SubpixelAntialias, Subpixel = true };\ncanvas.DrawText(\"Hello\", x, y, font, paint);\n```\n\nAlso see #2308 which reported the same regression with a full repro and was resolved in December 2022 — it may be worth checking whether the latest release fixes this for you."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related subpixel rendering question #830",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 830
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related ClearType regression #2308 (closed as completed)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 2308
+      }
+    ]
+  }
+}
+```
+
+</details>
