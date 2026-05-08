@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2051,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T21:08:11Z",
+    "currentLabels": ["area/SkiaSharp.Views.Maui"]
+  },
+  "summary": "On MAUI SKCanvasView with EnableTouchEvents=true, only the Pressed touch event fires on MacCatalyst (and Android); subsequent Move and Released events are not delivered unless the handler sets args.Handled = true, causing cross-platform inconsistency since WinUI fires all events regardless.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.85 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.95 },
+    "platforms": ["os/macOS", "os/Android", "os/Windows-WinUI"],
+    "tenets": ["tenet/compatibility"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "missing-output",
+      "errorMessage": "Only the Pressed touch event fires; Moved and Released events are never delivered",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net6.0-maccatalyst"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI app with SKCanvasView and EnableTouchEvents=true",
+        "Subscribe to the Touch event",
+        "Run on MacCatalyst (or Android)",
+        "Tap and drag on the canvas",
+        "Observe: only Pressed fires; Moved and Released do not"
+      ],
+      "environmentDetails": "MAUI VSMPreview, MacCatalyst, latest SkiaSharp at time of filing (2022-05)"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["latest"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Platform touch handler implementations have not fundamentally changed since filing; the Handled requirement and cross-platform inconsistency are still present in current code."
+    }
+  },
+  "analysis": {
+    "summary": "The Apple SKTouchHandler uses UIGestureRecognizer and calls IgnoreTouch when args.Handled is false on Pressed, causing the recognizer to drop all subsequent touch events for that touch. Android's OnTouch handler propagates e.Handled = args.Handled; returning false for Down causes the Android view system to stop delivering Move/Up events. WinUI subscribes to all pointer events independently and does not require Handled=true to receive subsequent events (only pointer capture is conditional on Handled). This cross-platform behavioral inconsistency means the same SkiaSharp code behaves differently depending on the target platform.",
+    "rationale": "Classified as type/bug because there is a documented cross-platform inconsistency in the Handled requirement. On WinUI all touch events fire regardless; on Apple and Android, not setting Handled=true on Pressed drops subsequent events. A workaround exists (set e.Handled = true), but the inconsistency is a real defect in the library's cross-platform contract.",
+    "keySignals": [
+      {
+        "text": "only the Pressed action is coming through. You don't even get the release action. No move actions either.",
+        "source": "issue body",
+        "interpretation": "Classic symptom of IgnoreTouch being called after Pressed when Handled is not set."
+      },
+      {
+        "text": "You may have to set e.Handled = true",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer confirms the Handled requirement is by design, modeled after HandledMouseEventArgs."
+      },
+      {
+        "text": "The WinUI target works without setting args.Handled, but Android does not. I would expect the requirements to be consistent.",
+        "source": "comment by yoshiask",
+        "interpretation": "Confirms the cross-platform inconsistency is a real defect in the behavioral contract."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "54-65",
+        "finding": "TouchesBegan calls FireEvent and if it returns false (Handled not set), calls IgnoreTouch(touch, evt) — UIGestureRecognizer then drops all subsequent Touch events for that touch (Moved, Ended, Cancelled never fire).",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
+        "lines": "63-73",
+        "finding": "OnTouch sets e.Handled = args.Handled on MotionEventActions.Down; Android stops delivering Move/Up to this view when the Down handler returns Handled=false.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+        "lines": "68-81",
+        "finding": "OnPointerPressed calls CommonHandler and sets args.Handled; pointer capture is conditional on Handled, but all pointer events (moved, released) are subscribed independently and fire regardless of the Handled value — WinUI does not require Handled=true to receive subsequent events.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+        "lines": "36",
+        "finding": "Handled property defaults to false (bool default), so unless the consumer explicitly sets it in the Touch handler, all platforms get Handled=false — but only Apple and Android suppress subsequent events as a result.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Set args.Handled = true inside the Touch event handler when the Pressed action is received to allow subsequent Moved and Released events to be delivered on Apple and Android platforms.",
+      "Example: void OnTouch(object s, SKTouchEventArgs e) { if (e.ActionType == SKTouchAction.Pressed) e.Handled = true; /* process e */ }"
+    ],
+    "nextQuestions": [
+      "Should the WinUI behavior (all events fire regardless) be used as the standard, or should WinUI be made stricter to match Android/Apple?",
+      "Is there a way to make the default Handled behavior consistent — e.g., default Handled to true for Pressed events across all platforms?"
+    ],
+    "resolution": {
+      "hypothesis": "Platform inconsistency: Apple/Android suppress subsequent touch events when Handled=false on Pressed; WinUI does not. The fix would normalize behavior across platforms.",
+      "proposals": [
+        {
+          "title": "Document the Handled requirement prominently",
+          "description": "Add XML doc comment to SKTouchEventArgs.Handled explaining that on Apple/Android platforms, setting Handled=true on the Pressed event is required to receive subsequent Moved/Released events.",
+          "category": "workaround",
+          "confidence": 0.80,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Normalize to WinUI behavior: always deliver all events",
+          "description": "On Apple, remove the IgnoreTouch call so all touch events fire regardless of Handled. On Android, return true from the Down handler unconditionally while still passing Handled signal through the args. This aligns all platforms with WinUI behavior.",
+          "category": "fix",
+          "confidence": 0.70,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Normalize to WinUI behavior: always deliver all events",
+      "recommendedReason": "Makes the cross-platform contract consistent and removes a common pitfall. The Handled mechanism can still be preserved for event bubbling semantics without suppressing delivery."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.80,
+      "reason": "The core issue (Handled requirement) has a known workaround and maintainer explanation, but the cross-platform inconsistency is a valid bug that needs design investigation to determine the right fix.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area, platform, compatibility tenet, and partner labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/macOS", "os/Android", "tenet/compatibility", "partner/maui"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the Handled requirement and acknowledge the cross-platform inconsistency",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for reporting this. The behavior is intentional on Apple and Android: you need to set `e.Handled = true` in your `Touch` event handler (at minimum on the `Pressed` action) to tell the platform that you are consuming the touch — otherwise the underlying platform drops subsequent move/release events.\n\nFor example:\n```csharp\nvoid OnTouch(object sender, SKTouchEventArgs e)\n{\n    if (e.ActionType == SKTouchAction.Pressed)\n        e.Handled = true;\n\n    // process e.Location etc.\n}\n```\n\nThis is modeled after [HandledMouseEventArgs](https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.handledmouseeventargs.handled): if you choose not to handle a touch you won't receive further events for that touch sequence, allowing parent views to receive them instead.\n\nThat said, the cross-platform inconsistency raised in the comments is valid — WinUI fires all pointer events regardless of `Handled`, while Apple and Android require it. This behavioral gap is worth addressing to make the cross-platform contract consistent."
+      }
+    ]
+  }
+}

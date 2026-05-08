@@ -1,0 +1,334 @@
+# Issue Triage Report — #3329
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T21:30:08Z |
+| Type | type/question (0.82 (82%)) |
+| Area | area/libSkiaSharp.native (0.90 (90%)) |
+| Suggested action | close-as-not-a-bug (0.82 (82%)) |
+
+**Issue Summary:** Reporter observes that SkiaSharp.csproj does not reference SkiaSharp.NativeAssets.Linux, causing a transitive dependency version conflict that produces a native library version incompatibility error (88.1 vs [119.0, 120.0)) on Linux CI.
+
+**Analysis:** SkiaSharp intentionally does not auto-include Linux native assets because Linux has multiple package variants (glibc, musl/Alpine, NoDependencies) and the user must choose the right one for their distribution and container setup. The reporter's error is a NuGet transitive dependency version conflict: another package in their solution references SkiaSharp.NativeAssets.Linux 2.88.x, and because no explicit pin exists, NuGet resolves to that old version. The fix is to explicitly add SkiaSharp.NativeAssets.Linux (or its NoDependencies variant) at the correct version in the application project.
+
+**Recommendations:** **close-as-not-a-bug** — Linux native assets are intentionally excluded from SkiaSharp.csproj because Linux requires users to choose between multiple variants (glibc vs musl, with/without fontconfig). The error is a NuGet transitive dependency version conflict fixed by pinning the correct Linux native assets package in the application project. This pattern is documented in packages.md and has been answered in related issues.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** Linux GitHub Actions runner, SkiaSharp 3.116.0, transitive SkiaSharp.NativeAssets.Linux 2.88.7 | Error: System.InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [119.0, 120.0).
+
+**Related issues:** #3117, #3276
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/discussions/3210 — Community discussion on Linux native asset selection
+- https://github.com/mono/SkiaSharp/issues/3117 — Similar native lib version mismatch on Linux (closed/completed)
+- https://github.com/mono/SkiaSharp/issues/3276 — Similar DevExpress conflict on Linux (open)
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.0, 3.119.0, 2.88.9, 2.88.7 |
+| Worked in | 2.88.9 |
+| Broke in | 3.116.0 |
+| Current relevance | likely |
+| Relevance reason | The by-design omission of Linux native assets from SkiaSharp.csproj is unchanged. The transitive dependency conflict pattern persists in 3.119.x. |
+
+## Analysis
+
+### Technical Summary
+
+SkiaSharp intentionally does not auto-include Linux native assets because Linux has multiple package variants (glibc, musl/Alpine, NoDependencies) and the user must choose the right one for their distribution and container setup. The reporter's error is a NuGet transitive dependency version conflict: another package in their solution references SkiaSharp.NativeAssets.Linux 2.88.x, and because no explicit pin exists, NuGet resolves to that old version. The fix is to explicitly add SkiaSharp.NativeAssets.Linux (or its NoDependencies variant) at the correct version in the application project.
+
+### Rationale
+
+The packages.md documentation explicitly documents this as by-design: 'For Linux, WebAssembly, NanoServer, and WinUI you must add the NativeAssets package manually.' The design choice avoids downloading unnecessary native binaries for all Linux distros on every platform and allows users to select the appropriate variant (glibc vs musl, dependencies vs no-dependencies). The reporter's proposed fix (referencing Linux in SkiaSharp.csproj) would force all users to download Linux binaries even when not targeting Linux. The actual error is caused by a transitive NuGet dependency conflict that can be resolved by pinning the correct package version in the application project.
+
+### Key Signals
+
+- "SkiaSharp.NativeAssets.Linux v2.88.7 is being included as a transient package rather than v3.119.0" — **issue body** (Classic NuGet transitive dependency conflict — another package brings in old Linux native assets, and without an explicit pin the old version wins.)
+- "I call this out because SkiaSharp references every other platform's native assets. So why does it not reference Linux? I'm not the only one with this issue: #3117 #3238" — **comment #2** (Reporter correctly identifies the asymmetry but the omission is intentional to support multiple Linux variants.)
+- "That's a consequence of factors like Linux having multiple distros, C libraries etc." — **comment #3 by molesmoke** (Community member correctly identifies the design rationale.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SkiaSharp.csproj` | 22-32 | direct | SkiaSharp.csproj includes ProjectReferences for Android, iOS, MacCatalyst, macOS, Tizen, tvOS, and Win32 — but intentionally omits Linux. This is the by-design behavior the reporter is questioning. |
+| `documentation/dev/packages.md` | — | direct | The packages.md documentation explicitly states: 'For Linux, WebAssembly, NanoServer, and WinUI you must add the NativeAssets package manually.' Multiple Linux variants exist (SkiaSharp.NativeAssets.Linux for glibc, SkiaSharp.NativeAssets.Linux.NoDependencies for minimal containers) which is why auto-inclusion is not possible. |
+
+### Workarounds
+
+- Add an explicit PackageReference for SkiaSharp.NativeAssets.Linux (or SkiaSharp.NativeAssets.Linux.NoDependencies for containers) at the correct version in the application (.exe) project to override the transitive dependency.
+- Use the same version for SkiaSharp and SkiaSharp.NativeAssets.Linux: e.g. both at 3.116.0 or both at 3.119.0.
+
+### Next Questions
+
+- Which package is bringing in SkiaSharp.NativeAssets.Linux 2.88.7 transitively? (run: dotnet list package --include-transitive)
+- Is the reporter using glibc-based Linux or Alpine/musl containers?
+
+### Resolution Proposals
+
+**Hypothesis:** Another package in the reporter's solution (not shown) transitively depends on SkiaSharp.NativeAssets.Linux 2.88.7. Since no explicit version constraint exists, NuGet picks the old version. Adding an explicit reference with the correct version (matching SkiaSharp) in the app project will resolve the conflict.
+
+1. **Pin SkiaSharp.NativeAssets.Linux in the application project** — workaround, confidence 0.90 (90%), cost/xs, validated=yes
+   - Add an explicit PackageReference for SkiaSharp.NativeAssets.Linux at the same version as SkiaSharp in the application (executable) project. This overrides the transitive dependency version.
+
+```csharp
+<PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.0" />
+```
+2. **Use SkiaSharp.NativeAssets.Linux.NoDependencies for containers** — alternative, confidence 0.88 (88%), cost/xs, validated=yes
+   - For minimal Docker containers (no fontconfig), use NoDependencies variant instead. Add it to the application project at the correct version.
+
+```csharp
+<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.0" />
+```
+
+**Recommended proposal:** Pin SkiaSharp.NativeAssets.Linux in the application project
+
+**Why:** Most direct fix. The version number should match the SkiaSharp managed package version in use.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.82 (82%) |
+| Reason | Linux native assets are intentionally excluded from SkiaSharp.csproj because Linux requires users to choose between multiple variants (glibc vs musl, with/without fontconfig). The error is a NuGet transitive dependency version conflict fixed by pinning the correct Linux native assets package in the application project. This pattern is documented in packages.md and has been answered in related issues. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.85 (85%) | Correct label from type/bug to type/question; add area and platform labels | labels=type/question, area/libSkiaSharp.native, os/Linux, tenet/compatibility |
+| add-comment | high | 0.82 (82%) | Explain design decision, provide explicit package pin workaround | — |
+| link-related | low | 0.90 (90%) | Cross-reference related Linux version mismatch issues | linkedIssue=#3117 |
+| close-issue | medium | 0.80 (80%) | Close as answered — by-design behavior with documented workaround | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report! The `SkiaSharp` package intentionally does **not** auto-include Linux native assets. This is by design because Linux has multiple package variants to choose from:
+
+- **`SkiaSharp.NativeAssets.Linux`** — for glibc-based distros (Ubuntu, Debian, RHEL, etc.), requires `fontconfig`
+- **`SkiaSharp.NativeAssets.Linux.NoDependencies`** — for minimal containers, only requires `libc`/`libm`/`libpthread`/`libdl`
+
+The error you're seeing (`native libSkiaSharp library (88.1) is incompatible`) is a NuGet **transitive dependency version conflict**: another package in your solution references `SkiaSharp.NativeAssets.Linux 2.88.x`, and without an explicit pin, NuGet resolves to that old version.
+
+**Fix:** Add an explicit package reference in your **application** project at the same version as `SkiaSharp`:
+
+```xml
+<!-- In your .csproj (application project) -->
+<PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.0" />
+<!-- OR for minimal containers: -->
+<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.0" />
+```
+
+To identify which package brings in the old version transitively, run:
+```
+dotnet list package --include-transitive
+```
+
+See the [packages documentation](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md#linux-package-selection-guide) and related discussion [#3210](https://github.com/mono/SkiaSharp/discussions/3210) for guidance on which Linux package to choose.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3329,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T21:30:08Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Reporter observes that SkiaSharp.csproj does not reference SkiaSharp.NativeAssets.Linux, causing a transitive dependency version conflict that produces a native library version incompatibility error (88.1 vs [119.0, 120.0)) on Linux CI.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.82
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Linux GitHub Actions runner, SkiaSharp 3.116.0, transitive SkiaSharp.NativeAssets.Linux 2.88.7 | Error: System.InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [119.0, 120.0).",
+      "relatedIssues": [
+        3117,
+        3276
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/discussions/3210",
+          "description": "Community discussion on Linux native asset selection"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3117",
+          "description": "Similar native lib version mismatch on Linux (closed/completed)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3276",
+          "description": "Similar DevExpress conflict on Linux (open)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "3.119.0",
+        "2.88.9",
+        "2.88.7"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The by-design omission of Linux native assets from SkiaSharp.csproj is unchanged. The transitive dependency conflict pattern persists in 3.119.x."
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp intentionally does not auto-include Linux native assets because Linux has multiple package variants (glibc, musl/Alpine, NoDependencies) and the user must choose the right one for their distribution and container setup. The reporter's error is a NuGet transitive dependency version conflict: another package in their solution references SkiaSharp.NativeAssets.Linux 2.88.x, and because no explicit pin exists, NuGet resolves to that old version. The fix is to explicitly add SkiaSharp.NativeAssets.Linux (or its NoDependencies variant) at the correct version in the application project.",
+    "rationale": "The packages.md documentation explicitly documents this as by-design: 'For Linux, WebAssembly, NanoServer, and WinUI you must add the NativeAssets package manually.' The design choice avoids downloading unnecessary native binaries for all Linux distros on every platform and allows users to select the appropriate variant (glibc vs musl, dependencies vs no-dependencies). The reporter's proposed fix (referencing Linux in SkiaSharp.csproj) would force all users to download Linux binaries even when not targeting Linux. The actual error is caused by a transitive NuGet dependency conflict that can be resolved by pinning the correct package version in the application project.",
+    "keySignals": [
+      {
+        "text": "SkiaSharp.NativeAssets.Linux v2.88.7 is being included as a transient package rather than v3.119.0",
+        "source": "issue body",
+        "interpretation": "Classic NuGet transitive dependency conflict — another package brings in old Linux native assets, and without an explicit pin the old version wins."
+      },
+      {
+        "text": "I call this out because SkiaSharp references every other platform's native assets. So why does it not reference Linux? I'm not the only one with this issue: #3117 #3238",
+        "source": "comment #2",
+        "interpretation": "Reporter correctly identifies the asymmetry but the omission is intentional to support multiple Linux variants."
+      },
+      {
+        "text": "That's a consequence of factors like Linux having multiple distros, C libraries etc.",
+        "source": "comment #3 by molesmoke",
+        "interpretation": "Community member correctly identifies the design rationale."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "lines": "22-32",
+        "finding": "SkiaSharp.csproj includes ProjectReferences for Android, iOS, MacCatalyst, macOS, Tizen, tvOS, and Win32 — but intentionally omits Linux. This is the by-design behavior the reporter is questioning.",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/packages.md",
+        "finding": "The packages.md documentation explicitly states: 'For Linux, WebAssembly, NanoServer, and WinUI you must add the NativeAssets package manually.' Multiple Linux variants exist (SkiaSharp.NativeAssets.Linux for glibc, SkiaSharp.NativeAssets.Linux.NoDependencies for minimal containers) which is why auto-inclusion is not possible.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Add an explicit PackageReference for SkiaSharp.NativeAssets.Linux (or SkiaSharp.NativeAssets.Linux.NoDependencies for containers) at the correct version in the application (.exe) project to override the transitive dependency.",
+      "Use the same version for SkiaSharp and SkiaSharp.NativeAssets.Linux: e.g. both at 3.116.0 or both at 3.119.0."
+    ],
+    "nextQuestions": [
+      "Which package is bringing in SkiaSharp.NativeAssets.Linux 2.88.7 transitively? (run: dotnet list package --include-transitive)",
+      "Is the reporter using glibc-based Linux or Alpine/musl containers?"
+    ],
+    "resolution": {
+      "hypothesis": "Another package in the reporter's solution (not shown) transitively depends on SkiaSharp.NativeAssets.Linux 2.88.7. Since no explicit version constraint exists, NuGet picks the old version. Adding an explicit reference with the correct version (matching SkiaSharp) in the app project will resolve the conflict.",
+      "proposals": [
+        {
+          "title": "Pin SkiaSharp.NativeAssets.Linux in the application project",
+          "description": "Add an explicit PackageReference for SkiaSharp.NativeAssets.Linux at the same version as SkiaSharp in the application (executable) project. This overrides the transitive dependency version.",
+          "category": "workaround",
+          "codeSnippet": "<PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"3.116.0\" />",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use SkiaSharp.NativeAssets.Linux.NoDependencies for containers",
+          "description": "For minimal Docker containers (no fontconfig), use NoDependencies variant instead. Add it to the application project at the correct version.",
+          "category": "alternative",
+          "codeSnippet": "<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"3.116.0\" />",
+          "confidence": 0.88,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Pin SkiaSharp.NativeAssets.Linux in the application project",
+      "recommendedReason": "Most direct fix. The version number should match the SkiaSharp managed package version in use."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.82,
+      "reason": "Linux native assets are intentionally excluded from SkiaSharp.csproj because Linux requires users to choose between multiple variants (glibc vs musl, with/without fontconfig). The error is a NuGet transitive dependency version conflict fixed by pinning the correct Linux native assets package in the application project. This pattern is documented in packages.md and has been answered in related issues.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct label from type/bug to type/question; add area and platform labels",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/question",
+          "area/libSkiaSharp.native",
+          "os/Linux",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain design decision, provide explicit package pin workaround",
+        "risk": "high",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed report! The `SkiaSharp` package intentionally does **not** auto-include Linux native assets. This is by design because Linux has multiple package variants to choose from:\n\n- **`SkiaSharp.NativeAssets.Linux`** — for glibc-based distros (Ubuntu, Debian, RHEL, etc.), requires `fontconfig`\n- **`SkiaSharp.NativeAssets.Linux.NoDependencies`** — for minimal containers, only requires `libc`/`libm`/`libpthread`/`libdl`\n\nThe error you're seeing (`native libSkiaSharp library (88.1) is incompatible`) is a NuGet **transitive dependency version conflict**: another package in your solution references `SkiaSharp.NativeAssets.Linux 2.88.x`, and without an explicit pin, NuGet resolves to that old version.\n\n**Fix:** Add an explicit package reference in your **application** project at the same version as `SkiaSharp`:\n\n```xml\n<!-- In your .csproj (application project) -->\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"3.116.0\" />\n<!-- OR for minimal containers: -->\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"3.116.0\" />\n```\n\nTo identify which package brings in the old version transitively, run:\n```\ndotnet list package --include-transitive\n```\n\nSee the [packages documentation](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md#linux-package-selection-guide) and related discussion [#3210](https://github.com/mono/SkiaSharp/discussions/3210) for guidance on which Linux package to choose."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related Linux version mismatch issues",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 3117
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — by-design behavior with documented workaround",
+        "risk": "medium",
+        "confidence": 0.8,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>
