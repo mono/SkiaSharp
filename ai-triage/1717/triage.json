@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1717,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T00:01:30Z"
+  },
+  "summary": "DllNotFoundException for libSkiaSharp on AWS Elastic Beanstalk (Linux) when using SkiaSharp 2.80.2 — the Linux NativeAssets package is not automatically included and must be manually added to the application project.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.88 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.92 },
+    "platforms": ["os/Linux"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "System.TypeInitializationException: The type initializer for 'SkiaSharp.SKImageInfo' threw an exception. ---> System.DllNotFoundException: Unable to load shared library 'libSkiaSharp' or one of its dependencies. liblibSkiaSharp: cannot open shared object file: No such file or directory",
+      "reproQuality": "partial",
+      "targetFrameworks": ["netcoreapp2.2"]
+    },
+    "reproEvidence": {
+      "environmentDetails": "AWS Elastic Beanstalk, .NET Platform 2.2.0 (Ubuntu Linux), SkiaSharp 2.80.2",
+      "relatedIssues": [3235, 2349, 2385, 2653],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/3235", "description": "Same reporter's follow-up issue with SkiaSharp 3.116.1 on .NET 6.0 in Elastic Beanstalk" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/2349", "description": "Related: DllNotFoundException on Elastic Beanstalk even after adding NativeAssets.Linux" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/2385", "description": "Related: liblibSkiaSharp naming question on Linux" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/2653", "description": "Related: Can't find liblibSkiaSharp.so on Linux" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.2"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Version 2.80.2 is very old; current is 3.x. However, the underlying issue (Linux NativeAssets must be manually added) persists across all versions."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.72,
+      "reason": "The 'regression' from .NET Platform 2.1.5 to 2.2.0 most likely reflects an AWS EB platform change (new Ubuntu version or different runtime path) that removed a previously working search path. Linux NativeAssets were never auto-included by SkiaSharp — their absence was always a configuration issue. The AWS EB platform update just surfaced the problem by removing the old binary lookup path.",
+      "workedInVersion": "AWS EB .NET Platform 2.1.5",
+      "brokeInVersion": "AWS EB .NET Platform 2.2.0"
+    }
+  },
+  "analysis": {
+    "summary": "libSkiaSharp native binary cannot be found at runtime on AWS Elastic Beanstalk (Linux). The root cause is that Linux NativeAssets are never auto-included — SkiaSharp.NativeAssets.Linux or SkiaSharp.NativeAssets.Linux.NoDependencies must be explicitly added to the executable project. A second commenter tried NativeAssets.Linux 2.88.3 and still failed, which is consistent with AWS Elastic Beanstalk lacking fontconfig (NativeAssets.Linux requires it), making NativeAssets.Linux.NoDependencies the correct package for this environment.",
+    "rationale": "DllNotFoundException on Linux is the canonical symptom of missing Linux NativeAssets. Code review of SkiaSharp.csproj confirms Linux is intentionally absent from auto-included platforms — it must be manually added. The perceived regression from AWS EB .NET Platform 2.1.5 to 2.2.0 is almost certainly an environment change (different Ubuntu base or runtime path changes), not a SkiaSharp code regression, because SkiaSharp never auto-included Linux NativeAssets in any version. The second commenter's continued failure after adding NativeAssets.Linux suggests fontconfig was missing from the Elastic Beanstalk environment.",
+    "keySignals": [
+      {
+        "text": "liblibSkiaSharp: cannot open shared object file: No such file or directory",
+        "source": "issue body",
+        "interpretation": "The native .so is not found on any search path — the Linux NativeAssets package is missing from the deployment output."
+      },
+      {
+        "text": "It was working fine in .Net Platform version 2.1.5 but after the upgrade, this version in Elastic Beanstalk gives an error.",
+        "source": "issue body",
+        "interpretation": "Perceived regression triggered by an AWS EB platform upgrade that changed the Linux runtime environment or search paths, not a SkiaSharp code change."
+      },
+      {
+        "text": "Same issue when run using SkiaSharp.NativeAssets.Linux 2.88.3.",
+        "source": "comment by MohanaselvamJ",
+        "interpretation": "Adding NativeAssets.Linux alone was insufficient — likely because Elastic Beanstalk lacks fontconfig (which NativeAssets.Linux requires), or the package was added to a library project instead of the application project."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "lines": "18-26",
+        "finding": "NativeAssets project references for auto-inclusion do not include Linux — only Windows, macOS, Android, iOS, MacCatalyst, Tizen, and tvOS are auto-included. This confirms Linux NativeAssets must always be added manually by the application developer.",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/packages.md",
+        "lines": "86-95",
+        "finding": "Linux NativeAssets packages (SkiaSharp.NativeAssets.Linux and SkiaSharp.NativeAssets.Linux.NoDependencies) must be added manually. NativeAssets.Linux requires fontconfig; NoDependencies only requires libc/libm/libpthread/libdl — making it the correct choice for cloud and container deployments without system libraries such as AWS Elastic Beanstalk.",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/packages.md",
+        "lines": "179-214",
+        "finding": "Troubleshooting section documents two DllNotFoundException failure modes: (1) .so not found — fix: add NativeAssets.Linux; (2) .so found but missing dependency (e.g. fontconfig) — fix: switch to NoDependencies. The first commenter's error matches mode (1); the second commenter's continued failure after adding NativeAssets.Linux is consistent with mode (2) on Elastic Beanstalk.",
+        "relevance": "direct"
+      }
+    ],
+    "errorFingerprint": "DllNotFoundException-libSkiaSharp-Linux-missing-native-assets",
+    "workarounds": [
+      "Add SkiaSharp.NativeAssets.Linux.NoDependencies to the application (executable) project — not a class library project. This has zero third-party dependencies and works on AWS Elastic Beanstalk.",
+      "If SkiaSharp.NativeAssets.Linux was already added but still fails, ensure it is referenced in the application project and that fontconfig is installed in the Elastic Beanstalk environment (apt-get install libfontconfig1), or switch to NoDependencies instead."
+    ],
+    "nextQuestions": [
+      "Was SkiaSharp.NativeAssets.Linux or SkiaSharp.NativeAssets.Linux.NoDependencies added to the application (executable) project, or only to a referenced class library?",
+      "Does AWS Elastic Beanstalk Ubuntu have fontconfig installed? If not, NativeAssets.Linux requires it and will fail.",
+      "What .NET runtime identifier (RID) is used for publishing? (e.g. linux-x64)"
+    ],
+    "resolution": {
+      "hypothesis": "The libSkiaSharp native binary is not deployed because SkiaSharp.NativeAssets.Linux (or NoDependencies) was not added to the application project. For AWS Elastic Beanstalk (Ubuntu without fontconfig), NativeAssets.Linux.NoDependencies is the correct package.",
+      "proposals": [
+        {
+          "title": "Add SkiaSharp.NativeAssets.Linux.NoDependencies to the application project",
+          "description": "Add SkiaSharp.NativeAssets.Linux.NoDependencies as a PackageReference in the ASP.NET Core application's .csproj file (the project that produces the executable, not a class library). This package ships libSkiaSharp with no external dependencies beyond standard libc/libm — it works on AWS Elastic Beanstalk without fontconfig.",
+          "category": "fix",
+          "codeSnippet": "<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"2.80.2\" />",
+          "validated": "untested",
+          "confidence": 0.88,
+          "effort": "cost/xs"
+        },
+        {
+          "title": "Verify NativeAssets is in the executable project",
+          "description": "If NativeAssets.Linux was already added but still fails, verify it is referenced in the .csproj of the project that produces the final executable (not in a referenced class library). NativeAssets placed in library projects are not deployed to the application output folder.",
+          "category": "investigation",
+          "confidence": 0.82,
+          "effort": "cost/xs"
+        }
+      ],
+      "recommendedProposal": "Add SkiaSharp.NativeAssets.Linux.NoDependencies to the application project",
+      "recommendedReason": "Zero third-party dependencies makes it compatible with AWS Elastic Beanstalk Ubuntu environments that do not have fontconfig installed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.78,
+      "reason": "The fix is almost certainly adding SkiaSharp.NativeAssets.Linux.NoDependencies to the application project, but the reporter has not confirmed whether any NativeAssets package was referenced or whether it was added to the correct project.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Was SkiaSharp.NativeAssets.Linux or SkiaSharp.NativeAssets.Linux.NoDependencies added to the project?",
+      "Is the NativeAssets package in the application (executable) project, or only in a class library dependency?",
+      "What is the full error log including all loading paths (set LD_DEBUG=libs for verbose output)?"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/libSkiaSharp.native, os/Linux, tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/libSkiaSharp.native", "os/Linux", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post diagnosis and NativeAssets.Linux.NoDependencies fix recommendation",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "This is a known issue when deploying SkiaSharp to Linux environments — the native library package is **not** automatically included for Linux and must be added manually.\n\nFor AWS Elastic Beanstalk (or any Linux environment without fontconfig), add **`SkiaSharp.NativeAssets.Linux.NoDependencies`** to your **application project** (the `.csproj` that produces the executable, not a class library):\n\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"2.80.2\" />\n```\n\nKey notes:\n- **`NativeAssets.Linux`** (without NoDependencies) requires `fontconfig` — if that system library is not installed on Elastic Beanstalk, it will also fail. Use `NoDependencies` instead.\n- The package **must** be in the application project that produces the final executable, not in a referenced library project — otherwise the native binary won't be copied to the deployment output.\n\nCould you confirm:\n1. Was a `NativeAssets.Linux` package already added?\n2. If so, was it in the application project or a library project?\n\nSee the [Linux deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md#linux-package-selection-guide) for full details."
+      }
+    ]
+  }
+}
