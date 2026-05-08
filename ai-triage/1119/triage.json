@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1119,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T09:30:00Z"
+  },
+  "summary": "User asks how to derive the font family name from a font full name (e.g., 'FrutigerNext LT Regular') in order to use SKTypeface.FromFamilyName(), which returns the default typeface when given a full font name instead of the family name.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call SKTypeface.FromFamilyName('FrutigerNext LT Regular') with the full font name",
+        "Observe that the default typeface (not the intended font) is returned"
+      ],
+      "relatedIssues": [762]
+    }
+  },
+  "analysis": {
+    "summary": "The user is confusing font full names (e.g., 'FrutigerNext LT Regular') with font family names (e.g., 'FrutigerNext LT'). SKTypeface.FromFamilyName() requires the family name component, not the full name. The family name can be found programmatically by enumerating SKFontManager.Default.FontFamilies, then using SKFontStyleSet.GetStyleName() to match the style portion.",
+    "rationale": "This is a usage question about Skia's font model. No broken behavior exists — Skia correctly uses a family+style model, not full font names. The contributor comment in the thread already partially answered it. The required API exists (SKFontManager, SKFontStyleSet) and is publicly accessible.",
+    "keySignals": [
+      {
+        "text": "Skia sharp is returning default font",
+        "source": "issue body",
+        "interpretation": "User is passing the full font name instead of the family name, causing SKTypeface to fall back to the default typeface."
+      },
+      {
+        "text": "how can i get the correct font family name correctly for different fonts",
+        "source": "issue body",
+        "interpretation": "Core question: how to derive the family name component from a full font name string."
+      },
+      {
+        "text": "I cannot use load by stream in my case, where i get input only as font name",
+        "source": "comment by reporter",
+        "interpretation": "Reporter only has font name strings available, not file paths or streams."
+      },
+      {
+        "text": "SKTypeface.FromFamilyName() uses the font manager to resolve fonts. So the moment you install your fonts on the system FromFamilyName should work",
+        "source": "comment by contributor Gillibald",
+        "interpretation": "Partial answer: family name must match system-installed family name, not full/PostScript name."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "55-71",
+        "finding": "SKTypeface.FromFamilyName() accepts a family name string and calls sk_typeface_create_from_name. If no installed font matches the family name, Skia silently returns a fallback typeface rather than null. There is no overload that accepts a full font name.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "43-72",
+        "finding": "SKFontManager.Default.FontFamilies enumerates all system-installed font family names (IEnumerable<string>). GetFontStyles(string familyName) returns an SKFontStyleSet containing all typefaces for that family.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontStyleSet.cs",
+        "lines": "28-45",
+        "finding": "SKFontStyleSet.GetStyleName(int index) returns the style name string (e.g., 'Regular', 'Bold', 'Heavy') for each typeface in the set. CreateTypeface(int index) materialises the typeface. This pair enables mapping full-name strings to typefaces without file access.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKTypeface.FromFamilyName('FrutigerNext LT', SKFontStyle.Normal) for regular — pass the family name only, not the full name",
+      "Enumerate SKFontManager.Default.FontFamilies and match by concatenating familyName + ' ' + GetStyleName(i) to find the typeface for a given full name",
+      "Load font from file or stream (SKTypeface.FromFile / SKTypeface.FromStream) and then read its .FamilyName property to discover the correct family name"
+    ],
+    "nextQuestions": [
+      "Are the FrutigerNext fonts installed on the target system, or do they need to be embedded/loaded from files?",
+      "What platform is the target — mobile platforms require fonts to be bundled, not just system-installed."
+    ],
+    "resolution": {
+      "hypothesis": "The user needs to separate the family name from the style suffix in the font full name, then pass only the family name to FromFamilyName() with an appropriate SKFontStyle — or enumerate font families to find a match.",
+      "proposals": [
+        {
+          "title": "Use family name with style parameter",
+          "description": "Strip the style suffix from the full font name and pass the family name to FromFamilyName() with the appropriate SKFontStyle weight.",
+          "category": "fix",
+          "codeSnippet": "// 'FrutigerNext LT Regular' → family='FrutigerNext LT', style=Normal\nusing var typeface = SKTypeface.FromFamilyName(\"FrutigerNext LT\", SKFontStyle.Normal);\n\n// 'FrutigerNext LT Heavy' → family='FrutigerNext LT', weight=900\nusing var heavy = SKTypeface.FromFamilyName(\"FrutigerNext LT\", new SKFontStyle(900, 5, SKFontStyleSlant.Upright));\n\n// Check if the requested font was actually matched (Skia silently returns a fallback)\nif (typeface?.FamilyName != \"FrutigerNext LT\")\n    throw new InvalidOperationException(\"Font not installed on this system.\");",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Resolve full font name to typeface by enumeration",
+          "description": "Enumerate all installed font families and style names to find the typeface whose family+style matches the given full font name. Works without knowing the split point in advance.",
+          "category": "workaround",
+          "codeSnippet": "SKTypeface FindTypefaceByFullName(string fullFontName)\n{\n    var fm = SKFontManager.Default;\n    foreach (var familyName in fm.FontFamilies)\n    {\n        using var styleSet = fm.GetFontStyles(familyName);\n        for (int i = 0; i < styleSet.Count; i++)\n        {\n            var styleName = styleSet.GetStyleName(i);\n            if (styleName == null) continue;\n            if (string.Equals($\"{familyName} {styleName}\", fullFontName,\n                    StringComparison.OrdinalIgnoreCase))\n            {\n                var tf = styleSet.CreateTypeface(i);\n                if (tf != null) return tf;\n            }\n        }\n    }\n    return null; // Font not installed on this system\n}\n\n// Usage:\nvar typeface = FindTypefaceByFullName(\"FrutigerNext LT Regular\");\n// Note: fonts must be installed on the system (or pre-registered via SKFontManager).\n// Not supported on WASM; mobile platforms require fonts to be embedded in the app bundle.",
+          "confidence": 0.80,
+          "effort": "cost/s",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use family name with style parameter",
+      "recommendedReason": "Simplest approach when the family name is known. Full font names follow a consistent 'FamilyName StyleName' pattern, so splitting the last word gives the style."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.85,
+      "reason": "Usage question about Skia's font model. API works as designed — it uses family names, not full/PostScript names. The answer is derivable from SKFontManager and SKFontStyleSet APIs. A contributor already partially answered in comments.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/question and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/question", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer explaining font family vs full name distinction with working code examples and platform caveats",
+        "risk": "medium",
+        "confidence": 0.83,
+        "comment": "Hi @Jack-Paul,\n\nThe key distinction in Skia's font model is between a **font family name** (e.g., `FrutigerNext LT`) and a **full font name** (e.g., `FrutigerNext LT Regular`). `SKTypeface.FromFamilyName()` expects only the family name portion, with the style (weight/slant) supplied separately via `SKFontStyle`.\n\n**Option 1 — If you know the family and style:**\n\n```csharp\n// 'FrutigerNext LT Regular'\nusing var typeface = SKTypeface.FromFamilyName(\"FrutigerNext LT\", SKFontStyle.Normal);\n\n// 'FrutigerNext LT Heavy' (weight 900)\nusing var heavy = SKTypeface.FromFamilyName(\"FrutigerNext LT\",\n    new SKFontStyle(900, 5, SKFontStyleSlant.Upright));\n\n// Important: Skia returns a fallback font silently if the family isn't found.\n// Check that the result matches what you requested:\nif (typeface?.FamilyName != \"FrutigerNext LT\")\n    throw new InvalidOperationException(\"Font not installed on this system.\");\n```\n\n**Option 2 — Resolve any full font name generically (family name unknown):**\n\n```csharp\nSKTypeface FindTypefaceByFullName(string fullFontName)\n{\n    var fm = SKFontManager.Default;\n    foreach (var familyName in fm.FontFamilies)\n    {\n        using var styleSet = fm.GetFontStyles(familyName);\n        for (int i = 0; i < styleSet.Count; i++)\n        {\n            var styleName = styleSet.GetStyleName(i);\n            if (styleName == null) continue;\n            if (string.Equals($\"{familyName} {styleName}\", fullFontName,\n                    StringComparison.OrdinalIgnoreCase))\n            {\n                var tf = styleSet.CreateTypeface(i);\n                if (tf != null) return tf;\n            }\n        }\n    }\n    return null; // font not found\n}\n\n// Usage:\nvar typeface = FindTypefaceByFullName(\"FrutigerNext LT Regular\");\n```\n\n**Important platform notes:**\n- Fonts must be **installed on the system** (Windows/macOS/Linux) for `FontFamilies` enumeration to see them.\n- On **Android/iOS**, system fonts are limited — custom fonts must be embedded in the app bundle and loaded via `SKTypeface.FromStream()` or `SKTypeface.FromFile()`.\n- **WASM** does not support runtime font enumeration — fonts must be embedded at build time.\n- On **Linux**, `fontconfig` must be installed and the font cache updated (`fc-cache -fv`) for custom fonts to be visible."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — usage question with documented API solution",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

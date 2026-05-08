@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 976,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T09:47:47Z"
+  },
+  "summary": "Memory violations occur when two background threads simultaneously use separate EGL/OpenGL contexts and GRContexts to render GPU bitmaps via DrawPath on UWP, despite each thread having its own independent EGLContext, EGLPbufferSurface, and GRContext.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.82 },
+    "platforms": ["os/Windows-Universal-UWP"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Memory violations (AccessViolationException) when two GPU rendering background threads are active simultaneously, crash occurs on DrawPath call",
+      "reproQuality": "complete",
+      "targetFrameworks": ["uap10.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a UWPGRContextProvider class that: initialises EGL (eglDisplay, eglConfig, eglPbufferSurface, eglContext) in a background thread, assembles a GRGlInterface using a custom EGL proc loader, creates a GRContext from the interface",
+        "Instantiate one UWPGRContextProvider on one background thread and call CreateGRContext — this works fine",
+        "Instantiate two UWPGRContextProvider objects each on their own independent background thread and call CreateGRContext simultaneously",
+        "Observe memory violation (attempted to read or write protected memory) during DrawPath call on one of the threads"
+      ],
+      "environmentDetails": "UWP on Windows, OpenGL/EGL via ANGLE",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/files/3688747/UWPGRContextProvider.txt", "description": "UWPGRContextProvider implementation showing EGL context setup and GRGlInterface assembly per thread" },
+        { "url": "https://github.com/mono/SkiaSharp/files/3721412/TestMultithreadedGPURendering.zip", "description": "Complete Visual Studio repro project demonstrating the multithreaded GPU rendering failure" },
+        { "url": "https://skia.googlesource.com/skia/+/20054dca88d578a642905b975656a4d767139d54", "description": "Upstream Skia commit: fix path effects to be thread-safe — possibly related to the DrawPath crash" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/755", "description": "Related predecessor issue: SystemAccessViolation in single-threaded GPU rendering with GRContext (same reporter)" }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Reporter is using the correct EGL per-thread context pattern (each thread owns its own EGLContext + PBuffer + GRContext with distinct IntPtrs), yet memory violations occur during DrawPath when two threads render simultaneously. The reporter links an upstream Skia commit fixing path effects thread-safety, which is the most likely root cause: Skia's path effect code shared global mutable state at the time of this issue. The SkiaSharp C# layer and GRGlInterface assembly code appear correct; the defect is likely in the underlying Skia C++ path rendering.",
+    "rationale": "Classified as type/bug because the reporter correctly implements per-thread EGL contexts per the EGL specification, and still gets memory violations. The crash on DrawPath combined with the upstream Skia path-effects thread-safety fix strongly implicates a Skia-level shared state bug rather than misuse. Area is area/SkiaSharp since the C# GRContext/GRGlInterface wrapping is the entry point; the backend is OpenGL via ANGLE on UWP. A complete repro project is provided, placing reproQuality at complete.",
+    "keySignals": [
+      { "text": "The System.IntPtrs are all different, so there doesn't appear to be any overlaps. But invariably when both threads are running memory violations will occur.", "source": "issue body", "interpretation": "Reporter has correctly isolated EGL contexts per thread — overlapping handles are not the cause. Shared mutable state deeper in Skia is implicated." },
+      { "text": "The memory exception happens on the DrawPath call.", "source": "comment by pathw0rk3r", "interpretation": "Crash is localized to path rendering, consistent with the path effects thread-safety bug fixed in the linked upstream Skia commit." },
+      { "text": "there was a bug fix that went into Skia a few months back regarding making path effects thread safe", "source": "comment by pathw0rk3r, linking skia commit 20054dca88d", "interpretation": "Reporter has found the likely root cause: Skia path effects were not thread-safe at the time. Fix exists upstream; question is whether SkiaSharp has consumed it." },
+      { "text": "I can supply a small Visual Studio project to demonstrate how the failure occurs", "source": "comment by pathw0rk3r", "interpretation": "Repro project was subsequently attached, giving a complete reproduction case." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/GRContext.cs", "lines": "36-46", "finding": "GRContext.CreateGl() assembles a GrDirectContext from a GRGlInterface handle. No thread-affinity enforcement or locking. This is intentional — each thread must create its own GRContext. The C# wrapper is correct; thread-safety responsibility is in the Skia C++ layer.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/GRGlInterface.cs", "lines": "52-60", "finding": "GRGlInterface.Create(GRGlGetProcedureAddressDelegate) assembles the interface via gr_glinterface_assemble_interface. The delegate-based proc loader pattern matches what the reporter uses with their custom EGL loader. API is used correctly.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/GRContext.cs", "lines": "108-114", "finding": "GRContext.AbandonContext() is called on Dispose. Per-thread GRContext disposal appears correct in the binding layer.", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Limit GPU rendering to a single background thread and use a queue/semaphore to serialize tile rendering requests — eliminates the concurrent GRContext issue at the cost of parallelism.",
+      "Fall back to CPU rasterization (SKSurface.Create with SKImageInfo, no GRContext) for tiles; CPU surfaces are inherently thread-safe since each has independent memory.",
+      "Check whether the version of SkiaSharp in use has consumed the upstream Skia path-effects thread-safety fix (skia commit 20054dca88d); upgrading to a newer SkiaSharp release may resolve the crash without code changes."
+    ],
+    "nextQuestions": [
+      "Has the upstream Skia path-effects thread-safety commit (20054dca88d) been incorporated into the Skia version bundled with the SkiaSharp version the reporter is using?",
+      "Does the crash reproduce on a non-UWP platform (e.g., WPF or WinForms with WGL) to confirm the issue is in Skia core rather than ANGLE?",
+      "Does the crash still reproduce with a newer SkiaSharp release (the issue was filed in 2019; multiple Skia milestone bumps have occurred since)?"
+    ],
+    "resolution": {
+      "hypothesis": "The memory violations are caused by Skia path effects sharing global mutable state across GRContexts even when each thread owns its own EGLContext. The upstream fix (skia commit 20054dca88d) addressed this; the reporter needs a SkiaSharp version that includes that Skia revision.",
+      "proposals": [
+        {
+          "title": "Upgrade to a SkiaSharp version that includes the Skia path-effects thread-safety fix",
+          "description": "The reporter identified upstream Skia commit 20054dca88d as the fix. Upgrading to the SkiaSharp NuGet release that incorporates this Skia version should resolve the crash without any code changes.",
+          "category": "fix",
+          "confidence": 0.72,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Serialize GPU rendering with a per-GRContext lock",
+          "description": "Wrap all Skia GPU calls (including DrawPath) per thread in a lock tied to that thread's GRContext. This is a workaround in case path effects still share state in newer versions.",
+          "category": "workaround",
+          "confidence": 0.65,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Use CPU surface per thread as fallback",
+          "description": "Replace GRContext-backed surfaces with CPU SKSurface per thread. CPU surfaces share no GPU state and are safe to use concurrently. Reduces GPU utilization but eliminates the crash.",
+          "category": "alternative",
+          "confidence": 0.90,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Upgrade to a SkiaSharp version that includes the Skia path-effects thread-safety fix",
+      "recommendedReason": "Zero code changes required. The reporter themselves identified the upstream fix — upgrading SkiaSharp to a release that includes Skia post-20054dca88d is the lowest-effort resolution."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.78,
+      "reason": "Complete repro project provided and upstream Skia fix identified. Needs investigation to confirm the fix is in the current SkiaSharp Skia version and whether the issue is still reproducible.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp core, UWP, OpenGL, and reliability tenet labels",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Universal-UWP", "backend/OpenGL", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis noting the upstream Skia path-effects fix and suggest upgrade + workarounds",
+        "risk": "medium",
+        "confidence": 0.78,
+        "comment": "Thanks for the detailed reproduction and for tracking down the upstream Skia commit!\n\nThe crash on `DrawPath` during concurrent rendering is consistent with the path-effects thread-safety issue fixed in Skia at [`20054dca88d`](https://skia.googlesource.com/skia/+/20054dca88d578a642905b975656a4d767139d54). Even with fully independent EGL contexts per thread, Skia path effects were sharing global mutable state before that fix.\n\n**Suggested next steps:**\n1. **Try upgrading SkiaSharp** to the latest available release — Skia has been bumped through multiple milestones since 2019, and this fix should be included in recent versions.\n2. If the crash persists after upgrading, please let us know the new SkiaSharp version and we can investigate further.\n\n**In the meantime**, two workarounds:\n- Serialize all GPU calls for each `GRContext` behind a per-thread lock.\n- Fall back to CPU surfaces (`SKSurface.Create(info)` without a `GRContext`) for concurrent tile rendering — CPU surfaces share no GPU state and are inherently thread-safe.\n\nThe test project you attached is very helpful — thank you!"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related predecessor issue #755 (same reporter, same GPU rendering pattern)",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 755
+      }
+    ]
+  }
+}

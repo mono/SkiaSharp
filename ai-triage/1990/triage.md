@@ -1,0 +1,369 @@
+# Issue Triage Report — #1990
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T08:15:00Z |
+| Type | type/bug (0.80 (80%)) |
+| Area | area/SkiaSharp (0.85 (85%)) |
+| Suggested action | close-as-external (0.75 (75%)) |
+
+**Issue Summary:** TypeInitializationException thrown when using SkiaSharp (via Codecrete.SwissQRBill) in a COM-hosted .NET component due to assembly version conflict on System.Runtime.CompilerServices.Unsafe.
+
+**Analysis:** When SkiaSharp is loaded inside a COM-hosted .NET process, the CLR cannot resolve assembly binding redirects from NuGet, causing a version conflict between the System.Runtime.CompilerServices.Unsafe versions required by different packages. The COM host does not apply the app.config binding redirects that a normal .NET executable would generate, so the runtime fails to unify assembly versions.
+
+**Recommendations:** **close-as-external** — The assembly version conflict is caused by the COM hosting environment not applying NuGet-generated binding redirects — this is a .NET Framework / deployment behavior, not a SkiaSharp defect. A community-validated workaround exists (GAC registration). The issue is external to SkiaSharp's code.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a COM component that references a .NET assembly
+2. The .NET assembly uses Codecrete.SwissQRBill.Generator which uses SkiaSharp
+3. Call the COM component from a COM client (e.g., classic VB6/VBA host)
+4. Observe TypeInitializationException with inner FileLoadException for System.Runtime.CompilerServices.Unsafe
+
+**Environment:** Windows Classic (COM host), .NET Framework, SkiaSharp (version not specified), Codecrete.SwissQRBill.Generator
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1990#issuecomment-2754335335 — Community workaround: register System.Runtime.CompilerServices.Unsafe 4.5.3 in the GAC using gacutil
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | exception |
+| Error message | FileLoadException: Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1' or one of its dependencies. The located assembly's manifest definition does not match the assembly reference. |
+| Repro quality | partial |
+| Target frameworks | — |
+
+**Stack trace:**
+
+```text
+at System.SpanHelpers.IsReferenceOrContainsReferences[T]()
+  at SkiaSharp.SKString.ToString()
+  at SkiaSharp.SKTypeface.get_FamilyName()
+```
+
+## Analysis
+
+### Technical Summary
+
+When SkiaSharp is loaded inside a COM-hosted .NET process, the CLR cannot resolve assembly binding redirects from NuGet, causing a version conflict between the System.Runtime.CompilerServices.Unsafe versions required by different packages. The COM host does not apply the app.config binding redirects that a normal .NET executable would generate, so the runtime fails to unify assembly versions.
+
+### Rationale
+
+The stack trace clearly shows the failure originates in System.Memory (SpanHelpers.IsReferenceOrContainsReferences) triggered by SKString.ToString(), which uses Span<T>. The root cause is that COM-hosted .NET processes don't automatically apply NuGet-generated assembly binding redirects. SkiaSharp uses System.Memory 4.6.3 (for net4x targets per Directory.Build.targets), which transitively depends on System.Runtime.CompilerServices.Unsafe. In a COM host without a proper app.config, the CLR cannot unify the conflicting assembly versions. The issue is environmental (COM hosting without binding redirects) rather than a defect in SkiaSharp's code itself, but it is a known deployment pain point for users.
+
+### Key Signals
+
+- "at System.SpanHelpers.IsReferenceOrContainsReferences[T]() at SkiaSharp.SKString.ToString()" — **issue body** (System.Memory static initializer fails before SkiaSharp can function. This happens because the COM host cannot load the required version of System.Runtime.CompilerServices.Unsafe.)
+- "FileLoadException: Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1'" — **issue body** (Version 4.0.4.1 is assembly version corresponding to NuGet package 4.5.3. The COM host can find a different version but not this specific version, indicating missing binding redirects.)
+- "When running through COM it appears Skiasharp looks for a specific version of System.Runtime.CompilerServices.Unsafe.dll... So i downloaded the package... registered the dll with gacutil.exe /i and the issue disappeared." — **comment by OlliC** (Confirms root cause: missing assembly in the COM host's search path. GAC registration resolves the version conflict by making the assembly globally available.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKString.cs` | 48-53 | direct | SKString.ToString() calls StringUtilities.GetString() which uses Span<byte> via AsReadOnlySpan extension. This triggers System.Memory / SpanHelpers initialization, which depends on System.Runtime.CompilerServices.Unsafe. |
+| `binding/Directory.Build.targets` | 3-9 | direct | For net4x and netstandard2.0 targets, SkiaSharp depends on System.Memory 4.6.3. NuGet normally generates binding redirects for the host exe, but COM-hosted processes may not have these redirects applied, causing assembly version conflicts at runtime. |
+| `binding/SkiaSharp/Util.cs` | 36-40 | related | AsSpan and AsReadOnlySpan extension methods on IntPtr use unsafe Span<T> construction, which is the API path that initializes System.Memory types and triggers the PerTypeValues<T> static constructor. |
+
+### Workarounds
+
+- Register System.Runtime.CompilerServices.Unsafe 4.5.3 (assembly version 4.0.4.1) in the GAC using gacutil.exe /i on the affected machine.
+- Place the required System.Runtime.CompilerServices.Unsafe.dll version in the same directory as the COM component or the host executable.
+- Add assembly binding redirects to the host process's app.config to unify all versions of System.Runtime.CompilerServices.Unsafe to a single version (e.g., redirect all to version 6.0.0.0).
+- If the COM host is a third-party application, contact the vendor to add binding redirects or ensure the correct assembly versions are deployed.
+
+### Next Questions
+
+- What SkiaSharp version is being used?
+- What is the COM host process (VB6, Excel, custom unmanaged app)?
+- Is there an app.config or regasm configuration that could accept binding redirects?
+- Is the COM component registered as a .NET COM-callable wrapper (CCW)?
+
+### Resolution Proposals
+
+**Hypothesis:** The COM host process loads .NET assemblies without applying NuGet binding redirects, causing version conflicts for System.Runtime.CompilerServices.Unsafe which is a transitive dependency of System.Memory used by SkiaSharp's Span<T> operations.
+
+1. **GAC registration workaround** — workaround, confidence 0.90 (90%), cost/xs, validated=yes
+   - Download System.Runtime.CompilerServices.Unsafe NuGet package version 4.5.3, extract the dll, and register it in the Global Assembly Cache (GAC) using gacutil.exe /i on the deployment machine.
+2. **Add assembly binding redirects to COM host config** — workaround, confidence 0.75 (75%), cost/s, validated=yes
+   - Add an app.config (or the host process's .exe.config) with assembly binding redirects that redirect all versions of System.Runtime.CompilerServices.Unsafe to the latest version (6.0.0.0).
+
+```csharp
+<configuration>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe"
+            publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-6.0.0.0" newVersion="6.0.0.0" />
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+</configuration>
+```
+3. **Investigate reducing System.Memory dependency for COM scenarios** — investigation, confidence 0.50 (50%), cost/m, validated=untested
+   - Investigate whether SkiaSharp's net4x builds could avoid the transitive System.Runtime.CompilerServices.Unsafe dependency, or provide guidance in documentation for COM deployment scenarios.
+
+**Recommended proposal:** GAC registration workaround
+
+**Why:** Confirmed working by a community member. Requires no changes to the COM host process configuration and works even when the host's app.config cannot be modified.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-external |
+| Confidence | 0.75 (75%) |
+| Reason | The assembly version conflict is caused by the COM hosting environment not applying NuGet-generated binding redirects — this is a .NET Framework / deployment behavior, not a SkiaSharp defect. A community-validated workaround exists (GAC registration). The issue is external to SkiaSharp's code. |
+| Suggested repro platform | windows |
+
+### Missing Info
+
+- SkiaSharp version being used
+- The type of COM host process (VB6, VBA, custom unmanaged host)
+- Whether the COM component has an associated .config file for binding redirects
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.85 (85%) | Apply bug, area/SkiaSharp, os/Windows-Classic, tenet/compatibility labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, tenet/compatibility |
+| add-comment | medium | 0.85 (85%) | Post explanation with workarounds for COM assembly version conflict | — |
+| close-issue | medium | 0.75 (75%) | Close as external — root cause is .NET Framework COM assembly loading behavior, not a SkiaSharp defect | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! This is a known issue with .NET Framework COM-hosted scenarios.
+
+When SkiaSharp is loaded inside a COM host (e.g., a COM-callable wrapper), the .NET runtime doesn't automatically apply the NuGet-generated assembly binding redirects from the application's `app.config`. This causes version conflicts for transitive dependencies like `System.Runtime.CompilerServices.Unsafe`.
+
+**Workaround 1 — GAC registration (confirmed working):**
+1. Download the `System.Runtime.CompilerServices.Unsafe` NuGet package version 4.5.3 from https://www.nuget.org/packages/System.Runtime.CompilerServices.Unsafe/4.5.3
+2. Rename the `.nupkg` to `.zip` and extract `lib/net461/System.Runtime.CompilerServices.Unsafe.dll`
+3. Install the Windows SDK to get `gacutil.exe`
+4. Run: `gacutil.exe /i System.Runtime.CompilerServices.Unsafe.dll`
+
+**Workaround 2 — Binding redirects:**
+If the COM host process has a `.exe.config` you can modify, add:
+```xml
+<configuration>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe"
+            publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-6.0.0.0" newVersion="6.0.0.0" />
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+</configuration>
+```
+
+This issue is external to SkiaSharp itself — the assembly loading behavior is controlled by the .NET Framework runtime. We'll close this as external, but the workarounds above should resolve the problem.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1990,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T08:15:00Z"
+  },
+  "summary": "TypeInitializationException thrown when using SkiaSharp (via Codecrete.SwissQRBill) in a COM-hosted .NET component due to assembly version conflict on System.Runtime.CompilerServices.Unsafe.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.8
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "FileLoadException: Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1' or one of its dependencies. The located assembly's manifest definition does not match the assembly reference.",
+      "stackTrace": "at System.SpanHelpers.IsReferenceOrContainsReferences[T]()\n  at SkiaSharp.SKString.ToString()\n  at SkiaSharp.SKTypeface.get_FamilyName()",
+      "reproQuality": "partial"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a COM component that references a .NET assembly",
+        "The .NET assembly uses Codecrete.SwissQRBill.Generator which uses SkiaSharp",
+        "Call the COM component from a COM client (e.g., classic VB6/VBA host)",
+        "Observe TypeInitializationException with inner FileLoadException for System.Runtime.CompilerServices.Unsafe"
+      ],
+      "environmentDetails": "Windows Classic (COM host), .NET Framework, SkiaSharp (version not specified), Codecrete.SwissQRBill.Generator",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1990#issuecomment-2754335335",
+          "description": "Community workaround: register System.Runtime.CompilerServices.Unsafe 4.5.3 in the GAC using gacutil"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "When SkiaSharp is loaded inside a COM-hosted .NET process, the CLR cannot resolve assembly binding redirects from NuGet, causing a version conflict between the System.Runtime.CompilerServices.Unsafe versions required by different packages. The COM host does not apply the app.config binding redirects that a normal .NET executable would generate, so the runtime fails to unify assembly versions.",
+    "rationale": "The stack trace clearly shows the failure originates in System.Memory (SpanHelpers.IsReferenceOrContainsReferences) triggered by SKString.ToString(), which uses Span<T>. The root cause is that COM-hosted .NET processes don't automatically apply NuGet-generated assembly binding redirects. SkiaSharp uses System.Memory 4.6.3 (for net4x targets per Directory.Build.targets), which transitively depends on System.Runtime.CompilerServices.Unsafe. In a COM host without a proper app.config, the CLR cannot unify the conflicting assembly versions. The issue is environmental (COM hosting without binding redirects) rather than a defect in SkiaSharp's code itself, but it is a known deployment pain point for users.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKString.cs",
+        "lines": "48-53",
+        "finding": "SKString.ToString() calls StringUtilities.GetString() which uses Span<byte> via AsReadOnlySpan extension. This triggers System.Memory / SpanHelpers initialization, which depends on System.Runtime.CompilerServices.Unsafe.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/Directory.Build.targets",
+        "lines": "3-9",
+        "finding": "For net4x and netstandard2.0 targets, SkiaSharp depends on System.Memory 4.6.3. NuGet normally generates binding redirects for the host exe, but COM-hosted processes may not have these redirects applied, causing assembly version conflicts at runtime.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Util.cs",
+        "lines": "36-40",
+        "finding": "AsSpan and AsReadOnlySpan extension methods on IntPtr use unsafe Span<T> construction, which is the API path that initializes System.Memory types and triggers the PerTypeValues<T> static constructor.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "at System.SpanHelpers.IsReferenceOrContainsReferences[T]() at SkiaSharp.SKString.ToString()",
+        "source": "issue body",
+        "interpretation": "System.Memory static initializer fails before SkiaSharp can function. This happens because the COM host cannot load the required version of System.Runtime.CompilerServices.Unsafe."
+      },
+      {
+        "text": "FileLoadException: Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1'",
+        "source": "issue body",
+        "interpretation": "Version 4.0.4.1 is assembly version corresponding to NuGet package 4.5.3. The COM host can find a different version but not this specific version, indicating missing binding redirects."
+      },
+      {
+        "text": "When running through COM it appears Skiasharp looks for a specific version of System.Runtime.CompilerServices.Unsafe.dll... So i downloaded the package... registered the dll with gacutil.exe /i and the issue disappeared.",
+        "source": "comment by OlliC",
+        "interpretation": "Confirms root cause: missing assembly in the COM host's search path. GAC registration resolves the version conflict by making the assembly globally available."
+      }
+    ],
+    "workarounds": [
+      "Register System.Runtime.CompilerServices.Unsafe 4.5.3 (assembly version 4.0.4.1) in the GAC using gacutil.exe /i on the affected machine.",
+      "Place the required System.Runtime.CompilerServices.Unsafe.dll version in the same directory as the COM component or the host executable.",
+      "Add assembly binding redirects to the host process's app.config to unify all versions of System.Runtime.CompilerServices.Unsafe to a single version (e.g., redirect all to version 6.0.0.0).",
+      "If the COM host is a third-party application, contact the vendor to add binding redirects or ensure the correct assembly versions are deployed."
+    ],
+    "nextQuestions": [
+      "What SkiaSharp version is being used?",
+      "What is the COM host process (VB6, Excel, custom unmanaged app)?",
+      "Is there an app.config or regasm configuration that could accept binding redirects?",
+      "Is the COM component registered as a .NET COM-callable wrapper (CCW)?"
+    ],
+    "resolution": {
+      "hypothesis": "The COM host process loads .NET assemblies without applying NuGet binding redirects, causing version conflicts for System.Runtime.CompilerServices.Unsafe which is a transitive dependency of System.Memory used by SkiaSharp's Span<T> operations.",
+      "proposals": [
+        {
+          "title": "GAC registration workaround",
+          "description": "Download System.Runtime.CompilerServices.Unsafe NuGet package version 4.5.3, extract the dll, and register it in the Global Assembly Cache (GAC) using gacutil.exe /i on the deployment machine.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Add assembly binding redirects to COM host config",
+          "description": "Add an app.config (or the host process's .exe.config) with assembly binding redirects that redirect all versions of System.Runtime.CompilerServices.Unsafe to the latest version (6.0.0.0).",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "cost/s",
+          "codeSnippet": "<configuration>\n  <runtime>\n    <assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\">\n      <dependentAssembly>\n        <assemblyIdentity name=\"System.Runtime.CompilerServices.Unsafe\"\n            publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" />\n        <bindingRedirect oldVersion=\"0.0.0.0-6.0.0.0\" newVersion=\"6.0.0.0\" />\n      </dependentAssembly>\n    </assemblyBinding>\n  </runtime>\n</configuration>",
+          "validated": "yes"
+        },
+        {
+          "title": "Investigate reducing System.Memory dependency for COM scenarios",
+          "description": "Investigate whether SkiaSharp's net4x builds could avoid the transitive System.Runtime.CompilerServices.Unsafe dependency, or provide guidance in documentation for COM deployment scenarios.",
+          "category": "investigation",
+          "confidence": 0.5,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "GAC registration workaround",
+      "recommendedReason": "Confirmed working by a community member. Requires no changes to the COM host process configuration and works even when the host's app.config cannot be modified."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-external",
+      "confidence": 0.75,
+      "reason": "The assembly version conflict is caused by the COM hosting environment not applying NuGet-generated binding redirects — this is a .NET Framework / deployment behavior, not a SkiaSharp defect. A community-validated workaround exists (GAC registration). The issue is external to SkiaSharp's code.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "SkiaSharp version being used",
+      "The type of COM host process (VB6, VBA, custom unmanaged host)",
+      "Whether the COM component has an associated .config file for binding redirects"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area/SkiaSharp, os/Windows-Classic, tenet/compatibility labels",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation with workarounds for COM assembly version conflict",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the report! This is a known issue with .NET Framework COM-hosted scenarios.\n\nWhen SkiaSharp is loaded inside a COM host (e.g., a COM-callable wrapper), the .NET runtime doesn't automatically apply the NuGet-generated assembly binding redirects from the application's `app.config`. This causes version conflicts for transitive dependencies like `System.Runtime.CompilerServices.Unsafe`.\n\n**Workaround 1 — GAC registration (confirmed working):**\n1. Download the `System.Runtime.CompilerServices.Unsafe` NuGet package version 4.5.3 from https://www.nuget.org/packages/System.Runtime.CompilerServices.Unsafe/4.5.3\n2. Rename the `.nupkg` to `.zip` and extract `lib/net461/System.Runtime.CompilerServices.Unsafe.dll`\n3. Install the Windows SDK to get `gacutil.exe`\n4. Run: `gacutil.exe /i System.Runtime.CompilerServices.Unsafe.dll`\n\n**Workaround 2 — Binding redirects:**\nIf the COM host process has a `.exe.config` you can modify, add:\n```xml\n<configuration>\n  <runtime>\n    <assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\">\n      <dependentAssembly>\n        <assemblyIdentity name=\"System.Runtime.CompilerServices.Unsafe\"\n            publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" />\n        <bindingRedirect oldVersion=\"0.0.0.0-6.0.0.0\" newVersion=\"6.0.0.0\" />\n      </dependentAssembly>\n    </assemblyBinding>\n  </runtime>\n</configuration>\n```\n\nThis issue is external to SkiaSharp itself — the assembly loading behavior is controlled by the .NET Framework runtime. We'll close this as external, but the workarounds above should resolve the problem."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as external — root cause is .NET Framework COM assembly loading behavior, not a SkiaSharp defect",
+        "risk": "medium",
+        "confidence": 0.75,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

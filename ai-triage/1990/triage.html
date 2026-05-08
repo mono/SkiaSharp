@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #1990 (close-as-external)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 1990, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-25T08:15:00Z"}, "summary": "TypeInitializationException thrown when using SkiaSharp (via Codecrete.SwissQRBill) in a COM-hosted .NET component due to assembly version conflict on System.Runtime.CompilerServices.Unsafe.", "classification": {"type": {"value": "type/bug", "confidence": 0.8}, "area": {"value": "area/SkiaSharp", "confidence": 0.85}, "platforms": ["os/Windows-Classic"], "tenets": ["tenet/compatibility"]}, "evidence": {"bugSignals": {"severity": "medium", "regressionClaimed": false, "errorType": "exception", "errorMessage": "FileLoadException: Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1' or one of its dependencies. The located assembly's manifest definition does not match the assembly reference.", "stackTrace": "at System.SpanHelpers.IsReferenceOrContainsReferences[T]()\n  at SkiaSharp.SKString.ToString()\n  at SkiaSharp.SKTypeface.get_FamilyName()", "reproQuality": "partial"}, "reproEvidence": {"stepsToReproduce": ["Create a COM component that references a .NET assembly", "The .NET assembly uses Codecrete.SwissQRBill.Generator which uses SkiaSharp", "Call the COM component from a COM client (e.g., classic VB6/VBA host)", "Observe TypeInitializationException with inner FileLoadException for System.Runtime.CompilerServices.Unsafe"], "environmentDetails": "Windows Classic (COM host), .NET Framework, SkiaSharp (version not specified), Codecrete.SwissQRBill.Generator", "repoLinks": [{"url": "https://github.com/mono/SkiaSharp/issues/1990#issuecomment-2754335335", "description": "Community workaround: register System.Runtime.CompilerServices.Unsafe 4.5.3 in the GAC using gacutil"}]}}, "analysis": {"summary": "When SkiaSharp is loaded inside a COM-hosted .NET process, the CLR cannot resolve assembly binding redirects from NuGet, causing a version conflict between the System.Runtime.CompilerServices.Unsafe versions required by different packages. The COM host does not apply the app.config binding redirects that a normal .NET executable would generate, so the runtime fails to unify assembly versions.", "rationale": "The stack trace clearly shows the failure originates in System.Memory (SpanHelpers.IsReferenceOrContainsReferences) triggered by SKString.ToString(), which uses Span<T>. The root cause is that COM-hosted .NET processes don't automatically apply NuGet-generated assembly binding redirects. SkiaSharp uses System.Memory 4.6.3 (for net4x targets per Directory.Build.targets), which transitively depends on System.Runtime.CompilerServices.Unsafe. In a COM host without a proper app.config, the CLR cannot unify the conflicting assembly versions. The issue is environmental (COM hosting without binding redirects) rather than a defect in SkiaSharp's code itself, but it is a known deployment pain point for users.", "codeInvestigation": [{"file": "binding/SkiaSharp/SKString.cs", "lines": "48-53", "finding": "SKString.ToString() calls StringUtilities.GetString() which uses Span<byte> via AsReadOnlySpan extension. This triggers System.Memory / SpanHelpers initialization, which depends on System.Runtime.CompilerServices.Unsafe.", "relevance": "direct"}, {"file": "binding/Directory.Build.targets", "lines": "3-9", "finding": "For net4x and netstandard2.0 targets, SkiaSharp depends on System.Memory 4.6.3. NuGet normally generates binding redirects for the host exe, but COM-hosted processes may not have these redirects applied, causing assembly version conflicts at runtime.", "relevance": "direct"}, {"file": "binding/SkiaSharp/Util.cs", "lines": "36-40", "finding": "AsSpan and AsReadOnlySpan extension methods on IntPtr use unsafe Span<T> construction, which is the API path that initializes System.Memory types and triggers the PerTypeValues<T> static constructor.", "relevance": "related"}], "keySignals": [{"text": "at System.SpanHelpers.IsReferenceOrContainsReferences[T]() at SkiaSharp.SKString.ToString()", "source": "issue body", "interpretation": "System.Memory static initializer fails before SkiaSharp can function. This happens because the COM host cannot load the required version of System.Runtime.CompilerServices.Unsafe."}, {"text": "FileLoadException: Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1'", "source": "issue body", "interpretation": "Version 4.0.4.1 is assembly version corresponding to NuGet package 4.5.3. The COM host can find a different version but not this specific version, indicating missing binding redirects."}, {"text": "When running through COM it appears Skiasharp looks for a specific version of System.Runtime.CompilerServices.Unsafe.dll... So i downloaded the package... registered the dll with gacutil.exe /i and the issue disappeared.", "source": "comment by OlliC", "interpretation": "Confirms root cause: missing assembly in the COM host's search path. GAC registration resolves the version conflict by making the assembly globally available."}], "workarounds": ["Register System.Runtime.CompilerServices.Unsafe 4.5.3 (assembly version 4.0.4.1) in the GAC using gacutil.exe /i on the affected machine.", "Place the required System.Runtime.CompilerServices.Unsafe.dll version in the same directory as the COM component or the host executable.", "Add assembly binding redirects to the host process's app.config to unify all versions of System.Runtime.CompilerServices.Unsafe to a single version (e.g., redirect all to version 6.0.0.0).", "If the COM host is a third-party application, contact the vendor to add binding redirects or ensure the correct assembly versions are deployed."], "nextQuestions": ["What SkiaSharp version is being used?", "What is the COM host process (VB6, Excel, custom unmanaged app)?", "Is there an app.config or regasm configuration that could accept binding redirects?", "Is the COM component registered as a .NET COM-callable wrapper (CCW)?"], "resolution": {"hypothesis": "The COM host process loads .NET assemblies without applying NuGet binding redirects, causing version conflicts for System.Runtime.CompilerServices.Unsafe which is a transitive dependency of System.Memory used by SkiaSharp's Span<T> operations.", "proposals": [{"title": "GAC registration workaround", "description": "Download System.Runtime.CompilerServices.Unsafe NuGet package version 4.5.3, extract the dll, and register it in the Global Assembly Cache (GAC) using gacutil.exe /i on the deployment machine.", "category": "workaround", "confidence": 0.9, "effort": "cost/xs", "validated": "yes"}, {"title": "Add assembly binding redirects to COM host config", "description": "Add an app.config (or the host process's .exe.config) with assembly binding redirects that redirect all versions of System.Runtime.CompilerServices.Unsafe to the latest version (6.0.0.0).", "category": "workaround", "confidence": 0.75, "effort": "cost/s", "codeSnippet": "<configuration>\n  <runtime>\n    <assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\">\n      <dependentAssembly>\n        <assemblyIdentity name=\"System.Runtime.CompilerServices.Unsafe\"\n            publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" />\n        <bindingRedirect oldVersion=\"0.0.0.0-6.0.0.0\" newVersion=\"6.0.0.0\" />\n      </dependentAssembly>\n    </assemblyBinding>\n  </runtime>\n</configuration>", "validated": "yes"}, {"title": "Investigate reducing System.Memory dependency for COM scenarios", "description": "Investigate whether SkiaSharp's net4x builds could avoid the transitive System.Runtime.CompilerServices.Unsafe dependency, or provide guidance in documentation for COM deployment scenarios.", "category": "investigation", "confidence": 0.5, "effort": "cost/m", "validated": "untested"}], "recommendedProposal": "GAC registration workaround", "recommendedReason": "Confirmed working by a community member. Requires no changes to the COM host process configuration and works even when the host's app.config cannot be modified."}}, "output": {"actionability": {"suggestedAction": "close-as-external", "confidence": 0.75, "reason": "The assembly version conflict is caused by the COM hosting environment not applying NuGet-generated binding redirects — this is a .NET Framework / deployment behavior, not a SkiaSharp defect. A community-validated workaround exists (GAC registration). The issue is external to SkiaSharp's code.", "suggestedReproPlatform": "windows"}, "missingInfo": ["SkiaSharp version being used", "The type of COM host process (VB6, VBA, custom unmanaged host)", "Whether the COM component has an associated .config file for binding redirects"], "actions": [{"type": "update-labels", "description": "Apply bug, area/SkiaSharp, os/Windows-Classic, tenet/compatibility labels", "risk": "low", "confidence": 0.85, "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/compatibility"]}, {"type": "add-comment", "description": "Post explanation with workarounds for COM assembly version conflict", "risk": "medium", "confidence": 0.85, "comment": "Thanks for the report! This is a known issue with .NET Framework COM-hosted scenarios.\n\nWhen SkiaSharp is loaded inside a COM host (e.g., a COM-callable wrapper), the .NET runtime doesn't automatically apply the NuGet-generated assembly binding redirects from the application's `app.config`. This causes version conflicts for transitive dependencies like `System.Runtime.CompilerServices.Unsafe`.\n\n**Workaround 1 — GAC registration (confirmed working):**\n1. Download the `System.Runtime.CompilerServices.Unsafe` NuGet package version 4.5.3 from https://www.nuget.org/packages/System.Runtime.CompilerServices.Unsafe/4.5.3\n2. Rename the `.nupkg` to `.zip` and extract `lib/net461/System.Runtime.CompilerServices.Unsafe.dll`\n3. Install the Windows SDK to get `gacutil.exe`\n4. Run: `gacutil.exe /i System.Runtime.CompilerServices.Unsafe.dll`\n\n**Workaround 2 — Binding redirects:**\nIf the COM host process has a `.exe.config` you can modify, add:\n```xml\n<configuration>\n  <runtime>\n    <assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\">\n      <dependentAssembly>\n        <assemblyIdentity name=\"System.Runtime.CompilerServices.Unsafe\"\n            publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" />\n        <bindingRedirect oldVersion=\"0.0.0.0-6.0.0.0\" newVersion=\"6.0.0.0\" />\n      </dependentAssembly>\n    </assemblyBinding>\n  </runtime>\n</configuration>\n```\n\nThis issue is external to SkiaSharp itself — the assembly loading behavior is controlled by the .NET Framework runtime. We'll close this as external, but the workarounds above should resolve the problem."}, {"type": "close-issue", "description": "Close as external — root cause is .NET Framework COM assembly loading behavior, not a SkiaSharp defect", "risk": "medium", "confidence": 0.75, "stateReason": "not_planned"}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

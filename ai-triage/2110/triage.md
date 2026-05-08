@@ -1,0 +1,271 @@
+# Issue Triage Report — #2110
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T10:48:32Z |
+| Type | type/enhancement (0.90 (90%)) |
+| Area | area/SkiaSharp.Views (0.95 (95%)) |
+| Suggested action | needs-investigation (0.85 (85%)) |
+
+**Issue Summary:** Enhancement request to enable WPF designer design-mode rendering in SKElement by removing the early-return guard that skips OnRender when DesignerProperties.GetIsInDesignMode returns true.
+
+**Analysis:** SKElement.cs explicitly returns early in OnRender when designMode is true (lines 49-50), preventing any rendering in the WPF Visual Studio designer. The fix is straightforward — remove the guard — but there is a known dotnet/sdk issue (#8645) that may cause crashes in design-time when SkiaSharp is consumed as a project reference rather than a NuGet package. The reporter has verified the fix works with NuGet packages.
+
+**Recommendations:** **needs-investigation** — Well-specified enhancement with a clear fix identified and verified by the reporter. Needs maintainer review of the design-time crash risk (dotnet/sdk#8645) and decision on whether to simply remove the guard or add an opt-in property.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Add SKElement to a WPF project that references SkiaSharp via NuGet
+2. Open the XAML file in the Visual Studio WPF designer
+3. Observe that SKElement renders nothing in the designer (blank/empty)
+
+**Environment:** WPF (Windows Presentation Foundation), Visual Studio WPF designer, SkiaSharp NuGet package
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/blob/bcb6526eeeda9f9e4442f6a716d1ad8c8e15e4cd/source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs#L49-L50 — The two lines the reporter proposes to remove to enable design-mode rendering
+- https://github.com/dotnet/sdk/issues/8645 — Upstream dotnet/sdk issue about design-time crash when referencing a project (not a NuGet package)
+
+## Analysis
+
+### Technical Summary
+
+SKElement.cs explicitly returns early in OnRender when designMode is true (lines 49-50), preventing any rendering in the WPF Visual Studio designer. The fix is straightforward — remove the guard — but there is a known dotnet/sdk issue (#8645) that may cause crashes in design-time when SkiaSharp is consumed as a project reference rather than a NuGet package. The reporter has verified the fix works with NuGet packages.
+
+### Rationale
+
+This is a `type/enhancement` because WPF view rendering already works at runtime; the gap is that design-mode rendering is intentionally disabled. The fix is two lines, the reporter verified it works with NuGet packages, and a community contributor confirmed. The area is `area/SkiaSharp.Views` (WPF-specific view). Platform is `os/Windows-Classic` as WPF is Windows-only. Action is `needs-investigation` because the dotnet/sdk#8645 concern means the maintainer should evaluate whether to simply remove the guard, add a conditional opt-in property, or handle design-time crashes defensively.
+
+### Key Signals
+
+- "Removing these two lines should do the trick" — **issue body** (Reporter has identified the exact change needed (lines 49-50 in SKElement.cs) and tested it.)
+- "There could be an issue with design time when referencing a project, but should work great with nuget package." — **issue body** (Reporter acknowledges a caveat: design-mode may crash when referencing as a project (vs NuGet), linked to dotnet/sdk#8645. NuGet-based consumption is the recommended approach.)
+- "Yes, I have tested it. Works in Visual Studio that consumes a nuget package." — **comment by virzak** (Reporter confirmed the fix works. Community contributor mgood7123 also acknowledged it.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs` | 25-28 | context | designMode is set in the constructor via DesignerProperties.GetIsInDesignMode(this); the design-mode flag is available. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs` | 49-50 | direct | OnRender returns early when designMode is true, entirely skipping the Skia paint pipeline including PaintSurface event. This is the exact guard the reporter requests to remove. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs` | 52-53 | related | A second guard checks Visibility and PresentationSource.FromVisual(this) == null. The PresentationSource check could also be null at design-time if the element is not fully connected to a visual tree in the designer host, which would cause a NullReferenceException in CreateSize at line 118. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs` | 34-52 | context | SKGLElement also sets designMode from DesignerProperties and has a similar pattern, but uses OpenGL via GLWpfControl. The design-mode guard is present in both WPF view types. |
+
+### Next Questions
+
+- Does the PresentationSource.FromVisual check at line 52 also need to be wrapped to avoid NullReferenceException when the designer host does not provide a full visual tree?
+- Should design-mode rendering be opt-in (e.g., via a property like EnableDesignModeRendering) to avoid breaking existing users who may rely on the blank design surface?
+- Is the dotnet/sdk#8645 issue still present in recent Visual Studio versions / .NET SDK releases, or has it been resolved upstream?
+
+### Resolution Proposals
+
+**Hypothesis:** The design-mode guard was added to avoid crashes in the designer. Removing it enables design-time rendering, but may expose a crash path via PresentationSource in project-reference scenarios. The safest fix involves removing the guard while adding a null-check on PresentationSource before CreateSize.
+
+1. **Remove designMode guard and add PresentationSource null-check** — fix, confidence 0.80 (80%), cost/s, validated=untested
+   - Remove lines 49-50 (if (designMode) return;). The existing check at line 52 already guards against null PresentationSource; verify that line 118 (PresentationSource.FromVisual(this).CompositionTarget) also null-checks before dereferencing.
+2. **Add opt-in EnableDesignModeRendering property** — alternative, confidence 0.75 (75%), cost/s, validated=untested
+   - Introduce a bool property EnableDesignModeRendering (default false) that controls whether OnRender proceeds in design mode. This is a backwards-compatible change — existing users get the current behavior by default.
+
+**Recommended proposal:** Remove designMode guard and add PresentationSource null-check
+
+**Why:** Simpler, matches reporter's verified fix, and aligns with what design-time users expect from WPF controls. The PresentationSource guard already exists for the general case.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.85 (85%) |
+| Reason | Well-specified enhancement with a clear fix identified and verified by the reporter. Needs maintainer review of the design-time crash risk (dotnet/sdk#8645) and decision on whether to simply remove the guard or add an opt-in property. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply enhancement, WPF views, and Windows platform labels | labels=type/enhancement, area/SkiaSharp.Views, os/Windows-Classic |
+| add-comment | medium | 0.85 (85%) | Acknowledge the enhancement, explain the current guard and the caveat, propose next steps | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the clear analysis and for testing the fix! The `if (designMode) return;` guard was added to prevent potential crashes in the WPF designer, particularly in project-reference scenarios (see [dotnet/sdk#8645](https://github.com/dotnet/sdk/issues/8645)).
+
+The safest approach would be to:
+1. Remove the `designMode` guard
+2. Ensure `PresentationSource.FromVisual(this)` is null-checked before calling `CreateSize` (line 118 accesses `.CompositionTarget` directly which would throw in some designer hosts)
+
+An alternative would be to add an opt-in `bool EnableDesignModeRendering { get; set; }` property (defaulting to `false`) to avoid breaking existing behavior.
+
+We'll investigate whether the upstream SDK issue is still relevant and pick the right approach.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2110,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T10:48:32Z"
+  },
+  "summary": "Enhancement request to enable WPF designer design-mode rendering in SKElement by removing the early-return guard that skips OnRender when DesignerProperties.GetIsInDesignMode returns true.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Add SKElement to a WPF project that references SkiaSharp via NuGet",
+        "Open the XAML file in the Visual Studio WPF designer",
+        "Observe that SKElement renders nothing in the designer (blank/empty)"
+      ],
+      "environmentDetails": "WPF (Windows Presentation Foundation), Visual Studio WPF designer, SkiaSharp NuGet package",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/blob/bcb6526eeeda9f9e4442f6a716d1ad8c8e15e4cd/source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs#L49-L50",
+          "description": "The two lines the reporter proposes to remove to enable design-mode rendering"
+        },
+        {
+          "url": "https://github.com/dotnet/sdk/issues/8645",
+          "description": "Upstream dotnet/sdk issue about design-time crash when referencing a project (not a NuGet package)"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "SKElement.cs explicitly returns early in OnRender when designMode is true (lines 49-50), preventing any rendering in the WPF Visual Studio designer. The fix is straightforward — remove the guard — but there is a known dotnet/sdk issue (#8645) that may cause crashes in design-time when SkiaSharp is consumed as a project reference rather than a NuGet package. The reporter has verified the fix works with NuGet packages.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "25-28",
+        "finding": "designMode is set in the constructor via DesignerProperties.GetIsInDesignMode(this); the design-mode flag is available.",
+        "relevance": "context"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "49-50",
+        "finding": "OnRender returns early when designMode is true, entirely skipping the Skia paint pipeline including PaintSurface event. This is the exact guard the reporter requests to remove.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "52-53",
+        "finding": "A second guard checks Visibility and PresentationSource.FromVisual(this) == null. The PresentationSource check could also be null at design-time if the element is not fully connected to a visual tree in the designer host, which would cause a NullReferenceException in CreateSize at line 118.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+        "lines": "34-52",
+        "finding": "SKGLElement also sets designMode from DesignerProperties and has a similar pattern, but uses OpenGL via GLWpfControl. The design-mode guard is present in both WPF view types.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Removing these two lines should do the trick",
+        "source": "issue body",
+        "interpretation": "Reporter has identified the exact change needed (lines 49-50 in SKElement.cs) and tested it."
+      },
+      {
+        "text": "There could be an issue with design time when referencing a project, but should work great with nuget package.",
+        "source": "issue body",
+        "interpretation": "Reporter acknowledges a caveat: design-mode may crash when referencing as a project (vs NuGet), linked to dotnet/sdk#8645. NuGet-based consumption is the recommended approach."
+      },
+      {
+        "text": "Yes, I have tested it. Works in Visual Studio that consumes a nuget package.",
+        "source": "comment by virzak",
+        "interpretation": "Reporter confirmed the fix works. Community contributor mgood7123 also acknowledged it."
+      }
+    ],
+    "rationale": "This is a `type/enhancement` because WPF view rendering already works at runtime; the gap is that design-mode rendering is intentionally disabled. The fix is two lines, the reporter verified it works with NuGet packages, and a community contributor confirmed. The area is `area/SkiaSharp.Views` (WPF-specific view). Platform is `os/Windows-Classic` as WPF is Windows-only. Action is `needs-investigation` because the dotnet/sdk#8645 concern means the maintainer should evaluate whether to simply remove the guard, add a conditional opt-in property, or handle design-time crashes defensively.",
+    "nextQuestions": [
+      "Does the PresentationSource.FromVisual check at line 52 also need to be wrapped to avoid NullReferenceException when the designer host does not provide a full visual tree?",
+      "Should design-mode rendering be opt-in (e.g., via a property like EnableDesignModeRendering) to avoid breaking existing users who may rely on the blank design surface?",
+      "Is the dotnet/sdk#8645 issue still present in recent Visual Studio versions / .NET SDK releases, or has it been resolved upstream?"
+    ],
+    "resolution": {
+      "hypothesis": "The design-mode guard was added to avoid crashes in the designer. Removing it enables design-time rendering, but may expose a crash path via PresentationSource in project-reference scenarios. The safest fix involves removing the guard while adding a null-check on PresentationSource before CreateSize.",
+      "proposals": [
+        {
+          "title": "Remove designMode guard and add PresentationSource null-check",
+          "description": "Remove lines 49-50 (if (designMode) return;). The existing check at line 52 already guards against null PresentationSource; verify that line 118 (PresentationSource.FromVisual(this).CompositionTarget) also null-checks before dereferencing.",
+          "category": "fix",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Add opt-in EnableDesignModeRendering property",
+          "description": "Introduce a bool property EnableDesignModeRendering (default false) that controls whether OnRender proceeds in design mode. This is a backwards-compatible change — existing users get the current behavior by default.",
+          "category": "alternative",
+          "confidence": 0.75,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Remove designMode guard and add PresentationSource null-check",
+      "recommendedReason": "Simpler, matches reporter's verified fix, and aligns with what design-time users expect from WPF controls. The PresentationSource guard already exists for the general case."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Well-specified enhancement with a clear fix identified and verified by the reporter. Needs maintainer review of the design-time crash risk (dotnet/sdk#8645) and decision on whether to simply remove the guard or add an opt-in property.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, WPF views, and Windows platform labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the enhancement, explain the current guard and the caveat, propose next steps",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the clear analysis and for testing the fix! The `if (designMode) return;` guard was added to prevent potential crashes in the WPF designer, particularly in project-reference scenarios (see [dotnet/sdk#8645](https://github.com/dotnet/sdk/issues/8645)).\n\nThe safest approach would be to:\n1. Remove the `designMode` guard\n2. Ensure `PresentationSource.FromVisual(this)` is null-checked before calling `CreateSize` (line 118 accesses `.CompositionTarget` directly which would throw in some designer hosts)\n\nAn alternative would be to add an opt-in `bool EnableDesignModeRendering { get; set; }` property (defaulting to `false`) to avoid breaking existing behavior.\n\nWe'll investigate whether the upstream SDK issue is still relevant and pick the right approach."
+      }
+    ]
+  }
+}
+```
+
+</details>

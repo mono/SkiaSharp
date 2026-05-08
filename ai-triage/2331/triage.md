@@ -1,0 +1,286 @@
+# Issue Triage Report — #2331
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-25T11:35:00Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/SkiaSharp.Views.Maui (0.97 (97%)) |
+| Suggested action | close-as-duplicate (0.93 (93%)) |
+
+**Issue Summary:** SKCanvasView PaintSurface event never fires on physical iOS 16 device (iPhone 8) in a .NET 6 MAUI app using SkiaSharp 2.88.3; works on Android 13. Duplicate of #2294.
+
+**Analysis:** PaintSurface never fires on physical iOS device in MAUI; identical symptoms to canonical tracking issue #2294. The same reporter (AlexanderSCK) confirmed this on #2294, and the official SkiaSharp demo sample reproduces the problem, ruling out user code.
+
+**Recommendations:** **close-as-duplicate** — Identical failure mode to #2294 (SKCanvasView not drawing on physical iOS in MAUI, same version). The reporter themselves confirmed it on #2294. #2294 is the open canonical tracking issue.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Maui |
+| Platforms | os/iOS |
+| Backends | — |
+| Tenets | — |
+| Partner | partner/maui |
+
+## Evidence
+
+### Reproduction
+
+1. Create a MAUI app with a custom SKCanvasView subclass and a PaintSurface event handler
+2. Deploy to a physical iOS 16 device (iPhone 8) using hot reload or direct deployment
+3. Observe that the PaintSurface event is never triggered and the view renders blank
+
+**Environment:** SkiaSharp 2.88.3, .NET 6, iOS 16, iPhone 8, SkiaSharp.Views.Maui.Controls + SkiaSharp.Views.Maui.Core, Visual Studio
+
+**Related issues:** #2294, #2001
+
+**Repository links:**
+- https://github.com/AlexanderSCK/RatingControl — Minimal MAUI repro repository provided by the reporter
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | missing-output |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | net6.0-ios |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | Issue reported in December 2022 with version 2.88.3. Canonical tracking issue #2294 is still open as of 2026, suggesting the underlying problem may persist in newer releases. |
+
+## Analysis
+
+### Technical Summary
+
+PaintSurface never fires on physical iOS device in MAUI; identical symptoms to canonical tracking issue #2294. The same reporter (AlexanderSCK) confirmed this on #2294, and the official SkiaSharp demo sample reproduces the problem, ruling out user code.
+
+### Rationale
+
+Both #2331 and #2294 describe SKCanvasView producing no output on physical iOS in MAUI — same version, same device family, same failure mode. The reporter commented on #2294 confirming the same issue. Code inspection shows the Apple handler routes PaintSurface events through a WeakReference-backed SKEventProxy; if the MAUI virtual view is not retained, the event silently no-ops. This is a confirmed platform-specific bug, not a usage error. #2294 is the open canonical tracking issue.
+
+### Key Signals
+
+- "the Paintsurface event is never triggered therefore, no view is rendered" — **issue body** (Complete rendering failure — not partial or intermittent output.)
+- "it is working accordingly on Android so the cause is not the code" — **issue body** (Platform-specific failure; the user's drawing code is correct.)
+- "Same issue here on an iphone 8, iOS version 16." — **reporter's comment on #2294** (Reporter explicitly acknowledged the same root issue in the canonical tracking issue.)
+- "I performed tests with the SkiaSharpDemo sample and once again is not triggering the Paint Surface event" — **issue comment #1341303666** (Reproduces with the official SkiaSharp demo sample, definitively ruling out reporter code as the cause.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Apple.cs` | 63-87 | direct | PaintSurfaceProxy routes the native iOS PaintSurface event to the MAUI virtual view via a WeakReference. If VirtualView resolves to null (due to GC or lifecycle mismatch), the paint callback returns silently — consistent with the blank view on physical iOS. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKEventProxy.cs` | 1-33 | direct | VirtualView is stored as WeakReference<T>; on physical iOS devices MAUI handler lifecycle may not keep the virtual view strongly referenced during the first draw cycle, silently preventing PaintSurface from firing. |
+
+### Workarounds
+
+- A community workaround was posted on #2294 referencing LiveCharts2 issue #800: https://github.com/beto-rodriguez/LiveCharts2/issues/800#issuecomment-1672992578
+- If deploying from Windows, try using a Mac build host instead (per related issue #2001)
+
+### Next Questions
+
+- Does the issue reproduce on newer SkiaSharp versions (2.88.6+, 3.x)?
+- Does it reproduce when building and deploying via a Mac build host rather than hot reload / Windows direct connection?
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-duplicate |
+| Confidence | 0.93 (93%) |
+| Reason | Identical failure mode to #2294 (SKCanvasView not drawing on physical iOS in MAUI, same version). The reporter themselves confirmed it on #2294. #2294 is the open canonical tracking issue. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply bug, MAUI views area, iOS platform, and MAUI partner labels | labels=type/bug, area/SkiaSharp.Views.Maui, os/iOS, partner/maui |
+| link-duplicate | medium | 0.93 (93%) | Mark as duplicate of canonical tracking issue #2294 | linkedIssue=#2294 |
+| add-comment | high | 0.93 (93%) | Notify reporter of duplicate and share known workaround link | — |
+| close-issue | medium | 0.93 (93%) | Close as duplicate of #2294 | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and the reproduction repository!
+
+This is the same issue tracked in #2294 ("SkiaSharp.Views.Maui.SkCanvasView is not drawing on physical iOS devices"). A community workaround was posted there — see [this comment on LiveCharts2 issue #800](https://github.com/beto-rodriguez/LiveCharts2/issues/800#issuecomment-1672992578) for a potential fix.
+
+Closing as a duplicate of #2294. Please 👍 and follow that issue for updates.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2331,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-25T11:35:00Z"
+  },
+  "summary": "SKCanvasView PaintSurface event never fires on physical iOS 16 device (iPhone 8) in a .NET 6 MAUI app using SkiaSharp 2.88.3; works on Android 13. Duplicate of #2294.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.97
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "missing-output",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0-ios"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI app with a custom SKCanvasView subclass and a PaintSurface event handler",
+        "Deploy to a physical iOS 16 device (iPhone 8) using hot reload or direct deployment",
+        "Observe that the PaintSurface event is never triggered and the view renders blank"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, .NET 6, iOS 16, iPhone 8, SkiaSharp.Views.Maui.Controls + SkiaSharp.Views.Maui.Core, Visual Studio",
+      "relatedIssues": [
+        2294,
+        2001
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/AlexanderSCK/RatingControl",
+          "description": "Minimal MAUI repro repository provided by the reporter"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "unknown",
+      "relevanceReason": "Issue reported in December 2022 with version 2.88.3. Canonical tracking issue #2294 is still open as of 2026, suggesting the underlying problem may persist in newer releases."
+    }
+  },
+  "analysis": {
+    "summary": "PaintSurface never fires on physical iOS device in MAUI; identical symptoms to canonical tracking issue #2294. The same reporter (AlexanderSCK) confirmed this on #2294, and the official SkiaSharp demo sample reproduces the problem, ruling out user code.",
+    "rationale": "Both #2331 and #2294 describe SKCanvasView producing no output on physical iOS in MAUI — same version, same device family, same failure mode. The reporter commented on #2294 confirming the same issue. Code inspection shows the Apple handler routes PaintSurface events through a WeakReference-backed SKEventProxy; if the MAUI virtual view is not retained, the event silently no-ops. This is a confirmed platform-specific bug, not a usage error. #2294 is the open canonical tracking issue.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Apple.cs",
+        "lines": "63-87",
+        "finding": "PaintSurfaceProxy routes the native iOS PaintSurface event to the MAUI virtual view via a WeakReference. If VirtualView resolves to null (due to GC or lifecycle mismatch), the paint callback returns silently — consistent with the blank view on physical iOS.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKEventProxy.cs",
+        "lines": "1-33",
+        "finding": "VirtualView is stored as WeakReference<T>; on physical iOS devices MAUI handler lifecycle may not keep the virtual view strongly referenced during the first draw cycle, silently preventing PaintSurface from firing.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "the Paintsurface event is never triggered therefore, no view is rendered",
+        "source": "issue body",
+        "interpretation": "Complete rendering failure — not partial or intermittent output."
+      },
+      {
+        "text": "it is working accordingly on Android so the cause is not the code",
+        "source": "issue body",
+        "interpretation": "Platform-specific failure; the user's drawing code is correct."
+      },
+      {
+        "text": "Same issue here on an iphone 8, iOS version 16.",
+        "source": "reporter's comment on #2294",
+        "interpretation": "Reporter explicitly acknowledged the same root issue in the canonical tracking issue."
+      },
+      {
+        "text": "I performed tests with the SkiaSharpDemo sample and once again is not triggering the Paint Surface event",
+        "source": "issue comment #1341303666",
+        "interpretation": "Reproduces with the official SkiaSharp demo sample, definitively ruling out reporter code as the cause."
+      }
+    ],
+    "workarounds": [
+      "A community workaround was posted on #2294 referencing LiveCharts2 issue #800: https://github.com/beto-rodriguez/LiveCharts2/issues/800#issuecomment-1672992578",
+      "If deploying from Windows, try using a Mac build host instead (per related issue #2001)"
+    ],
+    "nextQuestions": [
+      "Does the issue reproduce on newer SkiaSharp versions (2.88.6+, 3.x)?",
+      "Does it reproduce when building and deploying via a Mac build host rather than hot reload / Windows direct connection?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-duplicate",
+      "confidence": 0.93,
+      "reason": "Identical failure mode to #2294 (SKCanvasView not drawing on physical iOS in MAUI, same version). The reporter themselves confirmed it on #2294. #2294 is the open canonical tracking issue.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, MAUI views area, iOS platform, and MAUI partner labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Maui",
+          "os/iOS",
+          "partner/maui"
+        ]
+      },
+      {
+        "type": "link-duplicate",
+        "description": "Mark as duplicate of canonical tracking issue #2294",
+        "risk": "medium",
+        "confidence": 0.93,
+        "linkedIssue": 2294
+      },
+      {
+        "type": "add-comment",
+        "description": "Notify reporter of duplicate and share known workaround link",
+        "risk": "high",
+        "confidence": 0.93,
+        "comment": "Thanks for the detailed report and the reproduction repository!\n\nThis is the same issue tracked in #2294 (\"SkiaSharp.Views.Maui.SkCanvasView is not drawing on physical iOS devices\"). A community workaround was posted there — see [this comment on LiveCharts2 issue #800](https://github.com/beto-rodriguez/LiveCharts2/issues/800#issuecomment-1672992578) for a potential fix.\n\nClosing as a duplicate of #2294. Please 👍 and follow that issue for updates."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as duplicate of #2294",
+        "risk": "medium",
+        "confidence": 0.93,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>
