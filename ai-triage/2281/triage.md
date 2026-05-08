@@ -1,0 +1,293 @@
+# Issue Triage Report — #2281
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-02T14:38:00Z |
+| Type | type/feature-request (0.97 (97%)) |
+| Area | area/SkiaSharp (0.95 (95%)) |
+| Suggested action | needs-investigation (0.88 (88%)) |
+
+**Issue Summary:** Reporter requests exposing `SKImageInfo Info { get; }` property on `SKSurface` and `SKCanvas`, mirroring the upstream Skia C++ API, to allow callers to know the surface/canvas dimensions and format without the extra allocation required by `Snapshot()`.
+
+**Analysis:** The `SKSurface` and `SKCanvas` C# classes do not expose an `Info` / `ImageInfo` property, even though the upstream Skia C++ API has `SkSurface::imageInfo()` and `SkCanvas::imageInfo()`. This means callers who need to know the surface dimensions and pixel format before calling `ReadPixels` must either track the info themselves or call `Snapshot()` which allocates a temporary `SKImage`. The request is well-scoped: add `public SKImageInfo Info { get; }` to both `SKSurface` and `SKCanvas`, wrapping the corresponding C API functions (which themselves may need to be added to the shim).
+
+**Recommendations:** **needs-investigation** — The feature request is well-specified and the upstream C++ API exists, but the C API shim functions need to be verified before implementation can begin.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Repository links:**
+- https://github.com/google/skia/blob/2f0f67b34de8b09b692d03dd135642a0ba9309f2/include/core/SkSurface.h#L526 — Skia C++ SkSurface::imageInfo() declaration
+- https://github.com/google/skia/blob/2b62c1bf01fa5340e0dd891b0ca3bcb990c0f15f/src/image/SkSurface.cpp#L193 — Skia C++ SkSurface::imageInfo() implementation
+- https://github.com/google/skia/blob/2f0f67b34de8b09b692d03dd135642a0ba9309f2/include/core/SkCanvas.h#L251 — Skia C++ SkCanvas::imageInfo() declaration
+
+**Code snippets:**
+
+```csharp
+SKSurface.PeekPixels returns null so I need to use SKSurface.ReadPixels to create a raster copy of the surface — but I don't know what size the target pixmap should have.
+```
+
+```csharp
+The only workaround is to call Snapshot() first to create a temporary SKImage, which means an extra allocation.
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Code investigation confirms neither SKSurface nor SKCanvas expose an Info/ImageInfo property in the current binding. The upstream Skia C++ API has these methods and they are not wrapped. |
+
+## Analysis
+
+### Technical Summary
+
+The `SKSurface` and `SKCanvas` C# classes do not expose an `Info` / `ImageInfo` property, even though the upstream Skia C++ API has `SkSurface::imageInfo()` and `SkCanvas::imageInfo()`. This means callers who need to know the surface dimensions and pixel format before calling `ReadPixels` must either track the info themselves or call `Snapshot()` which allocates a temporary `SKImage`. The request is well-scoped: add `public SKImageInfo Info { get; }` to both `SKSurface` and `SKCanvas`, wrapping the corresponding C API functions (which themselves may need to be added to the shim).
+
+### Rationale
+
+The request is for a straightforward API exposure of existing upstream functionality. Both `SkSurface::imageInfo()` and `SkCanvas::imageInfo()` exist in the Skia C++ layer and were deliberately omitted from the C# binding. The reporter provides a clear use case (querying dimensions before ReadPixels) and a known workaround (Snapshot + extra allocation). Classification is `type/feature-request` with `area/SkiaSharp` because the gap is in the core C# wrapper, not a platform view or native library build issue.
+
+### Key Signals
+
+- "SkSurface.h contains the API to return an SKImageInfo but this is missing from the C# binding" — **issue body** (Upstream C++ API exists; binding gap is confirmed)
+- "The only workaround is to call Snapshot() first to create a temporary SKImage, which means an extra allocation." — **issue body** (Valid pain point — workaround is inefficient)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKSurface.cs` | — | direct | SKSurface exposes Canvas, SurfaceProperties, Context, Snapshot(), PeekPixels(), ReadPixels(), and Draw() but has no Info or ImageInfo property. |
+| `binding/SkiaSharp/SKCanvas.cs` | — | direct | SKCanvas exposes LocalClipBounds, DeviceClipBounds, SaveCount, QuickReject, and drawing methods but has no Info or ImageInfo property. |
+| `binding/SkiaSharp/SKSurface.cs` | — | related | SKSurface.ReadPixels(SKImageInfo dstInfo, ...) takes dstInfo as a parameter — callers must supply the target image info, confirming there is no way to query the surface's own info from the binding. |
+
+### Workarounds
+
+- Call surface.Snapshot() to obtain an SKImage, then use image.Info to retrieve the SKImageInfo; dispose the SKImage afterwards. This causes an extra allocation.
+- If the surface was created with a known SKImageInfo (e.g., via SKSurface.Create(SKImageInfo, ...)), track the info in application code and avoid querying the surface.
+
+### Next Questions
+
+- Does the C API shim already expose sk_surface_get_image_info / sk_canvas_get_image_info, or do those functions need to be added to externals/skia/src/c/?
+- Should the property on SKCanvas be named `Info` (consistent with SKImageInfo naming in SKBitmap, SKPixmap, SKImage) or `ImageInfo`?
+
+### Resolution Proposals
+
+**Hypothesis:** Add `public SKImageInfo Info { get; }` to `SKSurface` wrapping `sk_surface_get_image_info`, and `public SKImageInfo Info { get; }` to `SKCanvas` wrapping `sk_canvas_get_image_info`. If the C API functions are absent from the shim they must be added first.
+
+1. **Use Snapshot() to query info (existing workaround)** — workaround, cost/xs, validated=yes
+   - Call surface.Snapshot() to get an SKImage, read image.Info, then dispose the image. This is allocation-heavy but correct.
+
+```csharp
+using var image = surface.Snapshot();
+var info = image.Info; // SKImageInfo with width, height, colorType, alphaType
+```
+2. **Expose Info property on SKSurface and SKCanvas via C API shim** — fix, cost/m, validated=untested
+   - Add sk_surface_get_image_info and sk_canvas_get_image_info to the C API shim, then add public SKImageInfo Info { get; } properties to SKSurface and SKCanvas in the C# binding.
+
+**Recommended proposal:** fix-1
+
+**Why:** The fix is well-scoped and directly mirrors upstream Skia API. The workaround is valid but allocates unnecessarily.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.88 (88%) |
+| Reason | The feature request is well-specified and the upstream C++ API exists, but the C API shim functions need to be verified before implementation can begin. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply type/feature-request and area/SkiaSharp labels | labels=type/feature-request, area/SkiaSharp |
+| add-comment | medium | 0.88 (88%) | Acknowledge request, confirm API gap, share workaround, and indicate implementation path | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and upstream links!
+
+You're right — `SKSurface` and `SKCanvas` don't currently expose an `Info` / `ImageInfo` property, even though `SkSurface::imageInfo()` and `SkCanvas::imageInfo()` exist in the Skia C++ API.
+
+**Workaround (until this is implemented):**
+
+If you need the info from the surface:
+
+```csharp
+using var image = surface.Snapshot();
+var info = image.Info; // width, height, colorType, alphaType
+```
+
+Or, if you created the surface yourself, cache the `SKImageInfo` you passed to `SKSurface.Create()`.
+
+**Implementation notes:**
+
+A `public SKImageInfo Info { get; }` property can be added to both `SKSurface` and `SKCanvas` by wrapping new C API shim functions (`sk_surface_get_image_info` / `sk_canvas_get_image_info`). We'll track this as a feature request.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2281,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T14:38:00Z"
+  },
+  "summary": "Reporter requests exposing `SKImageInfo Info { get; }` property on `SKSurface` and `SKCanvas`, mirroring the upstream Skia C++ API, to allow callers to know the surface/canvas dimensions and format without the extra allocation required by `Snapshot()`.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "SKSurface.PeekPixels returns null so I need to use SKSurface.ReadPixels to create a raster copy of the surface — but I don't know what size the target pixmap should have.",
+        "The only workaround is to call Snapshot() first to create a temporary SKImage, which means an extra allocation."
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/google/skia/blob/2f0f67b34de8b09b692d03dd135642a0ba9309f2/include/core/SkSurface.h#L526",
+          "description": "Skia C++ SkSurface::imageInfo() declaration"
+        },
+        {
+          "url": "https://github.com/google/skia/blob/2b62c1bf01fa5340e0dd891b0ca3bcb990c0f15f/src/image/SkSurface.cpp#L193",
+          "description": "Skia C++ SkSurface::imageInfo() implementation"
+        },
+        {
+          "url": "https://github.com/google/skia/blob/2f0f67b34de8b09b692d03dd135642a0ba9309f2/include/core/SkCanvas.h#L251",
+          "description": "Skia C++ SkCanvas::imageInfo() declaration"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "Code investigation confirms neither SKSurface nor SKCanvas expose an Info/ImageInfo property in the current binding. The upstream Skia C++ API has these methods and they are not wrapped."
+    }
+  },
+  "analysis": {
+    "summary": "The `SKSurface` and `SKCanvas` C# classes do not expose an `Info` / `ImageInfo` property, even though the upstream Skia C++ API has `SkSurface::imageInfo()` and `SkCanvas::imageInfo()`. This means callers who need to know the surface dimensions and pixel format before calling `ReadPixels` must either track the info themselves or call `Snapshot()` which allocates a temporary `SKImage`. The request is well-scoped: add `public SKImageInfo Info { get; }` to both `SKSurface` and `SKCanvas`, wrapping the corresponding C API functions (which themselves may need to be added to the shim).",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "finding": "SKSurface exposes Canvas, SurfaceProperties, Context, Snapshot(), PeekPixels(), ReadPixels(), and Draw() but has no Info or ImageInfo property.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "SKCanvas exposes LocalClipBounds, DeviceClipBounds, SaveCount, QuickReject, and drawing methods but has no Info or ImageInfo property.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "finding": "SKSurface.ReadPixels(SKImageInfo dstInfo, ...) takes dstInfo as a parameter — callers must supply the target image info, confirming there is no way to query the surface's own info from the binding.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "SkSurface.h contains the API to return an SKImageInfo but this is missing from the C# binding",
+        "source": "issue body",
+        "interpretation": "Upstream C++ API exists; binding gap is confirmed"
+      },
+      {
+        "text": "The only workaround is to call Snapshot() first to create a temporary SKImage, which means an extra allocation.",
+        "source": "issue body",
+        "interpretation": "Valid pain point — workaround is inefficient"
+      }
+    ],
+    "rationale": "The request is for a straightforward API exposure of existing upstream functionality. Both `SkSurface::imageInfo()` and `SkCanvas::imageInfo()` exist in the Skia C++ layer and were deliberately omitted from the C# binding. The reporter provides a clear use case (querying dimensions before ReadPixels) and a known workaround (Snapshot + extra allocation). Classification is `type/feature-request` with `area/SkiaSharp` because the gap is in the core C# wrapper, not a platform view or native library build issue.",
+    "workarounds": [
+      "Call surface.Snapshot() to obtain an SKImage, then use image.Info to retrieve the SKImageInfo; dispose the SKImage afterwards. This causes an extra allocation.",
+      "If the surface was created with a known SKImageInfo (e.g., via SKSurface.Create(SKImageInfo, ...)), track the info in application code and avoid querying the surface."
+    ],
+    "nextQuestions": [
+      "Does the C API shim already expose sk_surface_get_image_info / sk_canvas_get_image_info, or do those functions need to be added to externals/skia/src/c/?",
+      "Should the property on SKCanvas be named `Info` (consistent with SKImageInfo naming in SKBitmap, SKPixmap, SKImage) or `ImageInfo`?"
+    ],
+    "resolution": {
+      "hypothesis": "Add `public SKImageInfo Info { get; }` to `SKSurface` wrapping `sk_surface_get_image_info`, and `public SKImageInfo Info { get; }` to `SKCanvas` wrapping `sk_canvas_get_image_info`. If the C API functions are absent from the shim they must be added first.",
+      "proposals": [
+        {
+          "title": "Use Snapshot() to query info (existing workaround)",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "validated": "yes",
+          "description": "Call surface.Snapshot() to get an SKImage, read image.Info, then dispose the image. This is allocation-heavy but correct.",
+          "codeSnippet": "using var image = surface.Snapshot();\nvar info = image.Info; // SKImageInfo with width, height, colorType, alphaType"
+        },
+        {
+          "title": "Expose Info property on SKSurface and SKCanvas via C API shim",
+          "category": "fix",
+          "effort": "cost/m",
+          "validated": "untested",
+          "description": "Add sk_surface_get_image_info and sk_canvas_get_image_info to the C API shim, then add public SKImageInfo Info { get; } properties to SKSurface and SKCanvas in the C# binding."
+        }
+      ],
+      "recommendedProposal": "fix-1",
+      "recommendedReason": "The fix is well-scoped and directly mirrors upstream Skia API. The workaround is valid but allocates unnecessarily."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "The feature request is well-specified and the upstream C++ API exists, but the C API shim functions need to be verified before implementation can begin.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/feature-request and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge request, confirm API gap, share workaround, and indicate implementation path",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed report and upstream links!\n\nYou're right — `SKSurface` and `SKCanvas` don't currently expose an `Info` / `ImageInfo` property, even though `SkSurface::imageInfo()` and `SkCanvas::imageInfo()` exist in the Skia C++ API.\n\n**Workaround (until this is implemented):**\n\nIf you need the info from the surface:\n\n```csharp\nusing var image = surface.Snapshot();\nvar info = image.Info; // width, height, colorType, alphaType\n```\n\nOr, if you created the surface yourself, cache the `SKImageInfo` you passed to `SKSurface.Create()`.\n\n**Implementation notes:**\n\nA `public SKImageInfo Info { get; }` property can be added to both `SKSurface` and `SKCanvas` by wrapping new C API shim functions (`sk_surface_get_image_info` / `sk_canvas_get_image_info`). We'll track this as a feature request."
+      }
+    ]
+  }
+}
+```
+
+</details>

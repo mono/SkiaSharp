@@ -1,0 +1,219 @@
+# Issue Triage Report — #2290
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-02T16:30:00Z |
+| Type | type/feature-request (0.95 (95%)) |
+| Area | area/SkiaSharp (0.85 (85%)) |
+| Suggested action | keep-open (0.88 (88%)) |
+
+**Issue Summary:** Request to expose Skottie's PropertyObserver API in the C# binding so that callers can modify color, opacity, and transform properties of named Lottie animation layers at runtime.
+
+**Analysis:** The upstream Skia skottie module exposes a PropertyObserver mechanism (SkottieProperty.h) that allows callers to receive callbacks and mutate color, opacity, text, and transform properties of named animation layers at render time. SkiaSharp already has a `skottie_property_observer_t` type alias in the generated bindings but provides no C API shim functions or C# wrappers for it. This is a missing API surface that needs a new C API (sk_skottie_property_observer_new / callbacks), regeneration of bindings, and a C# wrapper class.
+
+**Recommendations:** **keep-open** — Valid feature request with a clear upstream API to wrap. No repro/investigation needed — the gap is confirmed by code inspection. Requires design and implementation effort.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Repository links:**
+- https://skia.googlesource.com/skia/+/main/modules/skottie/include/SkottieProperty.h — Upstream Skia SkottieProperty.h — the C++ API to be wrapped
+- https://github.com/Aghajari/AXrLottie/#layerproperty — AXrLottie library showing the consumer-facing API pattern the reporter wants
+
+## Analysis
+
+### Technical Summary
+
+The upstream Skia skottie module exposes a PropertyObserver mechanism (SkottieProperty.h) that allows callers to receive callbacks and mutate color, opacity, text, and transform properties of named animation layers at render time. SkiaSharp already has a `skottie_property_observer_t` type alias in the generated bindings but provides no C API shim functions or C# wrappers for it. This is a missing API surface that needs a new C API (sk_skottie_property_observer_new / callbacks), regeneration of bindings, and a C# wrapper class.
+
+### Rationale
+
+This is clearly a feature request: no existing C# API for property observation exists, the upstream C++ capability is present, and the reporter provides reference implementations. The `skottie_property_observer_t` type alias being present but unused confirms the generator has partial awareness. Work requires adding a C API shim, regenerating bindings, and writing a C# wrapper.
+
+### Key Signals
+
+- "It looks like skottie also has properties support" — **issue body** (Reporter is aware the C++ upstream already has the feature; they want it exposed in C#.)
+- "Similar feature is implemented in AXrLottie" — **issue body** (Well-defined consumer-facing API pattern exists as a reference for the desired UX.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp.Skottie/SkottieApi.generated.cs` | 95-97 | direct | The type alias `using skottie_property_observer_t = System.IntPtr;` exists in the generated file, confirming the generator knows about the type, but no P/Invoke functions are declared for it — no `skottie_animation_builder_set_property_observer` or any property observer lifecycle functions. |
+| `binding/SkiaSharp.Skottie/SkottieApi.generated.cs` | 254-289 | direct | The builder only exposes `set_font_manager` and `set_resource_provider`. There is no `set_property_observer` method, confirming the feature has not been implemented. |
+| `binding/libSkiaSharp.Skottie.json` | — | direct | The binding configuration file maps the `skottie_` namespace to C# but contains no entries for `property_observer` functions, confirming no C API shim exists yet. |
+
+### Resolution Proposals
+
+**Hypothesis:** SkiaSharp needs a C API shim wrapping skottie::PropertyObserver's callback mechanism and a corresponding C# class.
+
+1. **Add C API + C# PropertyObserver wrapper** — fix, confidence 0.85 (85%), cost/l, validated=untested
+   - 1) Add `skottie_property_observer_new(callbacks)` and related functions to the C API shim. 2) Regenerate bindings (`pwsh ./utils/generate.ps1`). 3) Implement a `SKottiePropertyObserver` C# class that wires up the callbacks so callers can modify layer properties at render time.
+
+**Recommended proposal:** Add C API + C# PropertyObserver wrapper
+
+**Why:** Only path that delivers the requested functionality. The upstream API is stable and well-documented.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.88 (88%) |
+| Reason | Valid feature request with a clear upstream API to wrap. No repro/investigation needed — the gap is confirmed by code inspection. Requires design and implementation effort. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply feature-request and area/SkiaSharp labels | labels=type/feature-request, area/SkiaSharp |
+| add-comment | medium | 0.88 (88%) | Acknowledge the request and outline the implementation path | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the request! The upstream Skia `skottie::PropertyObserver` API (SkottieProperty.h) is not yet exposed in SkiaSharp. The `skottie_property_observer_t` type is already known to our code generator but no C shim functions have been written for it yet.
+
+To implement this we would need to:
+1. Add C API shim functions (`skottie_property_observer_new`, callbacks for color/opacity/transform)
+2. Regenerate the P/Invoke bindings
+3. Write a `SKottiePropertyObserver` C# wrapper class
+
+This is a valid enhancement. Contributions via pull request are welcome — the `/api-add-review` workflow can help guide the implementation.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2290,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T16:30:00Z"
+  },
+  "summary": "Request to expose Skottie's PropertyObserver API in the C# binding so that callers can modify color, opacity, and transform properties of named Lottie animation layers at runtime.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.85
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://skia.googlesource.com/skia/+/main/modules/skottie/include/SkottieProperty.h",
+          "description": "Upstream Skia SkottieProperty.h — the C++ API to be wrapped"
+        },
+        {
+          "url": "https://github.com/Aghajari/AXrLottie/#layerproperty",
+          "description": "AXrLottie library showing the consumer-facing API pattern the reporter wants"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The upstream Skia skottie module exposes a PropertyObserver mechanism (SkottieProperty.h) that allows callers to receive callbacks and mutate color, opacity, text, and transform properties of named animation layers at render time. SkiaSharp already has a `skottie_property_observer_t` type alias in the generated bindings but provides no C API shim functions or C# wrappers for it. This is a missing API surface that needs a new C API (sk_skottie_property_observer_new / callbacks), regeneration of bindings, and a C# wrapper class.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.Skottie/SkottieApi.generated.cs",
+        "lines": "95-97",
+        "finding": "The type alias `using skottie_property_observer_t = System.IntPtr;` exists in the generated file, confirming the generator knows about the type, but no P/Invoke functions are declared for it — no `skottie_animation_builder_set_property_observer` or any property observer lifecycle functions.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.Skottie/SkottieApi.generated.cs",
+        "lines": "254-289",
+        "finding": "The builder only exposes `set_font_manager` and `set_resource_provider`. There is no `set_property_observer` method, confirming the feature has not been implemented.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/libSkiaSharp.Skottie.json",
+        "finding": "The binding configuration file maps the `skottie_` namespace to C# but contains no entries for `property_observer` functions, confirming no C API shim exists yet.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "It looks like skottie also has properties support",
+        "source": "issue body",
+        "interpretation": "Reporter is aware the C++ upstream already has the feature; they want it exposed in C#."
+      },
+      {
+        "text": "Similar feature is implemented in AXrLottie",
+        "source": "issue body",
+        "interpretation": "Well-defined consumer-facing API pattern exists as a reference for the desired UX."
+      }
+    ],
+    "rationale": "This is clearly a feature request: no existing C# API for property observation exists, the upstream C++ capability is present, and the reporter provides reference implementations. The `skottie_property_observer_t` type alias being present but unused confirms the generator has partial awareness. Work requires adding a C API shim, regenerating bindings, and writing a C# wrapper.",
+    "resolution": {
+      "hypothesis": "SkiaSharp needs a C API shim wrapping skottie::PropertyObserver's callback mechanism and a corresponding C# class.",
+      "proposals": [
+        {
+          "title": "Add C API + C# PropertyObserver wrapper",
+          "description": "1) Add `skottie_property_observer_new(callbacks)` and related functions to the C API shim. 2) Regenerate bindings (`pwsh ./utils/generate.ps1`). 3) Implement a `SKottiePropertyObserver` C# class that wires up the callbacks so callers can modify layer properties at render time.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add C API + C# PropertyObserver wrapper",
+      "recommendedReason": "Only path that delivers the requested functionality. The upstream API is stable and well-documented."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.88,
+      "reason": "Valid feature request with a clear upstream API to wrap. No repro/investigation needed — the gap is confirmed by code inspection. Requires design and implementation effort.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request and outline the implementation path",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the request! The upstream Skia `skottie::PropertyObserver` API (SkottieProperty.h) is not yet exposed in SkiaSharp. The `skottie_property_observer_t` type is already known to our code generator but no C shim functions have been written for it yet.\n\nTo implement this we would need to:\n1. Add C API shim functions (`skottie_property_observer_new`, callbacks for color/opacity/transform)\n2. Regenerate the P/Invoke bindings\n3. Write a `SKottiePropertyObserver` C# wrapper class\n\nThis is a valid enhancement. Contributions via pull request are welcome — the `/api-add-review` workflow can help guide the implementation."
+      }
+    ]
+  }
+}
+```
+
+</details>
