@@ -1,0 +1,317 @@
+# Issue Triage Report — #2170
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-03T22:14:49Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp (0.92 (92%)) |
+| Suggested action | needs-investigation (0.82 (82%)) |
+
+**Issue Summary:** SKTypeface.FontWeight returns 100 (Thin) instead of 400 (Normal) when loading a typeface from an OpenStream() result on Linux, while Windows returns the correct value.
+
+**Analysis:** When a typeface is loaded from raw stream data on Linux via SKTypeface.FromStream(OpenStream()), the underlying Skia/FreeType font parser does not correctly extract the OS/2 weight metadata, defaulting to weight 100 (Thin). On Windows, DirectWrite reads the weight correctly from the same stream. This is a platform-specific discrepancy in Skia's font backend on Linux.
+
+**Recommendations:** **needs-investigation** — Bug has code snippet and font file attachment showing a plausible cross-platform inconsistency, but was reported on a preview version. Needs reproduction on current stable release to confirm before targeting a fix.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/reliability, tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Attachments:**
+- Montserrat-Regular.zip — https://github.com/mono/SkiaSharp/files/9111881/Montserrat-Regular.zip — Montserrat Regular font file used in the reproduction
+
+**Code snippets:**
+
+```csharp
+SKTypeface skTypeFace = SKTypeface.FromFamilyName("Montserrat", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+Console.WriteLine(skTypeFace.FontWeight);
+SKStreamAsset stream = skTypeFace.OpenStream();
+SKTypeface sKTypefacefont = SKTypeface.FromStream(stream);
+Console.WriteLine(sKTypefacefont.FontWeight);
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | FontWeight is 100 on Linux when loading typeface from OpenStream(); expected 400 |
+| Repro quality | partial |
+| Target frameworks | net6.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | v2.88.0-preview.209 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The SKTypeface.FromStream and OpenStream code paths have not materially changed; this is a platform-level behavior in Skia/FreeType on Linux. |
+
+## Analysis
+
+### Technical Summary
+
+When a typeface is loaded from raw stream data on Linux via SKTypeface.FromStream(OpenStream()), the underlying Skia/FreeType font parser does not correctly extract the OS/2 weight metadata, defaulting to weight 100 (Thin). On Windows, DirectWrite reads the weight correctly from the same stream. This is a platform-specific discrepancy in Skia's font backend on Linux.
+
+### Rationale
+
+Classified as type/bug because the same API call produces different FontWeight results on Linux vs Windows with the same font file. Area is area/SkiaSharp since entry points are SKTypeface.FromStream and OpenStream. Only os/Linux is affected. Severity is medium because a workaround exists. Root cause is likely Skia's FreeType backend on Linux not parsing OS/2 weight fields from stream-loaded fonts.
+
+### Key Signals
+
+- "When creating font using OpenStream(), Font weight is 100. In windows it is working properly as 400. But in Linux it is not working properly." — **issue body** (Cross-platform inconsistency: Skia/FreeType on Linux fails to read the OS/2 usWeightClass field from the Montserrat-Regular font stream, defaulting to 100.)
+- "NuGets used: SkiaSharp.v2.88.0-preview.209, SkiaSharp.NativeAssets.Linux v2.88.0-preview.209" — **issue body** (Preview version; may or may not be fixed in current stable releases. Needs verification.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKTypeface.cs` | 92-96 | direct | SKTypeface.FromStream(SKStreamAsset) delegates directly to SKFontManager.Default.CreateTypeface(stream, index). No weight metadata is passed — the weight must come from parsing the font data. |
+| `binding/SkiaSharp/SKTypeface.cs` | 107 | direct | FontWeight property calls sk_typeface_get_font_weight(Handle) which queries whatever the native Skia typeface stores for weight. If Skia/FreeType parsed the stream incorrectly on Linux, the wrong value is returned. |
+| `binding/SkiaSharp/SKTypeface.cs` | 270-278 | related | OpenStream calls sk_typeface_open_stream which returns raw binary font file data. When this stream is passed to FromStream on Linux, Skia's FreeType backend must re-parse the OS/2 usWeightClass field from the binary data. |
+
+### Workarounds
+
+- Track the font weight from the original typeface before calling OpenStream, and use SKFontManager.MatchTypeface or FromFamilyName to reconstruct the typeface with the correct weight instead of relying on FromStream.
+
+### Next Questions
+
+- Does the issue reproduce on current stable SkiaSharp (v2.88 stable or v3.x)?
+- Does the issue occur only with Montserrat, or with other custom fonts on Linux?
+- Does the issue occur with the Raster backend or only when a specific backend is active?
+
+### Resolution Proposals
+
+**Hypothesis:** When creating an SKTypeface from a raw stream on Linux, Skia's FreeType backend does not parse the OS/2 usWeightClass field from the font file header, defaulting to weight 100. Windows/DirectWrite reads this field correctly from the same stream.
+
+1. **Verify issue reproduces on current stable release** — investigation, cost/xs, validated=untested
+   - The reporter used a preview build (v2.88.0-preview.209). Test with the current stable SkiaSharp version on Linux to determine if the issue has already been fixed upstream.
+2. **Track font weight separately before OpenStream** — workaround, cost/xs, validated=untested
+   - Store the FontWeight value from the original typeface before calling OpenStream. Use this value for any weight-dependent logic rather than relying on the weight parsed from the stream-loaded typeface on Linux.
+
+**Recommended proposal:** Verify issue reproduces on current stable release
+
+**Why:** Before investing in a fix, confirm the bug still exists in current stable releases since it was first seen in a preview version.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.82 (82%) |
+| Reason | Bug has code snippet and font file attachment showing a plausible cross-platform inconsistency, but was reported on a preview version. Needs reproduction on current stable release to confirm before targeting a fix. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Confirmation that the issue reproduces on the current stable SkiaSharp release.
+- Whether other custom fonts exhibit the same behavior on Linux.
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply type/bug, area/SkiaSharp, os/Linux, tenet/reliability, tenet/compatibility | labels=type/bug, area/SkiaSharp, os/Linux, tenet/reliability, tenet/compatibility |
+| add-comment | medium | 0.82 (82%) | Ask reporter to confirm reproducibility on current stable release and suggest workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for the detailed bug report!
+
+Could you confirm whether this issue still reproduces with the current stable SkiaSharp release? The version you reported against (`v2.88.0-preview.209`) is a preview, and several fixes have landed since then.
+
+**Workaround (Linux):** Since `FontWeight` is correct on the original typeface, you can store it before calling `OpenStream()`:
+```csharp
+SKTypeface original = SKTypeface.FromFamilyName("Montserrat", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+int weight = original.FontWeight; // Correctly returns 400
+SKStreamAsset stream = original.OpenStream();
+// Use `weight` for any weight-dependent logic rather than querying the stream-loaded typeface
+```
+
+Also, does this happen with other custom fonts on Linux, or specifically with Montserrat?
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2170,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T22:14:49Z"
+  },
+  "summary": "SKTypeface.FontWeight returns 100 (Thin) instead of 400 (Normal) when loading a typeface from an OpenStream() result on Linux, while Windows returns the correct value.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/reliability",
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "FontWeight is 100 on Linux when loading typeface from OpenStream(); expected 400",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0"
+      ]
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        "SKTypeface skTypeFace = SKTypeface.FromFamilyName(\"Montserrat\", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\nConsole.WriteLine(skTypeFace.FontWeight);\nSKStreamAsset stream = skTypeFace.OpenStream();\nSKTypeface sKTypefacefont = SKTypeface.FromStream(stream);\nConsole.WriteLine(sKTypefacefont.FontWeight);"
+      ],
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/9111881/Montserrat-Regular.zip",
+          "filename": "Montserrat-Regular.zip",
+          "description": "Montserrat Regular font file used in the reproduction"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "v2.88.0-preview.209"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKTypeface.FromStream and OpenStream code paths have not materially changed; this is a platform-level behavior in Skia/FreeType on Linux."
+    }
+  },
+  "analysis": {
+    "summary": "When a typeface is loaded from raw stream data on Linux via SKTypeface.FromStream(OpenStream()), the underlying Skia/FreeType font parser does not correctly extract the OS/2 weight metadata, defaulting to weight 100 (Thin). On Windows, DirectWrite reads the weight correctly from the same stream. This is a platform-specific discrepancy in Skia's font backend on Linux.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "92-96",
+        "finding": "SKTypeface.FromStream(SKStreamAsset) delegates directly to SKFontManager.Default.CreateTypeface(stream, index). No weight metadata is passed — the weight must come from parsing the font data.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "107",
+        "finding": "FontWeight property calls sk_typeface_get_font_weight(Handle) which queries whatever the native Skia typeface stores for weight. If Skia/FreeType parsed the stream incorrectly on Linux, the wrong value is returned.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "270-278",
+        "finding": "OpenStream calls sk_typeface_open_stream which returns raw binary font file data. When this stream is passed to FromStream on Linux, Skia's FreeType backend must re-parse the OS/2 usWeightClass field from the binary data.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "When creating font using OpenStream(), Font weight is 100. In windows it is working properly as 400. But in Linux it is not working properly.",
+        "source": "issue body",
+        "interpretation": "Cross-platform inconsistency: Skia/FreeType on Linux fails to read the OS/2 usWeightClass field from the Montserrat-Regular font stream, defaulting to 100."
+      },
+      {
+        "text": "NuGets used: SkiaSharp.v2.88.0-preview.209, SkiaSharp.NativeAssets.Linux v2.88.0-preview.209",
+        "source": "issue body",
+        "interpretation": "Preview version; may or may not be fixed in current stable releases. Needs verification."
+      }
+    ],
+    "rationale": "Classified as type/bug because the same API call produces different FontWeight results on Linux vs Windows with the same font file. Area is area/SkiaSharp since entry points are SKTypeface.FromStream and OpenStream. Only os/Linux is affected. Severity is medium because a workaround exists. Root cause is likely Skia's FreeType backend on Linux not parsing OS/2 weight fields from stream-loaded fonts.",
+    "workarounds": [
+      "Track the font weight from the original typeface before calling OpenStream, and use SKFontManager.MatchTypeface or FromFamilyName to reconstruct the typeface with the correct weight instead of relying on FromStream."
+    ],
+    "resolution": {
+      "hypothesis": "When creating an SKTypeface from a raw stream on Linux, Skia's FreeType backend does not parse the OS/2 usWeightClass field from the font file header, defaulting to weight 100. Windows/DirectWrite reads this field correctly from the same stream.",
+      "proposals": [
+        {
+          "title": "Verify issue reproduces on current stable release",
+          "description": "The reporter used a preview build (v2.88.0-preview.209). Test with the current stable SkiaSharp version on Linux to determine if the issue has already been fixed upstream.",
+          "category": "investigation",
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Track font weight separately before OpenStream",
+          "description": "Store the FontWeight value from the original typeface before calling OpenStream. Use this value for any weight-dependent logic rather than relying on the weight parsed from the stream-loaded typeface on Linux.",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Verify issue reproduces on current stable release",
+      "recommendedReason": "Before investing in a fix, confirm the bug still exists in current stable releases since it was first seen in a preview version."
+    },
+    "nextQuestions": [
+      "Does the issue reproduce on current stable SkiaSharp (v2.88 stable or v3.x)?",
+      "Does the issue occur only with Montserrat, or with other custom fonts on Linux?",
+      "Does the issue occur with the Raster backend or only when a specific backend is active?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Bug has code snippet and font file attachment showing a plausible cross-platform inconsistency, but was reported on a preview version. Needs reproduction on current stable release to confirm before targeting a fix.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Confirmation that the issue reproduces on the current stable SkiaSharp release.",
+      "Whether other custom fonts exhibit the same behavior on Linux."
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, os/Linux, tenet/reliability, tenet/compatibility",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Linux",
+          "tenet/reliability",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask reporter to confirm reproducibility on current stable release and suggest workaround",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thank you for the detailed bug report!\n\nCould you confirm whether this issue still reproduces with the current stable SkiaSharp release? The version you reported against (`v2.88.0-preview.209`) is a preview, and several fixes have landed since then.\n\n**Workaround (Linux):** Since `FontWeight` is correct on the original typeface, you can store it before calling `OpenStream()`:\n```csharp\nSKTypeface original = SKTypeface.FromFamilyName(\"Montserrat\", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\nint weight = original.FontWeight; // Correctly returns 400\nSKStreamAsset stream = original.OpenStream();\n// Use `weight` for any weight-dependent logic rather than querying the stream-loaded typeface\n```\n\nAlso, does this happen with other custom fonts on Linux, or specifically with Montserrat?"
+      }
+    ]
+  }
+}
+```
+
+</details>

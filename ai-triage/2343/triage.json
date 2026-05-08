@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2343,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T22:59:00Z"
+  },
+  "summary": "SKCanvasView in a MAUI app crashes on Android when running directly from phone (without VS debugger), but works fine when launched via Visual Studio.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.92 },
+    "platforms": ["os/Android"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "App crashes on device without debugger; no error details provided",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net7.0-android"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET MAUI app using SKCanvasView (migrated from Xamarin.Forms)",
+        "Call .UseSkiaSharp() in MauiProgram",
+        "Run the app via Visual Studio — works correctly",
+        "Deploy the app to device and run it directly without Visual Studio — crash occurs with no information"
+      ],
+      "environmentDetails": "SkiaSharp.Views.Maui.Controls 2.88.3, VS 2022 17.4.3, Android 10, Honor View 10",
+      "repoLinks": [
+        { "url": "https://github.com/nacompllo/SKCanvasViewCrash", "description": "Reproduction project provided by reporter" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "No known fix for this class of startup crash in later 2.88.x releases; MAUI release-mode linker behaviour has not changed fundamentally."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter migrated a Xamarin.Forms circular progress bar control to MAUI and finds SKCanvasView crashes when the app is started directly on an Android device (not through the VS debugger). No crash log or stack trace is provided. The 'works in debugger, crashes on device' pattern is characteristic of Android release-mode linker stripping native libraries or platform-handler registration being omitted. The reporter correctly calls UseSkiaSharp() but also mentions trying UseSkiaSharp(true), which does not exist in the public API.",
+    "rationale": "The crash is real and reproducible by the reporter, so this is a genuine bug report. However, without a logcat or crash trace we cannot determine root cause. The most common cause for this exact symptom on Android MAUI is that the release build's IL linker strips the SkiaSharp.Views.Maui handler registration or the native libSkiaSharp.so is not included in the APK. Needs-info is appropriate because the crash log is the critical missing piece.",
+    "keySignals": [
+      { "text": "when I run the app directly from the phone a crash occurs and I don't receive any kind of information", "source": "issue body", "interpretation": "Silent crash on device without debugger – classic Android release-mode issue or missing native library." },
+      { "text": "I have also tried using: .UseSkiaSharp(true)", "source": "issue body", "interpretation": "UseSkiaSharp(bool) does not exist in AppHostBuilderExtensions; reporter may be confused or referencing an older pre-release API." },
+      { "text": "https://github.com/nacompllo/SKCanvasViewCrash", "source": "issue body", "interpretation": "Reproduction project provided, but no crash log attached." }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/AppHostBuilderExtensions.cs",
+        "lines": "11-25",
+        "finding": "UseSkiaSharp() registers SKCanvasViewHandler and SKGLViewHandler. There is no overload accepting a bool parameter, so UseSkiaSharp(true) would be a compile error – reporter likely has a build config difference.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Android.cs",
+        "lines": "1-79",
+        "finding": "Android handler is straightforward: creates SKCanvasView, hooks PaintSurface and touch. No obvious crash path at startup; crash is likely earlier (native library load or handler registration).",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "What does logcat show when the app crashes? Is it a JNI/native crash or a managed exception?",
+      "Is this a debug APK or release APK? Does enabling 'Linking: None' in Android project settings fix the crash?",
+      "Is the AndroidManifest or linker configuration stripping anything related to SkiaSharp?",
+      "Does UseSkiaSharp(true) actually compile? What NuGet package version includes that overload?"
+    ],
+    "workarounds": [
+      "Try setting Android Linker to 'None' (or 'SDK assemblies only') in project properties to rule out linker-stripping the SkiaSharp handler.",
+      "Add an explicit linker preserve file (linker.xml) to keep SkiaSharp handlers.",
+      "Run 'adb logcat' while launching the app directly on device to capture the actual crash stack trace."
+    ],
+    "resolution": {
+      "hypothesis": "The crash is caused by the Android IL linker stripping SkiaSharp.Views.Maui handler/native library entries in the release APK, causing a MissingMethodException or native load failure when the app is started without the VS profiler.",
+      "proposals": [
+        {
+          "title": "Request logcat output",
+          "description": "Ask reporter to run adb logcat while reproducing the crash to get the actual exception or native crash.",
+          "category": "investigation",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Suggest disabling linker",
+          "description": "Ask reporter to set Android Linker Behavior to 'Don't Link' and try again, to confirm linker is the cause.",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Request logcat output",
+      "recommendedReason": "Without the crash log we cannot confirm the root cause; logcat is the fastest way to get actionable data."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.90,
+      "reason": "Reporter describes a real crash but provides no stack trace or logcat. The critical missing data is the actual crash output from the device.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Logcat output (adb logcat) captured while the app crashes on device",
+      "Confirmation of whether this is a debug or release APK",
+      "Whether disabling the Android linker resolves the crash"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, MAUI views, Android and partner labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Android", "partner/maui"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask reporter for logcat and linker information",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "Thanks for the reproduction repository! To investigate the crash we need a bit more information:\n\n1. **Logcat output** — Connect the device via USB and run `adb logcat` while you launch the app directly (without VS). Paste the output around the time of the crash. This is the most important piece — without the actual error message we cannot diagnose the root cause.\n\n2. **Build type** — Is the APK you're installing a Debug or Release build? The 'run directly from phone' path typically installs a Release APK, which enables the IL linker. The linker sometimes strips SkiaSharp handler registrations.\n\n3. **Linker test** — In your Android project properties, set **Android Linker Behavior** to `Don't Link` (or `None`) and try again. If the crash disappears, the linker is stripping something SkiaSharp needs.\n\nNote: `UseSkiaSharp(true)` does not appear to be a valid API in this version — you may be thinking of a pre-release signature. `UseSkiaSharp()` (no arguments) is the correct call."
+      }
+    ]
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2364,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T23:36:22Z"
+  },
+  "summary": "Reporter asks how to build only the core SkiaSharp NuGet package without the Views/Controls projects, since the Views build fails with NETSDK1147 (missing iOS workload) on their Windows machine.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.88 },
+    "area": { "value": "area/Build", "confidence": 0.90 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Clone SkiaSharp source",
+        "Run build.cake on Windows without iOS workload installed",
+        "Observe NETSDK1147 failure for SkiaSharp.Views.csproj targeting net6.0-ios"
+      ],
+      "environmentDetails": ".NET SDK 7.0.102 / 7.0.200-preview.22628.1, Windows, no iOS workload installed",
+      "repoLinks": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["7.0.102", "7.0.200-preview.22628.1"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The solution filter still includes Views projects that require mobile workloads."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter wants to compile and build only the core SkiaSharp library (binding/SkiaSharp/SkiaSharp.csproj) without the Views/Controls libraries on Windows. The solution filter used by build.cake includes Views projects that require iOS workloads, which the reporter does not have installed. Building the binding project directly with dotnet build bypasses this problem.",
+    "rationale": "The issue is a usage question about the build system. No broken behavior — the build system works as designed. The reporter simply lacks the iOS workload required to build the Views multi-targeted project. Directly building binding/SkiaSharp/SkiaSharp.csproj is a valid workaround.",
+    "keySignals": [
+      {
+        "text": "Is there a way to only build the skiasharp nuget without all the extra stuff?",
+        "source": "issue title/body",
+        "interpretation": "Direct question about build subset support — this is a usage question."
+      },
+      {
+        "text": "error NETSDK1147: To build this project, the following workloads must be installed: ios",
+        "source": "issue body",
+        "interpretation": "Missing iOS workload prevents building the full solution filter. Not a bug in SkiaSharp — expected when workload is absent."
+      },
+      {
+        "text": "We were looking to update our custom SkiaSharp to the latest code but cant compile any of it any longer because of these views",
+        "source": "issue body",
+        "interpretation": "Reporter wants to fork/customize core SkiaSharp and build just that portion."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharpSource.Windows.slnf",
+        "finding": "Solution filter includes all binding projects (Views, NativeAssets, etc.). No subset filter exists for core-only builds. The Views project requires the iOS workload on Windows.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "finding": "Core SkiaSharp csproj file exists and can be built independently with 'dotnet build binding/SkiaSharp/SkiaSharp.csproj' without requiring Views or mobile workloads.",
+        "relevance": "direct"
+      },
+      {
+        "file": "build.cake",
+        "lines": "199-206",
+        "finding": "The 'libs' task uses RunDotNetBuild on the platform .slnf file, which includes all projects including Views. No per-project or subset target exists in build.cake.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Build the core project directly: dotnet build binding/SkiaSharp/SkiaSharp.csproj",
+      "Build just the HarfBuzzSharp binding: dotnet build binding/HarfBuzzSharp/HarfBuzzSharp.csproj",
+      "Install the required iOS workload with: dotnet workload install ios macos android"
+    ],
+    "resolution": {
+      "hypothesis": "The reporter needs to build only the core SkiaSharp C# binding without mobile/Views projects. Directly building the csproj is the straightforward workaround.",
+      "proposals": [
+        {
+          "title": "Build core csproj directly",
+          "description": "Run `dotnet build binding/SkiaSharp/SkiaSharp.csproj` directly instead of using build.cake or the solution filter. This builds the core SkiaSharp library without requiring Views or mobile workloads.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Install required workloads",
+          "description": "Install the required workloads via `dotnet workload install ios android macos` to allow full build via build.cake.",
+          "category": "alternative",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Build core csproj directly",
+      "recommendedReason": "Simplest path — reporter only needs the core SkiaSharp package, not Views. Building the csproj directly requires no additional tooling."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.82,
+      "reason": "This is a usage question about building a subset of the repo. The build system works as designed. A clear workaround exists: build binding/SkiaSharp/SkiaSharp.csproj directly."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question, build, and Windows labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/question", "area/Build", "os/Windows-Classic"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Answer the question with the workaround for building core SkiaSharp only",
+        "risk": "high",
+        "confidence": 0.82,
+        "comment": "Thanks for raising this!\n\nYes, you can build just the core SkiaSharp library without the Views/Controls projects. Instead of using `build.cake` (which builds the full solution filter including Views), build the core project directly:\n\n```bash\ndotnet build binding/SkiaSharp/SkiaSharp.csproj\n```\n\nThis will compile the core SkiaSharp assembly without requiring iOS, Android, or any other mobile workloads.\n\nIf you also need HarfBuzzSharp:\n\n```bash\ndotnet build binding/HarfBuzzSharp/HarfBuzzSharp.csproj\n```\n\nThe NETSDK1147 error you're seeing is expected when the iOS workload isn't installed — it's only required for the `SkiaSharp.Views` multi-targeted project.\n\nIf you do need the full build at some point, you can install all required workloads with:\n```bash\ndotnet workload install ios android macos\n```"
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered",
+        "risk": "medium",
+        "confidence": 0.80,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

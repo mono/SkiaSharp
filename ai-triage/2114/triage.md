@@ -1,0 +1,291 @@
+# Issue Triage Report — #2114
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-03T21:57:37Z |
+| Type | type/question (0.92 (92%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | close-as-not-a-bug (0.88 (88%)) |
+
+**Issue Summary:** User asks how to expand or reset the clipping area on SKCanvas after narrowing it, noting that SKClipOperation only supports Difference and Intersect.
+
+**Analysis:** The user wants to expand the canvas clip region after narrowing it. This is a by-design Skia limitation: SKClipOperation only exposes Difference (0) and Intersect (1). Expanding a clip is architecturally not supported post-hoc, but the canonical workaround is to Save() the canvas state before applying any clip, then Restore() or RestoreToCount() to recover the original (wider) clip at any time.
+
+**Recommendations:** **close-as-not-a-bug** — This is a usage question with a clear idiomatic answer. The behavior (SKClipOperation limited to Difference/Intersect) is by Skia design. The Save/Restore pattern is the standard solution.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create an SKCanvas
+2. Call canvas.ClipRect() to narrow the clip to a small rectangle
+3. Try to expand or union the clip with a larger region
+4. Observe that SKClipOperation only offers Difference and Intersect, making expansion impossible
+
+**Environment:** No specific version or platform provided
+
+**Code snippets:**
+
+```csharp
+canvas.ClipRect(clipRect); canvas.ClipRect(intersectRectF); // how to expand after this?
+```
+
+## Analysis
+
+### Technical Summary
+
+The user wants to expand the canvas clip region after narrowing it. This is a by-design Skia limitation: SKClipOperation only exposes Difference (0) and Intersect (1). Expanding a clip is architecturally not supported post-hoc, but the canonical workaround is to Save() the canvas state before applying any clip, then Restore() or RestoreToCount() to recover the original (wider) clip at any time.
+
+### Rationale
+
+The issue asks 'how to do X' rather than reporting broken behavior. The user correctly identifies that SKClipOperation has no Union/expand operation — this matches the Skia C API which intentionally removed the formerly-available Union operation for clip stacks. The Save/Restore pattern is the proper idiomatic solution. Code investigation confirms SKClipOperation has exactly two values (Difference=0, Intersect=1) and that Save/Restore are both public APIs.
+
+### Key Signals
+
+- "The SKClipOperation enumeration parameter used by the existing method of setting the clipping region can only shrink the clipping region." — **issue body** (User correctly identifies this Skia design constraint. SKClipOperation has no Union/expand value.)
+- "How to get the area that sets the current clipping area to the entire canvas?" — **issue body** (User wants to 'reset' the clip to the full canvas — exactly what canvas.Restore() achieves.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SkiaApi.generated.cs` | N/A (enum definition) | direct | SKClipOperation has exactly two values: Difference = 0 and Intersect = 1. No Union or Expand operation exists — this is by Skia design. |
+| `binding/SkiaSharp/SKCanvas.cs` | — | direct | ClipRect, ClipPath, ClipRoundRect, and ClipRegion all accept SKClipOperation, defaulting to Intersect. Save() and RestoreToCount() are public and allow restoring the prior clip stack state. |
+
+### Workarounds
+
+- Use canvas.Save() before setting any clip, then canvas.Restore() or canvas.RestoreToCount(count) to recover the larger clipping region at any point.
+- For union-like behavior across multiple regions, build a composite SKPath using path.AddRect() for each region and set the whole path as the clip in one call using canvas.ClipPath().
+
+### Resolution Proposals
+
+**Hypothesis:** The user wants to expand the clip region. The correct approach is Save/Restore: save the canvas state before clipping, work within the narrow clip, then restore to return to the wider clip.
+
+1. **Use Save/Restore to manage clip regions** — workaround, confidence 0.95 (95%), cost/xs, validated=yes
+   - Call canvas.Save() to push the current clip state onto a stack before narrowing the clip. After the narrow-clip drawing, call canvas.Restore() to pop back to the previous (wider) clip. RestoreToCount() restores to an earlier save point.
+
+```csharp
+int savedCount = canvas.Save();
+canvas.ClipRect(narrowClipRect); // narrow the clip
+canvas.DrawColor(SKColors.Red); // draw in narrow clip
+canvas.RestoreToCount(savedCount); // restore previous (wider) clip
+canvas.DrawColor(SKColors.Green); // now draws in the restored clip
+```
+2. **Use a union SKPath for a single composite clip** — alternative, confidence 0.90 (90%), cost/xs, validated=yes
+   - If the desired final clip is a union of multiple rectangles or shapes, build an SKPath with all regions added and call ClipPath once rather than attempting to union existing clips.
+
+```csharp
+using var clipPath = new SKPath();
+clipPath.AddRect(rect1);
+clipPath.AddRect(rect2);
+clipPath.FillType = SKPathFillType.Winding;
+canvas.ClipPath(clipPath);
+```
+
+**Recommended proposal:** Use Save/Restore to manage clip regions
+
+**Why:** Idiomatic Skia pattern, zero overhead, directly answers the question of resetting to the full canvas or a prior clip state.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.88 (88%) |
+| Reason | This is a usage question with a clear idiomatic answer. The behavior (SKClipOperation limited to Difference/Intersect) is by Skia design. The Save/Restore pattern is the standard solution. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply question type and SkiaSharp area labels | labels=type/question, area/SkiaSharp |
+| add-comment | medium | 0.90 (90%) | Post answer explaining Save/Restore pattern and SKClipOperation by-design limitation | — |
+| close-issue | medium | 0.85 (85%) | Close as answered — by-design behavior with documented workaround | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for the detailed question!
+
+Expanding a clip region in Skia is intentionally not supported via `SKClipOperation` — the enum only offers `Difference` and `Intersect` because Skia's clip stack is monotonically narrowing by design.
+
+The correct pattern to "reset" or recover a wider clip is to use **Save/Restore**:
+
+```csharp
+// Save the current (wide) clip state
+int savedCount = canvas.Save();
+
+// Narrow the clip for this section
+canvas.ClipRect(clipRect);
+canvas.DrawColor(SKColors.Green); // draws in narrow clip
+
+// Restore to the previous (wider) clip
+canvas.RestoreToCount(savedCount);
+
+// Now the clip is back to what it was before Save()
+canvas.ClipRect(intersectRectF);
+canvas.DrawColor(SKColors.Red);
+```
+
+For union-like clipping (non-overlapping areas combined), build a composite `SKPath` and set it all at once:
+
+```csharp
+using var clipPath = new SKPath();
+clipPath.AddRect(rect1);
+clipPath.AddRect(rect2);
+clipPath.FillType = SKPathFillType.Winding;
+canvas.ClipPath(clipPath);
+```
+
+This is the idiomatic Skia approach and fully supports your use case.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2114,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T21:57:37Z"
+  },
+  "summary": "User asks how to expand or reset the clipping area on SKCanvas after narrowing it, noting that SKClipOperation only supports Difference and Intersect.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "canvas.ClipRect(clipRect); canvas.ClipRect(intersectRectF); // how to expand after this?"
+      ],
+      "stepsToReproduce": [
+        "Create an SKCanvas",
+        "Call canvas.ClipRect() to narrow the clip to a small rectangle",
+        "Try to expand or union the clip with a larger region",
+        "Observe that SKClipOperation only offers Difference and Intersect, making expansion impossible"
+      ],
+      "environmentDetails": "No specific version or platform provided"
+    }
+  },
+  "analysis": {
+    "summary": "The user wants to expand the canvas clip region after narrowing it. This is a by-design Skia limitation: SKClipOperation only exposes Difference (0) and Intersect (1). Expanding a clip is architecturally not supported post-hoc, but the canonical workaround is to Save() the canvas state before applying any clip, then Restore() or RestoreToCount() to recover the original (wider) clip at any time.",
+    "rationale": "The issue asks 'how to do X' rather than reporting broken behavior. The user correctly identifies that SKClipOperation has no Union/expand operation — this matches the Skia C API which intentionally removed the formerly-available Union operation for clip stacks. The Save/Restore pattern is the proper idiomatic solution. Code investigation confirms SKClipOperation has exactly two values (Difference=0, Intersect=1) and that Save/Restore are both public APIs.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "N/A (enum definition)",
+        "finding": "SKClipOperation has exactly two values: Difference = 0 and Intersect = 1. No Union or Expand operation exists — this is by Skia design.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "ClipRect, ClipPath, ClipRoundRect, and ClipRegion all accept SKClipOperation, defaulting to Intersect. Save() and RestoreToCount() are public and allow restoring the prior clip stack state.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The SKClipOperation enumeration parameter used by the existing method of setting the clipping region can only shrink the clipping region.",
+        "source": "issue body",
+        "interpretation": "User correctly identifies this Skia design constraint. SKClipOperation has no Union/expand value."
+      },
+      {
+        "text": "How to get the area that sets the current clipping area to the entire canvas?",
+        "source": "issue body",
+        "interpretation": "User wants to 'reset' the clip to the full canvas — exactly what canvas.Restore() achieves."
+      }
+    ],
+    "workarounds": [
+      "Use canvas.Save() before setting any clip, then canvas.Restore() or canvas.RestoreToCount(count) to recover the larger clipping region at any point.",
+      "For union-like behavior across multiple regions, build a composite SKPath using path.AddRect() for each region and set the whole path as the clip in one call using canvas.ClipPath()."
+    ],
+    "resolution": {
+      "hypothesis": "The user wants to expand the clip region. The correct approach is Save/Restore: save the canvas state before clipping, work within the narrow clip, then restore to return to the wider clip.",
+      "proposals": [
+        {
+          "title": "Use Save/Restore to manage clip regions",
+          "description": "Call canvas.Save() to push the current clip state onto a stack before narrowing the clip. After the narrow-clip drawing, call canvas.Restore() to pop back to the previous (wider) clip. RestoreToCount() restores to an earlier save point.",
+          "category": "workaround",
+          "codeSnippet": "int savedCount = canvas.Save();\ncanvas.ClipRect(narrowClipRect); // narrow the clip\ncanvas.DrawColor(SKColors.Red); // draw in narrow clip\ncanvas.RestoreToCount(savedCount); // restore previous (wider) clip\ncanvas.DrawColor(SKColors.Green); // now draws in the restored clip",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use a union SKPath for a single composite clip",
+          "description": "If the desired final clip is a union of multiple rectangles or shapes, build an SKPath with all regions added and call ClipPath once rather than attempting to union existing clips.",
+          "category": "alternative",
+          "codeSnippet": "using var clipPath = new SKPath();\nclipPath.AddRect(rect1);\nclipPath.AddRect(rect2);\nclipPath.FillType = SKPathFillType.Winding;\ncanvas.ClipPath(clipPath);",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use Save/Restore to manage clip regions",
+      "recommendedReason": "Idiomatic Skia pattern, zero overhead, directly answers the question of resetting to the full canvas or a prior clip state."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "This is a usage question with a clear idiomatic answer. The behavior (SKClipOperation limited to Difference/Intersect) is by Skia design. The Save/Restore pattern is the standard solution.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question type and SkiaSharp area labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer explaining Save/Restore pattern and SKClipOperation by-design limitation",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thank you for the detailed question!\n\nExpanding a clip region in Skia is intentionally not supported via `SKClipOperation` — the enum only offers `Difference` and `Intersect` because Skia's clip stack is monotonically narrowing by design.\n\nThe correct pattern to \"reset\" or recover a wider clip is to use **Save/Restore**:\n\n```csharp\n// Save the current (wide) clip state\nint savedCount = canvas.Save();\n\n// Narrow the clip for this section\ncanvas.ClipRect(clipRect);\ncanvas.DrawColor(SKColors.Green); // draws in narrow clip\n\n// Restore to the previous (wider) clip\ncanvas.RestoreToCount(savedCount);\n\n// Now the clip is back to what it was before Save()\ncanvas.ClipRect(intersectRectF);\ncanvas.DrawColor(SKColors.Red);\n```\n\nFor union-like clipping (non-overlapping areas combined), build a composite `SKPath` and set it all at once:\n\n```csharp\nusing var clipPath = new SKPath();\nclipPath.AddRect(rect1);\nclipPath.AddRect(rect2);\nclipPath.FillType = SKPathFillType.Winding;\ncanvas.ClipPath(clipPath);\n```\n\nThis is the idiomatic Skia approach and fully supports your use case."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — by-design behavior with documented workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>
