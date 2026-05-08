@@ -1,0 +1,305 @@
+# Issue Triage Report — #2433
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-04T16:46:43Z |
+| Type | type/bug (0.65 (65%)) |
+| Area | area/SkiaSharp (0.72 (72%)) |
+| Suggested action | needs-info (0.85 (85%)) |
+
+**Issue Summary:** Reporter sees 'Unsupported path effect in addPaint.' log and path drawn as solid line instead of dashed when using SKPathEffect.CreateDash on a canvas; platform target and canvas type not specified.
+
+**Analysis:** The error message 'Unsupported path effect in addPaint.' originates inside Skia's PDF backend (SkPDFDevice::addPaint), which logs this warning when it encounters a path effect it cannot serialize to PDF. This strongly suggests the reporter is drawing onto a PDF canvas (created via SKDocument.CreatePdf()) rather than a raster canvas. On raster canvases, SKPathEffect.CreateDash works correctly. The SkiaSharp bindings for SKPathEffect.CreateDash and SKPaint.PathEffect are present and appear correct. Key missing information: platform target framework, whether an SKDocument is used, and a minimal reproduction.
+
+**Recommendations:** **needs-info** — Platform target frameworks are empty; canvas type unknown; no reproduction link. The error message strongly implies PDF canvas usage, but this needs confirmation before any fix or close action.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create an SKPaint with PathEffect = SKPathEffect.CreateDash(...)
+2. Draw an SKPath with canvas.DrawPath(path, paint)
+3. Observe: path drawn as solid line; log prints 'Unsupported path effect in addPaint.'
+
+**Environment:** SkiaSharp 2.88.3, Visual Studio 2022 17.5.2, .NET 5; platform target frameworks not provided
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | Unsupported path effect in addPaint. |
+| Repro quality | partial |
+| Target frameworks | — |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | Platform target frameworks and canvas type not specified; cannot determine if still relevant without knowing if reporter uses a raster or PDF/SVG canvas. |
+
+## Analysis
+
+### Technical Summary
+
+The error message 'Unsupported path effect in addPaint.' originates inside Skia's PDF backend (SkPDFDevice::addPaint), which logs this warning when it encounters a path effect it cannot serialize to PDF. This strongly suggests the reporter is drawing onto a PDF canvas (created via SKDocument.CreatePdf()) rather than a raster canvas. On raster canvases, SKPathEffect.CreateDash works correctly. The SkiaSharp bindings for SKPathEffect.CreateDash and SKPaint.PathEffect are present and appear correct. Key missing information: platform target framework, whether an SKDocument is used, and a minimal reproduction.
+
+### Rationale
+
+Classified as type/bug with medium confidence because the wrong-output behavior (path drawn solid instead of dashed) is a bug report, but the root cause is likely user code passing a PDF canvas to DrawPath — which is a Skia limitation, not a SkiaSharp binding bug. The exact canvas type and platform are unknown, making definitive classification impossible without more info. suggestedAction is needs-info because platform target frameworks are empty and no reproduction is provided.
+
+### Key Signals
+
+- "Unsupported path effect in addPaint." — **issue body** (This debug message is emitted by Skia's PDF device (SkPDFDevice::addPaint) when path effects cannot be serialized to PDF. The reporter is very likely drawing to a PDF canvas, not a raster canvas.)
+- "Platform Target Frameworks: (empty)" — **issue body** (Critical information missing — cannot determine platform (iOS, Android, Windows, etc.) or whether platform-specific canvas type is involved.)
+- "Version with issue: 2.88.3 / Last known good version: ???" — **issue body** (No regression baseline established. Reporter does not know if this ever worked.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKPathEffect.cs` | 64-73 | direct | SKPathEffect.CreateDash is correctly bound via sk_path_effect_create_dash C API. The C# binding pins the intervals array and passes it to native. No issues found in this code. |
+| `binding/SkiaSharp/SKPaint.cs` | 276-279 | direct | SKPaint.PathEffect getter/setter correctly calls sk_paint_get_path_effect / sk_paint_set_path_effect. The setter passes handle or IntPtr.Zero for null. No issues found. |
+
+### Workarounds
+
+- If drawing to a PDF canvas: pre-apply the dash effect manually by converting the path using SKPathEffect, or rasterize the stroke to a bitmap first.
+- If drawing to a raster canvas: ensure SKPathEffect.CreateDash returns a non-null value and that the intervals array has an even number of positive floats.
+
+### Next Questions
+
+- What platform/target framework is being used (iOS, Android, Windows, net5.0-windows, etc.)?
+- Is the canvas parameter coming from an SKDocument.CreatePdf() call, or from an SKBitmap/SKSurface raster canvas?
+- Does the issue reproduce with a simple net5.0 console app using a raster bitmap (SKBitmap → SKCanvas)?
+- Is there a minimal reproduction project or link?
+
+### Resolution Proposals
+
+**Hypothesis:** Reporter is likely drawing to a Skia PDF canvas (SKDocument) which does not support path effects — this is a known Skia limitation, not a SkiaSharp binding defect.
+
+1. **Request platform and canvas type information** — investigation, confidence 0.90 (90%), cost/xs, validated=untested
+   - Ask the reporter to confirm what platform target framework they are using, whether they are drawing to a PDF canvas (SKDocument), and to provide a minimal reproduction on a raster canvas.
+2. **Workaround: use raster canvas** — workaround, confidence 0.75 (75%), cost/s, validated=untested
+   - If the reporter is using an SKDocument PDF canvas, suggest switching to a raster approach: create an SKBitmap, draw to its canvas, then embed the bitmap in the PDF.
+
+**Recommended proposal:** Request platform and canvas type information
+
+**Why:** Without knowing the canvas type and platform, we cannot confirm root cause. Asking for this info will clarify if it is a PDF backend limitation or a real raster rendering bug.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.85 (85%) |
+| Reason | Platform target frameworks are empty; canvas type unknown; no reproduction link. The error message strongly implies PDF canvas usage, but this needs confirmation before any fix or close action. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Platform target framework (e.g., net5.0-android, net5.0-windows, net5.0-ios)
+- Type of canvas being drawn to (raster SKBitmap, SKDocument/PDF, SKSvgCanvas, etc.)
+- Minimal reproduction project or link
+- Detailed IDE/OS version info (the template section was left empty)
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.85 (85%) | Apply type/bug, area/SkiaSharp, tenet/reliability labels | labels=type/bug, area/SkiaSharp, tenet/reliability |
+| add-comment | medium | 0.85 (85%) | Ask for platform target framework, canvas type, and minimal repro; explain PDF canvas limitation | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! To help investigate, could you provide:
+
+1. **Platform target framework** — e.g., `net5.0-android`, `net5.0-windows`, `net5.0-ios`
+2. **Canvas type** — Is the `canvas` parameter coming from an `SKDocument.CreatePdf()` call (a PDF canvas), an `SKSvgCanvas`, or a raster `SKBitmap`/`SKSurface`?
+3. **Minimal reproduction** — A small self-contained project that shows the issue.
+
+**Likely cause:** The error message `Unsupported path effect in addPaint.` is emitted by Skia's PDF rendering backend when it encounters a path effect it cannot serialize to PDF. If you are drawing to a PDF canvas (`SKDocument.CreatePdf()`), this is a known Skia limitation — path effects are not supported in the PDF backend.
+
+**Workaround (if using PDF canvas):** Draw your dashed path onto a raster `SKBitmap` first, then embed the bitmap image into the PDF document. Alternatively, manually compute the dash segments and draw each segment as a separate path without a path effect.
+
+If you are drawing to a raster canvas (bitmap/surface), please share a minimal reproduction — `SKPathEffect.CreateDash` should work correctly on raster surfaces.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2433,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-04T16:46:43Z"
+  },
+  "summary": "Reporter sees 'Unsupported path effect in addPaint.' log and path drawn as solid line instead of dashed when using SKPathEffect.CreateDash on a canvas; platform target and canvas type not specified.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.65
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.72
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "Unsupported path effect in addPaint.",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKPaint with PathEffect = SKPathEffect.CreateDash(...)",
+        "Draw an SKPath with canvas.DrawPath(path, paint)",
+        "Observe: path drawn as solid line; log prints 'Unsupported path effect in addPaint.'"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Visual Studio 2022 17.5.2, .NET 5; platform target frameworks not provided"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "unknown",
+      "relevanceReason": "Platform target frameworks and canvas type not specified; cannot determine if still relevant without knowing if reporter uses a raster or PDF/SVG canvas."
+    }
+  },
+  "analysis": {
+    "summary": "The error message 'Unsupported path effect in addPaint.' originates inside Skia's PDF backend (SkPDFDevice::addPaint), which logs this warning when it encounters a path effect it cannot serialize to PDF. This strongly suggests the reporter is drawing onto a PDF canvas (created via SKDocument.CreatePdf()) rather than a raster canvas. On raster canvases, SKPathEffect.CreateDash works correctly. The SkiaSharp bindings for SKPathEffect.CreateDash and SKPaint.PathEffect are present and appear correct. Key missing information: platform target framework, whether an SKDocument is used, and a minimal reproduction.",
+    "keySignals": [
+      {
+        "text": "Unsupported path effect in addPaint.",
+        "source": "issue body",
+        "interpretation": "This debug message is emitted by Skia's PDF device (SkPDFDevice::addPaint) when path effects cannot be serialized to PDF. The reporter is very likely drawing to a PDF canvas, not a raster canvas."
+      },
+      {
+        "text": "Platform Target Frameworks: (empty)",
+        "source": "issue body",
+        "interpretation": "Critical information missing — cannot determine platform (iOS, Android, Windows, etc.) or whether platform-specific canvas type is involved."
+      },
+      {
+        "text": "Version with issue: 2.88.3 / Last known good version: ???",
+        "source": "issue body",
+        "interpretation": "No regression baseline established. Reporter does not know if this ever worked."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPathEffect.cs",
+        "lines": "64-73",
+        "finding": "SKPathEffect.CreateDash is correctly bound via sk_path_effect_create_dash C API. The C# binding pins the intervals array and passes it to native. No issues found in this code.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "276-279",
+        "finding": "SKPaint.PathEffect getter/setter correctly calls sk_paint_get_path_effect / sk_paint_set_path_effect. The setter passes handle or IntPtr.Zero for null. No issues found.",
+        "relevance": "direct"
+      }
+    ],
+    "rationale": "Classified as type/bug with medium confidence because the wrong-output behavior (path drawn solid instead of dashed) is a bug report, but the root cause is likely user code passing a PDF canvas to DrawPath — which is a Skia limitation, not a SkiaSharp binding bug. The exact canvas type and platform are unknown, making definitive classification impossible without more info. suggestedAction is needs-info because platform target frameworks are empty and no reproduction is provided.",
+    "nextQuestions": [
+      "What platform/target framework is being used (iOS, Android, Windows, net5.0-windows, etc.)?",
+      "Is the canvas parameter coming from an SKDocument.CreatePdf() call, or from an SKBitmap/SKSurface raster canvas?",
+      "Does the issue reproduce with a simple net5.0 console app using a raster bitmap (SKBitmap → SKCanvas)?",
+      "Is there a minimal reproduction project or link?"
+    ],
+    "workarounds": [
+      "If drawing to a PDF canvas: pre-apply the dash effect manually by converting the path using SKPathEffect, or rasterize the stroke to a bitmap first.",
+      "If drawing to a raster canvas: ensure SKPathEffect.CreateDash returns a non-null value and that the intervals array has an even number of positive floats."
+    ],
+    "resolution": {
+      "hypothesis": "Reporter is likely drawing to a Skia PDF canvas (SKDocument) which does not support path effects — this is a known Skia limitation, not a SkiaSharp binding defect.",
+      "proposals": [
+        {
+          "title": "Request platform and canvas type information",
+          "description": "Ask the reporter to confirm what platform target framework they are using, whether they are drawing to a PDF canvas (SKDocument), and to provide a minimal reproduction on a raster canvas.",
+          "category": "investigation",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: use raster canvas",
+          "description": "If the reporter is using an SKDocument PDF canvas, suggest switching to a raster approach: create an SKBitmap, draw to its canvas, then embed the bitmap in the PDF.",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Request platform and canvas type information",
+      "recommendedReason": "Without knowing the canvas type and platform, we cannot confirm root cause. Asking for this info will clarify if it is a PDF backend limitation or a real raster rendering bug."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.85,
+      "reason": "Platform target frameworks are empty; canvas type unknown; no reproduction link. The error message strongly implies PDF canvas usage, but this needs confirmation before any fix or close action.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Platform target framework (e.g., net5.0-android, net5.0-windows, net5.0-ios)",
+      "Type of canvas being drawn to (raster SKBitmap, SKDocument/PDF, SKSvgCanvas, etc.)",
+      "Minimal reproduction project or link",
+      "Detailed IDE/OS version info (the template section was left empty)"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask for platform target framework, canvas type, and minimal repro; explain PDF canvas limitation",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the report! To help investigate, could you provide:\n\n1. **Platform target framework** — e.g., `net5.0-android`, `net5.0-windows`, `net5.0-ios`\n2. **Canvas type** — Is the `canvas` parameter coming from an `SKDocument.CreatePdf()` call (a PDF canvas), an `SKSvgCanvas`, or a raster `SKBitmap`/`SKSurface`?\n3. **Minimal reproduction** — A small self-contained project that shows the issue.\n\n**Likely cause:** The error message `Unsupported path effect in addPaint.` is emitted by Skia's PDF rendering backend when it encounters a path effect it cannot serialize to PDF. If you are drawing to a PDF canvas (`SKDocument.CreatePdf()`), this is a known Skia limitation — path effects are not supported in the PDF backend.\n\n**Workaround (if using PDF canvas):** Draw your dashed path onto a raster `SKBitmap` first, then embed the bitmap image into the PDF document. Alternatively, manually compute the dash segments and draw each segment as a separate path without a path effect.\n\nIf you are drawing to a raster canvas (bitmap/surface), please share a minimal reproduction — `SKPathEffect.CreateDash` should work correctly on raster surfaces."
+      }
+    ]
+  }
+}
+```
+
+</details>

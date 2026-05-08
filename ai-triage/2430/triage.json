@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2430,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-04T17:55:00Z"
+  },
+  "summary": "User migrating from Xamarin.Forms to MAUI asks how to load a Lottie animation from an in-memory JSON string (downloaded from a server) using SKLottieView/Skottie.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.85 },
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Migrating from Xamarin.Forms to MAUI; animations stored as JSON strings in a database"
+    }
+  },
+  "analysis": {
+    "summary": "The reporter wants to load a Skottie/Lottie animation from an in-memory JSON string rather than a file. The SkiaSharp.Skottie library already has `Animation.Parse(string json)` and `Animation.TryParse(string json, out Animation animation)` that do exactly this.",
+    "rationale": "This is a usage question — the reporter does not know about the `Animation.Parse` API. No broken behavior is described. The functionality already exists in the `SkiaSharp.Skottie` package.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.Skottie/Animation.cs",
+        "lines": "31-42",
+        "finding": "Animation.Parse(string json) and Animation.TryParse(string json, out Animation animation) are public static methods that create an Animation directly from a JSON string, which is exactly what the reporter needs.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "is there a way to display an animation that is stored in memory inside as a JSON string variable?",
+        "source": "issue body",
+        "interpretation": "User is unaware of Animation.Parse(string json) which directly accepts a JSON string."
+      }
+    ],
+    "workarounds": [
+      "Use `Animation.Parse(jsonString)` from the `SkiaSharp.Skottie` namespace to load directly from a JSON string.",
+      "Alternatively, convert the string to a `Stream` or `SKData` and use `Animation.Create(stream)` / `Animation.Create(skData)`."
+    ],
+    "resolution": {
+      "hypothesis": "The user wants to render a Lottie animation from a JSON string in memory. `Animation.Parse(string json)` already supports this.",
+      "proposals": [
+        {
+          "title": "Use Animation.Parse(string json)",
+          "description": "Pass the JSON string directly to `Animation.Parse()`. Then draw the animation on a `SKCanvas` using `animation.Render(canvas, rect)`.",
+          "category": "fix",
+          "codeSnippet": "using SkiaSharp.Skottie;\n\n// jsonString is the Lottie JSON downloaded from your server\nvar animation = Animation.Parse(jsonString);\nif (animation != null)\n{\n    // In your SKCanvas paint handler:\n    animation.Seek(progress); // 0.0 to 1.0\n    animation.Render(canvas, destRect);\n}",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use Animation.Create(Stream) from string",
+          "description": "If you prefer a stream-based approach, convert the JSON string to a MemoryStream.",
+          "category": "alternative",
+          "codeSnippet": "using var stream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonString));\nvar animation = Animation.Create(stream);",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use Animation.Parse(string json)",
+      "recommendedReason": "Simplest and most direct approach — no conversion needed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.90,
+      "reason": "The requested functionality exists via Animation.Parse(string json). This is a usage question that can be answered and closed.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and MAUI partner labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/question", "area/SkiaSharp", "partner/maui"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Answer with Animation.Parse code example",
+        "risk": "medium",
+        "confidence": 0.95,
+        "comment": "The `SkiaSharp.Skottie` package already supports loading animations from an in-memory JSON string.\n\nUse `Animation.Parse(string json)` (or `Animation.TryParse`) directly:\n\n```csharp\nusing SkiaSharp.Skottie;\n\n// jsonString is the Lottie JSON downloaded from your server\nvar animation = Animation.Parse(jsonString);\nif (animation != null)\n{\n    // In your SKCanvas PaintSurface handler:\n    animation.Seek(progress); // 0.0 to 1.0\n    animation.Render(canvas, destRect);\n}\n```\n\nAlternatively, if you prefer streams:\n\n```csharp\nusing var stream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonString));\nvar animation = Animation.Create(stream);\n```\n\nNote: `SKLottieView` is not a built-in SkiaSharp control — use `Animation` from `SkiaSharp.Skottie` together with `SKCanvasView` to render animations. You can find a full example in the [SkiaSharp samples gallery](https://github.com/mono/SkiaSharp/blob/main/samples/Gallery/Shared/Samples/LottiePlayerSample.cs)."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
