@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2871,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T04:03:58Z",
+    "currentLabels": ["type/bug", "status/help-wanted"]
+  },
+  "summary": "SKGLView on .NET MAUI Windows (WinUI 3) renders an opaque gray background instead of a transparent one because WinUI 3's SwapChainPanel does not support transparency, while SKCanvasView correctly renders transparent.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.92 },
+    "platforms": ["os/Windows-WinUI"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/compatibility"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-windows10.0.19041"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET MAUI app targeting Windows",
+        "Add an SKGLView with a transparent background",
+        "In the PaintSurface handler call canvas.Clear()",
+        "Observe that the view renders an opaque gray background instead of transparent"
+      ],
+      "environmentDetails": "Windows 11 Home 10.0.22631, SkiaSharp 3.x Alpha, Visual Studio (Windows)",
+      "repoLinks": [
+        { "url": "https://github.com/hyvanmielenpelit/GnollHack", "description": "Reporter's project demonstrating the issue" },
+        { "url": "https://github.com/microsoft/microsoft-ui-xaml/issues/5025", "description": "WinUI upstream issue requesting SwapChainPanel transparency" },
+        { "url": "https://github.com/microsoft/microsoft-ui-xaml/issues/8130#issuecomment-1817217110", "description": "WinUI upstream thread about the same limitation" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/2817", "description": "PR exposing Direct3D backend — potential future fix path" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/2823", "description": "Related Direct3D PR mentioned by maintainer" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.x"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The MapBackground method in SKGLViewHandler.Windows.cs still explicitly documents this as a WinUI 3 limitation with no fix in place."
+    }
+  },
+  "analysis": {
+    "summary": "SKGLView is backed by SKSwapChainPanel which extends WinUI 3's SwapChainPanel. WinUI 3's SwapChainPanel does not support transparency — this is a known OS-level limitation. The MapBackground handler in SKGLViewHandler.Windows.cs explicitly documents this constraint. A future fix would require switching to a Direct3D composition-based backing view.",
+    "rationale": "The behavior is reproducible and clearly inconsistent — SKCanvasView supports transparency on WinUI 3 but SKGLView does not. The root cause is a WinUI 3 SwapChainPanel limitation rather than a SkiaSharp code defect. The code itself acknowledges this limitation (MapBackground comment). Classified as type/bug because this is a platform parity gap that breaks the user-visible API contract. The maintainer has pointed to a potential future fix path via Direct3D (PRs #2817/#2823).",
+    "keySignals": [
+      {
+        "text": "WinUI 3 limitation: Setting 'Background' property is not supported on SwapChainPanel.",
+        "source": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Windows.cs lines 74-75",
+        "interpretation": "SkiaSharp itself documents the transparency limitation as a WinUI 3 constraint in the MapBackground handler."
+      },
+      {
+        "text": "Indeed this is not a bug but unfortunately by design as windows GL hardware-accelerated view cannot be transparent.",
+        "source": "issue comment by contributor taublast",
+        "interpretation": "Community confirmation that this is a WinUI 3 platform limitation, not a SkiaSharp code defect."
+      },
+      {
+        "text": "Maybe this PR will expose Direct3D and then we can add a new D3D view to be used as a backing element: #2817, #2823",
+        "source": "issue comment by maintainer mattleibow",
+        "interpretation": "Maintainer acknowledges the limitation and identifies a future fix path via Direct3D composition."
+      },
+      {
+        "text": "SKCanvasView draws a transparent background upon canvas.Clear() but SKGLView draws an opaque gray background.",
+        "source": "issue body",
+        "interpretation": "Clear platform parity gap — the non-GPU view supports transparency, the GPU view does not."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Windows.cs",
+        "lines": "7-7",
+        "finding": "SKGLViewHandler.Windows uses SKSwapChainPanel as its platform view — the root of the transparency problem",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Windows.cs",
+        "lines": "72-76",
+        "finding": "MapBackground is a no-op with an explicit code comment: 'WinUI 3 limitation: Setting Background property is not supported on SwapChainPanel' — confirms known limitation is already documented in code",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "19-20",
+        "finding": "AngleSwapChainPanel extends WinUI 3's SwapChainPanel — inheriting its transparency restriction",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs",
+        "lines": "11-11",
+        "finding": "SKSwapChainPanel extends AngleSwapChainPanel, which extends SwapChainPanel — the full inheritance chain confirms the transparency limitation originates from the WinUI 3 SwapChainPanel base",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKCanvasView instead of SKGLView on Windows MAUI — SKCanvasView uses a different rendering path that does support transparency, at the cost of hardware GPU acceleration.",
+      "Use platform-specific conditional rendering: use SKGLView on Android/iOS and SKCanvasView on Windows to get both GPU acceleration and transparency where supported."
+    ],
+    "nextQuestions": [
+      "Has the Direct3D work in PRs #2817/#2823 progressed enough to support a transparent D3D-backed view?",
+      "Is there a WinUI 3 composition API (e.g., SpriteVisual) that could provide a transparent alternative to SwapChainPanel?"
+    ],
+    "resolution": {
+      "hypothesis": "On WinUI 3, SwapChainPanel (used by SKGLView via ANGLE) cannot be transparent. A proper fix requires a new WinUI 3 view backed by Direct3D composition instead of SwapChainPanel.",
+      "proposals": [
+        {
+          "title": "Use SKCanvasView on Windows as workaround",
+          "description": "Replace SKGLView with SKCanvasView on the Windows platform target. This sacrifices GPU acceleration on Windows but restores transparency. Use conditional compilation or MAUI handler registration to platform-switch.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Implement Direct3D-backed transparent view for WinUI 3",
+          "description": "Implement a new SKD3DView (or equivalent) for WinUI 3 using Direct3D composition surface (IDCompositionSurface or similar) that supports per-pixel alpha. This is the path being explored in PRs #2817/#2823.",
+          "category": "fix",
+          "confidence": 0.70,
+          "effort": "cost/xl",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKCanvasView on Windows as workaround",
+      "recommendedReason": "Immediate workaround available. The proper fix requires significant WinUI 3 / Direct3D composition work that is already being tracked in separate PRs."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Legitimate platform parity bug with a clear root cause (WinUI 3 SwapChainPanel limitation). Maintainer has acknowledged and identified a fix path via Direct3D. A workaround (use SKCanvasView on Windows) exists. Issue should remain open until the D3D-backed view is implemented.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, MAUI views, WinUI platform, and OpenGL backend labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Windows-WinUI", "backend/OpenGL", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the WinUI 3 limitation and provide the SKCanvasView workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed report!\n\nThis is a known WinUI 3 platform limitation — `SwapChainPanel` (which backs `SKGLView` via ANGLE) does not support per-pixel transparency in WinUI 3. You can see this is already documented in our code. The WinUI team has had a long-standing request for this feature: https://github.com/microsoft/microsoft-ui-xaml/issues/5025\n\n**Workaround:** Use `SKCanvasView` instead of `SKGLView` on Windows. `SKCanvasView` uses a different rendering path that does support transparency, though without GPU acceleration:\n\n```csharp\n// Option 1: Use SKCanvasView on all platforms\n// <skia:SKCanvasView ... BackgroundColor=\"Transparent\" />\n\n// Option 2: Platform-specific handler to use SKGLView on mobile and SKCanvasView on Windows\n```\n\nA proper fix would require a new Direct3D composition-based view for WinUI 3. This is on our radar — see the work being done in #2817 and #2823."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #2817 (Direct3D backend) as the potential fix path",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 2817
+      }
+    ]
+  }
+}

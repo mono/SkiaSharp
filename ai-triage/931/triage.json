@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 931,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-21T10:53:44Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "JPEG image colors change (particularly blues become brighter) after decoding with SKBitmap.Decode and re-encoding with SKPixmap.Encode, caused by Skia's CMYK/YCCK JPEG handling and SKBitmap losing colorspace information for backwards compatibility.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "platforms": ["os/Windows-Classic", "os/macOS", "os/iOS", "os/Android"],
+    "backends": ["backend/Raster"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "Color of jpeg image changed after decode/encode — blue becomes brighter",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net462"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open a JPEG file (especially CMYK/YCCK encoded JPEGs from Photoshop) as FileStream",
+        "Decode with SKBitmap.Decode(stream)",
+        "Re-encode with SKPixmap.Encode(outputStream, bmp, SKEncodedImageFormat.Jpeg, 100)",
+        "Compare input and output images in Windows Photos, Safari, or Photoshop",
+        "Observe blue channel appears brighter/different; only Chrome/Chromium renders the output correctly"
+      ],
+      "codeSnippets": ["using (FileStream inputStream = File.Open(@\"C:\\Temp\\in.jpeg\", FileMode.Open))\nusing (SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(inputStream))\nusing (SkiaSharp.SKFileWStream outputStream = new SkiaSharp.SKFileWStream(@\"C:\\Temp\\out.jpeg\"))\n{\n    SkiaSharp.SKPixmap.Encode(outputStream, bmp, SkiaSharp.SKEncodedImageFormat.Jpeg, 100);\n}"],
+      "attachments": [
+        { "url": "https://user-images.githubusercontent.com/31235892/63153083-1ecbd880-c016-11e9-9559-dafdd0c748c0.jpeg", "filename": "in.jpeg", "description": "Original input JPEG image" },
+        { "url": "https://user-images.githubusercontent.com/31235892/63153084-1ecbd880-c016-11e9-8563-a512c773dda1.jpeg", "filename": "out.jpeg", "description": "Output JPEG after SKBitmap.Decode + SKPixmap.Encode (colors shifted)" },
+        { "url": "https://github.com/mono/SkiaSharp/files/5230126/images.zip", "filename": "images.zip", "description": "Second set of input/output images by reporter (Sept 2020)" },
+        { "url": "https://github.com/mono/SkiaSharp/files/5259677/images.zip", "filename": "images.zip", "description": "Input and output produced by 2.84.0-preview.2 beta" },
+        { "url": "https://github.com/mono/SkiaSharp/files/6061595/images.zip", "filename": "images.zip", "description": "Another JPEG set showing the issue (Mar 2021)" },
+        { "url": "https://github.com/mono/SkiaSharp/files/13237849/images.zip", "filename": "images.zip", "description": "Additional affected images (Nov 2023)" }
+      ],
+      "relatedIssues": [523, 932, 1238, 1269],
+      "repoLinks": [
+        { "url": "https://source.chromium.org/chromium/chromium/src/+/master:third_party/skia/include/private/SkEncodedInfo.h;l=88", "description": "Skia source comment explaining inverted CMYK convention for Photoshop JPEGs" },
+        { "url": "https://stackoverflow.com/questions/50798014/determining-color-space-for-jpeg", "description": "How to determine JPEG color space" },
+        { "url": "https://groups.google.com/forum/#!topic/skia-discuss/b8JtsaOw7_o", "description": "Skia discuss thread on CMYK JPEG handling" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["1.68", "2.80", "2.84.0-preview.2", "2.88.x"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Issue still active in 2026 with users confirming the problem persists; the root cause is in upstream Skia's CMYK JPEG codec behavior that only Chromium-based viewers understand."
+    }
+  },
+  "analysis": {
+    "summary": "JPEG decode/re-encode color shift is caused by two interrelated issues: (1) SKBitmap.Decode loses the JPEG's embedded colorspace metadata for backwards compatibility, and (2) Skia treats CMYK/YCCK JPEGs as Photoshop inverted CMYK during decoding, producing a result that only Chromium renders correctly. Most other image viewers (Windows Photos, Safari, Photoshop) display the output with visually different colors.",
+    "rationale": "The reporter provides working code, sample images, and clear before/after comparison. Multiple users confirmed the bug across platforms and SkiaSharp versions through 2026. Maintainer (mattleibow) confirmed SKBitmap loses colorspace for backwards compatibility. A contributor (ziriax) identified the root cause as CMYK/YCCK JPEG handling with Photoshop-inverted CMYK — a decision made in upstream Skia to match Chromium behavior but incompatible with most other viewers.",
+    "keySignals": [
+      {
+        "text": "blue color becomes brighter",
+        "source": "issue body",
+        "interpretation": "Classic symptom of CMYK channel inversion — blue channel is inflated during CMYK-to-RGB conversion"
+      },
+      {
+        "text": "The bitmap loses it's colorspace information for backwards compatibility.",
+        "source": "comment by mattleibow",
+        "interpretation": "SKBitmap.Decode intentionally strips colorspace — confirmed root cause in the C# wrapper layer"
+      },
+      {
+        "text": "only Google Chromium display the Google Skia output correctly",
+        "source": "comment by AndersMad",
+        "interpretation": "Output is encoded with Skia's inverted-CMYK JPEG format — only Chromium understands it correctly; this is upstream Skia's deliberate choice"
+      },
+      {
+        "text": "Color Transform : Unknown (RGB or CMYK) [from ExifTool]",
+        "source": "comment by ziriax",
+        "interpretation": "Input JPEG is CMYK or YCCK — triggers Skia's Photoshop inverted CMYK conversion path"
+      },
+      {
+        "text": "when this issue can be fixed?",
+        "source": "comment 2026-03-27",
+        "interpretation": "Still actively affecting users as of 2026; issue has not been resolved"
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "434-444",
+        "finding": "SKBitmap.Decode(SKCodec) reads codec.Info which includes the JPEG's embedded colorspace, then passes it to Decode(codec, info). In theory colorspace is preserved here, but maintainer confirmed it is stripped for backwards compatibility — this likely occurs at the C API or Skia native layer when targeting legacy color types.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "68-93",
+        "finding": "All SKImageInfo constructors except the 5-argument form set ColorSpace = null. When a caller passes a bitmapInfo without an explicit colorspace, the decoded bitmap has no associated colorspace, causing color management to be skipped during re-encoding.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "166-173",
+        "finding": "SKImage.FromEncodedData wraps sk_image_new_from_encoded which defers decoding, preserving the encoded data and its color profile. Maintainer suggested this as a potential workaround because it avoids the SKBitmap colorspace loss.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKImage.FromEncodedData instead of SKBitmap.Decode — preserves encoded color profile and defers decode, which may avoid the CMYK→RGB conversion loss",
+      "Use SKCodec directly and request decode into an explicit SKImageInfo with ColorSpace set to SKColorSpace.CreateSrgb() — forces sRGB conversion at decode time rather than relying on null colorspace passthrough",
+      "Inspect the input JPEG's EXIF color transform before processing; if CMYK/YCCK, use a dedicated CMYK library (e.g., ImageSharp) for that specific format"
+    ],
+    "nextQuestions": [
+      "Does using SKImage.FromEncodedData + SKImage.Encode produce the correct output across all viewers?",
+      "Does explicitly passing WithColorSpace(SKColorSpace.CreateSrgb()) to SKBitmap.Decode(codec, info) fix the issue for sRGB JPEGs while failing for CMYK?",
+      "Is this reproducible only with CMYK/YCCK JPEGs, or does it also affect standard sRGB JPEGs?",
+      "Has Skia upstream changed CMYK JPEG handling in milestones after m87 that SkiaSharp has since adopted?"
+    ],
+    "errorFingerprint": "jpeg-decode-encode-color-shift-cmyk-colorspace",
+    "resolution": {
+      "hypothesis": "The color shift affects CMYK/YCCK JPEGs because Skia uses a Photoshop-specific inverted CMYK convention understood only by Chromium. Additionally, SKBitmap strips the original colorspace for backwards compatibility. Combined, re-encoding produces a JPEG that only Chrome displays correctly.",
+      "proposals": [
+        {
+          "title": "Use SKImage.FromEncodedData instead of SKBitmap.Decode",
+          "description": "SKImage.FromEncodedData defers decoding and preserves the encoded color profile, avoiding the SKBitmap colorspace loss. This is the maintainer-recommended approach for preserving color fidelity.",
+          "category": "workaround",
+          "confidence": 0.65,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Explicitly set sRGB colorspace when decoding",
+          "description": "Pass codec.Info.WithColorSpace(SKColorSpace.CreateSrgb()) to SKBitmap.Decode so the decoder performs an explicit sRGB conversion, avoiding null colorspace passthrough. This works for standard sRGB JPEGs but may not fix CMYK/YCCK inputs.",
+          "category": "workaround",
+          "confidence": 0.55,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Fix SKBitmap.Decode to preserve colorspace by default",
+          "description": "Remove or make opt-out the backwards-compat colorspace stripping in SKBitmap.Decode. This is a breaking change for users relying on legacy null-colorspace behavior.",
+          "category": "fix",
+          "confidence": 0.50,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKImage.FromEncodedData instead of SKBitmap.Decode",
+      "recommendedReason": "Non-breaking, immediately available, and aligns with maintainer's own suggestion."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.80,
+      "reason": "Confirmed wrong-output bug affecting multiple users through 2026. Root cause is understood (CMYK JPEG + colorspace loss) but the exact fix path requires deeper investigation of SKBitmap colorspace handling and whether SKImage.FromEncodedData provides a complete workaround.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp core, platform, and backend labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows", "os/macOS", "os/iOS", "os/Android", "backend/Raster"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and provide workaround using SKImage.FromEncodedData",
+        "risk": "medium",
+        "confidence": 0.75,
+        "comment": "Thanks for the detailed report and sample images. This issue affects JPEG files encoded in **CMYK or YCCK color space** (common in images exported from Adobe Photoshop).\n\nThere are two contributing factors:\n1. **Skia's CMYK JPEG convention**: Skia follows Photoshop's inverted CMYK convention when decoding CMYK/YCCK JPEGs. This means the decoded output is only rendered correctly by Chromium-based browsers. Other viewers (Windows Photos, Safari, Adobe Photoshop ≥ 2020, etc.) show different colors.\n2. **SKBitmap loses colorspace metadata**: `SKBitmap.Decode` strips the JPEG's embedded color profile for backwards compatibility, causing the re-encoded JPEG to lose color management metadata.\n\n**Recommended workaround**: Use `SKImage.FromEncodedData` instead of `SKBitmap.Decode` — it preserves the encoded color data and defers decoding, which may avoid the colorspace loss:\n\n```csharp\nusing var inputData = SKData.Create(@\"C:\\Temp\\in.jpeg\");\nusing var image = SKImage.FromEncodedData(inputData);\nusing var outputData = image.Encode(SKEncodedImageFormat.Jpeg, 100);\nusing var outputStream = File.OpenWrite(@\"C:\\Temp\\out.jpeg\");\noutputData.SaveTo(outputStream);\n```\n\nIf your JPEG is CMYK/YCCK, you can confirm this using ExifTool (`Color Transform: Unknown (RGB or CMYK)`) or any EXIF reader. Standard sRGB JPEGs are generally not affected.\n\nWe will investigate whether `SKBitmap.Decode` can be updated to preserve colorspace without breaking existing callers."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related colorspace/CMYK issues",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 1238
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related colorspace issue #523",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 523
+      }
+    ]
+  }
+}
