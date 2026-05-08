@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3654,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T15:35:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Referencing SkiaSharp.Views.Blazor blocks WASM trimming and causes a build error about a non-blittable P/Invoke callback return type in System.Drawing.Common when targeting Blazor WASM.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.90 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.92 },
+    "platforms": ["os/WASM"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "build-error",
+      "errorMessage": "The return type 'Windows.Win32.Foundation.BOOL' of pinvoke callback method 'Windows.Win32.Foundation.BOOL EnumChildWindowsNativeCallback(Windows.Win32.Foundation.HWND, Windows.Win32.Foundation.LPARAM)' needs to be blittable.",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net9.0-browser", "net10.0-browser"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM project",
+        "Add references to SkiaSharp (3.119.2), SkiaSharp.Views.Blazor (3.119.2), and System.Drawing.Common (10.0.5)",
+        "Build the project — build fails with the blittable P/Invoke callback error",
+        "Remove SkiaSharp.Views.Blazor — build succeeds"
+      ],
+      "environmentDetails": "Visual Studio on Windows; SkiaSharp 3.119.2, System.Drawing.Common 10.0.5",
+      "relatedIssues": [2221],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/2221", "description": "Related: Blazor WASM EntryPointNotFoundException / trimming issue with SkiaSharp.Views.Blazor" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.2", "2.88.9"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.119.2",
+      "currentRelevance": "likely",
+      "relevanceReason": "The reporter confirmed SkiaSharp 3.119.2 + System.Drawing.Common 10.0.5 triggers the error; downgrading System.Drawing.Common to 8.0.1 avoids it, suggesting an interaction between SkiaSharp.Views.Blazor's trimming behavior and System.Drawing.Common 10.0.5."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.75,
+      "reason": "Reporter states it worked with version 2.88.9 (last known good). The specific version combination that fails was not available before 3.119.x.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.119.2"
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp.Views.Blazor's presence in a Blazor WASM project prevents the trimmer from eliminating Windows-specific P/Invoke code in System.Drawing.Common 10.0.5, causing a build error about a non-blittable callback return type. The root cause is likely that SkiaSharp.Views.Blazor does not carry sufficient trim annotations or linker hints to limit trimmer roots, and System.Drawing.Common 10.0.5 added a new Windows P/Invoke callback (EnumChildWindowsNativeCallback) that does not satisfy the blittable constraint.",
+    "rationale": "This is a build-time regression: removing SkiaSharp.Views.Blazor fixes the build, demonstrating that it is the proximate cause. The error originates in System.Drawing.Common, but the trigger is SkiaSharp.Views.Blazor broadening the trimmer scope. This pattern is distinct from general trimming advice and warrants investigation into SkiaSharp.Views.Blazor's trim compatibility.",
+    "keySignals": [
+      {
+        "text": "if I reference SkiaSharp.Views.Blazor, it blocks the trimming and causes an error",
+        "source": "issue body",
+        "interpretation": "SkiaSharp.Views.Blazor broadens trimmer roots, preventing platform-guarded code from being eliminated."
+      },
+      {
+        "text": "if you remove SkiaSharp.Views.Blazor (3119.2), the project builds fine",
+        "source": "issue body",
+        "interpretation": "The issue is directly tied to SkiaSharp.Views.Blazor's inclusion, not SkiaSharp core."
+      },
+      {
+        "text": "If I drop that package down to 8.0.1, it works with SkiaSharp Blazor",
+        "source": "comment by reporter",
+        "interpretation": "System.Drawing.Common 10.0.5 introduced a non-blittable P/Invoke that is hit by the expanded trimmer scope; 8.0.1 does not have this issue."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "finding": "Project has <SupportedPlatform Include=\"browser\" /> but no explicit <IsTrimmable>true</IsTrimmable> nor TrimmerRootDescriptor. Missing trim annotations may cause the trimmer to be overly conservative when SkiaSharp.Views.Blazor is present.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SKHtmlCanvasInterop.cs",
+        "lines": "155-157",
+        "finding": "Uses [DllImport(\"libSkiaSharp\")] for InterceptBrowserObjects() as a workaround for dotnet/runtime#76077. This unconditional P/Invoke may affect trimmer analysis of the assembly.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Downgrade System.Drawing.Common to 8.0.1 — confirmed by reporter to fix the build error.",
+      "Add an ILLink.Descriptors.xml file explicitly excluding the problematic System.Drawing.Common assembly from trimming scope (as documented in issue #2221 for related trimming bugs)."
+    ],
+    "nextQuestions": [
+      "Does SkiaSharp.Views.Blazor carry <IsTrimmable> or trimmer root descriptor annotations?",
+      "Which specific trimmer root introduced by SkiaSharp.Views.Blazor causes EnumChildWindowsNativeCallback to be retained?",
+      "Is the issue reproducible without System.Drawing.Common (e.g., does SkiaSharp.Views.Blazor alone cause any trimmer warnings)?"
+    ],
+    "resolution": {
+      "hypothesis": "SkiaSharp.Views.Blazor lacks trim annotations that would allow the trimmer to safely exclude Windows-specific code paths from transitive dependencies like System.Drawing.Common 10.0.5.",
+      "proposals": [
+        {
+          "title": "Add trim compatibility annotations to SkiaSharp.Views.Blazor",
+          "description": "Add <IsTrimmable>true</IsTrimmable> to the .csproj and audit/add [RequiresUnreferencedCode] or DynamicDependency attributes where needed to allow the trimmer to correctly scope transitive dependencies.",
+          "category": "fix",
+          "confidence": 0.70,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: downgrade System.Drawing.Common",
+          "description": "Downgrade System.Drawing.Common from 10.0.5 to 8.0.1. Confirmed working by the reporter.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add trim compatibility annotations to SkiaSharp.Views.Blazor",
+      "recommendedReason": "Fixes the root cause for all users without requiring them to downgrade an unrelated dependency."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Bug is reproducible with clear steps. Root cause requires investigation into SkiaSharp.Views.Blazor trim annotations and how they interact with System.Drawing.Common 10.0.5.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor views, and WASM labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report, confirm workarounds, and ask for more details on the TFM",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report! This looks like a trim-compatibility issue where `SkiaSharp.Views.Blazor` widens the trimmer's scope enough to retain Windows-specific P/Invoke code from `System.Drawing.Common 10.0.5`.\n\n**Confirmed workarounds:**\n1. Downgrade `System.Drawing.Common` to `8.0.1` (confirmed by you).\n2. Add an `ILLink.Descriptors.xml` to exclude the problematic assembly from trimming (see #2221 for the pattern).\n\nWe'll investigate adding proper trim annotations to `SkiaSharp.Views.Blazor`. Could you also share which .NET TFM you're targeting (e.g., `net9.0`, `net10.0`)?"
+      }
+    ]
+  }
+}

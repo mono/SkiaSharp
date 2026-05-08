@@ -1,0 +1,262 @@
+# Issue Triage Report — #3120
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-01T19:39:10Z |
+| Type | type/feature-request (0.90 (90%)) |
+| Area | area/libSkiaSharp.native (0.88 (88%)) |
+| Suggested action | needs-investigation (0.82 (82%)) |
+
+**Issue Summary:** Request to include upstream Skia radial gradient SVG support in SkiaSharp, following a Skia commit that added radial and two-point conical gradient rendering in SKSvgCanvas.
+
+**Analysis:** The reporter previously filed #3095 (radial gradient bug) and discovered that the root cause was a missing upstream Skia implementation (TODO in SkSVGDevice.cpp). Upstream Skia subsequently landed a commit adding radial and two-point conical gradient support for SVG canvas. This feature request asks SkiaSharp to pick up that upstream change so that SKShader.CreateRadialGradient() renders correctly through SKSvgCanvas. No C# wrapper changes should be needed — only a native Skia dependency bump that includes the upstream commit.
+
+**Recommendations:** **needs-investigation** — Requires checking whether the target Skia commit is already in the current submodule pin and coordinating a native update if not.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/libSkiaSharp.native |
+| Platforms | — |
+| Backends | backend/SVG |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/feature-request |
+
+## Evidence
+
+### Reproduction
+
+**Related issues:** #3095
+
+**Repository links:**
+- https://github.com/google/skia/commit/f784f78a5669962a23243ff67997239a64ce8c99 — Upstream Skia commit adding radial and two-point conical gradient SVG support
+- https://github.com/mono/SkiaSharp/issues/3095 — Original bug report: radial gradient has no effect on SKSvgCanvas (same reporter, root cause was missing Skia implementation)
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.9 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Skia SVG canvas radial gradient support has not been pulled into SkiaSharp's native layer yet; the upstream commit postdates the current bindings. |
+
+## Analysis
+
+### Technical Summary
+
+The reporter previously filed #3095 (radial gradient bug) and discovered that the root cause was a missing upstream Skia implementation (TODO in SkSVGDevice.cpp). Upstream Skia subsequently landed a commit adding radial and two-point conical gradient support for SVG canvas. This feature request asks SkiaSharp to pick up that upstream change so that SKShader.CreateRadialGradient() renders correctly through SKSvgCanvas. No C# wrapper changes should be needed — only a native Skia dependency bump that includes the upstream commit.
+
+### Rationale
+
+Classified as type/feature-request rather than type/bug because the C# API surface is complete and correct; the missing functionality is an upstream native library limitation that has now been fixed upstream. The fix requires a Skia milestone bump or cherry-pick rather than SkiaSharp code changes.
+
+### Key Signals
+
+- "support has been added for both radial and two-point conical gradients: https://github.com/google/skia/commit/f784f78a5669962a23243ff67997239a64ce8c99" — **issue body** (Reporter identified the specific upstream commit that resolves the limitation described in #3095.)
+- "FYI It was never implemented in Skia svg canvas. They left a 'TODO' in that section of the code." — **comment on #3095** (Confirms root cause is in upstream Skia, not SkiaSharp wrappers.)
+- "Current Skia bindings might work, but additional implementation may be needed." — **issue body** (Reporter is unsure whether any C# or C API changes are required; likely only a native bump is needed.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKSVG.cs` | 17-33 | direct | SKSvgCanvas.Create() delegates to the native sk_svgcanvas_create_with_stream C API. No shader-specific logic exists in the C# layer — all gradient rendering happens inside the native Skia SVG device. No C# changes required. |
+| `binding/SkiaSharp/SKShader.cs` | — | related | SKShader.CreateRadialGradient() exists and is a complete C# wrapper. The C# API is correct; the missing rendering is purely a native-layer limitation addressed by the upstream Skia commit. |
+
+### Next Questions
+
+- Which Skia milestone introduced commit f784f78a5669962a23243ff67997239a64ce8c99 — is it already in SkiaSharp's current skia submodule?
+- Does the fix also cover two-point conical gradients (sweep/focal) in SVG, or only radial?
+
+### Resolution Proposals
+
+**Hypothesis:** Bumping SkiaSharp's native Skia dependency to a version that includes the upstream commit (f784f78) will make radial gradient rendering work on SKSvgCanvas without any C# code changes.
+
+1. **Bump Skia native dependency to milestone containing the fix** — fix, confidence 0.82 (82%), cost/m, validated=untested
+   - Update the externals/skia submodule to a Skia milestone that contains commit f784f78a5669962a23243ff67997239a64ce8c99. Rebuild native libraries. No C# or C API changes anticipated.
+
+**Recommended proposal:** Bump Skia native dependency to milestone containing the fix
+
+**Why:** The upstream fix already exists; the work is just picking it up via the normal Skia update workflow.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.82 (82%) |
+| Reason | Requires checking whether the target Skia commit is already in the current submodule pin and coordinating a native update if not. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply feature-request, native library, SVG backend, and compatibility tenet labels | labels=type/feature-request, area/libSkiaSharp.native, backend/SVG, tenet/compatibility |
+| link-related | low | 0.95 (95%) | Cross-reference original bug report #3095 | linkedIssue=#3095 |
+| add-comment | medium | 0.82 (82%) | Acknowledge the upstream fix and indicate that a Skia bump is the path forward | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for tracking down the upstream commit! Radial gradient SVG support was indeed missing in the Skia native layer (see #3095). Now that upstream Skia has landed the fix in [f784f78](https://github.com/google/skia/commit/f784f78a5669962a23243ff67997239a64ce8c99), we'll need to update SkiaSharp's Skia native dependency to a milestone that includes this change. No C# wrapper changes should be required — once the native layer is updated the existing `SKShader.CreateRadialGradient()` API should work correctly with `SKSvgCanvas`.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3120,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T19:39:10Z",
+    "currentLabels": [
+      "type/feature-request"
+    ]
+  },
+  "summary": "Request to include upstream Skia radial gradient SVG support in SkiaSharp, following a Skia commit that added radial and two-point conical gradient rendering in SKSvgCanvas.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.88
+    },
+    "backends": [
+      "backend/SVG"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/google/skia/commit/f784f78a5669962a23243ff67997239a64ce8c99",
+          "description": "Upstream Skia commit adding radial and two-point conical gradient SVG support"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3095",
+          "description": "Original bug report: radial gradient has no effect on SKSvgCanvas (same reporter, root cause was missing Skia implementation)"
+        }
+      ],
+      "relatedIssues": [
+        3095
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.9"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Skia SVG canvas radial gradient support has not been pulled into SkiaSharp's native layer yet; the upstream commit postdates the current bindings."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter previously filed #3095 (radial gradient bug) and discovered that the root cause was a missing upstream Skia implementation (TODO in SkSVGDevice.cpp). Upstream Skia subsequently landed a commit adding radial and two-point conical gradient support for SVG canvas. This feature request asks SkiaSharp to pick up that upstream change so that SKShader.CreateRadialGradient() renders correctly through SKSvgCanvas. No C# wrapper changes should be needed — only a native Skia dependency bump that includes the upstream commit.",
+    "rationale": "Classified as type/feature-request rather than type/bug because the C# API surface is complete and correct; the missing functionality is an upstream native library limitation that has now been fixed upstream. The fix requires a Skia milestone bump or cherry-pick rather than SkiaSharp code changes.",
+    "keySignals": [
+      {
+        "text": "support has been added for both radial and two-point conical gradients: https://github.com/google/skia/commit/f784f78a5669962a23243ff67997239a64ce8c99",
+        "source": "issue body",
+        "interpretation": "Reporter identified the specific upstream commit that resolves the limitation described in #3095."
+      },
+      {
+        "text": "FYI It was never implemented in Skia svg canvas. They left a 'TODO' in that section of the code.",
+        "source": "comment on #3095",
+        "interpretation": "Confirms root cause is in upstream Skia, not SkiaSharp wrappers."
+      },
+      {
+        "text": "Current Skia bindings might work, but additional implementation may be needed.",
+        "source": "issue body",
+        "interpretation": "Reporter is unsure whether any C# or C API changes are required; likely only a native bump is needed."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKSVG.cs",
+        "lines": "17-33",
+        "finding": "SKSvgCanvas.Create() delegates to the native sk_svgcanvas_create_with_stream C API. No shader-specific logic exists in the C# layer — all gradient rendering happens inside the native Skia SVG device. No C# changes required.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKShader.cs",
+        "finding": "SKShader.CreateRadialGradient() exists and is a complete C# wrapper. The C# API is correct; the missing rendering is purely a native-layer limitation addressed by the upstream Skia commit.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "Which Skia milestone introduced commit f784f78a5669962a23243ff67997239a64ce8c99 — is it already in SkiaSharp's current skia submodule?",
+      "Does the fix also cover two-point conical gradients (sweep/focal) in SVG, or only radial?"
+    ],
+    "resolution": {
+      "hypothesis": "Bumping SkiaSharp's native Skia dependency to a version that includes the upstream commit (f784f78) will make radial gradient rendering work on SKSvgCanvas without any C# code changes.",
+      "proposals": [
+        {
+          "title": "Bump Skia native dependency to milestone containing the fix",
+          "description": "Update the externals/skia submodule to a Skia milestone that contains commit f784f78a5669962a23243ff67997239a64ce8c99. Rebuild native libraries. No C# or C API changes anticipated.",
+          "category": "fix",
+          "confidence": 0.82,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Bump Skia native dependency to milestone containing the fix",
+      "recommendedReason": "The upstream fix already exists; the work is just picking it up via the normal Skia update workflow."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Requires checking whether the target Skia commit is already in the current submodule pin and coordinating a native update if not.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request, native library, SVG backend, and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/feature-request",
+          "area/libSkiaSharp.native",
+          "backend/SVG",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference original bug report #3095",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3095
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the upstream fix and indicate that a Skia bump is the path forward",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for tracking down the upstream commit! Radial gradient SVG support was indeed missing in the Skia native layer (see #3095). Now that upstream Skia has landed the fix in [f784f78](https://github.com/google/skia/commit/f784f78a5669962a23243ff67997239a64ce8c99), we'll need to update SkiaSharp's Skia native dependency to a milestone that includes this change. No C# wrapper changes should be required — once the native layer is updated the existing `SKShader.CreateRadialGradient()` API should work correctly with `SKSvgCanvas`."
+      }
+    ]
+  }
+}
+```
+
+</details>

@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3202,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T17:44:42Z",
+    "currentLabels": ["type/feature-request"]
+  },
+  "summary": "Request to build the native libSkiaSharp library on macOS with Vulkan support via MoltenVK, as GRVkExtensions returns a null handle on macOS currently.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.95 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.92 },
+    "platforms": ["os/macOS"],
+    "backends": ["backend/Vulkan"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "On macOS, create a SkiaSharp application targeting Vulkan backend",
+        "Instantiate GRVkExtensions or any Vulkan-related object",
+        "Observe that the constructor returns a null handle"
+      ],
+      "environmentDetails": "macOS, Vulkan backend, libSkiaSharp native library"
+    }
+  },
+  "analysis": {
+    "summary": "The macOS native libSkiaSharp build does not include Vulkan support. The macOS build script (native/macos/build.cake) only sets skia_use_metal=true with no skia_use_vulkan flag, whereas macOS Vulkan support requires MoltenVK — a Vulkan-over-Metal translation layer. The C# Vulkan bindings (GRVkExtensions, GRVkBackendContext) exist in the codebase but are effectively non-functional on macOS because the underlying native functions are compiled out.",
+    "rationale": "The issue is classified as type/feature-request because Vulkan is not natively supported on macOS (Apple uses Metal). Adding Vulkan support requires integrating MoltenVK, a non-trivial change to the native build system. The C# API surface already exists but is inoperable on macOS. The area is libSkiaSharp.native because this change requires modifications to the native build configuration for macOS.",
+    "keySignals": [
+      { "text": "trying to create objects like GRVkExtensions returns a null handle", "source": "issue body", "interpretation": "Confirms Vulkan support is absent in the macOS native build — the C API function returns null." },
+      { "text": "Build the native skia library with vulkan support", "source": "issue body", "interpretation": "Reporter understands the root cause — native library must be compiled with Vulkan support." }
+    ],
+    "codeInvestigation": [
+      { "file": "native/macos/build.cake", "finding": "macOS build uses skia_use_metal=true but has no skia_use_vulkan flag. Vulkan is not enabled in the macOS native build configuration.", "relevance": "direct" },
+      { "file": "native/linux/build.cake", "finding": "Linux build exposes a SUPPORT_VULKAN argument (default true) and passes skia_use_vulkan=true to the GN build, showing the pattern for enabling Vulkan on platforms that support it natively.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/GRVkExtensions.cs", "finding": "GRVkExtensions.cs calls gr_vk_extensions_new() via P/Invoke. If the native library was not compiled with Vulkan, this returns IntPtr.Zero, producing null from GetObject().", "relevance": "direct" }
+    ],
+    "workarounds": ["Use Metal backend (GRContext.CreateMetal or SKSurface.Create with a Metal backend) on macOS for GPU-accelerated rendering instead of Vulkan."],
+    "nextQuestions": [
+      "Does the team have plans to integrate MoltenVK into the macOS build?",
+      "Are there licensing or distribution implications of bundling MoltenVK?",
+      "Would the reporter accept a Metal-backed solution as an alternative?"
+    ],
+    "resolution": {
+      "hypothesis": "macOS does not support Vulkan natively. Adding Vulkan on macOS requires MoltenVK as an intermediary. The Skia build system supports this but it must be explicitly enabled and MoltenVK must be provided.",
+      "proposals": [
+        {
+          "title": "Enable Vulkan via MoltenVK in macOS native build",
+          "description": "Add skia_use_vulkan=true and configure MoltenVK SDK path in native/macos/build.cake, similar to how Linux enables Vulkan. Requires MoltenVK framework to be available during build.",
+          "category": "fix",
+          "confidence": 0.70,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Use Metal backend instead of Vulkan on macOS",
+          "description": "Switch to GRContext.CreateMetal() on macOS for GPU-accelerated rendering. Metal is the preferred GPU API on Apple platforms and is already compiled into the native library.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use Metal backend instead of Vulkan on macOS",
+      "recommendedReason": "Metal is fully supported and is Apple's recommended GPU API. Integrating MoltenVK adds significant build complexity and dependency overhead. Unless cross-platform Vulkan portability layer code is required, Metal is the practical solution."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.82,
+      "reason": "This is a valid feature request for MoltenVK/Vulkan support on macOS. The work is non-trivial (requires MoltenVK integration in the native build), warranting a keep-open status while the team evaluates feasibility.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request, native library, macOS, and Vulkan backend labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/feature-request", "area/libSkiaSharp.native", "os/macOS", "backend/Vulkan"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain current state: Vulkan not compiled for macOS, Metal is the alternative; note MoltenVK path for Vulkan",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the report! You're correct that the macOS native library is currently built without Vulkan support — the build configuration uses Metal (`skia_use_metal=true`) but does not enable `skia_use_vulkan`.\n\nOn macOS, Apple's native GPU API is **Metal**, not Vulkan. Vulkan can run on macOS via [MoltenVK](https://github.com/KhronosGroup/MoltenVK), which translates Vulkan calls to Metal — but integrating MoltenVK into the SkiaSharp native build is a non-trivial change.\n\n**Workaround:** If you need GPU-accelerated rendering on macOS, you can use the Metal backend instead:\n```csharp\n// Use Metal context on macOS instead of Vulkan\nvar context = GRContext.CreateMetal(metalDevice, metalQueue);\n```\n\nThis feature request will stay open for team evaluation of MoltenVK integration. If Vulkan portability is essential for your use case, please describe the cross-platform scenario so we can better prioritize this work."
+      }
+    ]
+  }
+}

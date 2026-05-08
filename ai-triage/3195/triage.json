@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3195,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T18:10:45Z",
+    "currentLabels": ["type/feature-request"]
+  },
+  "summary": "Feature request to expose SKCanvas.WritePixels() method to allow blitting pixel buffers directly to an SKSurface without creating an intermediate SKImage each frame.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.92 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "No specific platform mentioned — general SkiaSharp API request",
+      "codeSnippets": [
+        "// Current pattern: decompress JIT into pixel buffer, create SKImage, DrawImage, dispose\n// Requested: use SKCanvas.WritePixels() to blit pixel buffer directly to surface"
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Reporter wants to avoid creating an SKImage middleman on every animation frame when blitting a raw pixel buffer to a reused SKSurface. They request exposure of Skia's SkCanvas::writePixels() C++ method, which writes pixel data directly to the canvas surface. This method exists in the upstream Skia C++ API but is not currently exposed in SkiaSharp's SKCanvas C# class or the underlying C API shim.",
+    "rationale": "The issue is clearly a feature request: no bug or broken behavior is described. The reporter has a working workaround (DrawImage) but wants a more efficient path. Skia's SkCanvas::writePixels() is a real upstream API, confirmed absent from the SkiaSharp C# binding and C API shim. The existing SKSurface.ReadPixels and similar pixel-access patterns confirm the plumbing style that would be needed.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "1-10",
+        "finding": "SKCanvas.cs has a TODO comment mentioning PeekPixels and ReadPixels consideration but no WritePixels method is present. The file has DrawImage methods but no direct pixel-write path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "lines": "324-330",
+        "finding": "SKSurface.ReadPixels exists, showing the existing pattern for pixel access. A symmetric WritePixels on SKCanvas would follow the same pattern using an SKPixmap or IntPtr + SKImageInfo.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Please expose SKIA's SKCanvas.WritePixels() method as is.",
+        "source": "issue body",
+        "interpretation": "Direct request for a named Skia API — SkCanvas::writePixels() — which is not yet wrapped in SkiaSharp."
+      },
+      {
+        "text": "creating SKImage chaff as middleman",
+        "source": "issue body",
+        "interpretation": "Performance motivation: reporter wants to avoid per-frame allocation of SKImage objects in a tight animation loop."
+      },
+      {
+        "text": "we are creating SKImage from it, each frame",
+        "source": "issue body",
+        "interpretation": "Current workaround is functional but allocates per frame; WritePixels would be allocation-free."
+      }
+    ],
+    "workarounds": [
+      "Use SKSurface.Canvas.DrawBitmap(bitmap, 0, 0) with a pre-allocated SKBitmap whose pixels are updated in-place using SKBitmap.SetPixels(ptr) — avoids per-frame SKImage allocation.",
+      "Use SKPixmap wrapping the existing pixel buffer and call SKSurface.Canvas.DrawImage(SKImage.FromPixels(pixmap), ...) — still creates SKImage but it is a zero-copy wrappers if the buffer is pinned.",
+      "Use SKBitmap backed by an unmanaged pixel buffer (SKBitmap.InstallPixels) and draw that bitmap directly — avoids repeated creation of new SKBitmap objects."
+    ],
+    "resolution": {
+      "hypothesis": "Adding SKCanvas.WritePixels() requires: (1) a C API function sk_canvas_write_pixels in externals/skia/include/c/sk_canvas.h and externals/skia/src/c/sk_canvas.cpp wrapping SkCanvas::writePixels(); (2) a P/Invoke declaration in SkiaApi.generated.cs; (3) public overloads on SKCanvas in binding/SkiaSharp/SKCanvas.cs accepting (SKImageInfo, IntPtr, int rowBytes) and/or (SKPixmap).",
+      "proposals": [
+        {
+          "title": "Workaround: use SKBitmap.InstallPixels + DrawBitmap",
+          "description": "Pin the pixel buffer using GCHandle or unmanaged memory, call SKBitmap.InstallPixels to wrap it without copying, then call canvas.DrawBitmap each frame. The SKBitmap is created once and reused.",
+          "category": "workaround",
+          "codeSnippet": "// One-time setup\nvar bmp = new SKBitmap();\nbmp.InstallPixels(imageInfo, pixelBufferPtr, imageInfo.RowBytes);\n\n// Per-frame (no allocation):\ncanvas.DrawBitmap(bmp, 0, 0);",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Implement SKCanvas.WritePixels()",
+          "description": "Add C API wrapper sk_canvas_write_pixels, regenerate P/Invoke, and add SKCanvas.WritePixels overloads. Mirrors the pattern of SKSurface.ReadPixels.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Workaround: use SKBitmap.InstallPixels + DrawBitmap",
+      "recommendedReason": "Immediate workaround available now with no SkiaSharp changes required. The real fix (exposing WritePixels) is a valid feature request worth implementing but requires C API work."
+    },
+    "nextQuestions": [
+      "Does the reporter's use case require offset writes (non-zero srcX/srcY)?",
+      "Is there interest in also wrapping SkSurface::writePixels() in addition to SkCanvas::writePixels()?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.88,
+      "reason": "Valid feature request — SkCanvas::writePixels() is a real upstream API not yet exposed. A workaround exists (SKBitmap.InstallPixels + DrawBitmap) but the feature itself is worthwhile for performance-sensitive animation scenarios.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm feature-request label and add area/SkiaSharp and tenet/performance",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/feature-request", "area/SkiaSharp", "tenet/performance"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge request and share workaround using SKBitmap.InstallPixels",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the feature request! `SKCanvas.WritePixels()` is indeed a real Skia C++ API (`SkCanvas::writePixels`) that hasn't been exposed in SkiaSharp yet — this is a valid gap.\n\nIn the meantime, you can avoid per-frame `SKImage` allocation by using `SKBitmap.InstallPixels` to wrap your existing pixel buffer and drawing that bitmap directly:\n\n```csharp\n// One-time setup — wrap your existing pixel buffer (must be pinned/unmanaged)\nvar bmp = new SKBitmap();\nbmp.InstallPixels(imageInfo, pixelBufferPtr, imageInfo.RowBytes);\n\n// Per-frame — no allocation, direct blit:\ncanvas.DrawBitmap(bmp, 0, 0);\n```\n\nThis avoids creating a new `SKImage` each frame while the proper `WritePixels` API is added."
+      }
+    ]
+  }
+}
