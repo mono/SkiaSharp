@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3296,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T01:30:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "On iOS, SKGLView produces a canvas with a different (larger) scaling factor than SKCanvasView on certain devices such as iPhone 11, causing inconsistent e.Info.Width/Height values between the two views at equivalent layout sizes.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.92 },
+    "platforms": ["os/iOS"],
+    "backends": ["backend/OpenGL"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "e.Info.Width is larger for SKGLView than SKCanvasView at the same layout size on iPhone 11",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net9.0-ios"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an iOS app with both SKCanvasView and SKGLView side by side at equal layout widths",
+        "In PaintSurface handlers, log e.Info.Width and view.Width",
+        "Run on iPhone 11 with iOS 18.5",
+        "Observe that e.Info.Width / view.Width differs between the two views"
+      ],
+      "environmentDetails": "iPhone 11, iOS 18.5, SkiaSharp 3.116.0, Visual Studio (Windows)",
+      "attachments": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "3.116.1"],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKGLView iOS implementation uses GLKView.DrawableWidth/DrawableHeight which has not changed; the GLKit/UIKit scale discrepancy on some devices is a known platform behaviour."
+    }
+  },
+  "analysis": {
+    "summary": "SKCanvasView on iOS derives its surface dimensions from UIView.ContentScaleFactor (the logical screen scale), whereas SKGLView derives them from GLKView.DrawableWidth/DrawableHeight (the actual OpenGL framebuffer pixel dimensions). On most devices these agree, but on devices where the GLKit content scale factor differs slightly from UIView's content scale factor (e.g. iPhone 11 with an unusual native vs logical display scale relationship), the two views produce canvases of different sizes. Additionally, SKGLView has been deprecated since iOS 12 in favour of Metal-based views.",
+    "rationale": "The difference in surface size between SKCanvasView and SKGLView is a real and reproducible behavioural inconsistency. SKCanvasView uses ContentScaleFactor explicitly; SKGLView trusts GLKit's DrawableWidth/DrawableHeight which may be set to the hardware native scale rather than the logical scale. This is a confirmed code-level divergence, not user error.",
+    "keySignals": [
+      {
+        "text": "SKGLView on some iOS devices (iPhone 11 for example) uses a scaling factor different from DeviceDisplay.Current.MainDisplayInfo.Density",
+        "source": "issue body",
+        "interpretation": "GLKit reports a different pixel count than UIKit's ContentScaleFactor-based calculation on some devices."
+      },
+      {
+        "text": "e.Info.Width is a bit bigger for SKGLView than it is for SKCanvasView",
+        "source": "issue body",
+        "interpretation": "The canvas produced by SKGLView is rendered at a higher pixel density than expected, causing scaling mismatch."
+      },
+      {
+        "text": "No code, we observed this behavior on iPhone 11",
+        "source": "issue body",
+        "interpretation": "No minimal repro provided — behaviour needs to be confirmed with a code sample before a fix can be developed."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs",
+        "lines": "87",
+        "finding": "SKCanvasView calls drawable.CreateSurface(Bounds, ContentScaleFactor, out var info) — surface dimensions are explicitly derived from UIView.ContentScaleFactor (logical screen scale).",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+        "lines": "121",
+        "finding": "SKGLView uses var newSize = new SKSizeI((int)DrawableWidth, (int)DrawableHeight) — surface dimensions come from GLKView.DrawableWidth/DrawableHeight, which reflect the actual OpenGL framebuffer pixels set by GLKit's own contentScaleFactor. On some devices this may differ from UIView.ContentScaleFactor.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKMetalView.cs",
+        "lines": "1-30",
+        "finding": "SKMetalView exists as the recommended replacement for SKGLView on iOS 12+. SKGLView carries [ObsoletedOSPlatform(\"ios12.0\", \"Use 'Metal' instead.\")] — users on iOS 18.5 should migrate to SKMetalView.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Migrate from SKGLView to SKMetalView (or the MAUI equivalent) — SKGLView is deprecated since iOS 12 and SKMetalView uses MTKView which uses ContentScaleFactor consistently.",
+      "If SKGLView must be used, normalise the canvas dimensions by comparing e.Info.Width with view.Bounds.Width * ContentScaleFactor and applying a canvas scale correction."
+    ],
+    "nextQuestions": [
+      "Does the issue reproduce on iPhone 12 or iPhone 14 Pro (which have nativeScale != scale)?",
+      "What exact pixel values for e.Info.Width vs view.Width * ContentScaleFactor are observed on iPhone 11?",
+      "Is the reporter using SKGLView from SkiaSharp.Views.iOS or from SkiaSharp.Views.Maui?"
+    ],
+    "resolution": {
+      "hypothesis": "GLKView.contentScaleFactor is set by UIKit/GLKit to UIScreen.nativeScale on some devices, while UIView.contentScaleFactor (used by SKCanvasView) reflects UIScreen.scale. On iPhone 11 the logical scale is 2.0 but GLKit may use a slightly higher effective scale, producing a marginally larger framebuffer.",
+      "proposals": [
+        {
+          "title": "Migrate to SKMetalView",
+          "description": "SKGLView is deprecated since iOS 12. Replace with SKMetalView (or SKCanvasView for CPU rendering) which uses Metal/CoreGraphics and avoids the GLKit scale discrepancy entirely.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Normalise SKGLView ContentScaleFactor",
+          "description": "In SKGLView.Initialize(), explicitly set ContentScaleFactor = UIScreen.MainScreen.Scale to ensure DrawableWidth/DrawableHeight match UIKit's logical scaling, consistent with SKCanvasView.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Migrate to SKMetalView",
+      "recommendedReason": "SKGLView is deprecated on iOS 12+ and the fix requires only a view swap. The normalisation fix has lower confidence as it may affect existing GLKit rendering."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-reproduction",
+      "confidence": 0.82,
+      "reason": "Plausible bug with clear hypothesis, but no minimal repro code provided. A confirmed repro on iPhone 11 is needed before fixing the GLKit/UIKit scale divergence.",
+      "suggestedReproPlatform": "macos"
+    },
+    "missingInfo": [
+      "Minimal code sample demonstrating the scale difference",
+      "Exact numeric values (e.g. view.Width, e.Info.Width) for both SKCanvasView and SKGLView on iPhone 11",
+      "Whether SKGLView or SKMetalView is being used in the MAUI context"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, and iOS labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/iOS", "backend/OpenGL"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask for minimal repro and note SKGLView deprecation",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the report!\n\nA few notes:\n\n**SKGLView is deprecated since iOS 12** — the class carries `[Obsolete]` and the recommended replacement is `SKMetalView` (or `SKCanvasView` for CPU rendering). If you haven't already, migrating to `SKMetalView` will likely resolve the scaling inconsistency, because Metal-based views use the same `ContentScaleFactor` path as `SKCanvasView`.\n\nIf you do need to investigate the scale difference further, could you share:\n1. A minimal code snippet showing how you measure `view.Width` vs `e.Info.Width` for both views\n2. The exact numeric values you see on iPhone 11 (e.g., `view.Width = 390, e.Info.Width = 860` vs `858`)\n3. Whether you're using `SKGLView` directly from `SkiaSharp.Views.iOS` or via MAUI\n\nThis will help confirm the GLKit vs UIKit scale factor divergence and determine whether a code fix is also needed."
+      }
+    ]
+  }
+}
