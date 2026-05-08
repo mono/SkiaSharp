@@ -30,7 +30,7 @@ The easiest way to build is using the Cake build script:
 dotnet cake --target=externals-linux
 
 # Or build everything including managed code
-dotnet cake --target=everything
+dotnet cake --target=Everything
 ```
 
 ### Manual Building
@@ -82,7 +82,7 @@ Building for different Linux distributions is easier with Docker. The repository
 
 ```bash
 # Build the Docker image
-cd scripts/Docker/alpine/amd64
+cd scripts/infra/native/linux/docker/alpine/amd64
 docker build --tag skiasharp-alpine .
 
 # Run the build
@@ -93,4 +93,4 @@ docker run --rm --name skiasharp-alpine --volume $(pwd):/work skiasharp-alpine \
 chown -R $(id -u):$(id -g) .
 ```
 
-> See the `scripts/Docker/` directory for available Dockerfiles.
+> See the `scripts/infra/native/linux/docker/` directory for available Dockerfiles.

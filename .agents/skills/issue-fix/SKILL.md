@@ -282,10 +282,10 @@ When a bug affects one platform but not another, **build both platforms locally*
 
 ```bash
 # Build x64 native (in Docker)
-bash ./scripts/Docker/debian/amd64/build-local.sh
+bash ./scripts/infra/native/linux/docker/debian/11/build-local.sh
 
 # Build ARM64 cross-compile (in Docker)
-bash ./scripts/Docker/debian/clang-cross/build-local.sh arm64 10
+bash ./scripts/infra/native/linux/docker/debian/11/build-local.sh arm64 10
 
 # Compare DT_NEEDED entries (the linked libraries)
 docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \

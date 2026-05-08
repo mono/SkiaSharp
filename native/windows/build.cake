@@ -5,38 +5,23 @@ var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Progr
 DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
 string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
 
+// GPU features can be disabled for NanoServer builds
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
 bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
 string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
-var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
 
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/msbuild.cake"
-
-string GetSpectreLibPath(string arch)
-{
-    // Normalize architecture names to match spectre lib directory structure
-    var spectreArch = arch.ToLower() switch {
-        "win32" => "x86",
-        _ => arch.ToLower()
-    };
-
-    var spectrePaths = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/lib/spectre/{spectreArch}");
-    if (spectrePaths.Count == 0) {
-        throw new Exception($"Could not find spectre library path for {spectreArch}, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
-    }
-    return spectrePaths.First().FullPath;
-}
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/shared/msbuild.cake"
+#load "../../scripts/infra/native/windows/windows-shared.cake"
 
 string VARIANT = BUILD_VARIANT ?? "windows";
 
 Information("Native Arguments:");
 Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "(Using MSVC)" : LLVM_HOME);
-Information($"    {"SUPPORT_VULKAN".PadRight(30)} {{0}}", SUPPORT_VULKAN);
 Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
 Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
 

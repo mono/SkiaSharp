@@ -1,6 +1,7 @@
 parameters:
-  - name: buildExternals
-    type: string
+  - name: enableCaching
+    type: boolean
+    default: false
   - name: buildAgentWindowsNative
     type: object
 
@@ -14,72 +15,81 @@ stages:
           name: native_android_x86_windows
           displayName: Android x86
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-android
+          cacheJob: native/android
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Android|x64 (Win)
         parameters:
           name: native_android_x64_windows
           displayName: Android x64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-android
+          cacheJob: native/android
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Android|arm (Win)
         parameters:
           name: native_android_arm_windows
           displayName: Android arm
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-android
+          cacheJob: native/android
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Android|arm64 (Win)
         parameters:
           name: native_android_arm64_windows
           displayName: Android arm64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-android
+          cacheJob: native/android
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|x64 (Win)
         parameters:
           name: native_tizen_x64_windows
           displayName: Tizen x64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
+          cacheJob: native/tizen
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|arm64 (Win)
         parameters:
           name: native_tizen_arm64_windows
           displayName: Tizen arm64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
+          cacheJob: native/tizen
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Win32|x86 (Win)
         parameters:
           name: native_win32_x86_windows
           displayName: Win32 x86
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-windows
+          cacheJob: native/windows
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Win32|x64 (Win)
         parameters:
           name: native_win32_x64_windows
           displayName: Win32 x64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-windows
+          cacheJob: native/windows
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Win32|arm64 (Win)
         parameters:
           name: native_win32_arm64_windows
           displayName: Win32 arm64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-windows
+          cacheJob: native/windows
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm64
       - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Win32|x86 (Win + MSVC)
@@ -87,8 +97,9 @@ stages:
             name: native_win32_x86_msvc_windows
             displayName: Win32 x86 [MSVC]
             buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            buildExternals: ${{ parameters.buildExternals }}
             target: externals-windows
+            cacheJob: native/windows
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --buildarch=x86 --llvm="msvc"
             installLlvm: false
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Win32|x64 (Win + MSVC)
@@ -96,8 +107,9 @@ stages:
             name: native_win32_x64_msvc_windows
             displayName: Win32 x64 [MSVC]
             buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            buildExternals: ${{ parameters.buildExternals }}
             target: externals-windows
+            cacheJob: native/windows
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --buildarch=x64 --llvm="msvc"
             installLlvm: false
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Win32|arm64 (Win + MSVC)
@@ -105,8 +117,9 @@ stages:
             name: native_win32_arm64_msvc_windows
             displayName: Win32 arm64 [MSVC]
             buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            buildExternals: ${{ parameters.buildExternals }}
             target: externals-windows
+            cacheJob: native/windows
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --buildarch=arm64 --llvm="msvc"
             installLlvm: false
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native WinUI|x86 (Win)
@@ -114,54 +127,61 @@ stages:
           name: native_winui_x86_windows
           displayName: WinUI x86
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-winui
+          cacheJob: native/winui
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native WinUI|x64 (Win)
         parameters:
           name: native_winui_x64_windows
           displayName: WinUI x64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-winui
+          cacheJob: native/winui
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native WinUI|arm64 (Win)
         parameters:
           name: native_winui_arm64_windows
           displayName: WinUI arm64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-winui
+          cacheJob: native/winui
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|x86 (Win)
         parameters:
           name: native_winui_angle_x86_windows
           displayName: ANGLE WinUI x86
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-winui-angle
+          cacheJob: native/winui_angle
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|x64 (Win)
         parameters:
           name: native_winui_angle_x64_windows
           displayName: ANGLE WinUI x64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-winui-angle
+          cacheJob: native/winui_angle
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|arm64 (Win)
         parameters:
           name: native_winui_angle_arm64_windows
           displayName: ANGLE WinUI arm64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-winui-angle
+          cacheJob: native/winui_angle
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native NanoServer|x64 (Win)
         parameters:
           name: native_win32_x64_nanoserver_windows
           displayName: Nano Server x64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           target: externals-nanoserver
+          cacheJob: native/nanoserver
+          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=x64

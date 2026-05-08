@@ -130,7 +130,7 @@ for the full step-by-step workflow if you need to run it manually.
 
 ## How `samples-generate` Works
 
-The `CreateSamplesDirectory()` function in `scripts/cake/samples.cake`:
+The `CreateSamplesDirectory()` function in `scripts/infra/samples/samples.cake`:
 
 1. **`<ProjectReference>`** → converted to `<PackageReference>` using the project's `<PackagingGroup>` as the package ID and version from `VERSIONS.txt`
 2. **Existing `<PackageReference>`** → version updated from `VERSIONS.txt`
