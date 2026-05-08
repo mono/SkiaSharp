@@ -1,0 +1,156 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2647,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T16:57:24Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "On Android's SKGLTextureView (OpenGL backend), ClipRect set on the outer canvas is ignored when DrawPicture is called to render a SKPictureRecorder-captured scene, while SKCanvasView (raster backend) clips correctly.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.85 },
+    "platforms": ["os/Android"],
+    "backends": ["backend/OpenGL"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net-android"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an Android app using SKGLTextureView",
+        "In PaintSurface handler, call canvas.Save() then canvas.ClipRect(someRect)",
+        "Call a method that uses SKPictureRecorder, records drawing, and calls canvas.DrawPicture(pic, ref matrix) on the outer canvas",
+        "Call canvas.Restore()",
+        "Observe that drawing appears outside the clipped area"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Android, SKGLTextureView (OpenGL backend)",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/assets/16510738/91bb2c5c-4fd9-440b-9702-d4519e922739",
+          "description": "Screenshot: actual (incorrect) rendering showing drawing outside clip"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/assets/16510738/cf9bfa5a-c7da-467c-8b12-ff0be41d8862",
+          "description": "Screenshot: expected (correct) rendering with clip respected"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKGLTextureViewRenderer has not changed the DrawPicture/clip interaction in the analyzed source. The stencil buffer is cleared at the start of each frame (line 45 of SKGLTextureViewRenderer.cs) and clip state is managed by SKAutoCanvasRestore, but the picture playback on a GL-backed surface still shows the clip bypass."
+    }
+  },
+  "analysis": {
+    "summary": "ClipRect on the outer GPU-backed canvas (SKGLTextureView) is bypassed when DrawPicture replays recorded commands. The raster backend (SKCanvasView) clips correctly. Root cause hypothesis: Skia's GL backend uses stencil operations for clipping; when a picture is drawn with a scaling matrix, the clip region may not be correctly propagated through the picture playback path in the GPU pipeline.",
+    "rationale": "The reporter provides a complete, minimal repro with screenshots, correct/incorrect outputs, and identifies the exact API interaction (ClipRect + DrawPicture on a GL-backed canvas vs raster canvas). This is a clear wrong-output rendering bug affecting only the GPU backend. The area is SkiaSharp.Views because the divergence is between view types, though the underlying Skia GL pipeline is the likely root cause.",
+    "keySignals": [
+      {
+        "text": "Bug is replicable only with SKGLTextureView, SKCanvasView works as expected.",
+        "source": "issue body",
+        "interpretation": "Platform-specific to OpenGL backend; raster backend handles clip correctly during picture playback."
+      },
+      {
+        "text": "canvas.Save(); canvas.ClipRect(skr); dr.Draw(canvas, w, h); canvas.Restore();",
+        "source": "issue body",
+        "interpretation": "Clip is set before DrawPicture call in the outer canvas — should apply to all drawing within the Save/Restore block."
+      },
+      {
+        "text": "canvas.DrawPicture(pic, ref matrix)",
+        "source": "issue body",
+        "interpretation": "Picture drawn with a scaling matrix — clip state may not be correctly transformed/applied during picture playback in GPU backend."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureViewRenderer.cs",
+        "lines": "44-98",
+        "finding": "OnDrawFrame clears COLOR, DEPTH, and STENCIL buffers (line 45), creates an SKSurface with GRSurfaceOrigin.BottomLeft. The canvas is wrapped in SKAutoCanvasRestore (line 88). The PaintSurface callback fires inside this block, so user clip state should be valid during OnPaintSurface — yet the picture playback ignores it.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "525-538",
+        "finding": "DrawPicture(picture, matrix, paint) calls sk_canvas_draw_picture with a raw matrix pointer. No SkiaSharp-level manipulation of clip state. The behavior difference is in Skia's GL vs raster picture playback pipeline.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureViewRenderer.cs",
+        "lines": "36-40",
+        "finding": "EGL config chooser uses 0 depth bits and 8 stencil bits (SetEGLConfigChooser(8,8,8,8,0,8)). Stencil buffer exists, meaning clip operations via stencil should work — yet the picture playback bypasses them.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Instead of SKPictureRecorder + DrawPicture, draw directly to the outer canvas inside the Save/Restore/ClipRect block to avoid the picture playback path entirely.",
+      "If picture recording is required for caching, apply the same clip manually inside the recorded picture using BeginRecording with a bounded culling rect matching or smaller than the clip region."
+    ],
+    "nextQuestions": [
+      "Does the bug reproduce on all Android versions or only specific ones?",
+      "Does the issue also affect SKGLSurfaceView (not just SKGLTextureView)?",
+      "Is the bug reproducible with the latest SkiaSharp 3.x release?",
+      "Does removing the matrix argument from DrawPicture (drawing 1:1) still ignore the clip?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia's GPU (GL) backend does not propagate the parent canvas clip state into picture playback when a matrix transform is applied, unlike the raster backend. This is likely a Skia upstream issue in the GL picture rendering path.",
+      "proposals": [
+        {
+          "title": "Avoid SKPictureRecorder on GPU backends",
+          "description": "Draw directly to the outer canvas inside the Save/Restore block instead of recording to a SKPicture. This eliminates the picture-playback clip bypass.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Bound the recording region tightly",
+          "description": "Call BeginRecording with a culling rect that matches the intended clip region. Skia may use this hint to apply clip during picture playback.",
+          "category": "workaround",
+          "confidence": 0.60,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate Skia upstream GL picture-playback clip handling",
+          "description": "File or search for the corresponding Skia upstream bug. The divergence between raster and GL clip handling during DrawPicture with matrix is likely a Skia-level defect.",
+          "category": "investigation",
+          "confidence": 0.75,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Avoid SKPictureRecorder on GPU backends",
+      "recommendedReason": "Simple API-level workaround the reporter can apply immediately without waiting for an upstream fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Complete repro provided with screenshots. Bug clearly exists (wrong output on GL backend vs raster). Root cause likely in Skia's GL picture playback clip propagation — needs deeper investigation to confirm upstream vs SkiaSharp issue.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, android, opengl labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Android", "backend/OpenGL"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge bug and provide workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed repro! This looks like a clip propagation issue specific to the OpenGL backend — `ClipRect` on a GPU-backed canvas may not be correctly applied during `DrawPicture` playback, while the raster backend (`SKCanvasView`) handles it correctly.\n\nAs an immediate workaround, you can draw directly to the outer canvas inside the `Save`/`Restore`/`ClipRect` block without going through `SKPictureRecorder`:\n\n```csharp\ncanvas.Save();\ncanvas.ClipRect(skr);\nvar matrix = SKMatrix.CreateScale(w / size, h / size);\ncanvas.SetMatrix(matrix);\n// draw directly instead of via SKPictureRecorder\ncanvas.DrawPath(path, paint);\ncanvas.Restore();\n```\n\nWe'll investigate whether this is a Skia upstream issue in the GL picture-playback clip path."
+      }
+    ]
+  }
+}
