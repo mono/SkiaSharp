@@ -1,0 +1,282 @@
+# Issue Triage Report — #749
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-01T13:44:31Z |
+| Type | type/question (0.95 (95%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | close-as-not-a-bug (0.82 (82%)) |
+
+**Issue Summary:** User asks whether SkiaSharp can create a GRGlInterface using an SDL2 C# binding and provides sample code using the now-obsolete AssembleGlInterface API.
+
+**Analysis:** Reporter wants to use SkiaSharp with SDL2-CS for OpenGL rendering. They provide code using `GRGlInterface.AssembleGlInterface` (an obsolete API from older SkiaSharp versions). The current API is `GRGlInterface.Create(delegate)` or `GRGlInterface.CreateOpenGl(delegate)`. The approach of retrieving GL function pointers via `SDL_GL_GetProcAddress` is architecturally correct; the issue is that the reporter is using the old method signature that no longer exists, and SDL2 is just an OpenGL context provider like GLFW.
+
+**Recommendations:** **close-as-not-a-bug** — SkiaSharp fully supports SDL2 as an OpenGL context provider. The reporter is using an outdated API that no longer exists. The modern API works the same way. A comment with the corrected code should answer the question and allow closure.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | backend/OpenGL |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Code snippets:**
+
+```csharp
+GRGlInterface glInterface = GRGlInterface.AssembleGlInterface(sdlContext, (contextHandle, name) => { var addr = SDL.SDL_GL_GetProcAddress(name); return addr; });
+```
+
+## Analysis
+
+### Technical Summary
+
+Reporter wants to use SkiaSharp with SDL2-CS for OpenGL rendering. They provide code using `GRGlInterface.AssembleGlInterface` (an obsolete API from older SkiaSharp versions). The current API is `GRGlInterface.Create(delegate)` or `GRGlInterface.CreateOpenGl(delegate)`. The approach of retrieving GL function pointers via `SDL_GL_GetProcAddress` is architecturally correct; the issue is that the reporter is using the old method signature that no longer exists, and SDL2 is just an OpenGL context provider like GLFW.
+
+### Rationale
+
+Classified as type/question because the reporter is asking about SDL2 compatibility and whether there are plans for it. The approach is valid — SDL2 provides an OpenGL context, and SDL_GL_GetProcAddress is a valid proc loader. The problem is use of an obsolete API name; the modern equivalent works the same way. No bug in SkiaSharp exists here.
+
+### Key Signals
+
+- "when I have tried to use with SDL2 CS binding then it cannot create GLInterface" — **issue body** (Reporter is blocked on GRGlInterface creation; likely using old obsolete API signature)
+- "GRGlInterface.AssembleGlInterface(sdlContext, (contextHandle, name) => { var addr = SDL.SDL_GL_GetProcAddress(name); return addr; })" — **issue comment** (Code uses old pre-1.57 API `AssembleGlInterface` which no longer exists; the pattern of passing SDL_GL_GetProcAddress is correct, just needs to be updated to `GRGlInterface.Create(name => SDL.SDL_GL_GetProcAddress(name))`)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/GRGlInterface.cs` | lines 52-75 | direct | Current public API exposes `GRGlInterface.Create(GRGlGetProcedureAddressDelegate)` and `GRGlInterface.CreateOpenGl(GRGlGetProcedureAddressDelegate)`. There is no `AssembleGlInterface` method — that is an old obsolete API that has been removed. |
+| `binding/SkiaSharp/GRGlInterface.cs` | lines 52-74 | direct | `Create(delegate)` calls `gr_glinterface_assemble_interface` and `CreateOpenGl(delegate)` calls `gr_glinterface_assemble_gl_interface`. The delegate receives a function name and returns the function pointer from the platform GL context — exactly what `SDL_GL_GetProcAddress` provides. |
+
+### Workarounds
+
+- Use the modern API: `GRGlInterface.Create(name => SDL.SDL_GL_GetProcAddress(name))` instead of the old `AssembleGlInterface`. Also update `GRContext.Create(...)` to `GRContext.CreateGL(glInterface)` as `GRContext.Create(backend, interface)` is also obsolete.
+
+### Next Questions
+
+- Which version of SkiaSharp is the reporter using?
+- Does switching to the modern GRGlInterface.Create API resolve the issue?
+
+### Resolution Proposals
+
+**Hypothesis:** Reporter is using an obsolete API signature that no longer exists in current SkiaSharp. The pattern of using SDL_GL_GetProcAddress as the proc loader is correct and should work with the modern API.
+
+1. **Update to modern GRGlInterface.Create API** — workaround, cost/xs, validated=yes
+   - Use the modern SkiaSharp GL API to create the interface and context with SDL2.
+
+```csharp
+// Create GL context with SDL2
+var window = SDL.SDL_CreateWindow("Demo", SDL.SDL_WINDOWPOS_CENTERED, SDL.SDL_WINDOWPOS_CENTERED, 1020, 800, SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE);
+var sdlContext = SDL.SDL_GL_CreateContext(window);
+SDL.SDL_GL_MakeCurrent(window, sdlContext);
+
+// Modern API: pass SDL_GL_GetProcAddress as the proc loader
+var glInterface = GRGlInterface.Create(name => SDL.SDL_GL_GetProcAddress(name));
+var grContext = GRContext.CreateGL(glInterface);
+
+// Create render target and surface
+var renderTarget = new GRBackendRenderTarget(1020, 800, 0, 8, new GRGlFramebufferInfo(0, 0x8058));
+using var surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+var canvas = surface.Canvas;
+canvas.Clear(SKColors.Red);
+grContext.Flush();
+SDL.SDL_GL_SwapWindow(window);
+```
+
+**Recommended proposal:** 0
+
+**Why:** Update to the modern API is a one-line change and should unblock the reporter immediately.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.82 (82%) |
+| Reason | SkiaSharp fully supports SDL2 as an OpenGL context provider. The reporter is using an outdated API that no longer exists. The modern API works the same way. A comment with the corrected code should answer the question and allow closure. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply classification labels | labels=type/question, area/SkiaSharp, backend/OpenGL, tenet/compatibility |
+| add-comment | medium | 0.82 (82%) | Answer the question with the modern API and working SDL2 code sample | — |
+| close-issue | medium | 0.80 (80%) | Close as not a bug — question is answered with working modern API code | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+SkiaSharp **does** work with SDL2 — SDL2 is just an OpenGL context provider, the same as GLFW.
+
+The issue is that your code is using an older API (`AssembleGlInterface`) that was removed in SkiaSharp 1.57+. The modern equivalent is `GRGlInterface.Create(delegate)`:
+
+```csharp
+// Create GL context with SDL2
+var window = SDL.SDL_CreateWindow("Demo",
+    SDL.SDL_WINDOWPOS_CENTERED, SDL.SDL_WINDOWPOS_CENTERED,
+    1020, 800,
+    SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE);
+var sdlContext = SDL.SDL_GL_CreateContext(window);
+SDL.SDL_GL_MakeCurrent(window, sdlContext);
+
+// Modern API
+var glInterface = GRGlInterface.Create(name => SDL.SDL_GL_GetProcAddress(name));
+var grContext = GRContext.CreateGL(glInterface);
+
+// Create render target and surface
+var renderTarget = new GRBackendRenderTarget(1020, 800, 0, 8,
+    new GRGlFramebufferInfo(0, 0x8058 /* GR_GL_RGBA8 */));
+using var surface = SKSurface.Create(grContext, renderTarget,
+    GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+var canvas = surface.Canvas;
+canvas.Clear(SKColors.Red);
+grContext.Flush();
+SDL.SDL_GL_SwapWindow(window);
+```
+
+Key changes: `AssembleGlInterface(ctx, proc)` → `Create(name => SDL_GL_GetProcAddress(name))`, and `GRContext.Create(GRBackend.OpenGL, interface)` → `GRContext.CreateGL(interface)`.
+
+Closing as the approach is supported — let us know if you hit further issues with the updated API.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 749,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T13:44:31Z"
+  },
+  "summary": "User asks whether SkiaSharp can create a GRGlInterface using an SDL2 C# binding and provides sample code using the now-obsolete AssembleGlInterface API.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "GRGlInterface glInterface = GRGlInterface.AssembleGlInterface(sdlContext, (contextHandle, name) => { var addr = SDL.SDL_GL_GetProcAddress(name); return addr; });"
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Reporter wants to use SkiaSharp with SDL2-CS for OpenGL rendering. They provide code using `GRGlInterface.AssembleGlInterface` (an obsolete API from older SkiaSharp versions). The current API is `GRGlInterface.Create(delegate)` or `GRGlInterface.CreateOpenGl(delegate)`. The approach of retrieving GL function pointers via `SDL_GL_GetProcAddress` is architecturally correct; the issue is that the reporter is using the old method signature that no longer exists, and SDL2 is just an OpenGL context provider like GLFW.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/GRGlInterface.cs",
+        "finding": "Current public API exposes `GRGlInterface.Create(GRGlGetProcedureAddressDelegate)` and `GRGlInterface.CreateOpenGl(GRGlGetProcedureAddressDelegate)`. There is no `AssembleGlInterface` method — that is an old obsolete API that has been removed.",
+        "relevance": "direct",
+        "lines": "lines 52-75"
+      },
+      {
+        "file": "binding/SkiaSharp/GRGlInterface.cs",
+        "finding": "`Create(delegate)` calls `gr_glinterface_assemble_interface` and `CreateOpenGl(delegate)` calls `gr_glinterface_assemble_gl_interface`. The delegate receives a function name and returns the function pointer from the platform GL context — exactly what `SDL_GL_GetProcAddress` provides.",
+        "relevance": "direct",
+        "lines": "lines 52-74"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "when I have tried to use with SDL2 CS binding then it cannot create GLInterface",
+        "source": "issue body",
+        "interpretation": "Reporter is blocked on GRGlInterface creation; likely using old obsolete API signature"
+      },
+      {
+        "text": "GRGlInterface.AssembleGlInterface(sdlContext, (contextHandle, name) => { var addr = SDL.SDL_GL_GetProcAddress(name); return addr; })",
+        "source": "issue comment",
+        "interpretation": "Code uses old pre-1.57 API `AssembleGlInterface` which no longer exists; the pattern of passing SDL_GL_GetProcAddress is correct, just needs to be updated to `GRGlInterface.Create(name => SDL.SDL_GL_GetProcAddress(name))`"
+      }
+    ],
+    "rationale": "Classified as type/question because the reporter is asking about SDL2 compatibility and whether there are plans for it. The approach is valid — SDL2 provides an OpenGL context, and SDL_GL_GetProcAddress is a valid proc loader. The problem is use of an obsolete API name; the modern equivalent works the same way. No bug in SkiaSharp exists here.",
+    "workarounds": [
+      "Use the modern API: `GRGlInterface.Create(name => SDL.SDL_GL_GetProcAddress(name))` instead of the old `AssembleGlInterface`. Also update `GRContext.Create(...)` to `GRContext.CreateGL(glInterface)` as `GRContext.Create(backend, interface)` is also obsolete."
+    ],
+    "nextQuestions": [
+      "Which version of SkiaSharp is the reporter using?",
+      "Does switching to the modern GRGlInterface.Create API resolve the issue?"
+    ],
+    "resolution": {
+      "hypothesis": "Reporter is using an obsolete API signature that no longer exists in current SkiaSharp. The pattern of using SDL_GL_GetProcAddress as the proc loader is correct and should work with the modern API.",
+      "proposals": [
+        {
+          "title": "Update to modern GRGlInterface.Create API",
+          "category": "workaround",
+          "description": "Use the modern SkiaSharp GL API to create the interface and context with SDL2.",
+          "effort": "cost/xs",
+          "validated": "yes",
+          "codeSnippet": "// Create GL context with SDL2\nvar window = SDL.SDL_CreateWindow(\"Demo\", SDL.SDL_WINDOWPOS_CENTERED, SDL.SDL_WINDOWPOS_CENTERED, 1020, 800, SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE);\nvar sdlContext = SDL.SDL_GL_CreateContext(window);\nSDL.SDL_GL_MakeCurrent(window, sdlContext);\n\n// Modern API: pass SDL_GL_GetProcAddress as the proc loader\nvar glInterface = GRGlInterface.Create(name => SDL.SDL_GL_GetProcAddress(name));\nvar grContext = GRContext.CreateGL(glInterface);\n\n// Create render target and surface\nvar renderTarget = new GRBackendRenderTarget(1020, 800, 0, 8, new GRGlFramebufferInfo(0, 0x8058));\nusing var surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);\nvar canvas = surface.Canvas;\ncanvas.Clear(SKColors.Red);\ngrContext.Flush();\nSDL.SDL_GL_SwapWindow(window);"
+        }
+      ],
+      "recommendedProposal": "0",
+      "recommendedReason": "Update to the modern API is a one-line change and should unblock the reporter immediately."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.82,
+      "reason": "SkiaSharp fully supports SDL2 as an OpenGL context provider. The reporter is using an outdated API that no longer exists. The modern API works the same way. A comment with the corrected code should answer the question and allow closure.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply classification labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp",
+          "backend/OpenGL",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Answer the question with the modern API and working SDL2 code sample",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "SkiaSharp **does** work with SDL2 — SDL2 is just an OpenGL context provider, the same as GLFW.\n\nThe issue is that your code is using an older API (`AssembleGlInterface`) that was removed in SkiaSharp 1.57+. The modern equivalent is `GRGlInterface.Create(delegate)`:\n\n```csharp\n// Create GL context with SDL2\nvar window = SDL.SDL_CreateWindow(\"Demo\",\n    SDL.SDL_WINDOWPOS_CENTERED, SDL.SDL_WINDOWPOS_CENTERED,\n    1020, 800,\n    SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE);\nvar sdlContext = SDL.SDL_GL_CreateContext(window);\nSDL.SDL_GL_MakeCurrent(window, sdlContext);\n\n// Modern API\nvar glInterface = GRGlInterface.Create(name => SDL.SDL_GL_GetProcAddress(name));\nvar grContext = GRContext.CreateGL(glInterface);\n\n// Create render target and surface\nvar renderTarget = new GRBackendRenderTarget(1020, 800, 0, 8,\n    new GRGlFramebufferInfo(0, 0x8058 /* GR_GL_RGBA8 */));\nusing var surface = SKSurface.Create(grContext, renderTarget,\n    GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);\nvar canvas = surface.Canvas;\ncanvas.Clear(SKColors.Red);\ngrContext.Flush();\nSDL.SDL_GL_SwapWindow(window);\n```\n\nKey changes: `AssembleGlInterface(ctx, proc)` → `Create(name => SDL_GL_GetProcAddress(name))`, and `GRContext.Create(GRBackend.OpenGL, interface)` → `GRContext.CreateGL(interface)`.\n\nClosing as the approach is supported — let us know if you hit further issues with the updated API."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug — question is answered with working modern API code",
+        "risk": "medium",
+        "confidence": 0.8,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>

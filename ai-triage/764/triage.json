@@ -1,0 +1,109 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 764,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T11:02:49Z"
+  },
+  "summary": "User asks whether SkiaSharp can draw into a shared GPU resource (DirectX or other 3D API handle) for use in 3D applications.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.92 },
+    "backends": ["backend/Direct3D", "backend/OpenGL", "backend/Vulkan"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/688", "description": "Related issue discussing offscreen GPU rendering with code examples" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/755", "description": "Related issue on shared GPU rendering context" }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The reporter wants to know if they can create a shared GPU context/surface in SkiaSharp and pass its handle (e.g. D3D device/queue) to a 3D API. The current SkiaSharp codebase provides GRContext.CreateDirect3D(GRD3DBackendContext), CreateVulkan, CreateMetal, and CreateGl factory methods that accept native GPU handles, enabling exactly this use case. The maintainer pointed to issues #688 and #755 which contain code examples for offscreen GPU rendering patterns.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/GRContext.cs",
+        "finding": "GRContext.CreateDirect3D(GRD3DBackendContext) and CreateVulkan/CreateMetal/CreateGl factory methods exist, accepting native GPU backend contexts.",
+        "relevance": "direct",
+        "lines": "66-96"
+      },
+      {
+        "file": "binding/SkiaSharp/GRD3DBackendContext.cs",
+        "finding": "GRD3DBackendContext exposes Adapter, Device, and Queue as nint properties accepting IDXGIAdapter, ID3D12Device, and ID3D12CommandQueue COM pointers from a D3D12 application.",
+        "relevance": "direct",
+        "lines": "7-37"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "what you basically need for that is the GPU handle to create a surface in DirectX or other 3d API's",
+        "source": "issue body",
+        "interpretation": "Reporter wants to pass an existing D3D/Vulkan device handle to SkiaSharp, not create a fresh context."
+      },
+      {
+        "text": "I think this is exactly what @tcuthill and @pathw0rk3r are doing in #688 and #755",
+        "source": "maintainer comment",
+        "interpretation": "The maintainer confirmed the question was answered by existing issues with code examples."
+      }
+    ],
+    "rationale": "This is a how-to question. The maintainer's comment links to two issues (#688, #755) that demonstrate the pattern. The current codebase (GRContext.CreateDirect3D, CreateVulkan, CreateMetal) directly supports sharing GPU handles with 3D APIs. No code bug or missing feature — the question has a documented answer.",
+    "resolution": {
+      "proposals": [
+        {
+          "title": "Answer with existing API information",
+          "description": "Point reporter to GRContext.CreateDirect3D / CreateVulkan / CreateMetal which accept native GPU handles, and cross-reference issues #688 and #755.",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Answer with existing API information",
+      "recommendedReason": "The question is answered by existing APIs and related issues."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.82,
+      "reason": "This is a how-to question that has already been answered by the maintainer pointing to related issues #688 and #755. The feature the reporter wants (shared GPU surface via Direct3D/Vulkan handles) is supported through GRContext.CreateDirect3D, CreateVulkan, and CreateMetal APIs.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply classification labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/question", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Answer the question by explaining available GPU context factories and pointing to examples",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Yes, this is supported! SkiaSharp exposes `GRContext.CreateDirect3D(GRD3DBackendContext)`, `GRContext.CreateVulkan(GRVkBackendContext)`, and `GRContext.CreateMetal(GRMtlBackendContext)` factory methods. Each backend context type accepts native GPU handles (e.g. `GRD3DBackendContext.Device` takes an `ID3D12Device` pointer as `nint`).\n\nYou can see working examples of sharing GPU contexts in #688 and #755. Those issues demonstrate creating an offscreen GPU surface that can be used alongside a 3D application's device.\n\nClosing as answered — please reopen if you have more specific questions."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — the question has been addressed",
+        "risk": "medium",
+        "stateReason": "completed"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #688 which has code examples for GPU context sharing",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 688
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #755 for shared GPU rendering",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 755
+      }
+    ]
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 792,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T12:34:56Z",
+    "currentLabels": ["type/question"]
+  },
+  "summary": "User asks how to prevent touch events from propagating from SKGLView/SKCanvasView to the parent CarouselPage on iOS when using Xamarin.Forms v1.60.0, reporting that setting args.Handled = true does not stop the swipe event from reaching the parent.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.85 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.88 },
+    "platforms": ["os/iOS"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Place SKGLView or SKCanvasView inside a CarouselPage child page in Xamarin.Forms",
+        "Enable touch events on the view",
+        "Set args.Handled = true inside the touch handler",
+        "Observe that swipe gestures still trigger CarouselPage navigation"
+      ],
+      "environmentDetails": "Xamarin.Forms, SkiaSharp v1.60.0, iOS",
+      "relatedIssues": [832]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["1.60.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "iOS UIKit gesture recognizer interaction has not been fundamentally resolved; related open issue #832 from 2019 is still open as of 2026."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter wants to block touch event propagation from SKGLView/SKCanvasView to a parent CarouselPage swipe gesture on iOS; setting args.Handled = true in the SkiaSharp touch handler does not achieve this.",
+    "rationale": "The question is about how to disable touch propagation, which is a known platform-specific limitation on iOS. The SKCanvasView/SKGLView native iOS implementations do not override UIKit touch responder methods (TouchesBegan, etc.) nor do they interact with UIGestureRecognizers on parent views. Setting args.Handled controls SkiaSharp's internal event dispatch but does not call resignFirstResponder or cancel upstream gesture recognizers, so swipe gestures on UIScrollView-based CarouselPage still fire. This is closely related to open bug #832 which documents the same category of issue more thoroughly.",
+    "keySignals": [
+      {
+        "text": "enable Touch events and handler event by set args.Handled = true, but the event still propagates to carousel cause swipe event",
+        "source": "issue body",
+        "interpretation": "Reporter expects Handled=true to consume the UIKit touch and prevent parent CarouselPage gesture recognizer from firing — this is not how the iOS touch responder chain works via SkiaSharp."
+      },
+      {
+        "text": "args.Handled = true is not work for iOS",
+        "source": "issue body",
+        "interpretation": "Platform-specific limitation — same class of issue as #832 which reports the inverse problem (Handled=false not passing events through)."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs",
+        "finding": "iOS SKCanvasView inherits from UIView and does not override TouchesBegan/TouchesMoved/TouchesEnded, nor does it set any gesture recognizer properties. There is no code that would cancel or consume UIKit touches based on args.Handled.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+        "finding": "iOS SKGLView inherits from GLKView and similarly does not override UIKit touch responder methods. No gesture recognizer interaction is implemented.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Override the native UIView in a custom renderer/handler to intercept UIKit gesture recognizers on the parent CarouselPage and cancel them when a touch begins inside the SKCanvasView.",
+      "Use a transparent overlay UIView with a custom UIGestureRecognizer that overrides shouldRecognizeSimultaneouslyWithGestureRecognizer to return false, blocking the CarouselPage scroll gesture.",
+      "Switch from CarouselPage to a custom scroll container whose gesture recognizers can be more finely controlled."
+    ],
+    "nextQuestions": [
+      "Is this still reproducible with the current SkiaSharp version and MAUI (the Xamarin.Forms CarouselPage equivalent)?",
+      "Is a platform-specific custom renderer / handler workaround acceptable to the reporter?"
+    ],
+    "resolution": {
+      "hypothesis": "The SkiaSharp iOS view does not intercept or cancel UIKit gesture recognizers, so parent gesture recognizers (CarouselPage swipe) always fire regardless of args.Handled.",
+      "proposals": [
+        {
+          "title": "Explain iOS touch propagation limitation and link to #832",
+          "description": "Explain that args.Handled controls SkiaSharp's internal touch event pipeline, not UIKit's gesture recognizer chain. Point to issue #832 for tracking the underlying bug, and suggest a custom renderer workaround.",
+          "category": "workaround",
+          "confidence": 0.82,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Explain iOS touch propagation limitation and link to #832",
+      "recommendedReason": "This is a usage question rooted in a known platform limitation. The issue is best resolved by explaining the constraint and pointing to the related open bug."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.75,
+      "reason": "The behavior is a known iOS UIKit limitation — args.Handled only controls SkiaSharp's event pipeline, not UIKit gesture recognizers. Related open bug #832 tracks the underlying platform issue.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question, views, iOS, and compatibility labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/question", "area/SkiaSharp.Views", "os/iOS", "tenet/compatibility"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with open bug #832 which tracks the same class of iOS touch propagation issue",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 832
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the iOS touch propagation limitation and suggest workarounds",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "Thanks for the report!\n\nThe `args.Handled = true` flag controls SkiaSharp's **internal** touch event dispatch pipeline. On iOS, it does **not** cancel or consume UIKit gesture recognizers on parent views (such as the swipe gesture used by `CarouselPage`). This is a known limitation of the iOS platform — see the related issue #832 which tracks the inverse scenario (passing events through when `Handled = false`).\n\nTo prevent the `CarouselPage` from receiving swipe gestures when the user touches the SK view, you would need a platform-specific workaround such as:\n- Using a custom renderer/handler that overrides `UIGestureRecognizer.ShouldRecognizeSimultaneously` on the parent scroll view's gesture recognizers.\n- Implementing a transparent overlay with a custom gesture recognizer that returns `false` from `shouldRecognizeSimultaneouslyWithGestureRecognizer`.\n\nThis is tracked more broadly in #832. We'll keep that issue open for a proper fix. Closing this one as it's a usage question."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered usage question",
+        "risk": "medium",
+        "confidence": 0.72,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
