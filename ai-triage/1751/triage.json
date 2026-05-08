@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1751,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T05:13:00Z"
+  },
+  "summary": "Reporter sees a TypeInitializationException for SKImageInfo in the Android AXML designer in Xamarin (SkiaSharp ~2.80.3), but the APK runs fine — the issue body is almost entirely empty template placeholders.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.65 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.75 },
+    "platforms": ["os/Android"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "The type initializer for 'SkiaSharp.SKImageInfo' threw an exception",
+      "reproQuality": "none",
+      "targetFrameworks": ["monoandroid90"]
+    },
+    "reproEvidence": {
+      "environmentDetails": "Android v9.0, Google Pixel 4, SkiaSharp ~2.80.3, Xamarin AXML designer"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.3"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The report is from 2021 against a very old SkiaSharp version. The native library loading mechanism has been updated significantly since then. Issue #3094 (closed completed) shows the same error on Android 15 with 3.118.0-preview was fixed."
+    }
+  },
+  "analysis": {
+    "summary": "The TypeInitializationException originates from SKImageInfo's static constructor (line 48 of SKImageInfo.cs) which calls into the native libSkiaSharp via P/Invoke. If libSkiaSharp cannot be loaded (DllNotFoundException), the static constructor fails and every subsequent use of SKImageInfo throws TypeInitializationException. The exception only appears in the AXML designer because the Android design-time renderer cannot load native .so libraries — at runtime the APK deploys the .so and it works. This is a known design-time limitation, not a runtime regression.",
+    "rationale": "The exception in the AXML designer is expected: design-time renderers in Xamarin Android do not load native .so files. The APK working confirms the native library is present at runtime. The issue body is almost entirely empty (no repro code, no stack trace, no version details) making it impossible to determine if there is any additional real issue. Closest open work is needs-info since the reporter provided insufficient information.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "46-55",
+        "finding": "The static constructor of SKImageInfo calls SkiaApi.sk_colortype_get_default_8888() and SkiaApi.sk_color_get_bit_shift() via P/Invoke. If libSkiaSharp.so is not loaded, this throws DllNotFoundException wrapped as TypeInitializationException.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "37-45",
+        "finding": "PlatformColorType and the color shift static fields are initialized in the static constructor, which means ANY first access to SKImageInfo will trigger native library load. The AXML designer triggers this during layout inflation.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "exception is only in view(axml file)",
+        "source": "issue body",
+        "interpretation": "Exception is in the Xamarin Android designer during design-time rendering, not at runtime. This is expected — the designer cannot load native .so libraries."
+      },
+      {
+        "text": "apk is working fine",
+        "source": "issue body",
+        "interpretation": "Runtime behavior is correct. The native library loads successfully when the APK is deployed to the device."
+      },
+      {
+        "text": "probably in 2.80.3 version",
+        "source": "issue body",
+        "interpretation": "Very old version from 2021. Current SkiaSharp is 3.x. No stack trace or repro provided."
+      }
+    ],
+    "workarounds": [
+      "Wrap the SKCanvasView in a conditional check using `DesignerProperties.IsInDesignMode` (not directly available in Xamarin Android — use a custom design-time flag or `try/catch` wrapper in the custom view).",
+      "Add `android:isScrollContainer=\"false\"` and override `OnDraw` to no-op during design time by checking for native library availability.",
+      "Use a custom `SKCanvasView` subclass that catches `TypeInitializationException` during design-time rendering and renders a placeholder instead."
+    ],
+    "nextQuestions": [
+      "Does the reporter get a runtime exception too, or only in the designer?",
+      "What is the full stack trace from the AXML designer error list?",
+      "What version of Visual Studio and Xamarin Android tools are being used?"
+    ],
+    "resolution": {
+      "hypothesis": "The design-time renderer in Xamarin Android AXML editor tries to inflate and render the SKCanvasView, which triggers SKImageInfo's static constructor, which calls into libSkiaSharp — a native library not available in the designer host process.",
+      "proposals": [
+        {
+          "title": "Request more information",
+          "description": "Ask the reporter for the full stack trace, SkiaSharp version, and whether this also affects runtime behavior.",
+          "category": "investigation",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Designer-mode guard in SKCanvasView",
+          "description": "SKCanvasView.Android could check a design-time condition and skip native initialization when running in the designer host.",
+          "category": "fix",
+          "confidence": 0.55,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Request more information",
+      "recommendedReason": "The issue body is almost entirely empty. Without a stack trace or repro steps it is not possible to confirm whether this is a new bug or the known design-time limitation."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.88,
+      "reason": "Issue body contains only template placeholders. No stack trace, no repro steps, no version details. APK works fine which suggests this is the known design-time AXML designer limitation. Need confirmation and full details before any fix can be evaluated.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Full exception stack trace from the AXML designer",
+      "Exact SkiaSharp NuGet version",
+      "Visual Studio / Xamarin Android tools version",
+      "Minimal repro project or AXML layout that triggers the exception",
+      "Confirmation whether the runtime APK still works"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, android labels",
+        "risk": "low",
+        "confidence": 0.80,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Android", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask for repro details and stack trace",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the report! The exception you're seeing — `TypeInitializationException` for `SKImageInfo` — typically happens in the **Xamarin Android AXML designer** because the design-time renderer cannot load native `.so` libraries. Since you confirm the APK works fine at runtime, this is likely the expected design-time limitation rather than a real runtime bug.\n\nTo help us investigate further, could you please provide:\n\n1. **Full stack trace** from the designer error list (not just the title)\n2. **Exact SkiaSharp NuGet version** (you mentioned ~2.80.3 — please confirm)\n3. **Visual Studio and Xamarin.Android tools version**\n4. **Minimal AXML layout snippet** that triggers the error\n\nIn the meantime, a common workaround for designer errors with SkiaSharp views is to use the `IsInDesignMode` pattern or handle the `TypeInitializationException` gracefully in a custom view wrapper."
+      }
+    ]
+  }
+}

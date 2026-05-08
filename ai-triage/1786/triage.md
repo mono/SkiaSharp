@@ -1,0 +1,306 @@
+# Issue Triage Report — #1786
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-05T06:07:00Z |
+| Type | type/bug (0.75 (75%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-info (0.85 (85%)) |
+
+**Issue Summary:** SKBitmap.Decode() followed by DrawBitmap() produces visible color banding/alteration compared to a standard image viewer.
+
+**Analysis:** Reporter decodes a JPEG/PNG via SKBitmap.Decode and draws it to a rect with DrawBitmap, but observes banded/altered colors versus a standard photo viewer. Most likely cause is a color-space mismatch: the JPEG may embed an ICC profile (e.g., Display P3 or AdobeRGB) that Skia does not auto-convert to the surface's color space, producing visible hue/brightness bands. The platform, SkiaSharp version, and target framework are all unknown, making root-cause confirmation impossible without that context.
+
+**Recommendations:** **needs-info** — The issue lacks platform, framework, and SkiaSharp version information required for reproduction. The visual symptom suggests a color-space issue but cannot be confirmed without more context.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | backend/Raster |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Attachments:**
+- comparison-screenshot.png — https://user-images.githubusercontent.com/17200971/130828780-2697377c-a0a4-4d28-949d-056a07279593.png — Side-by-side comparison of standard photo viewer (left, correct) vs SkiaSharp (right, banded colors)
+- dog.jpg — https://user-images.githubusercontent.com/17200971/130829309-30d0ef6e-1ba8-40e2-a69a-f795ea75139c.jpg — Sample test image (dog photo) used to reproduce the banding
+
+**Code snippets:**
+
+```csharp
+ResultBitmap = SKBitmap.Decode(stream);
+
+protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)
+{
+    SKPaint paint = new SKPaint();
+    surface.Canvas.DrawBitmap(ResultBitmap, rect, paint: paint);
+}
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | — |
+
+## Analysis
+
+### Technical Summary
+
+Reporter decodes a JPEG/PNG via SKBitmap.Decode and draws it to a rect with DrawBitmap, but observes banded/altered colors versus a standard photo viewer. Most likely cause is a color-space mismatch: the JPEG may embed an ICC profile (e.g., Display P3 or AdobeRGB) that Skia does not auto-convert to the surface's color space, producing visible hue/brightness bands. The platform, SkiaSharp version, and target framework are all unknown, making root-cause confirmation impossible without that context.
+
+### Rationale
+
+Classified as type/bug because the reporter observes incorrect visual output (color banding) that does not match a reference viewer. Severity is medium (wrong output, workaround may exist). Action is needs-info because platform, SkiaSharp version, and target framework are absent, preventing reliable reproduction.
+
+### Key Signals
+
+- "I have tried with PNG & JPG, but it is the same issue." — **issue body** (Affects multiple formats; likely a decode-to-surface color-space pipeline issue rather than a format-specific codec bug.)
+- "SKBitmap.Decode(stream); ... DrawBitmap(ResultBitmap, rect, paint: paint);" — **issue body** (Minimal pipeline: decode then draw to rect with no custom color space or filter specified.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKCanvas.cs` | 577-587 | direct | DrawBitmap(bitmap, SKRect dest) converts the bitmap to an SKImage via SKImage.FromBitmap, then calls DrawImage. No explicit color-space conversion is performed at this point. |
+| `binding/SkiaSharp/SKBitmap.cs` | 434-444 | direct | SKBitmap.Decode(SKCodec) uses codec.Info (which preserves the embedded color space from the source image) but forces Premul alpha. If the rendering surface's color space differs from the bitmap's embedded color space, colors may shift. |
+
+### Next Questions
+
+- Which platform/OS and target framework (.NET MAUI, Xamarin.Android, WPF, etc.) is being used?
+- Which version of SkiaSharp is installed?
+- Does the image have an embedded ICC color profile (e.g., Display P3, AdobeRGB)?
+- Does using SKImage.FromEncodedData instead of SKBitmap.Decode change the behavior?
+- What is the color type and color space of the decoded SKBitmap (bitmap.ColorType, bitmap.ColorSpace)?
+
+### Resolution Proposals
+
+**Hypothesis:** A color-space mismatch between the decoded bitmap (which preserves the embedded ICC profile from the JPEG) and the rendering surface causes color banding. Explicit color-space management or using SKImage.FromEncodedData may resolve it.
+
+1. **Use SKImage.FromEncodedData instead of SKBitmap.Decode** — investigation, cost/xs, validated=untested
+   - SKImage.FromEncodedData hands the encoded bytes directly to Skia, which can apply correct color management during draw. Compare output.
+2. **Decode with explicit sRGB color space** — workaround, cost/xs, validated=untested
+   - Force sRGB on the bitmap info during decode so colors are converted to match most display surfaces.
+
+**Recommended proposal:** Use SKImage.FromEncodedData instead of SKBitmap.Decode
+
+**Why:** Using SKImage.FromEncodedData is the idiomatic SkiaSharp approach for displaying encoded images and may automatically handle ICC profiles, making it the fastest path to a fix.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.85 (85%) |
+| Reason | The issue lacks platform, framework, and SkiaSharp version information required for reproduction. The visual symptom suggests a color-space issue but cannot be confirmed without more context. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- SkiaSharp version
+- Target platform and framework (e.g., .NET MAUI on Android, Xamarin.iOS, WPF on Windows)
+- Whether the source image contains an embedded ICC color profile
+- Operating system and device model
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply type/bug, area/SkiaSharp, tenet/compatibility | labels=type/bug, area/SkiaSharp, tenet/compatibility |
+| add-comment | medium | 0.80 (80%) | Ask for missing platform/version info and suggest using SKImage.FromEncodedData as a potential workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for reporting this and including the comparison screenshot!
+
+To help us investigate the color banding, could you please share:
+
+1. **SkiaSharp version** (NuGet package version)
+2. **Target platform and framework** (e.g., .NET MAUI on Android, Xamarin.Forms on iOS, WPF on Windows)
+3. **Does the source image have an embedded ICC color profile?** (e.g., Display P3, AdobeRGB — many camera JPEGs include these)
+
+In the meantime, you might try replacing `SKBitmap.Decode` with `SKImage.FromEncodedData`, which hands the encoded bytes directly to Skia's color pipeline and may handle ICC profiles correctly:
+
+```csharp
+byte[] bytes = ...; // read stream bytes
+using var data = SKData.CreateCopy(bytes);
+var image = SKImage.FromEncodedData(data);
+
+protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)
+{
+    e.Surface.Canvas.DrawImage(image, rect);
+}
+```
+
+This approach avoids the intermediate bitmap decode step and may resolve the color shift.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1786,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T06:07:00Z"
+  },
+  "summary": "SKBitmap.Decode() followed by DrawBitmap() produces visible color banding/alteration compared to a standard image viewer.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.75
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "backends": [
+      "backend/Raster"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "attachments": [
+        {
+          "url": "https://user-images.githubusercontent.com/17200971/130828780-2697377c-a0a4-4d28-949d-056a07279593.png",
+          "filename": "comparison-screenshot.png",
+          "description": "Side-by-side comparison of standard photo viewer (left, correct) vs SkiaSharp (right, banded colors)"
+        },
+        {
+          "url": "https://user-images.githubusercontent.com/17200971/130829309-30d0ef6e-1ba8-40e2-a69a-f795ea75139c.jpg",
+          "filename": "dog.jpg",
+          "description": "Sample test image (dog photo) used to reproduce the banding"
+        }
+      ],
+      "codeSnippets": [
+        "ResultBitmap = SKBitmap.Decode(stream);\n\nprotected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    SKPaint paint = new SKPaint();\n    surface.Canvas.DrawBitmap(ResultBitmap, rect, paint: paint);\n}"
+      ],
+      "repoLinks": []
+    }
+  },
+  "analysis": {
+    "summary": "Reporter decodes a JPEG/PNG via SKBitmap.Decode and draws it to a rect with DrawBitmap, but observes banded/altered colors versus a standard photo viewer. Most likely cause is a color-space mismatch: the JPEG may embed an ICC profile (e.g., Display P3 or AdobeRGB) that Skia does not auto-convert to the surface's color space, producing visible hue/brightness bands. The platform, SkiaSharp version, and target framework are all unknown, making root-cause confirmation impossible without that context.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "577-587",
+        "finding": "DrawBitmap(bitmap, SKRect dest) converts the bitmap to an SKImage via SKImage.FromBitmap, then calls DrawImage. No explicit color-space conversion is performed at this point.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "434-444",
+        "finding": "SKBitmap.Decode(SKCodec) uses codec.Info (which preserves the embedded color space from the source image) but forces Premul alpha. If the rendering surface's color space differs from the bitmap's embedded color space, colors may shift.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "I have tried with PNG & JPG, but it is the same issue.",
+        "source": "issue body",
+        "interpretation": "Affects multiple formats; likely a decode-to-surface color-space pipeline issue rather than a format-specific codec bug."
+      },
+      {
+        "text": "SKBitmap.Decode(stream); ... DrawBitmap(ResultBitmap, rect, paint: paint);",
+        "source": "issue body",
+        "interpretation": "Minimal pipeline: decode then draw to rect with no custom color space or filter specified."
+      }
+    ],
+    "rationale": "Classified as type/bug because the reporter observes incorrect visual output (color banding) that does not match a reference viewer. Severity is medium (wrong output, workaround may exist). Action is needs-info because platform, SkiaSharp version, and target framework are absent, preventing reliable reproduction.",
+    "nextQuestions": [
+      "Which platform/OS and target framework (.NET MAUI, Xamarin.Android, WPF, etc.) is being used?",
+      "Which version of SkiaSharp is installed?",
+      "Does the image have an embedded ICC color profile (e.g., Display P3, AdobeRGB)?",
+      "Does using SKImage.FromEncodedData instead of SKBitmap.Decode change the behavior?",
+      "What is the color type and color space of the decoded SKBitmap (bitmap.ColorType, bitmap.ColorSpace)?"
+    ],
+    "resolution": {
+      "hypothesis": "A color-space mismatch between the decoded bitmap (which preserves the embedded ICC profile from the JPEG) and the rendering surface causes color banding. Explicit color-space management or using SKImage.FromEncodedData may resolve it.",
+      "proposals": [
+        {
+          "title": "Use SKImage.FromEncodedData instead of SKBitmap.Decode",
+          "description": "SKImage.FromEncodedData hands the encoded bytes directly to Skia, which can apply correct color management during draw. Compare output.",
+          "category": "investigation",
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Decode with explicit sRGB color space",
+          "description": "Force sRGB on the bitmap info during decode so colors are converted to match most display surfaces.",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKImage.FromEncodedData instead of SKBitmap.Decode",
+      "recommendedReason": "Using SKImage.FromEncodedData is the idiomatic SkiaSharp approach for displaying encoded images and may automatically handle ICC profiles, making it the fastest path to a fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.85,
+      "reason": "The issue lacks platform, framework, and SkiaSharp version information required for reproduction. The visual symptom suggests a color-space issue but cannot be confirmed without more context.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "SkiaSharp version",
+      "Target platform and framework (e.g., .NET MAUI on Android, Xamarin.iOS, WPF on Windows)",
+      "Whether the source image contains an embedded ICC color profile",
+      "Operating system and device model"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, tenet/compatibility",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask for missing platform/version info and suggest using SKImage.FromEncodedData as a potential workaround",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thank you for reporting this and including the comparison screenshot!\n\nTo help us investigate the color banding, could you please share:\n\n1. **SkiaSharp version** (NuGet package version)\n2. **Target platform and framework** (e.g., .NET MAUI on Android, Xamarin.Forms on iOS, WPF on Windows)\n3. **Does the source image have an embedded ICC color profile?** (e.g., Display P3, AdobeRGB — many camera JPEGs include these)\n\nIn the meantime, you might try replacing `SKBitmap.Decode` with `SKImage.FromEncodedData`, which hands the encoded bytes directly to Skia's color pipeline and may handle ICC profiles correctly:\n\n```csharp\nbyte[] bytes = ...; // read stream bytes\nusing var data = SKData.CreateCopy(bytes);\nvar image = SKImage.FromEncodedData(data);\n\nprotected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    e.Surface.Canvas.DrawImage(image, rect);\n}\n```\n\nThis approach avoids the intermediate bitmap decode step and may resolve the color shift."
+      }
+    ]
+  }
+}
+```
+
+</details>

@@ -1,0 +1,174 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2521,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T01:07:32Z"
+  },
+  "summary": "OnPaintSurface is not called on iOS when InvalidateSurface() is invoked from a background thread (System.Timers.Timer), because iOS UIKit requires SetNeedsDisplay() to be called on the main thread, while Android's Invalidate() is thread-safe.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.8
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "tenets": [
+      "tenet/reliability",
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "missing-output",
+      "errorMessage": "OnPaintSurface not called on iOS after InvalidateSurface()",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0",
+        "net7.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI or Xamarin.Forms ContentView with an SKCanvasView inside",
+        "Start a System.Timers.Timer that calls skiaView.InvalidateSurface() every 1 second",
+        "Run on iOS device or simulator",
+        "Observe that OnPaintSurface is never called on iOS (works on Android)"
+      ],
+      "environmentDetails": "Visual Studio for Mac 17.5.5, Xamarin.Forms 5.0.0.2578, .NET 6 and 7",
+      "relatedIssues": [
+        2001
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2001",
+          "description": "Related: InvalidateSurface does not trigger OnPaintSurface on iOS device connected to Windows"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "5.0.0.2578"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The iOS handler still calls SetNeedsDisplay() without dispatching to the main thread, meaning this issue persists in current code."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter calls InvalidateSurface() from a System.Timers.Timer callback, which runs on a ThreadPool thread. On iOS, this results in SetNeedsDisplay() being called off the main thread \u2014 a violation of UIKit's threading rules that silently fails. On Android, View.Invalidate() is internally thread-safe. SkiaSharp's iOS handler does not marshal the call to the main thread, causing the silent failure.",
+    "rationale": "This is a platform behavioral inconsistency: the same InvalidateSurface() call works on Android but silently fails on iOS when called from a background thread. The iOS UIKit requirement for main-thread UI calls is well-established, but SkiaSharp could defensively dispatch to the main thread in OnInvalidateSurface. The issue is real and reproducible, making it a medium-severity bug.",
+    "keySignals": [
+      {
+        "text": "The method OnPaintSurface doesn't get call on iOS. I've implemented a loop to cal the OnPaintSurface every 1 second",
+        "source": "issue body",
+        "interpretation": "The timer fires on a ThreadPool thread; iOS UIKit calls must be on main thread."
+      },
+      {
+        "text": "it doesn't work on iOS only on android with both Xamarin Forms and Maui",
+        "source": "issue body",
+        "interpretation": "Platform inconsistency: Android Invalidate() is thread-safe, iOS SetNeedsDisplay() is not."
+      },
+      {
+        "text": "var timer = new System.Timers.Timer(1000); timer.Elapsed += new ElapsedEventHandler(RedrawSquare);",
+        "source": "issue body code",
+        "interpretation": "System.Timers.Timer.Elapsed always fires on a ThreadPool thread, not the main UI thread."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Apple.cs",
+        "lines": "37-43",
+        "finding": "OnInvalidateSurface calls handler.PlatformView.SetNeedsDisplay() directly without marshaling to main thread. iOS UIKit requires this to be called from the main thread; calling it from a background thread silently fails.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Android.cs",
+        "lines": "35-38",
+        "finding": "OnInvalidateSurface calls handler.PlatformView.Invalidate() which Android handles thread-safely internally, explaining why it works on Android but not iOS.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SKCanvasView.cs",
+        "lines": "43-46",
+        "finding": "InvalidateSurface() calls Handler?.Invoke(nameof(ISKCanvasView.InvalidateSurface)) \u2014 dispatches to the platform handler without any thread check.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use MainThread.BeginInvokeOnMainThread(() => skiaView.InvalidateSurface()) instead of calling InvalidateSurface() directly from the timer callback",
+      "Use Dispatcher.Dispatch(() => skiaView.InvalidateSurface()) for MAUI",
+      "Replace System.Timers.Timer with a MAUI Dispatcher timer: Dispatcher.DispatchDelayed / Application.Current.Dispatcher.StartTimer"
+    ],
+    "nextQuestions": [
+      "Should SkiaSharp defensively dispatch SetNeedsDisplay() to the main thread in the iOS handler?",
+      "Does the same threading issue affect SKGLView on iOS?",
+      "Does the Xamarin.Forms iOS handler have the same issue?"
+    ],
+    "resolution": {
+      "hypothesis": "The iOS MAUI handler calls SetNeedsDisplay() on a background thread, which silently fails. Adding a main thread dispatch in OnInvalidateSurface for the Apple platform would fix this.",
+      "proposals": [
+        {
+          "title": "Add main-thread dispatch in iOS handler",
+          "description": "Wrap SetNeedsDisplay() call in MainThread.BeginInvokeOnMainThread in SKCanvasViewHandler.Apple.cs to ensure it runs on the UI thread regardless of the calling thread.",
+          "category": "fix",
+          "confidence": 0.8,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Document thread requirement and provide workaround",
+          "description": "Add documentation noting that InvalidateSurface() must be called on the main thread on iOS, and suggest using MainThread.BeginInvokeOnMainThread as a workaround.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add main-thread dispatch in iOS handler",
+      "recommendedReason": "Defensive main-thread marshaling makes SkiaSharp consistent across platforms and prevents silent failures for users who reasonably expect InvalidateSurface() to work from background threads as it does on Android."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Real platform inconsistency in the iOS handler \u2014 InvalidateSurface called from background thread silently fails on iOS but works on Android. Needs investigation to determine if SkiaSharp should add main-thread dispatch defensively.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, MAUI views, and iOS labels",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Maui",
+          "os/iOS",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain threading issue and provide workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report! The issue is that `System.Timers.Timer.Elapsed` fires on a **ThreadPool thread**, and iOS's UIKit requires all UI operations (including `SetNeedsDisplay()`, which `InvalidateSurface()` calls under the hood) to run on the **main thread**. Android's `View.Invalidate()` handles background thread calls internally, which is why it works there.\n\n**Workaround** \u2014 dispatch to the main thread before calling `InvalidateSurface()`:\n\n```csharp\n// MAUI\nvar timer = new System.Timers.Timer(1000);\ntimer.Elapsed += (s, e) => MainThread.BeginInvokeOnMainThread(() => skiaView.InvalidateSurface());\ntimer.Start();\n\n// Or use a MAUI dispatcher timer that fires on the main thread:\nDispatcher.StartTimer(TimeSpan.FromSeconds(1), () =>\n{\n    skiaView.InvalidateSurface();\n    return true; // keep repeating\n});\n```\n\nWe're also investigating whether SkiaSharp should add automatic main-thread marshaling in the iOS handler to make `InvalidateSurface()` consistent across platforms."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related issue #2001",
+        "risk": "low",
+        "confidence": 0.8,
+        "linkedIssue": 2001
+      }
+    ]
+  }
+}
