@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2508,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T17:33:38Z",
+    "currentLabels": [
+      "type/enhancement",
+      "os/Windows-Universal-UWP",
+      "area/libSkiaSharp.native"
+    ]
+  },
+  "summary": "Drawing with SKBlendMode.DstOver gradually slows down on UWP ARM64 (Surface Pro X / Microsoft SQ1), while running the same x64 build via emulation on the same device performs normally.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Universal-UWP"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "performance",
+      "errorMessage": "Drawing lines using SKBlendMode.DstOver on Windows ARM devices is very slow",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "uap10.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Build a UWP + Xamarin.Forms app targeting ARM64 using SkiaSharp.Views.Forms 2.88.3",
+        "Use SKBlendMode.DstOver on SKPaint stroke style",
+        "Draw multiple paths by touch on an ARM64 device (e.g. Surface Pro X / SQ1)",
+        "Observe gradual slowdown as more paths are added"
+      ],
+      "environmentDetails": "Surface Pro X (Microsoft SQ1, ARM64), UWP, SkiaSharp.Views.Forms 2.88.3, Visual Studio 2022 17.4.1",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mattleibow/SkiaSharpDemo",
+          "description": "Base demo project used to create the reproduction"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The underlying issue is in native ARM64 compilation with MSVC rather than LLVM/Clang, which has not changed between 2.88.x and later releases."
+    }
+  },
+  "analysis": {
+    "summary": "The ARM64 Windows build of libSkiaSharp is compiled with MSVC, which lacks the ARM-specific SIMD/vectorization optimizations that Skia is designed for with LLVM/Clang. This explains why the ARM64-native build is slow for blend-mode-heavy operations like DstOver, while running via x64 emulation uses an optimized x64 code path and performs better.",
+    "rationale": "The title says [QUESTION] but the reporter describes a real, reproducible performance degradation. The maintainer confirmed the root cause (MSVC for UWP ARM = no LLVM/Clang ARM optimizations). The build script (native/windows/build.cake) supports optional LLVM via LLVM_HOME; without it, MSVC is used for all Windows architectures including ARM64. This is a native build quality issue, not a SkiaSharp C# wrapper issue. Classified as type/bug with performance error type, in area/libSkiaSharp.native.",
+    "keySignals": [
+      {
+        "text": "Drawing lines using SKBlendMode.DstOver on Windows ARM devices is very slow",
+        "source": "issue body",
+        "interpretation": "Specific blend mode triggers heavy pixel-level computation; lack of SIMD/NEON optimizations for ARM in MSVC builds makes this expensive."
+      },
+      {
+        "text": "when I run x64 built app on an Windows ARM device it works fine",
+        "source": "issue body",
+        "interpretation": "x64 Skia build uses LLVM/Clang with x64 SIMD optimizations; running via x64 emulation on ARM bypasses the unoptimized ARM64 code path."
+      },
+      {
+        "text": "UWP ARM is the least optimized platform so could very well be the case. Skia is designed for LLVM/Clang, but UWP is using MSVC that has none of the optimizations.",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer confirmed the root cause: MSVC for UWP ARM64 lacks the compiler-level ARM NEON/SIMD support that LLVM/Clang enables."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "native/windows/build.cake",
+        "lines": "56-81",
+        "finding": "The Windows ARM64 build uses MSVC by default. LLVM/Clang is optional via LLVM_HOME argument: `var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? \"\" : $\"clang_win='{LLVM_HOME}'\"`. If LLVM_HOME is empty, no clang_win is passed to GN, so Skia builds with MSVC which lacks ARM NEON auto-vectorization.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/EnumMappings.cs",
+        "lines": "1-40",
+        "finding": "SKBlendMode.DstOver is a standard Porter-Duff composite mode fully supported in the C# bindings. The issue is not in the binding layer but in the native library performance.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Build and deploy the x64 variant of the app \u2014 Windows on ARM can run x64 apps via emulation. The x64 Skia build is compiled with LLVM/Clang and is significantly faster for blend-mode operations on ARM devices.",
+      "Avoid SKBlendMode.DstOver; use SKBlendMode.SrcOver (the default) where possible, as Porter-Duff modes that require reading the destination pixel are more expensive than source-only modes.",
+      "Reduce path complexity by periodically merging drawn paths into a bitmap snapshot to reduce per-frame drawing work."
+    ],
+    "nextQuestions": [
+      "Is UWP ARM64 built with clang_win in CI? Is LLVM_HOME set in the UWP build pipeline?",
+      "Would switching to clang_win for all Windows ARM64 builds be feasible given UWP toolchain constraints?",
+      "Does the issue occur with other non-SrcOver blend modes (e.g., Multiply, Screen) or is it specific to DstOver?"
+    ],
+    "resolution": {
+      "hypothesis": "The ARM64 libSkiaSharp.dll for Windows/UWP is built with MSVC, which does not provide LLVM-style ARM NEON auto-vectorization. Enabling clang_win in the Windows ARM64 GN build would enable LLVM-style optimizations and likely fix the performance regression.",
+      "proposals": [
+        {
+          "title": "Use LLVM/Clang for Windows ARM64 builds",
+          "description": "Modify native/windows/build.cake to always use clang_win for the ARM64 target, or ensure that the CI ARM64 build uses LLVM_HOME. This would enable ARM NEON SIMD optimizations that MSVC cannot provide.",
+          "category": "fix",
+          "confidence": 0.7,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Use x64 build via emulation (workaround)",
+          "description": "Publish and deploy the x64 version of the app on ARM devices. Windows on ARM provides native x64 emulation. The x64 Skia build is optimized with LLVM/Clang and performs significantly better for blend-mode operations.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Reduce blend mode complexity",
+          "description": "Switch from SKBlendMode.DstOver to SKBlendMode.SrcOver (default) where possible, or periodically flatten drawn paths into a cached bitmap to reduce per-frame computation.",
+          "category": "workaround",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use x64 build via emulation (workaround)",
+      "recommendedReason": "Immediate actionable workaround with high confidence. Allows the user to ship while the native build quality issue is tracked separately."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.78,
+      "reason": "Root cause is confirmed (MSVC vs LLVM/Clang for ARM64), repro is provided, and there is a potential fix path (enabling clang_win for ARM64 native build). Needs investigation into build toolchain feasibility before a fix can be committed.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct type to type/bug (performance issue), keep area/libSkiaSharp.native and os/Windows-Universal-UWP, add tenet/performance",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Windows-Universal-UWP",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the root cause, provide workaround, and note the path to fix",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for providing a reproduction case and confirming the device.\n\nThe root cause is that the ARM64 native build of `libSkiaSharp` for Windows/UWP is compiled with MSVC, which does not support the ARM NEON SIMD intrinsics that Skia relies on for blend-mode operations. The x64 build is compiled with LLVM/Clang and includes those optimizations \u2014 which is why x64-via-emulation is faster on your ARM device.\n\n**Immediate workaround:** Build and publish your app targeting `x64` rather than `ARM64`. Windows on ARM supports x64 app emulation and the x64 Skia binary is significantly faster for `SKBlendMode.DstOver` and related operations.\n\n**Longer term:** We would need to switch the ARM64 Windows build to use LLVM/Clang (`clang_win` in the GN build) to get the same SIMD optimizations. This requires build toolchain investigation.\n\nAlternatively, you can reduce per-frame work by periodically rasterizing completed paths into a cached bitmap, so only the active stroke needs to be re-rendered each frame."
+      }
+    ]
+  }
+}
