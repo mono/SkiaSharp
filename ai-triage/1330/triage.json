@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1330,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T13:40:00Z",
+    "currentLabels": ["type/enhancement", "area/SkiaSharp", "triage/triaged"]
+  },
+  "summary": "The SkiaSharp maintainer filed a design-tracking issue to complete the SKMatrix44 implementation by adding missing SkM44 APIs (LookAt, map, normalizePerspective, etc.) that are not covered by the current System.Numerics.Matrix4x4 wrapper.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.97 },
+    "tenets": ["tenet/compatibility", "tenet/performance"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        { "url": "https://github.com/taublast/DrawnUi.Maui/blob/2-A/src/Engine/Internals/Helpers/3D/Sk3dView.cs", "description": "Community implementation of Sk3dView using System.Numerics — demonstrates the gap left by missing SKM44 APIs" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/1652", "description": "Related issue tracking the SKCamera.h/SKMatrix44.h deprecation in Skia m84" }
+      ],
+      "relatedIssues": [1652, 3226]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.x", "3.116.x"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The maintainer confirmed in Oct 2024 that SKMatrix44 still only wraps System.Numerics.Matrix4x4 with incomplete API coverage, and the issue remains open."
+    }
+  },
+  "analysis": {
+    "summary": "SKMatrix44 in SkiaSharp v3 wraps System.Numerics.Matrix4x4 rather than directly binding to Skia's SkM44. As a result, several camera/3D view APIs (LookAt, map, normalizePerspective, etc.) that were available through the old SK3dView/SKCamera3D are missing. The maintainer wants to complete SKMatrix44 with full SkM44 API coverage.",
+    "rationale": "This is a feature-gap enhancement raised by the maintainer himself. The current implementation is intentionally a shortcut: using System.Numerics.Matrix4x4 to avoid the cost of C++ interop per operation. The gap is well-defined: SKM44 APIs in Skia C++ that are not yet surfaced in the C# wrapper. Several community contributors have run into this gap when trying to replace the deprecated SK3dView.",
+    "keySignals": [
+      { "text": "I didn't get the time I needed to fully recreate the SkM44 API in C#, so just leveraged the Numerics. Any missing APIs were just a result of me not knowing which ones to prioritize", "source": "maintainer comment #2439478698", "interpretation": "Confirms this is a planned but incomplete implementation, not a design decision to omit the APIs." },
+      { "text": "Current SKMatrix44 in SkiaSharp is just the basics needed to make things work. I see SkM44 does have several more APIs that I have not yet ported/wrapped/exposed", "source": "maintainer comment #2439478698", "interpretation": "Direct admission of API incompleteness." },
+      { "text": "In order to replace SK3dView i need the LookAt, map, normalizePerspective etc.", "source": "community comment #2438307929", "interpretation": "Concrete list of missing APIs needed for real use cases." },
+      { "text": "Skia deprecated SK3DView, SKCamera3D, SKPatch3D, because they provided a more flexible SKM44", "source": "community comment #2439427879", "interpretation": "Highlights why completing SKM44 coverage in C# is important for migration." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKMatrix44.cs", "lines": "58-115", "finding": "Create* factory methods exist for translation, scale, and axis-angle rotation, but LookAt, map, normalizePerspective, and other SkM44-specific APIs are absent. Several CreateRotation* overloads are commented out.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKMatrix44.cs", "lines": "262-298", "finding": "MapScalars methods are marked internal — they are not exposed as public API, limiting usefulness for callers needing 4-component vector transforms.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/SKMatrix44.cs", "lines": "477-481", "finding": "Implicit cast between SKMatrix44 and System.Numerics.Matrix4x4 uses Unsafe.As — zero-copy, confirming the struct layouts are binary-identical, validating the current design choice.", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Implement LookAt using System.Numerics.Matrix4x4.CreateLookAt and then cast to SKMatrix44 via the implicit conversion.",
+      "Use System.Numerics.Matrix4x4 directly for 3D math and cast to SKMatrix44 only when passing to SKCanvas.SetMatrix.",
+      "Port camera math manually using the community Sk3dView.cs reference implementation as a starting point (https://github.com/taublast/DrawnUi.Maui/blob/2-A/src/Engine/Internals/Helpers/3D/Sk3dView.cs)."
+    ],
+    "nextQuestions": [
+      "Which specific SkM44 methods should be prioritized? (LookAt, Map, normalizePerspective, setRotateAbout, etc.)",
+      "Should the implementation use System.Numerics helpers or direct mathematical implementations to preserve rotation direction conventions matching Skia?",
+      "Is there a test comparison between SK3dView (v2) and SKMatrix44 (v3) to catch behavioral differences in rotation orientation?"
+    ],
+    "resolution": {
+      "hypothesis": "The enhancement requires adding SkM44-equivalent APIs to SKMatrix44, implemented in pure C# using mathematics consistent with Skia's conventions. The implicit Unsafe.As cast already ensures zero-cost interop with System.Numerics types.",
+      "proposals": [
+        {
+          "title": "Implement missing SkM44 factory methods in pure C#",
+          "description": "Add CreateLookAt, CreateSetRotateAbout, and normalizePerspective to SKMatrix44, implemented directly in C# math without interop, following the SkM44 C++ source as reference.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Use System.Numerics helpers where available",
+          "description": "For LookAt specifically, Matrix4x4.CreateLookAt exists in System.Numerics and can be used as a starting point, but callers need to verify rotation-direction conventions match Skia (column-major vs row-major, LH vs RH).",
+          "category": "workaround",
+          "confidence": 0.65,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Implement missing SkM44 factory methods in pure C#",
+      "recommendedReason": "Direct C# math avoids interop overhead and ensures behavioral parity with Skia's SkM44 conventions."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.90,
+      "reason": "Valid enhancement filed by the maintainer. Active discussion in Oct 2024 confirms the gap is real and still open. Requires design work to identify which SkM44 APIs to port first.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, SkiaSharp area, and compatibility/performance tenet labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp", "tenet/compatibility", "tenet/performance"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Summarize current state and invite contributors to enumerate missing APIs",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the continued discussion. The current `SKMatrix44` is a managed C# struct that wraps `System.Numerics.Matrix4x4` with an implicit zero-copy cast (`Unsafe.As`). Several `SkM44` APIs — including `LookAt`, `setRotateAbout`, `map`, and `normalizePerspective` — are not yet exposed.\n\nIf you need 3D camera transforms now, a workaround is to use `System.Numerics.Matrix4x4.CreateLookAt` and cast the result to `SKMatrix44` via the implicit conversion. Be aware of potential rotation-direction convention differences between Skia (column-major) and DirectX-style (row-major, left-handed) matrices.\n\nTo help prioritize: could you list the specific `SkM44` methods you need? A test case showing the expected output would also help ensure any new implementation matches Skia's behavior."
+      }
+    ]
+  }
+}

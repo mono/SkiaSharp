@@ -1,0 +1,157 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1383,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T13:55:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "tenet/reliability", "triage/triaged"]
+  },
+  "summary": "On Windows with STA threading model, SkiaSharp's HandleDictionary uses ReaderWriterLockSlim which is alertable, causing the Windows message pump to dispatch WM_PAINT and COM callbacks while waiting for the lock during SKPath construction or handle registration, which can lead to deadlocks and unexpected reentrancy in WndProc handlers.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.98 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.97 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "platform-specific",
+      "errorMessage": "WM_PAINT dispatched inside SKPath constructor due to alertable ReaderWriterLockSlim on Windows STA thread, leading to deadlock/reentrancy",
+      "stackTrace": "Avalonia.Win32.dll!WindowImpl.WndProc -> [Native to Managed] -> WaitHandle.WaitOneNoCheck -> ReaderWriterLockSlim.TryEnterWriteLockCore -> HandleDictionary.RegisterHandle -> SKObject.Handle.set -> SKPath..ctor",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Windows desktop app using STA apartment model (WinForms, WPF, Avalonia, or any app using OLE/COM/Drag-Drop)",
+        "Process a Windows message that triggers SkiaSharp object construction (e.g., WM_PAINT or WM_SIZE)",
+        "Create a new SkiaSharp object (e.g., new SKPath()) which calls HandleDictionary.RegisterHandle",
+        "ReaderWriterLockSlim.EnterWriteLock blocks alertably, allowing Windows message pump to dispatch WM_PAINT",
+        "WM_PAINT handler attempts to use SkiaSharp, which tries to re-acquire the HandleDictionary write lock — deadlock or unexpected reentrancy"
+      ],
+      "environmentDetails": "Windows desktop, STA threading model, .NET, Avalonia/WinForms/WPF apps, any app requiring OLE/Drag-Drop/COM",
+      "repoLinks": [
+        { "url": "https://gist.github.com/retran/b57e4db1a173048c2cee49ac6d523fc2", "description": "Repro gist demonstrating reentrancy with .NET locks on STA thread" }
+      ]
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.97,
+      "reason": "PlatformLock.cs in binding/SkiaSharp/ explicitly states it is a fix for issue #1383 and replaces ReaderWriterLockSlim with a native Win32 CRITICAL_SECTION (non-alertable) on Windows. HandleDictionary.instancesLock now uses PlatformLock.Create() which returns NonAlertableWin32Lock on Windows."
+    }
+  },
+  "analysis": {
+    "summary": "The root cause is that .NET managed locks (ReaderWriterLockSlim, Monitor, WaitHandle) are alertable on Windows STA threads and allow the Windows message pump to run while waiting. HandleDictionary used ReaderWriterLockSlim, so any blocking wait (e.g., contended write lock during handle registration) would dispatch WM_PAINT and COM callbacks, re-entering SkiaSharp code mid-lock acquisition. This has been fixed in PlatformLock.cs by substituting a Win32 CRITICAL_SECTION (non-alertable) on Windows, and by exposing PlatformLock.Factory for users who need custom lock behavior.",
+    "rationale": "The issue is clearly a Windows-specific threading bug in the core SkiaSharp object management infrastructure. The alertable lock behavior is a known .NET design on STA threads and the fix (using Win32 CRITICAL_SECTION) is already present in the codebase with an explicit reference to this issue number. The issue should be closed as fixed with a comment pointing to the resolved implementation.",
+    "keySignals": [
+      {
+        "text": "ReaderWriterLockSlim.TryEnterWriteLockCore -> HandleDictionary.RegisterHandle -> SKPath..ctor [reentered by WndProc via WM_PAINT]",
+        "source": "issue body",
+        "interpretation": "Stack trace shows Windows message pump dispatching WndProc while waiting for HandleDictionary write lock — definitive STA alertable lock reentrancy."
+      },
+      {
+        "text": "This is caused by all locks in .NET being alertable locks that can still run the message pump when waiting for a lock",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identifies root cause: .NET managed synchronization primitives are alertable on STA threads, allowing message pump to run."
+      },
+      {
+        "text": "This is a fix for issue #1383 ... This fix replaces the ReaderWriteLockSlim instance on Windows with a native Win32 CRITICAL_SECTION.",
+        "source": "binding/SkiaSharp/PlatformLock.cs lines 9-18",
+        "interpretation": "The fix is already implemented in the codebase and explicitly references this issue number."
+      },
+      {
+        "text": "We are currently switching to a non-pumping SynchronizationContext before doing any calls to SkiaSharp on the UI thread",
+        "source": "comment by kekekeks",
+        "interpretation": "Workaround used by the reporter: switching SyncContext to non-pumping before SkiaSharp calls. The PlatformLock fix makes this workaround unnecessary."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/PlatformLock.cs",
+        "lines": "1-20",
+        "finding": "File header explicitly states 'This is a fix for issue #1383' and explains the fix replaces ReaderWriterLockSlim with native Win32 CRITICAL_SECTION on Windows to prevent alertable lock message pump dispatch.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/PlatformLock.cs",
+        "lines": "69-77",
+        "finding": "DefaultFactory() returns NonAlertableWin32Lock when PlatformConfiguration.IsWindows is true (and not on iOS/tvOS/macOS/macCatalyst/Android). NonAlertableWin32Lock wraps Win32 EnterCriticalSection/LeaveCriticalSection which are non-alertable by design.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/PlatformLock.cs",
+        "lines": "56-63",
+        "finding": "PlatformLock.Factory is a public static property that allows user code to plug in a custom IPlatformLock implementation, providing extensibility for apps that need different synchronization strategies.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/HandleDictionary.cs",
+        "lines": "27",
+        "finding": "HandleDictionary.instancesLock is created via PlatformLock.Create(), which delegates to the Factory (defaults to NonAlertableWin32Lock on Windows). The original ReaderWriterLockSlim is no longer used on Windows.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Switch to a non-pumping SynchronizationContext before any SkiaSharp calls on the STA UI thread.",
+      "Use PlatformLock.Factory to install a custom non-alertable lock implementation before SkiaSharp is first used.",
+      "Update to a SkiaSharp version that includes PlatformLock.cs (the fix for this issue)."
+    ],
+    "nextQuestions": [
+      "In which SkiaSharp NuGet version was PlatformLock.cs first shipped? The issue should be closed referencing that version.",
+      "Does the NonAlertableWin32Lock correctly handle the UpgradeableReadLock semantics used in GetOrAddObject?"
+    ],
+    "resolution": {
+      "hypothesis": "Windows STA alertable lock reentrancy fixed by substituting Win32 CRITICAL_SECTION for ReaderWriterLockSlim in HandleDictionary.",
+      "proposals": [
+        {
+          "title": "Update to fixed SkiaSharp version",
+          "description": "PlatformLock.cs implements a non-alertable Win32 CRITICAL_SECTION for Windows, replacing ReaderWriterLockSlim. Updating to a SkiaSharp version that includes this file resolves the issue.",
+          "category": "fix",
+          "confidence": 0.97,
+          "effort": "cost/xs"
+        },
+        {
+          "title": "Use PlatformLock.Factory for custom lock",
+          "description": "For advanced scenarios, set PlatformLock.Factory before any SkiaSharp usage to provide a custom IPlatformLock that is non-alertable on Windows STA threads.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/s"
+        }
+      ],
+      "recommendedProposal": "Update to fixed SkiaSharp version",
+      "recommendedReason": "The fix is already in the codebase. Updating to the latest SkiaSharp release is the simplest resolution."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.92,
+      "reason": "PlatformLock.cs in the codebase explicitly references issue #1383 as the motivation for replacing ReaderWriterLockSlim with a non-alertable Win32 CRITICAL_SECTION on Windows. The root cause has been resolved.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm existing labels: type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter that the fix is implemented via PlatformLock.cs using Win32 CRITICAL_SECTION",
+        "risk": "medium",
+        "confidence": 0.92,
+        "comment": "This issue has been addressed in the SkiaSharp codebase. The fix replaces `ReaderWriterLockSlim` in `HandleDictionary` with a native Win32 `CRITICAL_SECTION` on Windows (via `PlatformLock.cs`), which is non-alertable and will not allow the Windows message pump to dispatch `WM_PAINT` or COM callbacks while the lock is held.\n\nAdditionally, `PlatformLock.Factory` has been exposed as a public API so that host applications can plug in a custom `IPlatformLock` implementation if they need different synchronization behavior.\n\nPlease update to the latest SkiaSharp NuGet package to get this fix. If you continue to experience this issue on the latest version, please reopen with version details and a minimal reproduction."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed — PlatformLock.cs implements the non-alertable Win32 lock fix for this issue",
+        "risk": "medium",
+        "confidence": 0.92,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

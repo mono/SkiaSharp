@@ -1,0 +1,292 @@
+# Issue Triage Report — #1049
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-24T13:45:00Z |
+| Type | type/question (0.85 (85%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | close-as-not-a-bug (0.87 (87%)) |
+
+**Issue Summary:** Reporter finds SKPaint.MeasureText returns a larger value (63) than GDI (49.2) for Arabic text 'سلام دنیا'; root cause is that SkiaSharp does not perform text shaping, so complex scripts like Arabic are measured without ligature/contextual-form substitutions.
+
+**Analysis:** SkiaSharp's MeasureText calls into Skia's sk_font_measure_text_no_return, which measures glyph advances without applying HarfBuzz text shaping. Arabic text requires shaping to select the correct contextual glyph forms and apply ligatures; without it, default/isolated glyph forms are used, producing wider (incorrect) measurements compared to GDI which does perform shaping. This is a documented limitation, not a defect in the SkiaSharp binding.
+
+**Recommendations:** **close-as-not-a-bug** — Maintainer has already confirmed this is by-design: SkiaSharp does not do text shaping. The measurement difference from GDI is expected. A workaround (RichTextKit) was already provided in comments.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create SKPaint with B Sina typeface, TextSize=11
+2. Call paint.MeasureText("سلام دنیا")
+3. Compare result (63) with GDI measurement (49.2260742)
+
+**Environment:** SkiaSharp 1.59.3, Visual Studio 2017, .NET Core 2.0
+
+**Related issues:** #1102, #272
+
+**Code snippets:**
+
+```csharp
+SKPaint paint = new SKPaint();
+paint.Typeface = SKTypeface.FromFamilyName("B Sina", SKTypefaceStyle.Normal);
+paint.TextSize = 11;
+float size = paint.MeasureText("سلام دنیا");
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 1.59.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | SKFont.MeasureText still delegates to sk_font_measure_text_no_return which does not perform HarfBuzz text shaping; this is a known architectural limitation unchanged across versions. |
+
+## Analysis
+
+### Technical Summary
+
+SkiaSharp's MeasureText calls into Skia's sk_font_measure_text_no_return, which measures glyph advances without applying HarfBuzz text shaping. Arabic text requires shaping to select the correct contextual glyph forms and apply ligatures; without it, default/isolated glyph forms are used, producing wider (incorrect) measurements compared to GDI which does perform shaping. This is a documented limitation, not a defect in the SkiaSharp binding.
+
+### Rationale
+
+The reporter asks why SKPaint.MeasureText returns a different value than GDI for Arabic text. This is a question, not a defect: SkiaSharp's text APIs deliberately do not perform Unicode text shaping. The maintainer confirmed this and pointed to RichTextKit as the workaround. No fix is needed in SkiaSharp core; the correct answer is to use SkiaSharp.HarfBuzz or RichTextKit. Related issue #1102 reports the same limitation.
+
+### Key Signals
+
+- "SkiaSharp does not actually do any text shaping - and will always be wrong." — **comment by @mattleibow (COLLABORATOR)** (Maintainer confirmed this is a known limitation, not a bug. The measurement difference is expected when comparing to GDI which uses text shaping.)
+- "I would suggest having a look at https://github.com/toptensoftware/RichTextKit" — **comment by @mattleibow (COLLABORATOR)** (Official maintainer workaround already provided: use RichTextKit or SkiaSharp.HarfBuzz for shaped text measurement.)
+- "Are you sure that GDI isn't shaping the text?" — **comment by @Gillibald (CONTRIBUTOR)** (Confirms root cause hypothesis — GDI applies shaping, SkiaSharp does not, hence different widths.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKFont.cs` | 315-323 | direct | SKFont.MeasureText calls SkiaApi.sk_font_measure_text_no_return — there is no HarfBuzz shaping step before measuring; glyphs are looked up directly from Unicode codepoints without contextual substitution. |
+| `binding/SkiaSharp/SKPaint.cs` | 284-286 | related | SKPaint.MeasureText (used by reporter) is marked [Obsolete] and delegates to SKFont.MeasureText, confirming the same unshared code path in both old and new API. |
+
+### Workarounds
+
+- Use the RichTextKit library (https://github.com/toptensoftware/RichTextKit) which integrates with SkiaSharp and performs text shaping.
+- Use the SkiaSharp.HarfBuzz NuGet package which provides HarfBuzz-based text shaping on top of SkiaSharp.
+
+### Resolution Proposals
+
+**Hypothesis:** SKPaint.MeasureText does not apply text shaping; for Arabic/RTL scripts the measurement will always differ from shaping-aware renderers like GDI.
+
+1. **Use RichTextKit for shaped text measurement** — workaround, confidence 0.90 (90%), cost/s, validated=untested
+   - RichTextKit performs full Unicode bidirectional text layout and shaping on top of SkiaSharp, producing measurements that match GDI results for Arabic and other complex scripts.
+2. **Use SkiaSharp.HarfBuzz for shaping** — alternative, confidence 0.85 (85%), cost/m, validated=untested
+   - The SkiaSharp.HarfBuzz NuGet package provides direct access to HarfBuzz shaping. Shape the text into a glyph buffer, then measure glyph advances to get accurate measurements.
+
+**Recommended proposal:** Use RichTextKit for shaped text measurement
+
+**Why:** RichTextKit is the officially recommended solution by the maintainer; it handles the full Unicode shaping pipeline transparently.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.87 (87%) |
+| Reason | Maintainer has already confirmed this is by-design: SkiaSharp does not do text shaping. The measurement difference from GDI is expected. A workaround (RichTextKit) was already provided in comments. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply question, SkiaSharp area, and compatibility tenet labels | labels=type/question, area/SkiaSharp, tenet/compatibility |
+| link-related | low | 0.85 (85%) | Cross-reference #1102 which reports the same shaping limitation for Arabic text | linkedIssue=#1102 |
+| add-comment | high | 0.87 (87%) | Summarize the text shaping limitation and recommend RichTextKit or SkiaSharp.HarfBuzz | — |
+| close-issue | medium | 0.85 (85%) | Close as not-a-bug — behavior is by-design (no text shaping in core SkiaSharp) | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! As @Gillibald and @mattleibow noted, the difference in measurements is expected: SkiaSharp's `MeasureText` does not perform **text shaping**. Arabic (and other complex/RTL scripts) require shaping to select the correct contextual glyph forms and apply ligatures before measuring advances. GDI applies shaping automatically, which is why its measurement differs.
+
+For accurate measurement of Arabic and other complex-script text, the recommended options are:
+
+1. **[RichTextKit](https://github.com/toptensoftware/RichTextKit)** — a full text layout library built on top of SkiaSharp that handles Unicode bidirectional text and shaping transparently.
+2. **[SkiaSharp.HarfBuzz](https://www.nuget.org/packages/SkiaSharp.HarfBuzz)** — provides direct HarfBuzz shaping support within SkiaSharp.
+
+This is a known limitation of the core SkiaSharp text APIs rather than a bug, so I'll close this as not-a-bug. Please let us know if you have further questions!
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1049,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T13:45:00Z"
+  },
+  "summary": "Reporter finds SKPaint.MeasureText returns a larger value (63) than GDI (49.2) for Arabic text 'سلام دنیا'; root cause is that SkiaSharp does not perform text shaping, so complex scripts like Arabic are measured without ligature/contextual-form substitutions.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create SKPaint with B Sina typeface, TextSize=11",
+        "Call paint.MeasureText(\"سلام دنیا\")",
+        "Compare result (63) with GDI measurement (49.2260742)"
+      ],
+      "codeSnippets": [
+        "SKPaint paint = new SKPaint();\npaint.Typeface = SKTypeface.FromFamilyName(\"B Sina\", SKTypefaceStyle.Normal);\npaint.TextSize = 11;\nfloat size = paint.MeasureText(\"سلام دنیا\");"
+      ],
+      "environmentDetails": "SkiaSharp 1.59.3, Visual Studio 2017, .NET Core 2.0",
+      "relatedIssues": [
+        1102,
+        272
+      ],
+      "repoLinks": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.59.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKFont.MeasureText still delegates to sk_font_measure_text_no_return which does not perform HarfBuzz text shaping; this is a known architectural limitation unchanged across versions."
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp's MeasureText calls into Skia's sk_font_measure_text_no_return, which measures glyph advances without applying HarfBuzz text shaping. Arabic text requires shaping to select the correct contextual glyph forms and apply ligatures; without it, default/isolated glyph forms are used, producing wider (incorrect) measurements compared to GDI which does perform shaping. This is a documented limitation, not a defect in the SkiaSharp binding.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "lines": "315-323",
+        "finding": "SKFont.MeasureText calls SkiaApi.sk_font_measure_text_no_return — there is no HarfBuzz shaping step before measuring; glyphs are looked up directly from Unicode codepoints without contextual substitution.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "284-286",
+        "finding": "SKPaint.MeasureText (used by reporter) is marked [Obsolete] and delegates to SKFont.MeasureText, confirming the same unshared code path in both old and new API.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "SkiaSharp does not actually do any text shaping - and will always be wrong.",
+        "source": "comment by @mattleibow (COLLABORATOR)",
+        "interpretation": "Maintainer confirmed this is a known limitation, not a bug. The measurement difference is expected when comparing to GDI which uses text shaping."
+      },
+      {
+        "text": "I would suggest having a look at https://github.com/toptensoftware/RichTextKit",
+        "source": "comment by @mattleibow (COLLABORATOR)",
+        "interpretation": "Official maintainer workaround already provided: use RichTextKit or SkiaSharp.HarfBuzz for shaped text measurement."
+      },
+      {
+        "text": "Are you sure that GDI isn't shaping the text?",
+        "source": "comment by @Gillibald (CONTRIBUTOR)",
+        "interpretation": "Confirms root cause hypothesis — GDI applies shaping, SkiaSharp does not, hence different widths."
+      }
+    ],
+    "rationale": "The reporter asks why SKPaint.MeasureText returns a different value than GDI for Arabic text. This is a question, not a defect: SkiaSharp's text APIs deliberately do not perform Unicode text shaping. The maintainer confirmed this and pointed to RichTextKit as the workaround. No fix is needed in SkiaSharp core; the correct answer is to use SkiaSharp.HarfBuzz or RichTextKit. Related issue #1102 reports the same limitation.",
+    "workarounds": [
+      "Use the RichTextKit library (https://github.com/toptensoftware/RichTextKit) which integrates with SkiaSharp and performs text shaping.",
+      "Use the SkiaSharp.HarfBuzz NuGet package which provides HarfBuzz-based text shaping on top of SkiaSharp."
+    ],
+    "resolution": {
+      "hypothesis": "SKPaint.MeasureText does not apply text shaping; for Arabic/RTL scripts the measurement will always differ from shaping-aware renderers like GDI.",
+      "proposals": [
+        {
+          "title": "Use RichTextKit for shaped text measurement",
+          "description": "RichTextKit performs full Unicode bidirectional text layout and shaping on top of SkiaSharp, producing measurements that match GDI results for Arabic and other complex scripts.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SkiaSharp.HarfBuzz for shaping",
+          "description": "The SkiaSharp.HarfBuzz NuGet package provides direct access to HarfBuzz shaping. Shape the text into a glyph buffer, then measure glyph advances to get accurate measurements.",
+          "category": "alternative",
+          "confidence": 0.85,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use RichTextKit for shaped text measurement",
+      "recommendedReason": "RichTextKit is the officially recommended solution by the maintainer; it handles the full Unicode shaping pipeline transparently."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.87,
+      "reason": "Maintainer has already confirmed this is by-design: SkiaSharp does not do text shaping. The measurement difference from GDI is expected. A workaround (RichTextKit) was already provided in comments.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question, SkiaSharp area, and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #1102 which reports the same shaping limitation for Arabic text",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 1102
+      },
+      {
+        "type": "add-comment",
+        "description": "Summarize the text shaping limitation and recommend RichTextKit or SkiaSharp.HarfBuzz",
+        "risk": "high",
+        "confidence": 0.87,
+        "comment": "Thanks for the report! As @Gillibald and @mattleibow noted, the difference in measurements is expected: SkiaSharp's `MeasureText` does not perform **text shaping**. Arabic (and other complex/RTL scripts) require shaping to select the correct contextual glyph forms and apply ligatures before measuring advances. GDI applies shaping automatically, which is why its measurement differs.\n\nFor accurate measurement of Arabic and other complex-script text, the recommended options are:\n\n1. **[RichTextKit](https://github.com/toptensoftware/RichTextKit)** — a full text layout library built on top of SkiaSharp that handles Unicode bidirectional text and shaping transparently.\n2. **[SkiaSharp.HarfBuzz](https://www.nuget.org/packages/SkiaSharp.HarfBuzz)** — provides direct HarfBuzz shaping support within SkiaSharp.\n\nThis is a known limitation of the core SkiaSharp text APIs rather than a bug, so I'll close this as not-a-bug. Please let us know if you have further questions!"
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not-a-bug — behavior is by-design (no text shaping in core SkiaSharp)",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>
