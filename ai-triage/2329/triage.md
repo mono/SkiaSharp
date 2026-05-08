@@ -1,0 +1,267 @@
+# Issue Triage Report — #2329
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-04T06:02:21Z |
+| Type | type/bug (0.88 (88%)) |
+| Area | area/SkiaSharp.Views.Blazor (0.97 (97%)) |
+| Suggested action | ready-to-fix (0.88 (88%)) |
+
+**Issue Summary:** The GRContext field in SKGLView.razor.cs (Blazor) is private, preventing users from accessing the GPU context to create additional surfaces, while the macOS and iOS SKGLView implementations already expose it as a public property.
+
+**Analysis:** API parity gap: macOS and iOS SKGLView both expose `public GRContext GRContext => context;` but the Blazor SKGLView keeps `context` as a private nullable field. Adding a nullable public property would unblock the use-case and match existing platform behavior.
+
+**Recommendations:** **ready-to-fix** — The fix is a trivial one-line property addition to match the existing macOS and iOS pattern. Root cause is clear and the implementation path is unambiguous.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Blazor |
+| Platforms | os/WASM |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Use SKGLView in a Blazor WebAssembly application
+2. Attempt to access GRContext on the view to create an additional SKSurface
+3. Observe that no public GRContext property exists on SKGLView.razor.cs
+
+**Environment:** Blazor WebAssembly (WASM)
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/blob/1131738c9b89212ae53e6d33d994a9480d77a3c8/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor/SKGLView.razor.cs#L22 — Private GRContext field in Blazor SKGLView
+- https://github.com/mono/SkiaSharp/blob/1131738c9b89212ae53e6d33d994a9480d77a3c8/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L86 — Public GRContext property on macOS SKGLView
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | low |
+| Regression claimed | False |
+| Error type | missing-api |
+| Error message | — |
+| Repro quality | complete |
+| Target frameworks | — |
+
+## Analysis
+
+### Technical Summary
+
+API parity gap: macOS and iOS SKGLView both expose `public GRContext GRContext => context;` but the Blazor SKGLView keeps `context` as a private nullable field. Adding a nullable public property would unblock the use-case and match existing platform behavior.
+
+### Rationale
+
+Per SkiaSharp label taxonomy, a platform parity gap where an API exists on multiple platforms but is missing on one specific platform is classified as type/bug (broken API contract). macOS (line 86) and iOS (line 106) both expose GRContext publicly. The Blazor view manages the same GRContext lifecycle and the context is nullable (created lazily in OnRenderFrame). Exposing it as a public nullable property is a one-line fix with no ABI risk.
+
+### Key Signals
+
+- "the field is private" — **issue body** (Reporter confirmed that GRContext in Blazor SKGLView is not accessible from outside the component.)
+- "On macOS i'm using the GRContext of the view to generate an additional surface for rendering" — **issue body** (Concrete use-case: creating additional GPU surfaces that share the same GL context.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs` | 24 | direct | GRContext is declared `private GRContext? context;` — not exposed publicly. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs` | 86 | direct | `public GRContext GRContext => context;` is exposed as a public read-only property on macOS. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs` | 106 | direct | `public GRContext GRContext => context;` is similarly exposed on iOS — confirms cross-platform intent. |
+
+### Workarounds
+
+- No direct workaround — the GRContext cannot be accessed from outside the component. Users can create their own GRContext independently using GRContext.CreateGl(GRGlInterface.Create()), but it won't share the view's GL context.
+
+### Resolution Proposals
+
+**Hypothesis:** The omission of the public GRContext property in the Blazor view is an oversight, not by-design. The fix is to add a public nullable property exposing the context.
+
+1. **Add public GRContext property to SKGLView.razor.cs** — fix, confidence 0.92 (92%), cost/xs, validated=untested
+   - Add a public read-only property `public GRContext? GRContext => context;` to expose the internal context. It returns null before the first render frame (context is created lazily).
+
+**Recommended proposal:** Add public GRContext property to SKGLView.razor.cs
+
+**Why:** One-line addition that matches existing macOS/iOS pattern, no ABI risk, directly solves the reporter's use-case.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.88 (88%) |
+| Reason | The fix is a trivial one-line property addition to match the existing macOS and iOS pattern. Root cause is clear and the implementation path is unambiguous. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, Blazor views, WASM, and compatibility tenet labels | labels=type/bug, area/SkiaSharp.Views.Blazor, os/WASM, tenet/compatibility |
+| add-comment | medium | 0.88 (88%) | Acknowledge the parity gap and confirm the fix approach | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and the cross-platform comparison!
+
+This is an API parity gap — the macOS and iOS `SKGLView` implementations both expose `public GRContext GRContext => context;`, but the Blazor equivalent keeps the field private. This looks like an oversight.
+
+The fix would be to add:
+```csharp
+public GRContext? GRContext => context;
+```
+to `SKGLView.razor.cs`. Note it returns `null` before the first render frame since the context is created lazily in `OnRenderFrame`.
+
+In the meantime, as a workaround you can create your own separate `GRContext` with `GRContext.CreateGl(GRGlInterface.Create())`, though it won't share the same WebGL context as the view.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2329,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-04T06:02:21Z"
+  },
+  "summary": "The GRContext field in SKGLView.razor.cs (Blazor) is private, preventing users from accessing the GPU context to create additional surfaces, while the macOS and iOS SKGLView implementations already expose it as a public property.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.97
+    },
+    "platforms": [
+      "os/WASM"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "regressionClaimed": false,
+      "errorType": "missing-api",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SKGLView in a Blazor WebAssembly application",
+        "Attempt to access GRContext on the view to create an additional SKSurface",
+        "Observe that no public GRContext property exists on SKGLView.razor.cs"
+      ],
+      "environmentDetails": "Blazor WebAssembly (WASM)",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/blob/1131738c9b89212ae53e6d33d994a9480d77a3c8/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor/SKGLView.razor.cs#L22",
+          "description": "Private GRContext field in Blazor SKGLView"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/blob/1131738c9b89212ae53e6d33d994a9480d77a3c8/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L86",
+          "description": "Public GRContext property on macOS SKGLView"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "API parity gap: macOS and iOS SKGLView both expose `public GRContext GRContext => context;` but the Blazor SKGLView keeps `context` as a private nullable field. Adding a nullable public property would unblock the use-case and match existing platform behavior.",
+    "rationale": "Per SkiaSharp label taxonomy, a platform parity gap where an API exists on multiple platforms but is missing on one specific platform is classified as type/bug (broken API contract). macOS (line 86) and iOS (line 106) both expose GRContext publicly. The Blazor view manages the same GRContext lifecycle and the context is nullable (created lazily in OnRenderFrame). Exposing it as a public nullable property is a one-line fix with no ABI risk.",
+    "keySignals": [
+      {
+        "text": "the field is private",
+        "source": "issue body",
+        "interpretation": "Reporter confirmed that GRContext in Blazor SKGLView is not accessible from outside the component."
+      },
+      {
+        "text": "On macOS i'm using the GRContext of the view to generate an additional surface for rendering",
+        "source": "issue body",
+        "interpretation": "Concrete use-case: creating additional GPU surfaces that share the same GL context."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+        "lines": "24",
+        "finding": "GRContext is declared `private GRContext? context;` — not exposed publicly.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "lines": "86",
+        "finding": "`public GRContext GRContext => context;` is exposed as a public read-only property on macOS.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+        "lines": "106",
+        "finding": "`public GRContext GRContext => context;` is similarly exposed on iOS — confirms cross-platform intent.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "No direct workaround — the GRContext cannot be accessed from outside the component. Users can create their own GRContext independently using GRContext.CreateGl(GRGlInterface.Create()), but it won't share the view's GL context."
+    ],
+    "resolution": {
+      "hypothesis": "The omission of the public GRContext property in the Blazor view is an oversight, not by-design. The fix is to add a public nullable property exposing the context.",
+      "proposals": [
+        {
+          "title": "Add public GRContext property to SKGLView.razor.cs",
+          "description": "Add a public read-only property `public GRContext? GRContext => context;` to expose the internal context. It returns null before the first render frame (context is created lazily).",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add public GRContext property to SKGLView.razor.cs",
+      "recommendedReason": "One-line addition that matches existing macOS/iOS pattern, no ABI risk, directly solves the reporter's use-case."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.88,
+      "reason": "The fix is a trivial one-line property addition to match the existing macOS and iOS pattern. Root cause is clear and the implementation path is unambiguous.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor views, WASM, and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the parity gap and confirm the fix approach",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed report and the cross-platform comparison!\n\nThis is an API parity gap — the macOS and iOS `SKGLView` implementations both expose `public GRContext GRContext => context;`, but the Blazor equivalent keeps the field private. This looks like an oversight.\n\nThe fix would be to add:\n```csharp\npublic GRContext? GRContext => context;\n```\nto `SKGLView.razor.cs`. Note it returns `null` before the first render frame since the context is created lazily in `OnRenderFrame`.\n\nIn the meantime, as a workaround you can create your own separate `GRContext` with `GRContext.CreateGl(GRGlInterface.Create())`, though it won't share the same WebGL context as the view."
+      }
+    ]
+  }
+}
+```
+
+</details>

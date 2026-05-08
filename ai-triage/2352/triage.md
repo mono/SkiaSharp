@@ -1,0 +1,333 @@
+# Issue Triage Report — #2352
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-04T04:52:00Z |
+| Type | type/bug (0.80 (80%)) |
+| Area | area/SkiaSharp (0.90 (90%)) |
+| Suggested action | needs-investigation (0.75 (75%)) |
+
+**Issue Summary:** SKFontManager.MatchTypeface returns null when called with a typeface loaded from a stream in Blazor WASM, because stream-loaded fonts are not registered in the system font manager's index.
+
+**Analysis:** When a typeface is loaded from a stream via SKTypeface.FromStream, it is not registered in the default system font manager's index. SKFontManager.MatchTypeface (and the underlying sk_fontmgr_match_face_style) searches for the typeface's family name in the font manager's registered fonts — since the stream-loaded font is not indexed, it returns null. The documentation claim that it 'should never return null' is misleading; it returns null when the family is not found in the manager's index.
+
+**Recommendations:** **needs-investigation** — The reporter has a working repro and the behavior is documented inconsistently. The issue may be by-design but the docs claim otherwise. Needs repro on WASM to confirm and determine whether documentation should be updated or the API fixed.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/WASM |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Embed a .ttf font file (e.g., tahoma.ttf) as an assembly resource in a Blazor WASM project
+2. Load it via SKTypeface.FromStream(assembly.GetManifestResourceStream(...))
+3. Call SKFontManager.Default.MatchTypeface(typeface, SKFontStyle.Normal)
+4. Observe that the result is null
+
+**Environment:** SkiaSharp 2.88.3, .NET 7 Blazor WASM, VS 2022
+
+**Related issues:** #1148, #1100
+
+**Repository links:**
+- https://github.com/jjzhang12/SkiaCustomFontIssue — Minimal Blazor WASM repro project
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | SKFontManager.Default.MatchTypeface returns null for a typeface loaded via SKTypeface.FromStream |
+| Repro quality | complete |
+| Target frameworks | net7.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | MatchTypeface was removed in 3.0.0 but the underlying behavior (null for stream-loaded fonts) is still relevant in newer versions via MatchFamily. |
+
+## Analysis
+
+### Technical Summary
+
+When a typeface is loaded from a stream via SKTypeface.FromStream, it is not registered in the default system font manager's index. SKFontManager.MatchTypeface (and the underlying sk_fontmgr_match_face_style) searches for the typeface's family name in the font manager's registered fonts — since the stream-loaded font is not indexed, it returns null. The documentation claim that it 'should never return null' is misleading; it returns null when the family is not found in the manager's index.
+
+### Rationale
+
+The bug is real from the user's perspective: the API documentation says MatchTypeface should never return null, but it does for stream-loaded fonts. Root cause is that SKTypeface.FromStream creates a private typeface not registered in the system font manager's index, so family-name-based lookups (MatchTypeface, MatchFamily) cannot find it. This is consistent with Skia upstream behavior. The documentation is misleading. A workaround exists: embed and load each font style variant separately.
+
+### Key Signals
+
+- "SKFontManager.Default.MatchTypeface(typeface, SKFontStyle.Normal) returns null" — **issue body** (Stream-loaded typeface family not found in system font manager index — expected Skia behavior.)
+- "Based on documentation, it should never return null" — **issue body** (Documentation is misleading; null is returned when the family name is not in the manager's indexed font collection.)
+- "Related issue #1148 on Ubuntu: same MatchTypeface call with stream-loaded font causes a seg fault instead of null" — **related issue #1148** (Platform-specific behavior; WASM/Blazor gets null, Linux can seg fault — same root cause.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKFontManager.cs` | 74-87 | direct | MatchFamily calls sk_fontmgr_match_family_style which searches the system font index by family name. No MatchTypeface method exists in the current codebase — it was removed in 3.0.0. |
+| `binding/SkiaSharp/SKFontManager.cs` | 100-120 | direct | CreateTypeface (from stream) creates a typeface but does NOT register it into the font manager's searchable index. The returned typeface is opaque to MatchTypeface/MatchFamily lookups by family name. |
+| `changelogs/SkiaSharp/3.0.0/SkiaSharp.breaking.md` | — | related | SKFontManager.MatchTypeface(SKTypeface, SKFontStyle) was removed as a breaking change in 3.0.0. The issue is filed against 2.88.3 where the method existed. |
+
+### Workarounds
+
+- Embed all required font style variants (regular, bold, italic, bold-italic) as separate assembly resources and load each via SKTypeface.FromStream instead of using MatchTypeface to derive styles.
+- Use SKFontManager.Default.CreateTypeface(stream, index) which creates the typeface via the font manager itself (though it still may not be indexed for MatchTypeface lookups).
+
+### Next Questions
+
+- Does loading the font via SKFontManager.Default.CreateTypeface (instead of SKTypeface.FromStream) allow MatchTypeface to find it on WASM?
+- Is there any way to register a custom stream-loaded font into the font manager's index in Skia?
+
+### Resolution Proposals
+
+**Hypothesis:** Stream-loaded fonts are not indexed in the system font manager. MatchTypeface relies on family-name lookup in the index and thus returns null for unindexed fonts.
+
+1. **Embed all font style variants separately** — workaround, confidence 0.95 (95%), cost/xs, validated=untested
+   - Instead of relying on MatchTypeface to derive bold/italic, embed each variant (e.g., tahoma.ttf, tahoma-bold.ttf) as separate resources and load each with SKTypeface.FromStream.
+2. **Use SKFontManager.Default.CreateTypeface instead of SKTypeface.FromStream** — alternative, confidence 0.60 (60%), cost/xs, validated=untested
+   - Load fonts via SKFontManager.Default.CreateTypeface(stream) to create them through the font manager — this may improve discoverability for subsequent lookups on some platforms.
+
+**Recommended proposal:** Embed all font style variants separately
+
+**Why:** Most reliable approach: avoids MatchTypeface entirely and loads the exact variant needed. Works on all platforms including WASM.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.75 (75%) |
+| Reason | The reporter has a working repro and the behavior is documented inconsistently. The issue may be by-design but the docs claim otherwise. Needs repro on WASM to confirm and determine whether documentation should be updated or the API fixed. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply bug, SkiaSharp core, WASM, reliability labels | labels=type/bug, area/SkiaSharp, os/WASM, tenet/reliability |
+| add-comment | medium | 0.85 (85%) | Explain root cause and provide workaround | — |
+| link-related | low | 0.90 (90%) | Cross-reference related seg fault issue on Linux | linkedIssue=#1148 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for the detailed report!
+
+The root cause is that `SKTypeface.FromStream` creates a *private* typeface that is not registered in the system font manager's searchable index. When `SKFontManager.MatchTypeface` (or `MatchFamily`) is called, it looks up the font's family name in the system font manager's indexed collection — since your custom font was loaded from a stream and never indexed, it cannot be found and `null` is returned. This is consistent with the underlying Skia behavior, though the documentation claim that it "should never return null" is misleading.
+
+Note: `MatchTypeface` was removed in SkiaSharp 3.0.0 as a breaking change.
+
+**Workaround:** Embed each font style variant (regular, bold, italic) as a separate assembly resource and load each one individually via `SKTypeface.FromStream`. For example:
+
+```csharp
+// Load regular and bold variants separately
+var regularTypeface = SKTypeface.FromStream(
+    assembly.GetManifestResourceStream("MyApp.tahoma.ttf"));
+var boldTypeface = SKTypeface.FromStream(
+    assembly.GetManifestResourceStream("MyApp.tahoma-bold.ttf"));
+
+// Use the appropriate one directly — no MatchTypeface needed
+```
+
+This approach works reliably on all platforms including Blazor WASM.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2352,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-04T04:52:00Z"
+  },
+  "summary": "SKFontManager.MatchTypeface returns null when called with a typeface loaded from a stream in Blazor WASM, because stream-loaded fonts are not registered in the system font manager's index.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.8
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/WASM"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "SKFontManager.Default.MatchTypeface returns null for a typeface loaded via SKTypeface.FromStream",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net7.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Embed a .ttf font file (e.g., tahoma.ttf) as an assembly resource in a Blazor WASM project",
+        "Load it via SKTypeface.FromStream(assembly.GetManifestResourceStream(...))",
+        "Call SKFontManager.Default.MatchTypeface(typeface, SKFontStyle.Normal)",
+        "Observe that the result is null"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, .NET 7 Blazor WASM, VS 2022",
+      "repoLinks": [
+        {
+          "url": "https://github.com/jjzhang12/SkiaCustomFontIssue",
+          "description": "Minimal Blazor WASM repro project"
+        }
+      ],
+      "relatedIssues": [
+        1148,
+        1100
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "MatchTypeface was removed in 3.0.0 but the underlying behavior (null for stream-loaded fonts) is still relevant in newer versions via MatchFamily."
+    }
+  },
+  "analysis": {
+    "summary": "When a typeface is loaded from a stream via SKTypeface.FromStream, it is not registered in the default system font manager's index. SKFontManager.MatchTypeface (and the underlying sk_fontmgr_match_face_style) searches for the typeface's family name in the font manager's registered fonts — since the stream-loaded font is not indexed, it returns null. The documentation claim that it 'should never return null' is misleading; it returns null when the family is not found in the manager's index.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "74-87",
+        "finding": "MatchFamily calls sk_fontmgr_match_family_style which searches the system font index by family name. No MatchTypeface method exists in the current codebase — it was removed in 3.0.0.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "100-120",
+        "finding": "CreateTypeface (from stream) creates a typeface but does NOT register it into the font manager's searchable index. The returned typeface is opaque to MatchTypeface/MatchFamily lookups by family name.",
+        "relevance": "direct"
+      },
+      {
+        "file": "changelogs/SkiaSharp/3.0.0/SkiaSharp.breaking.md",
+        "finding": "SKFontManager.MatchTypeface(SKTypeface, SKFontStyle) was removed as a breaking change in 3.0.0. The issue is filed against 2.88.3 where the method existed.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "SKFontManager.Default.MatchTypeface(typeface, SKFontStyle.Normal) returns null",
+        "source": "issue body",
+        "interpretation": "Stream-loaded typeface family not found in system font manager index — expected Skia behavior."
+      },
+      {
+        "text": "Based on documentation, it should never return null",
+        "source": "issue body",
+        "interpretation": "Documentation is misleading; null is returned when the family name is not in the manager's indexed font collection."
+      },
+      {
+        "text": "Related issue #1148 on Ubuntu: same MatchTypeface call with stream-loaded font causes a seg fault instead of null",
+        "source": "related issue #1148",
+        "interpretation": "Platform-specific behavior; WASM/Blazor gets null, Linux can seg fault — same root cause."
+      }
+    ],
+    "rationale": "The bug is real from the user's perspective: the API documentation says MatchTypeface should never return null, but it does for stream-loaded fonts. Root cause is that SKTypeface.FromStream creates a private typeface not registered in the system font manager's index, so family-name-based lookups (MatchTypeface, MatchFamily) cannot find it. This is consistent with Skia upstream behavior. The documentation is misleading. A workaround exists: embed and load each font style variant separately.",
+    "workarounds": [
+      "Embed all required font style variants (regular, bold, italic, bold-italic) as separate assembly resources and load each via SKTypeface.FromStream instead of using MatchTypeface to derive styles.",
+      "Use SKFontManager.Default.CreateTypeface(stream, index) which creates the typeface via the font manager itself (though it still may not be indexed for MatchTypeface lookups)."
+    ],
+    "nextQuestions": [
+      "Does loading the font via SKFontManager.Default.CreateTypeface (instead of SKTypeface.FromStream) allow MatchTypeface to find it on WASM?",
+      "Is there any way to register a custom stream-loaded font into the font manager's index in Skia?"
+    ],
+    "resolution": {
+      "hypothesis": "Stream-loaded fonts are not indexed in the system font manager. MatchTypeface relies on family-name lookup in the index and thus returns null for unindexed fonts.",
+      "proposals": [
+        {
+          "title": "Embed all font style variants separately",
+          "description": "Instead of relying on MatchTypeface to derive bold/italic, embed each variant (e.g., tahoma.ttf, tahoma-bold.ttf) as separate resources and load each with SKTypeface.FromStream.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SKFontManager.Default.CreateTypeface instead of SKTypeface.FromStream",
+          "description": "Load fonts via SKFontManager.Default.CreateTypeface(stream) to create them through the font manager — this may improve discoverability for subsequent lookups on some platforms.",
+          "category": "alternative",
+          "confidence": 0.6,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Embed all font style variants separately",
+      "recommendedReason": "Most reliable approach: avoids MatchTypeface entirely and loads the exact variant needed. Works on all platforms including WASM."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "The reporter has a working repro and the behavior is documented inconsistently. The issue may be by-design but the docs claim otherwise. Needs repro on WASM to confirm and determine whether documentation should be updated or the API fixed.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp core, WASM, reliability labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/WASM",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and provide workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thank you for the detailed report!\n\nThe root cause is that `SKTypeface.FromStream` creates a *private* typeface that is not registered in the system font manager's searchable index. When `SKFontManager.MatchTypeface` (or `MatchFamily`) is called, it looks up the font's family name in the system font manager's indexed collection — since your custom font was loaded from a stream and never indexed, it cannot be found and `null` is returned. This is consistent with the underlying Skia behavior, though the documentation claim that it \"should never return null\" is misleading.\n\nNote: `MatchTypeface` was removed in SkiaSharp 3.0.0 as a breaking change.\n\n**Workaround:** Embed each font style variant (regular, bold, italic) as a separate assembly resource and load each one individually via `SKTypeface.FromStream`. For example:\n\n```csharp\n// Load regular and bold variants separately\nvar regularTypeface = SKTypeface.FromStream(\n    assembly.GetManifestResourceStream(\"MyApp.tahoma.ttf\"));\nvar boldTypeface = SKTypeface.FromStream(\n    assembly.GetManifestResourceStream(\"MyApp.tahoma-bold.ttf\"));\n\n// Use the appropriate one directly — no MatchTypeface needed\n```\n\nThis approach works reliably on all platforms including Blazor WASM."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related seg fault issue on Linux",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 1148
+      }
+    ]
+  }
+}
+```
+
+</details>

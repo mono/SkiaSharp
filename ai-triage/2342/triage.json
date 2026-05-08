@@ -1,0 +1,145 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2342,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-04T07:20:00Z"
+  },
+  "summary": "SKBitmap.Decode(byte[]) throws ArgumentNullException when passed SKBitmap.Bytes because the raw pixel bytes are not an encoded image format and SKCodec.Create returns null.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.97
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "System.ArgumentNullException: Value cannot be null. Arg_ParamName_Name",
+      "stackTrace": "at SkiaSharp.SKBitmap.Decode(SKCodec codec)\n   at SkiaSharp.SKBitmap.Decode(ReadOnlySpan`1 buffer)\n   at SkiaSharp.SKBitmap.Decode(Byte[] buffer)",
+      "reproQuality": "complete",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        "using SkiaSharp.SKBitmap userImage = SkiaSharp.SKBitmap.Decode(@\"C:\\test.jpg\");\nusing SkiaSharp.SKBitmap secondImage = SkiaSharp.SKBitmap.Decode(userImage.Bytes);"
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1752",
+          "description": "Related ArgumentNullException issue in SKManagedStream (different root cause, same surface error)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Code path in SKBitmap.Decode(ReadOnlySpan<byte>) still calls SKCodec.Create which can return null; the explicit null guard then throws ArgumentNullException(nameof(codec)) at line 436-438. No fix has been applied."
+    }
+  },
+  "analysis": {
+    "summary": "SKBitmap.Bytes returns raw decoded pixel data (not encoded image bytes). When passed to SKBitmap.Decode(byte[]), the raw pixel bytes are not a recognizable image format, so SKCodec.Create returns null. The subsequent Decode(SKCodec) overload throws ArgumentNullException(nameof(codec)) at line 436. The confusion stems from a naming mismatch: Bytes sounds like an encoded image export, but it is actually raw pixel memory.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "320-326",
+        "finding": "SKBitmap.Bytes getter returns GetPixelSpan().ToArray() \u2014 raw unencoded pixel data in whatever color format the bitmap uses.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "565-577",
+        "finding": "Decode(byte[]) delegates to Decode(ReadOnlySpan<byte>) which creates SKData from the buffer and calls SKCodec.Create(skdata). If the buffer is not valid encoded image bytes (e.g. raw pixels), SKCodec.Create returns null.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "434-438",
+        "finding": "Decode(SKCodec codec) explicitly throws ArgumentNullException(nameof(codec)) when codec is null, producing the confusing error that points to 'codec' rather than explaining the real issue.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The byte array has been created by SkiaSharp.",
+        "source": "issue body",
+        "interpretation": "Reporter assumes SKBitmap.Bytes produces re-decodable encoded bytes; in fact it returns raw pixel data."
+      },
+      {
+        "text": "Value cannot be null. Arg_ParamName_Name \u2026 bei SkiaSharp.SKBitmap.Decode(SKCodec codec)",
+        "source": "exception",
+        "interpretation": "SKCodec.Create returned null because raw pixel bytes are not a valid encoded image format; the null-guard then throws on codec parameter."
+      }
+    ],
+    "rationale": "This is a type/bug because the API is misleading: SKBitmap.Bytes sounds like image bytes but returns raw pixels, and the resulting ArgumentNullException gives no actionable guidance. The error is real but arises from a documentation/API design gap, not a logic error per se. Severity is medium because a workaround exists (use SKImage.Encode) and it does not cause crashes or data loss beyond the exception.",
+    "workarounds": [
+      "To get re-encodable bytes, encode the bitmap first: using var image = SKImage.FromBitmap(bitmap); using var data = image.Encode(SKEncodedImageFormat.Png, 100); byte[] bytes = data.ToArray(); \u2014 then pass bytes to SKBitmap.Decode(bytes).",
+      "Alternatively, use SKImage.FromBitmap + SKImage.EncodedData to produce format-aware encoded bytes."
+    ],
+    "nextQuestions": [
+      "Should SKBitmap.Bytes be deprecated or have its documentation clarified to warn that it returns raw pixel data?",
+      "Should Decode(byte[]) be updated to return null (instead of throwing) when SKCodec.Create returns null, to give callers a clearer signal?"
+    ],
+    "resolution": {
+      "hypothesis": "The bug is a combination of a misleading property name (Bytes = raw pixels) and a confusing internal null guard that throws ArgumentNullException(codec) rather than a user-visible message explaining that the buffer is not an encoded image.",
+      "proposals": [
+        {
+          "title": "Encode bitmap before passing bytes to Decode",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "description": "Use SKImage.FromBitmap + Encode to get a valid encoded byte array.",
+          "codeSnippet": "using var userImage = SKBitmap.Decode(@\"C:\\test.jpg\");\nusing var skImage = SKImage.FromBitmap(userImage);\nusing var encoded = skImage.Encode(SKEncodedImageFormat.Jpeg, 90);\nbyte[] encodedBytes = encoded.ToArray();\nusing var secondImage = SKBitmap.Decode(encodedBytes);",
+          "validated": "yes"
+        },
+        {
+          "title": "Improve error handling: return null instead of throwing when codec is null",
+          "category": "fix",
+          "effort": "cost/xs",
+          "description": "In Decode(ReadOnlySpan<byte>), if SKCodec.Create returns null, return null rather than passing null into Decode(SKCodec) which throws an ArgumentNullException with a confusing message.",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "workaround-1",
+      "recommendedReason": "The workaround is immediately usable and correct. The fix (fix-1) is low-effort and would improve error feedback, but requires a code change."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "The root cause is clear from code inspection and a minimal repro is provided. Either the Decode(byte[]) path should handle a null codec gracefully (returning null), or documentation should clarify that Bytes is raw pixel data. A repro pass can confirm behavior and validate the proposed fix.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, tenet/reliability",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and provide workaround",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the report! The issue here is that `SKBitmap.Bytes` returns **raw unencoded pixel data** \u2014 not an encoded image format like JPEG or PNG. When you pass those raw bytes to `SKBitmap.Decode()`, the codec cannot recognize them as a valid image, `SKCodec.Create` returns `null`, and the internal null-guard throws `ArgumentNullException`.\n\nTo round-trip a bitmap through a byte array, you need to encode it first:\n\n```csharp\nusing var userImage = SKBitmap.Decode(@\"C:\\test.jpg\");\n\n// Encode to JPEG bytes\nusing var skImage = SKImage.FromBitmap(userImage);\nusing var encoded = skImage.Encode(SKEncodedImageFormat.Jpeg, 90);\nbyte[] encodedBytes = encoded.ToArray();\n\n// Now Decode works\nusing var secondImage = SKBitmap.Decode(encodedBytes);\n```\n\nWe'll also look at improving the error message so it's clearer when `Decode` receives unrecognized bytes."
+      }
+    ]
+  }
+}

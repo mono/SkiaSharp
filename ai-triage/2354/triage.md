@@ -1,0 +1,301 @@
+# Issue Triage Report — #2354
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-04T09:59:52Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp (0.97 (97%)) |
+| Suggested action | needs-investigation (0.88 (88%)) |
+
+**Issue Summary:** SKBitmap.GetPixel ignores the bitmap's color space and returns incorrect colors for non-sRGB bitmaps, while SetPixel correctly converts from sRGB.
+
+**Analysis:** SKBitmap.GetPixel delegates to the native sk_bitmap_get_pixel_color API which only accounts for color type and alpha type, not color space. SetPixel uses SKCanvas.DrawPoint which correctly transforms from sRGB through the bitmap's color space. This asymmetry means a round-trip SetPixel/GetPixel will return the wrong color for non-sRGB bitmaps (e.g. linear sRGB, AdobeRgb). A fix could either convert on the C# side using SKColorSpaceTransferFn, or introduce a new GetPixelSrgb overload.
+
+**Recommendations:** **needs-investigation** — The bug is reproducible and well-documented with a complete test case. Code investigation confirms the asymmetry exists in current source. The fix path requires investigating how to perform the color space conversion correctly (SKColorSpaceTransferFn + SKColorSpaceXyz).
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/Windows-Classic, os/Linux, os/Android |
+| Backends | backend/Raster |
+| Tenets | tenet/compatibility, tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Code snippets:**
+
+```csharp
+bitmap.SetPixel(0, 0, testColor); Assert.AreEqual(testColor, bitmap.GetPixel(0, 0)); // fails for non-sRGB color spaces
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | — |
+| Repro quality | complete |
+| Target frameworks | Windows Classic, Linux, Android |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | SKBitmap.GetPixel calls sk_bitmap_get_pixel_color directly with no color space conversion; SetPixel uses SKCanvas.DrawPoint which does apply color space transforms. The asymmetry still exists in current code. |
+
+## Analysis
+
+### Technical Summary
+
+SKBitmap.GetPixel delegates to the native sk_bitmap_get_pixel_color API which only accounts for color type and alpha type, not color space. SetPixel uses SKCanvas.DrawPoint which correctly transforms from sRGB through the bitmap's color space. This asymmetry means a round-trip SetPixel/GetPixel will return the wrong color for non-sRGB bitmaps (e.g. linear sRGB, AdobeRgb). A fix could either convert on the C# side using SKColorSpaceTransferFn, or introduce a new GetPixelSrgb overload.
+
+### Rationale
+
+Classified as type/bug because there is a clear asymmetry in behavior: SetPixel converts from sRGB through the bitmap color space, but GetPixel does not convert back to sRGB. This is an inconsistency in the API contract. Severity is medium because a workaround exists. Repro quality is complete as the reporter provides a minimal, runnable test case with expected vs. actual behavior. The bug likely affects multiple platforms but is not platform-specific — it's an API-layer issue in the C# binding.
+
+### Key Signals
+
+- "GetPixel ignores the SKImageInfo.ColorSpace property (respects only SKColorType and SKAlphaType) and may return a completely invalid color" — **issue body** (The native sk_bitmap_get_pixel_color does not perform color space to sRGB conversion)
+- "SetPixel uses SKCanvas.DrawPoint in the background" — **issue body** (Confirmed in code: SetPixel creates an SKCanvas which routes through Skia color transforms)
+- "A very inefficient workaround is to create a 1x1 pixel sRGB Bgra8888/Unpremul bitmap, wrap it into a new SKCanvas, copy that single pixel area into the temp bitmap, and then read the result by GetPixel on the temp bitmap" — **issue body** (Reporter has found a working workaround; it confirms the bug and the correct fix approach)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKBitmap.cs` | 126-141 | direct | GetPixel calls SkiaApi.sk_bitmap_get_pixel_color without any color space conversion; SetPixel creates an SKCanvas and calls DrawPoint which routes through Skia's color pipeline |
+| `binding/SkiaSharp/SKPixmap.cs` | 174-177 | related | SKPixmap.GetPixelColor also delegates directly to sk_pixmap_get_pixel_color with no color space awareness; SKPixmap.GetPixelColorF returns SKColorF but similarly does no explicit color space conversion to sRGB |
+
+### Workarounds
+
+- Create a 1x1 sRGB Bgra8888/Unpremul bitmap, draw the source pixel to it using SKCanvas, then call GetPixel on the temporary bitmap to get the color space-converted result.
+
+### Resolution Proposals
+
+**Hypothesis:** The fix requires color space conversion to sRGB when reading a pixel. This can be done on the C# side by using SKColorSpaceTransferFn and SKColorSpaceXyz coefficients from the bitmap's color space, or by introducing a new overload that explicitly converts to sRGB.
+
+1. **Add GetPixelSrgb overload that converts the pixel to sRGB** — fix, cost/m, validated=untested
+   - Add a new method SKBitmap.GetPixelSrgb(int x, int y) that reads the raw pixel, then converts to sRGB using the bitmap's color space transfer function. This preserves backward compatibility.
+2. **Document the workaround in a comment** — workaround, cost/xs, validated=untested
+   - Use the reporter's workaround: create a 1x1 sRGB bitmap, use SKCanvas to copy the pixel, then call GetPixel.
+
+**Recommended proposal:** p1
+
+**Why:** Adding a new GetPixelSrgb overload is ABI-safe and directly addresses the bug. It matches the reporter's suggested API design (GetPixel(int x, int y, bool forceSrgb) or GetPixelSrgb) and fixes the inconsistency without breaking existing callers.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.88 (88%) |
+| Reason | The bug is reproducible and well-documented with a complete test case. Code investigation confirms the asymmetry exists in current source. The fix path requires investigating how to perform the color space conversion correctly (SKColorSpaceTransferFn + SKColorSpaceXyz). |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply classification labels | labels=type/bug, area/SkiaSharp, os/Windows-Classic, os/Linux, os/Android, backend/Raster, tenet/compatibility, tenet/reliability |
+| add-comment | medium | 0.88 (88%) | Acknowledge the bug, confirm the code investigation, and share the workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thank you for the detailed report and test case!
+
+This is a confirmed bug. Looking at the source code:
+
+- `SetPixel` creates an `SKCanvas` and calls `DrawPoint`, which routes through Skia's full color pipeline (including color space transforms from sRGB to the bitmap's color space).
+- `GetPixel` calls `sk_bitmap_get_pixel_color` directly, which only handles color type and alpha type unpremultiplication — it does **not** convert from the bitmap's color space back to sRGB.
+
+The asymmetry is real: for non-sRGB bitmaps (e.g. linear sRGB, AdobeRgb), a `SetPixel`/`GetPixel` round-trip will not return the original color.
+
+**Workaround (from reporter):**
+
+```csharp
+// For a bitmap with non-sRGB color space, use a temporary sRGB bitmap to read the color
+public static SKColor GetPixelAsSrgb(SKBitmap source, int x, int y)
+{
+    using var temp = new SKBitmap(new SKImageInfo(1, 1, SKColorType.Bgra8888, SKAlphaType.Unpremul, SKColorSpace.CreateSrgb()));
+    using var canvas = new SKCanvas(temp);
+    canvas.DrawBitmap(source, new SKRect(x, y, x + 1, y + 1), new SKRect(0, 0, 1, 1));
+    return temp.GetPixel(0, 0);
+}
+```
+
+We're tracking this as a bug. A future fix would add a color-space-aware overload or update `GetPixel` to perform the conversion.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2354,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-04T09:59:52Z"
+  },
+  "summary": "SKBitmap.GetPixel ignores the bitmap's color space and returns incorrect colors for non-sRGB bitmaps, while SetPixel correctly converts from sRGB.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.97
+    },
+    "platforms": [
+      "os/Windows-Classic",
+      "os/Linux",
+      "os/Android"
+    ],
+    "backends": [
+      "backend/Raster"
+    ],
+    "tenets": [
+      "tenet/compatibility",
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "Windows Classic",
+        "Linux",
+        "Android"
+      ]
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        "bitmap.SetPixel(0, 0, testColor); Assert.AreEqual(testColor, bitmap.GetPixel(0, 0)); // fails for non-sRGB color spaces"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKBitmap.GetPixel calls sk_bitmap_get_pixel_color directly with no color space conversion; SetPixel uses SKCanvas.DrawPoint which does apply color space transforms. The asymmetry still exists in current code."
+    }
+  },
+  "analysis": {
+    "summary": "SKBitmap.GetPixel delegates to the native sk_bitmap_get_pixel_color API which only accounts for color type and alpha type, not color space. SetPixel uses SKCanvas.DrawPoint which correctly transforms from sRGB through the bitmap's color space. This asymmetry means a round-trip SetPixel/GetPixel will return the wrong color for non-sRGB bitmaps (e.g. linear sRGB, AdobeRgb). A fix could either convert on the C# side using SKColorSpaceTransferFn, or introduce a new GetPixelSrgb overload.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "GetPixel calls SkiaApi.sk_bitmap_get_pixel_color without any color space conversion; SetPixel creates an SKCanvas and calls DrawPoint which routes through Skia's color pipeline",
+        "relevance": "direct",
+        "lines": "126-141"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPixmap.cs",
+        "finding": "SKPixmap.GetPixelColor also delegates directly to sk_pixmap_get_pixel_color with no color space awareness; SKPixmap.GetPixelColorF returns SKColorF but similarly does no explicit color space conversion to sRGB",
+        "relevance": "related",
+        "lines": "174-177"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "GetPixel ignores the SKImageInfo.ColorSpace property (respects only SKColorType and SKAlphaType) and may return a completely invalid color",
+        "source": "issue body",
+        "interpretation": "The native sk_bitmap_get_pixel_color does not perform color space to sRGB conversion"
+      },
+      {
+        "text": "SetPixel uses SKCanvas.DrawPoint in the background",
+        "source": "issue body",
+        "interpretation": "Confirmed in code: SetPixel creates an SKCanvas which routes through Skia color transforms"
+      },
+      {
+        "text": "A very inefficient workaround is to create a 1x1 pixel sRGB Bgra8888/Unpremul bitmap, wrap it into a new SKCanvas, copy that single pixel area into the temp bitmap, and then read the result by GetPixel on the temp bitmap",
+        "source": "issue body",
+        "interpretation": "Reporter has found a working workaround; it confirms the bug and the correct fix approach"
+      }
+    ],
+    "rationale": "Classified as type/bug because there is a clear asymmetry in behavior: SetPixel converts from sRGB through the bitmap color space, but GetPixel does not convert back to sRGB. This is an inconsistency in the API contract. Severity is medium because a workaround exists. Repro quality is complete as the reporter provides a minimal, runnable test case with expected vs. actual behavior. The bug likely affects multiple platforms but is not platform-specific — it's an API-layer issue in the C# binding.",
+    "workarounds": [
+      "Create a 1x1 sRGB Bgra8888/Unpremul bitmap, draw the source pixel to it using SKCanvas, then call GetPixel on the temporary bitmap to get the color space-converted result."
+    ],
+    "resolution": {
+      "hypothesis": "The fix requires color space conversion to sRGB when reading a pixel. This can be done on the C# side by using SKColorSpaceTransferFn and SKColorSpaceXyz coefficients from the bitmap's color space, or by introducing a new overload that explicitly converts to sRGB.",
+      "proposals": [
+        {
+          "title": "Add GetPixelSrgb overload that converts the pixel to sRGB",
+          "description": "Add a new method SKBitmap.GetPixelSrgb(int x, int y) that reads the raw pixel, then converts to sRGB using the bitmap's color space transfer function. This preserves backward compatibility.",
+          "category": "fix",
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Document the workaround in a comment",
+          "description": "Use the reporter's workaround: create a 1x1 sRGB bitmap, use SKCanvas to copy the pixel, then call GetPixel.",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "p1",
+      "recommendedReason": "Adding a new GetPixelSrgb overload is ABI-safe and directly addresses the bug. It matches the reporter's suggested API design (GetPixel(int x, int y, bool forceSrgb) or GetPixelSrgb) and fixes the inconsistency without breaking existing callers."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "The bug is reproducible and well-documented with a complete test case. Code investigation confirms the asymmetry exists in current source. The fix path requires investigating how to perform the color space conversion correctly (SKColorSpaceTransferFn + SKColorSpaceXyz).",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply classification labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "os/Linux",
+          "os/Android",
+          "backend/Raster",
+          "tenet/compatibility",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, confirm the code investigation, and share the workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thank you for the detailed report and test case!\n\nThis is a confirmed bug. Looking at the source code:\n\n- `SetPixel` creates an `SKCanvas` and calls `DrawPoint`, which routes through Skia's full color pipeline (including color space transforms from sRGB to the bitmap's color space).\n- `GetPixel` calls `sk_bitmap_get_pixel_color` directly, which only handles color type and alpha type unpremultiplication — it does **not** convert from the bitmap's color space back to sRGB.\n\nThe asymmetry is real: for non-sRGB bitmaps (e.g. linear sRGB, AdobeRgb), a `SetPixel`/`GetPixel` round-trip will not return the original color.\n\n**Workaround (from reporter):**\n\n```csharp\n// For a bitmap with non-sRGB color space, use a temporary sRGB bitmap to read the color\npublic static SKColor GetPixelAsSrgb(SKBitmap source, int x, int y)\n{\n    using var temp = new SKBitmap(new SKImageInfo(1, 1, SKColorType.Bgra8888, SKAlphaType.Unpremul, SKColorSpace.CreateSrgb()));\n    using var canvas = new SKCanvas(temp);\n    canvas.DrawBitmap(source, new SKRect(x, y, x + 1, y + 1), new SKRect(0, 0, 1, 1));\n    return temp.GetPixel(0, 0);\n}\n```\n\nWe're tracking this as a bug. A future fix would add a color-space-aware overload or update `GetPixel` to perform the conversion."
+      }
+    ]
+  }
+}
+```
+
+</details>
