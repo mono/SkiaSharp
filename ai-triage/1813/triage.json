@@ -1,0 +1,104 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1813,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-06T22:46:00Z"
+  },
+  "summary": "Feature request asking for Alpine Linux arm64 (linux-musl-arm64) native library support, which has since been implemented in the SkiaSharp.NativeAssets.Linux.NoDependencies package.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.95 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.90 },
+    "platforms": ["os/Linux"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Alpine Linux arm64 — musl libc",
+      "relatedIssues": [3097, 453],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/3097", "description": "Related 2024 feature request: Prebuilt ARM libraries for Alpine Linux (still open)" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/453", "description": "Earlier closed request: More Pre-Built Linux Libraries" }
+      ]
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.90,
+      "reason": "The NativeAssets.Linux.NoDependencies package now includes linux-musl-arm64 runtime, and CI pipelines build native_linux_arm64_alpine targets."
+    }
+  },
+  "analysis": {
+    "summary": "Alpine Linux arm64 native support has been implemented. The SkiaSharp.NativeAssets.Linux.NoDependencies package includes the linux-musl-arm64 runtime identifier, and the CI build infrastructure builds both alpine and alpine-nodeps arm64 variants.",
+    "rationale": "This 2021 feature request asked for Alpine (musl libc) arm64 native binaries. Code investigation confirms linux-musl-arm64 is now included in SkiaSharp.NativeAssets.Linux.NoDependencies, and CI pipeline definitions confirm native_linux_arm64_alpine builds are produced. The feature is implemented and the issue can be closed as fixed.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Linux.NoDependencies/SkiaSharp.NativeAssets.Linux.NoDependencies.csproj",
+        "finding": "PackageFile entry maps output/native/alpinenodeps/arm64/libSkiaSharp*.so to runtimes/linux-musl-arm64/native — arm64 Alpine support is included in the package.",
+        "relevance": "direct"
+      },
+      {
+        "file": "scripts/azure-templates-stages-native-merge.yml",
+        "finding": "CI artifact merge stages list native_linux_arm64_alpine_linux and native_linux_arm64_alpine_nodeps_linux — both are built in CI pipelines.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Linux.NoDependencies/buildTransitive/net4/SkiaSharp.targets",
+        "finding": "Build targets reference linux-musl-arm64 runtime path for native library deployment, confirming the package supports arm64 Alpine at build-time.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      { "text": "Currently not available in alpine-arm64", "source": "issue body", "interpretation": "At the time of filing (2021), no alpine arm64 support existed. This has since changed." },
+      { "text": "PackageFile Include=...alpinenodeps\\arm64...", "source": "SkiaSharp.NativeAssets.Linux.NoDependencies.csproj", "interpretation": "Explicit arm64 Alpine (no-deps) build output included in the package — feature implemented." }
+    ],
+    "workarounds": [
+      "Use SkiaSharp.NativeAssets.Linux.NoDependencies NuGet package which includes linux-musl-arm64 runtime support for Alpine Linux arm64."
+    ],
+    "resolution": {
+      "hypothesis": "The requested alpine-arm64 support has been implemented and is distributed via SkiaSharp.NativeAssets.Linux.NoDependencies.",
+      "proposals": [
+        {
+          "title": "Close as fixed",
+          "description": "Close the issue as the requested feature (Alpine arm64 native libraries) is now shipped in SkiaSharp.NativeAssets.Linux.NoDependencies.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Close as fixed",
+      "recommendedReason": "Code evidence confirms linux-musl-arm64 is packaged and CI builds the alpine arm64 native binaries."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.88,
+      "reason": "The requested Alpine arm64 native library support has been implemented in SkiaSharp.NativeAssets.Linux.NoDependencies since the issue was filed in 2021.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request, native, linux, and compatibility labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/feature-request", "area/libSkiaSharp.native", "os/Linux", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform reporter that Alpine arm64 support has been implemented",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Good news — Alpine Linux arm64 (`linux-musl-arm64`) support has been implemented since this issue was filed. You can use the [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies) NuGet package which includes prebuilt `linux-musl-arm64` native libraries for Alpine arm64 environments.\n\nIf you're still experiencing issues with this, please open a new issue with your specific environment details and SkiaSharp version."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as completed since the feature has been implemented",
+        "risk": "medium",
+        "confidence": 0.88,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

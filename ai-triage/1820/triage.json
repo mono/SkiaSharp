@@ -1,0 +1,107 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1820,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-06T21:59:56Z"
+  },
+  "summary": "User asks how to set a rectangular subset of pixels in an SKBitmap, unable to find an API for it.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.97 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/416", "description": "Related issue: how to set all bitmap pixels from a byte array" }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The reporter wants to write pixel data into a rectangular region of an SKBitmap. This is a 'how-to' question, not a bug. The functionality is achievable via SKCanvas drawn on the bitmap or by writing raw pixel memory via GetPixels() with row-stride arithmetic.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "131-141",
+        "finding": "SKBitmap.SetPixel(int x, int y, SKColor color) sets one pixel at a time by creating an SKCanvas internally and calling DrawPoint. Usable for small subsets.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "21",
+        "finding": "new SKCanvas(SKBitmap bitmap) constructor exists. Users can create a canvas over the bitmap and call DrawBitmap/DrawImage with source and destination rects to paint a pixel region.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "297-313",
+        "finding": "GetPixels() returns IntPtr to the raw pixel buffer; SetPixels(IntPtr) replaces the whole buffer. Raw memory manipulation with row-stride arithmetic can target any sub-region.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "493-502",
+        "finding": "SKCanvas.DrawImage(SKImage image, SKRect source, SKRect dest) and the equivalent DrawBitmap overloads allow copying a source rectangle from one image/bitmap to a destination rectangle, which is exactly what the reporter needs.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "what I need to do is set a subset (rectangle) of the pixels in an SKBitmap",
+        "source": "issue body",
+        "interpretation": "User wants to overwrite a rectangular region of an existing bitmap with new pixel data."
+      },
+      {
+        "text": "I couldn't find an API to do this",
+        "source": "issue body",
+        "interpretation": "Discovery problem — the API exists but is not obvious."
+      }
+    ],
+    "rationale": "This is a how-to question. The answer exists in the API: an SKCanvas can be constructed from an SKBitmap and DrawBitmap/DrawImage with source+destination rects will copy pixel regions. The issue should be answered and closed as not-a-bug.",
+    "resolution": {
+      "proposals": [
+        {
+          "title": "Use SKCanvas over SKBitmap with DrawBitmap",
+          "description": "Create an SKCanvas wrapping the target bitmap, then call DrawBitmap with a source rect and destination rect to write pixels into the desired subset.",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "validated": "yes",
+          "codeSnippet": "// target is the SKBitmap you want to write into\n// source is the SKBitmap containing the pixels to write\n// destRect is the rectangle in target where pixels should be placed\nusing var canvas = new SKCanvas(target);\ncanvas.DrawBitmap(source, sourceRect, destRect);"
+        }
+      ],
+      "recommendedProposal": "Use SKCanvas over SKBitmap with DrawBitmap",
+      "recommendedReason": "SKCanvas wrapping an SKBitmap is a well-established SkiaSharp pattern. DrawBitmap with source+dest rects directly solves the stated problem."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.9,
+      "reason": "This is a usage question. The functionality exists via SKCanvas + DrawBitmap with source/dest rects. Answering with a code snippet and closing is appropriate.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/question and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/question", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain how to write pixels to a subset rectangle using SKCanvas",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the question!\n\nYou can write pixels into a rectangular region of an `SKBitmap` by creating an `SKCanvas` over it and using `DrawBitmap` (or `DrawImage`) with source and destination rectangles:\n\n```csharp\n// 'target' is the SKBitmap you want to partially overwrite\n// 'source' is the SKBitmap (or SKImage) containing the new pixels\n// 'destRect' is the region in 'target' where you want the pixels placed\nusing var canvas = new SKCanvas(target);\ncanvas.DrawBitmap(source, sourceRect, destRect);\n```\n\nFor a single pixel you can also use `SKBitmap.SetPixel(x, y, color)`, but the canvas approach is more efficient for rectangular regions.\n\nIf you need to write raw bytes directly, `GetPixels()` returns an `IntPtr` to the pixel buffer and you can use row-stride arithmetic to target any sub-region with `Marshal.Copy` or `unsafe` spans."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not-a-bug — question answered",
+        "risk": "medium",
+        "confidence": 0.9,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
