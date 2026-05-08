@@ -1,0 +1,201 @@
+# Issue Triage Report — #2058
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-03T13:01:17Z |
+| Type | type/enhancement (0.98 (98%)) |
+| Area | area/SkiaSharp.Views (0.97 (97%)) |
+| Suggested action | keep-open (0.92 (92%)) |
+
+**Issue Summary:** Enhancement request to enable Nullable Reference Types (NRT) annotations in the SkiaSharp.Views package, part of a broader epic to add nullable annotations across all SkiaSharp packages.
+
+**Analysis:** The SkiaSharp.Views source project (source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj) does not have <Nullable>enable</Nullable> in its project file, while sibling packages like SkiaSharp (binding/SkiaSharp/SkiaSharp.csproj) and SkiaSharp.Views.Blazor already have it enabled. The request is to annotate all public APIs in SkiaSharp.Views with nullable reference type annotations to improve type safety for consumers.
+
+**Recommendations:** **keep-open** — This is a tracked enhancement in an active epic. No additional information is needed; it can be implemented when the team addresses the nullable annotations epic.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp.Views |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2055 — Parent epic tracking all nullable annotation packages
+- https://github.com/mono/SkiaSharp/issues/2057 — Sibling: nullable for SkiaSharp package
+- https://github.com/mono/SkiaSharp/issues/2064 — Sibling: nullable for SkiaSharp.Views.Forms
+
+## Analysis
+
+### Technical Summary
+
+The SkiaSharp.Views source project (source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj) does not have <Nullable>enable</Nullable> in its project file, while sibling packages like SkiaSharp (binding/SkiaSharp/SkiaSharp.csproj) and SkiaSharp.Views.Blazor already have it enabled. The request is to annotate all public APIs in SkiaSharp.Views with nullable reference type annotations to improve type safety for consumers.
+
+### Rationale
+
+This is clearly a type/enhancement filed by a maintainer (mattleibow) as a tracked task within the nullable annotations epic (#2055). The SkiaSharp.Views project lacks <Nullable>enable</Nullable> while sibling packages already have it. The area is area/SkiaSharp.Views since it targets the Views cross-platform layer. The tenet is tenet/compatibility because enabling NRT improves type-safety contracts for consumers. No platforms or backends are involved. The suggested action is keep-open as this is a valid pending enhancement with no blocking information needed.
+
+### Key Signals
+
+- "Enable Nullable Reference Types (SkiaSharp.Views)" — **issue title** (This is an explicit task/enhancement item to add NRT support to the SkiaSharp.Views assembly.)
+- "This is an epic to track adding nullable annotations to SkiaSharp. Packages: [#2057, #2058, ...]" — **issue #2055 (parent epic)** (Issue #2058 is one checklist item in the nullable annotations epic, specifically for the SkiaSharp.Views package.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj` | — | direct | No <Nullable>enable</Nullable> property present in the project file. Nullable reference types are not enabled for this project. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj` | — | context | <Nullable>enable</Nullable> is already set, indicating the pattern is in use in related Views projects. |
+| `binding/SkiaSharp/SkiaSharp.csproj` | — | context | <Nullable>enable</Nullable> is already set in the main SkiaSharp binding, showing the project-wide enablement pattern. |
+
+### Resolution Proposals
+
+1. **Enable Nullable Reference Types in SkiaSharp.Views project** — fix, cost/m, validated=untested
+   - Add <Nullable>enable</Nullable> to source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj and annotate all public APIs with appropriate nullable annotations (?, !), then fix any resulting warnings.
+
+**Recommended proposal:** fix-1
+
+**Why:** The straightforward path is enabling NRT in the project file and then annotating the public API surface, following the same pattern already used in SkiaSharp.csproj and SkiaSharp.Views.Blazor.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.92 (92%) |
+| Reason | This is a tracked enhancement in an active epic. No additional information is needed; it can be implemented when the team addresses the nullable annotations epic. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply type/enhancement, area/SkiaSharp.Views, tenet/compatibility labels | labels=type/enhancement, area/SkiaSharp.Views, tenet/compatibility |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2058,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T13:01:17Z"
+  },
+  "summary": "Enhancement request to enable Nullable Reference Types (NRT) annotations in the SkiaSharp.Views package, part of a broader epic to add nullable annotations across all SkiaSharp packages.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.97
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2055",
+          "description": "Parent epic tracking all nullable annotation packages"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2057",
+          "description": "Sibling: nullable for SkiaSharp package"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2064",
+          "description": "Sibling: nullable for SkiaSharp.Views.Forms"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp.Views source project (source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj) does not have <Nullable>enable</Nullable> in its project file, while sibling packages like SkiaSharp (binding/SkiaSharp/SkiaSharp.csproj) and SkiaSharp.Views.Blazor already have it enabled. The request is to annotate all public APIs in SkiaSharp.Views with nullable reference type annotations to improve type safety for consumers.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj",
+        "finding": "No <Nullable>enable</Nullable> property present in the project file. Nullable reference types are not enabled for this project.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "finding": "<Nullable>enable</Nullable> is already set, indicating the pattern is in use in related Views projects.",
+        "relevance": "context"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "finding": "<Nullable>enable</Nullable> is already set in the main SkiaSharp binding, showing the project-wide enablement pattern.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Enable Nullable Reference Types (SkiaSharp.Views)",
+        "source": "issue title",
+        "interpretation": "This is an explicit task/enhancement item to add NRT support to the SkiaSharp.Views assembly."
+      },
+      {
+        "text": "This is an epic to track adding nullable annotations to SkiaSharp. Packages: [#2057, #2058, ...]",
+        "source": "issue #2055 (parent epic)",
+        "interpretation": "Issue #2058 is one checklist item in the nullable annotations epic, specifically for the SkiaSharp.Views package."
+      }
+    ],
+    "rationale": "This is clearly a type/enhancement filed by a maintainer (mattleibow) as a tracked task within the nullable annotations epic (#2055). The SkiaSharp.Views project lacks <Nullable>enable</Nullable> while sibling packages already have it. The area is area/SkiaSharp.Views since it targets the Views cross-platform layer. The tenet is tenet/compatibility because enabling NRT improves type-safety contracts for consumers. No platforms or backends are involved. The suggested action is keep-open as this is a valid pending enhancement with no blocking information needed.",
+    "resolution": {
+      "proposals": [
+        {
+          "title": "Enable Nullable Reference Types in SkiaSharp.Views project",
+          "category": "fix",
+          "effort": "cost/m",
+          "validated": "untested",
+          "description": "Add <Nullable>enable</Nullable> to source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj and annotate all public APIs with appropriate nullable annotations (?, !), then fix any resulting warnings."
+        }
+      ],
+      "recommendedProposal": "fix-1",
+      "recommendedReason": "The straightforward path is enabling NRT in the project file and then annotating the public API surface, following the same pattern already used in SkiaSharp.csproj and SkiaSharp.Views.Blazor."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.92,
+      "reason": "This is a tracked enhancement in an active epic. No additional information is needed; it can be implemented when the team addresses the nullable annotations epic.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement, area/SkiaSharp.Views, tenet/compatibility labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "tenet/compatibility"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>

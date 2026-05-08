@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1549,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T11:46:00Z"
+  },
+  "summary": "Reporter asks how to detect a corrupt/invalid JPEG image without calling `SKCodec.Pixels`, which throws an exception on bad input.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "var result = SKCodec.Create(filename);\nvar codecPixels = codec.Pixels; // throw Exception"
+      ],
+      "repoLinks": []
+    }
+  },
+  "analysis": {
+    "summary": "The reporter has a corrupt JPEG and gets an `InvalidInput` exception from `SKCodec.Pixels`. The `Pixels` property intentionally throws when decoding fails, but the lower-level `GetPixels(out byte[] pixels)` method returns a `SKCodecResult` enum instead of throwing, allowing callers to inspect the result code without catching exceptions. This is working as designed; the question is answered by switching to the non-throwing overload.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "56-64",
+        "finding": "The `Pixels` property calls `GetPixels(out var pixels)` and throws `Exception(result.ToString())` if result is not `Success` or `IncompleteInput`. This is an intentional convenience API that throws rather than returning error codes.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "94-100",
+        "finding": "`GetPixels(out byte[] pixels)` returns `SKCodecResult` enum value (e.g. `InvalidInput`, `Success`, `IncompleteInput`) without throwing. This is the correct method for error-tolerant decoding.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "How can I know that the picture is bad without calling the `Pixels`, since this causes all bytes of the picture to be read",
+        "source": "issue body",
+        "interpretation": "Reporter wants non-throwing error detection for corrupt images"
+      }
+    ],
+    "rationale": "Issue title is `[QUESTION]` and body asks 'how can I know that the picture is bad'. The `Pixels` property throws by design; the existing `GetPixels(out byte[] pixels)` overload returns `SKCodecResult.InvalidInput` without throwing, which directly answers the question. Classified as `type/question` with `close-as-not-a-bug` because the API already provides the requested functionality.",
+    "resolution": {
+      "proposals": [
+        {
+          "title": "Use GetPixels overload that returns SKCodecResult",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "confidence": 0.95,
+          "validated": "yes",
+          "description": "Replace `codec.Pixels` with `codec.GetPixels(out byte[] pixels)`, then check the returned `SKCodecResult` to detect invalid input without exceptions.",
+          "codeSnippet": "using var codec = SKCodec.Create(filename);\nif (codec == null) {\n    // file not found or format not supported\n    return;\n}\n\nvar result = codec.GetPixels(out byte[] pixels);\nif (result == SKCodecResult.Success || result == SKCodecResult.IncompleteInput) {\n    // pixels contains the decoded image data\n} else {\n    // result is SKCodecResult.InvalidInput (or another error)\n    Console.WriteLine($\"Could not decode image: {result}\");\n}"
+        }
+      ],
+      "recommendedProposal": "use-getpixels",
+      "recommendedReason": "The `GetPixels` overload returning `SKCodecResult` is the exact non-throwing API the reporter needs and is already part of the public API."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.9,
+      "reason": "The `Pixels` property intentionally throws; `GetPixels(out byte[] pixels)` already provides the non-throwing error-inspection path the reporter wants.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/question and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the GetPixels workaround and clarify the by-design behavior",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed report and the image link.\n\nThe `Pixels` property is a convenience wrapper that intentionally throws when decoding fails. To detect a bad image without exception handling, use the `GetPixels` overload that returns `SKCodecResult` directly:\n\n```csharp\nusing var codec = SKCodec.Create(filename);\nif (codec == null) {\n    // file not found or format not supported\n    return;\n}\n\nvar result = codec.GetPixels(out byte[] pixels);\nif (result == SKCodecResult.Success || result == SKCodecResult.IncompleteInput) {\n    // pixels contains the decoded image data\n} else {\n    // result is SKCodecResult.InvalidInput for a corrupt/truncated image\n    Console.WriteLine($\"Could not decode image: {result}\");\n}\n```\n\n`SKCodecResult.InvalidInput` is returned when Skia's JPEG decoder encounters a corrupt or structurally invalid image \u2014 the same case you linked to in the upstream Skia codec. The `GetPixels` overload lets you inspect this result code without needing a try/catch."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug \u2014 existing API already covers the request",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}

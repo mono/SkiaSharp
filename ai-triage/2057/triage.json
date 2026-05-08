@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2057,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T12:32:48Z",
+    "currentLabels": ["type/enhancement", "status/long-term"]
+  },
+  "summary": "Tracking issue to enable Nullable Reference Types (NRT) annotations in the main SkiaSharp binding package, part of the broader nullable epic #2055.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.98 },
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [2055, 2058, 2059, 2060, 2061, 2062, 2063, 2064, 2065, 2066, 2067, 2068, 2069, 2070, 2071, 2072, 2073, 2074, 2075],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/2055", "description": "Parent epic: Enable Nullable Reference Types (all packages)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The csproj has <Nullable>enable</Nullable> but 75 of 88 source files still carry #nullable disable overrides, meaning annotation work remains incomplete."
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp main binding csproj already enables nullable project-wide, but the vast majority of source files (75/88) still opt-out via #nullable disable, suppressing compiler enforcement. The issue tracks completing per-file annotation work.",
+    "rationale": "Filed by a project maintainer as an enhancement to improve null-safety for consumers. The project-level Nullable setting exists; per-file annotations are the remaining work. Clearly an enhancement, not a bug. Tracked under long-term epic #2055.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "lines": "7",
+        "finding": "<Nullable>enable</Nullable> is already set project-wide, but 75 out of 88 source files have a top-level #nullable disable directive overriding it.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "1,54,76",
+        "finding": "File starts with #nullable disable, then has a small region with #nullable enable around lines 54–76, showing the incremental per-file approach already begun.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Enable Nullable Reference Types (SkiaSharp)",
+        "source": "issue title",
+        "interpretation": "Scoped to the main SkiaSharp package; sibling issues cover other packages."
+      },
+      {
+        "text": "Part of epic #2055 tracking all SkiaSharp packages",
+        "source": "issue #2055 body",
+        "interpretation": "Coordinated, multi-issue effort by the maintainer team."
+      }
+    ],
+    "nextQuestions": [
+      "Which files are highest priority to annotate first (public API surface vs. internals)?",
+      "Are there any existing callers / downstream packages that would be affected by NRT warnings?"
+    ],
+    "resolution": {
+      "hypothesis": "The enhancement requires annotating the remaining 75 source files in binding/SkiaSharp with nullable annotations, removing the per-file #nullable disable overrides.",
+      "proposals": [
+        {
+          "title": "Incremental per-file nullable annotation",
+          "description": "Enable nullable annotations file-by-file, removing #nullable disable, annotating public API parameters/return types, and fixing any resulting warnings. Follow the incremental pattern already started in SKCanvas.cs.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "cost/xl",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Incremental per-file nullable annotation",
+      "recommendedReason": "Matches the approach already started in the codebase and minimizes the risk of NRT-induced breaking changes on a file-by-file basis."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.93,
+      "reason": "Valid long-term enhancement, work partially started. Tracked as part of epic #2055. No action beyond labelling needed until implementation prioritized.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, area, and tenet labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/enhancement", "area/SkiaSharp", "tenet/compatibility"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference parent nullable epic #2055",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 2055
+      }
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2055,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T12:02:59Z",
+    "currentLabels": ["type/enhancement", "status/long-term"]
+  },
+  "summary": "Epic tracking issue for enabling nullable reference type annotations across all SkiaSharp packages; 19 sub-issues (#2057–#2075) remain open as of triage.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.85 },
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Created 2022-05-22 by maintainer mattleibow. No specific runtime version.",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/2057", "description": "Sub-issue: SkiaSharp package (open)" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/2058", "description": "Sub-issue: 2nd package (open)" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/2075", "description": "Sub-issue: last package (open)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The csproj has <Nullable>enable</Nullable> globally but most binding files use #nullable disable; work is still in progress."
+    }
+  },
+  "analysis": {
+    "summary": "This is a maintainer-created epic to track enabling C# nullable reference type annotations across all SkiaSharp NuGet packages. The global project setting enables nullable warnings but individual source files currently suppress them with #nullable disable. Only SKCanvas.cs has partial #nullable enable sections. All 19 sub-tracking issues (#2057–#2075) are still open, indicating the bulk of the work is not yet completed.",
+    "rationale": "Epic/tracker issue with sub-issues per package. Classified as type/enhancement because it improves the existing API surface (adds nullability contracts without adding new functionality). Area is area/SkiaSharp as the primary package being tracked, though the work spans multiple packages. tenet/compatibility applies because nullable annotations change how consuming code interacts with the API and can surface breaking annotation changes in downstream projects.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "finding": "<Nullable>enable</Nullable> is set globally, meaning all files opt in to warnings by default, but most individual source files override this with #nullable disable at the top.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "Contains multiple #nullable enable / #nullable disable blocks, indicating partial nullable annotation work has already been done in the main canvas class.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "This is an epic to track adding nullable annotations to SkiaSharp.",
+        "source": "issue body",
+        "interpretation": "Maintainer-created tracker; not a bug report or user question."
+      },
+      {
+        "text": "19 sub-issues (#2057–#2075) are all still open",
+        "source": "issue body checklist",
+        "interpretation": "No sub-issues have been completed; the work is still pending."
+      }
+    ],
+    "resolution": {
+      "hypothesis": "The work is well-scoped via sub-issues. Each sub-issue covers one NuGet package. Progress requires incrementally removing #nullable disable from each package's source files and fixing the resulting warnings.",
+      "proposals": [
+        {
+          "title": "Process sub-issues incrementally",
+          "description": "Work through sub-issues #2057–#2075 one package at a time: remove #nullable disable from each file, fix warnings, and close the corresponding sub-issue.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "cost/xl",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Process sub-issues incrementally",
+      "recommendedReason": "Sub-issue breakdown already exists; incremental approach minimizes risk of breaking consuming code."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "Active long-term epic with all 19 sub-issues still open. No action to close or reassign; track progress through sub-issues.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp", "tenet/compatibility"]
+      }
+    ]
+  }
+}

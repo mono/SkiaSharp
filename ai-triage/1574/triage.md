@@ -1,0 +1,374 @@
+# Issue Triage Report — #1574
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-03T11:08:42Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp (0.95 (95%)) |
+| Suggested action | ready-to-fix (0.87 (87%)) |
+
+**Issue Summary:** App crashes on macOS and iOS when passing a UTF-16 surrogate character (from iterating over an emoji string) to SKFontManager.MatchCharacter, while the same call returns null without crashing on Windows/WPF.
+
+**Analysis:** When C# iterates over an emoji string with foreach, it yields individual UTF-16 surrogate chars (e.g., 0xD83C, 0xDF39 for U+1F339 🌹). The MatchCharacter(char) overload passes these directly as integer code points to the native sk_fontmgr_match_family_style_character function. Surrogate values (0xD800–0xDFFF) are not valid Unicode scalar values; the native Skia on macOS/iOS crashes on them, while the Windows native Skia returns null gracefully.
+
+**Recommendations:** **ready-to-fix** — Root cause is clear (no surrogate validation before native P/Invoke), fix is straightforward (add guard in the int overload), and a minimal repro is provided.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | os/macOS, os/iOS |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a macOS or iOS app using SkiaSharp
+2. Iterate over an emoji string with foreach (char c in "🌹")
+3. Call SKFontManager.Default.MatchCharacter(c) for each char
+4. Observe native crash on macOS/iOS (works on Windows/WPF)
+
+**Environment:** SkiaSharp 2.80.2, macOS 10.15.7, iOS 13.5, Visual Studio for Mac 8.8.4
+
+**Related issues:** #2298
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2298 — Related: FontManager.MatchCharacter crash with emoji chars - same surrogate issue
+
+**Code snippets:**
+
+```csharp
+foreach (char c in "🌹")
+    SkiaSharp.SKFontManager.Default.MatchCharacter(c);
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | crash |
+| Error message | Native crash in sk_fontmgr_match_family_style_character when character is a UTF-16 surrogate value |
+| Repro quality | complete |
+| Target frameworks | net5.0-ios, net5.0-macos, Xamarin.iOS, Xamarin.Mac |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The MatchCharacter(char) overload in current code still directly casts char to int without validating for surrogates before passing to native. |
+
+## Analysis
+
+### Technical Summary
+
+When C# iterates over an emoji string with foreach, it yields individual UTF-16 surrogate chars (e.g., 0xD83C, 0xDF39 for U+1F339 🌹). The MatchCharacter(char) overload passes these directly as integer code points to the native sk_fontmgr_match_family_style_character function. Surrogate values (0xD800–0xDFFF) are not valid Unicode scalar values; the native Skia on macOS/iOS crashes on them, while the Windows native Skia returns null gracefully.
+
+### Rationale
+
+The crash is clearly a real bug — passing a surrogate char directly to native code without validation causes a native crash on Apple platforms. The fix belongs in the C# layer: the MatchCharacter(char) overload (and possibly the int overload) should validate the character and either return null or throw ArgumentException for surrogate values. Related issue #2298 reports the same root cause.
+
+### Key Signals
+
+- "foreach (char c in "🌹") SKFontManager.Default.MatchCharacter(c); -> native crash" — **issue body** (In C#, emoji are stored as surrogate pairs in UTF-16; foreach yields the individual surrogate chars, not the full code point.)
+- "SKFontManager.MatchCharacter returns null without error in WPF" — **issue body** (Windows native Skia handles invalid code points gracefully; macOS/iOS native crashes. The C# layer should sanitize input before passing to native.)
+- "native crash at binding/Binding/SKFontManager.cs#L185" — **issue body** (Points to the sk_fontmgr_match_family_style_character P/Invoke call — no validation of the character value before native call.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKFontManager.cs` | 131-134 | direct | MatchCharacter(char character) overload casts char to int implicitly and calls the int overload with no surrogate validation. A high or low surrogate (0xD800–0xDFFF) is passed as-is to native code. |
+| `binding/SkiaSharp/SKFontManager.cs` | 176-191 | direct | MatchCharacter(string, SKFontStyle, string[], int character) is the terminal overload — it passes 'character' directly to sk_fontmgr_match_family_style_character with no validation that the integer is a valid Unicode scalar value. |
+
+**Error fingerprint:** `sk_fontmgr_match_family_style_character:surrogate-codepoint:macOS/iOS`
+
+### Workarounds
+
+- Use StringInfo.GetTextElementEnumerator or string.EnumerateRunes() (.NET 5+) to iterate over full Unicode code points instead of individual chars.
+- Use char.ConvertToUtf32(highSurrogate, lowSurrogate) to obtain the actual code point when the char is a surrogate, then call MatchCharacter(int codePoint) with the full Unicode value.
+- Guard with char.IsSurrogate(c) before calling MatchCharacter to skip or handle surrogate chars explicitly.
+
+### Next Questions
+
+- Should MatchCharacter(char) return null or throw ArgumentException when passed a surrogate?
+- Should the int overload also validate for surrogate-range values (0xD800–0xDFFF)?
+- Does the same crash occur on Android or Linux when passing surrogate code points?
+
+### Resolution Proposals
+
+**Hypothesis:** The char overload does not guard against surrogate characters; native Skia on macOS/iOS crashes on invalid code points (surrogates) rather than returning null as Windows does.
+
+1. **Guard surrogates in MatchCharacter(char) overload** — fix, confidence 0.85 (85%), cost/xs, validated=untested
+   - Add a check in the char overload: if char.IsSurrogate(character), return null (matching Windows behavior).
+
+```csharp
+public SKTypeface MatchCharacter(char character)
+{
+    if (char.IsSurrogate(character))
+        return null;
+    return MatchCharacter(null, SKFontStyle.Normal, null, (int)character);
+}
+```
+2. **Validate code point range in int overload** — fix, confidence 0.90 (90%), cost/xs, validated=untested
+   - Add a guard in the terminal int overload: if character is in the surrogate range (0xD800–0xDFFF) or beyond Unicode max (> 0x10FFFF), return null.
+
+```csharp
+public SKTypeface MatchCharacter(string familyName, SKFontStyle style, string[] bcp47, int character)
+{
+    if (style == null)
+        throw new ArgumentNullException(nameof(style));
+    // Surrogates and out-of-range values are not valid Unicode scalar values
+    if (character < 0 || character > 0x10FFFF || (character >= 0xD800 && character <= 0xDFFF))
+        return null;
+    // ... rest of the method
+}
+```
+
+**Recommended proposal:** Validate code point range in int overload
+
+**Why:** Fixing the terminal overload protects all callers (including the char overload) and is the most defensive approach. It matches the behavior users expect: invalid code points return null rather than crashing.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.87 (87%) |
+| Reason | Root cause is clear (no surrogate validation before native P/Invoke), fix is straightforward (add guard in the int overload), and a minimal repro is provided. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, core SkiaSharp, macOS, iOS, and reliability labels | labels=type/bug, area/SkiaSharp, os/macOS, os/iOS, tenet/reliability |
+| add-comment | medium | 0.87 (87%) | Explain root cause, workaround, and planned fix | — |
+| link-related | low | 0.90 (90%) | Cross-reference related issue #2298 which reports the same surrogate crash | linkedIssue=#2298 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report!
+
+The crash is caused by how C# iterates emoji strings. When you write `foreach (char c in "🌹")`, C# yields two individual UTF-16 surrogate characters (e.g., `0xD83C` and `0xDF39`) rather than the combined Unicode code point `U+1F339`. These surrogate values are not valid Unicode scalar values, and the native Skia font manager on macOS/iOS crashes when it receives them instead of returning `null` as the Windows implementation does.
+
+**Workaround** (until fixed):
+
+```csharp
+// .NET 5+ — use string.EnumerateRunes() to get proper Unicode code points
+foreach (var rune in "🌹".EnumerateRunes())
+{
+    var typeface = SKFontManager.Default.MatchCharacter(rune.Value);
+}
+
+// Or guard manually:
+foreach (char c in "🌹")
+{
+    if (!char.IsSurrogate(c))
+        SKFontManager.Default.MatchCharacter(c);
+}
+```
+
+The fix will add validation in `MatchCharacter` to return `null` for surrogate and out-of-range code points rather than passing them to the native layer.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1574,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T11:08:42Z"
+  },
+  "summary": "App crashes on macOS and iOS when passing a UTF-16 surrogate character (from iterating over an emoji string) to SKFontManager.MatchCharacter, while the same call returns null without crashing on Windows/WPF.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/macOS",
+      "os/iOS"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Native crash in sk_fontmgr_match_family_style_character when character is a UTF-16 surrogate value",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net5.0-ios",
+        "net5.0-macos",
+        "Xamarin.iOS",
+        "Xamarin.Mac"
+      ]
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        "foreach (char c in \"🌹\")\n    SkiaSharp.SKFontManager.Default.MatchCharacter(c);"
+      ],
+      "stepsToReproduce": [
+        "Create a macOS or iOS app using SkiaSharp",
+        "Iterate over an emoji string with foreach (char c in \"🌹\")",
+        "Call SKFontManager.Default.MatchCharacter(c) for each char",
+        "Observe native crash on macOS/iOS (works on Windows/WPF)"
+      ],
+      "environmentDetails": "SkiaSharp 2.80.2, macOS 10.15.7, iOS 13.5, Visual Studio for Mac 8.8.4",
+      "relatedIssues": [
+        2298
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2298",
+          "description": "Related: FontManager.MatchCharacter crash with emoji chars - same surrogate issue"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The MatchCharacter(char) overload in current code still directly casts char to int without validating for surrogates before passing to native."
+    }
+  },
+  "analysis": {
+    "summary": "When C# iterates over an emoji string with foreach, it yields individual UTF-16 surrogate chars (e.g., 0xD83C, 0xDF39 for U+1F339 🌹). The MatchCharacter(char) overload passes these directly as integer code points to the native sk_fontmgr_match_family_style_character function. Surrogate values (0xD800–0xDFFF) are not valid Unicode scalar values; the native Skia on macOS/iOS crashes on them, while the Windows native Skia returns null gracefully.",
+    "rationale": "The crash is clearly a real bug — passing a surrogate char directly to native code without validation causes a native crash on Apple platforms. The fix belongs in the C# layer: the MatchCharacter(char) overload (and possibly the int overload) should validate the character and either return null or throw ArgumentException for surrogate values. Related issue #2298 reports the same root cause.",
+    "keySignals": [
+      {
+        "text": "foreach (char c in \"🌹\") SKFontManager.Default.MatchCharacter(c); -> native crash",
+        "source": "issue body",
+        "interpretation": "In C#, emoji are stored as surrogate pairs in UTF-16; foreach yields the individual surrogate chars, not the full code point."
+      },
+      {
+        "text": "SKFontManager.MatchCharacter returns null without error in WPF",
+        "source": "issue body",
+        "interpretation": "Windows native Skia handles invalid code points gracefully; macOS/iOS native crashes. The C# layer should sanitize input before passing to native."
+      },
+      {
+        "text": "native crash at binding/Binding/SKFontManager.cs#L185",
+        "source": "issue body",
+        "interpretation": "Points to the sk_fontmgr_match_family_style_character P/Invoke call — no validation of the character value before native call."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "131-134",
+        "finding": "MatchCharacter(char character) overload casts char to int implicitly and calls the int overload with no surrogate validation. A high or low surrogate (0xD800–0xDFFF) is passed as-is to native code.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "176-191",
+        "finding": "MatchCharacter(string, SKFontStyle, string[], int character) is the terminal overload — it passes 'character' directly to sk_fontmgr_match_family_style_character with no validation that the integer is a valid Unicode scalar value.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Use StringInfo.GetTextElementEnumerator or string.EnumerateRunes() (.NET 5+) to iterate over full Unicode code points instead of individual chars.",
+      "Use char.ConvertToUtf32(highSurrogate, lowSurrogate) to obtain the actual code point when the char is a surrogate, then call MatchCharacter(int codePoint) with the full Unicode value.",
+      "Guard with char.IsSurrogate(c) before calling MatchCharacter to skip or handle surrogate chars explicitly."
+    ],
+    "nextQuestions": [
+      "Should MatchCharacter(char) return null or throw ArgumentException when passed a surrogate?",
+      "Should the int overload also validate for surrogate-range values (0xD800–0xDFFF)?",
+      "Does the same crash occur on Android or Linux when passing surrogate code points?"
+    ],
+    "errorFingerprint": "sk_fontmgr_match_family_style_character:surrogate-codepoint:macOS/iOS",
+    "resolution": {
+      "hypothesis": "The char overload does not guard against surrogate characters; native Skia on macOS/iOS crashes on invalid code points (surrogates) rather than returning null as Windows does.",
+      "proposals": [
+        {
+          "title": "Guard surrogates in MatchCharacter(char) overload",
+          "description": "Add a check in the char overload: if char.IsSurrogate(character), return null (matching Windows behavior).",
+          "category": "fix",
+          "codeSnippet": "public SKTypeface MatchCharacter(char character)\n{\n    if (char.IsSurrogate(character))\n        return null;\n    return MatchCharacter(null, SKFontStyle.Normal, null, (int)character);\n}",
+          "confidence": 0.85,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Validate code point range in int overload",
+          "description": "Add a guard in the terminal int overload: if character is in the surrogate range (0xD800–0xDFFF) or beyond Unicode max (> 0x10FFFF), return null.",
+          "category": "fix",
+          "codeSnippet": "public SKTypeface MatchCharacter(string familyName, SKFontStyle style, string[] bcp47, int character)\n{\n    if (style == null)\n        throw new ArgumentNullException(nameof(style));\n    // Surrogates and out-of-range values are not valid Unicode scalar values\n    if (character < 0 || character > 0x10FFFF || (character >= 0xD800 && character <= 0xDFFF))\n        return null;\n    // ... rest of the method\n}",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Validate code point range in int overload",
+      "recommendedReason": "Fixing the terminal overload protects all callers (including the char overload) and is the most defensive approach. It matches the behavior users expect: invalid code points return null rather than crashing."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.87,
+      "reason": "Root cause is clear (no surrogate validation before native P/Invoke), fix is straightforward (add guard in the int overload), and a minimal repro is provided.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core SkiaSharp, macOS, iOS, and reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/macOS",
+          "os/iOS",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause, workaround, and planned fix",
+        "risk": "medium",
+        "confidence": 0.87,
+        "comment": "Thanks for the report!\n\nThe crash is caused by how C# iterates emoji strings. When you write `foreach (char c in \"🌹\")`, C# yields two individual UTF-16 surrogate characters (e.g., `0xD83C` and `0xDF39`) rather than the combined Unicode code point `U+1F339`. These surrogate values are not valid Unicode scalar values, and the native Skia font manager on macOS/iOS crashes when it receives them instead of returning `null` as the Windows implementation does.\n\n**Workaround** (until fixed):\n\n```csharp\n// .NET 5+ — use string.EnumerateRunes() to get proper Unicode code points\nforeach (var rune in \"🌹\".EnumerateRunes())\n{\n    var typeface = SKFontManager.Default.MatchCharacter(rune.Value);\n}\n\n// Or guard manually:\nforeach (char c in \"🌹\")\n{\n    if (!char.IsSurrogate(c))\n        SKFontManager.Default.MatchCharacter(c);\n}\n```\n\nThe fix will add validation in `MatchCharacter` to return `null` for surrogate and out-of-range code points rather than passing them to the native layer."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related issue #2298 which reports the same surrogate crash",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 2298
+      }
+    ]
+  }
+}
+```
+
+</details>

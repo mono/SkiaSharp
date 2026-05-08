@@ -1,0 +1,334 @@
+# Issue Triage Report — #1576
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-03T11:27:40Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp.Views (0.95 (95%)) |
+| Suggested action | ready-to-fix (0.85 (85%)) |
+
+**Issue Summary:** SKGLView on macOS crashes with a NullReferenceException during Initialize() when running on 'Apple Software Render' (no hardware GPU) because the NSOpenGLPixelFormat constructor requires hardware acceleration with no software fallback.
+
+**Analysis:** SKGLView.Initialize() constructs NSOpenGLPixelFormat with NSOpenGLPixelFormatAttribute.Accelerated required. On systems using Apple Software Render (VMs, certain CI runners), the native constructor returns null, causing an exception. The fix requires a fallback pixel format without the Accelerated attribute.
+
+**Recommendations:** **ready-to-fix** — Root cause is clearly identified in source code, fix location is known (Initialize() in Platform/macOS/SKGLView.cs), and a reference implementation exists. The change is small and low-risk.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/macOS |
+| Backends | backend/OpenGL |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Run a macOS app using SKGLView on a machine with 'Apple Software Render' (no discrete/integrated GPU, e.g., VM or certain CI environments)
+2. Observe NullReferenceException during Initialize()
+
+**Environment:** SkiaSharp 2.8.0, macOS 10.15, Visual Studio for Mac
+
+**Related issues:** #977
+
+**Repository links:**
+- https://github.com/xamarin/mac-samples/blob/c9216f3aa482739238254123f81949c63f190f56/GLSLShader/MyOpenGLView.cs#L68 — Reference fix showing software-render fallback pattern for NSOpenGLPixelFormat
+- https://github.com/mono/SkiaSharp/issues/977 — Related issue: NSOpenGLPixelFormat init returns nil (fixed in v1.68.2, but the software fallback was not added)
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | exception |
+| Error message | NullReferenceException at SKGLView.Initialize() when NSOpenGLPixelFormat returns null on software-only renderer |
+| Repro quality | partial |
+| Target frameworks | net-mac-10.15 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.8.0 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The current source (Platform/macOS/SKGLView.cs) still requires NSOpenGLPixelFormatAttribute.Accelerated with no software-render fallback. The related #977 fix addressed a constructor overload issue but not the missing fallback. |
+
+## Analysis
+
+### Technical Summary
+
+SKGLView.Initialize() constructs NSOpenGLPixelFormat with NSOpenGLPixelFormatAttribute.Accelerated required. On systems using Apple Software Render (VMs, certain CI runners), the native constructor returns null, causing an exception. The fix requires a fallback pixel format without the Accelerated attribute.
+
+### Rationale
+
+This is a real bug where a required NSOpenGLPixelFormatAttribute.Accelerated attribute causes a crash on software-only render systems. The root cause is confirmed in the current source: no null check or fallback pixel format after NSOpenGLPixelFormat creation. Issue #977 addressed a related (but different) crash with the constructor signature, but did not add the software-render fallback. The fix is clear and bounded to the Initialize() method.
+
+### Key Signals
+
+- "Currently the view will fail on the 'Apple Software Render' system, via a null ptr exception" — **issue body** (The issue is on virtual machines or systems without a physical GPU where only Apple's software renderer is available.)
+- "there is a fix noted here [xamarin/mac-samples GLSLShader fallback code]" — **issue body** (Reporter has identified the exact fix: try hardware pixel format first, fall back to non-accelerated on failure.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs` | 66-81 | direct | Initialize() builds a NSOpenGLPixelFormatAttribute array with Accelerated as a required attribute (line 69). On Apple Software Render systems, NSOpenGLPixelFormat returns null for this format because hardware acceleration is unavailable. No null check or fallback is present. The assignment at line 81 sets PixelFormat to null, causing a NullReferenceException. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs` | 88-95 | related | PrepareOpenGL() creates GRContext using GRGlInterface.Create() — this would also fail if OpenGLContext is null due to a null PixelFormat. |
+
+### Workarounds
+
+- Set ObjCRuntime.Class.ThrowOnInitFailure = false before constructing SKGLView — suppresses the exception but does not render anything
+- Use SKCanvasView (non-GL) instead of SKGLView on software-render environments
+
+### Resolution Proposals
+
+**Hypothesis:** NSOpenGLPixelFormat returns null when the Accelerated attribute is required but no GPU is available. Adding a fallback pixel format without Accelerated (matching the xamarin/mac-samples pattern) will allow the view to initialize and render using software OpenGL.
+
+1. **Add software-render fallback in Initialize()** — fix, confidence 0.88 (88%), cost/s, validated=untested
+   - After creating NSOpenGLPixelFormat with Accelerated, check if it is null. If so, retry with a reduced attribute set that omits Accelerated (and optionally Multisample/SampleBuffers). This matches the pattern in xamarin/mac-samples GLSLShader.
+
+```csharp
+var format = new NSOpenGLPixelFormat(attrs);
+if (format == null || format.Handle == IntPtr.Zero)
+{
+    // Fallback to software renderer
+    var softwareAttrs = new NSOpenGLPixelFormatAttribute[]
+    {
+        NSOpenGLPixelFormatAttribute.DoubleBuffer,
+        NSOpenGLPixelFormatAttribute.ColorSize, (NSOpenGLPixelFormatAttribute)32,
+        NSOpenGLPixelFormatAttribute.AlphaSize, (NSOpenGLPixelFormatAttribute)8,
+        NSOpenGLPixelFormatAttribute.DepthSize, (NSOpenGLPixelFormatAttribute)24,
+        NSOpenGLPixelFormatAttribute.StencilSize, (NSOpenGLPixelFormatAttribute)8,
+        (NSOpenGLPixelFormatAttribute)0,
+    };
+    format = new NSOpenGLPixelFormat(softwareAttrs);
+}
+PixelFormat = format;
+```
+2. **Use SKCanvasView instead of SKGLView** — alternative, confidence 0.95 (95%), cost/s, validated=untested
+   - On systems without hardware acceleration, switch to SKCanvasView which uses the Raster backend and does not require OpenGL at all.
+
+**Recommended proposal:** Add software-render fallback in Initialize()
+
+**Why:** The reporter specifically identified this fix and it has a clear, small scope. The xamarin/mac-samples reference provides the exact pattern to follow.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.85 (85%) |
+| Reason | Root cause is clearly identified in source code, fix location is known (Initialize() in Platform/macOS/SKGLView.cs), and a reference implementation exists. The change is small and low-risk. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply type/bug, area/SkiaSharp.Views, os/macOS, backend/OpenGL | labels=type/bug, area/SkiaSharp.Views, os/macOS, backend/OpenGL |
+| add-comment | medium | 0.85 (85%) | Acknowledge the bug, confirm root cause, provide workaround, note fix path | — |
+| link-related | low | 0.90 (90%) | Cross-reference related issue #977 (same component, prior NSOpenGLPixelFormat null crash) | linkedIssue=#977 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and the reference to the fix pattern!
+
+This is a confirmed bug. The `Initialize()` method in `SKGLView` (macOS) creates an `NSOpenGLPixelFormat` with `NSOpenGLPixelFormatAttribute.Accelerated` as a required attribute. On systems using Apple Software Render (VMs, CI environments without a physical GPU), the native constructor returns `null`, which then causes the exception when assigned to `PixelFormat`.
+
+**Workaround (until a fix is released):**
+
+Switch to `SKCanvasView` (Raster backend) instead of `SKGLView` on systems without hardware OpenGL support:
+
+```csharp
+// Use SKCanvasView instead of SKGLView for software-render environments
+var canvasView = new SKCanvasView();
+```
+
+Alternatively, if you need to keep `SKGLView`, you can suppress the exception before construction:
+```csharp
+ObjCRuntime.Class.ThrowOnInitFailure = false;
+```
+
+Note: This suppresses the error but the view will not render.
+
+**Fix:** The `Initialize()` method needs to check if the hardware-accelerated pixel format returned `null` and fall back to a non-accelerated format, as shown in the [xamarin/mac-samples GLSLShader example](https://github.com/xamarin/mac-samples/blob/c9216f3aa482739238254123f81949c63f190f56/GLSLShader/MyOpenGLView.cs#L68).
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1576,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T11:27:40Z"
+  },
+  "summary": "SKGLView on macOS crashes with a NullReferenceException during Initialize() when running on 'Apple Software Render' (no hardware GPU) because the NSOpenGLPixelFormat constructor requires hardware acceleration with no software fallback.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/macOS"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "exception",
+      "errorMessage": "NullReferenceException at SKGLView.Initialize() when NSOpenGLPixelFormat returns null on software-only renderer",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net-mac-10.15"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run a macOS app using SKGLView on a machine with 'Apple Software Render' (no discrete/integrated GPU, e.g., VM or certain CI environments)",
+        "Observe NullReferenceException during Initialize()"
+      ],
+      "environmentDetails": "SkiaSharp 2.8.0, macOS 10.15, Visual Studio for Mac",
+      "relatedIssues": [
+        977
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/xamarin/mac-samples/blob/c9216f3aa482739238254123f81949c63f190f56/GLSLShader/MyOpenGLView.cs#L68",
+          "description": "Reference fix showing software-render fallback pattern for NSOpenGLPixelFormat"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/977",
+          "description": "Related issue: NSOpenGLPixelFormat init returns nil (fixed in v1.68.2, but the software fallback was not added)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.8.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The current source (Platform/macOS/SKGLView.cs) still requires NSOpenGLPixelFormatAttribute.Accelerated with no software-render fallback. The related #977 fix addressed a constructor overload issue but not the missing fallback."
+    }
+  },
+  "analysis": {
+    "summary": "SKGLView.Initialize() constructs NSOpenGLPixelFormat with NSOpenGLPixelFormatAttribute.Accelerated required. On systems using Apple Software Render (VMs, certain CI runners), the native constructor returns null, causing an exception. The fix requires a fallback pixel format without the Accelerated attribute.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "lines": "66-81",
+        "finding": "Initialize() builds a NSOpenGLPixelFormatAttribute array with Accelerated as a required attribute (line 69). On Apple Software Render systems, NSOpenGLPixelFormat returns null for this format because hardware acceleration is unavailable. No null check or fallback is present. The assignment at line 81 sets PixelFormat to null, causing a NullReferenceException.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "lines": "88-95",
+        "finding": "PrepareOpenGL() creates GRContext using GRGlInterface.Create() — this would also fail if OpenGLContext is null due to a null PixelFormat.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Currently the view will fail on the 'Apple Software Render' system, via a null ptr exception",
+        "source": "issue body",
+        "interpretation": "The issue is on virtual machines or systems without a physical GPU where only Apple's software renderer is available."
+      },
+      {
+        "text": "there is a fix noted here [xamarin/mac-samples GLSLShader fallback code]",
+        "source": "issue body",
+        "interpretation": "Reporter has identified the exact fix: try hardware pixel format first, fall back to non-accelerated on failure."
+      }
+    ],
+    "rationale": "This is a real bug where a required NSOpenGLPixelFormatAttribute.Accelerated attribute causes a crash on software-only render systems. The root cause is confirmed in the current source: no null check or fallback pixel format after NSOpenGLPixelFormat creation. Issue #977 addressed a related (but different) crash with the constructor signature, but did not add the software-render fallback. The fix is clear and bounded to the Initialize() method.",
+    "workarounds": [
+      "Set ObjCRuntime.Class.ThrowOnInitFailure = false before constructing SKGLView — suppresses the exception but does not render anything",
+      "Use SKCanvasView (non-GL) instead of SKGLView on software-render environments"
+    ],
+    "resolution": {
+      "hypothesis": "NSOpenGLPixelFormat returns null when the Accelerated attribute is required but no GPU is available. Adding a fallback pixel format without Accelerated (matching the xamarin/mac-samples pattern) will allow the view to initialize and render using software OpenGL.",
+      "proposals": [
+        {
+          "title": "Add software-render fallback in Initialize()",
+          "description": "After creating NSOpenGLPixelFormat with Accelerated, check if it is null. If so, retry with a reduced attribute set that omits Accelerated (and optionally Multisample/SampleBuffers). This matches the pattern in xamarin/mac-samples GLSLShader.",
+          "codeSnippet": "var format = new NSOpenGLPixelFormat(attrs);\nif (format == null || format.Handle == IntPtr.Zero)\n{\n    // Fallback to software renderer\n    var softwareAttrs = new NSOpenGLPixelFormatAttribute[]\n    {\n        NSOpenGLPixelFormatAttribute.DoubleBuffer,\n        NSOpenGLPixelFormatAttribute.ColorSize, (NSOpenGLPixelFormatAttribute)32,\n        NSOpenGLPixelFormatAttribute.AlphaSize, (NSOpenGLPixelFormatAttribute)8,\n        NSOpenGLPixelFormatAttribute.DepthSize, (NSOpenGLPixelFormatAttribute)24,\n        NSOpenGLPixelFormatAttribute.StencilSize, (NSOpenGLPixelFormatAttribute)8,\n        (NSOpenGLPixelFormatAttribute)0,\n    };\n    format = new NSOpenGLPixelFormat(softwareAttrs);\n}\nPixelFormat = format;",
+          "category": "fix",
+          "confidence": 0.88,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SKCanvasView instead of SKGLView",
+          "description": "On systems without hardware acceleration, switch to SKCanvasView which uses the Raster backend and does not require OpenGL at all.",
+          "category": "alternative",
+          "confidence": 0.95,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add software-render fallback in Initialize()",
+      "recommendedReason": "The reporter specifically identified this fix and it has a clear, small scope. The xamarin/mac-samples reference provides the exact pattern to follow."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.85,
+      "reason": "Root cause is clearly identified in source code, fix location is known (Initialize() in Platform/macOS/SKGLView.cs), and a reference implementation exists. The change is small and low-risk.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views, os/macOS, backend/OpenGL",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/macOS",
+          "backend/OpenGL"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, confirm root cause, provide workaround, note fix path",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report and the reference to the fix pattern!\n\nThis is a confirmed bug. The `Initialize()` method in `SKGLView` (macOS) creates an `NSOpenGLPixelFormat` with `NSOpenGLPixelFormatAttribute.Accelerated` as a required attribute. On systems using Apple Software Render (VMs, CI environments without a physical GPU), the native constructor returns `null`, which then causes the exception when assigned to `PixelFormat`.\n\n**Workaround (until a fix is released):**\n\nSwitch to `SKCanvasView` (Raster backend) instead of `SKGLView` on systems without hardware OpenGL support:\n\n```csharp\n// Use SKCanvasView instead of SKGLView for software-render environments\nvar canvasView = new SKCanvasView();\n```\n\nAlternatively, if you need to keep `SKGLView`, you can suppress the exception before construction:\n```csharp\nObjCRuntime.Class.ThrowOnInitFailure = false;\n```\n\nNote: This suppresses the error but the view will not render.\n\n**Fix:** The `Initialize()` method needs to check if the hardware-accelerated pixel format returned `null` and fall back to a non-accelerated format, as shown in the [xamarin/mac-samples GLSLShader example](https://github.com/xamarin/mac-samples/blob/c9216f3aa482739238254123f81949c63f190f56/GLSLShader/MyOpenGLView.cs#L68)."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related issue #977 (same component, prior NSOpenGLPixelFormat null crash)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 977
+      }
+    ]
+  }
+}
+```
+
+</details>
