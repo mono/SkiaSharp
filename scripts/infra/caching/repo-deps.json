@@ -2,8 +2,11 @@
   "include": [
     "scripts/VERSIONS.txt",
     "scripts/infra/shared/**",
+    "scripts/azure-*.yml",
     "nuget.config",
-    "global.json"
+    "global.json",
+    ".config/**",
+    ".gitmodules"
   ],
   "exclude": [
     "documentation/**",
@@ -14,19 +17,15 @@
     ".vscode/**",
     ".agents/**",
     "*.md",
-    ".config/**",
     ".editorconfig",
     ".gitattributes",
     ".gitignore",
-    ".gitmodules",
     "build.ps1",
     "build.sh",
     "externals/.gitignore",
     "native/.gitignore",
-    "scripts/azure-*.yml",
     "scripts/get-skiasharp-pr.*",
     "scripts/infra/caching/**",
-    "scripts/infra/security/**",
     "cgmanifest.json",
     "utils/SkiaSharpGenerator/**",
     "utils/Utils.sln",
@@ -98,7 +97,7 @@
       "children": {
         "libs": {},
         "package": {
-          "include": ["scripts/infra/package/**"],
+          "include": ["scripts/infra/package/**", "scripts/infra/security/**"],
           "children": {
             "api_diff": {
               "include": ["scripts/infra/docs/**", "changelogs/**"]
