@@ -1,0 +1,330 @@
+# Issue Triage Report — #2895
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-06T02:47:26Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/SkiaSharp.Views (0.95 (95%)) |
+| Suggested action | ready-to-fix (0.85 (85%)) |
+
+**Issue Summary:** SKElement in SkiaSharp.Views.WPF renders blurred content when a RenderTransform (ScaleTransform) is applied to an ancestor element, because CreateSize only accounts for device DPI scaling and not WPF visual transforms.
+
+**Analysis:** The root cause is in SKElement.CreateSize(): it computes the scaling factor only from PresentationSource.CompositionTarget.TransformToDevice (device DPI), but ignores any WPF RenderTransform applied to ancestor visual elements. When a ScaleTransform is applied to a parent (e.g. Grid), the bitmap is rendered at the unscaled size then stretched up, producing blur. The fix is to also walk the visual tree and accumulate parent transforms before computing the scaled pixel dimensions.
+
+**Recommendations:** **ready-to-fix** — Root cause is clearly identified in source code, reporter provided a full proposed fix, complete repro code and screenshot supplied. Fix scope is small and contained to SKElement.CreateSize().
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a WPF window with an SKElement inside a Grid
+2. Apply a ScaleTransform (e.g. ScaleX=2, ScaleY=2) to the Grid via RenderTransform
+3. Render content (e.g. text) on the SKElement
+4. Observe that content appears blurred/upscaled instead of sharp
+
+**Environment:** SkiaSharp 2.88.3, Visual Studio on Windows
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/assets/24811783/e6d95fda-a2d9-47ae-a0f3-b284fa10bf25 — Screenshot showing blurred SKElement rendering with ScaleTransform applied to parent Grid
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | wrong-output |
+| Error message | SKElement renders blurred/low-resolution content when ancestor has a ScaleTransform applied |
+| Repro quality | complete |
+| Target frameworks | net-wpf |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3, 2.88.2 |
+| Worked in | 2.88.2 |
+| Broke in | 2.88.3 |
+| Current relevance | likely |
+| Relevance reason | The CreateSize method in current source still only reads TransformToDevice without walking the visual tree for accumulated transforms. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.70 (70%) |
+| Reason | Reporter explicitly states 2.88.2 worked and 2.88.3 broke; the CreateSize method may have been modified between these releases. |
+| Worked in version | 2.88.2 |
+| Broke in version | 2.88.3 |
+
+## Analysis
+
+### Technical Summary
+
+The root cause is in SKElement.CreateSize(): it computes the scaling factor only from PresentationSource.CompositionTarget.TransformToDevice (device DPI), but ignores any WPF RenderTransform applied to ancestor visual elements. When a ScaleTransform is applied to a parent (e.g. Grid), the bitmap is rendered at the unscaled size then stretched up, producing blur. The fix is to also walk the visual tree and accumulate parent transforms before computing the scaled pixel dimensions.
+
+### Rationale
+
+Reporter identifies exact method and line that is wrong, provides a screenshot demonstrating visible degradation, and supplies a complete proposed fix. The source code confirms the bug: CreateSize (line 118-120) reads only TransformToDevice and does not walk the visual parent tree for accumulated RenderTransform matrices. SKGLElement has an identical CreateSize issue.
+
+### Key Signals
+
+- "when I apply a RenderTransform as shown below to scale the entire app, the content becomes blurred" — **issue body** (Blurring is classic symptom of rendering at lower resolution then upscaling — confirms CreateSize is not accounting for the visual transform.)
+- "the CreateSize method in SKElement should multiply with the current transform" — **issue body** (Reporter correctly identified the root cause and the affected method.)
+- "Last Known Good Version: 2.88.2" — **issue body** (Regression claim — behavior changed between minor patch releases.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs` | 104-127 | direct | CreateSize() reads only PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice for DPI scaling. No code walks the visual parent tree to accumulate RenderTransform matrices from ancestor elements. When an ancestor has a ScaleTransform, scaleX/scaleY remain at the DPI-only value, causing the bitmap to be created at the unscaled resolution and then stretched/blurred. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs` | 97-106 | related | SKGLElement has an equivalent GetSize() method also using only CompositionTarget.TransformToDevice without walking parent transforms — the same class of bug likely affects SKGLElement too. |
+
+### Workarounds
+
+- Use LayoutTransform instead of RenderTransform on the parent container — LayoutTransform is applied before layout so SKElement measures at the scaled size and renders correctly.
+- Manually override the SKElement subclass and override CreateSize to walk the visual tree as shown in the reporter's proposed fix.
+
+### Next Questions
+
+- Does the same blurring reproduce with SKGLElement?
+- What changed in CreateSize between 2.88.2 and 2.88.3 that introduced the regression?
+- Does the proposed fix handle non-uniform or rotation transforms correctly?
+
+### Resolution Proposals
+
+**Hypothesis:** SKElement.CreateSize() does not accumulate visual tree transforms, so it renders the bitmap at DPI-only resolution and WPF stretches it when a RenderTransform is applied to an ancestor.
+
+1. **Walk visual tree to accumulate transforms in CreateSize** — fix, confidence 0.85 (85%), cost/s, validated=untested
+   - Add a GetRenderScale() helper that walks VisualTreeHelper.GetParent() chain, multiplies all Visual transforms, then multiply with TransformToDevice in CreateSize. This is exactly the fix proposed by the reporter.
+2. **Use LayoutTransform instead of RenderTransform (workaround)** — workaround, confidence 0.90 (90%), cost/xs, validated=untested
+   - LayoutTransform participates in WPF layout measurement, so the element receives its true display size and CreateSize works correctly without any code change.
+
+**Recommended proposal:** Walk visual tree to accumulate transforms in CreateSize
+
+**Why:** Fixes the root cause for all users without requiring callers to change their XAML. The reporter has provided a working implementation to use as reference.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.85 (85%) |
+| Reason | Root cause is clearly identified in source code, reporter provided a full proposed fix, complete repro code and screenshot supplied. Fix scope is small and contained to SKElement.CreateSize(). |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Add area and platform labels | labels=type/bug, area/SkiaSharp.Views, os/Windows-Classic |
+| add-comment | medium | 0.85 (85%) | Acknowledge the bug, confirm root cause, mention workaround and note SKGLElement is likely also affected | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and the proposed fix! You've correctly identified the root cause: `SKElement.CreateSize()` only reads the device DPI transform (`CompositionTarget.TransformToDevice`) but doesn't accumulate visual transforms from ancestor elements.
+
+As a **workaround**, you can use `LayoutTransform` instead of `RenderTransform` on the parent container — `LayoutTransform` is applied before layout measurement so `SKElement` receives the correct scaled size:
+
+```xaml
+<Grid Width="400" Height="500">
+    <Grid.LayoutTransform>
+        <ScaleTransform ScaleX="2" ScaleY="2"/>
+    </Grid.LayoutTransform>
+    <skia:SKElement PaintSurface="OnPaintSurface" />
+</Grid>
+```
+
+The proposed fix (walking the visual tree to accumulate parent transforms) looks correct in principle — we'll track this for an upcoming fix. Note that `SKGLElement` has the same `CreateSize` issue and would need the same fix.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2895,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-06T02:47:26Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKElement in SkiaSharp.Views.WPF renders blurred content when a RenderTransform (ScaleTransform) is applied to an ancestor element, because CreateSize only accounts for device DPI scaling and not WPF visual transforms.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "SKElement renders blurred/low-resolution content when ancestor has a ScaleTransform applied",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net-wpf"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a WPF window with an SKElement inside a Grid",
+        "Apply a ScaleTransform (e.g. ScaleX=2, ScaleY=2) to the Grid via RenderTransform",
+        "Render content (e.g. text) on the SKElement",
+        "Observe that content appears blurred/upscaled instead of sharp"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Visual Studio on Windows",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/assets/24811783/e6d95fda-a2d9-47ae-a0f3-b284fa10bf25",
+          "description": "Screenshot showing blurred SKElement rendering with ScaleTransform applied to parent Grid"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3",
+        "2.88.2"
+      ],
+      "workedIn": "2.88.2",
+      "brokeIn": "2.88.3",
+      "currentRelevance": "likely",
+      "relevanceReason": "The CreateSize method in current source still only reads TransformToDevice without walking the visual tree for accumulated transforms."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.7,
+      "reason": "Reporter explicitly states 2.88.2 worked and 2.88.3 broke; the CreateSize method may have been modified between these releases.",
+      "workedInVersion": "2.88.2",
+      "brokeInVersion": "2.88.3"
+    }
+  },
+  "analysis": {
+    "summary": "The root cause is in SKElement.CreateSize(): it computes the scaling factor only from PresentationSource.CompositionTarget.TransformToDevice (device DPI), but ignores any WPF RenderTransform applied to ancestor visual elements. When a ScaleTransform is applied to a parent (e.g. Grid), the bitmap is rendered at the unscaled size then stretched up, producing blur. The fix is to also walk the visual tree and accumulate parent transforms before computing the scaled pixel dimensions.",
+    "rationale": "Reporter identifies exact method and line that is wrong, provides a screenshot demonstrating visible degradation, and supplies a complete proposed fix. The source code confirms the bug: CreateSize (line 118-120) reads only TransformToDevice and does not walk the visual parent tree for accumulated RenderTransform matrices. SKGLElement has an identical CreateSize issue.",
+    "keySignals": [
+      {
+        "text": "when I apply a RenderTransform as shown below to scale the entire app, the content becomes blurred",
+        "source": "issue body",
+        "interpretation": "Blurring is classic symptom of rendering at lower resolution then upscaling — confirms CreateSize is not accounting for the visual transform."
+      },
+      {
+        "text": "the CreateSize method in SKElement should multiply with the current transform",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identified the root cause and the affected method."
+      },
+      {
+        "text": "Last Known Good Version: 2.88.2",
+        "source": "issue body",
+        "interpretation": "Regression claim — behavior changed between minor patch releases."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "104-127",
+        "finding": "CreateSize() reads only PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice for DPI scaling. No code walks the visual parent tree to accumulate RenderTransform matrices from ancestor elements. When an ancestor has a ScaleTransform, scaleX/scaleY remain at the DPI-only value, causing the bitmap to be created at the unscaled resolution and then stretched/blurred.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+        "lines": "97-106",
+        "finding": "SKGLElement has an equivalent GetSize() method also using only CompositionTarget.TransformToDevice without walking parent transforms — the same class of bug likely affects SKGLElement too.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use LayoutTransform instead of RenderTransform on the parent container — LayoutTransform is applied before layout so SKElement measures at the scaled size and renders correctly.",
+      "Manually override the SKElement subclass and override CreateSize to walk the visual tree as shown in the reporter's proposed fix."
+    ],
+    "nextQuestions": [
+      "Does the same blurring reproduce with SKGLElement?",
+      "What changed in CreateSize between 2.88.2 and 2.88.3 that introduced the regression?",
+      "Does the proposed fix handle non-uniform or rotation transforms correctly?"
+    ],
+    "resolution": {
+      "hypothesis": "SKElement.CreateSize() does not accumulate visual tree transforms, so it renders the bitmap at DPI-only resolution and WPF stretches it when a RenderTransform is applied to an ancestor.",
+      "proposals": [
+        {
+          "title": "Walk visual tree to accumulate transforms in CreateSize",
+          "description": "Add a GetRenderScale() helper that walks VisualTreeHelper.GetParent() chain, multiplies all Visual transforms, then multiply with TransformToDevice in CreateSize. This is exactly the fix proposed by the reporter.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Use LayoutTransform instead of RenderTransform (workaround)",
+          "description": "LayoutTransform participates in WPF layout measurement, so the element receives its true display size and CreateSize works correctly without any code change.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Walk visual tree to accumulate transforms in CreateSize",
+      "recommendedReason": "Fixes the root cause for all users without requiring callers to change their XAML. The reporter has provided a working implementation to use as reference."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.85,
+      "reason": "Root cause is clearly identified in source code, reporter provided a full proposed fix, complete repro code and screenshot supplied. Fix scope is small and contained to SKElement.CreateSize().",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area and platform labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, confirm root cause, mention workaround and note SKGLElement is likely also affected",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report and the proposed fix! You've correctly identified the root cause: `SKElement.CreateSize()` only reads the device DPI transform (`CompositionTarget.TransformToDevice`) but doesn't accumulate visual transforms from ancestor elements.\n\nAs a **workaround**, you can use `LayoutTransform` instead of `RenderTransform` on the parent container — `LayoutTransform` is applied before layout measurement so `SKElement` receives the correct scaled size:\n\n```xaml\n<Grid Width=\"400\" Height=\"500\">\n    <Grid.LayoutTransform>\n        <ScaleTransform ScaleX=\"2\" ScaleY=\"2\"/>\n    </Grid.LayoutTransform>\n    <skia:SKElement PaintSurface=\"OnPaintSurface\" />\n</Grid>\n```\n\nThe proposed fix (walking the visual tree to accumulate parent transforms) looks correct in principle — we'll track this for an upcoming fix. Note that `SKGLElement` has the same `CreateSize` issue and would need the same fix."
+      }
+    ]
+  }
+}
+```
+
+</details>

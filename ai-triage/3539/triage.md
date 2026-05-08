@@ -1,0 +1,289 @@
+# Issue Triage Report — #3539
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-05T22:59:38Z |
+| Type | type/enhancement (0.97 (97%)) |
+| Area | area/SkiaSharp.Views (0.92 (92%)) |
+| Suggested action | needs-investigation (0.90 (90%)) |
+
+**Issue Summary:** Add scroll wheel support (with v120 normalization) to SkiaSharp's WPF (SKElement/SKGLElement) and Windows Forms (SKControl/SKGLControl) views, which currently have no touch handler infrastructure.
+
+**Analysis:** WPF (SKElement/SKGLElement) and Windows Forms (SKControl/SKGLControl) views only handle PaintSurface today. Neither has SKTouchHandler infrastructure, Touch event, or EnableTouchEvents property. Adding wheel support requires first building the entire touch event pipeline before wiring MouseWheel. The v120 passthrough is trivial once infrastructure exists since both WPF MouseWheelEventArgs.Delta and WinForms MouseEventArgs.Delta already deliver ±120 per notch.
+
+**Recommendations:** **needs-investigation** — Well-specified enhancement with clear scope and implementation path. Needs design decision on infrastructure pattern (SKTouchHandler class vs direct events) before implementation.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/enhancement, os/Windows-Classic, area/SkiaSharp |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** WPF and Windows Forms, .NET — no platform version specified
+
+**Related issues:** #3533
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/3533 — Parent issue: Standardize WheelDelta to v120 convention across all platforms
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | WPF and WinForms views confirmed to have no touch/input infrastructure — the gap still exists. |
+
+## Analysis
+
+### Technical Summary
+
+WPF (SKElement/SKGLElement) and Windows Forms (SKControl/SKGLControl) views only handle PaintSurface today. Neither has SKTouchHandler infrastructure, Touch event, or EnableTouchEvents property. Adding wheel support requires first building the entire touch event pipeline before wiring MouseWheel. The v120 passthrough is trivial once infrastructure exists since both WPF MouseWheelEventArgs.Delta and WinForms MouseEventArgs.Delta already deliver ±120 per notch.
+
+### Rationale
+
+This is a type/enhancement — the views exist and work for rendering, but input handling is a missing capability being added. Not a bug because there is no broken contract, just absent functionality. Area is area/SkiaSharp.Views because it targets desktop WPF/WinForms view classes (not MAUI). Platform is os/Windows-Classic since WPF and Windows Forms only run on Windows.
+
+### Key Signals
+
+- "Neither platform has any SKTouchHandler or touch event infrastructure" — **issue body** (This is a larger effort than just adding wheel — full touch pipeline must be built first.)
+- "Both WPF and WinForms: passthrough — already v120" — **issue body** (The normalization logic is trivial; complexity is entirely in the missing event infrastructure.)
+- "Priority is lower than MAUI platforms since WPF/WinForms views are less commonly used with touch/input" — **issue body** (Low-to-medium priority signal from issue author (who is also a maintainer/collaborator).)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs` | 1-129 | direct | SKElement only exposes PaintSurface event and IgnorePixelScaling/CanvasSize properties. No input events, no Touch event, no EnableTouchEvents. Confirmed: no touch handler infrastructure. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs` | 1-92 | direct | SKControl (Windows Forms) only exposes PaintSurface event and CanvasSize. No mouse/touch event handling. Confirmed: no touch handler infrastructure. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs` | 1-60 | related | MAUI Windows platform uses WinUI PointerRoutedEventArgs (not WPF/WinForms APIs) and already wires PointerWheelChanged. Good reference pattern but cannot be directly reused — WPF uses MouseWheelEventArgs, WinForms uses MouseEventArgs. |
+
+### Next Questions
+
+- Should the touch handler follow MAUI's separate SKTouchHandler class pattern, or add events directly to SKElement/SKControl?
+- Which .NET TFMs should the WPF/WinForms touch events target (net6.0-windows, net8.0-windows, netstandard2.0)?
+- Should SKGLElement (WPF GL) and SKGLControl (WinForms GL) be in scope for the same PR?
+
+### Resolution Proposals
+
+**Hypothesis:** Add SKTouchHandler infrastructure to WPF and Windows Forms views by creating Touch event + EnableTouchEvents property, then wire MouseWheel events with v120 passthrough normalization.
+
+1. **Implement full touch handler infrastructure for WPF and WinForms** — fix, confidence 0.88 (88%), cost/l, validated=untested
+   - Following the MAUI pattern, add EnableTouchEvents property and Touch event to SKElement/SKControl/SKGLElement/SKGLControl. Wire MouseDown, MouseMove, MouseUp, MouseWheel, and MouseEnter/Leave events. WPF uses MouseWheelEventArgs.Delta (±120, passthrough). WinForms uses MouseEventArgs.Delta (±120, passthrough).
+2. **Add only MouseWheel to existing views without full touch pipeline** — alternative, confidence 0.60 (60%), cost/s, validated=untested
+   - Skip the full SKTouchHandler infrastructure and only add a WheelChanged event specifically for scroll. Less work but diverges from the consistent Touch event pattern used on MAUI.
+
+**Recommended proposal:** Implement full touch handler infrastructure for WPF and WinForms
+
+**Why:** Consistent with MAUI pattern, enables all input types (not just wheel), and avoids a partial/divergent API surface.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.90 (90%) |
+| Reason | Well-specified enhancement with clear scope and implementation path. Needs design decision on infrastructure pattern (SKTouchHandler class vs direct events) before implementation. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Correct area label from area/SkiaSharp to area/SkiaSharp.Views; retain type/enhancement and os/Windows-Classic | labels=type/enhancement, area/SkiaSharp.Views, os/Windows-Classic, tenet/compatibility |
+| link-related | low | 0.99 (99%) | Cross-reference parent tracking issue #3533 | linkedIssue=#3533 |
+| add-comment | medium | 0.87 (87%) | Acknowledge the enhancement, clarify design decision needed, and note priority relative to parent issue | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for filing this as a tracked sub-issue of #3533!
+
+The scope here is clear: WPF (`SKElement`/`SKGLElement`) and Windows Forms (`SKControl`/`SKGLControl`) have no touch/input infrastructure today, so adding wheel support means building the full `SKTouchHandler` pipeline first. Code investigation confirms neither class has `Touch`, `EnableTouchEvents`, or any mouse event wiring.
+
+A few design questions worth deciding before implementation:
+1. **Pattern**: should we create a separate `SKTouchHandler` class (like MAUI) or add events directly to the view classes?
+2. **Scope**: should `SKGLElement`/`SKGLControl` be included in the same PR?
+3. **TFM targeting**: which target frameworks should the new events appear on (`net6.0-windows`, `net8.0-windows`, `netstandard2.0`)?
+
+Once these are settled the normalization math is trivial — both WPF `MouseWheelEventArgs.Delta` and WinForms `MouseEventArgs.Delta` already deliver ±120 per notch, so no conversion is needed.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3539,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-05T22:59:38Z",
+    "currentLabels": [
+      "type/enhancement",
+      "os/Windows-Classic",
+      "area/SkiaSharp"
+    ]
+  },
+  "summary": "Add scroll wheel support (with v120 normalization) to SkiaSharp's WPF (SKElement/SKGLElement) and Windows Forms (SKControl/SKGLControl) views, which currently have no touch handler infrastructure.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "WPF and Windows Forms, .NET — no platform version specified",
+      "relatedIssues": [
+        3533
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3533",
+          "description": "Parent issue: Standardize WheelDelta to v120 convention across all platforms"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "WPF and WinForms views confirmed to have no touch/input infrastructure — the gap still exists."
+    }
+  },
+  "analysis": {
+    "summary": "WPF (SKElement/SKGLElement) and Windows Forms (SKControl/SKGLControl) views only handle PaintSurface today. Neither has SKTouchHandler infrastructure, Touch event, or EnableTouchEvents property. Adding wheel support requires first building the entire touch event pipeline before wiring MouseWheel. The v120 passthrough is trivial once infrastructure exists since both WPF MouseWheelEventArgs.Delta and WinForms MouseEventArgs.Delta already deliver ±120 per notch.",
+    "rationale": "This is a type/enhancement — the views exist and work for rendering, but input handling is a missing capability being added. Not a bug because there is no broken contract, just absent functionality. Area is area/SkiaSharp.Views because it targets desktop WPF/WinForms view classes (not MAUI). Platform is os/Windows-Classic since WPF and Windows Forms only run on Windows.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "1-129",
+        "finding": "SKElement only exposes PaintSurface event and IgnorePixelScaling/CanvasSize properties. No input events, no Touch event, no EnableTouchEvents. Confirmed: no touch handler infrastructure.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+        "lines": "1-92",
+        "finding": "SKControl (Windows Forms) only exposes PaintSurface event and CanvasSize. No mouse/touch event handling. Confirmed: no touch handler infrastructure.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+        "lines": "1-60",
+        "finding": "MAUI Windows platform uses WinUI PointerRoutedEventArgs (not WPF/WinForms APIs) and already wires PointerWheelChanged. Good reference pattern but cannot be directly reused — WPF uses MouseWheelEventArgs, WinForms uses MouseEventArgs.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Neither platform has any SKTouchHandler or touch event infrastructure",
+        "source": "issue body",
+        "interpretation": "This is a larger effort than just adding wheel — full touch pipeline must be built first."
+      },
+      {
+        "text": "Both WPF and WinForms: passthrough — already v120",
+        "source": "issue body",
+        "interpretation": "The normalization logic is trivial; complexity is entirely in the missing event infrastructure."
+      },
+      {
+        "text": "Priority is lower than MAUI platforms since WPF/WinForms views are less commonly used with touch/input",
+        "source": "issue body",
+        "interpretation": "Low-to-medium priority signal from issue author (who is also a maintainer/collaborator)."
+      }
+    ],
+    "nextQuestions": [
+      "Should the touch handler follow MAUI's separate SKTouchHandler class pattern, or add events directly to SKElement/SKControl?",
+      "Which .NET TFMs should the WPF/WinForms touch events target (net6.0-windows, net8.0-windows, netstandard2.0)?",
+      "Should SKGLElement (WPF GL) and SKGLControl (WinForms GL) be in scope for the same PR?"
+    ],
+    "resolution": {
+      "hypothesis": "Add SKTouchHandler infrastructure to WPF and Windows Forms views by creating Touch event + EnableTouchEvents property, then wire MouseWheel events with v120 passthrough normalization.",
+      "proposals": [
+        {
+          "title": "Implement full touch handler infrastructure for WPF and WinForms",
+          "description": "Following the MAUI pattern, add EnableTouchEvents property and Touch event to SKElement/SKControl/SKGLElement/SKGLControl. Wire MouseDown, MouseMove, MouseUp, MouseWheel, and MouseEnter/Leave events. WPF uses MouseWheelEventArgs.Delta (±120, passthrough). WinForms uses MouseEventArgs.Delta (±120, passthrough).",
+          "category": "fix",
+          "confidence": 0.88,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Add only MouseWheel to existing views without full touch pipeline",
+          "description": "Skip the full SKTouchHandler infrastructure and only add a WheelChanged event specifically for scroll. Less work but diverges from the consistent Touch event pattern used on MAUI.",
+          "category": "alternative",
+          "confidence": 0.6,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Implement full touch handler infrastructure for WPF and WinForms",
+      "recommendedReason": "Consistent with MAUI pattern, enables all input types (not just wheel), and avoids a partial/divergent API surface."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Well-specified enhancement with clear scope and implementation path. Needs design decision on infrastructure pattern (SKTouchHandler class vs direct events) before implementation.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct area label from area/SkiaSharp to area/SkiaSharp.Views; retain type/enhancement and os/Windows-Classic",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference parent tracking issue #3533",
+        "risk": "low",
+        "confidence": 0.99,
+        "linkedIssue": 3533
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the enhancement, clarify design decision needed, and note priority relative to parent issue",
+        "risk": "medium",
+        "confidence": 0.87,
+        "comment": "Thanks for filing this as a tracked sub-issue of #3533!\n\nThe scope here is clear: WPF (`SKElement`/`SKGLElement`) and Windows Forms (`SKControl`/`SKGLControl`) have no touch/input infrastructure today, so adding wheel support means building the full `SKTouchHandler` pipeline first. Code investigation confirms neither class has `Touch`, `EnableTouchEvents`, or any mouse event wiring.\n\nA few design questions worth deciding before implementation:\n1. **Pattern**: should we create a separate `SKTouchHandler` class (like MAUI) or add events directly to the view classes?\n2. **Scope**: should `SKGLElement`/`SKGLControl` be included in the same PR?\n3. **TFM targeting**: which target frameworks should the new events appear on (`net6.0-windows`, `net8.0-windows`, `netstandard2.0`)?\n\nOnce these are settled the normalization math is trivial — both WPF `MouseWheelEventArgs.Delta` and WinForms `MouseEventArgs.Delta` already deliver ±120 per notch, so no conversion is needed."
+      }
+    ]
+  }
+}
+```
+
+</details>
