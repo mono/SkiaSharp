@@ -122,12 +122,14 @@ E. Ship (Phase 11)
 
 3. **Check for existing PRs** — Search both mono/SkiaSharp and mono/skia for open update PRs.
 
-4. **Verify upstream branches exist**:
+4. **Verify upstream branches exist and fetch**:
    ```bash
    cd externals/skia
    git remote add upstream https://github.com/google/skia.git 2>/dev/null
    git fetch upstream chrome/m{TARGET}
    ```
+   > **Note:** When this phase is pre-computed by the automated workflow, you still need to
+   > add the `upstream` remote and fetch `chrome/m{TARGET}` — Phase 5 depends on it.
 
 > 🛑 **GATE**: Confirm current milestone, target milestone, and that upstream branch exists.
 
@@ -306,7 +308,7 @@ You should still be inside `externals/skia` from Phase 4.
 
 > ✅ **Before proceeding to C (Update & Build):**
 > - Parent branch is based on `origin/main`
-> - Submodule branch is based on `origin/main`'s expected SHA
+> - Submodule is at the SHA referenced by the parent's `origin/main` submodule pointer
 > - Upstream merge committed with proper two-parent history
 > - C API files intact, zero conflict markers
 
@@ -412,6 +414,8 @@ After the script completes, build C# to verify compilation:
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
+> 🛑 **GATE**: Script prints `✅ Phase 8 complete`. C# build succeeds with 0 errors.
+
 ### Phase 9: Fix C# Wrappers
 
 The C# build can pass with 0 errors while new C API functions remain invisible to users.
@@ -477,11 +481,11 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
 
 2. **Full test suite (required before any PR):**
    ```bash
-   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/test-output.txt
+   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/gh-aw/agent/test-output.txt
    ```
    Wait for it to finish (takes 5–7 min). Then read the summary:
    ```bash
-   tail -5 /tmp/test-output.txt
+   tail -5 /tmp/gh-aw/agent/test-output.txt
    ```
    The last line will look like: `Passed!  - Failed:     0, Passed:  5435, Skipped:   171, Total:  5606`
 
@@ -493,7 +497,7 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
    > while tests are still running. Capture with `tee` first, wait for completion, then `tail`
    > the output file. After the run, inspect failures with:
    > ```bash
-   > grep '^  Failed' /tmp/test-output.txt
+   > grep '^  Failed' /tmp/gh-aw/agent/test-output.txt
    > ```
 
 Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
@@ -513,13 +517,17 @@ before the update can be considered complete. Do not create PRs with only smoke 
 
 ### Phase 11: Create PRs
 
+> **Same-milestone bug-fix syncs:** When `CURRENT == TARGET`, only `cgmanifest.json`'s
+> `commitHash`/`upstream_merge_commit` change. Use PR titles like
+> `[skia-sync] Merge upstream chrome/m{TARGET} bug fixes` instead of milestone-bump titles.
+
 #### PR 1: mono/skia (submodule)
 
 | Field | Value |
 |-------|-------|
 | Branch | `skia-sync/m{TARGET}` |
 | Target | `skiasharp` |
-| Title | `Update skia to milestone {TARGET}` |
+| Title | `[skia-sync] Merge upstream chrome/m{TARGET}` |
 
 #### PR 2: mono/SkiaSharp (parent)
 
@@ -527,7 +535,7 @@ before the update can be considered complete. Do not create PRs with only smoke 
 |-------|-------|
 | Branch | `skia-sync/m{TARGET}` |
 | Target | `main` |
-| Title | `Bump skia to milestone {TARGET} (#ISSUE)` |
+| Title | `[skia-sync] Update skia to milestone {TARGET}` |
 
 **Submodule must point to the mono/skia PR branch.**
 

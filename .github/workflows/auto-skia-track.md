@@ -194,18 +194,25 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-10.** Notes specific to this automated workflow:
 
-- **Phase 1 is pre-computed** (above). Skip it.
+- **Phase 1 is pre-computed** (above). Skip it — but you still need to add the `upstream` remote
+  and fetch `chrome/m${{ needs.pre_activation.outputs.target }}` (Phase 1 step 4) since Phase 5 depends on it.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't do this for the chroot).
 - **Phase 4**: Before creating a fresh branch, check if `origin/skia-sync/m${{ needs.pre_activation.outputs.target }}` already exists.
   If so, check it out and check for new upstream commits. Stop if there are none.
   Even when current == target, there may be new upstream bug-fix commits — a matching milestone does NOT mean no work.
+  **Skip Phase 4 step 5** (submodule SHA alignment) — the pre-agent step already aligned it.
+  Branch from the current HEAD when creating the submodule feature branch in step 6.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
+  This also applies to Phase 10 if a native rebuild is needed.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
-- **Submodule alignment**: the pre-agent step already checked out the submodule to the correct SHA.
-  When creating your submodule feature branch in Phase 4, branch from the current HEAD.
-- **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 Step 1.
-- **Phase 11 is handled by a post-step.** Do NOT push branches, create PRs, or create issues yourself — all GitHub artifacts are handled by the post-step.
-  Just commit locally. Do NOT call `create_issue` or `create_pull_request`. After Phase 10, write these files:
+- **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
+- **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
+  Do NOT push branches, create PRs, or create issues — all GitHub artifacts are handled by the post-step.
+  Just commit locally. Do NOT call `create_issue` or `create_pull_request`.
+- **"No work" signal**: if you determine there are no new upstream commits to merge, do NOT write
+  `skia-sync-env.sh`. The post-step will detect its absence and skip. Stop immediately.
+
+After Phase 10, write these files:
 
 1. `/tmp/gh-aw/agent/skia-sync-env.sh` — **required** for the post-step to know what to push:
    ```bash
