@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3265,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-06T20:39:19Z"
+  },
+  "summary": "SKFont.ContainsGlyphs returns false for emoji strings containing Unicode variation selectors (e.g. \u2764\ufe0f) on Android because the variation selector character U+FE0F maps to glyph 0.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.93
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Android"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "screenshots": [
+        {
+          "url": "https://github.com/user-attachments/assets/8901e9cd-1e8d-4867-95de-ad4470e813cb",
+          "description": "Screenshot showing fallback font debug info"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/6c89af37-ba0e-4dbf-9f7d-2efce067fe34",
+          "description": "Screenshot showing ContainsGlyphs returning false"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/255a94c5-5612-4a79-b671-f537b5aff379",
+          "description": "Screenshot showing substring test results"
+        }
+      ],
+      "repoLinks": [],
+      "codeSnippets": [
+        "font.ContainsGlyphs(text) // returns false for '\u2764\ufe0f'",
+        "font.ContainsGlyphs(text.substring(0,1)) // returns true (just \u2764 U+2764)",
+        "font.ContainsGlyphs(text.substring(1,1)) // returns false (variation selector U+FE0F)"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "ContainsGlyphs implementation in SKFont.cs uses Array.IndexOf(glyphs, 0) == -1, which returns false whenever any glyph maps to 0. Variation selectors (U+FE0F) have no standalone glyph and map to glyph ID 0 on Android, causing the entire check to fail."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.7,
+      "reason": "Reporter states it worked in 2.88.9 but fails in 3.116.0. The ContainsGlyphs API may have changed behavior between versions.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "ContainsGlyphs(string) fails for emoji strings containing variation selectors on Android. The \u2764\ufe0f emoji is two UTF-16 characters (U+2764 + U+FE0F). GetGlyphs maps each char to a glyph ID; the variation selector U+FE0F returns glyph ID 0 (not found). ContainsGlyphs then returns false because it checks Array.IndexOf(glyphs, 0) == -1. The fix should skip variation selectors and other combining/modifier code points when checking for glyph presence.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "finding": "ContainsGlyphs(string) delegates to GetGlyphs(string) then private ContainsGlyphs(ushort[]). The private method returns Array.IndexOf(glyphs, (ushort)0) == -1, meaning ALL glyphs must be non-zero for the method to return true.",
+        "relevance": "direct",
+        "lines": "220-233"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "finding": "GetGlyphs(ReadOnlySpan<char>) calls sk_font_text_to_glyphs with UTF-16 encoding. For the string '\u2764\ufe0f' (2 chars), this produces 2 glyph IDs. Unicode variation selector U+FE0F is not a visible character and most fonts map it to glyph 0.",
+        "relevance": "direct",
+        "lines": "149-207"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "font.ContainsGlyphs(text.substring(0,1)) returns true. font.ContainsGlyphs(text.substring(1,1)) returns false.",
+        "source": "issue body",
+        "interpretation": "Confirms the heart character (index 0) has a glyph but the variation selector (index 1) does not, causing the combined check to fail."
+      },
+      {
+        "text": "on android you just get #91Fallback",
+        "source": "issue body",
+        "interpretation": "The fallback font is found but its ContainsGlyphs returns false due to the variation selector issue, so the character is not rendered."
+      },
+      {
+        "text": "On iOS all work and the fallbackfont is appleEmoji",
+        "source": "issue body",
+        "interpretation": "Apple Emoji font likely handles the variation sequence as a single cluster and returns a valid glyph for the full sequence, whereas Android fonts do not."
+      }
+    ],
+    "rationale": "This is a type/bug because ContainsGlyphs incorrectly returns false for emoji strings containing Unicode variation selectors. The root cause is in the private ContainsGlyphs(ushort[]) method which treats any glyph ID 0 as a failure, but variation selectors legitimately map to glyph 0 while the base character has a valid glyph. Classified as os/Android because iOS works correctly. Medium severity because it affects emoji rendering with a workaround available (pass only the base codepoint).",
+    "workarounds": [
+      "Use char.IsHighSurrogate/IsLowSurrogate checks and pass only the base emoji codepoint (without the variation selector) to ContainsGlyphs.",
+      "Convert the string to Unicode scalar values using StringInfo or Rune enumeration, then call ContainsGlyphs(ReadOnlySpan<int> codepoints) with individual codepoints, skipping variation selectors (U+FE0F, U+FE0E)."
+    ],
+    "nextQuestions": [
+      "Does SKFontManager.MatchCharacter handle variation sequences correctly on Android?",
+      "What was the ContainsGlyphs implementation in 2.88.9 that made it work correctly?"
+    ],
+    "resolution": {
+      "proposals": [
+        {
+          "title": "Workaround: use Rune enumeration to skip variation selectors",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "validated": "untested",
+          "description": "Enumerate runes and filter out combining/variation selectors before calling ContainsGlyphs."
+        },
+        {
+          "title": "Fix: ContainsGlyphs should check each base grapheme cluster independently",
+          "category": "fix",
+          "effort": "cost/m",
+          "validated": "untested",
+          "description": "The private ContainsGlyphs(ushort[]) should be changed to check glyphs corresponding to base codepoints only, skipping variation selectors and other zero-width combiners. Alternatively, use the ReadOnlySpan<int> codepoints overload internally."
+        }
+      ],
+      "recommendedProposal": "fix-1",
+      "recommendedReason": "The workaround requires users to understand Unicode variation selectors; a fix in the library is more correct and backward-compatible."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Regression with partial repro. Root cause is identified in ContainsGlyphs logic but a reliable minimal repro and confirmation of version difference is needed before fixing.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Minimal self-contained code sample demonstrating the issue",
+      "Confirmation of which version it first broke in (3.116.0 vs earlier 3.x versions)"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add type/bug, area/SkiaSharp, os/Android, tenet/reliability",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Android",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the variation selector root cause and provide workaround",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed report!\n\nThe root cause appears to be in `SKFont.ContainsGlyphs`. The heart emoji `\u2764\ufe0f` is actually two UTF-16 characters: `\u2764` (U+2764) and the variation selector `\ufe0f` (U+FE0F). When `ContainsGlyphs` calls `GetGlyphs` on the full string, it gets two glyph IDs. The variation selector U+FE0F doesn't have its own standalone glyph in most Android fonts, so it maps to glyph ID 0. Since `ContainsGlyphs` currently returns `false` if *any* glyph is 0, the whole check fails.\n\n**Workaround:** Use the `ReadOnlySpan<int>` overload of `ContainsGlyphs` with individual Unicode codepoints, skipping variation selectors:\n\n```csharp\n// Enumerate text as Unicode scalar values, skip variation selectors\nvar codepoints = new List<int>();\nforeach (var rune in text.EnumerateRunes())\n{\n    // Skip variation selectors (U+FE00\u2013U+FE0F and U+E0100\u2013U+E01EF)\n    if (rune.Value is >= 0xFE00 and <= 0xFE0F)\n        continue;\n    codepoints.Add(rune.Value);\n}\nbool hasGlyphs = font.ContainsGlyphs(System.Runtime.InteropServices.MemoryMarshal.Cast<int, int>(codepoints.ToArray()));\n```\n\nAlternatively, use `SKTypeface.ContainsGlyphs(ReadOnlySpan<int> codepoints)` directly.\n\nWe'll investigate fixing `ContainsGlyphs` to handle variation selectors correctly."
+      }
+    ]
+  }
+}

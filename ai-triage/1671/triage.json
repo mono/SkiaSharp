@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1671,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-06T16:49:33Z"
+  },
+  "summary": "User asks how to save SKCanvas drawing to a byte array, with code that incorrectly initializes an SKBitmap via Decode of an empty array.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.95 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "SKBitmap bitmap = SKBitmap.Decode(new byte[0]);\nSKCanvas sKCanvas = new SKCanvas(bitmap);\nSKPath path = new SKPath();\npath.AddCircle(0,0,20);\nsKCanvas.DrawPath(path, new SKPaint());"
+      ],
+      "stepsToReproduce": [
+        "Create an SKBitmap with SKBitmap.Decode(new byte[0]) — this produces a null bitmap",
+        "Wrap in SKCanvas and draw a path",
+        "Ask how to encode result as bytes"
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Usage question about how to encode/save an SKCanvas drawing to a byte array. The reporter's code also has a bug: SKBitmap.Decode(new byte[0]) returns null — the bitmap should be created with new SKBitmap(width, height) instead. The correct approach is to create a properly-sized SKBitmap, draw to it, then call SKBitmap.Encode() to get SKData and call .ToArray().",
+    "rationale": "This is a how-to question, not a bug. No broken behavior is reported. The API needed (SKBitmap.Encode + SKData.ToArray) exists in the public surface. The reporter's code has a secondary bug with Decode of empty bytes, but the main question is about encoding.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "732-736",
+        "finding": "SKBitmap.Encode(SKEncodedImageFormat format, int quality) returns an SKData object — the reporter can call .ToArray() on it to get bytes. Overloads also accept Stream directly.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKData.cs",
+        "lines": "236-251",
+        "finding": "SKData.ToArray() returns byte[] and Span property returns Span<byte>. Also has AsStream() for streaming use cases.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "How to save skcanvas as byte?",
+        "source": "issue body",
+        "interpretation": "This is a usage question — reporter does not know the Encode API."
+      },
+      {
+        "text": "SKBitmap bitmap = SKBitmap.Decode(new byte[0]);",
+        "source": "issue body",
+        "interpretation": "Bug in reporter's code — Decode of empty bytes returns null. Should use new SKBitmap(width, height)."
+      }
+    ],
+    "workarounds": [
+      "Create bitmap with: var bitmap = new SKBitmap(width, height); then use bitmap.Encode(SKEncodedImageFormat.Png, 100).ToArray() after drawing.",
+      "Alternatively: encode directly to a MemoryStream using bitmap.Encode(stream, SKEncodedImageFormat.Png, 100)."
+    ],
+    "resolution": {
+      "hypothesis": "Reporter needs to use SKBitmap.Encode() to obtain SKData and then call ToArray(), after correctly initializing the bitmap with new SKBitmap(width, height).",
+      "proposals": [
+        {
+          "title": "Use SKBitmap.Encode to get byte array",
+          "description": "Create the bitmap correctly with new SKBitmap(width, height), draw to it via SKCanvas, then call Encode() to get SKData and ToArray() for the byte array.",
+          "category": "fix",
+          "codeSnippet": "int width = 100, height = 100;\nusing var bitmap = new SKBitmap(width, height);\nusing var canvas = new SKCanvas(bitmap);\ncanvas.Clear(SKColors.Transparent);\n\nusing var path = new SKPath();\npath.AddCircle(50, 50, 20);\nusing var paint = new SKPaint { Color = SKColors.Red, IsAntialias = true };\ncanvas.DrawPath(path, paint);\n\n// Encode as PNG and get bytes\nusing var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);\nbyte[] bytes = data.ToArray();",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use SKBitmap.Encode to get byte array",
+      "recommendedReason": "Direct API path with minimal code. SKBitmap.Encode is the standard way to produce encoded image bytes."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.90,
+      "reason": "Standard usage question answered by existing public API. SKBitmap.Encode() + SKData.ToArray() is the correct approach.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/question", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer with corrected code showing how to encode bitmap to bytes",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "To save your canvas drawing as a byte array, use `SKBitmap.Encode()` to get an `SKData` object and call `.ToArray()` on it.\n\nNote: `SKBitmap.Decode(new byte[0])` returns `null` because there's no valid image data to decode. Create your bitmap with `new SKBitmap(width, height)` instead.\n\nHere's a corrected example:\n\n```csharp\nint width = 100, height = 100;\nusing var bitmap = new SKBitmap(width, height);\nusing var canvas = new SKCanvas(bitmap);\ncanvas.Clear(SKColors.Transparent);\n\nusing var path = new SKPath();\npath.AddCircle(50, 50, 20);\nusing var paint = new SKPaint { Color = SKColors.Red, IsAntialias = true };\ncanvas.DrawPath(path, paint);\n\n// Encode as PNG and get bytes\nusing var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);\nbyte[] bytes = data.ToArray();\n```\n\nYou can also encode directly to a `Stream`:\n\n```csharp\nbitmap.Encode(stream, SKEncodedImageFormat.Png, 100);\n```"
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — standard API usage question",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
