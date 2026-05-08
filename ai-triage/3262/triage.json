@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3262,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-30T21:52:04Z"
+  },
+  "summary": "Feature request to throw an ObjectDisposedException when a disposed SKObject (e.g. SKPaint) is passed to canvas drawing methods, instead of crashing with a native segfault.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "paint.Dispose();\ncanvas.DrawText(text, x, y, font, paint); // segfault"
+      ],
+      "repoLinks": []
+    }
+  },
+  "analysis": {
+    "summary": "When a disposed SKPaint (or any SKObject) is used as an argument to canvas drawing methods, its Handle becomes IntPtr.Zero and native Skia code crashes with a segfault. The fix is to check Handle == IntPtr.Zero (i.e. object is disposed) when the handle is accessed and throw ObjectDisposedException. The maintainer confirmed this is a valid enhancement.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "DrawText and other drawing methods call paint.Handle directly (e.g. SkiaApi.sk_canvas_draw_text_blob(Handle, text.Handle, x, y, paint.Handle)) without checking if paint is disposed. If paint.Handle is IntPtr.Zero after disposal, native code will segfault.",
+        "relevance": "direct",
+        "lines": "[97, 314, 325, 339, 626]"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "finding": "SKNativeObject exposes IsDisposed (line 242) but the Handle getter does not throw when the object is disposed. The Handle is set to IntPtr.Zero on Dispose (line 276) but callers are not notified.",
+        "relevance": "direct",
+        "lines": "[242, 276]"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "my program crashed with the text in the console 'segmentation error' without a stack trace",
+        "source": "issue body",
+        "interpretation": "Passing a disposed SKPaint causes a native segfault because Handle is IntPtr.Zero."
+      },
+      {
+        "text": "We could check when we get the handle. So we can pass the objects around, but then an exception just before it goes into native code.",
+        "source": "maintainer comment by mattleibow",
+        "interpretation": "Maintainer confirmed approach: check Handle at the point it is consumed by the native interop layer."
+      }
+    ],
+    "rationale": "This is a feature-request / enhancement to add defensive dispose-checks. The reporter filed it as a feature request and the label was already set. The behavior (segfault on disposed object) is expected given no current guard exists, but a proper ObjectDisposedException would dramatically improve debuggability. Maintainer explicitly endorsed the idea.",
+    "resolution": {
+      "proposals": [
+        {
+          "title": "Guard Handle access with ObjectDisposedException",
+          "category": "fix",
+          "description": "Override the Handle getter in SKNativeObject (or SKObject) to throw ObjectDisposedException when IsDisposed is true, so any attempt to pass a disposed object to native code raises a clear managed exception instead of crashing.",
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: check IsDisposed before use",
+          "category": "workaround",
+          "description": "Until the fix lands, callers can check paint.IsDisposed or wrap usage in a try/catch, ensuring objects are not disposed before use.",
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "p1",
+      "recommendedReason": "Checking Handle when consumed prevents all callers from crashing on disposed objects without requiring individual null checks throughout the codebase, as the maintainer suggested."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Well-scoped feature request with maintainer approval. Needs investigation to determine the right intercept point (Handle getter vs. per-call guards) and assess impact across all SKObject subclasses.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/feature-request, area/SkiaSharp, tenet/reliability",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request, confirm maintainer support, and suggest workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the report! This is a great defensive-programming improvement. When a disposed `SKObject` (like `SKPaint`) is passed to a drawing method, its `Handle` becomes `IntPtr.Zero` and native Skia crashes with a segfault rather than throwing a managed exception.\n\nThe maintainer has confirmed this is a valid improvement: checking the handle at the point it enters native code would surface an `ObjectDisposedException` with a clear message.\n\n**Workaround in the meantime:** Ensure objects are not disposed before passing them to canvas methods. If you're unsure, you can check `paint.IsDisposed` before use:\n\n```csharp\nif (!paint.IsDisposed)\n    canvas.DrawText(text, x, y, font, paint);\n```"
+      }
+    ]
+  }
+}

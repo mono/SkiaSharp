@@ -1,0 +1,344 @@
+# Issue Triage Report — #3332
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-30T23:01:32Z |
+| Type | type/bug (0.87 (87%)) |
+| Area | area/SkiaSharp.Views.Blazor (0.98 (98%)) |
+| Suggested action | needs-investigation (0.82 (82%)) |
+
+**Issue Summary:** SKCanvasView in Blazor WASM does not fill 100% CSS height because the component overrides the canvas element's width/height HTML attributes during rendering, potentially interfering with percentage-based CSS layout.
+
+**Analysis:** The SKCanvasView Blazor component renders as a bare <canvas> element with AdditionalAttributes forwarded. During rendering, SKHtmlCanvas.js explicitly sets the canvas element's width and height HTML attributes (e.g., canvas.width = pixelWidth). Setting these attributes can reset the canvas element's intrinsic dimensions, potentially interfering with CSS height: 100% when the parent layout depends on the canvas's intrinsic size. The SizeWatcher.js uses element.clientHeight for size reporting, which may not yet reflect the CSS percentage height at the time of first measurement.
+
+**Recommendations:** **needs-investigation** — The reporter provides a GitHub repro repo and screenshot. The bug is plausible based on code inspection, but a proper reproduction is needed to confirm whether this is a SkiaSharp bug or CSS usage issue.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Blazor |
+| Platforms | os/WASM |
+| Backends | backend/Raster |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** SkiaSharp.Views.Blazor 3.119.0; Visual Studio (Windows); Windows 11; Blazor WASM
+
+**Repository links:**
+- https://github.com/skanva/TestSS — Minimal Blazor WASM repro demonstrating SKCanvasView height: 100% not filling the container
+
+**Screenshots:**
+- https://github.com/user-attachments/assets/27eb4563-f700-4aba-ad88-174674d75611 — Canvas only fills partial height (blue area), not the full container (blue + green)
+
+**Code snippets:**
+
+```csharp
+@page "/"
+@using SkiaSharp
+@using SkiaSharp.Views.Blazor
+
+<SKCanvasView style="height:100%;width:100%;" OnPaintSurface="OnPaintSurface" />
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | wrong-output |
+| Error message | — |
+| Repro quality | complete |
+| Target frameworks | net9.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.119.0 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Code investigation shows the issue pattern still exists in current source: SKHtmlCanvas.js explicitly sets canvas.width/height attributes, and SizeWatcher.js uses clientHeight. |
+
+## Analysis
+
+### Technical Summary
+
+The SKCanvasView Blazor component renders as a bare <canvas> element with AdditionalAttributes forwarded. During rendering, SKHtmlCanvas.js explicitly sets the canvas element's width and height HTML attributes (e.g., canvas.width = pixelWidth). Setting these attributes can reset the canvas element's intrinsic dimensions, potentially interfering with CSS height: 100% when the parent layout depends on the canvas's intrinsic size. The SizeWatcher.js uses element.clientHeight for size reporting, which may not yet reflect the CSS percentage height at the time of first measurement.
+
+### Rationale
+
+Classified as type/bug in area/SkiaSharp.Views.Blazor because the component's JavaScript layer explicitly overrides canvas.width and canvas.height HTML attributes which can cause canvas elements using CSS percentage heights to render at incorrect sizes. The 'random' behavior is consistent with a layout race condition between CSS percentage height resolution and the SizeWatcher's initial measurement. Severity is medium because a workaround exists (use explicit pixel heights or a wrapper div with explicit height), and the rendering itself functions correctly once size is established.
+
+### Key Signals
+
+- "The SKCanvasView takes some random height that is less than 100%" — **issue body** ('Random' suggests a timing/layout race condition — the canvas size is captured before CSS layout fully resolves)
+- "The Skia canvas only fills the blue area. It should extend to cover the green area." — **issue body (screenshot description)** (The canvas renders correctly within a smaller-than-expected area, indicating the measured/reported canvas size is less than the container height)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor` | — | direct | The component renders as a single <canvas> element with AdditionalAttributes forwarded. No wrapper div or default styles are applied — the canvas element is bare. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.js` | 91-94, 138-139 | direct | In requestAnimationFrame() and putImageData(), the code explicitly sets this.htmlCanvas.width = width and this.htmlCanvas.height = height. Setting width/height HTML attributes on a canvas element resets its intrinsic/natural size, which can affect layout when CSS uses percentage heights. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SizeWatcher.js` | 41-42 | direct | SizeWatcher.invoke() reports element.clientWidth and element.clientHeight. For percentage-height CSS on canvas elements, the ResizeObserver may fire before the browser fully settles layout after the canvas width/height attributes are set. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs` | 162-169 | direct | OnSizeChanged callback updates canvasSize from the SizeWatcher, then calls Invalidate(). If the reported size is incorrect at first render (before CSS height resolves), the canvas will render at the wrong size. |
+
+### Workarounds
+
+- Wrap SKCanvasView in a div with an explicit height, then use height: 100% on the canvas: <div style="position:absolute;top:0;left:0;width:100%;height:100%;"><SKCanvasView style="width:100%;height:100%;" .../></div>
+- Use viewport units instead of percentage: style="height: 100vh; width: 100vw;"
+- Use an explicit pixel height: style="height: 500px; width: 100%;"
+
+### Next Questions
+
+- Does the issue reproduce consistently or only on first render?
+- What is the parent element's height set to in the reporter's test case?
+- Does manually calling Invalidate() after the component renders fix the issue?
+- Can the issue be reproduced in the linked test repo https://github.com/skanva/TestSS?
+
+### Resolution Proposals
+
+**Hypothesis:** The canvas element's intrinsic size set by canvas.width/canvas.height attributes interferes with CSS percentage-height layout. A fix could involve not overwriting width/height HTML attributes unnecessarily, or ensuring Invalidate() is called after layout stabilizes using a deferred frame.
+
+1. **Wrap in explicit-height container** — workaround, cost/xs, validated=untested
+   - Wrap SKCanvasView in a positioned div with a defined height so that the canvas's height: 100% resolves against a concrete value.
+
+```csharp
+<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+    <SKCanvasView style="width: 100%; height: 100%;" OnPaintSurface="OnPaintSurface" />
+</div>
+```
+2. **Investigate canvas attribute vs CSS sizing interaction** — investigation, cost/m, validated=untested
+   - Investigate whether setting canvas.width/canvas.height HTML attributes in SKHtmlCanvas.js interferes with CSS percentage height. Consider using CSS width/height instead of HTML attributes for visual sizing, or call Invalidate() on a next animation frame to re-measure after layout stabilizes.
+
+**Recommended proposal:** workaround-1
+
+**Why:** Quickest path to unblocking the reporter while the root cause is investigated.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.82 (82%) |
+| Reason | The reporter provides a GitHub repro repo and screenshot. The bug is plausible based on code inspection, but a proper reproduction is needed to confirm whether this is a SkiaSharp bug or CSS usage issue. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply classification labels | labels=type/bug, area/SkiaSharp.Views.Blazor, os/WASM, tenet/reliability |
+| add-comment | medium | 0.82 (82%) | Acknowledge issue and provide workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report and the test repository!
+
+This appears to be related to how the browser handles percentage-based CSS heights on `<canvas>` elements when the canvas's `width`/`height` HTML attributes are explicitly set by the SkiaSharp rendering engine.
+
+**Workaround:** Wrap the `SKCanvasView` in a positioned container with an explicit height:
+
+```razor
+<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+    <SKCanvasView style="width: 100%; height: 100%;" OnPaintSurface="OnPaintSurface" />
+</div>
+```
+
+Alternatively, use viewport units directly on the canvas:
+
+```razor
+<SKCanvasView style="width: 100vw; height: 100vh;" OnPaintSurface="OnPaintSurface" />
+```
+
+We'll investigate whether SkiaSharp's canvas sizing logic can be improved to better handle CSS percentage-height scenarios. If the workaround above resolves your issue in the meantime, please let us know!
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3332,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-30T23:01:32Z"
+  },
+  "summary": "SKCanvasView in Blazor WASM does not fill 100% CSS height because the component overrides the canvas element's width/height HTML attributes during rendering, potentially interfering with percentage-based CSS layout.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.87
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/WASM"
+    ],
+    "backends": [
+      "backend/Raster"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net9.0"
+      ]
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        "@page \"/\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<SKCanvasView style=\"height:100%;width:100%;\" OnPaintSurface=\"OnPaintSurface\" />"
+      ],
+      "screenshots": [
+        {
+          "url": "https://github.com/user-attachments/assets/27eb4563-f700-4aba-ad88-174674d75611",
+          "description": "Canvas only fills partial height (blue area), not the full container (blue + green)"
+        }
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/skanva/TestSS",
+          "description": "Minimal Blazor WASM repro demonstrating SKCanvasView height: 100% not filling the container"
+        }
+      ],
+      "environmentDetails": "SkiaSharp.Views.Blazor 3.119.0; Visual Studio (Windows); Windows 11; Blazor WASM"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Code investigation shows the issue pattern still exists in current source: SKHtmlCanvas.js explicitly sets canvas.width/height attributes, and SizeWatcher.js uses clientHeight."
+    }
+  },
+  "analysis": {
+    "summary": "The SKCanvasView Blazor component renders as a bare <canvas> element with AdditionalAttributes forwarded. During rendering, SKHtmlCanvas.js explicitly sets the canvas element's width and height HTML attributes (e.g., canvas.width = pixelWidth). Setting these attributes can reset the canvas element's intrinsic dimensions, potentially interfering with CSS height: 100% when the parent layout depends on the canvas's intrinsic size. The SizeWatcher.js uses element.clientHeight for size reporting, which may not yet reflect the CSS percentage height at the time of first measurement.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor",
+        "finding": "The component renders as a single <canvas> element with AdditionalAttributes forwarded. No wrapper div or default styles are applied — the canvas element is bare.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.js",
+        "finding": "In requestAnimationFrame() and putImageData(), the code explicitly sets this.htmlCanvas.width = width and this.htmlCanvas.height = height. Setting width/height HTML attributes on a canvas element resets its intrinsic/natural size, which can affect layout when CSS uses percentage heights.",
+        "relevance": "direct",
+        "lines": "91-94, 138-139"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SizeWatcher.js",
+        "finding": "SizeWatcher.invoke() reports element.clientWidth and element.clientHeight. For percentage-height CSS on canvas elements, the ResizeObserver may fire before the browser fully settles layout after the canvas width/height attributes are set.",
+        "relevance": "direct",
+        "lines": "41-42"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+        "finding": "OnSizeChanged callback updates canvasSize from the SizeWatcher, then calls Invalidate(). If the reported size is incorrect at first render (before CSS height resolves), the canvas will render at the wrong size.",
+        "relevance": "direct",
+        "lines": "162-169"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The SKCanvasView takes some random height that is less than 100%",
+        "source": "issue body",
+        "interpretation": "'Random' suggests a timing/layout race condition — the canvas size is captured before CSS layout fully resolves"
+      },
+      {
+        "text": "The Skia canvas only fills the blue area. It should extend to cover the green area.",
+        "source": "issue body (screenshot description)",
+        "interpretation": "The canvas renders correctly within a smaller-than-expected area, indicating the measured/reported canvas size is less than the container height"
+      }
+    ],
+    "rationale": "Classified as type/bug in area/SkiaSharp.Views.Blazor because the component's JavaScript layer explicitly overrides canvas.width and canvas.height HTML attributes which can cause canvas elements using CSS percentage heights to render at incorrect sizes. The 'random' behavior is consistent with a layout race condition between CSS percentage height resolution and the SizeWatcher's initial measurement. Severity is medium because a workaround exists (use explicit pixel heights or a wrapper div with explicit height), and the rendering itself functions correctly once size is established.",
+    "workarounds": [
+      "Wrap SKCanvasView in a div with an explicit height, then use height: 100% on the canvas: <div style=\"position:absolute;top:0;left:0;width:100%;height:100%;\"><SKCanvasView style=\"width:100%;height:100%;\" .../></div>",
+      "Use viewport units instead of percentage: style=\"height: 100vh; width: 100vw;\"",
+      "Use an explicit pixel height: style=\"height: 500px; width: 100%;\""
+    ],
+    "nextQuestions": [
+      "Does the issue reproduce consistently or only on first render?",
+      "What is the parent element's height set to in the reporter's test case?",
+      "Does manually calling Invalidate() after the component renders fix the issue?",
+      "Can the issue be reproduced in the linked test repo https://github.com/skanva/TestSS?"
+    ],
+    "resolution": {
+      "hypothesis": "The canvas element's intrinsic size set by canvas.width/canvas.height attributes interferes with CSS percentage-height layout. A fix could involve not overwriting width/height HTML attributes unnecessarily, or ensuring Invalidate() is called after layout stabilizes using a deferred frame.",
+      "proposals": [
+        {
+          "category": "workaround",
+          "title": "Wrap in explicit-height container",
+          "description": "Wrap SKCanvasView in a positioned div with a defined height so that the canvas's height: 100% resolves against a concrete value.",
+          "codeSnippet": "<div style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%;\">\n    <SKCanvasView style=\"width: 100%; height: 100%;\" OnPaintSurface=\"OnPaintSurface\" />\n</div>",
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "category": "investigation",
+          "title": "Investigate canvas attribute vs CSS sizing interaction",
+          "description": "Investigate whether setting canvas.width/canvas.height HTML attributes in SKHtmlCanvas.js interferes with CSS percentage height. Consider using CSS width/height instead of HTML attributes for visual sizing, or call Invalidate() on a next animation frame to re-measure after layout stabilizes.",
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "workaround-1",
+      "recommendedReason": "Quickest path to unblocking the reporter while the root cause is investigated."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "The reporter provides a GitHub repro repo and screenshot. The bug is plausible based on code inspection, but a proper reproduction is needed to confirm whether this is a SkiaSharp bug or CSS usage issue.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply classification labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge issue and provide workaround",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the report and the test repository!\n\nThis appears to be related to how the browser handles percentage-based CSS heights on `<canvas>` elements when the canvas's `width`/`height` HTML attributes are explicitly set by the SkiaSharp rendering engine.\n\n**Workaround:** Wrap the `SKCanvasView` in a positioned container with an explicit height:\n\n```razor\n<div style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%;\">\n    <SKCanvasView style=\"width: 100%; height: 100%;\" OnPaintSurface=\"OnPaintSurface\" />\n</div>\n```\n\nAlternatively, use viewport units directly on the canvas:\n\n```razor\n<SKCanvasView style=\"width: 100vw; height: 100vh;\" OnPaintSurface=\"OnPaintSurface\" />\n```\n\nWe'll investigate whether SkiaSharp's canvas sizing logic can be improved to better handle CSS percentage-height scenarios. If the workaround above resolves your issue in the meantime, please let us know!"
+      }
+    ]
+  }
+}
+```
+
+</details>

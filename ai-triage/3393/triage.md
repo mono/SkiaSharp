@@ -1,0 +1,333 @@
+# Issue Triage Report — #3393
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-30T23:29:42Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/SkiaSharp (0.95 (95%)) |
+| Suggested action | ready-to-fix (0.88 (88%)) |
+
+**Issue Summary:** All public P/Invoke-invoking methods in SkiaSharp are missing GC.KeepAlive calls for reference-type parameters, creating a race condition where the GC can collect objects while native code is still operating on their handles.
+
+**Analysis:** SkiaSharp's P/Invoke wrapper methods extract native IntPtr handles from managed SKObject instances and pass them to native functions, but do not call GC.KeepAlive on those instances afterward. This is a well-known .NET pattern where the JIT/GC may consider an object unreachable once its handle field is read, even while native code is using that handle. The fix requires a systematic audit of all public methods that call SkiaApi.* to add GC.KeepAlive for every reference-type parameter (and possibly 'this').
+
+**Recommendations:** **ready-to-fix** — Root cause is clear, fix pattern is well-established and already used in 14 places in the codebase. The scope is large but the fix is mechanical.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+| Current labels | type/bug, os/Android, area/SkiaSharp, tenet/reliability |
+
+## Evidence
+
+### Reproduction
+
+1. Call canvas.DrawPicture(picture) where picture is not referenced after that call
+2. Under GC pressure or on certain runtimes, picture can be collected before sk_canvas_draw_picture() returns
+3. Native code then operates on a freed handle, potentially causing a crash or corruption
+
+**Environment:** SkiaSharp 3.116.0, Android (all versions), all platforms
+
+**Repository links:**
+- https://github.com/unoplatform/uno/pull/21660 — Uno platform example showing this race condition in SkiaSharp
+- https://github.com/dotnet/java-interop/issues/719 — Same pattern observed in java-interop
+- https://learn.microsoft.com/en-us/archive/blogs/cbrumme/lifetime-gc-keepalive-handle-recycling — Chris Brumme's blog post on GC.KeepAlive and handle recycling
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | crash |
+| Error message | Race condition: GC can collect managed object while P/Invoke is using its native handle |
+| Repro quality | partial |
+| Target frameworks | net9.0-android |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.116.0 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | SKCanvas.DrawPicture and other P/Invoke wrappers still lack GC.KeepAlive as of current main. |
+
+## Analysis
+
+### Technical Summary
+
+SkiaSharp's P/Invoke wrapper methods extract native IntPtr handles from managed SKObject instances and pass them to native functions, but do not call GC.KeepAlive on those instances afterward. This is a well-known .NET pattern where the JIT/GC may consider an object unreachable once its handle field is read, even while native code is using that handle. The fix requires a systematic audit of all public methods that call SkiaApi.* to add GC.KeepAlive for every reference-type parameter (and possibly 'this').
+
+### Rationale
+
+This is a valid, well-documented .NET reliability bug. The reporter (a .NET runtime contributor) accurately describes the GC handle-recycling race and provides a concrete example from Uno platform. Code investigation confirms SKCanvas.DrawPicture and at least two other overloads have no GC.KeepAlive, while the fix pattern is already used inconsistently in 14 places across the codebase. The fix scope is large (all P/Invoke wrappers) but the root cause and fix pattern are clear. This is ready-to-fix with medium effort.
+
+### Key Signals
+
+- "once execution hits SkiaApi.sk_canvas_draw_picture(), nothing ensures that picture is kept alive" — **issue body** (Reporter has correctly identified the exact vulnerability — handle extraction makes object unreachable from GC perspective)
+- "This should be done for all public methods that invoke P/Invoke methods" — **issue body** (Scope is repo-wide: every method in binding/SkiaSharp/ that calls SkiaApi.* needs auditing)
+- "GC.KeepAlive already used in SKData.cs and SKImage.cs in 14 locations" — **code investigation** (Pattern is already understood and partially applied — this is a known gap in coverage, not a new concept)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKCanvas.cs` | 533-538 | direct | DrawPicture(SKPicture, SKPaint) calls SkiaApi.sk_canvas_draw_picture(Handle, picture.Handle, null, paint.Handle) with no GC.KeepAlive — picture and paint can be collected once their .Handle value is read |
+| `binding/SkiaSharp/SKCanvas.cs` | 525-531 | direct | DrawPicture(SKPicture, SKMatrix, SKPaint) has the same issue — picture.Handle is extracted but picture itself is not kept alive across the P/Invoke |
+| `binding/SkiaSharp/SKData.cs` | 167-191 | related | GC.KeepAlive(stream) already used in some factory methods — demonstrates the pattern is known and partially applied, but not systematically across all methods |
+| `binding/SkiaSharp/SKImage.cs` | 243 | related | GC.KeepAlive(bitmap) used in SKImage.FromBitmap, showing the partial application of the fix — the gap is the many other methods without it |
+| `binding/SkiaSharp/SKCanvas.cs` | 542-548 | direct | DrawDrawable(SKDrawable, SKMatrix) also lacks GC.KeepAlive after extracting drawable.Handle — same pattern applies to all Draw* methods |
+
+### Workarounds
+
+- Callers can add GC.KeepAlive(picture) after canvas.DrawPicture(picture) in their own code as a temporary workaround
+
+### Next Questions
+
+- Is there a source generator or Roslyn analyzer that could enforce GC.KeepAlive after P/Invoke calls to prevent regressions?
+- Does the issue also affect the 'this' reference (i.e., should GC.KeepAlive(this) be added to instance methods)?
+- Are there methods that use 'fixed' blocks for value types that also need attention?
+
+### Resolution Proposals
+
+**Hypothesis:** The JIT may determine that reference-type parameters are unreachable once their .Handle IntPtr is extracted, allowing GC collection while native code uses that handle. Adding GC.KeepAlive after each P/Invoke call prevents this.
+
+1. **Systematic GC.KeepAlive audit across all P/Invoke wrappers** — fix, confidence 0.92 (92%), cost/l, validated=untested
+   - For every public method in binding/SkiaSharp/ that calls SkiaApi.*, add GC.KeepAlive(param) after the P/Invoke call for each reference-type parameter. Also add GC.KeepAlive(this) where 'this' handle is passed. Consider whether a source generator can enforce this going forward.
+2. **Use SafeHandle or GCHandle.Alloc for native objects** — alternative, confidence 0.55 (55%), cost/xl, validated=untested
+   - Refactor SKObject to use SafeHandle, which pins objects across P/Invoke automatically. This is a larger architectural change but eliminates the problem class entirely.
+
+**Recommended proposal:** Systematic GC.KeepAlive audit across all P/Invoke wrappers
+
+**Why:** Lower risk, consistent with existing pattern already used in 14 places, and can be done incrementally. SafeHandle migration is too large and risky for a fix.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.88 (88%) |
+| Reason | Root cause is clear, fix pattern is well-established and already used in 14 places in the codebase. The scope is large but the fix is mechanical. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply bug, area/SkiaSharp, and reliability tenet labels (already mostly applied) | labels=type/bug, area/SkiaSharp, tenet/reliability |
+| add-comment | medium | 0.90 (90%) | Acknowledge the issue, confirm the bug and existing partial fix pattern, outline fix scope | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed write-up and references @jonpryor!
+
+Code investigation confirms the gap: `SKCanvas.DrawPicture` and many other P/Invoke wrappers extract `.Handle` from parameters without calling `GC.KeepAlive` afterward. The fix pattern is already used in 14 places across `SKData.cs`, `SKImage.cs`, `SKTextBlob.cs`, and others — so the approach is established, just not consistently applied.
+
+The scope of the fix is large (all public methods in `binding/SkiaSharp/` that call `SkiaApi.*`), making this a `cost/l` effort. A Roslyn analyzer or source generator could help enforce this pattern going forward to prevent regressions.
+
+Marking as `ready-to-fix`.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3393,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-30T23:29:42Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Android",
+      "area/SkiaSharp",
+      "tenet/reliability"
+    ]
+  },
+  "summary": "All public P/Invoke-invoking methods in SkiaSharp are missing GC.KeepAlive calls for reference-type parameters, creating a race condition where the GC can collect objects while native code is still operating on their handles.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Race condition: GC can collect managed object while P/Invoke is using its native handle",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net9.0-android"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call canvas.DrawPicture(picture) where picture is not referenced after that call",
+        "Under GC pressure or on certain runtimes, picture can be collected before sk_canvas_draw_picture() returns",
+        "Native code then operates on a freed handle, potentially causing a crash or corruption"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, Android (all versions), all platforms",
+      "repoLinks": [
+        {
+          "url": "https://github.com/unoplatform/uno/pull/21660",
+          "description": "Uno platform example showing this race condition in SkiaSharp"
+        },
+        {
+          "url": "https://github.com/dotnet/java-interop/issues/719",
+          "description": "Same pattern observed in java-interop"
+        },
+        {
+          "url": "https://learn.microsoft.com/en-us/archive/blogs/cbrumme/lifetime-gc-keepalive-handle-recycling",
+          "description": "Chris Brumme's blog post on GC.KeepAlive and handle recycling"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKCanvas.DrawPicture and other P/Invoke wrappers still lack GC.KeepAlive as of current main."
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp's P/Invoke wrapper methods extract native IntPtr handles from managed SKObject instances and pass them to native functions, but do not call GC.KeepAlive on those instances afterward. This is a well-known .NET pattern where the JIT/GC may consider an object unreachable once its handle field is read, even while native code is using that handle. The fix requires a systematic audit of all public methods that call SkiaApi.* to add GC.KeepAlive for every reference-type parameter (and possibly 'this').",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "533-538",
+        "finding": "DrawPicture(SKPicture, SKPaint) calls SkiaApi.sk_canvas_draw_picture(Handle, picture.Handle, null, paint.Handle) with no GC.KeepAlive — picture and paint can be collected once their .Handle value is read",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "525-531",
+        "finding": "DrawPicture(SKPicture, SKMatrix, SKPaint) has the same issue — picture.Handle is extracted but picture itself is not kept alive across the P/Invoke",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKData.cs",
+        "lines": "167-191",
+        "finding": "GC.KeepAlive(stream) already used in some factory methods — demonstrates the pattern is known and partially applied, but not systematically across all methods",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "243",
+        "finding": "GC.KeepAlive(bitmap) used in SKImage.FromBitmap, showing the partial application of the fix — the gap is the many other methods without it",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "542-548",
+        "finding": "DrawDrawable(SKDrawable, SKMatrix) also lacks GC.KeepAlive after extracting drawable.Handle — same pattern applies to all Draw* methods",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "once execution hits SkiaApi.sk_canvas_draw_picture(), nothing ensures that picture is kept alive",
+        "source": "issue body",
+        "interpretation": "Reporter has correctly identified the exact vulnerability — handle extraction makes object unreachable from GC perspective"
+      },
+      {
+        "text": "This should be done for all public methods that invoke P/Invoke methods",
+        "source": "issue body",
+        "interpretation": "Scope is repo-wide: every method in binding/SkiaSharp/ that calls SkiaApi.* needs auditing"
+      },
+      {
+        "text": "GC.KeepAlive already used in SKData.cs and SKImage.cs in 14 locations",
+        "source": "code investigation",
+        "interpretation": "Pattern is already understood and partially applied — this is a known gap in coverage, not a new concept"
+      }
+    ],
+    "rationale": "This is a valid, well-documented .NET reliability bug. The reporter (a .NET runtime contributor) accurately describes the GC handle-recycling race and provides a concrete example from Uno platform. Code investigation confirms SKCanvas.DrawPicture and at least two other overloads have no GC.KeepAlive, while the fix pattern is already used inconsistently in 14 places across the codebase. The fix scope is large (all P/Invoke wrappers) but the root cause and fix pattern are clear. This is ready-to-fix with medium effort.",
+    "resolution": {
+      "hypothesis": "The JIT may determine that reference-type parameters are unreachable once their .Handle IntPtr is extracted, allowing GC collection while native code uses that handle. Adding GC.KeepAlive after each P/Invoke call prevents this.",
+      "proposals": [
+        {
+          "title": "Systematic GC.KeepAlive audit across all P/Invoke wrappers",
+          "description": "For every public method in binding/SkiaSharp/ that calls SkiaApi.*, add GC.KeepAlive(param) after the P/Invoke call for each reference-type parameter. Also add GC.KeepAlive(this) where 'this' handle is passed. Consider whether a source generator can enforce this going forward.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SafeHandle or GCHandle.Alloc for native objects",
+          "description": "Refactor SKObject to use SafeHandle, which pins objects across P/Invoke automatically. This is a larger architectural change but eliminates the problem class entirely.",
+          "category": "alternative",
+          "confidence": 0.55,
+          "effort": "cost/xl",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Systematic GC.KeepAlive audit across all P/Invoke wrappers",
+      "recommendedReason": "Lower risk, consistent with existing pattern already used in 14 places, and can be done incrementally. SafeHandle migration is too large and risky for a fix."
+    },
+    "nextQuestions": [
+      "Is there a source generator or Roslyn analyzer that could enforce GC.KeepAlive after P/Invoke calls to prevent regressions?",
+      "Does the issue also affect the 'this' reference (i.e., should GC.KeepAlive(this) be added to instance methods)?",
+      "Are there methods that use 'fixed' blocks for value types that also need attention?"
+    ],
+    "workarounds": [
+      "Callers can add GC.KeepAlive(picture) after canvas.DrawPicture(picture) in their own code as a temporary workaround"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.88,
+      "reason": "Root cause is clear, fix pattern is well-established and already used in 14 places in the codebase. The scope is large but the fix is mechanical.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, area/SkiaSharp, and reliability tenet labels (already mostly applied)",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the issue, confirm the bug and existing partial fix pattern, outline fix scope",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed write-up and references @jonpryor!\n\nCode investigation confirms the gap: `SKCanvas.DrawPicture` and many other P/Invoke wrappers extract `.Handle` from parameters without calling `GC.KeepAlive` afterward. The fix pattern is already used in 14 places across `SKData.cs`, `SKImage.cs`, `SKTextBlob.cs`, and others — so the approach is established, just not consistently applied.\n\nThe scope of the fix is large (all public methods in `binding/SkiaSharp/` that call `SkiaApi.*`), making this a `cost/l` effort. A Roslyn analyzer or source generator could help enforce this pattern going forward to prevent regressions.\n\nMarking as `ready-to-fix`."
+      }
+    ]
+  }
+}
+```
+
+</details>
