@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage — #2728 (needs-investigation)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<script>const DATA = {"meta": {"schemaVersion": "1.0", "number": 2728, "repo": "mono/SkiaSharp", "analyzedAt": "2026-04-24T16:10:00Z", "currentLabels": ["type/bug", "os/Windows-Classic", "area/libSkiaSharp.native", "tenet/compatibility", "tenet/reliability", "triage/triaged"]}, "summary": "libSkiaSharp.dll is not copied to the output folder when SkiaSharp is referenced transitively through a class library targeting netstandard1.3, causing DllNotFoundException at runtime on .NET Framework 4.6.", "classification": {"type": {"value": "type/bug", "confidence": 0.9}, "area": {"value": "area/libSkiaSharp.native", "confidence": 0.92}, "platforms": ["os/Windows-Classic"], "tenets": ["tenet/compatibility", "tenet/reliability"]}, "evidence": {"bugSignals": {"severity": "medium", "regressionClaimed": true, "errorType": "missing-output", "errorMessage": "Unable to load DLL 'libSkiaSharp': The specified module could not be found. (Exception from HRESULT: 0x8007007E)", "stackTrace": "DllNotFoundException at SkiaSharp.SkiaApi.sk_data_new_empty() -> TypeInitializationException at SkiaSharp.SKData..cctor()", "reproQuality": "complete", "targetFrameworks": ["net46", "netstandard1.3"]}, "reproEvidence": {"stepsToReproduce": ["Create an ASP.NET WebForms application targeting .NET Framework 4.6", "Create a class library targeting netstandard1.3", "Add SkiaSharp v2.88.7 NuGet package to the class library", "Reference the class library from the WebForms application", "Build and run the application", "Observe that libSkiaSharp.dll is not copied to the bin folder and a DllNotFoundException is thrown"], "environmentDetails": "VS2019, .NET Framework 4.6, AnyCPU, SkiaSharp 2.88.7, Windows 10", "relatedIssues": [513, 955, 1726, 3040], "repoLinks": [{"url": "https://github.com/lbras/SkiaSharpTestWebFormsNETFramework46", "description": "Minimal repro project for the reported issue"}]}, "versionAnalysis": {"mentionedVersions": ["2.88.7", "2.88.3", "2.88.8", "2.88.9", "2.80.0", "1.68.3"], "workedIn": "1.68.3", "brokeIn": "2.80.0", "currentRelevance": "likely", "relevanceReason": "The buildTransitive/net4 path limitation still exists in current code; netstandard1.3 targets remain unsupported for native asset deployment."}, "regression": {"isRegression": true, "confidence": 0.75, "reason": "Reporter confirms SkiaSharp v1.68.3 deployed libSkiaSharp.dll correctly; versions 2.80.0+ fail. The packaging structure changed between v1 and v2.", "workedInVersion": "1.68.3", "brokeInVersion": "2.80.0"}}, "analysis": {"summary": "The SkiaSharp.NativeAssets.Win32 package only provides a buildTransitive MSBuild targets file under the net4* TFM path, so it only flows transitively to projects targeting .NET Framework 4.x. When a class library targets netstandard1.3, the targets file is never imported and the native DLL is never added to the build output — even for the consuming application. The fix is to reference SkiaSharp.NativeAssets.Win32 directly in the executable project, but the packaging gap (no netstandard buildTransitive targets) is a real issue.", "rationale": "The error message and stack trace clearly show the native DLL is missing at runtime, not a usage error. Code investigation confirms the Win32 native assets csproj only emits buildTransitive targets for net4* TFMs, leaving netstandard1.3 consumers without transitive native deployment. The maintainer's comment acknowledges the gap. This is a real bug (or at minimum a packaging/documentation issue) because NuGet.org still advertises netstandard1.3 support.", "keySignals": [{"text": "Unable to load DLL 'libSkiaSharp': The specified module could not be found.", "source": "issue body", "interpretation": "Native DLL is entirely absent from output directory — not a path or bitness issue."}, {"text": "SkiaSharp v1.68.3 works fine and I do get libSkiaSharp.dll deployed in the bin folder", "source": "issue body", "interpretation": "This is a regression from v1.x packaging behavior, confirming something changed in native asset deployment."}, {"text": "I tried updating my sample project to .NET Framework 4.8 and had no issues", "source": "comment by lbras", "interpretation": "The issue is specific to net46/netstandard1.3 TFM — net462+ and net48 work correctly because the buildTransitive/net4 targets file covers net462 and above."}, {"text": "I need to see why I do not copy the native dlls for plain .NET Standard.", "source": "comment by mattleibow", "interpretation": "Maintainer acknowledges the gap as needing investigation — not a conscious design decision."}], "codeInvestigation": [{"file": "binding/SkiaSharp.NativeAssets.Win32/SkiaSharp.NativeAssets.Win32.csproj", "finding": "The IncludeAdditionalTfmSpecificPackageFiles target only emits buildTransitive targets files when $(TargetFramework.StartsWith('net4')), meaning no targets file is included for netstandard* TFMs. There is no buildTransitive/netstandard1.3/ or buildTransitive/netstandard2.0/ path in the package.", "relevance": "direct"}, {"file": "binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets", "finding": "The targets file copies libSkiaSharp*.dll to the project output using None items with CopyToOutputDirectory=PreserveNewest. This logic only runs when the targets file is imported, which only happens for net4* TFMs. For netstandard-targeting class libraries consumed by net4* apps, the transitive import is blocked at the TFM boundary.", "relevance": "direct"}, {"file": "documentation/dev/packages.md", "finding": "Docs state: 'NativeAssets packages must be referenced in the application project (the one that produces the executable), not in library projects.' Also: Win32 is auto-included for non-platform TFMs including net462, netstandard2.0, netstandard2.1, but NOT netstandard1.3. This documents the intended behavior but is not obvious from NuGet.org listing.", "relevance": "related"}], "workarounds": ["Add SkiaSharp.NativeAssets.Win32 directly as a PackageReference in the WebForms application project (not the class library) — this is the recommended pattern per SkiaSharp docs", "Upgrade the class library TFM from netstandard1.3 to net462 or netstandard2.0, which triggers the buildTransitive targets and auto-deploys native assets", "Manually copy libSkiaSharp.dll to the application output directory as a post-build step"], "nextQuestions": ["Should a buildTransitive targets file be added for netstandard* TFMs in SkiaSharp.NativeAssets.Win32?", "Is the NuGet.org listing/README still advertising netstandard1.3 support, and if so, should it be updated to clarify native deployment limitations?"], "resolution": {"hypothesis": "The SkiaSharp.NativeAssets.Win32 package lacks a buildTransitive targets file for netstandard TFMs. When SkiaSharp is consumed from a netstandard1.3 class library, no targets file is imported into the consuming application, so native DLLs are never scheduled for copy.", "proposals": [{"title": "Add SkiaSharp.NativeAssets.Win32 to the application project", "description": "Reference SkiaSharp.NativeAssets.Win32 directly in the WebForms application project. Per SkiaSharp's documented packaging model, NativeAssets packages should be referenced by the application (executable), not by library projects. This is the immediate fix.", "category": "workaround", "confidence": 0.95, "effort": "cost/xs", "validated": "untested"}, {"title": "Upgrade class library TFM to net462 or netstandard2.0", "description": "Change the class library target from netstandard1.3 to net462 or netstandard2.0. Both are supported TFMs where the buildTransitive mechanism works correctly and native assets flow through automatically.", "category": "workaround", "confidence": 0.95, "effort": "cost/xs", "validated": "untested"}, {"title": "Add buildTransitive targets file for netstandard in SkiaSharp.NativeAssets.Win32", "description": "Add a buildTransitive/netstandard/ (or buildTransitive/netstandard1.0/) targets file to SkiaSharp.NativeAssets.Win32 that handles native DLL deployment for netstandard-targeting projects. This would require investigation of why it was originally excluded.", "category": "fix", "confidence": 0.6, "effort": "cost/m", "validated": "untested"}], "recommendedProposal": "Add SkiaSharp.NativeAssets.Win32 to the application project", "recommendedReason": "Immediate fix available with no packaging changes required. Consistent with the documented best practice for SkiaSharp native asset deployment."}}, "output": {"actionability": {"suggestedAction": "needs-investigation", "confidence": 0.8, "reason": "Root cause is clear (missing buildTransitive targets for netstandard TFMs), and a workaround exists (add NativeAssets to app project). However, a maintainer comment indicates the gap was not intentional and needs a design decision on whether to fix the packaging or update the documentation.", "suggestedReproPlatform": "windows"}, "actions": [{"type": "update-labels", "description": "Apply bug, native assets, Windows Classic, and tenet labels", "risk": "low", "confidence": 0.95, "labels": ["type/bug", "area/libSkiaSharp.native", "os/Windows-Classic", "tenet/compatibility", "tenet/reliability"]}, {"type": "add-comment", "description": "Provide workaround and explanation for the deployment gap", "risk": "medium", "confidence": 0.85, "comment": "Thanks for the detailed reproduction case!\n\nThe root cause here is that `SkiaSharp.NativeAssets.Win32` only includes a build targets file for `.NET Framework 4.x` projects (via `buildTransitive/net4/`). When SkiaSharp is consumed from a class library targeting `netstandard1.3`, the targets file that schedules `libSkiaSharp.dll` for copy is never imported into your WebForms application's build.\n\n**Immediate workarounds:**\n\n1. **Add NativeAssets directly to your application project** — Add `SkiaSharp.NativeAssets.Win32` as a `PackageReference` in your WebForms application project (not the class library). Per the SkiaSharp [packaging docs](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md), NativeAssets packages belong in the executable project:\n   ```xml\n   <PackageReference Include=\"SkiaSharp.NativeAssets.Win32\" Version=\"2.88.7\" />\n   ```\n\n2. **Upgrade the class library TFM** — Change your class library target from `netstandard1.3` to `net462` or `netstandard2.0`. Both are fully supported TFMs where native assets flow transitively without extra configuration.\n\n**Why v1.68.3 worked:** The packaging structure changed significantly between v1 and v2. The v2 model requires the consuming application to reference NativeAssets packages directly for class library scenarios.\n\nWe're tracking whether the `SkiaSharp.NativeAssets.Win32` package should include a `buildTransitive/netstandard` path to better support this scenario."}]}};</script>
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Issue Triage Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person-circle text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Issue Summary</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-story"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-search text-info fs-5"></i>
+            <h6 class="card-title mb-0">Analysis</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-signpost-split text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Recommendations</h6>
+          </div>
+          <div class="mb-1"><strong id="hero-action-label"></strong></div>
+          <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="triage-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="overview"></div>
+    <div class="tab-pane fade" id="evidence"></div>
+    <div class="tab-pane fade" id="analysis"></div>
+    <div class="tab-pane fade" id="actions"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(value) {
+  return typeof value === 'number' ? `${value.toFixed(2)} (${Math.round(value * 100)}%)` : '—';
+}
+
+function fmtList(items, formatter) {
+  if (!items || !items.length) return '<span class="text-muted">—</span>';
+  return items.map(item => formatter ? formatter(item) : esc(item)).join(', ');
+}
+
+function table(rows) {
+  return `<table class="table table-sm">
+    <tbody>
+      ${rows.map(([k, v]) => `<tr><th style="width: 220px">${esc(k)}</th><td>${v}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function section(title, bodyHtml) {
+  return `<div class="card mb-3"><div class="card-header bg-white fw-semibold">${esc(title)}</div><div class="card-body">${bodyHtml}</div></div>`;
+}
+
+function listOrEmpty(items, formatter) {
+  if (!items || !items.length) return '<div class="empty-state">No data in this section.</div>';
+  return `<ul class="mb-0">${items.map(item => `<li>${formatter ? formatter(item) : esc(item)}</li>`).join('')}</ul>`;
+}
+
+function renderMetricCards(data) {
+  const classification = data.classification || {};
+  const bug = (data.evidence || {}).bugSignals || {};
+  const actionability = (data.output || {}).actionability || {};
+  const cards = [
+    ['Type', classification.type?.value || '—'],
+    ['Area', classification.area?.value || '—'],
+    ['Action', actionability.suggestedAction || '—'],
+    ['Severity', bug.severity || '—']
+  ];
+  document.getElementById('metric-cards').innerHTML = cards.map(([label, value]) => `
+    <div class="col-6 col-lg-3">
+      <div class="card metric-card h-100">
+        <div class="card-body">
+          <div class="metric-label">${esc(label)}</div>
+          <div class="metric-value">${esc(value)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(data) {
+  const meta = data.meta || {};
+  const classification = data.classification || {};
+  const actionability = (data.output || {}).actionability || {};
+
+  const badges = [
+    classification.type?.value && badge(classification.type.value, 'bg-primary-subtle text-primary-emphasis'),
+    classification.area?.value && badge(classification.area.value, 'bg-info-subtle text-info-emphasis'),
+    actionability.suggestedAction && badge(actionability.suggestedAction, 'bg-warning-subtle text-warning-emphasis')
+  ].filter(Boolean).join(' ');
+  document.getElementById('header-badges').innerHTML = badges;
+  document.getElementById('header-subtitle').textContent =
+    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+
+  document.getElementById('hero-story').textContent = data.summary || '—';
+  document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';
+  document.getElementById('hero-action-label').textContent = actionability.suggestedAction || '—';
+  document.getElementById('hero-action-reason').textContent = actionability.reason || '—';
+
+  const overviewRows = [
+    ['Schema version', esc(meta.schemaVersion || '—')],
+    ['Repository', esc(meta.repo || '—')],
+    ['Analyzed at', esc(meta.analyzedAt || '—')],
+    ['Current labels', fmtList(meta.currentLabels)],
+    ['Type confidence', fmtConfidence(classification.type?.confidence)],
+    ['Area confidence', fmtConfidence(classification.area?.confidence)],
+    ['Platforms', fmtList(classification.platforms)],
+    ['Backends', fmtList(classification.backends)],
+    ['Tenets', fmtList(classification.tenets)],
+    ['Partner', esc(classification.partner || '—')]
+  ];
+
+  document.getElementById('overview').innerHTML =
+    section('Classification & Metadata', table(overviewRows)) +
+    section('Actionability', table([
+      ['Suggested action', esc(actionability.suggestedAction || '—')],
+      ['Confidence', fmtConfidence(actionability.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(actionability.reason || '—')}</div>`],
+      ['Suggested repro platform', esc(actionability.suggestedReproPlatform || '—')]
+    ]));
+}
+
+function renderEvidence(data) {
+  const evidence = data.evidence || {};
+  const repro = evidence.reproEvidence || {};
+  const bug = evidence.bugSignals || {};
+  const version = evidence.versionAnalysis || {};
+  const regression = evidence.regression || {};
+  const fix = evidence.fixStatus || {};
+
+  let html = '';
+  html += section('Reproduction', [
+    repro.stepsToReproduce?.length ? `<h6>Steps</h6>${listOrEmpty(repro.stepsToReproduce)}` : '',
+    repro.environmentDetails ? `<p><strong>Environment:</strong> ${esc(repro.environmentDetails)}</p>` : '',
+    repro.relatedIssues?.length ? `<p><strong>Related issues:</strong> ${repro.relatedIssues.map(n => `#${n}`).join(', ')}</p>` : '',
+    repro.repoLinks?.length ? `<h6>Repo Links</h6>${listOrEmpty(repro.repoLinks, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.screenshots?.length ? `<h6>Screenshots</h6>${listOrEmpty(repro.screenshots, item => `<a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.attachments?.length ? `<h6>Attachments</h6>${listOrEmpty(repro.attachments, item => `${esc(item.filename)} — <a href="${esc(item.url)}">${esc(item.url)}</a>${item.description ? ' — ' + esc(item.description) : ''}`)}` : '',
+    repro.codeSnippets?.length ? `<h6>Code Snippets</h6>${repro.codeSnippets.map(s => `<pre>${esc(s)}</pre>`).join('')}` : ''
+  ].filter(Boolean).join('') || '<div class="empty-state">No reproduction evidence recorded.</div>');
+
+  if (Object.keys(bug).length) {
+    html += section('Bug Signals', table([
+      ['Severity', esc(bug.severity || '—')],
+      ['Regression claimed', esc(String(bug.regressionClaimed ?? '—'))],
+      ['Error type', esc(bug.errorType || '—')],
+      ['Error message', `<div class="text-wrap-pre">${esc(bug.errorMessage || '—')}</div>`],
+      ['Repro quality', esc(bug.reproQuality || '—')],
+      ['Target frameworks', fmtList(bug.targetFrameworks)]
+    ]) + (bug.stackTrace ? `<h6>Stack Trace</h6><pre>${esc(bug.stackTrace)}</pre>` : ''));
+  }
+
+  if (Object.keys(version).length) {
+    html += section('Version Analysis', table([
+      ['Mentioned versions', fmtList(version.mentionedVersions)],
+      ['Worked in', esc(version.workedIn || '—')],
+      ['Broke in', esc(version.brokeIn || '—')],
+      ['Current relevance', esc(version.currentRelevance || '—')],
+      ['Relevance reason', `<div class="text-wrap-pre">${esc(version.relevanceReason || '—')}</div>`]
+    ]));
+  }
+
+  if (Object.keys(regression).length) {
+    html += section('Regression', table([
+      ['Is regression', esc(String(regression.isRegression ?? '—'))],
+      ['Confidence', fmtConfidence(regression.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(regression.reason || '—')}</div>`],
+      ['Worked in version', esc(regression.workedInVersion || '—')],
+      ['Broke in version', esc(regression.brokeInVersion || '—')]
+    ]));
+  }
+
+  if (Object.keys(fix).length) {
+    html += section('Fix Status', table([
+      ['Likely fixed', esc(String(fix.likelyFixed ?? '—'))],
+      ['Confidence', fmtConfidence(fix.confidence)],
+      ['Reason', `<div class="text-wrap-pre">${esc(fix.reason || '—')}</div>`],
+      ['Related PRs', fmtList(fix.relatedPRs, n => `#${n}`)],
+      ['Related commits', fmtList(fix.relatedCommits)],
+      ['Fixed in version', esc(fix.fixedInVersion || '—')]
+    ]));
+  }
+
+  document.getElementById('evidence').innerHTML = html;
+}
+
+function renderAnalysis(data) {
+  const analysis = data.analysis || {};
+  const resolution = analysis.resolution || {};
+  let html = '';
+
+  html += section('Technical Summary', `<p class="mb-0 text-wrap-pre">${esc(analysis.summary || '—')}</p>`);
+  if (analysis.rationale) {
+    html += section('Rationale', `<p class="mb-0 text-wrap-pre">${esc(analysis.rationale)}</p>`);
+  }
+  if (analysis.keySignals?.length) {
+    html += section('Key Signals', listOrEmpty(analysis.keySignals, item => {
+      const interpretation = item.interpretation ? ` <span class="text-muted">(${esc(item.interpretation)})</span>` : '';
+      return `"${esc(item.text)}" — <strong>${esc(item.source)}</strong>${interpretation}`;
+    }));
+  }
+  if (analysis.codeInvestigation?.length) {
+    html += section('Code Investigation', `
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>File</th><th>Lines</th><th>Relevance</th><th>Finding</th></tr></thead>
+          <tbody>
+            ${analysis.codeInvestigation.map(item => `
+              <tr>
+                <td class="mono">${esc(item.file)}</td>
+                <td>${esc(item.lines || '—')}</td>
+                <td>${esc(item.relevance || '—')}</td>
+                <td>${esc(item.finding || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`);
+  }
+  if (analysis.errorFingerprint) {
+    html += section('Error Fingerprint', `<code>${esc(analysis.errorFingerprint)}</code>`);
+  }
+  if (analysis.workarounds?.length) {
+    html += section('Workarounds', listOrEmpty(analysis.workarounds));
+  }
+  if (analysis.nextQuestions?.length) {
+    html += section('Next Questions', listOrEmpty(analysis.nextQuestions));
+  }
+
+  if (Object.keys(resolution).length) {
+    let body = '';
+    if (resolution.hypothesis) {
+      body += `<p><strong>Hypothesis:</strong> ${esc(resolution.hypothesis)}</p>`;
+    }
+    if (resolution.proposals?.length) {
+      body += resolution.proposals.map((proposal, index) => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <h6 class="mb-0">${index + 1}. ${esc(proposal.title || `Proposal ${index + 1}`)}</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                ${proposal.category ? badge(proposal.category, 'badge-soft') : ''}
+                ${proposal.effort ? badge(proposal.effort, 'bg-secondary-subtle text-secondary-emphasis') : ''}
+                ${proposal.validated ? badge(`validated:${proposal.validated}`, 'bg-success-subtle text-success-emphasis') : ''}
+              </div>
+            </div>
+            <p class="mb-2 text-wrap-pre">${esc(proposal.description || '—')}</p>
+            ${typeof proposal.confidence === 'number' ? `<p class="mb-2"><strong>Confidence:</strong> ${fmtConfidence(proposal.confidence)}</p>` : ''}
+            ${proposal.codeSnippet ? `<pre>${esc(proposal.codeSnippet)}</pre>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      body += '<div class="empty-state">No proposals recorded.</div>';
+    }
+    if (resolution.recommendedProposal) {
+      body += `<p><strong>Recommended proposal:</strong> ${esc(resolution.recommendedProposal)}</p>`;
+    }
+    if (resolution.recommendedReason) {
+      body += `<p class="mb-0"><strong>Reason:</strong> ${esc(resolution.recommendedReason)}</p>`;
+    }
+    html += section('Resolution', body);
+  }
+
+  document.getElementById('analysis').innerHTML = html;
+}
+
+function renderActions(data) {
+  const output = data.output || {};
+  const actions = output.actions || [];
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
+    ['Suggested repro platform', esc(output.actionability?.suggestedReproPlatform || '—')]
+  ]));
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', listOrEmpty(output.missingInfo));
+  }
+
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${fmtList(action.labels)}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.category ? `<p><strong>Discussion category:</strong> ${esc(action.category)}</p>` : ''}
+        ${action.milestone ? `<p><strong>Milestone:</strong> ${esc(action.milestone)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  document.getElementById('actions').innerHTML = html;
+}
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderOverview(DATA);
+renderEvidence(DATA);
+renderAnalysis(DATA);
+renderActions(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>

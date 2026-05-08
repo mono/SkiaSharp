@@ -1,0 +1,158 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1210,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T17:06:00Z"
+  },
+  "summary": "On Android with Xamarin.Forms, SKGLView's PaintSurface is not invoked before the first page render, causing a brief white/blank flash before the GL content appears, whereas SKCanvasView does not exhibit this behavior.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.85 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.90 },
+    "platforms": ["os/Android"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "reproQuality": "partial",
+      "targetFrameworks": ["monoandroid"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Xamarin.Forms page with SKGLView and a Button",
+        "Implement SKGLView.PaintSurface to draw a solid color (e.g., red)",
+        "Run the app on an Android device",
+        "Observe that the first rendered frame shows white/blank before SKGLView content appears"
+      ],
+      "environmentDetails": "HTC Desire Android 4.2, Teeno Android 5.1; Xamarin.Forms with SKGLView",
+      "repoLinks": [
+        { "url": "https://we.tl/t-JksrnWYlo9", "description": "Reporter's repro sample (wetransfer link, likely expired)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The async GL initialization pattern in GLTextureView has not changed; OpenGL on Android still requires the SurfaceTexture to be available before rendering can begin."
+    }
+  },
+  "analysis": {
+    "summary": "SKGLView on Android is backed by GLTextureView (a TextureView), whose OpenGL initialization is asynchronous — rendering begins only after the SurfaceTexture is available (via OnSurfaceTextureAvailable callback). This is inherently later than the first layout/draw pass, producing a blank first frame. SKCanvasView extends View and uses OnDraw(), which is invoked synchronously during the layout pass, so it renders correctly on the first frame.",
+    "rationale": "The behavioral difference between SKCanvasView and SKGLView on Android is a direct consequence of their implementation: SKCanvasView is a regular View (CPU-rendered, synchronous), while SKGLView uses a TextureView backed by a GL thread that must wait for the SurfaceTexture to become available. The maintainer confirmed this hypothesis. This is a known platform limitation but still represents a quality/parity defect worth investigating.",
+    "keySignals": [
+      {
+        "text": "SKGlView's PaintSurface has NOT been called YET. So on first frame, button is shown, but SKGLView is still white.",
+        "source": "issue body",
+        "interpretation": "OpenGL GL thread has not yet been initialized and rendered before the first UI frame is composited."
+      },
+      {
+        "text": "When using a SKCanvasView (instead of SKGlView), problem does not occur. SKCanvasView's PaintSurface is called before page is rendered.",
+        "source": "issue body",
+        "interpretation": "Confirms platform parity defect: View-based (CPU) rendering is synchronous; GL-backed rendering is asynchronous."
+      },
+      {
+        "text": "That may be because the OpenGL needs to be initialized... And that only happens when the view is visible.",
+        "source": "maintainer comment (mattleibow)",
+        "interpretation": "Maintainer acknowledges the root cause: EGL context creation and GL surface allocation only happen once the TextureView's SurfaceTexture becomes available."
+      },
+      {
+        "text": "The issue is more noticeable with real code, because first frame is the most heavy as plenty of code is jitted.",
+        "source": "reporter comment",
+        "interpretation": "On older/slower Android devices, JIT compilation widens the window between first layout and first GL frame, making the flash more visible."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs",
+        "lines": "163-167",
+        "finding": "OnSurfaceTextureAvailable() calls glThread.OnSurfaceCreated() and RequestRender(). This is the earliest point where the GL thread can start rendering, and it fires asynchronously after the TextureView is laid out — not before.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs",
+        "lines": "93-111",
+        "finding": "SetRenderer() starts the GL thread immediately but the thread blocks waiting for the surface. The GL thread cannot render until the EGL context and surface are created, which requires the SurfaceTexture to be available.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureViewRenderer.cs",
+        "lines": "43-97",
+        "finding": "OnDrawFrame() creates the GRContext and renders, but is only called by the GL thread after the EGL surface is ready — never before the SurfaceTexture is available.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKCanvasView.cs",
+        "lines": "77-80",
+        "finding": "SKCanvasView overrides OnDraw() (the standard Android View draw method), which is called synchronously during the layout/draw pass — explaining why it renders on the first frame.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKCanvasView instead of SKGLView if GPU/OpenGL acceleration is not required — it renders synchronously on the first frame.",
+      "Set the page or SKGLView background color to match the first frame's expected content color to minimize the visible flash.",
+      "Show an overlay or loading indicator until the first PaintSurface call completes, hiding the blank initial state."
+    ],
+    "nextQuestions": [
+      "Is the same first-frame blank issue present on newer Android versions (8+, 13+)?",
+      "Does SKGLSurfaceView (GLSurfaceView-backed) have the same problem, or only the TextureView-backed variant?",
+      "Would it be feasible to pre-warm the GL thread before the view is attached by initializing the EGL context eagerly?"
+    ],
+    "resolution": {
+      "hypothesis": "The GL thread must wait for the SurfaceTexture to become available before creating the EGL context and rendering. This is an inherent property of TextureView on Android and cannot be trivially bypassed. Mitigation strategies include pre-warming or background color matching.",
+      "proposals": [
+        {
+          "title": "Switch to SKCanvasView (workaround)",
+          "description": "If the app does not require GPU-accelerated rendering via OpenGL, replace SKGLView with SKCanvasView. SKCanvasView uses standard Android View.OnDraw() which is called synchronously on the first layout pass.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Match background color to GL content (workaround)",
+          "description": "Set the Xamarin.Forms page background or the SKGLView background to match the dominant color of the first GL frame. This minimizes the visual impact of the blank flash.",
+          "category": "workaround",
+          "confidence": 0.80,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate pre-warming EGL context (fix)",
+          "description": "Explore initializing the EGL context on the GL thread before the SurfaceTexture becomes available, or rendering into an off-screen surface that is swapped in on first attach. This is architecturally complex but could eliminate the blank frame.",
+          "category": "investigation",
+          "confidence": 0.45,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Switch to SKCanvasView (workaround)",
+      "recommendedReason": "Immediately actionable with no risk. Use SKGLView only when GPU acceleration is explicitly required."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "The root cause is confirmed (async GL init on Android TextureView), a maintainer acknowledged it, and a repro was provided. A proper fix requires architectural investigation into pre-warming the EGL context. Workarounds exist in the meantime.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views, os/Android, tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Android", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge root cause and provide workarounds",
+        "risk": "medium",
+        "confidence": 0.80,
+        "comment": "Thanks for the detailed report and sample!\n\nThe blank first frame is caused by how `SKGLView` is implemented on Android: it uses a `TextureView` backed by an OpenGL thread. The GL thread cannot begin rendering until the `SurfaceTexture` is available (the `OnSurfaceTextureAvailable` callback fires), which happens asynchronously after the initial layout/draw pass. `SKCanvasView` uses the standard `View.OnDraw()` path, which is synchronous — that's why it doesn't have this problem.\n\n**Workarounds:**\n- **Use `SKCanvasView` instead** if GPU acceleration is not required. It renders synchronously on the first frame.\n- **Match backgrounds:** Set the page/view background to the dominant color of your first GL frame to reduce the visible flash.\n- **Overlay approach:** Show an opaque overlay until the first `PaintSurface` call fires, then hide it.\n\nWe'll investigate whether we can pre-warm or initialize the EGL context earlier to eliminate the blank frame. This is a real issue and not by design."
+      }
+    ]
+  }
+}

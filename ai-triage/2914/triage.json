@@ -1,0 +1,153 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2914,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T15:55:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "After upgrading from SkiaSharp v2.88.8 to v3.0.0-preview.3.1, the Visual Studio 2022 Windows Forms designer fails to load forms containing SKGLControl or SKControl on .NET Framework 4.8, reporting 'unable to load 32-bit assembly SkiaSharp.dll'; runtime execution works correctly.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.88 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "platform-specific",
+      "errorMessage": "Visual Studio is unable to load 32-bit assembly 'SkiaSharp.dll'. Do you want to use the Windows Forms out-of-process designer?",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net462"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a new Windows Forms App (.NET Framework) in Visual Studio 2022",
+        "Install SkiaSharp v3.0.0-preview.3.1 and SkiaSharp.Views.WindowsForms via NuGet (PackageReference format)",
+        "Attempt to drag SKGLControl or SKControl from the toolbox onto a form",
+        "Observe the designer fails with 'unable to load 32-bit assembly SkiaSharp.dll' dialog"
+      ],
+      "environmentDetails": "Visual Studio Community 2022 64-bit Version 17.11.0 Preview 2.1, .NET Framework 4.8.09037, Windows 10 Enterprise 10.0.19045",
+      "repoLinks": [
+        { "url": "https://github.com/user-attachments/files/16077894/Bug1.zip", "description": "Sample repro project attached by reporter" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/827", "description": "Related: SKGLControl causes designer exception (older VS/OpenTK issue)" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/2033", "description": "Related: WinForms designer crashes for projects targeting multiple frameworks" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.0.0-preview.3.1", "2.88.8", "2.88.2"],
+      "workedIn": "2.88.8",
+      "brokeIn": "3.0.0-preview.3.1",
+      "currentRelevance": "likely",
+      "relevanceReason": "The native DLL deployment mechanism for .NET Framework 4.x has not changed significantly since this report was filed."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.92,
+      "reason": "Reporter explicitly confirmed v2.88.8 works and v3.0.0-preview.3.1 does not. Designer error occurs consistently on v3 preview but not on v2.",
+      "workedInVersion": "2.88.8",
+      "brokeInVersion": "3.0.0-preview.3.1"
+    }
+  },
+  "analysis": {
+    "summary": "The VS 2022 WinForms designer cannot load SkiaSharp v3 assemblies in design-time context for .NET Framework 4.x projects. The root cause hypothesis is that the native libSkiaSharp.dll is not available at the path expected by the out-of-process designer, because the .NET Framework 4.x targets file copies native DLLs to x86/ and x64/ subdirectories that the designer process may not search. A Packages.config format workaround allows the toolbox drag to succeed but fails at runtime.",
+    "rationale": "This is a regression bug because it explicitly worked in v2.88.8 and broke in v3 preview. The error occurs only in the designer (runtime is fine), pointing to a design-time native DLL resolution issue rather than a code defect. The targets file for net4x copies libSkiaSharp.dll to x86/ and x64/ subdirectories, but the VS out-of-process designer may use a different working directory and DLL search path. The Packages.config vs PackageReference behavioral difference (drag works with Packages.config) corroborates a DLL deployment path issue introduced in v3.",
+    "keySignals": [
+      {
+        "text": "I've reverted back to version 2.88.8, and the windows forms designer works again.",
+        "source": "issue body",
+        "interpretation": "Clear regression — something in v3 changed how native assets are resolved in the designer process."
+      },
+      {
+        "text": "In a second attempt, I selected Packages.config for the package manager format. In this case, dragging an SKGLControl from the toolbox to the main form succeeded, but the app failed at runtime.",
+        "source": "comment #2 by Costigan",
+        "interpretation": "The PackageReference vs Packages.config difference is significant — suggests native DLL path resolution differs between these formats in the designer context."
+      },
+      {
+        "text": "I think you should copy libSkiaSharp.dll from nuget packages to your project debug directory X64 and X32 both.",
+        "source": "comment #4 by dzhydaniel",
+        "interpretation": "Community-provided workaround confirms the native DLL is not being found in the correct path by the designer."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKGLControl.cs",
+        "lines": "72-78",
+        "finding": "SKGLControl.OnPaint has a DesignMode guard that returns early without calling Skia. However, the error occurs when loading the assembly into the designer before OnPaint, as the designer process must load SkiaSharp.dll and its native dependency libSkiaSharp.dll when instantiating the control.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets",
+        "lines": "12-28",
+        "finding": "The .NET Framework 4.x targets file copies libSkiaSharp.dll into x86/ and x64/ subdirectories of the output directory. The VS out-of-process designer process runs from a different working directory and may not have these subdirectories in its DLL search path, preventing libSkiaSharp.dll from loading.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SkiaSharp.Views.WindowsForms.csproj",
+        "lines": "3-11",
+        "finding": "The project targets both FullFrameworkTargetFrameworks (net4xx) and WindowsDesktopTargetFrameworks (net6.0-windows+). For net4x it uses OpenTK 3.1.0 while newer .NET targets use OpenTK 4.8.2/4.0.1. A version mismatch or API incompatibility in OpenTK between v2 and v3 could also contribute.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "What specifically changed between SkiaSharp v2.88.8 and v3.0.0-preview.3.1 in the native DLL deployment or loading mechanism for .NET Framework 4.x?",
+      "Does the issue reproduce on the latest stable v3.x release (not just the preview)?",
+      "Does the same issue affect .NET 6/8 Windows (net6.0-windows) WinForms projects, or only .NET Framework?",
+      "Is the error reproducible when using SKControl (non-GL) only, or is it specific to SKGLControl (which also depends on OpenTK.GLControl)?"
+    ],
+    "workarounds": [
+      "Manually copy libSkiaSharp.dll from the NuGet package's runtimes/win-x64/native/ and runtimes/win-x86/native/ into the project's output/debug directory under x64/ and x86/ subdirectories respectively.",
+      "Use Packages.config instead of PackageReference — the toolbox drag succeeds (though runtime may fail; runtime can be fixed by also adding native assets to the output).",
+      "Downgrade to SkiaSharp v2.88.8 as a temporary measure until the v3 designer issue is resolved."
+    ],
+    "resolution": {
+      "hypothesis": "The VS out-of-process designer process cannot find libSkiaSharp.dll because the .NET Framework 4.x targets file places it in x86/x64 subdirectories that are not on the designer's DLL search path. This may have worked in v2 due to a different targets file structure or DLL placement.",
+      "proposals": [
+        {
+          "title": "Copy native DLLs to output directory",
+          "description": "Manually copy libSkiaSharp.dll from the NuGet package runtimes to your project's Debug output directory under x64/ and x86/ subdirectories.",
+          "category": "workaround",
+          "confidence": 0.70,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate targets file difference between v2 and v3",
+          "description": "Compare the SkiaSharp.NativeAssets.Win32 targets file from v2.88.8 and v3.0.0-preview.3.1 to identify what changed in native DLL placement that breaks the VS designer.",
+          "category": "investigation",
+          "confidence": 0.80,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Investigate targets file difference between v2 and v3",
+      "recommendedReason": "Understanding what changed between versions is essential to implement a proper fix. The workaround is available in the meantime."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Confirmed regression with a sample project attached. The designer-time failure with .NET Framework 4.x needs deeper investigation into what changed in the native asset deployment targets between v2.88.8 and v3.0.0-preview.3.1.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, and Windows-Classic labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Windows-Classic", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the regression, confirm the designer issue root cause area, and share the workaround",
+        "risk": "medium",
+        "confidence": 0.78,
+        "comment": "Thanks for the detailed report and repro project! This is a confirmed regression in SkiaSharp v3 affecting the Visual Studio Windows Forms designer for .NET Framework 4.x projects.\n\nThe error occurs because the VS out-of-process designer process cannot find `libSkiaSharp.dll` — the native binary is deployed to `x86/` and `x64/` subdirectories in the output folder, but the designer process may not search those paths.\n\n**Workaround:** Manually copy `libSkiaSharp.dll` from your NuGet package cache to your project's Debug output directory under `x64\\` and `x86\\` subdirectories:\n- From: `%USERPROFILE%\\.nuget\\packages\\skiasharp.nativeassets.win32\\3.x.x\\runtimes\\win-x64\\native\\libSkiaSharp.dll`\n- To: `<project>\\bin\\Debug\\x64\\libSkiaSharp.dll`\n- And similarly for `win-x86` → `x86\\`\n\nWe need to investigate the difference between the v2 and v3 targets files to understand the root cause and implement a proper fix."
+      }
+    ]
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1251,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-24T16:18:09Z",
+    "currentLabels": ["type/enhancement", "area/SkiaSharp.Views", "backend/OpenGL"]
+  },
+  "summary": "SKSwapChainPanel.OnRenderFrame allocates SKAutoCanvasRestore and SKPaintGLSurfaceEventArgs on each frame, causing GC pressure in the render hot path; reporter requests a zero-allocation rendering mode.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
+    "platforms": ["os/Windows-WinUI", "os/Windows-Universal-UWP"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/performance"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SKSwapChainPanel on UWP/WinUI with a PaintSurface handler",
+        "Profile the render loop with a memory profiler",
+        "Observe two heap allocations per frame: SKAutoCanvasRestore and SKPaintGLSurfaceEventArgs"
+      ],
+      "environmentDetails": "UWP / WinUI SwapChainPanel with OpenGL (ANGLE) backend"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Both allocations are still present in the current WinUI SKSwapChainPanel.cs (lines 89 and 92). The SKCanvas property allocation was addressed by caching canvas at line 86."
+    }
+  },
+  "analysis": {
+    "summary": "SKSwapChainPanel.OnRenderFrame still makes two heap allocations per frame: SKAutoCanvasRestore on line 89 and SKPaintGLSurfaceEventArgs on line 92. The maintainer acknowledged both issues in comments. SKAutoCanvasRestore can be trivially replaced with canvas.Save()/RestoreToCount(). Reusing SKPaintGLSurfaceEventArgs was deemed a breaking change but an opt-in zero-allocation mode was proposed.",
+    "rationale": "Confirmed enhancement: both allocations exist in current code (verified in source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs). The SKAutoCanvasRestore fix is trivial and safe. The args reuse requires API design to avoid breaking users who store the EventArgs reference. This is a valid performance enhancement worth keeping open.",
+    "keySignals": [
+      { "text": "SkSwapChainPanel::OnRenderFrame(Rect) makes 2 heap allocations", "source": "issue body", "interpretation": "Confirmed allocation in hot path, still present in current code." },
+      { "text": "Can SKPaintGLSurfaceEventArgs be reused rather than allocated each frame?", "source": "issue body", "interpretation": "Reporter requests object reuse to reduce GC pressure." },
+      { "text": "We can't reuse the args as this is a breaking change", "source": "comment by mattleibow (2020-04-27)", "interpretation": "Maintainer acknowledged risk; opt-in property was suggested as a design." },
+      { "text": "We can totally replace the SKAutoCanvasRestore with a canvas.RestoreToCount(0); after the draw", "source": "comment by mattleibow (2020-04-27)", "interpretation": "Simple fix acknowledged by maintainer but not yet implemented." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs", "lines": "89-93", "finding": "using (new SKAutoCanvasRestore(canvas, true)) and new SKPaintGLSurfaceEventArgs(...) are still allocated per frame. Canvas is correctly cached at line 86, but the two call-site allocations remain unaddressed.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Shared/SKPaintGLSurfaceEventArgs.cs", "lines": "27-70", "finding": "SKPaintGLSurfaceEventArgs is a class (heap-allocated reference type). It has no reset or reuse API. Converting to a struct or adding opt-in reuse would be API/behavioral changes.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Cache SKPaintGLSurfaceEventArgs.Surface.Canvas locally in the PaintSurface handler instead of accessing it via the property each call to avoid any additional re-allocations."
+    ],
+    "nextQuestions": [
+      "Should the fix be applied to the Uno platform SKSwapChainPanel as well?",
+      "Is an opt-in zero-allocation mode (e.g., a bool property) acceptable as a non-breaking approach for args reuse?",
+      "Could SKAutoCanvasRestore be changed to a ref struct to allow stack allocation?"
+    ],
+    "resolution": {
+      "hypothesis": "Replace SKAutoCanvasRestore with manual save/restore and add an opt-in cached-args mode to achieve zero-allocation rendering per frame.",
+      "proposals": [
+        {
+          "title": "Replace SKAutoCanvasRestore with manual save/restore",
+          "description": "Replace `using (new SKAutoCanvasRestore(canvas, true))` with an explicit save count and `canvas.RestoreToCount(saveCount)` to eliminate one heap allocation per frame.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Add opt-in zero-allocation rendering mode",
+          "description": "Add a boolean property (e.g., EnableZeroAllocationRendering) that reuses a cached SKPaintGLSurfaceEventArgs instance instead of allocating a new one each frame. When disabled (default), behavior is unchanged for backward compatibility.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Replace SKAutoCanvasRestore with manual save/restore",
+      "recommendedReason": "Low-risk, trivial change that the maintainer already explicitly suggested. No breaking changes and provides immediate GC pressure reduction."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Valid performance enhancement with at least one trivial fix (SKAutoCanvasRestore replacement). The args reuse requires design discussion. Both allocations confirmed in current code.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add performance tenet and WinUI/UWP platform labels to the existing correct type/area/backend labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views", "backend/OpenGL", "tenet/performance", "os/Windows-WinUI", "os/Windows-Universal-UWP"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the still-open allocations and outline the fix path",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Both allocations are still present in the current codebase:\n\n1. **`SKAutoCanvasRestore`** — can be replaced with a manual `int saveCount = canvas.Save(); ... canvas.RestoreToCount(saveCount);` pattern, eliminating one heap allocation per frame with no API change.\n2. **`SKPaintGLSurfaceEventArgs`** — reuse requires an opt-in API to avoid breaking consumers that store event args references. A cached instance behind an opt-in property is the proposed approach.\n\nContributions welcome — the `SKAutoCanvasRestore` change in particular is a low-risk, small PR."
+      }
+    ]
+  }
+}
