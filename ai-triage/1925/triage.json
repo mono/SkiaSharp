@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1925,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T20:24:16Z"
+  },
+  "summary": "Reporter asks how to efficiently render 2048 colored spokes radiating from the center of a circle without moiré patterns, comparing DrawCircle-per-pixel (correct but slow) vs bitmap-per-spoke approach (fast but causes aliasing artifacts at edges).",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "for (int k = 0; k < dataLength; k++) { surface.Canvas.DrawCircle((int)x, (int)y, 1f, paint); }",
+        "SKBitmap spokeBmp = new SKBitmap(new SKImageInfo((int)512, (int)1, ...)); canvas.DrawBitmap(spokeBmp, 0, 0);"
+      ],
+      "environmentDetails": "Blazor / SKPaintGLSurfaceEventArgs implied, no version specified"
+    }
+  },
+  "analysis": {
+    "summary": "The reporter is building a polar chart (radar/sweep display) with 2048 spokes, each 512 pixels long with per-pixel color data. Approach 1 (DrawCircle per pixel) is correct but incurs ~1M draw calls per frame. Approach 2 (1×512 bitmap + rotation) is fast but causes moiré because a single-pixel-wide line becomes sub-pixel at the circumference when many spokes are packed together. The correct solution is to render the spoke data directly into a full polar bitmap (using cartesian to polar conversion) or use DrawLine to draw each spoke as a single anti-aliased line with a gradient/color stepping pattern.",
+    "rationale": "Title prefix '[QUESTION]' and body tone confirm this is a usage question, not a broken-behavior bug. No error or crash is described. The reporter explicitly asks for advice on technique. The API used (DrawCircle, SKBitmap, DrawBitmap, PeekPixels) all exist and work correctly.",
+    "keySignals": [
+      { "text": "do any one have any idea or do i have to fall back to adress every pixel in the bitmap?", "source": "issue body", "interpretation": "Reporter is asking for guidance on the right approach, not reporting a defect." },
+      { "text": "This works no moire pattern but it is slow", "source": "issue body", "interpretation": "Approach 1 (1M draw calls) is too slow; reporter needs a faster strategy." },
+      { "text": "the problem is that because of a circles spoke get wider the longer away from center the pixel is", "source": "issue body", "interpretation": "Reporter correctly identifies the aliasing root cause of Approach 2 — using single pixel bitmap without gap-filling." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "finding": "DrawLine(float x0, float y0, float x1, float y1, SKPaint paint) exists and is far cheaper than DrawCircle for this use case — one call per spoke instead of 512 calls; using StrokeWidth 1 with anti-alias draws a proper line segment.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKBitmap.cs", "finding": "GetPixelSpan() returns a Span<byte> backed by the bitmap's pixel buffer — reporter's Approach 2 uses this correctly for direct write; the moiré is not an API defect but a geometric gap when 2048 spokes of 1-pixel width cover a 3217-pixel circumference at r=512.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Use canvas.DrawLine(midx, midy, x, y, paint) per spoke (2048 draw calls instead of 1M). Configure paint with StrokeWidth=1, IsAntialias=true, and set paint.Color per spoke. This is ~500x fewer draw calls than DrawCircle-per-pixel.",
+      "Pre-render all spokes into a 1024×1024 SKBitmap by directly writing pixels using cartesian-to-polar mapping (iterate each pixel of the bitmap, compute its angle+radius, look up the spoke and distance, write color). Then draw the bitmap once per frame. This avoids gaps at the circumference.",
+      "Use SKPath: for each spoke, path.MoveTo(center); path.LineTo(endPoint) and draw the full path with per-segment paints, or use an SKVertices sweep mesh."
+    ],
+    "resolution": {
+      "hypothesis": "Reporter wants a polar visualization with per-pixel color per spoke. The fundamental issue is that approach 2 (1-pixel bitmap + rotation) leaves gaps at large radii because angular step (~0.176°) at radius 512 spans >3 pixels of arc.",
+      "proposals": [
+        {
+          "title": "DrawLine per spoke",
+          "description": "Replace DrawCircle-per-pixel loop with canvas.DrawLine(cx, cy, endX, endY, paint) per spoke. 2048 DrawLine calls is much faster than 1M DrawCircle calls. For per-pixel color control use an SKShader gradient on each paint.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Pre-render polar bitmap",
+          "description": "Create a 1024×1024 bitmap. For each pixel, compute angle=atan2(y-cy, x-cx) and radius=sqrt((x-cx)^2+(y-cy)^2). Look up spoke index = (int)(angle/TWO_PI * 2048) and distance = (int)radius. Write the color from your spoke data. Draw the bitmap once per frame. Zero draw calls; perfect rendering.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Pre-render polar bitmap",
+      "recommendedReason": "Eliminates moiré completely and reduces per-frame work to a single DrawBitmap call. For 2048 spokes updated at high frequency, the polar-bitmap approach scales well."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "This is a how-to usage question. The APIs work correctly. A clear answer with two alternative techniques can be provided and the issue closed as answered.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and core area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/question", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer with two recommended techniques for polar spoke rendering",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed explanation! This is a great rendering challenge.\n\nThe issue with Approach 2 (1×512 bitmap + rotation) is that at radius 512, your 2048 spokes have an angular step of ~0.176°, which corresponds to arc gaps of ~1.6 pixels — so pixels at the outer edge get missed.\n\n**Recommended approaches:**\n\n**Option A — DrawLine per spoke (~2048 draw calls)**\nInstead of DrawCircle for every pixel, draw one line per spoke. Configure an `SKPaint` with the dominant color of the spoke:\n```csharp\nusing var paint = new SKPaint { StrokeWidth = 1, IsAntialias = true };\nfor (int i = 0; i < 2048; i++)\n{\n    double rad = i * Math.PI * 2 / 2048;\n    float endX = (float)(cx + Math.Cos(rad) * 512);\n    float endY = (float)(cy + Math.Sin(rad) * 512);\n    paint.Color = spokeColor[i]; // pick representative color for spoke\n    canvas.DrawLine(cx, cy, endX, endY, paint);\n}\n```\nThis is ~500× fewer draw calls than your Approach 1.\n\n**Option B — Pre-render a full polar bitmap (no moiré, single DrawBitmap per frame)**\nFor full per-pixel color fidelity, iterate the destination bitmap pixels in cartesian space and reverse-map to polar:\n```csharp\nusing var bmp = new SKBitmap(1024, 1024, SKColorType.Bgra8888, SKAlphaType.Premul);\nunsafe\n{\n    var ptr = (uint*)bmp.GetPixels().ToPointer();\n    for (int py = 0; py < 1024; py++)\n    for (int px = 0; px < 1024; px++)\n    {\n        float dx = px - 512, dy = py - 512;\n        float r = MathF.Sqrt(dx*dx + dy*dy);\n        if (r < 1 || r > 512) continue;\n        float angle = MathF.Atan2(dy, dx); // -PI..PI\n        if (angle < 0) angle += MathF.PI * 2;\n        int spokeIdx = (int)(angle / (MathF.PI * 2) * 2048) % 2048;\n        int dist = (int)r;\n        ptr[py * 1024 + px] = (uint)spoke[spokeIdx][dist].ToArgb();\n    }\n}\ncanvas.DrawBitmap(bmp, 0, 0);\n```\nThis gives pixel-perfect rendering with zero gaps."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — usage question with clear solutions provided",
+        "risk": "medium",
+        "confidence": 0.80,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}

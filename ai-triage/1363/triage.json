@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1363,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T18:08:23Z"
+  },
+  "summary": "Feature request to move Linux native builds away from Cake to a bash script or Makefile, removing the Mono dependency for Linux build contributors.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.92 },
+    "area": { "value": "area/Build", "confidence": 0.95 },
+    "platforms": ["os/Linux"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Linux native build pipeline, Cake/Mono dependency"
+    }
+  },
+  "analysis": {
+    "summary": "The reporter (a project maintainer) requests that Linux native builds be moved out of Cake into a simpler bash script or Makefile, citing Mono as an unnecessary extra requirement for Linux build contributors. As of triage, the native/linux/build.cake file still exists and Cake is still used for Linux builds via build.sh invoking dotnet cake.",
+    "rationale": "The issue title uses [FEATURE] and the body describes a new capability (replacing Cake with a bash/Makefile alternative for Linux). This is a feature request to change the build tooling, not a bug in SkiaSharp functionality. The area is Build since it concerns the build infrastructure. The feature has not yet been implemented — native/linux/build.cake still exists and build.sh still calls dotnet cake.",
+    "codeInvestigation": [
+      {
+        "file": "native/linux/build.cake",
+        "finding": "Linux native build is defined in a Cake script — the Cake dependency for Linux builds is confirmed still present.",
+        "relevance": "direct"
+      },
+      {
+        "file": "build.sh",
+        "finding": "The top-level build.sh still calls `dotnet cake $@`, meaning all targets including Linux go through Cake. No bash/Makefile alternative exists for Linux.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Building SkiaSharp does not actually use it, and we can maybe have a bash script or Makefile to do this.",
+        "source": "issue body",
+        "interpretation": "Explicit feature request to replace Cake with simpler tooling for Linux builds."
+      },
+      {
+        "text": "Cake requires mono, and although it is pretty cross-platform, it is an additional requirement.",
+        "source": "issue body",
+        "interpretation": "The motivation is removing the Mono/Cake dependency from the Linux build path."
+      }
+    ],
+    "resolution": {
+      "hypothesis": "Replace native/linux/build.cake with a bash script or Makefile that invokes GN/ninja directly to build libSkiaSharp and libHarfBuzzSharp for Linux, allowing CI to build without requiring dotnet/Cake on Linux builders.",
+      "proposals": [
+        {
+          "title": "Add bash build script for Linux",
+          "description": "Create a build.sh in native/linux/ that directly invokes GN configuration and ninja build, mirroring what build.cake does but without requiring Mono or Cake. The main build.sh can delegate to this for Linux targets.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Keep Cake but document Mono requirement clearly",
+          "description": "As a lower-effort alternative, document clearly that Linux builds require dotnet (not mono) since Cake now runs on dotnet. This may already be addressed if the project moved to dotnet-based Cake.",
+          "category": "investigation",
+          "confidence": 0.60,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add bash build script for Linux",
+      "recommendedReason": "Directly addresses the stated goal of removing the Cake/Mono dependency from Linux builds."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.80,
+      "reason": "Valid build infrastructure feature request filed by a maintainer. The Linux build still uses Cake as of triage. No blocking urgency but worth pursuing to simplify CI contributor setup.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request, Build, and Linux labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/feature-request", "area/Build", "os/Linux"]
+      }
+    ]
+  }
+}

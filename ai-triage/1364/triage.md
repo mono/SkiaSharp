@@ -1,0 +1,224 @@
+# Issue Triage Report — #1364
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-02T17:50:00Z |
+| Type | type/enhancement (0.95 (95%)) |
+| Area | area/Build (0.98 (98%)) |
+| Suggested action | needs-investigation (0.80 (80%)) |
+
+**Issue Summary:** Request to skip native CI build jobs when the native source directories (externals/skia, externals/depot_tools, native/, cake scripts) have not changed, to reduce per-PR build times by ~50 minutes.
+
+**Analysis:** The issue requests conditional native builds — only rebuild platform native binaries when the relevant source paths have changed. The current CI pipeline (azure-pipelines-native.yml) has a basic path-exclude filter but no granular 'skip-if-unchanged' logic for individual native platform jobs. A SKIP_EXTERNALS argument already exists in build.cake, so the infrastructure has a partial hook; the missing piece is automated detection of which native targets actually changed and skipping unchanged ones.
+
+**Recommendations:** **needs-investigation** — Valid enhancement from the maintainer with clear scope and prior art in XamarinComponents. Ready for investigation/implementation planning.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/Build |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** Azure Pipelines CI; every PR triggers all native platform builds (~50 min)
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1364 — Original feature request by maintainer mattleibow
+
+## Analysis
+
+### Technical Summary
+
+The issue requests conditional native builds — only rebuild platform native binaries when the relevant source paths have changed. The current CI pipeline (azure-pipelines-native.yml) has a basic path-exclude filter but no granular 'skip-if-unchanged' logic for individual native platform jobs. A SKIP_EXTERNALS argument already exists in build.cake, so the infrastructure has a partial hook; the missing piece is automated detection of which native targets actually changed and skipping unchanged ones.
+
+### Rationale
+
+Classified as type/enhancement because the build pipeline already functions correctly — this change would improve it by skipping redundant native rebuild jobs based on changed paths. Area is Build because it is purely a CI/CD infrastructure improvement with no effect on shipping C# or native APIs.
+
+### Key Signals
+
+- "Today, each PR builds all the native platforms. We could probably be smart and only build them when they have changed. This would greatly speed up the builds - which spends 50 mins on all the native bits." — **issue body** (The requester (a maintainer) identifies the problem as unnecessary 50-minute CI time per PR and proposes path-based conditional execution.)
+- "The XamarinComponents repo does this, so we could leverage some of that logic." — **issue body** (A prior-art implementation exists in a sibling repo and could be directly adapted.)
+- "SKIP_EXTERNALS = Argument("skipexternals", "")" — **build.cake line 34** (Manual skip mechanism already exists; needs to be wired up automatically in CI.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `build.cake` | 34-36 | direct | SKIP_EXTERNALS and SKIP_BUILD arguments exist, indicating partial infrastructure for conditional builds was anticipated. |
+| `scripts/azure-pipelines-native.yml` | 7-17 | direct | Path exclusions (devcontainer, github, vscode, changelogs, README) skip the entire pipeline for doc-only changes but there is no per-platform skip logic. |
+| `native/` | — | related | Contains per-platform subdirectories (android, ios, linux, macos, windows, wasm, tizen, etc.) that map to individual native build jobs; file-hash or git-diff on these directories could gate individual jobs. |
+
+### Resolution Proposals
+
+**Hypothesis:** Implement per-platform path filters in Azure Pipelines YAML and wire them to the existing SKIP_EXTERNALS cake argument so unchanged native targets are skipped automatically.
+
+1. **Add path-based conditions to Azure Pipelines native stage templates** — fix, cost/m, validated=untested
+   - Use Azure Pipelines `paths` trigger conditions or `${{ if }}` expressions on each native platform job, checking whether files under the relevant directory (e.g., native/android/, externals/skia/) changed. If no relevant path changed, skip that platform's job. The existing SKIP_EXTERNALS argument in build.cake can serve as the fallback override.
+2. **Compute a content hash of native source directories and cache/compare between runs** — alternative, cost/l, validated=untested
+   - In a preliminary pipeline step, compute a SHA256 of all files under externals/skia, native/, and related directories. Compare against the cached hash from the last successful build artifact. Skip per-platform native jobs whose directories haven't changed. This is more robust than Azure path filters for monorepo scenarios.
+
+**Recommended proposal:** p1
+
+**Why:** Azure Pipelines path-condition expressions are natively supported and maintainable; they also have precedent in the existing path-exclude filter in the pipeline. Cost/M effort, no new tooling needed.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.80 (80%) |
+| Reason | Valid enhancement from the maintainer with clear scope and prior art in XamarinComponents. Ready for investigation/implementation planning. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.98 (98%) | Apply type/enhancement and area/Build labels | labels=type/enhancement, area/Build |
+| add-comment | medium | 0.80 (80%) | Acknowledge the request, confirm SKIP_EXTERNALS hook exists, and outline the recommended approach | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for filing this! The build pipeline already has a `SKIP_EXTERNALS` argument in `build.cake` as a manual override, so the hook exists. The recommended path forward is to add Azure Pipelines path-condition expressions to the native stage templates (`azure-templates-stages-native-*.yml`) so that each platform's native job is skipped automatically when none of the relevant source directories (`externals/skia`, `native/<platform>`, `cake`) have changed. The XamarinComponents prior art would be a good reference for the exact YAML shape. A content-hash approach is also viable for more robust change detection across non-standard monorepo layouts.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1364,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-02T17:50:00Z"
+  },
+  "summary": "Request to skip native CI build jobs when the native source directories (externals/skia, externals/depot_tools, native/, cake scripts) have not changed, to reduce per-PR build times by ~50 minutes.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.98
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Azure Pipelines CI; every PR triggers all native platform builds (~50 min)",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1364",
+          "description": "Original feature request by maintainer mattleibow"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The issue requests conditional native builds — only rebuild platform native binaries when the relevant source paths have changed. The current CI pipeline (azure-pipelines-native.yml) has a basic path-exclude filter but no granular 'skip-if-unchanged' logic for individual native platform jobs. A SKIP_EXTERNALS argument already exists in build.cake, so the infrastructure has a partial hook; the missing piece is automated detection of which native targets actually changed and skipping unchanged ones.",
+    "codeInvestigation": [
+      {
+        "file": "build.cake",
+        "lines": "34-36",
+        "finding": "SKIP_EXTERNALS and SKIP_BUILD arguments exist, indicating partial infrastructure for conditional builds was anticipated.",
+        "relevance": "direct"
+      },
+      {
+        "file": "scripts/azure-pipelines-native.yml",
+        "lines": "7-17",
+        "finding": "Path exclusions (devcontainer, github, vscode, changelogs, README) skip the entire pipeline for doc-only changes but there is no per-platform skip logic.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/",
+        "finding": "Contains per-platform subdirectories (android, ios, linux, macos, windows, wasm, tizen, etc.) that map to individual native build jobs; file-hash or git-diff on these directories could gate individual jobs.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Today, each PR builds all the native platforms. We could probably be smart and only build them when they have changed. This would greatly speed up the builds - which spends 50 mins on all the native bits.",
+        "source": "issue body",
+        "interpretation": "The requester (a maintainer) identifies the problem as unnecessary 50-minute CI time per PR and proposes path-based conditional execution."
+      },
+      {
+        "text": "The XamarinComponents repo does this, so we could leverage some of that logic.",
+        "source": "issue body",
+        "interpretation": "A prior-art implementation exists in a sibling repo and could be directly adapted."
+      },
+      {
+        "text": "SKIP_EXTERNALS = Argument(\"skipexternals\", \"\")",
+        "source": "build.cake line 34",
+        "interpretation": "Manual skip mechanism already exists; needs to be wired up automatically in CI."
+      }
+    ],
+    "rationale": "Classified as type/enhancement because the build pipeline already functions correctly — this change would improve it by skipping redundant native rebuild jobs based on changed paths. Area is Build because it is purely a CI/CD infrastructure improvement with no effect on shipping C# or native APIs.",
+    "resolution": {
+      "hypothesis": "Implement per-platform path filters in Azure Pipelines YAML and wire them to the existing SKIP_EXTERNALS cake argument so unchanged native targets are skipped automatically.",
+      "proposals": [
+        {
+          "title": "Add path-based conditions to Azure Pipelines native stage templates",
+          "description": "Use Azure Pipelines `paths` trigger conditions or `${{ if }}` expressions on each native platform job, checking whether files under the relevant directory (e.g., native/android/, externals/skia/) changed. If no relevant path changed, skip that platform's job. The existing SKIP_EXTERNALS argument in build.cake can serve as the fallback override.",
+          "category": "fix",
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Compute a content hash of native source directories and cache/compare between runs",
+          "description": "In a preliminary pipeline step, compute a SHA256 of all files under externals/skia, native/, and related directories. Compare against the cached hash from the last successful build artifact. Skip per-platform native jobs whose directories haven't changed. This is more robust than Azure path filters for monorepo scenarios.",
+          "category": "alternative",
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "p1",
+      "recommendedReason": "Azure Pipelines path-condition expressions are natively supported and maintainable; they also have precedent in the existing path-exclude filter in the pipeline. Cost/M effort, no new tooling needed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.8,
+      "reason": "Valid enhancement from the maintainer with clear scope and prior art in XamarinComponents. Ready for investigation/implementation planning.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement and area/Build labels",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": [
+          "type/enhancement",
+          "area/Build"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request, confirm SKIP_EXTERNALS hook exists, and outline the recommended approach",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for filing this! The build pipeline already has a `SKIP_EXTERNALS` argument in `build.cake` as a manual override, so the hook exists. The recommended path forward is to add Azure Pipelines path-condition expressions to the native stage templates (`azure-templates-stages-native-*.yml`) so that each platform's native job is skipped automatically when none of the relevant source directories (`externals/skia`, `native/<platform>`, `cake`) have changed. The XamarinComponents prior art would be a good reference for the exact YAML shape. A content-hash approach is also viable for more robust change detection across non-standard monorepo layouts."
+      }
+    ]
+  }
+}
+```
+
+</details>
