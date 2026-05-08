@@ -1,0 +1,267 @@
+# Issue Triage Report — #926
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-01T09:57:28Z |
+| Type | type/question (0.95 (95%)) |
+| Area | area/SkiaSharp.HarfBuzz (0.92 (92%)) |
+| Suggested action | close-as-not-a-bug (0.88 (88%)) |
+
+**Issue Summary:** Reporter asks how to force HarfBuzz to shape Arabic text correctly when the string starts with an LTR character (digit), causing the whole buffer to be shaped left-to-right instead of right-to-left.
+
+**Analysis:** HarfBuzz does not implement the Unicode BiDi algorithm. `GuessSegmentProperties()` inspects only the first codepoint to determine buffer direction. When the first character is a digit (LTR), the entire buffer is shaped LTR, breaking Arabic characters that follow. The fix is to create a `HarfBuzzSharp.Buffer` manually, set `Direction = Direction.RightToLeft` (and optionally `Script`), and pass it to `SKShaper.Shape(buffer, font)` instead of using the `Shape(string, font)` convenience overload which calls `GuessSegmentProperties()` internally.
+
+**Recommendations:** **close-as-not-a-bug** — This is a usage question with a clear answer: set Buffer.Direction = Direction.RightToLeft explicitly. A contributor already explained the root cause in comments. The fix is a caller-side workaround requiring no changes to SkiaSharp.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp.HarfBuzz |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Use SkiaSharp.HarfBuzz in a Xamarin app to render Arabic text
+2. Render a date string that begins with a digit followed by Arabic text (e.g. '8 يوليو')
+3. Observe that the text is displayed in the wrong order and without correct Arabic shaping
+
+**Environment:** Xamarin app, SkiaSharp with SkiaSharp.HarfBuzz
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/272 — Related: Right-To-Left text support — closed with HarfBuzz shaping as the answer
+
+## Analysis
+
+### Technical Summary
+
+HarfBuzz does not implement the Unicode BiDi algorithm. `GuessSegmentProperties()` inspects only the first codepoint to determine buffer direction. When the first character is a digit (LTR), the entire buffer is shaped LTR, breaking Arabic characters that follow. The fix is to create a `HarfBuzzSharp.Buffer` manually, set `Direction = Direction.RightToLeft` (and optionally `Script`), and pass it to `SKShaper.Shape(buffer, font)` instead of using the `Shape(string, font)` convenience overload which calls `GuessSegmentProperties()` internally.
+
+### Rationale
+
+The issue title is '[QUESTION]' and the body asks 'Is there any way to…?' — this is a how-to usage question, not a defect. A contributor (Gillibald) already confirmed the root cause: HarfBuzz does not apply BiDi and uses the first character's Unicode properties to determine the whole buffer's direction. The `HarfBuzzSharp.Buffer.Direction` property exists in source and can be set explicitly before shaping.
+
+### Key Signals
+
+- "Is there any way to force SkiaSharp.HarfBuzz to use arabic shaping?" — **issue body** (This is a usage question — the reporter does not know about the buffer Direction API)
+- "HarfBuzz doesn't apply the BiDi algorithm and also just checks the first character of the text for Unicode properties." — **comment by contributor Gillibald** (Root cause confirmed: direction must be set explicitly for mixed BiDi text)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/HarfBuzzSharp/Buffer.cs` | 29-31 | direct | Buffer.Direction is a read/write property wrapping hb_buffer_get/set_direction — callers can explicitly set Direction.RightToLeft before shaping |
+| `source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs` | 137-153 | direct | Shape(string, font) convenience overload calls buffer.GuessSegmentProperties() which infers direction from the first codepoint; this is where the wrong direction is set for mixed BiDi strings starting with a digit |
+
+### Workarounds
+
+- Create a HarfBuzzSharp.Buffer manually, call buffer.AddUtf8(text), set buffer.Direction = Direction.RightToLeft, call buffer.GuessSegmentProperties() or set Script manually, then pass the buffer to SKShaper.Shape(buffer, font).
+- For truly mixed LTR+RTL text (e.g. '8 يوليو'), implement the Unicode BiDi algorithm to split the string into directional runs and shape each run separately.
+
+### Resolution Proposals
+
+**Hypothesis:** Setting Buffer.Direction = Direction.RightToLeft before shaping overrides the guess and forces correct Arabic shaping.
+
+1. **Explicitly set buffer direction to RTL** — workaround, confidence 0.90 (90%), cost/xs, validated=yes
+   - Instead of calling the Shape(string, font) overload, manually create a Buffer, add text, set Direction = Direction.RightToLeft, then shape.
+
+```csharp
+using var buffer = new HarfBuzzSharp.Buffer();
+buffer.AddUtf8(arabicDateText);
+buffer.Direction = HarfBuzzSharp.Direction.RightToLeft;
+buffer.Script = HarfBuzzSharp.Script.Arabic;  // optional: ensure Arabic script
+buffer.Language = HarfBuzzSharp.Language.Default;
+var result = shaper.Shape(buffer, font);
+```
+2. **Implement BiDi run splitting for mixed text** — alternative, confidence 0.80 (80%), cost/m, validated=untested
+   - For strings that mix LTR and RTL segments, run the Unicode BiDi algorithm (e.g. via ICU or a managed library) to split into directional runs, shape each run with the correct direction, then concatenate the glyph results.
+
+**Recommended proposal:** Explicitly set buffer direction to RTL
+
+**Why:** Minimal code change, confirmed by the HarfBuzz API surface in source. Handles the reported case of a date string starting with digits followed by Arabic.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.88 (88%) |
+| Reason | This is a usage question with a clear answer: set Buffer.Direction = Direction.RightToLeft explicitly. A contributor already explained the root cause in comments. The fix is a caller-side workaround requiring no changes to SkiaSharp. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply question and HarfBuzz area labels | labels=type/question, area/SkiaSharp.HarfBuzz, tenet/compatibility |
+| add-comment | medium | 0.90 (90%) | Post answer explaining the direction property workaround | — |
+| close-issue | medium | 0.85 (85%) | Close as answered — this is a usage question with a known API-level solution | stateReason=completed |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+HarfBuzz does not implement the Unicode BiDi algorithm — when you call `Shape(string, font)`, `GuessSegmentProperties()` inspects the **first** character to decide the buffer direction. Since your date string starts with a digit (LTR), the entire buffer is shaped LTR.
+
+The fix is to create the `Buffer` manually and set the direction explicitly before shaping:
+
+```csharp
+using var buffer = new HarfBuzzSharp.Buffer();
+buffer.AddUtf8(arabicDateText);
+buffer.Direction = HarfBuzzSharp.Direction.RightToLeft;
+buffer.Script = HarfBuzzSharp.Script.Arabic;  // optional but recommended
+buffer.Language = HarfBuzzSharp.Language.Default;
+var result = shaper.Shape(buffer, font);
+```
+
+For strings that truly mix LTR and RTL runs (e.g. a number embedded inside Arabic prose), you would need to implement the Unicode BiDi algorithm to split the string into directional runs, shape each run separately with the correct `Direction`, and then composite the results.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 926,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T09:57:28Z"
+  },
+  "summary": "Reporter asks how to force HarfBuzz to shape Arabic text correctly when the string starts with an LTR character (digit), causing the whole buffer to be shaped left-to-right instead of right-to-left.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.HarfBuzz",
+      "confidence": 0.92
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SkiaSharp.HarfBuzz in a Xamarin app to render Arabic text",
+        "Render a date string that begins with a digit followed by Arabic text (e.g. '8 يوليو')",
+        "Observe that the text is displayed in the wrong order and without correct Arabic shaping"
+      ],
+      "environmentDetails": "Xamarin app, SkiaSharp with SkiaSharp.HarfBuzz",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/272",
+          "description": "Related: Right-To-Left text support — closed with HarfBuzz shaping as the answer"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "HarfBuzz does not implement the Unicode BiDi algorithm. `GuessSegmentProperties()` inspects only the first codepoint to determine buffer direction. When the first character is a digit (LTR), the entire buffer is shaped LTR, breaking Arabic characters that follow. The fix is to create a `HarfBuzzSharp.Buffer` manually, set `Direction = Direction.RightToLeft` (and optionally `Script`), and pass it to `SKShaper.Shape(buffer, font)` instead of using the `Shape(string, font)` convenience overload which calls `GuessSegmentProperties()` internally.",
+    "rationale": "The issue title is '[QUESTION]' and the body asks 'Is there any way to…?' — this is a how-to usage question, not a defect. A contributor (Gillibald) already confirmed the root cause: HarfBuzz does not apply BiDi and uses the first character's Unicode properties to determine the whole buffer's direction. The `HarfBuzzSharp.Buffer.Direction` property exists in source and can be set explicitly before shaping.",
+    "codeInvestigation": [
+      {
+        "file": "binding/HarfBuzzSharp/Buffer.cs",
+        "lines": "29-31",
+        "finding": "Buffer.Direction is a read/write property wrapping hb_buffer_get/set_direction — callers can explicitly set Direction.RightToLeft before shaping",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs",
+        "lines": "137-153",
+        "finding": "Shape(string, font) convenience overload calls buffer.GuessSegmentProperties() which infers direction from the first codepoint; this is where the wrong direction is set for mixed BiDi strings starting with a digit",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Is there any way to force SkiaSharp.HarfBuzz to use arabic shaping?",
+        "source": "issue body",
+        "interpretation": "This is a usage question — the reporter does not know about the buffer Direction API"
+      },
+      {
+        "text": "HarfBuzz doesn't apply the BiDi algorithm and also just checks the first character of the text for Unicode properties.",
+        "source": "comment by contributor Gillibald",
+        "interpretation": "Root cause confirmed: direction must be set explicitly for mixed BiDi text"
+      }
+    ],
+    "workarounds": [
+      "Create a HarfBuzzSharp.Buffer manually, call buffer.AddUtf8(text), set buffer.Direction = Direction.RightToLeft, call buffer.GuessSegmentProperties() or set Script manually, then pass the buffer to SKShaper.Shape(buffer, font).",
+      "For truly mixed LTR+RTL text (e.g. '8 يوليو'), implement the Unicode BiDi algorithm to split the string into directional runs and shape each run separately."
+    ],
+    "resolution": {
+      "hypothesis": "Setting Buffer.Direction = Direction.RightToLeft before shaping overrides the guess and forces correct Arabic shaping.",
+      "proposals": [
+        {
+          "title": "Explicitly set buffer direction to RTL",
+          "description": "Instead of calling the Shape(string, font) overload, manually create a Buffer, add text, set Direction = Direction.RightToLeft, then shape.",
+          "category": "workaround",
+          "codeSnippet": "using var buffer = new HarfBuzzSharp.Buffer();\nbuffer.AddUtf8(arabicDateText);\nbuffer.Direction = HarfBuzzSharp.Direction.RightToLeft;\nbuffer.Script = HarfBuzzSharp.Script.Arabic;  // optional: ensure Arabic script\nbuffer.Language = HarfBuzzSharp.Language.Default;\nvar result = shaper.Shape(buffer, font);",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Implement BiDi run splitting for mixed text",
+          "description": "For strings that mix LTR and RTL segments, run the Unicode BiDi algorithm (e.g. via ICU or a managed library) to split into directional runs, shape each run with the correct direction, then concatenate the glyph results.",
+          "category": "alternative",
+          "confidence": 0.8,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Explicitly set buffer direction to RTL",
+      "recommendedReason": "Minimal code change, confirmed by the HarfBuzz API surface in source. Handles the reported case of a date string starting with digits followed by Arabic."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "This is a usage question with a clear answer: set Buffer.Direction = Direction.RightToLeft explicitly. A contributor already explained the root cause in comments. The fix is a caller-side workaround requiring no changes to SkiaSharp.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and HarfBuzz area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp.HarfBuzz",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post answer explaining the direction property workaround",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "HarfBuzz does not implement the Unicode BiDi algorithm — when you call `Shape(string, font)`, `GuessSegmentProperties()` inspects the **first** character to decide the buffer direction. Since your date string starts with a digit (LTR), the entire buffer is shaped LTR.\n\nThe fix is to create the `Buffer` manually and set the direction explicitly before shaping:\n\n```csharp\nusing var buffer = new HarfBuzzSharp.Buffer();\nbuffer.AddUtf8(arabicDateText);\nbuffer.Direction = HarfBuzzSharp.Direction.RightToLeft;\nbuffer.Script = HarfBuzzSharp.Script.Arabic;  // optional but recommended\nbuffer.Language = HarfBuzzSharp.Language.Default;\nvar result = shaper.Shape(buffer, font);\n```\n\nFor strings that truly mix LTR and RTL runs (e.g. a number embedded inside Arabic prose), you would need to implement the Unicode BiDi algorithm to split the string into directional runs, shape each run separately with the correct `Direction`, and then composite the results."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — this is a usage question with a known API-level solution",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
+```
+
+</details>

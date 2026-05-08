@@ -1,0 +1,332 @@
+# Issue Triage Report — #832
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-01T06:53:15Z |
+| Type | type/bug (0.92 (92%)) |
+| Area | area/SkiaSharp.Views (0.88 (88%)) |
+| Suggested action | needs-investigation (0.82 (82%)) |
+
+**Issue Summary:** On iOS, touches are not passed through to underlying elements (e.g., a button behind SKCanvasView) regardless of whether EnableTouchEvents is false or whether e.Handled is set to false in the touch handler — while Android works correctly.
+
+**Analysis:** On iOS, SKCanvasView absorbs touch events even when EnableTouchEvents is false or e.Handled is false, preventing underlying sibling views (such as buttons) from receiving touches. This is caused by iOS's hit-testing model: the SKCanvasView UIView has UserInteractionEnabled=true, so it wins hit testing and touches go to it (not to the button beneath). The UIGestureRecognizer's IgnoreTouch call in TouchesBegan only tells the recognizer not to participate — it does not re-route the touch to sibling views. Android works differently (event bubbling), which explains the platform asymmetry.
+
+**Recommendations:** **needs-investigation** — Real iOS-specific bug with clear root cause and a reproduction repo. The fix path is understood but needs verification that the behavior still reproduces on current MAUI code and that the proposed fix doesn't break existing touch handling.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/iOS |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Place a button in a Xamarin.Forms layout
+2. Place an SKCanvasView on top of the button (FillAndExpand)
+3. Set EnableTouchEvents="false" on the SKCanvasView, OR set it true and set e.Handled = false in the Touch handler
+4. Tap on the area covered by the SKCanvasView on iOS
+5. Observe that the button's tap command is never triggered
+
+**Environment:** SkiaSharp 1.68.0, iOS 11.3 / 12.2, Simulator & iPhone 6s, Visual Studio for Mac / Rider
+
+**Repository links:**
+- https://github.com/Alex-Witkowski/SkiaSharpTouchTest — Reporter's minimal demo application
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | platform-specific |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | Xamarin.iOS |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 1.68.0 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The iOS touch handling on Apple platforms still uses UIGestureRecognizer without overriding hitTest:withEvent:. The structural cause (gesture recognizer does not make touches fall through to sibling views) persists in the current MAUI codebase. |
+
+## Analysis
+
+### Technical Summary
+
+On iOS, SKCanvasView absorbs touch events even when EnableTouchEvents is false or e.Handled is false, preventing underlying sibling views (such as buttons) from receiving touches. This is caused by iOS's hit-testing model: the SKCanvasView UIView has UserInteractionEnabled=true, so it wins hit testing and touches go to it (not to the button beneath). The UIGestureRecognizer's IgnoreTouch call in TouchesBegan only tells the recognizer not to participate — it does not re-route the touch to sibling views. Android works differently (event bubbling), which explains the platform asymmetry.
+
+### Rationale
+
+The reported behavior is a real platform bug specific to iOS. The code investigation confirms that neither the UIGestureRecognizer removal (when EnableTouchEvents=false) nor the IgnoreTouch call (when e.Handled=false) causes touches to pass through to overlapping sibling views in UIKit. The bug is in the iOS platform touch handler, not user error. Android works correctly because Android uses a different touch dispatch model.
+
+### Key Signals
+
+- "touch events don't reach the button on iOS even if EnableTouchEvents is set to false" — **issue body** (Hit testing assigns touches to the top UIView regardless of whether a gesture recognizer is present.)
+- "setting Handled property of TouchEventArgs to false" — **issue body** (IgnoreTouch is called in TouchesBegan but only tells the recognizer to opt-out; it does not route the touch to sibling views below.)
+- "On Android everything works as expected" — **issue body** (Android's event dispatch model supports pass-through; iOS UIKit does not without overriding hitTest:withEvent:.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs` | 25-42 | direct | SetEnabled removes the gesture recognizer when enableTouchEvents=false but does NOT set UserInteractionEnabled=false (because DisablesUserInteraction defaults to false and the condition on line 29 is false when UserInteractionEnabled is already true). Without UserInteractionEnabled=false, the UIView still wins hit testing and absorbs touches. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs` | 54-65 | direct | TouchesBegan calls IgnoreTouch when FireEvent returns false (i.e., e.Handled=false). However, IgnoreTouch only signals the UIGestureRecognizer to not claim the touch sequence — it does not cause the touch to be delivered to sibling views at the same Z-order level. UIKit's responder chain goes UP the view hierarchy (to parents), not sideways to overlapping siblings. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs` | 15-153 | related | The iOS SKCanvasView (SkiaSharp.Views.iOS) is a plain UIView subclass with no override of hitTest:withEvent: or pointInside:withEvent:. When UserInteractionEnabled=true (default), the standard hit testing always routes touches to this view if it is topmost, with no mechanism to pass to underlying siblings. |
+
+### Workarounds
+
+- Set UserInteractionEnabled = false on the native iOS SKCanvasView when touch passthrough is needed. In Xamarin.Forms, this can be done via a custom renderer that sets the underlying UIView's UserInteractionEnabled to false.
+- Use a custom renderer to override hitTest:withEvent: on the iOS SKCanvasView to return nil (or the result of testing child views), allowing touches to fall through to views below.
+- Restructure the layout to avoid overlapping — use absolute layout with the button positioned outside the SKCanvasView bounds.
+
+### Next Questions
+
+- Does this bug still reproduce with the current MAUI code on iOS?
+- Should the fix set UserInteractionEnabled=false when EnableTouchEvents=false, or override hitTest:withEvent: for a more targeted passthrough?
+- Is the same issue present on macOS/Catalyst?
+
+### Resolution Proposals
+
+**Hypothesis:** When EnableTouchEvents=false, the fix is to set UserInteractionEnabled=false on the UIView so it is excluded from hit testing and touches reach the underlying button. When EnableTouchEvents=true and e.Handled=false, the fix requires overriding hitTest:withEvent: in SKTouchHandler or the SKCanvasView to return nil when no handler claims the touch.
+
+1. **Set UserInteractionEnabled based on EnableTouchEvents** — fix, confidence 0.78 (78%), cost/s, validated=untested
+   - When EnableTouchEvents=false, set UserInteractionEnabled=false on the UIView. This causes the iOS hit-test to skip the SKCanvasView entirely, delivering touches to the button below. Existing code has a DisablesUserInteraction flag but it defaults to false; ensure it is set appropriately or simplify the logic.
+2. **Override hitTest:withEvent: to pass through unhandled touches** — fix, confidence 0.72 (72%), cost/m, validated=untested
+   - Subclass the iOS view (or use a swizzle/category) to override hitTest:withEvent:. When EnableTouchEvents=false or when the app has indicated touches should not be consumed, return nil so the system skips this view and continues hit-testing to the button below.
+
+**Recommended proposal:** Set UserInteractionEnabled based on EnableTouchEvents
+
+**Why:** Simpler change with well-understood iOS semantics. Setting UserInteractionEnabled=false excludes the view from hit-testing entirely, which is the correct behavior when the user does not want the view to capture touches.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.82 (82%) |
+| Reason | Real iOS-specific bug with clear root cause and a reproduction repo. The fix path is understood but needs verification that the behavior still reproduces on current MAUI code and that the proposed fix doesn't break existing touch handling. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply type/bug, area/SkiaSharp.Views, os/iOS, tenet/compatibility | labels=type/bug, area/SkiaSharp.Views, os/iOS, tenet/compatibility |
+| add-comment | medium | 0.82 (82%) | Explain root cause and provide workaround for now | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed report and the demo repo!
+
+The root cause is an iOS-specific behavior: UIKit uses **hit testing** to determine which view receives a touch. Because `SKCanvasView` is on top and has `UserInteractionEnabled = true` (the default), it always wins the hit test — the button beneath never sees the touch, regardless of `EnableTouchEvents` or `e.Handled`.
+
+On Android this works because Android's touch dispatch model supports event bubbling through overlapping views; UIKit does not.
+
+**Workaround (Xamarin.Forms):**
+Create a custom renderer for iOS that sets `UserInteractionEnabled = false` on the native view when you don't need touch:
+```csharp
+[assembly: ExportRenderer(typeof(SkiaSharp.Views.Forms.SKCanvasView), typeof(YourApp.iOS.PassthroughSKCanvasViewRenderer))]
+namespace YourApp.iOS
+{
+    public class PassthroughSKCanvasViewRenderer : SKCanvasViewRenderer
+    {
+        protected override void OnElementChanged(ElementChangedEventArgs<SkiaSharp.Views.Forms.SKCanvasView> e)
+        {
+            base.OnElementChanged(e);
+            if (Control != null)
+                Control.UserInteractionEnabled = false;
+        }
+    }
+}
+```
+This makes the SKCanvasView invisible to hit-testing and lets touches reach the button below.
+
+We're tracking a proper fix that will honor `EnableTouchEvents=false` by automatically setting `UserInteractionEnabled=false` on the native iOS view.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 832,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T06:53:15Z"
+  },
+  "summary": "On iOS, touches are not passed through to underlying elements (e.g., a button behind SKCanvasView) regardless of whether EnableTouchEvents is false or whether e.Handled is set to false in the touch handler — while Android works correctly.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "platform-specific",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "Xamarin.iOS"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Place a button in a Xamarin.Forms layout",
+        "Place an SKCanvasView on top of the button (FillAndExpand)",
+        "Set EnableTouchEvents=\"false\" on the SKCanvasView, OR set it true and set e.Handled = false in the Touch handler",
+        "Tap on the area covered by the SKCanvasView on iOS",
+        "Observe that the button's tap command is never triggered"
+      ],
+      "environmentDetails": "SkiaSharp 1.68.0, iOS 11.3 / 12.2, Simulator & iPhone 6s, Visual Studio for Mac / Rider",
+      "repoLinks": [
+        {
+          "url": "https://github.com/Alex-Witkowski/SkiaSharpTouchTest",
+          "description": "Reporter's minimal demo application"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The iOS touch handling on Apple platforms still uses UIGestureRecognizer without overriding hitTest:withEvent:. The structural cause (gesture recognizer does not make touches fall through to sibling views) persists in the current MAUI codebase."
+    }
+  },
+  "analysis": {
+    "summary": "On iOS, SKCanvasView absorbs touch events even when EnableTouchEvents is false or e.Handled is false, preventing underlying sibling views (such as buttons) from receiving touches. This is caused by iOS's hit-testing model: the SKCanvasView UIView has UserInteractionEnabled=true, so it wins hit testing and touches go to it (not to the button beneath). The UIGestureRecognizer's IgnoreTouch call in TouchesBegan only tells the recognizer not to participate — it does not re-route the touch to sibling views. Android works differently (event bubbling), which explains the platform asymmetry.",
+    "rationale": "The reported behavior is a real platform bug specific to iOS. The code investigation confirms that neither the UIGestureRecognizer removal (when EnableTouchEvents=false) nor the IgnoreTouch call (when e.Handled=false) causes touches to pass through to overlapping sibling views in UIKit. The bug is in the iOS platform touch handler, not user error. Android works correctly because Android uses a different touch dispatch model.",
+    "keySignals": [
+      {
+        "text": "touch events don't reach the button on iOS even if EnableTouchEvents is set to false",
+        "source": "issue body",
+        "interpretation": "Hit testing assigns touches to the top UIView regardless of whether a gesture recognizer is present."
+      },
+      {
+        "text": "setting Handled property of TouchEventArgs to false",
+        "source": "issue body",
+        "interpretation": "IgnoreTouch is called in TouchesBegan but only tells the recognizer to opt-out; it does not route the touch to sibling views below."
+      },
+      {
+        "text": "On Android everything works as expected",
+        "source": "issue body",
+        "interpretation": "Android's event dispatch model supports pass-through; iOS UIKit does not without overriding hitTest:withEvent:."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "25-42",
+        "finding": "SetEnabled removes the gesture recognizer when enableTouchEvents=false but does NOT set UserInteractionEnabled=false (because DisablesUserInteraction defaults to false and the condition on line 29 is false when UserInteractionEnabled is already true). Without UserInteractionEnabled=false, the UIView still wins hit testing and absorbs touches.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "54-65",
+        "finding": "TouchesBegan calls IgnoreTouch when FireEvent returns false (i.e., e.Handled=false). However, IgnoreTouch only signals the UIGestureRecognizer to not claim the touch sequence — it does not cause the touch to be delivered to sibling views at the same Z-order level. UIKit's responder chain goes UP the view hierarchy (to parents), not sideways to overlapping siblings.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs",
+        "lines": "15-153",
+        "finding": "The iOS SKCanvasView (SkiaSharp.Views.iOS) is a plain UIView subclass with no override of hitTest:withEvent: or pointInside:withEvent:. When UserInteractionEnabled=true (default), the standard hit testing always routes touches to this view if it is topmost, with no mechanism to pass to underlying siblings.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Set UserInteractionEnabled = false on the native iOS SKCanvasView when touch passthrough is needed. In Xamarin.Forms, this can be done via a custom renderer that sets the underlying UIView's UserInteractionEnabled to false.",
+      "Use a custom renderer to override hitTest:withEvent: on the iOS SKCanvasView to return nil (or the result of testing child views), allowing touches to fall through to views below.",
+      "Restructure the layout to avoid overlapping — use absolute layout with the button positioned outside the SKCanvasView bounds."
+    ],
+    "nextQuestions": [
+      "Does this bug still reproduce with the current MAUI code on iOS?",
+      "Should the fix set UserInteractionEnabled=false when EnableTouchEvents=false, or override hitTest:withEvent: for a more targeted passthrough?",
+      "Is the same issue present on macOS/Catalyst?"
+    ],
+    "resolution": {
+      "hypothesis": "When EnableTouchEvents=false, the fix is to set UserInteractionEnabled=false on the UIView so it is excluded from hit testing and touches reach the underlying button. When EnableTouchEvents=true and e.Handled=false, the fix requires overriding hitTest:withEvent: in SKTouchHandler or the SKCanvasView to return nil when no handler claims the touch.",
+      "proposals": [
+        {
+          "title": "Set UserInteractionEnabled based on EnableTouchEvents",
+          "description": "When EnableTouchEvents=false, set UserInteractionEnabled=false on the UIView. This causes the iOS hit-test to skip the SKCanvasView entirely, delivering touches to the button below. Existing code has a DisablesUserInteraction flag but it defaults to false; ensure it is set appropriately or simplify the logic.",
+          "category": "fix",
+          "confidence": 0.78,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Override hitTest:withEvent: to pass through unhandled touches",
+          "description": "Subclass the iOS view (or use a swizzle/category) to override hitTest:withEvent:. When EnableTouchEvents=false or when the app has indicated touches should not be consumed, return nil so the system skips this view and continues hit-testing to the button below.",
+          "category": "fix",
+          "confidence": 0.72,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Set UserInteractionEnabled based on EnableTouchEvents",
+      "recommendedReason": "Simpler change with well-understood iOS semantics. Setting UserInteractionEnabled=false excludes the view from hit-testing entirely, which is the correct behavior when the user does not want the view to capture touches."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Real iOS-specific bug with clear root cause and a reproduction repo. The fix path is understood but needs verification that the behavior still reproduces on current MAUI code and that the proposed fix doesn't break existing touch handling.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views, os/iOS, tenet/compatibility",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/iOS",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and provide workaround for now",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed report and the demo repo!\n\nThe root cause is an iOS-specific behavior: UIKit uses **hit testing** to determine which view receives a touch. Because `SKCanvasView` is on top and has `UserInteractionEnabled = true` (the default), it always wins the hit test — the button beneath never sees the touch, regardless of `EnableTouchEvents` or `e.Handled`.\n\nOn Android this works because Android's touch dispatch model supports event bubbling through overlapping views; UIKit does not.\n\n**Workaround (Xamarin.Forms):**\nCreate a custom renderer for iOS that sets `UserInteractionEnabled = false` on the native view when you don't need touch:\n```csharp\n[assembly: ExportRenderer(typeof(SkiaSharp.Views.Forms.SKCanvasView), typeof(YourApp.iOS.PassthroughSKCanvasViewRenderer))]\nnamespace YourApp.iOS\n{\n    public class PassthroughSKCanvasViewRenderer : SKCanvasViewRenderer\n    {\n        protected override void OnElementChanged(ElementChangedEventArgs<SkiaSharp.Views.Forms.SKCanvasView> e)\n        {\n            base.OnElementChanged(e);\n            if (Control != null)\n                Control.UserInteractionEnabled = false;\n        }\n    }\n}\n```\nThis makes the SKCanvasView invisible to hit-testing and lets touches reach the button below.\n\nWe're tracking a proper fix that will honor `EnableTouchEvents=false` by automatically setting `UserInteractionEnabled=false` on the native iOS view."
+      }
+    ]
+  }
+}
+```
+
+</details>
