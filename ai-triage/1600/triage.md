@@ -1,0 +1,380 @@
+# Issue Triage Report — #1600
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T11:06:59Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/SkiaSharp.Views (0.90 (90%)) |
+| Suggested action | needs-investigation (0.88 (88%)) |
+
+**Issue Summary:** SKSurface.Snapshot() returns null when called from SKGLView.OnPaintSurface on iOS devices (iOS 12.4, tested on iPhone 12 and iPad), while it works on Android and works when using SKCanvasView on iOS.
+
+**Analysis:** SKSurface.Snapshot() returns null on iOS when called inside SKGLView.OnPaintSurface. The iOS SKGLView uses GLKit (EAGLRenderingAPI.OpenGLES2, deprecated iOS 12+) with 4x MSAA enabled (DrawableMultisample = GLKViewDrawableMultisample.Sample4x). During DrawInRect, the active framebuffer is a multisampled renderbuffer managed by GLKit; calling Snapshot() on a GPU-backed Skia surface that wraps this MSAA framebuffer likely fails because Skia cannot create an image snapshot from an MSAA-backed GL surface before the MSAA resolve step. This would explain why Android works (Android renderer queries samples and handles MSAA explicitly) and why SKCanvasView works (CPU-backed surface, no GL dependency).
+
+**Recommendations:** **needs-investigation** — Real regression with partial repro code, multiple users affected, iOS-specific. The MSAA/GL deprecation hypothesis needs repro confirmation before a fix can be targeted.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/iOS |
+| Backends | backend/OpenGL |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Create a Xamarin.iOS app using SKGLView
+2. Override OnPaintSurface(SKPaintGLSurfaceEventArgs e)
+3. Call e.Surface.Snapshot() inside the override
+4. Run on iOS physical device or simulator (iOS 12.4+)
+5. Observe that snapshot is null
+
+**Environment:** SkiaSharp 2.80.2, iOS 12.4, Xamarin.iOS, Devices: iPad Air (4th gen), iPad Pro (4th gen), iPhone 12
+
+**Related issues:** #436
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/436 — Original issue #436 - same bug, reported fixed in 1.6, now regressed in 2.80.2
+
+**Code snippets:**
+
+```csharp
+protected override void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
+{
+    var snapshot = e.Surface.Snapshot();
+    if(snapshot == null)
+    {
+        // code always enters here on iOS
+    }
+}
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | True |
+| Error type | missing-output |
+| Error message | SKSurface.Snapshot() returns null inside OnPaintSurface of SKGLView on iOS |
+| Repro quality | partial |
+| Target frameworks | Xamarin.iOS |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2, 1.6 |
+| Worked in | 1.6 |
+| Broke in | 2.80.2 |
+| Current relevance | likely |
+| Relevance reason | The iOS SKGLView still uses OpenGL ES2 with 4x multisampling; issue reported again in Oct 2022 by another user. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.85 (85%) |
+| Reason | Reporter explicitly states it worked in 1.6 and references issue #436 which was closed as fixed. A second comment (2021) and a third (2022) confirm the issue persists. |
+| Worked in version | 1.6 |
+| Broke in version | 2.80.2 |
+
+## Analysis
+
+### Technical Summary
+
+SKSurface.Snapshot() returns null on iOS when called inside SKGLView.OnPaintSurface. The iOS SKGLView uses GLKit (EAGLRenderingAPI.OpenGLES2, deprecated iOS 12+) with 4x MSAA enabled (DrawableMultisample = GLKViewDrawableMultisample.Sample4x). During DrawInRect, the active framebuffer is a multisampled renderbuffer managed by GLKit; calling Snapshot() on a GPU-backed Skia surface that wraps this MSAA framebuffer likely fails because Skia cannot create an image snapshot from an MSAA-backed GL surface before the MSAA resolve step. This would explain why Android works (Android renderer queries samples and handles MSAA explicitly) and why SKCanvasView works (CPU-backed surface, no GL dependency).
+
+### Rationale
+
+Clear regression bug with repro code, multiple users confirming on iOS. Snapshot returning null from a valid surface is broken behaviour. The iOS GLKit path uses OpenGL ES2 which Apple deprecated in iOS 12; the 4x MSAA setup via GLKView is the likely culprit. The Android path works identically from a code structure standpoint, supporting the hypothesis that the issue is iOS/GLKit-specific.
+
+### Key Signals
+
+- "it looks exactly like an old issue which was fixed in 1.6" — **issue body** (The fix applied for #436 was likely reverted or not carried forward into 2.x.)
+- "it seems to work when it is used from SKCanvasView" — **issue body** (CPU-backed raster surface takes snapshot fine; the failure is specific to GPU (OpenGL) surface path.)
+- "I am facing similar problem with SKCanvasView on iOS" — **comment by mahesh139** (A second commenter reports the same null snapshot on iOS with SKCanvasView too, broadening the scope beyond SKGLView.)
+- "Same problem on iOS" — **comment by xamiell (Oct 2022)** (Still reproducible as of 2022, at least 18 months after initial report.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs` | 94-98 | direct | iOS SKGLView initializes with EAGLRenderingAPI.OpenGLES2 (deprecated iOS 12+) and enables DrawableMultisample = GLKViewDrawableMultisample.Sample4x. This 4x multisampling means the GLKit-managed framebuffer is a multisampled renderbuffer during DrawInRect. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs` | 124-152 | direct | The surface is created via SKSurface.Create(context, renderTarget, surfaceOrigin, colorType). The renderTarget wraps the GLKit-bound MSAA framebuffer. Snapshot() on this GPU surface invokes sk_surface_new_image_snapshot which may return null if Skia cannot snapshot an MSAA-backed GPU surface without first resolving it. |
+| `binding/SkiaSharp/SKSurface.cs` | 274-275 | related | Snapshot() calls SKImage.GetObject(SkiaApi.sk_surface_new_image_snapshot(Handle)) — returns null if the native call returns a null pointer. No null-guard or error logging is present. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLSurfaceViewRenderer.cs` | 38-80 | context | Android renderer uses the same pattern — queries GL_SAMPLES and passes them to GRBackendRenderTarget — and Snapshot() works there. Structural equivalence rules out a pure API-misuse explanation. |
+
+### Workarounds
+
+- Switch from SKGLView to SKCanvasView (CPU raster rendering) on iOS — Snapshot() works correctly with CPU-backed surfaces.
+- Upgrade to Metal-based SKMetalView (available iOS 9+) instead of the deprecated OpenGL ES SKGLView.
+
+### Next Questions
+
+- What exact change between SkiaSharp 1.6 and 2.80 re-introduced this regression?
+- Does Snapshot() fail because of MSAA or because of the deprecated OpenGL ES2 context?
+- Does the issue occur with DrawableMultisample = GLKViewDrawableMultisample.None?
+- Is there a Metal-based equivalent (SKMetalView) that reporters should use instead?
+
+### Resolution Proposals
+
+**Hypothesis:** The iOS SKGLView MSAA framebuffer (or OpenGL ES2 deprecation on iOS 12+) causes Skia's sk_surface_new_image_snapshot to return null. Disabling multisampling or switching to Metal may fix the issue.
+
+1. **Use SKCanvasView instead of SKGLView on iOS** — workaround, confidence 0.90 (90%), cost/s, validated=untested
+   - Switch to CPU-based rendering by using SKCanvasView. Snapshot() works correctly on raster surfaces.
+2. **Disable MSAA in SKGLView to test root cause** — investigation, confidence 0.70 (70%), cost/xs, validated=untested
+   - Set DrawableMultisample = GLKViewDrawableMultisample.None before initialization. If Snapshot() starts working, MSAA is the root cause and the fix is to either disable multisampling or perform an explicit MSAA resolve before calling Snapshot().
+3. **Migrate to SKMetalView (preferred iOS rendering)** — alternative, confidence 0.85 (85%), cost/m, validated=untested
+   - Replace SKGLView (deprecated OpenGL ES) with SKMetalView (Metal-based). The existing ObsoletedOSPlatform attributes already guide users toward Metal for iOS 12+.
+
+**Recommended proposal:** Use SKCanvasView instead of SKGLView on iOS
+
+**Why:** Immediate zero-risk workaround while the root cause is investigated. The MSAA/Metal investigation should proceed in parallel via issue-repro.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.88 (88%) |
+| Reason | Real regression with partial repro code, multiple users affected, iOS-specific. The MSAA/GL deprecation hypothesis needs repro confirmation before a fix can be targeted. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply bug, views, iOS, OpenGL labels | labels=type/bug, area/SkiaSharp.Views, os/iOS, backend/OpenGL |
+| add-comment | medium | 0.88 (88%) | Acknowledge regression, provide workarounds, ask for MSAA test | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report and for linking the original issue #436.
+
+This appears to be a regression in the iOS `SKGLView` path. The view uses OpenGL ES 2 (deprecated in iOS 12) with 4× multisampling (`GLKViewDrawableMultisample.Sample4x`). Our hypothesis is that calling `Snapshot()` on a GPU-backed surface that wraps a multisampled renderbuffer fails before GLKit resolves the MSAA buffer — this would explain why Android (no MSAA) and `SKCanvasView` (CPU raster) both work.
+
+**Workarounds you can use now:**
+1. Switch to `SKCanvasView` on iOS — `Snapshot()` works correctly with CPU-backed surfaces.
+2. Migrate to `SKMetalView` — the recommended path for iOS 12+ (OpenGL ES is officially deprecated by Apple).
+
+**To help narrow the root cause**, could you try disabling multisampling by subclassing `SKGLView` and overriding `Initialize()` to set `DrawableMultisample = GLKViewDrawableMultisample.None`? If `Snapshot()` returns non-null after that change, it confirms MSAA as the culprit.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1600,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T11:06:59Z"
+  },
+  "summary": "SKSurface.Snapshot() returns null when called from SKGLView.OnPaintSurface on iOS devices (iOS 12.4, tested on iPhone 12 and iPad), while it works on Android and works when using SKCanvasView on iOS.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "missing-output",
+      "errorMessage": "SKSurface.Snapshot() returns null inside OnPaintSurface of SKGLView on iOS",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "Xamarin.iOS"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Xamarin.iOS app using SKGLView",
+        "Override OnPaintSurface(SKPaintGLSurfaceEventArgs e)",
+        "Call e.Surface.Snapshot() inside the override",
+        "Run on iOS physical device or simulator (iOS 12.4+)",
+        "Observe that snapshot is null"
+      ],
+      "codeSnippets": [
+        "protected override void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\n{\n    var snapshot = e.Surface.Snapshot();\n    if(snapshot == null)\n    {\n        // code always enters here on iOS\n    }\n}"
+      ],
+      "environmentDetails": "SkiaSharp 2.80.2, iOS 12.4, Xamarin.iOS, Devices: iPad Air (4th gen), iPad Pro (4th gen), iPhone 12",
+      "relatedIssues": [
+        436
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/436",
+          "description": "Original issue #436 - same bug, reported fixed in 1.6, now regressed in 2.80.2"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2",
+        "1.6"
+      ],
+      "workedIn": "1.6",
+      "brokeIn": "2.80.2",
+      "currentRelevance": "likely",
+      "relevanceReason": "The iOS SKGLView still uses OpenGL ES2 with 4x multisampling; issue reported again in Oct 2022 by another user."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter explicitly states it worked in 1.6 and references issue #436 which was closed as fixed. A second comment (2021) and a third (2022) confirm the issue persists.",
+      "workedInVersion": "1.6",
+      "brokeInVersion": "2.80.2"
+    }
+  },
+  "analysis": {
+    "summary": "SKSurface.Snapshot() returns null on iOS when called inside SKGLView.OnPaintSurface. The iOS SKGLView uses GLKit (EAGLRenderingAPI.OpenGLES2, deprecated iOS 12+) with 4x MSAA enabled (DrawableMultisample = GLKViewDrawableMultisample.Sample4x). During DrawInRect, the active framebuffer is a multisampled renderbuffer managed by GLKit; calling Snapshot() on a GPU-backed Skia surface that wraps this MSAA framebuffer likely fails because Skia cannot create an image snapshot from an MSAA-backed GL surface before the MSAA resolve step. This would explain why Android works (Android renderer queries samples and handles MSAA explicitly) and why SKCanvasView works (CPU-backed surface, no GL dependency).",
+    "rationale": "Clear regression bug with repro code, multiple users confirming on iOS. Snapshot returning null from a valid surface is broken behaviour. The iOS GLKit path uses OpenGL ES2 which Apple deprecated in iOS 12; the 4x MSAA setup via GLKView is the likely culprit. The Android path works identically from a code structure standpoint, supporting the hypothesis that the issue is iOS/GLKit-specific.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+        "lines": "94-98",
+        "finding": "iOS SKGLView initializes with EAGLRenderingAPI.OpenGLES2 (deprecated iOS 12+) and enables DrawableMultisample = GLKViewDrawableMultisample.Sample4x. This 4x multisampling means the GLKit-managed framebuffer is a multisampled renderbuffer during DrawInRect.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+        "lines": "124-152",
+        "finding": "The surface is created via SKSurface.Create(context, renderTarget, surfaceOrigin, colorType). The renderTarget wraps the GLKit-bound MSAA framebuffer. Snapshot() on this GPU surface invokes sk_surface_new_image_snapshot which may return null if Skia cannot snapshot an MSAA-backed GPU surface without first resolving it.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "lines": "274-275",
+        "finding": "Snapshot() calls SKImage.GetObject(SkiaApi.sk_surface_new_image_snapshot(Handle)) — returns null if the native call returns a null pointer. No null-guard or error logging is present.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLSurfaceViewRenderer.cs",
+        "lines": "38-80",
+        "finding": "Android renderer uses the same pattern — queries GL_SAMPLES and passes them to GRBackendRenderTarget — and Snapshot() works there. Structural equivalence rules out a pure API-misuse explanation.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "it looks exactly like an old issue which was fixed in 1.6",
+        "source": "issue body",
+        "interpretation": "The fix applied for #436 was likely reverted or not carried forward into 2.x."
+      },
+      {
+        "text": "it seems to work when it is used from SKCanvasView",
+        "source": "issue body",
+        "interpretation": "CPU-backed raster surface takes snapshot fine; the failure is specific to GPU (OpenGL) surface path."
+      },
+      {
+        "text": "I am facing similar problem with SKCanvasView on iOS",
+        "source": "comment by mahesh139",
+        "interpretation": "A second commenter reports the same null snapshot on iOS with SKCanvasView too, broadening the scope beyond SKGLView."
+      },
+      {
+        "text": "Same problem on iOS",
+        "source": "comment by xamiell (Oct 2022)",
+        "interpretation": "Still reproducible as of 2022, at least 18 months after initial report."
+      }
+    ],
+    "workarounds": [
+      "Switch from SKGLView to SKCanvasView (CPU raster rendering) on iOS — Snapshot() works correctly with CPU-backed surfaces.",
+      "Upgrade to Metal-based SKMetalView (available iOS 9+) instead of the deprecated OpenGL ES SKGLView."
+    ],
+    "nextQuestions": [
+      "What exact change between SkiaSharp 1.6 and 2.80 re-introduced this regression?",
+      "Does Snapshot() fail because of MSAA or because of the deprecated OpenGL ES2 context?",
+      "Does the issue occur with DrawableMultisample = GLKViewDrawableMultisample.None?",
+      "Is there a Metal-based equivalent (SKMetalView) that reporters should use instead?"
+    ],
+    "resolution": {
+      "hypothesis": "The iOS SKGLView MSAA framebuffer (or OpenGL ES2 deprecation on iOS 12+) causes Skia's sk_surface_new_image_snapshot to return null. Disabling multisampling or switching to Metal may fix the issue.",
+      "proposals": [
+        {
+          "title": "Use SKCanvasView instead of SKGLView on iOS",
+          "description": "Switch to CPU-based rendering by using SKCanvasView. Snapshot() works correctly on raster surfaces.",
+          "category": "workaround",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Disable MSAA in SKGLView to test root cause",
+          "description": "Set DrawableMultisample = GLKViewDrawableMultisample.None before initialization. If Snapshot() starts working, MSAA is the root cause and the fix is to either disable multisampling or perform an explicit MSAA resolve before calling Snapshot().",
+          "category": "investigation",
+          "confidence": 0.7,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Migrate to SKMetalView (preferred iOS rendering)",
+          "description": "Replace SKGLView (deprecated OpenGL ES) with SKMetalView (Metal-based). The existing ObsoletedOSPlatform attributes already guide users toward Metal for iOS 12+.",
+          "category": "alternative",
+          "confidence": 0.85,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKCanvasView instead of SKGLView on iOS",
+      "recommendedReason": "Immediate zero-risk workaround while the root cause is investigated. The MSAA/Metal investigation should proceed in parallel via issue-repro."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Real regression with partial repro code, multiple users affected, iOS-specific. The MSAA/GL deprecation hypothesis needs repro confirmation before a fix can be targeted.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, iOS, OpenGL labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/iOS",
+          "backend/OpenGL"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge regression, provide workarounds, ask for MSAA test",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the report and for linking the original issue #436.\n\nThis appears to be a regression in the iOS `SKGLView` path. The view uses OpenGL ES 2 (deprecated in iOS 12) with 4× multisampling (`GLKViewDrawableMultisample.Sample4x`). Our hypothesis is that calling `Snapshot()` on a GPU-backed surface that wraps a multisampled renderbuffer fails before GLKit resolves the MSAA buffer — this would explain why Android (no MSAA) and `SKCanvasView` (CPU raster) both work.\n\n**Workarounds you can use now:**\n1. Switch to `SKCanvasView` on iOS — `Snapshot()` works correctly with CPU-backed surfaces.\n2. Migrate to `SKMetalView` — the recommended path for iOS 12+ (OpenGL ES is officially deprecated by Apple).\n\n**To help narrow the root cause**, could you try disabling multisampling by subclassing `SKGLView` and overriding `Initialize()` to set `DrawableMultisample = GLKViewDrawableMultisample.None`? If `Snapshot()` returns non-null after that change, it confirms MSAA as the culprit."
+      }
+    ]
+  }
+}
+```
+
+</details>

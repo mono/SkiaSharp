@@ -1,0 +1,338 @@
+# Issue Triage Report — #2117
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T12:29:33Z |
+| Type | type/bug (0.78 (78%)) |
+| Area | area/libHarfBuzzSharp.native (0.90 (90%)) |
+| Suggested action | needs-info (0.75 (75%)) |
+
+**Issue Summary:** User building libHarfBuzzSharp.so on Linux ARM64 (Raspberry Pi 3B+) gets an empty symbol table causing 'undefined symbol: hb_face_create_for_tables', and both the self-built and NuGet libHarfBuzzSharp.so segfault on load.
+
+**Analysis:** Two distinct failures: (1) custom gn/ninja build of libHarfBuzzSharp.so produces no harfbuzz symbols because the default -fvisibility=hidden hides everything and HB_EXTERN=extern in extra_cflags is insufficient to override it at link time; (2) both the custom-built and NuGet libHarfBuzzSharp.so crash with SIGSEGV at address 0x0 during library initialization on Linux ARM64, suggesting a null function pointer in the library's static constructor — likely an ARM64-specific initialization ordering issue or ABI incompatibility with the then-current SkiaSharp release.
+
+**Recommendations:** **needs-info** — No SkiaSharp version mentioned; the NuGet segfault on ARM64 may already be resolved in newer versions. Need confirmation of current behavior before investing in a fix.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libHarfBuzzSharp.native |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/reliability, tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. On Linux ARM64 (Raspberry Pi 3B+ running 64-bit RPi OS), run gn gen with skia_use_system_harfbuzz=true and build HarfBuzzSharp target via ninja
+2. Observe readelf -Ws --dyn-syms reports only 5 internal symbols with no harfbuzz symbols
+3. Run dotnet app that loads the library — get 'undefined symbol: hb_face_create_for_tables'
+4. Alternatively, run with the NuGet libHarfBuzzSharp.so on the same machine — segfault during library init
+
+**Environment:** Raspberry Pi 3B+, 64-bit Raspberry Pi OS, Linux ARM64, .NET 6, UVTools application using Avalonia
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2117 — Original issue — build from source + NuGet both fail on Linux ARM64
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | crash |
+| Error message | libHarfBuzzSharp.so: error: symbol lookup error: undefined symbol: hb_face_create_for_tables (fatal); SIGSEGV at 0x0000000000000000 during library load init |
+| Repro quality | partial |
+| Target frameworks | net6.0 |
+
+**Stack trace:**
+
+```text
+#0 0x0000000000000000 in ()
+#1 0x0000007f80b40c7c in ()
+#2 0x0000007ff7a29000 in vtable for InlinedCallFrame at libcoreclr.so
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | No SkiaSharp package version specified; issue filed June 2022 and never received a maintainer response. ARM64 Linux support has evolved since then. |
+
+## Analysis
+
+### Technical Summary
+
+Two distinct failures: (1) custom gn/ninja build of libHarfBuzzSharp.so produces no harfbuzz symbols because the default -fvisibility=hidden hides everything and HB_EXTERN=extern in extra_cflags is insufficient to override it at link time; (2) both the custom-built and NuGet libHarfBuzzSharp.so crash with SIGSEGV at address 0x0 during library initialization on Linux ARM64, suggesting a null function pointer in the library's static constructor — likely an ARM64-specific initialization ordering issue or ABI incompatibility with the then-current SkiaSharp release.
+
+### Rationale
+
+The missing-symbol issue is a build configuration problem: HarfBuzz symbols need explicit visibility annotations or -fvisibility=default to be exported in the .so. The user found the fix (remove -fvisibility=hidden, add -rdynamic). The segfault in the NuGet library is the more serious concern — crashing at 0x0 during init on ARM64 points to either a missing symbol resolved to null or a static initializer bug. Since the NuGet package also segfaults, this is a platform support bug in the native binary, not solely a user error. However, the issue predates modern ARM64 improvements and needs verification on a current version.
+
+### Key Signals
+
+- "readelf -Ws --dyn-syms libHarfBuzzSharp.so gives a *very* short list of symbols, none of which seem to have anything to do with harfbuzz" — **issue body** (Symbol visibility flag (-fvisibility=hidden) prevents all harfbuzz symbols from being exported into the shared library.)
+- "got it compiled today, had to edit more build scripts: removed -fvisibility=hidden from cflags and -fvisibility-inlines-hidden from cflags_cc, then added -shared and -rdynamic to ldflags" — **comment #1** (User confirmed the symbol-visibility fix. The build scripts in the SkiaSharp fork do not properly configure visibility for the HarfBuzzSharp target.)
+- "the source built libHarfBuzzSharp gives me the same issues as the nuget libHarfBuzzSharp: it seg faults as soon as it loads" — **comment #1** (Both the NuGet binary and the custom-built binary crash during initialization on ARM64 — likely a platform-level bug rather than a build flag issue.)
+- "calling init: .../runtimes/linux-arm64/native/libHarfbuzzSharp.so
+Segmentation Fault" — **comment #2** (Crash happens at library load time in the .init section, before any user code executes. Classic pattern for an ARM64 initialization ordering bug.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `scripts/build-linux.sh` | — | direct | The official Linux build script only builds the 'SkiaSharp' ninja target, not 'HarfBuzzSharp'. No official shell-script build path exists for libHarfBuzzSharp on Linux — users must use dotnet cake. This leaves manual gn/ninja builds undocumented and error-prone. |
+| `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` | 1861-1877 | direct | C# P/Invoke expects 'hb_face_create_for_tables' to be exported from libHarfBuzzSharp. This confirms the symbol must be present in the .so for the managed library to function. |
+| `binding/HarfBuzzSharp/Face.cs` | 43 | related | HarfBuzzSharp.Face constructor calls hb_face_create_for_tables — the symbol that triggered the fatal lookup error. |
+
+### Workarounds
+
+- Use the official dotnet cake build pipeline (dotnet cake --target=externals-linux --arch=arm64) instead of manual gn/ninja invocations.
+- When building manually: remove -fvisibility=hidden from extra_cflags and -fvisibility-inlines-hidden from extra_cflags_cc, and add -shared -rdynamic to extra_ldflags to ensure symbols are exported.
+- Use skia_use_system_harfbuzz=false so harfbuzz is statically linked into the .so instead of relying on the system library.
+
+### Next Questions
+
+- Does the current NuGet libHarfBuzzSharp still segfault on Linux ARM64 with a modern version of SkiaSharp (3.x)?
+- Is the segfault reproducible with a minimal dotnet app (not UVTools)?
+- What SkiaSharp NuGet version was the failing package?
+
+### Resolution Proposals
+
+**Hypothesis:** Two issues: (1) gn build flags suppress symbol visibility for the HarfBuzzSharp target — fixable by adjusting build args; (2) the NuGet linux-arm64 binary may have had an initialization bug on ARM64 at the time of this report. The current NuGet version may already be fixed.
+
+1. **Verify current NuGet version on Linux ARM64** — investigation, confidence 0.80 (80%), cost/s, validated=untested
+   - Request reporter (or repro in CI) to test the current SkiaSharp NuGet package on Linux ARM64. If the segfault is gone, close as fixed.
+2. **Document Linux ARM64 manual build flags** — workaround, confidence 0.70 (70%), cost/s, validated=untested
+   - Add notes to building-on-linux docs showing the correct extra_cflags and extra_ldflags for the HarfBuzzSharp gn target (remove -fvisibility=hidden, add -rdynamic).
+
+**Recommended proposal:** Verify current NuGet version on Linux ARM64
+
+**Why:** If the NuGet binary no longer segfaults, the remaining issue is documentation only. The user confirmed the symbol-visibility workaround themselves.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.75 (75%) |
+| Reason | No SkiaSharp version mentioned; the NuGet segfault on ARM64 may already be resolved in newer versions. Need confirmation of current behavior before investing in a fix. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Which version of SkiaSharp NuGet package is being used?
+- Does the issue reproduce with the latest SkiaSharp NuGet (3.x) on Linux ARM64?
+- Minimal self-contained dotnet app reproducing the segfault (not UVTools).
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply bug, native harfbuzz, and linux labels | labels=type/bug, area/libHarfBuzzSharp.native, os/Linux |
+| add-comment | medium | 0.75 (75%) | Ask for SkiaSharp version and whether the issue reproduces on current version | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed investigation! A few questions to help us understand the current state:
+
+1. Which version of the SkiaSharp NuGet packages were you using when the NuGet `libHarfBuzzSharp.so` segfaulted?
+2. Does this still reproduce with the latest SkiaSharp (3.x) on Linux ARM64?
+3. Can you share a minimal standalone `.NET` console app (not UVTools) that reproduces the segfault?
+
+For the **missing symbols** problem you encountered when building manually, the fix you found is correct — the gn default of `-fvisibility=hidden` suppresses all exports, so removing that flag and adding `-rdynamic` is needed. For the official build, use `dotnet cake --target=externals-linux --arch=arm64` which handles these flags correctly.
+
+If the segfault is still present on the current NuGet package, we'd like to reproduce it on our end.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2117,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T12:29:33Z"
+  },
+  "summary": "User building libHarfBuzzSharp.so on Linux ARM64 (Raspberry Pi 3B+) gets an empty symbol table causing 'undefined symbol: hb_face_create_for_tables', and both the self-built and NuGet libHarfBuzzSharp.so segfault on load.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.78
+    },
+    "area": {
+      "value": "area/libHarfBuzzSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/reliability",
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "libHarfBuzzSharp.so: error: symbol lookup error: undefined symbol: hb_face_create_for_tables (fatal); SIGSEGV at 0x0000000000000000 during library load init",
+      "stackTrace": "#0 0x0000000000000000 in ()\n#1 0x0000007f80b40c7c in ()\n#2 0x0000007ff7a29000 in vtable for InlinedCallFrame at libcoreclr.so",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "On Linux ARM64 (Raspberry Pi 3B+ running 64-bit RPi OS), run gn gen with skia_use_system_harfbuzz=true and build HarfBuzzSharp target via ninja",
+        "Observe readelf -Ws --dyn-syms reports only 5 internal symbols with no harfbuzz symbols",
+        "Run dotnet app that loads the library — get 'undefined symbol: hb_face_create_for_tables'",
+        "Alternatively, run with the NuGet libHarfBuzzSharp.so on the same machine — segfault during library init"
+      ],
+      "environmentDetails": "Raspberry Pi 3B+, 64-bit Raspberry Pi OS, Linux ARM64, .NET 6, UVTools application using Avalonia",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2117",
+          "description": "Original issue — build from source + NuGet both fail on Linux ARM64"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unknown",
+      "relevanceReason": "No SkiaSharp package version specified; issue filed June 2022 and never received a maintainer response. ARM64 Linux support has evolved since then."
+    }
+  },
+  "analysis": {
+    "summary": "Two distinct failures: (1) custom gn/ninja build of libHarfBuzzSharp.so produces no harfbuzz symbols because the default -fvisibility=hidden hides everything and HB_EXTERN=extern in extra_cflags is insufficient to override it at link time; (2) both the custom-built and NuGet libHarfBuzzSharp.so crash with SIGSEGV at address 0x0 during library initialization on Linux ARM64, suggesting a null function pointer in the library's static constructor — likely an ARM64-specific initialization ordering issue or ABI incompatibility with the then-current SkiaSharp release.",
+    "rationale": "The missing-symbol issue is a build configuration problem: HarfBuzz symbols need explicit visibility annotations or -fvisibility=default to be exported in the .so. The user found the fix (remove -fvisibility=hidden, add -rdynamic). The segfault in the NuGet library is the more serious concern — crashing at 0x0 during init on ARM64 points to either a missing symbol resolved to null or a static initializer bug. Since the NuGet package also segfaults, this is a platform support bug in the native binary, not solely a user error. However, the issue predates modern ARM64 improvements and needs verification on a current version.",
+    "keySignals": [
+      {
+        "text": "readelf -Ws --dyn-syms libHarfBuzzSharp.so gives a *very* short list of symbols, none of which seem to have anything to do with harfbuzz",
+        "source": "issue body",
+        "interpretation": "Symbol visibility flag (-fvisibility=hidden) prevents all harfbuzz symbols from being exported into the shared library."
+      },
+      {
+        "text": "got it compiled today, had to edit more build scripts: removed -fvisibility=hidden from cflags and -fvisibility-inlines-hidden from cflags_cc, then added -shared and -rdynamic to ldflags",
+        "source": "comment #1",
+        "interpretation": "User confirmed the symbol-visibility fix. The build scripts in the SkiaSharp fork do not properly configure visibility for the HarfBuzzSharp target."
+      },
+      {
+        "text": "the source built libHarfBuzzSharp gives me the same issues as the nuget libHarfBuzzSharp: it seg faults as soon as it loads",
+        "source": "comment #1",
+        "interpretation": "Both the NuGet binary and the custom-built binary crash during initialization on ARM64 — likely a platform-level bug rather than a build flag issue."
+      },
+      {
+        "text": "calling init: .../runtimes/linux-arm64/native/libHarfbuzzSharp.so\nSegmentation Fault",
+        "source": "comment #2",
+        "interpretation": "Crash happens at library load time in the .init section, before any user code executes. Classic pattern for an ARM64 initialization ordering bug."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "scripts/build-linux.sh",
+        "finding": "The official Linux build script only builds the 'SkiaSharp' ninja target, not 'HarfBuzzSharp'. No official shell-script build path exists for libHarfBuzzSharp on Linux — users must use dotnet cake. This leaves manual gn/ninja builds undocumented and error-prone.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs",
+        "lines": "1861-1877",
+        "finding": "C# P/Invoke expects 'hb_face_create_for_tables' to be exported from libHarfBuzzSharp. This confirms the symbol must be present in the .so for the managed library to function.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/Face.cs",
+        "lines": "43",
+        "finding": "HarfBuzzSharp.Face constructor calls hb_face_create_for_tables — the symbol that triggered the fatal lookup error.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "Does the current NuGet libHarfBuzzSharp still segfault on Linux ARM64 with a modern version of SkiaSharp (3.x)?",
+      "Is the segfault reproducible with a minimal dotnet app (not UVTools)?",
+      "What SkiaSharp NuGet version was the failing package?"
+    ],
+    "workarounds": [
+      "Use the official dotnet cake build pipeline (dotnet cake --target=externals-linux --arch=arm64) instead of manual gn/ninja invocations.",
+      "When building manually: remove -fvisibility=hidden from extra_cflags and -fvisibility-inlines-hidden from extra_cflags_cc, and add -shared -rdynamic to extra_ldflags to ensure symbols are exported.",
+      "Use skia_use_system_harfbuzz=false so harfbuzz is statically linked into the .so instead of relying on the system library."
+    ],
+    "resolution": {
+      "hypothesis": "Two issues: (1) gn build flags suppress symbol visibility for the HarfBuzzSharp target — fixable by adjusting build args; (2) the NuGet linux-arm64 binary may have had an initialization bug on ARM64 at the time of this report. The current NuGet version may already be fixed.",
+      "proposals": [
+        {
+          "title": "Verify current NuGet version on Linux ARM64",
+          "description": "Request reporter (or repro in CI) to test the current SkiaSharp NuGet package on Linux ARM64. If the segfault is gone, close as fixed.",
+          "category": "investigation",
+          "confidence": 0.8,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Document Linux ARM64 manual build flags",
+          "description": "Add notes to building-on-linux docs showing the correct extra_cflags and extra_ldflags for the HarfBuzzSharp gn target (remove -fvisibility=hidden, add -rdynamic).",
+          "category": "workaround",
+          "confidence": 0.7,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Verify current NuGet version on Linux ARM64",
+      "recommendedReason": "If the NuGet binary no longer segfaults, the remaining issue is documentation only. The user confirmed the symbol-visibility workaround themselves."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.75,
+      "reason": "No SkiaSharp version mentioned; the NuGet segfault on ARM64 may already be resolved in newer versions. Need confirmation of current behavior before investing in a fix.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Which version of SkiaSharp NuGet package is being used?",
+      "Does the issue reproduce with the latest SkiaSharp NuGet (3.x) on Linux ARM64?",
+      "Minimal self-contained dotnet app reproducing the segfault (not UVTools)."
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native harfbuzz, and linux labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/libHarfBuzzSharp.native",
+          "os/Linux"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask for SkiaSharp version and whether the issue reproduces on current version",
+        "risk": "medium",
+        "confidence": 0.75,
+        "comment": "Thanks for the detailed investigation! A few questions to help us understand the current state:\n\n1. Which version of the SkiaSharp NuGet packages were you using when the NuGet `libHarfBuzzSharp.so` segfaulted?\n2. Does this still reproduce with the latest SkiaSharp (3.x) on Linux ARM64?\n3. Can you share a minimal standalone `.NET` console app (not UVTools) that reproduces the segfault?\n\nFor the **missing symbols** problem you encountered when building manually, the fix you found is correct — the gn default of `-fvisibility=hidden` suppresses all exports, so removing that flag and adding `-rdynamic` is needed. For the official build, use `dotnet cake --target=externals-linux --arch=arm64` which handles these flags correctly.\n\nIf the segfault is still present on the current NuGet package, we'd like to reproduce it on our end."
+      }
+    ]
+  }
+}
+```
+
+</details>

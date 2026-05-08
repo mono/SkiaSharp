@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2350,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T14:00:00Z"
+  },
+  "summary": "Segmentation fault (exit code 139) on Linux when calling GRGlInterface.Create(getProcAddress) with GLFW, because Skia's generic GL interface assembler probes for EGL extensions using an invalid EGL display from a GLX context.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.80 },
+    "platforms": ["os/Linux"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "exit code 139 (segmentation fault)",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net7.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Install libglfw3 on Linux Mint or Ubuntu",
+        "Create a GLFW window on Linux (default context API = GLX/native OpenGL)",
+        "Call GRGlInterface.Create(getProcAddress) where getProcAddress wraps glfwGetProcAddress",
+        "Observe crash with exit code 139 (segmentation fault)"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Linux Mint 21.1 Vera and Ubuntu on WSL2 with WSLg, GLFW 3.3, F#/.NET 7, x86_64 desktop",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/files/10322653/dotnet-windowing.zip", "description": "Attached self-contained F# reproduction project" },
+        { "url": "https://stackoverflow.com/questions/74882243/how-do-i-properly-build-a-net-7-application-using-skiasharp-on-linux-getting-a", "description": "Reporter Stack Overflow question with additional context" },
+        { "url": "https://github.com/rust-skia/rust-skia/issues/511", "description": "Same crash reported in rust-skia bindings, pointing to identical root cause" },
+        { "url": "https://github.com/flutter/engine/pull/16924", "description": "Flutter engine PR that addressed this EGL probe crash in upstream Skia" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The crash is in upstream Skia's GrGLExtensions::init EGL probe logic. SkiaSharp's C# binding layer has not changed the gr_glinterface_assemble_interface call path. The flutter PR fix status relative to the current SkiaSharp-bundled Skia version is unconfirmed."
+    }
+  },
+  "analysis": {
+    "summary": "GRGlInterface.Create(getProcAddress) crashes on Linux with GLFW because Skia's gr_glinterface_assemble_interface probes for EGL extensions by calling eglQueryString(eglGetCurrentDisplay(), ...). When GLFW creates a window with the default context API on Linux (GLX, not EGL), eglGetCurrentDisplay() returns a garbage pointer (observed as 0xfffffffffffffec0). Skia then segfaults in GrGLExtensions::init when trying to dereference that pointer. The fix is to use GRGlInterface.CreateOpenGl(getProcAddress) which calls gr_glinterface_assemble_gl_interface — a desktop-OpenGL-only assembler that does not probe EGL — or to configure GLFW to use the EGL context API.",
+    "rationale": "Classified as type/bug because the crash is real, reproducible, and confirmed by a second reporter. The area is area/SkiaSharp because the immediate fix is a SkiaSharp API choice (CreateOpenGl vs Create), though the underlying crash is in upstream Skia. The platform is os/Linux because the bug is specific to Linux GLX context behavior. Severity is medium because a clean workaround exists and the bug only manifests when using GLFW with default context settings on Linux.",
+    "keySignals": [
+      {
+        "text": "Name passed into getProcAddress: eglQueryString\nName passed into getProcAddress: eglGetCurrentDisplay\n$ echo $?\n139",
+        "source": "issue body (program output screenshot)",
+        "interpretation": "Confirms crash occurs during EGL probing inside GRGlInterface.Create, after GLFW GLX context is set up but before any EGL display exists."
+      },
+      {
+        "text": "The crash occurs in GrGLExtensions::init. eglDisplay seems to be a garbage value (0xfffffffffffffec0) and queryString(eglDisplay, GR_EGL_EXTENSIONS) seems to return that same garbage value, leading to a segfault when attempting to call eat_space_sep_strings on it.",
+        "source": "comment by SuperAuguste (#issuecomment-3568368423)",
+        "interpretation": "Precisely identifies crash location and cause — invalid EGL display pointer from a GLX context is passed directly to eglQueryString, causing segfault."
+      },
+      {
+        "text": "An F# equivalent of glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API) when the OS is Linux should resolve this issue. Thus I don't believe this is a mono/skia or SkiaSharp bug but rather a rough edge that documentation should pave over.",
+        "source": "comment by SuperAuguste (#issuecomment-3572750316)",
+        "interpretation": "Confirmed user-side workaround: force EGL context creation via GLFW hint. Also suggests documentation gap as root cause of confusion."
+      },
+      {
+        "text": "I found https://github.com/rust-skia/rust-skia/issues/511 which pointed to https://github.com/flutter/engine/pull/16924.",
+        "source": "comment by SuperAuguste (#issuecomment-3572750316)",
+        "interpretation": "Same bug reported in rust-skia bindings; Flutter engine PR #16924 addressed this upstream in Skia. Establishes this is a known Skia issue, not a SkiaSharp-specific regression."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/GRGlInterface.cs",
+        "lines": "52-61",
+        "finding": "GRGlInterface.Create(GRGlGetProcedureAddressDelegate) calls SkiaApi.gr_glinterface_assemble_interface — the generic assembler that auto-detects OpenGL vs GLES/EGL. On Linux with a GLX context, the EGL probe inside GrGLExtensions::init crashes with a garbage eglDisplay.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/GRGlInterface.cs",
+        "lines": "66-75",
+        "finding": "GRGlInterface.CreateOpenGl(GRGlGetProcedureAddressDelegate) calls SkiaApi.gr_glinterface_assemble_gl_interface — the desktop-OpenGL-specific assembler. No platform guards restrict it on Linux. This is the correct API for GLFW/GLX contexts.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Use GRGlInterface.CreateOpenGl(getProcAddress) instead of GRGlInterface.Create(getProcAddress) when using GLFW with a GLX context on Linux — avoids EGL probing entirely.",
+      "Configure GLFW to use the EGL context API before creating the window on Linux: call glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API) — ensures a valid EGL display exists when Skia probes for EGL extensions."
+    ],
+    "nextQuestions": [
+      "Does Flutter engine PR #16924 land in the upstream Skia version currently bundled by SkiaSharp? If so, gr_glinterface_assemble_interface may already be patched and the crash may not reproduce on newer SkiaSharp versions.",
+      "Should GRGlInterface.Create(get) automatically detect the context type (GLX vs EGL) on Linux and route to the correct assembler to prevent this footgun?"
+    ],
+    "resolution": {
+      "hypothesis": "GRGlInterface.Create() uses the generic Skia assembler that probes EGL on all platforms, crashing on Linux/GLX where no EGL display exists. CreateOpenGl() uses the desktop-GL-only assembler that skips EGL probing entirely.",
+      "proposals": [
+        {
+          "title": "Use CreateOpenGl instead of Create",
+          "description": "Replace `GRGlInterface.Create(getProcAddress)` with `GRGlInterface.CreateOpenGl(getProcAddress)`. The `CreateOpenGl` method calls `gr_glinterface_assemble_gl_interface` which assembles a desktop OpenGL interface without probing EGL. Check the return value for null and dispose via `using`:\n\n```fsharp\nuse grGlInterface = GRGlInterface.CreateOpenGl(getProcAddress)\nif grGlInterface = null then failwith \"Failed to create OpenGL interface\"\n```",
+          "category": "workaround",
+          "confidence": 0.80,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Configure GLFW to use EGL context API on Linux",
+          "description": "Before creating the GLFW window on Linux, add a hint to force the EGL context creation API. This ensures `eglGetCurrentDisplay()` returns a valid EGL display when Skia probes for EGL extensions inside `GrGLExtensions::init`.\n\n```fsharp\n// Add before glfwCreateWindow on Linux:\nglfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API)\n```\n\nNote: `GLFW_EGL_CONTEXT_API` = 0x00036002 and `GLFW_CONTEXT_CREATION_API` = 0x0002200B in the GLFW C constants.",
+          "category": "workaround",
+          "confidence": 0.80,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use CreateOpenGl instead of Create",
+      "recommendedReason": "Single-line change on the SkiaSharp side, fully validated: CreateOpenGl exists with the correct signature, has no platform guards restricting Linux, and calls a different native assembler that skips EGL probing. Works regardless of GLFW context API configuration."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.80,
+      "reason": "The crash is real, reproducible, and confirmed by two community members. The root cause is in upstream Skia's EGL probing logic (GrGLExtensions::init) that assumes an EGL display is available even in GLX contexts. A workaround exists (use CreateOpenGl), but the underlying crash in gr_glinterface_assemble_interface on Linux/GLX should be investigated against the current bundled Skia version to determine if the flutter engine fix (PR #16924) has been incorporated.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply classification labels: type/bug, area/SkiaSharp, os/Linux, backend/OpenGL, tenet/reliability",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Linux", "backend/OpenGL", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Provide the CreateOpenGl workaround with null-check caveat and explanation of root cause",
+        "risk": "medium",
+        "confidence": 0.80,
+        "comment": "Thanks for the detailed reproduction and the community diagnosis in the comments.\n\nHere's a workaround you can use while we investigate: replace `GRGlInterface.Create(getProcAddress)` with `GRGlInterface.CreateOpenGl(getProcAddress)`, and make sure to null-check the result and dispose it properly:\n\n```fsharp\nuse grGlInterface = GRGlInterface.CreateOpenGl(getProcAddress)\nif grGlInterface = null then failwith \"Failed to create OpenGL interface\"\n```\n\nThe generic `Create()` calls Skia's `gr_glinterface_assemble_interface`, which probes for EGL extensions by calling `eglQueryString(eglGetCurrentDisplay(), ...)`. When GLFW creates a window with the default context API on Linux (GLX, not EGL), there is no valid EGL display — `eglGetCurrentDisplay()` returns a garbage pointer and Skia segfaults in `GrGLExtensions::init`. `CreateOpenGl()` calls `gr_glinterface_assemble_gl_interface` instead, which assembles a desktop OpenGL interface without the EGL probe.\n\nAlternatively, if you need to keep using `Create()`, you can configure GLFW to use the EGL context API before window creation:\n\n```fsharp\n// GLFW_CONTEXT_CREATION_API = 0x0002200B, GLFW_EGL_CONTEXT_API = 0x00036002\nglfwWindowHint(0x0002200B, 0x00036002)\n```\n\nThis ensures a valid EGL display exists when Skia probes for extensions. The Flutter engine team addressed this same crash in [PR #16924](https://github.com/flutter/engine/pull/16924) — we'll check whether that fix is present in the Skia version SkiaSharp currently bundles."
+      }
+    ]
+  }
+}

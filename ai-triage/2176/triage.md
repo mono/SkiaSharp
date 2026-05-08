@@ -1,0 +1,280 @@
+# Issue Triage Report — #2176
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T12:52:03Z |
+| Type | type/question (0.88 (88%)) |
+| Area | area/SkiaSharp.Views (0.90 (90%)) |
+| Suggested action | close-as-external (0.90 (90%)) |
+
+**Issue Summary:** User reports SKElement (WPF) stops rendering after frame 1 on some customer PCs when using InvalidateVisual() in a timer loop; root cause was identified in comments as an outdated Intel Iris Xe GPU driver.
+
+**Analysis:** Reporter asks why SKElement.InvalidateVisual() stops updating on some PCs. Comments from two other users confirmed the same issue on Intel Iris Xe laptops (no dedicated GPU) and identified the root cause: an outdated Intel Iris Xe Graphics driver (version 27.20.100.9415 from 2021). Updating to driver version 31.0.101.4577 (July 2023) resolved the issue. The SkiaSharp code is working correctly; the problem is in WPF's composition layer not firing redraws correctly with the buggy driver.
+
+**Recommendations:** **close-as-external** — Root cause is an outdated Intel Iris Xe GPU driver, not a SkiaSharp bug. Multiple community members confirmed this and the fix is a driver update. The SkiaSharp SKElement code is correct.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Use SKElement in a WPF app on a PC with Intel Iris Xe GPU
+2. Call InvalidateVisual() from a timer to trigger PaintSurface
+3. Draw to canvas in PaintSurface handler
+4. Observe that rendering stops after the first frame on some machines
+
+**Environment:** Windows, WPF, SKElement, Intel Iris Xe GPU (no dedicated graphics card). Reproducible on laptops with integrated Intel Xe GPU only.
+
+**Repository links:**
+- https://lostindetails.com/articles/skiasharp-with-wpf — Referenced sample project showing frame counter with SkiaSharp WPF
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | No SkiaSharp version given. The root cause is an external GPU driver bug, so relevance to SkiaSharp versions is unknown. |
+
+## Analysis
+
+### Technical Summary
+
+Reporter asks why SKElement.InvalidateVisual() stops updating on some PCs. Comments from two other users confirmed the same issue on Intel Iris Xe laptops (no dedicated GPU) and identified the root cause: an outdated Intel Iris Xe Graphics driver (version 27.20.100.9415 from 2021). Updating to driver version 31.0.101.4577 (July 2023) resolved the issue. The SkiaSharp code is working correctly; the problem is in WPF's composition layer not firing redraws correctly with the buggy driver.
+
+### Rationale
+
+This is a usage question with an identified external root cause. The issue title uses [QUESTION], and the body asks for help understanding the behavior. Code inspection of SKElement.cs shows a PresentationSource null-guard (line 52) that would cause silent skip of OnRender if WPF composition infrastructure is broken by a buggy GPU driver. No SkiaSharp code change is appropriate; the fix is updating the GPU driver. suggestedAction is close-as-external since the root cause is an external driver dependency, not SkiaSharp.
+
+### Key Signals
+
+- "[QUESTION] SkElement or skiaSharp is not working in some windows PC's" — **issue title** (Reporter asks a question, not reporting a reproducible bug.)
+- "I tested the program on my laptop and found that using InvalidateVisual cannot re render, but changing the window size can be done. Notebook is i5-1135G7, XE gpu, without independent graphics card. Desktop has a separate graphics card." — **comment by mimocvb** (Confirms Intel Xe integrated GPU correlation — window resize forces a synchronous redraw that bypasses the composition invalidation path.)
+- "Issue has been resolved. This issue is not a Skia issue. It was a VGA Driver issue. [after driver version] 31.0.101.4577(2023-07-24)" — **comment by hansangwook83** (Root cause confirmed as external GPU driver bug; updating driver to 2023 version resolves the issue.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs` | 52 | direct | OnRender guards with `PresentationSource.FromVisual(this) == null` — if WPF composition infrastructure fails to register the visual (possible with a buggy GPU driver), OnRender exits silently, explaining why the frame counter stops at 1. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs` | 86-88 | related | Rendering pipeline relies on WPF WriteableBitmap and DrawingContext — both depend on WPF's D3D/DirectX composition layer. With a broken Intel Xe driver, the composition layer may not properly propagate InvalidateVisual() dirty notifications through the render thread. |
+
+### Workarounds
+
+- Update Intel Iris Xe Graphics driver to version 31.0.101.4577 (July 2023) or later.
+- As a temporary workaround, resize the window to force a synchronous WPF redraw, which bypasses the composition invalidation path.
+- If driver update is not possible, use SKGLElement (hardware-accelerated) or call Dispatcher.Invoke with DispatcherPriority.Render to force rendering on the WPF UI thread.
+
+### Resolution Proposals
+
+**Hypothesis:** WPF's composition/D3D invalidation path does not reliably call OnRender when InvalidateVisual() is called on older Intel Xe GPU drivers. The WPF visual composition layer has a known issue with Intel Xe integrated graphics in older driver versions.
+
+1. **Update GPU driver** — fix, confidence 0.95 (95%), cost/xs, validated=untested
+   - Update Intel Iris Xe Graphics driver to 31.0.101.4577 (July 2023) or later. This is the confirmed fix from other users experiencing the same issue.
+2. **Use Dispatcher.Invoke workaround** — workaround, confidence 0.70 (70%), cost/xs, validated=untested
+   - Call InvalidateVisual via Dispatcher.Invoke with DispatcherPriority.Render to ensure the redraw is queued at the correct dispatcher priority level.
+
+**Recommended proposal:** Update GPU driver
+
+**Why:** Confirmed fix by multiple community members. The root cause is definitively external to SkiaSharp.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-external |
+| Confidence | 0.90 (90%) |
+| Reason | Root cause is an outdated Intel Iris Xe GPU driver, not a SkiaSharp bug. Multiple community members confirmed this and the fix is a driver update. The SkiaSharp SKElement code is correct. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply question, views, and Windows-Classic labels | labels=type/question, area/SkiaSharp.Views, os/Windows-Classic |
+| add-comment | medium | 0.90 (90%) | Explain root cause (GPU driver) and provide fix instructions | — |
+| close-issue | medium | 0.85 (85%) | Close as external — root cause is GPU driver, not SkiaSharp | stateReason=not_planned |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! Based on investigation of the comments here and the SkiaSharp WPF rendering code, this issue is caused by an **outdated Intel Iris Xe Graphics GPU driver**, not a SkiaSharp bug.
+
+Another user in this thread ([@hansangwook83](https://github.com/hansangwook83)) confirmed the same problem and resolved it by updating the Intel driver:
+
+- **Broken driver:** `27.20.100.9415` (March 2021)
+- **Fixed driver:** `31.0.101.4577` (July 2023)
+
+The underlying cause is that older Intel Xe drivers have a bug in WPF's D3D composition layer that prevents `InvalidateVisual()` dirty notifications from properly triggering `OnRender()`. Updating the driver to the 2023 version resolves the issue.
+
+**To fix:** Ask affected customers to update their Intel Graphics drivers via Intel's [Driver & Support Assistant](https://www.intel.com/content/www/us/en/support/detect.html) or Windows Update.
+
+I'll close this as the root cause is external to SkiaSharp.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2176,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T12:52:03Z"
+  },
+  "summary": "User reports SKElement (WPF) stops rendering after frame 1 on some customer PCs when using InvalidateVisual() in a timer loop; root cause was identified in comments as an outdated Intel Iris Xe GPU driver.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SKElement in a WPF app on a PC with Intel Iris Xe GPU",
+        "Call InvalidateVisual() from a timer to trigger PaintSurface",
+        "Draw to canvas in PaintSurface handler",
+        "Observe that rendering stops after the first frame on some machines"
+      ],
+      "environmentDetails": "Windows, WPF, SKElement, Intel Iris Xe GPU (no dedicated graphics card). Reproducible on laptops with integrated Intel Xe GPU only.",
+      "repoLinks": [
+        {
+          "url": "https://lostindetails.com/articles/skiasharp-with-wpf",
+          "description": "Referenced sample project showing frame counter with SkiaSharp WPF"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unknown",
+      "relevanceReason": "No SkiaSharp version given. The root cause is an external GPU driver bug, so relevance to SkiaSharp versions is unknown."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter asks why SKElement.InvalidateVisual() stops updating on some PCs. Comments from two other users confirmed the same issue on Intel Iris Xe laptops (no dedicated GPU) and identified the root cause: an outdated Intel Iris Xe Graphics driver (version 27.20.100.9415 from 2021). Updating to driver version 31.0.101.4577 (July 2023) resolved the issue. The SkiaSharp code is working correctly; the problem is in WPF's composition layer not firing redraws correctly with the buggy driver.",
+    "rationale": "This is a usage question with an identified external root cause. The issue title uses [QUESTION], and the body asks for help understanding the behavior. Code inspection of SKElement.cs shows a PresentationSource null-guard (line 52) that would cause silent skip of OnRender if WPF composition infrastructure is broken by a buggy GPU driver. No SkiaSharp code change is appropriate; the fix is updating the GPU driver. suggestedAction is close-as-external since the root cause is an external driver dependency, not SkiaSharp.",
+    "keySignals": [
+      {
+        "text": "[QUESTION] SkElement or skiaSharp is not working in some windows PC's",
+        "source": "issue title",
+        "interpretation": "Reporter asks a question, not reporting a reproducible bug."
+      },
+      {
+        "text": "I tested the program on my laptop and found that using InvalidateVisual cannot re render, but changing the window size can be done. Notebook is i5-1135G7, XE gpu, without independent graphics card. Desktop has a separate graphics card.",
+        "source": "comment by mimocvb",
+        "interpretation": "Confirms Intel Xe integrated GPU correlation — window resize forces a synchronous redraw that bypasses the composition invalidation path."
+      },
+      {
+        "text": "Issue has been resolved. This issue is not a Skia issue. It was a VGA Driver issue. [after driver version] 31.0.101.4577(2023-07-24)",
+        "source": "comment by hansangwook83",
+        "interpretation": "Root cause confirmed as external GPU driver bug; updating driver to 2023 version resolves the issue."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "52",
+        "finding": "OnRender guards with `PresentationSource.FromVisual(this) == null` — if WPF composition infrastructure fails to register the visual (possible with a buggy GPU driver), OnRender exits silently, explaining why the frame counter stops at 1.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "86-88",
+        "finding": "Rendering pipeline relies on WPF WriteableBitmap and DrawingContext — both depend on WPF's D3D/DirectX composition layer. With a broken Intel Xe driver, the composition layer may not properly propagate InvalidateVisual() dirty notifications through the render thread.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Update Intel Iris Xe Graphics driver to version 31.0.101.4577 (July 2023) or later.",
+      "As a temporary workaround, resize the window to force a synchronous WPF redraw, which bypasses the composition invalidation path.",
+      "If driver update is not possible, use SKGLElement (hardware-accelerated) or call Dispatcher.Invoke with DispatcherPriority.Render to force rendering on the WPF UI thread."
+    ],
+    "resolution": {
+      "hypothesis": "WPF's composition/D3D invalidation path does not reliably call OnRender when InvalidateVisual() is called on older Intel Xe GPU drivers. The WPF visual composition layer has a known issue with Intel Xe integrated graphics in older driver versions.",
+      "proposals": [
+        {
+          "title": "Update GPU driver",
+          "description": "Update Intel Iris Xe Graphics driver to 31.0.101.4577 (July 2023) or later. This is the confirmed fix from other users experiencing the same issue.",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Use Dispatcher.Invoke workaround",
+          "description": "Call InvalidateVisual via Dispatcher.Invoke with DispatcherPriority.Render to ensure the redraw is queued at the correct dispatcher priority level.",
+          "category": "workaround",
+          "confidence": 0.7,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Update GPU driver",
+      "recommendedReason": "Confirmed fix by multiple community members. The root cause is definitively external to SkiaSharp."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-external",
+      "confidence": 0.9,
+      "reason": "Root cause is an outdated Intel Iris Xe GPU driver, not a SkiaSharp bug. Multiple community members confirmed this and the fix is a driver update. The SkiaSharp SKElement code is correct.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question, views, and Windows-Classic labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause (GPU driver) and provide fix instructions",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Thanks for the report! Based on investigation of the comments here and the SkiaSharp WPF rendering code, this issue is caused by an **outdated Intel Iris Xe Graphics GPU driver**, not a SkiaSharp bug.\n\nAnother user in this thread ([@hansangwook83](https://github.com/hansangwook83)) confirmed the same problem and resolved it by updating the Intel driver:\n\n- **Broken driver:** `27.20.100.9415` (March 2021)\n- **Fixed driver:** `31.0.101.4577` (July 2023)\n\nThe underlying cause is that older Intel Xe drivers have a bug in WPF's D3D composition layer that prevents `InvalidateVisual()` dirty notifications from properly triggering `OnRender()`. Updating the driver to the 2023 version resolves the issue.\n\n**To fix:** Ask affected customers to update their Intel Graphics drivers via Intel's [Driver & Support Assistant](https://www.intel.com/content/www/us/en/support/detect.html) or Windows Update.\n\nI'll close this as the root cause is external to SkiaSharp."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as external — root cause is GPU driver, not SkiaSharp",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
+```
+
+</details>

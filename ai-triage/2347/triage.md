@@ -1,0 +1,310 @@
+# Issue Triage Report — #2347
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T14:15:28Z |
+| Type | type/question (0.88 (88%)) |
+| Area | area/SkiaSharp (0.92 (92%)) |
+| Suggested action | close-as-not-a-bug (0.88 (88%)) |
+
+**Issue Summary:** Reporter's SKCodec.Create() returns null for an image taken from an Android phone that has a .jpg extension but is actually a HEIC/HEIF file, which is not supported by Skia's built-in codec.
+
+**Analysis:** The image file has a .jpg extension but is actually a HEIC/HEIF file, a proprietary Apple-originated format that Skia's built-in codec does not support for decoding. SKCodec.Create() correctly returns null when it encounters an unsupported or unrecognized format. This is by-design behavior.
+
+**Recommendations:** **close-as-not-a-bug** — SKCodec.Create() correctly returns null for HEIC/HEIF files, which Skia does not support for decoding. A community comment already identified the root cause. This is by-design behavior with platform-level workarounds available.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/question |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Take a photo on an Android phone that saves in HEIC format with a .jpg extension
+2. Pass the stream to SKCodec.Create(managedStream)
+3. Observe that codec is null
+
+**Environment:** SkiaSharp 2.88.3
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1700 — Related HEIF/HEIC feature request, closed as not_planned
+
+**Code snippets:**
+
+```csharp
+using (var managedStream = new SKManagedStream(stream, false))
+{
+  using (var codec = SKCodec.Create(managedStream))
+  {
+    // codec is null here
+  }
+}
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.88.3 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | HEIC/HEIF decoding is not supported in the standard Skia build; this has not changed across versions. |
+
+## Analysis
+
+### Technical Summary
+
+The image file has a .jpg extension but is actually a HEIC/HEIF file, a proprietary Apple-originated format that Skia's built-in codec does not support for decoding. SKCodec.Create() correctly returns null when it encounters an unsupported or unrecognized format. This is by-design behavior.
+
+### Rationale
+
+A community comment correctly identifies the file as HEIC not JPEG. Chrome also cannot render it inline, consistent with HEIC. SKEncodedImageFormat.Heif (value 11) exists in the SkiaSharp enum to identify the format, but that does not imply decode support. Issue #1700 requesting HEIC/HEIF support was closed as not_planned, confirming this is not a supported feature. The behavior (null codec) is correct and expected.
+
+### Key Signals
+
+- "Very interesting fact that Chrome isn't able to load it." — **comment #1355619234** (Chrome also fails to display inline — consistent with HEIC format embedded with .jpg extension.)
+- "This is not a jpg file, this is HEIC file, which isn't supported." — **comment #1358178195** (Community correctly identifies the file format and explains why codec returns null.)
+- "codec is null here" — **issue body** (SKCodec.Create() returns null for unrecognized or unsupported formats — this is the documented null-on-failure behavior.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKCodec.cs` | 249-264 | direct | SKCodec.Create(SKStream) calls sk_codec_new_from_stream() via P/Invoke and returns null when the result handle is IntPtr.Zero. Null is the correct return value for unsupported formats. |
+| `binding/SkiaSharp/SKCodec.cs` | 292-293 | direct | GetObject() returns null when handle is IntPtr.Zero — confirms null codec is expected for unsupported formats. |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | 20804-20805 | context | SKEncodedImageFormat.Heif = 11 exists in the enum to identify files that are HEIF, but the native Skia build does not include a HEIC/HEIF decode codec. |
+
+### Workarounds
+
+- Convert HEIC images to JPEG or PNG before loading into SkiaSharp (e.g., use platform APIs on Android/iOS to transcode).
+- On Android, use Android.Graphics.BitmapFactory to decode the HEIC file into an Android.Graphics.Bitmap, then convert pixels to an SKBitmap.
+- On iOS/macOS, use UIKit/AppKit image loading to decode HEIC and then pass the pixel data to SkiaSharp.
+
+### Resolution Proposals
+
+**Hypothesis:** The file is a HEIC image saved with a .jpg extension. Skia does not include a HEIC decoder in its standard cross-platform build. SKCodec.Create() returns null, which is correct behavior.
+
+1. **Transcode on Android using platform APIs** — workaround, confidence 0.85 (85%), cost/s, validated=untested
+   - Use Android.Graphics.BitmapFactory to decode the HEIC file, then create an SKBitmap from the decoded bytes. This avoids the SkiaSharp codec entirely for HEIC.
+2. **Check codec before use and surface clear error** — workaround, confidence 0.95 (95%), cost/xs, validated=untested
+   - Wrap SKCodec.Create() with a null-check and provide a user-friendly error message explaining that HEIC is not supported. Suggest converting to JPEG/PNG first.
+
+**Recommended proposal:** Transcode on Android using platform APIs
+
+**Why:** Solves the problem at the source — HEIC decoding is performed by the platform's native codec which does support it.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | close-as-not-a-bug |
+| Confidence | 0.88 (88%) |
+| Reason | SKCodec.Create() correctly returns null for HEIC/HEIF files, which Skia does not support for decoding. A community comment already identified the root cause. This is by-design behavior with platform-level workarounds available. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply question label and area/SkiaSharp | labels=type/question, area/SkiaSharp |
+| add-comment | high | 0.88 (88%) | Post explanation that the file is HEIC not JPEG, and provide platform workarounds | — |
+| close-issue | medium | 0.85 (85%) | Close as not a bug — HEIC is unsupported by design | stateReason=not_planned |
+| link-related | low | 0.92 (92%) | Link to related HEIF feature request #1700 | linkedIssue=#1700 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! As noted in the thread, the image is actually in **HEIC/HEIF format** (a format commonly used by Apple devices and some Android phones) despite having a `.jpg` extension. SkiaSharp's underlying Skia library does not include a built-in HEIC/HEIF decoder, so `SKCodec.Create()` correctly returns `null` for these files.
+
+**Workarounds:**
+
+On **Android**, you can use the platform's own image decoder before passing pixels to SkiaSharp:
+```csharp
+// Android: decode HEIC via platform API
+var androidBitmap = Android.Graphics.BitmapFactory.DecodeStream(stream);
+// then copy pixels to SKBitmap or SKImage as needed
+```
+
+On **iOS/macOS**, use `UIImage` or `NSImage` to load the HEIC file and then copy the pixel data to SkiaSharp.
+
+If you need cross-platform HEIC support, consider converting HEIC images to JPEG or PNG before passing them to SkiaSharp (e.g., using a server-side conversion step or a library such as [MetadataExtractor](https://github.com/drewnoakes/metadata-extractor-dotnet) to detect the format first).
+
+For more context on HEIC support in SkiaSharp, see issue #1700.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2347,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T14:15:28Z"
+  },
+  "summary": "Reporter's SKCodec.Create() returns null for an image taken from an Android phone that has a .jpg extension but is actually a HEIC/HEIF file, which is not supported by Skia's built-in codec.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Take a photo on an Android phone that saves in HEIC format with a .jpg extension",
+        "Pass the stream to SKCodec.Create(managedStream)",
+        "Observe that codec is null"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1700",
+          "description": "Related HEIF/HEIC feature request, closed as not_planned"
+        }
+      ],
+      "codeSnippets": [
+        "using (var managedStream = new SKManagedStream(stream, false))\n{\n  using (var codec = SKCodec.Create(managedStream))\n  {\n    // codec is null here\n  }\n}"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "HEIC/HEIF decoding is not supported in the standard Skia build; this has not changed across versions."
+    }
+  },
+  "analysis": {
+    "summary": "The image file has a .jpg extension but is actually a HEIC/HEIF file, a proprietary Apple-originated format that Skia's built-in codec does not support for decoding. SKCodec.Create() correctly returns null when it encounters an unsupported or unrecognized format. This is by-design behavior.",
+    "rationale": "A community comment correctly identifies the file as HEIC not JPEG. Chrome also cannot render it inline, consistent with HEIC. SKEncodedImageFormat.Heif (value 11) exists in the SkiaSharp enum to identify the format, but that does not imply decode support. Issue #1700 requesting HEIC/HEIF support was closed as not_planned, confirming this is not a supported feature. The behavior (null codec) is correct and expected.",
+    "keySignals": [
+      {
+        "text": "Very interesting fact that Chrome isn't able to load it.",
+        "source": "comment #1355619234",
+        "interpretation": "Chrome also fails to display inline — consistent with HEIC format embedded with .jpg extension."
+      },
+      {
+        "text": "This is not a jpg file, this is HEIC file, which isn't supported.",
+        "source": "comment #1358178195",
+        "interpretation": "Community correctly identifies the file format and explains why codec returns null."
+      },
+      {
+        "text": "codec is null here",
+        "source": "issue body",
+        "interpretation": "SKCodec.Create() returns null for unrecognized or unsupported formats — this is the documented null-on-failure behavior."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "249-264",
+        "finding": "SKCodec.Create(SKStream) calls sk_codec_new_from_stream() via P/Invoke and returns null when the result handle is IntPtr.Zero. Null is the correct return value for unsupported formats.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "292-293",
+        "finding": "GetObject() returns null when handle is IntPtr.Zero — confirms null codec is expected for unsupported formats.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "20804-20805",
+        "finding": "SKEncodedImageFormat.Heif = 11 exists in the enum to identify files that are HEIF, but the native Skia build does not include a HEIC/HEIF decode codec.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Convert HEIC images to JPEG or PNG before loading into SkiaSharp (e.g., use platform APIs on Android/iOS to transcode).",
+      "On Android, use Android.Graphics.BitmapFactory to decode the HEIC file into an Android.Graphics.Bitmap, then convert pixels to an SKBitmap.",
+      "On iOS/macOS, use UIKit/AppKit image loading to decode HEIC and then pass the pixel data to SkiaSharp."
+    ],
+    "resolution": {
+      "hypothesis": "The file is a HEIC image saved with a .jpg extension. Skia does not include a HEIC decoder in its standard cross-platform build. SKCodec.Create() returns null, which is correct behavior.",
+      "proposals": [
+        {
+          "title": "Transcode on Android using platform APIs",
+          "description": "Use Android.Graphics.BitmapFactory to decode the HEIC file, then create an SKBitmap from the decoded bytes. This avoids the SkiaSharp codec entirely for HEIC.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Check codec before use and surface clear error",
+          "description": "Wrap SKCodec.Create() with a null-check and provide a user-friendly error message explaining that HEIC is not supported. Suggest converting to JPEG/PNG first.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Transcode on Android using platform APIs",
+      "recommendedReason": "Solves the problem at the source — HEIC decoding is performed by the platform's native codec which does support it."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.88,
+      "reason": "SKCodec.Create() correctly returns null for HEIC/HEIF files, which Skia does not support for decoding. A community comment already identified the root cause. This is by-design behavior with platform-level workarounds available.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question label and area/SkiaSharp",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation that the file is HEIC not JPEG, and provide platform workarounds",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "Thanks for the report! As noted in the thread, the image is actually in **HEIC/HEIF format** (a format commonly used by Apple devices and some Android phones) despite having a `.jpg` extension. SkiaSharp's underlying Skia library does not include a built-in HEIC/HEIF decoder, so `SKCodec.Create()` correctly returns `null` for these files.\n\n**Workarounds:**\n\nOn **Android**, you can use the platform's own image decoder before passing pixels to SkiaSharp:\n```csharp\n// Android: decode HEIC via platform API\nvar androidBitmap = Android.Graphics.BitmapFactory.DecodeStream(stream);\n// then copy pixels to SKBitmap or SKImage as needed\n```\n\nOn **iOS/macOS**, use `UIImage` or `NSImage` to load the HEIC file and then copy the pixel data to SkiaSharp.\n\nIf you need cross-platform HEIC support, consider converting HEIC images to JPEG or PNG before passing them to SkiaSharp (e.g., using a server-side conversion step or a library such as [MetadataExtractor](https://github.com/drewnoakes/metadata-extractor-dotnet) to detect the format first).\n\nFor more context on HEIC support in SkiaSharp, see issue #1700."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug — HEIC is unsupported by design",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "not_planned"
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related HEIF feature request #1700",
+        "risk": "low",
+        "confidence": 0.92,
+        "linkedIssue": 1700
+      }
+    ]
+  }
+}
+```
+
+</details>

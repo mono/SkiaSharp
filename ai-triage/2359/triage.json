@@ -1,0 +1,199 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2359,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T14:34:22Z"
+  },
+  "summary": "SKBitmap.Decode returns null (or fails) for specific images on Windows Classic when using SKManagedStream, with reporter citing issue #1621 as not yet fixed in version 2.88.3.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.82 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "missing-output",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net6.0-windows"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open specific image files with File.OpenRead",
+        "Wrap in SKManagedStream",
+        "Call SKBitmap.Decode(inputStream)",
+        "Observe that return value is null (or exception) for certain images"
+      ],
+      "codeSnippets": [
+        "using (var input = File.OpenRead(imageFileName))\n{\n    using (SKManagedStream inputStream = new SKManagedStream(input))\n    {\n        skBitmap = SKBitmap.Decode(inputStream);\n    }\n}"
+      ],
+      "environmentDetails": "Windows Classic 10, SkiaSharp 2.88.3, Visual Studio Code",
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/10410128/images.zip",
+          "filename": "images.zip",
+          "description": "Sample images that fail to decode with SKBitmap.Decode"
+        }
+      ],
+      "relatedIssues": [1621, 1551],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/1621", "description": "Closed duplicate: SKBitmap.Decode fails for some images (fixed in v2.88.3 via PR #2265)" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/1551", "description": "Root cause issue: SKManagedStream.OnReadManagedStream ArgumentNullException when buffer=IntPtr.Zero (fixed in v2.88.3)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3"],
+      "currentRelevance": "unknown",
+      "relevanceReason": "The fix for the null-buffer exception in SKManagedStream (issue #1551, #1621) was shipped in v2.88.3 via PR #2265. The current code contains the fix (buffer != IntPtr.Zero guard at line 85 of SKManagedStream.cs). The reporter uses 2.88.3 and claims the issue persists, but provides no actual error or stack trace. It is unclear if this is the same bug or a distinct decode failure."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.35,
+      "reason": "PR #2265 addressed the ArgumentNullException in SKManagedStream for the same symptom (issues #1551/#1621, milestone v2.88.3), and the fix is present in current code. However, the reporter explicitly states the issue persists on 2.88.3, and sample images were attached. Without a stack trace or actual behavior description it is impossible to confirm whether this is the same code path or a separate decode failure.",
+      "relatedPRs": [2265],
+      "fixedInVersion": "2.88.3"
+    }
+  },
+  "analysis": {
+    "summary": "Reporter claims SKBitmap.Decode silently fails (likely returns null) for certain images on Windows Classic using SkiaSharp 2.88.3. Related issues #1551 and #1621 describing an ArgumentNullException in SKManagedStream.OnReadManagedStream were fixed in v2.88.3 (PR #2265), and the fix is confirmed present in the current codebase. However, the reporter filed this after the fix was released and says the issue still occurs. The 'Actual Behavior' field in the report is empty, making it impossible to determine whether this is the same exception, a silent null return, or a different failure mode. The attached image zip may help diagnose image-specific characteristics triggering the failure.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKManagedStream.cs",
+        "lines": "73-96",
+        "finding": "OnReadManagedStream handles buffer==IntPtr.Zero since the fix in PR #2265 (line 85: 'if (buffer != IntPtr.Zero)'). Reads are performed into a temp buffer regardless, but the copy to native memory is skipped when buffer is null. This fix is present in the current codebase.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "487-498",
+        "finding": "SKBitmap.Decode(SKStream stream) creates an SKCodec from the stream via SKCodec.Create(stream). If codec creation returns null (native decode failure), Decode returns null with no exception — silent null return.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "252-261",
+        "finding": "SKCodec.Create(SKStream stream) delegates directly to native sk_codec_new_from_stream. If Skia native cannot identify the image format or rejects the file, it returns null, leading to SKBitmap.Decode returning null.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "278-290",
+        "finding": "WrapManagedStream wraps seekable streams in SKManagedStream and non-seekable in SKFrontBufferedManagedStream. File.OpenRead is always seekable, so SKManagedStream is used — consistent with the reporter's explicit wrapping.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Seems like https://github.com/mono/SkiaSharp/issues/1621 is not fixed yet. Is there a workaround to get past this?",
+        "source": "comment by reporter (Himanshu4)",
+        "interpretation": "Reporter assumes this is the same ArgumentNullException as #1621. Without a stack trace, this assumption cannot be confirmed."
+      },
+      {
+        "text": "[images.zip] These are some of the images which are failing for @Himanshu4",
+        "source": "comment by deepakupretims",
+        "interpretation": "Sample images attached. The specific images may have an unusual format, EXIF metadata, or encoding that native Skia cannot parse."
+      },
+      {
+        "text": "Actual Behavior: (empty section in issue body)",
+        "source": "issue body",
+        "interpretation": "The reporter did not fill in the actual behavior section. It is unknown whether SKBitmap.Decode returns null, throws an exception, or crashes. This is critical missing information."
+      },
+      {
+        "text": "Version with issue: 2.88.3",
+        "source": "issue body",
+        "interpretation": "The fix for #1551/#1621 shipped in milestone v2.88.3. If the reporter is truly on the released 2.88.3 build, the ArgumentNullException fix is present. Their images may expose a different failure path."
+      }
+    ],
+    "rationale": "Classified as type/bug in area/SkiaSharp because SKBitmap.Decode is a core decoding API and the reporter's images consistently fail. The area is SkiaSharp (not a view layer) because the issue is about image decoding. Severity is medium: only certain images fail, and a documented workaround (SKImage.FromEncodedData) exists. Suggested action is needs-info because the 'Actual Behavior' section is empty — the triage cannot determine if this is the same exception as #1551/#1621 (already fixed) or a different decode failure without a stack trace or error message.",
+    "workarounds": [
+      "Use SKImage.FromEncodedData(stream) + SKBitmap.FromImage(img) instead of SKBitmap.Decode (documented workaround from #1621)",
+      "Read the file into a byte array first and call SKBitmap.Decode(byte[]) to avoid any streaming issues"
+    ],
+    "nextQuestions": [
+      "What is the actual behavior: does SKBitmap.Decode return null, throw an exception (ArgumentNullException or other), or crash?",
+      "Can the reporter provide a stack trace if an exception is thrown?",
+      "What are the characteristics of the failing images (JPEG, PNG, format, DPI, EXIF orientation)?",
+      "Does the workaround SKImage.FromEncodedData(stream) then SKBitmap.FromImage(img) resolve the issue?"
+    ],
+    "resolution": {
+      "hypothesis": "The images likely have a specific encoding characteristic (e.g., EXIF orientation, high DPI metadata, CMYK color space, or unusual JPEG variant) that causes native Skia's codec to reject them. The #1621 fix addressed only the null-buffer exception; image-specific decode failures in native Skia are a separate issue.",
+      "proposals": [
+        {
+          "title": "Use SKImage.FromEncodedData as workaround",
+          "description": "Replace SKBitmap.Decode with SKImage.FromEncodedData + SKBitmap.FromImage. This was the documented workaround for #1621 and may bypass the decode path that fails.",
+          "category": "workaround",
+          "codeSnippet": "using var input = File.OpenRead(imageFileName);\nusing var skImage = SKImage.FromEncodedData(input);\nif (skImage != null)\n    skBitmap = SKBitmap.FromImage(skImage);",
+          "confidence": 0.70,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Read file to byte array first",
+          "description": "Load the file as a byte array and pass it to SKBitmap.Decode(byte[]) to avoid any stream-wrapping issues.",
+          "category": "workaround",
+          "codeSnippet": "var bytes = File.ReadAllBytes(imageFileName);\nskBitmap = SKBitmap.Decode(bytes);",
+          "confidence": 0.65,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate attached images for format characteristics",
+          "description": "Download the attached images.zip and check the image properties (JPEG variant, ICC profile, EXIF data) to identify what Skia's codec rejects. Then determine if this is a Skia upstream limitation or a SkiaSharp wrapper bug.",
+          "category": "investigation",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKImage.FromEncodedData as workaround",
+      "recommendedReason": "Immediately actionable and matches the known workaround from the related issue #1621. Reporter can unblock themselves while further investigation happens."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.82,
+      "reason": "The 'Actual Behavior' section is empty. Without knowing whether the issue is a null return, an exception, or a crash — and without a stack trace — it is impossible to confirm whether this is the already-fixed #1551/#1621 or a new issue. The reporter needs to provide actual error details.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "What is the actual behavior? Does SKBitmap.Decode return null, throw an exception, or crash the app?",
+      "If an exception is thrown, what is the stack trace?",
+      "What are the image file formats and characteristics of the failing images?",
+      "Does the SKImage.FromEncodedData workaround resolve the issue for the same images?"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp core, and Windows Classic labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask reporter for actual behavior, stack trace, and image characteristics. Provide known workaround.",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the report and the sample images!\n\nThe related issue #1621 (and its root cause #1551) were fixed in v2.88.3 via PR #2265. The fix addressed an `ArgumentNullException` in `SKManagedStream.OnReadManagedStream` that occurred when Skia called the stream with a null buffer.\n\nTo help us determine whether you're hitting the same issue or a different one, could you provide:\n\n1. **Actual behavior** — does `SKBitmap.Decode` return `null`, throw an exception, or crash the app?\n2. **Stack trace** — if an exception is thrown, please share the full stack trace.\n3. **Image characteristics** — are the failing images JPEG, PNG, or another format? Do they have specific properties (high DPI, EXIF orientation, ICC profile)?\n\nIn the meantime, you can try these workarounds:\n\n```csharp\n// Workaround 1: Use SKImage.FromEncodedData instead\nusing var input = File.OpenRead(imageFileName);\nusing var skImage = SKImage.FromEncodedData(input);\nif (skImage != null)\n    skBitmap = SKBitmap.FromImage(skImage);\n\n// Workaround 2: Read to byte array first\nvar bytes = File.ReadAllBytes(imageFileName);\nskBitmap = SKBitmap.Decode(bytes);\n```"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference closed root-cause issue #1551",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 1551
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference closed related issue #1621",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 1621
+      }
+    ]
+  }
+}

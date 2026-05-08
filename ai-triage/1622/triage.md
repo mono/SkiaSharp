@@ -1,0 +1,331 @@
+# Issue Triage Report — #1622
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-04-26T11:30:00Z |
+| Type | type/bug (0.92 (92%)) |
+| Area | area/libSkiaSharp.native (0.75 (75%)) |
+| Suggested action | needs-reproduction (0.88 (88%)) |
+
+**Issue Summary:** Random hard crash (STATUS_STACK_BUFFER_OVERRUN in clr.dll, exception 0xc0000409) in WinForms .NET Framework x86 apps since upgrading from SkiaSharp 1.68.3 to 2.80.2; crash does not occur under x64 or .NET Core.
+
+**Analysis:** Hard crash (STATUS_STACK_BUFFER_OVERRUN, 0xc0000409) occurs in clr.dll when SkiaSharp is used in a 32-bit .NET Framework WinForms process. The faulting module being clr.dll rather than libSkiaSharp.dll suggests the stack is being corrupted during a native-to-managed transition — likely a calling convention mismatch, wrong struct size, or incorrect library architecture loaded in a 32-bit process.
+
+**Recommendations:** **needs-reproduction** — Real regression with clear version boundary (1.68.3 → 2.80.2) and consistent x86-only crash signature, but no minimal repro code is provided. A minimal repro is needed before investigation can proceed.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | tenet/reliability, tenet/compatibility |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** WinForms .NET Framework x86; SkiaSharp 2.80.2 (broken), 1.68.3 (good); AnyCPU+Prefer32Bit also crashes. .NET Core projects work fine.
+
+**Related issues:** #3375
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/3375 — Related: Windows app crash only on x86, v3.116 or newer
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | crash |
+| Error message | Exception code: 0xc0000409 in clr.dll — STATUS_STACK_BUFFER_OVERRUN |
+| Repro quality | partial |
+| Target frameworks | net472, net48 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 2.80.2, 2.80.3-preview.40, 1.68.3 |
+| Worked in | 1.68.3 |
+| Broke in | 2.80.2 |
+| Current relevance | likely |
+| Relevance reason | x86 native library loading and P/Invoke ABI concerns in 32-bit mode are architectural and persist across versions unless explicitly fixed. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.92 (92%) |
+| Reason | Reporter explicitly states last known good version is 1.68.3; crash reproduces on both 2.80.2 and 2.80.3-preview.40. |
+| Worked in version | 1.68.3 |
+| Broke in version | 2.80.2 |
+
+## Analysis
+
+### Technical Summary
+
+Hard crash (STATUS_STACK_BUFFER_OVERRUN, 0xc0000409) occurs in clr.dll when SkiaSharp is used in a 32-bit .NET Framework WinForms process. The faulting module being clr.dll rather than libSkiaSharp.dll suggests the stack is being corrupted during a native-to-managed transition — likely a calling convention mismatch, wrong struct size, or incorrect library architecture loaded in a 32-bit process.
+
+### Rationale
+
+Reporter describes a hard unmanaged crash (exception code 0xc0000409 in clr.dll) that is x86-only, .NET-Framework-only, and regressed from 1.68.3 to 2.80.2. The crash signature is STATUS_STACK_BUFFER_OVERRUN — consistent with a calling convention mismatch or struct ABI difference in 32-bit mode that corrupts the stack during a P/Invoke call. The faulting module is clr.dll, not libSkiaSharp.dll, suggesting the corruption is detected at the managed/native boundary. x64 and .NET Core are unaffected because x64 Windows uses a single calling convention and because .NET Core resolves native libraries differently. No minimal repro is provided, but the maintainer confirmed the x86-specificity is notable.
+
+### Key Signals
+
+- "Faulting module name: clr.dll, Exception code: 0xc0000409" — **issue body** (STATUS_STACK_BUFFER_OVERRUN raised inside the CLR — stack was corrupted during or after a P/Invoke call, detected when returning to managed code.)
+- "If change the project compile Target Platform to Any CPU or x64, works fine" — **issue body** (Strictly a 32-bit (x86) problem. x64 code path in the native library is unaffected. Confirms ABI mismatch or native library selection issue in 32-bit mode.)
+- ".NetCore project is fine, only .Net Framework project crashes. using AnyCPU + prefer 32 bits crashes (same as x86)." — **comment #2** (Process bitness is the trigger, not the project SDK. .NET Core likely uses a different P/Invoke loading path or resolves the native library differently.)
+- "Version with issue: 2.80.2; Last known good version: 1.68.3" — **issue body** (Regression introduced between 1.68.3 and 2.80.2. The 2.80.x series introduced significant changes to native library loading (NativeAssets packages, architecture-specific subfolders).)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SkiaApi.generated.cs` | 122-190 | direct | All P/Invoke declarations use CallingConvention.Cdecl and UnmanagedFunctionPointer(CallingConvention.Cdecl). On x64 Windows, calling convention differences are moot; on x86 .NET Framework, a cdecl/stdcall mismatch would corrupt the stack and manifest as 0xc0000409 in clr.dll. The current code appears correct, suggesting the regression may be in the native binary ABI rather than the managed declarations. |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | 17465-17900 | related | Structs use StructLayout(Sequential) with IntPtr (pointer-sized) fields for size_t values. On x86, IntPtr is 4 bytes; on x64 it is 8 bytes. This should match native struct sizes on the respective platform. However, if the native x86 libSkiaSharp.dll was built with different struct padding or alignment than the managed declarations assume, struct size mismatches could cause buffer overruns at call boundaries. |
+
+### Next Questions
+
+- Which specific SkiaSharp API call triggers the crash — is it reproducible on first API call, or later?
+- Is the crash reproducible with a minimal WinForms project that just creates an SKBitmap?
+- Does the x86 libSkiaSharp.dll ship correctly in the NuGet package for 2.80.2 (correct architecture, not x64)?
+- Are there any GS-check or buffer security differences in how the native library was compiled for x86 in 2.80.2 vs 1.68.3?
+
+### Resolution Proposals
+
+**Hypothesis:** The 2.80.x series changed native library delivery (new NativeAssets packages, architecture-specific layout). Either the wrong native binary (x64) is being loaded in a 32-bit process, or a struct/delegate ABI mismatch was introduced in the new C API surface that only manifests on x86 .NET Framework.
+
+1. **Provide minimal WinForms x86 repro** — investigation, confidence 0.90 (90%), cost/s, validated=untested
+   - Reporter should create a minimal .NET Framework WinForms x86 project calling a single SkiaSharp API (e.g., SKBitmap, SKCanvas) to isolate which call triggers the crash. This will allow the maintainers to reproduce and pinpoint the native call site.
+2. **Workaround: target x64 or AnyCPU without Prefer32Bit** — workaround, confidence 0.95 (95%), cost/xs, validated=untested
+   - Until the root cause is fixed, targeting x64 or AnyCPU without the 'Prefer 32-bit' flag avoids the crash entirely. If x86 is required for third-party DLL compatibility, consider isolating SkiaSharp usage in an out-of-process worker.
+
+**Recommended proposal:** Provide minimal WinForms x86 repro
+
+**Why:** A minimal repro is the fastest path to root cause. The workaround is available but requires code changes on the reporter side.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-reproduction |
+| Confidence | 0.88 (88%) |
+| Reason | Real regression with clear version boundary (1.68.3 → 2.80.2) and consistent x86-only crash signature, but no minimal repro code is provided. A minimal repro is needed before investigation can proceed. |
+| Suggested repro platform | windows |
+
+### Missing Info
+
+- Minimal WinForms .NET Framework x86 repro project or code snippet
+- Which specific SkiaSharp API call triggers the crash
+- Full Windows Event Log crash details (module offset, crash address)
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply bug, native, Windows-Classic, reliability, compatibility labels | labels=type/bug, area/libSkiaSharp.native, os/Windows-Classic, tenet/reliability, tenet/compatibility |
+| add-comment | medium | 0.88 (88%) | Ask reporter for a minimal WinForms x86 repro and offer x64 workaround | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report! The `STATUS_STACK_BUFFER_OVERRUN` (0xc0000409) exception in `clr.dll` is a hard crash that typically indicates stack corruption at a native-to-managed boundary. The fact that it only affects x86 .NET Framework (not x64 or .NET Core) is a strong signal.
+
+To investigate further, could you:
+1. Create a **minimal WinForms .NET Framework x86** project that reproduces the crash — ideally just a few lines that call SkiaSharp (e.g., create an `SKBitmap` or draw something).
+2. Note which specific SkiaSharp API call is the first call in your code that triggers the crash.
+
+**Workaround in the meantime:** Targeting `x64` or `Any CPU` (without "Prefer 32-bit") completely avoids the crash.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1622,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T11:30:00Z"
+  },
+  "summary": "Random hard crash (STATUS_STACK_BUFFER_OVERRUN in clr.dll, exception 0xc0000409) in WinForms .NET Framework x86 apps since upgrading from SkiaSharp 1.68.3 to 2.80.2; crash does not occur under x64 or .NET Core.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.75
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/reliability",
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "Exception code: 0xc0000409 in clr.dll — STATUS_STACK_BUFFER_OVERRUN",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net472",
+        "net48"
+      ]
+    },
+    "reproEvidence": {
+      "environmentDetails": "WinForms .NET Framework x86; SkiaSharp 2.80.2 (broken), 1.68.3 (good); AnyCPU+Prefer32Bit also crashes. .NET Core projects work fine.",
+      "relatedIssues": [
+        3375
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3375",
+          "description": "Related: Windows app crash only on x86, v3.116 or newer"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2",
+        "2.80.3-preview.40",
+        "1.68.3"
+      ],
+      "workedIn": "1.68.3",
+      "brokeIn": "2.80.2",
+      "currentRelevance": "likely",
+      "relevanceReason": "x86 native library loading and P/Invoke ABI concerns in 32-bit mode are architectural and persist across versions unless explicitly fixed."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.92,
+      "reason": "Reporter explicitly states last known good version is 1.68.3; crash reproduces on both 2.80.2 and 2.80.3-preview.40.",
+      "workedInVersion": "1.68.3",
+      "brokeInVersion": "2.80.2"
+    }
+  },
+  "analysis": {
+    "summary": "Hard crash (STATUS_STACK_BUFFER_OVERRUN, 0xc0000409) occurs in clr.dll when SkiaSharp is used in a 32-bit .NET Framework WinForms process. The faulting module being clr.dll rather than libSkiaSharp.dll suggests the stack is being corrupted during a native-to-managed transition — likely a calling convention mismatch, wrong struct size, or incorrect library architecture loaded in a 32-bit process.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "122-190",
+        "finding": "All P/Invoke declarations use CallingConvention.Cdecl and UnmanagedFunctionPointer(CallingConvention.Cdecl). On x64 Windows, calling convention differences are moot; on x86 .NET Framework, a cdecl/stdcall mismatch would corrupt the stack and manifest as 0xc0000409 in clr.dll. The current code appears correct, suggesting the regression may be in the native binary ABI rather than the managed declarations.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "17465-17900",
+        "finding": "Structs use StructLayout(Sequential) with IntPtr (pointer-sized) fields for size_t values. On x86, IntPtr is 4 bytes; on x64 it is 8 bytes. This should match native struct sizes on the respective platform. However, if the native x86 libSkiaSharp.dll was built with different struct padding or alignment than the managed declarations assume, struct size mismatches could cause buffer overruns at call boundaries.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Faulting module name: clr.dll, Exception code: 0xc0000409",
+        "source": "issue body",
+        "interpretation": "STATUS_STACK_BUFFER_OVERRUN raised inside the CLR — stack was corrupted during or after a P/Invoke call, detected when returning to managed code."
+      },
+      {
+        "text": "If change the project compile Target Platform to Any CPU or x64, works fine",
+        "source": "issue body",
+        "interpretation": "Strictly a 32-bit (x86) problem. x64 code path in the native library is unaffected. Confirms ABI mismatch or native library selection issue in 32-bit mode."
+      },
+      {
+        "text": ".NetCore project is fine, only .Net Framework project crashes. using AnyCPU + prefer 32 bits crashes (same as x86).",
+        "source": "comment #2",
+        "interpretation": "Process bitness is the trigger, not the project SDK. .NET Core likely uses a different P/Invoke loading path or resolves the native library differently."
+      },
+      {
+        "text": "Version with issue: 2.80.2; Last known good version: 1.68.3",
+        "source": "issue body",
+        "interpretation": "Regression introduced between 1.68.3 and 2.80.2. The 2.80.x series introduced significant changes to native library loading (NativeAssets packages, architecture-specific subfolders)."
+      }
+    ],
+    "rationale": "Reporter describes a hard unmanaged crash (exception code 0xc0000409 in clr.dll) that is x86-only, .NET-Framework-only, and regressed from 1.68.3 to 2.80.2. The crash signature is STATUS_STACK_BUFFER_OVERRUN — consistent with a calling convention mismatch or struct ABI difference in 32-bit mode that corrupts the stack during a P/Invoke call. The faulting module is clr.dll, not libSkiaSharp.dll, suggesting the corruption is detected at the managed/native boundary. x64 and .NET Core are unaffected because x64 Windows uses a single calling convention and because .NET Core resolves native libraries differently. No minimal repro is provided, but the maintainer confirmed the x86-specificity is notable.",
+    "nextQuestions": [
+      "Which specific SkiaSharp API call triggers the crash — is it reproducible on first API call, or later?",
+      "Is the crash reproducible with a minimal WinForms project that just creates an SKBitmap?",
+      "Does the x86 libSkiaSharp.dll ship correctly in the NuGet package for 2.80.2 (correct architecture, not x64)?",
+      "Are there any GS-check or buffer security differences in how the native library was compiled for x86 in 2.80.2 vs 1.68.3?"
+    ],
+    "resolution": {
+      "hypothesis": "The 2.80.x series changed native library delivery (new NativeAssets packages, architecture-specific layout). Either the wrong native binary (x64) is being loaded in a 32-bit process, or a struct/delegate ABI mismatch was introduced in the new C API surface that only manifests on x86 .NET Framework.",
+      "proposals": [
+        {
+          "title": "Provide minimal WinForms x86 repro",
+          "description": "Reporter should create a minimal .NET Framework WinForms x86 project calling a single SkiaSharp API (e.g., SKBitmap, SKCanvas) to isolate which call triggers the crash. This will allow the maintainers to reproduce and pinpoint the native call site.",
+          "category": "investigation",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: target x64 or AnyCPU without Prefer32Bit",
+          "description": "Until the root cause is fixed, targeting x64 or AnyCPU without the 'Prefer 32-bit' flag avoids the crash entirely. If x86 is required for third-party DLL compatibility, consider isolating SkiaSharp usage in an out-of-process worker.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Provide minimal WinForms x86 repro",
+      "recommendedReason": "A minimal repro is the fastest path to root cause. The workaround is available but requires code changes on the reporter side."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-reproduction",
+      "confidence": 0.88,
+      "reason": "Real regression with clear version boundary (1.68.3 → 2.80.2) and consistent x86-only crash signature, but no minimal repro code is provided. A minimal repro is needed before investigation can proceed.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Minimal WinForms .NET Framework x86 repro project or code snippet",
+      "Which specific SkiaSharp API call triggers the crash",
+      "Full Windows Event Log crash details (module offset, crash address)"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, native, Windows-Classic, reliability, compatibility labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Windows-Classic",
+          "tenet/reliability",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Ask reporter for a minimal WinForms x86 repro and offer x64 workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the report! The `STATUS_STACK_BUFFER_OVERRUN` (0xc0000409) exception in `clr.dll` is a hard crash that typically indicates stack corruption at a native-to-managed boundary. The fact that it only affects x86 .NET Framework (not x64 or .NET Core) is a strong signal.\n\nTo investigate further, could you:\n1. Create a **minimal WinForms .NET Framework x86** project that reproduces the crash — ideally just a few lines that call SkiaSharp (e.g., create an `SKBitmap` or draw something).\n2. Note which specific SkiaSharp API call is the first call in your code that triggers the crash.\n\n**Workaround in the meantime:** Targeting `x64` or `Any CPU` (without \"Prefer 32-bit\") completely avoids the crash."
+      }
+    ]
+  }
+}
+```
+
+</details>

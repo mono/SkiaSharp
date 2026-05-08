@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2191,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-04-26T12:02:09Z",
+    "currentLabels": ["backend/Vulkan"]
+  },
+  "summary": "SkiaSharp does not expose GetVkImageInfo() or SetVkImageLayout() on GRBackendRenderTarget/GRBackendTexture, making it impossible to correctly synchronize Vulkan image layout state between SkiaSharp and external Vulkan renderers.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.92 },
+    "backends": ["backend/Vulkan"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a GRBackendRenderTarget with a GRVkImageInfo",
+        "Create an SKSurface from the render target",
+        "After Skia renders, attempt to read back the current VkImageLayout to know what layout Skia left the VkImage in",
+        "Observe: no GetVkImageInfo() method exists on GRBackendRenderTarget"
+      ],
+      "environmentDetails": "Vulkan interop scenario; any platform with Vulkan support",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/2191#issuecomment-1220446947", "description": "Reporter's patch adding C API bindings for gr_backendrendertarget_get_vk_imageinfo and gr_backendrendertarget_set_vk_imagelayout, plus C# P/Invoke wrapper" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/3312", "description": "Related issue: Vulkan GRContext creation failure during Vulkan interop" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The C# bindings for GRBackendRenderTarget still lack GetVkImageInfo() and SetVkImageLayout() in the current codebase."
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp's GRBackendRenderTarget and GRBackendTexture bindings expose GL equivalents (GetGlFramebufferInfo, GetGlTextureInfo) but not Vulkan equivalents (GetVkImageInfo, SetVkImageLayout). The upstream Skia C++ API provides GrBackendRenderTarget::getVkImageInfo() and setVkImageLayout(); these must be wrapped in the C API shim and then exposed in C# to support correct Vulkan image layout synchronization.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/GRBackendRenderTarget.cs",
+        "finding": "GRBackendRenderTarget exposes GetGlFramebufferInfo() for OpenGL but has no GetVkImageInfo() or SetVkImageLayout() methods. The only Vulkan entry point is the constructor accepting GRVkImageInfo.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/GRBackendTexture.cs",
+        "finding": "GRBackendTexture similarly exposes GetGlTextureInfo() for OpenGL but no Vulkan image info getter or layout setter, confirming the pattern gap.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "Generated P/Invoke layer contains gr_backendrendertarget_new_vulkan and gr_backendtexture_new_vulkan but no gr_backendrendertarget_get_vk_imageinfo, gr_backendrendertarget_set_vk_imagelayout, nor their texture equivalents. The C API shim does not yet expose these functions.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "finding": "SKSurface has no GetBackendTexture() or GetBackendRenderTarget() methods, which the maintainer noted is another route to access image layout (via SkSurface::getBackendTexture() → GrBackendTexture::getVkImageInfo()).",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "For Vulkan interopt we need to communicate the ImageLayout with Skia.",
+        "source": "issue body",
+        "interpretation": "The Vulkan spec requires the consumer of a VkImage to know its current layout; without this, correct pipeline barriers cannot be inserted."
+      },
+      {
+        "text": "What I think has changed is the way to do this and we need to use the new SkSurface::getBackendTexture() to get the GrBackendTexture and then call GrBackendTexture::getVkImageInfo() and/or use the GrBackendTexture::setVkImageLayout(). But, this all fails still because we don't have the initial SkSurface::getBackendTexture()",
+        "source": "maintainer comment (mattleibow)",
+        "interpretation": "Maintainer confirmed the gap and identified the preferred upstream approach, but noted SKSurface::GetBackendTexture() is also missing."
+      },
+      {
+        "text": "We don't have to use getBackendTexture, we instead create a surface using SKSurface.Create and keep a reference to the RenderTarget we pass in.",
+        "source": "reporter comment",
+        "interpretation": "Reporter found a partial workaround: retain the GRBackendRenderTarget and call custom P/Invoke wrappers. Demonstrates the missing API is needed but feasible."
+      }
+    ],
+    "workarounds": [
+      "Retain the GRBackendRenderTarget instance passed to SKSurface.Create and add custom P/Invoke bindings to gr_backendrendertarget_get_vk_imageinfo and gr_backendrendertarget_set_vk_imagelayout (as shown in the reporter's patch in the issue comments)."
+    ],
+    "rationale": "The issue is filed as [BUG] but is fundamentally a missing API — upstream Skia C++ supports getVkImageInfo/setVkImageLayout on GrBackendRenderTarget/GrBackendTexture, but these are not wrapped in SkiaSharp's C API shim or C# bindings. The GL equivalent (GetGlFramebufferInfo) exists, confirming this is a binding gap. Classified as type/feature-request because it requires new C API shim functions and new C# methods. The reporter provided a working patch as a proof of concept.",
+    "resolution": {
+      "hypothesis": "Adding gr_backendrendertarget_get_vk_imageinfo/set_vk_imagelayout to the C API shim and exposing them via GRBackendRenderTarget.GetVkImageInfo()/SetVkImageLayout() in C# would resolve the issue. Alternatively, exposing SKSurface.GetBackendTexture() as noted by the maintainer.",
+      "proposals": [
+        {
+          "title": "Add GetVkImageInfo/SetVkImageLayout to GRBackendRenderTarget",
+          "description": "Add C API shim functions gr_backendrendertarget_get_vk_imageinfo and gr_backendrendertarget_set_vk_imagelayout (as shown in the reporter's patch), regenerate bindings, and add C# wrapper methods to GRBackendRenderTarget.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Expose SKSurface.GetBackendTexture() and GetVkImageInfo on GRBackendTexture",
+          "description": "Follow the maintainer's preferred approach: expose SkSurface::getBackendTexture() as SKSurface.GetBackendTexture() and add GrBackendTexture::getVkImageInfo()/setVkImageLayout() bindings to GRBackendTexture.",
+          "category": "alternative",
+          "confidence": 0.75,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add GetVkImageInfo/SetVkImageLayout to GRBackendRenderTarget",
+      "recommendedReason": "Most targeted fix matching the reporter's needs; reporter already provided a working C API patch as proof of concept."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Valid feature request with a clear implementation path; reporter provided a proof-of-concept C API patch. A workaround exists via custom P/Invoke, so no blocker for current users. Needs maintainer decision on the preferred approach (render target vs surface backend texture).",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request, core bindings, and Vulkan backend labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/feature-request", "area/SkiaSharp", "backend/Vulkan"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request, confirm the gap, reference the reporter's patch, and note the preferred implementation approach",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report and for providing a proof-of-concept patch!\n\nThis is a confirmed binding gap: `GRBackendRenderTarget` exposes `GetGlFramebufferInfo()` for OpenGL but there is no equivalent `GetVkImageInfo()`/`SetVkImageLayout()` for Vulkan. The upstream Skia C++ API supports these operations but they haven't been wrapped in SkiaSharp's C API shim yet.\n\nAs a **workaround** today, you can retain the `GRBackendRenderTarget` instance you passed to `SKSurface.Create` and add custom P/Invoke declarations as shown in your comment — this avoids modifying the SkiaSharp source.\n\nWe'll track adding first-class support for `GetVkImageInfo`/`SetVkImageLayout` on `GRBackendRenderTarget` (and/or exposing `SKSurface.GetBackendTexture()` as noted above)."
+      }
+    ]
+  }
+}
