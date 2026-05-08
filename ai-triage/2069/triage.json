@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2069,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-03T17:11:17Z"
+  },
+  "summary": "Request to enable Nullable Reference Types in SkiaSharp.Views.Maui.Core project, which has since been implemented.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.99 },
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.95,
+      "reason": "The SkiaSharp.Views.Maui.Core.csproj already contains <Nullable>Enable</Nullable>, indicating the enhancement has been implemented.",
+      "fixedInVersion": "unknown"
+    }
+  },
+  "analysis": {
+    "summary": "The request was to enable C# Nullable Reference Types (NRT) in the SkiaSharp.Views.Maui.Core project. Code investigation shows <Nullable>Enable</Nullable> is already present in the project file, meaning this enhancement has been implemented since the issue was filed in May 2022.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SkiaSharp.Views.Maui.Core.csproj",
+        "finding": "<Nullable>Enable</Nullable> is present in the project file, confirming NRT is enabled",
+        "relevance": "direct",
+        "lines": "8"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Enable Nullable Reference Types (SkiaSharp.Views.Maui.Core)",
+        "source": "issue title",
+        "interpretation": "The reporter (project maintainer) wanted to enable NRT in the Maui Core package"
+      }
+    ],
+    "rationale": "This is a type/enhancement request from the maintainer themselves. Code investigation confirms the enhancement has been implemented: <Nullable>Enable</Nullable> is present in the .csproj. The issue can likely be closed as fixed.",
+    "resolution": {
+      "hypothesis": "The nullable reference types feature was enabled after the issue was filed.",
+      "proposals": [
+        {
+          "title": "Close as fixed",
+          "description": "The SkiaSharp.Views.Maui.Core.csproj already has <Nullable>Enable</Nullable>. The enhancement has been implemented.",
+          "category": "fix",
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Close as fixed",
+      "recommendedReason": "Code investigation confirms <Nullable>Enable</Nullable> is already in the project file, so the enhancement request is fulfilled."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.90,
+      "reason": "The project file already has Nullable enabled, confirming the enhancement was implemented.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement, area/SkiaSharp.Views.Maui, partner/maui labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views.Maui", "partner/maui"]
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed since Nullable is already enabled in the project",
+        "risk": "medium",
+        "confidence": 0.90,
+        "stateReason": "completed"
+      },
+      {
+        "type": "add-comment",
+        "description": "Inform that Nullable Reference Types are already enabled",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "This enhancement has been implemented. The `SkiaSharp.Views.Maui.Core.csproj` project file already contains `<Nullable>Enable</Nullable>`, so Nullable Reference Types are enabled for this package. Closing as fixed."
+      }
+    ]
+  }
+}
