@@ -1,0 +1,192 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2787,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T22:46:25Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKImage.Encode() returns null when the source image has SKColorType.Gray8, because the internal ToRasterImage/PeekPixels path fails to materialize pixel data for Gray8-typed lazy images.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Linux",
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/reliability",
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "missing-output",
+      "errorMessage": "trimmedImage.Encode(headers.EncodedFormat, 100) returns null when source has SKColorType.Gray8",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load a grayscale JPEG/PNG image using SKImage.FromEncodedData",
+        "Call sourceImage.Subset(rect) to get a trimmed portion",
+        "Call trimmedImage.Encode(SKEncodedImageFormat.Jpeg, 100)",
+        "Observe that the result is null"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.6, Ubuntu 22.04 Docker with SkiaSharp.NativeAssets.Linux.NoDependencies, Visual Studio Windows",
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/assets/70582521/4321c73b-5588-4605-a265-ec03a46135d6",
+          "description": "Screenshot showing the bug",
+          "filename": "skiagray8bug.png"
+        }
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/754",
+          "description": "Related: Gray8 decoding returns null since 1.68 \u2014 same Gray8 support issue"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/806",
+          "description": "Related: SKImage.FromPixelCopy with Gray8 produces BGRA8888 bitmap instead"
+        }
+      ],
+      "relatedIssues": [
+        754,
+        806
+      ],
+      "codeSnippets": [
+        "using var trimmedImage = sourceImage.Subset(trimmingRect);\nusing var trimmedData = trimmedImage.Encode(headers.EncodedFormat, 100); // null when source is Gray8"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.6"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "No Gray8 encode fix has been identified in subsequent releases; related issues #754 and #806 remain open."
+    }
+  },
+  "analysis": {
+    "summary": "Gray8 images created via SKImage.FromEncodedData are lazy/deferred. When SKImage.Encode(format, quality) is called, it internally calls ToRasterImage(true) followed by PeekPixels(). For Gray8 lazy images, either sk_image_make_raster_image or the subsequent PeekPixels call fails to produce a valid pixmap, causing pixmap?.Encode() to return null. This is part of a broader pattern of incomplete Gray8 support in SkiaSharp (also manifesting in #754 and #806).",
+    "rationale": "The reporter provides code, a workaround, and a screenshot. The bug is clearly a missing-output type: the Encode path silently returns null for Gray8 images. Code investigation confirms that SKImage.Encode delegates to ToRasterImage(true) then PeekPixels(), both of which can fail silently for Gray8 lazy images. Related issues #754 and #806 confirm Gray8 has been a long-standing problem area.",
+    "keySignals": [
+      {
+        "text": "trimmedData.AsStream().CopyTo(memStream) Results in null when source has SKColorType.Gray8",
+        "source": "issue body code comment",
+        "interpretation": "Encode returns null specifically for Gray8 color type \u2014 not a NullReferenceException but a silent null return from pixmap?.Encode()."
+      },
+      {
+        "text": "don't access the source image but call it on SKImage.Create(sourceImage.Info.WithColorType(someOtherColorType))",
+        "source": "issue body workaround",
+        "interpretation": "Converting away from Gray8 before encoding works \u2014 confirms the failure is specific to Gray8 in the encode path."
+      },
+      {
+        "text": "could also be related to the other ticket regarding SKColorType.Gray8",
+        "source": "issue body",
+        "interpretation": "Reporter is aware of the broader Gray8 issue pattern in SkiaSharp."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "363-373",
+        "finding": "SKImage.Encode(format, quality) calls ToRasterImage(true) which maps to sk_image_make_raster_image, then PeekPixels(). If either fails for Gray8 lazy images, pixmap is null and the method returns null silently via pixmap?.Encode().",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "559-562",
+        "finding": "ToRasterImage(true) calls sk_image_make_raster_image \u2014 the native Skia API may not fully support Gray8 color type for deferred/lazy images created from encoded data.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPixmap.cs",
+        "lines": "221-246",
+        "finding": "SKPixmap.Encode dispatches to sk_jpegencoder_encode, sk_pngencoder_encode, or sk_webpencoder_encode based on format. If the pixmap is null (from PeekPixels failure), this path is never reached.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Convert the image to a non-Gray8 color type before encoding: SKImage.Create(sourceImage.Info.WithColorType(SKColorType.Rgba8888)) \u2014 the reporter confirmed this works."
+    ],
+    "nextQuestions": [
+      "Does sk_image_make_raster_image return null for Gray8 images, or does PeekPixels fail?",
+      "Is this a Skia upstream limitation where Gray8 images cannot be made raster, or a SkiaSharp wrapping issue?",
+      "Does SKBitmap.Encode() on a Gray8 bitmap have the same failure?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia's SkImage::makeRasterImage() does not support Gray8 pixel format, causing sk_image_make_raster_image to return null. SKImage.Encode should detect this case and either convert to a supported color type internally or return a meaningful error.",
+      "proposals": [
+        {
+          "title": "Convert Gray8 to RGBA before encoding in SKImage.Encode",
+          "description": "In SKImage.Encode(format, quality), if ToRasterImage(true) returns null or PeekPixels returns null, try reading pixels into a different color type (e.g., RGBA8888) and encode from that. This would be transparent to the caller.",
+          "category": "fix",
+          "confidence": 0.7,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Use ReadPixels with explicit color type conversion",
+          "description": "Add an alternative Encode path that uses ReadPixels with a converted SKImageInfo (e.g., RGBA8888) when the image color type is Gray8, matching the reporter's workaround.",
+          "category": "workaround",
+          "confidence": 0.8,
+          "effort": "cost/m",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Convert Gray8 to RGBA before encoding in SKImage.Encode",
+      "recommendedReason": "Transparent fix that maintains the current API contract. Converting internally before encoding matches user expectation that Encode always produces valid output for any decoded image."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Real bug with partial repro code and confirmed workaround. Root cause in native layer (sk_image_make_raster_image with Gray8) needs repro to confirm before fix.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core SkiaSharp, platform, and tenet labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Linux",
+          "os/Windows-Classic",
+          "tenet/reliability",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related Gray8 issue #754",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 754
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, confirm the workaround, and ask for clarification on exact image format",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed report and for providing a workaround!\n\nThis looks like a real bug: `SKImage.Encode()` internally calls `ToRasterImage(true)` \u2192 `PeekPixels()` \u2192 `pixmap.Encode()`. For lazy (deferred) images with `SKColorType.Gray8`, one of those steps appears to fail silently, returning `null` from `Encode`.\n\nThis is related to a broader Gray8 support issue tracked in #754.\n\n**Confirmed workaround** (as you discovered): convert to a different color type before encoding:\n```csharp\nusing var convertedImage = SKImage.Create(sourceImage.Info.WithColorType(SKColorType.Rgba8888));\nusing var trimmedImage = convertedImage.Subset(trimmingRect);\nusing var trimmedData = trimmedImage.Encode(headers.EncodedFormat, 100);\n```\n\nCould you confirm: what image format is the source grayscale image (JPEG, PNG, other)? This will help narrow down where the decode/re-encode pipeline breaks for Gray8."
+      }
+    ]
+  }
+}

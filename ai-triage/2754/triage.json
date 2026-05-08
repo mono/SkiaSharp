@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2754,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-01T21:12:08Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Reporter observes that drawing rgba(0,0,255,128) on a Premul surface stores the blue channel as 128 instead of 255 in the raw buffer \u2014 this is correct premultiplied alpha behavior, not a bug.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create SKSurface with SKImageInfo using SKColorType.Rgba8888 and SKAlphaType.Premul",
+        "Clear canvas to rgba(0,0,0,0)",
+        "Draw a filled rect with SKColor(0,0,255,128) using SKBlendMode.SrcOver",
+        "Read raw bytes from the pinned buffer",
+        "Observe buffer[2] (blue) = 128 instead of expected 255"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Visual Studio on Windows",
+      "codeSnippets": [
+        "var imageinfo = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul);\nusing var surface = SKSurface.Create(imageinfo, pointer);\nsurface.Canvas.Clear(new SKColor(0, 0, 0, 0));\nvar paint = new SKPaint { Color = new SKColor(0, 0, 255, 128), BlendMode = SKBlendMode.SrcOver };\nsurface.Canvas.DrawRect(0, 0, size, size, paint);"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "This is by-design behavior of premultiplied alpha \u2014 not version-dependent."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter created a surface with SKAlphaType.Premul and is reading raw buffer bytes directly. In premultiplied alpha format, each color channel is stored pre-multiplied by the alpha value: B_stored = B_linear * (A/255) = 255 * (128/255) \u2248 128. This is correct and intentional behavior. The workaround is to use SKAlphaType.Unpremul so raw bytes are not premultiplied.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "70-84",
+        "finding": "SKImageInfo constructors default to SKAlphaType.Premul when no alphaType is specified. The reporter explicitly passed SKAlphaType.Premul, causing Skia to store pixel data in premultiplied form.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "lines": "164-212",
+        "finding": "GetAlphaType validates that SKColorType.Rgba8888 accepts both Premul and Unpremul alpha types \u2014 either can be used. Switching to Unpremul would store raw unmodified channel values.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "var imageinfo = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul)",
+        "source": "issue body",
+        "interpretation": "Reporter explicitly uses Premul alpha type. Raw bytes will be premultiplied: B_stored = B * (A/255) = 255 * (128/255) = 128. Observed result is mathematically correct."
+      },
+      {
+        "text": "result is rgba(0,0,128,128) instead of rgba(0,0,255,128)",
+        "source": "issue body",
+        "interpretation": "128 = 255 * 128/255 \u2014 this is exactly the premultiplied value for blue=255 with alpha=128. The result is correct."
+      },
+      {
+        "text": "I actually tried all SKBlendmodes, but none of them is producing the expected behaviour",
+        "source": "issue body",
+        "interpretation": "Blend mode is not the issue. The premultiplied storage is applying to all modes because it's a property of the surface format, not the blend mode."
+      }
+    ],
+    "rationale": "The behavior is mathematically correct for premultiplied alpha. The reporter created a Premul surface and reads raw bytes, which are stored in premultiplied form. SrcOver on an empty (transparent) canvas stores src as premultiplied. The issue is a misunderstanding of premultiplied alpha semantics, not a SkiaSharp bug.",
+    "workarounds": [
+      "Use SKAlphaType.Unpremul instead of SKAlphaType.Premul when creating the SKImageInfo \u2014 raw buffer bytes will then be straight (non-premultiplied) RGBA values.",
+      "To unpremultiply existing values manually: R = R_premul * 255 / A, G = G_premul * 255 / A, B = B_premul * 255 / A (when A > 0)."
+    ],
+    "resolution": {
+      "hypothesis": "Reporter expects raw buffer bytes to match the original SKColor values, but is using SKAlphaType.Premul which causes Skia to premultiply RGB by alpha before storing. Using SKAlphaType.Unpremul resolves the confusion.",
+      "proposals": [
+        {
+          "title": "Use SKAlphaType.Unpremul",
+          "description": "Change the SKImageInfo alpha type from Premul to Unpremul so raw buffer bytes are stored as straight alpha (unmodified RGB channels).",
+          "category": "workaround",
+          "codeSnippet": "// Change this:\nvar imageinfo = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul);\n// To this:\nvar imageinfo = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Unpremul);",
+          "confidence": 0.97,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use SKAlphaType.Unpremul",
+      "recommendedReason": "Minimal change that directly addresses the reporter's expectation that raw bytes match the original color values."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-not-a-bug",
+      "confidence": 0.92,
+      "reason": "The observed behavior is mathematically correct for premultiplied alpha. Changing to SKAlphaType.Unpremul resolves the confusion. This is by-design, not a defect.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct type from bug to question; add area and platform labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain premultiplied alpha semantics and provide the Unpremul workaround",
+        "risk": "high",
+        "confidence": 0.92,
+        "comment": "Thanks for the detailed repro!\n\nThe behavior you're seeing is actually correct \u2014 it's how **premultiplied alpha** works.\n\nWhen you create a surface with `SKAlphaType.Premul`, Skia stores color channels **pre-multiplied by the alpha value** in the raw pixel buffer:\n\n```\nB_stored = B_original \u00d7 (Alpha / 255) = 255 \u00d7 (128 / 255) \u2248 128\n```\n\nThat's why you see `(0, 0, 128, 128)` \u2014 mathematically, `255 \u00d7 128/255 = 128`.\n\nThe fix is to use `SKAlphaType.Unpremul` so raw buffer bytes are stored as straight (non-premultiplied) RGBA:\n\n```csharp\n// Change from:\nvar imageinfo = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul);\n// To:\nvar imageinfo = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Unpremul);\n```\n\nWith `Unpremul`, the buffer will contain `(0, 0, 255, 128)` as expected.\n\n> **Note:** Premultiplied alpha is preferred for compositing (better visual quality when blending semi-transparent layers) but requires you to interpret raw bytes accordingly. Straight/unpremul alpha is simpler for direct byte-level inspection."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as not a bug \u2014 behavior is by design (premultiplied alpha semantics)",
+        "risk": "medium",
+        "confidence": 0.88,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
