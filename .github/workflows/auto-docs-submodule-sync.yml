@@ -1,0 +1,116 @@
+name: Auto Docs Submodule Sync
+
+on:
+  schedule:
+    - cron: "0 10 * * *"  # Daily at 10 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-docs-submodule-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout SkiaSharp
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: false
+          token: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+
+      - name: Initialize docs submodule
+        run: |
+          git submodule update --init -- docs
+
+      - name: Check for submodule drift
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+        run: |
+          # Get current submodule SHA
+          CURRENT_SHA=$(git ls-tree HEAD -- docs | awk '{print $3}')
+          echo "current_sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
+          echo "Current submodule SHA: $CURRENT_SHA"
+
+          # Get latest docs repo main SHA
+          LATEST_SHA=$(gh api repos/mono/SkiaSharp-API-docs/git/ref/heads/main --jq '.object.sha')
+          echo "latest_sha=$LATEST_SHA" >> "$GITHUB_OUTPUT"
+          echo "Latest docs main SHA: $LATEST_SHA"
+
+          if [ "$CURRENT_SHA" = "$LATEST_SHA" ]; then
+            echo "Submodule is up to date — nothing to do"
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Submodule is behind: $CURRENT_SHA → $LATEST_SHA"
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+
+            # Get the commit message for context
+            COMMIT_MSG=$(gh api "repos/mono/SkiaSharp-API-docs/commits/$LATEST_SHA" --jq '.commit.message' | head -1)
+            echo "latest_commit_msg=$COMMIT_MSG" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update submodule
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          cd docs
+          git fetch origin main
+          git checkout ${{ steps.check.outputs.latest_sha }}
+          cd ..
+          git add docs
+
+      - name: Create or update PR
+        if: steps.check.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+        run: |
+          BRANCH="automation/update-docs-submodule"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Check if there are actually changes to commit
+          if git diff --cached --quiet; then
+            echo "No changes after staging — submodule may already be at target"
+            exit 0
+          fi
+
+          git checkout -B "$BRANCH"
+          git commit -m "Update docs submodule to latest main
+
+          mono/SkiaSharp-API-docs main: ${{ steps.check.outputs.latest_sha }}
+          Previous: ${{ steps.check.outputs.current_sha }}
+          Latest commit: ${{ steps.check.outputs.latest_commit_msg }}"
+
+          git push origin "$BRANCH" --force
+
+          # Create PR if one doesn't already exist
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            echo "PR #$existing already exists, force-pushed updates"
+            gh pr edit "$existing" \
+              --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
+
+          **Previous SHA:** \`${{ steps.check.outputs.current_sha }}\`
+          **New SHA:** \`${{ steps.check.outputs.latest_sha }}\`
+          **Latest commit:** ${{ steps.check.outputs.latest_commit_msg }}
+
+          Updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "Update docs submodule to latest main" \
+              --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
+
+          **Previous SHA:** \`${{ steps.check.outputs.current_sha }}\`
+          **New SHA:** \`${{ steps.check.outputs.latest_sha }}\`
+          **Latest commit:** ${{ steps.check.outputs.latest_commit_msg }}
+
+          Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
+          fi

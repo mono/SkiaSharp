@@ -31,7 +31,9 @@ A GitHub Actions workflow in [`mono/SkiaSharp-API-docs`](https://github.com/mono
 - **Manual trigger**: Go to the [Actions tab](https://github.com/mono/SkiaSharp-API-docs/actions) on `mono/SkiaSharp-API-docs` → "Update API Docs" → "Run workflow"
 - **Branch parameter**: Optionally specify a SkiaSharp branch to generate docs from (defaults to `main`)
 
-### What the pipeline does
+### Step 1: Stub generation (update-docs.yml)
+
+What the stub generation does:
 
 1. Downloads the latest NuGet packages from the [SkiaSharp-CI](https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json) Azure Artifacts feed (public, no authentication required)
 2. Runs `dotnet cake --target=update-docs` which:
@@ -40,13 +42,43 @@ A GitHub Actions workflow in [`mono/SkiaSharp-API-docs`](https://github.com/mono
    - Cleans up, formats, and validates the generated XML (`docs-format-docs`)
 3. If there are changes, creates a PR on [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs)
 
-### After the PR is merged
+### Step 2: AI fills placeholders (auto-api-docs-writer)
 
-Once the docs PR is merged into `mono/SkiaSharp-API-docs`, update the submodule pointer in the main SkiaSharp repo:
+After stubs are merged to `main`, a second workflow in this repo fills "To be added." placeholders:
+
+- **Workflow**: [`auto-api-docs-writer.md`](../../.github/workflows/auto-api-docs-writer.md) (agentic, in this repo)
+- **Schedule**: Daily at 8 AM UTC (2 hours after stub generation)
+- **What it does**: An AI agent reads the `api-docs` skill, finds all "To be added." placeholders, reads the corresponding C# source code, and writes proper documentation following .NET guidelines
+- **Output**: PR `automation/write-api-docs` → `main` in `mono/SkiaSharp-API-docs`
+- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-api-docs-writer.lock.yml) → "Auto API Docs Writer" → "Run workflow"
+
+### Step 3: Submodule sync (auto-docs-submodule-sync)
+
+After docs PRs are merged to `mono/SkiaSharp-API-docs` `main`, the submodule pointer in this repo needs to be updated:
+
+- **Workflow**: [`auto-docs-submodule-sync.yml`](../../.github/workflows/auto-docs-submodule-sync.yml) (in this repo)
+- **Schedule**: Daily at 10 AM UTC
+- **What it does**: Compares the `docs/` submodule SHA with the latest `mono/SkiaSharp-API-docs` `main` SHA. If behind, creates a PR to bump the submodule.
+- **Output**: PR `automation/update-docs-submodule` → `main` in `mono/SkiaSharp`
+- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-docs-submodule-sync.yml) → "Auto Docs Submodule Sync" → "Run workflow"
+
+### Pipeline timeline
+
+| Time (UTC) | Workflow | Location | Action |
+|------------|----------|----------|--------|
+| 6:00 AM | `update-docs.yml` | docs repo | Regenerates XML stubs from CI NuGets |
+| 8:00 AM | `auto-api-docs-writer` | this repo | AI fills "To be added." placeholders |
+| 10:00 AM | `auto-docs-submodule-sync` | this repo | Bumps `docs/` submodule pointer |
+
+Each step produces a PR that requires human review before merging. The 2-hour staggering gives each step time to complete before the next triggers.
+
+### Manual submodule update
+
+You can also update the submodule manually:
 
 ```bash
 cd docs
-git checkout master
+git checkout main
 git pull
 cd ..
 git add docs
