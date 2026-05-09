@@ -24,9 +24,47 @@ on:
         type: string
         default: "0"
 
-  # No pre-activation gate — stub regeneration in pre-agent-steps may
-  # create new placeholders that don't exist yet on docs main.
-  # The agent checks for placeholders itself and exits early if none.
+# -- Custom jobs -------------------------------------------------------
+# Stub regeneration requires Windows (mdoc.exe is .NET Framework).
+# Results are uploaded as artifacts and available to the agent.
+jobs:
+  regenerate-stubs:
+    runs-on: windows-latest
+    if: github.event.inputs.skip_regeneration != 'true'
+    steps:
+      - name: Checkout SkiaSharp
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Align docs submodule to latest main
+        run: |
+          cd docs
+          git fetch origin main
+          git checkout origin/main
+          cd ..
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install GTK# 2
+        shell: pwsh
+        run: |
+          $msiUrl = "https://github.com/mono/gtk-sharp/releases/download/2.12.45/gtk-sharp-2.12.45.msi"
+          $msiPath = "$env:RUNNER_TEMP\gtk-sharp.msi"
+          Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath
+          Start-Process msiexec.exe -ArgumentList "/i", $msiPath, "/quiet", "/norestart" -Wait -NoNewWindow
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: Download latest NuGet packages
+        run: dotnet cake --target=docs-download-output
+      - name: Regenerate API docs
+        run: dotnet cake --target=update-docs
+      - name: Package regenerated docs
+        shell: bash
+        run: |
+          mkdir -p /tmp/gh-aw/agent
+          tar czf /tmp/gh-aw/agent/docs-regenerated.tar.gz -C docs SkiaSharpAPI
 
 # -- Checkout ----------------------------------------------------------
 checkout:
@@ -62,7 +100,7 @@ steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
-  - name: Align docs submodule to latest main
+  - name: Align docs submodule to working branch
     run: |
       cd docs
       git fetch origin main
@@ -71,14 +109,14 @@ steps:
       echo "docs submodule on automation/write-api-docs at docs main"
 
 pre-agent-steps:
-  - name: Restore tools and regenerate stubs
-    env:
-      SKIP_REGENERATION: ${{ github.event.inputs.skip_regeneration }}
+  - name: Apply regenerated stubs
     run: |
-      dotnet tool restore
-      if [ "$SKIP_REGENERATION" != "true" ]; then
-        dotnet cake --target=docs-download-output
-        dotnet cake --target=update-docs
+      if [ -f /tmp/gh-aw/agent/docs-regenerated.tar.gz ]; then
+        echo "Applying regenerated stubs from Windows job..."
+        tar xzf /tmp/gh-aw/agent/docs-regenerated.tar.gz -C docs
+        echo "Stubs applied"
+      else
+        echo "No regenerated stubs artifact — using docs main as-is"
       fi
 
   - name: Copy push script for post-step
@@ -97,7 +135,7 @@ post-steps:
 
 **Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–5.** Overrides for this workflow:
 
-- **Phase 1 is pre-computed** — stub regeneration already ran. Skip it.
+- **Phase 1 is pre-computed** — stub regeneration already ran on Windows. Skip it.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't carry this into the chroot).
 - **Phase 5 branch**: use `automation/write-api-docs` as the branch name.
 - **Max files**: ${{ github.event.inputs.max_files || '0' }} (0 = unlimited — process all files).
