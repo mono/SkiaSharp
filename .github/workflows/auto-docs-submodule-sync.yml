@@ -23,7 +23,6 @@ jobs:
         with:
           fetch-depth: 1
           submodules: false
-          token: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
 
       - name: Initialize docs submodule
         run: |
@@ -31,8 +30,6 @@ jobs:
 
       - name: Check for submodule drift
         id: check
-        env:
-          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
         run: |
           # Get current submodule SHA
           CURRENT_SHA=$(git ls-tree HEAD -- docs | awk '{print $3}')
@@ -79,6 +76,9 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Configure push credentials (only needed for this step)
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
           # Check if there are actually changes to commit
           if git diff --cached --quiet; then

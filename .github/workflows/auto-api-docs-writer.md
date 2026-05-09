@@ -19,16 +19,14 @@ on:
   steps:
     - name: Check for placeholders
       id: check
-      env:
-        GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
       run: |
-        # Get the latest commit SHA on docs repo main
+        # Get the latest commit SHA on docs repo main (public repo, no auth needed)
         DOCS_SHA=$(gh api repos/mono/SkiaSharp-API-docs/git/ref/heads/main --jq '.object.sha')
         echo "docs_sha=$DOCS_SHA" >> "$GITHUB_OUTPUT"
         echo "Docs repo main SHA: $DOCS_SHA"
 
-        # Clone the docs repo shallowly to count placeholders
-        git clone --depth 1 https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp-API-docs.git /tmp/docs-check
+        # Clone the docs repo shallowly to count placeholders (public, no auth needed)
+        git clone --depth 1 https://github.com/mono/SkiaSharp-API-docs.git /tmp/docs-check
         PLACEHOLDER_COUNT=$(grep -r "To be added" /tmp/docs-check/SkiaSharpAPI/ 2>/dev/null | wc -l | tr -d ' ')
         echo "placeholder_count=$PLACEHOLDER_COUNT" >> "$GITHUB_OUTPUT"
         echo "Placeholder count: $PLACEHOLDER_COUNT"
