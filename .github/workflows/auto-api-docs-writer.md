@@ -104,9 +104,21 @@ steps:
     run: |
       cd docs
       git fetch origin main
-      git checkout -B automation/write-api-docs origin/main
+      BRANCH="automation/write-api-docs"
+      # If the branch exists remotely, rebase it onto main to preserve edits
+      if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
+        git fetch origin "$BRANCH"
+        git checkout -B "$BRANCH" "origin/$BRANCH"
+        git rebase origin/main || {
+          echo "::warning::Rebase failed — starting fresh from main"
+          git rebase --abort
+          git checkout -B "$BRANCH" origin/main
+        }
+      else
+        git checkout -B "$BRANCH" origin/main
+      fi
       cd ..
-      echo "docs submodule on automation/write-api-docs at docs main"
+      echo "docs submodule on $BRANCH"
 
 pre-agent-steps:
   - name: Apply regenerated stubs
