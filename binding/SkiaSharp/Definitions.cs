@@ -50,6 +50,7 @@ namespace SkiaSharp
 		RgbaF32 = 12,
 		Rg88 = 13,
 		AlphaF16 = 14,
+		R16Float = 28,
 		RgF16 = 15,
 		Alpha16 = 16,
 		Rg1616 = 17,
@@ -94,6 +95,7 @@ namespace SkiaSharp
 				SKColorType.Rg88 => 2,
 				SKColorType.Alpha16 => 2,
 				SKColorType.AlphaF16 => 2,
+				SKColorType.R16Float => 2,
 				SKColorType.R16Unorm => 2,
 				// 4
 				SKColorType.Bgra8888 => 4,
@@ -135,6 +137,7 @@ namespace SkiaSharp
 				SKColorType.Rg88 => 1,
 				SKColorType.Alpha16 => 1,
 				SKColorType.AlphaF16 => 1,
+				SKColorType.R16Float => 1,
 				SKColorType.R16Unorm => 1,
 				// 2
 				SKColorType.Bgra8888 => 2,
@@ -205,6 +208,7 @@ namespace SkiaSharp
 				case SKColorType.Bgr101010xXR:
 				case SKColorType.R8Unorm:
 				case SKColorType.R16Unorm:
+				case SKColorType.R16Float:
 				case SKColorType.RgbF16F16F16x:
 					alphaType = SKAlphaType.Opaque;
 					break;
