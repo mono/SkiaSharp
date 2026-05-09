@@ -37,11 +37,24 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - name: Align docs submodule to latest main
+      - name: Set up docs branch
+        shell: bash
         run: |
           cd docs
           git fetch origin main
-          git checkout origin/main
+          BRANCH="automation/write-api-docs"
+          # If the branch exists, check it out and merge main (favoring main on conflicts)
+          if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH"
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+            git merge origin/main -X theirs --no-edit || {
+              echo "::warning::Merge failed — starting fresh from main"
+              git merge --abort
+              git checkout -B "$BRANCH" origin/main
+            }
+          else
+            git checkout -B "$BRANCH" origin/main
+          fi
           cd ..
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -60,18 +73,11 @@ jobs:
         run: dotnet cake --target=docs-download-output
       - name: Regenerate API docs
         run: dotnet cake --target=update-docs
-      - name: Package regenerated changes
+      - name: Package regenerated docs
         shell: bash
         run: |
           mkdir -p /tmp/gh-aw/agent
-          cd docs
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes from stub regeneration"
-          else
-            git diff --cached --binary > /tmp/gh-aw/agent/docs-stubs.patch
-            echo "Patch created: $(wc -l < /tmp/gh-aw/agent/docs-stubs.patch) lines"
-          fi
+          tar czf /tmp/gh-aw/agent/docs-regenerated.tar.gz -C docs SkiaSharpAPI
 
 # -- Checkout ----------------------------------------------------------
 checkout:
@@ -107,40 +113,21 @@ steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
-  - name: Align docs submodule to working branch
+  - name: Set up docs branch
     run: |
       cd docs
-      git fetch origin main
-      BRANCH="automation/write-api-docs"
-      # If the branch exists remotely, rebase it onto main to preserve edits
-      if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
-        git fetch origin "$BRANCH"
-        git checkout -B "$BRANCH" "origin/$BRANCH"
-        git rebase origin/main || {
-          echo "::warning::Rebase failed — starting fresh from main"
-          git rebase --abort
-          git checkout -B "$BRANCH" origin/main
-        }
-      else
-        git checkout -B "$BRANCH" origin/main
-      fi
+      git checkout -B automation/write-api-docs
       cd ..
-      echo "docs submodule on $BRANCH"
 
 pre-agent-steps:
-  - name: Apply regenerated stubs
+  - name: Apply regenerated docs
     run: |
-      if [ -f /tmp/gh-aw/agent/docs-stubs.patch ]; then
-        echo "Applying stub regeneration patch..."
-        cd docs
-        git apply --3way /tmp/gh-aw/agent/docs-stubs.patch || {
-          echo "::warning::3-way apply had conflicts — trying with --reject"
-          git apply --reject /tmp/gh-aw/agent/docs-stubs.patch || true
-        }
-        cd ..
-        echo "Stubs applied"
+      if [ -f /tmp/gh-aw/agent/docs-regenerated.tar.gz ]; then
+        echo "Applying docs from Windows job..."
+        tar xzf /tmp/gh-aw/agent/docs-regenerated.tar.gz -C docs
+        echo "Done"
       else
-        echo "No stubs patch — using branch as-is"
+        echo "No regenerated docs artifact — using checkout as-is"
       fi
 
   - name: Copy push script for post-step
