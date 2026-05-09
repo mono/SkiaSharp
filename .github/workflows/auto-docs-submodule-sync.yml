@@ -21,101 +21,73 @@ jobs:
       - name: Checkout SkiaSharp
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           submodules: false
 
-      - name: Initialize docs submodule
+      - name: Initialize and update docs submodule
         run: |
           git submodule update --init -- docs
+          cd docs
+          git fetch origin main
+          git checkout origin/main
+          cd ..
 
-      - name: Check for submodule drift
+      - name: Check for changes
         id: check
         run: |
-          # Get current submodule SHA
-          CURRENT_SHA=$(git ls-tree HEAD -- docs | awk '{print $3}')
-          echo "current_sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
-          echo "Current submodule SHA: $CURRENT_SHA"
-
-          # Get latest docs repo main SHA
-          LATEST_SHA=$(gh api repos/mono/SkiaSharp-API-docs/git/ref/heads/main --jq '.object.sha')
-          echo "latest_sha=$LATEST_SHA" >> "$GITHUB_OUTPUT"
-          echo "Latest docs main SHA: $LATEST_SHA"
-
-          if [ "$CURRENT_SHA" = "$LATEST_SHA" ]; then
+          if git diff --quiet -- docs; then
             echo "Submodule is up to date — nothing to do"
             echo "needs_update=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Submodule is behind: $CURRENT_SHA → $LATEST_SHA"
+            echo "Submodule has changed"
             echo "needs_update=true" >> "$GITHUB_OUTPUT"
-
-            # Get the commit message for context
-            COMMIT_MSG=$(gh api "repos/mono/SkiaSharp-API-docs/commits/$LATEST_SHA" --jq '.commit.message' | head -1)
-            echo "latest_commit_msg=$COMMIT_MSG" >> "$GITHUB_OUTPUT"
+            LATEST_MSG=$(git -C docs log -1 --format=%s)
+            echo "latest_msg=$LATEST_MSG" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Update submodule
-        if: steps.check.outputs.needs_update == 'true'
-        env:
-          LATEST_SHA: ${{ steps.check.outputs.latest_sha }}
-        run: |
-          cd docs
-          git fetch origin main
-          git checkout "$LATEST_SHA"
-          cd ..
-          git add docs
 
       - name: Create or update PR
         if: steps.check.outputs.needs_update == 'true'
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-          LATEST_SHA: ${{ steps.check.outputs.latest_sha }}
-          CURRENT_SHA: ${{ steps.check.outputs.current_sha }}
-          LATEST_COMMIT_MSG: ${{ steps.check.outputs.latest_commit_msg }}
+          LATEST_MSG: ${{ steps.check.outputs.latest_msg }}
         run: |
           BRANCH="automation/update-docs-submodule"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Configure push credentials (only needed for this step)
+          # Configure push credentials
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
-          # Check if there are actually changes to commit
+          # Create or rebase the branch onto main
+          if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH"
+            git checkout "$BRANCH"
+            git rebase origin/main
+          else
+            git checkout -b "$BRANCH"
+          fi
+
+          git add docs
           if git diff --cached --quiet; then
-            echo "No changes after staging — submodule may already be at target"
+            echo "No changes after staging"
             exit 0
           fi
 
-          git checkout -B "$BRANCH"
           git commit -m "Update docs submodule to latest main
 
-          mono/SkiaSharp-API-docs main: $LATEST_SHA
-          Previous: $CURRENT_SHA
-          Latest commit: $LATEST_COMMIT_MSG"
+          Latest: $LATEST_MSG"
 
           git push origin "$BRANCH" --force
 
           # Create PR if one doesn't already exist
           existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
           if [ -n "$existing" ]; then
-            echo "PR #$existing already exists, force-pushed updates"
-            gh pr edit "$existing" \
-              --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
-
-          **Previous SHA:** \`$CURRENT_SHA\`
-          **New SHA:** \`$LATEST_SHA\`
-          **Latest commit:** $LATEST_COMMIT_MSG
-
-          Updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)
-          Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
+            echo "PR #$existing already exists, force-pushed update"
           else
             gh pr create --base main --head "$BRANCH" \
               --title "Update docs submodule to latest main" \
               --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
-
-          **Previous SHA:** \`$CURRENT_SHA\`
-          **New SHA:** \`$LATEST_SHA\`
-          **Latest commit:** $LATEST_COMMIT_MSG
 
           Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
           fi
