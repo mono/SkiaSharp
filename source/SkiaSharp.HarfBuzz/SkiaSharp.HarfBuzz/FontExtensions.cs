@@ -27,22 +27,28 @@ namespace SkiaSharp.HarfBuzz
 			font.SetScale(scale.Width, scale.Height);
 		}
 
+		public static SKPath GetShapedTextPath(this SKFont font, string text) =>
+			font.GetShapedTextPath(text, 0, 0);
+
 		public static SKPath GetShapedTextPath(this SKFont font, string text, SKPoint p) =>
 			font.GetShapedTextPath(text, p.X, p.Y);
 
-		public static SKPath GetShapedTextPath(this SKFont font, string text, float x, float y) =>
-			font.GetShapedTextPath(text, x, y, SKTextAlign.Left);
+		public static SKPath GetShapedTextPath(this SKFont font, string text, SKPoint p, SKTextAlign textAlign) =>
+			font.GetShapedTextPath(text, p.X, p.Y, textAlign);
 
-		public static SKPath GetShapedTextPath(this SKFont font, string text, float x, float y, SKTextAlign textAlign)
+		public static SKPath GetShapedTextPath(this SKFont font, string text, float xOffset, float yOffset) =>
+			font.GetShapedTextPath(text, xOffset, yOffset, SKTextAlign.Left);
+
+		public static SKPath GetShapedTextPath(this SKFont font, string text, float xOffset, float yOffset, SKTextAlign textAlign)
 		{
 			if (string.IsNullOrEmpty(text))
 				return new SKPath();
 
 			using var shaper = new SKShaper(font.Typeface);
-			return font.GetShapedTextPath(shaper, text, x, y, textAlign);
+			return font.GetShapedTextPath(shaper, text, xOffset, yOffset, textAlign);
 		}
 
-		public static SKPath GetShapedTextPath(this SKFont font, SKShaper shaper, string text, float x, float y, SKTextAlign textAlign)
+		public static SKPath GetShapedTextPath(this SKFont font, SKShaper shaper, string text, float xOffset, float yOffset, SKTextAlign textAlign)
 		{
 			if (string.IsNullOrEmpty(text))
 				return new SKPath();
@@ -55,16 +61,16 @@ namespace SkiaSharp.HarfBuzz
 			font.Typeface = shaper.Typeface;
 
 			// shape the text
-			var result = shaper.Shape(text, x, y, font);
+			var result = shaper.Shape(text, xOffset, yOffset, font);
 
 			// adjust alignment
-			var xOffset = 0.0f;
+			var alignXOffset = 0.0f;
 			if (textAlign != SKTextAlign.Left)
 			{
 				var width = result.Width;
 				if (textAlign == SKTextAlign.Center)
 					width *= 0.5f;
-				xOffset -= width;
+				alignXOffset -= width;
 			}
 
 			// get spans for more efficient accessing
@@ -85,7 +91,7 @@ namespace SkiaSharp.HarfBuzz
 				// translate the glyph path
 				var point = pointSpan[i];
 				var matrix = new SKMatrix(
-					1, 0, point.X + xOffset,
+					1, 0, point.X + alignXOffset,
 					0, 1, point.Y,
 					0, 0, 1
 				);
