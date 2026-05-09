@@ -24,37 +24,27 @@ This repository is pulled into the main SkiaSharp repo as a Git submodule at `do
 
 ## Automated Pipeline
 
-A GitHub Actions workflow in [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs) regenerates the API docs daily from the latest CI build artifacts. It checks out this repo (for the Cake build scripts) and the docs repo, then runs the doc generation targets:
+Two workflows in this repo automate the full docs lifecycle:
 
-- **Workflow**: [`update-docs.yml`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/update-docs.yml) (in the docs repo)
-- **Schedule**: Runs daily at 6 AM UTC
-- **Manual trigger**: Go to the [Actions tab](https://github.com/mono/SkiaSharp-API-docs/actions) on `mono/SkiaSharp-API-docs` → "Update API Docs" → "Run workflow"
-- **Branch parameter**: Optionally specify a SkiaSharp branch to generate docs from (defaults to `main`)
+### Step 1: Stub generation + AI docs (auto-api-docs-writer)
 
-### Step 1: Stub generation (update-docs.yml)
-
-What the stub generation does:
-
-1. Downloads the latest NuGet packages from the [SkiaSharp-CI](https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json) Azure Artifacts feed (public, no authentication required)
-2. Runs `dotnet cake --target=update-docs` which:
-   - Generates API diffs and changelogs (`docs-api-diff`)
-   - Extracts assemblies from NuGets, builds framework monikers, and runs `mdoc update` to regenerate XML docs (`docs-update-frameworks`)
-   - Cleans up, formats, and validates the generated XML (`docs-format-docs`)
-3. If there are changes, creates a PR on [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs)
-
-### Step 2: AI fills placeholders (auto-api-docs-writer)
-
-After stubs are merged to `main`, a second workflow in this repo fills "To be added." placeholders:
+A single agentic workflow handles the entire pipeline — regenerating XML stubs from CI NuGet packages AND filling "To be added." placeholders with AI-written documentation:
 
 - **Workflow**: [`auto-api-docs-writer.md`](../../.github/workflows/auto-api-docs-writer.md) (agentic, in this repo)
-- **Schedule**: Daily at 8 AM UTC (2 hours after stub generation)
-- **What it does**: An AI agent reads the `api-docs` skill, finds all "To be added." placeholders, reads the corresponding C# source code, and writes proper documentation following .NET guidelines
+- **Schedule**: Daily at 8 AM UTC
+- **What it does**:
+  1. **Pre-agent step**: Downloads latest NuGet packages from CI, runs `dotnet cake --target=update-docs` to regenerate XML stubs
+  2. **AI agent**: Reads the `api-docs` skill, finds all "To be added." placeholders, reads C# source code, writes proper documentation
+  3. **Post-step**: Pushes branch and creates PR in `mono/SkiaSharp-API-docs`
 - **Output**: PR `automation/write-api-docs` → `main` in `mono/SkiaSharp-API-docs`
 - **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-api-docs-writer.lock.yml) → "Auto API Docs Writer" → "Run workflow"
+- **Skip regeneration**: Set `skip_regeneration=true` to skip the stub generation step (useful when stubs are already up to date and you only want AI doc writing)
 
-### Step 3: Submodule sync (auto-docs-submodule-sync)
+> **Note**: There is also a standalone [`update-docs.yml`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/update-docs.yml) workflow in the docs repo that only regenerates stubs (no AI writing). The agentic workflow above supersedes it for the full pipeline.
 
-After docs PRs are merged to `mono/SkiaSharp-API-docs` `main`, the submodule pointer in this repo needs to be updated:
+### Step 2: Submodule sync (auto-docs-submodule-sync)
+
+After docs changes are merged to `mono/SkiaSharp-API-docs` `main` (whether from the AI pipeline, manual edits, or any other source), the submodule pointer in this repo needs to be updated:
 
 - **Workflow**: [`auto-docs-submodule-sync.yml`](../../.github/workflows/auto-docs-submodule-sync.yml) (in this repo)
 - **Schedule**: Daily at 10 AM UTC
@@ -64,13 +54,12 @@ After docs PRs are merged to `mono/SkiaSharp-API-docs` `main`, the submodule poi
 
 ### Pipeline timeline
 
-| Time (UTC) | Workflow | Location | Action |
-|------------|----------|----------|--------|
-| 6:00 AM | `update-docs.yml` | docs repo | Regenerates XML stubs from CI NuGets |
-| 8:00 AM | `auto-api-docs-writer` | this repo | AI fills "To be added." placeholders |
-| 10:00 AM | `auto-docs-submodule-sync` | this repo | Bumps `docs/` submodule pointer |
+| Time (UTC) | Workflow | Action |
+|------------|----------|--------|
+| 8:00 AM | `auto-api-docs-writer` | Regenerates stubs + AI fills placeholders → PR to docs repo |
+| 10:00 AM | `auto-docs-submodule-sync` | Bumps `docs/` submodule → PR to SkiaSharp |
 
-Each step produces a PR that requires human review before merging. The 2-hour staggering gives each step time to complete before the next triggers.
+Each step produces a PR that requires human review before merging.
 
 ### Manual submodule update
 
