@@ -18,36 +18,9 @@ on:
         type: string
         default: "0"
 
-  # -- Pre-activation step -------------------------------------------
-  # Lightweight check: clone docs repo and count existing placeholders.
-  # Stub regeneration runs later in pre-agent-steps (once, not twice).
-  # Exit 1 = skip the agent (nothing to do).
-  steps:
-    - name: Check for existing placeholders
-      id: check
-      run: |
-        # Shallow clone to check current state (public repo, no auth)
-        git clone --depth 1 https://github.com/mono/SkiaSharp-API-docs.git /tmp/docs-check
-        PLACEHOLDER_COUNT=$(grep -rc "To be added" /tmp/docs-check/SkiaSharpAPI/ 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
-        FILE_COUNT=$(grep -rl "To be added" /tmp/docs-check/SkiaSharpAPI/ 2>/dev/null | wc -l | tr -d ' ')
-        rm -rf /tmp/docs-check
-        echo "placeholder_count=$PLACEHOLDER_COUNT" >> "$GITHUB_OUTPUT"
-        echo "file_count=$FILE_COUNT" >> "$GITHUB_OUTPUT"
-        echo "Existing placeholders: $PLACEHOLDER_COUNT across $FILE_COUNT files"
-
-        if [ "$PLACEHOLDER_COUNT" -eq 0 ]; then
-          echo "::notice::No 'To be added.' placeholders found — nothing to do"
-          exit 1
-        fi
-
-jobs:
-  pre-activation:
-    outputs:
-      placeholder_count: ${{ steps.check.outputs.placeholder_count }}
-      file_count: ${{ steps.check.outputs.file_count }}
-
-# -- Agent gate --------------------------------------------------------
-if: needs.pre_activation.outputs.check_result == 'success'
+  # No pre-activation gate — stub regeneration in pre-agent-steps may
+  # create new placeholders that don't exist yet on docs main.
+  # The agent checks for placeholders itself and exits early if none.
 
 # -- Checkout ----------------------------------------------------------
 checkout:
@@ -115,8 +88,6 @@ post-steps:
 ---
 
 # Auto API Docs Writer
-
-There are **${{ needs.pre_activation.outputs.placeholder_count }}** "To be added." placeholders across **${{ needs.pre_activation.outputs.file_count }}** files.
 
 **Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–5.** Overrides for this workflow:
 
