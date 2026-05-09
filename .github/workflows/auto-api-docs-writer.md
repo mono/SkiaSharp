@@ -19,38 +19,24 @@ on:
         default: "0"
 
   # -- Pre-activation step -------------------------------------------
-  # Regenerate stubs, then check if there are placeholders to fill.
+  # Lightweight check: clone docs repo and count existing placeholders.
+  # Stub regeneration runs later in pre-agent-steps (once, not twice).
   # Exit 1 = skip the agent (nothing to do).
   steps:
-    - name: Regenerate stubs and check for placeholders
+    - name: Check for existing placeholders
       id: check
-      env:
-        SKIP_REGENERATION: ${{ github.event.inputs.skip_regeneration }}
       run: |
-        # Align docs submodule to latest main
-        cd docs
-        git fetch origin main
-        git checkout origin/main
-        cd ..
-
-        # Phase 1: regenerate stubs (unless skipped)
-        if [ "$SKIP_REGENERATION" != "true" ]; then
-          dotnet tool restore
-          dotnet cake --target=docs-download-output
-          dotnet cake --target=update-docs
-        else
-          echo "::notice::Skipping stub regeneration (skip_regeneration=true)"
-        fi
-
-        # Check for placeholders
-        PLACEHOLDER_COUNT=$(grep -rc "To be added" docs/SkiaSharpAPI/ 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
-        FILE_COUNT=$(grep -rl "To be added" docs/SkiaSharpAPI/ 2>/dev/null | wc -l | tr -d ' ')
+        # Shallow clone to check current state (public repo, no auth)
+        git clone --depth 1 https://github.com/mono/SkiaSharp-API-docs.git /tmp/docs-check
+        PLACEHOLDER_COUNT=$(grep -rc "To be added" /tmp/docs-check/SkiaSharpAPI/ 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+        FILE_COUNT=$(grep -rl "To be added" /tmp/docs-check/SkiaSharpAPI/ 2>/dev/null | wc -l | tr -d ' ')
+        rm -rf /tmp/docs-check
         echo "placeholder_count=$PLACEHOLDER_COUNT" >> "$GITHUB_OUTPUT"
         echo "file_count=$FILE_COUNT" >> "$GITHUB_OUTPUT"
-        echo "Placeholders: $PLACEHOLDER_COUNT across $FILE_COUNT files"
+        echo "Existing placeholders: $PLACEHOLDER_COUNT across $FILE_COUNT files"
 
         if [ "$PLACEHOLDER_COUNT" -eq 0 ]; then
-          echo "::notice::No 'To be added.' placeholders — nothing for the agent to do"
+          echo "::notice::No 'To be added.' placeholders found — nothing to do"
           exit 1
         fi
 
