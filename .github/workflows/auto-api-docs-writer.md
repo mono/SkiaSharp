@@ -13,11 +13,6 @@ on:
       - .agents/skills/api-docs/**
   workflow_dispatch:
     inputs:
-      skip_regeneration:
-        description: "Skip stub regeneration (Phase 1) — use when stubs are already up to date"
-        required: false
-        type: boolean
-        default: false
       max_files:
         description: "Maximum number of files to process (0 = unlimited)"
         required: false
@@ -26,11 +21,11 @@ on:
 
 # -- Custom jobs -------------------------------------------------------
 # Stub regeneration requires Windows (mdoc.exe is .NET Framework).
-# Results are uploaded as artifacts and available to the agent.
+# Handles branch management: merges main into existing branch (manual
+# edits preserved with -X ours), runs mdoc, uploads result as artifact.
 jobs:
   regenerate-stubs:
     runs-on: windows-latest
-    if: github.event.inputs.skip_regeneration != 'true'
     steps:
       - name: Checkout SkiaSharp
         uses: actions/checkout@v4
@@ -43,11 +38,13 @@ jobs:
           cd docs
           git fetch origin main
           BRANCH="automation/write-api-docs"
-          # If the branch exists, check it out and merge main (favoring main on conflicts)
           if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
             git fetch origin "$BRANCH"
             git checkout -B "$BRANCH" "origin/$BRANCH"
-            git merge origin/main -X theirs --no-edit || {
+            # Merge main — manual edits on branch win conflicts (-X ours)
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git merge origin/main -X ours --no-edit || {
               echo "::warning::Merge failed — starting fresh from main"
               git merge --abort
               git checkout -B "$BRANCH" origin/main
@@ -73,11 +70,12 @@ jobs:
         run: dotnet cake --target=docs-download-output
       - name: Regenerate API docs
         run: dotnet cake --target=update-docs
-      - name: Package regenerated docs
-        shell: bash
-        run: |
-          mkdir -p /tmp/gh-aw/agent
-          tar czf /tmp/gh-aw/agent/docs-regenerated.tar.gz -C docs SkiaSharpAPI
+      - name: Upload regenerated docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-regenerated
+          path: docs/SkiaSharpAPI/
+          retention-days: 1
 
 # -- Checkout ----------------------------------------------------------
 checkout:
@@ -120,15 +118,11 @@ steps:
       cd ..
 
 pre-agent-steps:
-  - name: Apply regenerated docs
-    run: |
-      if [ -f /tmp/gh-aw/agent/docs-regenerated.tar.gz ]; then
-        echo "Applying docs from Windows job..."
-        tar xzf /tmp/gh-aw/agent/docs-regenerated.tar.gz -C docs
-        echo "Done"
-      else
-        echo "No regenerated docs artifact — using checkout as-is"
-      fi
+  - name: Download regenerated docs
+    uses: actions/download-artifact@v4
+    with:
+      name: docs-regenerated
+      path: docs/SkiaSharpAPI/
 
   - name: Copy push script for post-step
     run: |

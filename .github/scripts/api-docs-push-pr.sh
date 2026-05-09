@@ -33,7 +33,7 @@ cd docs
 
 echo "Pushing $DOCS_BRANCH to mono/SkiaSharp-API-docs..."
 git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp-API-docs.git"
-git push origin "$DOCS_BRANCH" --force-with-lease 2>/dev/null || git push origin "$DOCS_BRANCH" --force
+git push origin "$DOCS_BRANCH" --force
 
 # --- Create or update PR ---
 pr=$(gh pr list --repo mono/SkiaSharp-API-docs --head "$DOCS_BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
