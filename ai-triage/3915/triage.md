@@ -1,0 +1,262 @@
+# Issue Triage Report — #3915
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-09T05:15:00Z |
+| Type | type/enhancement (0.90 (90%)) |
+| Area | area/SkiaSharp (0.85 (85%)) |
+| Suggested action | keep-open (0.92 (92%)) |
+
+**Issue Summary:** Tracking issue for reviewing and merging community-contributed PRs (new APIs, performance improvements, code quality) into SkiaSharp v4 before the 4.x RC 1 milestone.
+
+**Analysis:** This is a v4 milestone tracking issue for reviewing 11 community PRs across new APIs, performance improvements, code quality, and tooling. Detailed code reviews have already been posted in comments: #3752 is merge-ready; #2987, #3583, #3632 need minor fixes; #2513, #3203, #2865 need moderate fixes; #3033 needs significant rework; and #3489, #2669, #2617 are recommended for closure.
+
+**Recommendations:** **keep-open** — Active milestone tracking issue with several PRs still needing review feedback responses or further work. Detailed code reviews are posted; maintainer action required to merge or close each PR.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | upgrading/4.x, cost/m |
+
+## Evidence
+
+### Reproduction
+
+**Related issues:** #3680, #2512, #2986, #3237, #3202, #2015, #2616, #3032, #3372
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/pull/2513 — Add function to SkiaSharp.HarfBuzz for shaped text paths
+- https://github.com/mono/SkiaSharp/pull/2987 — SKCanvas.DrawPoints with count override
+- https://github.com/mono/SkiaSharp/pull/3203 — Enable Vulkan support on macOS
+- https://github.com/mono/SkiaSharp/pull/2865 — More advanced PDF metadata support
+- https://github.com/mono/SkiaSharp/pull/2669 — Span and ReadOnlySpan overloads (mega-PR)
+- https://github.com/mono/SkiaSharp/pull/2617 — Start using Span instead of arrays
+- https://github.com/mono/SkiaSharp/pull/3033 — Add caching to DrawShapedText
+- https://github.com/mono/SkiaSharp/pull/3489 — Optimize CopyTo method of SKBitmap
+- https://github.com/mono/SkiaSharp/pull/3752 — Enable TreatWarningsAsErrors and fix warnings
+- https://github.com/mono/SkiaSharp/pull/3583 — SKP Debugger - Blazor WASM with native DebugCanvas
+- https://github.com/mono/SkiaSharp/pull/3632 — Upgrade WASDK 1.7/1.8 for net9/net10
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 4.0 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | Milestone 4.x RC 1 is actively being targeted; review work is underway per comments. |
+
+## Analysis
+
+### Technical Summary
+
+This is a v4 milestone tracking issue for reviewing 11 community PRs across new APIs, performance improvements, code quality, and tooling. Detailed code reviews have already been posted in comments: #3752 is merge-ready; #2987, #3583, #3632 need minor fixes; #2513, #3203, #2865 need moderate fixes; #3033 needs significant rework; and #3489, #2669, #2617 are recommended for closure.
+
+### Rationale
+
+Classified as type/enhancement because this is a project management tracking issue organizing work to improve the v4 codebase by merging community contributions. The area is area/SkiaSharp as it spans the core library. No specific platform or backend is targeted overall. Action is keep-open because the milestone tracking work is still ongoing — not all PRs are checked off yet.
+
+### Key Signals
+
+- "Part of #3680" — **issue body** (This is a child tracking issue in the v4 milestone planning umbrella.)
+- "#3752 — TreatWarningsAsErrors: Clean, correct warning fixes. No behavioral changes." — **comment by mattleibow** (At least one PR is ready to merge immediately.)
+- "Critical: crashes on collection mutation during enumeration, use-after-dispose race with timer, coordinate behavior change." — **comment by mattleibow re #3033** (DrawShapedText caching PR has correctness issues preventing merge.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/` | — | direct | Multiple community PRs target this directory: #2987 adds DrawPoints count overload, #2513 adds shaped text paths in HarfBuzz, #2669/#2617 add Span overloads. |
+| `externals/skia/` | — | related | #3203 attempts to enable Vulkan on macOS via skia_use_vulkan=true in GN config, but requires skia_moltenvk_path to be effective. |
+
+### Next Questions
+
+- Which PRs have received author fixes based on review feedback?
+- Has #3752 (TreatWarningsAsErrors) been merged yet?
+- Is #3033 (DrawShapedText caching) going to be deferred to 4.1+?
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.92 (92%) |
+| Reason | Active milestone tracking issue with several PRs still needing review feedback responses or further work. Detailed code reviews are posted; maintainer action required to merge or close each PR. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.90 (90%) | Apply type/enhancement and area/SkiaSharp labels | labels=type/enhancement, area/SkiaSharp, triage/triaged |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3915,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-09T05:15:00Z",
+    "currentLabels": [
+      "upgrading/4.x",
+      "cost/m"
+    ]
+  },
+  "summary": "Tracking issue for reviewing and merging community-contributed PRs (new APIs, performance improvements, code quality) into SkiaSharp v4 before the 4.x RC 1 milestone.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.85
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [
+        3680,
+        2512,
+        2986,
+        3237,
+        3202,
+        2015,
+        2616,
+        3032,
+        3372
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2513",
+          "description": "Add function to SkiaSharp.HarfBuzz for shaped text paths"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2987",
+          "description": "SKCanvas.DrawPoints with count override"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3203",
+          "description": "Enable Vulkan support on macOS"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2865",
+          "description": "More advanced PDF metadata support"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2669",
+          "description": "Span and ReadOnlySpan overloads (mega-PR)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2617",
+          "description": "Start using Span instead of arrays"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3033",
+          "description": "Add caching to DrawShapedText"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3489",
+          "description": "Optimize CopyTo method of SKBitmap"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3752",
+          "description": "Enable TreatWarningsAsErrors and fix warnings"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3583",
+          "description": "SKP Debugger - Blazor WASM with native DebugCanvas"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3632",
+          "description": "Upgrade WASDK 1.7/1.8 for net9/net10"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "4.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Milestone 4.x RC 1 is actively being targeted; review work is underway per comments."
+    }
+  },
+  "analysis": {
+    "summary": "This is a v4 milestone tracking issue for reviewing 11 community PRs across new APIs, performance improvements, code quality, and tooling. Detailed code reviews have already been posted in comments: #3752 is merge-ready; #2987, #3583, #3632 need minor fixes; #2513, #3203, #2865 need moderate fixes; #3033 needs significant rework; and #3489, #2669, #2617 are recommended for closure.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/",
+        "finding": "Multiple community PRs target this directory: #2987 adds DrawPoints count overload, #2513 adds shaped text paths in HarfBuzz, #2669/#2617 add Span overloads.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/",
+        "finding": "#3203 attempts to enable Vulkan on macOS via skia_use_vulkan=true in GN config, but requires skia_moltenvk_path to be effective.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Part of #3680",
+        "source": "issue body",
+        "interpretation": "This is a child tracking issue in the v4 milestone planning umbrella."
+      },
+      {
+        "text": "#3752 — TreatWarningsAsErrors: Clean, correct warning fixes. No behavioral changes.",
+        "source": "comment by mattleibow",
+        "interpretation": "At least one PR is ready to merge immediately."
+      },
+      {
+        "text": "Critical: crashes on collection mutation during enumeration, use-after-dispose race with timer, coordinate behavior change.",
+        "source": "comment by mattleibow re #3033",
+        "interpretation": "DrawShapedText caching PR has correctness issues preventing merge."
+      }
+    ],
+    "rationale": "Classified as type/enhancement because this is a project management tracking issue organizing work to improve the v4 codebase by merging community contributions. The area is area/SkiaSharp as it spans the core library. No specific platform or backend is targeted overall. Action is keep-open because the milestone tracking work is still ongoing — not all PRs are checked off yet.",
+    "nextQuestions": [
+      "Which PRs have received author fixes based on review feedback?",
+      "Has #3752 (TreatWarningsAsErrors) been merged yet?",
+      "Is #3033 (DrawShapedText caching) going to be deferred to 4.1+?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.92,
+      "reason": "Active milestone tracking issue with several PRs still needing review feedback responses or further work. Detailed code reviews are posted; maintainer action required to merge or close each PR.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp",
+          "triage/triaged"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>
