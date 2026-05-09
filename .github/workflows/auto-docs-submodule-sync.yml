@@ -3,6 +3,9 @@ name: Auto Docs Submodule Sync
 on:
   schedule:
     - cron: "0 10 * * *"  # Daily at 10 AM UTC
+  pull_request:
+    paths:
+      - .github/workflows/auto-docs-submodule-sync.yml
   workflow_dispatch:
 
 permissions:
@@ -56,14 +59,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Create or rebase the branch onto main
-          if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
-            git fetch origin "$BRANCH"
-            git checkout "$BRANCH"
-            git rebase origin/main
-          else
-            git checkout -b "$BRANCH"
-          fi
+          # Always start fresh from main — avoids stale commit accumulation
+          git checkout -B "$BRANCH" origin/main
 
           git add docs
           if git diff --cached --quiet; then

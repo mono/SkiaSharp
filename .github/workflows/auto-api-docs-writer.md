@@ -5,6 +5,12 @@ description: "Daily API documentation pipeline — regenerates XML stubs from CI
 on:
   schedule:
     - cron: "0 8 * * *"
+  pull_request:
+    paths:
+      - .github/workflows/auto-api-docs-writer.md
+      - .github/workflows/auto-api-docs-writer.lock.yml
+      - .github/scripts/api-docs-push-pr.sh
+      - .agents/skills/api-docs/**
   workflow_dispatch:
     inputs:
       skip_regeneration:
@@ -60,9 +66,9 @@ steps:
     run: |
       cd docs
       git fetch origin main
-      git checkout origin/main
+      git checkout -B automation/write-api-docs origin/main
       cd ..
-      echo "docs submodule aligned to docs main"
+      echo "docs submodule on automation/write-api-docs at docs main"
 
 pre-agent-steps:
   - name: Restore tools and regenerate stubs
