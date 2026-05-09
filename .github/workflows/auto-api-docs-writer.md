@@ -60,11 +60,18 @@ jobs:
         run: dotnet cake --target=docs-download-output
       - name: Regenerate API docs
         run: dotnet cake --target=update-docs
-      - name: Package regenerated docs
+      - name: Package regenerated changes
         shell: bash
         run: |
           mkdir -p /tmp/gh-aw/agent
-          tar czf /tmp/gh-aw/agent/docs-regenerated.tar.gz -C docs SkiaSharpAPI
+          cd docs
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes from stub regeneration"
+          else
+            git diff --cached --binary > /tmp/gh-aw/agent/docs-stubs.patch
+            echo "Patch created: $(wc -l < /tmp/gh-aw/agent/docs-stubs.patch) lines"
+          fi
 
 # -- Checkout ----------------------------------------------------------
 checkout:
@@ -123,12 +130,17 @@ steps:
 pre-agent-steps:
   - name: Apply regenerated stubs
     run: |
-      if [ -f /tmp/gh-aw/agent/docs-regenerated.tar.gz ]; then
-        echo "Applying regenerated stubs from Windows job..."
-        tar xzf /tmp/gh-aw/agent/docs-regenerated.tar.gz -C docs
+      if [ -f /tmp/gh-aw/agent/docs-stubs.patch ]; then
+        echo "Applying stub regeneration patch..."
+        cd docs
+        git apply --3way /tmp/gh-aw/agent/docs-stubs.patch || {
+          echo "::warning::3-way apply had conflicts — trying with --reject"
+          git apply --reject /tmp/gh-aw/agent/docs-stubs.patch || true
+        }
+        cd ..
         echo "Stubs applied"
       else
-        echo "No regenerated stubs artifact — using docs main as-is"
+        echo "No stubs patch — using branch as-is"
       fi
 
   - name: Copy push script for post-step
