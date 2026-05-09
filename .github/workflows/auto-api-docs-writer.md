@@ -18,6 +18,51 @@ on:
         type: string
         default: "0"
 
+  # -- Pre-activation step -------------------------------------------
+  # Regenerate stubs, then check if there are placeholders to fill.
+  # Exit 1 = skip the agent (nothing to do).
+  steps:
+    - name: Regenerate stubs and check for placeholders
+      id: check
+      env:
+        SKIP_REGENERATION: ${{ github.event.inputs.skip_regeneration }}
+      run: |
+        # Align docs submodule to latest main
+        cd docs
+        git fetch origin main
+        git checkout origin/main
+        cd ..
+
+        # Phase 1: regenerate stubs (unless skipped)
+        if [ "$SKIP_REGENERATION" != "true" ]; then
+          dotnet tool restore
+          dotnet cake --target=docs-download-output
+          dotnet cake --target=update-docs
+        else
+          echo "::notice::Skipping stub regeneration (skip_regeneration=true)"
+        fi
+
+        # Check for placeholders
+        PLACEHOLDER_COUNT=$(grep -rc "To be added" docs/SkiaSharpAPI/ 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+        FILE_COUNT=$(grep -rl "To be added" docs/SkiaSharpAPI/ 2>/dev/null | wc -l | tr -d ' ')
+        echo "placeholder_count=$PLACEHOLDER_COUNT" >> "$GITHUB_OUTPUT"
+        echo "file_count=$FILE_COUNT" >> "$GITHUB_OUTPUT"
+        echo "Placeholders: $PLACEHOLDER_COUNT across $FILE_COUNT files"
+
+        if [ "$PLACEHOLDER_COUNT" -eq 0 ]; then
+          echo "::notice::No 'To be added.' placeholders — nothing for the agent to do"
+          exit 1
+        fi
+
+jobs:
+  pre-activation:
+    outputs:
+      placeholder_count: ${{ steps.check.outputs.placeholder_count }}
+      file_count: ${{ steps.check.outputs.file_count }}
+
+# -- Agent gate --------------------------------------------------------
+if: needs.pre_activation.outputs.check_result == 'success'
+
 # -- Checkout ----------------------------------------------------------
 checkout:
   - fetch-depth: 0
@@ -61,20 +106,15 @@ steps:
       echo "docs submodule aligned to docs main"
 
 pre-agent-steps:
-  - name: Regenerate XML stubs (Phase 1)
+  - name: Restore tools and regenerate stubs
     env:
       SKIP_REGENERATION: ${{ github.event.inputs.skip_regeneration }}
     run: |
-      if [ "$SKIP_REGENERATION" = "true" ]; then
-        echo "::notice::Skipping stub regeneration (skip_regeneration=true)"
-        exit 0
-      fi
       dotnet tool restore
-      dotnet cake --target=docs-download-output
-      dotnet cake --target=update-docs
-      # Count placeholders after regeneration
-      PLACEHOLDER_COUNT=$(grep -r "To be added" docs/SkiaSharpAPI/ 2>/dev/null | wc -l | tr -d ' ')
-      echo "Placeholders after regeneration: $PLACEHOLDER_COUNT"
+      if [ "$SKIP_REGENERATION" != "true" ]; then
+        dotnet cake --target=docs-download-output
+        dotnet cake --target=update-docs
+      fi
 
   - name: Copy push script for post-step
     run: |
@@ -90,36 +130,16 @@ post-steps:
 
 # Auto API Docs Writer
 
-Your job is to fill "To be added." placeholders in the docs submodule with proper API documentation.
+There are **${{ needs.pre_activation.outputs.placeholder_count }}** "To be added." placeholders across **${{ needs.pre_activation.outputs.file_count }}** files.
 
-**Phase 1 (stub regeneration) is pre-computed.** The pre-agent steps already ran `dotnet cake --target=update-docs` to regenerate XML stubs from the latest CI NuGet packages. The `docs/` submodule is checked out at the latest `main` with fresh stubs applied on top.
+**Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–5.** Overrides for this workflow:
 
-**Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–5.** Notes specific to this automated workflow:
-
-- **Skip Phase 1** — it was handled by the pre-agent steps above.
+- **Phase 1 is pre-computed** — stub regeneration already ran. Skip it.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't carry this into the chroot).
-- **Phase 2**: Find all "To be added." placeholders. Process ALL files (no batching).
-  Max files override: ${{ github.event.inputs.max_files || '0' }} (0 = unlimited).
-- **Phase 3**: For each file, read the C# source from `binding/` to understand the API,
-  then write proper docs following the patterns in `references/patterns.md`.
-  Validate XML with `xmllint` after each file.
-- **Phase 4**: Run `dotnet cake --target=docs-format-docs` to validate and format.
-- **Phase 5**: Commit changes inside the `docs/` submodule on branch `automation/write-api-docs`:
-  ```bash
-  cd docs
-  git checkout -b automation/write-api-docs
-  git add -A
-  git diff --cached --quiet && echo "No changes" && exit 0
-  git config user.name "github-actions[bot]"
-  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-  git commit -m "Fill API documentation placeholders
+- **Phase 5 branch**: use `automation/write-api-docs` as the branch name.
+- **Max files**: ${{ github.event.inputs.max_files || '0' }} (0 = unlimited — process all files).
 
-  AI-generated documentation for XML API docs.
-  Follows .NET API documentation guidelines."
-  cd ..
-  ```
-
-After Phase 5, write the signal file and summary for the post-step:
+After Phase 5, write the signal file for the post-step:
 
 ```bash
 mkdir -p /tmp/gh-aw/agent
@@ -128,11 +148,7 @@ DOCS_BRANCH=automation/write-api-docs
 EOF
 ```
 
-Also write `/tmp/gh-aw/agent/api-docs-summary.md` with:
-- Number of files processed
-- Number of placeholders filled
-- Any files skipped and why
-- Any validation issues encountered
+Also write `/tmp/gh-aw/agent/api-docs-summary.md` with a summary of files processed, placeholders filled, and any issues encountered.
 
 **IMPORTANT:** Do NOT push branches or create PRs — the post-step handles that.
 Do NOT call `create_pull_request`. Just commit locally.
