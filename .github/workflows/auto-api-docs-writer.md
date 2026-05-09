@@ -90,13 +90,10 @@ steps:
     run: |
       mkdir -p /tmp/gh-aw/agent
   - name: Align docs submodule to latest main
-    env:
-      GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
     run: |
-      DOCS_SHA="${{ needs.pre_activation.outputs.docs_sha }}"
+      DOCS_SHA="${GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_DOCS_SHA:-${{ needs.pre_activation.outputs.docs_sha }}}"
       echo "Checking out docs submodule at $DOCS_SHA (docs main HEAD)"
       cd docs
-      git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp-API-docs.git"
       git fetch origin main
       git checkout "$DOCS_SHA"
       cd ..
