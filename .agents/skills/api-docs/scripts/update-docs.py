@@ -54,48 +54,68 @@ def find_member_by_docid(root, docid):
     return None
 
 
+def set_element_content(elem, content):
+    """Set element content, parsing XML fragments like <see cref="..." />.
+    
+    Supports mixed content: plain text + inline XML elements.
+    """
+    if content is None or content == "":
+        elem.text = None
+        for child in list(elem):
+            elem.remove(child)
+        return
+
+    # Try parsing as XML fragment (wrapping in a temp root)
+    try:
+        fragment = ET.fromstring(f"<_wrap_>{content}</_wrap_>")
+        # Clear existing content
+        elem.text = None
+        for child in list(elem):
+            elem.remove(child)
+        # Copy parsed content
+        elem.text = fragment.text
+        for child in fragment:
+            elem.append(child)
+        # Fix tail of last child
+        if len(elem) > 0:
+            last = list(elem)[-1]
+            if last.tail and last.tail.strip() == "":
+                last.tail = last.tail
+    except ET.ParseError:
+        # Not valid XML — treat as plain text
+        for child in list(elem):
+            elem.remove(child)
+        elem.text = content
+
+
 def update_docs_block(docs_elem, summary=None, value=None, returns=None,
                       remarks=None, params=None):
     """Update children of a <Docs> element. Only touches specified fields."""
     if summary is not None:
         elem = docs_elem.find("summary")
         if elem is not None:
-            elem.text = summary
-            # Remove any children (like <see> refs) if we're replacing entirely
-            for child in list(elem):
-                elem.remove(child)
+            set_element_content(elem, summary)
 
     if value is not None:
         elem = docs_elem.find("value")
         if elem is not None:
-            elem.text = value if value else None
-            for child in list(elem):
-                elem.remove(child)
+            set_element_content(elem, value)
 
     if returns is not None:
         elem = docs_elem.find("returns")
         if elem is not None:
-            elem.text = returns if returns else None
-            for child in list(elem):
-                elem.remove(child)
+            set_element_content(elem, returns)
 
     if remarks is not None:
         elem = docs_elem.find("remarks")
         if elem is not None:
-            if remarks == "" or remarks is None:
-                elem.text = None
-                for child in list(elem):
-                    elem.remove(child)
-            else:
-                elem.text = remarks
+            set_element_content(elem, remarks)
 
     if params:
         for name, text in params.items():
             for param in docs_elem.findall("param"):
                 if param.get("name") == name:
-                    param.text = text
-                    for child in list(param):
-                        param.remove(child)
+                    set_element_content(param, text)
                     break
             else:
                 print(f"  Warning: param '{name}' not found in Docs block",
