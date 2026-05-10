@@ -117,7 +117,7 @@ pre-agent-steps:
 
 # -- Post-agent steps --------------------------------------------------
 post-steps:
-  - name: Push branch and create PR
+  - name: Commit and push if changed
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
     run: bash /tmp/gh-aw/api-docs-push-pr.sh
@@ -125,24 +125,11 @@ post-steps:
 
 # Auto API Docs Writer
 
-**Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–5.** Overrides for this workflow:
+**Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–4.** Overrides for this workflow:
 
 - **Phase 1 is pre-computed** — stub regeneration already ran on Windows. Skip it.
+- **Phase 5 is handled by the post-step** — do NOT commit or do any git operations. Just edit the XML files.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't carry this into the chroot).
-- **Phase 5 branch**: use `automation/write-api-docs` as the branch name.
 - **Max files**: ${{ github.event.inputs.max_files || '0' }} (0 = unlimited — process all files).
 
-**CRITICAL — you MUST do this last step or your work is lost:**
-
-After Phase 5 commit, write the signal file so the post-step knows to push:
-
-```bash
-mkdir -p /tmp/gh-aw/agent
-echo 'DOCS_BRANCH=automation/write-api-docs' > /tmp/gh-aw/agent/api-docs-env.sh
-```
-
-Without this file, the post-step will NOT push your changes and all work is discarded.
-
-Also write `/tmp/gh-aw/agent/api-docs-summary.md` with a summary of files processed and placeholders filled.
-
-**Do NOT push branches or create PRs** — the post-step handles that. Do NOT call `create_pull_request`.
+Your only job is to edit XML files in `docs/SkiaSharpAPI/` to fill "To be added." placeholders. The post-step will detect your changes, commit, push, and create a PR automatically.
