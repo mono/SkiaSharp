@@ -12,6 +12,8 @@ Based on [official .NET API documentation guidelines](https://github.com/dotnet/
 - [Punctuation Exceptions](#punctuation-exceptions)
 - [Common Mistakes](#common-mistakes)
 - [Extension Methods](#extension-methods)
+- [Rich Remarks and Examples](#rich-remarks-and-examples)
+- [Type-Level Documentation](#type-level-documentation)
 
 ## File Structure
 
@@ -347,3 +349,100 @@ Native platform views have special constructors with specific purposes. Always i
 <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Forms.SKCanvasView" /> class.</summary>
 <remarks />
 ```
+
+## Rich Remarks and Examples
+
+The best SkiaSharp docs use markdown-in-CDATA for rich content. This is the convention for type-level remarks and important factory methods.
+
+### When to Write Rich Remarks
+
+| API type | Remarks level |
+|----------|--------------|
+| Types (classes/structs) | Rich: overview, usage example, disposal notes, threading |
+| Factory methods (`Create*`) | Rich: code example showing common usage |
+| Important methods (`Draw*`, `Save`/`Restore`) | Brief explanation + link to related concepts |
+| Simple properties, getters, overloads | `<remarks />` (empty) is fine |
+| Enum members | No remarks needed |
+
+### Rich Remarks Format (Markdown in CDATA)
+
+For types and important methods, use this exact format:
+
+```json
+{
+  "remarks": "<format type=\"text/markdown\"><![CDATA[\n## Remarks\n\nYour explanation here.\n\n## Examples\n\n```csharp\nusing var paint = new SKPaint();\n```\n]]></format>"
+}
+```
+
+The `<format type="text/markdown"><![CDATA[...]]></format>` wrapper tells Microsoft Learn to render content as markdown.
+
+### Type-Level Remarks Template
+
+For classes and structs, follow this structure:
+
+```
+## Remarks
+
+[One paragraph: what the type does and when to use it]
+
+[Optional: how to create instances — constructor vs factory methods]
+
+[Optional: disposal pattern for SKObject subclasses]
+
+[Optional: threading notes — Skia is NOT thread-safe for mutable types]
+
+## Examples
+
+```csharp
+// Minimal usage example showing the most common pattern
+using var builder = new SKPathBuilder();
+builder.MoveTo(0, 0);
+builder.LineTo(100, 100);
+builder.LineTo(0, 100);
+builder.Close();
+using var path = builder.Snapshot();
+canvas.DrawPath(path, paint);
+```
+```
+
+### What Makes Good Examples
+
+- **Show the most common use case** — not edge cases
+- **Include using/disposal** — SkiaSharp objects are IDisposable
+- **Show the full picture** — create + configure + use, not just one call
+- **Keep it short** — 5-15 lines, enough to understand the pattern
+- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
+
+Look at `samples/Gallery/Shared/Samples/` for real usage patterns. These samples show how developers actually use the APIs.
+
+### Cross-References in Rich Remarks
+
+Inside CDATA blocks, use `<xref:...>` (NOT `<see cref>`):
+
+```
+See <xref:SkiaSharp.SKCanvas> for drawing operations.
+Use <xref:SkiaSharp.SKPathBuilder> to construct paths incrementally.
+```
+
+Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` as usual.
+
+## Type-Level Documentation
+
+### SKObject Subclasses (IDisposable types)
+
+Most SkiaSharp types inherit from `SKObject`. Their type-level docs should mention:
+
+```json
+{
+  "summary": "Provides a mutable builder for constructing SKPath objects incrementally.",
+  "remarks": "<format type=\"text/markdown\"><![CDATA[\n## Remarks\n\n`SKPathBuilder` is a convenient way to build paths step by step...\n\nThis type wraps a native Skia resource and implements `IDisposable`. Always dispose of it when done, either with a `using` statement or by calling `Dispose()` directly.\n\n## Examples\n\n```csharp\nusing var builder = new SKPathBuilder();\nbuilder.MoveTo(10, 10);\nbuilder.LineTo(100, 50);\nbuilder.LineTo(50, 100);\nbuilder.Close();\nusing var path = builder.Snapshot();\ncanvas.DrawPath(path, paint);\n```\n]]></format>"
+}
+```
+
+### Mutable vs Immutable Types
+
+| Type | Threading | Disposal |
+|------|-----------|----------|
+| `SKCanvas`, `SKPaint`, `SKPath`, `SKPathBuilder` | NOT thread-safe — one thread at a time | Must dispose |
+| `SKImage`, `SKShader`, `SKData` | Thread-safe (immutable after creation) | Must dispose |
+| `SKColor`, `SKPoint`, `SKRect` | Thread-safe (value types) | No disposal needed |

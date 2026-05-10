@@ -50,7 +50,14 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
 
 ### Phase 2: Discover and Write
 
-1. **Read the documentation patterns** in [references/patterns.md](references/patterns.md) — this contains all XML syntax rules, verb conventions, parameter/return patterns, and common mistakes.
+1. **Read the documentation patterns** in [references/patterns.md](references/patterns.md) — this covers XML syntax rules, verb conventions, parameter/return patterns, **rich remarks with code examples**, and type-level documentation guidance.
+
+   Key quality expectations:
+   - **Types** (classes/structs): need rich remarks with overview, usage example, disposal notes
+   - **Factory/important methods**: need code examples showing common usage
+   - **Look at existing well-documented types** (`docs/SkiaSharpAPI/SkiaSharp/SKShader.xml`, `SKCanvas.xml`) as a quality target
+   - **Look at sample gallery** (`samples/Gallery/Shared/Samples/`) for real-world usage patterns
+   - Simple getters/setters and enum members only need summaries
 
 2. **Extract placeholders to JSON** using the extract script:
    ```bash
