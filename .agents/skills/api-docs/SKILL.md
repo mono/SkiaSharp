@@ -52,49 +52,57 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
 
 1. **Read the documentation patterns** in [references/patterns.md](references/patterns.md) — this contains all XML syntax rules, verb conventions, parameter/return patterns, and common mistakes.
 
-2. **Find files with placeholders**:
+2. **Extract placeholders to JSON** using the extract script:
    ```bash
-   grep -rl "To be added" docs/SkiaSharpAPI/ | sort
+   python3 .agents/skills/api-docs/scripts/extract-docs.py docs/SkiaSharpAPI/ -o /tmp/docs-work/
    ```
-   Prioritize: `SkiaSharp/` (core) → `HarfBuzzSharp/` → other namespaces.
+   This produces one JSON file per XML file, containing only members with "To be added." placeholders. Each entry includes the DocId, C# signature, member type, and which fields need filling.
 
-3. **For each file with placeholders**:
-   - Read the XML file to understand the type and its members
-   - Read the corresponding C# source from `binding/` to understand what each API does:
-     - `docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml` → search `binding/SkiaSharp/` for `SKCanvas`
-     - `docs/SkiaSharpAPI/HarfBuzzSharp/Buffer.xml` → search `binding/HarfBuzzSharp/` for `Buffer`
-   - Write the documentation using the helper script below — **do NOT use the edit tool on XML files directly** as it risks deleting `<MemberSignature>` elements which breaks the Microsoft Learn build
+3. **Fill the JSON files** — for each JSON file in `/tmp/docs-work/`:
+   - Read the JSON to see what needs docs
+   - Read the corresponding C# source from `binding/` to understand each API
+   - Edit the JSON to replace "To be added." values with proper documentation
+   - **Do NOT edit XML files directly** — the merge script handles that safely
 
-4. **Use the `update-docs.py` helper script** to safely modify only `<Docs>` blocks:
-   ```bash
-   python3 .agents/skills/api-docs/scripts/update-docs.py \
-     docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml \
-     --member "M:SkiaSharp.SKCanvas.DrawRect(SkiaSharp.SKRect,SkiaSharp.SKPaint)" \
-     --summary "Draws a rectangle using the specified paint." \
-     --param "rect=The rectangle to draw." \
-     --param "paint=The paint to use for drawing."
-   ```
-
-   The script:
-   - Locates members by their `DocId` signature (unique, stable)
-   - Only modifies content inside `<Docs>` blocks — structurally cannot touch signatures
-   - Validates XML after each edit
-   - Supports: `--summary`, `--value`, `--returns`, `--remarks`, `--param name=text`
-
-   For type-level docs (the `<Docs>` block directly under `<Type>`):
-   ```bash
-   python3 .agents/skills/api-docs/scripts/update-docs.py \
-     docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml \
-     --type \
-     --summary "Encapsulates all of the state about drawing into a device."
+   Example JSON entry (before):
+   ```json
+   {
+     "docId": "M:SkiaSharp.SKCanvas.DrawRect(SkiaSharp.SKRect,SkiaSharp.SKPaint)",
+     "memberType": "Method",
+     "signature": "public void DrawRect (SkiaSharp.SKRect rect, SkiaSharp.SKPaint paint);",
+     "fields": {
+       "summary": "To be added.",
+       "params": { "rect": "To be added.", "paint": "To be added." },
+       "remarks": "To be added."
+     }
+   }
    ```
 
-   Process members in batches — call the script multiple times per file (one call per member).
-
-5. **Validate XML** after editing each file:
-   ```bash
-   xmllint --noout docs/SkiaSharpAPI/<Namespace>/<TypeName>.xml
+   After filling (supports XML refs like `<see cref>`, `<paramref>`, `<see langword>`):
+   ```json
+   {
+     "docId": "M:SkiaSharp.SKCanvas.DrawRect(SkiaSharp.SKRect,SkiaSharp.SKPaint)",
+     "memberType": "Method",
+     "signature": "public void DrawRect (SkiaSharp.SKRect rect, SkiaSharp.SKPaint paint);",
+     "fields": {
+       "summary": "Draws a rectangle using the specified paint.",
+       "params": {
+         "rect": "The <see cref=\"T:SkiaSharp.SKRect\" /> to draw.",
+         "paint": "The <see cref=\"T:SkiaSharp.SKPaint\" /> that controls color and style."
+       },
+       "remarks": ""
+     }
+   }
    ```
+
+   Set `remarks` to `""` for self-closing `<remarks />`. Leave fields as "To be added." to skip them.
+
+4. **Merge filled JSON back into XML**:
+   ```bash
+   pip install lxml  # Required for CDATA-safe XML handling
+   python3 .agents/skills/api-docs/scripts/merge-docs.py /tmp/docs-work/ --validate
+   ```
+   The merge script uses lxml to safely modify only `<Docs>` blocks — it structurally cannot touch `<MemberSignature>` elements and preserves CDATA sections byte-for-byte.
      ```
 
    Common XML errors to avoid:
