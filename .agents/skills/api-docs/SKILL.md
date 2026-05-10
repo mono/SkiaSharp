@@ -63,11 +63,38 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
    - Read the corresponding C# source from `binding/` to understand what each API does:
      - `docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml` → search `binding/SkiaSharp/` for `SKCanvas`
      - `docs/SkiaSharpAPI/HarfBuzzSharp/Buffer.xml` → search `binding/HarfBuzzSharp/` for `Buffer`
-   - Replace "To be added." placeholders with proper documentation following the patterns
-   - **NEVER delete or modify `<MemberSignature>`, `<TypeSignature>`, `<MemberType>`, `<AssemblyInfo>`, `<ReturnValue>`, `<Parameters>`, or `<Attributes>` elements** — only edit content inside `<Docs>` blocks (`<summary>`, `<param>`, `<returns>`, `<value>`, `<remarks>`). Deleting signature lines breaks the Microsoft Learn build.
-   - **Validate XML** after editing each file:
-     ```bash
-     xmllint --noout docs/SkiaSharpAPI/<Namespace>/<TypeName>.xml
+   - Write the documentation using the helper script below — **do NOT use the edit tool on XML files directly** as it risks deleting `<MemberSignature>` elements which breaks the Microsoft Learn build
+
+4. **Use the `update-docs.py` helper script** to safely modify only `<Docs>` blocks:
+   ```bash
+   python3 .agents/skills/api-docs/scripts/update-docs.py \
+     docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml \
+     --member "M:SkiaSharp.SKCanvas.DrawRect(SkiaSharp.SKRect,SkiaSharp.SKPaint)" \
+     --summary "Draws a rectangle using the specified paint." \
+     --param "rect=The rectangle to draw." \
+     --param "paint=The paint to use for drawing."
+   ```
+
+   The script:
+   - Locates members by their `DocId` signature (unique, stable)
+   - Only modifies content inside `<Docs>` blocks — structurally cannot touch signatures
+   - Validates XML after each edit
+   - Supports: `--summary`, `--value`, `--returns`, `--remarks`, `--param name=text`
+
+   For type-level docs (the `<Docs>` block directly under `<Type>`):
+   ```bash
+   python3 .agents/skills/api-docs/scripts/update-docs.py \
+     docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml \
+     --type \
+     --summary "Encapsulates all of the state about drawing into a device."
+   ```
+
+   Process members in batches — call the script multiple times per file (one call per member).
+
+5. **Validate XML** after editing each file:
+   ```bash
+   xmllint --noout docs/SkiaSharpAPI/<Namespace>/<TypeName>.xml
+   ```
      ```
 
    Common XML errors to avoid:
