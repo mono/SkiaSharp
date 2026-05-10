@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3686,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-10T05:23:19Z",
+    "currentLabels": ["upgrading/4.x", "cost/s"]
+  },
+  "summary": "Task issue to update HarfBuzz from 8.3.1 to 14.2.0 in the HarfBuzzSharp binding, including API surface review, breaking changes analysis, and rebuilding text shaping.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.92 },
+    "area": { "value": "area/HarfBuzzSharp", "confidence": 0.95 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Current HarfBuzz: 8.3.1, Target: 14.2.0, Milestone: 4.x Preview 2",
+      "relatedIssues": [3679, 3490],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/3679", "description": "Parent issue: Update native dependencies" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3490", "description": "PR: Update HarfBuzzSharp binding (closed draft, not merged)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["8.3.1", "14.1.0", "14.2.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The update is explicitly needed for v4 release. HarfBuzz is not linked into libSkiaSharp — it is a separate native library, so this update is independent of a Skia milestone bump."
+    }
+  },
+  "analysis": {
+    "summary": "This is a tracked task to upgrade HarfBuzz from 8.3.1 to 14.2.0 (a major version jump spanning 6 major versions) for the SkiaSharp v4 release. The work involves reviewing the closed draft PR #3490, updating the C# binding surface for any new/changed APIs, checking for breaking changes, and rebuilding and testing the text shaping pipeline. Since SkiaSharp builds with skia_use_harfbuzz=false, HarfBuzz is not linked into libSkiaSharp, making this update independent of a Skia milestone bump.",
+    "codeInvestigation": [
+      {
+        "file": "binding/HarfBuzzSharp/Definitions.cs",
+        "finding": "Contains OpenTypeNameId enum and other core HarfBuzz type definitions — these are the binding surface that will need updating for API changes between 8.3.1 and 14.2.0",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/Font.cs",
+        "finding": "Font binding class exists — PR #3490 added APIs like GetPpem, SetPpem, Ptem, SyntheticSlant, SetVariation, etc. This is the primary file needing API surface updates",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "SkiaSharp builds with skia_use_harfbuzz=false across all platforms, so HarfBuzz is not linked into libSkiaSharp",
+        "source": "issue body",
+        "interpretation": "The HarfBuzz update is fully independent of a Skia native build — reducing scope and risk."
+      },
+      {
+        "text": "PR #3490 (Update HarfBuzzSharp binding) is the existing in-progress work",
+        "source": "issue body",
+        "interpretation": "PR #3490 was a draft and is now closed without merging — work needs to be restarted or rebased on latest."
+      },
+      {
+        "text": "This is a large version jump",
+        "source": "issue body",
+        "interpretation": "8.3.1 → 14.2.0 spans 6 major versions with potential breaking API changes requiring careful review."
+      },
+      {
+        "text": "Updated target to 14.2.0 (latest stable release, up from 14.1.0 when this issue was filed)",
+        "source": "comment",
+        "interpretation": "The target version was updated after filing — maintainer actively tracking latest stable."
+      }
+    ],
+    "rationale": "This is a maintainer-filed enhancement task for the v4 release cycle, not a bug report. The type is enhancement because it improves an existing dependency (HarfBuzz) rather than adding a wholly new feature. The area is HarfBuzzSharp as the update is scoped to the HarfBuzz binding. The work is well-defined with a clear task list, but needs investigation because PR #3490 (the existing work) was closed as a draft and must be restarted or rebased targeting 14.2.0.",
+    "nextQuestions": [
+      "What API breaking changes exist between HarfBuzz 8.3.1 and 14.2.0?",
+      "Can PR #3490's work be rebased and updated, or does it need to be redone from scratch?",
+      "What HarfBuzz C APIs are currently wrapped in the libHarfBuzzSharp native shim?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Well-scoped enhancement task for v4 release with clear task list. Requires investigation into breaking API changes and rebasing/restarting the draft PR work.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and HarfBuzzSharp area labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/enhancement", "area/HarfBuzzSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Summary of triage findings for the maintainer",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "**Triage summary:** This is a well-scoped enhancement task for updating HarfBuzz 8.3.1 → 14.2.0 for v4.\n\nKey findings:\n- PR #3490 was closed as a draft without merging — the work from that PR (OpenType APIs, Font variable properties, Language.Matches, etc.) needs to be restarted or rebased targeting 14.2.0.\n- Since SkiaSharp builds with `skia_use_harfbuzz=false`, the update is independent of any Skia milestone bump.\n- The version jump (8.3.1 → 14.2.0) is large — breaking change analysis is critical before updating the C# binding surface.\n\nRecommend using the `native-dependency-update` skill to handle the DEPS update and breaking change analysis."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to parent dependency update issue",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3679
+      }
+    ]
+  }
+}
