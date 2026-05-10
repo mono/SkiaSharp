@@ -100,6 +100,11 @@ function Extract-Docs([string]$inputPath, [string]$outputDir) {
         if ($typeDocs) {
             $fields = Extract-DocsBlock $typeDocs
             if ($fields.Count -gt 0) {
+                # Pre-fill remarks template for types — agent completes the blanks
+                if ($fields.ContainsKey("remarks")) {
+                    $fields["remarks"] = "<format type=`"text/markdown`"><![CDATA[`n## Remarks`n`n[Describe what this type does and when to use it]`n`n[If IDisposable: mention using statement / disposal]`n`n## Examples`n`n``````csharp`n[Show the most common usage pattern, 5-15 lines]`n```````n]]></format>"
+                    $fields["remarksRequired"] = $true
+                }
                 $entries += @{
                     docId      = $null
                     memberType = "type"

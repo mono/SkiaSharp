@@ -71,6 +71,11 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
    - Edit the JSON to replace "To be added." values with proper documentation
    - **Do NOT edit XML files directly** — the merge script handles that safely
 
+   **Remarks rules:**
+   - **Type-level entries** (`"memberType": "type"`) have `"remarksRequired": true` and a pre-filled CDATA template. You MUST complete the template with real content — never leave the `[bracketed placeholders]`. Include a description, disposal note if applicable, and a code example.
+   - **Member-level entries**: set `remarks` to `""` for simple members, or write rich markdown for important methods (factory methods, `Draw*`, etc.)
+   - Look at `samples/Gallery/Shared/Samples/` and the C# source to write realistic code examples
+
    Example JSON entry (before):
    ```json
    {
@@ -102,26 +107,27 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
    }
    ```
 
-   For **types and important methods**, use rich markdown remarks with code examples:
+   For **types**, the extract script pre-fills a CDATA template. Complete it:
    ```json
    {
      "docId": null,
      "memberType": "type",
+     "remarksRequired": true,
      "fields": {
        "summary": "Provides a mutable builder for constructing <see cref=\"T:SkiaSharp.SKPath\" /> objects.",
-       "remarks": "<format type=\"text/markdown\"><![CDATA[\n## Remarks\n\n`SKPathBuilder` provides a step-by-step way to construct paths.\n\nThis type implements `IDisposable`. Always dispose when done.\n\n## Examples\n\n```csharp\nusing var builder = new SKPathBuilder();\nbuilder.MoveTo(10, 10);\nbuilder.LineTo(100, 50);\nbuilder.Close();\nusing var path = builder.Snapshot();\ncanvas.DrawPath(path, paint);\n```\n]]></format>"
+       "remarks": "<format type=\"text/markdown\"><![CDATA[\n## Remarks\n\n`SKPathBuilder` provides a step-by-step way to construct paths. Use `MoveTo` to set the starting point, then `LineTo`, `QuadTo`, or `CubicTo` to add segments. Call `Close` to connect back to the start.\n\nThis type wraps a native Skia resource and implements `IDisposable`. Always dispose when done.\n\n## Examples\n\n```csharp\nusing var builder = new SKPathBuilder();\nbuilder.MoveTo(10, 10);\nbuilder.LineTo(100, 50);\nbuilder.LineTo(50, 100);\nbuilder.Close();\n\nusing var path = builder.Snapshot();\ncanvas.DrawPath(path, paint);\n```\n]]></format>"
      }
    }
    ```
 
-   Set `remarks` to `""` for self-closing `<remarks />`. Leave fields as "To be added." to skip them.
-   See [references/patterns.md](references/patterns.md) for full guidance on rich remarks and when to use them.
+   For **simple members**, set `remarks` to `""`. Leave fields as "To be added." to skip them.
+   See [references/patterns.md](references/patterns.md) for full guidance on rich remarks.
 
 4. **Merge filled JSON back into XML**:
    ```bash
    pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 merge output/docs-work/
    ```
-   The merge script uses lxml to safely modify only `<Docs>` blocks — it structurally cannot touch `<MemberSignature>` elements and preserves CDATA sections byte-for-byte.
+   The merge script uses .NET XmlDocument to safely modify only `<Docs>` blocks — it structurally cannot touch `<MemberSignature>` elements and preserves CDATA sections.
 
 ### Phase 3: Validate
 
