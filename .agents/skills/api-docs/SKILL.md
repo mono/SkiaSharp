@@ -59,13 +59,13 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
    - **Look at sample gallery** (`samples/Gallery/Shared/Samples/`) for real-world usage patterns
    - Simple getters/setters and enum members only need summaries
 
-2. **Extract placeholders to JSON** using the extract script:
+2. **Extract placeholders to JSON** using the docs tool:
    ```bash
-   python3 .agents/skills/api-docs/scripts/docs-tool.py extract docs/SkiaSharpAPI/ -o docs-work/
+   python3 .agents/skills/api-docs/scripts/docs-tool.py extract docs/SkiaSharpAPI/ -o output/docs-work/
    ```
-   This produces one JSON file per XML file, containing only members with "To be added." placeholders. Each entry includes the DocId, C# signature, member type, and which fields need filling.
+   This produces one JSON file per XML file, containing only members with "To be added." placeholders. Each entry includes the DocId, C# signature, member type, and which fields need filling. The `output/` directory is gitignored so local runs don't pollute the repo.
 
-3. **Fill the JSON files** — for each JSON file in `docs-work/`:
+3. **Fill the JSON files** — for each JSON file in `output/docs-work/`:
    - Read the JSON to see what needs docs
    - Read the corresponding C# source from `binding/` to understand each API
    - Edit the JSON to replace "To be added." values with proper documentation
@@ -107,16 +107,9 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
 4. **Merge filled JSON back into XML**:
    ```bash
    pip install lxml  # Required for CDATA-safe XML handling
-   python3 .agents/skills/api-docs/scripts/docs-tool.py merge docs-work/ --validate
+   python3 .agents/skills/api-docs/scripts/docs-tool.py merge output/docs-work/ --validate
    ```
    The merge script uses lxml to safely modify only `<Docs>` blocks — it structurally cannot touch `<MemberSignature>` elements and preserves CDATA sections byte-for-byte.
-     ```
-
-   Common XML errors to avoid:
-   - **Duplicate closing tags**: `</param></param>` — happens when copy/pasting
-   - **Mismatched tags**: `<summary>...</param>` — tag names must match
-   - **Unescaped characters**: `<`, `>`, `&` must be `&lt;`, `&gt;`, `&amp;`
-   - **Missing closing tags**: `<summary>text` without `</summary>`
 
 ### Phase 3: Validate
 

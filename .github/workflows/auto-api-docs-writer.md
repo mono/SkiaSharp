@@ -107,8 +107,8 @@ pre-agent-steps:
   - name: Install lxml and extract placeholders
     run: |
       pip install lxml
-      mkdir -p docs-work
-      python3 .agents/skills/api-docs/scripts/docs-tool.py extract docs/SkiaSharpAPI/ -o docs-work/
+      mkdir -p output/docs-work
+      python3 .agents/skills/api-docs/scripts/docs-tool.py extract docs/SkiaSharpAPI/ -o output/docs-work/
 
   - name: Copy push script for post-step
     run: |
@@ -121,7 +121,7 @@ post-steps:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
     run: |
       pip install lxml
-      python3 .agents/skills/api-docs/scripts/docs-tool.py merge docs-work/ --validate
+      python3 .agents/skills/api-docs/scripts/docs-tool.py merge output/docs-work/ --validate
       bash /tmp/gh-aw/api-docs-push-pr.sh
 ---
 
@@ -130,8 +130,8 @@ post-steps:
 **Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–3.** Overrides for this workflow:
 
 - **Phase 1 is pre-computed** — stub regeneration already ran on Windows. Skip it.
-- **Extraction is pre-computed** — JSON files are already in `docs-work/`. Skip the extract step.
+- **Extraction is pre-computed** — JSON files are already in `output/docs-work/`. Skip the extract step.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't carry this into the chroot).
-- **Do NOT edit XML files directly** — edit only the JSON files in `docs-work/`.
+- **Do NOT edit XML files directly** — edit only the JSON files in `output/docs-work/`.
 
-Your job: read each JSON file in `docs-work/`, understand the APIs from the C# source in `binding/`, fill in the "To be added." values with proper documentation, and save the JSON files. The post-step handles merging into XML, committing, and pushing.
+Your job: read each JSON file in `output/docs-work/`, understand the APIs from the C# source in `binding/`, fill in the "To be added." values with proper documentation, and save the JSON files. The post-step handles merging into XML, committing, and pushing.
