@@ -38,7 +38,6 @@ A single agentic workflow handles the entire pipeline — regenerating XML stubs
   3. **Post-step**: Pushes branch and creates PR in `mono/SkiaSharp-API-docs`
 - **Output**: PR `automation/write-api-docs` → `main` in `mono/SkiaSharp-API-docs`
 - **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-api-docs-writer.lock.yml) → "Auto API Docs Writer" → "Run workflow"
-- **Skip regeneration**: Set `skip_regeneration=true` to skip the stub generation step (useful when stubs are already up to date and you only want AI doc writing)
 
 > **Note**: There is also a standalone [`update-docs.yml`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/update-docs.yml) workflow in the docs repo that only regenerates stubs (no AI writing). The agentic workflow above supersedes it for the full pipeline.
 

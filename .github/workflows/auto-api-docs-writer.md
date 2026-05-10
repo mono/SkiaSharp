@@ -100,7 +100,8 @@ steps:
   - name: Set up docs branch
     run: |
       cd docs
-      git checkout -B automation/write-api-docs
+      git fetch origin main
+      git checkout -B automation/write-api-docs origin/main
       cd ..
 
 pre-agent-steps:

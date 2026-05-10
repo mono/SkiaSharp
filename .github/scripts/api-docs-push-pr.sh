@@ -16,10 +16,24 @@ if [ ! -f /tmp/gh-aw/agent/api-docs-env.sh ]; then
     echo "No api-docs-env.sh — agent determined no work needed"
     exit 0
 fi
-source /tmp/gh-aw/agent/api-docs-env.sh
+
+# Parse signal file safely — do NOT source it (it's agent-written and we hold a PAT)
+DOCS_BRANCH=$(grep -oP '^DOCS_BRANCH=\K.+' /tmp/gh-aw/agent/api-docs-env.sh || true)
 
 if [ -z "${DOCS_BRANCH:-}" ]; then
     echo "DOCS_BRANCH is empty — skipping"
+    exit 0
+fi
+
+# Validate branch name
+if [[ ! "$DOCS_BRANCH" =~ ^automation/write-api-docs$ ]]; then
+    echo "::error::Unexpected DOCS_BRANCH value: $DOCS_BRANCH"
+    exit 1
+fi
+
+# --- Skip push on pull_request events (used for CI validation only) ---
+if [ "${GITHUB_EVENT_NAME:-}" = "pull_request" ]; then
+    echo "Skipping push — pull_request event is for CI validation only"
     exit 0
 fi
 
