@@ -12,17 +12,10 @@ on:
       - .github/scripts/api-docs-push-pr.sh
       - .agents/skills/api-docs/**
   workflow_dispatch:
-    inputs:
-      max_files:
-        description: "Maximum number of files to process (0 = unlimited)"
-        required: false
-        type: string
-        default: "0"
 
 # -- Custom jobs -------------------------------------------------------
 # Stub regeneration requires Windows (mdoc.exe is .NET Framework).
-# Handles branch management: merges main into existing branch (manual
-# edits preserved with -X ours), runs mdoc, uploads result as artifact.
+# Checks out docs main, runs mdoc, uploads result as artifact.
 jobs:
   regenerate-stubs:
     runs-on: windows-latest
@@ -125,11 +118,9 @@ post-steps:
 
 # Auto API Docs Writer
 
-**Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–4.** Overrides for this workflow:
+**Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–3.** Overrides for this workflow:
 
 - **Phase 1 is pre-computed** — stub regeneration already ran on Windows. Skip it.
-- **Phase 5 is handled by the post-step** — do NOT commit or do any git operations. Just edit the XML files.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't carry this into the chroot).
-- **Max files**: ${{ github.event.inputs.max_files || '0' }} (0 = unlimited — process all files).
 
 Your only job is to edit XML files in `docs/SkiaSharpAPI/` to fill "To be added." placeholders. The post-step will detect your changes, commit, push, and create a PR automatically.
