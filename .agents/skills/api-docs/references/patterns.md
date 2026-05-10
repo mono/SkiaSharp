@@ -374,10 +374,10 @@ Example remarks value for a type:
 <format type="text/markdown"><![CDATA[
 ## Remarks
 
-`SKPathBuilder` provides a step-by-step way to construct paths. Use `MoveTo`
-to set the starting point, then `LineTo`, `QuadTo`, `ConicTo`, or `CubicTo`
-to add segments. Call `Close` to connect back to the start, and `Snapshot` or
-`Detach` to obtain the finished `SKPath`.
+`SKPaint` controls how drawing operations render on the canvas, including
+color, stroke width, anti-aliasing, blend modes, shaders, and text properties.
+Create an instance, configure the desired properties, and pass it to drawing
+methods on `SKCanvas`.
 
 This type wraps a native Skia resource and implements `IDisposable`. Always
 dispose of it when done, either with a `using` statement or by calling
@@ -386,14 +386,13 @@ dispose of it when done, either with a `using` statement or by calling
 ## Examples
 
 ```csharp
-using var builder = new SKPathBuilder();
-builder.MoveTo(10, 10);
-builder.LineTo(100, 50);
-builder.LineTo(50, 100);
-builder.Close();
-
-using var path = builder.Snapshot();
-canvas.DrawPath(path, paint);
+using var paint = new SKPaint
+{
+    Color = SKColors.CornflowerBlue,
+    IsAntialias = true,
+    Style = SKPaintStyle.Fill,
+};
+canvas.DrawCircle(128, 128, 80, paint);
 ```
 ]]></format>
 ````
@@ -435,7 +434,7 @@ Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` as usual.
 
 ### SKObject Subclasses (IDisposable types)
 
-Most SkiaSharp types inherit from `SKObject`. Their type-level summary and remarks should cover construction, disposal, and usage. Example for `SKPathBuilder`:
+Most SkiaSharp types inherit from `SKObject`. Their type-level summary and remarks should cover construction, disposal, and usage. Example for `SKPaint`:
 
 **summary:**
 

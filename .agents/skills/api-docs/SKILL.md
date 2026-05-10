@@ -115,7 +115,7 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
      "remarksRequired": true,
      "fields": {
        "summary": "Provides a mutable builder for constructing <see cref=\"T:SkiaSharp.SKPath\" /> objects.",
-       "remarks": "<format type=\"text/markdown\"><![CDATA[\n## Remarks\n\n`SKPathBuilder` provides a step-by-step way to construct paths. Use `MoveTo` to set the starting point, then `LineTo`, `QuadTo`, or `CubicTo` to add segments. Call `Close` to connect back to the start.\n\nThis type wraps a native Skia resource and implements `IDisposable`. Always dispose when done.\n\n## Examples\n\n```csharp\nusing var builder = new SKPathBuilder();\nbuilder.MoveTo(10, 10);\nbuilder.LineTo(100, 50);\nbuilder.LineTo(50, 100);\nbuilder.Close();\n\nusing var path = builder.Snapshot();\ncanvas.DrawPath(path, paint);\n```\n]]></format>"
+       "remarks": "<format type=\"text/markdown\"><![CDATA[\n## Remarks\n\n`SKPaint` controls how drawing operations render on the canvas, including color, stroke width, anti-aliasing, blend modes, shaders, and text properties.\n\nThis type wraps a native Skia resource and implements `IDisposable`. Always dispose when done, either with a `using` statement or by calling `Dispose()` directly.\n\n## Examples\n\n```csharp\nusing var paint = new SKPaint\n{\n    Color = SKColors.CornflowerBlue,\n    IsAntialias = true,\n    Style = SKPaintStyle.Fill,\n};\ncanvas.DrawCircle(128, 128, 80, paint);\n```\n]]></format>"
      }
    }
    ```
