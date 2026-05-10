@@ -64,6 +64,7 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
      - `docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml` → search `binding/SkiaSharp/` for `SKCanvas`
      - `docs/SkiaSharpAPI/HarfBuzzSharp/Buffer.xml` → search `binding/HarfBuzzSharp/` for `Buffer`
    - Replace "To be added." placeholders with proper documentation following the patterns
+   - **NEVER modify `<MemberSignature>`, `<TypeSignature>`, `<MemberType>`, `<AssemblyInfo>`, `<ReturnValue>`, `<Parameters>`, or `<Attributes>` elements** — only edit content inside `<Docs>` blocks (`<summary>`, `<param>`, `<returns>`, `<value>`, `<remarks>`)
    - **Validate XML** after editing each file:
      ```bash
      xmllint --noout docs/SkiaSharpAPI/<Namespace>/<TypeName>.xml
