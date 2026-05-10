@@ -131,19 +131,17 @@ post-steps:
 - **Phase 5 branch**: use `automation/write-api-docs` as the branch name.
 - **Max files**: ${{ github.event.inputs.max_files || '0' }} (0 = unlimited — process all files).
 
-After Phase 5, write the signal file for the post-step:
+**CRITICAL — you MUST do this last step or your work is lost:**
+
+After Phase 5 commit, write the signal file so the post-step knows to push:
 
 ```bash
 mkdir -p /tmp/gh-aw/agent
-cat > /tmp/gh-aw/agent/api-docs-env.sh << 'EOF'
-DOCS_BRANCH=automation/write-api-docs
-EOF
+echo 'DOCS_BRANCH=automation/write-api-docs' > /tmp/gh-aw/agent/api-docs-env.sh
 ```
 
-Also write `/tmp/gh-aw/agent/api-docs-summary.md` with a summary of files processed, placeholders filled, and any issues encountered.
+Without this file, the post-step will NOT push your changes and all work is discarded.
 
-**IMPORTANT:** Do NOT push branches or create PRs — the post-step handles that.
-Do NOT call `create_pull_request`. Just commit locally.
+Also write `/tmp/gh-aw/agent/api-docs-summary.md` with a summary of files processed and placeholders filled.
 
-If there are no changes after processing, do NOT write `api-docs-env.sh`.
-The post-step will detect its absence and skip.
+**Do NOT push branches or create PRs** — the post-step handles that. Do NOT call `create_pull_request`.
