@@ -12,6 +12,9 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
+string SUPPORT_GRAPHITE_VAR = Argument ("supportGraphite", EnvironmentVariable ("SUPPORT_GRAPHITE") ?? "false");
+bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower () == "true";
+
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
@@ -22,6 +25,9 @@ string VARIANT = BUILD_VARIANT ?? "windows";
 
 Information("Native Arguments:");
 Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "(Using MSVC)" : LLVM_HOME);
+Information($"    {"SUPPORT_VULKAN".PadRight(30)} {{0}}", SUPPORT_VULKAN);
+Information($"    {"SUPPORT_DIRECT3D".PadRight(30)} {{0}}", SUPPORT_DIRECT3D);
+Information($"    {"SUPPORT_GRAPHITE".PadRight(30)} {{0}}", SUPPORT_GRAPHITE);
 Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
 Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
 
@@ -59,6 +65,7 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
+            $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower () +
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +

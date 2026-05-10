@@ -219,6 +219,51 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
 		}
 
+		// Graphite-backed render target
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info) =>
+			Create (recorder, info, mipmapped: false, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped) =>
+			Create (recorder, info, mipmapped, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, SKSurfaceProperties props) =>
+			Create (recorder, info, mipmapped: false, props);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped, SKSurfaceProperties props)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject (SkiaApi.sk_graphite_surface_make_render_target (recorder.Handle, &cinfo, mipmapped ? 1 : 0, props?.Handle ?? IntPtr.Zero));
+		}
+
+		// Graphite-backed surface wrapping a caller-allocated GPU texture
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType) =>
+			Create (recorder, backendTexture, colorType, colorSpace: null, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace) =>
+			Create (recorder, backendTexture, colorType, colorSpace, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+			if (backendTexture == null)
+				throw new ArgumentNullException (nameof (backendTexture));
+
+			return GetObject (SkiaApi.sk_graphite_surface_wrap_backend_texture (
+				recorder.Handle,
+				backendTexture.Handle,
+				colorType.ToNative (),
+				colorSpace?.Handle ?? IntPtr.Zero,
+				props?.Handle ?? IntPtr.Zero,
+				/* releaseProc */ null,
+				/* releaseContext */ null));
+		}
+
 #if __MACOS__ || __IOS__ || __TVOS__
 
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, out CoreAnimation.ICAMetalDrawable drawable) =>

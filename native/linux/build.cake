@@ -6,6 +6,12 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
+string SUPPORT_GRAPHITE_VAR = Argument("supportGraphite", EnvironmentVariable("SUPPORT_GRAPHITE") ?? "false");
+bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower() == "true";
+
+string SUPPORT_DAWN_VAR = Argument("supportDawn", EnvironmentVariable("SUPPORT_DAWN") ?? "false");
+bool SUPPORT_DAWN = SUPPORT_DAWN_VAR == "1" || SUPPORT_DAWN_VAR.ToLower() == "true";
+
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -110,6 +116,8 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan=true " +
+            $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower() +
+            $"skia_use_dawn={SUPPORT_DAWN} ".ToLower() +
             bionicArgs +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +

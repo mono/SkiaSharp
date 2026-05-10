@@ -4,11 +4,18 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/androi
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/native/android/ndk.cake"
 
+string SUPPORT_GRAPHITE_VAR = Argument ("supportGraphite", EnvironmentVariable ("SUPPORT_GRAPHITE") ?? "false");
+bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower () == "true";
+
 Information("Android NDK Path: {0}", ANDROID_NDK_HOME);
+Information("Building Graphite: {0}", SUPPORT_GRAPHITE);
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
+    // Linux is supported as a host since NDK r19+ ships an official linux-x86_64 toolchain.
+    // Upstream CI only exercises the macOS/Windows path; Linux works for cross-compiling
+    // arm64/arm/x64/x86 Android targets via the same prebuilt LLVM toolchain.
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows() || IsRunningOnLinux())
     .Does(() =>
 {
     Build("x86", "x86");
@@ -33,6 +40,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_use_vulkan=true " +
+            $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower () +
             $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-g', '-ggdb3' ] " +
             $"extra_ldflags=[ '-Wl,-z,max-page-size=16384' ] " +
@@ -46,7 +54,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows() || IsRunningOnLinux())
     .Does(() =>
 {
     Build("x86");

@@ -1,0 +1,359 @@
+#nullable disable
+
+using System;
+using System.Runtime.InteropServices;
+
+namespace SkiaSharp
+{
+#if THROW_OBJECT_EXCEPTIONS
+	using GCHandle = SkiaSharp.GCHandleProxy;
+#endif
+
+	/// <summary>
+	/// Root object for the Graphite GPU backend. Vends recorders, accepts and submits recordings,
+	/// and owns GPU resources. Single-thread-affine — do not share across threads.
+	/// Must outlive every <see cref="SKGraphiteRecorder"/>, <see cref="SKGraphiteRecording"/>,
+	/// and Graphite-backed <see cref="SKSurface"/> derived from it.
+	/// </summary>
+	public unsafe class SKGraphiteContext : SKObject
+	{
+		// Pinned managed delegate the Vulkan dispatch lambda calls back into. Ownership is transferred
+		// from the SKGraphiteVkBackendContext at CreateVulkan time so callers can safely Dispose
+		// the backend context immediately afterwards. Freed in DisposeNative AFTER the native context
+		// is deleted (which tears down the lambda).
+		private GCHandle pinnedBackendDelegate;
+
+		internal SKGraphiteContext (IntPtr handle, bool owns)
+			: base (handle, owns)
+		{
+		}
+
+		internal void AttachPinnedBackendDelegate (GCHandle gch)
+		{
+			// Only ever set once, immediately after construction by a backend factory.
+			pinnedBackendDelegate = gch;
+		}
+
+		/// <summary>
+		/// Returns true if the requested Graphite backend was compiled into this build of libSkiaSharp.
+		/// Safe to call without first creating a context.
+		/// </summary>
+		public static bool IsBackendAvailable (SKGraphiteBackend backend) =>
+			SkiaApi.sk_graphite_backend_is_available (backend);
+
+		/// <summary>
+		/// Create a Graphite context for the Vulkan backend. Returns null when Vulkan/Graphite is
+		/// not built into libSkiaSharp, when the backend context is invalid, or when the underlying
+		/// driver rejected the create call. Use <see cref="IsBackendAvailable"/> to disambiguate.
+		///
+		/// On success, the returned context takes ownership of the GetProc delegate's GCHandle and
+		/// the native backend-context wrapper. The caller may safely <see cref="IDisposable.Dispose"/>
+		/// <paramref name="backendContext"/> immediately after this returns; its Vulkan handles
+		/// (instance/device/queue) remain owned by the caller.
+		/// </summary>
+		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext) =>
+			CreateVulkan (backendContext, default);
+
+		/// <summary>
+		/// Create a Graphite context for the Metal backend (macOS / iOS only).
+		/// Returns null when Metal/Graphite is not built into this libSkiaSharp,
+		/// when the backend context is invalid, or when the underlying driver
+		/// rejected the create call.
+		///
+		/// Metal has no GetProc callback, so there is no GCHandle ownership
+		/// transfer (unlike the Vulkan path). The caller may dispose
+		/// <paramref name="backendContext"/> at any time after this returns —
+		/// Skia retains its own references to the MTLDevice/MTLCommandQueue
+		/// inside the resulting SKGraphiteContext.
+		/// </summary>
+		public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext) =>
+			CreateMetal (backendContext, default);
+
+		/// <summary>
+		/// Create a Graphite context for the Dawn (WebGPU) backend. Returns null
+		/// when Dawn/Graphite is not built into this libSkiaSharp, when the
+		/// backend context is invalid, or when Dawn rejected the create call.
+		///
+		/// As with the Metal path, no GCHandle ownership transfer happens here
+		/// (no GetProc callback). Skia internally AddRef's the WGPU instance/
+		/// device/queue handles when the context is constructed, so the caller
+		/// may safely Dispose <paramref name="backendContext"/> at any point
+		/// after this returns.
+		/// </summary>
+		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext) =>
+			CreateDawn (backendContext, default);
+
+		/// <inheritdoc cref="CreateDawn(SKGraphiteDawnBackendContext)"/>
+		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext, SKGraphiteContextOptions options)
+		{
+			if (backendContext is null)
+				throw new ArgumentNullException (nameof (backendContext));
+
+			var nativeBackend = backendContext.Handle;
+			if (nativeBackend == IntPtr.Zero)
+				return null;
+
+			IntPtr handle = SkiaApi.sk_graphite_context_make_dawn (nativeBackend, &options);
+			if (handle == IntPtr.Zero)
+				return null;
+
+			backendContext.ReleaseNativeHandle ();
+			return new SKGraphiteContext (handle, true);
+		}
+
+		/// <inheritdoc cref="CreateMetal(SKGraphiteMtlBackendContext)"/>
+		public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext, SKGraphiteContextOptions options)
+		{
+			if (backendContext is null)
+				throw new ArgumentNullException (nameof (backendContext));
+
+			var nativeBackend = backendContext.Handle;
+			if (nativeBackend == IntPtr.Zero)
+				return null;
+
+			IntPtr handle = SkiaApi.sk_graphite_context_make_metal (nativeBackend, &options);
+			if (handle == IntPtr.Zero)
+				return null;
+
+			// Skia took its own references on the Metal handles; the wrapper's
+			// native bc is no longer needed for context lifetime.
+			backendContext.ReleaseNativeHandle ();
+
+			return new SKGraphiteContext (handle, true);
+		}
+
+		/// <inheritdoc cref="CreateVulkan(SKGraphiteVkBackendContext)"/>
+		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext, SKGraphiteContextOptions options)
+		{
+			if (backendContext is null)
+				throw new ArgumentNullException (nameof (backendContext));
+
+			var nativeBackend = backendContext.Handle;
+			if (nativeBackend == IntPtr.Zero)
+				return null;
+
+			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (nativeBackend, &options);
+			if (handle == IntPtr.Zero)
+				return null;
+
+			var ctx = new SKGraphiteContext (handle, true);
+
+			// Variant A — transfer GCHandle ownership. The Skia context's Vulkan dispatch
+			// lambda captured the function pointer + userData by value; SKGraphiteContext
+			// is now responsible for keeping the underlying managed delegate alive.
+			ctx.AttachPinnedBackendDelegate (backendContext.TransferGetProcHandle ());
+
+			// The native sk_graphite_vk_backend_context_t* wrapper is no longer needed —
+			// release it here so the caller's Dispose doesn't double-free.
+			backendContext.ReleaseNativeHandle ();
+
+			return ctx;
+		}
+
+		protected override void DisposeNative ()
+		{
+			SkiaApi.sk_graphite_context_delete (Handle);
+			// Free AFTER the native context tears down its lambda — the lambda may dispatch
+			// during destruction (rare, but possible if Skia drains queues).
+			if (pinnedBackendDelegate.IsAllocated) {
+				pinnedBackendDelegate.Free ();
+				pinnedBackendDelegate = default;
+			}
+		}
+
+		// Properties
+
+		public SKGraphiteBackend Backend =>
+			SkiaApi.sk_graphite_context_get_backend (Handle);
+
+		public bool IsDeviceLost =>
+			SkiaApi.sk_graphite_context_is_device_lost (Handle);
+
+		public int MaxTextureSize =>
+			SkiaApi.sk_graphite_context_get_max_texture_size (Handle);
+
+		public bool SupportsProtectedContent =>
+			SkiaApi.sk_graphite_context_supports_protected_content (Handle);
+
+		public long CurrentBudgetedBytes =>
+			SkiaApi.sk_graphite_context_get_current_budgeted_bytes (Handle);
+
+		public long MaxBudgetedBytes {
+			get => SkiaApi.sk_graphite_context_get_max_budgeted_bytes (Handle);
+			set => SkiaApi.sk_graphite_context_set_max_budgeted_bytes (Handle, value);
+		}
+
+		// Recording
+
+		/// <summary>
+		/// Vend a fresh recorder. Each recorder is single-thread-affine; multiple recorders may
+		/// be used concurrently on different threads against the same context.
+		/// </summary>
+		public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes = -1) =>
+			CreateRecorder (recorderBudgetBytes, imageProvider: null);
+
+		/// <summary>
+		/// Vend a recorder with a managed <see cref="SKGraphiteImageProvider"/> attached.
+		/// Without one, Graphite drops every draw whose source <see cref="SKImage"/> is not
+		/// already Graphite-backed (it does not auto-upload like Ganesh). Use
+		/// <see cref="SKGraphiteImageProvider.Default"/> for an unconditional upload-on-demand
+		/// policy, or subclass <see cref="SKGraphiteImageProvider"/> for caching.
+		///
+		/// On a successful return, ownership of <paramref name="imageProvider"/>'s underlying
+		/// GCHandle and native wrapper transfers to the recorder; the caller may immediately
+		/// <see cref="IDisposable.Dispose"/> the provider — the recorder retains its own
+		/// references for its lifetime. The same <see cref="SKGraphiteImageProvider"/> instance
+		/// can be passed to multiple recorders (Skia takes its own ref); the wrapper is the
+		/// one-shot ownership-transfer slot.
+		/// </summary>
+		public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes, SKGraphiteImageProvider imageProvider)
+		{
+			IntPtr ipHandle = imageProvider?.Handle ?? IntPtr.Zero;
+			IntPtr handle = ipHandle != IntPtr.Zero
+				? SkiaApi.sk_graphite_context_make_recorder_with_image_provider (Handle, recorderBudgetBytes, ipHandle)
+				: SkiaApi.sk_graphite_context_make_recorder (Handle, recorderBudgetBytes);
+			if (handle == IntPtr.Zero)
+				return null;
+
+			var rec = new SKGraphiteRecorder (handle, true);
+			// Recorder took ownership of the native wrapper; transfer to the C#
+			// recorder so the pinned managed delegate (referenced by Skia via the
+			// captured function-pointer + userData) outlives the native recorder.
+			rec.AttachImageProvider (imageProvider);
+			return rec;
+		}
+
+		/// <summary>
+		/// Submit a recording for execution. Returns the status verbatim from the underlying
+		/// Graphite engine — non-success values are not exceptions; callers branch on the enum.
+		/// </summary>
+		public SKGraphiteInsertStatus InsertRecording (SKGraphiteRecording recording)
+		{
+			if (recording is null)
+				throw new ArgumentNullException (nameof (recording));
+
+			var info = new SKGraphiteInsertRecordingInfo {
+				Recording = recording.Handle,
+			};
+			return SkiaApi.sk_graphite_context_insert_recording (Handle, &info);
+		}
+
+		/// <inheritdoc cref="InsertRecording(SKGraphiteRecording)"/>
+		public SKGraphiteInsertStatus InsertRecording (SKGraphiteInsertRecordingInfo info) =>
+			SkiaApi.sk_graphite_context_insert_recording (Handle, &info);
+
+		/// <summary>
+		/// Submit pending GPU work. Returns false if submission failed.
+		/// </summary>
+		public bool Submit () =>
+			SkiaApi.sk_graphite_context_submit (Handle, null);
+
+		/// <inheritdoc cref="Submit()"/>
+		public bool Submit (SKGraphiteSubmitInfo submitInfo) =>
+			SkiaApi.sk_graphite_context_submit (Handle, &submitInfo);
+
+		// Resource management
+
+		public void FreeGpuResources () =>
+			SkiaApi.sk_graphite_context_free_gpu_resources (Handle);
+
+		public void PerformDeferredCleanup (TimeSpan duration) =>
+			SkiaApi.sk_graphite_context_perform_deferred_cleanup (Handle, (long)duration.TotalMilliseconds);
+
+		/// <summary>
+		/// Schedule a backend texture (created by <see cref="SKGraphiteRecorder.CreateBackendTexture"/>
+		/// or wrapped from a caller-allocated GPU resource) for release through the context.
+		/// Equivalent to <see cref="SKGraphiteRecorder.DeleteBackendTexture"/>; use whichever
+		/// matches your code's existing recorder/context split.
+		/// </summary>
+		public void DeleteBackendTexture (SKGraphiteBackendTexture backendTexture)
+		{
+			if (backendTexture == null)
+				throw new ArgumentNullException (nameof (backendTexture));
+			SkiaApi.sk_graphite_context_delete_backend_texture (Handle, backendTexture.Handle);
+		}
+
+		/// <summary>
+		/// Drives any pending async readback or finished-callback work. Callbacks fire on the
+		/// thread that calls this method.
+		/// </summary>
+		public void CheckAsyncWorkCompletion () =>
+			SkiaApi.sk_graphite_context_check_async_work_completion (Handle);
+
+		/// <summary>
+		/// Synchronous pixel readback from a Graphite-backed surface.
+		///
+		/// Required for Graphite — <see cref="SKSurface.ReadPixels(SKImageInfo, IntPtr, int, int, int)"/>
+		/// is gated on <c>GPU_TEST_UTILS</c> in upstream Skia and returns false in production builds.
+		/// This method composes the supported async path (Context::asyncRescaleAndReadPixels +
+		/// Context::checkAsyncWorkCompletion) into a blocking call.
+		///
+		/// THREADING: Blocks the calling thread on a tight polling loop until the GPU readback
+		/// completes (cost roughly equivalent to glFinish). Don't call from a render thread that
+		/// needs to keep doing GPU work in parallel.
+		/// </summary>
+		/// <param name="dstPixels">Caller-owned buffer at least <paramref name="dstRowBytes"/> *
+		///   <paramref name="dstInfo"/>.Height bytes. RGBA_8888/Premul are supported on every backend;
+		///   format conversions follow Skia's standard rules.</param>
+		/// <param name="dstRowBytes">Stride in bytes. May be tighter than the source's natural row.</param>
+		public bool ReadPixels (SKSurface surface, SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
+		{
+			if (surface is null) throw new ArgumentNullException (nameof (surface));
+			if (dstPixels == IntPtr.Zero) throw new ArgumentNullException (nameof (dstPixels));
+			if (dstRowBytes <= 0) throw new ArgumentOutOfRangeException (nameof (dstRowBytes));
+
+			bool done = false;
+			bool success = false;
+			int height = dstInfo.Height;
+
+			Action<IntPtr> handler = result => {
+				try {
+					if (result == IntPtr.Zero)
+						return;
+					int count = SkiaApi.sk_graphite_async_read_result_get_count (result);
+					if (count == 0)
+						return;
+					var src = SkiaApi.sk_graphite_async_read_result_get_data (result, 0);
+					if (src == null)
+						return;
+					int srcRowBytes = (int)SkiaApi.sk_graphite_async_read_result_get_row_bytes (result, 0);
+					int copy = Math.Min (srcRowBytes, dstRowBytes);
+					byte* srcBytes = (byte*)src;
+					byte* dstBytes = (byte*)dstPixels;
+					for (int y = 0; y < height; y++) {
+						Buffer.MemoryCopy (
+							srcBytes + (long)y * srcRowBytes,
+							dstBytes + (long)y * dstRowBytes,
+							dstRowBytes,
+							copy);
+					}
+					success = true;
+				} finally {
+					done = true;
+				}
+			};
+
+			DelegateProxies.Create (handler, out _, out var ctxPtr);
+
+			var nativeInfo = SKImageInfoNative.FromManaged (ref dstInfo);
+			var srcRect = new SKRectI (srcX, srcY, srcX + dstInfo.Width, srcY + dstInfo.Height);
+
+			SkiaApi.sk_graphite_context_async_rescale_and_read_pixels_surface (
+				Handle, surface.Handle, &nativeInfo, &srcRect,
+				SKGraphiteRescaleGamma.Src,
+				SKGraphiteRescaleMode.RepeatedLinear,
+				DelegateProxies.SKGraphiteAsyncReadPixelsProxy,
+				(void*)ctxPtr);
+
+			// Drive completion. Submit non-syncing first so any pending recordings are flushed,
+			// then spin on checkAsyncWorkCompletion. The proxy frees its GCHandle inside its
+			// finally — `done` is set just before that, so we observe it correctly here.
+			Submit ();
+			while (!done) {
+				SkiaApi.sk_graphite_context_check_async_work_completion (Handle);
+			}
+
+			return success;
+		}
+	}
+}
