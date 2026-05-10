@@ -366,44 +366,49 @@ The best SkiaSharp docs use markdown-in-CDATA for rich content. This is the conv
 
 ### Rich Remarks Format (Markdown in CDATA)
 
-For types and important methods, use this exact format:
+For types and important methods, wrap markdown content in `<format type="text/markdown"><![CDATA[...]]></format>`. Microsoft Learn renders the CDATA content as full markdown.
 
-```json
-{
-  "remarks": "<format type=\"text/markdown\"><![CDATA[\n## Remarks\n\nYour explanation here.\n\n## Examples\n\n```csharp\nusing var paint = new SKPaint();\n```\n]]></format>"
-}
-```
+Example remarks value for a type:
 
-The `<format type="text/markdown"><![CDATA[...]]></format>` wrapper tells Microsoft Learn to render content as markdown.
-
-### Type-Level Remarks Template
-
-For classes and structs, follow this structure:
-
-```
+````xml
+<format type="text/markdown"><![CDATA[
 ## Remarks
 
-[One paragraph: what the type does and when to use it]
+`SKPathBuilder` provides a step-by-step way to construct paths. Use `MoveTo`
+to set the starting point, then `LineTo`, `QuadTo`, `ConicTo`, or `CubicTo`
+to add segments. Call `Close` to connect back to the start, and `Snapshot` or
+`Detach` to obtain the finished `SKPath`.
 
-[Optional: how to create instances — constructor vs factory methods]
-
-[Optional: disposal pattern for SKObject subclasses]
-
-[Optional: threading notes — Skia is NOT thread-safe for mutable types]
+This type wraps a native Skia resource and implements `IDisposable`. Always
+dispose of it when done, either with a `using` statement or by calling
+`Dispose()` directly.
 
 ## Examples
 
 ```csharp
-// Minimal usage example showing the most common pattern
 using var builder = new SKPathBuilder();
-builder.MoveTo(0, 0);
-builder.LineTo(100, 100);
-builder.LineTo(0, 100);
+builder.MoveTo(10, 10);
+builder.LineTo(100, 50);
+builder.LineTo(50, 100);
 builder.Close();
+
 using var path = builder.Snapshot();
 canvas.DrawPath(path, paint);
 ```
-```
+]]></format>
+````
+
+### Type-Level Remarks Template
+
+For classes and structs, follow this structure inside the CDATA:
+
+1. `## Remarks` heading
+2. One paragraph: what the type does and when to use it
+3. Optional: how to create instances — constructor vs factory methods
+4. Optional: disposal pattern for `SKObject` subclasses
+5. Optional: threading notes — Skia is NOT thread-safe for mutable types
+6. `## Examples` heading
+7. One ` ```csharp ``` ` block showing the most common usage pattern
 
 ### What Makes Good Examples
 
@@ -430,14 +435,15 @@ Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` as usual.
 
 ### SKObject Subclasses (IDisposable types)
 
-Most SkiaSharp types inherit from `SKObject`. Their type-level docs should mention:
+Most SkiaSharp types inherit from `SKObject`. Their type-level summary and remarks should cover construction, disposal, and usage. Example for `SKPathBuilder`:
 
-```json
-{
-  "summary": "Provides a mutable builder for constructing SKPath objects incrementally.",
-  "remarks": "<format type=\"text/markdown\"><![CDATA[\n## Remarks\n\n`SKPathBuilder` is a convenient way to build paths step by step...\n\nThis type wraps a native Skia resource and implements `IDisposable`. Always dispose of it when done, either with a `using` statement or by calling `Dispose()` directly.\n\n## Examples\n\n```csharp\nusing var builder = new SKPathBuilder();\nbuilder.MoveTo(10, 10);\nbuilder.LineTo(100, 50);\nbuilder.LineTo(50, 100);\nbuilder.Close();\nusing var path = builder.Snapshot();\ncanvas.DrawPath(path, paint);\n```\n]]></format>"
-}
+**summary:**
+
+```xml
+Provides a mutable builder for constructing <see cref="T:SkiaSharp.SKPath" /> objects incrementally.
 ```
+
+**remarks** (use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block).
 
 ### Mutable vs Immutable Types
 
