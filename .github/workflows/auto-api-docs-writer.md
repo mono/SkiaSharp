@@ -106,9 +106,9 @@ pre-agent-steps:
 
   - name: Install lxml and extract placeholders
     run: |
-      pip install lxml
+      
       mkdir -p output/docs-work
-      python3 .agents/skills/api-docs/scripts/docs-tool.py extract docs/SkiaSharpAPI/ -o output/docs-work/
+      pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 extract docs/SkiaSharpAPI/ -Output output/docs-work/
 
   - name: Copy push script for post-step
     run: |
@@ -120,8 +120,8 @@ post-steps:
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
     run: |
-      pip install lxml
-      python3 .agents/skills/api-docs/scripts/docs-tool.py merge output/docs-work/ --validate
+      
+      pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 merge output/docs-work/
       bash /tmp/gh-aw/api-docs-push-pr.sh
 ---
 
