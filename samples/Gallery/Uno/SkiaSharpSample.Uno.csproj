@@ -47,6 +47,14 @@
     <SkiaSharpVersion>3.119.2</SkiaSharpVersion>
   </PropertyGroup>
 
+  <!-- SkiaSharp.Views.WinUI is needed for SKXamlCanvas/SKSwapChainPanel on Windows.
+       In-tree, this comes via _UnoPlatformSamples.targets (as a ProjectReference).
+       In generated samples, that import is stripped, so this PackageReference ensures
+       the generated build can resolve the types. samples-generate bumps the version. -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.2" />
+  </ItemGroup>
+
   <Import Project="..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
   <Import Project="..\..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />
