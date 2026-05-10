@@ -32,26 +32,12 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - name: Set up docs branch
+      - name: Align docs to latest main
         shell: bash
         run: |
           cd docs
           git fetch origin main
-          BRANCH="automation/write-api-docs"
-          if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
-            git fetch origin "$BRANCH"
-            git checkout -B "$BRANCH" "origin/$BRANCH"
-            # Merge main — manual edits on branch win conflicts (-X ours)
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git merge origin/main -X ours --no-edit || {
-              echo "::warning::Merge failed — starting fresh from main"
-              git merge --abort
-              git checkout -B "$BRANCH" origin/main
-            }
-          else
-            git checkout -B "$BRANCH" origin/main
-          fi
+          git checkout -B automation/write-api-docs origin/main
           cd ..
       - name: Setup .NET
         uses: actions/setup-dotnet@v4

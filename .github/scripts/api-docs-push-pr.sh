@@ -28,34 +28,9 @@ SUMMARY=""
 
 WORKFLOW_LINK="[auto-api-docs-writer](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-api-docs-writer.lock.yml)"
 
-# --- Set up docs repo with auth ---
+# --- Push the docs branch ---
 cd docs
 git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/mono/SkiaSharp-API-docs.git"
-git config user.name "github-actions[bot]"
-git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-# --- Rebase onto latest main so PR is always up to date ---
-git fetch origin main
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
-if [ "$CURRENT_BRANCH" = "HEAD" ]; then
-    # Detached HEAD — create branch from current state
-    git checkout -B "$DOCS_BRANCH"
-fi
-
-# Rebase the agent's work onto latest docs main
-git rebase origin/main || {
-    echo "::warning::Rebase onto main failed — force-resetting to main + agent commit"
-    git rebase --abort
-    # Save the tree (all file contents) from current HEAD
-    TREE=$(git log -1 --format=%T HEAD)
-    # Create a new commit with that tree on top of origin/main
-    COMMIT=$(git commit-tree "$TREE" -p origin/main -m "Fill API documentation placeholders
-
-AI-generated documentation for XML API docs.
-Follows .NET API documentation guidelines.")
-    git checkout -B "$DOCS_BRANCH" "$COMMIT"
-}
 
 echo "Pushing $DOCS_BRANCH to mono/SkiaSharp-API-docs..."
 git push origin "$DOCS_BRANCH" --force
