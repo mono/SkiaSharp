@@ -61,11 +61,11 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
 
 2. **Extract placeholders to JSON** using the extract script:
    ```bash
-   python3 .agents/skills/api-docs/scripts/extract-docs.py docs/SkiaSharpAPI/ -o /tmp/docs-work/
+   python3 .agents/skills/api-docs/scripts/docs-tool.py extract docs/SkiaSharpAPI/ -o docs-work/
    ```
    This produces one JSON file per XML file, containing only members with "To be added." placeholders. Each entry includes the DocId, C# signature, member type, and which fields need filling.
 
-3. **Fill the JSON files** — for each JSON file in `/tmp/docs-work/`:
+3. **Fill the JSON files** — for each JSON file in `docs-work/`:
    - Read the JSON to see what needs docs
    - Read the corresponding C# source from `binding/` to understand each API
    - Edit the JSON to replace "To be added." values with proper documentation
@@ -107,7 +107,7 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
 4. **Merge filled JSON back into XML**:
    ```bash
    pip install lxml  # Required for CDATA-safe XML handling
-   python3 .agents/skills/api-docs/scripts/merge-docs.py /tmp/docs-work/ --validate
+   python3 .agents/skills/api-docs/scripts/docs-tool.py merge docs-work/ --validate
    ```
    The merge script uses lxml to safely modify only `<Docs>` blocks — it structurally cannot touch `<MemberSignature>` elements and preserves CDATA sections byte-for-byte.
      ```
