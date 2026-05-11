@@ -3,16 +3,16 @@
 | Field | Value |
 |-------|-------|
 | Repository | mono/SkiaSharp |
-| Analyzed | 2026-04-23T22:55:00Z |
-| Type | type/enhancement (0.92 (92%)) |
+| Analyzed | 2026-05-11T05:31:00Z |
+| Type | type/enhancement (0.95 (95%)) |
 | Area | area/SkiaSharp (0.95 (95%)) |
-| Suggested action | needs-investigation (0.88 (88%)) |
+| Suggested action | keep-open (0.92 (92%)) |
 
-**Issue Summary:** Performance enhancement request to replace P/Invoke native interop in SKMatrix (Invert, Concat, MapRect, MapPoint, etc.) with pure managed C# math, similar to how SKMatrix44 already uses Matrix4x4 operations.
+**Issue Summary:** SKMatrix operations (Invert, Concat, MapRect, etc.) use native P/Invoke calls that are ~2x slower than equivalent managed C# math; request to replace them with pure C# implementations.
 
-**Analysis:** SKMatrix operations (Invert, Concat, MapRect, MapPoint, MapVector, MapRadius) call native Skia via P/Invoke (sk_matrix_try_invert, sk_matrix_concat, etc.), incurring interop overhead. SKMatrix44 already avoids this by delegating to System.Numerics.Matrix4x4. The request is to port SKMatrix's math to pure C# as well, potentially using Matrix4x4 conversions or a custom 3x2/3x3 struct.
+**Analysis:** SKMatrix currently delegates math operations (Invert, Concat, MapRect, MapPoints, MapVector, MapRadius) to native Skia C++ via P/Invoke (sk_matrix_try_invert, sk_matrix_concat, sk_matrix_map_rect, etc.). The benchmark data shows SKMatrix.Invert() takes ~45 ns vs ~19 ns for managed Matrix4x4.Invert. The proposal is to replace all native calls in SKMatrix with pure C# implementations, similar to how SKMatrix44 already converts to Matrix4x4 for its invert.
 
-**Recommendations:** **needs-investigation** — Well-specified enhancement with benchmark evidence and a clear implementation path. Next step is to prototype the managed math and verify numerical equivalence with the native path.
+**Recommendations:** **keep-open** — Well-specified performance enhancement with benchmark evidence, already tracked on the 4.x RC 1 milestone. Triage confirms the native calls are still present and the managed implementation path is clear.
 
 ---
 
@@ -31,74 +31,59 @@
 
 ### Reproduction
 
-1. Run the benchmark comparing SKMatrix.Invert() vs Matrix4x4.Invert()
-2. Observe SKMatrix.Invert() at ~45 ns vs Matrix4x4.Invert() at ~19 ns (2.36x slower)
+**Code snippets:**
 
-**Environment:** Windows 11 22631.3155, Intel Core i9-9980HK 2.40GHz, .NET 7.0.16 X64 RyuJIT AVX2
+```csharp
+SKMatrix.Invert() via SkiaApi.sk_matrix_try_invert — 45.30 ns vs Matrix4x4.Invert 19.20 ns
+```
 
-**Repository links:**
-- https://github.com/dotnet/runtime/issues/16226 — Rejected .NET runtime proposal for Matrix3x3 type
+```csharp
+SKMatrix44.Invert() converts to Matrix4x4, inverts, converts back — 22.52 ns
+```
 
 ### Version Analysis
 
 | Field | Value |
 |-------|-------|
-| Mentioned versions | net7.0 |
+| Mentioned versions | 4.x RC 1 |
 | Worked in | — |
 | Broke in | — |
 | Current relevance | likely |
-| Relevance reason | The P/Invoke calls in SKMatrix have not been replaced with managed math in current code. |
+| Relevance reason | Issue is open, milestone is 4.x RC 1, native P/Invoke calls still present in SKMatrix.cs |
 
 ## Analysis
 
 ### Technical Summary
 
-SKMatrix operations (Invert, Concat, MapRect, MapPoint, MapVector, MapRadius) call native Skia via P/Invoke (sk_matrix_try_invert, sk_matrix_concat, etc.), incurring interop overhead. SKMatrix44 already avoids this by delegating to System.Numerics.Matrix4x4. The request is to port SKMatrix's math to pure C# as well, potentially using Matrix4x4 conversions or a custom 3x2/3x3 struct.
+SKMatrix currently delegates math operations (Invert, Concat, MapRect, MapPoints, MapVector, MapRadius) to native Skia C++ via P/Invoke (sk_matrix_try_invert, sk_matrix_concat, sk_matrix_map_rect, etc.). The benchmark data shows SKMatrix.Invert() takes ~45 ns vs ~19 ns for managed Matrix4x4.Invert. The proposal is to replace all native calls in SKMatrix with pure C# implementations, similar to how SKMatrix44 already converts to Matrix4x4 for its invert.
 
 ### Rationale
 
-This is a performance enhancement — SKMatrix is fully functional today, but its operations are 2x+ slower than necessary due to P/Invoke overhead. SKMatrix44 already demonstrates the pattern: it uses Matrix4x4 math entirely in C# and exposes implicit conversion to/from Skia types. The contributor and community (Lunacy) confirm feasibility. Type is enhancement because the feature works; the goal is to improve it.
+This is a well-scoped enhancement with clear benchmark evidence. SKMatrix is a hot path in rendering pipelines; replacing P/Invoke calls with pure C# math will reduce overhead without changing the public API surface. The issue is already tracked under milestone 4.x RC 1 with labels tenet/performance and cost/s, indicating maintainer intent to implement this. suggestedAction is keep-open as the work is planned and well-specified.
 
 ### Key Signals
 
-- "InvertUsingSKMatrix | 45.30 ns ... InvertUsingMatrix4x4 | 19.20 ns | 0.42" — **issue body** (SKMatrix.Invert() is 2.36x slower than Matrix4x4.Invert() due to P/Invoke overhead.)
-- "SKMatrix44 is converting from SKMatrix44 to Matrix4x4, then running the invert, and then converting back to SKMatrix44. It is slower than raw Matrix4x4, but still 49% of the time." — **issue body** (Even with round-trip conversion SKMatrix44 is 2x faster than SKMatrix, showing the interop cost dominates.)
-- "We've created a 3x2 matrix struct that has 6 floats => 33% less memory. All math are on the C# side => better performance." — **comment by Mikolaytis** (Third-party (Lunacy) has already implemented pure-managed matrix math and seen real performance gains in production.)
-- "I would like to use some new Matrix3x3 type, but that was rejected by the .NET runtime folks." — **comment by mattleibow** (Direct .NET Matrix3x3 reuse is not available; an internal conversion strategy (3x3→4x4 in managed code) is the fallback.)
+- "InvertUsingSKMatrix: 45.30 ns vs InvertUsingMatrix4x4: 19.20 ns — basically half the time" — **issue body benchmark** (Native P/Invoke for matrix invert is ~2.4x slower than managed Matrix4x4)
+- "SKMatrix44 is converting from SKMatrix44 to Matrix4x4, then running the invert, and then converting back — still 49% of the time" — **issue body** (Even with conversion overhead, managed math beats native interop)
+- "In complex rendering scenarios when layer count is way over 100k - we've seen a significant 10-20% perf improvement" — **comment by Lunacy team** (Real-world impact for high-throughput rendering workloads is significant)
 
 ### Code Investigation
 
 | File | Lines | Relevance | Finding |
 |------|-------|-----------|---------|
-| `binding/SkiaSharp/SKMatrix.cs` | 243-417 | direct | TryInvert, IsInvertible, Concat, PreConcat, PostConcat, MapRect, MapPoint, MapPoints, MapVector, MapVectors, and MapRadius all delegate to SkiaApi.sk_matrix_* P/Invoke functions, crossing the managed/native boundary on every call. |
-| `binding/SkiaSharp/SKMatrix44.cs` | 211-243 | direct | SKMatrix44.Invert(), TryInvert(), IsInvertible, Transpose(), Determinant all use System.Numerics.Matrix4x4 methods — no P/Invoke for these operations. This is the existing precedent for pure-managed matrix math. |
-| `binding/SkiaSharp/SKMatrix.cs` | 7 | related | SKMatrix is a partial struct; the 9 float fields (scaleX, skewX, transX, skewY, scaleY, transY, persp0, persp1, persp2) are managed. Only operations like Invert and Map* go native. This means the math can be reimplemented in C# without changing the struct layout. |
-
-### Workarounds
-
-- Use System.Numerics.Matrix4x4 directly for matrix math and convert to SKMatrix only when passing to SkiaSharp drawing APIs.
-- Create a custom 3x2 managed struct (as Lunacy did) to avoid P/Invoke entirely, converting to SKMatrix only at draw-call boundaries.
-
-### Next Questions
-
-- Are all 9 perspective fields ever non-trivial in SkiaSharp usage, or can a 3x2 representation cover 95%+ of use cases?
-- Can the Invert algorithm be ported directly from Skia C++ source (SkMatrix.cpp) to C# without behavioral differences?
-- Should MapPoints still delegate to native for SIMD-heavy batch operations, or is C# SIMD (System.Runtime.Intrinsics) preferable?
+| `binding/SkiaSharp/SKMatrix.cs` | 241-417 | direct | All non-trivial SKMatrix operations (IsInvertible, TryInvert, Concat, PreConcat, PostConcat, MapRect, MapPoint, MapPoints, MapVector, MapVectors, MapRadius) delegate to native via SkiaApi.sk_matrix_* P/Invoke calls. |
+| `binding/SkiaSharp/SKMatrix44.cs` | — | related | SKMatrix44.Invert() already converts to System.Numerics.Matrix4x4 for the invert operation and converts back, demonstrating the pattern that managed math can replace native calls. |
 
 ### Resolution Proposals
 
-**Hypothesis:** Replace P/Invoke calls in SKMatrix with pure C# math, using the same pattern as SKMatrix44 (delegate to System.Numerics types or port the arithmetic directly). The 3x3→4x4 conversion path for Invert is viable; batch Map* operations may benefit from System.Runtime.Intrinsics.
+**Hypothesis:** Replace all sk_matrix_* P/Invoke calls in SKMatrix.cs with equivalent managed C# math using System.Numerics or inline float arithmetic. The 3x3 affine matrix invert is well-known: determinant-based computation in ~10 multiply-add operations.
 
-1. **Replace Invert/Concat with managed math using Matrix4x4 bridge** — fix, confidence 0.80 (80%), cost/m, validated=untested
-   - Implement TryInvert by widening SKMatrix to Matrix4x4 (using zeroed z-row/col, persp2=1 convention), calling Matrix4x4.Invert(), then narrowing back. Implement Concat as pure float arithmetic (3x3 multiply). This matches the SKMatrix44 pattern already in the codebase.
-2. **Port Skia C++ SkMatrix math directly to C#** — fix, confidence 0.75 (75%), cost/l, validated=untested
-   - Read externals/skia/src/core/SkMatrix.cpp and port the invert/concat/map algorithms verbatim to C#. Avoids Matrix4x4 conversion overhead and handles perspective correctly. Higher effort but most accurate.
-3. **Introduce a lightweight SKMatrix3x2 value type** — alternative, confidence 0.70 (70%), cost/l, validated=untested
-   - Add an optional SKMatrix3x2 struct (6 floats) that performs all math in C# and implicitly converts to/from SKMatrix. Users in hot paths can opt in. Low-risk since SKMatrix public API stays unchanged.
+1. **Implement SKMatrix math in pure C#** — fix, cost/s, validated=untested
+   - Replace SkiaApi.sk_matrix_try_invert, sk_matrix_concat, sk_matrix_map_rect, sk_matrix_map_xy, sk_matrix_map_points, sk_matrix_map_vector, sk_matrix_map_vectors, sk_matrix_map_radius with equivalent C# implementations. Use System.Numerics.Matrix4x4 as a conversion bridge or implement direct 3x3 math.
 
-**Recommended proposal:** Replace Invert/Concat with managed math using Matrix4x4 bridge
+**Recommended proposal:** proposal-1
 
-**Why:** Lowest risk approach consistent with the existing SKMatrix44 precedent. Can be done without changing the public SKMatrix API or struct layout.
+**Why:** Directly eliminates the P/Invoke overhead on every matrix operation; already planned by maintainer (milestone 4.x RC 1, cost/s).
 
 ## Recommendations
 
@@ -106,31 +91,16 @@ This is a performance enhancement — SKMatrix is fully functional today, but it
 
 | Field | Value |
 |-------|-------|
-| Suggested action | needs-investigation |
-| Confidence | 0.88 (88%) |
-| Reason | Well-specified enhancement with benchmark evidence and a clear implementation path. Next step is to prototype the managed math and verify numerical equivalence with the native path. |
+| Suggested action | keep-open |
+| Confidence | 0.92 (92%) |
+| Reason | Well-specified performance enhancement with benchmark evidence, already tracked on the 4.x RC 1 milestone. Triage confirms the native calls are still present and the managed implementation path is clear. |
 | Suggested repro platform | linux |
 
 ### Automatable Actions
 
 | Type | Risk | Confidence | Description | Details |
 |------|------|------------|-------------|---------|
-| update-labels | low | 0.95 (95%) | Apply enhancement, core SkiaSharp, and performance tenet labels | labels=type/enhancement, area/SkiaSharp, tenet/performance |
-| add-comment | medium | 0.88 (88%) | Acknowledge the enhancement, confirm investigation path, share workaround | — |
-
-**Comment draft for `add-comment`:**
-
-```markdown
-Thanks for the detailed benchmark data! The pattern you're proposing is already established in `SKMatrix44` which delegates to `System.Numerics.Matrix4x4` for all math operations.
-
-For `SKMatrix`, the most straightforward approach would be:
-1. **Invert** — widen to `Matrix4x4`, call `Matrix4x4.Invert()`, narrow back.
-2. **Concat** — pure 3×3 float multiply in C#.
-3. **MapPoint / MapVector** — inline arithmetic (3 multiplies + 2 adds each).
-4. **MapPoints (batch)** — keep or replace with `System.Runtime.Intrinsics` for SIMD.
-
-**Workaround (available now):** Use `System.Numerics.Matrix4x4` directly for heavy matrix math and convert to `SKMatrix` only at drawing call boundaries, as described in the issue. The Lunacy team's approach of a custom 3×2 struct with implicit cast to `SKMatrix` is another effective option for high-frequency rendering paths.
-```
+| update-labels | low | 0.95 (95%) | Apply type/enhancement, area/SkiaSharp, tenet/performance labels | labels=type/enhancement, area/SkiaSharp, tenet/performance |
 
 <details>
 <summary>Raw JSON</summary>
@@ -141,13 +111,13 @@ For `SKMatrix`, the most straightforward approach would be:
     "schemaVersion": "1.0",
     "number": 2779,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-04-23T22:55:00Z"
+    "analyzedAt": "2026-05-11T05:31:00Z"
   },
-  "summary": "Performance enhancement request to replace P/Invoke native interop in SKMatrix (Invert, Concat, MapRect, MapPoint, etc.) with pure managed C# math, similar to how SKMatrix44 already uses Matrix4x4 operations.",
+  "summary": "SKMatrix operations (Invert, Concat, MapRect, etc.) use native P/Invoke calls that are ~2x slower than equivalent managed C# math; request to replace them with pure C# implementations.",
   "classification": {
     "type": {
       "value": "type/enhancement",
-      "confidence": 0.92
+      "confidence": 0.95
     },
     "area": {
       "value": "area/SkiaSharp",
@@ -159,123 +129,82 @@ For `SKMatrix`, the most straightforward approach would be:
   },
   "evidence": {
     "reproEvidence": {
-      "stepsToReproduce": [
-        "Run the benchmark comparing SKMatrix.Invert() vs Matrix4x4.Invert()",
-        "Observe SKMatrix.Invert() at ~45 ns vs Matrix4x4.Invert() at ~19 ns (2.36x slower)"
+      "codeSnippets": [
+        "SKMatrix.Invert() via SkiaApi.sk_matrix_try_invert — 45.30 ns vs Matrix4x4.Invert 19.20 ns",
+        "SKMatrix44.Invert() converts to Matrix4x4, inverts, converts back — 22.52 ns"
       ],
-      "environmentDetails": "Windows 11 22631.3155, Intel Core i9-9980HK 2.40GHz, .NET 7.0.16 X64 RyuJIT AVX2",
-      "repoLinks": [
-        {
-          "url": "https://github.com/dotnet/runtime/issues/16226",
-          "description": "Rejected .NET runtime proposal for Matrix3x3 type"
-        }
-      ]
+      "attachments": [],
+      "repoLinks": []
     },
     "versionAnalysis": {
       "mentionedVersions": [
-        "net7.0"
+        "4.x RC 1"
       ],
       "currentRelevance": "likely",
-      "relevanceReason": "The P/Invoke calls in SKMatrix have not been replaced with managed math in current code."
+      "relevanceReason": "Issue is open, milestone is 4.x RC 1, native P/Invoke calls still present in SKMatrix.cs"
     }
   },
   "analysis": {
-    "summary": "SKMatrix operations (Invert, Concat, MapRect, MapPoint, MapVector, MapRadius) call native Skia via P/Invoke (sk_matrix_try_invert, sk_matrix_concat, etc.), incurring interop overhead. SKMatrix44 already avoids this by delegating to System.Numerics.Matrix4x4. The request is to port SKMatrix's math to pure C# as well, potentially using Matrix4x4 conversions or a custom 3x2/3x3 struct.",
-    "rationale": "This is a performance enhancement — SKMatrix is fully functional today, but its operations are 2x+ slower than necessary due to P/Invoke overhead. SKMatrix44 already demonstrates the pattern: it uses Matrix4x4 math entirely in C# and exposes implicit conversion to/from Skia types. The contributor and community (Lunacy) confirm feasibility. Type is enhancement because the feature works; the goal is to improve it.",
+    "summary": "SKMatrix currently delegates math operations (Invert, Concat, MapRect, MapPoints, MapVector, MapRadius) to native Skia C++ via P/Invoke (sk_matrix_try_invert, sk_matrix_concat, sk_matrix_map_rect, etc.). The benchmark data shows SKMatrix.Invert() takes ~45 ns vs ~19 ns for managed Matrix4x4.Invert. The proposal is to replace all native calls in SKMatrix with pure C# implementations, similar to how SKMatrix44 already converts to Matrix4x4 for its invert.",
     "codeInvestigation": [
       {
         "file": "binding/SkiaSharp/SKMatrix.cs",
-        "lines": "243-417",
-        "finding": "TryInvert, IsInvertible, Concat, PreConcat, PostConcat, MapRect, MapPoint, MapPoints, MapVector, MapVectors, and MapRadius all delegate to SkiaApi.sk_matrix_* P/Invoke functions, crossing the managed/native boundary on every call.",
+        "lines": "241-417",
+        "finding": "All non-trivial SKMatrix operations (IsInvertible, TryInvert, Concat, PreConcat, PostConcat, MapRect, MapPoint, MapPoints, MapVector, MapVectors, MapRadius) delegate to native via SkiaApi.sk_matrix_* P/Invoke calls.",
         "relevance": "direct"
       },
       {
         "file": "binding/SkiaSharp/SKMatrix44.cs",
-        "lines": "211-243",
-        "finding": "SKMatrix44.Invert(), TryInvert(), IsInvertible, Transpose(), Determinant all use System.Numerics.Matrix4x4 methods — no P/Invoke for these operations. This is the existing precedent for pure-managed matrix math.",
-        "relevance": "direct"
-      },
-      {
-        "file": "binding/SkiaSharp/SKMatrix.cs",
-        "lines": "7",
-        "finding": "SKMatrix is a partial struct; the 9 float fields (scaleX, skewX, transX, skewY, scaleY, transY, persp0, persp1, persp2) are managed. Only operations like Invert and Map* go native. This means the math can be reimplemented in C# without changing the struct layout.",
+        "finding": "SKMatrix44.Invert() already converts to System.Numerics.Matrix4x4 for the invert operation and converts back, demonstrating the pattern that managed math can replace native calls.",
         "relevance": "related"
       }
     ],
     "keySignals": [
       {
-        "text": "InvertUsingSKMatrix | 45.30 ns ... InvertUsingMatrix4x4 | 19.20 ns | 0.42",
+        "text": "InvertUsingSKMatrix: 45.30 ns vs InvertUsingMatrix4x4: 19.20 ns — basically half the time",
+        "source": "issue body benchmark",
+        "interpretation": "Native P/Invoke for matrix invert is ~2.4x slower than managed Matrix4x4"
+      },
+      {
+        "text": "SKMatrix44 is converting from SKMatrix44 to Matrix4x4, then running the invert, and then converting back — still 49% of the time",
         "source": "issue body",
-        "interpretation": "SKMatrix.Invert() is 2.36x slower than Matrix4x4.Invert() due to P/Invoke overhead."
+        "interpretation": "Even with conversion overhead, managed math beats native interop"
       },
       {
-        "text": "SKMatrix44 is converting from SKMatrix44 to Matrix4x4, then running the invert, and then converting back to SKMatrix44. It is slower than raw Matrix4x4, but still 49% of the time.",
-        "source": "issue body",
-        "interpretation": "Even with round-trip conversion SKMatrix44 is 2x faster than SKMatrix, showing the interop cost dominates."
-      },
-      {
-        "text": "We've created a 3x2 matrix struct that has 6 floats => 33% less memory. All math are on the C# side => better performance.",
-        "source": "comment by Mikolaytis",
-        "interpretation": "Third-party (Lunacy) has already implemented pure-managed matrix math and seen real performance gains in production."
-      },
-      {
-        "text": "I would like to use some new Matrix3x3 type, but that was rejected by the .NET runtime folks.",
-        "source": "comment by mattleibow",
-        "interpretation": "Direct .NET Matrix3x3 reuse is not available; an internal conversion strategy (3x3→4x4 in managed code) is the fallback."
+        "text": "In complex rendering scenarios when layer count is way over 100k - we've seen a significant 10-20% perf improvement",
+        "source": "comment by Lunacy team",
+        "interpretation": "Real-world impact for high-throughput rendering workloads is significant"
       }
     ],
-    "workarounds": [
-      "Use System.Numerics.Matrix4x4 directly for matrix math and convert to SKMatrix only when passing to SkiaSharp drawing APIs.",
-      "Create a custom 3x2 managed struct (as Lunacy did) to avoid P/Invoke entirely, converting to SKMatrix only at draw-call boundaries."
-    ],
-    "nextQuestions": [
-      "Are all 9 perspective fields ever non-trivial in SkiaSharp usage, or can a 3x2 representation cover 95%+ of use cases?",
-      "Can the Invert algorithm be ported directly from Skia C++ source (SkMatrix.cpp) to C# without behavioral differences?",
-      "Should MapPoints still delegate to native for SIMD-heavy batch operations, or is C# SIMD (System.Runtime.Intrinsics) preferable?"
-    ],
+    "rationale": "This is a well-scoped enhancement with clear benchmark evidence. SKMatrix is a hot path in rendering pipelines; replacing P/Invoke calls with pure C# math will reduce overhead without changing the public API surface. The issue is already tracked under milestone 4.x RC 1 with labels tenet/performance and cost/s, indicating maintainer intent to implement this. suggestedAction is keep-open as the work is planned and well-specified.",
     "resolution": {
-      "hypothesis": "Replace P/Invoke calls in SKMatrix with pure C# math, using the same pattern as SKMatrix44 (delegate to System.Numerics types or port the arithmetic directly). The 3x3→4x4 conversion path for Invert is viable; batch Map* operations may benefit from System.Runtime.Intrinsics.",
+      "hypothesis": "Replace all sk_matrix_* P/Invoke calls in SKMatrix.cs with equivalent managed C# math using System.Numerics or inline float arithmetic. The 3x3 affine matrix invert is well-known: determinant-based computation in ~10 multiply-add operations.",
       "proposals": [
         {
-          "title": "Replace Invert/Concat with managed math using Matrix4x4 bridge",
-          "description": "Implement TryInvert by widening SKMatrix to Matrix4x4 (using zeroed z-row/col, persp2=1 convention), calling Matrix4x4.Invert(), then narrowing back. Implement Concat as pure float arithmetic (3x3 multiply). This matches the SKMatrix44 pattern already in the codebase.",
+          "id": "proposal-1",
+          "title": "Implement SKMatrix math in pure C#",
           "category": "fix",
-          "confidence": 0.8,
-          "effort": "cost/m",
-          "validated": "untested"
-        },
-        {
-          "title": "Port Skia C++ SkMatrix math directly to C#",
-          "description": "Read externals/skia/src/core/SkMatrix.cpp and port the invert/concat/map algorithms verbatim to C#. Avoids Matrix4x4 conversion overhead and handles perspective correctly. Higher effort but most accurate.",
-          "category": "fix",
-          "confidence": 0.75,
-          "effort": "cost/l",
-          "validated": "untested"
-        },
-        {
-          "title": "Introduce a lightweight SKMatrix3x2 value type",
-          "description": "Add an optional SKMatrix3x2 struct (6 floats) that performs all math in C# and implicitly converts to/from SKMatrix. Users in hot paths can opt in. Low-risk since SKMatrix public API stays unchanged.",
-          "category": "alternative",
-          "confidence": 0.7,
-          "effort": "cost/l",
-          "validated": "untested"
+          "effort": "cost/s",
+          "validated": "untested",
+          "description": "Replace SkiaApi.sk_matrix_try_invert, sk_matrix_concat, sk_matrix_map_rect, sk_matrix_map_xy, sk_matrix_map_points, sk_matrix_map_vector, sk_matrix_map_vectors, sk_matrix_map_radius with equivalent C# implementations. Use System.Numerics.Matrix4x4 as a conversion bridge or implement direct 3x3 math."
         }
       ],
-      "recommendedProposal": "Replace Invert/Concat with managed math using Matrix4x4 bridge",
-      "recommendedReason": "Lowest risk approach consistent with the existing SKMatrix44 precedent. Can be done without changing the public SKMatrix API or struct layout."
+      "recommendedProposal": "proposal-1",
+      "recommendedReason": "Directly eliminates the P/Invoke overhead on every matrix operation; already planned by maintainer (milestone 4.x RC 1, cost/s)."
     }
   },
   "output": {
     "actionability": {
-      "suggestedAction": "needs-investigation",
-      "confidence": 0.88,
-      "reason": "Well-specified enhancement with benchmark evidence and a clear implementation path. Next step is to prototype the managed math and verify numerical equivalence with the native path.",
+      "suggestedAction": "keep-open",
+      "confidence": 0.92,
+      "reason": "Well-specified performance enhancement with benchmark evidence, already tracked on the 4.x RC 1 milestone. Triage confirms the native calls are still present and the managed implementation path is clear.",
       "suggestedReproPlatform": "linux"
     },
     "actions": [
       {
+        "id": "labels-1",
         "type": "update-labels",
-        "description": "Apply enhancement, core SkiaSharp, and performance tenet labels",
+        "description": "Apply type/enhancement, area/SkiaSharp, tenet/performance labels",
         "risk": "low",
         "confidence": 0.95,
         "labels": [
@@ -283,13 +212,6 @@ For `SKMatrix`, the most straightforward approach would be:
           "area/SkiaSharp",
           "tenet/performance"
         ]
-      },
-      {
-        "type": "add-comment",
-        "description": "Acknowledge the enhancement, confirm investigation path, share workaround",
-        "risk": "medium",
-        "confidence": 0.88,
-        "comment": "Thanks for the detailed benchmark data! The pattern you're proposing is already established in `SKMatrix44` which delegates to `System.Numerics.Matrix4x4` for all math operations.\n\nFor `SKMatrix`, the most straightforward approach would be:\n1. **Invert** — widen to `Matrix4x4`, call `Matrix4x4.Invert()`, narrow back.\n2. **Concat** — pure 3×3 float multiply in C#.\n3. **MapPoint / MapVector** — inline arithmetic (3 multiplies + 2 adds each).\n4. **MapPoints (batch)** — keep or replace with `System.Runtime.Intrinsics` for SIMD.\n\n**Workaround (available now):** Use `System.Numerics.Matrix4x4` directly for heavy matrix math and convert to `SKMatrix` only at drawing call boundaries, as described in the issue. The Lunacy team's approach of a custom 3×2 struct with implicit cast to `SKMatrix` is another effective option for high-frequency rendering paths."
       }
     ]
   }
