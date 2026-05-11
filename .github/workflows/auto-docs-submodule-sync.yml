@@ -3,9 +3,6 @@ name: Auto Docs Submodule Sync
 on:
   schedule:
     - cron: "0 10 * * *"  # Daily at 10 AM UTC
-  pull_request:
-    paths:
-      - .github/workflows/auto-docs-submodule-sync.yml
   workflow_dispatch:
 
 permissions:
@@ -49,7 +46,7 @@ jobs:
           fi
 
       - name: Create or update PR
-        if: steps.check.outputs.needs_update == 'true' && github.event_name != 'pull_request'
+        if: steps.check.outputs.needs_update == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           LATEST_MSG: ${{ steps.check.outputs.latest_msg }}

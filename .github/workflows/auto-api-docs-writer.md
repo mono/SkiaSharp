@@ -5,12 +5,6 @@ description: "Daily API documentation pipeline — regenerates XML stubs from CI
 on:
   schedule:
     - cron: "0 8 * * *"
-  pull_request:
-    paths:
-      - .github/workflows/auto-api-docs-writer.md
-      - .github/workflows/auto-api-docs-writer.lock.yml
-      - .github/scripts/api-docs-push-pr.sh
-      - .agents/skills/api-docs/**
   workflow_dispatch:
 
 # -- Custom jobs -------------------------------------------------------

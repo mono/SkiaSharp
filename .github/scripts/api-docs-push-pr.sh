@@ -11,12 +11,6 @@ set -euo pipefail
 DOCS_BRANCH="automation/write-api-docs"
 WORKFLOW_LINK="[auto-api-docs-writer](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-api-docs-writer.lock.yml)"
 
-# --- Skip on pull_request events (CI validation only) ---
-if [ "${GITHUB_EVENT_NAME:-}" = "pull_request" ]; then
-    echo "Skipping push — pull_request event is for CI validation only"
-    exit 0
-fi
-
 # --- Check for changes ---
 cd docs
 git add -A
