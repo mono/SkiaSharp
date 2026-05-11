@@ -59,6 +59,13 @@ New members appear with "To be added." placeholders. **Skip this phase** if:
    - **Look at sample gallery** (`samples/Gallery/Shared/Samples/`) for real-world usage patterns
    - Simple getters/setters and enum members only need summaries
 
+   **Critical rules to avoid common mistakes:**
+   - **NEVER invent API calls** — before writing a code example, verify the method/overload exists by reading the C# source in `binding/`. If you're unsure an API exists, don't use it in examples.
+   - **NEVER guess numeric values** — for enums with standard mappings (ITU-T, CICP, Vulkan), read the actual `MemberValue` from the XML and cross-reference with the source.
+   - **Fill ALL params in ALL overloads** — don't skip params on later overloads just because you documented them on the first overload. Each overload's params must be independently complete.
+   - **Read-only properties use "Gets"** — check the C# source for `{ get; }` vs `{ get; set; }` before writing "Gets or sets".
+   - **Use `<see langword="null" />`** not `<see langword="default" />` for nullable reference parameters.
+
 2. **Extract placeholders to JSON** using the docs tool:
    ```bash
    pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 extract docs/SkiaSharpAPI/ -Output output/docs-work/
@@ -139,12 +146,25 @@ dotnet cake --target=docs-format-docs
 
 Fix any errors it reports. This also syncs extension method docs in `index.xml`.
 
-Then launch a **background agent** to review your changes for quality issues. This catches mistakes that the writing agent may be biased toward missing:
+Then launch a **background agent** to review your changes for quality. This catches mistakes the writing agent is biased toward missing:
 
 ```
-Use a background explore agent to review the changed XML files against
-the checklist in .agents/skills/api-docs/references/checklist.md.
-Report any CRITICAL or IMPORTANT issues found.
+Launch a background explore agent to review the filled JSON files in output/docs-work/.
+Check for these specific issues:
+
+1. FABRICATED APIs — Do any code examples reference methods/overloads that
+   don't exist? Cross-reference against binding/ source code.
+2. WRONG VALUES — Do enum descriptions cite specific numeric values or
+   standard references (ITU-T, H.273, Vulkan)? Verify against the
+   MemberValue in the JSON and the C# source.
+3. INCOMPLETE OVERLOADS — Are there any remaining "To be added." values
+   that should have been filled?
+4. ACCESSOR VERBS — Do any read-only properties say "Gets or sets"?
+   Check against the C# signature in the JSON.
+5. REMARKS QUALITY — Do type-level entries have real content (not just
+   the template placeholders)? Check remarksRequired entries.
+
+Report issues with file name, member docId, and what's wrong.
 ```
 
 Fix any issues the reviewer finds before finishing.
