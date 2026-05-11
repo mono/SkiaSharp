@@ -146,28 +146,56 @@ dotnet cake --target=docs-format-docs
 
 Fix any errors it reports. This also syncs extension method docs in `index.xml`.
 
-Then launch a **background agent** to review your changes for quality. This catches mistakes the writing agent is biased toward missing:
+Then launch **two background agents** in parallel to validate your work. Wait for both to complete and fix any issues they find.
+
+**Agent 1: Fabrication Detector** — catches invented APIs and wrong facts:
 
 ```
-Launch a background explore agent to review the filled JSON files in output/docs-work/.
-Check for these specific issues:
+Launch a background general-purpose agent with this prompt:
 
-1. FABRICATED APIs — Do any code examples reference methods/overloads that
-   don't exist? Cross-reference against binding/ source code.
-2. WRONG VALUES — Do enum descriptions cite specific numeric values or
-   standard references (ITU-T, H.273, Vulkan)? Verify against the
-   MemberValue in the JSON and the C# source.
-3. INCOMPLETE OVERLOADS — Are there any remaining "To be added." values
-   that should have been filled?
-4. ACCESSOR VERBS — Do any read-only properties say "Gets or sets"?
-   Check against the C# signature in the JSON.
-5. REMARKS QUALITY — Do type-level entries have real content (not just
-   the template placeholders)? Check remarksRequired entries.
+You are a documentation accuracy auditor. Your ONLY goal is to find FABRICATED
+content in the JSON documentation files. AI documentation writers frequently
+invent API methods, overloads, and constructor signatures that don't actually
+exist. You must catch every instance.
 
-Report issues with file name, member docId, and what's wrong.
+For each JSON file in output/docs-work/:
+1. Read the JSON file
+2. For EVERY code example in remarks fields:
+   - Extract each method call, constructor call, and property access
+   - Search binding/ source code to verify it exists with that exact signature
+   - Check: does the overload accept those parameter types?
+   - Report any call that doesn't match actual source code
+3. For EVERY enum description that cites a specific number or standard:
+   - Check the MemberValue in the JSON matches what's described
+   - Verify standard references (ITU-T H.273, CICP, Vulkan) are correct
+4. For EVERY property summary that says "Gets or sets":
+   - Check the C# signature — if it has only { get; } then it should say "Gets"
+
+Output a list of issues. For each: file, docId, what's wrong, what it should be.
+If no issues found, say "No fabrication issues found."
 ```
 
-Fix any issues the reviewer finds before finishing.
+**Agent 2: Quality Reviewer** — catches style and completeness issues:
+
+```
+Launch a background general-purpose agent with this prompt:
+
+You are a documentation quality reviewer. Read the checklist at
+.agents/skills/api-docs/references/checklist.md for severity criteria.
+
+For each JSON file in output/docs-work/:
+1. Check for remaining "To be added." values that should have been filled
+2. Check type-level entries (memberType=type) have real remarks content,
+   not template placeholders like [Describe...] or [Show...]
+3. Check summaries add value beyond just restating the member name
+4. Check <see cref> references use correct prefix (T: M: P: F:)
+5. Check boolean params use "true to..." and boolean returns use "true if..."
+6. Check nullable params use <see langword="null" /> not "default"
+
+Report CRITICAL and IMPORTANT issues only. Include file, docId, and fix.
+```
+
+Fix all CRITICAL issues from both agents before finishing. IMPORTANT issues should be fixed if time allows.
 
 ## Resources
 
