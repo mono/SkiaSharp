@@ -28,14 +28,6 @@
     <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>
     <EmccExtraLDFlags Condition="'$(SkiaSharpEnableWebGpu)'=='True'">$(EmccExtraLDFlags) -s USE_WEBGPU=1 --js-library "$(MSBuildThisFileDirectory)skia_wgpu_bridge.js"</EmccExtraLDFlags>
   </PropertyGroup>
-  <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeSkiaSharp)' == 'True' and '$(SkiaSharpEnableWebGpu)' == 'True'">
-    <!--
-      Expose the WebGPU table on Module for diagnostic / advanced use.
-      Not required by skia_wgpu_bridge.js (which uses the local $WebGPU
-      binding directly), but useful for devtools inspection.
-    -->
-    <EmccExportedRuntimeMethod Include="WebGPU" />
-  </ItemGroup>
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeSkiaSharp)' == 'True' and '$(SkiaSharpEnableWebGpu)' == 'True'">
     <!--
       Force-link the skia_wgpu_bridge.js library's $SkiaSharpWebGpuBridge
