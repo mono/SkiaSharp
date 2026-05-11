@@ -1,5 +1,6 @@
 ﻿using System;
-
+using System.Collections.Generic;
+using System.Diagnostics;
 using HarfBuzzSharp;
 
 namespace SkiaSharp.HarfBuzz
@@ -82,26 +83,55 @@ namespace SkiaSharp.HarfBuzz
 
 			using var pathBuilder = new SKPathBuilder();
 
-			// generate a path for each glyph
-			for (var i = 0; i < pointSpan.Length; i++)
+			// Many GetGlyphPath calls is faster and allocates less memory than a single GetGlyphPaths call
+			var glyphCache = new Dictionary<ushort, SKPath>();
+			try
 			{
-				// get the glyph path
-				using var glyphPath = font.GetGlyphPath((ushort)glyphSpan[i]);
+				// generate a path for each glyph
+				for (var i = 0; i < pointSpan.Length; i++)
+				{
+					// get the glyph path
+					var glyph = (ushort)glyphSpan[i];
+#if NET6_0_OR_GREATER
+					ref var glyphPath = ref System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(glyphCache, glyph, out var exists);
+					if (!exists)
+					{
+						glyphPath = font.GetGlyphPath(glyph);
+					}
 
-				if (glyphPath is null || glyphPath.IsEmpty)
-					continue;
+					Debug.Assert(glyphPath != null);
+#else
+					if (!glyphCache.TryGetValue(glyph, out var glyphPath))
+					{
+						glyphPath = font.GetGlyphPath(glyph);
+						glyphCache.Add(glyph, glyphPath);
+					}
+#endif
 
-				// translate the glyph path
-				var point = pointSpan[i];
-				var matrix = new SKMatrix(
-					1, 0, point.X + alignXOffset,
-					0, 1, point.Y,
-					0, 0, 1
-				);
-				glyphPath.Transform(in matrix);
+					if (glyphPath is null || glyphPath.IsEmpty)
+						continue;
 
-				// append the glyph path
-				pathBuilder.AddPath(glyphPath);
+					// translate the glyph path
+					var point = pointSpan[i];
+					var matrix = new SKMatrix(
+						1, 0, point.X + alignXOffset,
+						0, 1, point.Y,
+						0, 0, 1
+					);
+					glyphPath.Transform(in matrix);
+
+					// append the glyph path
+					pathBuilder.AddPath(glyphPath);
+				}
+			}
+			finally
+			{
+				foreach (var path in glyphCache.Values)
+				{
+					path.Dispose();
+				}
+
+				glyphCache.Clear();
 			}
 
 			return pathBuilder.Detach();
