@@ -24,31 +24,16 @@ namespace SkiaSharp.Tests.Graphite
 
 			var info = new SKImageInfo (96, 96, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-			byte[] ganeshPixels;
-			byte[] graphitePixels;
+			// Both renderers draw the SAME scene; both pull from VulkanLoader.Shared,
+			// exercising the "two consumers, one device" coexistence path.
+			var scene = new CoexistenceScene { Info = info };
+			var ganesh   = new GaneshVulkanRenderer ();
+			var graphite = new GraphiteVulkanRenderer ();
+			Assert.True (ganesh.IsAvailable,   $"Ganesh+Vulkan renderer unavailable: {ganesh.UnavailableReason}");
+			Assert.True (graphite.IsAvailable, $"Graphite+Vulkan renderer unavailable: {graphite.UnavailableReason}");
 
-			using (var ganesh = new GaneshVulkanSetup ())
-			using (var graphite = new GraphiteVulkanSetup ()) {
-				Assert.True (ganesh.IsAvailable,    $"Ganesh+Vulkan setup unavailable: {ganesh.UnavailableReason}");
-				Assert.True (graphite.IsAvailable,  $"Graphite+Vulkan setup unavailable: {graphite.UnavailableReason}");
-
-				// Both setups draw the SAME scene through their respective canvases.
-				Action<SKCanvas> draw = canvas => {
-					canvas.Clear (SKColors.White);
-					using var paint = new SKPaint { Color = SKColors.DarkGreen, IsAntialias = true };
-					canvas.DrawCircle (48, 48, 32, paint);
-				};
-
-				using (var s = ganesh.CreateSurface (info)) {
-					draw (s.Canvas);
-					ganeshPixels = s.ReadPixels ();
-				}
-
-				using (var s = graphite.CreateSurface (info)) {
-					draw (s.Canvas);
-					graphitePixels = s.ReadPixels ();
-				}
-			}
+			var ganeshPixels   = ganesh.RenderAsync   (scene, info, default).GetAwaiter ().GetResult ();
+			var graphitePixels = graphite.RenderAsync (scene, info, default).GetAwaiter ().GetResult ();
 
 			// Both must have produced output, and neither destabilised the other.
 			Assert.Equal (ganeshPixels.Length, graphitePixels.Length);
@@ -68,6 +53,22 @@ namespace SkiaSharp.Tests.Graphite
 			Assert.True (meanDelta < 2.55, // ~1% of 255
 				$"Ganesh and Graphite produced visibly different pixels for the same scene: " +
 				$"mean per-channel delta {meanDelta:F2} (max {maxDelta}), threshold 2.55 (~1%).");
+		}
+
+		// Test-local scene; lives outside the SceneCatalog so it stays scoped
+		// to this test's specific assertion (cross-backend parity).
+		private sealed class CoexistenceScene : ISkiaScene
+		{
+			public SKImageInfo Info { get; set; }
+			public string Name => nameof (CoexistenceScene);
+			public SKImageInfo SuggestedInfo => Info;
+			public SceneRequirements Requires => SceneRequirements.None;
+			public void Draw (SKCanvas canvas)
+			{
+				canvas.Clear (SKColors.White);
+				using var paint = new SKPaint { Color = SKColors.DarkGreen, IsAntialias = true };
+				canvas.DrawCircle (48, 48, 32, paint);
+			}
 		}
 	}
 }

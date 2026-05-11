@@ -20,8 +20,8 @@ namespace SkiaSharp.Tests.Graphite
 		{
 			Skip.IfNot (IsLinux, "Lavapipe-only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan), "Graphite/Vulkan unavailable.");
-			using var setup = new GraphiteVulkanSetup ();
-			Skip.IfNot (setup.IsAvailable, setup.UnavailableReason);
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
 			var ctx = MakeContext ();
 			Assert.NotNull (ctx);
@@ -50,8 +50,8 @@ namespace SkiaSharp.Tests.Graphite
 			// "no crash", not "non-null".
 			Skip.IfNot (IsLinux, "Lavapipe-only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan), "Graphite/Vulkan unavailable.");
-			using var setup = new GraphiteVulkanSetup ();
-			Skip.IfNot (setup.IsAvailable, setup.UnavailableReason);
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
 			using var ctx = MakeContext ();
 			using var recorder = ctx.CreateRecorder ();
@@ -73,8 +73,8 @@ namespace SkiaSharp.Tests.Graphite
 			// is the safe order — each child disposed before its parent.
 			Skip.IfNot (IsLinux, "Lavapipe-only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan), "Graphite/Vulkan unavailable.");
-			using var setup = new GraphiteVulkanSetup ();
-			Skip.IfNot (setup.IsAvailable, setup.UnavailableReason);
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
 			var ctx = MakeContext ();
 			var recorder = ctx.CreateRecorder ();

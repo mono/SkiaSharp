@@ -2,158 +2,180 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
-	/// Base class for visual tests. Subclass and write tests that take a
-	/// <see cref="VisualSetup"/> from <see cref="AllSetups"/> (or one of the
-	/// filtered MemberData sources) and call <see cref="VerifyDraw"/>:
+	/// Base class for visual tests. Provides the matrix theory data
+	/// (<see cref="Matrix"/>) — every (renderer × scene) pair where the
+	/// renderer is compatible with the scene's requirements — and the
+	/// per-cell comparison harness (<see cref="VerifyScene"/>).
 	///
-	/// <code>
-	/// public class MyVisualTests : VisualTestBase
-	/// {
-	///     [Theory, MemberData(nameof(AllSetups))]
-	///     public void RedSquare(VisualSetup setup) =>
-	///         VerifyDraw (setup, "red_square", new SKImageInfo (64, 64), canvas => {
-	///             canvas.Clear (SKColors.White);
-	///             using var p = new SKPaint { Color = SKColors.Red };
-	///             canvas.DrawRect (16, 16, 32, 32, p);
-	///         });
-	/// }
-	/// </code>
+	/// <para>
+	/// Theory data is passed as <c>(string rendererName, string sceneName)</c>
+	/// (xUnit-serializable). The catalog lookup happens inside the test body,
+	/// so discovery never instantiates GPU contexts.
+	/// </para>
 	///
-	/// First run with no golden file: the framework writes the actual image to
-	/// the failure-inspection directory and fails the test. To accept a new
-	/// golden, set <c>SKIASHARP_UPDATE_GOLDENS=1</c> and re-run — the framework
-	/// will write the rendered output to the source-tree <c>Goldens/</c>
-	/// directory. Subsequent runs without the env var will compare.
+	/// <para>
+	/// <b>Golden file lookup</b>: per-renderer override first, shared fallback:
+	/// <list type="number">
+	///   <item><c>Goldens/{renderer.Name}/{scene.Name}.png</c> — explicit override</item>
+	///   <item><c>Goldens/_shared/{scene.Name}.png</c> — canonical baseline</item>
+	/// </list>
+	/// </para>
 	///
-	/// Tolerance: <see cref="MaxChannelDelta"/> is the per-channel max
-	/// allowable difference. Default 2 (catch real regressions, ride out
-	/// 1-bit rounding in software rasterizers). Override per-test if needed.
+	/// <para>
+	/// <b>Update mode</b>: set <c>SKIASHARP_UPDATE_GOLDENS=1</c>. By default
+	/// writes to <c>_shared/</c>. To record a per-renderer override (accepted
+	/// platform divergence), also set <c>SKIASHARP_GOLDEN_SCOPE=renderer</c>.
+	/// </para>
 	/// </summary>
 	public abstract class VisualTestBase : BaseTest
 	{
-		private const string EnvUpdateGoldens = "SKIASHARP_UPDATE_GOLDENS";
+		private const string EnvUpdateGoldens   = "SKIASHARP_UPDATE_GOLDENS";
+		private const string EnvGoldenScope     = "SKIASHARP_GOLDEN_SCOPE";
+		private const string SharedGoldensDir   = "_shared";
 
-		// Setups are cheap value-y objects: they hold a Name + an availability
-		// probe but NOT any SKObject GPU resources. Per-test surfaces (returned
-		// by VisualSetup.CreateSurface) own the GRContext/SKGraphiteContext/etc.
-		// and dispose them all together — keeps the assembly-level leak check
-		// in GarbageCleanupFixture happy.
-		//
-		// MemberData methods are evaluated by xUnit at TEST DISCOVERY TIME (not
-		// run time), so they must not allocate GPU resources.
-
-		public static IEnumerable<object[]> AllSetups () => Setups (
-			new RasterSetup (),
-			new GaneshVulkanSetup (),
-			new GraphiteVulkanSetup (),
-			new MetalSetup ());
-
-		public static IEnumerable<object[]> GpuSetups () => Setups (
-			new GaneshVulkanSetup (),
-			new GraphiteVulkanSetup (),
-			new MetalSetup ());
-
-		public static IEnumerable<object[]> RasterSetups () => Setups (
-			new RasterSetup ());
-
-		public static IEnumerable<object[]> GraphiteSetups () => Setups (
-			new GraphiteVulkanSetup (),
-			new MetalSetup ());
-
-		public static IEnumerable<object[]> GaneshSetups () => Setups (
-			new GaneshVulkanSetup ());
-
-		private static IEnumerable<object[]> Setups (params VisualSetup[] setups) =>
-			setups.Select (s => new object[] { s });
-
-		/// <summary>Default per-channel tolerance. Override per-test as needed.</summary>
+		/// <summary>Per-channel max delta. Software ICDs (Lavapipe, llvmpipe)
+		/// are bit-stable; 2 rides out 1-bit rounding while catching regressions.</summary>
 		protected virtual int MaxChannelDelta => 2;
 
 		/// <summary>
-		/// Render <paramref name="draw"/> into a fresh surface from
-		/// <paramref name="setup"/> and compare against the golden file
-		/// at <c>Goldens/{setup.Name}/{goldenName}.png</c>. Skips if the
-		/// setup is unavailable. Fails with a clear message + saved actual/diff
-		/// images if the comparison fails or the golden is missing.
+		/// Full (renderer × scene) matrix, filtered to compatible cells (e.g.
+		/// scenes that need GPU are skipped against raster renderers).
 		/// </summary>
-		protected void VerifyDraw (VisualSetup setup, string goldenName, SKImageInfo info, Action<SKCanvas> draw)
+		public static IEnumerable<object[]> Matrix ()
 		{
-			Skip.IfNot (setup.IsAvailable, $"Setup '{setup.Name}' unavailable: {setup.UnavailableReason}");
-
-			byte[] actualPixels;
-			using (var surface = setup.CreateSurface (info)) {
-				draw (surface.Canvas);
-				actualPixels = surface.ReadPixels ();
+			// Note: this is evaluated AT DISCOVERY TIME. Cheap probes only —
+			// no GPU resource allocation. RendererCatalog and SceneCatalog
+			// both lazy-instantiate on first access, but constructors are
+			// metadata-only by contract (see IRenderer doc).
+			foreach (var renderer in RendererCatalog.All) {
+				foreach (var scene in SceneCatalog.All) {
+					if (!renderer.Caps.Satisfies (scene.Requires))
+						continue;
+					yield return new object[] { renderer.Name, scene.Name };
+				}
 			}
-
-			var rgbaInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
-			Compare (setup.Name, goldenName, rgbaInfo, actualPixels);
 		}
 
-		private void Compare (string setupName, string goldenName, SKImageInfo info, byte[] actual)
+		/// <summary>
+		/// Convenience: every available renderer's name. Useful for scenes
+		/// that want to write one theory per scene (with per-scene overrides
+		/// like tolerance) and fan it across renderers.
+		/// </summary>
+		public static IEnumerable<object[]> AllRenderers () =>
+			RendererCatalog.AllNames.Select<string, object[]> (n => new object[] { n });
+
+		/// <summary>Run a single (renderer, scene) cell.</summary>
+		protected async Task VerifyScene (string rendererName, string sceneName, CancellationToken ct = default)
 		{
-			var sourceGoldenPath  = SourceGoldenPath (setupName, goldenName);
-			var runtimeGoldenPath = RuntimeGoldenPath (setupName, goldenName);
+			var renderer = RendererCatalog.Get (rendererName);
+			var scene    = SceneCatalog.Get (sceneName);
 
-			// Prefer the source-tree golden (lets devs edit + run without rebuild);
-			// fall back to the runtime copy that the build pipeline copied.
-			var goldenPath = File.Exists (sourceGoldenPath) ? sourceGoldenPath
-			               : File.Exists (runtimeGoldenPath) ? runtimeGoldenPath
-			               : null;
+			Skip.IfNot (renderer.IsAvailable,
+				$"Renderer '{renderer.Name}' unavailable: {renderer.UnavailableReason}");
+			Skip.IfNot (renderer.Caps.Satisfies (scene.Requires),
+				$"Scene '{scene.Name}' requires {scene.Requires}, renderer offers {renderer.Caps}");
 
-			var update = (Environment.GetEnvironmentVariable (EnvUpdateGoldens) ?? "").Trim ();
-			var updateMode = update == "1" || update.Equals ("true", StringComparison.OrdinalIgnoreCase);
+			var actual = await renderer.RenderAsync (scene, scene.SuggestedInfo, ct);
+			var rgba = new SKImageInfo (scene.SuggestedInfo.Width, scene.SuggestedInfo.Height,
+				SKColorType.Rgba8888, SKAlphaType.Premul);
+			Compare (renderer.Name, scene.Name, rgba, actual);
+		}
 
+		// ---- Comparison ----
+
+		private void Compare (string rendererName, string sceneName, SKImageInfo info, byte[] actual)
+		{
+			// Lookup: renderer-specific override → shared baseline.
+			var goldenPath = ResolveGoldenForRead (rendererName, sceneName);
+
+			var updateRequested = IsTrue (Environment.GetEnvironmentVariable (EnvUpdateGoldens));
 			if (goldenPath == null) {
-				if (updateMode) {
-					WritePng (sourceGoldenPath, info, actual);
+				if (updateRequested) {
+					var writeTo = ResolveGoldenForWrite (rendererName, sceneName, exists: false);
+					WritePng (writeTo, info, actual);
 					return;
 				}
-				var actualOut = WritePng (FailurePath (setupName, goldenName, ".actual.png"), info, actual);
+				var actualMissingOut = WritePng (FailurePath (rendererName, sceneName, ".actual.png"), info, actual);
+				var sharedPath   = SourceGoldenPath (SharedGoldensDir, sceneName);
 				throw new Xunit.Sdk.XunitException (
-					$"No golden image at '{sourceGoldenPath}'. Actual output saved to '{actualOut}'. " +
-					$"To accept this output as the new golden, re-run with {EnvUpdateGoldens}=1.");
+					$"No golden image found for renderer '{rendererName}' scene '{sceneName}'. " +
+					$"Looked in '{SourceGoldenPath (rendererName, sceneName)}' and '{sharedPath}'. " +
+					$"Actual output saved to '{actualMissingOut}'. " +
+					$"Re-run with {EnvUpdateGoldens}=1 to record as the shared golden (default), " +
+					$"or {EnvUpdateGoldens}=1 {EnvGoldenScope}=renderer for a per-renderer override.");
 			}
 
 			var golden = LoadPngAsRgba (goldenPath, info);
 			var diff   = ComputeDiff (actual, golden, info, MaxChannelDelta);
+			if (!diff.Failed)
+				return;
 
-			if (diff.Failed) {
-				if (updateMode) {
-					WritePng (sourceGoldenPath, info, actual);
-					return;
-				}
-				var actualOut = WritePng (FailurePath (setupName, goldenName, ".actual.png"), info, actual);
-				var diffOut   = WritePng (FailurePath (setupName, goldenName, ".diff.png"),   info, diff.DiffImage);
-				throw new Xunit.Sdk.XunitException (
-					$"Visual diff against '{goldenPath}': max channel delta {diff.MaxDelta} exceeds tolerance {MaxChannelDelta}. " +
-					$"Mismatched pixels: {diff.MismatchCount}/{info.Width * info.Height}. " +
-					$"Actual: '{actualOut}', diff: '{diffOut}'. " +
-					$"If this output is correct, re-run with {EnvUpdateGoldens}=1 to update the golden.");
+			if (updateRequested) {
+				var writeTo = ResolveGoldenForWrite (rendererName, sceneName, exists: true);
+				WritePng (writeTo, info, actual);
+				return;
 			}
+
+			var actualOut = WritePng (FailurePath (rendererName, sceneName, ".actual.png"), info, actual);
+			var diffOut   = WritePng (FailurePath (rendererName, sceneName, ".diff.png"),   info, diff.DiffImage);
+			throw new Xunit.Sdk.XunitException (
+				$"Visual diff against '{goldenPath}': max channel delta {diff.MaxDelta} exceeds tolerance {MaxChannelDelta}. " +
+				$"Mismatched pixels: {diff.MismatchCount}/{info.Width * info.Height}. " +
+				$"Actual: '{actualOut}', diff: '{diffOut}'. " +
+				$"If this divergence is expected for this renderer, re-run with " +
+				$"{EnvUpdateGoldens}=1 {EnvGoldenScope}=renderer to record a per-renderer override; " +
+				$"otherwise fix the underlying regression.");
+		}
+
+		private static bool IsTrue (string v)
+		{
+			if (string.IsNullOrEmpty (v)) return false;
+			v = v.Trim ();
+			return v == "1" || v.Equals ("true", StringComparison.OrdinalIgnoreCase);
 		}
 
 		// ---- Path resolution ----
 
-		// The runtime location is where the test runner actually executes from
-		// (bin/.../net10.0/Goldens/...). Goldens get copied there by the project.
-		private static string RuntimeGoldenPath (string setup, string golden) =>
-			Path.Combine (RuntimeRoot, "Goldens", setup, golden + ".png");
+		private static string ResolveGoldenForRead (string rendererName, string sceneName)
+		{
+			// Source tree first (lets devs edit + run without rebuild), then
+			// the build-copied runtime path. Renderer-specific override wins
+			// over shared baseline.
+			foreach (var dir in new[] { rendererName, SharedGoldensDir }) {
+				var src = SourceGoldenPath (dir, sceneName);
+				if (File.Exists (src)) return src;
+				var rt = RuntimeGoldenPath (dir, sceneName);
+				if (File.Exists (rt))  return rt;
+			}
+			return null;
+		}
 
-		// The source-tree location is where the goldens are committed
-		// (tests/Tests/SkiaSharp/Visual/Goldens/...). Found by walking up from
-		// the test assembly's directory until we hit the source-tree pattern.
-		private static string SourceGoldenPath (string setup, string golden) =>
-			Path.Combine (SourceRoot, "Goldens", setup, golden + ".png");
+		private static string ResolveGoldenForWrite (string rendererName, string sceneName, bool exists)
+		{
+			// Default scope: shared (the common, expected case). Operators
+			// explicitly opt into a per-renderer override for accepted
+			// platform divergences.
+			var scope = (Environment.GetEnvironmentVariable (EnvGoldenScope) ?? "").Trim ()
+				.ToLowerInvariant ();
+			var dir = scope == "renderer" ? rendererName : SharedGoldensDir;
+			return SourceGoldenPath (dir, sceneName);
+		}
 
-		private static string FailurePath (string setup, string golden, string suffix) =>
-			Path.Combine (RuntimeRoot, "_failures", setup, golden + suffix);
+		private static string RuntimeGoldenPath (string dir, string scene) =>
+			Path.Combine (RuntimeRoot, "Goldens", dir, scene + ".png");
+
+		private static string SourceGoldenPath (string dir, string scene) =>
+			Path.Combine (SourceRoot, "Goldens", dir, scene + ".png");
+
+		private static string FailurePath (string rendererName, string scene, string suffix) =>
+			Path.Combine (RuntimeRoot, "_failures", rendererName, scene + suffix);
 
 		private static string RuntimeRoot =>
 			Path.GetDirectoryName (typeof (VisualTestBase).Assembly.Location);
@@ -162,7 +184,6 @@ namespace SkiaSharp.Tests.Visual
 		private static string SourceRoot {
 			get {
 				if (sourceRootCache != null) return sourceRootCache;
-				// Walk up from the assembly until we find a `tests/Tests/SkiaSharp/Visual` directory.
 				var dir = RuntimeRoot;
 				for (int i = 0; i < 12 && dir != null; i++) {
 					var candidate = Path.Combine (dir, "tests", "Tests", "SkiaSharp", "Visual");
@@ -172,14 +193,12 @@ namespace SkiaSharp.Tests.Visual
 					}
 					dir = Path.GetDirectoryName (dir);
 				}
-				// Fallback: keep goldens next to the test assembly. Update mode will
-				// just write here and require a manual copy back to source.
 				sourceRootCache = Path.Combine (RuntimeRoot, "Goldens-source-fallback");
 				return sourceRootCache;
 			}
 		}
 
-		// ---- PNG read/write via SkiaSharp itself ----
+		// ---- PNG read/write ----
 
 		private static string WritePng (string path, SKImageInfo info, byte[] rgbaPixels)
 		{
@@ -193,10 +212,9 @@ namespace SkiaSharp.Tests.Visual
 
 		private static byte[] LoadPngAsRgba (string path, SKImageInfo expectedInfo)
 		{
-			using var data = SKData.Create (path);
-			using var codec = SKCodec.Create (data);
-			if (codec == null)
-				throw new InvalidOperationException ($"Failed to decode golden PNG at '{path}'");
+			using var data  = SKData.Create (path);
+			using var codec = SKCodec.Create (data)
+				?? throw new InvalidOperationException ($"Failed to decode golden PNG at '{path}'");
 			if (codec.Info.Width != expectedInfo.Width || codec.Info.Height != expectedInfo.Height)
 				throw new InvalidOperationException ($"Golden PNG '{path}' is {codec.Info.Width}x{codec.Info.Height} but the test rendered {expectedInfo.Width}x{expectedInfo.Height}");
 			var pixels = new byte[expectedInfo.BytesSize];
@@ -210,13 +228,9 @@ namespace SkiaSharp.Tests.Visual
 			return pixels;
 		}
 
-		private static IntPtr PinPixels (byte[] pixels)
-		{
-			// Caller guarantees pixels stays alive for the duration of the SKPixmap
-			// (pixmap is used only inside WritePng, returns before pixels can be GC'd).
-			return System.Runtime.InteropServices.GCHandle.Alloc (
+		private static IntPtr PinPixels (byte[] pixels) =>
+			System.Runtime.InteropServices.GCHandle.Alloc (
 				pixels, System.Runtime.InteropServices.GCHandleType.Pinned).AddrOfPinnedObject ();
-		}
 
 		// ---- Pixel comparison ----
 
@@ -225,7 +239,7 @@ namespace SkiaSharp.Tests.Visual
 			public bool   Failed;
 			public int    MaxDelta;
 			public int    MismatchCount;
-			public byte[] DiffImage;     // RGBA: red=high diff, green=in tolerance, original=identical
+			public byte[] DiffImage;
 		}
 
 		private static DiffResult ComputeDiff (byte[] actual, byte[] golden, SKImageInfo info, int tolerance)
@@ -250,19 +264,10 @@ namespace SkiaSharp.Tests.Visual
 				if (max > maxDelta) maxDelta = max;
 				if (max > tolerance) {
 					mismatch++;
-					// Highlight as bright red in the diff image.
-					diffImage[i + 0] = 255;
-					diffImage[i + 1] = 0;
-					diffImage[i + 2] = 0;
-					diffImage[i + 3] = 255;
+					diffImage[i + 0] = 255; diffImage[i + 1] = 0;   diffImage[i + 2] = 0;   diffImage[i + 3] = 255;
 				} else if (max > 0) {
-					// In-tolerance differences: amber.
-					diffImage[i + 0] = 255;
-					diffImage[i + 1] = 200;
-					diffImage[i + 2] = 0;
-					diffImage[i + 3] = 255;
+					diffImage[i + 0] = 255; diffImage[i + 1] = 200; diffImage[i + 2] = 0;   diffImage[i + 3] = 255;
 				} else {
-					// Bit-exact: dim grey so the eye can see the shape of the rendered scene.
 					diffImage[i + 0] = (byte)(actual[i + 0] / 4);
 					diffImage[i + 1] = (byte)(actual[i + 1] / 4);
 					diffImage[i + 2] = (byte)(actual[i + 2] / 4);
