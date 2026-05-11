@@ -134,4 +134,4 @@ Your workflow:
 2. **Phase 4 (Write)** — fill JSON files with documentation
 3. **Phase 5 (Review)** — launch two background agents, fix issues, repeat until clean
 
-Invalid docs are worse than no docs. Only validated, accurate documentation should remain in the JSON files when you finish.
+**Do NOT create issues, PRs, or comments.** The post-step handles the PR. Do not use `create_issue` or `create_pull_request`.
