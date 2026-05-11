@@ -10,6 +10,16 @@ string[] EMSCRIPTEN_FEATURES = Argument("emscriptenFeatures", EnvironmentVariabl
     .Split(",").Where(f => f != "none").ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
+string SUPPORT_GRAPHITE_VAR = Argument("supportGraphite", EnvironmentVariable("SUPPORT_GRAPHITE") ?? "false");
+bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower() == "true";
+
+// Graphite on WASM uses Dawn-via-Emscripten (skia_use_webgpu drives the wgpu C++ -> emscripten/html5_webgpu bridge).
+// When Graphite is on, force-enable both. They follow the CanvasKit WebGPU recipe in
+// externals/skia/modules/canvaskit/compile.sh and require -sUSE_WEBGPU=1 + -sASYNCIFY at
+// the FINAL link step (.NET WASM bundle), not here -- libSkiaSharp.a is just a static archive.
+bool SUPPORT_DAWN = SUPPORT_GRAPHITE;
+bool SUPPORT_WEBGPU = SUPPORT_GRAPHITE;
+
 string CC = Argument("cc", "emcc");
 string CXX = Argument("cxx", "em++");
 string AR = Argument("ar", "emar");
@@ -33,6 +43,13 @@ Task("libSkiaSharp")
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
+        // is_canvaskit is the Skia switch that makes :graphite's Dawn-backed
+        // sources resolve <webgpu/webgpu_cpp.h> via Emscripten's bundled headers
+        // (added by -sUSE_WEBGPU=1 at the final link) instead of trying to
+        // include the native-Dawn-generated webgpu_cpp.h that doesn't exist on
+        // Emscripten. We only flip it on when SUPPORT_GRAPHITE is true so the
+        // existing Ganesh/WebGL path stays unchanged.
+        $"is_canvaskit={SUPPORT_GRAPHITE} ".ToLower() +
         $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
         $"skia_enable_fontmgr_custom_embedded=true " +
@@ -58,6 +75,9 @@ Task("libSkiaSharp")
         $"skia_use_vulkan=false " +
         $"skia_use_wuffs=true " +
         $"skia_enable_skottie=true " +
+        $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower() +
+        $"skia_use_dawn={SUPPORT_DAWN} ".ToLower() +
+        $"skia_use_webgpu={SUPPORT_WEBGPU} ".ToLower() +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
@@ -74,12 +94,26 @@ Task("libSkiaSharp")
 
     var a = SKIA_PATH.CombineWithFilePath($"out/wasm/libSkiaSharp.a");
 
-    // separate all the .a.wasm files into .o files
+    // Extract every Skia static archive's .o files and merge them into libSkiaSharp.a
+    // so the consumer's final link sees a single fat archive. Archive naming differs
+    // by build mode:
+    //   * Default WASM build → `*.a.wasm` (set by gn/toolchain/BUILD.gn).
+    //   * canvaskit / Graphite-on-WebGPU build (is_canvaskit=true) → `*.a` (no .wasm
+    //     suffix), because that's the canvaskit convention upstream.
+    // The merge must skip libSkiaSharp.a itself (we're appending INTO it) and skip
+    // libHarfBuzzSharp.a.wasm (separate consumer-facing archive). Globbing both
+    // patterns keeps both build modes working.
     var skiaOut = SKIA_PATH.Combine("out/wasm");
     var mergeDir = skiaOut.Combine("obj/merge");
     EnsureDirectoryExists(mergeDir);
     CleanDirectories(mergeDir.FullPath);
-    foreach (var file in GetFiles($"{skiaOut}/*.a.wasm")) {
+    var archivesToMerge = GetFiles($"{skiaOut}/*.a.wasm").ToList();
+    archivesToMerge.AddRange(GetFiles($"{skiaOut}/*.a"));
+    foreach (var file in archivesToMerge) {
+        var name = file.GetFilename().FullPath;
+        // libSkiaSharp.a is our output; libHarfBuzzSharp.* ships separately.
+        if (name == "libSkiaSharp.a" || name.StartsWith("libHarfBuzzSharp."))
+            continue;
         RunProcess(AR, new ProcessSettings {
             Arguments = $"x \"{file}\"",
             WorkingDirectory = mergeDir.FullPath,
