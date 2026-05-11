@@ -79,6 +79,12 @@ network:
 permissions:
   contents: read
 
+# -- Safe outputs ------------------------------------------------------
+# All GitHub writes (push, PR) are done in post-steps via bash.
+# Stage all safe outputs so the agent can't create issues/PRs directly.
+safe-outputs:
+  staged: true
+
 # -- Pre-agent steps (host) -------------------------------------------
 steps:
   - name: Set up agent output directory
