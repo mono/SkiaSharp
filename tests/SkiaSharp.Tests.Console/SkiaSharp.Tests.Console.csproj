@@ -24,6 +24,10 @@
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="coverlet.msbuild" Version="10.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" Condition="$(TargetFramework.StartsWith('net4'))" />
+    <!-- Drives Chromium for the wasm-* renderer cells. Linux/macOS only;
+         skipped on net48 since Playwright doesn't support .NET Framework. -->
+    <PackageReference Include="Microsoft.Playwright" Version="1.49.0"
+                      Condition="!$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
 
   <ItemGroup>
