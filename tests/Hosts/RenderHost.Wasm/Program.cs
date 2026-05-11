@@ -30,7 +30,7 @@ public static partial class Program
 
 		byte[] pixels = rendererName switch {
 			"wasm-raster"        => WasmRenderers.RenderRaster (scene, info),
-			"wasm-ganesh-gles"   => WasmRenderers.RenderGaneshGl (scene, info),
+			"wasm-ganesh-gles"   => await WasmRenderers.RenderGaneshGlAsync (scene, info),
 			"wasm-graphite-dawn" => await WasmRenderers.RenderGraphiteDawnAsync (scene, info),
 			_ => throw new ArgumentException ($"Unknown renderer '{rendererName}'"),
 		};

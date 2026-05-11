@@ -40,10 +40,16 @@
        targets, which we don't consume here because we project-reference
        SkiaSharp directly. Replicate the same emcc flags inline so the
        final link resolves wgpu:: symbols. -->
-  <PropertyGroup Condition="'$(SkiaSharpEnableWebGpu)'=='True'">
-    <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGPU=1 --js-library "$(MSBuildThisFileDirectory)..\..\..\native\wasm\skia_wgpu_bridge.js"</EmccExtraLDFlags>
-    <EmccExtraLDFlags>$(EmccExtraLDFlags) -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=['%24SkiaSharpWebGpuBridge']</EmccExtraLDFlags>
+  <PropertyGroup>
+    <EmccExtraLDFlags Condition="'$(SkiaSharpEnableWebGpu)'=='True'">$(EmccExtraLDFlags) -s USE_WEBGPU=1 --js-library "$(MSBuildThisFileDirectory)..\..\..\native\wasm\skia_wgpu_bridge.js"</EmccExtraLDFlags>
+    <EmccExtraLDFlags Condition="'$(SkiaSharpEnableWebGpu)'=='True'">$(EmccExtraLDFlags) -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=['%24SkiaSharpWebGpuBridge']</EmccExtraLDFlags>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Expose Emscripten's $GL runtime on Module so SKWebGl can walk to
+         it via JSHost.DotnetInstance and dispatch registerContext /
+         makeContextCurrent from C# without needing a js-library shim. -->
+    <EmccExportedRuntimeMethod Include="GL" />
+  </ItemGroup>
 
   <!-- Scenes live alongside the in-process visual tests; compile the same
        sources into the WASM host so a scene change updates both at once. -->

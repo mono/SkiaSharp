@@ -90,12 +90,9 @@ namespace SkiaSharp.Tests.Visual
 		public override RendererCapabilities Caps => RendererCapabilities.Gpu;
 	}
 
-	// Ganesh-WebGL2 host-side renderer NOT registered yet — the in-page
-	// implementation needs an emscripten_webgl_create_context + make_current
-	// JS-library shim; tracked as a follow-up. When that lands, add the
-	// renderer here:
-	// public sealed class WasmGaneshGlEsRenderer : WasmRendererBase {
-	//     public override string Name => "wasm-ganesh-gles";
-	//     public override RendererCapabilities Caps => RendererCapabilities.Gpu;
-	// }
+	public sealed class WasmGaneshGlEsRenderer : WasmRendererBase
+	{
+		public override string Name => "wasm-ganesh-gles";
+		public override RendererCapabilities Caps => RendererCapabilities.Gpu;
+	}
 }
