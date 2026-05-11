@@ -636,23 +636,23 @@ namespace SkiaSharp
 			(sk_graphite_context_supports_protected_content_delegate ??= GetSymbol<Delegates.sk_graphite_context_supports_protected_content> ("sk_graphite_context_supports_protected_content")).Invoke (context);
 		#endif
 
-		// sk_graphite_image_provider_t* sk_graphite_image_provider_new(sk_graphite_image_provider_proc_t proc, void* userData)
+		// sk_image_t* sk_graphite_image_make_texture(sk_graphite_recorder_t* recorder, const sk_image_t* image, int32_t mipmapped)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_image_provider_t sk_graphite_image_provider_new (delegate* unmanaged[Cdecl] <void*, sk_graphite_recorder_t, sk_image_t, Int32, sk_image_t> proc, void* userData);
+		internal static partial sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_image_provider_t sk_graphite_image_provider_new (SKGraphiteImageProviderProxyDelegate proc, void* userData);
+		internal static extern sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_image_provider_t sk_graphite_image_provider_new (SKGraphiteImageProviderProxyDelegate proc, void* userData);
+			internal delegate sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
 		}
-		private static Delegates.sk_graphite_image_provider_new sk_graphite_image_provider_new_delegate;
-		internal static sk_graphite_image_provider_t sk_graphite_image_provider_new (SKGraphiteImageProviderProxyDelegate proc, void* userData) =>
-			(sk_graphite_image_provider_new_delegate ??= GetSymbol<Delegates.sk_graphite_image_provider_new> ("sk_graphite_image_provider_new")).Invoke (proc, userData);
+		private static Delegates.sk_graphite_image_make_texture sk_graphite_image_make_texture_delegate;
+		internal static sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped) =>
+			(sk_graphite_image_make_texture_delegate ??= GetSymbol<Delegates.sk_graphite_image_make_texture> ("sk_graphite_image_make_texture")).Invoke (recorder, image, mipmapped);
 		#endif
 
 		// void sk_graphite_image_provider_delete(sk_graphite_image_provider_t* provider)
@@ -674,23 +674,23 @@ namespace SkiaSharp
 			(sk_graphite_image_provider_delete_delegate ??= GetSymbol<Delegates.sk_graphite_image_provider_delete> ("sk_graphite_image_provider_delete")).Invoke (provider);
 		#endif
 
-		// sk_image_t* sk_graphite_image_make_texture(sk_graphite_recorder_t* recorder, const sk_image_t* image, int32_t mipmapped)
+		// sk_graphite_image_provider_t* sk_graphite_image_provider_new(sk_graphite_image_provider_proc_t proc, void* userData)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
+		internal static partial sk_graphite_image_provider_t sk_graphite_image_provider_new (void* proc, void* userData);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
+		internal static extern sk_graphite_image_provider_t sk_graphite_image_provider_new (SKGraphiteImageProviderProxyDelegate proc, void* userData);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
+			internal delegate sk_graphite_image_provider_t sk_graphite_image_provider_new (SKGraphiteImageProviderProxyDelegate proc, void* userData);
 		}
-		private static Delegates.sk_graphite_image_make_texture sk_graphite_image_make_texture_delegate;
-		internal static sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped) =>
-			(sk_graphite_image_make_texture_delegate ??= GetSymbol<Delegates.sk_graphite_image_make_texture> ("sk_graphite_image_make_texture")).Invoke (recorder, image, mipmapped);
+		private static Delegates.sk_graphite_image_provider_new sk_graphite_image_provider_new_delegate;
+		internal static sk_graphite_image_provider_t sk_graphite_image_provider_new (SKGraphiteImageProviderProxyDelegate proc, void* userData) =>
+			(sk_graphite_image_provider_new_delegate ??= GetSymbol<Delegates.sk_graphite_image_provider_new> ("sk_graphite_image_provider_new")).Invoke (proc, userData);
 		#endif
 
 		// sk_image_t* sk_graphite_image_wrap_texture(sk_graphite_recorder_t* recorder, const sk_graphite_backend_texture_t* backendTexture, sk_colortype_t colorType, sk_alphatype_t alphaType, sk_colorspace_t* colorSpace, sk_graphite_release_proc_t releaseProc, void* releaseContext)
@@ -7737,6 +7737,25 @@ namespace SkiaSharp
 		private static Delegates.sk_graphite_dawn_backend_context_new sk_graphite_dawn_backend_context_new_delegate;
 		internal static sk_graphite_dawn_backend_context_t sk_graphite_dawn_backend_context_new (SKGraphiteDawnBackendContextInit* init) =>
 			(sk_graphite_dawn_backend_context_new_delegate ??= GetSymbol<Delegates.sk_graphite_dawn_backend_context_new> ("sk_graphite_dawn_backend_context_new")).Invoke (init);
+		#endif
+
+		// sk_graphite_backend_texture_t* sk_graphite_dawn_backend_texture_new(void* wgpuTexture)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_graphite_backend_texture_t sk_graphite_dawn_backend_texture_new (void* wgpuTexture);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_graphite_backend_texture_t sk_graphite_dawn_backend_texture_new (void* wgpuTexture);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_graphite_backend_texture_t sk_graphite_dawn_backend_texture_new (void* wgpuTexture);
+		}
+		private static Delegates.sk_graphite_dawn_backend_texture_new sk_graphite_dawn_backend_texture_new_delegate;
+		internal static sk_graphite_backend_texture_t sk_graphite_dawn_backend_texture_new (void* wgpuTexture) =>
+			(sk_graphite_dawn_backend_texture_new_delegate ??= GetSymbol<Delegates.sk_graphite_dawn_backend_texture_new> ("sk_graphite_dawn_backend_texture_new")).Invoke (wgpuTexture);
 		#endif
 
 		#endregion
@@ -18723,13 +18742,13 @@ namespace SkiaSharp {
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGraphiteAsyncReadPixelsProxyDelegate(void* callbackContext, sk_graphite_async_read_result_t result);
 
-	// typedef void (*)(void* releaseContext)* sk_graphite_release_proc_t
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKGraphiteReleaseProxyDelegate(void* releaseContext);
-
 	// typedef sk_image_t* (*)(void* userData, sk_graphite_recorder_t* recorder, const sk_image_t* image, int32_t mipmapped)* sk_graphite_image_provider_proc_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate sk_image_t SKGraphiteImageProviderProxyDelegate(void* userData, sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
+
+	// typedef void (*)(void* releaseContext)* sk_graphite_release_proc_t
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKGraphiteReleaseProxyDelegate(void* releaseContext);
 
 	// typedef void (*)()* sk_graphite_vk_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -23276,6 +23295,16 @@ internal static unsafe partial class DelegateProxies {
 #endif
 	private static partial void SKGraphiteAsyncReadPixelsProxyImplementation(void* callbackContext,sk_graphite_async_read_result_t result);
 
+	/// Proxy for sk_graphite_image_provider_proc_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, sk_graphite_recorder_t, sk_image_t, Int32, sk_image_t> SKGraphiteImageProviderProxy = &SKGraphiteImageProviderProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKGraphiteImageProviderProxyDelegate SKGraphiteImageProviderProxy = SKGraphiteImageProviderProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKGraphiteImageProviderProxyDelegate))]
+#endif
+	private static partial sk_image_t SKGraphiteImageProviderProxyImplementation(void* userData,sk_graphite_recorder_t recorder,sk_image_t image,Int32 mipmapped);
+
 	/// Proxy for sk_graphite_release_proc_t native function.
 #if USE_LIBRARY_IMPORT
 	public static readonly delegate* unmanaged[Cdecl] <void*, void> SKGraphiteReleaseProxy = &SKGraphiteReleaseProxyImplementation;
@@ -23285,16 +23314,6 @@ internal static unsafe partial class DelegateProxies {
 	[MonoPInvokeCallback (typeof (SKGraphiteReleaseProxyDelegate))]
 #endif
 	private static partial void SKGraphiteReleaseProxyImplementation(void* releaseContext);
-
-	/// Proxy for sk_graphite_image_provider_proc_t native function.
-#if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <void*, sk_graphite_recorder_t, sk_image_t, Int32, sk_image_t> SKGraphiteImageProviderProxy = &SKGraphiteImageProviderProxyImplementation;
-	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-	public static readonly SKGraphiteImageProviderProxyDelegate SKGraphiteImageProviderProxy = SKGraphiteImageProviderProxyImplementation;
-	[MonoPInvokeCallback (typeof (SKGraphiteImageProviderProxyDelegate))]
-#endif
-	private static partial sk_image_t SKGraphiteImageProviderProxyImplementation(void* userData, sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
 
 	/// Proxy for sk_graphite_vk_get_proc_t native function.
 #if USE_LIBRARY_IMPORT
