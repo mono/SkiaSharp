@@ -22,10 +22,12 @@ public class TextLabSample : CanvasSampleBase
 
 	public override string Title => "Text Lab";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
 	public override string Description =>
 		"Explore text rendering with font selection, alignment, size, and metric visualization.";
 
-	public override string Category => SampleCategories.Text;
+	public override string Category => SampleManager.Text;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

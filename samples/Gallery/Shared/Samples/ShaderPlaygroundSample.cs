@@ -129,9 +129,11 @@ half4 main(float2 fragCoord) {
 
 	public override string Title => "Shader Playground";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
 	public override string Description => "Write and visualize animated SkSL runtime effect shaders with adjustable parameters.";
 
-	public override string Category => SampleCategories.Shaders;
+	public override string Category => SampleManager.Shaders;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

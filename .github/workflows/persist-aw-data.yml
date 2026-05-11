@@ -1,0 +1,157 @@
+name: Persist Agentic Workflow Data
+
+# Downloads the agent artifact from a completed agentic workflow run and commits
+# files to the aw-data branch. The data-key (subfolder) is resolved from a
+# mapping of workflow names, or can be provided via manual dispatch with a run URL.
+
+on:
+  workflow_run:
+    workflows:
+      - "Auto-Triage SkiaSharp Issue"
+    types: [completed]
+
+  workflow_dispatch:
+    inputs:
+      run-url:
+        description: 'URL of the workflow run to persist (e.g. https://github.com/mono/SkiaSharp/actions/runs/12345)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: persist-aw-data
+  cancel-in-progress: false
+
+env:
+  DATA_BRANCH: aw-data
+
+jobs:
+  persist:
+    name: Persist to aw-data
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Resolve run ID and data key
+        id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WR_NAME: ${{ github.event.workflow_run.name }}
+          WR_ID: ${{ github.event.workflow_run.id }}
+          INPUT_URL: ${{ inputs.run-url }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # --- Workflow name → data-key mapping ---
+          resolve_key() {
+            case "$1" in
+              "Auto-Triage SkiaSharp Issue") echo "ai-triage" ;;
+              # Add future mappings here:
+              # "Auto-Repro SkiaSharp Issue") echo "ai-repro" ;;
+              *) echo "" ;;
+            esac
+          }
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Extract run ID from URL: .../actions/runs/12345...
+            RUN_ID=$(echo "$INPUT_URL" | grep -oE '/runs/[0-9]+' | grep -oE '[0-9]+')
+            if [ -z "$RUN_ID" ]; then
+              echo "::error::Could not extract run ID from URL: $INPUT_URL"
+              exit 1
+            fi
+            # Fetch the workflow name from the API
+            WF_NAME=$(gh api "repos/${{ github.repository }}/actions/runs/$RUN_ID" --jq '.name')
+            DATA_KEY=$(resolve_key "$WF_NAME")
+            if [ -z "$DATA_KEY" ]; then
+              echo "::error::No data-key mapping for workflow: $WF_NAME"
+              exit 1
+            fi
+          else
+            RUN_ID="$WR_ID"
+            DATA_KEY=$(resolve_key "$WR_NAME")
+            if [ -z "$DATA_KEY" ]; then
+              echo "::notice::No data-key mapping for workflow: $WR_NAME — skipping"
+              exit 0
+            fi
+          fi
+
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "data_key=$DATA_KEY" >> "$GITHUB_OUTPUT"
+          echo "Resolved: run=$RUN_ID, data-key=$DATA_KEY"
+
+      - name: Download artifact
+        id: download
+        if: steps.resolve.outputs.data_key != ''
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: agent
+          run-id: ${{ steps.resolve.outputs.run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/agent-artifact
+
+      - name: Check for data
+        id: check
+        if: steps.download.outcome == 'success'
+        env:
+          DATA_KEY: ${{ steps.resolve.outputs.data_key }}
+        run: |
+          DATA_DIR="${RUNNER_TEMP}/agent-artifact/agent/$DATA_KEY"
+          if [ ! -d "$DATA_DIR" ] || [ -z "$(ls -A "$DATA_DIR" 2>/dev/null)" ]; then
+            echo "::notice::No $DATA_KEY data found in artifact"
+            echo "has_data=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Found data to persist:"
+          find "$DATA_DIR" -type f | sort
+          echo "has_data=true" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout data branch
+        if: steps.check.outputs.has_data == 'true'
+        run: |
+          git init .
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code origin "refs/heads/$DATA_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$DATA_BRANCH" --depth=1
+            git checkout "$DATA_BRANCH"
+          else
+            git checkout --orphan "$DATA_BRANCH"
+            git rm -rf . 2>/dev/null || true
+            echo "# Agentic Workflow Data" > README.md
+            git add README.md
+            git commit -m "Initialize $DATA_BRANCH branch"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Copy and commit data
+        if: steps.check.outputs.has_data == 'true'
+        env:
+          DATA_KEY: ${{ steps.resolve.outputs.data_key }}
+          RUN_ID: ${{ steps.resolve.outputs.run_id }}
+        run: |
+          DATA_DIR="${RUNNER_TEMP}/agent-artifact/agent/$DATA_KEY"
+
+          cp -r "$DATA_DIR" .
+          git add "$DATA_KEY/"
+
+          if git diff --cached --quiet; then
+            echo "::notice::No new or changed data to commit"
+            exit 0
+          fi
+
+          ITEMS=$(git diff --cached --name-only | sed "s|^$DATA_KEY/||" | cut -d/ -f1 | sort -u | tr '\n' ', ' | sed 's/,$//')
+
+          git commit -m "$DATA_KEY: persist data ($ITEMS)
+
+          Source: ${{ github.server_url }}/${{ github.repository }}/actions/runs/$RUN_ID"
+          git push origin "$DATA_BRANCH"
+          echo "✅ Committed $DATA_KEY data: $ITEMS"

@@ -17,7 +17,9 @@ public class TextOnPathSample : CanvasSampleBase
 
 	public override string Title => "Text on Path";
 
-	public override string Category => SampleCategories.Text;
+	public override DateOnly? DateAdded => new DateOnly(2020, 5, 15);
+
+	public override string Category => SampleManager.Text;
 
 	public override string Description =>
 		"Draw text along circle, wave, and heart-shaped paths with adjustable offset and size.";

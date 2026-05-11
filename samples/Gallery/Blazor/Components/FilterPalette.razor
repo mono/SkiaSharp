@@ -1,0 +1,153 @@
+@* Design B: Command Palette — frosted glass bar with search + segmented toggles *@
+
+<div class="palette-container">
+    <div class="palette-search">
+        <i class="bi bi-search"></i>
+        <input type="search" placeholder="Search @AllSamples.Length samples…"
+               @oninput="OnSearch" />
+    </div>
+    <div class="palette-segments">
+        @foreach (var catName in AllCategories)
+        {
+            var cat = SampleManager.GetCategoryFor(catName);
+            var active = SelectedCategories.Contains(catName);
+            <button class="palette-seg @(active ? "active" : "")" style="--seg-color: @cat.Color;"
+                    @onclick="() => ToggleCategory(catName)">
+                <i class="bi @cat.CssIcon"></i>
+                @ShortName(catName)
+            </button>
+        }
+        <button class="palette-reset" @onclick="ResetAll">Reset</button>
+    </div>
+</div>
+
+<style>
+    .palette-container {
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(16px) saturate(1.5);
+        -webkit-backdrop-filter: blur(16px) saturate(1.5);
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 16px;
+        padding: 1rem;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .palette-search {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.1rem 0;
+    }
+    .palette-search i { color: #888; font-size: 1rem; }
+    .palette-search input {
+        border: none;
+        background: transparent;
+        outline: none;
+        font-size: 1.05rem;
+        width: 100%;
+        font-weight: 500;
+        color: #222;
+    }
+    .palette-search input::placeholder { color: #aaa; }
+
+    .palette-segments {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .palette-seg {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        border: 1.5px solid transparent;
+        background: rgba(0,0,0,0.04);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #555;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .palette-seg i { font-size: 0.85rem; color: var(--seg-color); }
+    .palette-seg:hover { background: color-mix(in srgb, var(--seg-color) 12%, white); border-color: color-mix(in srgb, var(--seg-color) 30%, transparent); }
+    .palette-seg.active {
+        background: color-mix(in srgb, var(--seg-color) 15%, white);
+        border-color: var(--seg-color);
+        color: var(--seg-color);
+    }
+    .palette-seg:not(.active) { opacity: 0.5; }
+
+    .palette-reset {
+        font-size: 0.7rem;
+        color: #888;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.2rem 0.4rem;
+    }
+    .palette-reset:hover { color: #333; }
+
+    [data-theme="dark"] .palette-container { background: rgba(30,30,46,0.88); border-color: rgba(255,255,255,0.08); }
+    [data-theme="dark"] .palette-search input { color: #e0e0e0; }
+    [data-theme="dark"] .palette-seg { background: rgba(255,255,255,0.06); color: #aaa; }
+    [data-theme="dark"] .palette-seg.active { background: color-mix(in srgb, var(--seg-color) 20%, #1e1e2e); color: var(--seg-color); }
+    [data-theme="dark"] .palette-reset { color: #666; }
+</style>
+
+@implements IDisposable
+
+@code {
+    [Parameter] public string[] AllCategories { get; set; } = [];
+    [Parameter] public HashSet<string> SelectedCategories { get; set; } = new();
+    [Parameter] public string SearchText { get; set; } = "";
+    [Parameter] public SampleBase[] AllSamples { get; set; } = [];
+    [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
+    [Parameter] public EventCallback<HashSet<string>> OnCategoriesChanged { get; set; }
+
+    private System.Timers.Timer? debounce;
+    private string pendingText = "";
+
+    protected override void OnInitialized()
+    {
+        debounce = new System.Timers.Timer(350) { AutoReset = false };
+        debounce.Elapsed += async (_, _) =>
+            await InvokeAsync(() => OnSearchChanged.InvokeAsync(pendingText));
+    }
+
+    private void OnSearch(ChangeEventArgs e)
+    {
+        pendingText = e.Value?.ToString() ?? "";
+        debounce?.Stop();
+        debounce?.Start();
+    }
+
+    private async Task ToggleCategory(string cat)
+    {
+        var copy = new HashSet<string>(SelectedCategories);
+        if (!copy.Remove(cat)) copy.Add(cat);
+        await OnCategoriesChanged.InvokeAsync(copy);
+    }
+
+    private async Task ResetAll()
+    {
+        await OnCategoriesChanged.InvokeAsync(new HashSet<string>(AllCategories));
+    }
+
+    private static string ShortName(string cat) => cat switch
+    {
+        "Image & Filters" => "Filters",
+        "Shaders & Effects" => "Shaders",
+        "Text & Typography" => "Text",
+        "Paths & Geometry" => "Paths",
+        "Image Decoding" => "Decode",
+        _ => cat,
+    };
+
+    public void Dispose() => debounce?.Dispose();
+}

@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, "release/**"]
     tags: ["v*"]
+    paths-ignore:
+      - "documentation/docfx/releases/**"
   workflow_dispatch:
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
@@ -13,16 +15,17 @@ timeout-minutes: 10
 permissions:
   contents: read
 tools:
-  bash: ["python3", "gh", "git", "cat", "grep", "sort", "head", "tail", "sed", "awk"]
+  bash: ["python3", "git", "cat", "grep", "sort", "head", "tail", "sed", "awk"]
   edit:
-network:
-  allowed:
-    - defaults
+network: {}
 safe-outputs:
   create-pull-request:
     title-prefix: "[docs] "
     labels: [documentation]
     draft: false
+    allowed-base-branches: [main]
+    preserve-branch-name: true
+    recreate-ref: true
 ---
 
 # Update Release Notes
