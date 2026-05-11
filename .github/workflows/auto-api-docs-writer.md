@@ -120,18 +120,24 @@ post-steps:
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
     run: |
-      
       pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 merge output/docs-work/
+      dotnet tool restore
+      dotnet cake --target=docs-format-docs || true
       bash /tmp/gh-aw/api-docs-push-pr.sh
 ---
 
 # Auto API Docs Writer
 
-**Read `.agents/skills/api-docs/SKILL.md` and follow Phases 2–3.** Overrides for this workflow:
+**Read `.agents/skills/api-docs/SKILL.md` and follow Phases 3–5.** Overrides for this workflow:
 
-- **Phase 1 is pre-computed** — stub regeneration already ran on Windows. Skip it.
-- **Extraction is pre-computed** — JSON files are already in `output/docs-work/`. Skip the extract step.
+- **Phases 1–2 are pre-computed** — stub regeneration and JSON extraction already ran. Skip them.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't carry this into the chroot).
 - **Do NOT edit XML files directly** — edit only the JSON files in `output/docs-work/`.
+- **Phase 6 (merge) is handled by the post-step** — do NOT merge or run docs-format-docs yourself.
 
-Your job: read each JSON file in `output/docs-work/`, understand the APIs from the C# source in `binding/`, fill in the "To be added." values with proper documentation, and save the JSON files. The post-step handles merging into XML, committing, and pushing.
+Your workflow:
+1. **Phase 3 (Discover)** — read patterns, study existing good docs, read source code
+2. **Phase 4 (Write)** — fill JSON files with documentation
+3. **Phase 5 (Review)** — launch two background agents, fix issues, repeat until clean
+
+Invalid docs are worse than no docs. Only validated, accurate documentation should remain in the JSON files when you finish.
