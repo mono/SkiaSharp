@@ -25,7 +25,9 @@ namespace SkiaSharp.Tests.Visual
 		public string UnavailableReason
 		{
 			get {
-				if (!OperatingSystem.IsMacOS () && !OperatingSystem.IsIOS () && !OperatingSystem.IsTvOS ())
+				if (!RuntimeInformation.IsOSPlatform (OSPlatform.OSX)
+					&& !RuntimeInformation.IsOSPlatform (OSPlatform.Create ("IOS"))
+					&& !RuntimeInformation.IsOSPlatform (OSPlatform.Create ("TVOS")))
 					return "Metal is only available on Apple platforms";
 				if (!SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Metal))
 					return "SK_GRAPHITE/SK_METAL not built into libSkiaSharp (rebuild with SUPPORT_GRAPHITE=true)";

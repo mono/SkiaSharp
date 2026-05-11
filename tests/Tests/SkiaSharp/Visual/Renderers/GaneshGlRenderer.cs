@@ -33,8 +33,8 @@ namespace SkiaSharp.Tests.Visual
 		public bool IsAvailable
 		{
 			get {
-				if (OperatingSystem.IsLinux ())   return EglLoader.Shared.IsAvailable;
-				if (OperatingSystem.IsWindows ()) return WglLoader.Shared.IsAvailable;
+				if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))   return EglLoader.Shared.IsAvailable;
+				if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) return WglLoader.Shared.IsAvailable;
 				return false;
 			}
 		}
@@ -42,11 +42,11 @@ namespace SkiaSharp.Tests.Visual
 		public string UnavailableReason
 		{
 			get {
-				if (OperatingSystem.IsLinux ()) {
+				if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux)) {
 					return EglLoader.Shared.IsAvailable ? null
 						: $"EGL loader unavailable: {EglLoader.Shared.FailureReason}";
 				}
-				if (OperatingSystem.IsWindows ()) {
+				if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
 					return WglLoader.Shared.IsAvailable ? null
 						: $"WGL loader unavailable: {WglLoader.Shared.FailureReason}";
 				}
@@ -57,16 +57,16 @@ namespace SkiaSharp.Tests.Visual
 		// Platform-aware context handles, used by the worker thread.
 		private static void LoaderMakeCurrent ()
 		{
-			if      (OperatingSystem.IsLinux ())   EglLoader.Shared.MakeCurrent ();
-			else if (OperatingSystem.IsWindows ()) WglLoader.Shared.MakeCurrent ();
+			if      (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))   EglLoader.Shared.MakeCurrent ();
+			else if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) WglLoader.Shared.MakeCurrent ();
 			else throw new PlatformNotSupportedException (
 				"ganesh-gl is only available on Linux (EGL) and Windows (WGL)");
 		}
 
 		private static IntPtr LoaderGetProc (string name)
 		{
-			if (OperatingSystem.IsLinux ())   return EglLoader.Shared.GetProc (name);
-			if (OperatingSystem.IsWindows ()) return WglLoader.Shared.GetProc (name);
+			if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))   return EglLoader.Shared.GetProc (name);
+			if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) return WglLoader.Shared.GetProc (name);
 			return IntPtr.Zero;
 		}
 

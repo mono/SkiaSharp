@@ -25,6 +25,7 @@ namespace SkiaSharp.Tests.Visual
 
 		static VulkanLoader ()
 		{
+#if NET5_0_OR_GREATER
 			// On Windows the Vulkan loader ships as `vulkan-1.dll`, not
 			// `vulkan.dll`, so `[DllImport("vulkan")]` would fail. Install a
 			// resolver that maps the request — Linux behaviour is preserved
@@ -33,7 +34,12 @@ namespace SkiaSharp.Tests.Visual
 			// already registered on the assembly; we swallow that case so
 			// repeat-load scenarios (test reruns, isolated test contexts)
 			// don't break.
-			if (OperatingSystem.IsWindows ()) {
+			//
+			// NativeLibrary + SetDllImportResolver are .NET Core 3+ APIs;
+			// on net48 the Vulkan cells just fail to load on Windows
+			// (matching pre-matrix behaviour — this branch only exists
+			// because the test assembly multi-targets for compat).
+			if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
 				try {
 					NativeLibrary.SetDllImportResolver (
 						typeof (VulkanLoader).Assembly,
@@ -44,6 +50,7 @@ namespace SkiaSharp.Tests.Visual
 					// resolver already installed in this AppDomain — fine
 				}
 			}
+#endif
 		}
 
 		private static VulkanLoader instance;

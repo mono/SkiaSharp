@@ -78,11 +78,14 @@ namespace SkiaSharp.Tests.Visual
 			if (val != 0 && val != 1 && val != 2 && val != 3 && val != -1)
 				return addr;
 
-			if (opengl32Handle == IntPtr.Zero) {
-				if (!NativeLibrary.TryLoad ("opengl32.dll", out opengl32Handle))
-					return IntPtr.Zero;
-			}
-			return NativeLibrary.TryGetExport (opengl32Handle, name, out var sym) ? sym : IntPtr.Zero;
+			// Use kernel32 directly (works on net48 too — NativeLibrary is
+			// .NET Core 3+). opengl32 is already loaded by the time wgl* is
+			// callable so LoadLibrary is just a ref-bump.
+			if (opengl32Handle == IntPtr.Zero)
+				opengl32Handle = LoadLibraryW ("opengl32.dll");
+			if (opengl32Handle == IntPtr.Zero)
+				return IntPtr.Zero;
+			return GetProcAddress (opengl32Handle, name);
 		}
 
 		private void Initialize ()
@@ -264,5 +267,11 @@ namespace SkiaSharp.Tests.Visual
 
 		[DllImport ("opengl32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
 		private static extern IntPtr wglGetProcAddress (string name);
+
+		[DllImport ("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+		private static extern IntPtr LoadLibraryW (string lpLibFileName);
+
+		[DllImport ("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true, BestFitMapping = false)]
+		private static extern IntPtr GetProcAddress (IntPtr hModule, string procName);
 	}
 }
