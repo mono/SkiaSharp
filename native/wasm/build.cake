@@ -10,7 +10,7 @@ string[] EMSCRIPTEN_FEATURES = Argument("emscriptenFeatures", EnvironmentVariabl
     .Split(",").Where(f => f != "none").ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
-string SUPPORT_GRAPHITE_VAR = Argument("supportGraphite", EnvironmentVariable("SUPPORT_GRAPHITE") ?? "false");
+string SUPPORT_GRAPHITE_VAR = Argument("supportGraphite", EnvironmentVariable("SUPPORT_GRAPHITE") ?? "true");
 bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower() == "true";
 
 // Graphite on WASM uses Dawn-via-Emscripten (skia_use_webgpu drives the wgpu C++ -> emscripten/html5_webgpu bridge).

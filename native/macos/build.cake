@@ -4,9 +4,11 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"))
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/native/apple/xcode.cake"
 
-string SUPPORT_GRAPHITE_VAR = Argument("supportGraphite", EnvironmentVariable("SUPPORT_GRAPHITE") ?? "false");
+string SUPPORT_GRAPHITE_VAR = Argument("supportGraphite", EnvironmentVariable("SUPPORT_GRAPHITE") ?? "true");
 bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower() == "true";
 
+// Dawn isn't needed on macOS — Metal is the native Graphite backend.
+// Opt in with SUPPORT_DAWN=true only if you want WebGPU symbols too.
 string SUPPORT_DAWN_VAR = Argument("supportDawn", EnvironmentVariable("SUPPORT_DAWN") ?? "false");
 bool SUPPORT_DAWN = SUPPORT_DAWN_VAR == "1" || SUPPORT_DAWN_VAR.ToLower() == "true";
 

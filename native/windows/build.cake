@@ -12,7 +12,7 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
-string SUPPORT_GRAPHITE_VAR = Argument ("supportGraphite", EnvironmentVariable ("SUPPORT_GRAPHITE") ?? "false");
+string SUPPORT_GRAPHITE_VAR = Argument ("supportGraphite", EnvironmentVariable ("SUPPORT_GRAPHITE") ?? "true");
 bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower () == "true";
 
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];

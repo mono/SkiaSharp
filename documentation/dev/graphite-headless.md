@@ -45,11 +45,12 @@ export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
 From the repo root:
 
 ```bash
-SUPPORT_GPU=true \
-SUPPORT_VULKAN=true \
-SUPPORT_GRAPHITE=true \
 dotnet cake --target=externals-linux --arch=x64
 ```
+
+`SUPPORT_GPU`, `SUPPORT_VULKAN`, and `SUPPORT_GRAPHITE` all default to
+`true` since the matrix work landed; pass `SUPPORT_X=false` only if you
+want to opt out.
 
 The first run is a from-scratch Skia build — expect it to take 30–90 minutes wall-clock and to download a few GB of Skia/Dawn DEPS. Subsequent rebuilds are much faster (incremental ninja).
 

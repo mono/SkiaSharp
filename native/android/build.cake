@@ -4,7 +4,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/androi
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/native/android/ndk.cake"
 
-string SUPPORT_GRAPHITE_VAR = Argument ("supportGraphite", EnvironmentVariable ("SUPPORT_GRAPHITE") ?? "false");
+string SUPPORT_GRAPHITE_VAR = Argument ("supportGraphite", EnvironmentVariable ("SUPPORT_GRAPHITE") ?? "true");
 bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower () == "true";
 
 Information("Android NDK Path: {0}", ANDROID_NDK_HOME);

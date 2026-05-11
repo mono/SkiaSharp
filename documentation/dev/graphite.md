@@ -119,7 +119,6 @@ sudo apt-get install -y mesa-vulkan-drivers libvulkan-dev vulkan-tools
 vulkaninfo --summary  # expect a device named "llvmpipe" or "lavapipe"
 
 CC=clang CXX=clang++ \
-SUPPORT_GPU=true SUPPORT_VULKAN=true SUPPORT_GRAPHITE=true \
 dotnet cake --target=externals-linux --arch=x64
 
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
@@ -179,7 +178,7 @@ Goldens land at `tests/Tests/SkiaSharp/Visual/Goldens/{setup}/MyTest.png`, ready
 | C API headers | `externals/skia/include/c/sk_graphite.h`, `sk_graphite_vulkan.h` |
 | C API impl | `externals/skia/src/c/sk_graphite.cpp`, `sk_graphite_vulkan.cpp` |
 | GN integration | `externals/skia/gn/core.gni` (source list), `externals/skia/BUILD.gn` (`SK_GRAPHITE`/`SK_DAWN` defines on `:core`) |
-| Build flags | `native/linux/build.cake` (and macOS/Windows) — `SUPPORT_GRAPHITE`, `SUPPORT_DAWN` |
+| Build flags | All per-platform `native/{os}/build.cake` files — `SUPPORT_GRAPHITE` (default `true`), `SUPPORT_DAWN` (default `false` except WASM, where it follows `SUPPORT_GRAPHITE`) |
 | Generator config | `binding/libSkiaSharp.json` (mappings for `sk_graphite_vk_get_proc_t`, etc.) |
 | Hand-written C# wrappers | `binding/SkiaSharp/Gpu/Graphite/SKGraphite*.cs` |
 | Generator-emitted P/Invokes | `binding/SkiaSharp/SkiaApi.generated.cs` (regenerated; never hand-edited) |
