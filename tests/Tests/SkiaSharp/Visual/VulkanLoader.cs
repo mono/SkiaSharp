@@ -23,6 +23,29 @@ namespace SkiaSharp.Tests.Visual
 	{
 		private const string libvulkan = "vulkan";   // resolves to libvulkan.so.1 on Linux
 
+		static VulkanLoader ()
+		{
+			// On Windows the Vulkan loader ships as `vulkan-1.dll`, not
+			// `vulkan.dll`, so `[DllImport("vulkan")]` would fail. Install a
+			// resolver that maps the request — Linux behaviour is preserved
+			// (libvulkan.so → libvulkan.so.1 symlink chain handled by the
+			// native loader). SetDllImportResolver throws if a resolver is
+			// already registered on the assembly; we swallow that case so
+			// repeat-load scenarios (test reruns, isolated test contexts)
+			// don't break.
+			if (OperatingSystem.IsWindows ()) {
+				try {
+					NativeLibrary.SetDllImportResolver (
+						typeof (VulkanLoader).Assembly,
+						(name, asm, search) =>
+							name == libvulkan && NativeLibrary.TryLoad ("vulkan-1.dll", out var h)
+								? h : IntPtr.Zero);
+				} catch (InvalidOperationException) {
+					// resolver already installed in this AppDomain — fine
+				}
+			}
+		}
+
 		private static VulkanLoader instance;
 		private static readonly object instanceLock = new object ();
 

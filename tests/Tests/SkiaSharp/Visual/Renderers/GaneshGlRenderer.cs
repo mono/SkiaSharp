@@ -7,22 +7,22 @@ using System.Threading.Tasks;
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
-	/// Ganesh GPU backend over desktop OpenGL on Linux. Headless via EGL +
-	/// Mesa <c>llvmpipe</c> (software rasterizer; deterministic across hosts).
+	/// Ganesh GPU backend over desktop OpenGL.
 	///
 	/// <para>
-	/// GL contexts are THREAD-AFFINE — they can only be current on one thread
-	/// at a time, and GL commands must come from that thread. This renderer
-	/// owns a dedicated worker thread for its lifetime: <see cref="RenderAsync"/>
-	/// posts the work + awaits the result, the worker brings up + tears down
-	/// the GRContext + SKSurface against the EGL context it holds current.
+	/// Platform-dispatched: on Linux uses <see cref="EglLoader"/> (EGL +
+	/// Mesa <c>llvmpipe</c> for software-deterministic output); on Windows
+	/// uses <see cref="WglLoader"/> (HWND_MESSAGE + <c>wglCreateContextAttribsARB</c>).
+	/// macOS is not covered — Apple deprecated desktop GL in favor of Metal.
 	/// </para>
 	///
 	/// <para>
-	/// Linux only. Windows uses a different loader (WGL + HWND_MESSAGE pbuffer);
-	/// macOS GL is dead — Apple deprecated it for Metal. Other Linux software
-	/// stacks (X11 / Wayland) are bypassed entirely thanks to EGL's
-	/// platform-device extension — no display server is contacted.
+	/// GL contexts are THREAD-AFFINE — they can only be current on one
+	/// thread at a time, and GL commands must come from that thread. This
+	/// renderer owns a dedicated worker thread for its lifetime:
+	/// <see cref="RenderAsync"/> posts the work + awaits the result; the
+	/// worker brings up + tears down the GRContext + SKSurface against the
+	/// platform context it holds current.
 	/// </para>
 	/// </summary>
 	public sealed class GaneshGlRenderer : IRenderer
@@ -30,17 +30,44 @@ namespace SkiaSharp.Tests.Visual
 		public string Name => "ganesh-gl";
 		public RendererCapabilities Caps => RendererCapabilities.Gpu;
 
-		public bool IsAvailable => OperatingSystem.IsLinux () && EglLoader.Shared.IsAvailable;
+		public bool IsAvailable
+		{
+			get {
+				if (OperatingSystem.IsLinux ())   return EglLoader.Shared.IsAvailable;
+				if (OperatingSystem.IsWindows ()) return WglLoader.Shared.IsAvailable;
+				return false;
+			}
+		}
 
 		public string UnavailableReason
 		{
 			get {
-				if (!OperatingSystem.IsLinux ())
-					return "ganesh-gl uses EGL+llvmpipe on Linux only (Windows uses WGL, macOS uses Metal)";
-				return EglLoader.Shared.IsAvailable
-					? null
-					: $"EGL loader unavailable: {EglLoader.Shared.FailureReason}";
+				if (OperatingSystem.IsLinux ()) {
+					return EglLoader.Shared.IsAvailable ? null
+						: $"EGL loader unavailable: {EglLoader.Shared.FailureReason}";
+				}
+				if (OperatingSystem.IsWindows ()) {
+					return WglLoader.Shared.IsAvailable ? null
+						: $"WGL loader unavailable: {WglLoader.Shared.FailureReason}";
+				}
+				return "ganesh-gl uses EGL+llvmpipe on Linux and WGL on Windows (macOS uses Metal — no desktop GL)";
 			}
+		}
+
+		// Platform-aware context handles, used by the worker thread.
+		private static void LoaderMakeCurrent ()
+		{
+			if      (OperatingSystem.IsLinux ())   EglLoader.Shared.MakeCurrent ();
+			else if (OperatingSystem.IsWindows ()) WglLoader.Shared.MakeCurrent ();
+			else throw new PlatformNotSupportedException (
+				"ganesh-gl is only available on Linux (EGL) and Windows (WGL)");
+		}
+
+		private static IntPtr LoaderGetProc (string name)
+		{
+			if (OperatingSystem.IsLinux ())   return EglLoader.Shared.GetProc (name);
+			if (OperatingSystem.IsWindows ()) return WglLoader.Shared.GetProc (name);
+			return IntPtr.Zero;
 		}
 
 		// Worker thread + work queue. Lazy: spun up on first RenderAsync,
@@ -87,7 +114,7 @@ namespace SkiaSharp.Tests.Visual
 		private void WorkerLoop ()
 		{
 			try {
-				EglLoader.Shared.MakeCurrent ();
+				LoaderMakeCurrent ();
 			} catch (Exception ex) {
 				while (_queue.TryTake (out var it))
 					it.Tcs.TrySetException (ex);
@@ -107,7 +134,7 @@ namespace SkiaSharp.Tests.Visual
 
 		private byte[] RenderOnWorker (ISkiaScene scene, SKImageInfo info)
 		{
-			using var glInterface = GRGlInterface.CreateOpenGl (name => EglLoader.Shared.GetProc (name))
+			using var glInterface = GRGlInterface.CreateOpenGl (name => LoaderGetProc (name))
 				?? throw new InvalidOperationException ("GRGlInterface.CreateOpenGl returned null");
 			using var ctx = GRContext.CreateGl (glInterface)
 				?? throw new InvalidOperationException ("GRContext.CreateGl returned null");
