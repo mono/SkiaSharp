@@ -22,7 +22,7 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 			return new SKFourByteTag (0);
 
 		var realTag = new char[4];
-		var len = Math.Min (4, tag.Length);
+		var len = Math.Min (4, tag!.Length);
 		var i = 0;
 		for (; i < len; i++)
 			realTag[i] = tag[i];
