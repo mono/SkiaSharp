@@ -44,6 +44,9 @@ namespace SkiaSharp.HarfBuzz
 			if (string.IsNullOrEmpty(text))
 				return new SKPath();
 
+			if (font == null)
+				throw new ArgumentNullException(nameof(font));
+
 			using var shaper = new SKShaper(font.Typeface);
 			return font.GetShapedTextPath(shaper, text, xOffset, yOffset, textAlign);
 		}
