@@ -24,29 +24,49 @@ This repository is pulled into the main SkiaSharp repo as a Git submodule at `do
 
 ## Automated Pipeline
 
-A GitHub Actions workflow in [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs) regenerates the API docs daily from the latest CI build artifacts. It checks out this repo (for the Cake build scripts) and the docs repo, then runs the doc generation targets:
+Two workflows in this repo automate the full docs lifecycle:
 
-- **Workflow**: [`update-docs.yml`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/update-docs.yml) (in the docs repo)
-- **Schedule**: Runs daily at 6 AM UTC
-- **Manual trigger**: Go to the [Actions tab](https://github.com/mono/SkiaSharp-API-docs/actions) on `mono/SkiaSharp-API-docs` → "Update API Docs" → "Run workflow"
-- **Branch parameter**: Optionally specify a SkiaSharp branch to generate docs from (defaults to `main`)
+### Step 1: Stub generation + AI docs (auto-api-docs-writer)
 
-### What the pipeline does
+A single agentic workflow handles the entire pipeline — regenerating XML stubs from CI NuGet packages AND filling "To be added." placeholders with AI-written documentation:
 
-1. Downloads the latest NuGet packages from the [SkiaSharp-CI](https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json) Azure Artifacts feed (public, no authentication required)
-2. Runs `dotnet cake --target=update-docs` which:
-   - Generates API diffs and changelogs (`docs-api-diff`)
-   - Extracts assemblies from NuGets, builds framework monikers, and runs `mdoc update` to regenerate XML docs (`docs-update-frameworks`)
-   - Cleans up, formats, and validates the generated XML (`docs-format-docs`)
-3. If there are changes, creates a PR on [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs)
+- **Workflow**: [`auto-api-docs-writer.md`](../../.github/workflows/auto-api-docs-writer.md) (agentic, in this repo)
+- **Schedule**: Daily at 8 AM UTC
+- **What it does**:
+  1. **Pre-agent step**: Downloads latest NuGet packages from CI, runs `dotnet cake --target=update-docs` to regenerate XML stubs
+  2. **AI agent**: Reads the `api-docs` skill, finds all "To be added." placeholders, reads C# source code, writes proper documentation
+  3. **Post-step**: Pushes branch and creates PR in `mono/SkiaSharp-API-docs`
+- **Output**: PR `automation/write-api-docs` → `main` in `mono/SkiaSharp-API-docs`
+- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-api-docs-writer.lock.yml) → "Auto API Docs Writer" → "Run workflow"
 
-### After the PR is merged
+> **Note**: There is also a standalone [`update-docs.yml`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/update-docs.yml) workflow in the docs repo that only regenerates stubs (no AI writing). The agentic workflow above supersedes it for the full pipeline.
 
-Once the docs PR is merged into `mono/SkiaSharp-API-docs`, update the submodule pointer in the main SkiaSharp repo:
+### Step 2: Submodule sync (auto-docs-submodule-sync)
+
+After docs changes are merged to `mono/SkiaSharp-API-docs` `main` (whether from the AI pipeline, manual edits, or any other source), the submodule pointer in this repo needs to be updated:
+
+- **Workflow**: [`auto-docs-submodule-sync.yml`](../../.github/workflows/auto-docs-submodule-sync.yml) (in this repo)
+- **Schedule**: Daily at 10 AM UTC
+- **What it does**: Compares the `docs/` submodule SHA with the latest `mono/SkiaSharp-API-docs` `main` SHA. If behind, creates a PR to bump the submodule.
+- **Output**: PR `automation/update-docs-submodule` → `main` in `mono/SkiaSharp`
+- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-docs-submodule-sync.yml) → "Auto Docs Submodule Sync" → "Run workflow"
+
+### Pipeline timeline
+
+| Time (UTC) | Workflow | Action |
+|------------|----------|--------|
+| 8:00 AM | `auto-api-docs-writer` | Regenerates stubs + AI fills placeholders → PR to docs repo |
+| 10:00 AM | `auto-docs-submodule-sync` | Bumps `docs/` submodule → PR to SkiaSharp |
+
+Each step produces a PR that requires human review before merging.
+
+### Manual submodule update
+
+You can also update the submodule manually:
 
 ```bash
 cd docs
-git checkout master
+git checkout main
 git pull
 cd ..
 git add docs

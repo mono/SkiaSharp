@@ -137,6 +137,12 @@ permissions:
   contents: read
   pull-requests: read
 
+# -- Safe outputs ------------------------------------------------------
+# All GitHub writes (push, PR) are done in post-steps via bash.
+# Stage all safe outputs so the agent can't create issues/PRs directly.
+safe-outputs:
+  staged: true
+
 # -- Sandbox -----------------------------------------------------------
 # Mount host /etc/fonts into the AWF chroot so Skia's fontconfig can find fonts.
 # Without this, /etc/fonts/fonts.conf doesn't exist in the chroot and

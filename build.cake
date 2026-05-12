@@ -229,13 +229,20 @@ Task ("clean-managed")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("samples")
-    .Description ("Build all sample projects.")
-    .IsDependentOn ("libs")
+    .Description ("Generate, prepare, and run all sample projects.")
     .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "Default"));
 
 Task ("samples-generate")
     .Description ("Generate sample project files.")
     .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-generate"));
+
+Task ("samples-prepare")
+    .Description ("Prepare samples for building (copy NuGet packages, etc.).")
+    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-prepare"));
+
+Task ("samples-run")
+    .Description ("Build and run the generated samples.")
+    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-run"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEFAULT - target for common development
