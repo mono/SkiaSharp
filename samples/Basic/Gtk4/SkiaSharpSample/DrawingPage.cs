@@ -40,7 +40,7 @@ public class DrawingPage : Box
 	private Scale brushScale;
 	private Label brushSizeLabel;
 	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
-	private SKPath currentPath;
+	private SKPathBuilder? currentBuilder;
 	private SKColor currentColor;
 	private float brushSize = 4f;
 	private SKPoint cursorPosition;
@@ -157,7 +157,7 @@ public class DrawingPage : Box
 		motionController.OnMotion += (sender, args) =>
 		{
 			cursorPosition = new SKPoint((float)args.X, (float)args.Y);
-			if (currentPath == null)
+			if (currentBuilder == null)
 				drawingSkiaView.QueueDraw();
 		};
 		drawingSkiaView.AddController(motionController);
@@ -196,11 +196,12 @@ public class DrawingPage : Box
 			canvas.DrawPath(path, paint);
 		}
 
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
+			using var path = currentBuilder.Snapshot();
 			paint.Color = currentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(currentPath, paint);
+			canvas.DrawPath(path, paint);
 		}
 
 		if (isCursorOver)
@@ -220,8 +221,8 @@ public class DrawingPage : Box
 	{
 		dragStartX = args.StartX;
 		dragStartY = args.StartY;
-		currentPath = new SKPath();
-		currentPath.MoveTo((float)dragStartX, (float)dragStartY);
+		currentBuilder = new SKPathBuilder();
+		currentBuilder.MoveTo((float)dragStartX, (float)dragStartY);
 		cursorPosition = new SKPoint((float)dragStartX, (float)dragStartY);
 		drawingSkiaView.QueueDraw();
 	}
@@ -231,16 +232,16 @@ public class DrawingPage : Box
 		var x = dragStartX + args.OffsetX;
 		var y = dragStartY + args.OffsetY;
 		cursorPosition = new SKPoint((float)x, (float)y);
-		currentPath?.LineTo((float)x, (float)y);
+		currentBuilder?.LineTo((float)x, (float)y);
 		drawingSkiaView.QueueDraw();
 	}
 
 	private void OnDragEnd(GestureDrag sender, GestureDrag.DragEndSignalArgs args)
 	{
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
-			strokes.Add((currentPath, currentColor, brushSize));
-			currentPath = null;
+			strokes.Add((currentBuilder.Detach(), currentColor, brushSize));
+			currentBuilder = null;
 			drawingSkiaView.QueueDraw();
 		}
 	}
@@ -250,8 +251,8 @@ public class DrawingPage : Box
 		foreach (var (path, _, _) in strokes)
 			path.Dispose();
 		strokes.Clear();
-		currentPath?.Dispose();
-		currentPath = null;
+		currentBuilder?.Dispose();
+		currentBuilder = null;
 		drawingSkiaView.QueueDraw();
 	}
 }
