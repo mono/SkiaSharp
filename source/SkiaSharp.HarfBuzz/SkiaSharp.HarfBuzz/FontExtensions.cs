@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using HarfBuzzSharp;
 
 namespace SkiaSharp.HarfBuzz
@@ -98,8 +97,6 @@ namespace SkiaSharp.HarfBuzz
 					{
 						glyphPath = font.GetGlyphPath(glyph);
 					}
-
-					Debug.Assert(glyphPath != null);
 #else
 					if (!glyphCache.TryGetValue(glyph, out var glyphPath))
 					{
