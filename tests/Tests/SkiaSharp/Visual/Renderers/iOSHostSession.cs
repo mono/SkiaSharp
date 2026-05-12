@@ -70,11 +70,13 @@ namespace SkiaSharp.Tests.Visual
 				await RunXcrun ($"simctl install {bootedUdid} \"{appBundle}\"", ct);
 				await RunXcrun ($"simctl launch {bootedUdid} {BundleId}", ct);
 
-				// Give the AppDelegate's TcpListener a moment to come up.
-				await Task.Delay (1500, ct);
-
-				s._tcp = new TcpClient ();
-				await s._tcp.ConnectAsync ("127.0.0.1", Port, ct);
+				// `simctl launch` returns as soon as the process is spawned;
+				// the AppDelegate's FinishedLaunching (and the TcpListener it
+				// starts) hasn't fired yet. Poll the port for up to 15 s with
+				// short backoff instead of a single fixed sleep, so cold
+				// simulator launches don't lose the race.
+				s._tcp = await ConnectWithRetry ("127.0.0.1", Port,
+					TimeSpan.FromSeconds (15), bootedUdid, BundleId, ct);
 				var stream = s._tcp.GetStream ();
 				s._reader = new StreamReader (stream, Encoding.UTF8);
 				s._writer = new StreamWriter (stream, new UTF8Encoding (false)) { AutoFlush = true };
@@ -120,6 +122,55 @@ namespace SkiaSharp.Tests.Visual
 		}
 
 		// ---- simctl helpers ----
+
+		private static async Task<TcpClient> ConnectWithRetry (string host, int port,
+			TimeSpan budget, string udid, string bundleId, CancellationToken ct)
+		{
+			var deadline = DateTime.UtcNow + budget;
+			var delay = TimeSpan.FromMilliseconds (250);
+			Exception? last = null;
+			while (DateTime.UtcNow < deadline) {
+				ct.ThrowIfCancellationRequested ();
+				var tcp = new TcpClient ();
+				try {
+					await tcp.ConnectAsync (host, port, ct);
+					return tcp;
+				} catch (SocketException ex) {
+					last = ex;
+					try { tcp.Dispose (); } catch { }
+					await Task.Delay (delay, ct);
+					if (delay < TimeSpan.FromSeconds (1))
+						delay = TimeSpan.FromMilliseconds (delay.TotalMilliseconds * 2);
+				}
+			}
+
+			// Diagnostic before giving up. If the app crashed at launch, a
+			// re-launch will succeed too (fresh process) so the most useful
+			// signal is `simctl get_app_container` (proves install) plus
+			// recent OSLog messages for the process.
+			var installState = "unknown";
+			try {
+				installState = (await RunXcrun ($"simctl get_app_container {udid} {bundleId}", ct)).Trim ();
+			} catch (Exception ex) {
+				installState = $"get_app_container failed: {ex.Message}";
+			}
+			string crashLog = "";
+			try {
+				// Tail the last 200 lines of the simulator's syslog for our
+				// bundle — surfaces NSException backtraces, UIScene errors,
+				// dyld load failures, etc.
+				crashLog = await RunXcrun (
+					$"simctl spawn {udid} log show --last 30s --predicate \"subsystem == \\\"{bundleId}\\\" OR senderImagePath CONTAINS \\\"RenderHost.iOS\\\"\" --style compact",
+					ct);
+				if (crashLog.Length > 4000) crashLog = "..." + crashLog.Substring (crashLog.Length - 4000);
+			} catch { }
+
+			throw new InvalidOperationException (
+				$"could not connect to RenderHost.iOS on 127.0.0.1:{port} within {budget.TotalSeconds:F0}s; " +
+				$"last error: {last?.Message ?? "n/a"}. " +
+				$"App bundle installed at: {installState}. " +
+				(string.IsNullOrWhiteSpace (crashLog) ? "" : $"Recent log:\n{crashLog}"));
+		}
 
 		private static async Task<string?> GetBootedSimulator (CancellationToken ct)
 		{
