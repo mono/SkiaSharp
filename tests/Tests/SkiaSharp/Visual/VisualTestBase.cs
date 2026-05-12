@@ -45,23 +45,16 @@ namespace SkiaSharp.Tests.Visual
 		/// catching real regressions.</summary>
 		protected virtual int MaxChannelDelta => 2;
 
-		/// <summary>
-		/// Full (renderer × scene) matrix, filtered to compatible cells (e.g.
-		/// scenes that need GPU are skipped against raster renderers).
-		/// </summary>
+		/// <summary>Full (renderer × scene) matrix.</summary>
 		public static IEnumerable<object[]> Matrix ()
 		{
 			// Note: this is evaluated AT DISCOVERY TIME. Cheap probes only —
 			// no GPU resource allocation. RendererCatalog and SceneCatalog
 			// both lazy-instantiate on first access, but constructors are
 			// metadata-only by contract (see IRenderer doc).
-			foreach (var renderer in RendererCatalog.All) {
-				foreach (var scene in SceneCatalog.All) {
-					if (!renderer.Caps.Satisfies (scene.Requires))
-						continue;
+			foreach (var renderer in RendererCatalog.All)
+				foreach (var scene in SceneCatalog.All)
 					yield return new object[] { renderer.Name, scene.Name };
-				}
-			}
 		}
 
 		/// <summary>
@@ -80,8 +73,6 @@ namespace SkiaSharp.Tests.Visual
 
 			Skip.IfNot (renderer.IsAvailable,
 				$"Renderer '{renderer.Name}' unavailable: {renderer.UnavailableReason}");
-			Skip.IfNot (renderer.Caps.Satisfies (scene.Requires),
-				$"Scene '{scene.Name}' requires {scene.Requires}, renderer offers {renderer.Caps}");
 
 			byte[] actual;
 			try {

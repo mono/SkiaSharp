@@ -13,7 +13,6 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class GaneshVulkanRenderer : IRenderer
 	{
 		public string Name => "ganesh-vulkan";
-		public RendererCapabilities Caps => RendererCapabilities.Gpu;
 
 		public bool IsAvailable => VulkanLoader.Shared.IsAvailable;
 		public string UnavailableReason => VulkanLoader.Shared.IsAvailable

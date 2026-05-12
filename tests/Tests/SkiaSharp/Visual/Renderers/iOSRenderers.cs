@@ -16,7 +16,6 @@ namespace SkiaSharp.Tests.Visual
 	public abstract class iOSRendererBase : IRenderer
 	{
 		public abstract string Name { get; }
-		public abstract RendererCapabilities Caps { get; }
 
 		private static volatile iOSHostSession? _session;
 		private static readonly SemaphoreSlim _initLock = new (1, 1);
@@ -85,18 +84,15 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class iOSRasterRenderer : iOSRendererBase
 	{
 		public override string Name => "ios-raster";
-		public override RendererCapabilities Caps => RendererCapabilities.Cpu;
 	}
 
 	public sealed class iOSGaneshMetalRenderer : iOSRendererBase
 	{
 		public override string Name => "ios-ganesh-metal";
-		public override RendererCapabilities Caps => RendererCapabilities.Gpu;
 	}
 
 	public sealed class iOSGraphiteMetalRenderer : iOSRendererBase
 	{
 		public override string Name => "ios-graphite-metal";
-		public override RendererCapabilities Caps => RendererCapabilities.Gpu;
 	}
 }

@@ -13,7 +13,6 @@ namespace SkiaSharp.Tests.Visual
 	public abstract class WasmRendererBase : IRenderer
 	{
 		public abstract string Name { get; }
-		public abstract RendererCapabilities Caps { get; }
 
 		// Cached lazily on first access. Bringing up Playwright is heavy
 		// (~3-10 s); we pay it once per test session.
@@ -81,18 +80,15 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class WasmRasterRenderer : WasmRendererBase
 	{
 		public override string Name => "wasm-raster";
-		public override RendererCapabilities Caps => RendererCapabilities.Cpu;
 	}
 
 	public sealed class WasmGraphiteDawnRenderer : WasmRendererBase
 	{
 		public override string Name => "wasm-graphite-dawn";
-		public override RendererCapabilities Caps => RendererCapabilities.Gpu;
 	}
 
 	public sealed class WasmGaneshGlEsRenderer : WasmRendererBase
 	{
 		public override string Name => "wasm-ganesh-gles";
-		public override RendererCapabilities Caps => RendererCapabilities.Gpu;
 	}
 }

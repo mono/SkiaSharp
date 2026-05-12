@@ -7,8 +7,6 @@ namespace SkiaSharp.Tests.Visual
 		public SKImageInfo SuggestedInfo =>
 			new SKImageInfo (256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-		public SceneRequirements Requires => SceneRequirements.None;
-
 		public void Draw (SKCanvas canvas)
 		{
 			canvas.Clear (SKColors.White);

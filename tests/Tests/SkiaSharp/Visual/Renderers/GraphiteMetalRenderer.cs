@@ -18,7 +18,6 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class GraphiteMetalRenderer : IRenderer
 	{
 		public string Name => "graphite-metal";
-		public RendererCapabilities Caps => RendererCapabilities.Gpu;
 
 		public bool IsAvailable => UnavailableReason == null;
 

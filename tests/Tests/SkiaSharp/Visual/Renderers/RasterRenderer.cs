@@ -12,7 +12,6 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class RasterRenderer : IRenderer
 	{
 		public string Name => "raster";
-		public RendererCapabilities Caps => RendererCapabilities.Cpu;
 		public bool IsAvailable => true;
 		public string UnavailableReason => null;
 

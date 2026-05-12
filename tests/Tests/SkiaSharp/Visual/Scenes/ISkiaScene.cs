@@ -22,13 +22,6 @@ namespace SkiaSharp.Tests.Visual
 		/// </summary>
 		SKImageInfo SuggestedInfo { get; }
 
-		/// <summary>
-		/// What the scene needs from the renderer (e.g. GPU-only effects, MSAA, …).
-		/// The matrix framework filters out incompatible (renderer, scene) cells
-		/// at theory-discovery time.
-		/// </summary>
-		SceneRequirements Requires { get; }
-
 		void Draw (SKCanvas canvas);
 	}
 }

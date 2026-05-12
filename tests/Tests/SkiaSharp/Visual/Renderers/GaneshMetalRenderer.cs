@@ -19,7 +19,6 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class GaneshMetalRenderer : IRenderer
 	{
 		public string Name => "ganesh-metal";
-		public RendererCapabilities Caps => RendererCapabilities.Gpu;
 
 		public bool IsAvailable => UnavailableReason == null;
 

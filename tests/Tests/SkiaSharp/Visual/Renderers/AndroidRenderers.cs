@@ -13,7 +13,6 @@ namespace SkiaSharp.Tests.Visual
 	public abstract class AndroidRendererBase : IRenderer
 	{
 		public abstract string Name { get; }
-		public abstract RendererCapabilities Caps { get; }
 
 		// Session is process-singleton and lazily initialised on the first
 		// RenderAsync — bringing it up takes ~5-10 s (adb install + activity
@@ -76,13 +75,11 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class AndroidRasterRenderer : AndroidRendererBase
 	{
 		public override string Name => "android-raster";
-		public override RendererCapabilities Caps => RendererCapabilities.Cpu;
 	}
 
 	public sealed class AndroidGaneshVulkanRenderer : AndroidRendererBase
 	{
 		public override string Name => "android-ganesh-vulkan";
-		public override RendererCapabilities Caps => RendererCapabilities.Gpu;
 	}
 
 	// Follow-ups (not in this commit):

@@ -28,7 +28,6 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class GaneshGlRenderer : IRenderer
 	{
 		public string Name => "ganesh-gl";
-		public RendererCapabilities Caps => RendererCapabilities.Gpu;
 
 		public bool IsAvailable
 		{

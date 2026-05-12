@@ -22,8 +22,6 @@ namespace SkiaSharp.Tests.Visual
 		/// </summary>
 		string Name { get; }
 
-		RendererCapabilities Caps { get; }
-
 		/// <summary>
 		/// Cheap probe — true if this renderer can run on the current host.
 		/// Must not allocate GPU resources; just check whether the loader, driver,

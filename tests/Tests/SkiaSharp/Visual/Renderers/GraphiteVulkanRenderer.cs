@@ -12,7 +12,6 @@ namespace SkiaSharp.Tests.Visual
 	public sealed class GraphiteVulkanRenderer : IRenderer
 	{
 		public string Name => "graphite-vulkan";
-		public RendererCapabilities Caps => RendererCapabilities.Gpu;
 
 		public bool IsAvailable => VulkanLoader.Shared.IsAvailable
 			&& SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan);

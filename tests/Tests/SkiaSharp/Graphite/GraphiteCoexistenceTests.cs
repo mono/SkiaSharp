@@ -62,7 +62,6 @@ namespace SkiaSharp.Tests.Graphite
 			public SKImageInfo Info { get; set; }
 			public string Name => nameof (CoexistenceScene);
 			public SKImageInfo SuggestedInfo => Info;
-			public SceneRequirements Requires => SceneRequirements.None;
 			public void Draw (SKCanvas canvas)
 			{
 				canvas.Clear (SKColors.White);
