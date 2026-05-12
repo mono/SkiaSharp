@@ -82,10 +82,34 @@ namespace SkiaSharp.Tests.Visual
 			Skip.IfNot (renderer.Caps.Satisfies (scene.Requires),
 				$"Scene '{scene.Name}' requires {scene.Requires}, renderer offers {renderer.Caps}");
 
-			var actual = await renderer.RenderAsync (scene, scene.SuggestedInfo, ct);
+			byte[] actual;
+			try {
+				actual = await renderer.RenderAsync (scene, scene.SuggestedInfo, ct);
+			} catch (Exception ex) when (IsBrowserCapabilityFailure (ex)) {
+				Skip.If (true,
+					$"Renderer '{renderer.Name}' can't run on this browser host: {ex.Message}");
+				return; // unreachable — Skip.If throws
+			}
 			var rgba = new SKImageInfo (scene.SuggestedInfo.Width, scene.SuggestedInfo.Height,
 				SKColorType.Rgba8888, SKAlphaType.Premul);
 			Compare (renderer.Name, scene.Name, rgba, actual);
+		}
+
+		/// <summary>
+		/// True if the exception looks like "the browser host can't initialize
+		/// the feature this renderer needs" rather than a real test failure.
+		/// Bridge JS returns null + we throw with a documented message for the
+		/// three cases (no <c>navigator.gpu</c>, no OffscreenCanvas, no WebGL2);
+		/// the test base converts those to Skip rather than Fail so a CI host
+		/// without GPU/WebGPU support reports cleanly.
+		/// </summary>
+		private static bool IsBrowserCapabilityFailure (Exception ex)
+		{
+			var msg = ex.Message ?? string.Empty;
+			return msg.Contains ("no WebGPU available")
+				|| msg.Contains ("OffscreenCanvas/WebGL2 unavailable")
+				|| msg.Contains ("OffscreenCanvas unavailable")
+				|| msg.Contains ("webgl2 context unavailable");
 		}
 
 		// ---- Comparison ----
