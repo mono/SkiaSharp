@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests.Visual
 		{
 			if (_session != null) {
 				if (!_session.IsAvailable)
-					throw new InvalidOperationException (_session.FailureReason);
+					throw new RendererUnavailableException (_session.FailureReason);
 				return _session;
 			}
 			await _initLock.WaitAsync (ct);
@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests.Visual
 				if (_session == null)
 					_session = await AndroidHostSession.GetAsync (ct);
 				if (!_session.IsAvailable)
-					throw new InvalidOperationException (_session.FailureReason);
+					throw new RendererUnavailableException (_session.FailureReason);
 				return _session;
 			} finally {
 				_initLock.Release ();

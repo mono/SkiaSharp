@@ -110,18 +110,44 @@ namespace SkiaSharp.Tests.Visual
 			}
 		}
 
+		// JS-side messages from skia_wgpu_bridge.js / skia_gl_bridge.js / the
+		// in-page renderers that mean "this browser host can't provide the
+		// API this renderer needs" (vs. a real test failure). String-matching
+		// is OK *here* because the boundary is JS — we can't propagate a
+		// typed exception across page.evaluateAsync. The match is contained
+		// to this one method.
+		private static readonly string[] BrowserCapabilityMarkers = {
+			"no WebGPU available",
+			"OffscreenCanvas/WebGL2 unavailable",
+			"OffscreenCanvas unavailable",
+			"webgl2 context unavailable",
+		};
+
 		public async Task<byte[]> RenderAsync (string rendererName, string sceneName,
 			int width, int height, CancellationToken ct)
 		{
 			if (!IsAvailable)
-				throw new InvalidOperationException (FailureReason);
+				throw new RendererUnavailableException (FailureReason);
 
-			var b64 = await _page.EvaluateAsync<string> (
-				@"async ([r, s, w, h]) => await globalThis.skiaTestHost.renderScene(r, s, w, h)",
-				new object[] { rendererName, sceneName, width, height });
+			string b64;
+			try {
+				b64 = await _page.EvaluateAsync<string> (
+					@"async ([r, s, w, h]) => await globalThis.skiaTestHost.renderScene(r, s, w, h)",
+					new object[] { rendererName, sceneName, width, height });
+			} catch (Microsoft.Playwright.PlaywrightException ex) when (IsBrowserCapabilityFailure (ex.Message)) {
+				throw new RendererUnavailableException (ex.Message, ex);
+			}
 			if (string.IsNullOrEmpty (b64))
 				throw new InvalidOperationException ($"WASM host returned empty pixels for {rendererName}/{sceneName}");
 			return Convert.FromBase64String (b64);
+		}
+
+		private static bool IsBrowserCapabilityFailure (string msg)
+		{
+			if (string.IsNullOrEmpty (msg)) return false;
+			foreach (var marker in BrowserCapabilityMarkers)
+				if (msg.Contains (marker)) return true;
+			return false;
 		}
 
 		// ---- Tiny HTTP server (PUBLISH-only, no caching, no security) ----

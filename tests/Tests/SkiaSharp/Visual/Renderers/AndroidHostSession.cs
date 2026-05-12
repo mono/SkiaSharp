@@ -103,7 +103,7 @@ namespace SkiaSharp.Tests.Visual
 			int width, int height, CancellationToken ct)
 		{
 			if (!IsAvailable)
-				throw new InvalidOperationException (FailureReason);
+				throw new RendererUnavailableException (FailureReason);
 
 			await _ioLock.WaitAsync (ct);
 			try {

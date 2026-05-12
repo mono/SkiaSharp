@@ -86,34 +86,17 @@ namespace SkiaSharp.Tests.Visual
 			byte[] actual;
 			try {
 				actual = await renderer.RenderAsync (scene, scene.SuggestedInfo, ct);
-			} catch (Exception ex) when (IsBrowserCapabilityFailure (ex)) {
-				Skip.If (true,
-					$"Renderer '{renderer.Name}' can't run on this browser host: {ex.Message}");
+			} catch (RendererUnavailableException ex) {
+				// The renderer (or its transport) decided at runtime that
+				// this host can't run it — missing driver feature, no
+				// device attached, etc. Skip rather than fail; the matrix
+				// is supposed to honestly report what each host can do.
+				Skip.If (true, $"Renderer '{renderer.Name}' unavailable at runtime: {ex.Message}");
 				return; // unreachable — Skip.If throws
 			}
 			var rgba = new SKImageInfo (scene.SuggestedInfo.Width, scene.SuggestedInfo.Height,
 				SKColorType.Rgba8888, SKAlphaType.Premul);
 			Compare (renderer.Name, scene.Name, rgba, actual);
-		}
-
-		/// <summary>
-		/// True if the exception looks like "this host can't reach the
-		/// feature/device this renderer needs" rather than a real test
-		/// failure. Covers in-browser feature gates (no WebGPU, no
-		/// OffscreenCanvas, …) AND the out-of-process transports (no adb,
-		/// no Android device attached, RenderHost bring-up failed).
-		/// </summary>
-		private static bool IsBrowserCapabilityFailure (Exception ex)
-		{
-			var msg = ex.Message ?? string.Empty;
-			return msg.Contains ("no WebGPU available")
-				|| msg.Contains ("OffscreenCanvas/WebGL2 unavailable")
-				|| msg.Contains ("OffscreenCanvas unavailable")
-				|| msg.Contains ("webgl2 context unavailable")
-				|| msg.Contains ("WGL_ARB_create_context not supported")
-				|| msg.Contains ("adb not found")
-				|| msg.Contains ("no Android device or emulator attached")
-				|| msg.Contains ("Android host bring-up failed");
 		}
 
 		// ---- Comparison ----

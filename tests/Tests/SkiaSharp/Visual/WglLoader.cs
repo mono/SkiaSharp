@@ -91,7 +91,7 @@ namespace SkiaSharp.Tests.Visual
 				|| createAttribsVal == 3 || createAttribsVal == -1) {
 				wglMakeCurrent (IntPtr.Zero, IntPtr.Zero);
 				wglDeleteContext (dummyCtx);
-				throw new InvalidOperationException (
+				throw new RendererUnavailableException (
 					"WGL_ARB_create_context not supported by this driver — install a recent GPU driver");
 			}
 			var createAttribs = Marshal.GetDelegateForFunctionPointer<wglCreateContextAttribsARB_t> (createAttribsAddr);
