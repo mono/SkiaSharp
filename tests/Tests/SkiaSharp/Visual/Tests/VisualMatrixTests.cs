@@ -16,7 +16,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 	/// </summary>
 	public class VisualMatrixTests : VisualTestBase
 	{
-		[SkippableTheory, MemberData (nameof (Matrix))]
+		[VisualTheory, MemberData (nameof (Matrix))]
 		public Task RenderAndCompare (string rendererName, string sceneName) =>
 			VerifyScene (rendererName, sceneName);
 	}

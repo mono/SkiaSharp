@@ -4,6 +4,8 @@ A cross-backend pixel-comparison harness that renders the same scene through eve
 
 These tests are **opt-in**. A plain `dotnet test` skips all of them — they need a published WASM payload, a built Android APK, a booted simulator, etc., and on a machine without that infrastructure the matrix is mostly skips. Turn them on with `SKIASHARP_VISUAL_TESTS=1`.
 
+The gate is a custom xUnit attribute (`[VisualTheory]` / `[VisualFact]`, defined in `tests/Tests/SkiaSharp/Visual/VisualFactAttribute.cs`) that checks the env var at discovery time. Without the env var the unrun matrix collapses to a single skipped theory in the test report rather than 42 individual skip lines.
+
 ---
 
 ## TL;DR
