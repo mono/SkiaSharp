@@ -110,6 +110,7 @@ namespace SkiaSharp.Tests.Visual
 				|| msg.Contains ("OffscreenCanvas/WebGL2 unavailable")
 				|| msg.Contains ("OffscreenCanvas unavailable")
 				|| msg.Contains ("webgl2 context unavailable")
+				|| msg.Contains ("WGL_ARB_create_context not supported")
 				|| msg.Contains ("adb not found")
 				|| msg.Contains ("no Android device or emulator attached")
 				|| msg.Contains ("Android host bring-up failed");

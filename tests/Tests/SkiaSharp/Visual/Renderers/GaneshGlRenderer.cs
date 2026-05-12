@@ -64,6 +64,14 @@ namespace SkiaSharp.Tests.Visual
 		private readonly object _startLock = new object ();
 		private Thread _worker;
 		private BlockingCollection<WorkItem> _queue;
+		// If the worker dies during platform init (WGL/EGL bring-up
+		// failed), every subsequent RenderAsync must reject immediately
+		// rather than queueing work onto a queue with no consumer.
+		// _workerInitFailure is set by the worker before exiting; reading
+		// it in RenderAsync closes the race where the caller queues work
+		// in the window between the worker's failure and the caller's
+		// add.
+		private volatile Exception _workerInitFailure;
 
 		private sealed class WorkItem
 		{
@@ -78,6 +86,13 @@ namespace SkiaSharp.Tests.Visual
 			if (!IsAvailable)
 				throw new InvalidOperationException (UnavailableReason);
 			EnsureWorker ();
+			// Worker bring-up may have failed on a previous call (e.g.
+			// WGL_ARB_create_context unsupported by the host's driver).
+			// Reject every subsequent call with the cached failure rather
+			// than queueing work onto a dead worker's queue.
+			var initFailure = _workerInitFailure;
+			if (initFailure != null)
+				return Task.FromException<byte[]> (initFailure);
 			var tcs = new TaskCompletionSource<byte[]> (TaskCreationOptions.RunContinuationsAsynchronously);
 			_queue.Add (new WorkItem { Scene = scene, Info = info, Ct = ct, Tcs = tcs }, ct);
 			return tcs.Task;
@@ -114,6 +129,7 @@ namespace SkiaSharp.Tests.Visual
 						"ganesh-gl is only available on Linux (EGL) and Windows (WGL)");
 				}
 			} catch (Exception ex) {
+				_workerInitFailure = ex;
 				while (_queue.TryTake (out var it))
 					it.Tcs.TrySetException (ex);
 				wgl?.Dispose ();
