@@ -17,12 +17,12 @@ namespace SkiaSharp.Tests.Visual
 	/// </para>
 	///
 	/// <para>
-	/// GL contexts are THREAD-AFFINE — they can only be current on one
-	/// thread at a time, and GL commands must come from that thread. This
-	/// renderer owns a dedicated worker thread for its lifetime:
-	/// <see cref="RenderAsync"/> posts the work + awaits the result; the
-	/// worker brings up + tears down the GRContext + SKSurface against the
-	/// platform context it holds current.
+	/// GL contexts are thread-affine. On Linux EGL allows cross-thread binding,
+	/// so the process-singleton <see cref="EglLoader.Shared"/> is reused across
+	/// threads. WGL on Windows does NOT — its DC pixel-format state and the
+	/// context's bind state are tied to the thread that created them. So the
+	/// renderer's worker thread does the full WGL bring-up itself; we never
+	/// touch WGL from another thread.
 	/// </para>
 	/// </summary>
 	public sealed class GaneshGlRenderer : IRenderer
@@ -33,8 +33,12 @@ namespace SkiaSharp.Tests.Visual
 		public bool IsAvailable
 		{
 			get {
+				// Cheap, side-effect-free probe. The actual WGL bring-up on
+				// Windows happens on the worker thread inside RenderAsync;
+				// if it fails there, the test gets a hard failure (not a
+				// skip) with the underlying Win32 error in the message.
 				if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))   return EglLoader.Shared.IsAvailable;
-				if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) return WglLoader.Shared.IsAvailable;
+				if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) return WglLoader.ProbeOpenGl32Loadable ();
 				return false;
 			}
 		}
@@ -47,34 +51,16 @@ namespace SkiaSharp.Tests.Visual
 						: $"EGL loader unavailable: {EglLoader.Shared.FailureReason}";
 				}
 				if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
-					return WglLoader.Shared.IsAvailable ? null
-						: $"WGL loader unavailable: {WglLoader.Shared.FailureReason}";
+					return WglLoader.ProbeOpenGl32Loadable () ? null
+						: "opengl32.dll not loadable on this host";
 				}
 				return "ganesh-gl uses EGL+llvmpipe on Linux and WGL on Windows (macOS uses Metal — no desktop GL)";
 			}
 		}
 
-		// Platform-aware context handles, used by the worker thread.
-		private static void LoaderMakeCurrent ()
-		{
-			if      (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))   EglLoader.Shared.MakeCurrent ();
-			else if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) WglLoader.Shared.MakeCurrent ();
-			else throw new PlatformNotSupportedException (
-				"ganesh-gl is only available on Linux (EGL) and Windows (WGL)");
-		}
-
-		private static IntPtr LoaderGetProc (string name)
-		{
-			if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))   return EglLoader.Shared.GetProc (name);
-			if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) return WglLoader.Shared.GetProc (name);
-			return IntPtr.Zero;
-		}
-
 		// Worker thread + work queue. Lazy: spun up on first RenderAsync,
-		// joined on Dispose. The EGL context is bound once on the worker
-		// (GL is thread-affine), but the GRContext + SKSurface are created
-		// PER render — matches the Vulkan/Metal renderers' lifetime model
-		// and keeps GarbageCleanupFixture happy (no long-lived GRContext).
+		// joined on Dispose. On Windows the worker also owns the WGL state
+		// (creates window, DC, context on first iteration).
 		private readonly object _startLock = new object ();
 		private Thread _worker;
 		private BlockingCollection<WorkItem> _queue;
@@ -113,28 +99,45 @@ namespace SkiaSharp.Tests.Visual
 
 		private void WorkerLoop ()
 		{
+			WglLoader wgl = null;
+			GRGlGetProcedureAddressDelegate getProc;
 			try {
-				LoaderMakeCurrent ();
+				if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux)) {
+					EglLoader.Shared.MakeCurrent ();
+					getProc = name => EglLoader.Shared.GetProc (name);
+				} else if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
+					wgl = new WglLoader ();
+					wgl.Initialize (); // creates window+DC+context on THIS thread
+					getProc = name => wgl.GetProc (name);
+				} else {
+					throw new PlatformNotSupportedException (
+						"ganesh-gl is only available on Linux (EGL) and Windows (WGL)");
+				}
 			} catch (Exception ex) {
 				while (_queue.TryTake (out var it))
 					it.Tcs.TrySetException (ex);
+				wgl?.Dispose ();
 				return;
 			}
 
-			foreach (var item in _queue.GetConsumingEnumerable ()) {
-				try {
-					item.Ct.ThrowIfCancellationRequested ();
-					var bytes = RenderOnWorker (item.Scene, item.Info);
-					item.Tcs.SetResult (bytes);
-				} catch (Exception ex) {
-					item.Tcs.TrySetException (ex);
+			try {
+				foreach (var item in _queue.GetConsumingEnumerable ()) {
+					try {
+						item.Ct.ThrowIfCancellationRequested ();
+						var bytes = RenderOnWorker (getProc, item.Scene, item.Info);
+						item.Tcs.SetResult (bytes);
+					} catch (Exception ex) {
+						item.Tcs.TrySetException (ex);
+					}
 				}
+			} finally {
+				wgl?.Dispose ();
 			}
 		}
 
-		private byte[] RenderOnWorker (ISkiaScene scene, SKImageInfo info)
+		private byte[] RenderOnWorker (GRGlGetProcedureAddressDelegate getProc, ISkiaScene scene, SKImageInfo info)
 		{
-			using var glInterface = GRGlInterface.CreateOpenGl (name => LoaderGetProc (name))
+			using var glInterface = GRGlInterface.CreateOpenGl (getProc)
 				?? throw new InvalidOperationException ("GRGlInterface.CreateOpenGl returned null");
 			using var ctx = GRContext.CreateGl (glInterface)
 				?? throw new InvalidOperationException ("GRContext.CreateGl returned null");

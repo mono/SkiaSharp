@@ -1,129 +1,61 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
-	/// Process-singleton WGL context, used by <see cref="GaneshGlRenderer"/>
-	/// for headless GL on Windows.
+	/// Headless WGL context — owned by a single thread, end-to-end.
 	///
 	/// <para>
-	/// Bootstraps a message-only HWND (parented to <c>HWND_MESSAGE</c>), gets
-	/// a DC, sets a minimal RGBA8/depth24/stencil8 pixel format, creates a
-	/// dummy WGL context to query <c>wglCreateContextAttribsARB</c>, then
-	/// creates a real GL 3.3 core profile context on the same DC. The window
-	/// is never shown; Skia renders into its own FBO inside the context, so
-	/// the DC's default framebuffer is never touched.
+	/// Unlike <see cref="EglLoader"/> (which is a process-singleton and lets
+	/// callers cross-thread <c>eglMakeCurrent</c> freely), WGL is strictly
+	/// single-thread: the window class default DC's pixel format and the
+	/// context's bind-state are both tied to the thread that <em>creates</em>
+	/// them. Crossing the thread boundary surfaces as either ERROR_BUSY (170)
+	/// or ERROR_INVALID_PIXEL_FORMAT (2004) depending on the driver.
 	/// </para>
 	///
 	/// <para>
-	/// Mirrors <see cref="EglLoader"/> for Linux. The renderer
-	/// (<see cref="GaneshGlRenderer"/>) picks one or the other based on
-	/// <c>OperatingSystem.IsWindows()</c> / <c>IsLinux()</c>.
+	/// Consequently this loader is NOT a static singleton: every instance is
+	/// created, initialised, used, and disposed on exactly one thread —
+	/// <see cref="GaneshGlRenderer"/>'s dedicated worker.
 	/// </para>
 	/// </summary>
-	internal sealed unsafe class WglLoader
+	internal sealed unsafe class WglLoader : IDisposable
 	{
-		private static WglLoader instance;
-		private static readonly object instanceLock = new object ();
-
 		public IntPtr Hwnd  { get; private set; }
 		public IntPtr Hdc   { get; private set; }
 		public IntPtr Hglrc { get; private set; }
-		public bool   IsAvailable   { get; private set; }
-		public string FailureReason { get; private set; }
 
-		public static WglLoader Shared {
-			get {
-				if (instance == null) {
-					lock (instanceLock) {
-						if (instance == null) {
-							instance = new WglLoader ();
-							instance.Initialize ();
-						}
-					}
-				}
-				return instance;
-			}
+		/// <summary>Cheap process-wide probe for <see cref="GaneshGlRenderer.IsAvailable"/>:
+		/// can we resolve opengl32.dll at all? Says nothing about whether
+		/// <see cref="Initialize"/> will actually succeed.</summary>
+		public static bool ProbeOpenGl32Loadable ()
+		{
+			var h = LoadLibraryW ("opengl32.dll");
+			return h != IntPtr.Zero;
 		}
 
 		/// <summary>
-		/// Bind this loader's context to the calling thread. WGL contexts are
-		/// thread-affine (one current context per thread); the renderer calls
-		/// this once on its dedicated worker.
+		/// Brings the window + DC + pixel format + GL 3.3 core context up on
+		/// the CALLING thread, and leaves the context current on it. Throws
+		/// on failure with a descriptive message; caller (the worker thread)
+		/// should catch and propagate via TaskCompletionSource.
 		/// </summary>
-		public void MakeCurrent ()
+		public void Initialize ()
 		{
-			if (!IsAvailable)
-				throw new InvalidOperationException ($"WGL unavailable: {FailureReason}");
-			if (!wglMakeCurrent (Hdc, Hglrc))
-				throw new InvalidOperationException ($"wglMakeCurrent failed (err {Marshal.GetLastWin32Error ()})");
-		}
-
-		private IntPtr opengl32Handle;
-
-		/// <summary>
-		/// Procedure-address adapter for <see cref="GRGlInterface.CreateOpenGl"/>.
-		/// <c>wglGetProcAddress</c> only returns pointers for GL functions ABOVE
-		/// OpenGL 1.1 — legacy entry points (<c>glClear</c>, <c>glBegin</c>, …)
-		/// have to come from <c>opengl32.dll</c> via <c>GetProcAddress</c>. We
-		/// try wgl first and fall back to opengl32 on the documented sentinel
-		/// returns (0, 1, 2, 3, -1).
-		/// </summary>
-		public IntPtr GetProc (string name)
-		{
-			var addr = wglGetProcAddress (name);
-			var val = (long)addr;
-			if (val != 0 && val != 1 && val != 2 && val != 3 && val != -1)
-				return addr;
-
-			// Use kernel32 directly (works on net48 too — NativeLibrary is
-			// .NET Core 3+). opengl32 is already loaded by the time wgl* is
-			// callable so LoadLibrary is just a ref-bump.
-			if (opengl32Handle == IntPtr.Zero)
-				opengl32Handle = LoadLibraryW ("opengl32.dll");
-			if (opengl32Handle == IntPtr.Zero)
-				return IntPtr.Zero;
-			return GetProcAddress (opengl32Handle, name);
-		}
-
-		private void Initialize ()
-		{
-			try {
-				if (!CreateWindowAndContext (out var failure)) {
-					FailureReason = failure;
-					return;
-				}
-				IsAvailable = true;
-			} catch (DllNotFoundException ex) {
-				FailureReason = $"Windows GL libraries not loadable: {ex.Message}";
-			} catch (Exception ex) {
-				FailureReason = $"WGL init failed: {ex.GetType ().Name}: {ex.Message}";
-			}
-		}
-
-		private bool CreateWindowAndContext (out string failure)
-		{
-			failure = null;
-
-			// HWND_MESSAGE = (HWND)-3: a special parent that makes the
-			// resulting window message-only — never gets WM_PAINT, never
-			// composited, never visible. We use the built-in "STATIC"
-			// window class so we don't have to RegisterClass.
+			// HWND_MESSAGE = (HWND)-3: message-only window — never composited,
+			// never visible. Built-in "STATIC" class so we don't have to
+			// RegisterClass.
 			var HWND_MESSAGE = new IntPtr (-3);
 			Hwnd = CreateWindowExW (0, "STATIC", null, 0, 0, 0, 0, 0,
 				HWND_MESSAGE, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
-			if (Hwnd == IntPtr.Zero) {
-				failure = $"CreateWindowExW returned NULL (err {Marshal.GetLastWin32Error ()})";
-				return false;
-			}
+			if (Hwnd == IntPtr.Zero)
+				throw new InvalidOperationException ($"CreateWindowExW returned NULL (err {Marshal.GetLastWin32Error ()})");
 
 			Hdc = GetDC (Hwnd);
-			if (Hdc == IntPtr.Zero) {
-				failure = "GetDC returned NULL";
-				return false;
-			}
+			if (Hdc == IntPtr.Zero)
+				throw new InvalidOperationException ("GetDC returned NULL");
 
 			var pfd = new PIXELFORMATDESCRIPTOR {
 				nSize        = (ushort)sizeof (PIXELFORMATDESCRIPTOR),
@@ -137,43 +69,35 @@ namespace SkiaSharp.Tests.Visual
 				iLayerType   = PFD_MAIN_PLANE,
 			};
 			var pixelFormat = ChoosePixelFormat (Hdc, ref pfd);
-			if (pixelFormat == 0) {
-				failure = $"ChoosePixelFormat returned 0 (err {Marshal.GetLastWin32Error ()})";
-				return false;
-			}
-			if (!SetPixelFormat (Hdc, pixelFormat, ref pfd)) {
-				failure = $"SetPixelFormat failed (err {Marshal.GetLastWin32Error ()})";
-				return false;
-			}
+			if (pixelFormat == 0)
+				throw new InvalidOperationException ($"ChoosePixelFormat returned 0 (err {Marshal.GetLastWin32Error ()})");
+			if (!SetPixelFormat (Hdc, pixelFormat, ref pfd))
+				throw new InvalidOperationException ($"SetPixelFormat failed (err {Marshal.GetLastWin32Error ()})");
 
 			// Dummy context: wglCreateContext gives whatever GL the driver
-			// defaults to (often GL 1.1 on Windows, since the modern
-			// entry points live behind wglCreateContextAttribsARB).
+			// defaults to (often GL 1.1 on Windows). We only need it long
+			// enough to query wglCreateContextAttribsARB.
 			var dummyCtx = wglCreateContext (Hdc);
-			if (dummyCtx == IntPtr.Zero) {
-				failure = $"wglCreateContext (dummy) returned NULL (err {Marshal.GetLastWin32Error ()})";
-				return false;
-			}
+			if (dummyCtx == IntPtr.Zero)
+				throw new InvalidOperationException ($"wglCreateContext (dummy) returned NULL (err {Marshal.GetLastWin32Error ()})");
 			if (!wglMakeCurrent (Hdc, dummyCtx)) {
-				failure = $"wglMakeCurrent (dummy) failed (err {Marshal.GetLastWin32Error ()})";
 				wglDeleteContext (dummyCtx);
-				return false;
+				throw new InvalidOperationException ($"wglMakeCurrent (dummy) failed (err {Marshal.GetLastWin32Error ()})");
 			}
 
-			// Query wglCreateContextAttribsARB through the dummy.
 			var createAttribsAddr = wglGetProcAddress ("wglCreateContextAttribsARB");
 			var createAttribsVal = (long)createAttribsAddr;
 			if (createAttribsAddr == IntPtr.Zero || createAttribsVal == 1 || createAttribsVal == 2
 				|| createAttribsVal == 3 || createAttribsVal == -1) {
-				failure = "WGL_ARB_create_context not supported by this driver — install a recent GPU driver";
 				wglMakeCurrent (IntPtr.Zero, IntPtr.Zero);
 				wglDeleteContext (dummyCtx);
-				return false;
+				throw new InvalidOperationException (
+					"WGL_ARB_create_context not supported by this driver — install a recent GPU driver");
 			}
 			var createAttribs = Marshal.GetDelegateForFunctionPointer<wglCreateContextAttribsARB_t> (createAttribsAddr);
 
-			// Request GL 3.3 core profile first. Fall back to a
-			// compatibility profile if the driver rejects core.
+			// Request GL 3.3 core; fall back to plain GL 3.3 if the driver
+			// rejects core profile.
 			IntPtr realCtx;
 			var coreAttribs = stackalloc int[] {
 				WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
@@ -191,42 +115,75 @@ namespace SkiaSharp.Tests.Visual
 				realCtx = createAttribs (Hdc, IntPtr.Zero, compatAttribs);
 			}
 			if (realCtx == IntPtr.Zero) {
-				failure = $"wglCreateContextAttribsARB returned NULL (err {Marshal.GetLastWin32Error ()})";
+				var err = Marshal.GetLastWin32Error ();
 				wglMakeCurrent (IntPtr.Zero, IntPtr.Zero);
 				wglDeleteContext (dummyCtx);
-				return false;
+				throw new InvalidOperationException ($"wglCreateContextAttribsARB returned NULL (err {err})");
 			}
 
-			// Swap the dummy for the real context.
+			// Swap dummy for real, leave real current on this thread.
 			wglMakeCurrent (IntPtr.Zero, IntPtr.Zero);
 			wglDeleteContext (dummyCtx);
 			Hglrc = realCtx;
-
 			if (!wglMakeCurrent (Hdc, Hglrc)) {
-				failure = $"wglMakeCurrent (real) failed (err {Marshal.GetLastWin32Error ()})";
+				var err = Marshal.GetLastWin32Error ();
 				wglDeleteContext (Hglrc);
 				Hglrc = IntPtr.Zero;
-				return false;
+				throw new InvalidOperationException ($"wglMakeCurrent (real) failed (err {err})");
 			}
-			// Release the context from the init thread. WGL is strictly
-			// one-thread-at-a-time: a context that's "current" on thread A
-			// returns ERROR_BUSY when thread B tries to bind it. The
-			// renderer's worker thread will call MakeCurrent next, so we
-			// hand the context off cleanly here.
-			wglMakeCurrent (IntPtr.Zero, IntPtr.Zero);
-			return true;
+		}
+
+		private IntPtr opengl32Handle;
+
+		/// <summary>
+		/// Procedure-address adapter for <see cref="GRGlInterface.CreateOpenGl"/>.
+		/// <c>wglGetProcAddress</c> only returns pointers for GL functions above
+		/// 1.1 — legacy entry points (glClear, glBegin, …) come from opengl32.dll
+		/// directly. Try wgl first, fall back on the documented sentinel returns
+		/// (0, 1, 2, 3, -1).
+		/// </summary>
+		public IntPtr GetProc (string name)
+		{
+			var addr = wglGetProcAddress (name);
+			var val = (long)addr;
+			if (val != 0 && val != 1 && val != 2 && val != 3 && val != -1)
+				return addr;
+
+			if (opengl32Handle == IntPtr.Zero)
+				opengl32Handle = LoadLibraryW ("opengl32.dll");
+			if (opengl32Handle == IntPtr.Zero)
+				return IntPtr.Zero;
+			return GetProcAddress (opengl32Handle, name);
+		}
+
+		public void Dispose ()
+		{
+			// MUST run on the same thread that called Initialize.
+			if (Hglrc != IntPtr.Zero) {
+				wglMakeCurrent (IntPtr.Zero, IntPtr.Zero);
+				wglDeleteContext (Hglrc);
+				Hglrc = IntPtr.Zero;
+			}
+			if (Hdc != IntPtr.Zero && Hwnd != IntPtr.Zero) {
+				ReleaseDC (Hwnd, Hdc);
+				Hdc = IntPtr.Zero;
+			}
+			if (Hwnd != IntPtr.Zero) {
+				DestroyWindow (Hwnd);
+				Hwnd = IntPtr.Zero;
+			}
 		}
 
 		// ---- Constants ----
 
-		private const uint PFD_DRAW_TO_WINDOW              = 0x00000004;
-		private const uint PFD_SUPPORT_OPENGL              = 0x00000020;
-		private const uint PFD_DOUBLEBUFFER                = 0x00000001;
-		private const byte PFD_TYPE_RGBA                   = 0;
-		private const byte PFD_MAIN_PLANE                  = 0;
-		private const int  WGL_CONTEXT_MAJOR_VERSION_ARB   = 0x2091;
-		private const int  WGL_CONTEXT_MINOR_VERSION_ARB   = 0x2092;
-		private const int  WGL_CONTEXT_PROFILE_MASK_ARB    = 0x9126;
+		private const uint PFD_DRAW_TO_WINDOW               = 0x00000004;
+		private const uint PFD_SUPPORT_OPENGL               = 0x00000020;
+		private const uint PFD_DOUBLEBUFFER                 = 0x00000001;
+		private const byte PFD_TYPE_RGBA                    = 0;
+		private const byte PFD_MAIN_PLANE                   = 0;
+		private const int  WGL_CONTEXT_MAJOR_VERSION_ARB    = 0x2091;
+		private const int  WGL_CONTEXT_MINOR_VERSION_ARB    = 0x2092;
+		private const int  WGL_CONTEXT_PROFILE_MASK_ARB     = 0x9126;
 		private const int  WGL_CONTEXT_CORE_PROFILE_BIT_ARB = 0x00000001;
 
 		[StructLayout (LayoutKind.Sequential)]
@@ -252,6 +209,13 @@ namespace SkiaSharp.Tests.Visual
 
 		[DllImport ("user32.dll", SetLastError = true)]
 		private static extern IntPtr GetDC (IntPtr hwnd);
+
+		[DllImport ("user32.dll", SetLastError = true)]
+		private static extern int ReleaseDC (IntPtr hwnd, IntPtr hdc);
+
+		[DllImport ("user32.dll", SetLastError = true)]
+		[return: MarshalAs (UnmanagedType.Bool)]
+		private static extern bool DestroyWindow (IntPtr hwnd);
 
 		[DllImport ("gdi32.dll", SetLastError = true)]
 		private static extern int ChoosePixelFormat (IntPtr hdc, ref PIXELFORMATDESCRIPTOR ppfd);
