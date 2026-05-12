@@ -38,6 +38,7 @@ namespace SkiaSharp.Tests.Visual
 	{
 		private const string EnvUpdateGoldens   = "SKIASHARP_UPDATE_GOLDENS";
 		private const string EnvGoldenScope     = "SKIASHARP_GOLDEN_SCOPE";
+		private const string EnvRunVisualTests  = "SKIASHARP_VISUAL_TESTS";
 		private const string SharedGoldensDir   = "_shared";
 
 		/// <summary>Per-channel max delta. Software ICDs are typically
@@ -68,6 +69,14 @@ namespace SkiaSharp.Tests.Visual
 		/// <summary>Run a single (renderer, scene) cell.</summary>
 		protected async Task VerifyScene (string rendererName, string sceneName, CancellationToken ct = default)
 		{
+			// Visual tests are opt-in: they need a published WASM payload, a
+			// built Android APK or iOS .app, etc., and on machines without
+			// them the matrix is mostly skips. Gate on an env var so a plain
+			// `dotnet test` doesn't have to think about visual coverage.
+			Skip.IfNot (IsTrue (Environment.GetEnvironmentVariable (EnvRunVisualTests)),
+				$"Visual tests are opt-in. Set {EnvRunVisualTests}=1 to enable them " +
+				$"(see documentation/dev/visual-tests.md).");
+
 			var renderer = RendererCatalog.Get (rendererName);
 			var scene    = SceneCatalog.Get (sceneName);
 
