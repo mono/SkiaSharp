@@ -1,0 +1,127 @@
+parameters:
+  - name: isSplitPipeline
+    type: boolean
+    default: false
+  - name: buildAgentMac
+    type: object
+  - name: buildAgentLinux
+    type: object
+
+# Visual-regression matrix (see documentation/dev/visual-tests.md). One job
+# per OS; each installs the platform-specific deps that gate its cells, runs
+# the same `tests-visual` cake target, and publishes results plus the diff
+# PNGs of any failed cells so a reviewer can see what changed.
+#
+# Windows is intentionally deferred — Azure hosted Windows agents don't ship
+# a Vulkan ICD, and bringing Lavapipe up on Windows is more involved than
+# `apt install`. Drop in a `tests_visual_windows` job here once that's worked
+# out.
+stages:
+    - stage: tests_visual
+      displayName: Visual Tests
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: native
+      jobs:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Visual (Linux)
+          parameters:
+            name: tests_visual_linux
+            displayName: Visual (Linux)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            packages: $(MANAGED_LINUX_PACKAGES) mesa-vulkan-drivers vulkan-tools libegl1
+            target: tests-visual
+            additionalArgs: --skipExternals="all"
+            installAndroidSdk: false
+            shouldPublish: false
+            installEmsdk: true
+            initScript: source ~/emsdk/emsdk_env.sh
+            requiredArtifacts:
+              - name: native
+            preBuildSteps:
+              # Confirm Lavapipe is actually visible to the Vulkan loader.
+              # If this prints zero physical devices, the ganesh-vulkan and
+              # graphite-vulkan cells will skip — useful to know up-front.
+              - bash: |
+                  set -e
+                  vulkaninfo --summary || echo "vulkaninfo unavailable — Vulkan cells will skip"
+                displayName: Probe Vulkan ICD
+                continueOnError: true
+              # Playwright Chromium for the wasm-* cells. Browsers are
+              # downloaded into the test project's bin/, so this runs after
+              # restore but before the test invocation. We install eagerly
+              # here so the cake step doesn't need to.
+              - bash: |
+                  set -e
+                  dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
+                    -c Release -f net10.0 --nologo /v:m
+                  pwsh tests/SkiaSharp.Tests.Console/bin/Release/net10.0/playwright.ps1 install chromium --with-deps
+                displayName: Install Playwright Chromium
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the visual test results (Linux)
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Visual/**/TestResults.xml'
+                  testRunTitle: 'Visual Tests (Linux)'
+            publishArtifacts:
+              - name: testlogs_visual_linux
+                always: true
+                path: 'output/logs/testlogs'
+              # Failure artifacts — actual.png + diff.png for any cell that
+              # didn't match its golden. Lets a reviewer see *what* changed.
+              - name: visual_failures_linux
+                always: true
+                path: 'tests/SkiaSharp.Tests.Console/bin/Release/net10.0/_failures'
+
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Visual (macOS)
+          parameters:
+            name: tests_visual_macos
+            displayName: Visual (macOS)
+            buildAgent: ${{ parameters.buildAgentMac }}
+            target: tests-visual
+            additionalArgs: --skipExternals="all"
+            installAndroidSdk: false
+            shouldPublish: false
+            dotnetWorkloads: ios,wasm-tools
+            requiredArtifacts:
+              - name: native
+            preBuildSteps:
+              # Boot the first available iOS simulator so the ios-* cells
+              # can actually reach a running device via xcrun simctl.
+              - bash: |
+                  set -e
+                  udid=$(xcrun simctl list devices available -j \
+                    | python3 -c "import sys,json; d=json.load(sys.stdin)['devices']; \
+                                  print(next((dev['udid'] for k,v in d.items() if 'iOS' in k for dev in v if dev['isAvailable']), ''))")
+                  if [ -z "$udid" ]; then
+                    echo "No available iOS simulator — ios-* cells will skip."
+                    exit 0
+                  fi
+                  echo "Booting simulator $udid"
+                  xcrun simctl boot "$udid" || true
+                  xcrun simctl bootstatus "$udid" -b
+                displayName: Boot iOS Simulator
+                continueOnError: true
+              - bash: |
+                  set -e
+                  dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
+                    -c Release -f net10.0 --nologo /v:m
+                  pwsh tests/SkiaSharp.Tests.Console/bin/Release/net10.0/playwright.ps1 install chromium
+                displayName: Install Playwright Chromium
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the visual test results (macOS)
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Visual/**/TestResults.xml'
+                  testRunTitle: 'Visual Tests (macOS)'
+            publishArtifacts:
+              - name: testlogs_visual_macos
+                always: true
+                path: 'output/logs/testlogs'
+              - name: visual_failures_macos
+                always: true
+                path: 'tests/SkiaSharp.Tests.Console/bin/Release/net10.0/_failures'

@@ -74,3 +74,8 @@ stages:
         buildAgentLinux: ${{ parameters.buildAgentLinux }}
         buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
         enableCaching: ${{ parameters.enableCaching }}
+    - template: /scripts/azure-templates-stages-visual.yml@self
+      parameters:
+        isSplitPipeline: ${{ eq(parameters.buildPipelineType, 'test') }}
+        buildAgentMac: ${{ parameters.buildAgentMac }}
+        buildAgentLinux: ${{ parameters.buildAgentLinux }}

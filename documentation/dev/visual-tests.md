@@ -140,6 +140,19 @@ When a cell fails, the actual + diff PNGs are written to `tests/SkiaSharp.Tests.
 
 ---
 
+## CI
+
+Two Azure-Pipelines jobs in `scripts/azure-templates-stages-visual.yml` run this matrix:
+
+| Job | Agent | What it covers |
+|---|---|---|
+| `tests_visual_linux` | `ubuntu-22.04` + `mesa-vulkan-drivers vulkan-tools libegl1` | `raster`, `ganesh-gl`, `ganesh-vulkan`, `graphite-vulkan`, `wasm-*` |
+| `tests_visual_macos` | `macos-15` + booted iOS simulator + Playwright Chromium | `raster`, `ganesh-metal`, `graphite-metal`, `ios-*`, `wasm-*` |
+
+Both jobs run `dotnet cake --target=tests-visual`, which sets `SKIASHARP_VISUAL_TESTS=1`, builds the relevant out-of-process hosts, and runs `dotnet test --filter FullyQualifiedName~VisualMatrixTests`. Test results land in `output/logs/testlogs/SkiaSharp.Tests.Visual/` and are published; failure PNGs (`_failures/<renderer>/<scene>.{actual,diff}.png`) are published as a separate artifact (`visual_failures_<os>`) so a PR reviewer can pull the diff and see what changed.
+
+Windows is intentionally not in the matrix yet — hosted Windows agents don't ship a Vulkan ICD, so the Vulkan-backed cells would always skip. Drop in a `tests_visual_windows` job once Lavapipe-on-Windows (or a different software ICD) is wired up.
+
 ## Adding a new scene
 
 1. Implement `ISkiaScene` in `tests/Tests/SkiaSharp/Visual/Scenes/`:

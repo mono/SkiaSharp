@@ -118,6 +118,11 @@ Task ("tests-maccatalyst")
     .IsDependentOn ("externals")
     .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-maccatalyst"));
 
+Task ("tests-visual")
+    .Description ("Run the cross-backend visual-regression matrix.")
+    .IsDependentOn ("externals")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-visual.cake", "Default"));
+
 Task ("tests-wasm")
     .Description ("Run WASM tests.")
     .IsDependentOn ("externals-wasm")
