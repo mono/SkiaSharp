@@ -63,9 +63,16 @@ namespace SkiaSharp.Tests.Visual
 				Microsoft.Playwright.Program.Main (new[] { "install", "chromium" });
 
 				session._pw = await Playwright.CreateAsync ();
+				// Headless=false + --headless=new: run the full chromium binary
+				// in "new headless" mode rather than the legacy chromium_headless_shell.
+				// Same lack-of-display behaviour, but the GPU init path matches the
+				// headed code paths — WebGPU comes up reliably on hosts where the
+				// legacy shell can't initialise an adapter (notably Windows headless,
+				// per https://developer.chrome.com/articles/new-headless/).
 				session._browser = await session._pw.Chromium.LaunchAsync (new BrowserTypeLaunchOptions {
-					Headless = true,
+					Headless = false,
 					Args = new[] {
+						"--headless=new",
 						"--enable-unsafe-webgpu",
 						"--enable-features=Vulkan",
 						"--use-vulkan=swiftshader",
