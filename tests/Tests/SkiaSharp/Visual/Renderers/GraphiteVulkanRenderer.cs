@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
-	/// Graphite GPU backend over Vulkan. Same Lavapipe target as
+	/// Graphite GPU backend over Vulkan. Same Vulkan loader as
 	/// <see cref="GaneshVulkanRenderer"/>; different Skia pipeline (recorder →
 	/// recording → context.InsertRecording → context.Submit).
 	/// </summary>

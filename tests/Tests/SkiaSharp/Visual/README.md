@@ -16,8 +16,8 @@ Visual/
 │   ├── _shared/   canonical golden per scene (used by default)
 │   └── {name}/    per-renderer override (only if that renderer diverges)
 ├── VisualTestBase.cs   comparison harness + scope-aware update mode
-├── VulkanLoader.cs     headless VkInstance/VkDevice (Lavapipe on Linux, real loader on Windows)
-├── EglLoader.cs        headless EGL+llvmpipe (Linux)
+├── VulkanLoader.cs     headless VkInstance/VkDevice, prefers a software CPU ICD
+├── EglLoader.cs        headless EGL display + GL context (Linux)
 └── WglLoader.cs        headless WGL+HWND_MESSAGE (Windows)
 ```
 
@@ -25,14 +25,14 @@ Visual/
 
 | Renderer | Linux | Windows | macOS / iOS |
 |---|---|---|---|
-| `raster`              | ✓ direct                    | ✓ direct                | ✓ direct |
-| `ganesh-gl`           | ✓ EGL + llvmpipe            | ✓ WGL + HWND_MESSAGE    | — (deprecated) |
-| `ganesh-vulkan`       | ✓ Lavapipe                  | ✓ vulkan-1.dll          | — |
-| `graphite-vulkan`     | ✓ Lavapipe                  | ✓ vulkan-1.dll          | — |
-| `graphite-metal`      | —                           | —                       | ✓ direct |
-| `wasm-raster`         | ✓ Chromium/Playwright       | ✓ Chromium/Playwright   | ✓ Chromium/Playwright |
-| `wasm-ganesh-gles`    | ✓ Chromium/Playwright       | ✓ Chromium/Playwright   | ✓ Chromium/Playwright |
-| `wasm-graphite-dawn`  | ✓ Chromium SwiftShader-WebGPU | ✓ Chromium SwiftShader-WebGPU | ✓ Chromium SwiftShader-WebGPU |
+| `raster`              | ✓ direct                | ✓ direct                | ✓ direct |
+| `ganesh-gl`           | ✓ EGL + sw ICD          | ✓ WGL + HWND_MESSAGE    | — (deprecated) |
+| `ganesh-vulkan`       | ✓ sw Vulkan ICD         | ✓ vulkan-1.dll          | — |
+| `graphite-vulkan`     | ✓ sw Vulkan ICD         | ✓ vulkan-1.dll          | — |
+| `graphite-metal`      | —                       | —                       | ✓ direct |
+| `wasm-raster`         | ✓ Chromium/Playwright   | ✓ Chromium/Playwright   | ✓ Chromium/Playwright |
+| `wasm-ganesh-gles`    | ✓ Chromium/Playwright   | ✓ Chromium/Playwright   | ✓ Chromium/Playwright |
+| `wasm-graphite-dawn`  | ✓ Chromium/Playwright   | ✓ Chromium/Playwright   | ✓ Chromium/Playwright |
 
 `IsAvailable` probes each renderer at run time; any unreachable cell skips
 with a clear reason rather than failing.
@@ -62,9 +62,9 @@ dotnet test ... --filter "DisplayName~ganesh-gl|DisplayName~DiagonalLines"
 - For `ganesh-vulkan` / `graphite-vulkan` cells: a Vulkan loader on the
   system. Linux ships `libvulkan.so.1` via `libvulkan1`; Windows GPU drivers
   install `vulkan-1.dll`. Without a loader, those cells skip.
-- For `ganesh-gl` on Linux: `libegl1` + `libgl1-mesa-dri` (provides
-  llvmpipe). Without those, the cell skips. WSL2 typically has them
-  preinstalled.
+- For `ganesh-gl` on Linux: `libegl1` + a software DRI driver package
+  (typically `libgl1-mesa-dri`). Without those, the cell skips. WSL2
+  typically has them preinstalled.
 - For `ganesh-gl` on Windows: any modern GPU driver (NVIDIA/AMD/Intel)
   exposes WGL + OpenGL 3.3+. No extra installation.
 - For `wasm-*` cells:
@@ -132,8 +132,8 @@ the divergence is a real regression — investigate the diff PNG.
 | `raster/RedRoundedRectOnWhite.png` | Same — corner AA differs |
 | `wasm-raster/DiagonalLines.png` | Same as desktop raster but via WASM build |
 | `wasm-raster/RedRoundedRectOnWhite.png` | Same |
-| `wasm-ganesh-gles/DiagonalLines.png` | SwiftShader-WebGL2 vs Lavapipe diverges by 6 channels on 28 px |
-| `wasm-graphite-dawn/DiagonalLines.png` | SwiftShader-WebGPU vs Lavapipe-Vulkan diverges by 5 channels |
+| `wasm-ganesh-gles/DiagonalLines.png` | Browser GL stack vs native software ICD diverges by 6 channels on 28 px |
+| `wasm-graphite-dawn/DiagonalLines.png` | Browser WebGPU stack vs native software Vulkan diverges by 5 channels |
 | `wasm-graphite-dawn/GpuOnly_FilledCircle.png` | Same |
 
 When you add a new platform's renderer, expect similar small divergences

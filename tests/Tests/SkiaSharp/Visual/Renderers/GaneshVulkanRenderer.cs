@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
-	/// Ganesh GPU backend over Vulkan. Targets Mesa Lavapipe (software ICD)
-	/// for deterministic, headless rendering. GPU resources allocated lazily
-	/// in <see cref="RenderAsync"/> — never during construction or discovery.
+	/// Ganesh GPU backend over Vulkan. Prefers a software CPU ICD via
+	/// <see cref="VulkanLoader"/> for deterministic, headless rendering.
+	/// GPU resources allocated lazily in <see cref="RenderAsync"/> — never
+	/// during construction or discovery.
 	/// </summary>
 	public sealed class GaneshVulkanRenderer : IRenderer
 	{

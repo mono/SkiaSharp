@@ -9,10 +9,10 @@ namespace SkiaSharp.Tests.Visual
 	/// <see cref="GaneshGlRenderer"/> for headless GL on Linux.
 	///
 	/// <para>
-	/// Targets Mesa's <c>llvmpipe</c> (the software OpenGL driver) so tests
-	/// run in headless CI / WSL2 without a real GPU. Prefers the device that
-	/// advertises <c>EGL_MESA_device_software</c> so we get deterministic
-	/// software output even on machines that ALSO have a real GPU.
+	/// Prefers an EGL device that advertises <c>EGL_MESA_device_software</c>,
+	/// so any software OpenGL ICD on the host wins over a real GPU. That
+	/// gives us deterministic pixels for goldens even on machines that also
+	/// have hardware-accelerated GL.
 	/// </para>
 	///
 	/// <para>

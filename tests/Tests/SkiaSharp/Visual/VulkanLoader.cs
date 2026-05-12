@@ -9,11 +9,10 @@ namespace SkiaSharp.Tests.Visual
 	/// Ganesh (<c>GRContext.CreateVulkan</c>) and Graphite
 	/// (<c>SKGraphiteContext.CreateVulkan</c>) for visual tests.
 	///
-	/// Targets Mesa Lavapipe (the CPU-only software ICD shipped by
-	/// mesa-vulkan-drivers) so tests run in headless CI / WSL2 without a GPU.
-	/// Prefers <c>VK_PHYSICAL_DEVICE_TYPE_CPU</c> when present so we get
+	/// Prefers a <c>VK_PHYSICAL_DEVICE_TYPE_CPU</c> ICD when present so we get
 	/// deterministic software rendering even on machines that ALSO have a real
-	/// GPU (deterministic = stable goldens).
+	/// GPU (deterministic = stable goldens). Any CPU-typed Vulkan ICD on the
+	/// host satisfies the preference.
 	///
 	/// Lifetime is process-wide. The first test that touches
 	/// <see cref="Shared"/> brings up Vulkan; everything else reuses it. The
@@ -177,7 +176,7 @@ namespace SkiaSharp.Tests.Visual
 			return true;
 		}
 
-		// Minimal Vulkan 1.3 P/Invoke surface — same shape as LavapipeFixture had.
+		// Minimal Vulkan 1.3 P/Invoke surface.
 
 		public  const uint VK_API_VERSION_1_3                          = (1u << 22) | (3u << 12);
 		private const uint VK_STRUCTURE_TYPE_APPLICATION_INFO          = 0;

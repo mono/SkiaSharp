@@ -40,8 +40,9 @@ namespace SkiaSharp.Tests.Visual
 		private const string EnvGoldenScope     = "SKIASHARP_GOLDEN_SCOPE";
 		private const string SharedGoldensDir   = "_shared";
 
-		/// <summary>Per-channel max delta. Software ICDs (Lavapipe, llvmpipe)
-		/// are bit-stable; 2 rides out 1-bit rounding while catching regressions.</summary>
+		/// <summary>Per-channel max delta. Software ICDs are typically
+		/// bit-stable across hosts; 2 rides out 1-bit rounding while still
+		/// catching real regressions.</summary>
 		protected virtual int MaxChannelDelta => 2;
 
 		/// <summary>

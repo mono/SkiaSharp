@@ -10,8 +10,8 @@ namespace SkiaSharp.Tests.Visual
 	/// Ganesh GPU backend over desktop OpenGL.
 	///
 	/// <para>
-	/// Platform-dispatched: on Linux uses <see cref="EglLoader"/> (EGL +
-	/// Mesa <c>llvmpipe</c> for software-deterministic output); on Windows
+	/// Platform-dispatched: on Linux uses <see cref="EglLoader"/> (EGL with a
+	/// software-rendering ICD preference for deterministic output); on Windows
 	/// uses <see cref="WglLoader"/> (HWND_MESSAGE + <c>wglCreateContextAttribsARB</c>).
 	/// macOS is not covered — Apple deprecated desktop GL in favor of Metal.
 	/// </para>
@@ -54,7 +54,7 @@ namespace SkiaSharp.Tests.Visual
 					return WglLoader.ProbeOpenGl32Loadable () ? null
 						: "opengl32.dll not loadable on this host";
 				}
-				return "ganesh-gl uses EGL+llvmpipe on Linux and WGL on Windows (macOS uses Metal — no desktop GL)";
+				return "ganesh-gl uses EGL on Linux and WGL on Windows (macOS uses Metal — no desktop GL)";
 			}
 		}
 
