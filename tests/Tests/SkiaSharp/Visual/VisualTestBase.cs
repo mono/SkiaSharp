@@ -177,8 +177,13 @@ namespace SkiaSharp.Tests.Visual
 		private static string FailurePath (string rendererName, string scene, string suffix) =>
 			Path.Combine (RuntimeRoot, "_failures", rendererName, scene + suffix);
 
-		private static string RuntimeRoot =>
-			Path.GetDirectoryName (typeof (VisualTestBase).Assembly.Location);
+		// AppContext.BaseDirectory rather than Assembly.Location: net48's
+		// vstest runner shadow-copies the test DLL to %TEMP%\<guid>\... and
+		// Assembly.Location points there, but the Content goldens + the
+		// source tree are reachable only from the original bin\ folder.
+		// AppContext.BaseDirectory always returns the deployment directory.
+		private static string RuntimeRoot => AppContext.BaseDirectory.TrimEnd (
+			Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
 		private static string sourceRootCache;
 		private static string SourceRoot {
