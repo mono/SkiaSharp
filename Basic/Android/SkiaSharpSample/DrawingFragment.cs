@@ -28,7 +28,7 @@ public class DrawingFragment : Fragment
 	private View selectedSwatch;
 	private Google.Android.Material.Slider.Slider brushSlider;
 	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
-	private SKPath currentPath;
+	private SKPathBuilder? currentBuilder;
 	private SKColor currentColor = SKColors.Black;
 	private SKColor canvasBackground = SKColors.White;
 
@@ -94,8 +94,8 @@ public class DrawingFragment : Fragment
 			foreach (var (path, _, _) in strokes)
 				path.Dispose();
 			strokes.Clear();
-			currentPath?.Dispose();
-			currentPath = null;
+			currentBuilder?.Dispose();
+			currentBuilder = null;
 			skiaView?.Invalidate();
 		};
 
@@ -146,11 +146,12 @@ public class DrawingFragment : Fragment
 			canvas.DrawPath(path, paint);
 		}
 
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
+			using var path = currentBuilder.Snapshot();
 			paint.Color = currentColor;
 			paint.StrokeWidth = BrushSize;
-			canvas.DrawPath(currentPath, paint);
+			canvas.DrawPath(path, paint);
 		}
 	}
 
@@ -162,20 +163,20 @@ public class DrawingFragment : Fragment
 		switch (e.Event.Action)
 		{
 			case MotionEventActions.Down:
-				currentPath = new SKPath();
-				currentPath.MoveTo(x, y);
+				currentBuilder = new SKPathBuilder();
+				currentBuilder.MoveTo(x, y);
 				skiaView.Invalidate();
 				break;
 			case MotionEventActions.Move:
-				currentPath?.LineTo(x, y);
+				currentBuilder?.LineTo(x, y);
 				skiaView.Invalidate();
 				break;
 			case MotionEventActions.Up:
 			case MotionEventActions.Cancel:
-				if (currentPath != null)
+				if (currentBuilder != null)
 				{
-					strokes.Add((currentPath, currentColor, BrushSize));
-					currentPath = null;
+					strokes.Add((currentBuilder.Detach(), currentColor, BrushSize));
+					currentBuilder = null;
 					skiaView.Invalidate();
 				}
 				break;
@@ -194,8 +195,8 @@ public class DrawingFragment : Fragment
 		foreach (var (path, _, _) in strokes)
 			path.Dispose();
 		strokes.Clear();
-		currentPath?.Dispose();
-		currentPath = null;
+		currentBuilder?.Dispose();
+		currentBuilder = null;
 		base.OnDestroyView();
 	}
 }

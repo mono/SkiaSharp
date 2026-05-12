@@ -25,7 +25,7 @@ public class DrawingViewController : NSViewController
 	readonly List<Stroke> strokes = new();
 	readonly List<NSView> paletteSwatches = new();
 	NSView? selectedSwatch;
-	SKPath? currentPath;
+	SKPathBuilder? currentBuilder;
 	int colorIndex;
 	float brushSize = 4f;
 
@@ -73,8 +73,8 @@ public class DrawingViewController : NSViewController
 			foreach (var stroke in strokes)
 				stroke.Path.Dispose();
 			strokes.Clear();
-			currentPath?.Dispose();
-			currentPath = null;
+			currentBuilder?.Dispose();
+			currentBuilder = null;
 			skiaView.NeedsDisplay = true;
 		};
 
@@ -126,30 +126,30 @@ public class DrawingViewController : NSViewController
 	public override void MouseDown(NSEvent theEvent)
 	{
 		var pt = CanvasPoint(theEvent);
-		currentPath = new SKPath();
-		currentPath.MoveTo(pt);
+		currentBuilder = new SKPathBuilder();
+		currentBuilder.MoveTo(pt);
 		skiaView.NeedsDisplay = true;
 	}
 
 	public override void MouseDragged(NSEvent theEvent)
 	{
-		if (currentPath == null) return;
+		if (currentBuilder == null) return;
 		var pt = CanvasPoint(theEvent);
-		currentPath.LineTo(pt);
+		currentBuilder.LineTo(pt);
 		skiaView.NeedsDisplay = true;
 	}
 
 	public override void MouseUp(NSEvent theEvent)
 	{
-		if (currentPath == null) return;
+		if (currentBuilder == null) return;
 		var (light, dark) = palette[colorIndex];
 		strokes.Add(new Stroke
 		{
-			Path = currentPath,
+			Path = currentBuilder.Detach(),
 			Color = ResolveColor(light, dark),
 			Width = brushSize,
 		});
-		currentPath = null;
+		currentBuilder = null;
 		skiaView.NeedsDisplay = true;
 	}
 
@@ -198,12 +198,13 @@ public class DrawingViewController : NSViewController
 		}
 
 		// Draw current in-progress stroke
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
 			var (cl, cd) = palette[colorIndex];
+			using var path = currentBuilder.Snapshot();
 			paint.Color = ResolveColor(cl, cd);
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(currentPath, paint);
+			canvas.DrawPath(path, paint);
 		}
 	}
 
