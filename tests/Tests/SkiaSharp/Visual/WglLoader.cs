@@ -208,6 +208,12 @@ namespace SkiaSharp.Tests.Visual
 				Hglrc = IntPtr.Zero;
 				return false;
 			}
+			// Release the context from the init thread. WGL is strictly
+			// one-thread-at-a-time: a context that's "current" on thread A
+			// returns ERROR_BUSY when thread B tries to bind it. The
+			// renderer's worker thread will call MakeCurrent next, so we
+			// hand the context off cleanly here.
+			wglMakeCurrent (IntPtr.Zero, IntPtr.Zero);
 			return true;
 		}
 
