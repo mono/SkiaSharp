@@ -97,12 +97,11 @@ namespace SkiaSharp.Tests.Visual
 		}
 
 		/// <summary>
-		/// True if the exception looks like "the browser host can't initialize
-		/// the feature this renderer needs" rather than a real test failure.
-		/// Bridge JS returns null + we throw with a documented message for the
-		/// three cases (no <c>navigator.gpu</c>, no OffscreenCanvas, no WebGL2);
-		/// the test base converts those to Skip rather than Fail so a CI host
-		/// without GPU/WebGPU support reports cleanly.
+		/// True if the exception looks like "this host can't reach the
+		/// feature/device this renderer needs" rather than a real test
+		/// failure. Covers in-browser feature gates (no WebGPU, no
+		/// OffscreenCanvas, …) AND the out-of-process transports (no adb,
+		/// no Android device attached, RenderHost bring-up failed).
 		/// </summary>
 		private static bool IsBrowserCapabilityFailure (Exception ex)
 		{
@@ -110,7 +109,10 @@ namespace SkiaSharp.Tests.Visual
 			return msg.Contains ("no WebGPU available")
 				|| msg.Contains ("OffscreenCanvas/WebGL2 unavailable")
 				|| msg.Contains ("OffscreenCanvas unavailable")
-				|| msg.Contains ("webgl2 context unavailable");
+				|| msg.Contains ("webgl2 context unavailable")
+				|| msg.Contains ("adb not found")
+				|| msg.Contains ("no Android device or emulator attached")
+				|| msg.Contains ("Android host bring-up failed");
 		}
 
 		// ---- Comparison ----

@@ -44,13 +44,15 @@
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
   </ItemGroup>
 
-  <!-- The WASM cell proxies depend on Microsoft.Playwright + ValueTask /
-       IAsyncDisposable, none of which target .NET Framework 4.8. The
-       Visual matrix theory still runs on net48 — those cells simply don't
-       exist there. -->
+  <!-- The WASM + Android cell proxies depend on Microsoft.Playwright /
+       ValueTask / IAsyncDisposable / async TcpListener overloads, none of
+       which target .NET Framework 4.8. The Visual matrix theory still
+       runs on net48 — those cells simply don't exist there. -->
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\WasmRenderers.cs" />
     <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\WasmHostSession.cs" />
+    <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\AndroidRenderers.cs" />
+    <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\AndroidHostSession.cs" />
   </ItemGroup>
 
   <ItemGroup>

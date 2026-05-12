@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-android36.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>SkiaSharp.Tests.RenderHost.Android</RootNamespace>
+    <AssemblyName>RenderHost.Android</AssemblyName>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
+
+    <ApplicationId>com.skiasharp.renderhost</ApplicationId>
+    <ApplicationTitle>SkiaSharp Render Host</ApplicationTitle>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+  <!-- Compile-include the scene + renderer sources from the in-process tests.
+       A scene/renderer change updates desktop AND android with one edit. -->
+  <ItemGroup>
+    <Compile Include="..\..\Tests\SkiaSharp\Visual\Scenes\*.cs" Link="Scenes\%(Filename)%(Extension)" />
+
+    <Compile Include="..\..\Tests\SkiaSharp\Visual\VulkanLoader.cs"                   Link="Renderers\VulkanLoader.cs" />
+    <!-- VulkanLoader prefers VK_PHYSICAL_DEVICE_TYPE_CPU; Android devices
+         have no CPU-typed Vulkan ICD so it gracefully falls back to the
+         first physical device (the real GPU). Exactly what we want. -->
+  </ItemGroup>
+
+</Project>
