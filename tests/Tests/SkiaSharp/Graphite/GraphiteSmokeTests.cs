@@ -45,7 +45,7 @@ namespace SkiaSharp.Tests.Graphite
 
 			Assert.Equal (SKGraphiteInsertStatus.Success, ctx.InsertRecording (recording));
 			Assert.True (ctx.Submit (new SKGraphiteSubmitInfo {
-				Sync = SKGraphiteSyncToCpu.Yes,
+				Sync = true,
 			}));
 
 			// Synchronous CPU readback via Skia's async path (sync wrapper).

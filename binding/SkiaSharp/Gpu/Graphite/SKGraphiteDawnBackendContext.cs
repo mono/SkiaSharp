@@ -29,8 +29,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// When true, no DawnTickFunction is installed (Skia's "non-yielding"
 		/// mode). Required when running over Emscripten without -s ASYNCIFY,
-		/// at the cost of disallowing <see cref="SKGraphiteSyncToCpu.Yes"/>.
-		/// Defaults to false (the shim installs <c>DawnNativeProcessEventsFunction</c>).
+		/// at the cost of disallowing <c>SKGraphiteSubmitInfo.Sync = true</c>
+		/// on submit. Defaults to false (the shim installs
+		/// <c>DawnNativeProcessEventsFunction</c>).
 		/// </summary>
 		public bool NonYielding   { get; set; }
 

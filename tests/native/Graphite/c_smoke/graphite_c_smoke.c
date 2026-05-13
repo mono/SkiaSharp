@@ -244,8 +244,8 @@ int main(void) {
     }
 
     sk_graphite_submit_info_t si = {0};
-    si.fSync = YES_SK_GRAPHITE_SYNC_TO_CPU;
-    si.fMarkBoundary = NO_SK_GRAPHITE_MARK_FRAME_BOUNDARY;
+    si.fSync = true;
+    si.fMarkBoundary = false;
     si.fFrameID = 0;
     if (!sk_graphite_context_submit(ctx, &si)) {
         sk_graphite_recording_delete(rcd);

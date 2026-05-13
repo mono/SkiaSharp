@@ -20713,18 +20713,18 @@ namespace SkiaSharp {
 	// sk_graphite_submit_info_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKGraphiteSubmitInfo : IEquatable<SKGraphiteSubmitInfo> {
-		// public sk_graphite_sync_to_cpu_t fSync
-		private SKGraphiteSyncToCpu fSync;
-		public SKGraphiteSyncToCpu Sync {
-			readonly get => fSync;
-			set => fSync = value;
+		// public bool fSync
+		private Byte fSync;
+		public bool Sync {
+			readonly get => fSync > 0;
+			set => fSync = value ? (byte)1 : (byte)0;
 		}
 
-		// public sk_graphite_mark_frame_boundary_t fMarkBoundary
-		private SKGraphiteMarkFrameBoundary fMarkBoundary;
-		public SKGraphiteMarkFrameBoundary MarkBoundary {
-			readonly get => fMarkBoundary;
-			set => fMarkBoundary = value;
+		// public bool fMarkBoundary
+		private Byte fMarkBoundary;
+		public bool MarkBoundary {
+			readonly get => fMarkBoundary > 0;
+			set => fMarkBoundary = value ? (byte)1 : (byte)0;
 		}
 
 		// public uint64_t fFrameID
@@ -22783,14 +22783,6 @@ namespace SkiaSharp {
 		OutOfOrderRecording = 5,
 	}
 
-	// sk_graphite_mark_frame_boundary_t
-	public enum SKGraphiteMarkFrameBoundary {
-		// NO_SK_GRAPHITE_MARK_FRAME_BOUNDARY = 0
-		No = 0,
-		// YES_SK_GRAPHITE_MARK_FRAME_BOUNDARY = 1
-		Yes = 1,
-	}
-
 	// sk_graphite_rescale_gamma_t
 	public enum SKGraphiteRescaleGamma {
 		// SRC_SK_GRAPHITE_RESCALE_GAMMA = 0
@@ -22807,14 +22799,6 @@ namespace SkiaSharp {
 		RepeatedLinear = 1,
 		// REPEATED_CUBIC_SK_GRAPHITE_RESCALE_MODE = 2
 		RepeatedCubic = 2,
-	}
-
-	// sk_graphite_sync_to_cpu_t
-	public enum SKGraphiteSyncToCpu {
-		// NO_SK_GRAPHITE_SYNC_TO_CPU = 0
-		No = 0,
-		// YES_SK_GRAPHITE_SYNC_TO_CPU = 1
-		Yes = 1,
 	}
 
 	// sk_highcontrastconfig_invertstyle_t

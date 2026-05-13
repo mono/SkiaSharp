@@ -122,7 +122,7 @@ internal static partial class WasmRenderers
 				if (status != SKGraphiteInsertStatus.Success)
 					throw new InvalidOperationException ($"InsertRecording status = {status}");
 			}
-			s_ctx.Submit (new SKGraphiteSubmitInfo { Sync = SKGraphiteSyncToCpu.No });
+			s_ctx.Submit (new SKGraphiteSubmitInfo { Sync = false });
 
 			var b64 = await JsBridge.ReadTextureRgbaAsync (textureId, info.Width, info.Height)
 				?? throw new InvalidOperationException ("readTextureRgbaAsync returned null");
