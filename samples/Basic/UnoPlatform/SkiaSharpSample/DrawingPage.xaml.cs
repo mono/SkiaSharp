@@ -22,7 +22,7 @@ public sealed partial class DrawingPage : Page
 	};
 
 	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
-	private SKPath? currentPath;
+	private SKPathBuilder? currentBuilder;
 	private SKColor currentColor;
 	private float brushSize = 4f;
 	private SKPoint cursorPosition;
@@ -58,8 +58,8 @@ public sealed partial class DrawingPage : Page
 		foreach (var (path, _, _) in strokes)
 			path.Dispose();
 		strokes.Clear();
-		currentPath?.Dispose();
-		currentPath = null;
+		currentBuilder?.Dispose();
+		currentBuilder = null;
 		skiaView.Invalidate();
 	}
 
@@ -87,11 +87,12 @@ public sealed partial class DrawingPage : Page
 			canvas.DrawPath(path, paint);
 		}
 
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
+			using var path = currentBuilder.Snapshot();
 			paint.Color = currentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(currentPath, paint);
+			canvas.DrawPath(path, paint);
 		}
 
 		if (isCursorOver)
@@ -110,8 +111,8 @@ public sealed partial class DrawingPage : Page
 	private void OnPointerPressed(object? sender, PointerRoutedEventArgs e)
 	{
 		var point = e.GetCurrentPoint(skiaView);
-		currentPath = new SKPath();
-		currentPath.MoveTo((float)point.Position.X, (float)point.Position.Y);
+		currentBuilder = new SKPathBuilder();
+		currentBuilder.MoveTo((float)point.Position.X, (float)point.Position.Y);
 		cursorPosition = new SKPoint((float)point.Position.X, (float)point.Position.Y);
 		isCursorOver = true;
 		skiaView.CapturePointer(e.Pointer);
@@ -123,16 +124,16 @@ public sealed partial class DrawingPage : Page
 		var point = e.GetCurrentPoint(skiaView);
 		cursorPosition = new SKPoint((float)point.Position.X, (float)point.Position.Y);
 		isCursorOver = true;
-		currentPath?.LineTo((float)point.Position.X, (float)point.Position.Y);
+		currentBuilder?.LineTo((float)point.Position.X, (float)point.Position.Y);
 		skiaView.Invalidate();
 	}
 
 	private void OnPointerReleased(object? sender, PointerRoutedEventArgs e)
 	{
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
-			strokes.Add((currentPath, currentColor, brushSize));
-			currentPath = null;
+			strokes.Add((currentBuilder.Detach(), currentColor, brushSize));
+			currentBuilder = null;
 			skiaView.Invalidate();
 		}
 		skiaView.ReleasePointerCapture(e.Pointer);

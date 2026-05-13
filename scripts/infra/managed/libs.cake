@@ -1,0 +1,18 @@
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
+
+#load "../shared/shared.cake"
+#load "../shared/msbuild.cake"
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// LIBS — build managed assemblies
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("Default")
+    .Description ("Build all managed assemblies.")
+    .WithCriteria (!SKIP_BUILD)
+    .Does (() =>
+{
+    RunDotNetBuild ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", properties: MSBUILD_VERSION_PROPERTIES);
+});
+
+RunTarget(TARGET);

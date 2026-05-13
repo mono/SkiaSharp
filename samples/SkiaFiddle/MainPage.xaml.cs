@@ -1,6 +1,8 @@
 using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 using SkiaFiddle.Fiddle;
 using SkiaSharp;
@@ -57,13 +59,16 @@ public sealed partial class MainPage : Page
     {
         if (SamplesCombo.SelectedItem is ComboBoxItem item && item.Tag is FiddleSample sample)
         {
-            SetupEditor.Text = sample.Setup;
-            DrawEditor.Text = sample.Draw;
-            _ = RunAsync();
+            DispatcherQueue.TryEnqueue(() => 
+            {
+                SetupEditor.Text = sample.Setup;
+                DrawEditor.Text = sample.Draw;
+                _ = RunAsync();
+            });
         }
     }
 
-    private async void OnRunClicked(object sender, RoutedEventArgs e) => await RunAsync();
+    private void OnRunClicked(object sender, RoutedEventArgs e) => DispatcherQueue.TryEnqueue(() => _ = RunAsync());
 
     // Monaco's onDidChangeContent → managed CodeEditor.Text round-trip is unreliable
     // under Uno WASM (the property lags behind keystrokes), so we ask Monaco directly
@@ -74,7 +79,7 @@ public sealed partial class MainPage : Page
         try
         {
             var json = WebAssemblyRuntime.InvokeJS("globalThis.skiaFiddleGetMonacoValues ? globalThis.skiaFiddleGetMonacoValues() : '[]'");
-            var values = JsonSerializer.Deserialize<string[]>(json) ?? Array.Empty<string>();
+            var values = JsonSerializer.Deserialize(json, FiddleJsonContext.Default.StringArray) ?? Array.Empty<string>();
             var setup = values.Length > 0 ? values[0] : SetupEditor.Text ?? string.Empty;
             var draw = values.Length > 1 ? values[1] : DrawEditor.Text ?? string.Empty;
             return (setup, draw);
@@ -88,7 +93,7 @@ public sealed partial class MainPage : Page
     private void OnPauseClicked(object sender, RoutedEventArgs e)
     {
         OutputCanvas.TogglePause();
-        PauseLabel.Text = OutputCanvas.IsAnimating ? "⏸ Pause" : "▶ Play";
+        PauseLabel.Text = OutputCanvas.IsAnimating ? "Stop" : "Play";
         if (!OutputCanvas.IsAnimating)
             FpsText.Text = "paused";
     }
@@ -106,14 +111,14 @@ public sealed partial class MainPage : Page
             if (result.Draw is not null)
             {
                 OutputCanvas.SetDrawDelegate(result.Draw);
-                PauseLabel.Text = "⏸ Pause";
+                PauseLabel.Text = "Stop";
                 MessageText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Resources["TextSecondary"];
                 MessageText.Text = result.Diagnostics ?? "Compiled in " + result.ElapsedMs + " ms";
             }
             else
             {
                 OutputCanvas.SetError(result.Diagnostics ?? "Unknown error");
-                PauseLabel.Text = "▶ Play";
+                PauseLabel.Text = "Play";
                 FpsText.Text = "";
                 MessageText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Resources["ErrorBrush"];
                 MessageText.Text = (result.Diagnostics ?? "Compile failed").Split('\n')[0];
@@ -130,4 +135,7 @@ public sealed partial class MainPage : Page
             RunButton.IsEnabled = true;
         }
     }
+
+    [JsonSerializable(typeof(string[]))]
+    internal partial class FiddleJsonContext : JsonSerializerContext;
 }
