@@ -2,12 +2,15 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
+    height: 100vh;
+    overflow: hidden;
 }
 
 main {
     flex: 1;
-    overflow-x: hidden;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .top-row {
@@ -17,6 +20,7 @@ main {
     align-items: center;
     color: white;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .top-row a {
@@ -36,13 +40,11 @@ main {
 }
 
 .content {
-    padding-top: 1.5rem;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 3.5rem);
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding-bottom: 0.5rem !important;
+    overflow: hidden;
+    padding-bottom: 0 !important;
 }
 
 @media (max-width: 640px) {

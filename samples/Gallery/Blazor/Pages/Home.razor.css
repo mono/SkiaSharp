@@ -1,6 +1,7 @@
 /* ============================================
    Gallery — API Atlas layout
-   Sidebar + CSS Grid. No masonry. No JS layout.
+   Full split: page never scrolls. Sidebar and
+   card grid each scroll independently.
    ============================================ */
 
 /* Design tokens */
@@ -19,35 +20,38 @@
     --color-method: #d97706;
     --color-method-soft: #fef3c7;
 
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
     color: var(--gallery-text);
-    overflow-x: hidden;
 }
 
-/* ─── Hero ─── */
+/* ─── Hero (fixed at top, never scrolls) ─── */
 .hero-band {
-    padding: 1.5rem 0 0.75rem;
+    padding: 0.75rem 1.5rem;
     border-bottom: 1px solid var(--gallery-border);
+    flex-shrink: 0;
 }
 .hero-content {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
     gap: 1rem;
     flex-wrap: wrap;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 .hero-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 800;
     margin: 0;
     letter-spacing: -0.03em;
 }
 .hero-subtitle {
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     color: var(--gallery-text-muted);
-    margin: 0.2rem 0 0;
+    margin: 0.15rem 0 0;
 }
 .hero-stats {
     display: flex;
@@ -56,41 +60,70 @@
     font-variant-numeric: tabular-nums;
 }
 .stat {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--gallery-accent);
 }
 .stat small {
     font-weight: 400;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: var(--gallery-text-muted);
 }
 .stat-sep { color: var(--gallery-border); }
 
-/* ─── Filter bar area ─── */
+/* ─── Filter bar (fixed, between hero and main) ─── */
 .filter-bar-area {
-    min-height: 1rem;
+    flex-shrink: 0;
+    padding: 0 1.5rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* ─── Main layout ─── */
+/* ─── Main split layout (fills remaining height) ─── */
 .gallery-main {
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
-    gap: 1.5rem;
-    align-items: start;
-    padding: 1rem 0 2rem;
+    gap: 0;
+    flex: 1;
+    min-height: 0; /* critical: allows children to shrink below content height */
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* ─── Results column ─── */
+/* ─── Sidebar (scrolls independently) ─── */
+.sidebar-desktop {
+    display: block;
+    overflow-y: auto;
+    padding: 0.75rem 1rem 1rem 1.5rem;
+    border-right: 1px solid var(--gallery-border);
+    scrollbar-width: thin;
+}
+.sidebar-desktop::-webkit-scrollbar { width: 4px; }
+.sidebar-desktop::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 2px; }
+
+/* ─── Results column (scrolls independently) ─── */
+.results-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
 .results-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    padding: 0.6rem 1.5rem;
     gap: 1rem;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--gallery-border);
 }
 .results-count {
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 .results-sort {
@@ -110,10 +143,17 @@
     cursor: pointer;
 }
 
+/* ─── Scrollable card area ─── */
+.results-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.5rem 2rem;
+}
+
 /* ─── Card grid ─── */
 .sample-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 0.9rem;
 }
 .grid-link {
@@ -148,21 +188,17 @@
 /* ─── Footer ─── */
 .gallery-footer {
     text-align: center;
-    padding: 1.5rem 0 2rem;
-    font-size: 0.8rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 0.75rem;
     color: var(--gallery-text-muted);
     border-top: 1px solid var(--gallery-border);
+    flex-shrink: 0;
 }
 
 /* ─── Responsive ─── */
 
-/* Mobile filter FAB — hidden on desktop */
 .mobile-filter-fab {
     display: none;
-}
-
-.sidebar-desktop {
-    display: block;
 }
 
 @media (max-width: 860px) {
@@ -176,7 +212,6 @@
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     }
 
-    /* Show mobile filter FAB */
     .mobile-filter-fab {
         display: flex;
         align-items: center;
@@ -281,9 +316,13 @@
 }
 
 @media (max-width: 640px) {
-    .gallery-page { padding: 0 0.75rem; }
-    .hero-title { font-size: 1.25rem; }
+    .hero-band { padding: 0.5rem 0.75rem; }
+    .hero-title { font-size: 1.15rem; }
+    .hero-subtitle { display: none; }
     .hero-stats { display: none; }
+    .filter-bar-area { padding: 0 0.75rem; }
+    .results-header { padding: 0.5rem 0.75rem; }
+    .results-scroll { padding: 0.75rem; }
     .sample-grid {
         grid-template-columns: 1fr;
     }
@@ -295,3 +334,4 @@
 [data-theme="dark"] .drawer-panel { background: var(--gallery-surface, #14171c); }
 [data-theme="dark"] .drawer-header { border-color: var(--gallery-border, #2a2f37); }
 [data-theme="dark"] .drawer-backdrop { background: rgba(0,0,0,0.6); }
+[data-theme="dark"] .sidebar-desktop { border-right-color: var(--gallery-border, #2a2f37); }

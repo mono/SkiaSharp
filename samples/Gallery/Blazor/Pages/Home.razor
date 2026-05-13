@@ -73,49 +73,51 @@
                 </div>
             </div>
 
-            @* Card grid *@
-            @if (filteredSamples.Length == 0)
-            {
-                <div class="empty-state">
-                    <i class="bi bi-search" style="font-size: 2rem; opacity: 0.3;"></i>
-                    <h3>No samples match</h3>
-                    <p>Try removing a filter or switching tag mode to <strong>ANY</strong>.</p>
-                    <button class="empty-reset" @onclick="ResetAll">Reset all filters</button>
-                </div>
-            }
-            else
-            {
-                <div class="sample-grid">
-                    @{ var index = 0; }
-                    @foreach (var sample in filteredSamples)
-                    {
-                        var i = index++;
-                        var icon = SampleManager.GetCssIcon(sample.Title);
-                        var isNew = SampleManager.IsNew(sample, allSamples);
+            @* Scrollable card area *@
+            <div class="results-scroll">
+                @if (filteredSamples.Length == 0)
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-search" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <h3>No samples match</h3>
+                        <p>Try removing a filter or switching tag mode to <strong>ANY</strong>.</p>
+                        <button class="empty-reset" @onclick="ResetAll">Reset all filters</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="sample-grid">
+                        @{ var index = 0; }
+                        @foreach (var sample in filteredSamples)
+                        {
+                            var i = index++;
+                            var icon = SampleManager.GetCssIcon(sample.Title);
+                            var isNew = SampleManager.IsNew(sample, allSamples);
 
-                        @if (sample.IsSupported)
-                        {
-                            <a href="sample/@Uri.EscapeDataString(sample.Title)" class="grid-link" @key="sample.Title">
-                                <SampleCard Sample="sample" Icon="@icon"
-                                            Index="i" Supported="true" IsNew="isNew"
-                                            ActiveTags="@selectedTags"
-                                            CorpusCounts="@corpusTagCounts"
-                                            OnTagClicked="HandleTagToggled" />
-                            </a>
+                            @if (sample.IsSupported)
+                            {
+                                <a href="sample/@Uri.EscapeDataString(sample.Title)" class="grid-link" @key="sample.Title">
+                                    <SampleCard Sample="sample" Icon="@icon"
+                                                Index="i" Supported="true" IsNew="isNew"
+                                                ActiveTags="@selectedTags"
+                                                CorpusCounts="@corpusTagCounts"
+                                                OnTagClicked="HandleTagToggled" />
+                                </a>
+                            }
+                            else
+                            {
+                                <div @key="sample.Title">
+                                    <SampleCard Sample="sample" Icon="@icon"
+                                                Index="i" Supported="false" IsNew="isNew"
+                                                ActiveTags="@selectedTags"
+                                                CorpusCounts="@corpusTagCounts"
+                                                OnTagClicked="HandleTagToggled" />
+                                </div>
+                            }
                         }
-                        else
-                        {
-                            <div @key="sample.Title">
-                                <SampleCard Sample="sample" Icon="@icon"
-                                            Index="i" Supported="false" IsNew="isNew"
-                                            ActiveTags="@selectedTags"
-                                            CorpusCounts="@corpusTagCounts"
-                                            OnTagClicked="HandleTagToggled" />
-                            </div>
-                        }
-                    }
-                </div>
-            }
+                    </div>
+                }
+            </div>
         </div>
     </div>
 
