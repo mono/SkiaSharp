@@ -236,7 +236,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (recorder));
 
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject (SkiaApi.sk_graphite_surface_make_render_target (recorder.Handle, &cinfo, mipmapped ? 1 : 0, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_graphite_surface_make_render_target (recorder.Handle, &cinfo, mipmapped, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// Graphite-backed surface wrapping a caller-allocated GPU texture

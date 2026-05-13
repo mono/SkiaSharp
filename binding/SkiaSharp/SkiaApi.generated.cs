@@ -617,22 +617,22 @@ namespace SkiaSharp
 			(sk_graphite_context_supports_protected_content_delegate ??= GetSymbol<Delegates.sk_graphite_context_supports_protected_content> ("sk_graphite_context_supports_protected_content")).Invoke (context);
 		#endif
 
-		// sk_image_t* sk_graphite_image_make_texture(sk_graphite_recorder_t* recorder, const sk_image_t* image, int32_t mipmapped)
+		// sk_image_t* sk_graphite_image_make_texture(sk_graphite_recorder_t* recorder, const sk_image_t* image, bool mipmapped)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
+		internal static partial sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
+		internal static extern sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
+			internal delegate sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
 		}
 		private static Delegates.sk_graphite_image_make_texture sk_graphite_image_make_texture_delegate;
-		internal static sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped) =>
+		internal static sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, bool mipmapped) =>
 			(sk_graphite_image_make_texture_delegate ??= GetSymbol<Delegates.sk_graphite_image_make_texture> ("sk_graphite_image_make_texture")).Invoke (recorder, image, mipmapped);
 		#endif
 
@@ -826,22 +826,22 @@ namespace SkiaSharp
 			(sk_graphite_recording_delete_delegate ??= GetSymbol<Delegates.sk_graphite_recording_delete> ("sk_graphite_recording_delete")).Invoke (recording);
 		#endif
 
-		// sk_surface_t* sk_graphite_surface_make_render_target(sk_graphite_recorder_t* recorder, const sk_imageinfo_t* info, int32_t mipmapped, const sk_surfaceprops_t* props)
+		// sk_surface_t* sk_graphite_surface_make_render_target(sk_graphite_recorder_t* recorder, const sk_imageinfo_t* info, bool mipmapped, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, Int32 mipmapped, sk_surfaceprops_t props);
+		internal static partial sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, [MarshalAs (UnmanagedType.I1)] bool mipmapped, sk_surfaceprops_t props);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, Int32 mipmapped, sk_surfaceprops_t props);
+		internal static extern sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, [MarshalAs (UnmanagedType.I1)] bool mipmapped, sk_surfaceprops_t props);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, Int32 mipmapped, sk_surfaceprops_t props);
+			internal delegate sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, [MarshalAs (UnmanagedType.I1)] bool mipmapped, sk_surfaceprops_t props);
 		}
 		private static Delegates.sk_graphite_surface_make_render_target sk_graphite_surface_make_render_target_delegate;
-		internal static sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, Int32 mipmapped, sk_surfaceprops_t props) =>
+		internal static sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, bool mipmapped, sk_surfaceprops_t props) =>
 			(sk_graphite_surface_make_render_target_delegate ??= GetSymbol<Delegates.sk_graphite_surface_make_render_target> ("sk_graphite_surface_make_render_target")).Invoke (recorder, info, mipmapped, props);
 		#endif
 
@@ -902,22 +902,25 @@ namespace SkiaSharp
 			(sk_graphite_texture_info_get_backend_delegate ??= GetSymbol<Delegates.sk_graphite_texture_info_get_backend> ("sk_graphite_texture_info_get_backend")).Invoke (info);
 		#endif
 
-		// int32_t sk_graphite_texture_info_get_mipmapped(const sk_graphite_texture_info_t* info)
+		// bool sk_graphite_texture_info_get_mipmapped(const sk_graphite_texture_info_t* info)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_graphite_texture_info_get_mipmapped (sk_graphite_texture_info_t info);
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_graphite_texture_info_get_mipmapped (sk_graphite_texture_info_t info);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_graphite_texture_info_get_mipmapped (sk_graphite_texture_info_t info);
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_graphite_texture_info_get_mipmapped (sk_graphite_texture_info_t info);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_graphite_texture_info_get_mipmapped (sk_graphite_texture_info_t info);
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_graphite_texture_info_get_mipmapped (sk_graphite_texture_info_t info);
 		}
 		private static Delegates.sk_graphite_texture_info_get_mipmapped sk_graphite_texture_info_get_mipmapped_delegate;
-		internal static Int32 sk_graphite_texture_info_get_mipmapped (sk_graphite_texture_info_t info) =>
+		internal static bool sk_graphite_texture_info_get_mipmapped (sk_graphite_texture_info_t info) =>
 			(sk_graphite_texture_info_get_mipmapped_delegate ??= GetSymbol<Delegates.sk_graphite_texture_info_get_mipmapped> ("sk_graphite_texture_info_get_mipmapped")).Invoke (info);
 		#endif
 
@@ -20568,11 +20571,11 @@ namespace SkiaSharp {
 			set => fQueue = value;
 		}
 
-		// public int32_t fNonYielding
-		private Int32 fNonYielding;
-		public Int32 NonYielding {
-			readonly get => fNonYielding;
-			set => fNonYielding = value;
+		// public bool fNonYielding
+		private Byte fNonYielding;
+		public bool NonYielding {
+			readonly get => fNonYielding > 0;
+			set => fNonYielding = value ? (byte)1 : (byte)0;
 		}
 
 		public readonly bool Equals (SKGraphiteDawnBackendContextInit obj) =>
@@ -20831,11 +20834,11 @@ namespace SkiaSharp {
 			set => fSampleCount = value;
 		}
 
-		// public int32_t fMipmapped
-		private Int32 fMipmapped;
-		public Int32 Mipmapped {
-			readonly get => fMipmapped;
-			set => fMipmapped = value;
+		// public bool fMipmapped
+		private Byte fMipmapped;
+		public bool Mipmapped {
+			readonly get => fMipmapped > 0;
+			set => fMipmapped = value ? (byte)1 : (byte)0;
 		}
 
 		// public uint32_t fFlags

@@ -31,6 +31,6 @@ namespace SkiaSharp
 		public bool              IsValid     => SkiaApi.sk_graphite_texture_info_is_valid (Handle);
 		public SKGraphiteBackend Backend     => SkiaApi.sk_graphite_texture_info_get_backend (Handle);
 		public int               SampleCount => SkiaApi.sk_graphite_texture_info_get_sample_count (Handle);
-		public bool              Mipmapped   => SkiaApi.sk_graphite_texture_info_get_mipmapped (Handle) != 0;
+		public bool              Mipmapped   => SkiaApi.sk_graphite_texture_info_get_mipmapped (Handle);
 	}
 }

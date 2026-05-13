@@ -55,7 +55,7 @@ namespace SkiaSharp.Tests.Graphite
 
 			var info = new SKGraphiteVkTextureInfo {
 				SampleCount     = 1,
-				Mipmapped       = 0,
+				Mipmapped       = false,
 				Flags           = 0,
 				Format          = VK_FORMAT_R8G8B8A8_UNORM,
 				ImageTiling     = VK_IMAGE_TILING_OPTIMAL,
@@ -121,7 +121,7 @@ namespace SkiaSharp.Tests.Graphite
 
 			var vkInfo = new SKGraphiteVkTextureInfo {
 				SampleCount     = 1,
-				Mipmapped       = 0,
+				Mipmapped       = false,
 				Flags           = 0,
 				Format          = VK_FORMAT_R8G8B8A8_UNORM,
 				ImageTiling     = VK_IMAGE_TILING_OPTIMAL,

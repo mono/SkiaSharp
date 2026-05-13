@@ -205,7 +205,7 @@ int main(void) {
     info.colorType  = RGBA_8888_SK_COLORTYPE;
     info.alphaType  = PREMUL_SK_ALPHATYPE;
 
-    sk_surface_t* surf = sk_graphite_surface_make_render_target(rec, &info, /*mipmapped=*/0, /*props=*/NULL);
+    sk_surface_t* surf = sk_graphite_surface_make_render_target(rec, &info, /*mipmapped=*/false, /*props=*/NULL);
     if (!surf) DIE(33, "sk_graphite_surface_make_render_target returned NULL");
 
     sk_canvas_t* canvas = sk_surface_get_canvas(surf);

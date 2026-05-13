@@ -47,7 +47,7 @@ namespace SkiaSharp
 						Instance    = (void*)WgpuInstance,
 						Device      = (void*)WgpuDevice,
 						Queue       = (void*)WgpuQueue,
-						NonYielding = NonYielding ? 1 : 0,
+						NonYielding = NonYielding,
 					};
 					nativeBackendContext = SkiaApi.sk_graphite_dawn_backend_context_new (&native);
 				}

@@ -612,7 +612,7 @@ namespace SkiaSharp
 			if (image == null)
 				throw new ArgumentNullException (nameof (image));
 
-			return GetObject (SkiaApi.sk_graphite_image_make_texture (recorder.Handle, image.Handle, mipmapped ? 1 : 0));
+			return GetObject (SkiaApi.sk_graphite_image_make_texture (recorder.Handle, image.Handle, mipmapped));
 		}
 
 		// ApplyImageFilter
