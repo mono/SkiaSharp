@@ -35,6 +35,14 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	public override string Description => "Encode an animated WebP with letter-by-letter reveal, blink, and fade-out, then play it back.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"SKPixmap", "SKWebpEncoder", "SKWebpEncoderFrame", "SKWebpEncoderOptions", "EncodeAnimated",
+		"SKCodecOptions", "FromStream", "SKCodec", "SKData", "SKMaskFilter", "CreateBlur", "SKShader",
+		"CreateLinearGradient", "SKBitmap", "DrawBitmap", "DrawText", "DrawCircle", "DrawRect",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
 	public override string Category => SampleManager.BitmapDecoding;
 
 	public override DateOnly? DateAdded => new DateOnly(2026, 5, 5);

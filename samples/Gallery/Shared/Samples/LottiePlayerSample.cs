@@ -22,6 +22,11 @@ public class LottiePlayerSample : CanvasSampleBase
 
 	public override string Description => "Play Lottie/Skottie animations with playback speed control.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"Animation", "Render", "SeekFrameTime", "SKCanvas", "SKRect",
+	];
+
 	public override string Category => SampleManager.General;
 
 	public override IReadOnlyList<SampleControl> Controls =>

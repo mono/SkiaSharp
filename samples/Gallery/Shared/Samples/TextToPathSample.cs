@@ -31,6 +31,12 @@ public class TextToPathSample : CanvasSampleBase
 	public override string Description =>
 		"Convert text to an SKPath using SKFont.GetTextPath, then compute the stroked outline with GetFillPath.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"GetTextPath", "GetFillPath", "FromData", "SKData", "SKPath", "MeasureText",
+		"DrawPath", "DrawText", "SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
 	public override string Category => SampleManager.Text;
 
 	public override IReadOnlyList<SampleControl> Controls =>

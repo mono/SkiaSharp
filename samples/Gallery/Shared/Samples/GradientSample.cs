@@ -24,6 +24,13 @@ public class GradientSample : CanvasSampleBase
 	public override string Description =>
 		"Create linear, radial, sweep, and conical gradients with adjustable angle and tile modes.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"SKShaderTileMode", "CreateSweepGradient", "CreateTwoPointConicalGradient",
+		"CreateRadialGradient", "CreateLinearGradient", "SKShader", "DrawRoundRect",
+		"SKCanvas", "SKPaint",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("gradientType", "Gradient Type", GradientTypes, gradientType),

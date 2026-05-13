@@ -18,6 +18,15 @@ public class WideGamutP3Sample : CanvasSampleBase
 	public override string Description =>
 		"Compare Display P3 wide-gamut colors with sRGB. P3 reds, greens, and blues are more vivid than sRGB can represent.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"SKSurface", "SKColorF", "CreateSrgb", "CreateRgb", "SetColor", "Snapshot",
+		"SKColorSpace", "SKColorSpaceTransferFn", "SKColorSpaceXyz", "SKImage", "SKImageInfo",
+		"SKShader", "SKPathBuilder", "SKPath", "SKPathEffect", "CreateLinearGradient",
+		"CreateDash", "DrawRoundRect", "DrawText", "DrawPath", "DrawImage", "SKCanvas",
+		"SKPaint", "SKFont",
+	];
+
 	public override string Category => SampleManager.Shaders;
 
 	public override IReadOnlyList<SampleControl> Controls =>

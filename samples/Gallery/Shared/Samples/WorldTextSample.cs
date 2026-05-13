@@ -35,6 +35,12 @@ public class WorldTextSample : CanvasSampleBase
 
 	public override string Description => "Compare text rendering across Latin, Arabic, Hebrew, Emoji, and CJK scripts with HarfBuzz shaping.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"SKFontManager", "SKShaper", "DrawShapedText", "MatchCharacter", "FromStream",
+		"DrawText", "DrawLine", "SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("script", "Script", ScriptNames, scriptIndex),

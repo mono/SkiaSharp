@@ -1,0 +1,288 @@
+@* FilterRail — sticky sidebar with categories + tag cloud *@
+
+<aside class="filter-rail">
+    @* Search *@
+    <div class="rail-section">
+        <div class="rail-search">
+            <i class="bi bi-search"></i>
+            <input type="search" placeholder="Search samples, APIs…"
+                   value="@SearchText" @oninput="OnSearch" />
+        </div>
+    </div>
+
+    @* Categories *@
+    <div class="rail-section">
+        <h3 class="rail-heading">Categories</h3>
+        <button class="cat-item @(SelectedCategory == null ? "active" : "")"
+                @onclick="() => SelectCategory(null)">
+            <span>All</span>
+            <span class="cat-count">@TotalCount</span>
+        </button>
+        @foreach (var catName in AllCategories)
+        {
+            var cat = SampleManager.GetCategoryFor(catName);
+            var count = SampleManager.GetSampleCount(catName, AllSamples);
+            <button class="cat-item @(SelectedCategory == catName ? "active" : "")"
+                    style="--cat-color: @cat.Color;"
+                    @onclick="() => SelectCategory(catName)">
+                <i class="bi @cat.CssIcon cat-icon"></i>
+                <span>@catName</span>
+                <span class="cat-count">@count</span>
+            </button>
+        }
+    </div>
+
+    @* Tag cloud — Types *@
+    <div class="rail-section">
+        <h3 class="rail-heading">Types</h3>
+        <div class="tag-cloud">
+            @foreach (var t in GetTypeTags())
+            {
+                var tag = t;
+                var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
+                <TagPill Tag="@tag.Tag" Count="@liveCount" Kind="TagKind.Type"
+                         IsActive="@SelectedTags.Contains(tag.Tag)"
+                         IsZero="@(liveCount == 0)"
+                         Size="@GetPillSize(tag.Count)"
+                         OnTagClicked="ToggleTag" />
+            }
+        </div>
+    </div>
+
+    @* Tag cloud — Methods *@
+    <div class="rail-section">
+        <div class="rail-heading-row">
+            <h3 class="rail-heading">Methods</h3>
+            <button class="rail-toggle" @onclick="() => showMethods = !showMethods">
+                @(showMethods ? "Hide" : "Show")
+            </button>
+        </div>
+        @if (showMethods)
+        {
+            <div class="tag-cloud">
+                @foreach (var t in GetMethodTags())
+                {
+                    var tag = t;
+                    var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
+                    <TagPill Tag="@tag.Tag" Count="@liveCount" Kind="TagKind.Method"
+                             IsActive="@SelectedTags.Contains(tag.Tag)"
+                             IsZero="@(liveCount == 0)"
+                             Size="@GetPillSize(tag.Count)"
+                             OnTagClicked="ToggleTag" />
+                }
+            </div>
+        }
+    </div>
+
+    @* Tag mode *@
+    @if (SelectedTags.Count > 1)
+    {
+        <div class="rail-section">
+            <div class="tag-mode">
+                Match
+                <button class="mode-btn @(!TagModeAll ? "active" : "")" @onclick="() => SetTagMode(false)">ANY</button>
+                <button class="mode-btn @(TagModeAll ? "active" : "")" @onclick="() => SetTagMode(true)">ALL</button>
+            </div>
+        </div>
+    }
+</aside>
+
+<style>
+    .filter-rail {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        position: sticky;
+        top: 1rem;
+        max-height: calc(100vh - 5rem);
+        overflow-y: auto;
+        padding-right: 0.5rem;
+        scrollbar-width: thin;
+    }
+    .filter-rail::-webkit-scrollbar { width: 4px; }
+    .filter-rail::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+
+    .rail-section {
+        padding: 0.6rem 0;
+        border-bottom: 1px solid var(--gallery-border, #e5e7eb);
+    }
+    .rail-section:last-child { border-bottom: none; }
+
+    .rail-search {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.7rem;
+        border: 1px solid var(--gallery-border, #e5e7eb);
+        border-radius: 10px;
+        background: var(--gallery-surface, #fff);
+    }
+    .rail-search i { color: #888; font-size: 0.85rem; }
+    .rail-search input {
+        border: none; background: transparent; outline: none;
+        font-size: 0.88rem; width: 100%; color: var(--gallery-text, #111);
+    }
+    .rail-search input::placeholder { color: #aaa; }
+
+    .rail-heading {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--gallery-text-muted, #6b7280);
+        margin: 0 0 0.5rem;
+    }
+
+    .rail-heading-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .rail-toggle {
+        font-size: 0.7rem;
+        color: var(--gallery-accent, #6366f1);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    /* Category list */
+    .cat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        width: 100%;
+        padding: 0.4rem 0.6rem;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        font-size: 0.82rem;
+        color: var(--gallery-text, #111);
+        cursor: pointer;
+        text-align: left;
+        transition: background 120ms ease;
+    }
+    .cat-item:hover { background: var(--gallery-surface-2, #f3f4f6); }
+    .cat-item.active {
+        background: var(--gallery-accent-soft, #eef2ff);
+        color: var(--gallery-accent, #6366f1);
+        font-weight: 600;
+    }
+    .cat-icon { font-size: 0.85rem; color: var(--cat-color); }
+    .cat-count {
+        margin-left: auto;
+        font-size: 0.7rem;
+        color: var(--gallery-text-muted, #6b7280);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Tag cloud */
+    .tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    /* Tag mode */
+    .tag-mode {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        color: var(--gallery-text-muted, #6b7280);
+    }
+    .mode-btn {
+        padding: 0.2rem 0.5rem;
+        border: 1px solid var(--gallery-border, #e5e7eb);
+        border-radius: 6px;
+        background: transparent;
+        font-size: 0.7rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--gallery-text-muted, #6b7280);
+        transition: all 120ms ease;
+    }
+    .mode-btn.active {
+        background: var(--gallery-accent, #6366f1);
+        color: white;
+        border-color: var(--gallery-accent, #6366f1);
+    }
+
+    [data-theme="dark"] .rail-search { background: var(--gallery-surface, #14171c); border-color: var(--gallery-border, #2a2f37); }
+    [data-theme="dark"] .rail-search input { color: var(--gallery-text, #e5e7eb); }
+    [data-theme="dark"] .cat-item { color: var(--gallery-text, #e5e7eb); }
+    [data-theme="dark"] .cat-item:hover { background: var(--gallery-surface-2, #1b1f25); }
+    [data-theme="dark"] .cat-item.active { background: rgba(99,102,241,0.15); }
+</style>
+
+@implements IDisposable
+
+@code {
+    [Parameter] public string[] AllCategories { get; set; } = [];
+    [Parameter] public SampleBase[] AllSamples { get; set; } = [];
+    [Parameter] public string SearchText { get; set; } = "";
+    [Parameter] public string? SelectedCategory { get; set; }
+    [Parameter] public IReadOnlySet<string> SelectedTags { get; set; } = new HashSet<string>();
+    [Parameter] public bool TagModeAll { get; set; }
+    [Parameter] public Dictionary<string, int> LiveTagCounts { get; set; } = new();
+    [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
+    [Parameter] public EventCallback<string?> OnCategoryChanged { get; set; }
+    [Parameter] public EventCallback<string> OnTagToggled { get; set; }
+    [Parameter] public EventCallback<bool> OnTagModeChanged { get; set; }
+
+    private bool showMethods = false;
+    private System.Timers.Timer? debounce;
+    private string pendingText = "";
+
+    private IReadOnlyList<(string Tag, int Count, TagKind Kind)>? allTags;
+
+    private int TotalCount => AllSamples.Length;
+
+    protected override void OnInitialized()
+    {
+        debounce = new System.Timers.Timer(200) { AutoReset = false };
+        debounce.Elapsed += async (_, _) =>
+            await InvokeAsync(() => OnSearchChanged.InvokeAsync(pendingText));
+    }
+
+    protected override void OnParametersSet()
+    {
+        allTags = SampleManager.GetAllTags(AllSamples);
+    }
+
+    private IEnumerable<(string Tag, int Count, TagKind Kind)> GetTypeTags() =>
+        (allTags ?? []).Where(t => t.Kind == TagKind.Type);
+
+    private IEnumerable<(string Tag, int Count, TagKind Kind)> GetMethodTags() =>
+        (allTags ?? []).Where(t => t.Kind == TagKind.Method);
+
+    private static TagPill.TagPillSize GetPillSize(int corpusCount) =>
+        corpusCount >= 10 ? TagPill.TagPillSize.Large
+        : corpusCount <= 2 ? TagPill.TagPillSize.Small
+        : TagPill.TagPillSize.Normal;
+
+    private void OnSearch(ChangeEventArgs e)
+    {
+        pendingText = e.Value?.ToString() ?? "";
+        debounce?.Stop();
+        debounce?.Start();
+    }
+
+    private async Task SelectCategory(string? cat)
+    {
+        await OnCategoryChanged.InvokeAsync(cat);
+    }
+
+    private async Task ToggleTag(string tag)
+    {
+        await OnTagToggled.InvokeAsync(tag);
+    }
+
+    private async Task SetTagMode(bool all)
+    {
+        await OnTagModeChanged.InvokeAsync(all);
+    }
+
+    public void Dispose() => debounce?.Dispose();
+}

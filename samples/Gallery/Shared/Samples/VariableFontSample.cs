@@ -29,6 +29,12 @@ public class VariableFontSample : CanvasSampleBase
 	public override string Description =>
 		"Explore OpenType variable font axes — adjust weight and optical size in real time using Inter.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"SKFourByteTag", "SKFontVariationPositionCoordinate", "Clone", "FromData", "SKData",
+		"MeasureText", "DrawText", "SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
 	public override string Category => SampleManager.Text;
 
 	public override IReadOnlyList<SampleControl> Controls =>

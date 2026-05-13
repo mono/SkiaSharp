@@ -23,6 +23,13 @@ public class PathBuilderSample : CanvasSampleBase
 
 	public override string Description => "Build star, Bézier, and spiral paths with bounds visualization and fill rule controls.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"SKPathFillType", "GetBounds", "GetTightBounds", "SKPath", "SKPathBuilder",
+		"SKPathEffect", "CreateDash", "DrawPath", "DrawCircle", "DrawLine", "DrawText",
+		"DrawRect", "SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("shape", "Shape", ShapeNames, shapeIndex),

@@ -1,86 +1,172 @@
 /* ============================================
-   Gallery — CSS-first layout
-   CSS handles ALL layout via column-count.
-   JS only reorders DOM for NEW item distribution.
+   Gallery — API Atlas layout
+   Sidebar + CSS Grid. No masonry. No JS layout.
    ============================================ */
 
-.gallery-shell {
-    max-width: 1200px;
+/* Design tokens */
+.gallery-page {
+    --gallery-bg: #fafafa;
+    --gallery-surface: #ffffff;
+    --gallery-surface-2: #f3f4f6;
+    --gallery-border: #e5e7eb;
+    --gallery-text: #111827;
+    --gallery-text-muted: #6b7280;
+    --gallery-accent: #6366f1;
+    --gallery-accent-strong: #4f46e5;
+    --gallery-accent-soft: #eef2ff;
+    --color-type: #2563eb;
+    --color-type-soft: #dbeafe;
+    --color-method: #d97706;
+    --color-method-soft: #fef3c7;
+
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 1.5rem;
+    color: var(--gallery-text);
 }
 
-.filter-area {
-    padding: 1.5rem 0 1rem;
+/* ─── Hero ─── */
+.hero-band {
+    padding: 1.5rem 0 0.75rem;
+    border-bottom: 1px solid var(--gallery-border);
+}
+.hero-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.hero-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.03em;
+}
+.hero-subtitle {
+    font-size: 0.88rem;
+    color: var(--gallery-text-muted);
+    margin: 0.2rem 0 0;
+}
+.hero-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-variant-numeric: tabular-nums;
+}
+.stat {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gallery-accent);
+}
+.stat small {
+    font-weight: 400;
+    font-size: 0.78rem;
+    color: var(--gallery-text-muted);
+}
+.stat-sep { color: var(--gallery-border); }
+
+/* ─── Filter bar area ─── */
+.filter-bar-area {
+    min-height: 1rem;
 }
 
-/* ─── Shared column rules ─── */
-.skeleton-grid { column-count: 3; column-gap: 1rem; }
-.masonry-grid  { /* JS creates flex columns */ }
-
-/* ─── Masonry grid ─── */
-.masonry-grid {
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    padding-bottom: 2rem;
+/* ─── Main layout ─── */
+.gallery-main {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    padding: 1rem 0 2rem;
 }
 
-.grid-item {
-    margin-bottom: 0; /* gap handled by flex column */
+/* ─── Results column ─── */
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    gap: 1rem;
+}
+.results-count {
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+.results-sort {
+    font-size: 0.78rem;
+    color: var(--gallery-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.results-sort select {
+    border: 1px solid var(--gallery-border);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.78rem;
+    background: var(--gallery-surface);
+    color: var(--gallery-text);
+    cursor: pointer;
 }
 
+/* ─── Card grid ─── */
+.sample-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 0.9rem;
+}
 .grid-link {
     text-decoration: none;
     color: inherit;
     display: block;
 }
 
-/* ─── Skeleton shimmer ─── */
-@@keyframes shimmer {
-    0%   { background-position: -200px 0; }
-    100% { background-position:  200px 0; }
+/* ─── Empty state ─── */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--gallery-text-muted);
 }
-
-.skeleton-grid {
-    padding-bottom: 2rem;
+.empty-state h3 {
+    margin: 0.75rem 0 0.3rem;
+    color: var(--gallery-text);
 }
-
-.skeleton-card {
-    break-inside: avoid;
-    margin-bottom: 1rem;
-    border-radius: 12px;
-    background: #f0f0f0;
-    padding: 1.2rem;
-    animation: shimmer 1.5s ease-in-out infinite;
-    background-image: linear-gradient(90deg, #f0f0f0 0px, #e8e8e8 40px, #f0f0f0 80px);
-    background-size: 400px 100%;
+.empty-state p { margin: 0 0 1rem; font-size: 0.9rem; }
+.empty-reset {
+    padding: 0.5rem 1.2rem;
+    border: 1px solid var(--gallery-border);
+    border-radius: 8px;
+    background: var(--gallery-surface);
+    color: var(--gallery-accent);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 120ms ease;
 }
-
-.skeleton-accent {
-    height: 6px;
-    width: 100%;
-    border-radius: 3px;
-    background: #ddd;
-    margin-bottom: 1rem;
-}
-
-.skeleton-line {
-    height: 12px;
-    border-radius: 6px;
-    background: #e0e0e0;
-    margin-bottom: 0.6rem;
-}
-.skeleton-line.wide   { width: 80%; }
-.skeleton-line.medium { width: 60%; }
-.skeleton-line.short  { width: 40%; }
+.empty-reset:hover { background: var(--gallery-accent-soft); }
 
 /* ─── Footer ─── */
 .gallery-footer {
     text-align: center;
     padding: 1.5rem 0 2rem;
     font-size: 0.8rem;
-    color: #888;
-    border-top: 1px solid #eee;
+    color: var(--gallery-text-muted);
+    border-top: 1px solid var(--gallery-border);
 }
 
+/* ─── Responsive ─── */
+@@media (max-width: 860px) {
+    .gallery-main {
+        grid-template-columns: 1fr;
+    }
+    .sample-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+}
 
+@@media (max-width: 640px) {
+    .gallery-page { padding: 0 1rem; }
+    .hero-title { font-size: 1.25rem; }
+    .sample-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -20,6 +20,12 @@ public class VertexMeshSample : CanvasSampleBase
 
 	public override string Description => "Render colored triangle meshes with adjustable grid density, color modes, and wireframe overlay.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"SKVertices", "SKColor", "DrawVertices", "CreateCopy", "SKPathBuilder", "SKPath",
+		"DrawPath", "SKCanvas", "SKPaint",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("colorMode", "Color Mode", ColorModes, colorModeIndex),

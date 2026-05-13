@@ -81,6 +81,12 @@ half4 main(float2 fragCoord) {
 	public override string Description =>
 		"Animated cross-fade between two procedural images using an SkSL noise threshold mask with child shaders.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"SKRuntimeEffectChildren", "SKRuntimeEffect", "SKRuntimeEffectUniforms", "CreateShader", "ToShader",
+		"SKShader", "CreateLinearGradient", "DrawRect", "DrawText", "SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override string Category => SampleManager.Shaders;
 
 	public override IReadOnlyList<SampleControl> Controls =>

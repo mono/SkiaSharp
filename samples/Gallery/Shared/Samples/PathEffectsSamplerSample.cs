@@ -19,6 +19,13 @@ public class PathEffectsSamplerSample : CanvasSampleBase
 	public override string Description =>
 		"All 6 path effects side by side on the same base path: corner, dash, discrete, 1D stamp, 2D tile, and compose.";
 
+	public override IReadOnlyList<string> Tags =>
+	[
+		"CreateCorner", "CreateDiscrete", "Create1DPath", "Create2DPath", "ClipRect",
+		"CreateCompose", "CreateDash", "SKPathEffect", "SKMatrix", "SKPath", "SKPathBuilder",
+		"DrawPath", "DrawLine", "DrawText", "SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override string Category => SampleManager.Paths;
 
 	public override IReadOnlyList<SampleControl> Controls =>
