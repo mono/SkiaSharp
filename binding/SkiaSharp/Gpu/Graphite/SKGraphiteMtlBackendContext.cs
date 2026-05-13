@@ -32,6 +32,10 @@ namespace SkiaSharp
 		internal IntPtr Handle {
 			get {
 				if (nativeBackendContext == IntPtr.Zero) {
+					if (MtlDevice == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (MtlDevice)} must be set before materializing the backend context.");
+					if (MtlQueue == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (MtlQueue)} must be set before materializing the backend context.");
 					var native = new SKGraphiteMtlBackendContextInit {
 						Device = (void*)MtlDevice,
 						Queue  = (void*)MtlQueue,

@@ -70,6 +70,14 @@ namespace SkiaSharp
 		internal IntPtr Handle {
 			get {
 				if (nativeBackendContext == IntPtr.Zero) {
+					if (VkInstance == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (VkInstance)} must be set before materializing the backend context.");
+					if (VkPhysicalDevice == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (VkPhysicalDevice)} must be set before materializing the backend context.");
+					if (VkDevice == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (VkDevice)} must be set before materializing the backend context.");
+					if (VkQueue == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (VkQueue)} must be set before materializing the backend context.");
 					var native = ToNative ();
 					nativeBackendContext = SkiaApi.sk_graphite_vk_backend_context_new (&native);
 				}

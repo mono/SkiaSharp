@@ -74,6 +74,10 @@ namespace SkiaSharp
 		{
 			if (info == null)
 				throw new ArgumentNullException (nameof (info));
+			if (width <= 0)
+				throw new ArgumentOutOfRangeException (nameof (width), width, "Must be positive.");
+			if (height <= 0)
+				throw new ArgumentOutOfRangeException (nameof (height), height, "Must be positive.");
 			IntPtr handle = SkiaApi.sk_graphite_recorder_create_backend_texture (Handle, width, height, info.Handle);
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
 		}

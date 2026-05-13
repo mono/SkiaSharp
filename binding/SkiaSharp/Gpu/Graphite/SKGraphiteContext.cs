@@ -197,7 +197,11 @@ namespace SkiaSharp
 
 		public long MaxBudgetedBytes {
 			get => SkiaApi.sk_graphite_context_get_max_budgeted_bytes (Handle);
-			set => SkiaApi.sk_graphite_context_set_max_budgeted_bytes (Handle, value);
+			set {
+				if (value < 0)
+					throw new ArgumentOutOfRangeException (nameof (value), value, "Must be non-negative.");
+				SkiaApi.sk_graphite_context_set_max_budgeted_bytes (Handle, value);
+			}
 		}
 
 		// Recording
@@ -274,8 +278,12 @@ namespace SkiaSharp
 		public void FreeGpuResources () =>
 			SkiaApi.sk_graphite_context_free_gpu_resources (Handle);
 
-		public void PerformDeferredCleanup (TimeSpan duration) =>
+		public void PerformDeferredCleanup (TimeSpan duration)
+		{
+			if (duration < TimeSpan.Zero)
+				throw new ArgumentOutOfRangeException (nameof (duration), duration, "Must be non-negative.");
 			SkiaApi.sk_graphite_context_perform_deferred_cleanup (Handle, (long)duration.TotalMilliseconds);
+		}
 
 		/// <summary>
 		/// Schedule a backend texture (created by <see cref="SKGraphiteRecorder.CreateBackendTexture"/>

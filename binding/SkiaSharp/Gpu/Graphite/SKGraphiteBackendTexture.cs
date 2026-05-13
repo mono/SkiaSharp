@@ -37,6 +37,10 @@ namespace SkiaSharp
 		{
 			if (vkImage == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (vkImage));
+			if (width <= 0)
+				throw new ArgumentOutOfRangeException (nameof (width), width, "Must be positive.");
+			if (height <= 0)
+				throw new ArgumentOutOfRangeException (nameof (height), height, "Must be positive.");
 			IntPtr handle = SkiaApi.sk_graphite_vk_backend_texture_new (
 				width, height, &info, imageLayout, queueFamilyIndex, (void*)vkImage);
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
@@ -54,6 +58,10 @@ namespace SkiaSharp
 		{
 			if (mtlTexture == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (mtlTexture));
+			if (width <= 0)
+				throw new ArgumentOutOfRangeException (nameof (width), width, "Must be positive.");
+			if (height <= 0)
+				throw new ArgumentOutOfRangeException (nameof (height), height, "Must be positive.");
 			IntPtr handle = SkiaApi.sk_graphite_mtl_backend_texture_new (
 				width, height, (void*)mtlTexture);
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);

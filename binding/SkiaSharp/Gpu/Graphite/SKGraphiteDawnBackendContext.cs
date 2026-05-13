@@ -37,6 +37,12 @@ namespace SkiaSharp
 		internal IntPtr Handle {
 			get {
 				if (nativeBackendContext == IntPtr.Zero) {
+					if (WgpuInstance == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (WgpuInstance)} must be set before materializing the backend context.");
+					if (WgpuDevice == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (WgpuDevice)} must be set before materializing the backend context.");
+					if (WgpuQueue == IntPtr.Zero)
+						throw new InvalidOperationException ($"{nameof (WgpuQueue)} must be set before materializing the backend context.");
 					var native = new SKGraphiteDawnBackendContextInit {
 						Instance    = (void*)WgpuInstance,
 						Device      = (void*)WgpuDevice,
