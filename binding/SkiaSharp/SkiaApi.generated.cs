@@ -22773,6 +22773,8 @@ namespace SkiaSharp {
 
 	// sk_graphite_backend_t
 	public enum SKGraphiteBackend {
+		// UNKNOWN_SK_GRAPHITE_BACKEND = -1
+		Unknown = -1,
 		// DAWN_SK_GRAPHITE_BACKEND = 0
 		Dawn = 0,
 		// METAL_SK_GRAPHITE_BACKEND = 1

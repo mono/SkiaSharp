@@ -88,6 +88,7 @@ namespace SkiaSharp
 		{
 			if (backendContext is null)
 				throw new ArgumentNullException (nameof (backendContext));
+			ValidateOptions (options);
 
 			var nativeBackend = backendContext.Handle;
 			if (nativeBackend == IntPtr.Zero)
@@ -106,6 +107,7 @@ namespace SkiaSharp
 		{
 			if (backendContext is null)
 				throw new ArgumentNullException (nameof (backendContext));
+			ValidateOptions (options);
 
 			var nativeBackend = backendContext.Handle;
 			if (nativeBackend == IntPtr.Zero)
@@ -127,6 +129,7 @@ namespace SkiaSharp
 		{
 			if (backendContext is null)
 				throw new ArgumentNullException (nameof (backendContext));
+			ValidateOptions (options);
 
 			var nativeBackend = backendContext.Handle;
 			if (nativeBackend == IntPtr.Zero)
@@ -148,6 +151,20 @@ namespace SkiaSharp
 			backendContext.ReleaseNativeHandle ();
 
 			return ctx;
+		}
+
+		// Reject options values the native shim's validator would refuse so the
+		// caller sees ArgumentException with a clear message instead of a null
+		// from sk_graphite_context_make_*. fInternalMultisampleCount == 0 is the
+		// documented "use Skia default" sentinel — matches default(SKGraphiteContextOptions).
+		private static void ValidateOptions (in SKGraphiteContextOptions options)
+		{
+			var msaa = options.InternalMultisampleCount;
+			if (msaa != 0 && msaa != 1 && msaa != 2 && msaa != 4 && msaa != 8 && msaa != 16) {
+				throw new ArgumentException (
+					$"InternalMultisampleCount must be 0 (use Skia default) or one of 1, 2, 4, 8, 16. Got {msaa}.",
+					nameof (options));
+			}
 		}
 
 		protected override void DisposeNative ()
