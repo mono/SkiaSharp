@@ -232,8 +232,10 @@
 
     private void HandleTagToggled(string tag)
     {
-        if (!selectedTags.Remove(tag))
-            selectedTags.Add(tag);
+        var copy = new HashSet<string>(selectedTags);
+        if (!copy.Remove(tag))
+            copy.Add(tag);
+        selectedTags = copy;
         RefreshGrid();
     }
 
@@ -257,7 +259,9 @@
 
     private void RemoveTag(string tag)
     {
-        selectedTags.Remove(tag);
+        var copy = new HashSet<string>(selectedTags);
+        copy.Remove(tag);
+        selectedTags = copy;
         RefreshGrid();
     }
 
@@ -265,7 +269,7 @@
     {
         searchText = string.Empty;
         selectedCategory = null;
-        selectedTags.Clear();
+        selectedTags = new HashSet<string>();
         tagModeAll = false;
         sortOrder = SampleSortOrder.NewestFirst;
         RefreshGrid();

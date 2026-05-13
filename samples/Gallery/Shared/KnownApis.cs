@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SkiaSharpSample;
 
@@ -10,81 +11,53 @@ public enum TagKind
 }
 
 /// <summary>
-/// Classifies sample tags as Types vs Methods for visual differentiation in the gallery.
+/// Classifies sample tags as Types vs Methods using heuristics derived
+/// from the actual tags collected across all samples. No hardcoded registry —
+/// classification is based on naming conventions.
 /// </summary>
 public static class KnownApis
 {
-	private static readonly HashSet<string> Types = new(StringComparer.Ordinal)
+	/// <summary>
+	/// Classify a tag as Type, Method, or Other based on naming conventions.
+	/// Types: start with "SK", contain a ".", or are known external type names.
+	/// Methods: start with "Draw", "Create", "Get", "Set", "From", "To", or
+	///          are other known verb-based API names.
+	/// </summary>
+	public static TagKind Classify(string tag)
 	{
-		// Core
-		"SKCanvas", "SKPaint", "SKBitmap", "SKImage", "SKSurface", "SKData",
-		"SKColor", "SKColorF", "SKRect", "SKRectI", "SKPoint", "SKSize",
+		if (string.IsNullOrEmpty(tag))
+			return TagKind.Other;
 
-		// Text
-		"SKFont", "SKTypeface", "SKFontMetrics", "SKFontManager", "SKShaper",
-		"SKTextBlob", "SKFourByteTag", "SKFontVariationPositionCoordinate",
+		// Types: SK-prefixed, dotted namespaces (HarfBuzz.Face), known externals
+		if (tag.StartsWith("SK", StringComparison.Ordinal))
+			return TagKind.Type;
+		if (tag.Contains('.'))
+			return TagKind.Type;
+		if (tag == "Animation")
+			return TagKind.Type;
 
-		// Paths & Geometry
-		"SKPath", "SKPathBuilder", "SKPathMeasure", "SKPathFillType",
-		"SKMatrix", "SKMatrix44", "SKRoundRect",
+		// Methods: verb prefixes
+		if (tag.StartsWith("Draw", StringComparison.Ordinal) ||
+			tag.StartsWith("Create", StringComparison.Ordinal) ||
+			tag.StartsWith("Get", StringComparison.Ordinal) ||
+			tag.StartsWith("Set", StringComparison.Ordinal) ||
+			tag.StartsWith("From", StringComparison.Ordinal) ||
+			tag.StartsWith("To", StringComparison.Ordinal) ||
+			tag.StartsWith("Encode", StringComparison.Ordinal) ||
+			tag.StartsWith("Decode", StringComparison.Ordinal) ||
+			tag.StartsWith("Match", StringComparison.Ordinal) ||
+			tag.StartsWith("Measure", StringComparison.Ordinal) ||
+			tag.StartsWith("Clip", StringComparison.Ordinal))
+			return TagKind.Method;
 
-		// Effects
-		"SKShader", "SKShaderTileMode", "SKImageFilter", "SKColorFilter",
-		"SKMaskFilter", "SKPathEffect", "SKBlendMode",
-		"SKRuntimeEffect", "SKRuntimeEffectUniforms", "SKRuntimeEffectChildren",
-
-		// Images & Color
-		"SKCodec", "SKCodecOptions", "SKImageInfo", "SKManagedStream", "SKPixmap",
-		"SKColorSpace", "SKColorSpaceXyz", "SKColorSpaceTransferFn",
-
-		// Documents & Encoding
-		"SKDocument", "SKDocumentPdfMetadata",
-		"SKWebpEncoder", "SKWebpEncoderFrame", "SKWebpEncoderOptions",
-
-		// Vertices
-		"SKVertices",
-
-		// External
-		"SKSvg", "Animation",
-		"HarfBuzz.Blob", "HarfBuzz.Face",
-	};
-
-	private static readonly HashSet<string> Methods = new(StringComparer.Ordinal)
-	{
-		// Draw methods
-		"DrawText", "DrawPath", "DrawBitmap", "DrawImage", "DrawRect",
-		"DrawRoundRect", "DrawCircle", "DrawLine", "DrawOval",
-		"DrawVertices", "DrawPaint", "DrawPicture",
-		"DrawBitmapNinePatch", "DrawTextOnPath", "DrawShapedText",
-
-		// Canvas operations
-		"Save", "Restore", "Translate", "RotateDegrees", "Scale",
-		"SaveLayer", "Concat", "ClipRect", "ClipRoundRect",
-
-		// Create/Factory methods
-		"CreateBlur", "CreateDash", "CreateCorner", "CreateDiscrete",
-		"Create1DPath", "Create2DPath", "CreateCompose",
-		"CreateLinearGradient", "CreateRadialGradient",
-		"CreateSweepGradient", "CreateTwoPointConicalGradient",
-		"CreatePerlinNoiseFractalNoise", "CreatePerlinNoiseTurbulence",
-		"CreateColorMatrix", "CreateHighContrast", "CreateBlendMode",
-		"CreateDilate", "CreateErode", "CreateMagnifier",
-		"CreateRotationDegrees", "CreateShader", "CreatePdf", "CreateXps",
-		"CreateSrgb", "CreateRgb", "CreateCopy",
-
-		// Query methods
-		"MeasureText", "GetFillPath", "GetTextPath", "GetBounds",
-		"GetTightBounds", "GetIntercepts", "GetPixels",
-		"MatchCharacter",
-
-		// Misc
-		"ToShader", "Decode", "Clone", "FromData", "FromStream",
-		"BeginPage", "EncodeAnimated", "SetColor", "Snapshot",
-		"Render", "SeekFrameTime", "PaletteCount",
-	};
-
-	public static TagKind Classify(string tag) =>
-		Types.Contains(tag) ? TagKind.Type
-		: Methods.Contains(tag) ? TagKind.Method
-		: TagKind.Other;
+		// Known method names that don't match a prefix pattern
+		return tag switch
+		{
+			"Save" or "Restore" or "Translate" or "Scale" or "Concat" => TagKind.Method,
+			"RotateDegrees" or "SaveLayer" => TagKind.Method,
+			"Clone" or "Decode" or "Snapshot" or "Render" => TagKind.Method,
+			"SeekFrameTime" or "PaletteCount" or "BeginPage" => TagKind.Method,
+			_ => TagKind.Other,
+		};
+	}
 }
