@@ -1,4 +1,4 @@
-@* FilterRail — sticky sidebar with categories + tag cloud *@
+@* FilterRail — sticky sidebar (desktop) / drawer (mobile) *@
 
 <aside class="filter-rail">
     @* Search *@
@@ -10,57 +10,69 @@
         </div>
     </div>
 
-    @* Categories *@
+    @* Categories — expanded by default, collapsible *@
     <div class="rail-section">
-        <h3 class="rail-heading">Categories</h3>
-        <button class="cat-item @(SelectedCategory == null ? "active" : "")"
-                @onclick="() => SelectCategory(null)">
-            <span>All</span>
-            <span class="cat-count">@TotalCount</span>
+        <button class="rail-heading-btn" @onclick="() => categoriesOpen = !categoriesOpen">
+            <h3 class="rail-heading">Categories</h3>
+            <i class="bi @(categoriesOpen ? "bi-chevron-up" : "bi-chevron-down") rail-chevron"></i>
         </button>
-        @foreach (var catName in AllCategories)
+        @if (categoriesOpen)
         {
-            var cat = SampleManager.GetCategoryFor(catName);
-            var count = SampleManager.GetSampleCount(catName, AllSamples);
-            <button class="cat-item @(SelectedCategory == catName ? "active" : "")"
-                    style="--cat-color: @cat.Color;"
-                    @onclick="() => SelectCategory(catName)">
-                <i class="bi @cat.CssIcon cat-icon"></i>
-                <span>@catName</span>
-                <span class="cat-count">@count</span>
-            </button>
+            <div class="rail-section-body">
+                <button class="cat-item @(SelectedCategory == null ? "active" : "")"
+                        @onclick="() => SelectCategory(null)">
+                    <span>All</span>
+                    <span class="cat-count">@TotalCount</span>
+                </button>
+                @foreach (var catName in AllCategories)
+                {
+                    var cat = SampleManager.GetCategoryFor(catName);
+                    var count = SampleManager.GetSampleCount(catName, AllSamples);
+                    <button class="cat-item @(SelectedCategory == catName ? "active" : "")"
+                            style="--cat-color: @cat.Color;"
+                            @onclick="() => SelectCategory(catName)">
+                        <i class="bi @cat.CssIcon cat-icon"></i>
+                        <span>@catName</span>
+                        <span class="cat-count">@count</span>
+                    </button>
+                }
+            </div>
         }
     </div>
 
-    @* Tag cloud — Types *@
+    @* Tag cloud — Types — expanded by default, collapsible *@
     <div class="rail-section">
-        <h3 class="rail-heading">Types</h3>
-        <div class="tag-cloud">
-            @foreach (var t in GetTypeTags())
-            {
-                var tag = t;
-                var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
-                <TagPill Tag="@tag.Tag" Count="@liveCount" Kind="TagKind.Type"
-                         IsActive="@SelectedTags.Contains(tag.Tag)"
-                         IsZero="@(liveCount == 0)"
-                         Size="@GetPillSize(tag.Count)"
-                         OnTagClicked="ToggleTag" />
-            }
-        </div>
-    </div>
-
-    @* Tag cloud — Methods *@
-    <div class="rail-section">
-        <div class="rail-heading-row">
-            <h3 class="rail-heading">Methods</h3>
-            <button class="rail-toggle" @onclick="() => showMethods = !showMethods">
-                @(showMethods ? "Hide" : "Show")
-            </button>
-        </div>
-        @if (showMethods)
+        <button class="rail-heading-btn" @onclick="() => typesOpen = !typesOpen">
+            <h3 class="rail-heading">Types</h3>
+            <i class="bi @(typesOpen ? "bi-chevron-up" : "bi-chevron-down") rail-chevron"></i>
+        </button>
+        @if (typesOpen)
         {
             <div class="tag-cloud">
-                @foreach (var t in GetMethodTags())
+                @foreach (var t in GetSortedTags(TagKind.Type))
+                {
+                    var tag = t;
+                    var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
+                    <TagPill Tag="@tag.Tag" Count="@liveCount" Kind="TagKind.Type"
+                             IsActive="@SelectedTags.Contains(tag.Tag)"
+                             IsZero="@(liveCount == 0)"
+                             Size="@GetPillSize(tag.Count)"
+                             OnTagClicked="ToggleTag" />
+                }
+            </div>
+        }
+    </div>
+
+    @* Tag cloud — Methods — collapsed by default, collapsible *@
+    <div class="rail-section">
+        <button class="rail-heading-btn" @onclick="() => methodsOpen = !methodsOpen">
+            <h3 class="rail-heading">Methods</h3>
+            <i class="bi @(methodsOpen ? "bi-chevron-up" : "bi-chevron-down") rail-chevron"></i>
+        </button>
+        @if (methodsOpen)
+        {
+            <div class="tag-cloud">
+                @foreach (var t in GetSortedTags(TagKind.Method))
                 {
                     var tag = t;
                     var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
@@ -124,27 +136,40 @@
     }
     .rail-search input::placeholder { color: #aaa; }
 
+    /* Collapsible heading button */
+    .rail-heading-btn {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 0;
+        margin: 0 0 0.4rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: inherit;
+    }
+    .rail-heading-btn:hover .rail-heading { color: var(--gallery-accent, #6366f1); }
+
     .rail-heading {
         font-size: 0.7rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--gallery-text-muted, #6b7280);
-        margin: 0 0 0.5rem;
+        margin: 0;
+        transition: color 120ms ease;
     }
 
-    .rail-heading-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .rail-chevron {
+        font-size: 0.65rem;
+        color: var(--gallery-text-muted, #6b7280);
+        transition: transform 150ms ease;
     }
-    .rail-toggle {
-        font-size: 0.7rem;
-        color: var(--gallery-accent, #6366f1);
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0;
+
+    .rail-section-body {
+        display: flex;
+        flex-direction: column;
     }
 
     /* Category list */
@@ -231,7 +256,9 @@
     [Parameter] public EventCallback<string> OnTagToggled { get; set; }
     [Parameter] public EventCallback<bool> OnTagModeChanged { get; set; }
 
-    private bool showMethods = false;
+    private bool categoriesOpen = true;
+    private bool typesOpen = true;
+    private bool methodsOpen = false;
     private System.Timers.Timer? debounce;
     private string pendingText = "";
 
@@ -251,11 +278,16 @@
         allTags = SampleManager.GetAllTags(AllSamples);
     }
 
-    private IEnumerable<(string Tag, int Count, TagKind Kind)> GetTypeTags() =>
-        (allTags ?? []).Where(t => t.Kind == TagKind.Type);
-
-    private IEnumerable<(string Tag, int Count, TagKind Kind)> GetMethodTags() =>
-        (allTags ?? []).Where(t => t.Kind == TagKind.Method);
+    /// <summary>
+    /// Sort tags: active (selected) first, then by count descending.
+    /// This ensures selected pills float to the top so users don't hunt for them.
+    /// </summary>
+    private IEnumerable<(string Tag, int Count, TagKind Kind)> GetSortedTags(TagKind kind) =>
+        (allTags ?? [])
+            .Where(t => t.Kind == kind)
+            .OrderByDescending(t => SelectedTags.Contains(t.Tag) ? 1 : 0)
+            .ThenByDescending(t => t.Count)
+            .ThenBy(t => t.Tag);
 
     private static TagPill.TagPillSize GetPillSize(int corpusCount) =>
         corpusCount >= 10 ? TagPill.TagPillSize.Large

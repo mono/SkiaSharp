@@ -34,17 +34,20 @@
 
     @* Main layout: sidebar + grid *@
     <div class="gallery-main">
-        <FilterRail AllCategories="allCategories"
-                    AllSamples="allSamples"
-                    SearchText="@searchText"
-                    SelectedCategory="@selectedCategory"
-                    SelectedTags="@selectedTags"
-                    TagModeAll="@tagModeAll"
-                    LiveTagCounts="@liveTagCounts"
-                    OnSearchChanged="HandleSearchChanged"
-                    OnCategoryChanged="HandleCategoryChanged"
-                    OnTagToggled="HandleTagToggled"
-                    OnTagModeChanged="HandleTagModeChanged" />
+        @* Desktop sidebar — hidden on mobile *@
+        <div class="sidebar-desktop">
+            <FilterRail AllCategories="allCategories"
+                        AllSamples="allSamples"
+                        SearchText="@searchText"
+                        SelectedCategory="@selectedCategory"
+                        SelectedTags="@selectedTags"
+                        TagModeAll="@tagModeAll"
+                        LiveTagCounts="@liveTagCounts"
+                        OnSearchChanged="HandleSearchChanged"
+                        OnCategoryChanged="HandleCategoryChanged"
+                        OnTagToggled="HandleTagToggled"
+                        OnTagModeChanged="HandleTagModeChanged" />
+        </div>
 
         <div class="results-column">
             @* Results header *@
@@ -116,6 +119,42 @@
         </div>
     </div>
 
+    @* Mobile filter drawer *@
+    <div class="mobile-filter-fab @(HasActiveFilters ? "has-filters" : "")" @onclick="() => mobileDrawerOpen = true">
+        <i class="bi bi-funnel"></i>
+        Filters
+        @if (activeFilterCount > 0)
+        {
+            <span class="fab-badge">@activeFilterCount</span>
+        }
+    </div>
+
+    @if (mobileDrawerOpen)
+    {
+        <div class="drawer-backdrop" @onclick="() => mobileDrawerOpen = false"></div>
+        <div class="drawer-panel">
+            <div class="drawer-header">
+                <span class="drawer-title">Filters · @filteredSamples.Length results</span>
+                <button class="drawer-close" @onclick="() => mobileDrawerOpen = false">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <FilterRail AllCategories="allCategories"
+                            AllSamples="allSamples"
+                            SearchText="@searchText"
+                            SelectedCategory="@selectedCategory"
+                            SelectedTags="@selectedTags"
+                            TagModeAll="@tagModeAll"
+                            LiveTagCounts="@liveTagCounts"
+                            OnSearchChanged="HandleSearchChanged"
+                            OnCategoryChanged="HandleCategoryChanged"
+                            OnTagToggled="HandleTagToggled"
+                            OnTagModeChanged="HandleTagModeChanged" />
+            </div>
+        </div>
+    }
+
     <footer class="gallery-footer">
         SkiaSharp <strong>@SampleService.SkiaSharpVersion</strong> ·
         HarfBuzzSharp <strong>@SampleService.HarfBuzzSharpVersion</strong>
@@ -132,6 +171,7 @@
     private HashSet<string> selectedTags = new();
     private bool tagModeAll;
     private SampleSortOrder sortOrder = SampleSortOrder.NewestFirst;
+    private bool mobileDrawerOpen;
 
     private string[] allCategories = Array.Empty<string>();
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
@@ -158,6 +198,11 @@
         !string.IsNullOrWhiteSpace(searchText) ||
         selectedCategory is not null ||
         selectedTags.Count > 0;
+
+    private int activeFilterCount =>
+        (string.IsNullOrWhiteSpace(searchText) ? 0 : 1) +
+        (selectedCategory is not null ? 1 : 0) +
+        selectedTags.Count;
 
     private void RefreshGrid()
     {
