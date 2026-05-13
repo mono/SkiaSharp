@@ -1,0 +1,121 @@
+{
+  "include": [
+    "scripts/VERSIONS.txt",
+    "scripts/infra/shared/**",
+    "scripts/azure-*.yml",
+    "nuget.config",
+    "global.json",
+    ".config/**",
+    ".gitmodules",
+    ".editorconfig",
+    "scripts/infra/security/**"
+  ],
+  "exclude": [
+    "documentation/**",
+    "images/**",
+    "interactive/**",
+    ".github/**",
+    ".devcontainer/**",
+    ".vscode/**",
+    ".agents/**",
+    "*.md",
+    ".gitattributes",
+    ".gitignore",
+    "externals/.gitignore",
+    "native/.gitignore",
+    "scripts/get-skiasharp-pr.*",
+    "scripts/infra/caching/**",
+    "cgmanifest.json",
+    "utils/SkiaSharpGenerator/**",
+    "utils/Utils.sln",
+    "utils/generate.ps1",
+    "utils/README.md"
+  ],
+  "jobs": {
+    "native": {
+      "include": ["scripts/infra/native/shared/**"],
+      "submodules": ["externals/skia", "externals/depot_tools"],
+      "children": {
+        "android": {
+          "include": ["native/android/**", "scripts/infra/native/android/**"]
+        },
+        "ios": {
+          "include": ["native/ios/**", "scripts/infra/native/apple/**"]
+        },
+        "macos": {
+          "include": ["native/macos/**", "scripts/infra/native/apple/**"]
+        },
+        "maccatalyst": {
+          "include": ["native/maccatalyst/**", "scripts/infra/native/apple/**", "native/ios/**"]
+        },
+        "tvos": {
+          "include": ["native/tvos/**", "scripts/infra/native/apple/**"]
+        },
+        "windows": {
+          "include": ["native/windows/**", "scripts/infra/native/windows/**"]
+        },
+        "winui": {
+          "include": ["native/winui/**", "scripts/infra/native/windows/**"]
+        },
+        "winui_angle": {
+          "include": ["native/winui-angle/**", "scripts/infra/native/windows/**"]
+        },
+        "nanoserver": {
+          "include": ["native/nanoserver/**", "scripts/infra/native/windows/**", "native/windows/**"]
+        },
+        "linux": {
+          "include": ["native/linux/**", "scripts/infra/native/linux/**"]
+        },
+        "linux_cross": {
+          "include": ["native/linux-clang-cross/**", "scripts/infra/native/linux/**", "native/linux/**"]
+        },
+        "linuxnodeps": {
+          "include": ["native/linuxnodeps/**", "scripts/infra/native/linux/**", "native/linux/**"]
+        },
+        "tizen": {
+          "include": ["native/tizen/**", "scripts/infra/native/tizen/**"]
+        },
+        "wasm": {
+          "include": ["native/wasm/**", "scripts/infra/native/wasm/**"]
+        }
+      }
+    },
+    "managed": {
+      "dependsOn": ["native"],
+      "include": [
+        "binding/**",
+        "source/**",
+        "scripts/infra/managed/**",
+        "scripts/mono.*",
+        "build.cake",
+        "LICENSE.txt",
+        "images/nuget.png",
+        "External-Dependency-Info.txt"
+      ],
+      "submodules": ["docs"],
+      "children": {
+        "libs": {},
+        "package": {
+          "include": ["scripts/infra/package/**"],
+          "children": {
+            "api_diff": {
+              "include": ["scripts/infra/docs/**", "changelogs/**"]
+            },
+            "samples": {
+              "include": ["samples/**", "scripts/infra/samples/**"]
+            }
+          }
+        },
+        "tests": {
+          "include": [
+            "tests/**",
+            "scripts/infra/tests/**",
+            "benchmarks/**",
+            "utils/WasmTestRunner/**",
+            "utils/NativeLibraryMiniTest/**"
+          ]
+        }
+      }
+    }
+  }
+}

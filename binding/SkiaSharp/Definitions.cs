@@ -601,6 +601,33 @@ namespace SkiaSharp
 		public float Quality => fQuality;
 	}
 
+	public struct SKWebpEncoderFrame
+	{
+		public SKWebpEncoderFrame (SKPixmap pixmap, TimeSpan duration)
+		{
+			Pixmap = pixmap ?? throw new ArgumentNullException (nameof (pixmap));
+			Duration = duration;
+		}
+
+		public SKWebpEncoderFrame (SKBitmap bitmap, TimeSpan duration)
+		{
+			_ = bitmap ?? throw new ArgumentNullException (nameof (bitmap));
+			Pixmap = bitmap.PeekPixels () ?? throw new ArgumentException ("Unable to peek pixels from bitmap.", nameof (bitmap));
+			Duration = duration;
+		}
+
+		public SKWebpEncoderFrame (SKImage image, TimeSpan duration)
+		{
+			_ = image ?? throw new ArgumentNullException (nameof (image));
+			Pixmap = image.PeekPixels () ?? throw new ArgumentException ("Unable to peek pixels from image. Ensure the image is raster-backed.", nameof (image));
+			Duration = duration;
+		}
+
+		public SKPixmap Pixmap { readonly get; set; }
+
+		public TimeSpan Duration { readonly get; set; }
+	}
+
 	public partial struct SKCubicResampler
 	{
 		public static readonly SKCubicResampler Mitchell = new (1 / 3.0f, 1 / 3.0f);

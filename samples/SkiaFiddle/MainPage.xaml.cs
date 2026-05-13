@@ -1,8 +1,12 @@
 using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 using SkiaFiddle.Fiddle;
 using SkiaSharp;
+using Uno.Foundation;
 
 namespace SkiaFiddle;
 
@@ -25,7 +29,7 @@ public sealed partial class MainPage : Page
         {
             FpsText.Text = $"{fps:0.0} fps";
         });
-        // SamplesCombo.SelectedIndex = 0 (set in InitSamples) fires OnSampleChanged,
+        // SamplesCombo.SelectedIndex (set in InitSamples) fires OnSampleChanged,
         // which seeds both editors and runs.
     }
 
@@ -40,27 +44,56 @@ public sealed partial class MainPage : Page
         if (_samplesInitialized)
             return;
         _samplesInitialized = true;
-        foreach (var sample in SampleSnippets.All)
+        var defaultIndex = 0;
+        for (var i = 0; i < SampleSnippets.All.Count; i++)
+        {
+            var sample = SampleSnippets.All[i];
             SamplesCombo.Items.Add(new ComboBoxItem { Content = sample.Name, Tag = sample });
-        SamplesCombo.SelectedIndex = 0;
+            if (sample.Name == "Animated · Orbits")
+                defaultIndex = i;
+        }
+        SamplesCombo.SelectedIndex = defaultIndex;
     }
 
     private void OnSampleChanged(object sender, SelectionChangedEventArgs e)
     {
         if (SamplesCombo.SelectedItem is ComboBoxItem item && item.Tag is FiddleSample sample)
         {
-            SetupEditor.Text = sample.Setup;
-            DrawEditor.Text = sample.Draw;
-            _ = RunAsync();
+            DispatcherQueue.TryEnqueue(() => 
+            {
+                SetupEditor.Text = sample.Setup;
+                DrawEditor.Text = sample.Draw;
+                _ = RunAsync();
+            });
         }
     }
 
-    private async void OnRunClicked(object sender, RoutedEventArgs e) => await RunAsync();
+    private void OnRunClicked(object sender, RoutedEventArgs e) => DispatcherQueue.TryEnqueue(() => _ = RunAsync());
+
+    // Monaco's onDidChangeContent → managed CodeEditor.Text round-trip is unreliable
+    // under Uno WASM (the property lags behind keystrokes), so we ask Monaco directly
+    // for its current model values right before compiling. DOM order matches XAML
+    // declaration order: SetupEditor first (top), DrawEditor second (bottom).
+    private (string setup, string draw) GetEditorTexts()
+    {
+        try
+        {
+            var json = WebAssemblyRuntime.InvokeJS("globalThis.skiaFiddleGetMonacoValues ? globalThis.skiaFiddleGetMonacoValues() : '[]'");
+            var values = JsonSerializer.Deserialize(json, FiddleJsonContext.Default.StringArray) ?? Array.Empty<string>();
+            var setup = values.Length > 0 ? values[0] : SetupEditor.Text ?? string.Empty;
+            var draw = values.Length > 1 ? values[1] : DrawEditor.Text ?? string.Empty;
+            return (setup, draw);
+        }
+        catch
+        {
+            return (SetupEditor.Text ?? string.Empty, DrawEditor.Text ?? string.Empty);
+        }
+    }
 
     private void OnPauseClicked(object sender, RoutedEventArgs e)
     {
         OutputCanvas.TogglePause();
-        PauseLabel.Text = OutputCanvas.IsAnimating ? "⏸ Pause" : "▶ Play";
+        PauseLabel.Text = OutputCanvas.IsAnimating ? "Stop" : "Play";
         if (!OutputCanvas.IsAnimating)
             FpsText.Text = "paused";
     }
@@ -73,18 +106,19 @@ public sealed partial class MainPage : Page
         FpsText.Text = "";
         try
         {
-            var result = await _compiler.CompileAsync(SetupEditor.Text, DrawEditor.Text);
+            var (setup, draw) = GetEditorTexts();
+            var result = await _compiler.CompileAsync(setup, draw);
             if (result.Draw is not null)
             {
                 OutputCanvas.SetDrawDelegate(result.Draw);
-                PauseLabel.Text = "⏸ Pause";
+                PauseLabel.Text = "Stop";
                 MessageText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Resources["TextSecondary"];
                 MessageText.Text = result.Diagnostics ?? "Compiled in " + result.ElapsedMs + " ms";
             }
             else
             {
                 OutputCanvas.SetError(result.Diagnostics ?? "Unknown error");
-                PauseLabel.Text = "▶ Play";
+                PauseLabel.Text = "Play";
                 FpsText.Text = "";
                 MessageText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Resources["ErrorBrush"];
                 MessageText.Text = (result.Diagnostics ?? "Compile failed").Split('\n')[0];
@@ -101,4 +135,7 @@ public sealed partial class MainPage : Page
             RunButton.IsEnabled = true;
         }
     }
+
+    [JsonSerializable(typeof(string[]))]
+    internal partial class FiddleJsonContext : JsonSerializerContext;
 }

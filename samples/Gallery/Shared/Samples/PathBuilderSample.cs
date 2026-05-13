@@ -17,7 +17,9 @@ public class PathBuilderSample : CanvasSampleBase
 
 	public override string Title => "Path Builder";
 
-	public override string Category => SampleCategories.Paths;
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
+	public override string Category => SampleManager.Paths;
 
 	public override string Description => "Build star, Bézier, and spiral paths with bounds visualization and fill rule controls.";
 

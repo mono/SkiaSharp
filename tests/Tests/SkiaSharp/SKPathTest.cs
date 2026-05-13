@@ -725,5 +725,31 @@ namespace SkiaSharp.Tests
 		}
 
 #pragma warning restore CS0618
+
+		[SkippableFact]
+		public void PathWithPendingBuilderMutationsSurvivesFinalization()
+		{
+			// Reproduces a finalizer-ordering crash: SKPath holds a private SKPathBuilder
+			// for batched mutations. Both are SKObjects with their own finalizers, and the
+			// CLR may finalize the builder first. When the path's finalizer then accesses
+			// path.Handle, the override calls FlushBuilder, which calls
+			// sk_pathbuilder_detach_path on the builder's already-freed handle.
+			MakeAndAbandon();
+
+			CollectGarbage();
+			CollectGarbage();
+
+			// If the bug is present, the second collect crashes the finalizer thread on
+			// sk_pathbuilder_detach_path(IntPtr.Zero). Reaching here without an unhandled
+			// native exception means the disposal path skipped FlushBuilder correctly.
+
+			static void MakeAndAbandon()
+			{
+				var path = new SKPath();
+				path.MoveTo(0, 0);
+				path.LineTo(10, 10);
+				// drop both references; the builder is private and goes with it
+			}
+		}
 	}
 }

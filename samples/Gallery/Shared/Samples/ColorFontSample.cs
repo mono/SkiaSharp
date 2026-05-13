@@ -25,10 +25,12 @@ private static readonly string[] TextOptions =
 
 public override string Title => "Color Fonts";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 26);
+
 public override string Description =>
 "Explore color font palettes with Nabla — a Google Font with 7 built-in color palettes and variable axes.";
 
-public override string Category => SampleCategories.Text;
+public override string Category => SampleManager.Text;
 
 public override IReadOnlyList<SampleControl> Controls =>
 [

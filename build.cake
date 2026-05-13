@@ -1,212 +1,88 @@
-#addin nuget:?package=Cake.Xamarin&version=3.1.0
-#addin nuget:?package=Cake.XCode&version=5.0.0
-#addin nuget:?package=Cake.FileHelpers&version=4.0.1
-#addin nuget:?package=Cake.Json&version=6.0.1
-#addin nuget:?package=NuGet.Packaging&version=6.9.1
-#addin nuget:?package=SharpCompress&version=0.32.2
-#addin nuget:?package=Mono.Cecil&version=0.11.5
-#addin nuget:?package=Mono.ApiTools.ApiInfo&version=1.4.1
-#addin nuget:?package=Mono.ApiTools.ApiDiff&version=1.4.1
-#addin nuget:?package=Mono.ApiTools.ApiDiffFormatted&version=1.4.1
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.4.1
-
-#tool nuget:?package=mdoc&version=5.8.9
-#tool nuget:?package=xunit.runner.console&version=2.4.2
-#tool nuget:?package=vswhere&version=2.8.4
-
-using System.Linq;
-using System.Net.Http;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Linq;
-using SharpCompress.Common;
-using SharpCompress.Readers;
-using Mono.ApiTools;
-using NuGet.Packaging;
-using NuGet.Versioning;
-
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
-#load "./scripts/cake/shared.cake"
-#load "./scripts/cake/native-shared.cake"
-
-var SKIP_EXTERNALS = Argument ("skipexternals", "")
-    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-var SKIP_BUILD = Argument ("skipbuild", false);
-var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
-var THROW_ON_FIRST_TEST_FAILURE = Argument ("throwOnFirstTestFailure", false);
-var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
-var COVERAGE = Argument ("coverage", false);
-var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
-
-var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
-var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
-var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
-
-var PLATFORM_SUPPORTS_DIRECT3D_TESTS = IsRunningOnWindows ().ToString ();
-var SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? PLATFORM_SUPPORTS_DIRECT3D_TESTS);
-var SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
-
-var MDocPath = Context.Tools.Resolve ("mdoc.exe");
-
-DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
-DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
-
-var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
-var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
-var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
-var BUILD_COUNTER = Argument ("buildCounter", EnvironmentVariable ("BUILD_COUNTER") ?? BUILD_NUMBER);
-var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
-var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
-var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
-
-var PREVIEW_NUGET_SUFFIX = "";
-if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
-} else {
-    PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
-}
-if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
-    PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
-}
-
-var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
-    { "GIT_SHA", GIT_SHA },
-    { "GIT_BRANCH_NAME", GIT_BRANCH_NAME },
-    { "GIT_URL", GIT_URL },
-    { "BUILD_COUNTER", BUILD_COUNTER },
-    { "BUILD_NUMBER", BUILD_NUMBER },
-    { "FEATURE_NAME", FEATURE_NAME },
-    { "PREVIEW_LABEL", PREVIEW_LABEL },
-};
-
-var CURRENT_PLATFORM = "";
-if (IsRunningOnWindows ()) {
-    CURRENT_PLATFORM = "Windows";
-} else if (IsRunningOnMacOs ()) {
-    CURRENT_PLATFORM = "Mac";
-} else if (IsRunningOnLinux ()) {
-    CURRENT_PLATFORM = "Linux";
-} else {
-    throw new Exception ("This script is not running on a known platform.");
-}
-
-var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json");
-
-var SUPPORTED_NUGETS = new Dictionary<string, Version> {
-    // SkiaSharp core
-    { "SkiaSharp",                                     new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.Linux",                  new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.NanoServer",             new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.Android",                new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.iOS",                    new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.macOS",                  new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.Tizen",                  new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.tvOS",                   new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.Win32",                  new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.WinUI",                  new Version (2, 80, 0) },
-    { "SkiaSharp.Views",                               new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Desktop.Common",                new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Gtk3",                          new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Gtk4",                          new Version (3, 119, 0) },
-    { "SkiaSharp.Views.WindowsForms",                  new Version (2, 80, 0) },
-    { "SkiaSharp.Views.WPF",                           new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Uno.WinUI",                     new Version (2, 80, 0) },
-    { "SkiaSharp.Views.WinUI",                         new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Maui.Core",                     new Version (2, 88, 0) },
-    { "SkiaSharp.Views.Maui.Controls",                 new Version (2, 88, 0) },
-    { "SkiaSharp.Views.Blazor",                        new Version (2, 80, 0) },
-    // HarfBuzzSharp core
-    { "HarfBuzzSharp",                                 new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.Android",            new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.iOS",                new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.Linux",              new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.MacCatalyst",        new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.macOS",              new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.Tizen",              new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.tvOS",               new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.Win32",              new Version (2, 6, 1) },
-    // Extras
-    { "SkiaSharp.HarfBuzz",                            new Version (2, 80, 0) },
-    { "SkiaSharp.Skottie",                             new Version (2, 88, 0) },
-    { "SkiaSharp.SceneGraph",                          new Version (2, 88, 0) },
-    { "SkiaSharp.Resources",                           new Version (2, 88, 0) },
-    { "SkiaSharp.Vulkan.SharpVk",                      new Version (2, 80, 0) },
-    { "SkiaSharp.Direct3D.Vortice",                    new Version (2, 88, 0) },
-};
-
-var OBSOLETED_NUGETS = new Dictionary<string, Version> {
-    // Obsolete packages no longer built but still tracked for documentation
-    { "SkiaSharp.NativeAssets.UWP",                    new Version (2, 80, 0) },
-    { "SkiaSharp.NativeAssets.watchOS",                new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Gtk2",                          new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (2, 88, 0) },
-    { "SkiaSharp.Views.Forms",                         new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Forms.WPF",                     new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Forms.GTK",                     new Version (2, 80, 0) },
-    { "SkiaSharp.Views.Uno",                           new Version (2, 80, 0) },
-    { "SkiaSharp.Views.NativeAssets.UWP",              new Version (2, 80, 0) },
-    { "HarfBuzzSharp.NativeAssets.UWP",                new Version (2, 6, 1) },
-    { "HarfBuzzSharp.NativeAssets.watchOS",            new Version (2, 6, 1) },
-};
-
-var TRACKED_NUGETS = SUPPORTED_NUGETS
-    .Concat(OBSOLETED_NUGETS)
-    .ToDictionary(x => x.Key, x => x.Value);
-
-var PREVIEW_ONLY_NUGETS = new List<string> {
-};
-
-var DATE_TIME_NOW = DateTime.Now;
-var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_hhmmss");
-
-Information("Source Control:");
-Information($"    {"PREVIEW_LABEL".PadRight(30)} {{0}}", PREVIEW_LABEL);
-Information($"    {"FEATURE_NAME".PadRight(30)} {{0}}", FEATURE_NAME);
-Information($"    {"BUILD_NUMBER".PadRight(30)} {{0}}", BUILD_NUMBER);
-Information($"    {"GIT_SHA".PadRight(30)} {{0}}", GIT_SHA);
-Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
-Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
-
-#load "./scripts/cake/msbuild.cake"
-#load "./scripts/cake/UtilsManaged.cake"
-#load "./scripts/cake/samples.cake"
-#load "./scripts/cake/externals.cake"
-#load "./scripts/cake/UpdateDocs.cake"
-
-
-Task ("__________________________________")
-    .Description ("__________________________________________________");
+#load "./scripts/infra/shared/shared.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// this builds all the externals
+var externalsTask = Task("externals-native");
+
+foreach (var cake in GetFiles("native/*/build.cake"))
+{
+    var native = cake.GetDirectory().GetDirectoryName();
+    var should = ShouldBuildExternal(native);
+    var localCake = cake;
+
+    var task = Task($"externals-{native}")
+        .WithCriteria(should)
+        .WithCriteria(!SKIP_BUILD)
+        .Does(() => RunCake(localCake, "Default"));
+
+    externalsTask.IsDependentOn(task);
+}
+
+Task("externals-osx")
+    .IsDependentOn("externals-macos");
+
+Task("externals-nano")
+    .IsDependentOn("externals-nanoserver");
+
+Task("externals-catalyst")
+    .IsDependentOn("externals-maccatalyst");
+
 Task ("externals")
     .Description ("Build all external dependencies.")
     .IsDependentOn ("externals-native");
 
+Task ("externals-download")
+    .Description ("Download pre-built native binaries from CI.")
+    .Does (() => RunCake ("./scripts/infra/managed/externals-download.cake", "Default"));
+
+Task ("externals-interop")
+    .Description ("Re-generate the interop files.")
+    .Does (() => RunCake ("./scripts/infra/managed/interop.cake", "Default"));
+
+bool ShouldBuildExternal(string platform)
+{
+    platform = platform?.ToLower() ?? "";
+
+    if (SKIP_EXTERNALS.Contains("all") || SKIP_EXTERNALS.Contains("true"))
+        return false;
+
+    switch (platform) {
+        case "mac":
+        case "osx":
+            platform = "macos";
+            break;
+        case "catalyst":
+            platform = "maccatalyst";
+            break;
+        case "win":
+            platform = "windows";
+            break;
+        case "nano":
+            platform = "nanoserver";
+            break;
+    }
+
+    if (SKIP_EXTERNALS.Contains(platform))
+        return false;
+
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// LIBS - the managed C# libraries
+// LIBS - build managed assemblies (isolated via RunCake)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("libs")
     .Description ("Build all managed assemblies.")
-    .WithCriteria (!SKIP_BUILD)
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    RunDotNetBuild ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", properties: MSBUILD_VERSION_PROPERTIES);
-});
+    .Does (() => RunCake ("./scripts/infra/managed/libs.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS - some test cases to make sure it works
+// TESTS - run test suites (isolated via RunCake)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
@@ -219,255 +95,36 @@ Task ("tests")
 
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
-    .WithCriteria (IsRunningOnWindows ())
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    var failedTests = 0;
-
-    foreach ( var arch in new [] { "x86", "x64" }) {
-        if (Skip(arch)) continue;
-
-        var tfm = "net48";
-        var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
-        if (SUPPORT_VULKAN)
-            testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
-        if (SUPPORT_DIRECT3D)
-            testAssemblies.Add ("SkiaSharp.Direct3D.Tests.Console");
-        foreach (var testAssembly in testAssemblies) {
-            var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
-
-            // build
-            if (!SKIP_BUILD) {
-                RunDotNetBuild (csproj, platform: arch, properties: new Dictionary<string, string> {
-                    { "TargetFramework", tfm }
-                });
-            }
-
-            // test
-            DirectoryPath results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}-{arch}";
-            var assName = testAssembly.Replace (".Console", "");
-            EnsureDirectoryExists (results);
-            try {
-                RunTests ($"./tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.dll", results, arch == "x86");
-            } catch {
-                failedTests++;
-                if (THROW_ON_FIRST_TEST_FAILURE)
-                    throw;
-            }
-        }
-    }
-
-    if (failedTests > 0) {
-        throw new Exception ($"There were {failedTests} failed test runs.");
-    }
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests-netfx.cake", "Default"));
 
 Task ("tests-netcore")
     .Description ("Run all .NET Core tests.")
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    if (IsRunningOnLinux ()) {
-        try {
-            RunProcess ("dpkg", "-s libfontconfig1 ttf-ancient-fonts ttf-mscorefonts-installer", out var _);
-        } catch {
-            Warning ("Running tests on Linux requires that FontConfig and various font packages are installed. Run the `./scripts/install-linux-test-requirements.sh` script file.");
-        }
-    }
-
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    var failedTests = 0;
-
-    var tfm = "net10.0";
-    var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
-    if (SUPPORT_VULKAN)
-        testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
-    if (SUPPORT_DIRECT3D)
-        testAssemblies.Add ("SkiaSharp.Direct3D.Tests.Console");
-    foreach (var testAssembly in testAssemblies) {
-        var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
-
-        // build
-        if (!SKIP_BUILD) {
-            RunDotNetBuild (csproj, properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm }
-            });
-        }
-
-        // test
-        var results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
-        try {
-            RunDotNetTest (csproj, results, properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm }
-            });
-        } catch {
-            failedTests++;
-            if (THROW_ON_FIRST_TEST_FAILURE)
-                throw;
-        }
-    }
-
-    if (failedTests > 0) {
-        throw new Exception ($"There were {failedTests} failed test runs.");
-    }
-
-    if (COVERAGE) {
-        RunCodeCoverage ("./output/logs/testlogs/**/Coverage/**/*.xml", "./output/coverage");
-    }
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests-netcore.cake", "Default"));
 
 Task ("tests-android")
     .Description ("Run all Android tests.")
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
-    var configuration = "Release";
-    var tfm = "net10.0-android36.0";
-    var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
-
-    Information ("=== Android Test Build Configuration ===");
-    Information ("  Project:       {0}", csproj);
-    Information ("  Configuration: {0}", configuration);
-    Information ("  TFM:           {0}", tfm);
-    Information ("  RID:           {0}", rid);
-    Information ("  App Path:      {0}", app);
-    Information ("  OS:            {0}", RuntimeInformation.OSDescription);
-    Information ("  Arch:          {0}", RuntimeInformation.ProcessArchitecture);
-    Information ("========================================");
-
-    // build the app
-    if (!SKIP_BUILD) {
-        RunDotNetBuild (csproj,
-            configuration: configuration,
-            properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm },
-                { "RuntimeIdentifier", rid },
-            });
-    }
-
-    // run the tests
-    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
-        { "app", MakeAbsolute (app).FullPath },
-        { "results", MakeAbsolute (results).FullPath },
-    });
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests-android.cake", "Default"));
 
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
-    var configuration = "Debug";
-    var tfm = "net10.0-ios26.2";
-    var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
-
-    // package the app
-    if (!SKIP_BUILD) {
-        RunDotNetBuild (csproj,
-            configuration: configuration,
-            properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm },
-                { "RuntimeIdentifier", rid },
-            });
-    }
-
-    // find the .app bundle (name may differ from AssemblyName in .NET 10)
-    var appBundles = GetDirectories ($"{outputDir}/*.app");
-    if (!appBundles.Any ())
-        throw new Exception ($"No .app bundle found in {outputDir}");
-    var app = appBundles.First ();
-    Information ("Found app bundle: {0}", app);
-
-    // run the tests
-    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
-        { "app", MakeAbsolute (app).FullPath },
-        { "results", MakeAbsolute (results).FullPath },
-    });
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-ios"));
 
 Task ("tests-maccatalyst")
     .Description ("Run all Mac Catalyst tests.")
     .IsDependentOn ("externals")
-    .Does (() =>
-{
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
-    var configuration = "Debug";
-    var tfm = "net10.0-maccatalyst26.2";
-    var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
-
-    // package the app
-    if (!SKIP_BUILD) {
-        RunDotNetBuild (csproj,
-            configuration: configuration,
-            properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm },
-                { "RuntimeIdentifier", rid },
-            });
-    }
-
-    // find the .app bundle (name may differ from AssemblyName in .NET 10)
-    var appBundles = GetDirectories ($"{outputDir}/*.app");
-    if (!appBundles.Any ())
-        throw new Exception ($"No .app bundle found in {outputDir}");
-    var app = appBundles.First ();
-    Information ("Found app bundle: {0}", app);
-
-    // run the tests
-    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
-        { "app", MakeAbsolute (app).FullPath },
-        { "results", MakeAbsolute (results).FullPath },
-        { "device", "maccatalyst" },
-    });
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-maccatalyst"));
 
 Task ("tests-wasm")
     .Description ("Run WASM tests.")
     .IsDependentOn ("externals-wasm")
-    .Does (() =>
-{
-    if (!SKIP_BUILD) {
-        RunDotNetBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
-    }
-
-    IProcess serverProc = null;
-    try {
-        var wasmProj = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj")).FullPath;
-        serverProc = RunAndReturnProcess ("dotnet", $"run --project {wasmProj} --no-build -c {CONFIGURATION}");
-        DotNetRun ("./utils/WasmTestRunner/WasmTestRunner.csproj",
-            $"--output=\"./output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}/\" " +
-            (string.IsNullOrEmpty (CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
-            "--verbose " +
-            "\"http://127.0.0.1:8000/\" ");
-    } finally {
-        serverProc?.Kill ();
-    }
-});
+    .Does (() => RunCake ("./scripts/infra/tests/tests-wasm.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// NUGET - building the package for NuGet.org
+// NUGET - pack NuGet packages (isolated via RunCake)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("nuget")
@@ -478,272 +135,12 @@ Task ("nuget")
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .IsDependentOn ("libs")
-    .Does (() =>
-{
-    var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
-        { "BuildingInsideUnoSourceGenerator", "true" },
-        { "BuildProjectReferences", "false" },
-    };
-
-    // pack stable
-    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
-
-    // pack preview
-    props ["VersionSuffix"] = PREVIEW_NUGET_SUFFIX;
-    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", properties: props);
-
-    // move symbols to a special location to avoid signing
-    EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
-    DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
-    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
-    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
-});
+    .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-normal"));
 
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
-    .IsDependentOn ("nuget-normal")
-    .Does (() =>
-{
-    EnsureDirectoryExists ($"{OUTPUT_SPECIAL_NUGETS_PATH}");
-    DeleteFiles ($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
-
-    // get a list of all the version number variants
-    var versions = new Dictionary<string, string> ();
-    if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
-        var v = $"0.0.0-{PREVIEW_LABEL}";
-        if (!string.IsNullOrEmpty (BUILD_COUNTER))
-            v += $".{BUILD_COUNTER}";
-        versions.Add ("pr", v);
-    } else {
-        if (!string.IsNullOrEmpty (GIT_SHA)) {
-            var v = $"0.0.0-commit.{GIT_SHA}";
-            if (!string.IsNullOrEmpty (BUILD_COUNTER))
-                v += $".{BUILD_COUNTER}";
-            versions.Add ("commit", v);
-        }
-        if (!string.IsNullOrEmpty (GIT_BRANCH_NAME)) {
-            var v = $"0.0.0-branch.{GIT_BRANCH_NAME.Replace ("/", ".")}";
-            if (!string.IsNullOrEmpty (BUILD_COUNTER))
-                v += $".{BUILD_COUNTER}";
-            versions.Add ("branch", v);
-        }
-    }
-    Information ("Detected {0} special versions to process:", versions.Count);
-    var max = 0;
-    foreach (var version in versions) {
-        if (version.Key.Length > max)
-            max = version.Key.Length + 1;
-    }
-    foreach (var version in versions) {
-        Information ("  - {0}" + " ".PadRight(max - version.Key.Length) + "=> {1}", version.Key, version.Value);
-    }
-
-    // _NativeAssets handling (per-platform raw native binaries)
-    var nativePlatforms = GetDirectories ("./output/native/*")
-        .Select (d => d.GetDirectoryName ())
-        .ToArray ();
-    if (nativePlatforms.Length > 0) {
-        var nativeSpecials = new Dictionary<string, string> ();
-        nativeSpecials["_NativeAssets"] = "native";
-        foreach (var platform in nativePlatforms) {
-            nativeSpecials[$"_NativeAssets.{platform}"] = $"native/{platform}";
-        }
-
-        Information ("Detected {0} native asset artifacts to process:", nativeSpecials.Count);
-        max = 0;
-        foreach (var special in nativeSpecials) {
-            if (special.Key.Length > max)
-                max = special.Key.Length + 1;
-        }
-        foreach (var special in nativeSpecials) {
-            Information ("  - {0}" + " ".PadRight(max - special.Key.Length) + "=> {1}", special.Key, special.Value);
-        }
-
-        foreach (var pair in nativeSpecials) {
-            var id = pair.Key;
-            var path = pair.Value;
-            var nuspec = $"./output/{path}/{id}.nuspec";
-
-            DeleteFiles ($"./output/{path}/*.nuspec");
-
-            foreach (var version in versions) {
-                var packageVersion = version.Value;
-
-                var xdoc = XDocument.Load ("./scripts/nuget/_NativeAssets.nuspec");
-                var metadata = xdoc.Root.Element ("metadata");
-                metadata.Element ("version").Value = packageVersion;
-                metadata.Element ("id").Value = id;
-
-                if (id == "_NativeAssets") {
-                    var dependencies = metadata.Element ("dependencies");
-                    foreach (var platform in nativePlatforms) {
-                        dependencies.Add (new XElement ("dependency",
-                            new XAttribute ("id", $"_NativeAssets.{platform}"),
-                            new XAttribute ("version", packageVersion)));
-                    }
-                } else {
-                    var platform = id.Substring (id.IndexOf (".") + 1);
-                    var files = xdoc.Root.Element ("files");
-                    files.Add (new XElement ("file",
-                        new XAttribute ("src", "**"),
-                        new XAttribute ("target", $"tools/{platform}")));
-                }
-                {
-                    var files = xdoc.Root.Element ("files");
-                    files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
-                        new XAttribute ("target", "README.md")));
-                }
-
-                xdoc.Save (nuspec);
-                RunDotNetPack (
-                    "./scripts/nuget/NuGet.csproj",
-                    OUTPUT_SPECIAL_NUGETS_PATH,
-                    bl: $".{id}.{version.Key}",
-                    additionalArgs: "/restore /nologo",
-                    properties: new Dictionary<string, string> {
-                        { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
-                    });
-            }
-
-            DeleteFiles ($"./output/{path}/*.nuspec");
-        }
-    }
-
-    // NuGets and Symbols: bin-pack all nupkgs into ~200 MB numbered chunks
-    if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
-        const long MAX_CHUNK_SIZE = 200L * 1024 * 1024;
-
-        var metaPackages = new[] {
-            new { Id = "_NuGets",         SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = false },
-            new { Id = "_NuGetsPreview",  SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = true },
-            new { Id = "_Symbols",        SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = false },
-            new { Id = "_SymbolsPreview", SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = true },
-        };
-
-        foreach (var meta in metaPackages) {
-            // enumerate matching files
-            var allFiles = GetFiles ($"./output/{meta.SourceDir}/*.nupkg").ToList ();
-            if (meta.IncludeSnupkg)
-                allFiles.AddRange (GetFiles ($"./output/{meta.SourceDir}/*.snupkg"));
-
-            var matchingFiles = allFiles
-                .Where (f => {
-                    var name = f.GetFilename ().ToString ();
-                    if (name.StartsWith ("_")) return false;
-                    return meta.IsPreview ? name.Contains ("-") : !name.Contains ("-");
-                })
-                .Select (f => new { Path = f, Size = new FileInfo (f.FullPath).Length })
-                .OrderByDescending (f => f.Size)
-                .ToList ();
-
-            if (matchingFiles.Count == 0)
-                continue;
-
-            // bin-pack using first-fit decreasing
-            var chunks = new List<List<FilePath>> ();
-            var chunkSizes = new List<long> ();
-
-            foreach (var file in matchingFiles) {
-                var placed = false;
-                for (int i = 0; i < chunks.Count; i++) {
-                    if (chunkSizes[i] + file.Size <= MAX_CHUNK_SIZE) {
-                        chunks[i].Add (file.Path);
-                        chunkSizes[i] += file.Size;
-                        placed = true;
-                        break;
-                    }
-                }
-                if (!placed) {
-                    chunks.Add (new List<FilePath> { file.Path });
-                    chunkSizes.Add (file.Size);
-                }
-            }
-
-            Information ("{0}: {1} files -> {2} chunk(s)", meta.Id, matchingFiles.Count, chunks.Count);
-            for (int i = 0; i < chunks.Count; i++) {
-                Information ("  Chunk {0}: {1} files, {2:F1} MB",
-                    i + 1, chunks[i].Count, chunkSizes[i] / 1024.0 / 1024.0);
-            }
-
-            foreach (var version in versions) {
-                var packageVersion = version.Value;
-
-                // pack each chunk as a numbered dependency
-                for (int i = 0; i < chunks.Count; i++) {
-                    var chunkId = $"{meta.Id}.Dependencies.{i + 1}";
-                    var nuspec = $"./output/{meta.SourceDir}/{chunkId}.nuspec";
-
-                    DeleteFiles ($"./output/{meta.SourceDir}/*.nuspec");
-
-                    var xdoc = XDocument.Load ("./scripts/nuget/_Dependencies.nuspec");
-                    var xmeta = xdoc.Root.Element ("metadata");
-                    xmeta.Element ("id").Value = chunkId;
-                    xmeta.Element ("version").Value = packageVersion;
-                    xmeta.Element ("title").Value = $"{meta.Id.TrimStart ('_')} (Part {i + 1})";
-                    xmeta.Element ("description").Value =
-                        $"Part {i + 1} of {chunks.Count} of the {meta.Id.TrimStart ('_')} packages.";
-                    xmeta.Element ("summary").Value = xmeta.Element ("description").Value;
-
-                    var files = xdoc.Root.Element ("files");
-                    foreach (var file in chunks[i]) {
-                        files.Add (new XElement ("file",
-                            new XAttribute ("src", MakeAbsolute (file).FullPath),
-                            new XAttribute ("target", "tools/")));
-                    }
-                    files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
-                        new XAttribute ("target", "README.md")));
-
-                    xdoc.Save (nuspec);
-                    RunDotNetPack (
-                        "./scripts/nuget/NuGet.csproj",
-                        OUTPUT_SPECIAL_NUGETS_PATH,
-                        bl: $".{chunkId}.{version.Key}",
-                        additionalArgs: "/restore /nologo",
-                        properties: new Dictionary<string, string> {
-                            { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
-                        });
-                }
-
-                // pack the parent meta-package with dependencies on all chunks
-                {
-                    var nuspec = $"./output/{meta.SourceDir}/{meta.Id}.nuspec";
-
-                    DeleteFiles ($"./output/{meta.SourceDir}/*.nuspec");
-
-                    var xdoc = XDocument.Load ($"./scripts/nuget/{meta.Id}.nuspec");
-                    var xmeta = xdoc.Root.Element ("metadata");
-                    xmeta.Element ("version").Value = packageVersion;
-
-                    var dependencies = xmeta.Element ("dependencies");
-                    for (int i = 0; i < chunks.Count; i++) {
-                        dependencies.Add (new XElement ("dependency",
-                            new XAttribute ("id", $"{meta.Id}.Dependencies.{i + 1}"),
-                            new XAttribute ("version", packageVersion)));
-                    }
-
-                    var files = xdoc.Root.Element ("files");
-                    files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ("./scripts/nuget/README.md")).FullPath),
-                        new XAttribute ("target", "README.md")));
-
-                    xdoc.Save (nuspec);
-                    RunDotNetPack (
-                        "./scripts/nuget/NuGet.csproj",
-                        OUTPUT_SPECIAL_NUGETS_PATH,
-                        bl: $".{meta.Id}.{version.Key}",
-                        additionalArgs: "/restore /nologo",
-                        properties: new Dictionary<string, string> {
-                            { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
-                        });
-                }
-
-                DeleteFiles ($"./output/{meta.SourceDir}/*.nuspec");
-            }
-        }
-    }
-});
+    .IsDependentOn ("libs")
+    .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - creating the xml, markdown and other documentation
@@ -751,9 +148,27 @@ Task ("nuget-special")
 
 Task ("update-docs")
     .Description ("Regenerate all docs.")
-    .IsDependentOn ("docs-api-diff")
-    .IsDependentOn ("docs-update-frameworks")
-    .IsDependentOn ("docs-format-docs");
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "update-docs"));
+
+Task ("docs-download-output")
+    .Description ("Download CI build output for docs.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-download-output"));
+
+Task ("docs-api-diff")
+    .Description ("Generate API diffs.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-api-diff"));
+
+Task ("docs-api-diff-past")
+    .Description ("Generate historical API diffs.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-api-diff-past"));
+
+Task ("docs-update-frameworks")
+    .Description ("Update doc frameworks.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-update-frameworks"));
+
+Task ("docs-format-docs")
+    .Description ("Format doc XML files.")
+    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-format-docs"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts
@@ -763,6 +178,20 @@ Task ("clean")
     .Description ("Clean up.")
     .IsDependentOn ("clean-externals")
     .IsDependentOn ("clean-managed");
+
+Task ("clean-externals")
+    .Description ("Clean native build outputs.")
+    .Does (() =>
+{
+    CleanDirectories("externals/skia/out");
+    CleanDirectories("externals/skia/xcodebuild");
+    CleanDirectories("externals/angle");
+    CleanDirectories("output/native");
+    CleanDirectories("native/*/*/bin");
+    CleanDirectories("native/*/*/obj");
+    CleanDirectories("native/*/*/libs");
+    CleanDirectories("native/*/tools");
+});
 
 Task ("clean-managed")
     .Description ("Clean up (managed only).")
@@ -796,11 +225,28 @@ Task ("clean-managed")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// DEFAULT - target for common development
+// SAMPLES - build sample projects (isolated via RunCake)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("----------------------------------")
-    .Description ("--------------------------------------------------");
+Task ("samples")
+    .Description ("Generate, prepare, and run all sample projects.")
+    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "Default"));
+
+Task ("samples-generate")
+    .Description ("Generate sample project files.")
+    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-generate"));
+
+Task ("samples-prepare")
+    .Description ("Prepare samples for building (copy NuGet packages, etc.).")
+    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-prepare"));
+
+Task ("samples-run")
+    .Description ("Build and run the generated samples.")
+    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-run"));
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// DEFAULT - target for common development
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("Default")
     .Description ("Build all managed assemblies and external dependencies.")
