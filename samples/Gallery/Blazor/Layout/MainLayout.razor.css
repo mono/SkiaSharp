@@ -2,10 +2,12 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
 main {
     flex: 1;
+    overflow-x: hidden;
 }
 
 .top-row {
@@ -14,6 +16,7 @@ main {
     display: flex;
     align-items: center;
     color: white;
+    overflow: hidden;
 }
 
 .top-row a {
@@ -29,6 +32,7 @@ main {
     font-size: 1.2rem;
     font-weight: bold;
     color: white !important;
+    white-space: nowrap;
 }
 
 .content {
@@ -36,6 +40,13 @@ main {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 3.5rem);
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     padding-bottom: 0.5rem !important;
+}
+
+@media (max-width: 640px) {
+    .top-row { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+    .content { padding-left: 0 !important; padding-right: 0 !important; }
+    .navbar-brand { font-size: 1rem; }
 }
