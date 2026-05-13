@@ -12,14 +12,22 @@ namespace SkiaSharp
 	/// <summary>
 	/// Bridges Graphite's "I have a non-Graphite SkImage; please convert it" hook
 	/// (<c>skgpu::graphite::ImageProvider::findOrCreate</c>) to a managed override.
-	/// Construct an instance, pass it via <see cref="SKGraphiteContextOptions"/>, and the
-	/// resulting context will call <see cref="FindOrCreate"/> for every raster/lazy
+	/// Construct an instance and pass it to
+	/// <see cref="SKGraphiteContext.CreateRecorder(long, SKGraphiteImageProvider)"/>.
+	/// The recorder will call <see cref="FindOrCreate"/> for every raster/lazy
 	/// SkImage it encounters in a draw.
 	///
-	/// LIFETIME: hold a managed reference to the provider until you have called
-	/// <see cref="SKGraphiteContext.CreateVulkan"/> (or the per-backend equivalent).
-	/// On a successful Context creation, ownership of the underlying GCHandle and
-	/// native wrapper transfers to the SKGraphiteContext (Variant A pattern).
+	/// LIFETIME: one provider per recorder. On a successful CreateRecorder call,
+	/// ownership of the underlying GCHandle and native wrapper transfers to the
+	/// SKGraphiteRecorder; <see cref="IDisposable.Dispose"/> on the original
+	/// wrapper becomes a no-op after the transfer. Do NOT share a single
+	/// SKGraphiteImageProvider between multiple recorders — although the
+	/// underlying Skia ImageProvider is ref-counted and could in principle be
+	/// shared, this managed wrapper pins a one-shot GCHandle that is freed
+	/// when the first owning recorder disposes; subsequent recorders that
+	/// captured the same wrapper would dispatch through a freed handle.
+	/// If you need per-recorder caching, construct a fresh provider per
+	/// recorder (see <see cref="CreateDefault"/>).
 	///
 	/// THREADING: <see cref="FindOrCreate"/> runs on the recorder's owning thread,
 	/// not necessarily the thread that constructed the provider. Implementations
@@ -70,11 +78,10 @@ namespace SkiaSharp
 		/// drawing on <paramref name="recorder"/>, or return null to drop the draw.
 		/// The returned SKImage's reference is consumed by Skia.
 		///
-		/// The default <see cref="SKGraphiteImageProvider.Default"/> implementation
-		/// performs an unconditional upload via
-		/// <see cref="SKImage.ToTextureImage(SKGraphiteRecorder, bool)"/> with no caching.
-		/// Most callers should subclass and add at least an LRU cache keyed on
-		/// <c>image.UniqueId</c> to avoid re-uploading on every draw.
+		/// The provider returned by <see cref="CreateDefault"/> uploads each
+		/// unique image once and caches the result keyed on
+		/// <c>image.UniqueId</c>. Subclass this base when you need a different
+		/// caching policy.
 		/// </summary>
 		public abstract SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped);
 
@@ -169,18 +176,25 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Default provider: uploads each unique source SkImage to a Graphite-backed
-		/// texture exactly once and caches the result keyed on
-		/// <see cref="SKImage.UniqueId"/> + mipmap flag. Cache lifetime is the
-		/// provider's lifetime — typically the recorder's lifetime via
+		/// Construct a fresh default provider that uploads each unique source
+		/// SkImage to a Graphite-backed texture exactly once and caches the
+		/// result keyed on <see cref="SKImage.UniqueId"/> + mipmap flag, capped
+		/// at 256 LRU entries. Cache lifetime is the provider's lifetime —
+		/// typically the recorder's lifetime via
 		/// <see cref="SKGraphiteContext.CreateRecorder(long, SKGraphiteImageProvider)"/>.
 		///
-		/// This is sufficient for most apps. Without caching, every <c>DrawImage</c>
-		/// call re-uploads to the GPU and the recorder accumulates state until it
-		/// runs out of resources or crashes — visible as a "scroll → silent crash"
-		/// pattern. Subclass to add LRU eviction or share the cache across recorders.
+		/// Each call returns a new instance — providers are one-shot per
+		/// recorder (see class-level LIFETIME doc), and the cache lives inside
+		/// the provider, so there is no meaningful singleton to return.
+		///
+		/// This is sufficient for most apps. Without any provider, every
+		/// <c>DrawImage</c> call re-uploads to the GPU and the recorder
+		/// accumulates state until it runs out of resources or crashes —
+		/// visible as a "scroll → silent crash" pattern. Subclass
+		/// <see cref="SKGraphiteImageProvider"/> if you need a different
+		/// eviction policy or want to coordinate with your own decode pipeline.
 		/// </summary>
-		public static SKGraphiteImageProvider Default => new DefaultProvider ();
+		public static SKGraphiteImageProvider CreateDefault () => new DefaultProvider ();
 
 		private sealed class DefaultProvider : SKGraphiteImageProvider
 		{

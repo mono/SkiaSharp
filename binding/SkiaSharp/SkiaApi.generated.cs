@@ -497,42 +497,23 @@ namespace SkiaSharp
 			(sk_graphite_context_is_device_lost_delegate ??= GetSymbol<Delegates.sk_graphite_context_is_device_lost> ("sk_graphite_context_is_device_lost")).Invoke (context);
 		#endif
 
-		// sk_graphite_recorder_t* sk_graphite_context_make_recorder(sk_graphite_context_t* context, int64_t recorderBudgetBytes)
+		// sk_graphite_recorder_t* sk_graphite_context_make_recorder(sk_graphite_context_t* context, int64_t recorderBudgetBytes, sk_graphite_image_provider_t* imageProvider)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_recorder_t sk_graphite_context_make_recorder (sk_graphite_context_t context, Int64 recorderBudgetBytes);
+		internal static partial sk_graphite_recorder_t sk_graphite_context_make_recorder (sk_graphite_context_t context, Int64 recorderBudgetBytes, sk_graphite_image_provider_t imageProvider);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_recorder_t sk_graphite_context_make_recorder (sk_graphite_context_t context, Int64 recorderBudgetBytes);
+		internal static extern sk_graphite_recorder_t sk_graphite_context_make_recorder (sk_graphite_context_t context, Int64 recorderBudgetBytes, sk_graphite_image_provider_t imageProvider);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_recorder_t sk_graphite_context_make_recorder (sk_graphite_context_t context, Int64 recorderBudgetBytes);
+			internal delegate sk_graphite_recorder_t sk_graphite_context_make_recorder (sk_graphite_context_t context, Int64 recorderBudgetBytes, sk_graphite_image_provider_t imageProvider);
 		}
 		private static Delegates.sk_graphite_context_make_recorder sk_graphite_context_make_recorder_delegate;
-		internal static sk_graphite_recorder_t sk_graphite_context_make_recorder (sk_graphite_context_t context, Int64 recorderBudgetBytes) =>
-			(sk_graphite_context_make_recorder_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_recorder> ("sk_graphite_context_make_recorder")).Invoke (context, recorderBudgetBytes);
-		#endif
-
-		// sk_graphite_recorder_t* sk_graphite_context_make_recorder_with_image_provider(sk_graphite_context_t* context, int64_t recorderBudgetBytes, sk_graphite_image_provider_t* imageProvider)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_recorder_t sk_graphite_context_make_recorder_with_image_provider (sk_graphite_context_t context, Int64 recorderBudgetBytes, sk_graphite_image_provider_t imageProvider);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_recorder_t sk_graphite_context_make_recorder_with_image_provider (sk_graphite_context_t context, Int64 recorderBudgetBytes, sk_graphite_image_provider_t imageProvider);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_recorder_t sk_graphite_context_make_recorder_with_image_provider (sk_graphite_context_t context, Int64 recorderBudgetBytes, sk_graphite_image_provider_t imageProvider);
-		}
-		private static Delegates.sk_graphite_context_make_recorder_with_image_provider sk_graphite_context_make_recorder_with_image_provider_delegate;
-		internal static sk_graphite_recorder_t sk_graphite_context_make_recorder_with_image_provider (sk_graphite_context_t context, Int64 recorderBudgetBytes, sk_graphite_image_provider_t imageProvider) =>
-			(sk_graphite_context_make_recorder_with_image_provider_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_recorder_with_image_provider> ("sk_graphite_context_make_recorder_with_image_provider")).Invoke (context, recorderBudgetBytes, imageProvider);
+		internal static sk_graphite_recorder_t sk_graphite_context_make_recorder (sk_graphite_context_t context, Int64 recorderBudgetBytes, sk_graphite_image_provider_t imageProvider) =>
+			(sk_graphite_context_make_recorder_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_recorder> ("sk_graphite_context_make_recorder")).Invoke (context, recorderBudgetBytes, imageProvider);
 		#endif
 
 		// void sk_graphite_context_options_init_defaults(sk_graphite_context_options_t* out)

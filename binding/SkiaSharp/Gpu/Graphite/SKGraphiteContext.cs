@@ -217,22 +217,20 @@ namespace SkiaSharp
 		/// Vend a recorder with a managed <see cref="SKGraphiteImageProvider"/> attached.
 		/// Without one, Graphite drops every draw whose source <see cref="SKImage"/> is not
 		/// already Graphite-backed (it does not auto-upload like Ganesh). Use
-		/// <see cref="SKGraphiteImageProvider.Default"/> for an unconditional upload-on-demand
-		/// policy, or subclass <see cref="SKGraphiteImageProvider"/> for caching.
+		/// <see cref="SKGraphiteImageProvider.CreateDefault"/> for an upload-with-LRU-cache
+		/// policy, or subclass <see cref="SKGraphiteImageProvider"/> for custom caching.
 		///
-		/// On a successful return, ownership of <paramref name="imageProvider"/>'s underlying
-		/// GCHandle and native wrapper transfers to the recorder; the caller may immediately
-		/// <see cref="IDisposable.Dispose"/> the provider — the recorder retains its own
-		/// references for its lifetime. The same <see cref="SKGraphiteImageProvider"/> instance
-		/// can be passed to multiple recorders (Skia takes its own ref); the wrapper is the
-		/// one-shot ownership-transfer slot.
+		/// On a successful return, ownership of <paramref name="imageProvider"/> transfers
+		/// to the recorder; calling <see cref="IDisposable.Dispose"/> on it becomes a
+		/// no-op. Do NOT share a single <see cref="SKGraphiteImageProvider"/> instance
+		/// across multiple recorders — the managed wrapper holds a one-shot GCHandle
+		/// that the first owning recorder will free, leaving subsequent recorders to
+		/// dispatch into freed memory. Construct a fresh provider per recorder.
 		/// </summary>
 		public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes, SKGraphiteImageProvider imageProvider)
 		{
 			IntPtr ipHandle = imageProvider?.Handle ?? IntPtr.Zero;
-			IntPtr handle = ipHandle != IntPtr.Zero
-				? SkiaApi.sk_graphite_context_make_recorder_with_image_provider (Handle, recorderBudgetBytes, ipHandle)
-				: SkiaApi.sk_graphite_context_make_recorder (Handle, recorderBudgetBytes);
+			IntPtr handle = SkiaApi.sk_graphite_context_make_recorder (Handle, recorderBudgetBytes, ipHandle);
 			if (handle == IntPtr.Zero)
 				return null;
 
