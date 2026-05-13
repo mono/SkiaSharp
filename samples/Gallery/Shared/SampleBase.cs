@@ -12,7 +12,7 @@ public abstract class SampleBase
 
 	public virtual string Category { get; } = SampleManager.General;
 
-	public abstract IReadOnlyList<string> Tags { get; }
+	public abstract IReadOnlyList<string> ApiTags { get; }
 
 	public virtual DateOnly? DateAdded { get; }
 
@@ -69,7 +69,7 @@ public abstract class SampleBase
 			Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1)
 			return true;
 
-		foreach (var tag in Tags)
+		foreach (var tag in ApiTags)
 		{
 			if (tag.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1)
 				return true;

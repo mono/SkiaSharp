@@ -7,7 +7,7 @@
     {
         <span class="tag-prefix">T</span>
     }
-    <span class="tag-name">@Tag</span>
+    <span class="tag-name">@DisplayName</span>
     @if (ShowCount && Count > 0)
     {
         <span class="tag-count">@Count</span>
@@ -111,7 +111,7 @@
 @code {
     [Parameter, EditorRequired] public string Tag { get; set; } = "";
     [Parameter] public int Count { get; set; }
-    [Parameter] public TagKind Kind { get; set; } = TagKind.Other;
+    [Parameter] public TagKind Kind { get; set; } = TagKind.Method;
     [Parameter] public bool IsActive { get; set; }
     [Parameter] public bool IsZero { get; set; }
     [Parameter] public bool ShowCount { get; set; } = true;
@@ -122,9 +122,10 @@
     private string KindClass => Kind switch
     {
         TagKind.Type => "tag-type",
-        TagKind.Method => "tag-method",
-        _ => "",
+        _ => "tag-method",
     };
+
+    private string DisplayName => KnownApis.GetDisplayName(Tag);
 
     private string SizeClass => Size switch
     {
@@ -135,7 +136,9 @@
 
     private string TooltipText => IsZero
         ? $"No samples match with current filters"
-        : $"Used in {Count} sample{(Count != 1 ? "s" : "")}";
+        : Kind == TagKind.Method
+            ? $"{Tag} — used in {Count} sample{(Count != 1 ? "s" : "")}"
+            : $"Used in {Count} sample{(Count != 1 ? "s" : "")}";
 
     private async Task OnClick()
     {

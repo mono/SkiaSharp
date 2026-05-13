@@ -27,10 +27,12 @@ public class TextLabSample : CanvasSampleBase
 	public override string Description =>
 		"Explore text rendering with font selection, alignment, size, and metric visualization.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"SKFontMetrics", "MeasureText", "SKPathEffect", "CreateDash", "DrawText",
-		"DrawRect", "DrawLine", "SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+		"SKFontMetrics", "SKFont.MeasureText",
+		"SKPathEffect", "SKPathEffect.CreateDash",
+		"SKCanvas.DrawText", "SKCanvas.DrawRect", "SKCanvas.DrawLine",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
 	];
 
 	public override string Category => SampleManager.Text;

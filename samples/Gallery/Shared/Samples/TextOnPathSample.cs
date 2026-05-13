@@ -24,10 +24,12 @@ public class TextOnPathSample : CanvasSampleBase
 	public override string Description =>
 		"Draw text along circle, wave, and heart-shaped paths with adjustable offset and size.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"SKPathMeasure", "DrawTextOnPath", "SKPathBuilder", "SKPath", "DrawPath",
-		"DrawText", "SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+		"SKPathMeasure", "SKCanvas.DrawTextOnPath",
+		"SKPathBuilder", "SKPath",
+		"SKCanvas.DrawPath", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
 	];
 
 	public override IReadOnlyList<SampleControl> Controls =>

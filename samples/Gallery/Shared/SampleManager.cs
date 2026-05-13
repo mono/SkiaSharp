@@ -176,7 +176,7 @@ public static class SampleManager
 		var counts = new Dictionary<string, int>(StringComparer.Ordinal);
 		foreach (var s in samples)
 		{
-			foreach (var tag in s.Tags)
+			foreach (var tag in s.ApiTags)
 			{
 				counts.TryGetValue(tag, out var c);
 				counts[tag] = c + 1;
@@ -190,7 +190,7 @@ public static class SampleManager
 	/// </summary>
 	public static IReadOnlyList<string> GetRankedTags(SampleBase sample, Dictionary<string, int> corpusCounts)
 	{
-		return sample.Tags.OrderBy(t => corpusCounts.GetValueOrDefault(t, 0)).ToList();
+		return sample.ApiTags.OrderBy(t => corpusCounts.GetValueOrDefault(t, 0)).ToList();
 	}
 
 	/// <summary>
@@ -239,8 +239,8 @@ public static class SampleManager
 		if (tags is { Count: > 0 })
 		{
 			query = tagModeAll
-				? query.Where(s => tags.All(t => s.Tags.Contains(t)))
-				: query.Where(s => tags.Any(t => s.Tags.Contains(t)));
+				? query.Where(s => tags.All(t => s.ApiTags.Contains(t)))
+				: query.Where(s => tags.Any(t => s.ApiTags.Contains(t)));
 		}
 
 		var list = query.ToList();

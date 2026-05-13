@@ -18,10 +18,11 @@ public class NinePatchSample : CanvasSampleBase
 
 	public override string Description => "Interactively resize 9-patch bitmaps with adjustable dimensions and lattice grid overlay.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"DrawBitmapNinePatch", "Decode", "SKManagedStream", "SKBitmap",
-		"SKPathEffect", "CreateDash", "DrawLine", "DrawRect", "SKCanvas", "SKPaint",
+		"SKCanvas.DrawBitmapNinePatch", "SKBitmap", "SKBitmap.Decode", "SKManagedStream",
+		"SKPathEffect", "SKPathEffect.CreateDash",
+		"SKCanvas.DrawLine", "SKCanvas.DrawRect", "SKCanvas", "SKPaint",
 	];
 
 	public override string Category => SampleManager.General;

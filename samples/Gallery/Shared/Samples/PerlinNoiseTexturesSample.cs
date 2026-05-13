@@ -20,11 +20,12 @@ public class PerlinNoiseTexturesSample : CanvasSampleBase
 	public override string Description =>
 		"Procedural textures using Perlin noise — fractal vs turbulence side by side, with color presets for marble, wood, cloud, and fire effects.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"DrawPaint", "CreatePerlinNoiseFractalNoise", "CreatePerlinNoiseTurbulence",
-		"SKColorFilter", "CreateColorMatrix", "SKShader", "DrawRect", "DrawRoundRect",
-		"DrawText", "SKCanvas", "SKPaint", "SKFont",
+		"SKShader", "SKShader.CreatePerlinNoiseFractalNoise", "SKShader.CreatePerlinNoiseTurbulence",
+		"SKColorFilter", "SKColorFilter.CreateColorMatrix",
+		"SKCanvas.DrawPaint", "SKCanvas.DrawRect", "SKCanvas.DrawRoundRect", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont",
 	];
 
 	public override string Category => SampleManager.Shaders;

@@ -18,10 +18,12 @@ public class VectorArtSample : CanvasSampleBase
 
 	public override string Description => "Render complex Bézier path artwork with rotation, scale, and color theme controls.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"Save", "Restore", "Translate", "RotateDegrees", "Scale", "SKPathBuilder",
-		"SKPath", "DrawPath", "SKCanvas", "SKPaint",
+		"SKCanvas.Save", "SKCanvas.Restore", "SKCanvas.Translate",
+		"SKCanvas.RotateDegrees", "SKCanvas.Scale",
+		"SKPathBuilder", "SKPath",
+		"SKCanvas.DrawPath", "SKCanvas", "SKPaint",
 	];
 
 	public override string Category => SampleManager.Paths;

@@ -19,9 +19,11 @@ public class BlurImageFilterSample : CanvasSampleBase
 	public override string Description =>
 		"Apply Gaussian blur with independent horizontal and vertical sigma controls.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"SKImageFilter", "SKManagedStream", "CreateBlur", "SKBitmap", "DrawBitmap", "SKCanvas", "SKPaint",
+		"SKImageFilter", "SKImageFilter.CreateBlur",
+		"SKManagedStream", "SKBitmap",
+		"SKCanvas.DrawBitmap", "SKCanvas", "SKPaint",
 	];
 
 	public override IReadOnlyList<SampleControl> Controls =>

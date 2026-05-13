@@ -35,9 +35,11 @@ public class SmartTextUnderlineSample : CanvasSampleBase
 	public override string Description =>
 		"Text underlines that intelligently break around descenders using GetIntercepts().";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"SKTextBlob", "GetIntercepts", "MeasureText", "DrawText", "DrawLine",
+		"SKTextBlob", "SKTextBlob.GetIntercepts",
+		"SKFont.MeasureText",
+		"SKCanvas.DrawText", "SKCanvas.DrawLine",
 		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
 	];
 

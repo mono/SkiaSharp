@@ -45,11 +45,12 @@
         {
             var tag = rankedTags[i];
             var kind = KnownApis.Classify(tag);
+            var displayName = KnownApis.GetDisplayName(tag);
             var isActiveTag = ActiveTags.Contains(tag);
-            <button class="card-tag @(kind == TagKind.Type ? "ct-type" : kind == TagKind.Method ? "ct-method" : "") @(isActiveTag ? "ct-active" : "")"
+            <button class="card-tag @(kind == TagKind.Type ? "ct-type" : "ct-method") @(isActiveTag ? "ct-active" : "")"
                     @onclick="() => OnTagClicked.InvokeAsync(tag)" @onclick:stopPropagation="true"
-                    @onclick:preventDefault="true" title="Filter by @tag">
-                @tag
+                    @onclick:preventDefault="true" title="@tag">
+                @displayName
             </button>
         }
         @if (overflow > 0)
@@ -85,8 +86,8 @@
     private IReadOnlyList<string> GetDisplayTags()
     {
         // Active filter tags first, then rarest tags
-        var active = Sample.Tags.Where(t => ActiveTags.Contains(t)).ToList();
-        var rest = Sample.Tags
+        var active = Sample.ApiTags.Where(t => ActiveTags.Contains(t)).ToList();
+        var rest = Sample.ApiTags
             .Where(t => !ActiveTags.Contains(t))
             .OrderBy(t => CorpusCounts.GetValueOrDefault(t, 0))
             .ToList();

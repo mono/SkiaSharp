@@ -1,63 +1,42 @@
-using System.Collections.Generic;
-using System.Linq;
+using System;
 
 namespace SkiaSharpSample;
 
-public enum TagKind
-{
-	Type,
-	Method,
-	Other,
-}
-
 /// <summary>
-/// Classifies sample tags as Types vs Methods using heuristics derived
-/// from the actual tags collected across all samples. No hardcoded registry —
-/// classification is based on naming conventions.
+/// Classifies API tags for visual differentiation in the gallery.
+/// Tags use the format "Type" (e.g. "SKShader") or "Type.Method"
+/// (e.g. "SKImageFilter.CreateBlur"). Classification is derived
+/// from the format — no hardcoded registry needed.
 /// </summary>
 public static class KnownApis
 {
 	/// <summary>
-	/// Classify a tag as Type, Method, or Other based on naming conventions.
-	/// Types: start with "SK", contain a ".", or are known external type names.
-	/// Methods: start with "Draw", "Create", "Get", "Set", "From", "To", or
-	///          are other known verb-based API names.
+	/// Classify a tag as Type or Method.
+	/// Tags containing a dot are methods (Type.Method format).
+	/// Tags without a dot are types.
 	/// </summary>
-	public static TagKind Classify(string tag)
+	public static TagKind Classify(string tag) =>
+		tag.Contains('.') ? TagKind.Method : TagKind.Type;
+
+	/// <summary>
+	/// Extract the display name for a tag.
+	/// "SKImageFilter.CreateBlur" → "CreateBlur"
+	/// "SKCanvas" → "SKCanvas"
+	/// </summary>
+	public static string GetDisplayName(string tag)
 	{
-		if (string.IsNullOrEmpty(tag))
-			return TagKind.Other;
+		var dotIndex = tag.LastIndexOf('.');
+		return dotIndex >= 0 ? tag[(dotIndex + 1)..] : tag;
+	}
 
-		// Types: SK-prefixed, dotted namespaces (HarfBuzz.Face), known externals
-		if (tag.StartsWith("SK", StringComparison.Ordinal))
-			return TagKind.Type;
-		if (tag.Contains('.'))
-			return TagKind.Type;
-		if (tag == "Animation")
-			return TagKind.Type;
-
-		// Methods: verb prefixes
-		if (tag.StartsWith("Draw", StringComparison.Ordinal) ||
-			tag.StartsWith("Create", StringComparison.Ordinal) ||
-			tag.StartsWith("Get", StringComparison.Ordinal) ||
-			tag.StartsWith("Set", StringComparison.Ordinal) ||
-			tag.StartsWith("From", StringComparison.Ordinal) ||
-			tag.StartsWith("To", StringComparison.Ordinal) ||
-			tag.StartsWith("Encode", StringComparison.Ordinal) ||
-			tag.StartsWith("Decode", StringComparison.Ordinal) ||
-			tag.StartsWith("Match", StringComparison.Ordinal) ||
-			tag.StartsWith("Measure", StringComparison.Ordinal) ||
-			tag.StartsWith("Clip", StringComparison.Ordinal))
-			return TagKind.Method;
-
-		// Known method names that don't match a prefix pattern
-		return tag switch
-		{
-			"Save" or "Restore" or "Translate" or "Scale" or "Concat" => TagKind.Method,
-			"RotateDegrees" or "SaveLayer" => TagKind.Method,
-			"Clone" or "Decode" or "Snapshot" or "Render" => TagKind.Method,
-			"SeekFrameTime" or "PaletteCount" or "BeginPage" => TagKind.Method,
-			_ => TagKind.Other,
-		};
+	/// <summary>
+	/// Extract the parent type from a method tag.
+	/// "SKImageFilter.CreateBlur" → "SKImageFilter"
+	/// "SKCanvas" → null
+	/// </summary>
+	public static string? GetParentType(string tag)
+	{
+		var dotIndex = tag.LastIndexOf('.');
+		return dotIndex >= 0 ? tag[..dotIndex] : null;
 	}
 }

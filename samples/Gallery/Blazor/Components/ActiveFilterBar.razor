@@ -24,9 +24,10 @@
         {
             var t = tag;
             var kind = KnownApis.Classify(t);
-            <button class="filter-chip @(kind == TagKind.Type ? "chip-type" : kind == TagKind.Method ? "chip-method" : "")"
-                    @onclick="() => RemoveTag(t)">
-                @t <span class="chip-x">✕</span>
+            var displayName = KnownApis.GetDisplayName(t);
+            <button class="filter-chip @(kind == TagKind.Type ? "chip-type" : "chip-method")"
+                    @onclick="() => RemoveTag(t)" title="@t">
+                @displayName <span class="chip-x">✕</span>
             </button>
         }
 

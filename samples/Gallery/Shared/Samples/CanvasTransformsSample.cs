@@ -21,10 +21,12 @@ public class CanvasTransformsSample : CanvasSampleBase
 
 	public override string Description => "Visualize 2D canvas transformations — translate, rotate, and scale with live matrix display.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"SKMatrix", "Save", "Restore", "Translate", "RotateDegrees", "Scale", "SKRoundRect",
-		"SKPathEffect", "CreateDash", "DrawRoundRect", "DrawLine", "DrawText",
+		"SKMatrix", "SKRoundRect",
+		"SKPathEffect", "SKPathEffect.CreateDash",
+		"SKCanvas.Save", "SKCanvas.Restore", "SKCanvas.Translate", "SKCanvas.RotateDegrees", "SKCanvas.Scale",
+		"SKCanvas.DrawRoundRect", "SKCanvas.DrawLine", "SKCanvas.DrawText",
 		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
 	];
 

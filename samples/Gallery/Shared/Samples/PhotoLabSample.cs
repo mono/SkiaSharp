@@ -33,12 +33,14 @@ public class PhotoLabSample : CanvasSampleBase
 	public override string Description =>
 		"Composable image effect stack — color filters, blur, morphology, magnifier, and high contrast.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"CreateDilate", "CreateErode", "CreateMagnifier", "CreateHighContrast",
-		"CreateBlendMode", "CreateCompose", "SKColorFilter", "CreateColorMatrix",
-		"SKImageFilter", "CreateBlur", "SKManagedStream", "SKBitmap", "DrawBitmap",
-		"SKCanvas", "SKPaint",
+		"SKImageFilter", "SKImageFilter.CreateDilate", "SKImageFilter.CreateErode",
+		"SKImageFilter.CreateMagnifier", "SKImageFilter.CreateBlur",
+		"SKColorFilter", "SKColorFilter.CreateHighContrast",
+		"SKColorFilter.CreateBlendMode", "SKColorFilter.CreateColorMatrix",
+		"CreateCompose", "SKManagedStream", "SKBitmap",
+		"SKCanvas.DrawBitmap", "SKCanvas", "SKPaint",
 	];
 
 	public override string Category => SampleManager.ImageFilters;

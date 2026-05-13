@@ -19,9 +19,11 @@ public class BlendModesSample : CanvasSampleBase
 	public override string Description =>
 		"Explore all SkiaSharp blend modes with adjustable source and destination opacity.";
 
-	public override IReadOnlyList<string> Tags =>
+	public override IReadOnlyList<string> ApiTags =>
 	[
-		"SKBlendMode", "SaveLayer", "DrawCircle", "DrawText", "SKCanvas", "SKPaint", "SKFont",
+		"SKBlendMode",
+		"SKCanvas.SaveLayer", "SKCanvas.DrawCircle", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont",
 	];
 
 	public override string Category => SampleManager.Shaders;
