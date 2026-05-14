@@ -96,15 +96,11 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var nativeBackend = backendContext.Handle;
-			if (nativeBackend == IntPtr.Zero)
-				return null;
-
-			IntPtr handle = SkiaApi.sk_graphite_context_make_dawn (nativeBackend, &options);
+			var init = backendContext.ToNative ();
+			IntPtr handle = SkiaApi.sk_graphite_context_make_dawn (&init, &options);
 			if (handle == IntPtr.Zero)
 				return null;
 
-			backendContext.ReleaseNativeHandle ();
 			return new SKGraphiteContext (handle, true) {
 				isNonYielding = backendContext.IsNonYielding,
 			};
@@ -117,17 +113,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var nativeBackend = backendContext.Handle;
-			if (nativeBackend == IntPtr.Zero)
-				return null;
-
-			IntPtr handle = SkiaApi.sk_graphite_context_make_metal (nativeBackend, &options);
+			var init = backendContext.ToNative ();
+			IntPtr handle = SkiaApi.sk_graphite_context_make_metal (&init, &options);
 			if (handle == IntPtr.Zero)
 				return null;
-
-			// Skia took its own references on the Metal handles; the wrapper's
-			// native bc is no longer needed for context lifetime.
-			backendContext.ReleaseNativeHandle ();
 
 			return new SKGraphiteContext (handle, true);
 		}
@@ -139,11 +128,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var nativeBackend = backendContext.Handle;
-			if (nativeBackend == IntPtr.Zero)
-				return null;
-
-			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (nativeBackend, &options);
+			var init = backendContext.ToNative ();
+			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (init, &options);
 			if (handle == IntPtr.Zero)
 				return null;
 
@@ -153,10 +139,6 @@ namespace SkiaSharp
 			// lambda captured the function pointer + userData by value; SKGraphiteContext
 			// is now responsible for keeping the underlying managed delegate alive.
 			ctx.AttachPinnedBackendDelegate (backendContext.TransferGetProcHandle ());
-
-			// The native sk_graphite_vk_backend_context_t* wrapper is no longer needed —
-			// release it here so the caller's Dispose doesn't double-free.
-			backendContext.ReleaseNativeHandle ();
 
 			return ctx;
 		}

@@ -7,12 +7,10 @@ namespace SkiaSharp
 {
 	/// <summary>
 	/// Caller-supplied Dawn (WebGPU) handles used to bring up a Graphite Dawn
-	/// context. The shim AddRef's each handle when the context is created and
-	/// Releases on disposal — caller's refs are unaffected.
-	///
-	/// As with <see cref="SKGraphiteMtlBackendContext"/>, there is no GetProc
-	/// callback and no GCHandle ownership transfer; the caller may dispose
-	/// this object any time after <see cref="SKGraphiteContext.CreateDawn"/>.
+	/// context. The shim AddRef's each handle inside
+	/// <see cref="SKGraphiteContext.CreateDawn"/>; Skia takes its own refs on
+	/// success, so the caller's references are unaffected and may be dropped
+	/// as soon as that call returns.
 	///
 	/// On WebAssembly (browser) targets the shim runs in "non-yielding" mode
 	/// automatically — Emscripten without -s ASYNCIFY cannot pump the Dawn
@@ -23,12 +21,12 @@ namespace SkiaSharp
 	/// timer tick to drive readbacks instead. On every other platform the
 	/// shim installs <c>DawnNativeProcessEventsFunction</c> and the sync
 	/// path works as expected.
+	///
+	/// Pure data carrier — no native resources held on the managed side.
 	/// </summary>
-	public unsafe class SKGraphiteDawnBackendContext : IDisposable
+	public unsafe class SKGraphiteDawnBackendContext
 	{
 		private static readonly OSPlatform Browser = OSPlatform.Create ("BROWSER");
-
-		private IntPtr nativeBackendContext;
 
 		/// <summary>WGPUInstance handle.</summary>
 		public IntPtr WgpuInstance { get; set; }
@@ -45,45 +43,20 @@ namespace SkiaSharp
 		// on Submit(Sync=true).
 		internal bool IsNonYielding => RuntimeInformation.IsOSPlatform (Browser);
 
-		internal IntPtr Handle {
-			get {
-				if (nativeBackendContext == IntPtr.Zero) {
-					if (WgpuInstance == IntPtr.Zero)
-						throw new InvalidOperationException ($"{nameof (WgpuInstance)} must be set before materializing the backend context.");
-					if (WgpuDevice == IntPtr.Zero)
-						throw new InvalidOperationException ($"{nameof (WgpuDevice)} must be set before materializing the backend context.");
-					if (WgpuQueue == IntPtr.Zero)
-						throw new InvalidOperationException ($"{nameof (WgpuQueue)} must be set before materializing the backend context.");
-					var native = new SKGraphiteDawnBackendContextInit {
-						Instance    = (void*)WgpuInstance,
-						Device      = (void*)WgpuDevice,
-						Queue       = (void*)WgpuQueue,
-						NonYielding = IsNonYielding,
-					};
-					nativeBackendContext = SkiaApi.sk_graphite_dawn_backend_context_new (&native);
-				}
-				return nativeBackendContext;
-			}
-		}
-
-		internal void ReleaseNativeHandle ()
+		internal SKGraphiteDawnBackendContextInit ToNative ()
 		{
-			if (nativeBackendContext != IntPtr.Zero) {
-				SkiaApi.sk_graphite_dawn_backend_context_delete (nativeBackendContext);
-				nativeBackendContext = IntPtr.Zero;
-			}
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposing)
-				ReleaseNativeHandle ();
-		}
-
-		public void Dispose ()
-		{
-			Dispose (disposing: true);
-			GC.SuppressFinalize (this);
+			if (WgpuInstance == IntPtr.Zero)
+				throw new InvalidOperationException ($"{nameof (WgpuInstance)} must be set before materializing the backend context.");
+			if (WgpuDevice == IntPtr.Zero)
+				throw new InvalidOperationException ($"{nameof (WgpuDevice)} must be set before materializing the backend context.");
+			if (WgpuQueue == IntPtr.Zero)
+				throw new InvalidOperationException ($"{nameof (WgpuQueue)} must be set before materializing the backend context.");
+			return new SKGraphiteDawnBackendContextInit {
+				Instance    = (void*)WgpuInstance,
+				Device      = (void*)WgpuDevice,
+				Queue       = (void*)WgpuQueue,
+				NonYielding = IsNonYielding,
+			};
 		}
 	}
 }

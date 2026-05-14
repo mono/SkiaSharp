@@ -50,7 +50,7 @@ namespace SkiaSharp.Tests.Visual
 				if (queue == IntPtr.Zero)
 					throw new InvalidOperationException ("[MTLDevice newCommandQueue] returned null");
 
-				using var bc = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
+				var bc = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
 				using var ctx = SKGraphiteContext.CreateMetal (bc)
 					?? throw new InvalidOperationException ("SKGraphiteContext.CreateMetal returned null");
 				using var recorder = ctx.CreateRecorder ()

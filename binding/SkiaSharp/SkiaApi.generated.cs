@@ -43,13 +43,10 @@ using sk_fontstyleset_t = System.IntPtr;
 using sk_graphite_async_read_result_t = System.IntPtr;
 using sk_graphite_backend_texture_t = System.IntPtr;
 using sk_graphite_context_t = System.IntPtr;
-using sk_graphite_dawn_backend_context_t = System.IntPtr;
 using sk_graphite_image_provider_t = System.IntPtr;
-using sk_graphite_mtl_backend_context_t = System.IntPtr;
 using sk_graphite_recorder_t = System.IntPtr;
 using sk_graphite_recording_t = System.IntPtr;
 using sk_graphite_texture_info_t = System.IntPtr;
-using sk_graphite_vk_backend_context_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
 using sk_manageddrawable_t = System.IntPtr;
@@ -632,7 +629,7 @@ namespace SkiaSharp
 			internal delegate sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
 		}
 		private static Delegates.sk_graphite_image_make_texture sk_graphite_image_make_texture_delegate;
-		internal static sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, bool mipmapped) =>
+		internal static sk_image_t sk_graphite_image_make_texture (sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped) =>
 			(sk_graphite_image_make_texture_delegate ??= GetSymbol<Delegates.sk_graphite_image_make_texture> ("sk_graphite_image_make_texture")).Invoke (recorder, image, mipmapped);
 		#endif
 
@@ -841,7 +838,7 @@ namespace SkiaSharp
 			internal delegate sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, [MarshalAs (UnmanagedType.I1)] bool mipmapped, sk_surfaceprops_t props);
 		}
 		private static Delegates.sk_graphite_surface_make_render_target sk_graphite_surface_make_render_target_delegate;
-		internal static sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, bool mipmapped, sk_surfaceprops_t props) =>
+		internal static sk_surface_t sk_graphite_surface_make_render_target (sk_graphite_recorder_t recorder, SKImageInfoNative* info, [MarshalAs (UnmanagedType.I1)] bool mipmapped, sk_surfaceprops_t props) =>
 			(sk_graphite_surface_make_render_target_delegate ??= GetSymbol<Delegates.sk_graphite_surface_make_render_target> ("sk_graphite_surface_make_render_target")).Invoke (recorder, info, mipmapped, props);
 		#endif
 
@@ -7666,61 +7663,23 @@ namespace SkiaSharp
 
 		#region sk_graphite_dawn.h
 
-		// sk_graphite_context_t* sk_graphite_context_make_dawn(const sk_graphite_dawn_backend_context_t* bc, const sk_graphite_context_options_t* opts)
+		// sk_graphite_context_t* sk_graphite_context_make_dawn(const sk_graphite_dawn_backend_context_init_t* init, const sk_graphite_context_options_t* opts)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_context_t sk_graphite_context_make_dawn (sk_graphite_dawn_backend_context_t bc, SKGraphiteContextOptions* opts);
+		internal static partial sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptions* opts);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_context_t sk_graphite_context_make_dawn (sk_graphite_dawn_backend_context_t bc, SKGraphiteContextOptions* opts);
+		internal static extern sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptions* opts);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_context_t sk_graphite_context_make_dawn (sk_graphite_dawn_backend_context_t bc, SKGraphiteContextOptions* opts);
+			internal delegate sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptions* opts);
 		}
 		private static Delegates.sk_graphite_context_make_dawn sk_graphite_context_make_dawn_delegate;
-		internal static sk_graphite_context_t sk_graphite_context_make_dawn (sk_graphite_dawn_backend_context_t bc, SKGraphiteContextOptions* opts) =>
-			(sk_graphite_context_make_dawn_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_dawn> ("sk_graphite_context_make_dawn")).Invoke (bc, opts);
-		#endif
-
-		// void sk_graphite_dawn_backend_context_delete(sk_graphite_dawn_backend_context_t* bc)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_graphite_dawn_backend_context_delete (sk_graphite_dawn_backend_context_t bc);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_graphite_dawn_backend_context_delete (sk_graphite_dawn_backend_context_t bc);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_graphite_dawn_backend_context_delete (sk_graphite_dawn_backend_context_t bc);
-		}
-		private static Delegates.sk_graphite_dawn_backend_context_delete sk_graphite_dawn_backend_context_delete_delegate;
-		internal static void sk_graphite_dawn_backend_context_delete (sk_graphite_dawn_backend_context_t bc) =>
-			(sk_graphite_dawn_backend_context_delete_delegate ??= GetSymbol<Delegates.sk_graphite_dawn_backend_context_delete> ("sk_graphite_dawn_backend_context_delete")).Invoke (bc);
-		#endif
-
-		// sk_graphite_dawn_backend_context_t* sk_graphite_dawn_backend_context_new(const sk_graphite_dawn_backend_context_init_t* init)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_dawn_backend_context_t sk_graphite_dawn_backend_context_new (SKGraphiteDawnBackendContextInit* init);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_dawn_backend_context_t sk_graphite_dawn_backend_context_new (SKGraphiteDawnBackendContextInit* init);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_dawn_backend_context_t sk_graphite_dawn_backend_context_new (SKGraphiteDawnBackendContextInit* init);
-		}
-		private static Delegates.sk_graphite_dawn_backend_context_new sk_graphite_dawn_backend_context_new_delegate;
-		internal static sk_graphite_dawn_backend_context_t sk_graphite_dawn_backend_context_new (SKGraphiteDawnBackendContextInit* init) =>
-			(sk_graphite_dawn_backend_context_new_delegate ??= GetSymbol<Delegates.sk_graphite_dawn_backend_context_new> ("sk_graphite_dawn_backend_context_new")).Invoke (init);
+		internal static sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptions* opts) =>
+			(sk_graphite_context_make_dawn_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_dawn> ("sk_graphite_context_make_dawn")).Invoke (init, opts);
 		#endif
 
 		// sk_graphite_backend_texture_t* sk_graphite_dawn_backend_texture_new(void* wgpuTexture)
@@ -7746,61 +7705,23 @@ namespace SkiaSharp
 
 		#region sk_graphite_metal.h
 
-		// sk_graphite_context_t* sk_graphite_context_make_metal(const sk_graphite_mtl_backend_context_t* bc, const sk_graphite_context_options_t* opts)
+		// sk_graphite_context_t* sk_graphite_context_make_metal(const sk_graphite_mtl_backend_context_init_t* init, const sk_graphite_context_options_t* opts)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_context_t sk_graphite_context_make_metal (sk_graphite_mtl_backend_context_t bc, SKGraphiteContextOptions* opts);
+		internal static partial sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptions* opts);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_context_t sk_graphite_context_make_metal (sk_graphite_mtl_backend_context_t bc, SKGraphiteContextOptions* opts);
+		internal static extern sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptions* opts);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_context_t sk_graphite_context_make_metal (sk_graphite_mtl_backend_context_t bc, SKGraphiteContextOptions* opts);
+			internal delegate sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptions* opts);
 		}
 		private static Delegates.sk_graphite_context_make_metal sk_graphite_context_make_metal_delegate;
-		internal static sk_graphite_context_t sk_graphite_context_make_metal (sk_graphite_mtl_backend_context_t bc, SKGraphiteContextOptions* opts) =>
-			(sk_graphite_context_make_metal_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_metal> ("sk_graphite_context_make_metal")).Invoke (bc, opts);
-		#endif
-
-		// void sk_graphite_mtl_backend_context_delete(sk_graphite_mtl_backend_context_t* bc)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_graphite_mtl_backend_context_delete (sk_graphite_mtl_backend_context_t bc);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_graphite_mtl_backend_context_delete (sk_graphite_mtl_backend_context_t bc);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_graphite_mtl_backend_context_delete (sk_graphite_mtl_backend_context_t bc);
-		}
-		private static Delegates.sk_graphite_mtl_backend_context_delete sk_graphite_mtl_backend_context_delete_delegate;
-		internal static void sk_graphite_mtl_backend_context_delete (sk_graphite_mtl_backend_context_t bc) =>
-			(sk_graphite_mtl_backend_context_delete_delegate ??= GetSymbol<Delegates.sk_graphite_mtl_backend_context_delete> ("sk_graphite_mtl_backend_context_delete")).Invoke (bc);
-		#endif
-
-		// sk_graphite_mtl_backend_context_t* sk_graphite_mtl_backend_context_new(const sk_graphite_mtl_backend_context_init_t* init)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_mtl_backend_context_t sk_graphite_mtl_backend_context_new (SKGraphiteMtlBackendContextInit* init);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_mtl_backend_context_t sk_graphite_mtl_backend_context_new (SKGraphiteMtlBackendContextInit* init);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_mtl_backend_context_t sk_graphite_mtl_backend_context_new (SKGraphiteMtlBackendContextInit* init);
-		}
-		private static Delegates.sk_graphite_mtl_backend_context_new sk_graphite_mtl_backend_context_new_delegate;
-		internal static sk_graphite_mtl_backend_context_t sk_graphite_mtl_backend_context_new (SKGraphiteMtlBackendContextInit* init) =>
-			(sk_graphite_mtl_backend_context_new_delegate ??= GetSymbol<Delegates.sk_graphite_mtl_backend_context_new> ("sk_graphite_mtl_backend_context_new")).Invoke (init);
+		internal static sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptions* opts) =>
+			(sk_graphite_context_make_metal_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_metal> ("sk_graphite_context_make_metal")).Invoke (init, opts);
 		#endif
 
 		// sk_graphite_backend_texture_t* sk_graphite_mtl_backend_texture_new(int32_t width, int32_t height, void* mtlTexture)
@@ -7826,61 +7747,23 @@ namespace SkiaSharp
 
 		#region sk_graphite_vulkan.h
 
-		// sk_graphite_context_t* sk_graphite_context_make_vulkan(const sk_graphite_vk_backend_context_t* bc, const sk_graphite_context_options_t* opts)
+		// sk_graphite_context_t* sk_graphite_context_make_vulkan(const sk_graphite_vk_backend_context_init_t init, const sk_graphite_context_options_t* opts)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_context_t sk_graphite_context_make_vulkan (sk_graphite_vk_backend_context_t bc, SKGraphiteContextOptions* opts);
+		internal static partial sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_context_t sk_graphite_context_make_vulkan (sk_graphite_vk_backend_context_t bc, SKGraphiteContextOptions* opts);
+		internal static extern sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_context_t sk_graphite_context_make_vulkan (sk_graphite_vk_backend_context_t bc, SKGraphiteContextOptions* opts);
+			internal delegate sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
 		}
 		private static Delegates.sk_graphite_context_make_vulkan sk_graphite_context_make_vulkan_delegate;
-		internal static sk_graphite_context_t sk_graphite_context_make_vulkan (sk_graphite_vk_backend_context_t bc, SKGraphiteContextOptions* opts) =>
-			(sk_graphite_context_make_vulkan_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_vulkan> ("sk_graphite_context_make_vulkan")).Invoke (bc, opts);
-		#endif
-
-		// void sk_graphite_vk_backend_context_delete(sk_graphite_vk_backend_context_t* bc)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_graphite_vk_backend_context_delete (sk_graphite_vk_backend_context_t bc);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_graphite_vk_backend_context_delete (sk_graphite_vk_backend_context_t bc);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_graphite_vk_backend_context_delete (sk_graphite_vk_backend_context_t bc);
-		}
-		private static Delegates.sk_graphite_vk_backend_context_delete sk_graphite_vk_backend_context_delete_delegate;
-		internal static void sk_graphite_vk_backend_context_delete (sk_graphite_vk_backend_context_t bc) =>
-			(sk_graphite_vk_backend_context_delete_delegate ??= GetSymbol<Delegates.sk_graphite_vk_backend_context_delete> ("sk_graphite_vk_backend_context_delete")).Invoke (bc);
-		#endif
-
-		// sk_graphite_vk_backend_context_t* sk_graphite_vk_backend_context_new(const sk_graphite_vk_backend_context_init_t* init)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_vk_backend_context_t sk_graphite_vk_backend_context_new (SKGraphiteVkBackendContextNative* init);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_vk_backend_context_t sk_graphite_vk_backend_context_new (SKGraphiteVkBackendContextNative* init);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_vk_backend_context_t sk_graphite_vk_backend_context_new (SKGraphiteVkBackendContextNative* init);
-		}
-		private static Delegates.sk_graphite_vk_backend_context_new sk_graphite_vk_backend_context_new_delegate;
-		internal static sk_graphite_vk_backend_context_t sk_graphite_vk_backend_context_new (SKGraphiteVkBackendContextNative* init) =>
-			(sk_graphite_vk_backend_context_new_delegate ??= GetSymbol<Delegates.sk_graphite_vk_backend_context_new> ("sk_graphite_vk_backend_context_new")).Invoke (init);
+		internal static sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts) =>
+			(sk_graphite_context_make_vulkan_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_vulkan> ("sk_graphite_context_make_vulkan")).Invoke (init, opts);
 		#endif
 
 		// sk_graphite_backend_texture_t* sk_graphite_vk_backend_texture_new(int32_t width, int32_t height, const sk_graphite_vk_texture_info_t* info, int32_t imageLayout, uint32_t queueFamilyIndex, void* vkImage)
@@ -18726,9 +18609,9 @@ namespace SkiaSharp {
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGraphiteAsyncReadPixelsProxyDelegate(void* callbackContext, sk_graphite_async_read_result_t result);
 
-	// typedef sk_image_t* (*)(void* userData, sk_graphite_recorder_t* recorder, const sk_image_t* image, int32_t mipmapped)* sk_graphite_image_provider_proc_t
+	// typedef sk_image_t* (*)(void* userData, sk_graphite_recorder_t* recorder, const sk_image_t* image, bool mipmapped)* sk_graphite_image_provider_proc_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate sk_image_t SKGraphiteImageProviderProxyDelegate(void* userData, sk_graphite_recorder_t recorder, sk_image_t image, Int32 mipmapped);
+	internal unsafe delegate sk_image_t SKGraphiteImageProviderProxyDelegate(void* userData, sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
 
 	// typedef void (*)(void* releaseContext)* sk_graphite_release_proc_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -22757,14 +22640,14 @@ namespace SkiaSharp {
 
 	// sk_graphite_backend_t
 	public enum SKGraphiteBackend {
-		// UNKNOWN_SK_GRAPHITE_BACKEND = -1
-		Unknown = -1,
 		// DAWN_SK_GRAPHITE_BACKEND = 0
 		Dawn = 0,
 		// METAL_SK_GRAPHITE_BACKEND = 1
 		Metal = 1,
 		// VULKAN_SK_GRAPHITE_BACKEND = 2
 		Vulkan = 2,
+		// UNKNOWN_SK_GRAPHITE_BACKEND = -1
+		Unknown = -1,
 	}
 
 	// sk_graphite_insert_status_t
@@ -23267,13 +23150,13 @@ internal static unsafe partial class DelegateProxies {
 
 	/// Proxy for sk_graphite_image_provider_proc_t native function.
 #if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <void*, sk_graphite_recorder_t, sk_image_t, Int32, sk_image_t> SKGraphiteImageProviderProxy = &SKGraphiteImageProviderProxyImplementation;
+	public static readonly delegate* unmanaged[Cdecl] <void*, sk_graphite_recorder_t, sk_image_t, bool, sk_image_t> SKGraphiteImageProviderProxy = &SKGraphiteImageProviderProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 	public static readonly SKGraphiteImageProviderProxyDelegate SKGraphiteImageProviderProxy = SKGraphiteImageProviderProxyImplementation;
 	[MonoPInvokeCallback (typeof (SKGraphiteImageProviderProxyDelegate))]
 #endif
-	private static partial sk_image_t SKGraphiteImageProviderProxyImplementation(void* userData,sk_graphite_recorder_t recorder,sk_image_t image,Int32 mipmapped);
+	private static partial sk_image_t SKGraphiteImageProviderProxyImplementation(void* userData,sk_graphite_recorder_t recorder,sk_image_t image,[MarshalAs (UnmanagedType.I1)] bool mipmapped);
 
 	/// Proxy for sk_graphite_release_proc_t native function.
 #if USE_LIBRARY_IMPORT

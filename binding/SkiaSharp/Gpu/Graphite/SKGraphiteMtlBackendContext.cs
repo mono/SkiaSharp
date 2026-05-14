@@ -8,62 +8,31 @@ namespace SkiaSharp
 	/// Caller-supplied Metal handles used to bring up a Graphite Metal context.
 	/// Both <see cref="MtlDevice"/> and <see cref="MtlQueue"/> must be valid
 	/// CFTypeRef-compatible Objective-C handles (id&lt;MTLDevice&gt; and
-	/// id&lt;MTLCommandQueue&gt;); the SkiaSharp shim CFRetains them when the
-	/// context is created and CFReleases on disposal.
+	/// id&lt;MTLCommandQueue&gt;); the SkiaSharp shim CFRetains them inside
+	/// <see cref="SKGraphiteContext.CreateMetal"/> and the resulting
+	/// <see cref="SKGraphiteContext"/> keeps its own retained references (held
+	/// inside the Skia-side <c>MtlBackendContext</c>'s sk_cfp fields).
 	///
-	/// Unlike <see cref="SKGraphiteVkBackendContext"/>, Metal has no GetProc
-	/// callback, so there is no GCHandle to pin and no Variant A-style transfer.
-	/// The caller may dispose this object at any time after
-	/// <see cref="SKGraphiteContext.CreateMetal"/> returns; the resulting
-	/// SKGraphiteContext keeps its own retained references to the device/queue
-	/// (held inside the Skia-side <c>MtlBackendContext</c>'s sk_cfp fields).
+	/// Pure data carrier — no native resources held on the managed side.
 	/// </summary>
-	public unsafe class SKGraphiteMtlBackendContext : IDisposable
+	public unsafe class SKGraphiteMtlBackendContext
 	{
-		private IntPtr nativeBackendContext;
-
 		/// <summary>id&lt;MTLDevice&gt; (CFRetainable Obj-C handle).</summary>
 		public IntPtr MtlDevice { get; set; }
 
 		/// <summary>id&lt;MTLCommandQueue&gt; (CFRetainable Obj-C handle).</summary>
 		public IntPtr MtlQueue  { get; set; }
 
-		/// <summary>Lazily creates the native backend-context handle.</summary>
-		internal IntPtr Handle {
-			get {
-				if (nativeBackendContext == IntPtr.Zero) {
-					if (MtlDevice == IntPtr.Zero)
-						throw new InvalidOperationException ($"{nameof (MtlDevice)} must be set before materializing the backend context.");
-					if (MtlQueue == IntPtr.Zero)
-						throw new InvalidOperationException ($"{nameof (MtlQueue)} must be set before materializing the backend context.");
-					var native = new SKGraphiteMtlBackendContextInit {
-						Device = (void*)MtlDevice,
-						Queue  = (void*)MtlQueue,
-					};
-					nativeBackendContext = SkiaApi.sk_graphite_mtl_backend_context_new (&native);
-				}
-				return nativeBackendContext;
-			}
-		}
-
-		internal void ReleaseNativeHandle ()
+		internal SKGraphiteMtlBackendContextInit ToNative ()
 		{
-			if (nativeBackendContext != IntPtr.Zero) {
-				SkiaApi.sk_graphite_mtl_backend_context_delete (nativeBackendContext);
-				nativeBackendContext = IntPtr.Zero;
-			}
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposing)
-				ReleaseNativeHandle ();
-		}
-
-		public void Dispose ()
-		{
-			Dispose (disposing: true);
-			GC.SuppressFinalize (this);
+			if (MtlDevice == IntPtr.Zero)
+				throw new InvalidOperationException ($"{nameof (MtlDevice)} must be set before materializing the backend context.");
+			if (MtlQueue == IntPtr.Zero)
+				throw new InvalidOperationException ($"{nameof (MtlQueue)} must be set before materializing the backend context.");
+			return new SKGraphiteMtlBackendContextInit {
+				Device = (void*)MtlDevice,
+				Queue  = (void*)MtlQueue,
+			};
 		}
 	}
 }
