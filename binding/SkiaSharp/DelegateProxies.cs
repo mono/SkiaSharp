@@ -121,15 +121,10 @@ namespace SkiaSharp
 
 		private static partial IntPtr SKGraphiteImageProviderProxyImplementation (void* userData, IntPtr recorder, IntPtr image, int mipmapped)
 		{
-			// userData is the GCHandle pinned by SKGraphiteImageProvider (kept alive
-			// by the managed wrapper for the Context's lifetime — the GCHandle is
-			// freed in SKGraphiteImageProvider.Dispose(), NOT here).
-			//
-			// The wrapped instance's FindOrCreate decides whether to upload (returns
-			// a Graphite-backed SKImage) or to drop (returns null). Returning a null
-			// IntPtr here triggers Skia's "Couldn't convert" / draw-dropped path —
-			// same as if no provider were installed.
-			var del = Get<SKGraphiteImageProvider.FindOrCreateProxy> ((IntPtr)userData, out _);
+			// userData is a GCHandle pinned by SKGraphiteContext.CreateRecorder; the
+			// recorder keeps it alive for its own lifetime and frees it in DisposeNative.
+			// Returning IntPtr.Zero drops the draw, same as if no callback were installed.
+			var del = Get<SKGraphiteFindOrCreateImageProxy> ((IntPtr)userData, out _);
 			try {
 				return del.Invoke (recorder, image, mipmapped != 0);
 			} catch {

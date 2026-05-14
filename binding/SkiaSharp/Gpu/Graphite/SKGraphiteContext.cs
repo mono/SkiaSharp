@@ -181,31 +181,83 @@ namespace SkiaSharp
 		/// be used concurrently on different threads against the same context.
 		/// </summary>
 		public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes = -1) =>
-			CreateRecorder (recorderBudgetBytes, imageProvider: null);
+			CreateRecorder (recorderBudgetBytes, findOrCreate: null, findOrCreateDispose: null);
 
 		/// <summary>
-		/// Vend a recorder with a managed <see cref="SKGraphiteImageProvider"/> attached.
-		/// Without one, Graphite drops every draw whose source <see cref="SKImage"/> is not
-		/// already Graphite-backed (it does not auto-upload like Ganesh). Use
-		/// <see cref="SKGraphiteImageProvider.CreateDefault"/> for an upload-with-LRU-cache
-		/// policy, or subclass <see cref="SKGraphiteImageProvider"/> for custom caching.
+		/// Vend a recorder with a managed image-upload callback attached. Without one, Graphite
+		/// drops every draw whose source <see cref="SKImage"/> is not already Graphite-backed
+		/// (it does not auto-upload like Ganesh). For a ready-made LRU policy pass
+		/// <c>cache.FindOrCreate</c> + <c>cache.Dispose</c> from a new
+		/// <see cref="SKGraphiteImageCache"/>.
 		///
-		/// On success the recorder takes ownership of <paramref name="imageProvider"/>.
-		/// Do NOT share one provider across multiple recorders — construct a fresh one per recorder.
+		/// <paramref name="findOrCreateDispose"/>, if supplied, runs at recorder teardown
+		/// <em>before</em> the native recorder is destroyed — use it to release any
+		/// graphite-backed images the callback's closure captured (releasing them after
+		/// destruction is undefined behavior).
 		/// </summary>
-		public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes, SKGraphiteImageProvider imageProvider)
+		public SKGraphiteRecorder CreateRecorder (
+			long recorderBudgetBytes,
+			SKGraphiteFindOrCreateImageDelegate findOrCreate,
+			Action findOrCreateDispose = null)
 		{
-			IntPtr ipHandle = imageProvider?.Handle ?? IntPtr.Zero;
-			IntPtr handle = SkiaApi.sk_graphite_context_make_recorder (Handle, recorderBudgetBytes, ipHandle);
-			if (handle == IntPtr.Zero)
+			IntPtr providerHandle = IntPtr.Zero;
+			GCHandle pinnedCallback = default;
+
+			if (findOrCreate != null) {
+				SKGraphiteFindOrCreateImageProxy proxy = (rh, ih, mipmapped) =>
+					InvokeFindOrCreate (findOrCreate, rh, ih, mipmapped);
+				DelegateProxies.Create (proxy, out pinnedCallback, out var ctx);
+#if USE_LIBRARY_IMPORT
+				providerHandle = SkiaApi.sk_graphite_image_provider_new (
+					(delegate* unmanaged[Cdecl] <void*, IntPtr, IntPtr, Int32, IntPtr>)
+						DelegateProxies.SKGraphiteImageProviderProxy,
+					(void*)ctx);
+#else
+				providerHandle = SkiaApi.sk_graphite_image_provider_new (
+					DelegateProxies.SKGraphiteImageProviderProxy,
+					(void*)ctx);
+#endif
+				if (providerHandle == IntPtr.Zero) {
+					pinnedCallback.Free ();
+					throw new InvalidOperationException ("sk_graphite_image_provider_new failed (Graphite not built into libSkiaSharp?)");
+				}
+			}
+
+			IntPtr handle = SkiaApi.sk_graphite_context_make_recorder (Handle, recorderBudgetBytes, providerHandle);
+
+			// makeRecorder copied our sp out; the wrapper can be freed regardless of success.
+			if (providerHandle != IntPtr.Zero)
+				SkiaApi.sk_graphite_image_provider_delete (providerHandle);
+
+			if (handle == IntPtr.Zero) {
+				if (pinnedCallback.IsAllocated) pinnedCallback.Free ();
 				return null;
+			}
 
 			var rec = new SKGraphiteRecorder (handle, true);
-			// Recorder took ownership of the native wrapper; transfer to the C#
-			// recorder so the pinned managed delegate (referenced by Skia via the
-			// captured function-pointer + userData) outlives the native recorder.
-			rec.AttachImageProvider (imageProvider);
+			if (findOrCreate != null)
+				rec.AttachImageCallback (pinnedCallback, findOrCreateDispose);
 			return rec;
+		}
+
+		private static IntPtr InvokeFindOrCreate (
+			SKGraphiteFindOrCreateImageDelegate callback,
+			IntPtr recorderHandle, IntPtr imageHandle, bool mipmapped)
+		{
+			if (recorderHandle == IntPtr.Zero || imageHandle == IntPtr.Zero)
+				return IntPtr.Zero;
+			// Wrap the handles in non-owning managed views. unrefExisting:false because
+			// these are borrowed handles owned by Skia for the duration of this call —
+			// decrementing on dispose would crash later.
+			var recorder = SKObject.GetOrAddObject<SKGraphiteRecorder> (recorderHandle, false, false, (h, o) => new SKGraphiteRecorder (h, o));
+			var image    = SKObject.GetOrAddObject<SKImage>            (imageHandle,    false, false, (h, o) => new SKImage (h, o));
+			var result   = callback (recorder, image, mipmapped);
+			if (result == null) return IntPtr.Zero;
+			// Skia consumes the +1 ref on `result`. Detach the managed wrapper so Dispose
+			// doesn't decrement the reference Skia just took.
+			var raw = result.Handle;
+			result.RevokeOwnership (null);
+			return raw;
 		}
 
 		/// <summary>
