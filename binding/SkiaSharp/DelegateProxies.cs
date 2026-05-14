@@ -129,7 +129,7 @@ namespace SkiaSharp
 			// a Graphite-backed SKImage) or to drop (returns null). Returning a null
 			// IntPtr here triggers Skia's "Couldn't convert" / draw-dropped path —
 			// same as if no provider were installed.
-			var del = Get<SKGraphiteImageProvider.FindOrCreateDelegate> ((IntPtr)userData, out _);
+			var del = Get<SKGraphiteImageProvider.FindOrCreateProxy> ((IntPtr)userData, out _);
 			try {
 				return del.Invoke (recorder, image, mipmapped != 0);
 			} catch {
