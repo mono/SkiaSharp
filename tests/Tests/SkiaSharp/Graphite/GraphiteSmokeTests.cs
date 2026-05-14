@@ -52,9 +52,7 @@ namespace SkiaSharp.Tests.Graphite
 			// Synchronous CPU readback via Skia's async path (sync wrapper).
 			const int W = 256, H = 256;
 			var pixels = new byte[W * H * 4];
-			fixed (byte* p = pixels) {
-				Assert.True (ctx.ReadPixels (surface, info, (IntPtr)p, W * 4, 0, 0));
-			}
+			Assert.True (ctx.ReadPixelsSync (surface, info, pixels, 0, 0));
 
 			// RGBA_8888: low byte = R.
 			int center = (128 * W + 128) * 4;
@@ -142,9 +140,7 @@ namespace SkiaSharp.Tests.Graphite
 				Assert.Equal (SKGraphiteInsertStatus.Success, ctx.InsertRecording (recording));
 
 				var pixels = new byte[64 * 64 * 4];
-				fixed (byte* p = pixels) {
-					Assert.True (ctx.ReadPixels (surface, info, (IntPtr)p, 64 * 4, 0, 0));
-				}
+				Assert.True (ctx.ReadPixelsSync (surface, info, pixels, 0, 0));
 				// Spot-check: should be blue (B=255, R=0, G=0).
 				Assert.True (pixels[2] > 200, $"B={pixels[2]} expected >200");
 				Assert.True (pixels[0] < 50,  $"R={pixels[0]} expected <50");

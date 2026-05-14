@@ -93,9 +93,7 @@ namespace SkiaSharp.Tests.Graphite
 			Assert.True (ctx.Submit (new SKGraphiteSubmitInfo { Sync = true }));
 
 			var pixels = new byte[info.Width * info.Height * 4];
-			fixed (byte* p = pixels) {
-				Assert.True (ctx.ReadPixels (surface, info, (IntPtr)p, info.Width * 4, 0, 0));
-			}
+			Assert.True (ctx.ReadPixelsSync (surface, info, pixels, 0, 0));
 			int center = ((info.Height / 2) * info.Width + (info.Width / 2)) * 4;
 			Assert.True (pixels[center + 0] > 200, $"R={pixels[center + 0]} expected >200");
 			Assert.True (pixels[center + 1] < 50,  $"G={pixels[center + 1]} expected <50");

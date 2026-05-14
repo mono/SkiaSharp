@@ -86,9 +86,7 @@ namespace SkiaSharp.Tests.Graphite
 
 				var rgba = new SKImageInfo (W, H, SKColorType.Rgba8888, SKAlphaType.Premul);
 				pixels = new byte[rgba.BytesSize];
-				fixed (byte* p = pixels) {
-					Assert.True (ctx.ReadPixels (wrapped, rgba, (IntPtr)p, rgba.RowBytes, 0, 0));
-				}
+				Assert.True (ctx.ReadPixelsSync (wrapped, rgba, pixels, 0, 0));
 			}
 
 			// Pixel(32,32) should be yellow (R=255, G=255, B=0, A=255).
