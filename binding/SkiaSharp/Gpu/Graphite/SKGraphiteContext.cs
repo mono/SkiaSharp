@@ -301,76 +301,52 @@ namespace SkiaSharp
 			SkiaApi.sk_graphite_context_check_async_work_completion (Handle);
 
 		/// <summary>
-		/// Synchronous pixel readback from a Graphite-backed surface. Use this in place of
-		/// <see cref="SKSurface.ReadPixels(SKImageInfo, IntPtr, int, int, int)"/>, which is
-		/// unavailable for Graphite-backed surfaces in production builds.
+		/// Kick off an async pixel readback from a Graphite-backed surface. <paramref name="callback"/>
+		/// fires later, on whatever thread next calls <see cref="CheckAsyncWorkCompletion"/> (or
+		/// <see cref="Submit(SKGraphiteSubmitInfo)"/> with <c>Sync = true</c>). The callback receives
+		/// a result whose plane pointers are only valid for the duration of the callback —
+		/// copy out anything you need before returning. On failure the callback fires with
+		/// <c>null</c>.
 		///
-		/// THREADING: Blocks the calling thread until the GPU readback completes (cost
-		/// roughly equivalent to glFinish). Don't call from a render thread that needs to
-		/// keep doing GPU work in parallel.
+		/// The caller is responsible for driving completion (Submit + CheckAsyncWorkCompletion,
+		/// or some other tick). This method does NOT block.
 		/// </summary>
-		/// <param name="dstPixels">Caller-owned buffer at least <paramref name="dstRowBytes"/> *
-		///   <paramref name="dstInfo"/>.Height bytes. RGBA_8888/Premul are supported on every backend;
+		/// <param name="dstInfo">Target pixel format. RGBA_8888/Premul is supported on every backend;
 		///   format conversions follow Skia's standard rules.</param>
-		/// <param name="dstRowBytes">Stride in bytes. May be tighter than the source's natural row.</param>
-		public bool ReadPixels (SKSurface surface, SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
+		/// <param name="srcRect">Region of <paramref name="surface"/> to read.</param>
+		public void RequestReadPixels (
+			SKSurface surface,
+			SKImageInfo dstInfo,
+			SKRectI srcRect,
+			SKGraphiteRescaleGamma rescaleGamma,
+			SKGraphiteRescaleMode rescaleMode,
+			Action<SKGraphiteAsyncReadResult> callback)
 		{
 			if (surface is null) throw new ArgumentNullException (nameof (surface));
-			if (dstPixels == IntPtr.Zero) throw new ArgumentNullException (nameof (dstPixels));
-			if (dstRowBytes <= 0) throw new ArgumentOutOfRangeException (nameof (dstRowBytes));
+			if (callback is null) throw new ArgumentNullException (nameof (callback));
 
-			bool done = false;
-			bool success = false;
-			int height = dstInfo.Height;
-
-			Action<IntPtr> handler = result => {
-				try {
-					if (result == IntPtr.Zero)
-						return;
-					int count = SkiaApi.sk_graphite_async_read_result_get_count (result);
-					if (count == 0)
-						return;
-					var src = SkiaApi.sk_graphite_async_read_result_get_data (result, 0);
-					if (src == null)
-						return;
-					int srcRowBytes = (int)SkiaApi.sk_graphite_async_read_result_get_row_bytes (result, 0);
-					int copy = Math.Min (srcRowBytes, dstRowBytes);
-					byte* srcBytes = (byte*)src;
-					byte* dstBytes = (byte*)dstPixels;
-					for (int y = 0; y < height; y++) {
-						Buffer.MemoryCopy (
-							srcBytes + (long)y * srcRowBytes,
-							dstBytes + (long)y * dstRowBytes,
-							dstRowBytes,
-							copy);
-					}
-					success = true;
-				} finally {
-					done = true;
-				}
+			Action<IntPtr> handler = raw => {
+				using var result = raw == IntPtr.Zero ? null : new SKGraphiteAsyncReadResult (raw);
+				callback (result);
 			};
 
 			DelegateProxies.Create (handler, out _, out var ctxPtr);
 
 			var nativeInfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			var srcRect = new SKRectI (srcX, srcY, srcX + dstInfo.Width, srcY + dstInfo.Height);
-
 			SkiaApi.sk_graphite_context_async_rescale_and_read_pixels_surface (
 				Handle, surface.Handle, &nativeInfo, &srcRect,
-				SKGraphiteRescaleGamma.Src,
-				SKGraphiteRescaleMode.RepeatedLinear,
+				rescaleGamma, rescaleMode,
 				DelegateProxies.SKGraphiteAsyncReadPixelsProxy,
 				(void*)ctxPtr);
-
-			// Drive completion. Submit non-syncing first so any pending recordings are flushed,
-			// then spin on checkAsyncWorkCompletion. The proxy frees its GCHandle inside its
-			// finally — `done` is set just before that, so we observe it correctly here.
-			Submit ();
-			while (!done) {
-				SkiaApi.sk_graphite_context_check_async_work_completion (Handle);
-			}
-
-			return success;
 		}
+
+		/// <inheritdoc cref="RequestReadPixels(SKSurface, SKImageInfo, SKRectI, SKGraphiteRescaleGamma, SKGraphiteRescaleMode, Action{SKGraphiteAsyncReadResult})"/>
+		public void RequestReadPixels (
+			SKSurface surface,
+			SKImageInfo dstInfo,
+			SKRectI srcRect,
+			Action<SKGraphiteAsyncReadResult> callback) =>
+			RequestReadPixels (surface, dstInfo, srcRect,
+				SKGraphiteRescaleGamma.Src, SKGraphiteRescaleMode.RepeatedLinear, callback);
 	}
 }

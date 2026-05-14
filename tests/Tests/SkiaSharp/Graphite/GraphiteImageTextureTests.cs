@@ -147,9 +147,7 @@ namespace SkiaSharp.Tests.Graphite
 				Assert.True (ctx.Submit (new SKGraphiteSubmitInfo { Sync = true }));
 
 				var pixels = new byte[W * H * 4];
-				fixed (byte* p = pixels) {
-					Assert.True (ctx.ReadPixels (dst, dstInfo, (IntPtr)p, W * 4, 0, 0));
-				}
+				Assert.True (ctx.ReadPixelsSync (dst, dstInfo, pixels, 0, 0));
 				int center = (32 * W + 32) * 4;
 				// LimeGreen is roughly (50, 205, 50). Allow some slack.
 				Assert.True (pixels[center + 1] > 150, $"G={pixels[center + 1]} expected >150");

@@ -65,12 +65,8 @@ namespace SkiaSharp.Tests.Visual
 
 				var rgba = new SKImageInfo (info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
 				var pixels = new byte[rgba.BytesSize];
-				unsafe {
-					fixed (byte* p = pixels) {
-						if (!ctx.ReadPixels (surface, rgba, (IntPtr)p, rgba.RowBytes, 0, 0))
-							throw new InvalidOperationException ("SKGraphiteContext.ReadPixels failed");
-					}
-				}
+				if (!ctx.ReadPixelsSync (surface, rgba, pixels, 0, 0))
+					throw new InvalidOperationException ("SKGraphiteContext.ReadPixelsSync failed");
 				return Task.FromResult (pixels);
 			}
 		}
