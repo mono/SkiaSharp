@@ -67,13 +67,11 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Wrap an externally-allocated <c>WGPUTexture</c>. Width, height,
-		/// format, and usage are queried directly from the texture, which is
-		/// why this method takes only a handle. The wrapper does NOT call
-		/// retain or release on the texture — caller must keep it alive for
-		/// the BackendTexture's lifetime. Any SKSurface/SKImage that wraps the
-		/// BackendTexture <em>does</em> retain it, so once such a Surface is
-		/// built the caller may drop their own reference.
+		/// Wrap an externally-allocated <c>WGPUTexture</c>. Dimensions and format
+		/// are queried directly from the texture. The wrapper does NOT retain
+		/// the texture — caller must keep it alive for the BackendTexture's
+		/// lifetime. Any SKSurface/SKImage built from this BackendTexture
+		/// <em>does</em> retain it, at which point the caller may drop their reference.
 		/// </summary>
 		public static SKGraphiteBackendTexture CreateDawn (IntPtr wgpuTexture)
 		{

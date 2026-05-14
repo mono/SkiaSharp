@@ -6,17 +6,12 @@ using System.Runtime.InteropServices;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Caller-supplied Dawn (WebGPU) handles used to bring up a Graphite Dawn
-	/// context. The resulting <see cref="SKGraphiteContext"/> retains the
-	/// instance/device/queue handles for its lifetime and the caller may drop
-	/// their own references once <see cref="SKGraphiteContext.CreateDawn"/>
-	/// returns.
+	/// Caller-supplied Dawn (WebGPU) handles used to bring up a Graphite Dawn context.
 	///
-	/// On WebAssembly (browser) targets the resulting context runs in
-	/// non-yielding mode: <see cref="SKGraphiteSubmitInfo.Sync"/> = true is
-	/// rejected by <see cref="SKGraphiteContext.Submit(SKGraphiteSubmitInfo)"/>.
-	/// Use <see cref="SKGraphiteContext.CheckAsyncWorkCompletion"/> to drive
-	/// readbacks instead.
+	/// On WebAssembly (browser) targets the resulting context runs in non-yielding
+	/// mode: <see cref="SKGraphiteContext.Submit(SKGraphiteSubmitInfo)"/> rejects
+	/// <see cref="SKGraphiteSubmitInfo.Sync"/> = true; drive readbacks through
+	/// <see cref="SKGraphiteContext.CheckAsyncWorkCompletion"/>.
 	/// </summary>
 	public unsafe class SKGraphiteDawnBackendContext
 	{

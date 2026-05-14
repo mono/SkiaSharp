@@ -40,46 +40,31 @@ namespace SkiaSharp
 			pinnedBackendDelegate = gch;
 		}
 
-		/// <summary>
-		/// Returns true if the requested Graphite backend was compiled into this build of libSkiaSharp.
-		/// Safe to call without first creating a context.
-		/// </summary>
+		/// <summary>True if the requested Graphite backend was compiled into this build of libSkiaSharp.</summary>
 		public static bool IsBackendAvailable (SKGraphiteBackend backend) =>
 			SkiaApi.sk_graphite_backend_is_available (backend);
 
 		/// <summary>
-		/// Create a Graphite context for the Vulkan backend. Returns null when Vulkan/Graphite is
-		/// not built into libSkiaSharp, when the backend context is invalid, or when the underlying
-		/// driver rejected the create call. Use <see cref="IsBackendAvailable"/> to disambiguate.
-		///
-		/// The caller may safely <see cref="IDisposable.Dispose"/> <paramref name="backendContext"/>
-		/// immediately after this returns; its Vulkan handles (instance/device/queue) remain owned
-		/// by the caller for the lifetime of the returned context.
+		/// Create a Graphite context for the Vulkan backend. Returns null when the backend isn't
+		/// available (see <see cref="IsBackendAvailable"/>) or when the driver rejected the call.
+		/// The caller may dispose <paramref name="backendContext"/> as soon as this returns.
 		/// </summary>
 		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext) =>
 			CreateVulkan (backendContext, default);
 
 		/// <summary>
-		/// Create a Graphite context for the Metal backend (macOS / iOS only).
-		/// Returns null when Metal/Graphite is not built into libSkiaSharp,
-		/// when the backend context is invalid, or when the underlying driver
-		/// rejected the create call.
-		///
-		/// The caller may drop <paramref name="backendContext"/> at any time after this returns;
-		/// the MTLDevice/MTLCommandQueue handles remain owned by the caller for the lifetime
-		/// of the returned context.
+		/// Create a Graphite context for the Metal backend (macOS / iOS only). Returns null when
+		/// the backend isn't available (see <see cref="IsBackendAvailable"/>) or when the driver
+		/// rejected the call. The caller may drop <paramref name="backendContext"/> as soon as
+		/// this returns.
 		/// </summary>
 		public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext) =>
 			CreateMetal (backendContext, default);
 
 		/// <summary>
-		/// Create a Graphite context for the Dawn (WebGPU) backend. Returns null
-		/// when Dawn/Graphite is not built into libSkiaSharp, when the backend
-		/// context is invalid, or when Dawn rejected the create call.
-		///
-		/// The caller may drop <paramref name="backendContext"/> at any time after this returns;
-		/// the WGPUInstance/Device/Queue handles remain owned by the caller for the lifetime of
-		/// the returned context.
+		/// Create a Graphite context for the Dawn (WebGPU) backend. Returns null when the backend
+		/// isn't available (see <see cref="IsBackendAvailable"/>) or when Dawn rejected the call.
+		/// The caller may drop <paramref name="backendContext"/> as soon as this returns.
 		/// </summary>
 		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext) =>
 			CreateDawn (backendContext, default);
@@ -205,10 +190,8 @@ namespace SkiaSharp
 		/// <see cref="SKGraphiteImageProvider.CreateDefault"/> for an upload-with-LRU-cache
 		/// policy, or subclass <see cref="SKGraphiteImageProvider"/> for custom caching.
 		///
-		/// On a successful return the recorder takes ownership of <paramref name="imageProvider"/>;
-		/// calling <see cref="IDisposable.Dispose"/> on it becomes a no-op. Do NOT share a single
-		/// <see cref="SKGraphiteImageProvider"/> instance across multiple recorders — construct
-		/// a fresh provider per recorder.
+		/// On success the recorder takes ownership of <paramref name="imageProvider"/>.
+		/// Do NOT share one provider across multiple recorders — construct a fresh one per recorder.
 		/// </summary>
 		public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes, SKGraphiteImageProvider imageProvider)
 		{
@@ -226,8 +209,8 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Submit a recording for execution. Returns the status verbatim from the underlying
-		/// Graphite engine — non-success values are not exceptions; callers branch on the enum.
+		/// Submit a recording for execution. Non-success values are returned verbatim,
+		/// not thrown — callers branch on the enum.
 		/// </summary>
 		public SKGraphiteInsertStatus InsertRecording (SKGraphiteRecording recording)
 		{
@@ -253,11 +236,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Submit pending GPU work with explicit options. Returns false if submission failed.
 		///
-		/// <para>Setting <see cref="SKGraphiteSubmitInfo.Sync"/> to true blocks the calling
-		/// thread until the GPU has finished. Not supported on contexts created in a
-		/// non-yielding (browser/WASM) environment — calling Submit with <c>Sync = true</c>
-		/// on such a context throws <see cref="InvalidOperationException"/>. Drive readbacks
-		/// with <see cref="CheckAsyncWorkCompletion"/> instead.</para>
+		/// <para><see cref="SKGraphiteSubmitInfo.Sync"/> = true blocks until the GPU is done.
+		/// Throws <see cref="InvalidOperationException"/> on contexts created in a non-yielding
+		/// (browser/WASM) environment; use <see cref="CheckAsyncWorkCompletion"/> instead.</para>
 		/// </summary>
 		public bool Submit (SKGraphiteSubmitInfo submitInfo)
 		{
@@ -281,10 +262,8 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Schedule a backend texture (created by <see cref="SKGraphiteRecorder.CreateBackendTexture"/>
-		/// or wrapped from a caller-allocated GPU resource) for release through the context.
-		/// Equivalent to <see cref="SKGraphiteRecorder.DeleteBackendTexture"/>; use whichever
-		/// matches your code's existing recorder/context split.
+		/// Schedule a backend texture for release. Equivalent to
+		/// <see cref="SKGraphiteRecorder.DeleteBackendTexture"/>.
 		/// </summary>
 		public void DeleteBackendTexture (SKGraphiteBackendTexture backendTexture)
 		{
@@ -294,25 +273,18 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Drives any pending async readback or finished-callback work. Callbacks fire on the
-		/// thread that calls this method.
+		/// Drive pending async readback / finished callbacks. Callbacks fire on the calling thread.
 		/// </summary>
 		public void CheckAsyncWorkCompletion () =>
 			SkiaApi.sk_graphite_context_check_async_work_completion (Handle);
 
 		/// <summary>
-		/// Kick off an async pixel readback from a Graphite-backed surface. <paramref name="callback"/>
-		/// fires later, on whatever thread next calls <see cref="CheckAsyncWorkCompletion"/> (or
-		/// <see cref="Submit(SKGraphiteSubmitInfo)"/> with <c>Sync = true</c>). The callback receives
-		/// a result whose plane pointers are only valid for the duration of the callback —
-		/// copy out anything you need before returning. On failure the callback fires with
-		/// <c>null</c>.
-		///
-		/// The caller is responsible for driving completion (Submit + CheckAsyncWorkCompletion,
-		/// or some other tick). This method does NOT block.
+		/// Kick off an async pixel readback. <paramref name="callback"/> fires on whichever thread
+		/// next drives completion via <see cref="CheckAsyncWorkCompletion"/> (or
+		/// <see cref="Submit(SKGraphiteSubmitInfo)"/> with <c>Sync = true</c>), with <c>null</c>
+		/// on failure. The caller drives completion themselves — this method does not block.
 		/// </summary>
-		/// <param name="dstInfo">Target pixel format. RGBA_8888/Premul is supported on every backend;
-		///   format conversions follow Skia's standard rules.</param>
+		/// <param name="dstInfo">Target pixel format. RGBA_8888/Premul is supported on every backend.</param>
 		/// <param name="srcRect">Region of <paramref name="surface"/> to read.</param>
 		public void RequestReadPixels (
 			SKSurface surface,
