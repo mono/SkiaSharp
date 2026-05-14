@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -10,36 +11,49 @@ namespace SkiaSharp
 #endif
 
 	/// <summary>
+	/// Convert <paramref name="image"/> (raster or lazy) to a Graphite-backed image suitable for
+	/// drawing on <paramref name="recorder"/>, or return null to drop the draw. The returned
+	/// SKImage's reference is consumed by Skia.
+	/// </summary>
+	public delegate SKImage SKGraphiteFindOrCreateImageDelegate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped);
+
+	/// <summary>
 	/// Bridges Graphite's non-Graphite-SkImage → Graphite-backed-SkImage hook to a managed
-	/// override. Pass an instance to
+	/// callback. Pass an instance to
 	/// <see cref="SKGraphiteContext.CreateRecorder(long, SKGraphiteImageProvider)"/>.
 	///
 	/// LIFETIME: one provider per recorder. Ownership transfers to the recorder on success.
 	/// Do NOT share between recorders — construct a fresh one each time (see <see cref="CreateDefault"/>).
 	///
-	/// THREADING: <see cref="FindOrCreate"/> runs on the recorder's owning thread, not
-	/// necessarily the thread that constructed the provider — implementations must be
-	/// thread-safe around any caches they maintain.
+	/// THREADING: the callback runs on the recorder's owning thread, not necessarily the
+	/// thread that constructed the provider — implementations must be thread-safe around
+	/// any caches they maintain.
 	///
-	/// EXCEPTIONS: never throw out of <see cref="FindOrCreate"/>; the FFI boundary catches
-	/// and converts to a null return (draw dropped).
+	/// EXCEPTIONS: never throw out of the callback; the FFI boundary catches and converts
+	/// to a null return (draw dropped).
 	/// </summary>
-	public unsafe abstract class SKGraphiteImageProvider : IDisposable
+	public sealed unsafe class SKGraphiteImageProvider : IDisposable
 	{
 		// Internal: signature the proxy expects. Returning IntPtr.Zero drops the draw.
-		internal delegate IntPtr FindOrCreateDelegate (IntPtr recorderHandle, IntPtr imageHandle, bool mipmapped);
+		internal delegate IntPtr FindOrCreateProxy (IntPtr recorderHandle, IntPtr imageHandle, bool mipmapped);
 
-		private FindOrCreateDelegate proxyDelegate;
+		private readonly SKGraphiteFindOrCreateImageDelegate findOrCreate;
+		private readonly Action onDispose;
+		private FindOrCreateProxy proxyDelegate;
 		private GCHandle delegateHandle;
 		private IntPtr nativeProvider;
 		private bool ownershipTransferred;
 
-		protected SKGraphiteImageProvider ()
+		/// <summary>
+		/// Build a provider from a callback. <paramref name="onDispose"/>, if supplied, runs
+		/// once when the provider is disposed (typically together with the owning recorder)
+		/// — use it to release any cached resources the callback closure built up.
+		/// </summary>
+		public SKGraphiteImageProvider (SKGraphiteFindOrCreateImageDelegate findOrCreate, Action onDispose = null)
 		{
-			// Capture a closure over `this` so the unmanaged callback ends up at the
-			// virtual override. We allocate the GCHandle eagerly in the constructor
-			// rather than lazily so SKGraphiteContextOptions can read Handle without
-			// side effects.
+			this.findOrCreate = findOrCreate ?? throw new ArgumentNullException (nameof (findOrCreate));
+			this.onDispose = onDispose;
+
 			proxyDelegate = (recorderHandle, imageHandle, mipmapped) => InvokeFindOrCreate (recorderHandle, imageHandle, mipmapped);
 			DelegateProxies.Create (proxyDelegate, out delegateHandle, out var ctx);
 
@@ -60,12 +74,6 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Convert <paramref name="image"/> to a Graphite-backed image, or return null to drop
-		/// the draw. The returned SKImage's reference is consumed by Skia.
-		/// </summary>
-		public abstract SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped);
-
 		private IntPtr InvokeFindOrCreate (IntPtr recorderHandle, IntPtr imageHandle, bool mipmapped)
 		{
 			if (recorderHandle == IntPtr.Zero || imageHandle == IntPtr.Zero)
@@ -78,7 +86,7 @@ namespace SkiaSharp
 			// out of a Skia factory but wrong for borrowed handles like these.)
 			var recorder = SKObject.GetOrAddObject<SKGraphiteRecorder> (recorderHandle, false, false, (h, o) => new SKGraphiteRecorder (h, o));
 			var image    = SKObject.GetOrAddObject<SKImage>            (imageHandle,    false, false, (h, o) => new SKImage (h, o));
-			var result   = FindOrCreate (recorder, image, mipmapped);
+			var result   = findOrCreate (recorder, image, mipmapped);
 			if (result == null) return IntPtr.Zero;
 			// Skia consumes the +1 reference on `result`. Detach the managed wrapper
 			// from the underlying native handle so Dispose/finalize does NOT call
@@ -90,11 +98,10 @@ namespace SkiaSharp
 
 		internal IntPtr Handle => nativeProvider;
 
-		// Called by SKGraphiteContext after a successful CreateXxx — at that point
-		// the native context wrapper consumed the sk_graphite_image_provider_t* and
-		// took its own ref on the underlying ImageProvider. Our wrapper (and the
-		// GCHandle pinning the user's delegate) must stay alive for as long as the
-		// context lives, so we DON'T free the GCHandle here.
+		// Called by SKGraphiteContext after a successful CreateXxx — the recorder took its
+		// own ref on the underlying ImageProvider. Our wrapper (and the GCHandle pinning
+		// the user's delegate) must stay alive for as long as the recorder lives, so we
+		// DON'T free the GCHandle here.
 		internal void TransferOwnership () => ownershipTransferred = true;
 
 		// Called by SKGraphiteRecorder.DisposeNative BEFORE the native recorder is
@@ -103,7 +110,7 @@ namespace SkiaSharp
 		// releasing them after destruction is undefined behavior.
 		internal void DrainCacheBeforeRecorderDispose ()
 		{
-			DisposeCachedResources ();
+			onDispose?.Invoke ();
 		}
 
 		// Called by SKGraphiteRecorder.DisposeNative AFTER the native recorder has
@@ -118,23 +125,17 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>Hook for subclasses to release cached resources at provider disposal.</summary>
-		protected virtual void DisposeCachedResources ()
-		{
-		}
-
 		public void Dispose ()
 		{
-			DisposeCachedResources ();
-
 			if (ownershipTransferred) {
-				// Context owns the native side now; freeing it here would double-free.
-				// The GCHandle stays pinned until the context is disposed, which
-				// will call FreeAfterContextDispose for us.
+				// Recorder owns the native side now; freeing it here would double-free.
+				// The GCHandle stays pinned until the recorder is disposed, which
+				// will call onDispose + FreeAfterContextDispose for us.
 				GC.SuppressFinalize (this);
 				return;
 			}
 
+			onDispose?.Invoke ();
 			if (nativeProvider != IntPtr.Zero) {
 				SkiaApi.sk_graphite_image_provider_delete (nativeProvider);
 				nativeProvider = IntPtr.Zero;
@@ -148,12 +149,17 @@ namespace SkiaSharp
 
 		/// <summary>
 		/// A fresh default provider: uploads each unique source SkImage to a Graphite-backed
-		/// texture exactly once, LRU-cached at 256 entries. Subclass
-		/// <see cref="SKGraphiteImageProvider"/> for a different eviction policy.
+		/// texture exactly once, LRU-cached at 256 entries. Construct a custom provider via
+		/// <see cref="SKGraphiteImageProvider(SKGraphiteFindOrCreateImageDelegate, Action)"/>
+		/// for a different eviction policy.
 		/// </summary>
-		public static SKGraphiteImageProvider CreateDefault () => new DefaultProvider ();
+		public static SKGraphiteImageProvider CreateDefault ()
+		{
+			var cache = new DefaultCache ();
+			return new SKGraphiteImageProvider (cache.FindOrCreate, cache.Dispose);
+		}
 
-		private sealed class DefaultProvider : SKGraphiteImageProvider
+		private sealed class DefaultCache
 		{
 			// LRU cap — keeps memory bounded when callers (like Uno) decode fresh
 			// SkImages per frame instead of reusing the same SkImage object. Without
@@ -164,16 +170,18 @@ namespace SkiaSharp
 			// lookup we bump the ref again (Skia consumes one when we return) and
 			// hand back a fresh wrapper. Cache refs are released either on eviction
 			// or on provider disposal.
-			//
-			// Keys pack (uniqueId : 32, mipmapped : 1) into a long.
 			private readonly object _cacheLock = new object ();
-			private readonly System.Collections.Generic.LinkedList<long> _lruOrder = new ();
-			private readonly System.Collections.Generic.Dictionary<long, (System.Collections.Generic.LinkedListNode<long> node, IntPtr handle)> _cache = new ();
+			private readonly LinkedList<(uint UniqueId, bool Mipmapped)> _lruOrder = new ();
+			private readonly Dictionary<(uint UniqueId, bool Mipmapped), (LinkedListNode<(uint UniqueId, bool Mipmapped)> node, IntPtr handle)> _cache = new ();
 
-			public override SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped)
+			public SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped)
 			{
-				long key = ((long)image.UniqueId << 1) | (mipmapped ? 1L : 0L);
+				var key = (image.UniqueId, mipmapped);
 
+				// Hold the lock across the upload so concurrent misses for the same key
+				// don't each pay a redundant ToTextureImage. FindOrCreate is expected to
+				// run on the recorder's owning thread, so contention with unrelated keys
+				// should be rare in practice.
 				lock (_cacheLock) {
 					if (_cache.TryGetValue (key, out var entry)) {
 						// Hit — promote to MRU, bump native ref, return fresh wrapper.
@@ -182,21 +190,9 @@ namespace SkiaSharp
 						SkiaApi.sk_refcnt_safe_ref (entry.handle);
 						return SKImage.GetObject (entry.handle);
 					}
-				}
 
-				// Miss — upload outside the lock so concurrent draws don't serialize.
-				var uploaded = SKImage.ToTextureImage (recorder, image, mipmapped);
-				if (uploaded == null) return null;
-
-				lock (_cacheLock) {
-					if (_cache.TryGetValue (key, out var winner)) {
-						// Lost the upload race. Drop ours, return a wrapper to the winner.
-						uploaded.Dispose ();
-						_lruOrder.Remove (winner.node);
-						_lruOrder.AddFirst (winner.node);
-						SkiaApi.sk_refcnt_safe_ref (winner.handle);
-						return SKImage.GetObject (winner.handle);
-					}
+					var uploaded = SKImage.ToTextureImage (recorder, image, mipmapped);
+					if (uploaded == null) return null;
 
 					// Evict LRU entries until we're under cap. Each eviction drops one
 					// ref; if Skia is still drawing with the evicted image it has its
@@ -220,7 +216,7 @@ namespace SkiaSharp
 				}
 			}
 
-			protected override void DisposeCachedResources ()
+			public void Dispose ()
 			{
 				lock (_cacheLock) {
 					foreach (var entry in _cache.Values) {
