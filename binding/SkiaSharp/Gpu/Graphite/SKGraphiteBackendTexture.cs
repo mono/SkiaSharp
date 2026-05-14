@@ -49,8 +49,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Wrap an externally-allocated id&lt;MTLTexture&gt;. The wrapper does
 		/// NOT call retain or release on the passed-in texture — caller must
-		/// keep it alive for the BackendTexture's lifetime (per upstream Skia's
-		/// <c>BackendTextures::MakeMetal</c> contract).
+		/// keep it alive for the BackendTexture's lifetime.
 		/// </summary>
 		public static SKGraphiteBackendTexture CreateMetal (
 			int width, int height,
@@ -69,13 +68,12 @@ namespace SkiaSharp
 
 		/// <summary>
 		/// Wrap an externally-allocated <c>WGPUTexture</c>. Width, height,
-		/// format, usage etc. are queried directly from the texture, which is
+		/// format, and usage are queried directly from the texture, which is
 		/// why this method takes only a handle. The wrapper does NOT call
 		/// retain or release on the texture — caller must keep it alive for
-		/// the BackendTexture's lifetime (per upstream Skia's
-		/// <c>BackendTextures::MakeDawn</c> contract). Any SKSurface/SKImage
-		/// that wraps the BackendTexture <em>does</em> retain it, so once such
-		/// a Surface is built the caller may drop their own reference.
+		/// the BackendTexture's lifetime. Any SKSurface/SKImage that wraps the
+		/// BackendTexture <em>does</em> retain it, so once such a Surface is
+		/// built the caller may drop their own reference.
 		/// </summary>
 		public static SKGraphiteBackendTexture CreateDawn (IntPtr wgpuTexture)
 		{

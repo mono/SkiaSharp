@@ -8,12 +8,9 @@ namespace SkiaSharp
 	/// Caller-supplied Metal handles used to bring up a Graphite Metal context.
 	/// Both <see cref="MtlDevice"/> and <see cref="MtlQueue"/> must be valid
 	/// CFTypeRef-compatible Objective-C handles (id&lt;MTLDevice&gt; and
-	/// id&lt;MTLCommandQueue&gt;); the SkiaSharp shim CFRetains them inside
-	/// <see cref="SKGraphiteContext.CreateMetal"/> and the resulting
-	/// <see cref="SKGraphiteContext"/> keeps its own retained references (held
-	/// inside the Skia-side <c>MtlBackendContext</c>'s sk_cfp fields).
-	///
-	/// Pure data carrier — no native resources held on the managed side.
+	/// id&lt;MTLCommandQueue&gt;); the resulting <see cref="SKGraphiteContext"/>
+	/// retains them for its lifetime and the caller may drop their own references
+	/// once <see cref="SKGraphiteContext.CreateMetal"/> returns.
 	/// </summary>
 	public unsafe class SKGraphiteMtlBackendContext
 	{

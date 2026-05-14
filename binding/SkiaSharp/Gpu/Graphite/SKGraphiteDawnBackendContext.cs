@@ -7,22 +7,16 @@ namespace SkiaSharp
 {
 	/// <summary>
 	/// Caller-supplied Dawn (WebGPU) handles used to bring up a Graphite Dawn
-	/// context. The shim AddRef's each handle inside
-	/// <see cref="SKGraphiteContext.CreateDawn"/>; Skia takes its own refs on
-	/// success, so the caller's references are unaffected and may be dropped
-	/// as soon as that call returns.
+	/// context. The resulting <see cref="SKGraphiteContext"/> retains the
+	/// instance/device/queue handles for its lifetime and the caller may drop
+	/// their own references once <see cref="SKGraphiteContext.CreateDawn"/>
+	/// returns.
 	///
-	/// On WebAssembly (browser) targets the shim runs in "non-yielding" mode
-	/// automatically — Emscripten without -s ASYNCIFY cannot pump the Dawn
-	/// event loop from inside a C# stack frame. The trade-off is that
-	/// <see cref="SKGraphiteSubmitInfo.Sync"/> = true is rejected by
-	/// <see cref="SKGraphiteContext.Submit(SKGraphiteSubmitInfo)"/>; use
-	/// <see cref="SKGraphiteContext.CheckAsyncWorkCompletion"/> on a JS
-	/// timer tick to drive readbacks instead. On every other platform the
-	/// shim installs <c>DawnNativeProcessEventsFunction</c> and the sync
-	/// path works as expected.
-	///
-	/// Pure data carrier — no native resources held on the managed side.
+	/// On WebAssembly (browser) targets the resulting context runs in
+	/// non-yielding mode: <see cref="SKGraphiteSubmitInfo.Sync"/> = true is
+	/// rejected by <see cref="SKGraphiteContext.Submit(SKGraphiteSubmitInfo)"/>.
+	/// Use <see cref="SKGraphiteContext.CheckAsyncWorkCompletion"/> to drive
+	/// readbacks instead.
 	/// </summary>
 	public unsafe class SKGraphiteDawnBackendContext
 	{
