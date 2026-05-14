@@ -5,9 +5,9 @@ using System;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// An immutable, replayable command list produced by <see cref="SKGraphiteRecorder.Snap"/>.
+	/// An immutable command list produced by <see cref="SKGraphiteRecorder.Snap"/>.
 	/// Insert via <see cref="SKGraphiteContext.InsertRecording(SKGraphiteRecording)"/> to execute
-	/// on the GPU; reusing a recording after insertion is undefined behavior in upstream Skia.
+	/// on the GPU; reusing a recording after insertion is undefined behavior.
 	/// </summary>
 	public unsafe class SKGraphiteRecording : SKObject
 	{

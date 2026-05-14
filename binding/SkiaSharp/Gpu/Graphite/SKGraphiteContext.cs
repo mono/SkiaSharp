@@ -52,39 +52,34 @@ namespace SkiaSharp
 		/// not built into libSkiaSharp, when the backend context is invalid, or when the underlying
 		/// driver rejected the create call. Use <see cref="IsBackendAvailable"/> to disambiguate.
 		///
-		/// On success, the returned context takes ownership of the GetProc delegate's GCHandle and
-		/// the native backend-context wrapper. The caller may safely <see cref="IDisposable.Dispose"/>
-		/// <paramref name="backendContext"/> immediately after this returns; its Vulkan handles
-		/// (instance/device/queue) remain owned by the caller.
+		/// The caller may safely <see cref="IDisposable.Dispose"/> <paramref name="backendContext"/>
+		/// immediately after this returns; its Vulkan handles (instance/device/queue) remain owned
+		/// by the caller for the lifetime of the returned context.
 		/// </summary>
 		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext) =>
 			CreateVulkan (backendContext, default);
 
 		/// <summary>
 		/// Create a Graphite context for the Metal backend (macOS / iOS only).
-		/// Returns null when Metal/Graphite is not built into this libSkiaSharp,
+		/// Returns null when Metal/Graphite is not built into libSkiaSharp,
 		/// when the backend context is invalid, or when the underlying driver
 		/// rejected the create call.
 		///
-		/// Metal has no GetProc callback, so there is no GCHandle ownership
-		/// transfer (unlike the Vulkan path). The caller may dispose
-		/// <paramref name="backendContext"/> at any time after this returns —
-		/// Skia retains its own references to the MTLDevice/MTLCommandQueue
-		/// inside the resulting SKGraphiteContext.
+		/// The caller may drop <paramref name="backendContext"/> at any time after this returns;
+		/// the MTLDevice/MTLCommandQueue handles remain owned by the caller for the lifetime
+		/// of the returned context.
 		/// </summary>
 		public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext) =>
 			CreateMetal (backendContext, default);
 
 		/// <summary>
 		/// Create a Graphite context for the Dawn (WebGPU) backend. Returns null
-		/// when Dawn/Graphite is not built into this libSkiaSharp, when the
-		/// backend context is invalid, or when Dawn rejected the create call.
+		/// when Dawn/Graphite is not built into libSkiaSharp, when the backend
+		/// context is invalid, or when Dawn rejected the create call.
 		///
-		/// As with the Metal path, no GCHandle ownership transfer happens here
-		/// (no GetProc callback). Skia internally AddRef's the WGPU instance/
-		/// device/queue handles when the context is constructed, so the caller
-		/// may safely Dispose <paramref name="backendContext"/> at any point
-		/// after this returns.
+		/// The caller may drop <paramref name="backendContext"/> at any time after this returns;
+		/// the WGPUInstance/Device/Queue handles remain owned by the caller for the lifetime of
+		/// the returned context.
 		/// </summary>
 		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext) =>
 			CreateDawn (backendContext, default);
@@ -210,12 +205,10 @@ namespace SkiaSharp
 		/// <see cref="SKGraphiteImageProvider.CreateDefault"/> for an upload-with-LRU-cache
 		/// policy, or subclass <see cref="SKGraphiteImageProvider"/> for custom caching.
 		///
-		/// On a successful return, ownership of <paramref name="imageProvider"/> transfers
-		/// to the recorder; calling <see cref="IDisposable.Dispose"/> on it becomes a
-		/// no-op. Do NOT share a single <see cref="SKGraphiteImageProvider"/> instance
-		/// across multiple recorders — the managed wrapper holds a one-shot GCHandle
-		/// that the first owning recorder will free, leaving subsequent recorders to
-		/// dispatch into freed memory. Construct a fresh provider per recorder.
+		/// On a successful return the recorder takes ownership of <paramref name="imageProvider"/>;
+		/// calling <see cref="IDisposable.Dispose"/> on it becomes a no-op. Do NOT share a single
+		/// <see cref="SKGraphiteImageProvider"/> instance across multiple recorders — construct
+		/// a fresh provider per recorder.
 		/// </summary>
 		public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes, SKGraphiteImageProvider imageProvider)
 		{
@@ -261,12 +254,10 @@ namespace SkiaSharp
 		/// Submit pending GPU work with explicit options. Returns false if submission failed.
 		///
 		/// <para>Setting <see cref="SKGraphiteSubmitInfo.Sync"/> to true blocks the calling
-		/// thread until the GPU has finished. This is unsupported on Dawn contexts created
-		/// in a non-yielding (browser/WASM) environment — Dawn's event loop cannot be pumped
-		/// from inside a managed stack frame, so the wait would deadlock. Calling this with
-		/// <c>Sync = true</c> on such a context throws <see cref="InvalidOperationException"/>.
-		/// Drive readbacks with <see cref="CheckAsyncWorkCompletion"/> on a JS timer tick
-		/// instead.</para>
+		/// thread until the GPU has finished. Not supported on contexts created in a
+		/// non-yielding (browser/WASM) environment — calling Submit with <c>Sync = true</c>
+		/// on such a context throws <see cref="InvalidOperationException"/>. Drive readbacks
+		/// with <see cref="CheckAsyncWorkCompletion"/> instead.</para>
 		/// </summary>
 		public bool Submit (SKGraphiteSubmitInfo submitInfo)
 		{
@@ -310,16 +301,13 @@ namespace SkiaSharp
 			SkiaApi.sk_graphite_context_check_async_work_completion (Handle);
 
 		/// <summary>
-		/// Synchronous pixel readback from a Graphite-backed surface.
+		/// Synchronous pixel readback from a Graphite-backed surface. Use this in place of
+		/// <see cref="SKSurface.ReadPixels(SKImageInfo, IntPtr, int, int, int)"/>, which is
+		/// unavailable for Graphite-backed surfaces in production builds.
 		///
-		/// Required for Graphite — <see cref="SKSurface.ReadPixels(SKImageInfo, IntPtr, int, int, int)"/>
-		/// is gated on <c>GPU_TEST_UTILS</c> in upstream Skia and returns false in production builds.
-		/// This method composes the supported async path (Context::asyncRescaleAndReadPixels +
-		/// Context::checkAsyncWorkCompletion) into a blocking call.
-		///
-		/// THREADING: Blocks the calling thread on a tight polling loop until the GPU readback
-		/// completes (cost roughly equivalent to glFinish). Don't call from a render thread that
-		/// needs to keep doing GPU work in parallel.
+		/// THREADING: Blocks the calling thread until the GPU readback completes (cost
+		/// roughly equivalent to glFinish). Don't call from a render thread that needs to
+		/// keep doing GPU work in parallel.
 		/// </summary>
 		/// <param name="dstPixels">Caller-owned buffer at least <paramref name="dstRowBytes"/> *
 		///   <paramref name="dstInfo"/>.Height bytes. RGBA_8888/Premul are supported on every backend;
