@@ -2,6 +2,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace SkiaSharp
 {
@@ -14,7 +15,7 @@ namespace SkiaSharp
 	/// Graphite Vulkan context. The Vulkan handles are never freed by SkiaSharp — caller
 	/// retains ownership for the lifetime of the resulting <see cref="SKGraphiteContext"/>.
 	/// </summary>
-	public unsafe class SKGraphiteVkBackendContext : IDisposable
+	public sealed unsafe class SKGraphiteVkBackendContext : IDisposable
 	{
 		private SKGraphiteVkGetProcedureAddressDelegate getProc;
 		private GCHandle getProcHandle;
@@ -89,20 +90,26 @@ namespace SkiaSharp
 			};
 		}
 
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposing) {
-				if (getProcHandle.IsAllocated) {
-					getProcHandle.Free ();
-					getProcHandle = default;
-				}
-			}
-		}
+		// 0 = not disposed, 1 = disposed. Interlocked.Exchange makes the
+		// "claim ownership of the cleanup" step atomic, so a racing Dispose +
+		// finalizer can't both fall through to GCHandle.Free.
+		private int disposed;
 
 		public void Dispose ()
 		{
-			Dispose (disposing: true);
+			DisposeCore ();
 			GC.SuppressFinalize (this);
 		}
+
+		private void DisposeCore ()
+		{
+			if (Interlocked.Exchange (ref disposed, 1) != 0)
+				return;
+
+			if (getProcHandle.IsAllocated)
+				getProcHandle.Free ();
+		}
+
+		~SKGraphiteVkBackendContext () => DisposeCore ();
 	}
 }
