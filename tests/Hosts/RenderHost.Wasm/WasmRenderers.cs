@@ -90,7 +90,6 @@ internal static partial class WasmRenderers
 				WgpuInstance = (IntPtr)handles.GetPropertyAsInt32 ("instanceId"),
 				WgpuDevice   = (IntPtr)handles.GetPropertyAsInt32 ("deviceId"),
 				WgpuQueue    = (IntPtr)handles.GetPropertyAsInt32 ("queueId"),
-				NonYielding  = true,
 			};
 			s_ctx = SKGraphiteContext.CreateDawn (s_bc)
 				?? throw new InvalidOperationException ("SKGraphiteContext.CreateDawn returned null");

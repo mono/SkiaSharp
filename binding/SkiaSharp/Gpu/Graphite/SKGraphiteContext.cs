@@ -23,6 +23,12 @@ namespace SkiaSharp
 		// is deleted (which tears down the lambda).
 		private GCHandle pinnedBackendDelegate;
 
+		// Set in CreateDawn when the backend context detected a non-yielding (WASM/browser)
+		// environment. Submit(Sync=true) is rejected up-front for these contexts because Dawn
+		// cannot pump its event loop from inside a managed call frame and the Skia-side wait
+		// would deadlock — see SKGraphiteDawnBackendContext remarks.
+		private bool isNonYielding;
+
 		internal SKGraphiteContext (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -99,7 +105,9 @@ namespace SkiaSharp
 				return null;
 
 			backendContext.ReleaseNativeHandle ();
-			return new SKGraphiteContext (handle, true);
+			return new SKGraphiteContext (handle, true) {
+				isNonYielding = backendContext.IsNonYielding,
+			};
 		}
 
 		/// <inheritdoc cref="CreateMetal(SKGraphiteMtlBackendContext)"/>
@@ -267,9 +275,25 @@ namespace SkiaSharp
 		public bool Submit () =>
 			SkiaApi.sk_graphite_context_submit (Handle, null);
 
-		/// <inheritdoc cref="Submit()"/>
-		public bool Submit (SKGraphiteSubmitInfo submitInfo) =>
-			SkiaApi.sk_graphite_context_submit (Handle, &submitInfo);
+		/// <summary>
+		/// Submit pending GPU work with explicit options. Returns false if submission failed.
+		///
+		/// <para>Setting <see cref="SKGraphiteSubmitInfo.Sync"/> to true blocks the calling
+		/// thread until the GPU has finished. This is unsupported on Dawn contexts created
+		/// in a non-yielding (browser/WASM) environment — Dawn's event loop cannot be pumped
+		/// from inside a managed stack frame, so the wait would deadlock. Calling this with
+		/// <c>Sync = true</c> on such a context throws <see cref="InvalidOperationException"/>.
+		/// Drive readbacks with <see cref="CheckAsyncWorkCompletion"/> on a JS timer tick
+		/// instead.</para>
+		/// </summary>
+		public bool Submit (SKGraphiteSubmitInfo submitInfo)
+		{
+			if (submitInfo.Sync && isNonYielding)
+				throw new InvalidOperationException (
+					"SKGraphiteSubmitInfo.Sync = true is not supported in this environment. " +
+					"Submit without sync and drive readbacks via CheckAsyncWorkCompletion instead.");
+			return SkiaApi.sk_graphite_context_submit (Handle, &submitInfo);
+		}
 
 		// Resource management
 

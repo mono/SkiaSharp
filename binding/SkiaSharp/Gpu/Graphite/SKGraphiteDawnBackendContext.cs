@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -12,9 +13,21 @@ namespace SkiaSharp
 	/// As with <see cref="SKGraphiteMtlBackendContext"/>, there is no GetProc
 	/// callback and no GCHandle ownership transfer; the caller may dispose
 	/// this object any time after <see cref="SKGraphiteContext.CreateDawn"/>.
+	///
+	/// On WebAssembly (browser) targets the shim runs in "non-yielding" mode
+	/// automatically — Emscripten without -s ASYNCIFY cannot pump the Dawn
+	/// event loop from inside a C# stack frame. The trade-off is that
+	/// <see cref="SKGraphiteSubmitInfo.Sync"/> = true is rejected by
+	/// <see cref="SKGraphiteContext.Submit(SKGraphiteSubmitInfo)"/>; use
+	/// <see cref="SKGraphiteContext.CheckAsyncWorkCompletion"/> on a JS
+	/// timer tick to drive readbacks instead. On every other platform the
+	/// shim installs <c>DawnNativeProcessEventsFunction</c> and the sync
+	/// path works as expected.
 	/// </summary>
 	public unsafe class SKGraphiteDawnBackendContext : IDisposable
 	{
+		private static readonly OSPlatform Browser = OSPlatform.Create ("BROWSER");
+
 		private IntPtr nativeBackendContext;
 
 		/// <summary>WGPUInstance handle.</summary>
@@ -26,14 +39,11 @@ namespace SkiaSharp
 		/// <summary>WGPUQueue handle.</summary>
 		public IntPtr WgpuQueue    { get; set; }
 
-		/// <summary>
-		/// When true, no DawnTickFunction is installed (Skia's "non-yielding"
-		/// mode). Required when running over Emscripten without -s ASYNCIFY,
-		/// at the cost of disallowing <c>SKGraphiteSubmitInfo.Sync = true</c>
-		/// on submit. Defaults to false (the shim installs
-		/// <c>DawnNativeProcessEventsFunction</c>).
-		/// </summary>
-		public bool NonYielding   { get; set; }
+		// True only on browser/WASM where the Dawn event loop cannot be
+		// pumped from inside a managed call stack. Not user-settable —
+		// see the class-level remarks for the constraint this imposes
+		// on Submit(Sync=true).
+		internal bool IsNonYielding => RuntimeInformation.IsOSPlatform (Browser);
 
 		internal IntPtr Handle {
 			get {
@@ -48,7 +58,7 @@ namespace SkiaSharp
 						Instance    = (void*)WgpuInstance,
 						Device      = (void*)WgpuDevice,
 						Queue       = (void*)WgpuQueue,
-						NonYielding = NonYielding,
+						NonYielding = IsNonYielding,
 					};
 					nativeBackendContext = SkiaApi.sk_graphite_dawn_backend_context_new (&native);
 				}

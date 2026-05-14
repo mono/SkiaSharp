@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -65,6 +66,40 @@ namespace SkiaSharp.Tests.Graphite
 			Assert.Equal (255, pixels[0]);
 			Assert.Equal (255, pixels[1]);
 			Assert.Equal (255, pixels[2]);
+		}
+
+		[SkippableFact]
+		public void Submit_WithSync_ThrowsOnNonYieldingContext ()
+		{
+			// SKGraphiteContext auto-flags itself non-yielding when its backend is Dawn-in-browser
+			// (Emscripten without ASYNCIFY can't pump the Dawn event loop from a managed stack).
+			// We can't easily build a real Dawn-in-browser context from here, so flip the private
+			// flag via reflection on an already-running Vulkan context. The Submit-side guard
+			// lives in managed code and doesn't care about the actual backend.
+			Skip.IfNot (IsLinux, "Lavapipe smoke is Linux/CI only.");
+			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
+				"Graphite/Vulkan not available in this libSkiaSharp build.");
+
+			using var fixture = LavapipeFixture.TryCreate ();
+			Skip.IfNot (fixture.IsAvailable, $"Lavapipe unavailable: {fixture.FailureReason}");
+
+			using var ctx = SKGraphiteContext.CreateVulkan (fixture.BackendContext);
+			Assert.NotNull (ctx);
+
+			var field = typeof (SKGraphiteContext).GetField ("isNonYielding",
+				BindingFlags.Instance | BindingFlags.NonPublic);
+			Assert.NotNull (field);
+			field.SetValue (ctx, true);
+
+			// Sync = true on a non-yielding context must throw before reaching native code.
+			var ex = Assert.Throws<InvalidOperationException> (() =>
+				ctx.Submit (new SKGraphiteSubmitInfo { Sync = true }));
+			Assert.Contains ("not supported in this environment", ex.Message);
+
+			// Sync = false stays a normal call (returns true; no pending work, no failure).
+			Assert.True (ctx.Submit (new SKGraphiteSubmitInfo { Sync = false }));
+			// Parameterless Submit() likewise unaffected.
+			Assert.True (ctx.Submit ());
 		}
 
 		[SkippableFact]
