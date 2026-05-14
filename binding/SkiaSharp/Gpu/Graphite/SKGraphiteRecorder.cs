@@ -64,11 +64,9 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Allocate a fresh Skia-managed GPU texture matching the supplied
-		/// <paramref name="info"/>. Pair the resulting <see cref="SKGraphiteBackendTexture"/>
-		/// with <see cref="DeleteBackendTexture"/> (here on the recorder, OR
-		/// <see cref="SKGraphiteContext.DeleteBackendTexture"/> on the context) so
-		/// Skia releases the underlying GPU resource. Returns null on failure.
+		/// Allocate a fresh Skia-managed GPU texture. Pair the result with
+		/// <see cref="DeleteBackendTexture"/> (or <see cref="SKGraphiteContext.DeleteBackendTexture"/>).
+		/// Returns null on failure.
 		/// </summary>
 		public SKGraphiteBackendTexture CreateBackendTexture (int width, int height, SKGraphiteTextureInfo info)
 		{

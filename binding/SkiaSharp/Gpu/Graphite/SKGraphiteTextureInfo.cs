@@ -5,11 +5,8 @@ using System;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Backend-erased description of a Graphite texture's format / sample
-	/// count / mipmap state. Use the per-backend factories
-	/// (<see cref="CreateVulkan"/>, …) to build one from backend-specific
-	/// fields, or use a <see cref="SKGraphiteVkTextureInfo"/> struct directly
-	/// when you only need the Vulkan-typed view.
+	/// Backend-erased description of a Graphite texture (format, sample count, mipmap).
+	/// Build via the per-backend factories (<see cref="CreateVulkan"/>, …).
 	/// </summary>
 	public unsafe class SKGraphiteTextureInfo : SKObject
 	{

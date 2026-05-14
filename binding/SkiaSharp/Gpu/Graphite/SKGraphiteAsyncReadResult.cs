@@ -5,15 +5,9 @@ using System;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// The result handed to the callback passed to
-	/// <see cref="SKGraphiteContext.RequestReadPixels"/>. Wraps the per-plane
-	/// pixel data produced by Graphite's async readback.
-	///
-	/// LIFETIME: only valid for the duration of the callback. The underlying
-	/// native buffer is freed by Skia immediately after the callback returns,
-	/// at which point this wrapper is also disposed — don't capture it, copy
-	/// what you need before exiting the callback. Accessing any member after
-	/// disposal throws <see cref="ObjectDisposedException"/>.
+	/// Per-plane pixel data delivered to the callback passed to
+	/// <see cref="SKGraphiteContext.RequestReadPixels"/>. Only valid for the duration
+	/// of that callback — copy what you need before returning.
 	/// </summary>
 	public sealed unsafe class SKGraphiteAsyncReadResult : IDisposable
 	{
@@ -24,7 +18,7 @@ namespace SkiaSharp
 			this.handle = handle;
 		}
 
-		/// <summary>Number of pixel planes in the result (1 for RGBA, 2/3 for YUV variants).</summary>
+		/// <summary>Number of pixel planes (1 for RGBA, 2/3 for YUV variants).</summary>
 		public int PlaneCount {
 			get {
 				ThrowIfDisposed ();
@@ -32,10 +26,7 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Pointer to plane <paramref name="planeIndex"/>'s pixel data. Read-only;
-		/// freed by Skia when the callback returns.
-		/// </summary>
+		/// <summary>Raw pointer to plane <paramref name="planeIndex"/>'s pixel data.</summary>
 		public IntPtr GetPlaneData (int planeIndex)
 		{
 			ThrowIfDisposed ();
@@ -55,9 +46,7 @@ namespace SkiaSharp
 
 		/// <summary>
 		/// Copy <paramref name="rowCount"/> rows of plane <paramref name="planeIndex"/> verbatim
-		/// (including any per-row padding the source carries) into <paramref name="destination"/>.
-		/// The destination must be at least <c>rowCount × <see cref="GetPlaneRowBytes"/></c>
-		/// bytes; otherwise <see cref="ArgumentException"/>.
+		/// (including any per-row padding) into <paramref name="destination"/>.
 		/// </summary>
 		public void CopyPlaneTo (int planeIndex, Span<byte> destination, int rowCount)
 		{
@@ -79,11 +68,7 @@ namespace SkiaSharp
 			new ReadOnlySpan<byte> (src, required).CopyTo (destination);
 		}
 
-		/// <summary>
-		/// Detaches the wrapper from the underlying native result. Called automatically
-		/// by <see cref="SKGraphiteContext.RequestReadPixels"/> after the user callback
-		/// returns. Subsequent access to plane data throws <see cref="ObjectDisposedException"/>.
-		/// </summary>
+		/// <summary>Invalidates this wrapper; called automatically when the callback returns.</summary>
 		public void Dispose () => handle = IntPtr.Zero;
 
 		private void ThrowIfDisposed ()

@@ -11,14 +11,8 @@ namespace SkiaSharp
 
 	/// <summary>
 	/// Caller-supplied Vulkan handles + procedure-address callback used to bring up a
-	/// Graphite Vulkan context. Construct, populate the properties, then pass to
-	/// <see cref="SKGraphiteContext.CreateVulkan(SKGraphiteVkBackendContext)"/>.
-	///
-	/// After a successful CreateVulkan call the caller may safely <see cref="Dispose"/>
-	/// this object; the Vulkan handles themselves
-	/// (<see cref="VkInstance"/>/<see cref="VkDevice"/>/<see cref="VkQueue"/>) are never
-	/// freed by SkiaSharp and remain owned by the caller for the lifetime of the
-	/// SKGraphiteContext.
+	/// Graphite Vulkan context. The Vulkan handles are never freed by SkiaSharp — caller
+	/// retains ownership for the lifetime of the resulting <see cref="SKGraphiteContext"/>.
 	/// </summary>
 	public unsafe class SKGraphiteVkBackendContext : IDisposable
 	{

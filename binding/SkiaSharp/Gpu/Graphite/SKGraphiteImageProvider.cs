@@ -10,24 +10,19 @@ namespace SkiaSharp
 #endif
 
 	/// <summary>
-	/// Bridges Graphite's "non-Graphite SkImage → Graphite-backed SkImage" hook to a
-	/// managed override. Construct an instance and pass it to
+	/// Bridges Graphite's non-Graphite-SkImage → Graphite-backed-SkImage hook to a managed
+	/// override. Pass an instance to
 	/// <see cref="SKGraphiteContext.CreateRecorder(long, SKGraphiteImageProvider)"/>.
-	/// The recorder will call <see cref="FindOrCreate"/> for every raster/lazy
-	/// SkImage it encounters in a draw.
 	///
-	/// LIFETIME: one provider per recorder. On a successful CreateRecorder call,
-	/// ownership transfers to the recorder; <see cref="IDisposable.Dispose"/> on the
-	/// original wrapper becomes a no-op afterwards. Do NOT share a single
-	/// SKGraphiteImageProvider between multiple recorders — construct a fresh
-	/// provider per recorder (see <see cref="CreateDefault"/>).
+	/// LIFETIME: one provider per recorder. Ownership transfers to the recorder on success.
+	/// Do NOT share between recorders — construct a fresh one each time (see <see cref="CreateDefault"/>).
 	///
-	/// THREADING: <see cref="FindOrCreate"/> runs on the recorder's owning thread,
-	/// not necessarily the thread that constructed the provider. Implementations
-	/// must be thread-safe with respect to any caches they maintain.
+	/// THREADING: <see cref="FindOrCreate"/> runs on the recorder's owning thread, not
+	/// necessarily the thread that constructed the provider — implementations must be
+	/// thread-safe around any caches they maintain.
 	///
-	/// EXCEPTIONS: never throw out of <see cref="FindOrCreate"/>. Exceptions are
-	/// caught at the FFI boundary and converted to a null return (draw dropped).
+	/// EXCEPTIONS: never throw out of <see cref="FindOrCreate"/>; the FFI boundary catches
+	/// and converts to a null return (draw dropped).
 	/// </summary>
 	public unsafe abstract class SKGraphiteImageProvider : IDisposable
 	{
@@ -66,14 +61,8 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Convert <paramref name="image"/> to a Graphite-backed image suitable for
-		/// drawing on <paramref name="recorder"/>, or return null to drop the draw.
-		/// The returned SKImage's reference is consumed by Skia.
-		///
-		/// The provider returned by <see cref="CreateDefault"/> uploads each
-		/// unique image once and caches the result keyed on
-		/// <c>image.UniqueId</c>. Subclass this base when you need a different
-		/// caching policy.
+		/// Convert <paramref name="image"/> to a Graphite-backed image, or return null to drop
+		/// the draw. The returned SKImage's reference is consumed by Skia.
 		/// </summary>
 		public abstract SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped);
 
@@ -129,11 +118,7 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Hook for subclasses to release any cached graphite-backed images, GPU
-		/// resources, or other state when the provider is disposed (typically when
-		/// the owning recorder is disposed).
-		/// </summary>
+		/// <summary>Hook for subclasses to release cached resources at provider disposal.</summary>
 		protected virtual void DisposeCachedResources ()
 		{
 		}
@@ -162,14 +147,9 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Construct a fresh default provider: uploads each unique source SkImage
-		/// to a Graphite-backed texture exactly once, LRU-cached at 256 entries.
-		/// Cache lifetime is the provider's lifetime — typically the recorder's
-		/// lifetime via <see cref="SKGraphiteContext.CreateRecorder(long, SKGraphiteImageProvider)"/>.
-		///
-		/// Sufficient for most apps. Subclass <see cref="SKGraphiteImageProvider"/>
-		/// if you need a different eviction policy or want to coordinate with your
-		/// own decode pipeline.
+		/// A fresh default provider: uploads each unique source SkImage to a Graphite-backed
+		/// texture exactly once, LRU-cached at 256 entries. Subclass
+		/// <see cref="SKGraphiteImageProvider"/> for a different eviction policy.
 		/// </summary>
 		public static SKGraphiteImageProvider CreateDefault () => new DefaultProvider ();
 
