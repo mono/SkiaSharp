@@ -1,9 +1,14 @@
 #nullable disable
 
 using System;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+#if THROW_OBJECT_EXCEPTIONS
+	using GCHandle = SkiaSharp.GCHandleProxy;
+#endif
+
 	/// <summary>
 	/// A short-lived recording context vended by a <see cref="SKGraphiteContext"/>.
 	/// Drawing commands target a recorder; <see cref="Snap"/> produces a Recording for
@@ -12,37 +17,37 @@ namespace SkiaSharp
 	/// </summary>
 	public unsafe class SKGraphiteRecorder : SKObject
 	{
-		// Optional ImageProvider attached at CreateRecorder time. Holds the managed
-		// FindOrCreate delegate alive (via its GCHandle) for as long as the recorder
-		// can dispatch into it. Freed in DisposeNative AFTER the native recorder is
-		// destroyed (which drops the last sp ref to the underlying FfiImageProvider).
-		private SKGraphiteImageProvider attachedImageProvider;
+		// Pin keeping the user's image-upload callback alive while Skia's FfiImageProvider
+		// can dispatch into it. Freed in DisposeNative AFTER the native recorder is destroyed.
+		private GCHandle pinnedImageCallback;
+
+		// Optional cleanup hook for whatever state the callback's closure captured
+		// (typically an SKGraphiteImageCache). Runs BEFORE the native recorder is
+		// destroyed — graphite-backed images cached against this recorder are only
+		// safe to release while the recorder is still alive.
+		private Action imageCallbackDispose;
 
 		internal SKGraphiteRecorder (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		internal void AttachImageProvider (SKGraphiteImageProvider provider)
+		internal void AttachImageCallback (GCHandle pinned, Action onDispose)
 		{
-			if (provider != null) {
-				provider.TransferOwnership ();
-				attachedImageProvider = provider;
-			}
+			pinnedImageCallback = pinned;
+			imageCallbackDispose = onDispose;
 		}
 
 		protected override void DisposeNative ()
 		{
-			// Drain the provider's cache BEFORE the native recorder dies — the cached
-			// graphite-backed SkImages hold sk_sp<TextureProxy>s that reference the
-			// recorder's resource manager. Tearing those down post-destroy is UB.
-			attachedImageProvider?.DrainCacheBeforeRecorderDispose ();
+			imageCallbackDispose?.Invoke ();
+			imageCallbackDispose = null;
 
 			SkiaApi.sk_graphite_recorder_delete (Handle);
 
-			if (attachedImageProvider != null) {
-				attachedImageProvider.FreeAfterContextDispose ();
-				attachedImageProvider = null;
+			if (pinnedImageCallback.IsAllocated) {
+				pinnedImageCallback.Free ();
+				pinnedImageCallback = default;
 			}
 		}
 

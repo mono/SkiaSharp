@@ -7,8 +7,8 @@ namespace SkiaSharp.Tests.Graphite
 	/// Coverage for <see cref="SKImage.ToTextureImage"/> and
 	/// <see cref="SKImage.FromTexture"/> against a Graphite recorder. These two
 	/// factories are the public path for round-tripping pixels through GPU
-	/// memory and form the basis of any custom <see cref="SKGraphiteImageProvider"/>
-	/// implementation.
+	/// memory and form the basis of any custom
+	/// <see cref="SKGraphiteFindOrCreateImageDelegate"/> implementation.
 	/// </summary>
 	public unsafe class GraphiteImageTextureTests : BaseTest
 	{
