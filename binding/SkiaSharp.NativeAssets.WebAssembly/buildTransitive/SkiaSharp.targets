@@ -3,10 +3,6 @@
   <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
   <PropertyGroup>
     <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
-    <!-- Off by default so existing GL consumers keep their current binary size. Set to True
-         from the app csproj to enable Skia's Graphite-on-WebGPU path. Pulls in Emscripten's
-         bundled webgpu_cpp.h via -sUSE_WEBGPU=1 at the final link step. -->
-    <SkiaSharpEnableWebGpu Condition=" '$(SkiaSharpEnableWebGpu)' == '' ">False</SkiaSharpEnableWebGpu>
   </PropertyGroup>
 
   <!-- If this is an UNO Platform app -->
@@ -19,16 +15,13 @@
     <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
     <!-- Enable GLCtx when threading is available -->
     <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
-    <WasmShellExtraEmccFlags Condition="'$(SkiaSharpEnableWebGpu)'=='True'" Include="-s USE_WEBGPU=1"/>
+    <WasmShellExtraEmccFlags Include="-s USE_WEBGPU=1"/>
   </ItemGroup>
 
   <!-- If this is a .NET web assembly app -->
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
-    <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>
-    <EmccExtraLDFlags Condition="'$(SkiaSharpEnableWebGpu)'=='True'">$(EmccExtraLDFlags) -s USE_WEBGPU=1 --js-library "$(MSBuildThisFileDirectory)skia_wgpu_bridge.js"</EmccExtraLDFlags>
-  </PropertyGroup>
-  <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeSkiaSharp)' == 'True' and '$(SkiaSharpEnableWebGpu)' == 'True'">
+    <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s USE_WEBGPU=1 --js-library "$(MSBuildThisFileDirectory)skia_wgpu_bridge.js"</EmccExtraLDFlags>
     <!--
       Force-link the skia_wgpu_bridge.js library's $SkiaSharpWebGpuBridge
       symbol. Without this, emcc's JS-library mechanism drops library
