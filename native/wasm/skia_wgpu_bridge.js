@@ -1,6 +1,5 @@
 // JS library merged into the consumer's final emcc link (via --js-library)
-// when <SkiaSharpEnableWebGpu>True</SkiaSharpEnableWebGpu> is set on a
-// .NET WASM project that references SkiaSharp.NativeAssets.WebAssembly.
+// for any .NET WASM project that references SkiaSharp.NativeAssets.WebAssembly.
 //
 // Why: Blazor (Microsoft.NET.Sdk.BlazorWebAssembly) — and starting in
 // .NET 10 also Uno's Microsoft.NET.Sdk.WebAssembly path — encapsulates the

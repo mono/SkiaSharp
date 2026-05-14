@@ -17,21 +17,13 @@ For the Vulkan / Metal / Dawn-native paths and the high-level API surface, read 
               → browser navigator.gpu → host GPU
 ```
 
-A consumer csproj opts in with one property:
-
-```xml
-<PropertyGroup>
-  <SkiaSharpEnableWebGpu>True</SkiaSharpEnableWebGpu>
-</PropertyGroup>
-```
-
-`SkiaSharp.NativeAssets.WebAssembly`'s targets file then:
+`SkiaSharp.NativeAssets.WebAssembly`'s targets file unconditionally:
 - adds `-s USE_WEBGPU=1` to the final emcc link,
 - adds `--js-library skia_wgpu_bridge.js` (a small JS shim that ships in the same nupkg),
 - adds `EXPORTED_RUNTIME_METHODS+=WebGPU` (for devtools / diagnostics),
 - adds `DEFAULT_LIBRARY_FUNCS_TO_INCLUDE+=$SkiaSharpWebGpuBridge` (force-keeps the bridge symbol so its `__postset` installs `globalThis.skiaSharpWebGpu` at module init).
 
-Default is `False`. Consumers that don't opt in see no change — same WebGL-Ganesh path as before, same binary size.
+WebGPU plumbing is always linked in — consumers that don't use Graphite/Dawn still pay the binary-size cost but the WebGL-Ganesh path keeps working unchanged.
 
 ---
 
@@ -44,12 +36,13 @@ Default is `False`. Consumers that don't opt in see no change — same WebGL-Gan
 var bridge = await JS.InvokeAsync<JSWebGpuHandles>(
     "globalThis.skiaSharpWebGpu.initAsync", canvasElementId);
 
-using var bc = new SKGraphiteDawnBackendContext {
+var bc = new SKGraphiteDawnBackendContext {
     WgpuInstance = (IntPtr)bridge.InstanceId,
     WgpuDevice   = (IntPtr)bridge.DeviceId,
     WgpuQueue    = (IntPtr)bridge.QueueId,
-    NonYielding  = true,           // see "non-yielding mode" below
 };
+// On WASM/browser the backend context auto-detects non-yielding mode —
+// see "non-yielding mode" below.
 using var ctx = SKGraphiteContext.CreateDawn(bc);
 using var recorder = ctx.CreateRecorder(
     recorderBudgetBytes: -1,
@@ -62,18 +55,13 @@ using var bt = SKGraphiteBackendTexture.CreateDawn((IntPtr)texHandle);
 using var surface = SKSurface.Create(recorder, bt, SKColorType.Rgba8888);
 surface.Canvas.DrawWhatever(...);
 using (var rec = recorder.Snap()) ctx.InsertRecording(rec);
-ctx.Submit(new SKGraphiteSubmitInfo { Sync = SKGraphiteSyncToCpu.No });
+ctx.Submit(new SKGraphiteSubmitInfo { Sync = false });
 ```
 
 ### Uno (Microsoft.NET.Sdk.WebAssembly with Uno.UI.Runtime.Skia.WebAssembly.Browser)
 
-Uno ships a `WebGpuBrowserRenderer` that wraps the above flow. Just opt in at the head:
-
-```xml
-<SkiaSharpEnableWebGpu>True</SkiaSharpEnableWebGpu>
-```
-
-`Uno.UI.Runtime.Skia.WebAssembly.Browser` selects WebGPU first, then falls back to WebGL, then Software based on what the browser supports.
+Uno ships a `WebGpuBrowserRenderer` that wraps the above flow.
+`Uno.UI.Runtime.Skia.WebAssembly.Browser` selects WebGPU first, then falls back to WebGL, then Software based on what the browser supports — no opt-in required, the WebGPU symbols are always linked.
 
 ---
 
@@ -94,10 +82,10 @@ Uno ships a `WebGpuBrowserRenderer` that wraps the above flow. Just opt in at th
 
 ## Non-yielding mode
 
-`SKGraphiteDawnBackendContext.NonYielding = true` tells Skia to never block on async WebGPU operations. Required because we don't build with `-sASYNCIFY` (significant binary size cost).
+On WebAssembly (browser) targets `SKGraphiteDawnBackendContext` auto-detects non-yielding mode and passes it through to the shim — Skia is told to never block on async WebGPU operations. Required because we don't build with `-sASYNCIFY` (significant binary size cost). Not user-settable.
 
 **Trade-offs:**
-- `SKGraphiteSyncToCpu.Yes` on Submit is rejected.
+- `SKGraphiteSubmitInfo.Sync = true` on Submit is rejected with `InvalidOperationException`.
 - Synchronous pixel readback isn't available — use the async readback helper instead.
 - Calling `SKGraphiteContext.Dispose()` while GPU work is in flight triggers
   `fatal error: When ContextOptions::fNeverYieldToWebGPU is specified all GPU
@@ -108,13 +96,13 @@ Uno ships a `WebGpuBrowserRenderer` that wraps the above flow. Just opt in at th
   Dispose). At process exit / page unload the warning fires once and is
   harmless.
 
-If you need synchronous behavior, rebuild with `-sASYNCIFY` and `NonYielding = false`.
+If you need synchronous behavior, rebuild with `-sASYNCIFY`.
 
 ---
 
 ## Image provider
 
-Pass `SKGraphiteImageProvider.Default` (or a custom subclass) to `CreateRecorder`. Without it, every `DrawImage` of a raster `SkImage` logs:
+Pass `SKGraphiteImageProvider.CreateDefault()` (or a custom subclass) to `CreateRecorder`. Without it, every `DrawImage` of a raster `SkImage` logs:
 
 ```
 [skia] [graphite] Couldn't convert SkImage to a Graphite-backed representation
@@ -123,7 +111,7 @@ Pass `SKGraphiteImageProvider.Default` (or a custom subclass) to `CreateRecorder
 
 and the draw is silently lost.
 
-`SKGraphiteImageProvider.Default` uploads each unique source `SkImage` to a Graphite-backed texture exactly once and LRU-caches the result keyed on `SkImage.UniqueId` (cap: 256 entries). The cache's lifetime is the provider's lifetime — typically the recorder's lifetime.
+`SKGraphiteImageProvider.CreateDefault()` returns a fresh provider that uploads each unique source `SkImage` to a Graphite-backed texture exactly once and LRU-caches the result keyed on `SkImage.UniqueId` (cap: 256 entries). The cache's lifetime is the provider's lifetime — typically the recorder's lifetime.
 
 The `/tmp/sk-wasm-cs-smoke/Pages/Stress.razor` artifact in the validation tree exercises this with 1024 distinct images cycled across 16 frames and verifies that post-eviction re-upload works.
 
@@ -176,10 +164,10 @@ A magenta-clear smoke landed at `/tmp/sk-wasm-cs-smoke/` proves the full Blazor 
 | Symptom | Likely cause |
 |---|---|
 | `wasm-ld: undefined symbol: skgpu::graphite::ContextFactory::MakeDawn` | The cake archive-merge glob didn't pick up Skia's internal static libs. Check that `is_canvaskit` is true AND the glob in `native/wasm/build.cake` covers both `*.a.wasm` and `*.a`. |
-| `wasm-ld: undefined symbol: wgpuCreateInstance` etc. | `-sUSE_WEBGPU=1` not in the final emcc link. Check `<SkiaSharpEnableWebGpu>True</SkiaSharpEnableWebGpu>` is set on the WASM head csproj. |
+| `wasm-ld: undefined symbol: wgpuCreateInstance` etc. | `-sUSE_WEBGPU=1` not in the final emcc link. The NativeAssets.WebAssembly targets file adds it unconditionally — check it's actually being imported (PackageReference vs ProjectReference). |
 | `globalThis.skiaSharpWebGpu` is undefined at runtime | The JS library didn't get force-included. Check the link rsp has `-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=['$SkiaSharpWebGpuBridge']` (MSBuild's `$` escape is `%24`, not `$$`). |
 | `System.DllNotFoundException: libSkiaSharp` / `libHarfBuzzSharp` at runtime | The `NativeFileReference` glob didn't expand. On Linux, MSBuild does NOT normalize backslash separators — the targets file must use `/`. |
-| `Couldn't convert SkImage to a Graphite-backed representation` | No `SKGraphiteImageProvider` passed to `CreateRecorder`. Pass `SKGraphiteImageProvider.Default`. |
+| `Couldn't convert SkImage to a Graphite-backed representation` | No `SKGraphiteImageProvider` passed to `CreateRecorder`. Pass `SKGraphiteImageProvider.CreateDefault()`. |
 | `canvas.getContext('webgpu') returned null` | The canvas already has a different context type (likely `webgl2` grabbed by Uno's WebGL renderer or by Emscripten's GL auto-init). The WebGPU init must run BEFORE any other code touches the canvas. |
 | `When ContextOptions::fNeverYieldToWebGPU is specified all GPU work must be finished before destroying Context` | You're disposing `SKGraphiteContext` while non-yielding mode is on. Keep the Context alive for the process lifetime, or build with `-sASYNCIFY`. |
 
