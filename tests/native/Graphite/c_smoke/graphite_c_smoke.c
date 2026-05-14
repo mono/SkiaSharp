@@ -184,12 +184,8 @@ int main(void) {
     init.fGetProcUserData     = NULL;
     init.fProtectedContext    = false;
 
-    sk_graphite_vk_backend_context_t* bc = sk_graphite_vk_backend_context_new(&init);
-    if (!bc) { tear_down_vulkan(); DIE(30, "sk_graphite_vk_backend_context_new returned NULL"); }
-
-    sk_graphite_context_t* ctx = sk_graphite_context_make_vulkan(bc, NULL);
+    sk_graphite_context_t* ctx = sk_graphite_context_make_vulkan(&init, NULL);
     if (!ctx) {
-        sk_graphite_vk_backend_context_delete(bc);
         tear_down_vulkan();
         DIE(31, "sk_graphite_context_make_vulkan returned NULL");
     }
@@ -315,7 +311,6 @@ int main(void) {
     sk_surface_unref(surf);
     sk_graphite_recorder_delete(rec);
     sk_graphite_context_delete(ctx);
-    sk_graphite_vk_backend_context_delete(bc);
     tear_down_vulkan();
 
     return retval;

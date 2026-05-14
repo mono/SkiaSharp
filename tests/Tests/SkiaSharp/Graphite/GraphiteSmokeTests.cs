@@ -106,10 +106,10 @@ namespace SkiaSharp.Tests.Graphite
 		public unsafe void Vulkan_Graphite_BackendContextCanBeDisposedEarly ()
 		{
 			// Variant A regression: SKGraphiteContext.CreateVulkan must take ownership of the
-			// GetProc GCHandle and the native sk_graphite_vk_backend_context_t* wrapper. After
-			// that, the SKGraphiteVkBackendContext is safe to dispose immediately — the still-
-			// live SKGraphiteContext continues to dispatch Vulkan calls through the captured
-			// delegate without referring back to the backend-context object.
+			// GetProc GCHandle from the SKGraphiteVkBackendContext. After that, the backend
+			// context is safe to dispose immediately — the still-live SKGraphiteContext
+			// continues to dispatch Vulkan calls through the captured delegate without
+			// referring back to the backend-context object.
 
 			Skip.IfNot (IsLinux, "Lavapipe smoke is Linux/CI only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
