@@ -71,9 +71,23 @@ on:
         fi
         echo "target=$TARGET" >> "$GITHUB_OUTPUT"
 
-        if ! git ls-remote --exit-code https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" >/dev/null 2>&1; then
+        UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
+        if [ -z "$UPSTREAM_SHA" ]; then
           echo "::notice::upstream/chrome/m${TARGET} does not exist yet"
           exit 1
+        fi
+
+        # Check if the sync branch already contains all upstream commits.
+        # This avoids spinning up the expensive agent job when there's nothing new.
+        SYNC_SHA=$(git ls-remote https://github.com/mono/skia.git "refs/heads/skia-sync/m${TARGET}" | awk '{print $1}')
+        if [ -n "$SYNC_SHA" ]; then
+          BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...skia-sync/m${TARGET}" \
+            --jq '.behind_by' 2>/dev/null || echo "unknown")
+          if [ "$BEHIND" = "0" ]; then
+            echo "::notice::chrome/m${TARGET} already fully merged into skia-sync/m${TARGET} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
+            exit 1
+          fi
+          echo "Sync branch exists but is ${BEHIND} commits behind upstream"
         fi
 
         echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
@@ -213,7 +227,7 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
   and fetch `chrome/m${{ needs.pre_activation.outputs.target }}` (Phase 1 step 4) since Phase 5 depends on it.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't do this for the chroot).
 - **Phase 4**: Before creating a fresh branch, check if `origin/skia-sync/m${{ needs.pre_activation.outputs.target }}` already exists.
-  If so, check it out and check for new upstream commits. Stop if there are none.
+  If so, check it out — the pre-activation step already verified new upstream commits exist.
   Even when current == target, there may be new upstream bug-fix commits — a matching milestone does NOT mean no work.
   **Skip Phase 4 step 5** (submodule SHA alignment) — the pre-agent step already aligned it.
   Branch from the current HEAD when creating the submodule feature branch in step 6.
@@ -224,8 +238,8 @@ Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
   Do NOT push branches, create PRs, or create issues — all GitHub artifacts are handled by the post-step.
   Just commit locally. Do NOT call `create_issue` or `create_pull_request`.
-- **"No work" signal**: if you determine there are no new upstream commits to merge, do NOT write
-  `skia-sync-env.sh`. The post-step will detect its absence and skip. Stop immediately.
+- **"No work" signal**: the pre-activation step skips the workflow when there are no new upstream commits,
+  so this should not happen. If somehow it does, do NOT write `skia-sync-env.sh` and stop.
 
 After Phase 10, write these files:
 
