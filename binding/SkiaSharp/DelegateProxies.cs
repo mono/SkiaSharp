@@ -119,14 +119,14 @@ namespace SkiaSharp
 			}
 		}
 
-		private static partial IntPtr SKGraphiteImageProviderProxyImplementation (void* userData, IntPtr recorder, IntPtr image, int mipmapped)
+		private static partial IntPtr SKGraphiteImageProviderProxyImplementation (void* userData, IntPtr recorder, IntPtr image, bool mipmapped)
 		{
 			// userData is a GCHandle pinned by SKGraphiteContext.CreateRecorder; the
 			// recorder keeps it alive for its own lifetime and frees it in DisposeNative.
 			// Returning IntPtr.Zero drops the draw, same as if no callback were installed.
 			var del = Get<SKGraphiteFindOrCreateImageProxy> ((IntPtr)userData, out _);
 			try {
-				return del.Invoke (recorder, image, mipmapped != 0);
+				return del.Invoke (recorder, image, mipmapped);
 			} catch {
 				// Never throw across the FFI boundary. Drop the draw on any
 				// managed exception inside FindOrCreate.
