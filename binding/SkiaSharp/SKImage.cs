@@ -160,7 +160,14 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return FromEncodedData (data)?.Subset (subset);
+			var full = FromEncodedData (data);
+			if (full == null)
+				return null;
+
+			var result = full.Subset (subset);
+			if (result != full)
+				full.Dispose ();
+			return result;
 		}
 
 		public static SKImage FromEncodedData (SKData data)
