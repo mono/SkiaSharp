@@ -6,11 +6,6 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
-// Dawn isn't needed on Linux — Vulkan is the native Graphite backend.
-// Opt in with SUPPORT_DAWN=true only if you want WebGPU symbols too.
-string SUPPORT_DAWN_VAR = Argument("supportDawn", EnvironmentVariable("SUPPORT_DAWN") ?? "false");
-bool SUPPORT_DAWN = SUPPORT_DAWN_VAR == "1" || SUPPORT_DAWN_VAR.ToLower() == "true";
-
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -116,7 +111,6 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan=true " +
             $"skia_enable_graphite={SUPPORT_GPU} ".ToLower() +
-            $"skia_use_dawn={SUPPORT_DAWN} ".ToLower() +
             bionicArgs +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +

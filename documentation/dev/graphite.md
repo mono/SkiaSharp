@@ -178,7 +178,7 @@ Goldens land at `tests/Tests/SkiaSharp/Visual/Goldens/{setup}/MyTest.png`, ready
 | C API headers | `externals/skia/include/c/sk_graphite.h`, `sk_graphite_vulkan.h` |
 | C API impl | `externals/skia/src/c/sk_graphite.cpp`, `sk_graphite_vulkan.cpp` |
 | GN integration | `externals/skia/gn/core.gni` (source list), `externals/skia/BUILD.gn` (`SK_GRAPHITE`/`SK_DAWN` defines on `:core`) |
-| Build flags | All per-platform `native/{os}/build.cake` files — `skia_enable_graphite=true` is hard-wired; `SUPPORT_DAWN` defaults to `false` on Linux/macOS (Vulkan/Metal-only), `true` on WASM (Dawn-via-Emscripten) |
+| Build flags | All per-platform `native/{os}/build.cake` files — Graphite is on by default (gated on `SUPPORT_GPU` where that toggle exists); Dawn is WASM-only |
 | Generator config | `binding/libSkiaSharp.json` (mappings for `sk_graphite_vk_get_proc_t`, etc.) |
 | Hand-written C# wrappers | `binding/SkiaSharp/Gpu/Graphite/SKGraphite*.cs` |
 | Generator-emitted P/Invokes | `binding/SkiaSharp/SkiaApi.generated.cs` (regenerated; never hand-edited) |
