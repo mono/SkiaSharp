@@ -29,6 +29,16 @@ public class ThreeDSample : CanvasSampleBase
 
 	public override string Description => "Visualize 3D transformations with per-axis rotation, perspective projection, and translate controls.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKMatrix44", "SKMatrix44.CreateRotationDegrees",
+		"SKMaskFilter", "SKMaskFilter.CreateBlur",
+		"SKRoundRect", "SKPathEffect", "SKPathEffect.CreateDash",
+		"SKCanvas.DrawOval", "SKCanvas.Concat",
+		"SKCanvas.DrawRoundRect", "SKCanvas.DrawLine", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("projection", "Projection", Projections, projectionIndex),

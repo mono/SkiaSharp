@@ -26,6 +26,19 @@ public class PdfComposerSample : DocumentSampleBase
 
 	public override string Description => "Generate rich multi-page PDFs with shapes, text, images, and clickable annotations.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKDocumentPdfMetadata",
+		"SKCanvas.DrawUrlAnnotation", "SKCanvas.DrawLinkDestinationAnnotation",
+		"SKCanvas.DrawNamedDestinationAnnotation",
+		"SKDocument", "SKDocument.CreatePdf", "SKDocument.BeginPage",
+		"SKPathBuilder", "SKPath",
+		"SKShader", "SKShader.CreateLinearGradient", "SKShader.CreateRadialGradient",
+		"SKCanvas.DrawText", "SKCanvas.DrawPath", "SKCanvas.DrawBitmap",
+		"SKCanvas.DrawCircle", "SKCanvas.DrawLine", "SKCanvas.DrawRoundRect",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("pageSize", "Page Size", PageSizes, pageSizeIndex),

@@ -30,6 +30,14 @@ public override string Title => "Color Fonts";
 public override string Description =>
 "Explore color font palettes with Nabla — a Google Font with 7 built-in color palettes and variable axes.";
 
+public override IReadOnlyList<string> ApiTags =>
+[
+"HarfBuzz.Blob", "HarfBuzz.Face", "HarfBuzz.Face.PaletteCount",
+"SKData", "SKTypeface", "SKTypeface.Clone", "SKTypeface.FromData",
+"SKFont.MeasureText", "SKCanvas.DrawText",
+"SKCanvas", "SKPaint", "SKFont",
+];
+
 public override string Category => SampleManager.Text;
 
 public override IReadOnlyList<SampleControl> Controls =>
