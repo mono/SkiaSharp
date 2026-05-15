@@ -637,17 +637,13 @@ namespace SkiaSharp
 			DrawText (text, x, y, paint.TextAlign, paint.GetFont (), paint);
 
 		public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawText (text, p, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawText (text, p, SKTextAlign.Left, font, paint);
 
 		public void DrawText (string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawText (text, p.X, p.Y, textAlign, font, paint);
 
 		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawText (text, x, y, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawText (text, x, y, SKTextAlign.Left, font, paint);
 
 		public void DrawText (string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
@@ -687,25 +683,19 @@ namespace SkiaSharp
 			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetFont (), paint);
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawTextOnPath (text, path, offset, true, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawTextOnPath (text, path, offset, true, SKTextAlign.Left, font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, offset, true, textAlign, font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, SKTextAlign.Left, font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, textAlign, font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawTextOnPath (text, path, offset, warpGlyphs, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawTextOnPath (text, path, offset, warpGlyphs, SKTextAlign.Left, font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
