@@ -28,8 +28,9 @@ public class PdfComposerSample : DocumentSampleBase
 
 	public override IReadOnlyList<string> ApiTags =>
 	[
-		"SKDocumentPdfMetadata", "DrawUrlAnnotation", "DrawLinkDestinationAnnotation",
-		"DrawNamedDestinationAnnotation",
+		"SKDocumentPdfMetadata",
+		"SKCanvas.DrawUrlAnnotation", "SKCanvas.DrawLinkDestinationAnnotation",
+		"SKCanvas.DrawNamedDestinationAnnotation",
 		"SKDocument", "SKDocument.CreatePdf", "SKDocument.BeginPage",
 		"SKPathBuilder", "SKPath",
 		"SKShader", "SKShader.CreateLinearGradient", "SKShader.CreateRadialGradient",

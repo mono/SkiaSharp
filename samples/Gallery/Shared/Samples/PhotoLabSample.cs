@@ -39,7 +39,7 @@ public class PhotoLabSample : CanvasSampleBase
 		"SKImageFilter.CreateMagnifier", "SKImageFilter.CreateBlur",
 		"SKColorFilter", "SKColorFilter.CreateHighContrast",
 		"SKColorFilter.CreateBlendMode", "SKColorFilter.CreateColorMatrix",
-		"CreateCompose", "SKManagedStream", "SKBitmap",
+		"SKColorFilter.CreateCompose", "SKManagedStream", "SKBitmap",
 		"SKCanvas.DrawBitmap", "SKCanvas", "SKPaint",
 	];
 

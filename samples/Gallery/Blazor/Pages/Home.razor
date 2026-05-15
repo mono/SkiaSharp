@@ -1,5 +1,4 @@
 ﻿@page "/"
-@implements IDisposable
 @using SkiaSharpSample.Services
 @inject SampleService SampleService
 
@@ -122,14 +121,14 @@
     </div>
 
     @* Mobile filter drawer *@
-    <div class="mobile-filter-fab @(HasActiveFilters ? "has-filters" : "")" @onclick="() => mobileDrawerOpen = true">
+    <button type="button" class="mobile-filter-fab @(HasActiveFilters ? "has-filters" : "")" @onclick="() => mobileDrawerOpen = true">
         <i class="bi bi-funnel"></i>
         Filters
         @if (activeFilterCount > 0)
         {
             <span class="fab-badge">@activeFilterCount</span>
         }
-    </div>
+    </button>
 
     @if (mobileDrawerOpen)
     {
@@ -276,6 +275,4 @@
         sortOrder = SampleSortOrder.NewestFirst;
         RefreshGrid();
     }
-
-    public void Dispose() { }
 }

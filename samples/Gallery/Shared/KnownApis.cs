@@ -15,8 +15,21 @@ public static class KnownApis
 	/// Tags containing a dot are methods (Type.Method format).
 	/// Tags without a dot are types.
 	/// </summary>
-	public static TagKind Classify(string tag) =>
-		tag.Contains('.') ? TagKind.Method : TagKind.Type;
+	public static TagKind Classify(string tag)
+	{
+		if (tag.Contains('.'))
+		{
+			// Namespace-qualified types: "HarfBuzz.Face" is a type, not a method
+			var prefix = tag[..tag.IndexOf('.')];
+			if (prefix == "HarfBuzz")
+			{
+				// "HarfBuzz.Face" = type, "HarfBuzz.Face.PaletteCount" = method
+				return tag.Count(c => c == '.') >= 2 ? TagKind.Method : TagKind.Type;
+			}
+			return TagKind.Method;
+		}
+		return TagKind.Type;
+	}
 
 	/// <summary>
 	/// Extract the display name for a tag.

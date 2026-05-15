@@ -47,11 +47,11 @@
             var kind = KnownApis.Classify(tag);
             var displayName = KnownApis.GetDisplayName(tag);
             var isActiveTag = ActiveTags.Contains(tag);
-            <button class="card-tag @(kind == TagKind.Type ? "ct-type" : "ct-method") @(isActiveTag ? "ct-active" : "")"
+            <span role="button" tabindex="0" class="card-tag @(kind == TagKind.Type ? "ct-type" : "ct-method") @(isActiveTag ? "ct-active" : "")"
                     @onclick="() => OnTagClicked.InvokeAsync(tag)" @onclick:stopPropagation="true"
                     @onclick:preventDefault="true" title="@tag">
                 @displayName
-            </button>
+            </span>
         }
         @if (overflow > 0)
         {
