@@ -19,6 +19,14 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	public override string Description => "Decode images in various formats (PNG, WebP, DNG) with metadata inspection and subset decoding.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKColorSpace", "SKColorSpaceXyz", "SKColorSpaceTransferFn",
+		"SKBitmap", "SKBitmap.Decode", "SKCodec", "SKImageInfo", "SKData", "SKRoundRect",
+		"SKCanvas.DrawBitmap", "SKCanvas.DrawText", "SKCanvas.DrawRect",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override string Category => SampleManager.BitmapDecoding;
 
 	public override IReadOnlyList<SampleControl> Controls =>

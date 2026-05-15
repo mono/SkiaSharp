@@ -24,6 +24,19 @@ public class HeroImageSample : CanvasSampleBase
 	public override string Description =>
 		"Generate a stylized SkiaSharp banner with flowing Bézier curves, gradient text, and a frosted glass logo card.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKSvg", "SKImage", "SKFontVariationPositionCoordinate",
+		"SKMaskFilter", "SKMaskFilter.CreateBlur",
+		"SKImageFilter", "SKImageFilter.CreateBlur",
+		"SKShader", "SKShader.CreateRadialGradient", "SKShader.CreateLinearGradient",
+		"SKPathBuilder", "SKPath", "SKRoundRect",
+		"SKCanvas.DrawPicture", "SKCanvas.ClipRoundRect",
+		"SKCanvas.DrawPath", "SKCanvas.DrawCircle", "SKCanvas.DrawRect",
+		"SKCanvas.DrawRoundRect", "SKCanvas.DrawText", "SKCanvas.DrawImage",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
 	public override string Category => SampleManager.General;
 
 	public override IReadOnlyList<SampleControl> Controls =>

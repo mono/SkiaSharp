@@ -165,6 +165,54 @@ public static class SampleManager
 		allSamples.Count(s => s.Category == categoryName);
 
 	// ---------------------------------------------------------------
+	// Tag infrastructure
+	// ---------------------------------------------------------------
+
+	/// <summary>
+	/// Compute tag → sample count for the full corpus.
+	/// </summary>
+	public static Dictionary<string, int> GetTagCounts(IEnumerable<SampleBase> samples)
+	{
+		var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+		foreach (var s in samples)
+		{
+			foreach (var tag in s.ApiTags)
+			{
+				counts.TryGetValue(tag, out var c);
+				counts[tag] = c + 1;
+			}
+		}
+		return counts;
+	}
+
+	/// <summary>
+	/// Return the tags for a sample ranked by rarity (rarest = most distinctive first).
+	/// </summary>
+	public static IReadOnlyList<string> GetRankedTags(SampleBase sample, Dictionary<string, int> corpusCounts)
+	{
+		return sample.ApiTags.OrderBy(t => corpusCounts.GetValueOrDefault(t, 0)).ToList();
+	}
+
+	/// <summary>
+	/// Get all unique tags from the corpus, grouped by kind and sorted by count desc.
+	/// </summary>
+	public static IReadOnlyList<(string Tag, int Count, TagKind Kind)> GetAllTags(IEnumerable<SampleBase> samples)
+	{
+		var counts = GetTagCounts(samples);
+		return counts
+			.Select(kv => (Tag: kv.Key, Count: kv.Value, Kind: KnownApis.Classify(kv.Key)))
+			.OrderByDescending(t => t.Count)
+			.ThenBy(t => t.Tag)
+			.ToList();
+	}
+
+	/// <summary>
+	/// Compute live tag counts scoped to the currently filtered result set.
+	/// </summary>
+	public static Dictionary<string, int> GetLiveTagCounts(IEnumerable<SampleBase> filteredSamples)
+		=> GetTagCounts(filteredSamples);
+
+	// ---------------------------------------------------------------
 	// Search, filter, sort
 	// ---------------------------------------------------------------
 
@@ -176,6 +224,8 @@ public static class SampleManager
 		IEnumerable<SampleBase> samples,
 		string? searchText = null,
 		ISet<string>? categories = null,
+		ISet<string>? tags = null,
+		bool tagModeAll = false,
 		SampleSortOrder sort = SampleSortOrder.NewestFirst)
 	{
 		var query = samples.ToList().AsEnumerable();
@@ -185,6 +235,13 @@ public static class SampleManager
 
 		if (categories is { Count: > 0 })
 			query = query.Where(s => categories.Contains(s.Category));
+
+		if (tags is { Count: > 0 })
+		{
+			query = tagModeAll
+				? query.Where(s => tags.All(t => s.ApiTags.Contains(t)))
+				: query.Where(s => tags.Any(t => s.ApiTags.Contains(t)));
+		}
 
 		var list = query.ToList();
 
