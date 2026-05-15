@@ -8,9 +8,6 @@ Information("Android NDK Path: {0}", ANDROID_NDK_HOME);
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    // Linux is supported as a host since NDK r19+ ships an official linux-x86_64 toolchain.
-    // Upstream CI only exercises the macOS/Windows path; Linux works for cross-compiling
-    // arm64/arm/x64/x86 Android targets via the same prebuilt LLVM toolchain.
     .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows() || IsRunningOnLinux())
     .Does(() =>
 {

@@ -116,8 +116,8 @@ and the draw is silently lost.
 
 If you're maintaining the WASM build (rather than just consuming it), see also:
 - [building.md](building.md) for the cross-platform native build flow.
-- `native/wasm/build.cake` — invoke with `dotnet cake --target=externals-wasm --emscriptenVersion=3.1.56 --emscriptenFeatures=_wasmeh,st`. Repeat with `_wasmeh,st,simd` to also produce the SIMD-enabled flavor. `SkiaSharp.NativeAssets.WebAssembly.targets` resolves `3.1.56/$(_SkiaSharpNativeBinaryType)/*.a` at consumer build time. `SUPPORT_GRAPHITE` defaults to `true`; pass `SUPPORT_GRAPHITE=false` to build a WebGL-only WASM native.
-- `SUPPORT_GRAPHITE=true` (the default) flips on `is_canvaskit=true` in GN. This switches Skia's `:graphite` and `:dawn` source sets to `<webgpu/webgpu_cpp.h>` (Emscripten's bundled headers, resolved by `-sUSE_WEBGPU=1` at the consumer's final link) rather than the native-Dawn-generated `webgpu_cpp.h` that doesn't exist on Emscripten. It also tells `externals/skia/third_party/dawn/BUILD.gn` to skip the native Dawn CMake build entirely.
+- `native/wasm/build.cake` — invoke with `dotnet cake --target=externals-wasm --emscriptenVersion=3.1.56 --emscriptenFeatures=_wasmeh,st`. Repeat with `_wasmeh,st,simd` to also produce the SIMD-enabled flavor. `SkiaSharp.NativeAssets.WebAssembly.targets` resolves `3.1.56/$(_SkiaSharpNativeBinaryType)/*.a` at consumer build time.
+- `is_canvaskit=true` is hard-wired in the WASM GN args. It switches Skia's `:graphite` and `:dawn` source sets to `<webgpu/webgpu_cpp.h>` (Emscripten's bundled headers, resolved by `-sUSE_WEBGPU=1` at the consumer's final link) rather than the native-Dawn-generated `webgpu_cpp.h` that doesn't exist on Emscripten. It also tells `externals/skia/third_party/dawn/BUILD.gn` to skip the native Dawn CMake build entirely.
 - The cake archive-merge step globs both `*.a` and `*.a.wasm` because `is_canvaskit=true` changes Skia's GN toolchain output extension.
 - Emscripten version must match what the .NET WASM SDK ships (currently 3.1.56). Mismatched versions ABI-break.
 
