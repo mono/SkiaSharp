@@ -37,8 +37,9 @@ Task("libSkiaSharp")
         // sources resolve <webgpu/webgpu_cpp.h> via Emscripten's bundled headers
         // (added by -sUSE_WEBGPU=1 at the final link) instead of trying to
         // include the native-Dawn-generated webgpu_cpp.h that doesn't exist on
-        // Emscripten.
-        $"is_canvaskit=true " +
+        // Emscripten. Tracks SUPPORT_GPU so a GPU-less build stays a clean
+        // raster-only WASM bundle.
+        $"is_canvaskit={SUPPORT_GPU} ".ToLower() +
         $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
         $"skia_enable_fontmgr_custom_embedded=true " +
@@ -64,9 +65,9 @@ Task("libSkiaSharp")
         $"skia_use_vulkan=false " +
         $"skia_use_wuffs=true " +
         $"skia_enable_skottie=true " +
-        $"skia_enable_graphite=true " +
-        $"skia_use_dawn=true " +
-        $"skia_use_webgpu=true " +
+        $"skia_enable_graphite={SUPPORT_GPU} ".ToLower() +
+        $"skia_use_dawn={SUPPORT_GPU} ".ToLower() +
+        $"skia_use_webgpu={SUPPORT_GPU} ".ToLower() +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +

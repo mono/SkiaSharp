@@ -115,7 +115,7 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan=true " +
-            $"skia_enable_graphite=true " +
+            $"skia_enable_graphite={SUPPORT_GPU} ".ToLower() +
             $"skia_use_dawn={SUPPORT_DAWN} ".ToLower() +
             bionicArgs +
             $"extra_asmflags=[] " +
