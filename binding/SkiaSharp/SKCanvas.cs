@@ -570,18 +570,24 @@ namespace SkiaSharp
 
 		public void DrawBitmap (SKBitmap bitmap, float x, float y, SKPaint paint = null)
 		{
+			if (bitmap == null)
+				throw new ArgumentNullException (nameof (bitmap));
 			using var image = SKImage.FromBitmap (bitmap);
 			DrawImage (image, x, y, paint);
 		}
 
 		public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKPaint paint = null)
 		{
+			if (bitmap == null)
+				throw new ArgumentNullException (nameof (bitmap));
 			using var image = SKImage.FromBitmap (bitmap);
 			DrawImage (image, dest, paint);
 		}
 
 		public void DrawBitmap (SKBitmap bitmap, SKRect source, SKRect dest, SKPaint paint = null)
 		{
+			if (bitmap == null)
+				throw new ArgumentNullException (nameof (bitmap));
 			using var image = SKImage.FromBitmap (bitmap);
 			DrawImage (image, source, dest, paint);
 		}
