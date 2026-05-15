@@ -26,6 +26,13 @@ public class GifPlayerSample : CanvasSampleBase
 
 	public override string Description => "Play animated GIFs frame-by-frame with adjustable playback speed.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKBitmap.GetPixels", "SKCodecOptions", "SKCodec", "SKImageInfo", "SKManagedStream",
+		"SKBitmap", "SKCanvas.DrawBitmap", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new SliderControl("speed", "Speed", 0.25f, 4, speed, 0.25f),

@@ -150,7 +150,7 @@ public sealed partial class HomePage : Page
     private void RefreshCards()
     {
         var allSamples = sampleService.GetAllSamples();
-        var items = SampleManager.SearchSamples(allSamples, searchText, selectedCategories, SampleSortOrder.NewestFirst)
+        var items = SampleManager.SearchSamples(allSamples, searchText, selectedCategories, sort: SampleSortOrder.NewestFirst)
             .Select(s => new SampleCardItem(s, allSamples))
             .ToList();
 
