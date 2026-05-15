@@ -4,9 +4,6 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"))
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/native/apple/xcode.cake"
 
-string SUPPORT_GRAPHITE_VAR = Argument("supportGraphite", EnvironmentVariable("SUPPORT_GRAPHITE") ?? "true");
-bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower() == "true";
-
 // Dawn isn't needed on macOS — Metal is the native Graphite backend.
 // Opt in with SUPPORT_DAWN=true only if you want WebGPU symbols too.
 string SUPPORT_DAWN_VAR = Argument("supportDawn", EnvironmentVariable("SUPPORT_DAWN") ?? "false");
@@ -48,7 +45,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower() +
+            $"skia_enable_graphite=true " +
             $"skia_use_dawn={SUPPORT_DAWN} ".ToLower() +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-stdlib=libc++' ]");

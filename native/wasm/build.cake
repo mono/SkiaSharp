@@ -10,16 +10,6 @@ string[] EMSCRIPTEN_FEATURES = Argument("emscriptenFeatures", EnvironmentVariabl
     .Split(",").Where(f => f != "none").ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
-string SUPPORT_GRAPHITE_VAR = Argument("supportGraphite", EnvironmentVariable("SUPPORT_GRAPHITE") ?? "true");
-bool SUPPORT_GRAPHITE = SUPPORT_GRAPHITE_VAR == "1" || SUPPORT_GRAPHITE_VAR.ToLower() == "true";
-
-// Graphite on WASM uses Dawn-via-Emscripten (skia_use_webgpu drives the wgpu C++ -> emscripten/html5_webgpu bridge).
-// When Graphite is on, force-enable both. They follow the CanvasKit WebGPU recipe in
-// externals/skia/modules/canvaskit/compile.sh and require -sUSE_WEBGPU=1 + -sASYNCIFY at
-// the FINAL link step (.NET WASM bundle), not here -- libSkiaSharp.a is just a static archive.
-bool SUPPORT_DAWN = SUPPORT_GRAPHITE;
-bool SUPPORT_WEBGPU = SUPPORT_GRAPHITE;
-
 string CC = Argument("cc", "emcc");
 string CXX = Argument("cxx", "em++");
 string AR = Argument("ar", "emar");
@@ -47,9 +37,8 @@ Task("libSkiaSharp")
         // sources resolve <webgpu/webgpu_cpp.h> via Emscripten's bundled headers
         // (added by -sUSE_WEBGPU=1 at the final link) instead of trying to
         // include the native-Dawn-generated webgpu_cpp.h that doesn't exist on
-        // Emscripten. We only flip it on when SUPPORT_GRAPHITE is true so the
-        // existing Ganesh/WebGL path stays unchanged.
-        $"is_canvaskit={SUPPORT_GRAPHITE} ".ToLower() +
+        // Emscripten.
+        $"is_canvaskit=true " +
         $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
         $"skia_enable_fontmgr_custom_embedded=true " +
@@ -75,9 +64,9 @@ Task("libSkiaSharp")
         $"skia_use_vulkan=false " +
         $"skia_use_wuffs=true " +
         $"skia_enable_skottie=true " +
-        $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower() +
-        $"skia_use_dawn={SUPPORT_DAWN} ".ToLower() +
-        $"skia_use_webgpu={SUPPORT_WEBGPU} ".ToLower() +
+        $"skia_enable_graphite=true " +
+        $"skia_use_dawn=true " +
+        $"skia_use_webgpu=true " +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +

@@ -48,9 +48,8 @@ From the repo root:
 dotnet cake --target=externals-linux --arch=x64
 ```
 
-`SUPPORT_GPU`, `SUPPORT_VULKAN`, and `SUPPORT_GRAPHITE` all default to
-`true` since the matrix work landed; pass `SUPPORT_X=false` only if you
-want to opt out.
+`SUPPORT_GPU` and `SUPPORT_VULKAN` default to `true`; pass `SUPPORT_X=false`
+only if you want to opt out. Graphite is always on.
 
 The first run is a from-scratch Skia build — expect it to take 30–90 minutes wall-clock and to download a few GB of Skia/Dawn DEPS. Subsequent rebuilds are much faster (incremental ninja).
 
