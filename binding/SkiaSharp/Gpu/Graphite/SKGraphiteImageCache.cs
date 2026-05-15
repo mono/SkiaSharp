@@ -14,9 +14,9 @@ namespace SkiaSharp
 	/// </summary>
 	public sealed class SKGraphiteImageCache : IDisposable
 	{
-		// LRU cap — keeps memory bounded when callers (like Uno) decode fresh
-		// SkImages per frame instead of reusing the same SkImage object. Without
-		// a cap, scrolling unbounded content would eventually OOM the GPU.
+		// LRU cap — keeps memory bounded when callers decode fresh SkImages
+		// per frame instead of reusing the same SkImage object. Without a cap,
+		// scrolling unbounded content would eventually OOM the GPU.
 		private const int MaxCacheEntries = 256;
 
 		// Cache entries hold a +1 native ref on the graphite-backed image. On

@@ -71,10 +71,10 @@ internal static partial class WasmRenderers
 	// Non-yielding mode disallows SKGraphiteContext.Dispose() while any GPU
 	// work is in flight — that path asserts ("all GPU work must be finished
 	// before destroying Context") and in WASM the assert becomes a fatal
-	// `unreachable` trap. We mirror Uno's renderer pattern: bring up the
-	// Context + Recorder once per session, leave them alive for the lifetime
-	// of the WASM process, and only cycle the per-render Surface + backend
-	// texture. Process-exit means the Skia warning never fires anyway.
+	// `unreachable` trap. Bring up the Context + Recorder once per session,
+	// leave them alive for the lifetime of the WASM process, and only cycle
+	// the per-render Surface + backend texture. Process-exit means the Skia
+	// warning never fires anyway.
 	private static SKGraphiteDawnBackendContext s_bc;
 	private static SKGraphiteContext s_ctx;
 	private static SKGraphiteRecorder s_recorder;

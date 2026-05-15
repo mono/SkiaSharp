@@ -1,15 +1,13 @@
 // JS library merged into the consumer's final emcc link (via --js-library)
 // for any .NET WASM project that references SkiaSharp.NativeAssets.WebAssembly.
 //
-// Why: Blazor (Microsoft.NET.Sdk.BlazorWebAssembly) — and starting in
-// .NET 10 also Uno's Microsoft.NET.Sdk.WebAssembly path — encapsulates the
-// Emscripten Module inside an IIFE and replaces the standard lifecycle
-// hooks (preRun/onRuntimeInitialized), making `Module.WebGPU` unreachable
-// from external JS. The library file ships INSIDE dotnet.native.js after
-// linking, so its code has direct access to the live $WebGPU shim and to
-// the JsValStore manager objects — exactly what Skia's Graphite-Dawn
-// shim needs to register a caller's GPUDevice/Queue/Texture by numeric
-// handle.
+// Why: starting in .NET 10, the WASM SDKs wrap dotnet.native.js in an IIFE
+// and replace the standard Emscripten lifecycle hooks (preRun /
+// onRuntimeInitialized), making `Module.WebGPU` unreachable from external
+// JS. This file ships INSIDE dotnet.native.js after linking, so its code
+// has direct access to the live $WebGPU shim and to the JsValStore
+// manager objects — exactly what Skia's Graphite-Dawn shim needs to
+// register a caller's GPUDevice/Queue/Texture by numeric handle.
 //
 // `__postset` injects the bridge installer at module load time. By the
 // time a consumer JS function calls `globalThis.skiaSharpWebGpu.*`, the
