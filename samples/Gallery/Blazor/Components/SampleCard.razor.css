@@ -146,21 +146,19 @@
 
 /* Disabled / unsupported */
 .sample-card-disabled {
-    opacity: 0.55;
+    opacity: 0.5;
     cursor: not-allowed;
+    filter: grayscale(0.6);
 }
 .sample-card-disabled:hover {
     transform: none;
     box-shadow: none;
     border-color: var(--gallery-border, #e5e7eb);
 }
-.sample-card-disabled .card-accent {
-    background: #9ca3af !important;
-}
 .card-unsupported {
     font-size: 0.68rem;
-    color: var(--gallery-text-muted, #6b7280);
-    font-weight: 500;
+    color: #b45309;
+    font-weight: 600;
 }
 
 /* Dark mode */
@@ -173,6 +171,7 @@
 [data-theme="dark"] .card-tag.ct-type { color: #60a5fa; }
 [data-theme="dark"] .card-tag.ct-method { color: #fbbf24; }
 [data-theme="dark"] .card-tag:hover { background: rgba(99,102,241,0.15); }
+[data-theme="dark"] .card-unsupported { color: #fbbf24; }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
