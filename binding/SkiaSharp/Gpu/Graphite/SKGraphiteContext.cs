@@ -209,7 +209,7 @@ namespace SkiaSharp
 				DelegateProxies.Create (proxy, out pinnedCallback, out var ctx);
 #if USE_LIBRARY_IMPORT
 				providerHandle = SkiaApi.sk_graphite_image_provider_new (
-					(delegate* unmanaged[Cdecl] <void*, IntPtr, IntPtr, Int32, IntPtr>)
+					(delegate* unmanaged[Cdecl] <void*, IntPtr, IntPtr, bool, IntPtr>)
 						DelegateProxies.SKGraphiteImageProviderProxy,
 					(void*)ctx);
 #else
