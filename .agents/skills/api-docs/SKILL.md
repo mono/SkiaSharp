@@ -156,6 +156,8 @@ Only after Phase 5 reviewers pass, merge the JSON back into XML:
 pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 merge output/docs-work/
 ```
 
+The merge tool has built-in safety checks — it counts `MemberSignature` and `TypeSignature` elements before and after merging each file and aborts with a fatal error if any were lost. It also validates the output XML is well-formed.
+
 Then run formatting to clean up:
 
 ```bash
