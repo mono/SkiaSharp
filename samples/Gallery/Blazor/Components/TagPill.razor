@@ -2,6 +2,8 @@
 
 <button class="api-tag @KindClass @SizeClass @(IsActive ? "active" : "") @(IsZero ? "zero" : "")"
         @onclick="OnClick" @onclick:stopPropagation="true"
+        disabled="@IsZero"
+        aria-disabled="@(IsZero ? "true" : null)"
         title="@TooltipText">
     @if (Kind == TagKind.Type)
     {

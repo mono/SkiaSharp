@@ -181,5 +181,10 @@
         await OnTagModeChanged.InvokeAsync(all);
     }
 
-    public void Dispose() => debounceCts?.Cancel();
+    public void Dispose()
+    {
+        debounceCts?.Cancel();
+        debounceCts?.Dispose();
+        debounceCts = null;
+    }
 }

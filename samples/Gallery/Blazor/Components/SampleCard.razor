@@ -47,9 +47,13 @@
             var kind = KnownApis.Classify(tag);
             var displayName = KnownApis.GetDisplayName(tag);
             var isActiveTag = ActiveTags.Contains(tag);
+            var capturedTag = tag;
             <span role="button" tabindex="0" class="card-tag @(kind == TagKind.Type ? "ct-type" : "ct-method") @(isActiveTag ? "ct-active" : "")"
-                    @onclick="() => OnTagClicked.InvokeAsync(tag)" @onclick:stopPropagation="true"
-                    @onclick:preventDefault="true" title="@tag">
+                    @onclick="() => OnTagClicked.InvokeAsync(capturedTag)" @onclick:stopPropagation="true"
+                    @onclick:preventDefault="true"
+                    @onkeydown="e => HandleTagKeyDown(e, capturedTag)" @onkeydown:stopPropagation="true"
+                    aria-pressed="@(isActiveTag ? "true" : "false")"
+                    title="@tag">
                 @displayName
             </span>
         }
@@ -85,13 +89,18 @@
 
     private IReadOnlyList<string> GetDisplayTags()
     {
-        // Active filter tags first, then rarest tags
         var active = Sample.ApiTags.Where(t => ActiveTags.Contains(t)).ToList();
         var rest = Sample.ApiTags
             .Where(t => !ActiveTags.Contains(t))
             .OrderBy(t => CorpusCounts.GetValueOrDefault(t, 0))
             .ToList();
         return active.Concat(rest).ToList();
+    }
+
+    private async Task HandleTagKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, string tag)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+            await OnTagClicked.InvokeAsync(tag);
     }
 
     private static string TruncateDescription(string desc) =>
