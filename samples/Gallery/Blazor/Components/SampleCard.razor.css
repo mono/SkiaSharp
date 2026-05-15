@@ -144,11 +144,23 @@
     transform: translateX(2px);
 }
 
-/* Disabled */
+/* Disabled / unsupported */
 .sample-card-disabled {
-    opacity: 0.4;
+    opacity: 0.55;
     cursor: not-allowed;
-    pointer-events: none;
+}
+.sample-card-disabled:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--gallery-border, #e5e7eb);
+}
+.sample-card-disabled .card-accent {
+    background: #9ca3af !important;
+}
+.card-unsupported {
+    font-size: 0.68rem;
+    color: var(--gallery-text-muted, #6b7280);
+    font-weight: 500;
 }
 
 /* Dark mode */

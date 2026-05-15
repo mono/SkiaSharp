@@ -40,12 +40,10 @@
                         SearchText="@searchText"
                         SelectedCategory="@selectedCategory"
                         SelectedTags="@selectedTags"
-                        TagModeAll="@tagModeAll"
                         LiveTagCounts="@liveTagCounts"
                         OnSearchChanged="HandleSearchChanged"
                         OnCategoryChanged="HandleCategoryChanged"
-                        OnTagToggled="HandleTagToggled"
-                        OnTagModeChanged="HandleTagModeChanged" />
+                        OnTagToggled="HandleTagToggled" />
         </div>
 
         <div class="results-column">
@@ -105,7 +103,7 @@
                             }
                             else
                             {
-                                <div @key="sample.Title">
+                                <div @key="sample.Title" title="This sample is not supported on this platform">
                                     <SampleCard Sample="sample" Icon="@icon"
                                                 Index="i" Supported="false" IsNew="isNew"
                                                 ActiveTags="@selectedTags"
@@ -146,12 +144,10 @@
                             SearchText="@searchText"
                             SelectedCategory="@selectedCategory"
                             SelectedTags="@selectedTags"
-                            TagModeAll="@tagModeAll"
                             LiveTagCounts="@liveTagCounts"
                             OnSearchChanged="HandleSearchChanged"
                             OnCategoryChanged="HandleCategoryChanged"
-                            OnTagToggled="HandleTagToggled"
-                            OnTagModeChanged="HandleTagModeChanged" />
+                            OnTagToggled="HandleTagToggled" />
             </div>
         </div>
     }
@@ -170,7 +166,7 @@
     private string searchText = string.Empty;
     private string? selectedCategory;
     private HashSet<string> selectedTags = new();
-    private bool tagModeAll;
+    private bool tagModeAll = true;
     private SampleSortOrder sortOrder = SampleSortOrder.NewestFirst;
     private bool mobileDrawerOpen;
 
@@ -240,12 +236,6 @@
         RefreshGrid();
     }
 
-    private void HandleTagModeChanged(bool all)
-    {
-        tagModeAll = all;
-        RefreshGrid();
-    }
-
     private void ClearSearch()
     {
         searchText = string.Empty;
@@ -271,7 +261,7 @@
         searchText = string.Empty;
         selectedCategory = null;
         selectedTags = new HashSet<string>();
-        tagModeAll = false;
+        tagModeAll = true;
         sortOrder = SampleSortOrder.NewestFirst;
         RefreshGrid();
     }

@@ -85,17 +85,6 @@
         }
     </div>
 
-    @* Tag mode *@
-    @if (SelectedTags.Count > 1)
-    {
-        <div class="rail-section">
-            <div class="tag-mode">
-                Match
-                <button class="mode-btn @(!TagModeAll ? "active" : "")" @onclick="() => SetTagMode(false)">ANY</button>
-                <button class="mode-btn @(TagModeAll ? "active" : "")" @onclick="() => SetTagMode(true)">ALL</button>
-            </div>
-        </div>
-    }
 </aside>
 
 @implements IDisposable
@@ -106,12 +95,10 @@
     [Parameter] public string SearchText { get; set; } = "";
     [Parameter] public string? SelectedCategory { get; set; }
     [Parameter] public IReadOnlySet<string> SelectedTags { get; set; } = new HashSet<string>();
-    [Parameter] public bool TagModeAll { get; set; }
     [Parameter] public Dictionary<string, int> LiveTagCounts { get; set; } = new();
     [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
     [Parameter] public EventCallback<string?> OnCategoryChanged { get; set; }
     [Parameter] public EventCallback<string> OnTagToggled { get; set; }
-    [Parameter] public EventCallback<bool> OnTagModeChanged { get; set; }
 
     private bool categoriesOpen = true;
     private bool typesOpen = true;
@@ -174,11 +161,6 @@
     private async Task ToggleTag(string tag)
     {
         await OnTagToggled.InvokeAsync(tag);
-    }
-
-    private async Task SetTagMode(bool all)
-    {
-        await OnTagModeChanged.InvokeAsync(all);
     }
 
     public void Dispose()
