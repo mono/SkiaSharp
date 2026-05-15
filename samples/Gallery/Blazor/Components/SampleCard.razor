@@ -48,7 +48,7 @@
             var displayName = KnownApis.GetDisplayName(tag);
             var isActiveTag = ActiveTags.Contains(tag);
             var capturedTag = tag;
-            <span role="button" tabindex="0" class="card-tag @(kind == TagKind.Type ? "ct-type" : "ct-method") @(isActiveTag ? "ct-active" : "")"
+            <span role="button" tabindex="@(Supported ? 0 : -1)" class="card-tag @(kind == TagKind.Type ? "ct-type" : "ct-method") @(isActiveTag ? "ct-active" : "")"
                     @onclick="() => OnTagClicked.InvokeAsync(capturedTag)" @onclick:stopPropagation="true"
                     @onclick:preventDefault="true"
                     @onkeydown="e => HandleTagKeyDown(e, capturedTag)" @onkeydown:stopPropagation="true"
