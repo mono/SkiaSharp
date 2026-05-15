@@ -99,15 +99,19 @@ See [references/patterns.md](references/patterns.md) for full guidance on rich r
 
 Launch **two background agents** in parallel to validate the JSON **before** merging. Wait for both to complete. This is a write→review→fix loop — repeat until no CRITICAL issues remain.
 
-**Agent 1: Fabrication Detector** — catches invented APIs and wrong facts:
+**Agent 1: Fabrication Detector** — catches invented APIs, wrong facts, and unverified claims:
 
 ```
 Launch a background general-purpose agent with this prompt:
 
 You are a documentation accuracy auditor. Your ONLY goal is to find FABRICATED
-content in the JSON documentation files. AI documentation writers frequently
-invent API methods, overloads, and constructor signatures that don't actually
-exist. You must catch every instance.
+or UNVERIFIED content in the JSON documentation files. AI documentation writers
+frequently invent API methods, make false claims about type behavior, and state
+"facts" without checking source code. Treat every claim as a hypothesis — verify
+it against actual source, or flag it.
+
+Do all work directly. Do NOT launch sub-agents or delegate to further background
+agents.
 
 For each JSON file in output/docs-work/:
 1. Read the JSON file
@@ -121,18 +125,28 @@ For each JSON file in output/docs-work/:
    - Verify standard references (ITU-T H.273, CICP, Vulkan) are correct
 4. For EVERY property summary that says "Gets or sets":
    - Check the C# signature — if it has only { get; } then it should say "Gets"
+5. For EVERY factual claim in summaries and remarks, verify against source:
+   - Immutability/mutability claims ("X is immutable", "X cannot be changed")
+   - Thread safety claims ("X is thread-safe", "X can be shared")
+   - Default value claims ("defaults to 72", "the default is X")
+   - Data format claims (bit layouts, byte sizes, channel counts, packing)
+   - Behavioral claims ("unlike X, which does Y")
+   If the source code does not confirm a claim, flag it as unverified.
 
 Output a list of issues. For each: file, docId, what's wrong, what it should be.
 If no issues found, say "No fabrication issues found."
 ```
 
-**Agent 2: Quality Reviewer** — catches style and completeness issues:
+**Agent 2: Quality Reviewer** — catches style, completeness, and accuracy issues:
 
 ```
 Launch a background general-purpose agent with this prompt:
 
 You are a documentation quality reviewer. Read the checklist at
 .agents/skills/api-docs/references/checklist.md for severity criteria.
+
+Do all work directly. Do NOT launch sub-agents or delegate to further background
+agents.
 
 For each JSON file in output/docs-work/:
 1. Check for remaining "To be added." values that should have been filled
@@ -142,6 +156,10 @@ For each JSON file in output/docs-work/:
 4. Check <see cref> references use correct prefix (T: M: P: F:)
 5. Check boolean params use "true to..." and boolean returns use "true if..."
 6. Check nullable params use <see langword="null" /> not "default"
+7. Check remarks don't make false comparisons with other types
+   (e.g., "Unlike X, which is immutable" — verify before accepting)
+8. Check enum member descriptions accurately describe the member's
+   specific value, not a similar-looking sibling enum member
 
 Report CRITICAL and IMPORTANT issues only. Include file, docId, and fix.
 ```
