@@ -9,10 +9,12 @@ namespace SkiaSharp.Tests.RenderHost.Wasm;
 // In-page renderers, one per backend. Caller passes a scene + size; we
 // return raw RGBA8888/Premul pixels.
 //
-// raster      — pure CPU, always works
-// graphite-dawn — WebGPU via Skia Graphite, no canvas (the JS bridge's
-//                 initOffscreenAsync gives us device+queue handles; Skia
-//                 allocates its own GPUTexture inside the recorder)
+// raster        — pure CPU, always works
+// graphite-dawn — WebGPU via Skia Graphite, no canvas: we acquire an
+//                 adapter/device, build an SKGraphiteDawnBackendContext
+//                 from numeric handles registered with the Emscripten
+//                 $WebGPU manager tables, render into a GPUTexture we
+//                 created ourselves, and read it back asynchronously.
 internal static partial class WasmRenderers
 {
 	public static byte[] RenderRaster (ISkiaScene scene, SKImageInfo info)
@@ -75,38 +77,48 @@ internal static partial class WasmRenderers
 	// leave them alive for the lifetime of the WASM process, and only cycle
 	// the per-render Surface + backend texture. Process-exit means the Skia
 	// warning never fires anyway.
-	private static SKGraphiteDawnBackendContext s_bc;
 	private static SKGraphiteContext s_ctx;
 	private static SKGraphiteRecorder s_recorder;
+	private static JSObject s_offscreenDevice;
 	private static bool s_dawnReady;
 
 	public static async Task<byte[]> RenderGraphiteDawnAsync (ISkiaScene scene, SKImageInfo info)
 	{
 		if (!s_dawnReady) {
-			var handles = await JsBridge.InitWebGpuOffscreenAsync ()
-				?? throw new InvalidOperationException (
-					"globalThis.skiaSharpWebGpu.initOffscreenAsync returned null — no WebGPU available");
-			s_bc = new SKGraphiteDawnBackendContext {
-				WgpuInstance = (IntPtr)handles.GetPropertyAsInt32 ("instanceId"),
-				WgpuDevice   = (IntPtr)handles.GetPropertyAsInt32 ("deviceId"),
-				WgpuQueue    = (IntPtr)handles.GetPropertyAsInt32 ("queueId"),
+			var adapter = await SKWebGpu.RequestAdapter ()
+				?? throw new InvalidOperationException ("navigator.gpu.requestAdapter returned null — WebGPU unavailable");
+			var device = await SKWebGpu.RequestDevice (adapter)
+				?? throw new InvalidOperationException ("adapter.requestDevice returned null");
+			s_offscreenDevice = device;
+
+			var queue = SKWebGpu.GetDeviceQueue (device);
+			int queueId  = SKWebGpu.RegisterQueue (queue);
+			int deviceId = SKWebGpu.RegisterDevice (device);
+			// emscripten 3.1.56 has no mgrInstance — wgpuCreateInstance returns
+			// a hard-coded value. Newer Emscripten added a real table. Skia's
+			// DawnBackendContext stores fInstance opaquely, any non-null number works.
+			int instanceId = SKWebGpu.CreateInstance ();
+
+			var bc = new SKGraphiteDawnBackendContext {
+				WgpuInstance = (IntPtr)instanceId,
+				WgpuDevice   = (IntPtr)deviceId,
+				WgpuQueue    = (IntPtr)queueId,
 			};
-			s_ctx = SKGraphiteContext.CreateDawn (s_bc)
+			s_ctx = SKGraphiteContext.CreateDawn (bc)
 				?? throw new InvalidOperationException ("SKGraphiteContext.CreateDawn returned null");
 			s_recorder = s_ctx.CreateRecorder ()
 				?? throw new InvalidOperationException ("CreateRecorder returned null");
 			s_dawnReady = true;
 		}
 
-		// Create our own GPUTexture (via the bridge), wrap it as a Graphite
-		// BackendTexture, render into it, then ask the bridge to read it
-		// back asynchronously. We CAN'T use ctx.ReadPixels here: in
-		// non-yielding mode it would deadlock on a mapAsync that needs the
-		// JS event loop to tick. Bridge-side readback keeps the GPU→CPU
-		// copy on the async path and never blocks a C# stack on JS work.
-		var textureId = JsBridge.CreateOffscreenTexture (info.Width, info.Height);
-		if (textureId == 0)
-			throw new InvalidOperationException ("createOffscreenTexture returned 0");
+		// Create our own GPUTexture, wrap it as a Graphite BackendTexture,
+		// render into it, then read it back asynchronously. We CAN'T use
+		// SKGraphiteContext.RequestReadPixels here: in non-yielding mode it
+		// would deadlock on a mapAsync that needs the JS event loop to tick.
+		// JS-side readback keeps the GPU→CPU copy on the async path and
+		// never blocks a C# stack on JS work.
+		var texture = SKWebGpu.CreateTexture (s_offscreenDevice, info.Width, info.Height);
+		int textureId = SKWebGpu.RegisterTexture (texture);
 		try {
 			using var backendTex = SKGraphiteBackendTexture.CreateDawn ((IntPtr)textureId)
 				?? throw new InvalidOperationException ("SKGraphiteBackendTexture.CreateDawn returned null");
@@ -123,11 +135,19 @@ internal static partial class WasmRenderers
 			}
 			s_ctx.Submit (new SKGraphiteSubmitInfo { Sync = false });
 
-			var b64 = await JsBridge.ReadTextureRgbaAsync (textureId, info.Width, info.Height)
-				?? throw new InvalidOperationException ("readTextureRgbaAsync returned null");
+			// WebGPU spec: bytesPerRow on copyTextureToBuffer must be a multiple of 256.
+			int bytesPerRow = ((info.Width * 4 + 255) / 256) * 256;
+			int bufSize = bytesPerRow * info.Height;
+			var buffer = SKWebGpu.CreateBuffer (s_offscreenDevice, bufSize);
+			var encoder = SKWebGpu.CreateCommandEncoder (s_offscreenDevice);
+			SKWebGpu.CopyTextureToBuffer (encoder, texture, buffer, bytesPerRow, info.Width, info.Height);
+			SKWebGpu.SubmitEncoder (s_offscreenDevice, encoder);
+			await SKWebGpu.MapBufferReadAsync (buffer);
+
+			var b64 = SKWebGpu.GetMappedBase64 (buffer, bytesPerRow, info.Width, info.Height);
 			return Convert.FromBase64String (b64);
 		} finally {
-			JsBridge.ReleaseOffscreenTexture (textureId);
+			SKWebGpu.ReleaseTexture (textureId);
 		}
 	}
 
@@ -211,5 +231,109 @@ internal static partial class WasmRenderers
 
 		internal static int InitOffscreenContext () => InitOffscreenImpl (s_gl);
 		internal static int MakeCurrent (int handle) => MakeCurrentImpl (s_gl, handle);
+	}
+
+	// All Graphite/Dawn orchestration lives in C#. The bridge JS does
+	// exactly one thing: publish Emscripten's Module onto globalThis so
+	// `globalThis.skiaSharpModule.WebGPU.mgr*` is reachable via [JSImport]
+	// from out here. Everything else — method calls on JSObject instances
+	// (`adapter.requestDevice`, `device.createTexture`, `buf.mapAsync`,
+	// etc.) — is bridged by a small set of helper closures we install via
+	// `eval` once at static-ctor time, then bind via [JSImport].
+	internal static partial class SKWebGpu
+	{
+		[JSImport ("globalThis.eval")]
+		private static partial void Eval (string expr);
+
+		static SKWebGpu ()
+		{
+			// One-time install of method-dispatch helpers. They exist only to
+			// turn `obj.method(...)` calls into top-level functions reachable
+			// by dotted path — that's the shape [JSImport] can bind. Each is
+			// a one-liner; the only complex one is GetMappedBase64, which
+			// fuses the repack-out-of-padded-rows step with the base64 pack.
+			Eval (@"
+				globalThis.skiaSharpWebGpu = {
+					requestAdapter: () => navigator.gpu && navigator.gpu.requestAdapter({ powerPreference: 'low-power' }),
+					requestDevice: a => a.requestDevice(),
+					deviceQueue: d => d.queue,
+					createInstance: () => (typeof _wgpuCreateInstance === 'function') ? _wgpuCreateInstance(0) : 1,
+					createTexture: (d, w, h) => d.createTexture({
+						size: { width: w, height: h, depthOrArrayLayers: 1 },
+						format: 'rgba8unorm',
+						usage: 0x10 | 0x01, // RENDER_ATTACHMENT | COPY_SRC
+					}),
+					createBuffer: (d, sz) => d.createBuffer({ size: sz, usage: 0x09 /* COPY_DST | MAP_READ */ }),
+					createCommandEncoder: d => d.createCommandEncoder(),
+					copyTextureToBuffer: (e, tex, buf, bpr, w, h) => e.copyTextureToBuffer(
+						{ texture: tex },
+						{ buffer: buf, bytesPerRow: bpr, rowsPerImage: h },
+						{ width: w, height: h, depthOrArrayLayers: 1 }),
+					submitEncoder: (d, e) => d.queue.submit([e.finish()]),
+					mapAsync: b => b.mapAsync(0x01 /* GPUMapMode.READ */),
+					getMappedBase64: (b, bpr, w, h) => {
+						const mapped = new Uint8Array(b.getMappedRange());
+						const widthBytes = w * 4;
+						const packed = new Uint8Array(widthBytes * h);
+						for (let r = 0; r < h; r++)
+							packed.set(mapped.subarray(r * bpr, r * bpr + widthBytes), r * widthBytes);
+						b.unmap();
+						b.destroy();
+						let s = '';
+						const CHUNK = 0x8000;
+						for (let i = 0; i < packed.length; i += CHUNK)
+							s += String.fromCharCode.apply(null, packed.subarray(i, i + CHUNK));
+						return btoa(s);
+					},
+				};
+			");
+		}
+
+		// Free dotted-path functions — no helper needed.
+		[JSImport ("globalThis.skiaSharpWebGpu.requestAdapter")]
+		internal static partial Task<JSObject?> RequestAdapter ();
+
+		[JSImport ("globalThis.skiaSharpModule.WebGPU.mgrDevice.create")]
+		internal static partial int RegisterDevice (JSObject device);
+
+		[JSImport ("globalThis.skiaSharpModule.WebGPU.mgrQueue.create")]
+		internal static partial int RegisterQueue (JSObject queue);
+
+		[JSImport ("globalThis.skiaSharpModule.WebGPU.mgrTexture.create")]
+		internal static partial int RegisterTexture (JSObject texture);
+
+		[JSImport ("globalThis.skiaSharpModule.WebGPU.mgrTexture.release")]
+		internal static partial void ReleaseTexture (int textureId);
+
+		// Method-on-JSObject calls dispatched via eval'd helpers.
+		[JSImport ("globalThis.skiaSharpWebGpu.requestDevice")]
+		internal static partial Task<JSObject?> RequestDevice (JSObject adapter);
+
+		[JSImport ("globalThis.skiaSharpWebGpu.deviceQueue")]
+		internal static partial JSObject GetDeviceQueue (JSObject device);
+
+		[JSImport ("globalThis.skiaSharpWebGpu.createInstance")]
+		internal static partial int CreateInstance ();
+
+		[JSImport ("globalThis.skiaSharpWebGpu.createTexture")]
+		internal static partial JSObject CreateTexture (JSObject device, int width, int height);
+
+		[JSImport ("globalThis.skiaSharpWebGpu.createBuffer")]
+		internal static partial JSObject CreateBuffer (JSObject device, int size);
+
+		[JSImport ("globalThis.skiaSharpWebGpu.createCommandEncoder")]
+		internal static partial JSObject CreateCommandEncoder (JSObject device);
+
+		[JSImport ("globalThis.skiaSharpWebGpu.copyTextureToBuffer")]
+		internal static partial void CopyTextureToBuffer (JSObject encoder, JSObject texture, JSObject buffer, int bytesPerRow, int width, int height);
+
+		[JSImport ("globalThis.skiaSharpWebGpu.submitEncoder")]
+		internal static partial void SubmitEncoder (JSObject device, JSObject encoder);
+
+		[JSImport ("globalThis.skiaSharpWebGpu.mapAsync")]
+		internal static partial Task MapBufferReadAsync (JSObject buffer);
+
+		[JSImport ("globalThis.skiaSharpWebGpu.getMappedBase64")]
+		internal static partial string GetMappedBase64 (JSObject buffer, int bytesPerRow, int width, int height);
 	}
 }
