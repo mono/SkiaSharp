@@ -51,9 +51,14 @@ jobs:
           retention-days: 1
 
 # -- Checkout ----------------------------------------------------------
+# Shallow checkout for SkiaSharp + skia submodule (source reference only).
+# Docs repo checked out separately so create-pull-request can target it.
 checkout:
-  - fetch-depth: 0
+  - fetch-depth: 1
     submodules: recursive
+  - repository: mono/SkiaSharp-API-docs
+    path: docs
+    fetch-depth: 1
 timeout-minutes: 120
 concurrency:
   group: auto-api-docs-writer
@@ -80,22 +85,19 @@ permissions:
   contents: read
 
 # -- Safe outputs ------------------------------------------------------
-# All GitHub writes (push, PR) are done in post-steps via bash.
-# Stage all safe outputs so the agent can't create issues/PRs directly.
 safe-outputs:
-  staged: true
+  create-pull-request:
+    target-repo: "mono/SkiaSharp-API-docs"
+    draft: false
+    base-branch: main
+    preserve-branch-name: true
+    recreate-ref: true
 
 # -- Pre-agent steps (host) -------------------------------------------
 steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
-  - name: Set up docs branch
-    run: |
-      cd docs
-      git fetch origin main
-      git checkout -B automation/write-api-docs origin/main
-      cd ..
 
 pre-agent-steps:
   - name: Download regenerated docs
@@ -109,21 +111,6 @@ pre-agent-steps:
       
       mkdir -p output/docs-work
       pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 extract docs/SkiaSharpAPI/ -Output output/docs-work/
-
-  - name: Copy push script for post-step
-    run: |
-      cp .github/scripts/api-docs-push-pr.sh /tmp/gh-aw/api-docs-push-pr.sh
-
-# -- Post-agent steps --------------------------------------------------
-post-steps:
-  - name: Merge docs and push
-    env:
-      GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-    run: |
-      pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 merge output/docs-work/
-      dotnet tool restore
-      dotnet cake --target=docs-format-docs || true
-      bash /tmp/gh-aw/api-docs-push-pr.sh
 ---
 
 # Auto API Docs Writer
@@ -133,11 +120,43 @@ post-steps:
 - **Phases 1–2 are pre-computed** — stub regeneration and JSON extraction already ran. Skip them.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't carry this into the chroot).
 - **Do NOT edit XML files directly** — edit only the JSON files in `output/docs-work/`.
-- **Phase 6 (merge) is handled by the post-step** — do NOT merge or run docs-format-docs yourself.
 
 Your workflow:
 1. **Phase 3 (Discover)** — read patterns, study existing good docs, read source code
 2. **Phase 4 (Write)** — fill JSON files with documentation
 3. **Phase 5 (Review)** — launch two background agents, fix issues, repeat until clean
+4. **Finalize** — merge, validate, commit, and create the PR (see below)
 
-**Do NOT create issues, PRs, or comments.** The post-step handles the PR. Do not use `create_issue` or `create_pull_request`.
+## Finalize — Merge, Validate, and Create PR
+
+After completing Phases 3–5:
+
+1. **Merge** JSON changes back into XML:
+   ```bash
+   pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 merge output/docs-work/
+   ```
+
+2. **Format** the XML docs:
+   ```bash
+   dotnet cake --target=docs-format-docs || true
+   ```
+
+3. **Safety check** — verify no `MemberSignature` or `TypeSignature` lines were deleted:
+   ```bash
+   cd docs && git diff -- '*.xml' | grep '^-.*<\(MemberSignature\|TypeSignature\)' | head -20
+   ```
+   If any deletions appear, revert those files with `git checkout HEAD -- <file>` and re-run merge.
+
+4. **Commit** in the docs directory:
+   ```bash
+   cd docs
+   git add -A
+   git commit -m "Fill API documentation placeholders"
+   ```
+
+5. **Create PR** — use the `create_pull_request` tool:
+   - Branch: `automation/write-api-docs`
+   - Title: `Fill API documentation placeholders`
+   - Body: `Automated AI-generated documentation for XML API docs with 'To be added.' placeholders.`
+
+If there are no documentation changes after merging, skip the commit and PR.
