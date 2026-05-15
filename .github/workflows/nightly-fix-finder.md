@@ -46,7 +46,7 @@ safe-outputs:
   report-failure-as-issue: false
   create-issue:
     title-prefix: "[fix-finder] "
-    labels: [automated, code-quality]
+    labels: [auto-fix-finder]
     expires: 7d
     close-older-issues: false
   assign-to-agent:
@@ -338,7 +338,7 @@ Create exactly **one** well-scoped issue using `create_issue`. The issue must be
 
 ### Issue Template
 
-Use this structure:
+Use this structure (note the tracker reference at the bottom):
 
 ```markdown
 ### Problem
@@ -376,7 +376,12 @@ Use this structure:
 - [ ] [Specific, verifiable criterion 2]
 - [ ] All tests pass: `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj`
 - [ ] No new warnings introduced
+
+---
+Part of #3976
 ```
+
+**Important**: Every issue body MUST end with `Part of #3976` so it appears in the tracker issue's timeline.
 
 ## Phase 5: Assign to Copilot
 
