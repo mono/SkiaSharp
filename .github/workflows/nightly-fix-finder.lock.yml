@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"7ee8b40e30564972d2b0b3dfd7690fe66604927a1c93fd7f274eeecf0ab3c4e8","compiler_version":"v0.71.5","strict":true,"agent_id":"copilot","agent_model":"claude-opus-4.6"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"bf0df800491db9108e9a66ec2652bfc7a89507349b4f011c9d2b94666674696e","compiler_version":"v0.71.5","strict":true,"agent_id":"copilot","agent_model":"claude-opus-4.6"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","SKIASHARP_AUTOBUMP_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"b8068426813005612b960b5ab0b8bd2c27142323","version":"v0.71.5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.40","digest":"sha256:14ff567e8d9d4c2fbc5e55c973488381c71d7e0fdbe72d30ee7b8a738fd86504","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.25.40@sha256:14ff567e8d9d4c2fbc5e55c973488381c71d7e0fdbe72d30ee7b8a738fd86504"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.40","digest":"sha256:2883ca3e5ae9f330cafdd9345bfd4ae17fc8da36c96d4c9a1f76e922b4c45280","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.40@sha256:2883ca3e5ae9f330cafdd9345bfd4ae17fc8da36c96d4c9a1f76e922b4c45280"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.40","digest":"sha256:b084f4a2c771f584ee68084ced52fa6b3245197a1889645d817462d307d3ac51","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.25.40@sha256:b084f4a2c771f584ee68084ced52fa6b3245197a1889645d817462d307d3ac51"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.6","digest":"sha256:2bb8eef86006a4c5963c55616a9c51c32f27bfdecb023b8aa6f91f6718d9171c","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.6@sha256:2bb8eef86006a4c5963c55616a9c51c32f27bfdecb023b8aa6f91f6718d9171c"},{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -53,6 +53,7 @@ name: "Nightly Fix Finder"
     paths:
     - .github/workflows/nightly-fix-finder.md
     - .github/workflows/nightly-fix-finder.lock.yml
+    - .github/workflows/nightly-fix-finder/*.sh
   schedule:
   - cron: "34 6 * * *"
     # Friendly format: daily (scattered)
@@ -206,20 +207,20 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_cccb5790496dea65_EOF'
+          cat << 'GH_AW_PROMPT_2ddfa5c86ecd1491_EOF'
           <system>
-          GH_AW_PROMPT_cccb5790496dea65_EOF
+          GH_AW_PROMPT_2ddfa5c86ecd1491_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_cccb5790496dea65_EOF'
+          cat << 'GH_AW_PROMPT_2ddfa5c86ecd1491_EOF'
           <safe-output-tools>
           Tools: create_issue, assign_to_agent, missing_tool, missing_data, noop
           </safe-output-tools>
-          GH_AW_PROMPT_cccb5790496dea65_EOF
+          GH_AW_PROMPT_2ddfa5c86ecd1491_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_cccb5790496dea65_EOF'
+          cat << 'GH_AW_PROMPT_2ddfa5c86ecd1491_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -248,12 +249,12 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_cccb5790496dea65_EOF
+          GH_AW_PROMPT_2ddfa5c86ecd1491_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_cccb5790496dea65_EOF'
+          cat << 'GH_AW_PROMPT_2ddfa5c86ecd1491_EOF'
           </system>
           {{#runtime-import .github/workflows/nightly-fix-finder.md}}
-          GH_AW_PROMPT_cccb5790496dea65_EOF
+          GH_AW_PROMPT_2ddfa5c86ecd1491_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -383,8 +384,8 @@ jobs:
         run: bash "${RUNNER_TEMP}/gh-aw/actions/configure_gh_for_ghe.sh"
         env:
           GH_TOKEN: ${{ github.token }}
-      - name: Collect codebase metrics
-        run: "mkdir -p /tmp/gh-aw/agent\n\n# --- Deterministic category rotation using day-of-year ---\nNUM_CATEGORIES=8\nDAY=$(date +%j)\nCATEGORY_INDEX=$(( DAY % NUM_CATEGORIES ))\n\n# --- Collect recently-changed files (last 90 days) for signal-driven targeting ---\ngit log --since=\"90 days ago\" --name-only --pretty=format: -- '*.cs' \\\n  | sort | uniq -c | sort -rn \\\n  | grep -v 'generated\\.cs' \\\n  | head -50 > /tmp/gh-aw/agent/hot-files.txt 2>/dev/null || true\n\n{\n  echo \"## Selected Category: $CATEGORY_INDEX\"\n  echo \"\"\n  echo \"## Recently Changed Files (last 90 days, by frequency)\"\n  cat /tmp/gh-aw/agent/hot-files.txt\n  echo \"\"\n\n  case $CATEGORY_INDEX in\n    0)\n      echo \"## Category 0: TODO/FIXME/HACK Comments\"\n      echo \"### Sample TODO/FIXME/HACK comments in binding/ and source/\"\n      grep -rn 'TODO\\|FIXME\\|HACK\\|XXX' --include='*.cs' --exclude-dir=obj --exclude-dir=bin --exclude='*.generated.cs' binding/ source/ 2>/dev/null | shuf | head -25 || echo \"None found\"\n      echo \"### Total count\"\n      grep -rn 'TODO\\|FIXME\\|HACK\\|XXX' --include='*.cs' --exclude-dir=obj --exclude-dir=bin --exclude='*.generated.cs' binding/ source/ 2>/dev/null | wc -l || true\n      ;;\n    1)\n      echo \"## Category 1: Missing Null Argument Validation\"\n      echo \"### Public methods with SKObject-derived parameters in binding/SkiaSharp/\"\n      echo \"### Showing method signatures and their files (agent must read full file to verify)\"\n      # Find public methods that take SK*/GR* type parameters — these are the ones needing null checks\n      grep -rn 'public.*\\(.*SK[A-Z]\\|public.*\\(.*GR[A-Z]' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/SkiaSharp/ 2>/dev/null | shuf | head -25 || echo \"None found\"\n      echo \"\"\n      echo \"### Existing ArgumentNullException patterns (for reference on style)\"\n      grep -rn 'throw new ArgumentNullException' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/SkiaSharp/ 2>/dev/null | head -10 || echo \"None found\"\n      echo \"### Total existing null checks\"\n      grep -rn 'throw new ArgumentNullException' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/SkiaSharp/ 2>/dev/null | wc -l || true\n      ;;\n    2)\n      echo \"## Category 2: Obsolete API Usage\"\n      echo \"### Internal callers using #pragma warning disable CS0618 (obsolete member usage)\"\n      grep -rn 'CS0618' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n      echo \"\"\n      echo \"### [Obsolete] declarations with messages (to find recommended replacements)\"\n      grep -rn '\\[Obsolete.*\"' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | head -15 || echo \"None found\"\n      ;;\n    3)\n      echo \"## Category 3: Missing nameof() in Exceptions\"\n      echo \"### ArgumentNullException using string literals instead of nameof()\"\n      grep -rn 'ArgumentNullException\\s*(\"' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof' | head -20 || echo \"None found\"\n      echo \"\"\n      echo \"### ArgumentOutOfRangeException using string literals instead of nameof()\"\n      grep -rn 'ArgumentOutOfRangeException\\s*(\"' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof' | head -20 || echo \"None found\"\n      echo \"\"\n      echo \"### Reference: correct pattern using nameof()\"\n      grep -rn 'throw new Argument.*Exception\\s*(nameof' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | head -5 || echo \"None found\"\n      echo \"### Total string-literal exceptions (ArgumentNull + ArgumentOutOfRange only)\"\n      { grep -rn 'ArgumentNullException\\s*(\"' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof'; grep -rn 'ArgumentOutOfRangeException\\s*(\"' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof'; } | wc -l || true\n      ;;\n    4)\n      echo \"## Category 4: Inconsistent Dispose Patterns\"\n      echo \"### Direct .Dispose() calls that should use 'using' statements\"\n      echo \"### In tests and samples (binding code is more carefully managed)\"\n      grep -rn '\\.Dispose()' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj tests/ samples/ source/ 2>/dev/null | grep -v 'using\\|override\\|protected\\|virtual\\|base\\.' | shuf | head -20 || echo \"None found\"\n      echo \"\"\n      echo \"### SKObject instances created with 'new' but not in a using block (sample)\"\n      grep -rn 'new SK[A-Z][a-zA-Z]*(' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj tests/ samples/ 2>/dev/null | grep -v 'using\\|=>' | shuf | head -15 || echo \"None found\"\n      ;;\n    5)\n      echo \"## Category 5: Test Coverage Gaps\"\n      echo \"### Public methods in core classes vs test references\"\n      echo \"### Extracting method names from SKCanvas, SKBitmap, SKImage, SKPaint, SKPath, SKSurface\"\n      for cls in SKCanvas SKBitmap SKImage SKPaint SKPath SKSurface SKFont SKColorSpace SKShader SKData; do\n        FILE=\"binding/SkiaSharp/${cls}.cs\"\n        if [ -f \"$FILE\" ]; then\n          grep -n 'public.*[a-zA-Z]\\+\\s*(' \"$FILE\" 2>/dev/null | grep -v 'class\\|interface\\|enum\\|delegate\\|struct\\|//' | sed \"s|^|$FILE:|\" | awk -F'(' '{print $1}' | awk '{print $NF, \"|\", $0}'\n        fi\n      done | sort -u > /tmp/gh-aw/agent/public-methods.txt\n      echo \"### All extracted public methods:\"\n      cat /tmp/gh-aw/agent/public-methods.txt\n      echo \"\"\n      echo \"### Methods NOT found (as whole word) in any test file:\"\n      while IFS='|' read -r method source; do\n        method=$(echo \"$method\" | tr -d ' ')\n        if [ ${#method} -gt 3 ] && ! grep -rwq \"$method\" --include='*.cs' tests/ 2>/dev/null; then\n          echo \"  UNTESTED: $method  (from $source)\"\n        fi\n      done < /tmp/gh-aw/agent/public-methods.txt | head -25\n      ;;\n    6)\n      echo \"## Category 6: Error Handling\"\n      echo \"### Bare catch blocks that may swallow exceptions in binding/ and source/\"\n      grep -rn 'catch\\s*(Exception' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n      echo \"\"\n      echo \"### catch blocks without throw/rethrow (potential swallowed exceptions)\"\n      for f in $(grep -rl 'catch' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | shuf | head -15); do\n        awk '/catch/{found=1; start=NR; block=\"\"} found{block=block\"\\n\"$0; if(/\\}/){if(block !~ /throw/){print FILENAME\":\"start\": \"block}; found=0}}' \"$f\" 2>/dev/null\n      done | head -30 || echo \"None found\"\n      ;;\n    7)\n      echo \"## Category 7: Same-Instance-Return Safety\"\n      echo \"### Calls to Subset(), ToRasterImage() that might not check for same instance\"\n      echo \"### CLAUDE.md warns: always check if (result != source) before disposing\"\n      grep -rn '\\.Subset\\s*(\\|\\.ToRasterImage\\s*(' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ tests/ samples/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n      echo \"\"\n      echo \"### Reference pattern (correct):\"\n      echo \"    var result = source.Subset(bounds);\"\n      echo \"    if (result != source) source.Dispose();\"\n      echo \"\"\n      echo \"### Calls to MakeSubset/ToRasterImage followed by Dispose on the original\"\n      grep -rnA3 '\\.Subset\\|\\.ToRasterImage' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ tests/ samples/ 2>/dev/null | grep -B3 'Dispose' | head -30 || echo \"None found\"\n      ;;\n  esac\n} > /tmp/gh-aw/agent/scan-results.md\necho \"✅ Category $CATEGORY_INDEX scan complete → /tmp/gh-aw/agent/scan-results.md\"\n"
+      - name: Run category scan script
+        run: "mkdir -p /tmp/gh-aw/agent\n\n# --- Collect recently-changed files (last 90 days) for signal-driven targeting ---\ngit log --since=\"90 days ago\" --name-only --pretty=format: -- '*.cs' \\\n  | sort | uniq -c | sort -rn \\\n  | grep -v 'generated\\.cs' \\\n  | head -50 > /tmp/gh-aw/agent/hot-files.txt 2>/dev/null || true\n\n# --- Pick a random category script ---\nSCRIPTS_DIR=\".github/workflows/nightly-fix-finder\"\nSCRIPT=$(ls \"$SCRIPTS_DIR\"/*.sh 2>/dev/null | shuf -n 1)\nSCRIPT_NAME=$(basename \"$SCRIPT\" .sh)\n\n{\n  echo \"## Selected Script: $SCRIPT_NAME\"\n  echo \"\"\n  echo \"## Recently Changed Files (last 90 days, by frequency)\"\n  cat /tmp/gh-aw/agent/hot-files.txt\n  echo \"\"\n  bash \"$SCRIPT\"\n} > /tmp/gh-aw/agent/scan-results.md\necho \"✅ Script $SCRIPT_NAME complete → /tmp/gh-aw/agent/scan-results.md\"\n"
 
       - name: Configure Git credentials
         env:
@@ -446,9 +447,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << GH_AW_SAFE_OUTPUTS_CONFIG_c16c985df6c1bce6_EOF
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << GH_AW_SAFE_OUTPUTS_CONFIG_71a39ec23525a286_EOF
           {"assign_to_agent":{"github-token":"${SKIASHARP_AUTOBUMP_TOKEN}","max":1,"model":"claude-opus-4.6","target":"*"},"create_issue":{"close_older_issues":false,"expires":168,"labels":["auto-fix-finder"],"max":1,"title_prefix":"[fix-finder] "},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_c16c985df6c1bce6_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_71a39ec23525a286_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -672,7 +673,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_6a0329179dba44cf_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_e0c2984c7ee32156_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -718,7 +719,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_6a0329179dba44cf_EOF
+          GH_AW_MCP_CONFIG_e0c2984c7ee32156_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true

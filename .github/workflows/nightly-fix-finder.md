@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/nightly-fix-finder.md"
       - ".github/workflows/nightly-fix-finder.lock.yml"
+      - ".github/workflows/nightly-fix-finder/*.sh"
   workflow_dispatch:
 permissions:
   contents: read
@@ -57,14 +58,9 @@ safe-outputs:
 timeout-minutes: 30
 strict: true
 steps:
-  - name: Collect codebase metrics
+  - name: Run category scan script
     run: |
       mkdir -p /tmp/gh-aw/agent
-
-      # --- Deterministic category rotation using day-of-year ---
-      NUM_CATEGORIES=8
-      DAY=$(date +%j)
-      CATEGORY_INDEX=$(( DAY % NUM_CATEGORIES ))
 
       # --- Collect recently-changed files (last 90 days) for signal-driven targeting ---
       git log --since="90 days ago" --name-only --pretty=format: -- '*.cs' \
@@ -72,110 +68,20 @@ steps:
         | grep -v 'generated\.cs' \
         | head -50 > /tmp/gh-aw/agent/hot-files.txt 2>/dev/null || true
 
+      # --- Pick a random category script ---
+      SCRIPTS_DIR=".github/workflows/nightly-fix-finder"
+      SCRIPT=$(ls "$SCRIPTS_DIR"/*.sh 2>/dev/null | shuf -n 1)
+      SCRIPT_NAME=$(basename "$SCRIPT" .sh)
+
       {
-        echo "## Selected Category: $CATEGORY_INDEX"
+        echo "## Selected Script: $SCRIPT_NAME"
         echo ""
         echo "## Recently Changed Files (last 90 days, by frequency)"
         cat /tmp/gh-aw/agent/hot-files.txt
         echo ""
-
-        case $CATEGORY_INDEX in
-          0)
-            echo "## Category 0: TODO/FIXME/HACK Comments"
-            echo "### Sample TODO/FIXME/HACK comments in binding/ and source/"
-            grep -rn 'TODO\|FIXME\|HACK\|XXX' --include='*.cs' --exclude-dir=obj --exclude-dir=bin --exclude='*.generated.cs' binding/ source/ 2>/dev/null | shuf | head -25 || echo "None found"
-            echo "### Total count"
-            grep -rn 'TODO\|FIXME\|HACK\|XXX' --include='*.cs' --exclude-dir=obj --exclude-dir=bin --exclude='*.generated.cs' binding/ source/ 2>/dev/null | wc -l || true
-            ;;
-          1)
-            echo "## Category 1: Missing Null Argument Validation"
-            echo "### Public methods with SKObject-derived parameters in binding/SkiaSharp/"
-            echo "### Showing method signatures and their files (agent must read full file to verify)"
-            # Find public methods that take SK*/GR* type parameters — these are the ones needing null checks
-            grep -rn 'public.*\(.*SK[A-Z]\|public.*\(.*GR[A-Z]' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/SkiaSharp/ 2>/dev/null | shuf | head -25 || echo "None found"
-            echo ""
-            echo "### Existing ArgumentNullException patterns (for reference on style)"
-            grep -rn 'throw new ArgumentNullException' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/SkiaSharp/ 2>/dev/null | head -10 || echo "None found"
-            echo "### Total existing null checks"
-            grep -rn 'throw new ArgumentNullException' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/SkiaSharp/ 2>/dev/null | wc -l || true
-            ;;
-          2)
-            echo "## Category 2: Obsolete API Usage"
-            echo "### Internal callers using #pragma warning disable CS0618 (obsolete member usage)"
-            grep -rn 'CS0618' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | shuf | head -20 || echo "None found"
-            echo ""
-            echo "### [Obsolete] declarations with messages (to find recommended replacements)"
-            grep -rn '\[Obsolete.*"' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | head -15 || echo "None found"
-            ;;
-          3)
-            echo "## Category 3: Missing nameof() in Exceptions"
-            echo "### ArgumentNullException using string literals instead of nameof()"
-            grep -rn 'ArgumentNullException\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof' | head -20 || echo "None found"
-            echo ""
-            echo "### ArgumentOutOfRangeException using string literals instead of nameof()"
-            grep -rn 'ArgumentOutOfRangeException\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof' | head -20 || echo "None found"
-            echo ""
-            echo "### Reference: correct pattern using nameof()"
-            grep -rn 'throw new Argument.*Exception\s*(nameof' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | head -5 || echo "None found"
-            echo "### Total string-literal exceptions (ArgumentNull + ArgumentOutOfRange only)"
-            { grep -rn 'ArgumentNullException\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof'; grep -rn 'ArgumentOutOfRangeException\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof'; } | wc -l || true
-            ;;
-          4)
-            echo "## Category 4: Inconsistent Dispose Patterns"
-            echo "### Direct .Dispose() calls that should use 'using' statements"
-            echo "### In tests and samples (binding code is more carefully managed)"
-            grep -rn '\.Dispose()' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj tests/ samples/ source/ 2>/dev/null | grep -v 'using\|override\|protected\|virtual\|base\.' | shuf | head -20 || echo "None found"
-            echo ""
-            echo "### SKObject instances created with 'new' but not in a using block (sample)"
-            grep -rn 'new SK[A-Z][a-zA-Z]*(' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj tests/ samples/ 2>/dev/null | grep -v 'using\|=>' | shuf | head -15 || echo "None found"
-            ;;
-          5)
-            echo "## Category 5: Test Coverage Gaps"
-            echo "### Public methods in core classes vs test references"
-            echo "### Extracting method names from SKCanvas, SKBitmap, SKImage, SKPaint, SKPath, SKSurface"
-            for cls in SKCanvas SKBitmap SKImage SKPaint SKPath SKSurface SKFont SKColorSpace SKShader SKData; do
-              FILE="binding/SkiaSharp/${cls}.cs"
-              if [ -f "$FILE" ]; then
-                grep -n 'public.*[a-zA-Z]\+\s*(' "$FILE" 2>/dev/null | grep -v 'class\|interface\|enum\|delegate\|struct\|//' | sed "s|^|$FILE:|" | awk -F'(' '{print $1}' | awk '{print $NF, "|", $0}'
-              fi
-            done | sort -u > /tmp/gh-aw/agent/public-methods.txt
-            echo "### All extracted public methods:"
-            cat /tmp/gh-aw/agent/public-methods.txt
-            echo ""
-            echo "### Methods NOT found (as whole word) in any test file:"
-            while IFS='|' read -r method source; do
-              method=$(echo "$method" | tr -d ' ')
-              if [ ${#method} -gt 3 ] && ! grep -rwq "$method" --include='*.cs' tests/ 2>/dev/null; then
-                echo "  UNTESTED: $method  (from $source)"
-              fi
-            done < /tmp/gh-aw/agent/public-methods.txt | head -25
-            ;;
-          6)
-            echo "## Category 6: Error Handling"
-            echo "### Bare catch blocks that may swallow exceptions in binding/ and source/"
-            grep -rn 'catch\s*(Exception' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | shuf | head -20 || echo "None found"
-            echo ""
-            echo "### catch blocks without throw/rethrow (potential swallowed exceptions)"
-            for f in $(grep -rl 'catch' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | shuf | head -15); do
-              awk '/catch/{found=1; start=NR; block=""} found{block=block"\n"$0; if(/\}/){if(block !~ /throw/){print FILENAME":"start": "block}; found=0}}' "$f" 2>/dev/null
-            done | head -30 || echo "None found"
-            ;;
-          7)
-            echo "## Category 7: Same-Instance-Return Safety"
-            echo "### Calls to Subset(), ToRasterImage() that might not check for same instance"
-            echo "### CLAUDE.md warns: always check if (result != source) before disposing"
-            grep -rn '\.Subset\s*(\|\.ToRasterImage\s*(' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ tests/ samples/ 2>/dev/null | shuf | head -20 || echo "None found"
-            echo ""
-            echo "### Reference pattern (correct):"
-            echo "    var result = source.Subset(bounds);"
-            echo "    if (result != source) source.Dispose();"
-            echo ""
-            echo "### Calls to MakeSubset/ToRasterImage followed by Dispose on the original"
-            grep -rnA3 '\.Subset\|\.ToRasterImage' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ tests/ samples/ 2>/dev/null | grep -B3 'Dispose' | head -30 || echo "None found"
-            ;;
-        esac
+        bash "$SCRIPT"
       } > /tmp/gh-aw/agent/scan-results.md
-      echo "✅ Category $CATEGORY_INDEX scan complete → /tmp/gh-aw/agent/scan-results.md"
+      echo "✅ Script $SCRIPT_NAME complete → /tmp/gh-aw/agent/scan-results.md"
 ---
 
 # Nightly Fix Finder
@@ -223,26 +129,23 @@ Before doing anything else, check if tracker issue #3976 has the `paused` label.
 
 Read `/tmp/gh-aw/agent/scan-results.md` which contains pre-collected metrics for **one deterministically selected category**, plus a list of recently-changed files (last 90 days) for context.
 
-### 1.2 Identify the Category
+### 1.2 Identify the Selected Category
 
-The scan results start with `## Selected Category: N` where N is 0-7. The file ONLY contains data for that one category — you MUST work with whatever category was selected:
+The scan results start with `## Selected Script: NNN-name` — this is the category
+that was randomly selected for today's run. The file then contains, in order:
 
-| Index | Category | Description |
-|-------|----------|-------------|
-| 0 | TODO/FIXME/HACK Comments | Find stale TODO/FIXME/HACK comments that should be resolved |
-| 1 | Missing Null Argument Validation | Find public methods missing `ArgumentNullException` for SK*/GR* params |
-| 2 | Obsolete API Usage | Find internal callers using `#pragma warning disable CS0618` that should be updated |
-| 3 | Missing nameof() in Exceptions | Find `throw new ArgumentException("param")` that should use `nameof(param)` |
-| 4 | Inconsistent Dispose Patterns | Find resources not using `using` in tests/samples |
-| 5 | Test Coverage Gaps | Find public APIs in core classes with no test coverage |
-| 6 | Error Handling | Find bare `catch (Exception)` blocks that swallow errors |
-| 7 | Same-Instance-Return Safety | Find `Subset()`/`ToRasterImage()` calls without same-instance checks |
+1. **Recently changed files** (hot files for prioritization — prefer findings here)
+2. **Category guidance** — what to look for, how to fix it, ABI safety rules, what NOT to flag
+3. **Scan data** — grep results, counts, and code samples from the repository
 
-If the selected category has no actionable findings in the scan results, call `noop` — do NOT switch to a different category.
+You MUST work exclusively with the selected category. If the scan data shows no
+actionable findings for this category, call `noop` — do NOT switch to another category.
 
 ### 1.3 Use Hot Files for Prioritization
 
-The scan results include a "Recently Changed Files" section showing files changed in the last 90 days. **Prefer findings in hot files** — these are actively maintained areas where improvements have the most impact and are least likely to be ignored.
+The scan results include a "Recently Changed Files" section listing files changed in
+the last 90 days. **Prefer findings in hot files** — these are actively maintained
+areas where improvements have the most impact and are least likely to be ignored.
 
 ## Phase 2: Deep Analysis + Confidence Scoring
 
@@ -264,75 +167,8 @@ Score your finding on three dimensions (each 1-10):
 
 **If the sum is less than 24 (out of 30), call `noop`.** It's better to skip a day than file a questionable issue. Include your scores in the noop message.
 
-### Category-Specific Guidance
-
-#### TODO/FIXME/HACK Comments (Category 0)
-- Pick a TODO that is clearly stale or has a concrete action
-- Check if the TODO references an old bug number or feature that's already done
-- Prefer TODOs in `binding/SkiaSharp/` over `source/` (higher impact)
-- The issue should ask to either implement the TODO or remove it if no longer relevant
-
-#### Missing Null Argument Validation (Category 1)
-- Pick a public method that takes `SKPaint`, `SKImage`, `SKData`, or other `SKObject`-derived parameters
-- **Read the full method** to verify it doesn't already validate with `ArgumentNullException`
-- The fix should add `ArgumentNullException` checks consistent with existing patterns:
-  ```csharp
-  if (paint == null)
-      throw new ArgumentNullException(nameof(paint));
-  ```
-- For new code, prefer `#if NET6_0_OR_GREATER` / `ArgumentNullException.ThrowIfNull()` with a fallback for older TFMs, OR use the simple `if (x == null) throw` pattern that works everywhere
-- **ABI safe** — adding validation doesn't change signatures
-
-#### Obsolete API Usage (Category 2)
-- Find internal usages with `#pragma warning disable CS0618` and suggest the modern replacement
-- If the `[Obsolete]` message suggests an alternative, reference it
-- Do NOT suggest removing the obsolete API itself (ABI break) — only updating internal callers
-
-#### Missing nameof() in Exceptions (Category 3)
-- Find `throw new ArgumentNullException("paramName")` or `ArgumentOutOfRangeException("paramName")` and replace with `nameof(paramName)`
-- **Ignore `ArgumentException("descriptive message")`** — these use descriptive messages, not parameter names, and don't need nameof()
-- Verify the string literal matches an actual parameter name in the method signature
-- **ABI safe** — only changes the exception message at most
-- This is a simple, low-risk, high-confidence category — but it has very few remaining items
-
-#### Inconsistent Dispose Patterns (Category 4)
-- Find places where `SKObject` instances are created but not wrapped in `using`
-- **Focus on test code and samples** (binding code is more carefully managed)
-- Check for patterns like `var x = new SKPaint(); ... x.Dispose()` → `using var x = new SKPaint();`
-- **Ignore value types**: `SKPoint`, `SKSize`, `SKRect`, `SKRectI`, `SKColor`, `SKColorF`, `SKMatrix` are structs and do NOT need dispose
-- **Be careful**: some test patterns intentionally control disposal timing — read the full test
-
-#### Test Coverage Gaps (Category 5)
-- Find public methods in core classes with zero references in `tests/`
-- The pre-scan uses whole-word matching (`grep -w`), but still verify by reading actual test files
-- The issue should include a **non-trivial** test skeleton that exercises real behavior:
-  ```csharp
-  [SkippableFact]
-  public void MethodNameWorks()
-  {
-      using var surface = SKSurface.Create(new SKImageInfo(100, 100));
-      var canvas = surface.Canvas;
-      // ... actual test logic
-      Assert.Equal(expected, actual);
-  }
-  ```
-- Do NOT file issues for trivial `Assert.NotNull` test suggestions
-
-#### Error Handling (Category 6)
-- Find `catch (Exception)` blocks that don't log or rethrow
-- Focus on `binding/` and `source/` (not tests — tests may legitimately catch)
-- The issue should suggest specific exception types or proper rethrow patterns
-
-#### Same-Instance-Return Safety (Category 7)
-- Find calls to `Subset()`, `ToRasterImage()`, `ToRasterImage(false)` where the caller disposes the source without checking if source == result
-- This is a **real crash-level bug** when it occurs — high value
-- The fix pattern is always:
-  ```csharp
-  var result = source.Subset(bounds);
-  if (result != source)
-      source.Dispose();
-  return result;
-  ```
+> The category-specific guidance (what to look for, how to fix, what NOT to flag) is
+> embedded at the top of the scan results you read in Phase 1. Refer to it here.
 
 ## Phase 3: Deduplication Check (MANDATORY)
 
@@ -349,7 +185,7 @@ Use the GitHub MCP tools to find existing open issues in `mono/SkiaSharp`:
 ### 3.2 Evaluate overlap
 
 For each matching issue found, read its body and check:
-- Does it contain the **same fingerprint** (`cat=N file=X.cs`)?
+- Does it contain the **same fingerprint** (`script=X file=Y.cs`)?
 - Does it target the **same file(s)** AND **same problem**?
 
 ### 3.3 Decision
@@ -404,12 +240,12 @@ Use this structure exactly (note the fingerprint and tracker reference):
 - [ ] No new warnings introduced
 
 ---
-<!-- fingerprint: cat=N file=FILENAME.cs rule=BRIEF_RULE_ID -->
+<!-- fingerprint: script=SCRIPT-NAME file=FILENAME.cs rule=BRIEF_RULE_ID -->
 Part of #3976
 ```
 
 **CRITICAL**: The `<!-- fingerprint: ... -->` HTML comment is MANDATORY. It enables deterministic deduplication. Use:
-- `cat=N` — the category number
+- `script=SCRIPT-NAME` — the script basename without extension (e.g., `01-missing-null-validation`)
 - `file=FILENAME.cs` — the primary file being fixed (basename only)
 - `rule=BRIEF_ID` — a short identifier for the specific finding (e.g., `TextAlign-obsolete`, `DrawRect-null-check`, `Subset-same-instance`)
 
@@ -473,5 +309,5 @@ You **MUST** end by calling exactly one set of safe output tools:
 - **`noop`**: When no actionable improvement was found, or confidence is too low
 
 ```json
-{"noop": {"message": "No actionable improvements found today for category N. Scores: correctness=X, clarity=Y, safety=Z (sum=S < 24)."}}
+{"noop": {"message": "No actionable improvements found today for script SCRIPT-NAME. Scores: correctness=X, clarity=Y, safety=Z (sum=S < 24)."}}
 ```
