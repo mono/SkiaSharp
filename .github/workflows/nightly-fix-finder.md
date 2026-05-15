@@ -109,13 +109,16 @@ steps:
             ;;
           3)
             echo "## Category 3: Missing nameof() in Exceptions"
-            echo "### ArgumentNullException/ArgumentException using string literals instead of nameof()"
-            grep -rn 'throw new Argument.*Exception\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof' | shuf | head -20 || echo "None found"
+            echo "### ArgumentNullException using string literals instead of nameof()"
+            grep -rn 'ArgumentNullException\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof' | head -20 || echo "None found"
+            echo ""
+            echo "### ArgumentOutOfRangeException using string literals instead of nameof()"
+            grep -rn 'ArgumentOutOfRangeException\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof' | head -20 || echo "None found"
             echo ""
             echo "### Reference: correct pattern using nameof()"
             grep -rn 'throw new Argument.*Exception\s*(nameof' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | head -5 || echo "None found"
-            echo "### Total string-literal exceptions (without nameof)"
-            grep -rn 'throw new Argument.*Exception\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof' | wc -l || true
+            echo "### Total string-literal exceptions (ArgumentNull + ArgumentOutOfRange only)"
+            { grep -rn 'ArgumentNullException\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof'; grep -rn 'ArgumentOutOfRangeException\s*("' --include='*.cs' --exclude='*.generated.cs' --exclude-dir=obj binding/ source/ 2>/dev/null | grep -v 'nameof'; } | wc -l || true
             ;;
           4)
             echo "## Category 4: Inconsistent Dispose Patterns"
@@ -200,7 +203,15 @@ Each night, analyze pre-collected scan data for one category, find one specific 
 5. **The `SK` prefix convention** — all public types use `SK` or `GR` prefix
 6. **Memory management matters** — `SKObject` subclasses have specific dispose patterns; `Subset()` and `ToRasterImage()` may return the same instance
 7. **Tests must pass** — any fix must not break `dotnet test tests/SkiaSharp.Tests.Console/`
-8. **Multi-targets netstandard2.0/net462** — do NOT use .NET 6+ APIs (e.g., `ArgumentNullException.ThrowIfNull`)
+8. **Multi-targets netstandard2.0/net462** — when suggesting .NET 6+ APIs (e.g., `ArgumentNullException.ThrowIfNull`), wrap them in `#if` preprocessor guards so the code compiles on all TFMs:
+   ```csharp
+   #if NET6_0_OR_GREATER
+   ArgumentNullException.ThrowIfNull(paint);
+   #else
+   if (paint == null)
+       throw new ArgumentNullException(nameof(paint));
+   #endif
+   ```
 
 ## Phase 0: Kill Switch Check
 
@@ -269,7 +280,7 @@ Score your finding on three dimensions (each 1-10):
   if (paint == null)
       throw new ArgumentNullException(nameof(paint));
   ```
-- Do NOT use `ArgumentNullException.ThrowIfNull()` — not available on netstandard2.0
+- For new code, prefer `#if NET6_0_OR_GREATER` / `ArgumentNullException.ThrowIfNull()` with a fallback for older TFMs, OR use the simple `if (x == null) throw` pattern that works everywhere
 - **ABI safe** — adding validation doesn't change signatures
 
 #### Obsolete API Usage (Category 2)
@@ -278,15 +289,17 @@ Score your finding on three dimensions (each 1-10):
 - Do NOT suggest removing the obsolete API itself (ABI break) — only updating internal callers
 
 #### Missing nameof() in Exceptions (Category 3)
-- Find `throw new ArgumentNullException("paramName")` and replace with `nameof(paramName)`
+- Find `throw new ArgumentNullException("paramName")` or `ArgumentOutOfRangeException("paramName")` and replace with `nameof(paramName)`
+- **Ignore `ArgumentException("descriptive message")`** — these use descriptive messages, not parameter names, and don't need nameof()
 - Verify the string literal matches an actual parameter name in the method signature
 - **ABI safe** — only changes the exception message at most
-- This is a simple, low-risk, high-confidence category
+- This is a simple, low-risk, high-confidence category — but it has very few remaining items
 
 #### Inconsistent Dispose Patterns (Category 4)
 - Find places where `SKObject` instances are created but not wrapped in `using`
 - **Focus on test code and samples** (binding code is more carefully managed)
 - Check for patterns like `var x = new SKPaint(); ... x.Dispose()` → `using var x = new SKPaint();`
+- **Ignore value types**: `SKPoint`, `SKSize`, `SKRect`, `SKRectI`, `SKColor`, `SKColorF`, `SKMatrix` are structs and do NOT need dispose
 - **Be careful**: some test patterns intentionally control disposal timing — read the full test
 
 #### Test Coverage Gaps (Category 5)
@@ -380,7 +393,7 @@ Use this structure exactly (note the fingerprint and tracker reference):
 - [ ] Does NOT modify any `*.generated.cs` file
 - [ ] Does NOT change existing public API signatures (ABI stable)
 - [ ] Does NOT use default parameters in public methods
-- [ ] Does NOT use .NET 6+ APIs (must work on netstandard2.0/net462)
+- [ ] Does NOT use .NET 6+ APIs without `#if` guards (must compile on netstandard2.0/net462)
 - [ ] Follows existing code style and naming conventions
 
 ### Acceptance Criteria
