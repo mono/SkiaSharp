@@ -323,13 +323,32 @@ Using the pre-collected sample data for the selected category, pick **one specif
 - **ABI constraint**: Cannot rename existing public APIs — only suggest fixes for internal/private members
 - For public naming issues, suggest adding a correctly-named overload and `[Obsolete]` on the old one
 
-## Phase 3: Deduplication Check
+## Phase 3: Deduplication Check (MANDATORY)
 
-Before creating an issue, search for existing issues that might already cover this improvement:
+Before creating an issue, you **MUST** search for existing issues. Skipping this step is the #1 cause of duplicate issues.
 
-1. Search open issues with the `[fix-finder]` prefix
-2. Search open issues mentioning the same file or method
-3. If a similar issue exists, call `noop` instead of creating a duplicate
+### 3.1 Search for duplicates
+
+Use the GitHub MCP `search_issues` tool (or `list_issues`) to find existing open issues in `mono/SkiaSharp` that might overlap:
+
+1. **Search by label**: List all open issues with the `auto-fix-finder` label
+2. **Search by file path**: Search open issues mentioning the same file name (e.g., `CanvasExtensions.cs`)
+3. **Search by key term**: Search for the method name or code pattern you're about to file (e.g., `TextAlign`, `DrawShapedText`)
+
+### 3.2 Evaluate overlap
+
+For each matching issue found, read its body and check:
+- Does it target the **same file(s)**?
+- Does it target the **same lines or methods**?
+- Does it address the **same underlying problem** (even if worded differently)?
+
+### 3.3 Decision
+
+- **If ANY existing open issue covers the same file + same problem** → call `noop` with a message like: `"Duplicate of #NNNN — same file and issue already tracked"`
+- **If an existing issue covers the same problem in a DIFFERENT file** → that's fine, proceed (they're separate fixes)
+- **If no overlap found** → proceed to Phase 4
+
+**Example**: If issue #3977 already fixes `paint.TextAlign` in `SKCanvas.cs`, filing a new issue for `paint.TextAlign` in `CanvasExtensions.cs` is OK (different file). But filing another issue for `paint.TextAlign` in `SKCanvas.cs` is a duplicate and MUST be skipped.
 
 ## Phase 4: Create Issue
 
