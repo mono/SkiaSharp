@@ -1,8 +1,7 @@
 ---
 description: "Nightly scan for code improvement opportunities — files issues assigned to Copilot"
 on:
-  schedule:
-    - cron: "0 3 * * *"
+  schedule: daily
   pull_request:
     paths:
       - ".github/workflows/nightly-fix-finder.md"
