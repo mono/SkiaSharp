@@ -42,14 +42,6 @@
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_SkiaSharpNativeBinaryType)</_SkiaSharpNativeBinaryType>
   </PropertyGroup>
   <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
-    <!--
-      Use POSIX separators below: MSBuild's `Include="...\*.a"` glob does NOT
-      normalize backslashes on Linux (the `\` is a literal char, so the glob
-      matches nothing). Forward slashes work on both Windows and Linux. The
-      original Windows-style separators silently produced empty NativeFileReference
-      on Linux SDK consumers, causing the final emcc link to omit libSkiaSharp.a
-      entirely.
-    -->
     <!-- net8.0 -->
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)/3.1.34/$(_SkiaSharpNativeBinaryType)/*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
     <!-- net9.0+ -->
