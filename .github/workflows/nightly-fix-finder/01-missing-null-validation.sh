@@ -11,13 +11,12 @@ A null passed through to a P/Invoke call causes AccessViolationException or a na
 crash instead of a clear, debuggable exception.
 
 ### How to fix
-Add null checks consistent with existing patterns:
+Add null checks using the simple form that compiles on all TFMs:
   if (paint == null)
       throw new ArgumentNullException(nameof(paint));
 
-For code that must compile on both netstandard2.0 and net6+, use the simple
-if-null-throw pattern (works everywhere). Do NOT use ArgumentNullException.ThrowIfNull()
-without a #if NET6_0_OR_GREATER guard.
+Do NOT suggest ArgumentNullException.ThrowIfNull() — it requires a #if guard for
+older TFMs and provides no real benefit over the two-line form above.
 
 ### ABI safety
 Adding argument validation does not change the method signature. Always ABI-safe.

@@ -20,7 +20,8 @@ For methods where null is NOT valid input, add a guard before the .Handle access
   if (paint == null)
       throw new ArgumentNullException(nameof(paint));
 
-### ABI safety
+Do NOT suggest ArgumentNullException.ThrowIfNull() — the two-line form works on
+all TFMs and is preferred.
 Adding argument validation does not change the method signature. Always ABI-safe.
 
 ### What NOT to flag

@@ -109,15 +109,12 @@ Each night, analyze pre-collected scan data for one category, find one specific 
 5. **The `SK` prefix convention** — all public types use `SK` or `GR` prefix
 6. **Memory management matters** — `SKObject` subclasses have specific dispose patterns; `Subset()` and `ToRasterImage()` may return the same instance
 7. **Tests must pass** — any fix must not break `dotnet test tests/SkiaSharp.Tests.Console/`
-8. **Multi-targets netstandard2.0/net462** — when suggesting .NET 6+ APIs (e.g., `ArgumentNullException.ThrowIfNull`), wrap them in `#if` preprocessor guards so the code compiles on all TFMs:
+8. **Multi-targets netstandard2.0/net462** — prefer patterns that work on all TFMs without conditional compilation. For null checks, always use the simple form:
    ```csharp
-   #if NET6_0_OR_GREATER
-   ArgumentNullException.ThrowIfNull(paint);
-   #else
    if (paint == null)
        throw new ArgumentNullException(nameof(paint));
-   #endif
    ```
+   Reserve `#if NET6_0_OR_GREATER` guards for APIs that provide a **genuine benefit** — performance (e.g., `Span<T>`, `stackalloc`), meaningful allocation savings, or new functionality. Do NOT use `#if` just to access a stylistically shorter alternative to something that already works fine on all TFMs.
 
 ## Phase 0: Kill Switch Check
 
@@ -127,7 +124,7 @@ Before doing anything else, check if tracker issue #3976 has the `paused` label.
 
 ### 1.1 Read Pre-computed Data
 
-Read `/tmp/gh-aw/agent/scan-results.md` which contains pre-collected metrics for **one deterministically selected category**, plus a list of recently-changed files (last 90 days) for context.
+Read `/tmp/gh-aw/agent/scan-results.md` which contains pre-collected scan data for **one randomly selected category script**, plus a list of recently-changed files (last 90 days) for context.
 
 ### 1.2 Identify the Selected Category
 
@@ -229,7 +226,7 @@ Use this structure exactly (note the fingerprint and tracker reference):
 - [ ] Does NOT modify any `*.generated.cs` file
 - [ ] Does NOT change existing public API signatures (ABI stable)
 - [ ] Does NOT use default parameters in public methods
-- [ ] Does NOT use .NET 6+ APIs without `#if` guards (must compile on netstandard2.0/net462)
+- [ ] Does NOT use .NET 6+ APIs without `#if` guards unless they genuinely benefit all callers (simple null-check style alternatives do NOT qualify — use the `if (x == null) throw` form instead)
 - [ ] Follows existing code style and naming conventions
 
 ### Acceptance Criteria
