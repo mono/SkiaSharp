@@ -142,6 +142,22 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void BuildReturnsMeshBuilder()
+		{
+			using var builder = SKMeshSpecification.Build(
+				SimpleAttributes,
+				sizeof(float) * 2,
+				EmptyVaryings,
+				SimpleVertexShader,
+				SimpleFragmentShader);
+
+			Assert.NotNull(builder);
+			Assert.NotNull(builder.Specification);
+			Assert.NotNull(builder.Uniforms);
+			Assert.NotNull(builder.Children);
+		}
+
+		[SkippableFact]
 		public void UniformsAndChildrenProperties()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -446,7 +462,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeshBuilderCreatesNonIndexedMesh()
 		{
-			using var spec = SKMeshSpecification.Create(
+			var spec = SKMeshSpecification.Create(
 				SimpleAttributes,
 				sizeof(float) * 2,
 				EmptyVaryings,
@@ -473,7 +489,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MeshBuilderCreatesIndexedMesh()
 		{
-			using var spec = SKMeshSpecification.Create(
+			var spec = SKMeshSpecification.Create(
 				SimpleAttributes,
 				sizeof(float) * 2,
 				EmptyVaryings,

@@ -59,6 +59,7 @@ public class SKMeshBuilder : IDisposable
 	{
 		Uniforms?.Dispose ();
 		Children?.Dispose ();
+		Specification?.Dispose ();
 	}
 }
 
