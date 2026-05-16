@@ -23,26 +23,26 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 
 	// Create
 
-	public static SKMeshSpecification Create (
+	public static SKMeshSpecification? Create (
 		ReadOnlySpan<SKMeshSpecificationAttribute> attributes,
 		int vertexStride,
 		ReadOnlySpan<SKMeshSpecificationVarying> varyings,
 		string vertexShader,
 		string fragmentShader,
-		out string errors)
+		out string? errors)
 	{
 		return Create (attributes, vertexStride, varyings, vertexShader, fragmentShader, null, SKAlphaType.Premul, out errors);
 	}
 
-	public static SKMeshSpecification Create (
+	public static SKMeshSpecification? Create (
 		ReadOnlySpan<SKMeshSpecificationAttribute> attributes,
 		int vertexStride,
 		ReadOnlySpan<SKMeshSpecificationVarying> varyings,
 		string vertexShader,
 		string fragmentShader,
-		SKColorSpace colorSpace,
+		SKColorSpace? colorSpace,
 		SKAlphaType alphaType,
-		out string errors)
+		out string? errors)
 	{
 		if (vertexShader == null)
 			throw new ArgumentNullException (nameof (vertexShader));
@@ -129,7 +129,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 
 	// Build
 
-	public static SKMeshSpecification Build (
+	public static SKMeshBuilder Build (
 		ReadOnlySpan<SKMeshSpecificationAttribute> attributes,
 		int vertexStride,
 		ReadOnlySpan<SKMeshSpecificationVarying> varyings,
@@ -139,7 +139,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		return Build (attributes, vertexStride, varyings, vertexShader, fragmentShader, null, SKAlphaType.Premul);
 	}
 
-	public static SKMeshSpecification Build (
+	public static SKMeshBuilder Build (
 		ReadOnlySpan<SKMeshSpecificationAttribute> attributes,
 		int vertexStride,
 		ReadOnlySpan<SKMeshSpecificationVarying> varyings,
@@ -157,7 +157,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 				throw new SKMeshSpecificationException ($"Failed to create the mesh specification. There was an error: {errors}");
 		}
 
-		return spec;
+		return new SKMeshBuilder (spec);
 	}
 
 	// Properties
@@ -199,7 +199,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int vertexOffset,
 		SKRect bounds)
 	{
-		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData)null, null, bounds, out _);
+		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData?)null, null, bounds, out _);
 	}
 
 	public SKMesh ToMesh (
@@ -208,9 +208,9 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int vertexCount,
 		int vertexOffset,
 		SKRect bounds,
-		out string errors)
+		out string? errors)
 	{
-		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData)null, null, bounds, out errors);
+		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData?)null, null, bounds, out errors);
 	}
 
 	public SKMesh ToMesh (
@@ -218,8 +218,8 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
 		int vertexOffset,
-		SKRuntimeEffectUniforms uniforms,
-		SKRuntimeEffectChildren children,
+		SKRuntimeEffectUniforms? uniforms,
+		SKRuntimeEffectChildren? children,
 		SKRect bounds)
 	{
 		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset,
@@ -231,7 +231,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
 		int vertexOffset,
-		SKData uniforms,
+		SKData? uniforms,
 		SKRect bounds)
 	{
 		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, null, bounds, out _);
@@ -242,9 +242,9 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
 		int vertexOffset,
-		SKData uniforms,
+		SKData? uniforms,
 		SKRect bounds,
-		out string errors)
+		out string? errors)
 	{
 		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, null, bounds, out errors);
 	}
@@ -254,10 +254,10 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
 		int vertexOffset,
-		SKData uniforms,
-		SKObject[] children,
+		SKData? uniforms,
+		SKObject?[]? children,
 		SKRect bounds,
-		out string errors)
+		out string? errors)
 	{
 		if (vertexBuffer == null)
 			throw new ArgumentNullException (nameof (vertexBuffer));
@@ -308,7 +308,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKRect bounds)
 	{
 		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
-			indexBuffer, indexCount, indexOffset, (SKData)null, null, bounds, out _);
+			indexBuffer, indexCount, indexOffset, (SKData?)null, null, bounds, out _);
 	}
 
 	public SKMesh ToMeshIndexed (
@@ -320,10 +320,10 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int indexCount,
 		int indexOffset,
 		SKRect bounds,
-		out string errors)
+		out string? errors)
 	{
 		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
-			indexBuffer, indexCount, indexOffset, (SKData)null, null, bounds, out errors);
+			indexBuffer, indexCount, indexOffset, (SKData?)null, null, bounds, out errors);
 	}
 
 	public SKMesh ToMeshIndexed (
@@ -334,8 +334,8 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshIndexBuffer indexBuffer,
 		int indexCount,
 		int indexOffset,
-		SKRuntimeEffectUniforms uniforms,
-		SKRuntimeEffectChildren children,
+		SKRuntimeEffectUniforms? uniforms,
+		SKRuntimeEffectChildren? children,
 		SKRect bounds)
 	{
 		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
@@ -351,7 +351,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshIndexBuffer indexBuffer,
 		int indexCount,
 		int indexOffset,
-		SKData uniforms,
+		SKData? uniforms,
 		SKRect bounds)
 	{
 		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
@@ -366,9 +366,9 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshIndexBuffer indexBuffer,
 		int indexCount,
 		int indexOffset,
-		SKData uniforms,
+		SKData? uniforms,
 		SKRect bounds,
-		out string errors)
+		out string? errors)
 	{
 		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
 			indexBuffer, indexCount, indexOffset, uniforms, null, bounds, out errors);
@@ -382,10 +382,10 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshIndexBuffer indexBuffer,
 		int indexCount,
 		int indexOffset,
-		SKData uniforms,
-		SKObject[] children,
+		SKData? uniforms,
+		SKObject?[]? children,
 		SKRect bounds,
-		out string errors)
+		out string? errors)
 	{
 		if (vertexBuffer == null)
 			throw new ArgumentNullException (nameof (vertexBuffer));
