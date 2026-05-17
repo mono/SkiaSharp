@@ -2,17 +2,15 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
+#load "test-shared.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// ANDROID TESTS — build, emulator management, and xharness execution
+// ANDROID TESTS — build, emulator management, and dotnet test execution
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var TEST_APP = Argument("app", EnvironmentVariable("ANDROID_TEST_APP") ?? "");
 var TEST_RESULTS = Argument("results", EnvironmentVariable("ANDROID_TEST_RESULTS") ?? "");
 var TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64");
 var TEST_VERSION = Argument("deviceVersion", EnvironmentVariable("ANDROID_TEST_DEVICE_VERSION") ?? "36");
-var TEST_APP_PACKAGE_NAME = Argument("package", EnvironmentVariable("ANDROID_TEST_APP_PACKAGE_NAME") ?? "");
-var TEST_APP_INSTRUMENTATION = Argument("instrumentation", EnvironmentVariable("ANDROID_TEST_APP_INSTRUMENTATION") ?? "devicerunners.xharness.maui.XHarnessInstrumentation");
 
 var ANDROID_AVD = "DEVICE_TESTS_EMULATOR";
 var DEVICE_NAME = Argument("skin", EnvironmentVariable("ANDROID_TEST_SKIN") ?? "Nexus 5X");
@@ -22,37 +20,6 @@ var usingEmulator = true;
 
 Setup(context =>
 {
-    // if app wasn't passed as argument, build it
-    if (string.IsNullOrEmpty(TEST_APP)) {
-        FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
-        var configuration = "Release";
-        var tfm = "net10.0-android";
-        var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString().ToLower();
-        TEST_APP = ROOT_PATH + $"/tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
-
-        Information("=== Android Test Build Configuration ===");
-        Information("  Project:       {0}", csproj);
-        Information("  Configuration: {0}", configuration);
-        Information("  TFM:           {0}", tfm);
-        Information("  RID:           {0}", rid);
-        Information("  App Path:      {0}", TEST_APP);
-        Information("  OS:            {0}", RuntimeInformation.OSDescription);
-        Information("  Arch:          {0}", RuntimeInformation.ProcessArchitecture);
-        Information("========================================");
-
-        CleanDirectories($"{PACKAGE_CACHE_PATH}/skiasharp*");
-        CleanDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-        if (!SKIP_BUILD) {
-            RunDotNetBuild(csproj,
-                configuration: configuration,
-                properties: new Dictionary<string, string> {
-                    { "TargetFramework", tfm },
-                    { "RuntimeIdentifier", rid },
-                });
-        }
-    }
-
     if (string.IsNullOrEmpty(TEST_RESULTS)) {
         TEST_RESULTS = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
     }
@@ -62,7 +29,6 @@ Setup(context =>
     if (!string.IsNullOrEmpty(TEST_VERSION) && TEST_VERSION != "latest")
         TEST_DEVICE = $"{TEST_DEVICE}_{TEST_VERSION}";
 
-    Information("Test App: {0}", TEST_APP);
     Information("Test Device: {0}", TEST_DEVICE);
 
     // determine the device characteristics
@@ -132,47 +98,9 @@ Teardown(context =>
 Task("Default")
     .Does(() =>
 {
-    if (string.IsNullOrEmpty(TEST_APP_PACKAGE_NAME)) {
-        var appFile = (FilePath)TEST_APP;
-        appFile = appFile.GetFilenameWithoutExtension();
-        TEST_APP_PACKAGE_NAME = appFile.FullPath.Replace("-Signed", "");
-    }
-    if (string.IsNullOrEmpty(TEST_APP_INSTRUMENTATION)) {
-        TEST_APP_INSTRUMENTATION = TEST_APP_PACKAGE_NAME + ".TestInstrumentation";
-    }
+    FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
 
-    Information("Test App: {0}", TEST_APP);
-    Information("Test App Package Name: {0}", TEST_APP_PACKAGE_NAME);
-    Information("Test App Instrumentation: {0}", TEST_APP_INSTRUMENTATION);
-    Information("Test Results Directory: {0}", TEST_RESULTS);
-
-    TakeSnapshot(TEST_RESULTS, "starting-tests");
-
-    var complete = false;
-    System.Threading.Tasks.Task.Run(() => {
-        while (!complete) {
-            TakeSnapshot(TEST_RESULTS, "running-tests");
-            System.Threading.Thread.Sleep(5000);
-        }
-    });
-
-    DotNetTool("xharness android test " +
-        $"--app=\"{TEST_APP}\" " +
-        $"--package-name=\"{TEST_APP_PACKAGE_NAME}\" " +
-        $"--instrumentation=\"{TEST_APP_INSTRUMENTATION}\" " +
-        $"--output-directory=\"{TEST_RESULTS}\" " +
-        $"--timeout=00:15:00 " +
-        $"--launch-timeout=00:05:00 " +
-        $"--verbosity=\"Debug\" ");
-
-    complete = true;
-
-    TakeSnapshot(TEST_RESULTS, "finished-tests");
-
-    var failed = XmlPeek($"{TEST_RESULTS}/TestResults.xml", "/assemblies/assembly[@failed > 0 or @errors > 0]/@failed");
-    if (!string.IsNullOrEmpty(failed)) {
-        throw new Exception($"At least {failed} test(s) failed.");
-    }
+    RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net10.0-android");
 });
 
 RunTarget(TARGET);

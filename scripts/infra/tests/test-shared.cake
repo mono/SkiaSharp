@@ -3,6 +3,34 @@
 #tool nuget:?package=xunit.runner.console&version=2.4.2
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// DEVICE RUNNERS — shared helper for DeviceRunners.Testing.Targets based tests
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void RunDeviceRunnersTest(
+    FilePath testProject,
+    DirectoryPath output,
+    string configuration = null,
+    string framework = null)
+{
+    CleanDirectories($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
+    output = MakeAbsolute(output);
+    CleanDirectories(output.FullPath);
+
+    var settings = new DotNetTestSettings {
+        Configuration = configuration ?? CONFIGURATION,
+        Framework = framework,
+        ResultsDirectory = output,
+        Verbosity = DotNetVerbosity.Normal,
+        ArgumentCustomization = args => args
+            .Append("--logger").Append("trx"),
+    };
+
+    DotNetTest(MakeAbsolute(testProject).FullPath, settings);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // TEST UTILITIES — shared by desktop test cakes
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
