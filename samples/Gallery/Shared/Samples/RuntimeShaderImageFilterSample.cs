@@ -83,6 +83,13 @@ public class RuntimeShaderImageFilterSample : CanvasSampleBase
 
 	public override string Category => SampleManager.ImageFilters;
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKRuntimeEffect", "SKRuntimeImageFilterBuilder",
+		"SKRuntimeEffect.BuildImageFilter", "SKRuntimeEffect.ToImageFilter",
+		"SKImageFilter", "SKCanvas.SaveLayer",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("shader", "Effect", ShaderNames, selectedShader),

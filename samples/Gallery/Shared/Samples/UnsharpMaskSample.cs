@@ -31,6 +31,14 @@ public class UnsharpMaskSample : CanvasSampleBase
 
 	public override string Category => SampleManager.ImageFilters;
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKRuntimeEffect", "SKRuntimeImageFilterBuilder",
+		"SKRuntimeEffectImageFilterInputs",
+		"SKRuntimeEffect.BuildImageFilter", "SKImageFilter.CreateBlur",
+		"SKCanvas.SaveLayer",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new SliderControl("blur", "Blur Radius", 0.5f, 10, blurRadius, 0.5f, "Radius of the blur used for the mask"),
