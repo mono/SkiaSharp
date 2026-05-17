@@ -366,7 +366,7 @@ namespace HarfBuzzSharp.Tests
 			var arrayResult = face.GetPaletteColors (0);
 			Assert.NotEmpty (arrayResult);
 
-			var spanBuffer = new uint[arrayResult.Length];
+			var spanBuffer = new HBColor[arrayResult.Length];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (arrayResult.Length, written);
 
@@ -384,7 +384,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.True (totalColors > 1, $"Need palette with >1 colors, got {totalColors}");
 
 			// HarfBuzz fills what fits
-			var spanBuffer = new uint[1];
+			var spanBuffer = new HBColor[1];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (1, written);
 		}
@@ -397,7 +397,7 @@ namespace HarfBuzzSharp.Tests
 
 			var totalColors = face.GetPaletteColors (0).Length;
 
-			var spanBuffer = new uint[totalColors + 5];
+			var spanBuffer = new HBColor[totalColors + 5];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (totalColors, written);
 		}
@@ -408,7 +408,7 @@ namespace HarfBuzzSharp.Tests
 			using var face = CreateColorFace ();
 			Assert.True (face.PaletteCount > 0);
 
-			var spanBuffer = new uint[0];
+			var spanBuffer = new HBColor[0];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (0, written);
 		}
@@ -516,6 +516,83 @@ namespace HarfBuzzSharp.Tests
 		{
 			using var face = CreateColorFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteColorNameId (-1));
+		}
+
+		[SkippableFact]
+		public void PaletteColorsHaveCorrectChannels ()
+		{
+			// GetPaletteColors() returns HBColor[] with correct channel accessors.
+			// HBColor properties use the same bit-shift logic as the native
+			// hb_color_get_* macros — no P/Invoke needed.
+			using var face = CreateColorFace ();
+			var colors = face.GetPaletteColors (0);
+			Assert.NotEmpty (colors);
+
+			// Verify at least one color has non-zero alpha (palette colors should be opaque)
+			Assert.Contains (colors, c => c.Alpha > 0);
+		}
+
+		[SkippableFact]
+		public void HBColorCreateRoundtrips ()
+		{
+			var color = new HBColor (0xAA, 0xBB, 0xCC, 0xFF);
+			Assert.Equal ((byte)0xAA, color.Red);
+			Assert.Equal ((byte)0xBB, color.Green);
+			Assert.Equal ((byte)0xCC, color.Blue);
+			Assert.Equal ((byte)0xFF, color.Alpha);
+
+			// Verify raw uint layout: 0xBBGGRRAA
+			Assert.Equal (0xCCBBAA_FFu, color.Value);
+		}
+
+		[SkippableFact]
+		public void PaletteColorConversionToSKColorIsCorrect ()
+		{
+			using var face = CreateColorFace ();
+			var colors = face.GetPaletteColors (0);
+			Assert.NotEmpty (colors);
+
+			foreach (var hbColor in colors) {
+				var skColor = SkiaSharp.HarfBuzz.ColorExtensions.ToSKColor (hbColor);
+
+				Assert.Equal (hbColor.Red, skColor.Red);
+				Assert.Equal (hbColor.Green, skColor.Green);
+				Assert.Equal (hbColor.Blue, skColor.Blue);
+				Assert.Equal (hbColor.Alpha, skColor.Alpha);
+			}
+		}
+
+		[SkippableFact]
+		public void PaletteColorConversionToSKColorFIsCorrect ()
+		{
+			var hbColor = new HBColor (255, 128, 0, 204);
+			var skColorF = SkiaSharp.HarfBuzz.ColorExtensions.ToSKColorF (hbColor);
+
+			Assert.Equal (1.0f, skColorF.Red, 0.01f);
+			Assert.Equal (128 / 255f, skColorF.Green, 0.01f);
+			Assert.Equal (0.0f, skColorF.Blue, 0.01f);
+			Assert.Equal (204 / 255f, skColorF.Alpha, 0.01f);
+		}
+
+		[SkippableFact]
+		public void SKColorToHBColorRoundtrips ()
+		{
+			var original = new SkiaSharp.SKColor (0xAA, 0xBB, 0xCC, 0xFF);
+			var hbColor = SkiaSharp.HarfBuzz.ColorExtensions.ToHBColor (original);
+			var converted = SkiaSharp.HarfBuzz.ColorExtensions.ToSKColor (hbColor);
+			Assert.Equal (original, converted);
+		}
+
+		[SkippableFact]
+		public void SKColorFToHBColorRoundtrips ()
+		{
+			var original = new SkiaSharp.SKColorF (1.0f, 0.5f, 0.0f, 0.8f);
+			var hbColor = SkiaSharp.HarfBuzz.ColorExtensions.ToHBColor (original);
+
+			Assert.Equal ((byte)255, hbColor.Red);
+			Assert.Equal ((byte)128, hbColor.Green);
+			Assert.Equal ((byte)0, hbColor.Blue);
+			Assert.Equal ((byte)204, hbColor.Alpha);
 		}
 
 		[SkippableFact]
