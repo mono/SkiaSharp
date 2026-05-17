@@ -288,6 +288,31 @@ This may return <see langword="null" /> if not found.
 <summary>Gets the width of the bitmap in pixels.</summary>
 ```
 
+## Skia Naming Conventions
+
+Skia type names encode format information. Get these right in documentation:
+
+### Color Type Suffixes
+
+| Suffix | Meaning | Example | Documentation |
+|--------|---------|---------|---------------|
+| No suffix / `a` at end | Has alpha channel | `Rgba8888`, `Bgra8888` | "with alpha channel" |
+| `x` at end | **Opaque/padding** — NOT alpha | `Rgb888x`, `RgbF16F16F16x` | "with an unused padding channel" |
+
+**Never describe an `x` channel as "alpha".** The `x` means the fourth byte/component is unused padding for alignment. The type is opaque — it has no alpha.
+
+```xml
+<!-- ❌ WRONG — x is NOT alpha -->
+<summary>RGB format with three 16-bit float channels and an unused alpha channel.</summary>
+
+<!-- ✅ CORRECT -->
+<summary>RGB format with three 16-bit float channels and an unused padding channel.</summary>
+```
+
+### Channel Order in Names
+
+The letters in the name specify channel order: `Rgba` = R first, A last. `Bgra` = B first, A last. `Argb` = A first, B last. Always match the documentation to the name — don't rearrange.
+
 ## Extension Methods
 
 Extension method docs appear in two places:

@@ -137,6 +137,13 @@ For each JSON file in output/docs-work/:
    - `SKColor` / `sk_color_t` is **ARGB** (0xAARRGGBB). Never describe as "RGBA".
    - `hb_color_t` is **RGBA**. Never describe as "ARGB".
    - If a doc claims a color format, check WHICH native type backs the C# property.
+7. For EVERY parameter description that claims a **validation constraint** ("exactly N",
+   "must be", "cannot be negative", "required"), read the method source to confirm
+   it actually validates. If the method silently accepts out-of-spec input (pads,
+   truncates, clamps, returns default), the docs must describe that behavior instead.
+8. For EVERY code example, verify the **API call shown actually exists** with the types
+   being passed. If the example constructs a struct/options object, check that the
+   method it's passed to actually accepts that type (not just a single field from it).
 
 Output a list of issues. For each: file, docId, what's wrong, what it should be.
 If no issues found, say "No fabrication issues found."
