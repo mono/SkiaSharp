@@ -18522,7 +18522,7 @@ namespace SkiaSharp {
 
 		// public bool fFullyReceived
 		private Byte fFullyReceived;
-		public bool FullyReceived {
+		public bool FullyRecieved {
 			readonly get => fFullyReceived > 0;
 			set => fFullyReceived = value ? (byte)1 : (byte)0;
 		}
