@@ -97,68 +97,106 @@ See [references/patterns.md](references/patterns.md) for full guidance on rich r
 
 ### Phase 5: Review
 
-Launch **two background agents** in parallel to validate the JSON **before** merging. Wait for both to complete. This is a write→review→fix loop — repeat until no CRITICAL issues remain.
+Launch **three background agents** in parallel to validate the JSON **before** merging. Each agent is a narrow specialist with one job. Wait for all three to complete. This is a write→review→fix loop — repeat until no CRITICAL issues remain.
 
-**Agent 1: Fabrication Detector** — catches invented APIs, wrong facts, and unverified claims:
+> **IMPORTANT — adversarial mindset:** AI documentation writers typically introduce
+> 15–30 factual errors per batch of ~800 fields. A review that finds 0 issues
+> almost certainly skimmed. Each agent MUST read source code and provide evidence.
+
+**Agent 1: Code Example Verifier** — verifies every code example compiles and uses real APIs:
 
 ```
 Launch a background general-purpose agent with this prompt:
 
-You are a documentation accuracy auditor. Your ONLY goal is to find FABRICATED
-or UNVERIFIED content in the JSON documentation files. AI documentation writers
-frequently invent API methods, make false claims about type behavior, and state
-"facts" without checking source code. Treat every claim as a hypothesis — verify
-it against actual source, or flag it.
+You are a CODE EXAMPLE VERIFIER. Your ONLY job is to verify that every code
+example in the documentation uses real APIs with correct signatures.
 
-Do all work directly. Do NOT launch sub-agents or delegate to further background
-agents.
+ADVERSARIAL CONTEXT: AI doc writers frequently invent method overloads, use
+wrong parameter types, and write examples with C# syntax errors. In past runs,
+we found examples using reserved keywords as variable names (var override = ...)
+and constructing structs that no public API actually accepts. Assume errors exist.
+
+Do all work directly. Do NOT launch sub-agents or delegate.
 
 For each JSON file in output/docs-work/:
-1. Read the JSON file
-2. For EVERY code example in remarks fields:
-   - Extract each method call, constructor call, and property access
-   - Search binding/ source code to verify it exists with that exact signature
-   - Check: does the overload accept those parameter types?
-   - Report any call that doesn't match actual source code
-3. For EVERY enum description that cites a specific number or standard:
-   - Check the MemberValue in the JSON matches what's described
-   - Verify standard references (ITU-T H.273, CICP, Vulkan) are correct
-4. For EVERY property summary that says "Gets or sets":
-   - Check the C# signature — if it has only { get; } then it should say "Gets"
-5. For EVERY factual claim in summaries and remarks, verify against source:
-   - Immutability/mutability claims ("X is immutable", "X cannot be changed")
-   - Thread safety claims ("X is thread-safe", "X can be shared")
-   - Default value claims ("defaults to 72", "the default is X")
-   - Data format claims (bit layouts, byte sizes, channel counts, packing)
-   - Behavioral claims ("unlike X, which does Y")
-   If the source code does not confirm a claim, flag it as unverified.
-6. **Cross-library boundary check**: SkiaSharp and HarfBuzzSharp wrap DIFFERENT native
-   libraries. Verify that documentation does not conflate types across these boundaries:
-   - `SKColor` / `sk_color_t` is **ARGB** (0xAARRGGBB). Never describe as "RGBA".
-   - `hb_color_t` is **RGBA**. Never describe as "ARGB".
-   - If a doc claims a color format, check WHICH native type backs the C# property.
-7. For EVERY parameter description that claims a **validation constraint** ("exactly N",
-   "must be", "cannot be negative", "required"), read the method source to confirm
-   it actually validates. If the method silently accepts out-of-spec input (pads,
-   truncates, clamps, returns default), the docs must describe that behavior instead.
-8. For EVERY code example, verify the **API call shown actually exists** with the types
-   being passed. If the example constructs a struct/options object, check that the
-   method it's passed to actually accepts that type (not just a single field from it).
+1. Find every code block in remarks fields (look for ```csharp in CDATA sections)
+2. For each code block:
+   a. Extract every method call, constructor call, and property access
+   b. grep binding/ source code to verify it exists with that exact signature
+   c. Check: does the overload accept those parameter types?
+   d. Check for C# reserved keywords used as variable names:
+      override, base, event, class, struct, delegate, abstract, virtual, etc.
+   e. Check null safety: if a method returns nullable (SKData?), does the
+      example handle null before using the result?
 
-Output a list of issues. For each: file, docId, what's wrong, what it should be.
-If no issues found, say "No fabrication issues found."
+OUTPUT FORMAT — you MUST use this structure for each file:
+  [filename.json] CHECKED N code examples
+    Example 1 (docId): "var surface = SKSurface.Create(...)"
+      → grep binding/SkiaSharp/SKSurface.cs: found Create(SKImageInfo) at line 42 ✓
+      → variable names OK ✓
+    Example 2 (docId): "var override = new SKFontPaletteOverride"
+      → CRITICAL: "override" is a C# reserved keyword
+  ISSUES: [list] or NONE
+
+A review that checks 0 code examples is INCOMPLETE. Finding 0 issues across
+all files should be rare — state your confidence level if you find nothing.
 ```
 
-**Agent 2: Quality Reviewer** — catches style, completeness, and accuracy issues:
+**Agent 2: Factual Claim Verifier** — cross-references every factual claim against source:
 
 ```
 Launch a background general-purpose agent with this prompt:
 
-You are a documentation quality reviewer. Read the checklist at
-.agents/skills/api-docs/references/checklist.md for severity criteria.
+You are a FACTUAL CLAIM VERIFIER. Your ONLY job is to find documentation claims
+that contradict the actual source code.
 
-Do all work directly. Do NOT launch sub-agents or delegate to further background
-agents.
+ADVERSARIAL CONTEXT: AI doc writers confidently state "facts" without checking
+source. In past runs, we found: "exactly four characters" for a param that
+silently pads/truncates, "alpha channel" for a padding channel (Skia's x suffix
+means NO alpha), and "RGBA" for a type that's actually ARGB. Assume errors exist.
+
+Do all work directly. Do NOT launch sub-agents or delegate.
+
+SOURCE-FIRST PROTOCOL — for each JSON file:
+1. Identify the type name from the filename
+2. Find and READ the corresponding C# source file in binding/ BEFORE reading the JSON
+3. Build a fact sheet: constructors, methods, property accessors (get vs get+set),
+   validation logic (throws? clamps? pads? truncates?), numeric constants, defaults
+4. NOW read the JSON and compare every claim against your fact sheet
+
+SPECIFIC CHECKS:
+- Parameter constraints ("exactly N", "must be", "cannot be"): does the source
+  actually validate/reject, or silently accept? Read the METHOD BODY, not just signature.
+- Data format claims (ARGB vs RGBA, bit layouts, channel names): check the underlying
+  C/C++ type. In Skia, x suffix = padding NOT alpha. SKColor = ARGB. hb_color_t = RGBA.
+- Default value claims: find the actual default in source (e.g., SKDocument.DefaultRasterDpi)
+- "Gets or sets" vs "Gets": check if property has { get; set; } or only { get; }
+- Cross-library: SkiaSharp and HarfBuzzSharp are DIFFERENT libraries with different conventions.
+
+OUTPUT FORMAT — you MUST include a verification trace per file:
+  [filename.json] SOURCE: binding/SkiaSharp/SKFoo.cs (read lines 1-85)
+    Claim: "exactly four characters" (docId: M:SkiaSharp.SKFoo.Parse)
+      → Source line 22: if (s.Length < 4) s = s.PadRight(4); → SILENTLY PADS
+      → CRITICAL: should say "padded with spaces if shorter than 4 characters"
+    Claim: "Gets or sets the width" (docId: P:SkiaSharp.SKFoo.Width)
+      → Source line 45: public int Width { get; } → GET ONLY
+      → CRITICAL: should say "Gets"
+  ISSUES: [list]
+
+A file review with NO source file reads is INCOMPLETE and will be rejected.
+Finding 0 issues across all files should be rare — state your confidence level.
+```
+
+**Agent 3: Quality Reviewer** — catches style, completeness, and naming issues:
+
+```
+Launch a background general-purpose agent with this prompt:
+
+You are a documentation QUALITY REVIEWER. Read the checklist at
+.agents/skills/api-docs/references/checklist.md and the patterns at
+.agents/skills/api-docs/references/patterns.md for guidelines.
+
+Do all work directly. Do NOT launch sub-agents or delegate.
 
 For each JSON file in output/docs-work/:
 1. Check for remaining "To be added." values that should have been filled
@@ -172,11 +210,14 @@ For each JSON file in output/docs-work/:
    (e.g., "Unlike X, which is immutable" — verify before accepting)
 8. Check enum member descriptions accurately describe the member's
    specific value, not a similar-looking sibling enum member
+9. Check Skia naming conventions in patterns.md:
+   - x suffix in color types = padding, never "alpha"
+   - Channel order matches the type name (Rgba = R first, A last)
 
 Report CRITICAL and IMPORTANT issues only. Include file, docId, and fix.
 ```
 
-**Fix all CRITICAL issues** from both agents, then re-run the reviewers if you made changes. Only proceed to Phase 6 when both agents report no CRITICAL issues.
+**Fix all CRITICAL issues** from all three agents, then re-run the reviewers if you made changes. Only proceed to Phase 6 when all agents report no CRITICAL issues.
 
 ### Phase 6: Merge
 
