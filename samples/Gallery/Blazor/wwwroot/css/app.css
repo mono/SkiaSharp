@@ -7,79 +7,30 @@ body {
 }
 
 /* ============================================
-   Responsive column layout (unscoped — media queries
-   don't work in Blazor scoped CSS)
-   ============================================ */
-
-@media (max-width: 680px) {
-    .skeleton-grid { column-count: 1 !important; }
-    .gallery-shell { padding: 0 1rem !important; }
-}
-@media (min-width: 681px) and (max-width: 995px) {
-    .skeleton-grid { column-count: 2 !important; }
-}
-@media (min-width: 996px) {
-    .skeleton-grid { column-count: 3 !important; }
-}
-
-/* ============================================
-   Dark mode
+   Dark mode — global (body-level)
+   Component-specific dark mode rules live in
+   their respective .razor.css files.
    ============================================ */
 
 [data-theme="dark"] {
-    --bg-primary: #121212;
-    --bg-card: #1e1e2e;
-    --bg-surface: #2a2a3e;
-    --text-primary: #e0e0e0;
-    --text-muted: #a0a0a0;
-    --border-color: #333;
+    --gallery-bg: #0b0d10;
+    --gallery-surface: #14171c;
+    --gallery-surface-2: #1b1f25;
+    --gallery-border: #2a2f37;
+    --gallery-text: #e5e7eb;
+    --gallery-text-muted: #9ca3af;
+    --gallery-accent: #818cf8;
+    --gallery-accent-strong: #6366f1;
+    --gallery-accent-soft: rgba(99,102,241,0.15);
+    --color-type: #60a5fa;
+    --color-type-soft: rgba(37,99,235,0.15);
+    --color-method: #fbbf24;
+    --color-method-soft: rgba(217,119,6,0.15);
 }
 
 [data-theme="dark"] body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-}
-
-[data-theme="dark"] .sample-card {
-    background-color: var(--bg-card) !important;
-    border-color: var(--border-color);
-}
-
-[data-theme="dark"] .card-bg-warm  { background: #1f1e1c !important; }
-[data-theme="dark"] .card-bg-cool  { background: #1c1d22 !important; }
-[data-theme="dark"] .card-bg-neutral { background: var(--bg-card) !important; }
-
-[data-theme="dark"] .sample-card .card-title {
-    color: var(--text-primary) !important;
-}
-
-[data-theme="dark"] .sample-card .card-desc {
-    color: var(--text-muted) !important;
-}
-
-[data-theme="dark"] .card-watermark {
-    opacity: 0.04;
-}
-
-[data-theme="dark"] .card-hover-reveal {
-    background: linear-gradient(transparent, rgba(255,255,255,0.03));
-}
-
-[data-theme="dark"] .gallery-shell {
-    color: var(--text-primary);
-}
-
-[data-theme="dark"] .gallery-footer {
-    color: var(--text-muted);
-    border-top-color: var(--border-color);
-}
-
-[data-theme="dark"] .meta-canvas { background: #1a3a5c; color: #64b5f6; }
-[data-theme="dark"] .meta-animated { background: #4a2800; color: #ffb74d; }
-[data-theme="dark"] .meta-doc { background: #2a3a40; color: #90a4ae; }
-
-[data-theme="dark"] .top-row {
-    background-color: #0d1147;
+    background-color: var(--gallery-bg);
+    color: var(--gallery-text);
 }
 
 h1:focus {
