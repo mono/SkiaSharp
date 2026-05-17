@@ -18245,8 +18245,8 @@ namespace SkiaSharp {
 		}
 
 		// public gr_vk_ycbcrconversioninfo_t fYcbcrConversionInfo
-		private GrVkYcbcrConversionInfo fYcbcrConversionInfo;
-		public GrVkYcbcrConversionInfo YcbcrConversionInfo {
+		private GRVkYcbcrConversionInfo fYcbcrConversionInfo;
+		public GRVkYcbcrConversionInfo YcbcrConversionInfo {
 			readonly get => fYcbcrConversionInfo;
 			set => fYcbcrConversionInfo = value;
 		}
@@ -18351,7 +18351,7 @@ namespace SkiaSharp {
 
 	// gr_vk_ycbcrconversioninfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct GrVkYcbcrConversionInfo : IEquatable<GrVkYcbcrConversionInfo> {
+	public unsafe partial struct GRVkYcbcrConversionInfo : IEquatable<GRVkYcbcrConversionInfo> {
 		// public uint32_t fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
@@ -18429,18 +18429,18 @@ namespace SkiaSharp {
 			set => fSupportsLinearFilter = value ? (byte)1 : (byte)0;
 		}
 
-		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
+		public readonly bool Equals (GRVkYcbcrConversionInfo obj) =>
 #pragma warning disable CS8909
 			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fComponents == obj.fComponents && fSamplerFilterMustMatchChromaFilter == obj.fSamplerFilterMustMatchChromaFilter && fSupportsLinearFilter == obj.fSupportsLinearFilter;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
-			obj is GrVkYcbcrConversionInfo f && Equals (f);
+			obj is GRVkYcbcrConversionInfo f && Equals (f);
 
-		public static bool operator == (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+		public static bool operator == (GRVkYcbcrConversionInfo left, GRVkYcbcrConversionInfo right) =>
 			left.Equals (right);
 
-		public static bool operator != (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+		public static bool operator != (GRVkYcbcrConversionInfo left, GRVkYcbcrConversionInfo right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()
@@ -18522,7 +18522,7 @@ namespace SkiaSharp {
 
 		// public bool fFullyReceived
 		private Byte fFullyReceived;
-		public bool FullyRecieved {
+		public bool FullyReceived {
 			readonly get => fFullyReceived > 0;
 			set => fFullyReceived = value ? (byte)1 : (byte)0;
 		}
@@ -19079,7 +19079,7 @@ namespace SkiaSharp {
 	public unsafe partial struct SKDocumentXpsOptions : IEquatable<SKDocumentXpsOptions> {
 		// public float fDPI
 		private Single fDPI;
-		public Single DPI {
+		public Single Dpi {
 			readonly get => fDPI;
 			set => fDPI = value;
 		}

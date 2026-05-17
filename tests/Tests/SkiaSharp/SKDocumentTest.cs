@@ -168,6 +168,45 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public void CanCreateXpsWithOptions()
+		{
+			// XPS is only supported on Windows
+
+			var options = new SKDocumentXpsOptions { Dpi = 150, AllowNoPngs = true };
+
+			using (var stream = new MemoryStream())
+			{
+				using (new SKAutoCoInitialize())
+				using (var doc = SKDocument.CreateXps(stream, options))
+				{
+					if (IsWindows)
+					{
+						Assert.NotNull(doc);
+						Assert.NotNull(doc.BeginPage(100, 100));
+
+						doc.EndPage();
+						doc.Close();
+					}
+					else
+					{
+						Assert.Null(doc);
+					}
+				}
+
+				if (IsWindows)
+				{
+					Assert.True(stream.Length > 0);
+					Assert.True(stream.Position > 0);
+				}
+				else
+				{
+					Assert.True(stream.Length == 0);
+					Assert.True(stream.Position == 0);
+				}
+			}
+		}
+
 
 		[SkippableFact]
 		public void StreamIsNotCollectedPrematurely()
