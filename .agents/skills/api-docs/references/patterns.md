@@ -451,3 +451,22 @@ Provides a mutable builder for constructing <see cref="T:SkiaSharp.SKPath" /> ob
 | `SKCanvas`, `SKPaint`, `SKPath`, `SKPathBuilder` | NOT thread-safe — one thread at a time | Must dispose |
 | `SKImage`, `SKShader`, `SKData` | Thread-safe (immutable after creation) | Must dispose |
 | `SKColor`, `SKPoint`, `SKRect` | Thread-safe (value types) | No disposal needed |
+
+## Cross-Library Boundaries
+
+SkiaSharp wraps two separate native libraries: **Skia** (SkiaSharp namespace) and **HarfBuzz** (HarfBuzzSharp namespace). Although they coexist in the same solution and some types look similar, their underlying conventions differ. **Never assume a type from one library works the same way as a similar type from the other.**
+
+### Color Types
+
+| Type | Byte Order | Bit Layout |
+|------|-----------|------------|
+| `SKColor` / `sk_color_t` (Skia) | **ARGB** | `0xAARRGGBB` — Alpha in bits 31-24, Red 23-16, Green 15-8, Blue 7-0 |
+| `hb_color_t` (HarfBuzz) | **RGBA** | R in low byte, A in high byte — opposite of SKColor |
+
+- `HarfBuzzSharp.Face.GetPaletteColors()` returns raw `hb_color_t` values as `uint[]` — these are **RGBA**, not ARGB.
+- `SKFontPaletteOverride.Color` stores `sk_color_t` — this is **ARGB**, matching `SKColor`.
+- Do **not** describe both as "packed RGBA" just because they are both `uint`. Check the underlying C type.
+
+### General Rule
+
+When documenting a HarfBuzzSharp type, read the HarfBuzz source/headers for ground truth. When documenting a SkiaSharp type, read the Skia source. Do not extrapolate behavior from one library to the other based on superficial similarity (same C# type, similar naming, etc.).

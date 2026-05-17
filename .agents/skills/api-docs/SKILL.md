@@ -132,6 +132,11 @@ For each JSON file in output/docs-work/:
    - Data format claims (bit layouts, byte sizes, channel counts, packing)
    - Behavioral claims ("unlike X, which does Y")
    If the source code does not confirm a claim, flag it as unverified.
+6. **Cross-library boundary check**: SkiaSharp and HarfBuzzSharp wrap DIFFERENT native
+   libraries. Verify that documentation does not conflate types across these boundaries:
+   - `SKColor` / `sk_color_t` is **ARGB** (0xAARRGGBB). Never describe as "RGBA".
+   - `hb_color_t` is **RGBA**. Never describe as "ARGB".
+   - If a doc claims a color format, check WHICH native type backs the C# property.
 
 Output a list of issues. For each: file, docId, what's wrong, what it should be.
 If no issues found, say "No fabrication issues found."
