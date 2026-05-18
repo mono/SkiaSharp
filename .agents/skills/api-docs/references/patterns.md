@@ -486,18 +486,12 @@ SkiaSharp wraps two separate native libraries: **Skia** (SkiaSharp namespace) an
 | Type | Byte Order | Bit Layout |
 |------|-----------|------------|
 | `SKColor` / `sk_color_t` (Skia) | **ARGB** | `0xAARRGGBB` — Alpha in bits 31-24, Red 23-16, Green 15-8, Blue 7-0 |
-| `hb_color_t` (HarfBuzz) | **BGRA** (packed uint) | `0xBBGGRRAA` — Blue in bits 31-24, Green 23-16, Red 15-8, Alpha 7-0 |
+| `hb_color_t` (HarfBuzz) | Different from SKColor | The C# API returns `uint[]` with no named packing order |
 
-**hb_color_t layout detail:** HarfBuzz defines `HB_COLOR(b,g,r,a) = (b<<24)|(g<<16)|(r<<8)|a`. This means:
-- Byte 3 (MSB, bits 31-24) = **Blue**
-- Byte 2 (bits 23-16) = **Green**
-- Byte 1 (bits 15-8) = **Red**
-- Byte 0 (LSB, bits 7-0) = **Alpha**
+**Key rule for hb_color_t:** The C# binding (`GetPaletteColors`) returns raw `uint[]` values. The source code does NOT label these as "RGBA", "BGRA", or any other order. Do NOT invent a byte-order description. Simply say "color values" in documentation — never claim a specific channel layout.
 
-Do NOT call this "RGBA" — the packed uint32 layout is BGRA. When documenting `GetPaletteColors()`, say "color values" or "BGRA-packed color values" — never "RGBA color values."
-
-- `HarfBuzzSharp.Face.GetPaletteColors()` returns raw `hb_color_t` values as `uint[]` — these are **BGRA**-packed, not ARGB.
-- `SKFontPaletteOverride.Color` stores `sk_color_t` — this is **ARGB**, matching `SKColor`.
+- `HarfBuzzSharp.Face.GetPaletteColors()` returns `uint[]` — just say "color values". Do NOT say "ARGB", "RGBA", "BGRA", or describe byte positions.
+- `SKFontPaletteOverride.Color` stores `sk_color_t` — this IS `SKColor` (ARGB, `0xAARRGGBB`).
 - Do **not** describe both as "packed RGBA" just because they are both `uint`. Check the underlying C type.
 
 ### General Rule
@@ -513,7 +507,7 @@ These are verified facts that AI documentation agents frequently get wrong. Alwa
 - `SKDocumentXpsOptions` is a **struct** — it zero-initializes. `new SKDocumentXpsOptions()` has `DPI = 0.0f` (NOT 72).
 - The constant `SKDocument.DefaultRasterDpi` is 72.0f, but this is NOT the struct's default — you must set it explicitly.
 - There is **no public overload** `SKDocument.CreateXps(stream, SKDocumentXpsOptions)`. The only public overload is `SKDocument.CreateXps(SKWStream stream, float dpi)`.
-- Example showing the struct should extract the DPI float: `SKDocument.CreateXps(stream, options.DPI)` — but note this is equivalent to just passing a float directly.
+- Do NOT write examples that create the struct and pass it to `CreateXps` — that API surface does not exist. If documenting the struct's properties, show property access only, not integration with `SKDocument`.
 
 ### SKFourByteTag.Parse
 
