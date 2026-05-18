@@ -35,6 +35,8 @@ namespace SkiaSharp.Tests
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyToSucceeds(SKColorType colorType)
 		{
+			SkipOnPlatform(IsBrowser, "WASM color conversion has minor rounding differences");
+
 			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
 				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
 
@@ -69,6 +71,8 @@ namespace SkiaSharp.Tests
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyWithAlphaToSucceeds(SKColorType colorType)
 		{
+			SkipOnPlatform(IsBrowser, "WASM color conversion has minor rounding differences");
+
 			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
 				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
 

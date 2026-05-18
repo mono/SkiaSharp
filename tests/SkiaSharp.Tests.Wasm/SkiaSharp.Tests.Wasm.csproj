@@ -32,6 +32,11 @@
     <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" />
   </ItemGroup>
 
+  <!-- Embed test content as resources, extracted to VFS at startup -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Content\**" Exclude="..\Content\.DS_Store" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
+
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
 

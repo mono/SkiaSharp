@@ -237,6 +237,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
+
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
