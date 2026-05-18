@@ -1,5 +1,7 @@
 # XML Documentation Patterns
 
+.NET XML documentation formatting rules. For SkiaSharp/HarfBuzz domain knowledge, see [skia-patterns.md](skia-patterns.md).
+
 Based on [official .NET API documentation guidelines](https://github.com/dotnet/dotnet-api-docs/wiki).
 
 ## Contents
@@ -12,6 +14,7 @@ Based on [official .NET API documentation guidelines](https://github.com/dotnet/
 - [Punctuation Exceptions](#punctuation-exceptions)
 - [Common Mistakes](#common-mistakes)
 - [Extension Methods](#extension-methods)
+- [Platform View Constructors](#platform-view-constructors)
 - [Rich Remarks and Examples](#rich-remarks-and-examples)
 - [Type-Level Documentation](#type-level-documentation)
 
@@ -288,31 +291,6 @@ This may return <see langword="null" /> if not found.
 <summary>Gets the width of the bitmap in pixels.</summary>
 ```
 
-## Skia Naming Conventions
-
-Skia type names encode format information. Get these right in documentation:
-
-### Color Type Suffixes
-
-| Suffix | Meaning | Example | Documentation |
-|--------|---------|---------|---------------|
-| No suffix / `a` at end | Has alpha channel | `Rgba8888`, `Bgra8888` | "with alpha channel" |
-| `x` at end | **Opaque/padding** — NOT alpha | `Rgb888x`, `RgbF16F16F16x` | "with an unused padding channel" |
-
-**Never describe an `x` channel as "alpha".** The `x` means the fourth byte/component is unused padding for alignment. The type is opaque — it has no alpha.
-
-```xml
-<!-- ❌ WRONG — x is NOT alpha -->
-<summary>RGB format with three 16-bit float channels and an unused alpha channel.</summary>
-
-<!-- ✅ CORRECT -->
-<summary>RGB format with three 16-bit float channels and an unused padding channel.</summary>
-```
-
-### Channel Order in Names
-
-The letters in the name specify channel order: `Rgba` = R first, A last. `Bgra` = B first, A last. `Argb` = A first, B last. Always match the documentation to the name — don't rearrange.
-
 ## Extension Methods
 
 Extension method docs appear in two places:
@@ -459,67 +437,6 @@ Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` as usual.
 
 ### SKObject Subclasses (IDisposable types)
 
-Most SkiaSharp types inherit from `SKObject`. Their type-level summary and remarks should cover construction, disposal, and usage. Example for `SKPaint`:
+Most SkiaSharp types inherit from `SKObject`. Their type-level summary and remarks should cover construction, disposal, and usage.
 
-**summary:**
-
-```xml
-Provides a mutable builder for constructing <see cref="T:SkiaSharp.SKPath" /> objects incrementally.
-```
-
-**remarks** (use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block).
-
-### Mutable vs Immutable Types
-
-| Type | Threading | Disposal |
-|------|-----------|----------|
-| `SKCanvas`, `SKPaint`, `SKPath`, `SKPathBuilder` | NOT thread-safe — one thread at a time | Must dispose |
-| `SKImage`, `SKShader`, `SKData` | Thread-safe (immutable after creation) | Must dispose |
-| `SKColor`, `SKPoint`, `SKRect` | Thread-safe (value types) | No disposal needed |
-
-## Cross-Library Boundaries
-
-SkiaSharp wraps two separate native libraries: **Skia** (SkiaSharp namespace) and **HarfBuzz** (HarfBuzzSharp namespace). Although they coexist in the same solution and some types look similar, their underlying conventions differ. **Never assume a type from one library works the same way as a similar type from the other.**
-
-### Color Types
-
-| Type | Byte Order | Bit Layout |
-|------|-----------|------------|
-| `SKColor` / `sk_color_t` (Skia) | **ARGB** | `0xAARRGGBB` — Alpha in bits 31-24, Red 23-16, Green 15-8, Blue 7-0 |
-| `hb_color_t` (HarfBuzz) | **BGRA** | `0xBBGGRRAA` — Blue bits 31-24, Green 23-16, Red 15-8, Alpha 7-0 |
-
-**Source (harfbuzz/src/hb-common.h):**
-```c
-#define HB_COLOR(b,g,r,a) ((hb_color_t) HB_TAG ((b),(g),(r),(a)))
-#define hb_color_get_alpha(color)   ((color) & 0xFF)         // bits 0-7
-#define hb_color_get_red(color)     (((color) >> 8) & 0xFF)  // bits 8-15
-#define hb_color_get_green(color)   (((color) >> 16) & 0xFF) // bits 16-23
-#define hb_color_get_blue(color)    (((color) >> 24) & 0xFF) // bits 24-31
-```
-
-- `HarfBuzzSharp.Face.GetPaletteColors()` returns `hb_color_t` values as `uint[]` packed as **BGRA** (`0xBBGGRRAA`).
-- `SKFontPaletteOverride.Color` stores `sk_color_t` — this IS `SKColor` (ARGB, `0xAARRGGBB`).
-- Do **not** describe both as "packed RGBA" just because they are both `uint`. Check the underlying C type.
-
-### General Rule
-
-When documenting a HarfBuzzSharp type, read the HarfBuzz source/headers for ground truth. When documenting a SkiaSharp type, read the Skia source. Do not extrapolate behavior from one library to the other based on superficial similarity (same C# type, similar naming, etc.).
-
-## Common API Gotchas (Fact Sheet)
-
-These are verified facts that AI documentation agents frequently get wrong. Always use these exact descriptions.
-
-### SKDocumentXpsOptions
-
-- `SKDocumentXpsOptions` is a **struct** — it zero-initializes. `new SKDocumentXpsOptions()` has `DPI = 0.0f` (NOT 72).
-- The constant `SKDocument.DefaultRasterDpi` is 72.0f, but this is NOT the struct's default — you must set it explicitly.
-- There is **no public overload** `SKDocument.CreateXps(stream, SKDocumentXpsOptions)`. The only public overload is `SKDocument.CreateXps(SKWStream stream, float dpi)`.
-- Do NOT write examples that create the struct and pass it to `CreateXps` — that API surface does not exist. If documenting the struct's properties, show property access only, not integration with `SKDocument`.
-
-### SKFourByteTag.Parse
-
-- Strings **shorter** than 4 characters are **padded with spaces** (0x20).
-- Strings **longer** than 4 characters are **silently truncated** to the first 4 characters.
-- `null` or empty strings return a tag with value 0.
-- Source: `var len = Math.Min(4, tag.Length);` then loop fills remaining with `' '`.
-- Correct param description: "A string of characters. Strings shorter than four characters are padded with spaces; strings longer than four are truncated to four."
+**remarks** should use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block.

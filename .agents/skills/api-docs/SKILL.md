@@ -168,7 +168,8 @@ SPECIFIC CHECKS:
 - Parameter constraints ("exactly N", "must be", "cannot be"): does the source
   actually validate/reject, or silently accept? Read the METHOD BODY, not just signature.
 - Data format claims (ARGB vs RGBA, bit layouts, channel names): check the underlying
-  C/C++ type. In Skia, x suffix = padding NOT alpha. SKColor = ARGB. hb_color_t = RGBA.
+  C/C++ type. In Skia, x suffix = padding NOT alpha. SKColor = ARGB (0xAARRGGBB).
+  hb_color_t = BGRA (0xBBGGRRAA). Always verify against the native header — do not guess.
 - Default value claims: find the actual default in source (e.g., SKDocument.DefaultRasterDpi)
 - "Gets or sets" vs "Gets": check if property has { get; set; } or only { get; }
 - Cross-library: SkiaSharp and HarfBuzzSharp are DIFFERENT libraries with different conventions.
@@ -193,8 +194,9 @@ Finding 0 issues across all files should be rare — state your confidence level
 Launch a background general-purpose agent with this prompt:
 
 You are a documentation QUALITY REVIEWER. Read the checklist at
-.agents/skills/api-docs/references/checklist.md and the patterns at
-.agents/skills/api-docs/references/patterns.md for guidelines.
+.agents/skills/api-docs/references/checklist.md, the patterns at
+.agents/skills/api-docs/references/patterns.md, and the domain knowledge at
+.agents/skills/api-docs/references/skia-patterns.md for guidelines.
 
 Do all work directly. Do NOT launch sub-agents or delegate.
 
@@ -237,6 +239,7 @@ dotnet cake --target=docs-format-docs
 
 ## Resources
 
-- [references/patterns.md](references/patterns.md) — XML syntax, verb conventions, and examples
+- [references/patterns.md](references/patterns.md) — .NET XML documentation syntax, verb conventions, and formatting
+- [references/skia-patterns.md](references/skia-patterns.md) — SkiaSharp/HarfBuzz domain knowledge (color types, naming, threading)
 - [references/checklist.md](references/checklist.md) — Review severity criteria (CRITICAL / IMPORTANT / MINOR)
 - [documentation/dev/writing-docs.md](../../../documentation/dev/writing-docs.md) — Full pipeline docs, cake targets, local generation
