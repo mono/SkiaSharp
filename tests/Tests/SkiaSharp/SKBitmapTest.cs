@@ -35,7 +35,6 @@ namespace SkiaSharp.Tests
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyToSucceeds(SKColorType colorType)
 		{
-			SkipOnPlatform(IsBrowser, "WASM color conversion has minor rounding differences");
 
 			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
 				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
@@ -59,7 +58,7 @@ namespace SkiaSharp.Tests
 				var color = copy.GetPixel(10, 10);
 				Assert.NotEqual(SKColors.Empty, color);
 				if (colorType == SKColorType.Gray8)
-					Assert.Equal(0xFF353535, color);
+					AssertSimilarColor(0xFF353535, color, tolerance: 1);
 				else if (colorType == SKColorType.Alpha8 || colorType == SKColorType.AlphaF16 || colorType == SKColorType.Alpha16)
 					Assert.Equal(0xFF000000, color);
 				else
@@ -71,7 +70,6 @@ namespace SkiaSharp.Tests
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyWithAlphaToSucceeds(SKColorType colorType)
 		{
-			SkipOnPlatform(IsBrowser, "WASM color conversion has minor rounding differences");
 
 			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
 				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
@@ -97,7 +95,7 @@ namespace SkiaSharp.Tests
 
 				if (colorType == SKColorType.Gray8)
 				{
-					Assert.Equal((SKColor)0xFF232323, color);
+					AssertSimilarColor((SKColor)0xFF232323, color, tolerance: 1);
 				}
 				else if (alphaType == SKAlphaType.Opaque)
 				{
