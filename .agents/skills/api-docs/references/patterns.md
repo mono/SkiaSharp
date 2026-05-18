@@ -486,11 +486,18 @@ SkiaSharp wraps two separate native libraries: **Skia** (SkiaSharp namespace) an
 | Type | Byte Order | Bit Layout |
 |------|-----------|------------|
 | `SKColor` / `sk_color_t` (Skia) | **ARGB** | `0xAARRGGBB` — Alpha in bits 31-24, Red 23-16, Green 15-8, Blue 7-0 |
-| `hb_color_t` (HarfBuzz) | Different from SKColor | The C# API returns `uint[]` with no named packing order |
+| `hb_color_t` (HarfBuzz) | **BGRA** | `0xBBGGRRAA` — Blue bits 31-24, Green 23-16, Red 15-8, Alpha 7-0 |
 
-**Key rule for hb_color_t:** The C# binding (`GetPaletteColors`) returns raw `uint[]` values. The source code does NOT label these as "RGBA", "BGRA", or any other order. Do NOT invent a byte-order description. Simply say "color values" in documentation — never claim a specific channel layout.
+**Source (harfbuzz/src/hb-common.h):**
+```c
+#define HB_COLOR(b,g,r,a) ((hb_color_t) HB_TAG ((b),(g),(r),(a)))
+#define hb_color_get_alpha(color)   ((color) & 0xFF)         // bits 0-7
+#define hb_color_get_red(color)     (((color) >> 8) & 0xFF)  // bits 8-15
+#define hb_color_get_green(color)   (((color) >> 16) & 0xFF) // bits 16-23
+#define hb_color_get_blue(color)    (((color) >> 24) & 0xFF) // bits 24-31
+```
 
-- `HarfBuzzSharp.Face.GetPaletteColors()` returns `uint[]` — just say "color values". Do NOT say "ARGB", "RGBA", "BGRA", or describe byte positions.
+- `HarfBuzzSharp.Face.GetPaletteColors()` returns `hb_color_t` values as `uint[]` packed as **BGRA** (`0xBBGGRRAA`).
 - `SKFontPaletteOverride.Color` stores `sk_color_t` — this IS `SKColor` (ARGB, `0xAARRGGBB`).
 - Do **not** describe both as "packed RGBA" just because they are both `uint`. Check the underlying C type.
 
