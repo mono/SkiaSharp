@@ -435,8 +435,18 @@ Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` as usual.
 
 ## Type-Level Documentation
 
-### SKObject Subclasses (IDisposable types)
-
-Most SkiaSharp types inherit from `SKObject`. Their type-level summary and remarks should cover construction, disposal, and usage.
+Types that wrap native resources (`IDisposable`) should have remarks that cover:
+1. What the type does and when to use it
+2. How to create instances (constructor vs factory)
+3. Disposal pattern — always show `using` in examples
+4. Threading constraints if applicable
 
 **remarks** should use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block.
+
+### Code Example Best Practices
+
+- **Show disposal** — if the type is `IDisposable`, examples must use `using` or call `Dispose()`
+- **Show the full picture** — create + configure + use, not just one call
+- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
+- **Keep it short** — 5-15 lines, enough to understand the pattern
+- **Only use real APIs** — verify every method/overload exists in source before using in an example

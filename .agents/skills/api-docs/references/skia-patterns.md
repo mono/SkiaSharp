@@ -44,11 +44,15 @@ The letters in the name specify channel order in memory: `Rgba` = R first, A las
 
 ## Type Categories
 
+When documenting SkiaSharp types, match the disposal and threading guidance to the type's category:
+
 | Category | Examples | Threading | Disposal |
 |----------|----------|-----------|----------|
 | Mutable native objects | `SKCanvas`, `SKPaint`, `SKPath` | NOT thread-safe | Must dispose |
 | Immutable native objects | `SKImage`, `SKShader`, `SKData` | Thread-safe | Must dispose |
 | Value types | `SKColor`, `SKPoint`, `SKRect` | Thread-safe | No disposal |
+
+In examples: mutable types need `using`, immutable types need `using`, value types do not.
 
 ## Struct Defaults
 
