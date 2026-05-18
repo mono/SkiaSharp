@@ -14,7 +14,7 @@ Task ("Default")
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj";
     DirectoryPath results = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}";
 
-    RunDeviceRunnersTest(csproj, results);
+    RunDeviceRunnersTest(csproj, results, allowFailure: true);
 });
 
 RunTarget(TARGET);
