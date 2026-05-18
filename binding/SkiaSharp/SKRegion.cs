@@ -166,9 +166,6 @@ namespace SkiaSharp
 
 		public bool SetRects (ReadOnlySpan<SKRectI> rects)
 		{
-			if (rects == null)
-				throw new ArgumentNullException (nameof (rects));
-
 			fixed (SKRectI* r = rects) {
 				return SkiaApi.sk_region_set_rects (Handle, r, rects.Length);
 			}

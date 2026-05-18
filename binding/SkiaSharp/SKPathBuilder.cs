@@ -186,8 +186,6 @@ namespace SkiaSharp
 
 		public void AddPoly (ReadOnlySpan<SKPoint> points, bool close = true)
 		{
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
 			fixed (SKPoint* p = points) {
 				SkiaApi.sk_pathbuilder_add_poly (Handle, p, points.Length, close);
 			}
