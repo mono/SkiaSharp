@@ -11,7 +11,8 @@ void RunDeviceRunnersTest(
     DirectoryPath output,
     string configuration = null,
     string framework = null,
-    bool allowFailure = false)
+    bool allowFailure = false,
+    Dictionary<string, string> properties = null)
 {
     CleanDirectories($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
@@ -24,8 +25,17 @@ void RunDeviceRunnersTest(
         Framework = framework,
         ResultsDirectory = output,
         Verbosity = DotNetVerbosity.Normal,
-        ArgumentCustomization = args => args
-            .Append("--logger").Append("trx"),
+        ArgumentCustomization = args => {
+            args = args.Append("--logger").Append("trx");
+            if (properties != null) {
+                foreach (var prop in properties) {
+                    if (!string.IsNullOrEmpty(prop.Value)) {
+                        args = args.Append($"/p:{prop.Key}={prop.Value}");
+                    }
+                }
+            }
+            return args;
+        },
     };
 
     if (allowFailure)
