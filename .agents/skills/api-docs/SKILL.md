@@ -68,20 +68,25 @@ This phase is lightweight — you are an **orchestrator**, not a writer. Read on
 
 3. **Do NOT pre-read JSON files or source code** — the writer agents will do their own discovery. Pre-reading is wasted work that duplicates what writers do.
 
-### Phase 4: Write (Single Agent)
+### Phase 4: Write (2 Parallel Agents)
 
-Launch **one** background `general-purpose` agent to write all documentation. A single writer sees all files, maintaining cross-file consistency. No file splitting.
+Launch **two** background `general-purpose` agents to write documentation in parallel. Split the files from `manifest.json` into two halves — writer 1 gets the first half, writer 2 gets the second half.
 
-**Writer agent prompt:**
+**How to split:** Read `manifest.json`, get the `files` array. Writer 1 handles files[0..N/2-1], writer 2 handles files[N/2..end]. Tell each writer EXACTLY which filenames to process (list them explicitly in the prompt).
+
+**Writer agent prompt** (customize the file list per agent):
 
 ```
 You are an API DOCUMENTATION WRITER. Fill all placeholder fields in the JSON
 files with accurate, well-written .NET XML documentation.
 
+YOUR FILES (process ONLY these, in order):
+{list the specific filenames assigned to this writer}
+
 STEPS:
 1. Read the patterns file at .agents/skills/api-docs/references/patterns.md
 2. Read the domain knowledge at .agents/skills/api-docs/references/skia-patterns.md
-3. For each JSON file in output/docs-work/ (skip manifest.json):
+3. For each of YOUR assigned JSON files in output/docs-work/:
    a. Read the JSON file
    b. Find and READ the corresponding C# source in binding/ (ESSENTIAL for accuracy)
    c. Fill all "To be added." fields following the rules below
@@ -115,7 +120,7 @@ TRUST HIERARCHY for native type facts (bit layouts, byte orders):
 Do all work directly. Do NOT launch sub-agents or delegate.
 ```
 
-Wait for the writer agent to complete before proceeding to Phase 5.
+Wait for **both** writer agents to complete before proceeding to Phase 5.
 
 ### Phase 5: Review (3 Independent Agents)
 
