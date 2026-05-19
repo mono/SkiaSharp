@@ -56,54 +56,78 @@ pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 extract docs/SkiaSharpAPI/ -O
 ```
 This produces one JSON file per XML file, containing only members with "To be added." placeholders. The `output/` directory is gitignored so local runs don't pollute the repo.
 
-### Phase 3: Discover
+### Phase 3: Discover (Orchestrator)
 
-Before writing any documentation, build context:
+This phase is lightweight — you are an **orchestrator**, not a writer. Read only what you need to plan the work, then delegate immediately.
 
-1. **Read the documentation patterns** in [references/patterns.md](references/patterns.md) — this covers XML syntax rules, verb conventions, parameter/return patterns, rich remarks with code examples, and type-level documentation guidance.
+1. **Read the manifest** — `output/docs-work/manifest.json` tells you how many files, types, and fields need documentation. Use this to plan the write phase.
 
-2. **Read the domain knowledge** in [references/skia-patterns.md](references/skia-patterns.md) — this covers SkiaSharp/HarfBuzz-specific facts: color type byte layouts, naming conventions, type categories, struct defaults, and API surface verification rules.
+2. **Read the reference docs** — these will be passed to writer agents:
+   - [references/patterns.md](references/patterns.md) — .NET XML documentation formatting rules
+   - [references/skia-patterns.md](references/skia-patterns.md) — SkiaSharp/HarfBuzz domain knowledge
 
-3. **Study existing well-documented types** — read these XML files to understand what good docs look like:
-   - `docs/SkiaSharpAPI/SkiaSharp/SKShader.xml` — rich CDATA remarks with code examples
-   - `docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml` — comprehensive member documentation
+3. **Do NOT pre-read JSON files or source code** — the writer agents will do their own discovery. Pre-reading is wasted work that duplicates what writers do.
 
-4. **Review the sample gallery** — `samples/Gallery/Shared/Samples/` contains real-world usage patterns that make excellent code examples.
+### Phase 4: Write (Parallel)
 
-4. **Read the extracted JSON** — scan each file in `output/docs-work/` to understand the scope:
-   - How many types need docs? Which are the most important?
-   - Which entries have `"remarksRequired": true`? These need rich content.
-   - Read the C# signatures to understand what each API does.
+Split the work across **multiple parallel writer agents** for speed. Each writer independently reads its assigned JSON files, reads the corresponding C# source, and fills the documentation.
 
-5. **Read the C# source** for the types you'll be documenting — `binding/SkiaSharp/` and `binding/HarfBuzzSharp/`. This is essential for writing accurate docs and avoiding fabrication.
+**Splitting strategy:**
+- Sort files from manifest by `fieldCount` descending
+- Distribute files round-robin across 3 groups to balance total fields per group
+- Launch 3 parallel background `general-purpose` agents, one per group
 
-### Phase 4: Write
+**Writer agent prompt template** (customize the file list for each agent):
 
-Fill the JSON files in `output/docs-work/`. **Do NOT edit XML files directly.**
+```
+You are an API DOCUMENTATION WRITER. Fill all placeholder fields in your assigned
+JSON files with accurate, well-written .NET XML documentation.
 
-**Critical rules:**
-- **NEVER invent API calls** — before writing a code example, verify the method/overload exists by reading the C# source in `binding/`. If you're unsure an API exists, don't use it in examples.
-- **NEVER guess numeric values** — for enums with standard mappings (ITU-T, CICP, Vulkan), read the actual `MemberValue` from the JSON and cross-reference with the source.
-- **Fill ALL params in ALL overloads** — don't skip params on later overloads. Each overload must be independently complete.
-- **Read-only properties use "Gets"** — check the C# source for `{ get; }` vs `{ get; set; }`.
-- **Use `<see langword="null" />`** not `<see langword="default" />` for nullable reference parameters.
+ASSIGNED FILES: [list the filenames for this agent's group]
 
-**Remarks rules:**
-- **Type-level entries** (`"memberType": "type"`) have `"remarksRequired": true` and a pre-filled CDATA template. You MUST complete the template — never leave `[bracketed placeholders]`. Include a description, disposal note if applicable, and a code example.
-- **Member-level entries**: set `remarks` to `""` for simple members, or write rich markdown for important methods (factory methods, `Draw*`, etc.)
+STEPS:
+1. Read the patterns file at .agents/skills/api-docs/references/patterns.md
+2. Read the domain knowledge at .agents/skills/api-docs/references/skia-patterns.md
+3. For each assigned file:
+   a. Read the JSON file from output/docs-work/
+   b. Find and READ the corresponding C# source in binding/ (ESSENTIAL for accuracy)
+   c. Fill all "To be added." fields following the rules below
+   d. Write the completed JSON back to the same path
 
-**Content supports XML refs**: `<see cref="T:..." />`, `<paramref name="..." />`, `<see langword="null" />`. In CDATA remarks, use `<xref:...>` instead of `<see cref>`.
+CRITICAL RULES:
+- NEVER invent API calls — verify every method/overload exists by reading C# source
+- NEVER guess numeric values — read MemberValue from JSON, cross-reference source
+- Fill ALL params in ALL overloads — each overload independently complete
+- Read-only properties use "Gets" — check source for { get; } vs { get; set; }
+- Use <see langword="null" /> not <see langword="default" /> for nullable params
+- Use <see langword="true" /> and <see langword="false" /> for boolean literals in prose
 
-Set `remarks` to `""` for self-closing `<remarks />`. Leave fields as "To be added." to skip them.
-See [references/patterns.md](references/patterns.md) for full guidance on rich remarks.
+REMARKS RULES:
+- Type-level entries (memberType=type) have remarksRequired=true with a CDATA template.
+  Complete it fully — never leave [bracketed placeholders]. Include description,
+  disposal note if applicable, and a code example.
+- Member-level: set remarks to "" for simple members, or write rich markdown for
+  important methods (factory methods, Draw*, etc.)
+
+CONTENT FORMAT:
+- XML refs: <see cref="T:..." />, <paramref name="..." />, <see langword="null" />
+- In CDATA remarks: use <xref:...> instead of <see cref>
+- Set remarks to "" for self-closing <remarks />
+
+Do all work directly. Do NOT launch sub-agents or delegate.
+```
+
+Wait for all writer agents to complete before proceeding to Phase 5.
 
 ### Phase 5: Review
 
-Launch **three background agents** in parallel to validate the JSON **before** merging. Each agent is a narrow specialist with one job. Wait for all three to complete. This is a write→review→fix loop — repeat until no CRITICAL issues remain.
+Launch **four background agents** in parallel to validate the JSON **before** merging. The factual verifier is split into two agents (each reviewing half the files) to reduce tail latency. Wait for all four to complete. This is a write→review→fix loop — repeat until no CRITICAL issues remain.
 
 > **IMPORTANT — adversarial mindset:** AI documentation writers typically introduce
 > 15–30 factual errors per batch of ~800 fields. A review that finds 0 issues
 > almost certainly skimmed. Each agent MUST read source code and provide evidence.
+
+**Splitting the factual reviewer:** Sort the JSON files alphabetically. Give the first half to Factual Verifier A and the second half to Factual Verifier B.
 
 **Agent 1: Code Example Verifier** — verifies every code example compiles and uses real APIs:
 
@@ -144,13 +168,15 @@ A review that checks 0 code examples is INCOMPLETE. Finding 0 issues across
 all files should be rare — state your confidence level if you find nothing.
 ```
 
-**Agent 2: Factual Claim Verifier** — cross-references every factual claim against source:
+**Agents 2a & 2b: Factual Claim Verifiers** — cross-reference factual claims against source (split across two agents for speed):
 
 ```
-Launch a background general-purpose agent with this prompt:
+Launch TWO background general-purpose agents with this prompt (customize ASSIGNED FILES for each):
 
 You are a FACTUAL CLAIM VERIFIER. Your ONLY job is to find documentation claims
 that contradict the actual source code.
+
+ASSIGNED FILES: [list the filenames for this agent's half]
 
 ADVERSARIAL CONTEXT: AI doc writers confidently state "facts" without checking
 source. Common errors include: wrong parameter constraints, wrong channel names,
@@ -235,7 +261,7 @@ For each JSON file in output/docs-work/:
 Report CRITICAL and IMPORTANT issues only. Include file, docId, and fix.
 ```
 
-**Fix all CRITICAL issues** from all three agents, then re-run the reviewers if you made changes. Only proceed to Phase 6 when all agents report no CRITICAL issues.
+**Fix all CRITICAL issues** from all four agents, then re-run the reviewers if you made changes. Only proceed to Phase 6 when all agents report no CRITICAL issues.
 
 ### Phase 6: Merge
 
