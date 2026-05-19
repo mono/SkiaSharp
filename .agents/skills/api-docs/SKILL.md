@@ -169,10 +169,20 @@ SPECIFIC CHECKS:
   actually validate/reject, or silently accept? Read the METHOD BODY, not just signature.
 - Data format claims (ARGB vs RGBA, bit layouts, channel names): check the underlying
   C/C++ type. In Skia, x suffix = padding NOT alpha. SKColor = ARGB (0xAARRGGBB).
-  hb_color_t = BGRA (0xBBGGRRAA). Always verify against the native header — do not guess.
+  hb_color_t = BGRA (0xBBGGRRAA). Verify against the native header if available.
 - Default value claims: find the actual default in source (e.g., SKDocument.DefaultRasterDpi)
 - "Gets or sets" vs "Gets": check if property has { get; set; } or only { get; }
 - Cross-library: SkiaSharp and HarfBuzzSharp are DIFFERENT libraries with different conventions.
+
+TRUST HIERARCHY for native type facts (bit layouts, byte orders, macro expansions):
+1. Native C/C++ header in repo (if you can find and read it) — AUTHORITATIVE
+2. skia-patterns.md reference file — PRE-VERIFIED, trust it if header unavailable
+3. Your own knowledge — DO NOT USE for byte layouts. Never invent macro expansions.
+
+If you cannot locate the native header for a type (e.g., hb-common.h is not in
+the git checkout), you MUST defer to skia-patterns.md. Do NOT "correct" a claim
+that matches skia-patterns.md based on your own reasoning about how a macro
+"should" expand. The reference file was verified against the actual source.
 
 OUTPUT FORMAT — you MUST include a verification trace per file:
   [filename.json] SOURCE: binding/SkiaSharp/SKFoo.cs (read lines 1-85)
@@ -212,9 +222,12 @@ For each JSON file in output/docs-work/:
    (e.g., "Unlike X, which is immutable" — verify before accepting)
 8. Check enum member descriptions accurately describe the member's
    specific value, not a similar-looking sibling enum member
-9. Check Skia naming conventions in patterns.md:
+9. Check Skia naming conventions in skia-patterns.md:
    - x suffix in color types = padding, never "alpha"
    - Channel order matches the type name (Rgba = R first, A last)
+10. For native byte layout claims, compare against skia-patterns.md. If the
+    documentation matches the reference file, it is CORRECT — do not override.
+    Never invent C macro expansions to "disprove" the reference.
 
 Report CRITICAL and IMPORTANT issues only. Include file, docId, and fix.
 ```

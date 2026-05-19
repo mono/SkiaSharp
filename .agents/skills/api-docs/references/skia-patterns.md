@@ -15,10 +15,14 @@ SkiaSharp wraps **Skia** (C++) and **HarfBuzz** (C). They have different convent
 
 ## Color Types
 
-| Type | Format | Packed Layout |
-|------|--------|---------------|
-| `SKColor` (Skia) | ARGB | `0xAARRGGBB` |
-| `hb_color_t` (HarfBuzz) | BGRA | `0xBBGGRRAA` |
+| Type | Format | Packed Layout | Verified From |
+|------|--------|---------------|---------------|
+| `SKColor` (Skia) | ARGB | `0xAARRGGBB` | `include/core/SkColor.h` |
+| `hb_color_t` (HarfBuzz) | BGRA | `0xBBGGRRAA` | `harfbuzz/src/hb-common.h` |
+
+**Proof for `hb_color_t`:** `HB_COLOR(b,g,r,a)` calls `HB_TAG(b,g,r,a)` which expands to
+`(b<<24)|(g<<16)|(r<<8)|a`. So blue is bits 31-24 (high byte), alpha is bits 7-0 (low byte).
+The accessors confirm: `hb_color_get_alpha(c) = c & 0xFF`, `hb_color_get_blue(c) = c >> 24`.
 
 - `SKColor` has alpha in the high byte. Standard .NET `Color.ToArgb()` order.
 - `hb_color_t` has blue in the high byte, alpha in the low byte.
