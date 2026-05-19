@@ -955,6 +955,22 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_vertices (Handle, vertices.Handle, mode, paint.Handle);
 		}
 
+		// DrawMesh
+
+		public void DrawMesh (SKMesh mesh, SKPaint paint)
+		{
+			DrawMesh (mesh, null, paint);
+		}
+
+		public void DrawMesh (SKMesh mesh, SKBlender blender, SKPaint paint)
+		{
+			if (mesh == null)
+				throw new ArgumentNullException (nameof (mesh));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			SkiaApi.sk_canvas_draw_mesh (Handle, mesh.Handle, blender?.Handle ?? IntPtr.Zero, paint.Handle);
+		}
+
 		// DrawArc
 
 		public void DrawArc (SKRect oval, float startAngle, float sweepAngle, bool useCenter, SKPaint paint)

@@ -263,6 +263,25 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKRuntimeEffectUniforms (SKMeshSpecification specification)
+		{
+			if (specification == null)
+				throw new ArgumentNullException (nameof (specification));
+
+			names = specification.Uniforms.ToArray ();
+			uniforms = new Dictionary<string, Variable> ();
+			data = specification.UniformSize is int size && size > 0
+				? SKData.Create (specification.UniformSize)
+				: SKData.Empty;
+
+			for (var i = 0; i < names.Length; i++) {
+				var name = names[i];
+				SKRuntimeEffectUniformNative uniform;
+				SkiaApi.sk_meshspecification_get_uniform_from_index (specification.Handle, i, &uniform);
+				uniforms[name] = new Variable (i, name, uniform);
+			}
+		}
+
 		public IReadOnlyList<string> Names =>
 			names;
 
@@ -372,6 +391,14 @@ namespace SkiaSharp
 			_ = effect ?? throw new ArgumentNullException (nameof (effect));
 
 			names = effect.Children.ToArray ();
+			children = new SKObject[names.Length];
+		}
+
+		public SKRuntimeEffectChildren (SKMeshSpecification specification)
+		{
+			_ = specification ?? throw new ArgumentNullException (nameof (specification));
+
+			names = specification.Children.ToArray ();
 			children = new SKObject[names.Length];
 		}
 
