@@ -659,6 +659,494 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		public unsafe class ImageFilters : SKRuntimeEffectTest
+		{
+			[SkippableFact]
+			public void ZeroArgAutoDetectsChild()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return half4(1, 0, 0, 1);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build();
+
+				Assert.NotNull(filter);
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.DrawPaint(paint);
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
+			}
+
+			[SkippableFact]
+			public void ZeroArgFailsWithMultipleChildren()
+			{
+				var src = """
+					uniform shader a;
+					uniform shader b;
+					half4 main(float2 p) {
+						return a.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build();
+
+				// C++ returns nullptr when auto-detect fails with 2 children
+				Assert.Null(filter);
+			}
+
+			[SkippableFact]
+			public void SingleChildWithNamedChild()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return child.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var blur = SKImageFilter.CreateBlur(5, 5);
+				builder.Inputs["child"] = blur;
+				using var filter = builder.Build();
+
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void SingleChildWithNullNameAutoDetects()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return child.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build();
+
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void SingleChildWithMaxSampleRadius()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						half4 c = child.eval(p);
+						c += child.eval(p + float2(1, 0));
+						c += child.eval(p + float2(-1, 0));
+						return c / 3;
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				builder.Inputs["child"] = null;
+				using var filter = builder.Build(1.0f);
+
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void AutoDetectWithMaxSampleRadius()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						half4 c = child.eval(p);
+						c += child.eval(p + float2(1, 0));
+						c += child.eval(p + float2(-1, 0));
+						return c / 3;
+					}
+					""";
+
+				// no Inputs set, auto-detect + radius
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var filter = builder.Build(1.0f);
+
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void SingleChildRendersCorrectly()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return half4(1, 0, 0, 1);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				builder.Inputs["child"] = null;
+				using var filter = builder.Build();
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.DrawPaint(paint);
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
+			}
+
+			[SkippableFact]
+			public void UniformsArePassedToShader()
+			{
+				var src = """
+					uniform shader child;
+					uniform float4 tintColor;
+					half4 main(float2 p) {
+						return half4(tintColor);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				builder.Uniforms["tintColor"] = new float[] { 0, 0, 1, 1 };
+				builder.Inputs["child"] = null;
+				using var filter = builder.Build();
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.DrawPaint(paint);
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				Assert.Equal(SKColors.Blue, pixmap.GetPixelColor(50, 50));
+			}
+
+			[SkippableFact]
+			public void InputFilterIsChained()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return child.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var blur = SKImageFilter.CreateBlur(2, 2);
+				builder.Inputs["child"] = blur;
+				using var filter = builder.Build();
+
+				Assert.NotNull(filter);
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.Green);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.DrawPaint(paint);
+			}
+
+			[SkippableFact]
+			public void MaxSampleRadiusRendersCorrectly()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						half4 c = child.eval(p);
+						c += child.eval(p + float2(1, 0));
+						c += child.eval(p + float2(-1, 0));
+						c += child.eval(p + float2(0, 1));
+						c += child.eval(p + float2(0, -1));
+						return c / 5;
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				builder.Inputs["child"] = null;
+				using var filter = builder.Build(1.0f);
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.Transparent);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+
+				canvas.SaveLayer(paint);
+				canvas.Clear(SKColors.Red);
+				canvas.Restore();
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				var pixel = pixmap.GetPixelColor(50, 50);
+				Assert.Equal(255, pixel.Red);
+				Assert.Equal(0, pixel.Green);
+				Assert.Equal(0, pixel.Blue);
+			}
+
+			[SkippableFact]
+			public void MultiChildCreatesFilter()
+			{
+				var src = """
+					uniform shader content;
+					uniform shader blurred;
+					vec4 main(vec2 coord) {
+						vec4 c = content.eval(coord);
+						vec4 b = blurred.eval(coord);
+						return c + (c - b) * 4;
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var blur = SKImageFilter.CreateBlur(1, 1);
+				builder.Inputs["content"] = null;
+				builder.Inputs["blurred"] = blur;
+				using var filter = builder.Build();
+
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void MultiChildRendersCorrectly()
+			{
+				// Two children: one returns red, one returns blue. Shader picks first.
+				var src = """
+					uniform shader a;
+					uniform shader b;
+					half4 main(float2 p) {
+						return a.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var redShader = SKShader.CreateColor(SKColors.Red);
+				using var redInput = SKImageFilter.CreateShader(redShader);
+				using var blueShader = SKShader.CreateColor(SKColors.Blue);
+				using var blueInput = SKImageFilter.CreateShader(blueShader);
+				builder.Inputs["a"] = redInput;
+				builder.Inputs["b"] = blueInput;
+				using var filter = builder.Build();
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.SaveLayer(paint);
+				canvas.Clear(SKColors.Transparent);
+				canvas.Restore();
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
+			}
+
+			[SkippableFact]
+			public void ToImageFilterOnEffectWorks()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return half4(0, 1, 0, 1);
+					}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errors);
+				Assert.Null(errors);
+
+				using var filter = effect.ToImageFilter();
+				Assert.NotNull(filter);
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.DrawPaint(paint);
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				Assert.Equal(new SKColor(0, 255, 0), pixmap.GetPixelColor(50, 50));
+			}
+
+			[SkippableFact]
+			public void ToImageFilterWithExplicitUniformsWorks()
+			{
+				var src = """
+					uniform shader child;
+					uniform float4 tintColor;
+					half4 main(float2 p) {
+						return half4(tintColor);
+					}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errors);
+				Assert.Null(errors);
+
+				var uniforms = new SKRuntimeEffectUniforms(effect);
+				uniforms["tintColor"] = new float[] { 1, 0, 0, 1 };
+				var children = new SKRuntimeEffectChildren(effect);
+				using var filter = effect.ToImageFilter(uniforms, children, "child", null);
+
+				Assert.NotNull(filter);
+
+				using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+
+				using var paint = new SKPaint();
+				paint.ImageFilter = filter;
+				canvas.DrawPaint(paint);
+
+				using var snapshot = surface.Snapshot();
+				using var pixmap = snapshot.PeekPixels();
+				Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
+			}
+
+			[SkippableFact]
+			public void InputsNamesAndCountReflectSetState()
+			{
+				var src = """
+					uniform shader a;
+					uniform shader b;
+					half4 main(float2 p) {
+						return a.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				Assert.Equal(0, builder.Inputs.Count);
+				Assert.Empty(builder.Inputs.Names);
+
+				builder.Inputs["a"] = null;
+				Assert.Equal(1, builder.Inputs.Count);
+				Assert.Contains("a", builder.Inputs.Names);
+				Assert.True(builder.Inputs.Contains("a"));
+				Assert.False(builder.Inputs.Contains("b"));
+
+				builder.Inputs["b"] = null;
+				Assert.Equal(2, builder.Inputs.Count);
+
+				builder.Inputs.Reset();
+				Assert.Equal(0, builder.Inputs.Count);
+				Assert.Empty(builder.Inputs.Names);
+			}
+
+			[SkippableFact]
+			public void InputsThrowsOnInvalidName()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return child.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				Assert.Throws<ArgumentOutOfRangeException>(() => builder.Inputs["invalid"] = null);
+			}
+
+			[SkippableFact]
+			public void InputsResetClearsAll()
+			{
+				var src = """
+					uniform shader child;
+					half4 main(float2 p) {
+						return child.eval(p);
+					}
+					""";
+
+				using var builder = SKRuntimeEffect.BuildImageFilter(src);
+				using var blur = SKImageFilter.CreateBlur(1, 1);
+				builder.Inputs["child"] = blur;
+				Assert.Equal(1, builder.Inputs.Count);
+
+				builder.Inputs.Reset();
+				Assert.Equal(0, builder.Inputs.Count);
+
+				// after reset, Build() should auto-detect again
+				using var filter = builder.Build();
+				Assert.NotNull(filter);
+			}
+
+			[SkippableFact]
+			public void SettingInputNullDiffersFromNotSetting()
+			{
+				// Shader adds a.eval + b.eval. Unbound children return transparent black.
+				// "b" not listed → b stays unbound (transparent black)
+				// "b" set to null → b gets implicit source (blue canvas)
+				var src = """
+					uniform shader a;
+					uniform shader b;
+					half4 main(float2 p) {
+						return a.eval(p) + b.eval(p);
+					}
+					""";
+
+				using var redShader = SKShader.CreateColor(SKColors.Red);
+				using var redInput = SKImageFilter.CreateShader(redShader);
+
+				// Only set "a" — "b" is not listed, so b.eval returns transparent black
+				// Result: red + black = red
+				using var builder1 = SKRuntimeEffect.BuildImageFilter(src);
+				builder1.Inputs["a"] = redInput;
+				using var filter1 = builder1.Build();
+
+				using var surface1 = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas1 = surface1.Canvas;
+				using var paint1 = new SKPaint();
+				paint1.ImageFilter = filter1;
+				canvas1.SaveLayer(paint1);
+				canvas1.Clear(SKColors.Blue);
+				canvas1.Restore();
+
+				using var snap1 = surface1.Snapshot();
+				using var pix1 = snap1.PeekPixels();
+				var color1 = pix1.GetPixelColor(50, 50);
+
+				// Set "a" to red and "b" to null — "b" gets implicit source (blue)
+				// Result: red + blue = magenta
+				using var builder2 = SKRuntimeEffect.BuildImageFilter(src);
+				builder2.Inputs["a"] = redInput;
+				builder2.Inputs["b"] = null;
+				using var filter2 = builder2.Build();
+
+				using var surface2 = SKSurface.Create(new SKImageInfo(100, 100));
+				var canvas2 = surface2.Canvas;
+				using var paint2 = new SKPaint();
+				paint2.ImageFilter = filter2;
+				canvas2.SaveLayer(paint2);
+				canvas2.Clear(SKColors.Blue);
+				canvas2.Restore();
+
+				using var snap2 = surface2.Snapshot();
+				using var pix2 = snap2.PeekPixels();
+				var color2 = pix2.GetPixelColor(50, 50);
+
+				// The two should differ — unset vs null produce different results
+				Assert.NotEqual(color1, color2);
+			}
+		}
+
 		public abstract class TestEffectTests : SKRuntimeEffectTest
 		{
 			protected SKSurface Surface { get; set; }

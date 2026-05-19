@@ -13619,6 +13619,44 @@ namespace SkiaSharp
 			(sk_runtimeeffect_make_for_shader_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_for_shader> ("sk_runtimeeffect_make_for_shader")).Invoke (sksl, error);
 		#endif
 
+		// sk_imagefilter_t* sk_runtimeeffect_make_image_filter(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, float maxSampleRadius, const char* childShaderName, const sk_imagefilter_t* input)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPStr)] String childShaderName, sk_imagefilter_t input);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPStr)] String childShaderName, sk_imagefilter_t input);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPStr)] String childShaderName, sk_imagefilter_t input);
+		}
+		private static Delegates.sk_runtimeeffect_make_image_filter sk_runtimeeffect_make_image_filter_delegate;
+		internal static sk_imagefilter_t sk_runtimeeffect_make_image_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPStr)] String childShaderName, sk_imagefilter_t input) =>
+			(sk_runtimeeffect_make_image_filter_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_image_filter> ("sk_runtimeeffect_make_image_filter")).Invoke (effect, uniforms, children, childCount, maxSampleRadius, childShaderName, input);
+		#endif
+
+		// sk_imagefilter_t* sk_runtimeeffect_make_image_filter_with_children(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, float maxSampleRadius, const char** childShaderNames, const sk_imagefilter_t** inputs, int inputCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		}
+		private static Delegates.sk_runtimeeffect_make_image_filter_with_children sk_runtimeeffect_make_image_filter_with_children_delegate;
+		internal static sk_imagefilter_t sk_runtimeeffect_make_image_filter_with_children (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, Single maxSampleRadius, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount) =>
+			(sk_runtimeeffect_make_image_filter_with_children_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_image_filter_with_children> ("sk_runtimeeffect_make_image_filter_with_children")).Invoke (effect, uniforms, children, childCount, maxSampleRadius, childShaderNames, inputs, inputCount);
+		#endif
+
 		// sk_shader_t* sk_runtimeeffect_make_shader(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
