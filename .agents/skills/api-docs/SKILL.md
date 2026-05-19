@@ -62,11 +62,13 @@ Before writing any documentation, build context:
 
 1. **Read the documentation patterns** in [references/patterns.md](references/patterns.md) — this covers XML syntax rules, verb conventions, parameter/return patterns, rich remarks with code examples, and type-level documentation guidance.
 
-2. **Study existing well-documented types** — read these XML files to understand what good docs look like:
+2. **Read the domain knowledge** in [references/skia-patterns.md](references/skia-patterns.md) — this covers SkiaSharp/HarfBuzz-specific facts: color type byte layouts, naming conventions, type categories, struct defaults, and API surface verification rules.
+
+3. **Study existing well-documented types** — read these XML files to understand what good docs look like:
    - `docs/SkiaSharpAPI/SkiaSharp/SKShader.xml` — rich CDATA remarks with code examples
    - `docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml` — comprehensive member documentation
 
-3. **Review the sample gallery** — `samples/Gallery/Shared/Samples/` contains real-world usage patterns that make excellent code examples.
+4. **Review the sample gallery** — `samples/Gallery/Shared/Samples/` contains real-world usage patterns that make excellent code examples.
 
 4. **Read the extracted JSON** — scan each file in `output/docs-work/` to understand the scope:
    - How many types need docs? Which are the most important?
@@ -155,6 +157,10 @@ source. Common errors include: wrong parameter constraints, wrong channel names,
 wrong byte layouts, and invented API overloads. Assume errors exist.
 
 Do all work directly. Do NOT launch sub-agents or delegate.
+
+FIRST: Read .agents/skills/api-docs/references/skia-patterns.md — this is your
+reference for domain-specific facts (byte layouts, naming conventions, type
+categories). You will use this to verify claims about native types.
 
 SOURCE-FIRST PROTOCOL — for each JSON file:
 1. Identify the type name from the filename
