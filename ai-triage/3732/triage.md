@@ -1,0 +1,212 @@
+# Issue Triage Report — #3732
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-19T05:34:16Z |
+| Type | type/enhancement (0.97 (97%)) |
+| Area | area/SkiaSharp (0.97 (97%)) |
+| Suggested action | keep-open (0.95 (95%)) |
+
+**Issue Summary:** Maintainer-filed enhancement to promote ~115 SKPaint text/font obsolete warning members (and 6 SKCanvas overloads) to compile errors, enabling a future Phase 2 removal of the SkCompatPaint C++ shim.
+
+**Analysis:** SKPaint currently has ~115 members marked [Obsolete] (warning-level) that delegate to SKFont for text operations, plus 6 SKCanvas overloads. The issue proposes Phase 1: elevate all to [Obsolete(error: true)], forcing consumers to migrate to SKFont. Phase 2 (future release): remove the SkCompatPaint C++ shim entirely, replacing sk_compatpaint_* P/Invoke calls with sk_paint_* equivalents. Code investigation confirms all these members exist at warning-level today and SkCompatPaint is actively used.
+
+**Recommendations:** **keep-open** — Well-specified maintainer-filed enhancement assigned to milestone 4.x Preview 3. Implementation plan is clear; the issue should remain open until Phase 1 is implemented.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | breaking-change, upgrading/4.x, cost/m |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** Milestone: 4.x Preview 3. Filed by maintainer mattleibow.
+
+## Analysis
+
+### Technical Summary
+
+SKPaint currently has ~115 members marked [Obsolete] (warning-level) that delegate to SKFont for text operations, plus 6 SKCanvas overloads. The issue proposes Phase 1: elevate all to [Obsolete(error: true)], forcing consumers to migrate to SKFont. Phase 2 (future release): remove the SkCompatPaint C++ shim entirely, replacing sk_compatpaint_* P/Invoke calls with sk_paint_* equivalents. Code investigation confirms all these members exist at warning-level today and SkCompatPaint is actively used.
+
+### Rationale
+
+Type is enhancement because the feature being requested (escalating obsolete warnings to errors and eventually removing deprecated API) improves existing functionality rather than adding new functionality. Area is area/SkiaSharp because the change is in the core binding (SKPaint, SKCanvas, SkCompatPaint). tenet/compatibility applies because consumers on older code will get compile errors after this change — it is a deliberate breaking change tracked as such with existing labels breaking-change and upgrading/4.x. The issue is well-specified with a milestone assigned, so keep-open is appropriate.
+
+### Key Signals
+
+- "~115 obsolete members that delegate to SKFont for text-related operations. These are currently [Obsolete("Use SKFont instead.")] (warning only). We should promote these to [Obsolete("...", error: true)]" — **issue body** (Maintainer has clear plan and scope; this is Phase 1 of a 2-phase deprecation removal.)
+- "once obsolete members become errors, SkCompatPaint can be fully removed" — **issue body** (Phase 2 is a native C++ change requiring submodule modification; deferred intentionally.)
+- "labels: breaking-change, upgrading/4.x, cost/m; milestone: 4.x Preview 3" — **issue metadata** (Already triaged by maintainer as a known breaking change in the 4.x release cycle.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKPaint.cs` | — | direct | Confirms ~22 [Obsolete] members visible in grep (font properties, MeasureText overloads etc.) all at warning level (no error: true). sk_compatpaint_* is used for constructor, delete, reset, clone, IsAntialias setter, and font accessors. |
+| `binding/SkiaSharp/SKCanvas.cs` | — | direct | Confirms 5 obsolete DrawText/DrawTextOnPath overloads at warning level. Line 898 has one [Obsolete(..., true)] (SetMatrix) showing the pattern already used for error-level obsoletes. |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | — | related | sk_compatpaint_* P/Invoke bindings exist (clone, delete, reset, new_with_font, set_is_antialias, get_font, make_font, get/set_filter_quality, get/set_text_align, get/set_text_encoding). These are the bindings that would be removed in Phase 2. |
+
+### Resolution Proposals
+
+**Hypothesis:** Phase 1 is straightforward: add error: true to existing [Obsolete] attributes on SKPaint and SKCanvas text members. Phase 2 requires C++ changes to SkCompatPaint and regenerating bindings.
+
+1. **Phase 1: Promote obsolete members to error** — fix, confidence 0.95 (95%), cost/m, validated=untested
+   - Add `error: true` to all [Obsolete] attributes on SKPaint text/font members and SKCanvas DrawText/DrawTextOnPath overloads. Fix internal usages in tests/samples.
+2. **Phase 2: Remove SkCompatPaint shim** — fix, confidence 0.90 (90%), cost/l, validated=untested
+   - After Phase 1 ships, replace SKPaint backing from sk_compatpaint_* to sk_paint_*, delete SkCompatPaint C++ source from skia submodule, regenerate bindings.
+
+**Recommended proposal:** Phase 1: Promote obsolete members to error
+
+**Why:** Phase 1 is scoped, well-understood, and targeted for 4.x Preview 3. Phase 2 is a larger native change deliberately deferred.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | keep-open |
+| Confidence | 0.95 (95%) |
+| Reason | Well-specified maintainer-filed enhancement assigned to milestone 4.x Preview 3. Implementation plan is clear; the issue should remain open until Phase 1 is implemented. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply enhancement, SkiaSharp area, and compatibility tenet labels | labels=type/enhancement, area/SkiaSharp, tenet/compatibility |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3732,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-19T05:34:16Z",
+    "currentLabels": [
+      "breaking-change",
+      "upgrading/4.x",
+      "cost/m"
+    ]
+  },
+  "summary": "Maintainer-filed enhancement to promote ~115 SKPaint text/font obsolete warning members (and 6 SKCanvas overloads) to compile errors, enabling a future Phase 2 removal of the SkCompatPaint C++ shim.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.97
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Milestone: 4.x Preview 3. Filed by maintainer mattleibow.",
+      "repoLinks": []
+    }
+  },
+  "analysis": {
+    "summary": "SKPaint currently has ~115 members marked [Obsolete] (warning-level) that delegate to SKFont for text operations, plus 6 SKCanvas overloads. The issue proposes Phase 1: elevate all to [Obsolete(error: true)], forcing consumers to migrate to SKFont. Phase 2 (future release): remove the SkCompatPaint C++ shim entirely, replacing sk_compatpaint_* P/Invoke calls with sk_paint_* equivalents. Code investigation confirms all these members exist at warning-level today and SkCompatPaint is actively used.",
+    "rationale": "Type is enhancement because the feature being requested (escalating obsolete warnings to errors and eventually removing deprecated API) improves existing functionality rather than adding new functionality. Area is area/SkiaSharp because the change is in the core binding (SKPaint, SKCanvas, SkCompatPaint). tenet/compatibility applies because consumers on older code will get compile errors after this change — it is a deliberate breaking change tracked as such with existing labels breaking-change and upgrading/4.x. The issue is well-specified with a milestone assigned, so keep-open is appropriate.",
+    "keySignals": [
+      {
+        "text": "~115 obsolete members that delegate to SKFont for text-related operations. These are currently [Obsolete(\"Use SKFont instead.\")] (warning only). We should promote these to [Obsolete(\"...\", error: true)]",
+        "source": "issue body",
+        "interpretation": "Maintainer has clear plan and scope; this is Phase 1 of a 2-phase deprecation removal."
+      },
+      {
+        "text": "once obsolete members become errors, SkCompatPaint can be fully removed",
+        "source": "issue body",
+        "interpretation": "Phase 2 is a native C++ change requiring submodule modification; deferred intentionally."
+      },
+      {
+        "text": "labels: breaking-change, upgrading/4.x, cost/m; milestone: 4.x Preview 3",
+        "source": "issue metadata",
+        "interpretation": "Already triaged by maintainer as a known breaking change in the 4.x release cycle."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "finding": "Confirms ~22 [Obsolete] members visible in grep (font properties, MeasureText overloads etc.) all at warning level (no error: true). sk_compatpaint_* is used for constructor, delete, reset, clone, IsAntialias setter, and font accessors.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "Confirms 5 obsolete DrawText/DrawTextOnPath overloads at warning level. Line 898 has one [Obsolete(..., true)] (SetMatrix) showing the pattern already used for error-level obsoletes.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "sk_compatpaint_* P/Invoke bindings exist (clone, delete, reset, new_with_font, set_is_antialias, get_font, make_font, get/set_filter_quality, get/set_text_align, get/set_text_encoding). These are the bindings that would be removed in Phase 2.",
+        "relevance": "related"
+      }
+    ],
+    "resolution": {
+      "hypothesis": "Phase 1 is straightforward: add error: true to existing [Obsolete] attributes on SKPaint and SKCanvas text members. Phase 2 requires C++ changes to SkCompatPaint and regenerating bindings.",
+      "proposals": [
+        {
+          "title": "Phase 1: Promote obsolete members to error",
+          "description": "Add `error: true` to all [Obsolete] attributes on SKPaint text/font members and SKCanvas DrawText/DrawTextOnPath overloads. Fix internal usages in tests/samples.",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Phase 2: Remove SkCompatPaint shim",
+          "description": "After Phase 1 ships, replace SKPaint backing from sk_compatpaint_* to sk_paint_*, delete SkCompatPaint C++ source from skia submodule, regenerate bindings.",
+          "category": "fix",
+          "confidence": 0.9,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Phase 1: Promote obsolete members to error",
+      "recommendedReason": "Phase 1 is scoped, well-understood, and targeted for 4.x Preview 3. Phase 2 is a larger native change deliberately deferred."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "Well-specified maintainer-filed enhancement assigned to milestone 4.x Preview 3. Implementation plan is clear; the issue should remain open until Phase 1 is implemented.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, SkiaSharp area, and compatibility tenet labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp",
+          "tenet/compatibility"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>
