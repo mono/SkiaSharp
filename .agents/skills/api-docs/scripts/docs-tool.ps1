@@ -138,7 +138,8 @@ function Extract-Docs([string]$inputPath, [string]$outputDir) {
         if ($entries.Count -eq 0) { continue }
 
         $basePath = if (Test-Path $inputPath -PathType Container) {
-            $xmlFile.FullName.Substring((Resolve-Path $inputPath).Path.Length + 1)
+            $resolvedInput = (Resolve-Path $inputPath).Path.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+            $xmlFile.FullName.Substring($resolvedInput.Length + 1)
         }
         else { $xmlFile.Name }
         $jsonName = $basePath -replace '[/\\]', '__' -replace '\.xml$', '.json'
