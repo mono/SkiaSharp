@@ -46,70 +46,76 @@ $midlrt = Join-Path $winSdkBin 'midlrt.exe'
 Write-Host "Using Windows SDK: $($sdkVersion.Name)"
 Write-Host "WinAppSDK path: $Path"
 
-# Process WINMD files with winmdidl.exe
-$winmdFiles = @(
-    @{ Winmd = "uap$uapVersion\Microsoft.Foundation.winmd"; Stamp = 'Microsoft.Foundation.idl' }
-    @{ Winmd = "uap$uapVersion\Microsoft.Graphics.winmd"; Stamp = 'Microsoft.Graphics.DirectX.idl' }
-    @{ Winmd = "uap$uapVersion\Microsoft.UI.winmd"; Stamp = 'Microsoft.UI.idl' }
-    @{ Winmd = 'uap10.0\Microsoft.UI.Text.winmd'; Stamp = 'Microsoft.UI.Text.idl' }
-    @{ Winmd = 'uap10.0\Microsoft.UI.Xaml.winmd'; Stamp = 'Microsoft.UI.Xaml.idl' }
-    @{ Winmd = 'uap10.0\Microsoft.Web.WebView2.Core.winmd'; Stamp = 'Microsoft.Web.WebView2.Core.idl' }
-)
+# Both winmdidl and midlrt run with CWD set to the include directory
+# (midlrt resolves imported IDL files relative to CWD)
+Push-Location $includePath
+try {
+    # Process WINMD files with winmdidl.exe
+    $winmdFiles = @(
+        @{ Winmd = "uap$uapVersion\Microsoft.Foundation.winmd"; Stamp = 'Microsoft.Foundation.idl' }
+        @{ Winmd = "uap$uapVersion\Microsoft.Graphics.winmd"; Stamp = 'Microsoft.Graphics.DirectX.idl' }
+        @{ Winmd = "uap$uapVersion\Microsoft.UI.winmd"; Stamp = 'Microsoft.UI.idl' }
+        @{ Winmd = 'uap10.0\Microsoft.UI.Text.winmd'; Stamp = 'Microsoft.UI.Text.idl' }
+        @{ Winmd = 'uap10.0\Microsoft.UI.Xaml.winmd'; Stamp = 'Microsoft.UI.Xaml.idl' }
+        @{ Winmd = 'uap10.0\Microsoft.Web.WebView2.Core.winmd'; Stamp = 'Microsoft.Web.WebView2.Core.idl' }
+    )
 
-foreach ($entry in $winmdFiles) {
-    $stampFile = Join-Path $includePath $entry.Stamp
-    if (Test-Path $stampFile) { continue }
+    foreach ($entry in $winmdFiles) {
+        $stampFile = Join-Path $includePath $entry.Stamp
+        if (Test-Path $stampFile) { continue }
 
-    $winmdPath = Join-Path $libPath $entry.Winmd
-    Write-Host "  winmdidl: $($entry.Winmd)"
-    & $winmdidl $winmdPath `
-        "/metadata_dir:C:\Windows\System32\WinMetadata" `
-        "/metadata_dir:$(Join-Path $libPath "uap$uapVersion")" `
-        "/metadata_dir:$(Join-Path $libPath 'uap10.0')" `
-        "/outdir:$includePath" `
-        /nologo
-    if ($LASTEXITCODE -ne 0) { throw "winmdidl failed for $($entry.Winmd)" }
-}
+        $winmdPath = Join-Path $libPath $entry.Winmd
+        Write-Host "  winmdidl: $($entry.Winmd)"
+        & $winmdidl $winmdPath `
+            "/metadata_dir:C:\Windows\System32\WinMetadata" `
+            "/metadata_dir:$(Join-Path $libPath "uap$uapVersion")" `
+            "/metadata_dir:$(Join-Path $libPath 'uap10.0')" `
+            "/outdir:$includePath" `
+            /nologo
+        if ($LASTEXITCODE -ne 0) { throw "winmdidl failed for $($entry.Winmd)" }
+    }
 
-# Process IDL files with midlrt.exe
-$idlFiles = @(
-    'Microsoft.Foundation.idl'
-    'Microsoft.Graphics.DirectX.idl'
-    'Microsoft.UI.Composition.idl'
-    'Microsoft.UI.Composition.SystemBackdrops.idl'
-    'Microsoft.UI.Dispatching.idl'
-    'Microsoft.UI.idl'
-    'Microsoft.UI.Input.idl'
-    'Microsoft.UI.Text.idl'
-    'Microsoft.UI.Windowing.idl'
-    'Microsoft.UI.Xaml.Automation.idl'
-    'Microsoft.UI.Xaml.Automation.Peers.idl'
-    'Microsoft.UI.Xaml.Automation.Provider.idl'
-    'Microsoft.UI.Xaml.Automation.Text.idl'
-    'Microsoft.UI.Xaml.Controls.idl'
-    'Microsoft.UI.Xaml.Controls.Primitives.idl'
-    'Microsoft.UI.Xaml.Data.idl'
-    'Microsoft.UI.Xaml.Documents.idl'
-    'Microsoft.UI.Xaml.idl'
-    'Microsoft.UI.Xaml.Input.idl'
-    'Microsoft.UI.Xaml.Interop.idl'
-    'Microsoft.UI.Xaml.Media.Animation.idl'
-    'Microsoft.UI.Xaml.Media.idl'
-    'Microsoft.UI.Xaml.Media.Imaging.idl'
-    'Microsoft.UI.Xaml.Media.Media3D.idl'
-    'Microsoft.UI.Xaml.Navigation.idl'
-    'Microsoft.Web.WebView2.Core.idl'
-)
+    # Process IDL files with midlrt.exe
+    $idlFiles = @(
+        'Microsoft.Foundation.idl'
+        'Microsoft.Graphics.DirectX.idl'
+        'Microsoft.UI.Composition.idl'
+        'Microsoft.UI.Composition.SystemBackdrops.idl'
+        'Microsoft.UI.Dispatching.idl'
+        'Microsoft.UI.idl'
+        'Microsoft.UI.Input.idl'
+        'Microsoft.UI.Text.idl'
+        'Microsoft.UI.Windowing.idl'
+        'Microsoft.UI.Xaml.Automation.idl'
+        'Microsoft.UI.Xaml.Automation.Peers.idl'
+        'Microsoft.UI.Xaml.Automation.Provider.idl'
+        'Microsoft.UI.Xaml.Automation.Text.idl'
+        'Microsoft.UI.Xaml.Controls.idl'
+        'Microsoft.UI.Xaml.Controls.Primitives.idl'
+        'Microsoft.UI.Xaml.Data.idl'
+        'Microsoft.UI.Xaml.Documents.idl'
+        'Microsoft.UI.Xaml.idl'
+        'Microsoft.UI.Xaml.Input.idl'
+        'Microsoft.UI.Xaml.Interop.idl'
+        'Microsoft.UI.Xaml.Media.Animation.idl'
+        'Microsoft.UI.Xaml.Media.idl'
+        'Microsoft.UI.Xaml.Media.Imaging.idl'
+        'Microsoft.UI.Xaml.Media.Media3D.idl'
+        'Microsoft.UI.Xaml.Navigation.idl'
+        'Microsoft.Web.WebView2.Core.idl'
+    )
 
-foreach ($idl in $idlFiles) {
-    $noExt = [System.IO.Path]::GetFileNameWithoutExtension($idl)
-    $headerFile = Join-Path $includePath "$noExt.h"
-    if (Test-Path $headerFile) { continue }
+    foreach ($idl in $idlFiles) {
+        $noExt = [System.IO.Path]::GetFileNameWithoutExtension($idl)
+        $headerFile = Join-Path $includePath "$noExt.h"
+        if (Test-Path $headerFile) { continue }
 
-    $idlPath = Join-Path $includePath $idl
-    Write-Host "  midlrt: $idl"
-    & $midlrt $idlPath /metadata_dir C:\Windows\System32\WinMetadata /ns_prefix /nomidl /nologo
-    if ($LASTEXITCODE -ne 0) { throw "midlrt failed for $idl" }
+        Write-Host "  midlrt: $idl"
+        & $midlrt $idl /metadata_dir C:\Windows\System32\WinMetadata /ns_prefix /nomidl /nologo
+        if ($LASTEXITCODE -ne 0) { throw "midlrt failed for $idl" }
+    }
+} finally {
+    Pop-Location
 }
 
 Write-Host "Windows App SDK header generation complete."
