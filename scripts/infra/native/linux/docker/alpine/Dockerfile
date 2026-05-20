@@ -46,7 +46,7 @@ RUN . /etc/skia-env \
          *)           DISTRO_VERSION=3.17 ;; \
          esac \
     && APK_DIR="$(mktemp -d)" \
-    && curl -SLO --create-dirs --output-dir "$APK_DIR" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.14/$MACHINE_ARCH/apk.static" \
+    && curl -SLO --fail --retry 5 --retry-delay 10 --retry-all-errors --create-dirs --output-dir "$APK_DIR" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.14/$MACHINE_ARCH/apk.static" \
     && chmod +x "$APK_DIR/apk.static" \
     && "$APK_DIR/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \

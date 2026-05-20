@@ -73,6 +73,35 @@ namespace SkiaSharp
 			return Referenced (GetObject (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
 		}
 
+		public static SKDocument CreateXps (string path, SKDocumentXpsOptions options)
+		{
+			if (path == null) {
+				throw new ArgumentNullException (nameof (path));
+			}
+
+			var stream = SKFileWStream.OpenStream (path);
+			return Owned (CreateXps (stream, options), stream);
+		}
+
+		public static SKDocument CreateXps (Stream stream, SKDocumentXpsOptions options)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			var managed = new SKManagedWStream (stream);
+			return Owned (CreateXps (managed, options), managed);
+		}
+
+		public static SKDocument CreateXps (SKWStream stream, SKDocumentXpsOptions options)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			return Referenced (GetObject (SkiaApi.sk_document_create_xps_from_stream_with_options (stream.Handle, &options)), stream);
+		}
+
 		// CreatePdf
 
 		public static SKDocument CreatePdf (string path)

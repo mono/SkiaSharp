@@ -29,13 +29,6 @@ namespace SkiaSharp
 
 		public static void SwapRedBlue (ReadOnlySpan<byte> dest, ReadOnlySpan<byte> src, int count)
 		{
-			if (dest == null) {
-				throw new ArgumentNullException (nameof (dest));
-			}
-			if (src == null) {
-				throw new ArgumentNullException (nameof (src));
-			}
-
 			fixed (byte* d = dest)
 			fixed (byte* s = src) {
 				SkiaApi.sk_swizzle_swap_rb ((uint*)d, (uint*)s, count);

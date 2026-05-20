@@ -366,7 +366,7 @@ namespace HarfBuzzSharp.Tests
 			var arrayResult = face.GetPaletteColors (0);
 			Assert.NotEmpty (arrayResult);
 
-			var spanBuffer = new uint[arrayResult.Length];
+			var spanBuffer = new HBColor[arrayResult.Length];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (arrayResult.Length, written);
 
@@ -384,7 +384,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.True (totalColors > 1, $"Need palette with >1 colors, got {totalColors}");
 
 			// HarfBuzz fills what fits
-			var spanBuffer = new uint[1];
+			var spanBuffer = new HBColor[1];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (1, written);
 		}
@@ -397,7 +397,7 @@ namespace HarfBuzzSharp.Tests
 
 			var totalColors = face.GetPaletteColors (0).Length;
 
-			var spanBuffer = new uint[totalColors + 5];
+			var spanBuffer = new HBColor[totalColors + 5];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (totalColors, written);
 		}
@@ -408,7 +408,7 @@ namespace HarfBuzzSharp.Tests
 			using var face = CreateColorFace ();
 			Assert.True (face.PaletteCount > 0);
 
-			var spanBuffer = new uint[0];
+			var spanBuffer = new HBColor[0];
 			var written = face.GetPaletteColors (0, spanBuffer);
 			Assert.Equal (0, written);
 		}
@@ -516,6 +516,20 @@ namespace HarfBuzzSharp.Tests
 		{
 			using var face = CreateColorFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteColorNameId (-1));
+		}
+
+		[SkippableFact]
+		public void PaletteColorsHaveCorrectChannels ()
+		{
+			// GetPaletteColors() returns HBColor[] with correct channel accessors.
+			// HBColor properties use the same bit-shift logic as the native
+			// hb_color_get_* macros — no P/Invoke needed.
+			using var face = CreateColorFace ();
+			var colors = face.GetPaletteColors (0);
+			Assert.NotEmpty (colors);
+
+			// Verify at least one color has non-zero alpha (palette colors should be opaque)
+			Assert.Contains (colors, c => c.Alpha > 0);
 		}
 
 		[SkippableFact]

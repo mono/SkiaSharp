@@ -150,6 +150,24 @@ namespace SkiaSharp
 		public void Submit (bool synchronous = false) =>
 			SkiaApi.gr_direct_context_submit (Handle, synchronous);
 
+		public void Flush (SKImage image)
+		{
+			if (image == null) {
+				throw new ArgumentNullException (nameof (image));
+			}
+
+			SkiaApi.gr_direct_context_flush_image (Handle, image.Handle);
+		}
+
+		public void Flush (SKSurface surface)
+		{
+			if (surface == null) {
+				throw new ArgumentNullException (nameof (surface));
+			}
+
+			SkiaApi.gr_direct_context_flush_surface (Handle, surface.Handle);
+		}
+
 		public new int GetMaxSurfaceSampleCount (SKColorType colorType) =>
 			base.GetMaxSurfaceSampleCount (colorType);
 
@@ -168,7 +186,7 @@ namespace SkiaSharp
 		public void PurgeUnlockedResources (long bytesToPurge, bool preferScratchResources) =>
 			SkiaApi.gr_direct_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
 
-		internal static GRContext GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+		internal new static GRContext GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
 			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new GRContext (h, o));
 	}
 }
