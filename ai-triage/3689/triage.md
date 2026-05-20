@@ -1,0 +1,228 @@
+# Issue Triage Report — #3689
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-05-20T05:35:00Z |
+| Type | type/enhancement (0.95 (95%)) |
+| Area | area/libSkiaSharp.native (0.97 (97%)) |
+| Suggested action | ready-to-fix (0.92 (92%)) |
+
+**Issue Summary:** Dependency update task to bump libjpeg-turbo from 3.1.0 to 3.1.4.1 in the mono/skia DEPS file and cgmanifest.json, as part of the v4 native dependency refresh tracked in #3679.
+
+**Analysis:** libjpeg-turbo 3.1.0 is currently recorded in cgmanifest.json for SkiaSharp v4. The target is 3.1.4.1 from Chromium's libjpeg-turbo fork. The issue is open and outstanding — a prior zlib PR accidentally closed it via a stray 'Fixes #3689' commit message, and the maintainer reopened it. The update requires locating the 3.1.4.1 commit in chromium.googlesource.com/chromium/deps/libjpeg_turbo.git, updating the DEPS entry in mono/skia, and updating cgmanifest.json.
+
+**Recommendations:** **ready-to-fix** — The update target, source repository, and task checklist are all specified. The issue is assigned to a milestone (4.x RC 1) and the native-dependency-update skill can execute this directly.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/libSkiaSharp.native |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | upgrading/4.x, cost/xs, priority/1 |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** mono/skia DEPS, cgmanifest.json — libjpeg-turbo 3.1.0 currently referenced
+
+**Related issues:** #3679, #3684
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/3679 — Parent tracker: Update native dependencies for v4
+- https://github.com/mono/SkiaSharp/issues/3684 — Grandparent tracker: v4 release tasks
+- https://github.com/mono/SkiaSharp/pull/3720 — PR #3720 (zlib bump) incorrectly closed this issue via stray Fixes reference
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.1.0, 3.1.4.1 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | cgmanifest.json still records libjpeg-turbo 3.1.0 and no PR has merged the update; issue was reopened after accidental closure. |
+
+## Analysis
+
+### Technical Summary
+
+libjpeg-turbo 3.1.0 is currently recorded in cgmanifest.json for SkiaSharp v4. The target is 3.1.4.1 from Chromium's libjpeg-turbo fork. The issue is open and outstanding — a prior zlib PR accidentally closed it via a stray 'Fixes #3689' commit message, and the maintainer reopened it. The update requires locating the 3.1.4.1 commit in chromium.googlesource.com/chromium/deps/libjpeg_turbo.git, updating the DEPS entry in mono/skia, and updating cgmanifest.json.
+
+### Rationale
+
+This is a well-scoped native dependency version bump with a clear upstream source, a parent tracker (#3679), and existing milestone assignment (4.x RC 1). The enhancement classification fits because it improves an existing native dependency rather than reporting a defect or requesting new API. The native-dependency-update skill is the recommended tool for execution.
+
+### Key Signals
+
+- "Current: 3.1.0 | Target: 3.1.4.1 | Source: https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git" — **issue body** (Well-scoped dependency bump with a clear source and target version.)
+- "Reopening — this was incorrectly closed by PR #3720 (zlib bump) which had `Fixes #3689` in its commit message when it should have been `Fixes #3914`. The libjpeg-turbo update is still outstanding." — **issue comment by mattleibow** (Confirms the update is still needed and was not completed; administrative false-close, not a real fix.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `cgmanifest.json` | — | direct | libjpeg-turbo is listed at version 3.1.0 with downloadUrl https://github.com/libjpeg-turbo/libjpeg-turbo. Target is 3.1.4.1. |
+| `externals/skia/DEPS` | — | direct | Skia submodule is not checked out in this environment; DEPS cannot be read directly. The comment in issue #3689 confirms the Skia m147 bump already brought libjpeg-turbo from 2.1.5.1 → 3.1.0; remaining gap is 3.1.0 → 3.1.4.1. |
+
+### Resolution Proposals
+
+**Hypothesis:** Update the libjpeg-turbo commit hash in mono/skia DEPS to the 3.1.4.1 tag from chromium.googlesource.com/chromium/deps/libjpeg_turbo.git and update cgmanifest.json to version 3.1.4.1.
+
+1. **Update DEPS and cgmanifest.json via native-dependency-update skill** — fix, cost/xs, validated=untested
+   - Use the native-dependency-update skill to locate the 3.1.4.1 commit in the Chromium libjpeg-turbo fork, update DEPS in mono/skia, rebuild natives, and update cgmanifest.json.
+
+**Recommended proposal:** fix-1
+
+**Why:** The issue body already provides the exact source repository and version. The native-dependency-update skill is purpose-built for this workflow and the effort is xs.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.92 (92%) |
+| Reason | The update target, source repository, and task checklist are all specified. The issue is assigned to a milestone (4.x RC 1) and the native-dependency-update skill can execute this directly. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply triage classification labels | labels=type/enhancement, area/libSkiaSharp.native, triage/triaged |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3689,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-05-20T05:35:00Z",
+    "currentLabels": [
+      "upgrading/4.x",
+      "cost/xs",
+      "priority/1"
+    ]
+  },
+  "summary": "Dependency update task to bump libjpeg-turbo from 3.1.0 to 3.1.4.1 in the mono/skia DEPS file and cgmanifest.json, as part of the v4 native dependency refresh tracked in #3679.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.97
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "mono/skia DEPS, cgmanifest.json — libjpeg-turbo 3.1.0 currently referenced",
+      "relatedIssues": [
+        3679,
+        3684
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3679",
+          "description": "Parent tracker: Update native dependencies for v4"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/3684",
+          "description": "Grandparent tracker: v4 release tasks"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3720",
+          "description": "PR #3720 (zlib bump) incorrectly closed this issue via stray Fixes reference"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.1.0",
+        "3.1.4.1"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "cgmanifest.json still records libjpeg-turbo 3.1.0 and no PR has merged the update; issue was reopened after accidental closure."
+    }
+  },
+  "analysis": {
+    "summary": "libjpeg-turbo 3.1.0 is currently recorded in cgmanifest.json for SkiaSharp v4. The target is 3.1.4.1 from Chromium's libjpeg-turbo fork. The issue is open and outstanding — a prior zlib PR accidentally closed it via a stray 'Fixes #3689' commit message, and the maintainer reopened it. The update requires locating the 3.1.4.1 commit in chromium.googlesource.com/chromium/deps/libjpeg_turbo.git, updating the DEPS entry in mono/skia, and updating cgmanifest.json.",
+    "codeInvestigation": [
+      {
+        "file": "cgmanifest.json",
+        "finding": "libjpeg-turbo is listed at version 3.1.0 with downloadUrl https://github.com/libjpeg-turbo/libjpeg-turbo. Target is 3.1.4.1.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/DEPS",
+        "finding": "Skia submodule is not checked out in this environment; DEPS cannot be read directly. The comment in issue #3689 confirms the Skia m147 bump already brought libjpeg-turbo from 2.1.5.1 → 3.1.0; remaining gap is 3.1.0 → 3.1.4.1.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Current: 3.1.0 | Target: 3.1.4.1 | Source: https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git",
+        "source": "issue body",
+        "interpretation": "Well-scoped dependency bump with a clear source and target version."
+      },
+      {
+        "text": "Reopening — this was incorrectly closed by PR #3720 (zlib bump) which had `Fixes #3689` in its commit message when it should have been `Fixes #3914`. The libjpeg-turbo update is still outstanding.",
+        "source": "issue comment by mattleibow",
+        "interpretation": "Confirms the update is still needed and was not completed; administrative false-close, not a real fix."
+      }
+    ],
+    "rationale": "This is a well-scoped native dependency version bump with a clear upstream source, a parent tracker (#3679), and existing milestone assignment (4.x RC 1). The enhancement classification fits because it improves an existing native dependency rather than reporting a defect or requesting new API. The native-dependency-update skill is the recommended tool for execution.",
+    "resolution": {
+      "hypothesis": "Update the libjpeg-turbo commit hash in mono/skia DEPS to the 3.1.4.1 tag from chromium.googlesource.com/chromium/deps/libjpeg_turbo.git and update cgmanifest.json to version 3.1.4.1.",
+      "proposals": [
+        {
+          "title": "Update DEPS and cgmanifest.json via native-dependency-update skill",
+          "category": "fix",
+          "effort": "cost/xs",
+          "description": "Use the native-dependency-update skill to locate the 3.1.4.1 commit in the Chromium libjpeg-turbo fork, update DEPS in mono/skia, rebuild natives, and update cgmanifest.json.",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "fix-1",
+      "recommendedReason": "The issue body already provides the exact source repository and version. The native-dependency-update skill is purpose-built for this workflow and the effort is xs."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.92,
+      "reason": "The update target, source repository, and task checklist are all specified. The issue is assigned to a milestone (4.x RC 1) and the native-dependency-update skill can execute this directly.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply triage classification labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/libSkiaSharp.native",
+          "triage/triaged"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>
