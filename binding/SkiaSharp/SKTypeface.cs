@@ -26,8 +26,26 @@ namespace SkiaSharp
 			// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
 			// then falls back to style set 0). matchFamilyStyle(null) doesn't work
 			// on Android/NDK/Custom because onMatchFamily(null) returns null.
-			var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
-				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
+			//
+			// Guard against circular initialization: if SKFontManager is itself being
+			// initialized (i.e., SKFontManager..cctor() triggered SKObject..cctor()
+			// which triggered this cctor), Default will be null. In that case, create
+			// a temporary native font manager directly to resolve the default typeface.
+			var fmHandle = SKFontManager.Default?.Handle ?? IntPtr.Zero;
+			var ownsFm = false;
+			if (fmHandle == IntPtr.Zero) {
+				fmHandle = SkiaApi.sk_fontmgr_create_default ();
+				ownsFm = true;
+			}
+			IntPtr matched;
+			try {
+				matched = fmHandle != IntPtr.Zero
+					? SkiaApi.sk_fontmgr_legacy_create_typeface (fmHandle, IntPtr.Zero, SKFontStyle.Normal.Handle)
+					: IntPtr.Zero;
+			} finally {
+				if (ownsFm && fmHandle != IntPtr.Zero)
+					SkiaApi.sk_fontmgr_unref (fmHandle);
+			}
 			defaultTypeface = matched == IntPtr.Zero
 				? empty
 				: new SKTypefaceStatic (matched);
