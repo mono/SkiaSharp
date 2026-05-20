@@ -24,7 +24,8 @@ on:
 
   # -- Pre-activation step -------------------------------------------
   # Runs BEFORE the agent job. Detects the target milestone.
-  # Exit 1 = skip the entire workflow (upstream branch doesn't exist).
+  # Exit 1 = hard failure (explicit milestone input doesn't exist).
+  # skip=true output = nothing to sync (graceful skip, workflow shows green).
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
     - name: Detect milestone
@@ -74,7 +75,11 @@ on:
         UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
         if [ -z "$UPSTREAM_SHA" ]; then
           echo "::notice::upstream/chrome/m${TARGET} does not exist yet"
-          exit 1
+          if [ "$MODE" = "explicit" ]; then
+            exit 1
+          fi
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+          exit 0
         fi
 
         # Check if the sync branch already contains all upstream commits.
@@ -85,7 +90,8 @@ on:
             --jq '.behind_by' 2>/dev/null || echo "unknown")
           if [ "$BEHIND" = "0" ]; then
             echo "::notice::chrome/m${TARGET} already fully merged into skia-sync/m${TARGET} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
-            exit 1
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           echo "Sync branch exists but is ${BEHIND} commits behind upstream"
         fi
@@ -103,10 +109,11 @@ jobs:
       latest: ${{ steps.detect.outputs.latest }}
       target: ${{ steps.detect.outputs.target }}
       mode: ${{ steps.detect.outputs.mode }}
+      skip: ${{ steps.detect.outputs.skip }}
 
 # -- Agent job gate --------------------------------------------------
-# Only run the agent if pre-activation succeeded (milestone detected).
-if: needs.pre_activation.outputs.detect_result == 'success'
+# Only run the agent if pre-activation succeeded and there's work to do.
+if: needs.pre_activation.outputs.detect_result == 'success' && needs.pre_activation.outputs.skip != 'true'
 
 # -- Checkout --------------------------------------------------------
 checkout:
