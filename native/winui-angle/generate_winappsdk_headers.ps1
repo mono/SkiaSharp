@@ -84,7 +84,21 @@ try {
 
         Write-Host "  midlrt: $idl"
         & $midlrt $idl /metadata_dir C:\Windows\System32\WinMetadata /ns_prefix /nomidl /nologo
-        if ($LASTEXITCODE -ne 0) { throw "midlrt failed for $idl" }
+        if ($LASTEXITCODE -ne 0) {
+            # Some IDL files reference metadata from external packages that midlrt
+            # cannot resolve (e.g. Microsoft.Windows.ApplicationModel.Resources).
+            # Create an empty stub header so downstream #includes don't fail —
+            # ANGLE doesn't use types from these namespaces.
+            Write-Host "    WARNING: midlrt failed for $idl (exit code $LASTEXITCODE), creating stub header"
+            $guard = ($noExt -replace '\.', '_').ToUpper() + '_H'
+            Set-Content -Path $headerFile -Value @"
+#pragma once
+// Stub header — midlrt could not process $idl
+#ifndef $guard
+#define $guard
+#endif // $guard
+"@
+        }
     }
 } finally {
     Pop-Location
