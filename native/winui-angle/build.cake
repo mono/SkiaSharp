@@ -112,98 +112,84 @@ Task("sync-ANGLE")
         var uapVersion = "10.0.18362";
         EnsureDirectoryExists(includePath);
 
-        // Process WINMD files with winmdidl.exe
-        var winmdFiles = new Dictionary<string, string> {
-            { $"uap{uapVersion}/Microsoft.Foundation.winmd", null },
-            { $"uap{uapVersion}/Microsoft.Graphics.winmd", "Microsoft.Graphics.DirectX.idl" },
-            { $"uap{uapVersion}/Microsoft.UI.winmd", null },
-            { "uap10.0/Microsoft.UI.Text.winmd", null },
-            { "uap10.0/Microsoft.UI.Xaml.winmd", null },
-            { "uap10.0/Microsoft.Web.WebView2.Core.winmd", null },
+        // Build a batch script that processes all WINMD and IDL files,
+        // then run it under vcvarsall.bat so midlrt can find cl.exe
+        var winmdFiles = new[] {
+            ($"uap{uapVersion}/Microsoft.Foundation.winmd", (string)null),
+            ($"uap{uapVersion}/Microsoft.Graphics.winmd", "Microsoft.Graphics.DirectX.idl"),
+            ($"uap{uapVersion}/Microsoft.UI.winmd", (string)null),
+            ("uap10.0/Microsoft.UI.Text.winmd", (string)null),
+            ("uap10.0/Microsoft.UI.Xaml.winmd", (string)null),
+            ("uap10.0/Microsoft.Web.WebView2.Core.winmd", (string)null),
         };
 
-        foreach (var winmd in winmdFiles) {
-            var stampFilename = winmd.Value;
-            FilePath stampFile;
-            if (stampFilename != null)
-                stampFile = includePath.CombineWithFilePath(stampFilename);
-            else {
-                var noExt = System.IO.Path.GetFileNameWithoutExtension(winmd.Key);
-                stampFile = includePath.CombineWithFilePath($"{noExt}.idl");
-            }
-            if (FileExists(stampFile))
-                continue;
+        var idlFiles = new[] {
+            "Microsoft.Foundation.idl",
+            "Microsoft.Graphics.DirectX.idl",
+            "Microsoft.UI.Composition.idl",
+            "Microsoft.UI.Composition.SystemBackdrops.idl",
+            "Microsoft.UI.Dispatching.idl",
+            "Microsoft.UI.idl",
+            "Microsoft.UI.Input.idl",
+            "Microsoft.UI.Text.idl",
+            "Microsoft.UI.Windowing.idl",
+            "Microsoft.UI.Xaml.Automation.idl",
+            "Microsoft.UI.Xaml.Automation.Peers.idl",
+            "Microsoft.UI.Xaml.Automation.Provider.idl",
+            "Microsoft.UI.Xaml.Automation.Text.idl",
+            "Microsoft.UI.Xaml.Controls.idl",
+            "Microsoft.UI.Xaml.Controls.Primitives.idl",
+            "Microsoft.UI.Xaml.Data.idl",
+            "Microsoft.UI.Xaml.Documents.idl",
+            "Microsoft.UI.Xaml.idl",
+            "Microsoft.UI.Xaml.Input.idl",
+            "Microsoft.UI.Xaml.Interop.idl",
+            "Microsoft.UI.Xaml.Media.Animation.idl",
+            "Microsoft.UI.Xaml.Media.idl",
+            "Microsoft.UI.Xaml.Media.Imaging.idl",
+            "Microsoft.UI.Xaml.Media.Media3D.idl",
+            "Microsoft.UI.Xaml.Navigation.idl",
+            "Microsoft.Web.WebView2.Core.idl",
+        };
 
-            var winmdidl = winSdkBin.CombineWithFilePath("winmdidl.exe");
-            RunProcess(winmdidl, new ProcessSettings {
-                Arguments = $"\"{libPath.CombineWithFilePath(winmd.Key)}\" " +
-                    $"/metadata_dir:C:\\Windows\\System32\\WinMetadata " +
-                    $"/metadata_dir:\"{libPath.Combine($"uap{uapVersion}")}\" " +
-                    $"/metadata_dir:\"{libPath.Combine("uap10.0")}\" " +
-                    $"/outdir:\"{includePath}\" /nologo",
-                WorkingDirectory = includePath.FullPath,
-            });
+        var winmdidl = winSdkBin.CombineWithFilePath("winmdidl.exe").FullPath;
+        var midlrt = winSdkBin.CombineWithFilePath("midlrt.exe").FullPath;
+        var includeFullPath = includePath.FullPath;
+        var libFullPath = libPath.FullPath;
+
+        // Generate a batch script with all winmdidl + midlrt commands
+        var bat = new System.Text.StringBuilder();
+        bat.AppendLine("@echo off");
+        bat.AppendLine($"cd /d \"{includeFullPath}\"");
+        bat.AppendLine("if errorlevel 1 exit /b 1");
+
+        foreach (var (winmd, stampFilename) in winmdFiles) {
+            var bat_stamp = stampFilename
+                ?? (System.IO.Path.GetFileNameWithoutExtension(winmd) + ".idl");
+            bat.AppendLine($"if exist \"{includeFullPath}\\{bat_stamp}\" goto :skip_winmd_{bat_stamp.Replace(".", "_")}");
+            bat.AppendLine($"\"{winmdidl}\" \"{libFullPath}\\{winmd.Replace("/", "\\")}\" /metadata_dir:C:\\Windows\\System32\\WinMetadata /metadata_dir:\"{libFullPath}\\uap{uapVersion}\" /metadata_dir:\"{libFullPath}\\uap10.0\" /outdir:\"{includeFullPath}\" /nologo");
+            bat.AppendLine("if errorlevel 1 exit /b 1");
+            bat.AppendLine($":skip_winmd_{bat_stamp.Replace(".", "_")}");
         }
 
-        // Find cl.exe for midlrt (it needs the C preprocessor on PATH)
-        var clDir = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Hostx64/x64")
-            .OrderByDescending(d => d.GetDirectoryName())
-            .FirstOrDefault();
-        if (clDir == null)
-            throw new Exception("Could not find cl.exe directory, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+        foreach (var idl in idlFiles) {
+            var noExt = System.IO.Path.GetFileNameWithoutExtension(idl);
+            bat.AppendLine($"if exist \"{includeFullPath}\\{noExt}.h\" goto :skip_midl_{noExt.Replace(".", "_")}");
+            bat.AppendLine($"\"{midlrt}\" \"{includeFullPath}\\{idl}\" /metadata_dir C:\\Windows\\System32\\WinMetadata /ns_prefix /nomidl /nologo");
+            bat.AppendLine("if errorlevel 1 exit /b 1");
+            bat.AppendLine($":skip_midl_{noExt.Replace(".", "_")}");
+        }
 
-        // Add cl.exe directory to PATH so midlrt can find the C preprocessor
-        var originalPath = System.Environment.GetEnvironmentVariable("PATH");
-        System.Environment.SetEnvironmentVariable("PATH", $"{clDir.FullPath};{originalPath}");
+        var batPath = WINAPPSDK_PATH.CombineWithFilePath("_generate_headers.bat");
+        System.IO.File.WriteAllText(batPath.FullPath, bat.ToString());
 
         try {
-            // Process IDL files with midlrt.exe
-            var idlFiles = new[] {
-                "Microsoft.Foundation.idl",
-                "Microsoft.Graphics.DirectX.idl",
-                "Microsoft.UI.Composition.idl",
-                "Microsoft.UI.Composition.SystemBackdrops.idl",
-                "Microsoft.UI.Dispatching.idl",
-                "Microsoft.UI.idl",
-                "Microsoft.UI.Input.idl",
-                "Microsoft.UI.Text.idl",
-                "Microsoft.UI.Windowing.idl",
-                "Microsoft.UI.Xaml.Automation.idl",
-                "Microsoft.UI.Xaml.Automation.Peers.idl",
-                "Microsoft.UI.Xaml.Automation.Provider.idl",
-                "Microsoft.UI.Xaml.Automation.Text.idl",
-                "Microsoft.UI.Xaml.Controls.idl",
-                "Microsoft.UI.Xaml.Controls.Primitives.idl",
-                "Microsoft.UI.Xaml.Data.idl",
-                "Microsoft.UI.Xaml.Documents.idl",
-                "Microsoft.UI.Xaml.idl",
-                "Microsoft.UI.Xaml.Input.idl",
-                "Microsoft.UI.Xaml.Interop.idl",
-                "Microsoft.UI.Xaml.Media.Animation.idl",
-                "Microsoft.UI.Xaml.Media.idl",
-                "Microsoft.UI.Xaml.Media.Imaging.idl",
-                "Microsoft.UI.Xaml.Media.Media3D.idl",
-                "Microsoft.UI.Xaml.Navigation.idl",
-                "Microsoft.Web.WebView2.Core.idl",
-            };
-
-            foreach (var idl in idlFiles) {
-                var noExt = System.IO.Path.GetFileNameWithoutExtension(idl);
-                var headerStamp = includePath.CombineWithFilePath($"{noExt}.h");
-                if (FileExists(headerStamp))
-                    continue;
-
-                var midlrt = winSdkBin.CombineWithFilePath("midlrt.exe");
-                var idlPath = includePath.CombineWithFilePath(idl);
-                RunProcess(midlrt, new ProcessSettings {
-                    Arguments = $"\"{idlPath}\" " +
-                        $"/metadata_dir C:\\Windows\\System32\\WinMetadata " +
-                        $"/ns_prefix /nomidl /nologo",
-                    WorkingDirectory = includePath.FullPath,
-                });
-            }
+            // Run the batch script under vcvarsall.bat so cl.exe is on PATH for midlrt
+            var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
+            RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" \"{batPath}\"");
         } finally {
-            System.Environment.SetEnvironmentVariable("PATH", originalPath);
+            if (FileExists(batPath))
+                DeleteFile(batPath);
         }
     }
 });
