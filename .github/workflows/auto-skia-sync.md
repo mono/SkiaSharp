@@ -165,13 +165,14 @@ safe-outputs:
   staged: true
 
 # -- Sandbox -----------------------------------------------------------
-# Mount host /etc/fonts into the AWF chroot so Skia's fontconfig can find fonts.
-# Without this, /etc/fonts/fonts.conf doesn't exist in the chroot and
-# SKTypeface.Default is empty (46 test failures).
+# Mount host fontconfig config AND font files into the AWF chroot.
+# /etc/fonts provides fonts.conf; /usr/share/fonts provides the actual .ttf files.
+# Without BOTH, fontconfig resolves 0 fonts and SKTypeface tests fail (61 failures).
 sandbox:
   agent:
     mounts:
       - "/etc/fonts:/etc/fonts:ro"
+      - "/usr/share/fonts:/usr/share/fonts:ro"
 
 # -- Pre-agent steps (host) ------------------------------------------
 # Both steps: and pre-agent-steps: run on the HOST, not inside the AWF container.
