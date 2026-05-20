@@ -50,29 +50,26 @@ Write-Host "WinAppSDK path: $Path"
 # (midlrt resolves imported IDL files relative to CWD)
 Push-Location $includePath
 try {
-    # Process WINMD files with winmdidl.exe
-    $winmdFiles = @(
-        @{ Winmd = "uap$uapVersion\Microsoft.Foundation.winmd"; Stamp = 'Microsoft.Foundation.idl' }
-        @{ Winmd = "uap$uapVersion\Microsoft.Graphics.winmd"; Stamp = 'Microsoft.Graphics.DirectX.idl' }
-        @{ Winmd = "uap$uapVersion\Microsoft.UI.winmd"; Stamp = 'Microsoft.UI.idl' }
-        @{ Winmd = 'uap10.0\Microsoft.UI.Text.winmd'; Stamp = 'Microsoft.UI.Text.idl' }
-        @{ Winmd = 'uap10.0\Microsoft.UI.Xaml.winmd'; Stamp = 'Microsoft.UI.Xaml.idl' }
-        @{ Winmd = 'uap10.0\Microsoft.Web.WebView2.Core.winmd'; Stamp = 'Microsoft.Web.WebView2.Core.idl' }
+    # Process all WINMD files with winmdidl.exe
+    # Discover all .winmd files under the lib directory so new namespaces in
+    # newer WinAppSDK versions are handled automatically.
+    $metadataDirs = @(
+        'C:\Windows\System32\WinMetadata'
+        (Join-Path $libPath "uap$uapVersion")
+        (Join-Path $libPath 'uap10.0')
     )
+    $winmdFiles = Get-ChildItem $libPath -Filter '*.winmd' -Recurse
 
-    foreach ($entry in $winmdFiles) {
-        $stampFile = Join-Path $includePath $entry.Stamp
+    foreach ($winmd in $winmdFiles) {
+        # Use the first IDL that would be produced as a stamp file
+        $stampName = [System.IO.Path]::GetFileNameWithoutExtension($winmd.Name) + '.idl'
+        $stampFile = Join-Path $includePath $stampName
         if (Test-Path $stampFile) { continue }
 
-        $winmdPath = Join-Path $libPath $entry.Winmd
-        Write-Host "  winmdidl: $($entry.Winmd)"
-        & $winmdidl $winmdPath `
-            "/metadata_dir:C:\Windows\System32\WinMetadata" `
-            "/metadata_dir:$(Join-Path $libPath "uap$uapVersion")" `
-            "/metadata_dir:$(Join-Path $libPath 'uap10.0')" `
-            "/outdir:$includePath" `
-            /nologo
-        if ($LASTEXITCODE -ne 0) { throw "winmdidl failed for $($entry.Winmd)" }
+        Write-Host "  winmdidl: $($winmd.FullName)"
+        $metadataArgs = $metadataDirs | ForEach-Object { "/metadata_dir:$_" }
+        & $winmdidl $winmd.FullName @metadataArgs "/outdir:$includePath" /nologo
+        if ($LASTEXITCODE -ne 0) { throw "winmdidl failed for $($winmd.Name)" }
     }
 
     # Process IDL files with midlrt.exe
