@@ -109,88 +109,12 @@ Task("sync-ANGLE")
 
         var includePath = WINAPPSDK_PATH.Combine("include");
         var libPath = WINAPPSDK_PATH.Combine("lib");
-        var uapVersion = "10.0.18362";
         EnsureDirectoryExists(includePath);
 
-        // Build a batch script that processes all WINMD and IDL files,
-        // then run it under vcvarsall.bat so midlrt can find cl.exe
-        var winmdFiles = new[] {
-            ($"uap{uapVersion}/Microsoft.Foundation.winmd", (string)null),
-            ($"uap{uapVersion}/Microsoft.Graphics.winmd", "Microsoft.Graphics.DirectX.idl"),
-            ($"uap{uapVersion}/Microsoft.UI.winmd", (string)null),
-            ("uap10.0/Microsoft.UI.Text.winmd", (string)null),
-            ("uap10.0/Microsoft.UI.Xaml.winmd", (string)null),
-            ("uap10.0/Microsoft.Web.WebView2.Core.winmd", (string)null),
-        };
-
-        var idlFiles = new[] {
-            "Microsoft.Foundation.idl",
-            "Microsoft.Graphics.DirectX.idl",
-            "Microsoft.UI.Composition.idl",
-            "Microsoft.UI.Composition.SystemBackdrops.idl",
-            "Microsoft.UI.Dispatching.idl",
-            "Microsoft.UI.idl",
-            "Microsoft.UI.Input.idl",
-            "Microsoft.UI.Text.idl",
-            "Microsoft.UI.Windowing.idl",
-            "Microsoft.UI.Xaml.Automation.idl",
-            "Microsoft.UI.Xaml.Automation.Peers.idl",
-            "Microsoft.UI.Xaml.Automation.Provider.idl",
-            "Microsoft.UI.Xaml.Automation.Text.idl",
-            "Microsoft.UI.Xaml.Controls.idl",
-            "Microsoft.UI.Xaml.Controls.Primitives.idl",
-            "Microsoft.UI.Xaml.Data.idl",
-            "Microsoft.UI.Xaml.Documents.idl",
-            "Microsoft.UI.Xaml.idl",
-            "Microsoft.UI.Xaml.Input.idl",
-            "Microsoft.UI.Xaml.Interop.idl",
-            "Microsoft.UI.Xaml.Media.Animation.idl",
-            "Microsoft.UI.Xaml.Media.idl",
-            "Microsoft.UI.Xaml.Media.Imaging.idl",
-            "Microsoft.UI.Xaml.Media.Media3D.idl",
-            "Microsoft.UI.Xaml.Navigation.idl",
-            "Microsoft.Web.WebView2.Core.idl",
-        };
-
-        var winmdidl = winSdkBin.CombineWithFilePath("winmdidl.exe").FullPath;
-        var midlrt = winSdkBin.CombineWithFilePath("midlrt.exe").FullPath;
-        var includeFullPath = includePath.FullPath;
-        var libFullPath = libPath.FullPath;
-
-        // Generate a batch script with all winmdidl + midlrt commands
-        var bat = new System.Text.StringBuilder();
-        bat.AppendLine("@echo off");
-        bat.AppendLine($"cd /d \"{includeFullPath}\"");
-        bat.AppendLine("if errorlevel 1 exit /b 1");
-
-        foreach (var (winmd, stampFilename) in winmdFiles) {
-            var bat_stamp = stampFilename
-                ?? (System.IO.Path.GetFileNameWithoutExtension(winmd) + ".idl");
-            bat.AppendLine($"if exist \"{includeFullPath}\\{bat_stamp}\" goto :skip_winmd_{bat_stamp.Replace(".", "_")}");
-            bat.AppendLine($"\"{winmdidl}\" \"{libFullPath}\\{winmd.Replace("/", "\\")}\" /metadata_dir:C:\\Windows\\System32\\WinMetadata /metadata_dir:\"{libFullPath}\\uap{uapVersion}\" /metadata_dir:\"{libFullPath}\\uap10.0\" /outdir:\"{includeFullPath}\" /nologo");
-            bat.AppendLine("if errorlevel 1 exit /b 1");
-            bat.AppendLine($":skip_winmd_{bat_stamp.Replace(".", "_")}");
-        }
-
-        foreach (var idl in idlFiles) {
-            var noExt = System.IO.Path.GetFileNameWithoutExtension(idl);
-            bat.AppendLine($"if exist \"{includeFullPath}\\{noExt}.h\" goto :skip_midl_{noExt.Replace(".", "_")}");
-            bat.AppendLine($"\"{midlrt}\" \"{includeFullPath}\\{idl}\" /metadata_dir C:\\Windows\\System32\\WinMetadata /ns_prefix /nomidl /nologo");
-            bat.AppendLine("if errorlevel 1 exit /b 1");
-            bat.AppendLine($":skip_midl_{noExt.Replace(".", "_")}");
-        }
-
-        var batPath = WINAPPSDK_PATH.CombineWithFilePath("_generate_headers.bat");
-        System.IO.File.WriteAllText(batPath.FullPath, bat.ToString());
-
-        try {
-            // Run the batch script under vcvarsall.bat so cl.exe is on PATH for midlrt
-            var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
-            RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" \"{batPath}\"");
-        } finally {
-            if (FileExists(batPath))
-                DeleteFile(batPath);
-        }
+        // Run the header generation script under vcvarsall.bat so midlrt can find cl.exe
+        var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
+        var generateScript = MakeAbsolute(File("generate_winappsdk_headers.bat"));
+        RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" \"{generateScript}\" \"{winSdkBin}\" \"{includePath}\" \"{libPath}\"");
     }
 });
 
