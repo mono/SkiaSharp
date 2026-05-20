@@ -157,7 +157,33 @@ function Extract-Docs([string]$inputPath, [string]$outputDir) {
         Write-Host "  $($xmlFile.Name): $($entries.Count) entries"
     }
 
+    # Generate manifest.json
+    $jsonFiles = Get-ChildItem -Path $outputDir -Filter "*.json" | Sort-Object Name
+    $manifest = @()
+    $totalFields = 0
+    foreach ($jf in $jsonFiles) {
+        $data = Get-Content $jf.FullName -Raw | ConvertFrom-Json
+        $entryCount = if ($data.entries) { $data.entries.Count } else { 0 }
+        $fieldCount = 0
+        if ($data.entries) {
+            foreach ($entry in $data.entries) {
+                if ($entry.fields) {
+                    $fieldCount += ($entry.fields.PSObject.Properties | Measure-Object).Count
+                }
+            }
+        }
+        $manifest += @{
+            file       = $jf.Name
+            typeName   = if ($data.typeName) { $data.typeName } else { "" }
+            entryCount = $entryCount
+            fieldCount = $fieldCount
+        }
+        $totalFields += $fieldCount
+    }
+    $manifest | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $outputDir "manifest.json") -Encoding UTF8
+
     Write-Host "`nExtracted $totalEntries entries from $totalFiles files to $outputDir/"
+    Write-Host "Manifest: $($manifest.Count) files, $totalFields total fields"
 }
 
 function Extract-DocsBlock([System.Xml.XmlElement]$docs) {
