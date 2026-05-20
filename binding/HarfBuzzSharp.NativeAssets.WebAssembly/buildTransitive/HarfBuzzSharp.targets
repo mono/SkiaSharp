@@ -27,4 +27,10 @@
     <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.56\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0'))" />
   </ItemGroup>
 
+  <!-- Error when targeting unsupported WASM TFMs -->
+  <Target Name="_HarfBuzzSharpCheckWasmTfm" BeforeTargets="PrepareForBuild"
+          Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True' and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '8.0'))">
+    <Error Text="HarfBuzzSharp WebAssembly native assets require .NET 8.0 or later. Please update your project to target net8.0 or newer." />
+  </Target>
+
 </Project>
