@@ -1,5 +1,7 @@
 # XML Documentation Patterns
 
+.NET XML documentation formatting rules. For SkiaSharp/HarfBuzz domain knowledge, see [skia-patterns.md](skia-patterns.md).
+
 Based on [official .NET API documentation guidelines](https://github.com/dotnet/dotnet-api-docs/wiki).
 
 ## Contents
@@ -12,6 +14,7 @@ Based on [official .NET API documentation guidelines](https://github.com/dotnet/
 - [Punctuation Exceptions](#punctuation-exceptions)
 - [Common Mistakes](#common-mistakes)
 - [Extension Methods](#extension-methods)
+- [Platform View Constructors](#platform-view-constructors)
 - [Rich Remarks and Examples](#rich-remarks-and-examples)
 - [Type-Level Documentation](#type-level-documentation)
 
@@ -432,22 +435,18 @@ Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` as usual.
 
 ## Type-Level Documentation
 
-### SKObject Subclasses (IDisposable types)
+Types that wrap native resources (`IDisposable`) should have remarks that cover:
+1. What the type does and when to use it
+2. How to create instances (constructor vs factory)
+3. Disposal pattern — always show `using` in examples
+4. Threading constraints if applicable
 
-Most SkiaSharp types inherit from `SKObject`. Their type-level summary and remarks should cover construction, disposal, and usage. Example for `SKPaint`:
+**remarks** should use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block.
 
-**summary:**
+### Code Example Best Practices
 
-```xml
-Provides a mutable builder for constructing <see cref="T:SkiaSharp.SKPath" /> objects incrementally.
-```
-
-**remarks** (use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block).
-
-### Mutable vs Immutable Types
-
-| Type | Threading | Disposal |
-|------|-----------|----------|
-| `SKCanvas`, `SKPaint`, `SKPath`, `SKPathBuilder` | NOT thread-safe — one thread at a time | Must dispose |
-| `SKImage`, `SKShader`, `SKData` | Thread-safe (immutable after creation) | Must dispose |
-| `SKColor`, `SKPoint`, `SKRect` | Thread-safe (value types) | No disposal needed |
+- **Show disposal** — if the type is `IDisposable`, examples must use `using` or call `Dispose()`
+- **Show the full picture** — create + configure + use, not just one call
+- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
+- **Keep it short** — 5-15 lines, enough to understand the pattern
+- **Only use real APIs** — verify every method/overload exists in source before using in an example
