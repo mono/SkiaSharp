@@ -48,7 +48,7 @@ Platform-specific UI controls for rendering SkiaSharp content. These provide rea
 | **SkiaSharp.Views.WPF** | WPF control: `SKElement`. net462+ and net6.0-windows+. Depends on OpenTK. |
 | **SkiaSharp.Views.WinUI** | WinUI 3 controls: `SKXamlCanvas`, `SKSwapChainPanel`. net6.0-windows+. Depends on Microsoft.WindowsAppSDK. Auto-includes SkiaSharp.NativeAssets.WinUI. |
 | **SkiaSharp.Views.Gtk3** | GTK# 3 control: `SKDrawingArea`. netstandard2.0+. For Linux desktop apps. Depends on GtkSharp. |
-| **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+. Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
+| **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+ (WASM native assets require net8.0+). Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
 | **SkiaSharp.Views.Maui.Core** | .NET MAUI shared view infrastructure. net8.0+. Depends on Microsoft.Maui.Core. |
 | **SkiaSharp.Views.Maui.Controls** | .NET MAUI controls: `SKCanvasView`, `SKGLView`. net8.0+. Depends on SkiaSharp.Views.Maui.Core and Microsoft.Maui.Controls. |
 | **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas`, `SKSwapChainPanel`. net8.0+. Depends on Uno.WinUI. Auto-includes SkiaSharp.NativeAssets.WebAssembly for WASM targets and SkiaSharp.Views.WinUI for Windows targets. |
@@ -92,7 +92,7 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 | **SkiaSharp.NativeAssets.MacCatalyst**<br/>**HarfBuzzSharp.NativeAssets.MacCatalyst** | Mac Catalyst universal framework bundle. Auto-included. |
 | **SkiaSharp.NativeAssets.tvOS**<br/>**HarfBuzzSharp.NativeAssets.tvOS** | Apple tvOS framework bundle (arm64, device only). Auto-included. |
 | **SkiaSharp.NativeAssets.Tizen**<br/>**HarfBuzzSharp.NativeAssets.Tizen** | Samsung Tizen (armel, x86). Auto-included. |
-| **SkiaSharp.NativeAssets.WebAssembly**<br/>**HarfBuzzSharp.NativeAssets.WebAssembly** | Emscripten static library (`.a`). **Static linking, not P/Invoke** — linked into `dotnet.wasm` at build time via MSBuild `NativeFileReference`. Includes multiple Emscripten versions with threading (st/mt) and SIMD variants. **Must add manually** (or use SkiaSharp.Views.Blazor / SkiaSharp.Views.Uno.WinUI). |
+| **SkiaSharp.NativeAssets.WebAssembly**<br/>**HarfBuzzSharp.NativeAssets.WebAssembly** | Emscripten static library (`.a`). **Static linking, not P/Invoke** — linked into `dotnet.wasm` at build time via MSBuild `NativeFileReference`. Includes Emscripten 3.1.34 (net8.0) and 3.1.56 (net9.0+) with threading (st/mt) and SIMD variants. **Requires net8.0+.** Must add manually (or use SkiaSharp.Views.Blazor / SkiaSharp.Views.Uno.WinUI). |
 
 > **⚠️ WASM is NOT dynamic loading.** Unlike all other platforms, WebAssembly uses static linking at compile time. The `.a` files are passed to the Emscripten linker which embeds them into the final `dotnet.wasm` binary. `DllImport("libSkiaSharp")` still works — the .NET WASM runtime resolves it to statically linked symbols.
 
