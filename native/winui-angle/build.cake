@@ -83,10 +83,112 @@ Task("sync-ANGLE")
 
     // generate Windows App SDK files
     if (!FileExists(WINAPPSDK_PATH.CombineWithFilePath("Microsoft.WindowsAppSDK.nuspec"))) {
-        var setup = ANGLE_PATH.CombineWithFilePath("scripts/winappsdk_setup.py");
-        RunProcess(
-            ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat"),
-            $"\"{VS_INSTALL}\" \"x64\" \"{PYTHON_EXE}\" \"{setup}\" --output \"{WINAPPSDK_PATH}\"");
+        var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
+        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
+
+        // Download and extract the NuGet package using .NET HTTP (works on restricted agents
+        // where Python's urllib is blocked by firewall policy)
+        if (!FileExists(stamp)) {
+            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdk_version}/microsoft.windowsappsdk.{winappsdk_version}.nupkg";
+            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.nupkg");
+            EnsureDirectoryExists(WINAPPSDK_PATH);
+            DownloadFile(nugetUrl, nupkgPath);
+            Unzip(nupkgPath, WINAPPSDK_PATH);
+            DeleteFile(nupkgPath);
+            System.IO.File.WriteAllText(stamp.FullPath, "");
+        }
+
+        // Find Windows SDK tools
+        var winSdkDir = EnvironmentVariable("WindowsSdkDir")
+            ?? "C:/Program Files (x86)/Windows Kits/10";
+        var winSdkBinDir = new DirectoryPath(winSdkDir).Combine("bin");
+        var sdkVersions = GetDirectories($"{winSdkBinDir}/10.0.*")
+            .OrderByDescending(d => d.GetDirectoryName())
+            .First();
+        var winSdkBin = sdkVersions.Combine("x64");
+
+        var includePath = WINAPPSDK_PATH.Combine("include");
+        var libPath = WINAPPSDK_PATH.Combine("lib");
+        var uapVersion = "10.0.18362";
+        EnsureDirectoryExists(includePath);
+
+        // Process WINMD files with winmdidl.exe
+        var winmdFiles = new Dictionary<string, string> {
+            { $"uap{uapVersion}/Microsoft.Foundation.winmd", null },
+            { $"uap{uapVersion}/Microsoft.Graphics.winmd", "Microsoft.Graphics.DirectX.idl" },
+            { $"uap{uapVersion}/Microsoft.UI.winmd", null },
+            { "uap10.0/Microsoft.UI.Text.winmd", null },
+            { "uap10.0/Microsoft.UI.Xaml.winmd", null },
+            { "uap10.0/Microsoft.Web.WebView2.Core.winmd", null },
+        };
+
+        foreach (var winmd in winmdFiles) {
+            var stampFilename = winmd.Value;
+            FilePath stampFile;
+            if (stampFilename != null)
+                stampFile = includePath.CombineWithFilePath(stampFilename);
+            else {
+                var noExt = System.IO.Path.GetFileNameWithoutExtension(winmd.Key);
+                stampFile = includePath.CombineWithFilePath($"{noExt}.idl");
+            }
+            if (FileExists(stampFile))
+                continue;
+
+            var winmdidl = winSdkBin.CombineWithFilePath("winmdidl.exe");
+            RunProcess(winmdidl, new ProcessSettings {
+                Arguments = $"\"{libPath.CombineWithFilePath(winmd.Key)}\" " +
+                    $"/metadata_dir:C:\\Windows\\System32\\WinMetadata " +
+                    $"/metadata_dir:\"{libPath.Combine($"uap{uapVersion}")}\" " +
+                    $"/metadata_dir:\"{libPath.Combine("uap10.0")}\" " +
+                    $"/outdir:\"{includePath}\" /nologo",
+                WorkingDirectory = includePath.FullPath,
+            });
+        }
+
+        // Process IDL files with midlrt.exe
+        var idlFiles = new[] {
+            "Microsoft.Foundation.idl",
+            "Microsoft.Graphics.DirectX.idl",
+            "Microsoft.UI.Composition.idl",
+            "Microsoft.UI.Composition.SystemBackdrops.idl",
+            "Microsoft.UI.Dispatching.idl",
+            "Microsoft.UI.idl",
+            "Microsoft.UI.Input.idl",
+            "Microsoft.UI.Text.idl",
+            "Microsoft.UI.Windowing.idl",
+            "Microsoft.UI.Xaml.Automation.idl",
+            "Microsoft.UI.Xaml.Automation.Peers.idl",
+            "Microsoft.UI.Xaml.Automation.Provider.idl",
+            "Microsoft.UI.Xaml.Automation.Text.idl",
+            "Microsoft.UI.Xaml.Controls.idl",
+            "Microsoft.UI.Xaml.Controls.Primitives.idl",
+            "Microsoft.UI.Xaml.Data.idl",
+            "Microsoft.UI.Xaml.Documents.idl",
+            "Microsoft.UI.Xaml.idl",
+            "Microsoft.UI.Xaml.Input.idl",
+            "Microsoft.UI.Xaml.Interop.idl",
+            "Microsoft.UI.Xaml.Media.Animation.idl",
+            "Microsoft.UI.Xaml.Media.idl",
+            "Microsoft.UI.Xaml.Media.Imaging.idl",
+            "Microsoft.UI.Xaml.Media.Media3D.idl",
+            "Microsoft.UI.Xaml.Navigation.idl",
+            "Microsoft.Web.WebView2.Core.idl",
+        };
+
+        foreach (var idl in idlFiles) {
+            var noExt = System.IO.Path.GetFileNameWithoutExtension(idl);
+            var headerStamp = includePath.CombineWithFilePath($"{noExt}.h");
+            if (FileExists(headerStamp))
+                continue;
+
+            var midlrt = winSdkBin.CombineWithFilePath("midlrt.exe");
+            RunProcess(midlrt, new ProcessSettings {
+                Arguments = $"\"{includePath.CombineWithFilePath(idl)}\" " +
+                    $"/metadata_dir C:\\Windows\\System32\\WinMetadata " +
+                    $"/ns_prefix /nomidl /nologo",
+                WorkingDirectory = includePath.FullPath,
+            });
+        }
     }
 });
 
