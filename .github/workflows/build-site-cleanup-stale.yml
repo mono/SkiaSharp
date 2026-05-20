@@ -78,7 +78,19 @@ jobs:
           git add -A
           if ! git diff --cached --quiet; then
             git commit -m "Sweep stale staging docs for ${#stale_dirs[@]} closed PR(s)"
-            git push origin docs-live
+            # Retry push with rebase in case another workflow pushed in the meantime
+            for attempt in 1 2 3 4 5; do
+              if git push origin docs-live; then
+                break
+              fi
+              echo "Push failed (attempt $attempt), pulling with rebase and retrying..."
+              git pull --rebase origin docs-live
+              if [ $attempt -eq 5 ]; then
+                echo "Failed to push after 5 attempts"
+                exit 1
+              fi
+              sleep $((attempt * 2))
+            done
           else
             echo "No changes to commit"
           fi
