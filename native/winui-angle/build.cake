@@ -145,57 +145,65 @@ Task("sync-ANGLE")
             });
         }
 
-        // Find cl.exe for midlrt (it needs the C preprocessor)
-        var clExe = GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Hostx64/x64/cl.exe")
-            .OrderByDescending(f => f.FullPath)
+        // Find cl.exe for midlrt (it needs the C preprocessor on PATH)
+        var clDir = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Hostx64/x64")
+            .OrderByDescending(d => d.GetDirectoryName())
             .FirstOrDefault();
-        if (clExe == null)
-            throw new Exception("Could not find cl.exe, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+        if (clDir == null)
+            throw new Exception("Could not find cl.exe directory, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
 
-        // Process IDL files with midlrt.exe
-        var idlFiles = new[] {
-            "Microsoft.Foundation.idl",
-            "Microsoft.Graphics.DirectX.idl",
-            "Microsoft.UI.Composition.idl",
-            "Microsoft.UI.Composition.SystemBackdrops.idl",
-            "Microsoft.UI.Dispatching.idl",
-            "Microsoft.UI.idl",
-            "Microsoft.UI.Input.idl",
-            "Microsoft.UI.Text.idl",
-            "Microsoft.UI.Windowing.idl",
-            "Microsoft.UI.Xaml.Automation.idl",
-            "Microsoft.UI.Xaml.Automation.Peers.idl",
-            "Microsoft.UI.Xaml.Automation.Provider.idl",
-            "Microsoft.UI.Xaml.Automation.Text.idl",
-            "Microsoft.UI.Xaml.Controls.idl",
-            "Microsoft.UI.Xaml.Controls.Primitives.idl",
-            "Microsoft.UI.Xaml.Data.idl",
-            "Microsoft.UI.Xaml.Documents.idl",
-            "Microsoft.UI.Xaml.idl",
-            "Microsoft.UI.Xaml.Input.idl",
-            "Microsoft.UI.Xaml.Interop.idl",
-            "Microsoft.UI.Xaml.Media.Animation.idl",
-            "Microsoft.UI.Xaml.Media.idl",
-            "Microsoft.UI.Xaml.Media.Imaging.idl",
-            "Microsoft.UI.Xaml.Media.Media3D.idl",
-            "Microsoft.UI.Xaml.Navigation.idl",
-            "Microsoft.Web.WebView2.Core.idl",
-        };
+        // Add cl.exe directory to PATH so midlrt can find the C preprocessor
+        var originalPath = System.Environment.GetEnvironmentVariable("PATH");
+        System.Environment.SetEnvironmentVariable("PATH", $"{clDir.FullPath};{originalPath}");
 
-        foreach (var idl in idlFiles) {
-            var noExt = System.IO.Path.GetFileNameWithoutExtension(idl);
-            var headerStamp = includePath.CombineWithFilePath($"{noExt}.h");
-            if (FileExists(headerStamp))
-                continue;
+        try {
+            // Process IDL files with midlrt.exe
+            var idlFiles = new[] {
+                "Microsoft.Foundation.idl",
+                "Microsoft.Graphics.DirectX.idl",
+                "Microsoft.UI.Composition.idl",
+                "Microsoft.UI.Composition.SystemBackdrops.idl",
+                "Microsoft.UI.Dispatching.idl",
+                "Microsoft.UI.idl",
+                "Microsoft.UI.Input.idl",
+                "Microsoft.UI.Text.idl",
+                "Microsoft.UI.Windowing.idl",
+                "Microsoft.UI.Xaml.Automation.idl",
+                "Microsoft.UI.Xaml.Automation.Peers.idl",
+                "Microsoft.UI.Xaml.Automation.Provider.idl",
+                "Microsoft.UI.Xaml.Automation.Text.idl",
+                "Microsoft.UI.Xaml.Controls.idl",
+                "Microsoft.UI.Xaml.Controls.Primitives.idl",
+                "Microsoft.UI.Xaml.Data.idl",
+                "Microsoft.UI.Xaml.Documents.idl",
+                "Microsoft.UI.Xaml.idl",
+                "Microsoft.UI.Xaml.Input.idl",
+                "Microsoft.UI.Xaml.Interop.idl",
+                "Microsoft.UI.Xaml.Media.Animation.idl",
+                "Microsoft.UI.Xaml.Media.idl",
+                "Microsoft.UI.Xaml.Media.Imaging.idl",
+                "Microsoft.UI.Xaml.Media.Media3D.idl",
+                "Microsoft.UI.Xaml.Navigation.idl",
+                "Microsoft.Web.WebView2.Core.idl",
+            };
 
-            var midlrt = winSdkBin.CombineWithFilePath("midlrt.exe");
-            RunProcess(midlrt, new ProcessSettings {
-                Arguments = $"/cpp_cmd \"{clExe}\" " +
-                    $"\"{includePath.CombineWithFilePath(idl)}\" " +
-                    $"/metadata_dir C:\\Windows\\System32\\WinMetadata " +
-                    $"/ns_prefix /nomidl /nologo",
-                WorkingDirectory = includePath.FullPath,
-            });
+            foreach (var idl in idlFiles) {
+                var noExt = System.IO.Path.GetFileNameWithoutExtension(idl);
+                var headerStamp = includePath.CombineWithFilePath($"{noExt}.h");
+                if (FileExists(headerStamp))
+                    continue;
+
+                var midlrt = winSdkBin.CombineWithFilePath("midlrt.exe");
+                var idlPath = includePath.CombineWithFilePath(idl);
+                RunProcess(midlrt, new ProcessSettings {
+                    Arguments = $"\"{idlPath}\" " +
+                        $"/metadata_dir C:\\Windows\\System32\\WinMetadata " +
+                        $"/ns_prefix /nomidl /nologo",
+                    WorkingDirectory = includePath.FullPath,
+                });
+            }
+        } finally {
+            System.Environment.SetEnvironmentVariable("PATH", originalPath);
         }
     }
 });
