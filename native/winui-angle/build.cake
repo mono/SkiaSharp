@@ -82,7 +82,7 @@ Task("sync-ANGLE")
     }
 
     // generate Windows App SDK files
-    if (!FileExists(WINAPPSDK_PATH.CombineWithFilePath("Microsoft.WindowsAppSDK.nuspec"))) {
+    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
         var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
         var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
 
@@ -145,6 +145,13 @@ Task("sync-ANGLE")
             });
         }
 
+        // Find cl.exe for midlrt (it needs the C preprocessor)
+        var clExe = GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Hostx64/x64/cl.exe")
+            .OrderByDescending(f => f.FullPath)
+            .FirstOrDefault();
+        if (clExe == null)
+            throw new Exception("Could not find cl.exe, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+
         // Process IDL files with midlrt.exe
         var idlFiles = new[] {
             "Microsoft.Foundation.idl",
@@ -183,7 +190,8 @@ Task("sync-ANGLE")
 
             var midlrt = winSdkBin.CombineWithFilePath("midlrt.exe");
             RunProcess(midlrt, new ProcessSettings {
-                Arguments = $"\"{includePath.CombineWithFilePath(idl)}\" " +
+                Arguments = $"/cpp_cmd \"{clExe}\" " +
+                    $"\"{includePath.CombineWithFilePath(idl)}\" " +
                     $"/metadata_dir C:\\Windows\\System32\\WinMetadata " +
                     $"/ns_prefix /nomidl /nologo",
                 WorkingDirectory = includePath.FullPath,
