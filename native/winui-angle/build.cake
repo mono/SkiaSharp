@@ -98,23 +98,10 @@ Task("sync-ANGLE")
             System.IO.File.WriteAllText(stamp.FullPath, "");
         }
 
-        // Find Windows SDK tools
-        var winSdkDir = EnvironmentVariable("WindowsSdkDir")
-            ?? "C:/Program Files (x86)/Windows Kits/10";
-        var winSdkBinDir = new DirectoryPath(winSdkDir).Combine("bin");
-        var sdkVersions = GetDirectories($"{winSdkBinDir}/10.0.*")
-            .OrderByDescending(d => d.GetDirectoryName())
-            .First();
-        var winSdkBin = sdkVersions.Combine("x64");
-
-        var includePath = WINAPPSDK_PATH.Combine("include");
-        var libPath = WINAPPSDK_PATH.Combine("lib");
-        EnsureDirectoryExists(includePath);
-
         // Run the header generation script under vcvarsall.bat so midlrt can find cl.exe
         var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
-        var generateScript = MakeAbsolute(File("generate_winappsdk_headers.bat"));
-        RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" \"{generateScript}\" \"{winSdkBin}\" \"{includePath}\" \"{libPath}\"");
+        var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
+        RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" pwsh -NoProfile -ExecutionPolicy Bypass -File \"{generateScript}\" -Path \"{WINAPPSDK_PATH}\"");
     }
 });
 
