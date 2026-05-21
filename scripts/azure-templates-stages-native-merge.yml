@@ -75,12 +75,6 @@ stages:
             - name: native_linux_x64_bionic_linux
             - name: native_linux_arm64_bionic_linux            
             # WASM
-            - name: native_wasm_2_0_23_linux
-            - name: native_wasm_2_0_6_linux
-            - name: native_wasm_3_1_12_linux
-            - name: native_wasm_3_1_12_SIMD_linux
-            - name: native_wasm_3_1_12_Threading_linux
-            - name: native_wasm_3_1_12_Threading_SIMD_linux
             - name: native_wasm_3_1_34_linux
             - name: native_wasm_3_1_34_SIMD_linux
             - name: native_wasm_3_1_34_SIMD_Threading_linux
@@ -89,7 +83,6 @@ stages:
             - name: native_wasm_3_1_56_SIMD_linux
             - name: native_wasm_3_1_56_SIMD_Threading_linux
             - name: native_wasm_3_1_56_Threading_linux
-            - name: native_wasm_3_1_7_linux
 
       - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native Linux Artifacts
         parameters:
@@ -129,12 +122,6 @@ stages:
           displayName: Merge Native WASM Artifacts
           buildAgent: ${{ parameters.buildAgentHost }}
           requiredArtifacts:
-            - name: native_wasm_2_0_23_linux
-            - name: native_wasm_2_0_6_linux
-            - name: native_wasm_3_1_12_linux
-            - name: native_wasm_3_1_12_SIMD_linux
-            - name: native_wasm_3_1_12_Threading_linux
-            - name: native_wasm_3_1_12_Threading_SIMD_linux
             - name: native_wasm_3_1_34_linux
             - name: native_wasm_3_1_34_SIMD_linux
             - name: native_wasm_3_1_34_SIMD_Threading_linux
@@ -143,7 +130,6 @@ stages:
             - name: native_wasm_3_1_56_SIMD_linux
             - name: native_wasm_3_1_56_SIMD_Threading_linux
             - name: native_wasm_3_1_56_Threading_linux
-            - name: native_wasm_3_1_7_linux
 
       - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
         - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts
