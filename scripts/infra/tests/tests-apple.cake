@@ -48,19 +48,7 @@ Task ("tests-maccatalyst")
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     DirectoryPath results = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.maccatalyst/{DATE_TIME_STR}";
 
-    // Determine the RuntimeIdentifier for Mac Catalyst based on host architecture.
-    // DeviceRunners targets look for the .app in $(OutputPath) which doesn't include
-    // the RID subdirectory by default. Passing RuntimeIdentifier explicitly makes
-    // OutputPath include the RID, so the targets find the .app correctly.
-    var rid = RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64
-        ? "maccatalyst-arm64"
-        : "maccatalyst-x64";
-
-    var properties = new Dictionary<string, string> {
-        { "RuntimeIdentifier", rid },
-    };
-
-    RunDeviceRunnersTest(csproj, results, framework: "net10.0-maccatalyst", properties: properties);
+    RunDeviceRunnersTest(csproj, results, framework: "net10.0-maccatalyst");
 });
 
 Task ("Default")
