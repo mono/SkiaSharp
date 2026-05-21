@@ -68,6 +68,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <_PlatformCompile Include="Tests\Apple\**\*.cs;Tests\iOS\**\*.cs" Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos'))" />
     <_PlatformCompile Include="Tests\Apple\**\*.cs;Tests\macOS\**\*.cs" Condition="$(TargetFramework.Contains('-macos'))" />
     <_PlatformCompile Include="Tests\Android\**\*.cs" Condition="$(TargetFramework.Contains('-android'))" />
