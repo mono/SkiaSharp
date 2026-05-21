@@ -29,9 +29,20 @@ public class WorldTextSample : CanvasSampleBase
 
 	public override string Title => "World Text";
 
-	public override string Category => SampleCategories.Text;
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
+	public override string Category => SampleManager.Text;
 
 	public override string Description => "Compare text rendering across Latin, Arabic, Hebrew, Emoji, and CJK scripts with HarfBuzz shaping.";
+
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKFontManager", "SKFontManager.MatchCharacter",
+		"SKShaper", "SKCanvas.DrawShapedText",
+		"SKTypeface", "SKTypeface.FromStream",
+		"SKCanvas.DrawText", "SKCanvas.DrawLine",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

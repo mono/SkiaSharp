@@ -3,7 +3,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-// ReSharper disable PartialMethodParameterNameMismatch
 
 namespace HarfBuzzSharp
 {
@@ -13,9 +12,9 @@ namespace HarfBuzzSharp
 
 	internal static unsafe partial class DelegateProxies
 	{
-		private static partial void DestroyProxyImplementation (void* context)
+		private static partial void DestroyProxyImplementation (void* user_data)
 		{
-			var del = Get<ReleaseDelegate> ((IntPtr)context, out var gch);
+			var del = Get<ReleaseDelegate> ((IntPtr)user_data, out var gch);
 			try {
 				del.Invoke ();
 			} finally {
@@ -23,9 +22,9 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		private static partial void DestroyProxyImplementationForMulti (void* context)
+		private static partial void DestroyProxyImplementationForMulti (void* user_data)
 		{
-			var del = GetMulti<ReleaseDelegate> ((IntPtr)context, out var gch);
+			var del = GetMulti<ReleaseDelegate> ((IntPtr)user_data, out var gch);
 			try {
 				del?.Invoke ();
 			} finally {
@@ -33,9 +32,9 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		private static partial IntPtr ReferenceTableProxyImplementation (IntPtr face, uint tag, void* context)
+		private static partial IntPtr ReferenceTableProxyImplementation (IntPtr face, uint tag, void* user_data)
 		{
-			GetMultiUserData<GetTableDelegate, Face> ((IntPtr)context, out var getTable, out var userData, out _);
+			GetMultiUserData<GetTableDelegate, Face> ((IntPtr)user_data, out var getTable, out var userData, out _);
 			var blob = getTable.Invoke (userData, tag);
 			return blob?.Handle ?? IntPtr.Zero;
 		}

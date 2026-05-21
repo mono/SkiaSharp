@@ -22,7 +22,7 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 			return new SKFourByteTag (0);
 
 		var realTag = new char[4];
-		var len = Math.Min (4, tag.Length);
+		var len = Math.Min (4, tag!.Length);
 		var i = 0;
 		for (; i < len; i++)
 			realTag[i] = tag[i];
@@ -43,7 +43,7 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 
 	public static implicit operator SKFourByteTag (uint tag) => new SKFourByteTag (tag);
 
-	public override bool Equals (object obj) =>
+	public override bool Equals (object? obj) =>
 		obj is SKFourByteTag tag && value.Equals (tag.value);
 
 	public bool Equals (SKFourByteTag other) => value == other.value;

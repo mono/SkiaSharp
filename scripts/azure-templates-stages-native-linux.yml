@@ -1,10 +1,11 @@
 parameters:
-  - name: buildExternals
-    type: string
   - name: buildAgentLinuxNative
     type: object
   - name: use1ESPipelineTemplates
     type: boolean
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
 
@@ -15,7 +16,7 @@ stages:
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Linux)
         parameters:
-          buildExternals: ${{ parameters.buildExternals }}
+          enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:
@@ -26,13 +27,13 @@ stages:
               additionalArgs: --verifyExcluded=fontconfig
               gnArgs: skia_use_fontconfig=false
           matrix:
-            # Debian 13 / Trixie (gcc-14, glibc 2.38) — for archs that
+            # Debian 13 / Trixie (gcc-14, glibc 2.38) - for archs that
             # never had release-arch packages in Bullseye OR Bookworm:
             #   - loongarch64 (LoongArch port; not in Bullseye/Bookworm main,
             #                  first release arch in Trixie)
             - ${{ each arch in split('loongarch64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/Docker/debian/13
+                docker: scripts/infra/native/linux/docker/debian/13
                 target: externals-linux-clang-cross
                 additionalArgs: --verifyGlibcMax=2.38
             # Debian 11 / Bullseye (gcc-10, glibc 2.31). riscv64 is a
@@ -40,21 +41,21 @@ stages:
             # gcc-10-cross packages that contain a riscv64 sysroot at
             # glibc 2.31. The image installs those instead of LLVM
             # multiarch packages and the build links libstdc++/libgcc
-            # statically — keeps glibc parity with the other archs.
+            # statically - keeps glibc parity with the other archs.
             - ${{ each arch in split('arm,arm64,x86,x64,riscv64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/Docker/debian/11
+                docker: scripts/infra/native/linux/docker/debian/11
                 target: externals-linux-clang-cross
                 additionalArgs: --verifyGlibcMax=2.31
             - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
               - arch: ${{ arch }}
                 variant: alpine
-                docker: scripts/Docker/alpine
+                docker: scripts/infra/native/linux/docker/alpine
                 target: externals-linux-clang-cross
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
         parameters:
-          buildExternals: ${{ parameters.buildExternals }}
+          enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:
@@ -64,5 +65,5 @@ stages:
             - ${{ each arch in split('arm64,x64', ',') }}:
               - arch: ${{ arch }}
                 variant: bionic
-                docker: scripts/Docker/bionic
+                docker: scripts/infra/native/linux/docker/bionic
 

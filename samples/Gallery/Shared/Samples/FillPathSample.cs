@@ -19,10 +19,18 @@ public class FillPathSample : CanvasSampleBase
 
 	public override string Title => "Fill Path";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
+
 	public override string Description =>
 	"Compute the filled outline of a stroked path using SKPaint.GetFillPath, with adjustable stroke parameters.";
 
-	public override string Category => SampleCategories.Paths;
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKPaint.GetFillPath", "SKRoundRect", "SKPath", "SKPathBuilder",
+		"SKCanvas.DrawPath", "SKCanvas", "SKPaint",
+	];
+
+	public override string Category => SampleManager.Paths;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

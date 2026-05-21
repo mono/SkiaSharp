@@ -1355,18 +1355,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial Byte hb_color_get_alpha (UInt32 color);
+		internal static partial Byte hb_color_get_alpha (HBColor color);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte hb_color_get_alpha (UInt32 color);
+		internal static extern Byte hb_color_get_alpha (HBColor color);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Byte hb_color_get_alpha (UInt32 color);
+			internal delegate Byte hb_color_get_alpha (HBColor color);
 		}
 		private static Delegates.hb_color_get_alpha hb_color_get_alpha_delegate;
-		internal static Byte hb_color_get_alpha (UInt32 color) =>
+		internal static Byte hb_color_get_alpha (HBColor color) =>
 			(hb_color_get_alpha_delegate ??= GetSymbol<Delegates.hb_color_get_alpha> ("hb_color_get_alpha")).Invoke (color);
 		#endif
 
@@ -1374,18 +1374,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial Byte hb_color_get_blue (UInt32 color);
+		internal static partial Byte hb_color_get_blue (HBColor color);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte hb_color_get_blue (UInt32 color);
+		internal static extern Byte hb_color_get_blue (HBColor color);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Byte hb_color_get_blue (UInt32 color);
+			internal delegate Byte hb_color_get_blue (HBColor color);
 		}
 		private static Delegates.hb_color_get_blue hb_color_get_blue_delegate;
-		internal static Byte hb_color_get_blue (UInt32 color) =>
+		internal static Byte hb_color_get_blue (HBColor color) =>
 			(hb_color_get_blue_delegate ??= GetSymbol<Delegates.hb_color_get_blue> ("hb_color_get_blue")).Invoke (color);
 		#endif
 
@@ -1393,18 +1393,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial Byte hb_color_get_green (UInt32 color);
+		internal static partial Byte hb_color_get_green (HBColor color);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte hb_color_get_green (UInt32 color);
+		internal static extern Byte hb_color_get_green (HBColor color);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Byte hb_color_get_green (UInt32 color);
+			internal delegate Byte hb_color_get_green (HBColor color);
 		}
 		private static Delegates.hb_color_get_green hb_color_get_green_delegate;
-		internal static Byte hb_color_get_green (UInt32 color) =>
+		internal static Byte hb_color_get_green (HBColor color) =>
 			(hb_color_get_green_delegate ??= GetSymbol<Delegates.hb_color_get_green> ("hb_color_get_green")).Invoke (color);
 		#endif
 
@@ -1412,18 +1412,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial Byte hb_color_get_red (UInt32 color);
+		internal static partial Byte hb_color_get_red (HBColor color);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte hb_color_get_red (UInt32 color);
+		internal static extern Byte hb_color_get_red (HBColor color);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Byte hb_color_get_red (UInt32 color);
+			internal delegate Byte hb_color_get_red (HBColor color);
 		}
 		private static Delegates.hb_color_get_red hb_color_get_red_delegate;
-		internal static Byte hb_color_get_red (UInt32 color) =>
+		internal static Byte hb_color_get_red (HBColor color) =>
 			(hb_color_get_red_delegate ??= GetSymbol<Delegates.hb_color_get_red> ("hb_color_get_red")).Invoke (color);
 		#endif
 
@@ -4017,18 +4017,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, UInt32* colors);
+		internal static partial UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, HBColor* colors);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, UInt32* colors);
+		internal static extern UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, HBColor* colors);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, UInt32* colors);
+			internal delegate UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, HBColor* colors);
 		}
 		private static Delegates.hb_ot_color_palette_get_colors hb_ot_color_palette_get_colors_delegate;
-		internal static UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, UInt32* colors) =>
+		internal static UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, HBColor* colors) =>
 			(hb_ot_color_palette_get_colors_delegate ??= GetSymbol<Delegates.hb_ot_color_palette_get_colors> ("hb_ot_color_palette_get_colors")).Invoke (face, palette_index, start_offset, color_count, colors);
 		#endif
 

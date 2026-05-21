@@ -1,0 +1,120 @@
+@* Active filter bar — shows current filters as removable chips *@
+
+@if (HasFilters)
+{
+    <div class="active-filters">
+        <span class="filter-label">Filters:</span>
+
+        @if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            <button class="filter-chip chip-search" @onclick="ClearSearch">
+                <i class="bi bi-search"></i> "@SearchText" <span class="chip-x">✕</span>
+            </button>
+        }
+
+        @if (SelectedCategory is not null)
+        {
+            <button class="filter-chip chip-category" @onclick="ClearCategory"
+                    style="--chip-color: @(SampleManager.GetCategoryFor(SelectedCategory).Color);">
+                @SelectedCategory <span class="chip-x">✕</span>
+            </button>
+        }
+
+        @foreach (var tag in SelectedTags)
+        {
+            var t = tag;
+            var kind = KnownApis.Classify(t);
+            var displayName = KnownApis.GetDisplayName(t);
+            <button class="filter-chip @(kind == TagKind.Type ? "chip-type" : "chip-method")"
+                    @onclick="() => RemoveTag(t)" title="@t">
+                @displayName <span class="chip-x">✕</span>
+            </button>
+        }
+
+        <button class="filter-reset" @onclick="ResetAll">Reset all</button>
+    </div>
+}
+
+<style>
+    .active-filters {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding: 0.6rem 0;
+    }
+
+    .filter-label {
+        font-size: 0.78rem;
+        color: var(--gallery-text-muted, #6b7280);
+        font-weight: 600;
+    }
+
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.28rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid var(--gallery-border, #e5e7eb);
+        background: var(--gallery-surface, #fff);
+        font-size: 0.78rem;
+        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        cursor: pointer;
+        color: var(--gallery-text, #111827);
+        transition: background 140ms ease, border-color 140ms ease;
+    }
+    .filter-chip:hover {
+        border-color: #ef4444;
+        background: #fef2f2;
+    }
+    .filter-chip i { font-size: 0.7rem; }
+
+    .chip-type { color: var(--color-type, #2563eb); border-color: var(--color-type-soft, #dbeafe); }
+    .chip-method { color: var(--color-method, #d97706); border-color: var(--color-method-soft, #fef3c7); }
+    .chip-category { color: var(--chip-color); border-color: color-mix(in srgb, var(--chip-color) 30%, transparent); }
+
+    .chip-x {
+        font-size: 0.65rem;
+        opacity: 0.5;
+    }
+    .filter-chip:hover .chip-x { opacity: 1; color: #ef4444; }
+
+    .filter-reset {
+        font-size: 0.75rem;
+        color: var(--gallery-text-muted, #6b7280);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.2rem 0.4rem;
+        text-decoration: underline;
+        text-decoration-color: transparent;
+        transition: text-decoration-color 140ms ease;
+    }
+    .filter-reset:hover { text-decoration-color: currentColor; }
+
+    [data-theme="dark"] .filter-chip { background: var(--gallery-surface, #14171c); border-color: var(--gallery-border, #2a2f37); color: var(--gallery-text, #e5e7eb); }
+    [data-theme="dark"] .filter-chip:hover { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+    [data-theme="dark"] .chip-type { color: #60a5fa; }
+    [data-theme="dark"] .chip-method { color: #fbbf24; }
+</style>
+
+@code {
+    [Parameter] public string? SearchText { get; set; }
+    [Parameter] public string? SelectedCategory { get; set; }
+    [Parameter] public IReadOnlySet<string> SelectedTags { get; set; } = new HashSet<string>();
+    [Parameter] public EventCallback OnClearSearch { get; set; }
+    [Parameter] public EventCallback OnClearCategory { get; set; }
+    [Parameter] public EventCallback<string> OnRemoveTag { get; set; }
+    [Parameter] public EventCallback OnResetAll { get; set; }
+
+    private bool HasFilters =>
+        !string.IsNullOrWhiteSpace(SearchText) ||
+        SelectedCategory is not null ||
+        SelectedTags.Count > 0;
+
+    private async Task ClearSearch() => await OnClearSearch.InvokeAsync();
+    private async Task ClearCategory() => await OnClearCategory.InvokeAsync();
+    private async Task RemoveTag(string tag) => await OnRemoveTag.InvokeAsync(tag);
+    private async Task ResetAll() => await OnResetAll.InvokeAsync();
+}

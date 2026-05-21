@@ -3,7 +3,7 @@ name: Manage NuGet Feed
 on:
   pull_request:
     paths:
-      - 'scripts/manage-nuget-feed.ps1'
+      - 'scripts/infra/package/manage-nuget-feed.ps1'
       - '.github/workflows/manage-nuget-feed.yml'
   workflow_dispatch:
     inputs:
@@ -128,7 +128,7 @@ jobs:
 
           Write-Host "Running ${{ matrix.package.name }} with parameters:"
           $params | Format-Table -AutoSize
-          ./scripts/manage-nuget-feed.ps1 @params
+          ./scripts/infra/package/manage-nuget-feed.ps1 @params
 
   # Parallel jobs for regular packages (delete bad versions only, no move)
   manage-regular-packages:
@@ -174,7 +174,7 @@ jobs:
 
           Write-Host "Running ${{ matrix.package.name }} with parameters:"
           $params | Format-Table -AutoSize
-          ./scripts/manage-nuget-feed.ps1 @params
+          ./scripts/infra/package/manage-nuget-feed.ps1 @params
 
   # Single package mode (manual filter)
   manage-single:
@@ -228,4 +228,4 @@ jobs:
           Write-Host "Running with parameters:"
           $params | Format-Table -AutoSize
 
-          ./scripts/manage-nuget-feed.ps1 @params
+          ./scripts/infra/package/manage-nuget-feed.ps1 @params

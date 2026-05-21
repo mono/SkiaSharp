@@ -21,7 +21,7 @@ public partial class DrawingPage : UserControl
 	];
 
 	readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = [];
-	SKPath? currentPath;
+	SKPathBuilder? currentBuilder;
 	SKColor currentColor;
 	float brushSize = 4f;
 	SKPoint cursorPosition;
@@ -85,8 +85,8 @@ public partial class DrawingPage : UserControl
 		foreach (var (path, _, _) in strokes)
 			path.Dispose();
 		strokes.Clear();
-		currentPath?.Dispose();
-		currentPath = null;
+		currentBuilder?.Dispose();
+		currentBuilder = null;
 		skiaView.Invalidate();
 	}
 
@@ -121,11 +121,12 @@ public partial class DrawingPage : UserControl
 			canvas.DrawPath(path, paint);
 		}
 
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
+			using var path = currentBuilder.Snapshot();
 			paint.Color = currentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(currentPath, paint);
+			canvas.DrawPath(path, paint);
 		}
 
 		if (isCursorOver)
@@ -144,8 +145,8 @@ public partial class DrawingPage : UserControl
 	void OnMouseDown(object sender, MouseEventArgs e)
 	{
 		if (e.Button != MouseButtons.Left) return;
-		currentPath = new SKPath();
-		currentPath.MoveTo(e.X, e.Y);
+		currentBuilder = new SKPathBuilder();
+		currentBuilder.MoveTo(e.X, e.Y);
 		cursorPosition = new SKPoint(e.X, e.Y);
 		skiaView.Invalidate();
 	}
@@ -153,16 +154,16 @@ public partial class DrawingPage : UserControl
 	void OnMouseMove(object sender, MouseEventArgs e)
 	{
 		cursorPosition = new SKPoint(e.X, e.Y);
-		currentPath?.LineTo(e.X, e.Y);
+		currentBuilder?.LineTo(e.X, e.Y);
 		skiaView.Invalidate();
 	}
 
 	void OnMouseUp(object sender, MouseEventArgs e)
 	{
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
-			strokes.Add((currentPath, currentColor, brushSize));
-			currentPath = null;
+			strokes.Add((currentBuilder.Detach(), currentColor, brushSize));
+			currentBuilder = null;
 			skiaView.Invalidate();
 		}
 	}

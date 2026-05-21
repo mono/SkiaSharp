@@ -2,8 +2,8 @@
 name: release-notes
 description: >
   Generate or regenerate polished website release notes for SkiaSharp versions.
-  Fetches raw release data from GitHub, reads the template, and writes formatted
-  markdown pages to documentation/docfx/releases/.
+  Collects raw PR data from git history (no API calls needed), reads the template,
+  and writes formatted markdown pages to documentation/docfx/releases/.
 
   Use this skill whenever the user asks to:
   - Generate release notes for a version ("write release notes for 3.119.2")
@@ -21,11 +21,11 @@ description: >
 
 # Release Notes Skill
 
-Manually generate or regenerate polished website release notes for SkiaSharp versions.
+Generate polished website release notes for SkiaSharp versions.
 
-> **Note:** The `update-release-notes` agentic workflow handles this automatically
-> for pushes to `main`, `release/*` branches, and tag creation. Use this skill only
-> for manual regeneration, corrections, or bulk operations.
+This skill is used both by the `update-release-notes` agentic workflow (automatically
+on push to `main`, `release/*` branches, and tags) and manually when regenerating,
+correcting, or bulk-processing release notes.
 
 ## Process
 
@@ -46,23 +46,69 @@ python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch 
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
 ```
 
-This writes raw PR data with YAML header to `documentation/docfx/releases/{version}.md`
-and regenerates TOC/index. Read the file to get the raw data and metadata.
+This writes raw PR data to `documentation/docfx/releases/{version}.md` or
+`documentation/docfx/releases/{version}-unreleased.md` depending on the branch type,
+and regenerates TOC/index. All data comes from git history — no API calls or tokens needed.
+
+The file starts with an HTML comment block containing both metadata (version, status, branch,
+diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
+placeholder for polished content. The raw data comment must be preserved in the final file.
+
+**IMPORTANT:** The script prints a summary at the end listing ALL files to polish:
+
+```
+========================================
+Files to polish:
+  - documentation/docfx/releases/4.147.0.md
+  - documentation/docfx/releases/4.147.0-unreleased.md
+  - documentation/docfx/releases/3.119.4-unreleased.md
+========================================
+```
+
+You MUST polish **every file** in the "Files to polish" list — not just the first one.
+Read each file to get its raw data and metadata, then rewrite it with polished content.
 
 ### Step 3 — Read the template
 
 Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished
 release notes page. Match its structure, tone, and formatting exactly.
 
-Determine the version's status from the YAML header in the version file (`status: unreleased`, `status: preview`, or `status: stable`):
+Determine the version's status from the HTML comment block in the file (`status: unreleased`, `status: preview`, or `status: stable`):
 - **Stable**: header uses `Released {date}` + NuGet link + GitHub Release link
 - **Preview**: header uses `Preview only` + preview NuGet link + GitHub Release link
 - **Unreleased**: header uses `> **Upcoming release** · In development · Not yet available on NuGet`
 
 ### Step 4 — Write polished pages
 
-For each version, write `documentation/docfx/releases/{X.Y.Z}.md` with polished content.
-If the file exists, replace its entire content — this is a full regeneration.
+For **every file** listed in the script's "Files to polish" output, write polished release
+notes **below the raw data HTML comment block**. 
+
+**CRITICAL: Preserve the raw data comment.** The `<!-- RAW PR DATA ... -->` comment block at
+the top of the file must remain intact. Replace everything AFTER it (the skeleton heading and
+placeholder) with polished content. When you write the polished content, start with the
+`<!-- Generated: ... -->` timestamp line, then the `# Version X.Y.Z` heading, then the rest.
+
+The final file structure should be:
+
+```markdown
+<!-- RAW PR DATA — Do not remove this comment block. ... -->
+
+<!-- Generated: YYYY-MM-DDTHH:MM:SSZ by {model-name} -->
+
+# Version X.Y.Z
+
+> **theme** · status · links
+
+## Highlights
+...
+```
+
+Each file has its own HTML comment block with version, status, branch, and diff range.
+
+**CRITICAL: Each file is independent.** Only use the raw PR data that is IN THAT FILE.
+Do NOT combine data from other files. For example, if `3.119.4-unreleased.md` has 4 PRs
+and `3.119.4.md` has 101 PRs, the unreleased file should only cover those 4 PRs — it is
+NOT a rollup of the version file.
 
 Follow these rules:
 
@@ -87,11 +133,15 @@ Follow these rules:
 
 7. **PR links** — Every item links to its PR.
 
-8. **Rollup at top** — Aggregate ALL changes across all previews into the main sections.
+8. **Generation timestamp** — Always include `<!-- Generated: YYYY-MM-DDTHH:MM:SSZ by {model-name} -->`
+   as the first line AFTER the raw data comment block (before the `# Version` heading).
+   Use the current UTC time and your model name.
 
-9. **Previews are minimal** — One sentence + changelog link each, at the bottom.
+9. **Rollup at top** — Aggregate ALL changes across all previews into the main sections.
 
-10. **Links section** — Full Changelog, NuGet Package, API Diff.
+10. **Previews are minimal** — One sentence + changelog link each, at the bottom.
+
+11. **Links section** — Full Changelog, NuGet Package, API Diff.
 
 ## Parallelization
 

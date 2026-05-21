@@ -186,30 +186,30 @@ namespace HarfBuzzSharp
 
 		public int PaletteCount => (int)HarfBuzzApi.hb_ot_color_palette_get_count (Handle);
 
-		public uint[] GetPaletteColors (int paletteIndex)
+		public HBColor[] GetPaletteColors (int paletteIndex)
 		{
 			if (paletteIndex < 0)
 				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
 
 			var totalColors = (int)HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, null, null);
 			if (totalColors == 0)
-				return Array.Empty<uint> ();
+				return Array.Empty<HBColor> ();
 
 			uint count = (uint)totalColors;
-			var colors = new uint[totalColors];
-			fixed (uint* ptr = colors) {
+			var colors = new HBColor[totalColors];
+			fixed (HBColor* ptr = colors) {
 				HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, &count, ptr);
 			}
 			return colors;
 		}
 
-		public int GetPaletteColors (int paletteIndex, Span<uint> colors)
+		public int GetPaletteColors (int paletteIndex, Span<HBColor> colors)
 		{
 			if (paletteIndex < 0)
 				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
 
 			uint count = (uint)colors.Length;
-			fixed (uint* ptr = colors) {
+			fixed (HBColor* ptr = colors) {
 				HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, &count, ptr);
 			}
 			return (int)count;

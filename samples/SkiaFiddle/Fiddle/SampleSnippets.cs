@@ -209,15 +209,16 @@ public static class SampleSnippets
             StrokeWidth = 3,
             Color = new SKColor(0x16, 0x82, 0xFF),
         };
-        using var path = new SKPath();
+        using var builder = new SKPathBuilder();
         float midY = height / 2f;
         float amp = height * 0.3f;
         for (int x = 0; x <= width; x++)
         {
             float u = x / (float)width;
             float y = midY + amp * (float)Math.Sin(u * Math.PI * 4 + t * 2);
-            if (x == 0) path.MoveTo(x, y); else path.LineTo(x, y);
+            if (x == 0) builder.MoveTo(x, y); else builder.LineTo(x, y);
         }
+        using var path = builder.Detach();
         canvas.DrawPath(path, paint);
         """;
 

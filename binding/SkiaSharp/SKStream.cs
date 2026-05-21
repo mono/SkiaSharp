@@ -162,6 +162,11 @@ namespace SkiaSharp
 			return (IntPtr)SkiaApi.sk_stream_get_memory_base (Handle);
 		}
 
+		public SKData GetData ()
+		{
+			return SKData.GetObject (SkiaApi.sk_stream_get_data (Handle));
+		}
+
 		internal SKStream Fork () => GetObject (SkiaApi.sk_stream_fork (Handle));
 
 		internal SKStream Duplicate () => GetObject (SkiaApi.sk_stream_duplicate (Handle));

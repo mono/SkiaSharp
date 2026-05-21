@@ -1,10 +1,10 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Phase 7: Regenerate bindings with automatic HarfBuzz revert and diff summary.
+    Phase 8: Regenerate bindings with automatic HarfBuzz revert and diff summary.
 
 .DESCRIPTION
-    Performs ALL steps of Phase 7 of the update-skia skill:
+    Performs ALL steps of Phase 8 of the update-skia skill:
     1. Runs pwsh ./utils/generate.ps1 to regenerate all bindings
     2. IMMEDIATELY reverts HarfBuzz generated bindings (HarfBuzz updates are always separate)
     3. Reports the diff summary of what changed in SkiaSharp bindings
@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = git rev-parse --show-toplevel
 Set-Location $repoRoot
 
-Write-Host "`n=== Phase 7: Regenerate Bindings ===" -ForegroundColor Cyan
+Write-Host "`n=== Phase 8: Regenerate Bindings ===" -ForegroundColor Cyan
 
 # --- Step 1: Run generator ---
 Write-Host "`n--- Running binding generator ---" -ForegroundColor Yellow
@@ -67,4 +67,4 @@ if ($newFunctions) {
     Write-Host "  No new functions found" -ForegroundColor Green
 }
 
-Write-Host "`n✅ Phase 7 complete" -ForegroundColor Green
+Write-Host "`n✅ Phase 8 complete" -ForegroundColor Green

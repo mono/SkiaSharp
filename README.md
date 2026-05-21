@@ -34,7 +34,7 @@ SkiaSharp provides cross-platform bindings for:
  - WinUI 3 (Windows App SDK / Uno Platform)
  - Windows Classic Desktop (Windows.Forms / WPF)
  - Web Assembly (WASM)
- - Uno Platform (iOS / macOS / Android / WebAssembly)
+ - [Uno Platform](https://platform.uno) (iOS / Android / Windows / macOS / Linux / WebAssembly)
 
 The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
 available on the web to browse.

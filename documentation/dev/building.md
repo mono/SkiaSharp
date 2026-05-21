@@ -97,7 +97,7 @@ The **`SkiaSharpSource.sln`** solution is primarily for working with platform-sp
 Once you are finished making changes, you can run the `tests` target and make sure that the tests will pass on CI. There is also the `samples` and `nuget` targets. By adding the `--skipExternals=all` argument, you can let the bootstrapper know that it should _not_ build any native bits, but rather use the bits that were downloaded.
 
 ```
-> dotnet cake --target=everything --skipExternals=all
+> dotnet cake --target=Everything --skipExternals=all
 ```
 
 ## Native Building
@@ -149,7 +149,7 @@ dotnet cake --target=externals-macos --arch=x64
 dotnet cake --target=externals-ios
 
 # iOS Simulator
-dotnet cake --target=externals-ios-simulator --arch=arm64
+dotnet cake --target=externals-ios --arch=arm64
 
 # Android (ARM64)
 dotnet cake --target=externals-android --arch=arm64

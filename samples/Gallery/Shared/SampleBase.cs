@@ -10,7 +10,11 @@ public abstract class SampleBase
 
 	public virtual string Description { get; } = string.Empty;
 
-	public virtual string Category { get; } = SampleCategories.General;
+	public virtual string Category { get; } = SampleManager.General;
+
+	public abstract IReadOnlyList<string> ApiTags { get; }
+
+	public virtual DateOnly? DateAdded { get; }
 
 
 	public virtual bool IsSupported => true;
@@ -60,9 +64,17 @@ public abstract class SampleBase
 	{
 		if (string.IsNullOrWhiteSpace(searchText))
 			return true;
-		
-		return
-			Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1 ||
-			Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1;
+
+		if (Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1 ||
+			Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1)
+			return true;
+
+		foreach (var tag in ApiTags)
+		{
+			if (tag.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1)
+				return true;
+		}
+
+		return false;
 	}
 }

@@ -147,5 +147,171 @@ namespace SkiaSharp.Tests
 			Assert.Equal(4, dupe.ReadByte());
 			Assert.Equal(4, stream.ReadByte());
 		}
+
+		[SkippableFact]
+		public void MemoryStreamGetDataReturnsBackingData()
+		{
+			var bytes = new byte[] { 10, 20, 30, 40, 50 };
+			using var data = SKData.CreateCopy(bytes);
+			using var stream = new SKMemoryStream(data);
+
+			using var result = stream.GetData();
+
+			Assert.NotNull(result);
+			Assert.Equal(bytes.Length, (int)result.Size);
+			Assert.Equal(bytes, result.ToArray());
+		}
+
+		[SkippableFact]
+		public void MemoryStreamGetDataFromByteArrayReturnsData()
+		{
+			var bytes = new byte[] { 1, 2, 3 };
+			using var stream = new SKMemoryStream(bytes);
+
+			using var result = stream.GetData();
+
+			Assert.NotNull(result);
+			Assert.Equal(bytes.Length, (int)result.Size);
+			Assert.Equal(bytes, result.ToArray());
+		}
+
+		[SkippableFact]
+		public void MemoryStreamGetDataIsZeroCopy()
+		{
+			var bytes = new byte[] { 100, 200 };
+			using var data = SKData.CreateCopy(bytes);
+			using var stream = new SKMemoryStream(data);
+
+			using var result1 = stream.GetData();
+			using var result2 = stream.GetData();
+
+			Assert.NotNull(result1);
+			Assert.NotNull(result2);
+			Assert.Equal(result1.Data, result2.Data);
+		}
+
+		[SkippableFact]
+		public void FileStreamGetDataReturnsNull()
+		{
+			var path = Path.Combine(PathToImages, "baboon.jpg");
+			using var stream = new SKFileStream(path);
+
+			var result = stream.GetData();
+
+			Assert.Null(result);
+		}
+
+		[SkippableFact]
+		public void EmptyMemoryStreamGetDataReturnsEmptyData()
+		{
+			using var stream = new SKMemoryStream();
+
+			using var result = stream.GetData();
+
+			Assert.NotNull(result);
+			Assert.Equal(0, (int)result.Size);
+		}
+
+		[SkippableFact]
+		public void GetDataInteropRoundTrip()
+		{
+			var bytes = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
+			using var data = SKData.CreateCopy(bytes);
+			using var stream = new SKMemoryStream(data);
+
+			using var result = stream.GetData();
+
+			Assert.NotNull(result);
+			Assert.Equal(bytes, result.ToArray());
+		}
+
+		[SkippableFact]
+		public void ManagedStreamGetDataReturnsNull()
+		{
+			using var memoryStream = new MemoryStream(new byte[] { 1, 2, 3 });
+			using var stream = new SKManagedStream(memoryStream);
+
+			var result = stream.GetData();
+
+			Assert.Null(result);
+		}
+
+		[SkippableFact]
+		public void ManagedStreamGetDataReturnsNullForNonSeekableStream()
+		{
+			using var inner = new MemoryStream(new byte[] { 10, 20, 30 });
+			using var nonSeekable = new NonSeekableReadOnlyStream(inner);
+			using var stream = new SKManagedStream(nonSeekable);
+
+			var result = stream.GetData();
+
+			Assert.Null(result);
+		}
+
+		[SkippableFact]
+		public void ManagedStreamGetDataReturnsNullEvenAfterRead()
+		{
+			using var memoryStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+			using var stream = new SKManagedStream(memoryStream);
+
+			// read some data first, then ask for getData
+			stream.ReadByte();
+			stream.ReadByte();
+
+			var result = stream.GetData();
+
+			Assert.Null(result);
+		}
+
+		[SkippableFact]
+		public void GetDataReturnsSameManagedObject()
+		{
+			var bytes = new byte[] { 10, 20, 30, 40 };
+			using var data = SKData.CreateCopy(bytes);
+			using var stream = new SKMemoryStream(data);
+
+			var result = stream.GetData();
+
+			// GetOrAddObject finds the existing C# wrapper and returns it
+			Assert.Same(data, result);
+		}
+
+		[SkippableFact]
+		public void GetDataSurvivesStreamDisposal()
+		{
+			var bytes = new byte[] { 10, 20, 30, 40 };
+			using var data = SKData.CreateCopy(bytes);
+			var stream = new SKMemoryStream(data);
+
+			var result = stream.GetData();
+			Assert.NotNull(result);
+
+			// dispose stream — data survives because SkData is ref-counted
+			stream.Dispose();
+
+			Assert.Equal(bytes.Length, (int)data.Size);
+			Assert.Equal(bytes, data.ToArray());
+		}
+
+		[SkippableFact]
+		public void GetDataSurvivesNativeCreatedStreamDisposal()
+		{
+			var bytes = new byte[] { 0xCA, 0xFE, 0xBA, 0xBE };
+
+			// byte[] constructor: native side creates the SkData internally
+			var stream = new SKMemoryStream(bytes);
+
+			var result = stream.GetData();
+			Assert.NotNull(result);
+
+			// dispose the stream — result holds its own native ref
+			stream.Dispose();
+
+			// result survives because ref-counted SkData keeps it alive
+			Assert.Equal(bytes.Length, (int)result.Size);
+			Assert.Equal(bytes, result.ToArray());
+
+			result.Dispose();
+		}
 	}
 }

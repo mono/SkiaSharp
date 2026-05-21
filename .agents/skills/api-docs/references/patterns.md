@@ -1,5 +1,7 @@
 # XML Documentation Patterns
 
+.NET XML documentation formatting rules. For SkiaSharp/HarfBuzz domain knowledge, see [skia-patterns.md](skia-patterns.md).
+
 Based on [official .NET API documentation guidelines](https://github.com/dotnet/dotnet-api-docs/wiki).
 
 ## Contents
@@ -12,6 +14,9 @@ Based on [official .NET API documentation guidelines](https://github.com/dotnet/
 - [Punctuation Exceptions](#punctuation-exceptions)
 - [Common Mistakes](#common-mistakes)
 - [Extension Methods](#extension-methods)
+- [Platform View Constructors](#platform-view-constructors)
+- [Rich Remarks and Examples](#rich-remarks-and-examples)
+- [Type-Level Documentation](#type-level-documentation)
 
 ## File Structure
 
@@ -347,3 +352,101 @@ Native platform views have special constructors with specific purposes. Always i
 <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Forms.SKCanvasView" /> class.</summary>
 <remarks />
 ```
+
+## Rich Remarks and Examples
+
+The best SkiaSharp docs use markdown-in-CDATA for rich content. This is the convention for type-level remarks and important factory methods.
+
+### When to Write Rich Remarks
+
+| API type | Remarks level |
+|----------|--------------|
+| Types (classes/structs) | Rich: overview, usage example, disposal notes, threading |
+| Factory methods (`Create*`) | Rich: code example showing common usage |
+| Important methods (`Draw*`, `Save`/`Restore`) | Brief explanation + link to related concepts |
+| Simple properties, getters, overloads | `<remarks />` (empty) is fine |
+| Enum members | No remarks needed |
+
+### Rich Remarks Format (Markdown in CDATA)
+
+For types and important methods, wrap markdown content in `<format type="text/markdown"><![CDATA[...]]></format>`. Microsoft Learn renders the CDATA content as full markdown.
+
+Example remarks value for a type:
+
+````xml
+<format type="text/markdown"><![CDATA[
+## Remarks
+
+`SKPaint` controls how drawing operations render on the canvas, including
+color, stroke width, anti-aliasing, blend modes, shaders, and text properties.
+Create an instance, configure the desired properties, and pass it to drawing
+methods on `SKCanvas`.
+
+This type wraps a native Skia resource and implements `IDisposable`. Always
+dispose of it when done, either with a `using` statement or by calling
+`Dispose()` directly.
+
+## Examples
+
+```csharp
+using var paint = new SKPaint
+{
+    Color = SKColors.CornflowerBlue,
+    IsAntialias = true,
+    Style = SKPaintStyle.Fill,
+};
+canvas.DrawCircle(128, 128, 80, paint);
+```
+]]></format>
+````
+
+### Type-Level Remarks Template
+
+For classes and structs, follow this structure inside the CDATA:
+
+1. `## Remarks` heading
+2. One paragraph: what the type does and when to use it
+3. Optional: how to create instances — constructor vs factory methods
+4. Optional: disposal pattern for `SKObject` subclasses
+5. Optional: threading notes — Skia is NOT thread-safe for mutable types
+6. `## Examples` heading
+7. One ` ```csharp ``` ` block showing the most common usage pattern
+
+### What Makes Good Examples
+
+- **Show the most common use case** — not edge cases
+- **Include using/disposal** — SkiaSharp objects are IDisposable
+- **Show the full picture** — create + configure + use, not just one call
+- **Keep it short** — 5-15 lines, enough to understand the pattern
+- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
+
+Look at `samples/Gallery/Shared/Samples/` for real usage patterns. These samples show how developers actually use the APIs.
+
+### Cross-References in Rich Remarks
+
+Inside CDATA blocks, use `<xref:...>` (NOT `<see cref>`):
+
+```
+See <xref:SkiaSharp.SKCanvas> for drawing operations.
+Use <xref:SkiaSharp.SKPathBuilder> to construct paths incrementally.
+```
+
+Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` as usual.
+
+## Type-Level Documentation
+
+Types that wrap native resources (`IDisposable`) should have remarks that cover:
+1. What the type does and when to use it
+2. How to create instances (constructor vs factory)
+3. Disposal pattern — always show `using` in examples
+4. Threading constraints if applicable
+
+**remarks** should use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block.
+
+### Code Example Best Practices
+
+- **Show disposal** — if the type is `IDisposable`, examples must use `using` or call `Dispose()`
+- **Show the full picture** — create + configure + use, not just one call
+- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
+- **Keep it short** — 5-15 lines, enough to understand the pattern
+- **Only use real APIs** — verify every method/overload exists in source before using in an example
