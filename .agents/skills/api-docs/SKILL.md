@@ -56,17 +56,6 @@ pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 extract docs/SkiaSharpAPI/ -O
 ```
 This produces one JSON file per XML file, containing only members with "To be added." placeholders. The `output/` directory is gitignored so local runs don't pollute the repo.
 
-Each extracted entry includes an `_extractedKeys` array listing exactly which fields were placeholders. The merge tool uses this to reject any agent-added fields that weren't in the original extract.
-
-**Auditability:** After extraction, save a copy of the JSON files for later diffing:
-```bash
-cp -r output/docs-work/ output/docs-work-pre-write/
-```
-After the writer completes (Phase 4), you can diff the two directories to see exactly what the agent changed:
-```bash
-diff -r output/docs-work-pre-write/ output/docs-work/
-```
-
 ### Phase 3: Discover (Orchestrator)
 
 This phase is lightweight — you are an **orchestrator**, not a writer. Read only what you need to plan the work, then delegate immediately.
