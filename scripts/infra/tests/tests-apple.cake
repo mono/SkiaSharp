@@ -14,9 +14,25 @@ Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .Does (() =>
 {
-    // Boot the iOS simulator before running tests
-    Information("Booting iOS simulator: {0}...", IOS_SIMULATOR_NAME);
-    DotNetTool($"apple simulator boot \"{IOS_SIMULATOR_NAME}\" --wait");
+    // Create a unique simulator for this test run (matches DeviceRunners CI pattern)
+    var simulatorName = $"SkiaSharp-Tests-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
+    Information("Creating iOS simulator: {0} (device type: {1})...", simulatorName, IOS_SIMULATOR_NAME);
+
+    // Create simulator and capture UDID from JSON output
+    IEnumerable<string> createStdout;
+    var createExitCode = StartProcess("dotnet", new ProcessSettings {
+        Arguments = $"apple simulator create \"{simulatorName}\" --device-type \"{IOS_SIMULATOR_NAME}\" --format json",
+        RedirectStandardOutput = true,
+    }, out createStdout);
+    if (createExitCode != 0)
+        throw new Exception($"Failed to create simulator (exit code {createExitCode})");
+
+    var createJson = string.Join("", createStdout);
+    var udid = System.Text.Json.JsonDocument.Parse(createJson).RootElement.GetProperty("udid").GetString();
+    Information("  Created simulator with UDID: {0}", udid);
+
+    // Boot by UDID
+    DotNetTool($"apple simulator boot \"{udid}\" --wait");
     Information("  Simulator booted");
 
     try
@@ -24,19 +40,24 @@ Task ("tests-ios")
         FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
         DirectoryPath results = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.ios/{DATE_TIME_STR}";
 
-        RunDeviceRunnersTest(csproj, results, framework: "net10.0-ios");
+        // Pass the simulator UDID to DeviceRunners so it targets the correct device
+        var properties = new Dictionary<string, string> {
+            { "DeviceRunnersDevice", udid },
+        };
+
+        RunDeviceRunnersTest(csproj, results, framework: "net10.0-ios", properties: properties);
     }
     finally
     {
-        // Always attempt to shut down the simulator
-        Information("Shutting down iOS simulator: {0}", IOS_SIMULATOR_NAME);
+        // Always clean up the simulator
+        Information("Deleting simulator: {0}", simulatorName);
         try
         {
-            DotNetTool($"apple simulator shutdown \"{IOS_SIMULATOR_NAME}\"");
+            DotNetTool($"apple simulator delete --force \"{simulatorName}\"");
         }
         catch (Exception ex)
         {
-            Warning($"Failed to shutdown simulator: {ex.Message}");
+            Warning($"Failed to delete simulator: {ex.Message}");
         }
     }
 });
