@@ -3,9 +3,216 @@ name: API Diff
 on:
   push:
     branches: [main]
+    paths:
+      - '.github/workflows/api-diff.yml'
+  schedule:
+    # Weekly on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag, or SHA to diff (e.g., main, release/3.119.x, v3.119.3-preview.1.1)'
+        required: false
+        default: 'main'
+      prerelease:
+        description: 'Include prerelease versions as baseline'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: api-diff-${{ github.event_name == 'workflow_dispatch' && inputs.ref || 'main' }}
+  cancel-in-progress: false
+
+permissions: {}
 
 jobs:
   generate:
+    name: Generate API Diff
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - run: echo hello
+      - name: Resolve ref
+        id: resolve
+        env:
+          INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || 'main' }}
+        run: |
+          set -euo pipefail
+
+          # Determine download mode based on ref format
+          if [[ "$INPUT_REF" =~ ^(main|release/[0-9]+\.[0-9]+\.[0-9a-z._-]+)$ ]]; then
+            echo "mode=branch" >> "$GITHUB_OUTPUT"
+          elif [[ "$INPUT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9][0-9a-z._+-]*$ ]]; then
+            echo "mode=tag" >> "$GITHUB_OUTPUT"
+          elif [[ "$INPUT_REF" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "mode=sha" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Invalid ref: '$INPUT_REF'. Must be a branch (main, release/X.Y.Z), tag (vX.Y.Z...), or 40-char SHA."
+            exit 1
+          fi
+          echo "ref=$INPUT_REF" >> "$GITHUB_OUTPUT"
+          echo "Ref: $INPUT_REF"
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Get package versions from ref
+        id: fetch-ref
+        if: steps.resolve.outputs.mode != 'branch' || steps.resolve.outputs.ref != 'main'
+        env:
+          DIFF_REF: ${{ steps.resolve.outputs.ref }}
+        run: |
+          set -euo pipefail
+          # Fetch the target ref to resolve SHA and get package versions
+          git fetch --depth=1 origin "$DIFF_REF"
+          RESOLVED_SHA=$(git rev-parse FETCH_HEAD)
+          echo "sha=$RESOLVED_SHA" >> "$GITHUB_OUTPUT"
+          echo "Resolved SHA: $RESOLVED_SHA"
+
+          # Extract only the nuget version lines from the ref's VERSIONS.txt
+          # Keep main's dependency (release/url) lines intact for compatibility
+          REF_NUGET_LINES=$(git show FETCH_HEAD:scripts/VERSIONS.txt | grep -E '[[:space:]]nuget[[:space:]]')
+
+          # Replace nuget lines in main's VERSIONS.txt with the ref's versions
+          grep -v -E '[[:space:]]nuget[[:space:]]' scripts/VERSIONS.txt | grep -v '^# nuget versions' > scripts/VERSIONS.tmp
+          mv scripts/VERSIONS.tmp scripts/VERSIONS.txt
+          # Append the ref's nuget lines
+          printf '\n# nuget versions\n' >> scripts/VERSIONS.txt
+          echo "$REF_NUGET_LINES" >> scripts/VERSIONS.txt
+
+          echo "Updated nuget versions from $DIFF_REF:"
+          grep 'nuget' scripts/VERSIONS.txt | head -5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Download CI packages
+        env:
+          DIFF_MODE: ${{ steps.resolve.outputs.mode }}
+          DIFF_REF: ${{ steps.resolve.outputs.ref }}
+          RESOLVED_SHA: ${{ steps.fetch-ref.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$DIFF_MODE" == "branch" ]]; then
+            dotnet cake --target=docs-download-output --gitBranch="$DIFF_REF"
+          else
+            echo "Downloading packages for SHA: $RESOLVED_SHA"
+            dotnet cake --target=docs-download-output --gitSha="$RESOLVED_SHA"
+          fi
+
+      - name: Generate API diff
+        env:
+          DIFF_MODE: ${{ steps.resolve.outputs.mode }}
+          DIFF_REF: ${{ steps.resolve.outputs.ref }}
+          RESOLVED_SHA: ${{ steps.fetch-ref.outputs.sha }}
+          PRERELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease || 'false' }}
+        run: |
+          set -euo pipefail
+          if [[ "$DIFF_MODE" == "branch" ]]; then
+            dotnet cake --target=docs-api-diff --gitBranch="$DIFF_REF" --nugetDiffPrerelease="$PRERELEASE"
+          else
+            dotnet cake --target=docs-api-diff --gitSha="$RESOLVED_SHA" --nugetDiffPrerelease="$PRERELEASE"
+          fi
+
+      - name: Upload API diff artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: api-diff
+          path: output/api-diff/
+          if-no-files-found: warn
+
+      - name: Detect version
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION=$(awk '/^SkiaSharp[[:space:]]/ && /nuget/ {print $NF; exit}' scripts/VERSIONS.txt)
+          if [[ -z "$VERSION" || ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "::error::Failed to detect valid SkiaSharp version from VERSIONS.txt (got: '$VERSION')"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Detected version: $VERSION"
+
+      - name: Upload changelogs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: changelogs
+          path: changelogs/
+          if-no-files-found: warn
+
+  publish:
+    name: Create PR
+    needs: generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Download changelogs artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: changelogs
+          path: changelogs/
+
+      - name: Commit and create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.generate.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          PR_BRANCH="bot/api-diff-v${VERSION}"
+
+          # Check for changes (tracked + untracked)
+          git add changelogs/
+          if git diff --cached --quiet; then
+            echo "No changelog changes detected. Skipping PR."
+            exit 0
+          fi
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create/reset the PR branch and commit
+          git checkout -B "$PR_BRANCH"
+          git commit -m "[docs] Update API diff for v${VERSION}" \
+            -m "Generated by the api-diff workflow."
+
+          git push --force origin "$PR_BRANCH"
+
+          # Create PR if one doesn't already exist
+          existing=$(gh pr list --head "$PR_BRANCH" --base main --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            echo "PR #$existing already exists, force-pushed update"
+          else
+            gh pr create --base main --head "$PR_BRANCH" \
+              --title "[docs] API diff for v${VERSION}" \
+              --label "documentation" \
+              --body "Automated API diff comparing v${VERSION} against the latest published NuGet.org release. Generated by the \`api-diff\` workflow using \`Mono.ApiTools.NuGetDiff\`.
+
+          ---
+          - **Version:** ${VERSION}
+          - **Workflow run:** ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          fi
+
