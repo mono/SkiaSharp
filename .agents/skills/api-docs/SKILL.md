@@ -87,6 +87,14 @@ STEPS:
    c. Fill all "To be added." fields following the rules below
    d. Write the completed JSON back to the same path
 
+JSON INTEGRITY RULES (NON-NEGOTIABLE):
+- NEVER add new keys to the JSON that are not already present in the file
+- NEVER add new entries (members) to the JSON that were not extracted
+- Only modify values of EXISTING keys — the extract tool determines scope
+- The "_extractedKeys" array in each entry lists exactly which fields you may fill
+- If a member has only "remarks" extracted, fill ONLY "remarks" — do NOT add
+  "summary", "params", or other fields even if you think they could be improved
+
 WRITING RULES:
 - NEVER invent API calls — verify every method/overload exists by reading C# source
 - NEVER guess numeric values — read MemberValue from JSON, cross-reference source
@@ -94,6 +102,14 @@ WRITING RULES:
 - Read-only properties use "Gets" — check source for { get; } vs { get; set; }
 - Use <see langword="null" /> not <see langword="default" /> for nullable params
 - Use <see langword="true" /> and <see langword="false" /> for boolean literals in prose
+
+STANDARD VALUES (CICP, Vulkan, OpenType, etc.):
+- For enum members referencing external standards, you MUST read the C/C++ header
+  in externals/skia/ where the enum is defined and verify numeric values
+- Do NOT rely on your own knowledge of standards for specific numeric values
+  (gamma values, bit depths, transfer function parameters, etc.)
+- If you cannot find the header, state "value from standard" without inventing
+  specific numbers (e.g., say "assumed display gamma" not "assumed gamma 2.2")
 
 REMARKS RULES:
 - Type-level entries (memberType=type) have remarksRequired=true with a CDATA template.
@@ -156,6 +172,18 @@ SPECIFIC CHECKS:
 - Default value claims: find the actual default in source (e.g., struct zero-init vs constants)
 - "Gets or sets" vs "Gets": check if property has { get; set; } or only { get; }
 - Cross-library: SkiaSharp and HarfBuzzSharp are DIFFERENT libraries with different conventions.
+
+STANDARD VALUE VERIFICATION (CRITICAL):
+- For enum members that cite external standards (CICP, ITU-T, Vulkan, OpenType),
+  you MUST locate and read the C/C++ header where the enum is defined (check
+  externals/skia/include/ or binding/ generated files)
+- Cross-reference the MemberValue in JSON against the enum constant in source
+- If documentation claims a specific numeric property of a standard (e.g., "gamma 2.2",
+  "10-bit precision", "64-bit packed"), verify it is consistent:
+  - Does the bit math add up? (e.g., "64-bit with 10+10+10+10 packed" = only 40 bits → ERROR)
+  - Does the gamma match the correct CICP value number?
+- If you cannot find the header, flag the claim as UNVERIFIED rather than assuming correct
+- Provide file path + line number for every standard value you verify
 
 TRUST HIERARCHY for native type facts (bit layouts, byte orders, macro expansions):
 1. Native C/C++ header in repo (if you can find and read it) — AUTHORITATIVE
@@ -259,7 +287,10 @@ After fixing all CRITICAL review issues, merge the JSON back into XML:
 pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 merge output/docs-work/
 ```
 
-The merge tool has built-in safety checks — it counts `MemberSignature` and `TypeSignature` elements before and after merging each file and aborts with a fatal error if any were lost. It also validates the output XML is well-formed.
+The merge tool has built-in safety checks:
+- **Signature preservation** — counts `MemberSignature` and `TypeSignature` elements before and after merging each file and aborts with a fatal error if any were lost
+- **Extract guard** — rejects any field not listed in `_extractedKeys` (prevents agents from overwriting existing documentation with "improved" versions). Rejected fields emit a warning.
+- **XML validation** — validates the output XML is well-formed after save
 
 Then run formatting to clean up:
 

@@ -195,24 +195,37 @@ function Extract-DocsBlock([System.Xml.XmlElement]$docs) {
 
         switch ($child.LocalName) {
             "param" {
-                if ($text -match "To be added") {
+                if ($text -match "^\s*To be added\.?\s*$") {
                     if (-not $fields.ContainsKey("params")) { $fields["params"] = @{} }
                     $fields["params"][$child.GetAttribute("name")] = $text
                 }
             }
             "typeparam" {
-                if ($text -match "To be added") {
+                if ($text -match "^\s*To be added\.?\s*$") {
                     if (-not $fields.ContainsKey("typeparams")) { $fields["typeparams"] = @{} }
                     $fields["typeparams"][$child.GetAttribute("name")] = $text
                 }
             }
             { $_ -in "summary", "returns", "value", "remarks" } {
-                if ($text -match "To be added") {
+                if ($text -match "^\s*To be added\.?\s*$") {
                     $fields[$child.LocalName] = $text
                 }
             }
         }
     }
+
+    # Record which fields were extracted so the merge can reject agent-added fields
+    if ($fields.Count -gt 0) {
+        $allowedKeys = @($fields.Keys | Where-Object { $_ -ne "params" -and $_ -ne "typeparams" })
+        if ($fields.ContainsKey("params")) {
+            $allowedKeys += ($fields["params"].Keys | ForEach-Object { "params.$_" })
+        }
+        if ($fields.ContainsKey("typeparams")) {
+            $allowedKeys += ($fields["typeparams"].Keys | ForEach-Object { "typeparams.$_" })
+        }
+        $fields["_extractedKeys"] = $allowedKeys
+    }
+
     return $fields
 }
 
@@ -225,7 +238,7 @@ function Merge-Docs([string]$inputPath) {
         @(Get-Item $inputPath)
     }
     else {
-        Get-ChildItem -Path $inputPath -Filter "*.json" | Sort-Object Name
+        Get-ChildItem -Path $inputPath -Filter "*.json" | Where-Object { $_.Name -ne "manifest.json" } | Sort-Object Name
     }
 
     $totalUpdates = 0
@@ -263,10 +276,26 @@ function Merge-Docs([string]$inputPath) {
 
             $fields = $entry.fields
 
+            # Build allowed-keys set from extract metadata (guards against agent-added fields)
+            $allowedKeys = $null
+            $hasExtractMeta = $null -ne $fields.PSObject -and $null -ne $fields.PSObject.Properties['_extractedKeys']
+            if ($hasExtractMeta) {
+                $keyArray = @($fields._extractedKeys)
+                $allowedKeys = [System.Collections.Generic.HashSet[string]]::new(
+                    [string[]]$keyArray,
+                    [System.StringComparer]::OrdinalIgnoreCase
+                )
+            }
+
             # Update scalar fields
             foreach ($fieldName in @("summary", "returns", "value", "remarks")) {
                 $content = $fields.$fieldName
-                if ($null -ne $content -and $content -notmatch "To be added") {
+                if ($null -ne $content -and $content -notmatch "^\s*To be added\.?\s*$") {
+                    # Reject fields not in original extract
+                    if ($allowedKeys -and -not $allowedKeys.Contains($fieldName)) {
+                        Write-Warning "Skipping $($docId ?? 'type').$fieldName — not in original extract (agent-added)"
+                        continue
+                    }
                     $elem = $docs.SelectSingleNode($fieldName)
                     if ($elem) {
                         if ($DryRun) {
@@ -286,7 +315,12 @@ function Merge-Docs([string]$inputPath) {
                     $h = @{}; $fields.params.PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }; $h
                 }
                 foreach ($kv in $paramMap.GetEnumerator()) {
-                    if ($null -ne $kv.Value -and $kv.Value -notmatch "To be added") {
+                    if ($null -ne $kv.Value -and $kv.Value -notmatch "^\s*To be added\.?\s*$") {
+                        # Reject params not in original extract
+                        if ($allowedKeys -and -not $allowedKeys.Contains("params.$($kv.Key)")) {
+                            Write-Warning "Skipping $($docId ?? 'type').params.$($kv.Key) — not in original extract (agent-added)"
+                            continue
+                        }
                         $elem = $docs.SelectSingleNode("param[@name='$($kv.Key)']")
                         if ($elem) {
                             if (-not $DryRun) { Set-ElementContent $elem $kv.Value }
@@ -302,7 +336,12 @@ function Merge-Docs([string]$inputPath) {
                     $h = @{}; $fields.typeparams.PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }; $h
                 }
                 foreach ($kv in $tpMap.GetEnumerator()) {
-                    if ($null -ne $kv.Value -and $kv.Value -notmatch "To be added") {
+                    if ($null -ne $kv.Value -and $kv.Value -notmatch "^\s*To be added\.?\s*$") {
+                        # Reject typeparams not in original extract
+                        if ($allowedKeys -and -not $allowedKeys.Contains("typeparams.$($kv.Key)")) {
+                            Write-Warning "Skipping $($docId ?? 'type').typeparams.$($kv.Key) — not in original extract (agent-added)"
+                            continue
+                        }
                         $elem = $docs.SelectSingleNode("typeparam[@name='$($kv.Key)']")
                         if ($elem) {
                             if (-not $DryRun) { Set-ElementContent $elem $kv.Value }
