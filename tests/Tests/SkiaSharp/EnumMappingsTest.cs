@@ -47,6 +47,8 @@ namespace SkiaSharp.Tests
 				Assert.Equal(SKColorTypeNative.Bgra10101010Xr, native);
 			else if (value == SKColorType.RgbF16F16F16x)
 				Assert.Equal(SKColorTypeNative.RgbF16f16f16x, native);
+			else if (value == SKColorType.RedF16)
+				Assert.Equal(SKColorTypeNative.R16Float, native);
 			else
 				Assert.Equal(value.ToString(), native.ToString(), true);
 		}
@@ -76,6 +78,8 @@ namespace SkiaSharp.Tests
 					Assert.Equal(SKColorType.Bgra10101010XR, managed);
 				else if (value == SKColorTypeNative.RgbF16f16f16x)
 					Assert.Equal(SKColorType.RgbF16F16F16x, managed);
+				else if (value == SKColorTypeNative.R16Float)
+					Assert.Equal(SKColorType.RedF16, managed);
 				else
 					Assert.Equal(value.ToString(), managed.ToString(), true);
 			}
