@@ -58,25 +58,92 @@ When identifying which release branch to test, you **MUST** use semver ordering,
 
 ## Step 1: Check CI Status
 
-Before testing, verify CI builds have completed. Check commit statuses on the release branch head:
+Before testing, verify CI builds have completed.
+
+### Pipeline Chain
+
+Release builds flow through a **3-pipeline chain**, each triggered by completion of the previous:
+
+```
+SkiaSharp-Native (devdiv/DevDiv)
+    ↓ triggers on completion
+Pipeline 10789 (devdiv/DevDiv) — managed build
+    ↓ triggers on completion
+Pipeline 15756 (devdiv/DevDiv) — signing/packaging
+```
+
+All three must complete before packages are available on the internal feed.
+
+### Tracking Pipeline Status via GitHub
+
+Check commit statuses on the release branch head:
 
 ```bash
 gh api "repos/mono/SkiaSharp/commits/{sha}/statuses" --jq '.[] | "\(.context) | \(.state) | \(.description // "no desc") | \(.created_at)"'
 ```
 
+⚠️ Only `SkiaSharp-Native` and `SkiaSharp (Public)` report back to GitHub. The downstream DevDiv
+pipelines (10789, 15756) do NOT post commit statuses — use `az pipelines` to track them.
+
+### Tracking Pipeline Status via Azure DevOps CLI
+
+Use `az pipelines` to query each pipeline in the chain and verify trigger relationships:
+
+```bash
+# Check the native build status
+az pipelines runs show --id {native-build-id} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "{id:id, status:status, result:result, buildNumber:buildNumber}"
+
+# Find the downstream managed build triggered by the native build
+az pipelines runs list --pipeline-ids 10789 --branch release/{version} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
+
+# Find the signing/packaging build triggered by the managed build
+az pipelines runs list --pipeline-ids 15756 --branch release/{version} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
+```
+
+### Verifying Trigger Relationships
+
+Each triggered pipeline has a `triggerInfo` field that proves which upstream build caused it:
+
+```bash
+az pipelines runs show --id {downstream-build-id} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "triggerInfo"
+```
+
+Example output:
+```json
+{
+  "alias": "SkiaSharp",
+  "artifactType": "Pipeline",
+  "pipelineId": "14174467",
+  "pipelineTriggerType": "PipelineCompletion",
+  "source": "SkiaSharp-Native",
+  "version": "3.119.4-stable.2+3.119.4"
+}
+```
+
+Use `triggerInfo.pipelineId` to confirm which upstream build triggered a given run. This is
+essential when multiple runs exist on the same branch (e.g., retries or concurrent pushes to main).
+
 ### Required Pipelines
 
-| Pipeline | Required | Notes |
-|----------|----------|-------|
-| `SkiaSharp-Native` | ✅ Must pass | Builds native binaries |
-| `SkiaSharp` | ⚠️ May not exist publically | Builds managed code & publishes packages |
-| `SkiaSharp-Tests` | ⚠️ May fail or not exist publically | Sometimes flaky on release branches - warn user but don't block |
+| Pipeline | Definition ID | Required | Notes |
+|----------|---------------|----------|-------|
+| `SkiaSharp-Native` | — | ✅ Must pass | Builds native binaries, reports to GitHub |
+| Managed build | 10789 | ✅ Must pass | Builds managed code, triggered by Native |
+| Signing/packaging | 15756 | ✅ Must pass | Signs and publishes to internal feed, triggered by Managed |
 
 **Ignore:** `SkiaSharp (Public)` — public CI, not used for releases.
 
 ### Understanding Multiple Statuses
 
-The API returns ALL statuses chronologically. A pipeline may have multiple entries due to retries/rebuilds. Always use the **most recent** status (newest timestamp) for each pipeline.
+The GitHub API returns ALL statuses chronologically. A pipeline may have multiple entries due to retries/rebuilds. Always use the **most recent** status (newest timestamp) for each pipeline.
 
 ### Extracting NuGet Version
 

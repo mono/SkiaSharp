@@ -80,7 +80,34 @@ For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-p
 git push -u origin release/{version}
 ```
 
-This triggers CI build (2-4 hours).
+This triggers the CI pipeline chain (2-4 hours total):
+
+```
+SkiaSharp-Native (devdiv/DevDiv)         ~60-90 min
+    ↓ triggers on completion
+Pipeline 10789 (devdiv/DevDiv, managed)   ~30-60 min
+    ↓ triggers on completion
+Pipeline 15756 (devdiv/DevDiv, signing)   ~15-30 min
+```
+
+### Tracking Build Progress
+
+Use `az pipelines` to monitor the chain:
+
+```bash
+# Find the native build for this branch
+az pipelines runs list --pipeline-ids <native-pipeline-id> --branch release/{version} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 3
+
+# Check downstream builds and their trigger source
+az pipelines runs show --id {build-id} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "{status:status, result:result, triggerInfo:triggerInfo}"
+```
+
+The `triggerInfo.pipelineId` field on each downstream build confirms which upstream build triggered it.
+This is the definitive way to trace the pipeline chain (not just branch/time correlation).
 
 ---
 

@@ -93,6 +93,25 @@ If missing, STOP and ask user to verify testing was completed.
 
 Trigger the [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) to push packages to NuGet.org.
 
+### Verifying Source Build Before Publishing
+
+Before triggering the publish pipeline, confirm the full pipeline chain completed successfully
+using `az pipelines`:
+
+```bash
+# Verify all three pipelines completed for this release
+az pipelines runs list --pipeline-ids 15756 --branch release/{version} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 3
+
+# Confirm the signing build was triggered by the correct managed build
+az pipelines runs show --id {signing-build-id} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "triggerInfo"
+```
+
+The `triggerInfo.pipelineId` should trace back through pipeline 10789 to the SkiaSharp-Native build.
+
 ### Pipeline Steps
 
 1. Open the [NuGet.org publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298)
