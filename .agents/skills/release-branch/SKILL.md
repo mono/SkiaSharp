@@ -83,11 +83,11 @@ git push -u origin release/{version}
 This triggers the CI pipeline chain (2-4 hours total):
 
 ```
-SkiaSharp-Native (devdiv/DevDiv)         ~60-90 min
+SkiaSharp-Native (devdiv/DevDiv)              ~60-90 min
     ↓ triggers on completion
-Pipeline 10789 (devdiv/DevDiv, managed)   ~30-60 min
+SkiaSharp (devdiv/DevDiv, ID 10789)           ~30-60 min
     ↓ triggers on completion
-Pipeline 15756 (devdiv/DevDiv, signing)   ~15-30 min
+SkiaSharp-Tests (devdiv/DevDiv, ID 15756)     ~15-30 min
 ```
 
 ### Tracking Build Progress

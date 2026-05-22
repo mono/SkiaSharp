@@ -67,9 +67,9 @@ Release builds flow through a **3-pipeline chain**, each triggered by completion
 ```
 SkiaSharp-Native (devdiv/DevDiv)
     ↓ triggers on completion
-Pipeline 10789 (devdiv/DevDiv) — managed build
+SkiaSharp (devdiv/DevDiv, ID 10789) — managed build
     ↓ triggers on completion
-Pipeline 15756 (devdiv/DevDiv) — signing/packaging
+SkiaSharp-Tests (devdiv/DevDiv, ID 15756) — tests & signing
 ```
 
 All three must complete before packages are available on the internal feed.
@@ -95,12 +95,12 @@ az pipelines runs show --id {native-build-id} \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --query "{id:id, status:status, result:result, buildNumber:buildNumber}"
 
-# Find the downstream managed build triggered by the native build
+# Find the downstream SkiaSharp (managed) build triggered by the native build
 az pipelines runs list --pipeline-ids 10789 --branch release/{version} \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
 
-# Find the signing/packaging build triggered by the managed build
+# Find the SkiaSharp-Tests build triggered by the managed build
 az pipelines runs list --pipeline-ids 15756 --branch release/{version} \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
@@ -133,11 +133,11 @@ essential when multiple runs exist on the same branch (e.g., retries or concurre
 
 ### Required Pipelines
 
-| Pipeline | Definition ID | Required | Notes |
-|----------|---------------|----------|-------|
+| Pipeline Name | Definition ID | Required | Notes |
+|---------------|---------------|----------|-------|
 | `SkiaSharp-Native` | — | ✅ Must pass | Builds native binaries, reports to GitHub |
-| Managed build | 10789 | ✅ Must pass | Builds managed code, triggered by Native |
-| Signing/packaging | 15756 | ✅ Must pass | Signs and publishes to internal feed, triggered by Managed |
+| `SkiaSharp` | 10789 | ✅ Must pass | Builds managed code, triggered by Native |
+| `SkiaSharp-Tests` | 15756 | ✅ Must pass | Tests & signs, publishes to internal feed, triggered by SkiaSharp |
 
 **Ignore:** `SkiaSharp (Public)` — public CI, not used for releases.
 

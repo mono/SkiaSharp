@@ -99,18 +99,18 @@ Before triggering the publish pipeline, confirm the full pipeline chain complete
 using `az pipelines`:
 
 ```bash
-# Verify all three pipelines completed for this release
+# Verify SkiaSharp-Tests (final pipeline) completed for this release
 az pipelines runs list --pipeline-ids 15756 --branch release/{version} \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 3
 
-# Confirm the signing build was triggered by the correct managed build
-az pipelines runs show --id {signing-build-id} \
+# Confirm SkiaSharp-Tests was triggered by the correct SkiaSharp (managed) build
+az pipelines runs show --id {tests-build-id} \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --query "triggerInfo"
 ```
 
-The `triggerInfo.pipelineId` should trace back through pipeline 10789 to the SkiaSharp-Native build.
+The `triggerInfo.pipelineId` should trace back through SkiaSharp (10789) to the SkiaSharp-Native build.
 
 ### Pipeline Steps
 
