@@ -98,11 +98,26 @@ Task("sync-ANGLE")
     }
 
     // generate Windows App SDK files
-    if (!FileExists(WINAPPSDK_PATH.CombineWithFilePath("Microsoft.WindowsAppSDK.nuspec"))) {
-        var setup = ANGLE_PATH.CombineWithFilePath("scripts/winappsdk_setup.py");
-        RunProcess(
-            ROOT_PATH.CombineWithFilePath("scripts/vcvarsall.bat"),
-            $"\"{VS_INSTALL}\" \"x64\" \"{PYTHON_EXE}\" \"{setup}\" --output \"{WINAPPSDK_PATH}\"");
+    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
+        var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
+        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
+
+        // Download and extract the NuGet package using .NET HTTP (works on restricted agents
+        // where Python's urllib is blocked by firewall policy)
+        if (!FileExists(stamp)) {
+            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdk_version}/microsoft.windowsappsdk.{winappsdk_version}.nupkg";
+            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.nupkg");
+            EnsureDirectoryExists(WINAPPSDK_PATH);
+            DownloadFile(nugetUrl, nupkgPath);
+            Unzip(nupkgPath, WINAPPSDK_PATH);
+            DeleteFile(nupkgPath);
+            System.IO.File.WriteAllText(stamp.FullPath, "");
+        }
+
+        // Run the header generation script under vcvarsall.bat so midlrt can find cl.exe
+        var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/vcvarsall.bat");
+        var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
+        RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" pwsh -NoProfile -ExecutionPolicy Bypass -File \"{generateScript}\" -Path \"{WINAPPSDK_PATH}\"");
     }
 });
 
