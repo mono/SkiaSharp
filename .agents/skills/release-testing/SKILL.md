@@ -65,7 +65,7 @@ Before testing, verify CI builds have completed.
 Release builds flow through a **3-pipeline chain**, each triggered by completion of the previous:
 
 ```
-SkiaSharp-Native (devdiv/DevDiv)
+SkiaSharp-Native (devdiv/DevDiv, ID 26493)
     ↓ triggers on completion
 SkiaSharp (devdiv/DevDiv, ID 10789) — managed build
     ↓ triggers on completion
@@ -83,17 +83,17 @@ gh api "repos/mono/SkiaSharp/commits/{sha}/statuses" --jq '.[] | "\(.context) | 
 ```
 
 ⚠️ Only `SkiaSharp-Native` and `SkiaSharp (Public)` report back to GitHub. The downstream DevDiv
-pipelines (10789, 15756) do NOT post commit statuses — use `az pipelines` to track them.
+pipelines (`SkiaSharp`, `SkiaSharp-Tests`) do NOT post commit statuses — use `az pipelines` to track them.
 
 ### Tracking Pipeline Status via Azure DevOps CLI
 
 Use `az pipelines` to query each pipeline in the chain and verify trigger relationships:
 
 ```bash
-# Check the native build status
-az pipelines runs show --id {native-build-id} \
+# Check the SkiaSharp-Native build status (find latest run on the release branch)
+az pipelines runs list --pipeline-ids 26493 --branch release/{version} \
   --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "{id:id, status:status, result:result, buildNumber:buildNumber}"
+  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
 
 # Find the downstream SkiaSharp (managed) build triggered by the native build
 az pipelines runs list --pipeline-ids 10789 --branch release/{version} \
@@ -135,7 +135,7 @@ essential when multiple runs exist on the same branch (e.g., retries or concurre
 
 | Pipeline Name | Definition ID | Required | Notes |
 |---------------|---------------|----------|-------|
-| `SkiaSharp-Native` | — | ✅ Must pass | Builds native binaries, reports to GitHub |
+| `SkiaSharp-Native` | 26493 | ✅ Must pass | Builds native binaries, reports to GitHub |
 | `SkiaSharp` | 10789 | ✅ Must pass | Builds managed code, triggered by Native |
 | `SkiaSharp-Tests` | 15756 | ✅ Must pass | Tests & signs, publishes to internal feed, triggered by SkiaSharp |
 

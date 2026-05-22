@@ -83,7 +83,7 @@ git push -u origin release/{version}
 This triggers the CI pipeline chain (2-4 hours total):
 
 ```
-SkiaSharp-Native (devdiv/DevDiv)              ~60-90 min
+SkiaSharp-Native (devdiv/DevDiv, ID 26493)              ~60-90 min
     ↓ triggers on completion
 SkiaSharp (devdiv/DevDiv, ID 10789)           ~30-60 min
     ↓ triggers on completion
@@ -96,7 +96,7 @@ Use `az pipelines` to monitor the chain:
 
 ```bash
 # Find the native build for this branch
-az pipelines runs list --pipeline-ids <native-pipeline-id> --branch release/{version} \
+az pipelines runs list --pipeline-ids 26493 --branch release/{version} \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 3
 
