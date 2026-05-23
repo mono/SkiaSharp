@@ -12,14 +12,14 @@ How to release SkiaSharp: create branch → wait for CI → test → publish →
 
 ## Skills
 
-The release process is handled by three skills in order:
+The release process is handled by four skills in order:
 
 | Step | Skill | Purpose | Trigger |
 |------|-------|---------|---------|
 | 1 | [release-branch](../../.agents/skills/release-branch/SKILL.md) | Create release branch, trigger CI | "release now", "release X.Y.Z" |
-| 1.5 | [release-status](../../.agents/skills/release-status/SKILL.md) | Track pipeline chain progress | "check release status", "how is the build" |
-| 2 | [release-testing](../../.agents/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
-| 3 | [release-publish](../../.agents/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
+| 2 | [release-status](../../.agents/skills/release-status/SKILL.md) | Track pipeline chain progress | "check release status", "how is the build" |
+| 3 | [release-testing](../../.agents/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
+| 4 | [release-publish](../../.agents/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
 
 Each skill confirms with `ask_user` before executing destructive operations.
 

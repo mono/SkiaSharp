@@ -21,7 +21,9 @@ description: >
 
 Verify SkiaSharp packages work correctly before publishing.
 
-⚠️ **NO UNDO:** This is step 3 of 4. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is **Step 3 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+
+**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → [Step 2: release-status](../release-status/SKILL.md) → **Step 3 (this skill)** → [Step 4: release-publish](../release-publish/SKILL.md)
 
 ## CRITICAL: ANY FAIL IS TOTAL FAIL
 

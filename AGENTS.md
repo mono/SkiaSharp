@@ -354,10 +354,10 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Update dependency | `/native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
-| Start release | `/release-branch` | "release now", "start release X" |
-| Check release status | `/release-status` | "check release status", "how is the build", "pipeline status" |
-| Test release | `/release-testing` | "test the release", "verify packages" |
-| Publish release | `/release-publish` | "push to nuget", "tag release" |
+| Start release (Step 1/4) | `/release-branch` | "release now", "start release X" |
+| Check release status (Step 2/4) | `/release-status` | "check release status", "how is the build", "pipeline status" |
+| Test release (Step 3/4) | `/release-testing` | "test the release", "verify packages" |
+| Publish release (Step 4/4) | `/release-publish` | "push to nuget", "tag release" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
 | Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "changelog", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |

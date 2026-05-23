@@ -12,7 +12,9 @@ description: >
 
 Create release branches for SkiaSharp versions.
 
-⚠️ **NO UNDO:** This is step 1 of 4. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is **Step 1 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+
+**Pipeline:** **Step 1 (this skill)** → [Step 2: release-status](../release-status/SKILL.md) → [Step 3: release-testing](../release-testing/SKILL.md) → [Step 4: release-publish](../release-publish/SKILL.md)
 
 ## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
 

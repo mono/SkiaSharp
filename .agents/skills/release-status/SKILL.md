@@ -14,7 +14,7 @@ description: >
   "pipeline status", "is the build done", "check CI", "how is the run doing",
   "are packages ready", "build progress".
   
-  This is step 1.5 of the release flow — after release-branch creates the branch
+  This is Step 2 of 4 in the release pipeline — after release-branch creates the branch
   and before release-testing runs integration tests.
 ---
 
@@ -22,14 +22,19 @@ description: >
 
 Check the status of the SkiaSharp release pipeline chain on Azure DevOps.
 
+⚠️ This is **Step 2 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+
+**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → **Step 2 (this skill)** → [Step 3: release-testing](../release-testing/SKILL.md) → [Step 4: release-publish](../release-publish/SKILL.md)
+
 ## When to Use
 
 After `release-branch` pushes a release branch, the CI pipeline chain starts building.
 Use this skill to track progress and determine when packages are ready for testing.
 
 ```
-release-branch → [release-status] → release-testing → release-publish
-      ↑ creates branch    ↑ tracks builds      ↑ tests packages    ↑ ships
+release-branch  →  release-status  →  release-testing  →  release-publish
+   (Step 1)         (Step 2 – here)      (Step 3)             (Step 4)
+ creates branch     tracks builds       tests packages         ships
 ```
 
 ---

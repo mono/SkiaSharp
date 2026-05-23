@@ -17,7 +17,9 @@ description: >
 
 Publish packages to NuGet.org and finalize releases.
 
-⚠️ **NO UNDO:** This is step 4 of 4. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is **Step 4 of 4** in the release pipeline (final step). See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+
+**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → [Step 2: release-status](../release-status/SKILL.md) → [Step 3: release-testing](../release-testing/SKILL.md) → **Step 4 (this skill)**
 
 ## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
 
