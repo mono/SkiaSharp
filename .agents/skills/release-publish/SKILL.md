@@ -17,7 +17,7 @@ description: >
 
 Publish packages to NuGet.org and finalize releases.
 
-⚠️ **NO UNDO:** This is step 3 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is step 4 of 4. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
 
 ## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
 

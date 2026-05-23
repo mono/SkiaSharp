@@ -141,7 +141,18 @@ flowchart TB
     class START,CI,DONE endpoint
 ```
 
-### Stage 2: Testing (release-testing skill)
+### Stage 2: Status Tracking (release-status skill)
+
+After the branch is pushed, track the pipeline chain until packages are available:
+
+```bash
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+```
+
+The pipeline chain is: `SkiaSharp-Native` → `SkiaSharp` (signs & publishes) → `SkiaSharp-Tests`.
+Packages appear on the internal feed after `SkiaSharp` (ID 10789) completes.
+
+### Stage 3: Testing (release-testing skill)
 
 ```mermaid
 flowchart TB
@@ -196,7 +207,7 @@ flowchart TB
     class START,READY endpoint
 ```
 
-### Stage 3: Publishing (release-publish skill)
+### Stage 4: Publishing (release-publish skill)
 
 ```mermaid
 flowchart TB
