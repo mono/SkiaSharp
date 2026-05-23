@@ -58,124 +58,19 @@ When identifying which release branch to test, you **MUST** use semver ordering,
 
 ## Step 1: Check CI Status
 
-Before testing, verify CI builds have completed.
-
-### Pipeline Chain
-
-Release builds flow through a **3-pipeline chain**, each triggered by completion of the previous:
-
-```
-SkiaSharp-Native (devdiv/DevDiv, ID 26493)
-    ↓ triggers on completion
-SkiaSharp (devdiv/DevDiv, ID 10789) — managed build, signing & publishing to internal feed
-    ↓ triggers on completion
-SkiaSharp-Tests (devdiv/DevDiv, ID 15756) — device & unit tests
-```
-
-All three must complete before packages are available on the internal feed.
-Packages are published to the feed by the `SkiaSharp` pipeline (10789), not by `SkiaSharp-Tests`.
-
-### Tracking Pipeline Status via GitHub
-
-Check commit statuses on the release branch head:
+Before testing, verify CI builds have completed using the **release-status** skill:
 
 ```bash
-gh api "repos/mono/SkiaSharp/commits/{sha}/statuses" --jq '.[] | "\(.context) | \(.state) | \(.description // "no desc") | \(.created_at)"'
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-⚠️ Only `SkiaSharp-Native` and `SkiaSharp (Public)` report back to GitHub. The downstream DevDiv
-pipelines (`SkiaSharp`, `SkiaSharp-Tests`) do NOT post commit statuses — use `az pipelines` to track them.
+**Prerequisite:** The `SkiaSharp` pipeline (ID 10789) must have completed successfully — this is
+the pipeline that signs and publishes packages to the internal feed.
 
-### Tracking Pipeline Status via Azure DevOps CLI
+`SkiaSharp-Tests` (ID 15756) should pass but does not block testing/publishing.
 
-The quickest way to check the full pipeline chain is the reusable script:
-
-```bash
-.agents/skills/release-branch/scripts/pipeline-status.sh release/{version}
-# Or pass a SHA:
-.agents/skills/release-branch/scripts/pipeline-status.sh {commit-sha}
-```
-
-This outputs all three pipelines with status, trigger relationships, and ADO links.
-
-For manual queries, use `az pipelines` to query each pipeline individually:
-
-```bash
-# Check the SkiaSharp-Native build status (find latest run on the release branch)
-az pipelines runs list --pipeline-ids 26493 --branch release/{version} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
-
-# Find the downstream SkiaSharp (managed) build triggered by the native build
-az pipelines runs list --pipeline-ids 10789 --branch release/{version} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
-
-# Find the SkiaSharp-Tests build triggered by the managed build
-az pipelines runs list --pipeline-ids 15756 --branch release/{version} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
-```
-
-### Identifying the Correct Run
-
-Multiple runs may exist on the same branch (retries, new commits). Use the `buildNumber` field
-to match runs across the chain — all pipelines in the same chain share a version-based buildNumber:
-
-```
-buildNumber format: {base}-{label}.{build}+{branch-version}
-Example:            3.119.4-stable.2+3.119.4
-```
-
-To find the correct run for a specific version:
-1. Start with SkiaSharp-Native — find the successful run whose `buildNumber` matches your version
-2. Use that run's `id` to confirm downstream pipelines via `triggerInfo.pipelineId`
-
-```bash
-# Filter runs by buildNumber to find the exact match
-az pipelines runs list --pipeline-ids 10789 --branch release/{version} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "[?contains(buildNumber, '{version}')].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 3
-```
-
-### Verifying Trigger Relationships
-
-Each triggered pipeline has a `triggerInfo` field that proves which upstream build caused it:
-
-```bash
-az pipelines runs show --id {downstream-build-id} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "triggerInfo"
-```
-
-Example output:
-```json
-{
-  "alias": "SkiaSharp",
-  "artifactType": "Pipeline",
-  "pipelineId": "14174467",
-  "pipelineTriggerType": "PipelineCompletion",
-  "source": "SkiaSharp-Native",
-  "version": "3.119.4-stable.2+3.119.4"
-}
-```
-
-Use `triggerInfo.pipelineId` to confirm which upstream build triggered a given run. This is
-essential when multiple runs exist on the same branch (e.g., retries or concurrent pushes to main).
-
-### Required Pipelines
-
-| Pipeline Name | Definition ID | Required | Notes |
-|---------------|---------------|----------|-------|
-| `SkiaSharp-Native` | 26493 | ✅ Must pass | Builds native binaries, reports to GitHub |
-| `SkiaSharp` | 10789 | ✅ Must pass | Builds managed code, signs & publishes to internal feed, triggered by Native |
-| `SkiaSharp-Tests` | 15756 | ⚠️ Should pass | Device & unit tests, triggered by SkiaSharp — warn user if fails but don't block |
-
-**Ignore:** `SkiaSharp (Public)` — public CI, not used for releases.
-
-### Understanding Multiple Statuses
-
-The GitHub API returns ALL statuses chronologically. A pipeline may have multiple entries due to retries/rebuilds. Always use the **most recent** status (newest timestamp) for each pipeline.
+See the [release-status skill](../release-status/SKILL.md) for full pipeline chain documentation,
+manual queries, and troubleshooting.
 
 ### Extracting NuGet Version
 

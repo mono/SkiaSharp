@@ -355,6 +355,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
 | Start release | `/release-branch` | "release now", "start release X" |
+| Check release status | `/release-status` | "check release status", "how is the build", "pipeline status" |
 | Test release | `/release-testing` | "test the release", "verify packages" |
 | Publish release | `/release-publish` | "push to nuget", "tag release" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |

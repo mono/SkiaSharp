@@ -95,31 +95,14 @@ Trigger the [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?defini
 
 ### Verifying Source Build Before Publishing
 
-Before triggering the publish pipeline, confirm the `SkiaSharp` pipeline (which signs and publishes
-to the internal feed) completed successfully:
+Before triggering the publish pipeline, confirm builds completed using the **release-status** skill:
 
 ```bash
-# Quick check — shows all three pipelines at once
-.agents/skills/release-branch/scripts/pipeline-status.sh release/{version}
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-For targeted verification using `az pipelines`:
-
-```bash
-# Find the SkiaSharp (managed/signing) build for this release — match by buildNumber
-az pipelines runs list --pipeline-ids 10789 --branch release/{version} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "[?contains(buildNumber, '{version}')].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 3
-
-# Confirm it was triggered by the correct SkiaSharp-Native build
-az pipelines runs show --id {managed-build-id} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "triggerInfo"
-```
-
-The `triggerInfo.pipelineId` should point to the SkiaSharp-Native (26493) build for the same version.
-Match `buildNumber` across pipelines to ensure you're looking at the correct chain (e.g.,
-`3.119.4-stable.2+3.119.4` should appear in both the Native and SkiaSharp runs).
+The `SkiaSharp` pipeline (ID 10789) must show ✅ — this is the pipeline that produced the
+packages on the internal feed. See [release-status](../release-status/SKILL.md) for details.
 
 ### Pipeline Steps
 
