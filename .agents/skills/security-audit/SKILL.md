@@ -366,48 +366,48 @@ and trigger compliance alerts that block releases (partiallySucceeded builds).
 
 ### How to Query CG Alerts
 
+**Automated script (preferred):**
+
 ```bash
-# 1. Get the latest SkiaSharp-Native build ID
+# Get all current CG alerts (auto-discovers latest build, samples all container types)
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py
+
+# JSON output for inclusion in audit report
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --json
+
+# Query a specific build
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --build-id 14176611
+```
+
+The script automatically:
+1. Finds the latest completed SkiaSharp-Native build (pipeline 26493)
+2. Identifies representative CG logs (one per container type: alpine, debian11, debian13, bionic, wasm)
+3. Parses and deduplicates all CVEs across container types
+4. Categorizes alerts by source (Alpine sysroot, Debian base, npm tooling, Rust crates, NuGet)
+
+**Note:** There is no build-independent CG REST API. The `governance.visualstudio.com` service
+does not expose alert data through any documented endpoint. The CG portal UI aggregates from
+build results internally. Our script achieves the same result by sampling the latest build's
+CG logs, which report ALL active registration-level alerts regardless of which specific build
+produced them.
+
+**Manual approach (for debugging):**
+
+```bash
+# 1. Get latest build ID
 BUILD_ID=$(az pipelines runs list --pipeline-id 26493 \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --top 1 --query "[0].id" -o tsv)
 
-# 2. Get the build timeline to find CG task log IDs
+# 2. Get timeline to find CG log IDs
 az devops invoke --area build --resource timeline \
   --route-parameters project=DevDiv buildId=$BUILD_ID \
-  --org https://devdiv.visualstudio.com -o json \
-  | python3 -c "
-import sys, json
-data = json.loads(sys.stdin.read())
-for r in data.get('records', []):
-    if 'Component Governance' in r.get('name', ''):
-        log_id = r.get('log', {}).get('id') if r.get('log') else None
-        if log_id:
-            print(f'Log {log_id}: {r.get(\"result\",\"\")} - parent job TBD')
-"
+  --org https://devdiv.visualstudio.com -o json
 
-# 3. Get CVEs from a specific CG log
+# 3. Parse CVEs from a specific CG log
 az devops invoke --area build --resource logs \
   --route-parameters project=DevDiv buildId=$BUILD_ID logId={LOG_ID} \
-  --org https://devdiv.visualstudio.com -o json \
-  | python3 -c "
-import sys, json, re
-from collections import defaultdict
-data = json.loads(sys.stdin.read())
-lines = data if isinstance(data, list) else data.get('value', [])
-by_sev = defaultdict(lambda: defaultdict(list))
-for line in lines:
-    s = str(line)
-    m = re.search(r'\|(CVE-[\d-]+|MVS-[\w-]+|GHSA-[\w-]+)\s*\|([^|]+)\|(\w+)', s)
-    if m:
-        by_sev[m.group(3)][m.group(2).strip()].append(m.group(1))
-for sev in ['Critical','High','Medium','Low']:
-    if sev in by_sev:
-        total = sum(len(v) for v in by_sev[sev].values())
-        print(f'{sev} ({total}):')
-        for comp, cves in sorted(by_sev[sev].items()):
-            print(f'  {comp}: {\", \".join(sorted(cves))}')
-"
+  --org https://devdiv.visualstudio.com -o json
 ```
 
 ### CG Alert Categories
