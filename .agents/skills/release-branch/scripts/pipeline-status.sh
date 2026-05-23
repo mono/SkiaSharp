@@ -2,11 +2,11 @@
 # pipeline-status.sh — Trace the SkiaSharp release pipeline chain for a given ref.
 #
 # Usage:
-#   .agents/scripts/pipeline-status.sh <branch-or-sha>
+#   .agents/skills/release-branch/scripts/pipeline-status.sh <branch-or-sha>
 #
 # Examples:
-#   .agents/scripts/pipeline-status.sh release/3.119.4
-#   .agents/scripts/pipeline-status.sh f568ac94dd7
+#   .agents/skills/release-branch/scripts/pipeline-status.sh release/3.119.4
+#   .agents/skills/release-branch/scripts/pipeline-status.sh f568ac94dd7
 #
 # Outputs a structured summary of all three pipelines in the chain:
 #   SkiaSharp-Native (26493) → SkiaSharp (10789) → SkiaSharp-Tests (15756)

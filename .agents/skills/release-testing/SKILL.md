@@ -91,9 +91,9 @@ pipelines (`SkiaSharp`, `SkiaSharp-Tests`) do NOT post commit statuses — use `
 The quickest way to check the full pipeline chain is the reusable script:
 
 ```bash
-.agents/scripts/pipeline-status.sh release/{version}
+.agents/skills/release-branch/scripts/pipeline-status.sh release/{version}
 # Or pass a SHA:
-.agents/scripts/pipeline-status.sh {commit-sha}
+.agents/skills/release-branch/scripts/pipeline-status.sh {commit-sha}
 ```
 
 This outputs all three pipelines with status, trigger relationships, and ADO links.

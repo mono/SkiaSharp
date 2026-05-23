@@ -100,7 +100,7 @@ to the internal feed) completed successfully:
 
 ```bash
 # Quick check — shows all three pipelines at once
-.agents/scripts/pipeline-status.sh release/{version}
+.agents/skills/release-branch/scripts/pipeline-status.sh release/{version}
 ```
 
 For targeted verification using `az pipelines`:

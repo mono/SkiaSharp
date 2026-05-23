@@ -95,7 +95,7 @@ SkiaSharp-Tests (devdiv/DevDiv, ID 15756)               ~15-30 min  (device & un
 Use the pipeline status script to check the full chain at once:
 
 ```bash
-.agents/scripts/pipeline-status.sh release/{version}
+.agents/skills/release-branch/scripts/pipeline-status.sh release/{version}
 ```
 
 For manual queries, use `az pipelines` to monitor individual pipelines:
