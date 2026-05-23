@@ -1,7 +1,8 @@
 ---
 name: security-audit
 description: >
-  Audit SkiaSharp's native dependencies for security vulnerabilities and CVEs.
+  Audit SkiaSharp's native dependencies for security vulnerabilities and CVEs,
+  including Component Governance (CG) alerts from the SkiaSharp-Native Azure DevOps pipeline.
   Read-only investigation that produces a status report with recommendations.
 
   Use when user asks to:
@@ -10,9 +11,12 @@ description: >
   - Find security-related issues and their PR coverage
   - Get an overview of open vulnerabilities
   - See what security work is pending
+  - Check Component Governance alerts
+  - Review CG alerts from the native build pipeline
 
   Triggers: "security audit", "audit CVEs", "CVE status", "what security issues are open",
-  "check vulnerability status", "security overview", "what CVEs need fixing".
+  "check vulnerability status", "security overview", "what CVEs need fixing",
+  "CG alerts", "component governance", "check container CVEs".
 
   This skill is READ-ONLY. To actually fix issues, use the `native-dependency-update` skill.
 ---
@@ -46,9 +50,14 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
    ├─ Fixed? → Mark clean
    └─ Not fixed? → Flag for action
 5. Check false positives
-6. Assemble structured JSON report (per report-schema.md)
-7. Render HTML from JSON (render-security-audit.py)
-8. Present markdown summary to user
+6. Query Component Governance alerts from SkiaSharp-Native pipeline (Step 9)
+   ├─ Get latest build ID (pipeline 26493)
+   ├─ Extract CG log IDs from timeline
+   ├─ Parse CVEs from representative jobs (alpine, debian, wasm)
+   └─ Categorize by source (container, toolchain, NuGet)
+7. Assemble structured JSON report (per report-schema.md)
+8. Render HTML from JSON (render-security-audit.py)
+9. Present markdown summary to user
 ```
 
 ### Step 1: Search Issues & PRs
@@ -337,6 +346,135 @@ Within each priority level, sort by severity (CRITICAL > HIGH > MEDIUM > LOW).
 
 5. **"Undiscovered"** means a CVE found proactively by the audit (via NVD/web search) that has no corresponding user-filed GitHub issue. It does NOT mean the CVE is unknown to the world.
 
+## Step 9: Check Component Governance (CG) Alerts
+
+> ⚠️ **MANDATORY:** The security audit MUST include CG alerts from the SkiaSharp-Native pipeline.
+> CG scans Docker container images used for native builds and flags CVEs in OS packages,
+> npm dependencies, Rust crates, and NuGet packages used at build time.
+
+### Why This Matters
+
+CG alerts are **not visible** from GitHub Issues or NVD searches alone. They come from the
+internal Azure DevOps pipeline and flag vulnerabilities in:
+- **Docker base images** (Debian packages: dpkg, libcap2, sed, rsync)
+- **Cross-compilation sysroots** (Alpine packages: busybox, file, binutils, zlib, freetype, gmp)
+- **Build toolchain dependencies** (npm: minimatch, path-to-regexp, ws, express; Rust: hashbrown, zerovec, time)
+- **NuGet build dependencies** (Microsoft.WindowsAppSDK)
+
+Even though these don't ship in SkiaSharp NuGet packages, they exist in Docker image layers
+and trigger compliance alerts that block releases (partiallySucceeded builds).
+
+### How to Query CG Alerts
+
+```bash
+# 1. Get the latest SkiaSharp-Native build ID
+BUILD_ID=$(az pipelines runs list --pipeline-id 26493 \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --top 1 --query "[0].id" -o tsv)
+
+# 2. Get the build timeline to find CG task log IDs
+az devops invoke --area build --resource timeline \
+  --route-parameters project=DevDiv buildId=$BUILD_ID \
+  --org https://devdiv.visualstudio.com -o json \
+  | python3 -c "
+import sys, json
+data = json.loads(sys.stdin.read())
+for r in data.get('records', []):
+    if 'Component Governance' in r.get('name', ''):
+        log_id = r.get('log', {}).get('id') if r.get('log') else None
+        if log_id:
+            print(f'Log {log_id}: {r.get(\"result\",\"\")} - parent job TBD')
+"
+
+# 3. Get CVEs from a specific CG log
+az devops invoke --area build --resource logs \
+  --route-parameters project=DevDiv buildId=$BUILD_ID logId={LOG_ID} \
+  --org https://devdiv.visualstudio.com -o json \
+  | python3 -c "
+import sys, json, re
+from collections import defaultdict
+data = json.loads(sys.stdin.read())
+lines = data if isinstance(data, list) else data.get('value', [])
+by_sev = defaultdict(lambda: defaultdict(list))
+for line in lines:
+    s = str(line)
+    m = re.search(r'\|(CVE-[\d-]+|MVS-[\w-]+|GHSA-[\w-]+)\s*\|([^|]+)\|(\w+)', s)
+    if m:
+        by_sev[m.group(3)][m.group(2).strip()].append(m.group(1))
+for sev in ['Critical','High','Medium','Low']:
+    if sev in by_sev:
+        total = sum(len(v) for v in by_sev[sev].values())
+        print(f'{sev} ({total}):')
+        for comp, cves in sorted(by_sev[sev].items()):
+            print(f'  {comp}: {\", \".join(sorted(cves))}')
+"
+```
+
+### CG Alert Categories
+
+| Category | Source | Ships in NuGet? | Fix Mechanism |
+|----------|--------|-----------------|---------------|
+| Alpine sysroot packages | `apk add` in alpine Dockerfile | No | Bump `DISTRO_VERSION` in Dockerfile |
+| Debian base image packages | `apt-get` / base image | No | Update base image or wait for Debian patches |
+| npm build tooling | .NET SDK / Cake dependencies | No | Update .NET SDK or pin versions |
+| Rust crate deps | .NET SDK internals | No | Update .NET SDK |
+| NuGet build deps | Build-time references | No | Update package version |
+
+### Key Files for CG Fixes
+
+| File | Controls |
+|------|----------|
+| `scripts/infra/native/linux/docker/alpine/Dockerfile` (lines 43–47) | Alpine sysroot version (`DISTRO_VERSION`) |
+| `scripts/infra/native/linux/docker/debian/11/Dockerfile` | Debian 11 base image (EOL June 2026) |
+| `scripts/infra/native/linux/docker/debian/13/Dockerfile` | Debian 13 base image |
+| `scripts/infra/native/linux/docker/bionic/Dockerfile` | Bionic/Android cross-compile |
+| `scripts/infra/native/wasm/docker/Dockerfile` | WASM build container |
+
+### Include in Report
+
+Add a `cgAlerts` section to the JSON report:
+
+```json
+{
+  "cgAlerts": {
+    "buildId": 14176611,
+    "pipelineId": 26493,
+    "scanDate": "2026-05-23",
+    "totalAlerts": 112,
+    "categories": [
+      {
+        "source": "Alpine 3.17 sysroot",
+        "alertCount": 93,
+        "severity": "Medium",
+        "fix": "Bump to Alpine 3.21",
+        "affectedJobs": ["alpine arm64", "alpine x64", "alpine arm", "alpine x86"]
+      },
+      {
+        "source": "Build toolchain (npm/Rust/NuGet)",
+        "alertCount": 13,
+        "severity": "High/Medium/Low",
+        "fix": "Update .NET SDK or suppress",
+        "affectedJobs": ["ALL jobs"]
+      },
+      {
+        "source": "Debian base image",
+        "alertCount": 3,
+        "severity": "Medium",
+        "fix": "Wait for Debian patches or upgrade",
+        "affectedJobs": ["Debian 12-based jobs"]
+      }
+    ],
+    "uniqueCVEs": []
+  }
+}
+```
+
+### CG Portal Links
+
+- **Registration:** https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321
+- **Pipeline:** https://dev.azure.com/devdiv/DevDiv/_build?definitionId=26493
+- **Alert type filter:** Append `?_a=alerts&typeId={typeId}&alerts-view-option=active` to registration URL
+
 ## Handoff
 
 After audit, use `native-dependency-update` skill:
@@ -346,3 +484,6 @@ After audit, use `native-dependency-update` skill:
 
 For Skia core CVEs, the fix requires merging a newer upstream milestone into the fork.
 This is a significant undertaking — flag it in the report with the milestone gap.
+
+For CG container alerts, the fix is updating Dockerfiles under `scripts/infra/native/linux/docker/`.
+This does not require a Skia submodule update — only Docker image rebuilds.
