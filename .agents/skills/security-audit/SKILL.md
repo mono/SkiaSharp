@@ -2,7 +2,7 @@
 name: security-audit
 description: >
   Audit SkiaSharp's native dependencies for security vulnerabilities and CVEs,
-  including Component Governance (CG) alerts from the SkiaSharp-Native Azure DevOps pipeline.
+  including Component Governance (CG) alerts from the SkiaSharp-Native and SkiaSharp Azure DevOps pipelines.
   Read-only investigation that produces a status report with recommendations.
 
   Use when user asks to:
@@ -50,10 +50,10 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
    ├─ Fixed? → Mark clean
    └─ Not fixed? → Flag for action
 5. Check false positives
-6. Query Component Governance alerts from SkiaSharp-Native pipeline
-   ├─ Get latest build ID (pipeline 26493)
+6. Query Component Governance alerts from SkiaSharp-Native AND SkiaSharp pipelines
+   ├─ Get latest build IDs (native: 26493, managed: 10789)
    ├─ Extract CG log IDs from timeline
-   ├─ Parse CVEs from representative jobs (alpine, debian, wasm)
+   ├─ Parse CVEs from representative jobs (alpine, debian, wasm, managed-build)
    └─ Categorize by source (container, toolchain, NuGet)
 7. Assemble structured JSON report (per report-schema.md)
 8. Render HTML from JSON (render-security-audit.py)
@@ -286,7 +286,8 @@ See [dependencies.md](../../../documentation/dev/dependencies.md#known-false-pos
 
 ### Step 6: Check Component Governance (CG) Alerts
 
-> ⚠️ **MANDATORY:** The security audit MUST include CG alerts from the SkiaSharp-Native pipeline.
+> ⚠️ **MANDATORY:** The security audit MUST include CG alerts from BOTH the SkiaSharp-Native
+> (pipeline 26493) and SkiaSharp (pipeline 10789) pipelines — together they make up the shipped build.
 > CG scans Docker container images used for native builds and flags CVEs in OS packages,
 > npm dependencies, Rust crates, and NuGet packages used at build time.
 
@@ -307,7 +308,7 @@ and trigger compliance alerts that block releases (partiallySucceeded builds).
 **Automated script (preferred):**
 
 ```bash
-# Get all current CG alerts across main + release branches (default)
+# Get all current CG alerts across main + release branches from both pipelines (default)
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py
 
 # JSON output for inclusion in audit report
@@ -316,15 +317,22 @@ python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --json
 # Query only a specific branch
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --branch main
 
+# Query only the native pipeline
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --pipeline native
+
+# Query only the managed pipeline
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --pipeline managed
+
 # Query a specific build
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --build-id 14176611
 ```
 
 The script automatically:
-1. Discovers the latest completed build from main AND all active release/* branches
-2. Identifies representative CG logs per build (one per container type: alpine, debian11, debian13, bionic, wasm)
-3. Parses and deduplicates all CVEs across all builds and container types
-4. Categorizes alerts by source and shows which branches are affected
+1. Discovers the latest completed build from main AND all active release/* branches for BOTH pipelines
+2. Identifies representative CG logs per build (native: alpine, debian11, debian13, bionic, wasm; managed: build/test stages)
+3. Parses and deduplicates all CVEs across all builds, pipelines, and container types
+4. Categorizes alerts by source and shows "component stacks" (components with many CVEs grouped)
+5. Shows which branches and pipelines are affected
 
 **Note:** There is no build-independent CG REST API. The `governance.visualstudio.com` service
 does not expose alert data through any documented endpoint. The CG portal UI aggregates from
@@ -335,10 +343,12 @@ produced them.
 **Manual approach (for debugging):**
 
 ```bash
-# 1. Get latest build ID
+# 1. Get latest build ID (native pipeline)
 BUILD_ID=$(az pipelines runs list --pipeline-id 26493 \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --top 1 --query "[0].id" -o tsv)
+
+# For managed pipeline, use --pipeline-id 10789 instead
 
 # 2. Get timeline to find CG log IDs
 az devops invoke --area build --resource timeline \
@@ -378,8 +388,10 @@ Add a `cgAlerts` section to the JSON report:
 ```json
 {
   "cgAlerts": {
-    "buildId": 14176611,
-    "pipelineId": 26493,
+    "pipelines": [
+      {"type": "native", "name": "SkiaSharp-Native", "id": 26493},
+      {"type": "managed", "name": "SkiaSharp", "id": 10789}
+    ],
     "scanDate": "2026-05-23",
     "totalAlerts": 112,
     "categories": [

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Query all Component Governance (CG) alerts for the SkiaSharp-Native pipeline.
+Query all Component Governance (CG) alerts for SkiaSharp pipelines.
 
-Automatically queries the latest builds from main AND active release branches,
-then deduplicates alerts across all builds to give a complete picture.
+Queries BOTH the SkiaSharp-Native (native libraries) and SkiaSharp (managed C#)
+pipelines since together they make up the shipped build. Automatically queries
+the latest builds from main AND active release branches, then deduplicates
+alerts across all builds to give a complete picture.
 
 Prerequisites:
   - az CLI installed and authenticated
@@ -11,19 +13,23 @@ Prerequisites:
   - Default org/project configured: az devops configure --defaults organization=https://devdiv.visualstudio.com project=DevDiv
 
 Usage:
-  python3 query-cg-alerts.py [--build-id BUILD_ID] [--branch BRANCH] [--json] [--quiet]
+  python3 query-cg-alerts.py [--build-id BUILD_ID] [--branch BRANCH] [--json] [--quiet] [--pipeline PIPELINE]
 
-  # Query all branches (default)
+  # Query all branches and both pipelines (default)
   python3 query-cg-alerts.py
 
   # Query only a specific branch
   python3 query-cg-alerts.py --branch main
+
+  # Query only the native pipeline
+  python3 query-cg-alerts.py --pipeline native
 
   # Query a specific build
   python3 query-cg-alerts.py --build-id 14176611
 
 Output:
   Prints a summary of all unique CG alerts grouped by severity, component, and branch.
+  Shows "stacks" — components with multiple CVEs grouped together.
   With --json, outputs structured JSON suitable for the security audit report.
 """
 
@@ -37,7 +43,12 @@ from collections import defaultdict
 
 ORG = "https://devdiv.visualstudio.com"
 PROJECT = "DevDiv"
-PIPELINE_ID = 26493  # SkiaSharp-Native
+
+# Both pipelines together make up the shipped build
+PIPELINES = {
+    "native": {"id": 26493, "name": "SkiaSharp-Native"},
+    "managed": {"id": 10789, "name": "SkiaSharp"},
+}
 
 # Branches to query by default (main + any active release branches)
 DEFAULT_BRANCHES = ["main", "release/*"]
@@ -84,14 +95,14 @@ def run_az(args: list[str], parse_json=True):
     return result.stdout.strip()
 
 
-def get_builds_for_branches(token: str, branches: list[str], top_per_branch: int = 1) -> list[dict]:
+def get_builds_for_branches(token: str, pipeline_id: int, branches: list[str], top_per_branch: int = 1) -> list[dict]:
     """Get the latest completed builds for the given branches.
     
     Supports wildcards: "release/*" matches any release/X.Y.Z or release/X.Y.x branch.
     """
     # Get recent builds (enough to cover all active branches)
     url = (f"{ORG}/{PROJECT}/_apis/build/builds"
-           f"?definitions={PIPELINE_ID}&statusFilter=completed&$top=20&api-version=7.1")
+           f"?definitions={pipeline_id}&statusFilter=completed&$top=20&api-version=7.1")
     data = api_get(token, url)
     if not data:
         return []
@@ -113,8 +124,12 @@ def get_builds_for_branches(token: str, branches: list[str], top_per_branch: int
     return list(matched.values())
 
 
-def get_cg_log_ids(token: str, build_id: int) -> dict[str, tuple[str, int]]:
-    """Get representative CG log IDs from the build timeline."""
+def get_cg_log_ids(token: str, build_id: int, pipeline_type: str = "native") -> dict[str, tuple[str, int]]:
+    """Get representative CG log IDs from the build timeline.
+    
+    For 'native' pipeline: samples one per container type (alpine, debian11, etc.)
+    For 'managed' pipeline: samples one per job stage (prepare, build, test, etc.)
+    """
     url = (f"{ORG}/{PROJECT}/_apis/build/builds/{build_id}/timeline?api-version=7.1")
     timeline = api_get(token, url)
     if not timeline:
@@ -134,7 +149,24 @@ def get_cg_log_ids(token: str, build_id: int) -> dict[str, tuple[str, int]]:
             if result in ("succeeded", "succeededWithIssues"):
                 cg_logs[job_name] = log_id
 
-    # Pick representative jobs (one per container type for full coverage)
+    if pipeline_type == "managed":
+        # For managed pipeline, just pick a few representative jobs
+        representatives = {}
+        for job, log_id in cg_logs.items():
+            jl = job.lower()
+            if "prepare" in jl or "build" in jl:
+                representatives.setdefault("managed-build", (job, log_id))
+            elif "test" in jl or "pack" in jl:
+                representatives.setdefault("managed-test", (job, log_id))
+            else:
+                representatives.setdefault("managed-other", (job, log_id))
+        # If we couldn't categorize, just take up to 3
+        if not representatives:
+            for i, (job, log_id) in enumerate(list(cg_logs.items())[:3]):
+                representatives[f"managed-{i}"] = (job, log_id)
+        return representatives
+
+    # Native pipeline: Pick representative jobs (one per container type for full coverage)
     representatives = {}
     for job, log_id in cg_logs.items():
         jl = job.lower()
@@ -182,17 +214,25 @@ def parse_cg_log(token: str, build_id: int, log_id: int) -> list[dict]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Query CG alerts for SkiaSharp-Native")
+    parser = argparse.ArgumentParser(description="Query CG alerts for SkiaSharp pipelines")
     parser.add_argument("--build-id", type=int, help="Specific build ID (skips branch discovery)")
     parser.add_argument("--branch", type=str, help="Query only this branch (e.g., 'main' or 'release/3.119.x')")
+    parser.add_argument("--pipeline", type=str, choices=["native", "managed", "both"], default="both",
+                        help="Which pipeline to query (default: both)")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument("--quiet", action="store_true", help="Suppress progress messages")
     args = parser.parse_args()
 
     token = get_token()
 
+    # Determine which pipelines to query
+    if args.pipeline == "both":
+        pipelines_to_query = list(PIPELINES.items())
+    else:
+        pipelines_to_query = [(args.pipeline, PIPELINES[args.pipeline])]
+
     # Determine which builds to query
-    builds_to_query = []  # list of (build_id, branch, build_number)
+    builds_to_query = []  # list of (build_id, branch, build_number, pipeline_type)
 
     if args.build_id:
         # Query specific build
@@ -200,41 +240,50 @@ def main():
         build = api_get(token, url)
         if build:
             branch = build.get("sourceBranch", "").replace("refs/heads/", "")
-            builds_to_query.append((args.build_id, branch, build.get("buildNumber", "unknown")))
+            # Determine pipeline type from definition
+            def_id = build.get("definition", {}).get("id")
+            ptype = "native" if def_id == PIPELINES["native"]["id"] else "managed"
+            builds_to_query.append((args.build_id, branch, build.get("buildNumber", "unknown"), ptype))
         else:
             print(f"ERROR: Build {args.build_id} not found", file=sys.stderr)
             sys.exit(1)
     else:
-        # Discover builds from branches
+        # Discover builds from branches for each pipeline
         branches = [args.branch] if args.branch else DEFAULT_BRANCHES
-        discovered = get_builds_for_branches(token, branches)
-        if not discovered:
-            print("ERROR: No completed builds found for specified branches", file=sys.stderr)
-            sys.exit(1)
-        for b in discovered:
-            branch = b.get("sourceBranch", "").replace("refs/heads/", "")
-            builds_to_query.append((b["id"], branch, b.get("buildNumber", "unknown")))
+        for ptype, pinfo in pipelines_to_query:
+            discovered = get_builds_for_branches(token, pinfo["id"], branches)
+            if not discovered:
+                if not args.quiet:
+                    print(f"WARNING: No completed builds found for {pinfo['name']}", file=sys.stderr)
+                continue
+            for b in discovered:
+                branch = b.get("sourceBranch", "").replace("refs/heads/", "")
+                builds_to_query.append((b["id"], branch, b.get("buildNumber", "unknown"), ptype))
+
+    if not builds_to_query:
+        print("ERROR: No builds found to query", file=sys.stderr)
+        sys.exit(1)
 
     if not args.quiet:
-        print(f"Querying {len(builds_to_query)} build(s):", file=sys.stderr)
-        for bid, branch, bnum in builds_to_query:
-            print(f"  {branch}: build {bid} ({bnum})", file=sys.stderr)
+        print(f"Querying {len(builds_to_query)} build(s) across {len(pipelines_to_query)} pipeline(s):", file=sys.stderr)
+        for bid, branch, bnum, ptype in builds_to_query:
+            print(f"  [{PIPELINES[ptype]['name']}] {branch}: build {bid} ({bnum})", file=sys.stderr)
 
     # Collect alerts from all builds
-    all_alerts = {}  # id -> {component, severity, branches, sources}
+    all_alerts = {}  # id -> {component, severity, branches, sources, pipelines}
 
-    for build_id, branch, build_num in builds_to_query:
+    for build_id, branch, build_num, ptype in builds_to_query:
         if not args.quiet:
-            print(f"\n--- {branch} (build {build_id}) ---", file=sys.stderr)
+            print(f"\n--- [{PIPELINES[ptype]['name']}] {branch} (build {build_id}) ---", file=sys.stderr)
 
-        reps = get_cg_log_ids(token, build_id)
+        reps = get_cg_log_ids(token, build_id, ptype)
         if not reps:
             if not args.quiet:
                 print(f"  WARNING: No CG logs found in build {build_id}", file=sys.stderr)
             continue
 
         if not args.quiet:
-            print(f"  Sampling {len(reps)} container types: {', '.join(sorted(reps.keys()))}", file=sys.stderr)
+            print(f"  Sampling {len(reps)} job types: {', '.join(sorted(reps.keys()))}", file=sys.stderr)
 
         for category, (job_name, log_id) in sorted(reps.items()):
             if not args.quiet:
@@ -248,13 +297,16 @@ def main():
                         "component": alert["component"],
                         "severity": alert["severity"],
                         "sources": [category],
-                        "branches": [branch]
+                        "branches": [branch],
+                        "pipelines": [PIPELINES[ptype]["name"]]
                     }
                 else:
                     if category not in all_alerts[key]["sources"]:
                         all_alerts[key]["sources"].append(category)
                     if branch not in all_alerts[key]["branches"]:
                         all_alerts[key]["branches"].append(branch)
+                    if PIPELINES[ptype]["name"] not in all_alerts[key]["pipelines"]:
+                        all_alerts[key]["pipelines"].append(PIPELINES[ptype]["name"])
 
     # Categorize
     for alert in all_alerts.values():
@@ -265,7 +317,7 @@ def main():
             alert["category"] = "Debian 12 base image"
         elif comp.startswith("Debian:13:"):
             alert["category"] = "Debian 13 base image"
-        elif "WindowsAppSDK" in comp:
+        elif "WindowsAppSDK" in comp or "Microsoft." in comp:
             alert["category"] = "NuGet dependency"
         elif any(c in comp for c in ["hashbrown", "zerovec", "time 0."]):
             alert["category"] = "Rust crate (.NET SDK)"
@@ -275,8 +327,9 @@ def main():
     # Output
     if args.json:
         output = {
-            "builds": [{"id": bid, "branch": br, "number": num} for bid, br, num in builds_to_query],
-            "pipelineId": PIPELINE_ID,
+            "pipelines": [{"type": pt, "name": pi["name"], "id": pi["id"]} for pt, pi in pipelines_to_query],
+            "builds": [{"id": bid, "branch": br, "number": num, "pipeline": PIPELINES[pt]["name"]} 
+                       for bid, br, num, pt in builds_to_query],
             "totalAlerts": len(all_alerts),
             "alerts": sorted(all_alerts.values(), key=lambda a: (
                 {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}.get(a["severity"], 9),
@@ -291,9 +344,10 @@ def main():
         for alert in all_alerts.values():
             by_sev[alert["severity"]].append(alert)
 
-        branches_str = ", ".join(b for _, b, _ in builds_to_query)
+        branches_str = ", ".join(sorted(set(b for _, b, _, _ in builds_to_query)))
+        pipelines_str = ", ".join(pi["name"] for _, pi in pipelines_to_query)
         print(f"\n{'='*70}")
-        print(f"CG ALERTS SUMMARY — SkiaSharp-Native (pipeline {PIPELINE_ID})")
+        print(f"CG ALERTS SUMMARY — {pipelines_str}")
         print(f"Branches: {branches_str}")
         print(f"Total unique alerts: {len(all_alerts)}")
         print(f"{'='*70}")
@@ -348,12 +402,14 @@ def main():
         # Branch coverage
         if len(builds_to_query) > 1:
             print(f"\nBRANCH COVERAGE:")
-            for _, branch, _ in builds_to_query:
+            all_branches_seen = sorted(set(b for _, b, _, _ in builds_to_query))
+            for branch in all_branches_seen:
                 branch_alerts = [a for a in all_alerts.values() if branch in a["branches"]]
                 print(f"  {branch}: {len(branch_alerts)} alerts")
             
             # Show branch-exclusive alerts
-            for _, branch, _ in builds_to_query:
+            all_branches_seen = sorted(set(b for _, b, _, _ in builds_to_query))
+            for branch in all_branches_seen:
                 exclusive = [a for a in all_alerts.values() 
                            if a["branches"] == [branch]]
                 if exclusive:
@@ -362,6 +418,25 @@ def main():
                         print(f"    {a['id']} [{a['severity']}] {a['component']}")
                     if len(exclusive) > 10:
                         print(f"    ... and {len(exclusive) - 10} more")
+
+        # Component stacks (components with many CVEs grouped together)
+        print(f"\n{'='*70}")
+        print("COMPONENT STACKS (most affected first):")
+        by_comp = defaultdict(list)
+        for a in all_alerts.values():
+            by_comp[a["component"]].append(a)
+        stacks = sorted(by_comp.items(), key=lambda x: -len(x[1]))
+        for comp, comp_alerts in stacks[:15]:
+            sevs = defaultdict(int)
+            for a in comp_alerts:
+                sevs[a["severity"]] += 1
+            sev_str = ", ".join(f"{s}: {c}" for s, c in sorted(sevs.items()))
+            cat = comp_alerts[0].get("category", "unknown")
+            print(f"  {comp} — {len(comp_alerts)} CVEs ({sev_str}) [{cat}]")
+            # List CVE IDs for stacks > 5
+            if len(comp_alerts) > 5:
+                ids = sorted(a["id"] for a in comp_alerts)
+                print(f"    {', '.join(ids[:5])}... (+{len(ids)-5} more)")
 
 
 if __name__ == "__main__":
