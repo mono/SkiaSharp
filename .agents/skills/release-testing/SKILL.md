@@ -67,12 +67,13 @@ Release builds flow through a **3-pipeline chain**, each triggered by completion
 ```
 SkiaSharp-Native (devdiv/DevDiv, ID 26493)
     ↓ triggers on completion
-SkiaSharp (devdiv/DevDiv, ID 10789) — managed build
+SkiaSharp (devdiv/DevDiv, ID 10789) — managed build, signing & publishing to internal feed
     ↓ triggers on completion
-SkiaSharp-Tests (devdiv/DevDiv, ID 15756) — tests & signing
+SkiaSharp-Tests (devdiv/DevDiv, ID 15756) — device & unit tests
 ```
 
 All three must complete before packages are available on the internal feed.
+Packages are published to the feed by the `SkiaSharp` pipeline (10789), not by `SkiaSharp-Tests`.
 
 ### Tracking Pipeline Status via GitHub
 
@@ -87,7 +88,17 @@ pipelines (`SkiaSharp`, `SkiaSharp-Tests`) do NOT post commit statuses — use `
 
 ### Tracking Pipeline Status via Azure DevOps CLI
 
-Use `az pipelines` to query each pipeline in the chain and verify trigger relationships:
+The quickest way to check the full pipeline chain is the reusable script:
+
+```bash
+.agents/scripts/pipeline-status.sh release/{version}
+# Or pass a SHA:
+.agents/scripts/pipeline-status.sh {commit-sha}
+```
+
+This outputs all three pipelines with status, trigger relationships, and ADO links.
+
+For manual queries, use `az pipelines` to query each pipeline individually:
 
 ```bash
 # Check the SkiaSharp-Native build status (find latest run on the release branch)
@@ -104,6 +115,27 @@ az pipelines runs list --pipeline-ids 10789 --branch release/{version} \
 az pipelines runs list --pipeline-ids 15756 --branch release/{version} \
   --org https://devdiv.visualstudio.com --project DevDiv \
   --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
+```
+
+### Identifying the Correct Run
+
+Multiple runs may exist on the same branch (retries, new commits). Use the `buildNumber` field
+to match runs across the chain — all pipelines in the same chain share a version-based buildNumber:
+
+```
+buildNumber format: {base}-{label}.{build}+{branch-version}
+Example:            3.119.4-stable.2+3.119.4
+```
+
+To find the correct run for a specific version:
+1. Start with SkiaSharp-Native — find the successful run whose `buildNumber` matches your version
+2. Use that run's `id` to confirm downstream pipelines via `triggerInfo.pipelineId`
+
+```bash
+# Filter runs by buildNumber to find the exact match
+az pipelines runs list --pipeline-ids 10789 --branch release/{version} \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --query "[?contains(buildNumber, '{version}')].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 3
 ```
 
 ### Verifying Trigger Relationships
@@ -136,8 +168,8 @@ essential when multiple runs exist on the same branch (e.g., retries or concurre
 | Pipeline Name | Definition ID | Required | Notes |
 |---------------|---------------|----------|-------|
 | `SkiaSharp-Native` | 26493 | ✅ Must pass | Builds native binaries, reports to GitHub |
-| `SkiaSharp` | 10789 | ✅ Must pass | Builds managed code, triggered by Native |
-| `SkiaSharp-Tests` | 15756 | ✅ Must pass | Tests & signs, publishes to internal feed, triggered by SkiaSharp |
+| `SkiaSharp` | 10789 | ✅ Must pass | Builds managed code, signs & publishes to internal feed, triggered by Native |
+| `SkiaSharp-Tests` | 15756 | ⚠️ Should pass | Device & unit tests, triggered by SkiaSharp — warn user if fails but don't block |
 
 **Ignore:** `SkiaSharp (Public)` — public CI, not used for releases.
 

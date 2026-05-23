@@ -85,14 +85,20 @@ This triggers the CI pipeline chain (2-4 hours total):
 ```
 SkiaSharp-Native (devdiv/DevDiv, ID 26493)              ~60-90 min
     ↓ triggers on completion
-SkiaSharp (devdiv/DevDiv, ID 10789)           ~30-60 min
+SkiaSharp (devdiv/DevDiv, ID 10789)                     ~30-60 min  (managed build, signing & publishing)
     ↓ triggers on completion
-SkiaSharp-Tests (devdiv/DevDiv, ID 15756)     ~15-30 min
+SkiaSharp-Tests (devdiv/DevDiv, ID 15756)               ~15-30 min  (device & unit tests)
 ```
 
 ### Tracking Build Progress
 
-Use `az pipelines` to monitor the chain:
+Use the pipeline status script to check the full chain at once:
+
+```bash
+.agents/scripts/pipeline-status.sh release/{version}
+```
+
+For manual queries, use `az pipelines` to monitor individual pipelines:
 
 ```bash
 # Find the native build for this branch
