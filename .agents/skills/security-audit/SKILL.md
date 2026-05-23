@@ -50,7 +50,7 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
    ├─ Fixed? → Mark clean
    └─ Not fixed? → Flag for action
 5. Check false positives
-6. Query Component Governance alerts from SkiaSharp-Native pipeline (Step 9)
+6. Query Component Governance alerts from SkiaSharp-Native pipeline
    ├─ Get latest build ID (pipeline 26493)
    ├─ Extract CG log IDs from timeline
    ├─ Parse CVEs from representative jobs (alpine, debian, wasm)
@@ -284,75 +284,13 @@ Before flagging, verify the CVE actually affects SkiaSharp:
 
 See [dependencies.md](../../../documentation/dev/dependencies.md#known-false-positives) for details.
 
-### Step 6: Assemble Structured JSON Report
-
-> 🛑 **MANDATORY:** The audit MUST produce a JSON file conforming to [references/report-schema.md](references/report-schema.md). This is the machine-readable output used by dashboards and CI.
-
-Build the JSON object with these top-level keys:
-
-1. **`meta`** — Date, schema version, Skia commit hashes, milestone, upstream verification status
-2. **`summary`** — Counts by status category, total CVEs, highest severity
-3. **`versionVerification`** — One entry per dependency with DEPS commit, verified version, cgmanifest version, match boolean
-4. **`findings`** — Array of finding objects sorted by priority then severity. Each has `dependency`, `status`, `cves[]`, `nonChromeCves[]`, `action`, `notes`
-5. **`nextSteps`** — Prioritized action items with severity, command, and reason
-
-Save as `output/ai/security-audit-{date}.json` in the repo (same pattern as other AI outputs).
-
-### Step 7: Render HTML Report
-
-> 🛑 **MANDATORY:** Always generate the HTML report. The human needs a readable dashboard.
-
-```bash
-python3 .agents/skills/security-audit/scripts/render-security-audit.py \
-  output/ai/security-audit-{date}.json
-```
-
-This produces a self-contained HTML file (Bootstrap 5, no external dependencies except CDN CSS) alongside the JSON. The HTML renders:
-- Summary cards with status counts
-- Collapsible findings with CVE tables, severity badges, and NVD links
-- Version verification table with match/mismatch indicators
-- Skia upstream verification details with commit links
-- Prioritized next steps with severity-coded borders
-
-Present the output path to the user:
-```
-✅ security-audit-2026-04-10.html (45 KB)
-   m132 • 2026-04-10 • 12 CVEs • Highest: HIGH
-   🔴 3 attention · 🆕 2 undiscovered · ⚪ 4 FP · ✅ 5 clean
-```
-
-### Step 8: Present Markdown Summary
-
-After generating JSON and HTML, present a concise markdown summary to the user in the conversation (using the report-template.md format). This is in ADDITION to the JSON+HTML files, not instead of them.
-
-**Priority order (applies equally to Skia core and third-party deps):**
-1. 🔴 User-reported + no PR
-2. ✅ User-reported + PR ready  
-3. 🟡 User-reported + PR needs work
-4. 🆕 Undiscovered CVEs (proactively found, no user-filed issue)
-5. ⚪ False positives
-
-Within each priority level, sort by severity (CRITICAL > HIGH > MEDIUM > LOW).
-
-#### Report quality rules
-
-1. **Skia bump recommendations must target the highest-severity CVE**, not the lowest. If there are HIGH CVEs at m146 and a MEDIUM at m133, recommend m146 as the target, not m133.
-
-2. **Don't include already-closed GitHub issues** in the report unless they are directly relevant to an open vulnerability. If a CVE is fixed and the tracking issue is closed, omit it.
-
-3. **CVEs with NVD version range errors** go in the ⚪ false positive section with the fix commit as evidence — not in the findings section with a "but it's actually fixed" note.
-
-4. **CVEs without a CVSS score** should use the vendor severity rating (e.g., Chromium "High" → HIGH ~8.8) and note that the official CVSS is pending.
-
-5. **"Undiscovered"** means a CVE found proactively by the audit (via NVD/web search) that has no corresponding user-filed GitHub issue. It does NOT mean the CVE is unknown to the world.
-
-## Step 9: Check Component Governance (CG) Alerts
+### Step 6: Check Component Governance (CG) Alerts
 
 > ⚠️ **MANDATORY:** The security audit MUST include CG alerts from the SkiaSharp-Native pipeline.
 > CG scans Docker container images used for native builds and flags CVEs in OS packages,
 > npm dependencies, Rust crates, and NuGet packages used at build time.
 
-### Why This Matters
+#### Why This Matters
 
 CG alerts are **not visible** from GitHub Issues or NVD searches alone. They come from the
 internal Azure DevOps pipeline and flag vulnerabilities in:
@@ -364,7 +302,7 @@ internal Azure DevOps pipeline and flag vulnerabilities in:
 Even though these don't ship in SkiaSharp NuGet packages, they exist in Docker image layers
 and trigger compliance alerts that block releases (partiallySucceeded builds).
 
-### How to Query CG Alerts
+#### How to Query CG Alerts
 
 **Automated script (preferred):**
 
@@ -410,7 +348,7 @@ az devops invoke --area build --resource logs \
   --org https://devdiv.visualstudio.com -o json
 ```
 
-### CG Alert Categories
+#### CG Alert Categories
 
 | Category | Source | Ships in NuGet? | Fix Mechanism |
 |----------|--------|-----------------|---------------|
@@ -420,7 +358,7 @@ az devops invoke --area build --resource logs \
 | Rust crate deps | .NET SDK internals | No | Update .NET SDK |
 | NuGet build deps | Build-time references | No | Update package version |
 
-### Key Files for CG Fixes
+#### Key Files for CG Fixes
 
 | File | Controls |
 |------|----------|
@@ -430,7 +368,7 @@ az devops invoke --area build --resource logs \
 | `scripts/infra/native/linux/docker/bionic/Dockerfile` | Bionic/Android cross-compile |
 | `scripts/infra/native/wasm/docker/Dockerfile` | WASM build container |
 
-### Include in Report
+#### Include in Report
 
 Add a `cgAlerts` section to the JSON report:
 
@@ -469,11 +407,73 @@ Add a `cgAlerts` section to the JSON report:
 }
 ```
 
-### CG Portal Links
+#### CG Portal Links
 
 - **Registration:** https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321
 - **Pipeline:** https://dev.azure.com/devdiv/DevDiv/_build?definitionId=26493
 - **Alert type filter:** Append `?_a=alerts&typeId={typeId}&alerts-view-option=active` to registration URL
+
+### Step 7: Assemble Structured JSON Report
+
+> 🛑 **MANDATORY:** The audit MUST produce a JSON file conforming to [references/report-schema.md](references/report-schema.md). This is the machine-readable output used by dashboards and CI.
+
+Build the JSON object with these top-level keys:
+
+1. **`meta`** — Date, schema version, Skia commit hashes, milestone, upstream verification status
+2. **`summary`** — Counts by status category, total CVEs, highest severity
+3. **`versionVerification`** — One entry per dependency with DEPS commit, verified version, cgmanifest version, match boolean
+4. **`findings`** — Array of finding objects sorted by priority then severity. Each has `dependency`, `status`, `cves[]`, `nonChromeCves[]`, `action`, `notes`
+5. **`nextSteps`** — Prioritized action items with severity, command, and reason
+
+Save as `output/ai/security-audit-{date}.json` in the repo (same pattern as other AI outputs).
+
+### Step 8: Render HTML Report
+
+> 🛑 **MANDATORY:** Always generate the HTML report. The human needs a readable dashboard.
+
+```bash
+python3 .agents/skills/security-audit/scripts/render-security-audit.py \
+  output/ai/security-audit-{date}.json
+```
+
+This produces a self-contained HTML file (Bootstrap 5, no external dependencies except CDN CSS) alongside the JSON. The HTML renders:
+- Summary cards with status counts
+- Collapsible findings with CVE tables, severity badges, and NVD links
+- Version verification table with match/mismatch indicators
+- Skia upstream verification details with commit links
+- Prioritized next steps with severity-coded borders
+
+Present the output path to the user:
+```
+✅ security-audit-2026-04-10.html (45 KB)
+   m132 • 2026-04-10 • 12 CVEs • Highest: HIGH
+   🔴 3 attention · 🆕 2 undiscovered · ⚪ 4 FP · ✅ 5 clean
+```
+
+### Step 9: Present Markdown Summary
+
+After generating JSON and HTML, present a concise markdown summary to the user in the conversation (using the report-template.md format). This is in ADDITION to the JSON+HTML files, not instead of them.
+
+**Priority order (applies equally to Skia core and third-party deps):**
+1. 🔴 User-reported + no PR
+2. ✅ User-reported + PR ready  
+3. 🟡 User-reported + PR needs work
+4. 🆕 Undiscovered CVEs (proactively found, no user-filed issue)
+5. ⚪ False positives
+
+Within each priority level, sort by severity (CRITICAL > HIGH > MEDIUM > LOW).
+
+#### Report quality rules
+
+1. **Skia bump recommendations must target the highest-severity CVE**, not the lowest. If there are HIGH CVEs at m146 and a MEDIUM at m133, recommend m146 as the target, not m133.
+
+2. **Don't include already-closed GitHub issues** in the report unless they are directly relevant to an open vulnerability. If a CVE is fixed and the tracking issue is closed, omit it.
+
+3. **CVEs with NVD version range errors** go in the ⚪ false positive section with the fix commit as evidence — not in the findings section with a "but it's actually fixed" note.
+
+4. **CVEs without a CVSS score** should use the vendor severity rating (e.g., Chromium "High" → HIGH ~8.8) and note that the official CVSS is pending.
+
+5. **"Undiscovered"** means a CVE found proactively by the audit (via NVD/web search) that has no corresponding user-filed GitHub issue. It does NOT mean the CVE is unknown to the world.
 
 ## Handoff
 
