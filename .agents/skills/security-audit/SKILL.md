@@ -307,21 +307,24 @@ and trigger compliance alerts that block releases (partiallySucceeded builds).
 **Automated script (preferred):**
 
 ```bash
-# Get all current CG alerts (auto-discovers latest build, samples all container types)
+# Get all current CG alerts across main + release branches (default)
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py
 
 # JSON output for inclusion in audit report
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --json
+
+# Query only a specific branch
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --branch main
 
 # Query a specific build
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --build-id 14176611
 ```
 
 The script automatically:
-1. Finds the latest completed SkiaSharp-Native build (pipeline 26493)
-2. Identifies representative CG logs (one per container type: alpine, debian11, debian13, bionic, wasm)
-3. Parses and deduplicates all CVEs across container types
-4. Categorizes alerts by source (Alpine sysroot, Debian base, npm tooling, Rust crates, NuGet)
+1. Discovers the latest completed build from main AND all active release/* branches
+2. Identifies representative CG logs per build (one per container type: alpine, debian11, debian13, bionic, wasm)
+3. Parses and deduplicates all CVEs across all builds and container types
+4. Categorizes alerts by source and shows which branches are affected
 
 **Note:** There is no build-independent CG REST API. The `governance.visualstudio.com` service
 does not expose alert data through any documented endpoint. The CG portal UI aggregates from
