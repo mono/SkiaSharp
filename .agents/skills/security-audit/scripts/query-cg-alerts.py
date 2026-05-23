@@ -124,11 +124,11 @@ def get_builds_for_branches(token: str, pipeline_id: int, branches: list[str], t
     return list(matched.values())
 
 
-def get_cg_log_ids(token: str, build_id: int, pipeline_type: str = "native") -> dict[str, tuple[str, int]]:
-    """Get representative CG log IDs from the build timeline.
+def get_cg_log_ids(token: str, build_id: int) -> dict[str, tuple[str, int]]:
+    """Get ALL CG log IDs from the build timeline.
     
-    For 'native' pipeline: samples one per container type (alpine, debian11, etc.)
-    For 'managed' pipeline: samples one per job stage (prepare, build, test, etc.)
+    Returns every successful Component Governance task log — no sampling.
+    For security auditing, we must check all jobs to avoid missing alerts.
     """
     url = (f"{ORG}/{PROJECT}/_apis/build/builds/{build_id}/timeline?api-version=7.1")
     timeline = api_get(token, url)
@@ -138,8 +138,8 @@ def get_cg_log_ids(token: str, build_id: int, pipeline_type: str = "native") -> 
     records = timeline.get("records", [])
     jobs = {r["id"]: r.get("name", "") for r in records}
 
-    # Find all CG tasks with their parent job names
-    cg_logs = {}
+    # Find ALL CG tasks with their parent job names
+    all_logs = {}
     for r in records:
         if "Component Governance" in r.get("name", "") and r.get("log"):
             log_id = r["log"]["id"]
@@ -147,41 +147,9 @@ def get_cg_log_ids(token: str, build_id: int, pipeline_type: str = "native") -> 
             job_name = jobs.get(parent, "unknown")
             result = r.get("result", "")
             if result in ("succeeded", "succeededWithIssues"):
-                cg_logs[job_name] = log_id
+                all_logs[job_name] = (job_name, log_id)
 
-    if pipeline_type == "managed":
-        # For managed pipeline, just pick a few representative jobs
-        representatives = {}
-        for job, log_id in cg_logs.items():
-            jl = job.lower()
-            if "prepare" in jl or "build" in jl:
-                representatives.setdefault("managed-build", (job, log_id))
-            elif "test" in jl or "pack" in jl:
-                representatives.setdefault("managed-test", (job, log_id))
-            else:
-                representatives.setdefault("managed-other", (job, log_id))
-        # If we couldn't categorize, just take up to 3
-        if not representatives:
-            for i, (job, log_id) in enumerate(list(cg_logs.items())[:3]):
-                representatives[f"managed-{i}"] = (job, log_id)
-        return representatives
-
-    # Native pipeline: Pick representative jobs (one per container type for full coverage)
-    representatives = {}
-    for job, log_id in cg_logs.items():
-        jl = job.lower()
-        if "alpine" in jl and "arm64" in jl and "nodeps" not in jl:
-            representatives["alpine"] = (job, log_id)
-        elif "loongarch64" in jl and "alpine" not in jl:
-            representatives.setdefault("debian13", (job, log_id))
-        elif "arm)" in jl and "alpine" not in jl and "bionic" not in jl:
-            representatives.setdefault("debian11", (job, log_id))
-        elif "wasm" in jl and "3.1.56" in job and "simd" not in jl and "thread" not in jl:
-            representatives.setdefault("wasm", (job, log_id))
-        elif "bionic" in jl and "arm64" in jl:
-            representatives.setdefault("bionic", (job, log_id))
-
-    return representatives
+    return all_logs
 
 
 def parse_cg_log(token: str, build_id: int, log_id: int) -> list[dict]:
@@ -276,14 +244,14 @@ def main():
         if not args.quiet:
             print(f"\n--- [{PIPELINES[ptype]['name']}] {branch} (build {build_id}) ---", file=sys.stderr)
 
-        reps = get_cg_log_ids(token, build_id, ptype)
+        reps = get_cg_log_ids(token, build_id)
         if not reps:
             if not args.quiet:
                 print(f"  WARNING: No CG logs found in build {build_id}", file=sys.stderr)
             continue
 
         if not args.quiet:
-            print(f"  Sampling {len(reps)} job types: {', '.join(sorted(reps.keys()))}", file=sys.stderr)
+            print(f"  Checking {len(reps)} CG job(s): {', '.join(sorted(reps.keys())[:5])}{'...' if len(reps) > 5 else ''}", file=sys.stderr)
 
         for category, (job_name, log_id) in sorted(reps.items()):
             if not args.quiet:

@@ -52,8 +52,8 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
 5. Check false positives
 6. Query Component Governance alerts from SkiaSharp-Native AND SkiaSharp pipelines
    ├─ Get latest build IDs (native: 26493, managed: 10789)
-   ├─ Extract CG log IDs from timeline
-   ├─ Parse CVEs from representative jobs (alpine, debian, wasm, managed-build)
+   ├─ Extract ALL CG log IDs from timeline (every job, no sampling)
+   ├─ Parse CVEs from every job's CG log
    └─ Categorize by source (container, toolchain, NuGet)
 7. Assemble structured JSON report (per report-schema.md)
 8. Render HTML from JSON (render-security-audit.py)
@@ -329,8 +329,8 @@ python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --build-id 1417
 
 The script automatically:
 1. Discovers the latest completed build from main AND all active release/* branches for BOTH pipelines
-2. Identifies representative CG logs per build (native: alpine, debian11, debian13, bionic, wasm; managed: build/test stages)
-3. Parses and deduplicates all CVEs across all builds, pipelines, and container types
+2. Identifies ALL CG logs in each build (every job, no sampling — this is security)
+3. Parses and deduplicates all CVEs across all builds, pipelines, and jobs
 4. Categorizes alerts by source and shows "component stacks" (components with many CVEs grouped)
 5. Shows which branches and pipelines are affected
 
