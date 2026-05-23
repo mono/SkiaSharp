@@ -89,71 +89,65 @@ console.log('\n📋 isBaseVersionMatch');
 }
 
 // --- resolveMilestone ---
-console.log('\n📋 resolveMilestone — release branches (specific)');
-assertEqual(resolveMilestone('release/3.119.4', '4.147.0', []), '3.119.4', 'release/3.119.4 → 3.119.4');
-assertEqual(resolveMilestone('release/4.148.0-preview.1', '4.147.0', []), '4.148.0-preview.1', 'release/4.148.0-preview.1 → 4.148.0-preview.1');
-
-console.log('\n📋 resolveMilestone — release branches (servicing .x)');
+console.log('\n📋 resolveMilestone — stable target (preview.0)');
 assertEqual(
-  resolveMilestone('release/3.119.x', '3.119.4', ['3.119.4', '3.119.5-preview.1']),
-  '3.119.4',
-  'release/3.119.x uses VERSIONS.txt from that branch, picks lowest match'
-);
-assertEqual(
-  resolveMilestone('release/3.119.x', '3.119.5', ['3.119.4']),
-  '3.119.5',
-  'release/3.119.x with no matching milestone creates VERSIONS.txt version'
-);
-
-console.log('\n📋 resolveMilestone — main branch');
-// Real-world scenario: VERSIONS.txt=4.147.0, multiple milestones for 4.147.0 train
-assertEqual(
-  resolveMilestone('main', '4.147.0', ['4.147.0-preview.3', '4.147.0-rc.1', '4.147.0', '4.148.0-preview.1', 'Backlog']),
+  resolveMilestone('4.147.0', ['4.147.0-preview.3', '4.147.0-rc.1', '4.147.0', '4.148.0-preview.1', 'Backlog']),
   '4.147.0-preview.3',
   'picks lowest milestone in the 4.147.0 train (preview.3)'
 );
 assertEqual(
-  resolveMilestone('main', '4.147.0', ['4.147.0-rc.1', '4.147.0', '4.148.0-preview.1']),
+  resolveMilestone('4.147.0', ['4.147.0-rc.1', '4.147.0', '4.148.0-preview.1']),
   '4.147.0-rc.1',
   'picks lowest in train when preview is closed (rc.1)'
 );
 assertEqual(
-  resolveMilestone('main', '4.147.0', ['4.147.0', '4.148.0-preview.1']),
+  resolveMilestone('4.147.0', ['4.147.0', '4.148.0-preview.1']),
   '4.147.0',
-  'picks stable milestone when its the only one in the train'
+  'picks stable milestone when it is the only one in the train'
 );
 assertEqual(
-  resolveMilestone('main', '4.147.0', ['4.148.0-preview.1', '4.148.0', 'Backlog']),
+  resolveMilestone('4.147.0', ['4.148.0-preview.1', '4.148.0', 'Backlog']),
   '4.147.0',
   'no milestones matching 4.147.0 base → creates 4.147.0'
 );
 assertEqual(
-  resolveMilestone('main', '4.148.0-preview.2', ['4.148.0-preview.2', '4.148.0-rc.1', '4.148.0']),
-  '4.148.0-preview.2',
-  'prerelease version → exact milestone (preview.2)'
+  resolveMilestone('3.119.4', ['3.119.4', '3.119.5-preview.1']),
+  '3.119.4',
+  'servicing: picks matching base version'
 );
 assertEqual(
-  resolveMilestone('main', '4.148.0-preview.2', ['Backlog']),
-  '4.148.0-preview.2',
-  'prerelease version with no match → creates exact (preview.2)'
+  resolveMilestone('3.119.5', ['3.119.4']),
+  '3.119.5',
+  'servicing: no match → creates exact version'
 );
 assertEqual(
-  resolveMilestone('main', '4.148.0-rc.1', ['4.148.0-preview.2', '4.148.0-rc.1']),
-  '4.148.0-rc.1',
-  'rc version → exact milestone (rc.1)'
-);
-assertEqual(
-  resolveMilestone('main', '4.147.0', ['3.119.x', '4.148.x', 'Backlog']),
+  resolveMilestone('4.147.0', ['3.119.x', '4.148.x', 'Backlog']),
   '4.147.0',
-  'ignores .x milestones and higher versions → creates VERSIONS.txt version'
+  'ignores .x milestones and higher versions → creates base version'
+);
+
+console.log('\n📋 resolveMilestone — specific prerelease');
+assertEqual(
+  resolveMilestone('4.148.0-preview.2', ['4.148.0-preview.2', '4.148.0-rc.1', '4.148.0']),
+  '4.148.0-preview.2',
+  'prerelease → exact milestone (preview.2)'
+);
+assertEqual(
+  resolveMilestone('4.148.0-preview.2', ['Backlog']),
+  '4.148.0-preview.2',
+  'prerelease with no match → creates exact (preview.2)'
+);
+assertEqual(
+  resolveMilestone('4.148.0-rc.1', ['4.148.0-preview.2', '4.148.0-rc.1']),
+  '4.148.0-rc.1',
+  'rc → exact milestone (rc.1)'
 );
 
 console.log('\n📋 resolveMilestone — edge cases');
-assertEqual(resolveMilestone('feature/foo', '4.147.0', ['4.148.0-preview.1']), null, 'unknown branch → null');
-assertEqual(resolveMilestone('main', null, ['4.148.0-preview.1']), null, 'null version → null');
-assertEqual(resolveMilestone('release/foo-bar', '4.147.0', []), null, 'invalid release branch → null');
-assertEqual(resolveMilestone('release/not-a-version', '4.147.0', []), null, 'non-version release branch → null');
-assertEqual(resolveMilestone('main', '3.119.x', ['4.148.0-preview.1']), null, 'wildcard VERSIONS.txt → null');
+assertEqual(resolveMilestone(null, ['4.148.0-preview.1']), null, 'null version → null');
+assertEqual(resolveMilestone('', ['4.148.0-preview.1']), null, 'empty version → null');
+assertEqual(resolveMilestone('not-a-version', ['4.148.0-preview.1']), null, 'invalid version → null');
+assertEqual(resolveMilestone('3.119.x', ['4.148.0-preview.1']), null, 'wildcard version → null');
 
 // --- findOrCreateMilestone ---
 console.log('\n📋 findOrCreateMilestone');

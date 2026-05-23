@@ -46,53 +46,41 @@ function isBaseVersionMatch(milestoneVersion, targetVersion) {
 }
 
 /**
- * Derive the milestone name from a branch name and current version.
+ * Derive the milestone name from the effective version (from pipeline variables).
  *
- * @param {string} baseBranch - The PR's base branch (e.g., "main", "release/3.119.x")
- * @param {string} skiaSharpVersion - Current version from VERSIONS.txt (e.g., "4.147.0")
+ * @param {string} skiaSharpVersion - Effective version (e.g., "4.147.0" or "4.147.0-preview.3")
  * @param {string[]} openMilestones - Titles of all open milestones
  * @returns {string|null} The milestone name to assign, or null if undetermined
  */
-function resolveMilestone(baseBranch, skiaSharpVersion, openMilestones) {
-  // Specific release branches (not servicing) use the branch name directly
-  if (baseBranch.startsWith('release/') && !baseBranch.endsWith('.x')) {
-    const name = baseBranch.slice('release/'.length);
-    return parseVersion(name) ? name : null;
-  }
+function resolveMilestone(skiaSharpVersion, openMilestones) {
+  if (!skiaSharpVersion) return null;
 
-  // For main and release/*.x branches, use pipeline variables to find the target
-  if (baseBranch === 'main' || (baseBranch.startsWith('release/') && baseBranch.endsWith('.x'))) {
-    if (!skiaSharpVersion) return null;
+  const currentVersion = parseVersion(skiaSharpVersion);
+  if (!currentVersion) return null;
+  if (currentVersion.patch === -1) return null;
 
-    const currentVersion = parseVersion(skiaSharpVersion);
-    if (!currentVersion) return null;
-    if (currentVersion.patch === -1) return null;
-
-    // If the version has a specific prerelease (e.g., preview.3, rc.1),
-    // the milestone must be that exact version — no searching.
-    if (currentVersion.prerelease) {
-      return skiaSharpVersion;
-    }
-
-    // Stable target (preview.0) — find lowest open milestone in the same train
-    const candidates = openMilestones
-      .map(title => ({ title, parsed: parseVersion(title) }))
-      .filter(({ parsed }) => {
-        if (!parsed) return false;
-        if (parsed.patch === -1) return false;
-        return isBaseVersionMatch(parsed, currentVersion);
-      })
-      .sort((a, b) => compareVersions(a.parsed, b.parsed));
-
-    if (candidates.length > 0) {
-      return candidates[0].title;
-    }
-
-    // No matching milestone exists — create the base version
+  // If the version has a specific prerelease (e.g., preview.3, rc.1),
+  // the milestone must be that exact version — no searching.
+  if (currentVersion.prerelease) {
     return skiaSharpVersion;
   }
 
-  return null;
+  // Stable target (preview.0) — find lowest open milestone in the same train
+  const candidates = openMilestones
+    .map(title => ({ title, parsed: parseVersion(title) }))
+    .filter(({ parsed }) => {
+      if (!parsed) return false;
+      if (parsed.patch === -1) return false;
+      return isBaseVersionMatch(parsed, currentVersion);
+    })
+    .sort((a, b) => compareVersions(a.parsed, b.parsed));
+
+  if (candidates.length > 0) {
+    return candidates[0].title;
+  }
+
+  // No matching milestone exists — create the base version
+  return skiaSharpVersion;
 }
 
 /**

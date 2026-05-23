@@ -81,8 +81,7 @@ jobs:
               return;
             }
 
-            const baseBranch = pr.base.ref;
-            core.info(`PR #${pr.number} merged to ${baseBranch}`);
+            core.info(`PR #${pr.number} merged to ${pr.base.ref}`);
 
             // --- Read version from pipeline variables ---
             let skiaSharpVersion = null;
@@ -105,13 +104,12 @@ jobs:
 
             // --- Resolve milestone name ---
             const milestoneName = resolveMilestone(
-              baseBranch,
               skiaSharpVersion,
               openMilestones.map(m => m.title)
             );
 
             if (!milestoneName) {
-              core.warning(`Could not determine milestone for branch "${baseBranch}"`);
+              core.warning(`Could not determine milestone (version: ${skiaSharpVersion})`);
               return;
             }
 
