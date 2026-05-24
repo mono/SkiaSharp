@@ -82,6 +82,31 @@
   <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Findings</h5>
   <div id="findings-container"></div>
 
+  <!-- Component Governance Alerts -->
+  <div class="card mb-4" id="cg-section" style="display:none;">
+    <div class="card-header bg-white d-flex align-items-center">
+      <i class="bi bi-shield-exclamation me-2"></i><strong>Component Governance (Build Pipeline)</strong>
+      <span class="ms-auto" id="cg-badge"></span>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-warning py-2 small mb-3">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        <strong>Build-chain vulnerabilities matter.</strong> A compromised build toolchain can inject malicious code into shipped artifacts even if the vulnerability isn't in shipped source.
+      </div>
+      <div class="row g-3 mb-3" id="cg-severity-cards"></div>
+      <div id="cg-categories"></div>
+      <div id="cg-high-alerts" style="display:none;">
+        <h6 class="mt-3 text-danger"><i class="bi bi-exclamation-octagon me-1"></i>High Severity Alerts</h6>
+        <table class="table table-sm cve-table" id="cg-high-table">
+          <thead><tr><th>CVE/Advisory</th><th>Component</th><th>Category</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="text-muted small mt-3" id="cg-note"></div>
+      <div class="text-muted small" id="cg-pipelines"></div>
+    </div>
+  </div>
+
   <!-- Next Steps -->
   <div class="card mb-4">
     <div class="card-header bg-white"><i class="bi bi-list-check me-2"></i><strong>Next Steps</strong></div>
@@ -227,8 +252,18 @@ function renderFinding(f, idx) {
   if (f.currentVersion) body += `<tr><th>Current</th><td>${esc(f.currentVersion)}</td></tr>`;
   if (f.fixVersion) body += `<tr><th>Min Fix</th><td>${esc(f.fixVersion)}</td></tr>`;
   if (f.latestVersion) body += `<tr><th>Latest</th><td>${esc(f.latestVersion)}</td></tr>`;
-  if (f.issues && f.issues.length) body += `<tr><th>Issues</th><td>${f.issues.map(i => `<a href="https://github.com/mono/SkiaSharp/issues/${i}" target="_blank">#${i}</a>`).join(', ')}</td></tr>`;
-  if (f.prs && f.prs.length) body += `<tr><th>PRs</th><td>${f.prs.map(p => `<a href="https://github.com/mono/SkiaSharp/pull/${p}" target="_blank">#${p}</a>`).join(', ')}</td></tr>`;
+  if (f.issues && f.issues.length) body += `<tr><th>Issues</th><td>${f.issues.map(i => {
+      const num = typeof i === 'object' ? i.number : i;
+      const repo = (typeof i === 'object' && i.repo) ? i.repo : 'mono/SkiaSharp';
+      const state = (typeof i === 'object' && i.state) ? ` (${i.state.toLowerCase()})` : '';
+      return `<a href="https://github.com/${repo}/issues/${num}" target="_blank">#${num}</a>${state}`;
+    }).join(', ')}</td></tr>`;
+  if (f.prs && f.prs.length) body += `<tr><th>PRs</th><td>${f.prs.map(p => {
+      const num = typeof p === 'object' ? p.number : p;
+      const repo = (typeof p === 'object' && p.repo) ? p.repo : 'mono/SkiaSharp';
+      const title = (typeof p === 'object' && p.title) ? ` &mdash; ${esc(p.title)}` : '';
+      return `<a href="https://github.com/${repo}/pull/${num}" target="_blank">#${num}</a>${title}`;
+    }).join('<br>')}</td></tr>`;
   body += `</tbody></table>`;
 
   // Chrome CVEs
@@ -301,6 +336,75 @@ function renderUpstream(meta) {
   </tbody></table>`;
 }
 
+function renderCgAlerts(cg) {
+  if (!cg || !cg.totalAlerts) return;
+  const section = document.getElementById('cg-section');
+  section.style.display = '';
+
+  // Badge
+  const badge = document.getElementById('cg-badge');
+  const highCount = (cg.bySeverity || {}).High || 0;
+  const totalCount = cg.totalAlerts || 0;
+  badge.innerHTML = `<span class="badge bg-${highCount > 0 ? 'danger' : 'warning'}">${totalCount} alerts</span>`;
+
+  // Severity cards
+  const sevCards = document.getElementById('cg-severity-cards');
+  const sevData = cg.bySeverity || {};
+  const sevEntries = [
+    ['High', sevData.High || 0, 'danger', 'exclamation-octagon'],
+    ['Medium', sevData.Medium || 0, 'warning', 'exclamation-triangle'],
+    ['Low', sevData.Low || 0, 'secondary', 'info-circle'],
+  ];
+  sevCards.innerHTML = sevEntries.map(([label, count, color, icon]) => `
+    <div class="col-4">
+      <div class="card text-center p-2">
+        <div class="text-${color}"><i class="bi bi-${icon}"></i></div>
+        <div class="fs-4 fw-bold">${count}</div>
+        <div class="text-muted small">${label}</div>
+      </div>
+    </div>`).join('');
+
+  // Categories
+  const catEl = document.getElementById('cg-categories');
+  const cats = cg.categories || [];
+  catEl.innerHTML = `<table class="table table-sm cve-table mb-0">
+    <thead><tr><th>Source</th><th>Alerts</th><th>Severity</th><th>Fix</th><th>Affected Jobs</th></tr></thead>
+    <tbody>${cats.map(c => `<tr>
+      <td><strong>${esc(c.source)}</strong></td>
+      <td><span class="badge bg-secondary">${c.alertCount}</span></td>
+      <td class="${sevClass(c.severity)}">${esc(c.severity)}</td>
+      <td class="small">${esc(c.fix)}</td>
+      <td class="small text-muted">${(c.affectedJobs||[]).join(', ')}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+
+  // High alerts table
+  const highAlerts = cg.highAlerts || [];
+  if (highAlerts.length > 0) {
+    const highSection = document.getElementById('cg-high-alerts');
+    highSection.style.display = '';
+    const tbody = document.querySelector('#cg-high-table tbody');
+    tbody.innerHTML = highAlerts.map(a => `<tr>
+      <td><a href="https://nvd.nist.gov/vuln/detail/${esc(a.id)}" target="_blank" class="sev-high">${esc(a.id)}</a></td>
+      <td>${esc(a.component)}</td>
+      <td class="small text-muted">${esc(a.category)}</td>
+    </tr>`).join('');
+  }
+
+  // Note
+  if (cg.note) {
+    document.getElementById('cg-note').innerHTML = `<i class="bi bi-info-circle me-1"></i>${esc(cg.note)}`;
+  }
+
+  // Pipelines
+  const pipes = cg.pipelines || [];
+  if (pipes.length > 0) {
+    document.getElementById('cg-pipelines').innerHTML = `<i class="bi bi-gear me-1"></i>Scanned: ${pipes.map(p =>
+      `<a href="https://dev.azure.com/devdiv/DevDiv/_build?definitionId=${p.id}" target="_blank">${esc(p.name)}</a>`
+    ).join(', ')}`;
+  }
+}
+
 // Boot
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof DATA === 'undefined') { document.body.innerHTML = '<p class="p-4 text-danger">No DATA found. JSON not injected.</p>'; return; }
@@ -314,6 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('findings-container');
   container.innerHTML = d.findings.map((f, i) => renderFinding(f, i)).join('');
   renderNextSteps(d.nextSteps);
+  if (d.cgAlerts) renderCgAlerts(d.cgAlerts);
   renderUpstream(d.meta);
 });
 </script>
