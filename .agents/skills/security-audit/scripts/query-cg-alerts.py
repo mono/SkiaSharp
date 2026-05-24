@@ -32,7 +32,7 @@ Usage:
 
 Output:
   Default: JSON with every alert fully enumerated (id, component, severity,
-  category, source jobs, branches, pipelines). Designed for AI consumption.
+  source jobs, branches, pipelines). Designed for AI consumption.
   With --text: grouped listing with all CVEs shown per component.
 """
 
@@ -184,47 +184,6 @@ def parse_cg_log(token: str, build_id: int, log_id: int) -> list[dict]:
     return alerts
 
 
-def categorize_alert(component: str, source_jobs: list[str]) -> str:
-    """Derive category from the job context and component format.
-    
-    Uses job names (where the alert was found) as the primary signal,
-    falling back to component string patterns only when needed.
-    This approach is resilient to new packages/versions appearing.
-    """
-    # OS-packaged components are labeled "Distro:Version:package" by CG
-    distro_match = re.match(r"^([\w]+):(\d+):", component)
-    
-    if distro_match:
-        distro = distro_match.group(1)  # e.g., "Debian"
-        version = distro_match.group(2)  # e.g., "12", "13"
-        
-        # Check if it came from an alpine job — those "Debian:12:" entries
-        # are actually Alpine sysroot packages (CG mislabels them)
-        alpine_jobs = [s for s in source_jobs if "alpine" in s.lower()]
-        if alpine_jobs:
-            return f"Alpine sysroot (from {distro} {version} label)"
-        
-        return f"{distro} {version} base image"
-    
-    # NuGet packages (Microsoft.*, or other known .NET package patterns)
-    if re.match(r"^(Microsoft\.|System\.|NuGet\.|WindowsAppSDK)", component):
-        return "NuGet dependency"
-    
-    # Non-distro packages: categorize by job context
-    # If found only in "Prepare Build" or "Merge" jobs (not platform-specific),
-    # it's a toolchain/SDK dependency
-    platform_keywords = ["linux", "android", "ios", "wasm", "win", "angle",
-                         "mac", "tizen", "nano", "catalyst"]
-    platform_jobs = [s for s in source_jobs 
-                     if any(x in s.lower() for x in platform_keywords)]
-    non_platform_jobs = [s for s in source_jobs if s not in platform_jobs]
-    
-    if non_platform_jobs and not platform_jobs:
-        return "SDK/toolchain dependency"
-    
-    return "Build toolchain dependency"
-
-
 def main():
     parser = argparse.ArgumentParser(description="Query CG alerts for SkiaSharp pipelines")
     parser.add_argument("--build-id", type=int, help="Specific build ID (skips branch discovery)")
@@ -320,14 +279,6 @@ def main():
                     if PIPELINES[ptype]["name"] not in all_alerts[key]["pipelines"]:
                         all_alerts[key]["pipelines"].append(PIPELINES[ptype]["name"])
 
-    # Categorize based on job context (source) and component format.
-    # We use the job name the alert was found in — this is stable regardless of
-    # which packages or versions appear in the future.
-    for alert in all_alerts.values():
-        comp = alert["component"]
-        sources = alert["sources"]
-        alert["category"] = categorize_alert(comp, sources)
-
     # Output — always structured for AI consumption.
     # Default is JSON since this script is consumed by the security-audit skill.
     # Use --text for a human-readable summary.
@@ -342,21 +293,6 @@ def main():
                 for sev in ["Critical", "High", "Medium", "Low"]
                 if any(a["severity"] == sev for a in all_alerts.values())
             },
-            "byCategory": {
-                cat: {
-                    "count": len(alerts),
-                    "severities": dict(sorted(
-                        ((s, len([a for a in alerts if a["severity"] == s]))
-                         for s in set(a["severity"] for a in alerts)),
-                        key=lambda x: {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}.get(x[0], 9)
-                    ))
-                }
-                for cat, alerts in sorted(
-                    ((cat, [a for a in all_alerts.values() if a["category"] == cat])
-                     for cat in set(a["category"] for a in all_alerts.values())),
-                    key=lambda x: -x[1].__len__()
-                )
-            },
             "alerts": sorted(all_alerts.values(), key=lambda a: (
                 {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}.get(a["severity"], 9),
                 a["component"],
@@ -365,7 +301,7 @@ def main():
         }
         print(json.dumps(output, indent=2))
     else:
-        # Text mode: full listing, nothing truncated
+        # Text mode: full listing, grouped by component
         branches_str = ", ".join(sorted(set(b for _, b, _, _ in builds_to_query)))
         pipelines_str = ", ".join(pi["name"] for _, pi in pipelines_to_query)
         print(f"CG ALERTS — {pipelines_str}")
@@ -373,30 +309,21 @@ def main():
         print(f"Total: {len(all_alerts)} unique alerts")
         print()
 
-        # Group by category, then component, list ALL CVEs
-        by_cat = defaultdict(list)
+        # Group by component, list ALL CVEs
+        by_comp = defaultdict(list)
         for a in all_alerts.values():
-            by_cat[a["category"]].append(a)
+            by_comp[a["component"]].append(a)
 
-        for cat in sorted(by_cat.keys()):
-            cat_alerts = by_cat[cat]
-            print(f"## {cat} ({len(cat_alerts)} alerts)")
-            
-            # Group by component
-            by_comp = defaultdict(list)
-            for a in cat_alerts:
-                by_comp[a["component"]].append(a)
-            
-            for comp in sorted(by_comp.keys()):
-                comp_alerts = sorted(by_comp[comp], key=lambda a: a["id"])
-                sevs = set(a["severity"] for a in comp_alerts)
-                branches = set()
-                for a in comp_alerts:
-                    branches.update(a["branches"])
-                print(f"  {comp} [{', '.join(sorted(sevs))}] (branches: {', '.join(sorted(branches))})")
-                for a in comp_alerts:
-                    print(f"    - {a['id']} ({a['severity']})")
-            print()
+        for comp in sorted(by_comp.keys()):
+            comp_alerts = sorted(by_comp[comp], key=lambda a: a["id"])
+            sevs = set(a["severity"] for a in comp_alerts)
+            branches = set()
+            for a in comp_alerts:
+                branches.update(a["branches"])
+            print(f"  {comp} [{', '.join(sorted(sevs))}] (branches: {', '.join(sorted(branches))})")
+            for a in comp_alerts:
+                print(f"    - {a['id']} ({a['severity']})")
+        print()
 
 
 if __name__ == "__main__":
