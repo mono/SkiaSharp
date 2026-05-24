@@ -32,6 +32,8 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Which dependencies to audit, cgmanifest format, known false positives, Skia-specific tracking notes
 - **[references/report-template.md](references/report-template.md)** — Report format templates (markdown)
 - **[references/report-schema.md](references/report-schema.md)** — JSON schema for structured output
+- **[references/security-audit-schema.json](references/security-audit-schema.json)** — Machine-readable JSON Schema (Draft 2020-12)
+- **[scripts/validate-security-audit.py](scripts/validate-security-audit.py)** — Validates report JSON against schema + semantic checks
 - **[scripts/render-security-audit.py](scripts/render-security-audit.py)** — Renders JSON → standalone HTML
 - **[scripts/viewer.html](scripts/viewer.html)** — HTML template (Bootstrap 5)
 
@@ -56,8 +58,9 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
    ├─ Parse CVEs from every job's CG log
    └─ Categorize by source (container, toolchain, NuGet)
 7. Assemble structured JSON report (per report-schema.md)
-8. Render HTML from JSON (render-security-audit.py)
-9. Present markdown summary to user
+8. Validate JSON (validate-security-audit.py) — fix any errors before rendering
+9. Render HTML from JSON (render-security-audit.py)
+10. Present markdown summary to user
 ```
 
 ### Step 1: Search Issues & PRs
@@ -451,7 +454,19 @@ Build the JSON object with these top-level keys:
 
 Save as `output/ai/security-audit-{date}.json` in the repo (same pattern as other AI outputs).
 
-### Step 8: Render HTML Report
+### Step 8: Validate Report
+
+> 🛑 **MANDATORY:** Always validate before rendering. Fix any errors reported.
+
+```bash
+python3 .agents/skills/security-audit/scripts/validate-security-audit.py \
+  output/ai/security-audit-{date}.json
+```
+
+Exit codes: 0=valid, 1=fixable errors (fix and retry), 2=fatal.
+Warnings are informational — errors must be fixed before proceeding.
+
+### Step 9: Render HTML Report
 
 > 🛑 **MANDATORY:** Always generate the HTML report. The human needs a readable dashboard.
 

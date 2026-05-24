@@ -353,8 +353,42 @@ function renderCgAlerts(cg) {
       </div>
     </div>`).join('');
 
+  // Normalize alerts from different schema versions:
+  // v1: cg.allAlerts = [{id, component, severity, paths, pipelines, branches}]
+  // v2: cg.uniqueCVEs = [{id, component, severity, source}] + cg.categories = [{source, components, ...}]
+  let allAlerts = cg.allAlerts || [];
+  if (allAlerts.length === 0 && cg.uniqueCVEs) {
+    // Build allAlerts from uniqueCVEs + categories
+    allAlerts = cg.uniqueCVEs.map(cve => ({
+      id: cve.id,
+      component: cve.component + (cve.version ? ' ' + cve.version : ''),
+      severity: cve.severity,
+      paths: cve.paths || [],
+      pipelines: cve.pipelines || [],
+      branches: cve.branches || cg.branches || [],
+      source: cve.source || ''
+    }));
+  }
+  if (allAlerts.length === 0 && cg.categories) {
+    // Fallback: synthesize from categories if no flat list exists
+    cg.categories.forEach(cat => {
+      (cat.components || []).forEach(comp => {
+        for (let i = 0; i < (comp.cveCount || 1); i++) {
+          allAlerts.push({
+            id: `${comp.name}@${comp.version} (${i+1}/${comp.cveCount || 1})`,
+            component: `${comp.name} ${comp.version || ''}`.trim(),
+            severity: cat.severity || 'Medium',
+            paths: [],
+            pipelines: [],
+            branches: cg.branches || [],
+            source: cat.source || ''
+          });
+        }
+      });
+    });
+  }
+
   // Group alerts by component, render as collapsible cards
-  const allAlerts = cg.allAlerts || [];
   if (allAlerts.length > 0) {
     const byComp = {};
     allAlerts.forEach(a => {
