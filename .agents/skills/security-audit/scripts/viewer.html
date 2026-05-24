@@ -160,7 +160,8 @@ function renderOverview(vers, findings, cgAlerts) {
       const allCves = [...(f.cves||[]), ...(f.nonChromeCves||[])];
       const sevOrd = { Critical: 0, High: 1, Medium: 2, Low: 3 };
       allCves.forEach(c => {
-        if (!maxSev || (sevOrd[c.severity] ?? 9) < (sevOrd[maxSev] ?? 9)) maxSev = c.severity;
+        const norm = (c.severity||'').charAt(0).toUpperCase() + (c.severity||'').slice(1).toLowerCase();
+        if (!maxSev || (sevOrd[norm] ?? 9) < (sevOrd[maxSev] ?? 9)) maxSev = norm;
       });
     }
     return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1, isCg: false, cgSeverity: maxSev };
@@ -226,7 +227,8 @@ function renderOverview(vers, findings, cgAlerts) {
     let latest = v.latestVersion || '';
     let sevBadge = '<span class="text-muted">—</span>';
     if (v.cgSeverity) {
-      sevBadge = `<span class="${sevClass(v.cgSeverity)}">${esc(v.cgSeverity)}</span>`;
+      const normSev = v.cgSeverity.charAt(0).toUpperCase() + v.cgSeverity.slice(1).toLowerCase();
+      sevBadge = `<span class="${sevClass(v.cgSeverity)}">${esc(normSev)}</span>`;
     }
     if (v.f) {
       const [label, cls] = STATUS_LABELS[v.f.status] || ['?', ''];
