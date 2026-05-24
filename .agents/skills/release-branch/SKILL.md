@@ -12,7 +12,9 @@ description: >
 
 Create release branches for SkiaSharp versions.
 
-⚠️ **NO UNDO:** This is step 1 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is **Step 1 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+
+**Pipeline:** **Step 1 (this skill)** → [Step 2: release-status](../release-status/SKILL.md) → [Step 3: release-testing](../release-testing/SKILL.md) → [Step 4: release-publish](../release-publish/SKILL.md)
 
 ## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
 
@@ -80,7 +82,18 @@ For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-p
 git push -u origin release/{version}
 ```
 
-This triggers CI build (2-4 hours).
+This triggers the CI pipeline chain (2-4 hours total):
+
+```
+SkiaSharp-Native → SkiaSharp → SkiaSharp-Tests
+   (~60-90 min)    (~30-60 min)   (~15-30 min)
+```
+
+Use the **release-status** skill to track build progress. Quick check:
+
+```bash
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+```
 
 ---
 

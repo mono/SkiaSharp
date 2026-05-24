@@ -21,7 +21,9 @@ description: >
 
 Verify SkiaSharp packages work correctly before publishing.
 
-⚠️ **NO UNDO:** This is step 2 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is **Step 3 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+
+**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → [Step 2: release-status](../release-status/SKILL.md) → **Step 3 (this skill)** → [Step 4: release-publish](../release-publish/SKILL.md)
 
 ## CRITICAL: ANY FAIL IS TOTAL FAIL
 
@@ -58,25 +60,19 @@ When identifying which release branch to test, you **MUST** use semver ordering,
 
 ## Step 1: Check CI Status
 
-Before testing, verify CI builds have completed. Check commit statuses on the release branch head:
+Before testing, verify CI builds have completed using the **release-status** skill:
 
 ```bash
-gh api "repos/mono/SkiaSharp/commits/{sha}/statuses" --jq '.[] | "\(.context) | \(.state) | \(.description // "no desc") | \(.created_at)"'
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-### Required Pipelines
+**Prerequisite:** The `SkiaSharp` pipeline (ID 10789) must have completed successfully — this is
+the pipeline that signs and publishes packages to the internal feed.
 
-| Pipeline | Required | Notes |
-|----------|----------|-------|
-| `SkiaSharp-Native` | ✅ Must pass | Builds native binaries |
-| `SkiaSharp` | ⚠️ May not exist publically | Builds managed code & publishes packages |
-| `SkiaSharp-Tests` | ⚠️ May fail or not exist publically | Sometimes flaky on release branches - warn user but don't block |
+`SkiaSharp-Tests` (ID 15756) should pass but does not block testing/publishing.
 
-**Ignore:** `SkiaSharp (Public)` — public CI, not used for releases.
-
-### Understanding Multiple Statuses
-
-The API returns ALL statuses chronologically. A pipeline may have multiple entries due to retries/rebuilds. Always use the **most recent** status (newest timestamp) for each pipeline.
+See the [release-status skill](../release-status/SKILL.md) for full pipeline chain documentation,
+manual queries, and troubleshooting.
 
 ### Extracting NuGet Version
 
