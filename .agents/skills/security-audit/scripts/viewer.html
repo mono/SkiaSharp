@@ -173,8 +173,8 @@ function renderOverview(vers, findings, cgAlerts) {
       const verMatch = comp.match(/^(.+?)\s+([\d][\w.\-+:~]*)$/);
       const compName = verMatch ? verMatch[1] : comp;
       const compVersion = verMatch ? verMatch[2] : '';
-      // Map CG severity to finding status
-      const statusMap = { Critical: 'needs_attention', High: 'needs_attention', Medium: 'undiscovered', Low: 'clean' };
+      // Map CG severity to finding status — all CVEs need attention, severity determines urgency
+      const statusMap = { Critical: 'needs_attention', High: 'needs_attention', Medium: 'undiscovered', Low: 'undiscovered' };
       enriched.push({
         name: compName,
         source: 'CG (Build Pipeline)',
