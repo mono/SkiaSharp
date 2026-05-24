@@ -91,12 +91,8 @@
     </div>
     <div class="card-body">
       <div class="row g-3 mb-3" id="cg-severity-cards"></div>
-      <h6 class="mt-3"><i class="bi bi-exclamation-octagon me-1"></i>All Alerts</h6>
-      <table class="table table-sm cve-table" id="cg-all-table">
-        <thead><tr><th>CVE/Advisory</th><th>Severity</th><th>Component</th><th>Found At</th><th>Pipelines</th><th>Branches</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <div class="text-muted small" id="cg-pipelines"></div>
+      <div id="cg-components"></div>
+      <div class="text-muted small mt-3" id="cg-pipelines"></div>
     </div>
   </div>
 
@@ -357,18 +353,56 @@ function renderCgAlerts(cg) {
       </div>
     </div>`).join('');
 
-  // ALL alerts table — no filtering, no editorial decisions
-  const allAlerts = cg.allAlerts || cg.highAlerts || [];
+  // Group alerts by component, render as collapsible cards
+  const allAlerts = cg.allAlerts || [];
   if (allAlerts.length > 0) {
-    const tbody = document.querySelector('#cg-all-table tbody');
-    tbody.innerHTML = allAlerts.map(a => `<tr>
-      <td><a href="https://nvd.nist.gov/vuln/detail/${esc(a.id)}" target="_blank" class="${sevClass(a.severity)}">${esc(a.id)}</a></td>
-      <td class="${sevClass(a.severity)}">${esc(a.severity)}</td>
-      <td>${esc(a.component)}</td>
-      <td class="small text-muted">${(a.paths||[]).map(p => `<code>${esc(p)}</code>`).join('<br>') || '—'}</td>
-      <td class="small text-muted">${(a.pipelines||[]).join(', ')}</td>
-      <td class="small text-muted">${(a.branches||[]).join(', ')}</td>
-    </tr>`).join('');
+    const byComp = {};
+    allAlerts.forEach(a => {
+      const key = a.component;
+      if (!byComp[key]) byComp[key] = { component: key, alerts: [], paths: new Set(), pipelines: new Set(), branches: new Set() };
+      byComp[key].alerts.push(a);
+      (a.paths || []).forEach(p => byComp[key].paths.add(p));
+      (a.pipelines || []).forEach(p => byComp[key].pipelines.add(p));
+      (a.branches || []).forEach(b => byComp[key].branches.add(b));
+    });
+
+    // Sort: highest severity first, then by alert count desc
+    const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    const groups = Object.values(byComp).sort((a, b) => {
+      const aMax = Math.min(...a.alerts.map(x => sevOrder[x.severity] ?? 9));
+      const bMax = Math.min(...b.alerts.map(x => sevOrder[x.severity] ?? 9));
+      return aMax !== bMax ? aMax - bMax : b.alerts.length - a.alerts.length;
+    });
+
+    const container = document.getElementById('cg-components');
+    container.innerHTML = groups.map((g, idx) => {
+      const maxSev = g.alerts.reduce((best, a) => (sevOrder[a.severity] ?? 9) < (sevOrder[best] ?? 9) ? a.severity : best, 'Low');
+      const collapseId = `cg-comp-${idx}`;
+      const cveRows = g.alerts.map(a =>
+        `<tr><td><a href="https://nvd.nist.gov/vuln/detail/${esc(a.id)}" target="_blank">${esc(a.id)}</a></td><td class="${sevClass(a.severity)}">${esc(a.severity)}</td></tr>`
+      ).join('');
+      const pathList = [...g.paths].sort().map(p => `<code class="small d-block">${esc(p)}</code>`).join('');
+      return `
+        <div class="card mb-2">
+          <div class="card-header bg-white finding-header d-flex align-items-center py-2" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+            <span class="status-pill ${sevClass(maxSev)} me-2" style="font-size:0.7rem;padding:1px 6px;">${esc(maxSev)}</span>
+            <strong class="me-2">${esc(g.component)}</strong>
+            <span class="badge bg-secondary me-2">${g.alerts.length} CVE${g.alerts.length > 1 ? 's' : ''}</span>
+            <span class="text-muted small me-auto">${[...g.branches].join(', ')}</span>
+            <i class="bi bi-chevron-down ms-2"></i>
+          </div>
+          <div class="collapse" id="${collapseId}">
+            <div class="card-body py-2">
+              ${pathList ? `<div class="mb-2"><strong class="small">Found at:</strong><br>${pathList}</div>` : ''}
+              <table class="table table-sm cve-table mb-2">
+                <thead><tr><th>CVE/Advisory</th><th>Severity</th></tr></thead>
+                <tbody>${cveRows}</tbody>
+              </table>
+              <div class="text-muted small">Pipelines: ${[...g.pipelines].join(', ')}</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   // Pipelines
