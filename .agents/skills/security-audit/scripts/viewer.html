@@ -89,20 +89,14 @@
       <span class="ms-auto" id="cg-badge"></span>
     </div>
     <div class="card-body">
-      <div class="alert alert-warning py-2 small mb-3">
-        <i class="bi bi-exclamation-triangle me-1"></i>
-        <strong>Build-chain vulnerabilities matter.</strong> A compromised build toolchain can inject malicious code into shipped artifacts even if the vulnerability isn't in shipped source.
-      </div>
       <div class="row g-3 mb-3" id="cg-severity-cards"></div>
+      <h6 class="mt-3"><i class="bi bi-list-ul me-1"></i>By Category</h6>
       <div id="cg-categories"></div>
-      <div id="cg-high-alerts" style="display:none;">
-        <h6 class="mt-3 text-danger"><i class="bi bi-exclamation-octagon me-1"></i>High Severity Alerts</h6>
-        <table class="table table-sm cve-table" id="cg-high-table">
-          <thead><tr><th>CVE/Advisory</th><th>Component</th><th>Category</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="text-muted small mt-3" id="cg-note"></div>
+      <h6 class="mt-3"><i class="bi bi-exclamation-octagon me-1"></i>All Alerts</h6>
+      <table class="table table-sm cve-table" id="cg-all-table">
+        <thead><tr><th>CVE/Advisory</th><th>Severity</th><th>Component</th><th>Category</th><th>Pipelines</th><th>Branches</th></tr></thead>
+        <tbody></tbody>
+      </table>
       <div class="text-muted small" id="cg-pipelines"></div>
     </div>
   </div>
@@ -367,33 +361,28 @@ function renderCgAlerts(cg) {
   // Categories
   const catEl = document.getElementById('cg-categories');
   const cats = cg.categories || [];
-  catEl.innerHTML = `<table class="table table-sm cve-table mb-0">
-    <thead><tr><th>Source</th><th>Alerts</th><th>Severity</th><th>Fix</th><th>Affected Jobs</th></tr></thead>
+  catEl.innerHTML = `<table class="table table-sm cve-table mb-3">
+    <thead><tr><th>Source</th><th>Alerts</th><th>Severity</th><th>Affected Jobs</th></tr></thead>
     <tbody>${cats.map(c => `<tr>
       <td><strong>${esc(c.source)}</strong></td>
       <td><span class="badge bg-secondary">${c.alertCount}</span></td>
       <td class="${sevClass(c.severity)}">${esc(c.severity)}</td>
-      <td class="small">${esc(c.fix)}</td>
       <td class="small text-muted">${(c.affectedJobs||[]).join(', ')}</td>
     </tr>`).join('')}</tbody>
   </table>`;
 
-  // High alerts table
-  const highAlerts = cg.highAlerts || [];
-  if (highAlerts.length > 0) {
-    const highSection = document.getElementById('cg-high-alerts');
-    highSection.style.display = '';
-    const tbody = document.querySelector('#cg-high-table tbody');
-    tbody.innerHTML = highAlerts.map(a => `<tr>
-      <td><a href="https://nvd.nist.gov/vuln/detail/${esc(a.id)}" target="_blank" class="sev-high">${esc(a.id)}</a></td>
+  // ALL alerts table — no filtering, no editorial decisions
+  const allAlerts = cg.allAlerts || cg.highAlerts || [];
+  if (allAlerts.length > 0) {
+    const tbody = document.querySelector('#cg-all-table tbody');
+    tbody.innerHTML = allAlerts.map(a => `<tr>
+      <td><a href="https://nvd.nist.gov/vuln/detail/${esc(a.id)}" target="_blank" class="${sevClass(a.severity)}">${esc(a.id)}</a></td>
+      <td class="${sevClass(a.severity)}">${esc(a.severity)}</td>
       <td>${esc(a.component)}</td>
-      <td class="small text-muted">${esc(a.category)}</td>
+      <td class="small">${esc(a.category)}</td>
+      <td class="small text-muted">${(a.pipelines||[]).join(', ')}</td>
+      <td class="small text-muted">${(a.branches||[]).join(', ')}</td>
     </tr>`).join('');
-  }
-
-  // Note
-  if (cg.note) {
-    document.getElementById('cg-note').innerHTML = `<i class="bi bi-info-circle me-1"></i>${esc(cg.note)}`;
   }
 
   // Pipelines
