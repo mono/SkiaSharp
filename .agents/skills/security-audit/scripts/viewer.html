@@ -189,13 +189,8 @@ function renderOverview(vers, findings, cgAlerts) {
     });
   }
 
-  // Split into groups: has CVEs vs no CVEs, each sorted by severity then name
-  const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-  const withCves = enriched.filter(e => e.cveTotal > 0).sort((a,b) => {
-    const aSev = a.isCg ? (sevOrder[a.cgSeverity] || 9) : (a.f ? sevOrder[a.f.cves?.[0]?.severity] || 5 : 5);
-    const bSev = b.isCg ? (sevOrder[b.cgSeverity] || 9) : (b.f ? sevOrder[b.f.cves?.[0]?.severity] || 5 : 5);
-    return aSev !== bSev ? aSev - bSev : a.name.localeCompare(b.name);
-  });
+  // Split into groups: has CVEs vs no CVEs, sorted by name within each group
+  const withCves = enriched.filter(e => e.cveTotal > 0).sort((a,b) => a.name.localeCompare(b.name));
   const noCves = enriched.filter(e => e.cveTotal === 0).sort((a,b) => a.name.localeCompare(b.name));
 
   let mismatches = 0;
@@ -245,13 +240,16 @@ function renderOverview(vers, findings, cgAlerts) {
   html += noCves.map(buildRow).join('');
 
   tbody.innerHTML = html;
-  const total = enriched.length;
-  const cgMissing = enriched.filter(v => !v.cgmanifestVersion).length;
+  const nonCgEntries = enriched.filter(v => !v.isCg);
+  const total = nonCgEntries.length;
+  const cgMissing = nonCgEntries.filter(v => !v.cgmanifestVersion).length;
+  const cgTotal = enriched.filter(v => v.isCg).length;
   let statusText = mismatches === 0 && cgMissing === 0
     ? `✅ All ${total} dependencies verified`
     : `${total} deps`;
   if (mismatches > 0) statusText += ` · ❌ ${mismatches} version mismatch${mismatches > 1 ? 'es' : ''}`;
   if (cgMissing > 0) statusText += ` · ⚠️ ${cgMissing} missing from cgmanifest`;
+  if (cgTotal > 0) statusText += ` · 🛡️ ${cgTotal} CG components`;
   document.getElementById('overview-status').textContent = statusText;
 }
 
