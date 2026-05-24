@@ -353,60 +353,8 @@ function renderCgAlerts(cg) {
       </div>
     </div>`).join('');
 
-  // Normalize alerts from different schema versions:
-  // v1: cg.alerts = [{id, component, severity, paths, pipelines, branches}] (from query-cg-alerts.py)
-  // v1b: cg.allAlerts = same as above (legacy key name)
-  // v2: cg.uniqueCVEs = [{id, component, severity, source}] + cg.categories = [{source, components, ...}]
-  // v3: cg.categories = [{source, topComponents: [{component, cveCount}]}] (summarized, no individual alerts)
-  let allAlerts = cg.alerts || cg.allAlerts || [];
-  if (allAlerts.length === 0 && cg.uniqueCVEs) {
-    // Build allAlerts from uniqueCVEs + categories
-    allAlerts = cg.uniqueCVEs.map(cve => ({
-      id: cve.id,
-      component: cve.component + (cve.version ? ' ' + cve.version : ''),
-      severity: cve.severity,
-      paths: cve.paths || [],
-      pipelines: cve.pipelines || [],
-      branches: cve.branches || cg.branches || [],
-      source: cve.source || ''
-    }));
-  }
-  if (allAlerts.length === 0 && cg.categories) {
-    // Fallback: synthesize from categories if no flat list exists
-    cg.categories.forEach(cat => {
-      const comps = cat.components || cat.topComponents || [];
-      comps.forEach(comp => {
-        const compName = comp.component || `${comp.name || ''} ${comp.version || ''}`.trim();
-        const cveCount = comp.cveCount || 1;
-        const cves = comp.cves || [];
-        if (cves.length > 0) {
-          cves.forEach(cve => {
-            allAlerts.push({
-              id: cve.id || cve,
-              component: compName,
-              severity: cve.severity || cat.severity || 'Medium',
-              paths: comp.paths || [],
-              pipelines: cat.affectedJobs || [],
-              branches: cg.branches || [],
-              source: cat.source || ''
-            });
-          });
-        } else {
-          for (let i = 0; i < cveCount; i++) {
-            allAlerts.push({
-              id: `${compName} (${i+1}/${cveCount})`,
-              component: compName,
-              severity: cat.severity || 'Medium',
-              paths: comp.paths || [],
-              pipelines: cat.affectedJobs || [],
-              branches: cg.branches || [],
-              source: cat.source || ''
-            });
-          }
-        }
-      });
-    });
-  }
+  // cg.alerts = [{id, component, severity, paths, pipelines, branches, sources}]
+  const allAlerts = cg.alerts || [];
 
   // Group alerts by component, render as collapsible cards
   if (allAlerts.length > 0) {

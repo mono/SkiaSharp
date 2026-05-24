@@ -271,9 +271,14 @@
     "cgAlerts": {
       "type": "object",
       "required": [
-        "totalAlerts"
+        "totalAlerts",
+        "alerts"
       ],
       "properties": {
+        "queriedAt": {
+          "type": "string",
+          "description": "ISO timestamp of when the CG query was run"
+        },
         "pipelines": {
           "type": "array",
           "items": {
@@ -296,8 +301,12 @@
             "additionalProperties": true
           }
         },
-        "scanDate": {
-          "type": "string"
+        "builds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
         },
         "totalAlerts": {
           "type": "integer",
@@ -309,15 +318,9 @@
             "type": "integer"
           }
         },
-        "branches": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "alerts": {
           "type": "array",
-          "description": "Full alert list from query-cg-alerts.py output (preferred format, key is 'alerts')",
+          "description": "Full alert list from query-cg-alerts.py output, grouped by component in viewer",
           "items": {
             "type": "object",
             "required": [
@@ -360,92 +363,11 @@
                 }
               }
             },
-            "additionalProperties": true
-          }
-        },
-        "allAlerts": {
-          "type": "array",
-          "description": "Full alert list (legacy key name, same schema as 'alerts')",
-          "items": {
-            "type": "object",
-            "required": [
-              "id",
-              "component",
-              "severity"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "component": {
-                "type": "string"
-              },
-              "severity": {
-                "type": "string"
-              },
-              "paths": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "sources": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "pipelines": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "branches": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "additionalProperties": true
-          }
-        },
-        "uniqueCVEs": {
-          "type": "array",
-          "description": "Alternate flat CVE list (legacy format)",
-          "items": {
-            "type": "object",
-            "required": [
-              "id",
-              "severity"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "severity": {
-                "type": "string"
-              },
-              "component": {
-                "type": "string"
-              },
-              "source": {
-                "type": "string"
-              }
-            },
-            "additionalProperties": true
-          }
-        },
-        "categories": {
-          "type": "array",
-          "items": {
-            "type": "object",
             "additionalProperties": true
           }
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "nextSteps": {
       "type": "array",

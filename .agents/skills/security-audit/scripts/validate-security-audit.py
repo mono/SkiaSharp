@@ -77,18 +77,12 @@ if summary.get("totalCves", 0) != total_cves:
 # 3. CG alerts validation
 if cg:
     total_alerts = cg.get("totalAlerts", 0)
-    all_alerts = cg.get("alerts", []) or cg.get("allAlerts", [])
-    unique_cves = cg.get("uniqueCVEs", [])
-    categories = cg.get("categories", [])
+    all_alerts = cg.get("alerts", [])
 
-    # Prefer 'alerts' array — categories alone is insufficient
-    if not all_alerts and not unique_cves:
-        if categories:
-            errors.append("cgAlerts has 'categories' but no 'alerts' array — include the raw script output")
-        else:
-            errors.append("cgAlerts has totalAlerts but no 'alerts' array to enumerate them")
+    if not all_alerts:
+        errors.append("cgAlerts missing 'alerts' array — include the raw query-cg-alerts.py output")
 
-    # If alerts present, count must match totalAlerts
+    # Count must match totalAlerts
     if all_alerts and len(all_alerts) != total_alerts:
         warnings.append(f"cgAlerts.totalAlerts ({total_alerts}) != len(alerts) ({len(all_alerts)})")
 
