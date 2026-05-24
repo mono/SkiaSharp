@@ -59,6 +59,17 @@ fi
 
 ## Step 2 — Generate release notes using the skill
 
+**Important:** The script uses `origin/` remote refs for all git history queries.
+Always run from a `main` checkout to avoid leaking release-branch-specific files
+(like `PREVIEW_LABEL`) into the PR targeting main.
+
+Ensure the working tree is on `main` and all remote refs are fetched:
+
+```bash
+git checkout main
+git fetch origin --quiet
+```
+
 Use the **release-notes** skill (`.agents/skills/release-notes/SKILL.md`) to generate
 polished release notes for the branch determined above. Pass the branch name to the skill.
 
@@ -67,8 +78,14 @@ polished file, and regenerating the TOC.
 
 ## Step 3 — Create or update the pull request
 
-Always use `dev/release-notes-{VERSION}` as the branch name when creating the pull request.
-This ensures each workflow run updates the **same PR** for a given version instead of
-opening duplicates.
+Use a branch name that includes both the version and the release status to avoid collisions
+between release-branch triggers and main-branch triggers:
+
+- For versioned release branches (e.g. `release/4.147.0-preview.3`): use `dev/release-notes-{VERSION}-released`
+- For `main` (unreleased content): use `dev/release-notes-{VERSION}-unreleased`
+
+This ensures each workflow run updates the **same PR** for a given version and status
+instead of opening duplicates, and prevents a main push from force-pushing over a
+release-branch PR (or vice versa).
 
 The PR targets `main` — release notes always live on main for the docs site.
