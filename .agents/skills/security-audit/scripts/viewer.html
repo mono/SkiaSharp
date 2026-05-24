@@ -169,10 +169,14 @@ function renderOverview(vers, findings, cgAlerts) {
       }
     });
     Object.entries(byComp).forEach(([comp, data]) => {
+      // Split "minimatch 3.1.2" or "Debian:12:binutils 2.39-r2" into name + version
+      const verMatch = comp.match(/^(.+?)\s+([\d][\w.\-+:~]*)$/);
+      const compName = verMatch ? verMatch[1] : comp;
+      const compVersion = verMatch ? verMatch[2] : '';
       enriched.push({
-        name: comp,
+        name: compName,
         source: 'CG (Build Pipeline)',
-        verifiedVersion: '',
+        verifiedVersion: compVersion,
         cgmanifestVersion: '',
         latestVersion: '',
         match: true,
