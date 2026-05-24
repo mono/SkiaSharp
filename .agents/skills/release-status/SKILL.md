@@ -26,19 +26,6 @@ Check the status of the SkiaSharp release pipeline chain on Azure DevOps.
 
 **Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → **Step 2 (this skill)** → [Step 3: release-testing](../release-testing/SKILL.md) → [Step 4: release-publish](../release-publish/SKILL.md)
 
-## When to Use
-
-After `release-branch` pushes a release branch, the CI pipeline chain starts building.
-Use this skill to track progress and determine when packages are ready for testing.
-
-```
-release-branch  →  release-status  →  release-testing  →  release-publish
-   (Step 1)         (Step 2 – here)      (Step 3)             (Step 4)
- creates branch     tracks builds       tests packages         ships
-```
-
----
-
 ## Pipeline Chain
 
 Release builds flow through a **3-pipeline chain** on Azure DevOps (devdiv/DevDiv org):
