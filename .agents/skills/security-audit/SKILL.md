@@ -305,20 +305,20 @@ internal Azure DevOps pipeline and flag vulnerabilities in:
 
 #### How to Query CG Alerts
 
-> ⚠️ **CACHING:** This script queries 60+ build logs and takes 2-3 minutes to run.
-> **Run it ONCE at the start of the audit**, save the JSON output to a variable or temp file,
-> and reference that cached result for the rest of the skill execution. Do NOT re-run the
-> script each time you need a CG value. The data doesn't change during a single audit session.
-
-**Automated script (preferred):**
+> 🛑 **CRITICAL — SAVE TO FILE:** This script queries 60+ build logs and takes 2-3 minutes.
+> You MUST save the output to a **file** (not a shell variable) so it persists across tool calls.
+> Run it ONCE, save the JSON, then read from that file for the rest of the audit.
+> **NEVER run this script more than once per audit session.**
 
 ```bash
-# Run ONCE and cache the output for the duration of this audit
-CG_DATA=$(python3 .agents/skills/security-audit/scripts/query-cg-alerts.py)
+# Run ONCE and save to a temp file — this is your CG data for the entire audit
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py > /tmp/cg-alerts-cache.json 2>/dev/null
 
-# Then parse the cached JSON as needed (no re-running):
-echo "$CG_DATA" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d['totalAlerts'])"
+# Then read from the file whenever you need CG data (fast, no API calls):
+cat /tmp/cg-alerts-cache.json | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d['totalAlerts'])"
 ```
+
+> The output includes a `queriedAt` ISO timestamp so you can verify freshness.
 
 Additional flags:
 

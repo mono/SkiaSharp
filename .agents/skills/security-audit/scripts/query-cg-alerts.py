@@ -43,6 +43,7 @@ import subprocess
 import sys
 import urllib.request
 from collections import defaultdict
+from datetime import datetime, timezone
 
 ORG = "https://devdiv.visualstudio.com"
 PROJECT = "DevDiv"
@@ -327,6 +328,7 @@ def main():
     # Use --text for a human-readable summary.
     if not args.text:
         output = {
+            "queriedAt": datetime.now(timezone.utc).isoformat(),
             "pipelines": [{"type": pt, "name": pi["name"], "id": pi["id"]} for pt, pi in pipelines_to_query],
             "builds": [{"id": bid, "branch": br, "number": num, "pipeline": PIPELINES[pt]["name"]} 
                        for bid, br, num, pt in builds_to_query],
