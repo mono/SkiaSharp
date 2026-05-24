@@ -1,0 +1,191 @@
+# glibc cross-compilation image.
+#
+# Uses debootstrap to create a Debian sysroot, then compiles with --sysroot.
+# The sysroot's glibc version determines the minimum target distro.
+# The host's glibc version is IRRELEVANT — only the sysroot matters.
+#
+# Architecture:
+#   Azure Linux 3.0 (host) → clang-18 → --sysroot=/sysroot → libSkiaSharp.so
+#
+# Replaces: debian/11/Dockerfile (glibc 2.31) and debian/13/Dockerfile (glibc 2.38)
+#
+# | SYSROOT_RELEASE | glibc | libstdc++ | Supported distros                    |
+# |-----------------|-------|-----------|--------------------------------------|
+# | bullseye (11)   | 2.31  | GCC 10    | Debian 11+, Ubuntu 20.04+, RHEL 9+  |
+# | trixie (13)     | 2.38  | GCC 14    | Debian 13+, Ubuntu 24.04+           |
+#
+# Bullseye is the oldest with GCC 10 libstdc++ (C++20: std::span, std::countl_zero).
+# loongarch64 requires Trixie (no Bullseye/Bookworm binary archive).
+
+FROM mcr.microsoft.com/azurelinux/base/core:3.0
+
+# Install host build tools from Azure Linux packages.
+RUN tdnf install -y \
+        clang \
+        lld \
+        llvm \
+        compiler-rt \
+        ninja-build \
+        python3 \
+        git \
+        curl \
+        tar \
+        xz \
+        debootstrap \
+        dpkg \
+    && tdnf clean all
+
+# Install the .NET SDK (needed for Cake build scripts)
+ARG DOTNET_SDK_VERSION=10.0.1xx
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -L -o dotnet-install.sh \
+    && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && rm dotnet-install.sh \
+    && dotnet help \
+    && dotnet --info
+
+ENV CC=clang CXX=clang++
+
+ARG BUILD_ARCH=arm64
+
+# Map BUILD_ARCH to Debian triple, dpkg short arch, and clang target triple.
+RUN case ${BUILD_ARCH} in \
+        arm)         TOOLCHAIN_ARCH=arm-linux-gnueabihf       ; TOOLCHAIN_ARCH_SHORT=armhf   ; TOOLCHAIN_ARCH_TARGET=armv7a-linux-gnueabihf     ;; \
+        arm64)       TOOLCHAIN_ARCH=aarch64-linux-gnu         ; TOOLCHAIN_ARCH_SHORT=arm64   ; TOOLCHAIN_ARCH_TARGET=aarch64-linux-gnu          ;; \
+        riscv64)     TOOLCHAIN_ARCH=riscv64-linux-gnu         ; TOOLCHAIN_ARCH_SHORT=riscv64 ; TOOLCHAIN_ARCH_TARGET=riscv64-linux-gnu          ;; \
+        x86)         TOOLCHAIN_ARCH=i686-linux-gnu            ; TOOLCHAIN_ARCH_SHORT=i386    ; TOOLCHAIN_ARCH_TARGET=i686-linux-gnu             ;; \
+        x64)         TOOLCHAIN_ARCH=x86_64-linux-gnu          ; TOOLCHAIN_ARCH_SHORT=amd64   ; TOOLCHAIN_ARCH_TARGET=x86_64-linux-gnu           ;; \
+        loongarch64) TOOLCHAIN_ARCH=loongarch64-linux-gnu     ; TOOLCHAIN_ARCH_SHORT=loong64 ; TOOLCHAIN_ARCH_TARGET=loongarch64-linux-gnu      ;; \
+        *) echo "Unsupported architecture: ${BUILD_ARCH}" && exit 1 ;; \
+    esac \
+    && echo "export TOOLCHAIN_ARCH=${TOOLCHAIN_ARCH}" > /etc/skia-env \
+    && echo "export TOOLCHAIN_ARCH_SHORT=${TOOLCHAIN_ARCH_SHORT}" >> /etc/skia-env \
+    && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env
+
+# Choose the Debian release for the sysroot.
+# Bullseye (glibc 2.31) is default — oldest with C++20 libstdc++.
+# loongarch64 needs Trixie — no binary archive exists in Bullseye/Bookworm.
+ARG SYSROOT_RELEASE=bullseye
+
+# Determine GCC/libstdc++ version from the release.
+RUN case ${SYSROOT_RELEASE} in \
+        bullseye) TOOLCHAIN_VERSION=10 ;; \
+        trixie)   TOOLCHAIN_VERSION=14 ;; \
+        *) echo "Unsupported release: ${SYSROOT_RELEASE}" && exit 1 ;; \
+    esac \
+    && echo "export TOOLCHAIN_VERSION=${TOOLCHAIN_VERSION}" >> /etc/skia-env
+
+# Create the Debian sysroot using debootstrap.
+#
+# --foreign: Do not run second stage (we're creating a foreign-arch sysroot
+#   on an amd64/arm64 host — postinst scripts can't execute). We only need
+#   the unpacked headers + libraries for cross-compilation, not a bootable rootfs.
+# --variant=minbase: Only essential packages (dpkg, apt, coreutils).
+# --include: Add the gcc cross-compilation development packages we need.
+#
+# NOTE: riscv64 is not a release arch in Bullseye — it's available from the
+# debian-ports archive. For riscv64+bullseye, we fall back to extracting
+# gcc-10-cross .deb packages (same approach as the old debian/11 Dockerfile).
+ARG SYSROOT_DIR=/sysroot
+RUN . /etc/skia-env \
+    && case "${BUILD_ARCH}" in \
+         riscv64) \
+           # riscv64 has no Bullseye binary archive — use gcc-cross package extraction.
+           # Download the cross packages from Debian's pool and extract into sysroot.
+           mkdir -p ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH} \
+           && TOOLCHAIN_VERSION=$(grep TOOLCHAIN_VERSION /etc/skia-env | cut -d= -f2) \
+           && APT_REPO=http://deb.debian.org/debian \
+           && POOL="${APT_REPO}/pool/main" \
+           && mkdir -p /tmp/riscv-pkgs && cd /tmp/riscv-pkgs \
+           && for pkg in \
+                "g/gcc-${TOOLCHAIN_VERSION}-cross/libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
+                "g/gcc-${TOOLCHAIN_VERSION}-cross/libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
+                "l/linux/linux-libc-dev-${TOOLCHAIN_ARCH_SHORT}-cross"; do \
+                # Find the latest version of the package
+                dir=$(echo $pkg | rev | cut -d/ -f1 | rev) ; \
+                base=$(echo $pkg | rev | cut -d/ -f2- | rev) ; \
+                url="${POOL}/${base}/" ; \
+                # Download and extract — we only need data.tar
+                deb_url=$(curl -sL "$url" | grep -oP "href=\"\K${dir}_[^\"]+_all\.deb" | sort -V | tail -1) ; \
+                if [ -n "$deb_url" ]; then \
+                  curl -LO "${url}${deb_url}" ; \
+                  dpkg-deb -x "${deb_url}" extract/ ; \
+                fi ; \
+              done \
+           && if [ -d extract/usr/riscv64-linux-gnu ]; then \
+                cp -a extract/usr/riscv64-linux-gnu/* ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/ ; \
+              fi \
+           && if [ -d extract/usr/lib/gcc-cross ]; then \
+                mkdir -p ${SYSROOT_DIR}/usr/lib/gcc-cross ; \
+                cp -a extract/usr/lib/gcc-cross/* ${SYSROOT_DIR}/usr/lib/gcc-cross/ ; \
+              fi \
+           && rm -rf /tmp/riscv-pkgs ;; \
+         *) \
+           # Standard debootstrap for architectures with Debian binary archives
+           debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
+             --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev \
+             ${SYSROOT_RELEASE} ${SYSROOT_DIR} http://deb.debian.org/debian ;; \
+       esac \
+    && echo "Sysroot created: ${SYSROOT_RELEASE} ${BUILD_ARCH}"
+
+# Create the c++/current symlink so build.cake can reference libstdc++ headers
+# without baking the GCC version number into the build script.
+RUN . /etc/skia-env \
+    && TOOLCHAIN_VERSION=$(grep TOOLCHAIN_VERSION /etc/skia-env | cut -d= -f2) \
+    && INCLUDE_DIR=${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/include/c++ \
+    && if [ -d "${INCLUDE_DIR}/${TOOLCHAIN_VERSION}" ]; then \
+         ln -sf ${INCLUDE_DIR}/${TOOLCHAIN_VERSION} ${INCLUDE_DIR}/current ; \
+       elif [ -d "${INCLUDE_DIR}" ]; then \
+         GCC_VERSION=$(ls ${INCLUDE_DIR}/ | head -1) ; \
+         [ -n "$GCC_VERSION" ] && ln -sf ${INCLUDE_DIR}/${GCC_VERSION} ${INCLUDE_DIR}/current ; \
+       fi
+
+# Fix libc/libpthread linker scripts to use relative paths.
+# Debian's linker scripts contain absolute paths like:
+#   GROUP ( /usr/lib/x86_64-linux-gnu/libc.so.6 ... )
+# These must be relative for cross-compilation with --sysroot to work.
+RUN . /etc/skia-env \
+    && for script in \
+         ${SYSROOT_DIR}/usr/lib/${TOOLCHAIN_ARCH}/libc.so \
+         ${SYSROOT_DIR}/usr/lib/${TOOLCHAIN_ARCH}/libpthread.so \
+         ${SYSROOT_DIR}/usr/lib/${TOOLCHAIN_ARCH}/libpthread.so.0 \
+         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libc.so \
+         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
+         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so.0; do \
+       if [ -f "$script" ]; then \
+         sed -i "s|/usr/${TOOLCHAIN_ARCH}/lib/||g; s|/usr/lib/${TOOLCHAIN_ARCH}/||g; s|/lib/${TOOLCHAIN_ARCH}/||g" "$script" ; \
+       fi ; \
+    done
+
+# Install fontconfig into the sysroot.
+# Download .deb packages from Debian's pool and extract headers + libraries.
+RUN . /etc/skia-env \
+    && mkdir -p /tmp/fontconfig \
+    && cd /tmp/fontconfig \
+    && case "${SYSROOT_RELEASE}" in \
+         bullseye) FC_VERSION=2.13.1-4.2 ;; \
+         trixie)   FC_VERSION=2.17.1-5   ;; \
+       esac \
+    && case "${TOOLCHAIN_ARCH_SHORT}" in \
+         riscv64) FC_VERSION=2.15.0-2.3 ;; \
+       esac \
+    && APT_REPO=http://deb.debian.org/debian \
+    && for pkg in libfontconfig-dev libfontconfig1; do \
+           url="${APT_REPO}/pool/main/f/fontconfig/${pkg}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb"; \
+           echo "Downloading $url"; \
+           curl -L -o "${pkg}.deb" "$url"; \
+           dpkg-deb -x "${pkg}.deb" ${SYSROOT_DIR}/ ; \
+       done \
+    && rm -rf /tmp/fontconfig
+
+# Set the SYSROOT_PATH environment variable for build.cake to use.
+# The build script reads this to know where headers and libraries are.
+RUN . /etc/skia-env \
+    && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}" >> /etc/skia-env
+
+WORKDIR /work
+
+COPY ./startup.sh /
+RUN chmod +x /startup.sh
+ENTRYPOINT [ "/startup.sh" ]

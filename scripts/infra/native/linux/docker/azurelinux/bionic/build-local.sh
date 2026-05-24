@@ -15,12 +15,13 @@ if [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; then
     PLATFORM_ARGS="--platform linux/amd64"
 fi
 
-(cd "$DIR" && 
+# Build the bionic image
+(cd "$DIR" &&
   docker build $PLATFORM_ARGS --tag "skiasharp-bionic-$ARCH" \
-    --build-arg BUILD_ARCH=$ARCH            \
+    --build-arg BUILD_ARCH=$ARCH \
     .)
 
-(cd "$DIR/../../../../../.." && 
+(cd "$DIR/../../../../../.." &&
     docker run --rm $PLATFORM_ARGS --name "skiasharp-bionic-$ARCH" --volume "$(pwd)":/work "skiasharp-bionic-$ARCH" /bin/bash -c " \
         dotnet tool restore ; \
         dotnet cake --target=externals-linux --configuration=Release --buildarch=$ARCH --variant=bionic --verifyExcluded=fontconfig ")

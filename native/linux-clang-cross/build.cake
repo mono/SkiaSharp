@@ -5,10 +5,12 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 string TOOLCHAIN_ARCH = Argument("toolchainArch", EnvironmentVariable("TOOLCHAIN_ARCH"));
 string TOOLCHAIN_ARCH_SHORT = Argument("toolchainArchShort", EnvironmentVariable("TOOLCHAIN_ARCH_SHORT"));
 string TOOLCHAIN_ARCH_TARGET = Argument("toolchainArchTarget", EnvironmentVariable("TOOLCHAIN_ARCH_TARGET"));
+string SYSROOT_PATH = Argument("sysrootPath", EnvironmentVariable("SYSROOT_PATH"));
 
 Information("Toolchain:");
 Information($"    Arch:                          {TOOLCHAIN_ARCH} ({TOOLCHAIN_ARCH_SHORT})");
 Information($"    Target                         {TOOLCHAIN_ARCH_TARGET}");
+Information($"    Sysroot:                       {SYSROOT_PATH}");
 
 if (BUILD_ARCH.Length == 0)
     BUILD_ARCH = new [] { "arm" };
@@ -21,7 +23,7 @@ string GetGnArgs(string arch)
         _ => ("", ""),
     };
 
-    var sysroot = $"/usr/{TOOLCHAIN_ARCH}";
+    var sysroot = SYSROOT_PATH;
     var init = $"{sysrootArg} '--target={TOOLCHAIN_ARCH_TARGET}'";
     var bin = $"'-B{sysroot}/bin/' ";
     var libs = $"'-L{sysroot}/lib/' ";
