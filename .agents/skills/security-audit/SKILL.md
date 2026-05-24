@@ -1,7 +1,8 @@
 ---
 name: security-audit
 description: >
-  Audit SkiaSharp's native dependencies for security vulnerabilities and CVEs.
+  Audit SkiaSharp's native dependencies for security vulnerabilities and CVEs,
+  including Component Governance (CG) alerts from the SkiaSharp-Native and SkiaSharp Azure DevOps pipelines.
   Read-only investigation that produces a status report with recommendations.
 
   Use when user asks to:
@@ -10,9 +11,12 @@ description: >
   - Find security-related issues and their PR coverage
   - Get an overview of open vulnerabilities
   - See what security work is pending
+  - Check Component Governance alerts
+  - Review CG alerts from the native build pipeline
 
   Triggers: "security audit", "audit CVEs", "CVE status", "what security issues are open",
-  "check vulnerability status", "security overview", "what CVEs need fixing".
+  "check vulnerability status", "security overview", "what CVEs need fixing",
+  "CG alerts", "component governance", "check container CVEs".
 
   This skill is READ-ONLY. To actually fix issues, use the `native-dependency-update` skill.
 ---
@@ -28,6 +32,8 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Which dependencies to audit, cgmanifest format, known false positives, Skia-specific tracking notes
 - **[references/report-template.md](references/report-template.md)** — Report format templates (markdown)
 - **[references/report-schema.md](references/report-schema.md)** — JSON schema for structured output
+- **[references/security-audit-schema.json](references/security-audit-schema.json)** — Machine-readable JSON Schema (Draft 2020-12)
+- **[scripts/validate-security-audit.py](scripts/validate-security-audit.py)** — Validates report JSON against schema + semantic checks
 - **[scripts/render-security-audit.py](scripts/render-security-audit.py)** — Renders JSON → standalone HTML
 - **[scripts/viewer.html](scripts/viewer.html)** — HTML template (Bootstrap 5)
 
@@ -46,9 +52,15 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
    ├─ Fixed? → Mark clean
    └─ Not fixed? → Flag for action
 5. Check false positives
-6. Assemble structured JSON report (per report-schema.md)
-7. Render HTML from JSON (render-security-audit.py)
-8. Present markdown summary to user
+6. Query Component Governance alerts from SkiaSharp-Native AND SkiaSharp pipelines
+   ├─ Get latest build IDs (native: 26493, managed: 10789)
+   ├─ Extract ALL CG log IDs from timeline (every job, no sampling)
+   ├─ Parse CVEs from every job's CG log
+   └─ Deduplicate alerts by CVE ID across all jobs/branches/pipelines
+7. Assemble structured JSON report (per report-schema.md)
+8. Validate JSON (validate-security-audit.py) — fix any errors before rendering
+9. Render HTML from JSON (render-security-audit.py)
+10. Present markdown summary to user
 ```
 
 ### Step 1: Search Issues & PRs
@@ -88,7 +100,7 @@ git log --oneline --merges --grep="chrome/m" -5 HEAD
 # Find the merge commit that brought in chrome/mNNN
 
 # 4. Add the upstream remote and fetch (MANDATORY — this is read-only)
-git remote add upstream https://github.com/google/skia.git 2>/dev/null
+git remote add upstream https://github.com/google/skia.git 2>/dev/null || git remote set-url upstream https://github.com/google/skia.git
 git fetch upstream chrome/mNNN --depth=1
 git log --format="%H %s" -1 FETCH_HEAD
 # This gives the independently-verified upstream_merge_commit
@@ -275,7 +287,177 @@ Before flagging, verify the CVE actually affects SkiaSharp:
 
 See [dependencies.md](../../../documentation/dev/dependencies.md#known-false-positives) for details.
 
-### Step 6: Assemble Structured JSON Report
+### Step 6: Check Component Governance (CG) Alerts
+
+> 🛑 **FIRST ACTION — Run the CG query script ONCE and save to file:**
+> ```bash
+> mkdir -p output/ai && python3 .agents/skills/security-audit/scripts/query-cg-alerts.py > output/ai/cg-alerts-cache.json
+> ```
+> This takes 2-3 minutes. **Do NOT run this script again.** For ALL subsequent CG data needs,
+> read from `output/ai/cg-alerts-cache.json`. The script queries tens of build logs via API — running it
+> multiple times wastes minutes and produces identical results.
+
+> ⚠️ **MANDATORY:** The security audit MUST include CG alerts from BOTH the SkiaSharp-Native
+> (pipeline 26493) and SkiaSharp (pipeline 10789) pipelines — together they make up the shipped build.
+> CG scans Docker container images used for native builds and flags CVEs in OS packages,
+> npm dependencies, Rust crates, and NuGet packages used at build time.
+
+#### Why This Matters
+
+CG alerts are **not visible** from GitHub Issues or NVD searches alone. They come from the
+internal Azure DevOps pipeline and flag vulnerabilities in:
+- **Docker base images** (Debian packages: dpkg, libcap2, sed, rsync)
+- **Cross-compilation sysroots** (Alpine packages: busybox, file, binutils, zlib, freetype, gmp)
+- **Build toolchain dependencies** (npm: minimatch, path-to-regexp, ws, express; Rust: hashbrown, zerovec, time)
+- **NuGet build dependencies** (Microsoft.WindowsAppSDK)
+
+#### How to Query CG Alerts
+
+> 🛑 **CRITICAL — SAVE TO FILE:** This script queries tens of build logs and takes 2-3 minutes.
+> You MUST save the output to a **file** (not a shell variable) so it persists across tool calls.
+> Run it ONCE, save the JSON, then read from that file for the rest of the audit.
+> **NEVER run this script more than once per audit session.**
+
+```bash
+# Run ONCE and save — this is your CG data for the entire audit
+mkdir -p output/ai && python3 .agents/skills/security-audit/scripts/query-cg-alerts.py > output/ai/cg-alerts-cache.json
+
+# Then read from the file whenever you need CG data (fast, no API calls):
+cat output/ai/cg-alerts-cache.json | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d['totalAlerts'])"
+```
+
+> The output includes a `queriedAt` ISO timestamp so you can verify freshness.
+
+Additional flags:
+
+```bash
+# Human-readable text output (nothing truncated, all CVEs listed)
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --text
+
+# Query only a specific branch
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --branch main
+
+# Query only the native pipeline
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --pipeline native
+
+# Query only the managed pipeline
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --pipeline managed
+
+# Query a specific build
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --build-id 14176611
+```
+
+The script automatically:
+1. Discovers the latest completed build from main AND all active release/* branches for BOTH pipelines
+2. Identifies ALL CG logs in each build (every job, no sampling — this is security)
+3. Parses and deduplicates all CVEs across all builds, pipelines, and jobs
+4. Sorts by severity and reports which branches and pipelines are affected
+
+**Note:** There is no build-independent CG REST API. The `governance.visualstudio.com` service
+does not expose alert data through any documented endpoint. The CG portal UI aggregates from
+build results internally. Our script achieves the same result by enumerating every CG log in
+the latest build of every active branch (no sampling), which reports ALL active registration-level
+alerts regardless of which specific build produced them.
+
+**Manual approach (for debugging):**
+
+```bash
+# 1. Get latest build ID (native pipeline)
+BUILD_ID=$(az pipelines runs list --pipeline-id 26493 \
+  --org https://devdiv.visualstudio.com --project DevDiv \
+  --top 1 --query "[0].id" -o tsv)
+
+# For managed pipeline, use --pipeline-id 10789 instead
+
+# 2. Get timeline to find CG log IDs
+az devops invoke --area build --resource timeline \
+  --route-parameters project=DevDiv buildId=$BUILD_ID \
+  --org https://devdiv.visualstudio.com -o json
+
+# 3. Parse CVEs from a specific CG log
+az devops invoke --area build --resource logs \
+  --route-parameters project=DevDiv buildId=$BUILD_ID logId={LOG_ID} \
+  --org https://devdiv.visualstudio.com -o json
+```
+
+#### CG Alert Categories
+
+> These categories are reference context for understanding where alerts come from and how to fix them.
+> They are **NOT** part of the report JSON — the viewer groups by component automatically.
+
+| Category | Source | Fix Mechanism |
+|----------|--------|---------------|
+| Alpine sysroot packages | `apk add` in alpine Dockerfile | Bump `DISTRO_VERSION` in Dockerfile |
+| Debian base image packages | `apt-get` / base image | Update base image or wait for Debian patches |
+| npm build tooling | .NET SDK / Cake dependencies | Update .NET SDK or pin versions |
+| Rust crate deps | .NET SDK internals | Update .NET SDK |
+| NuGet build deps | Build-time references | Update package version |
+
+> ⚠️ **Do NOT editorialize about whether CG alerts "ship" or not.**
+> A vulnerable build chain means a potentially compromised build artifact.
+> Present all CG alerts at the same importance level as other findings.
+> HIGH severity CG alerts are "needs_attention" just like any other HIGH CVE.
+
+#### Key Files for CG Fixes
+
+| File | Controls |
+|------|----------|
+| `scripts/infra/native/linux/docker/alpine/Dockerfile` (lines 43–47) | Alpine sysroot version (`DISTRO_VERSION`) |
+| `scripts/infra/native/linux/docker/debian/11/Dockerfile` | Debian 11 base image (EOL June 2026) |
+| `scripts/infra/native/linux/docker/debian/13/Dockerfile` | Debian 13 base image |
+| `scripts/infra/native/linux/docker/bionic/Dockerfile` | Bionic/Android cross-compile |
+| `scripts/infra/native/wasm/docker/Dockerfile` | WASM build container |
+
+#### Include in Report
+
+> 🛑 **CRITICAL:** Include the **complete `alerts` array** from the script output in the report.
+> Do NOT summarize or truncate. The viewer needs every individual alert to render correctly.
+> Copy the entire JSON output from `output/ai/cg-alerts-cache.json` as the `cgAlerts` value.
+
+```bash
+# The cgAlerts section of your report MUST be the raw script output:
+cat output/ai/cg-alerts-cache.json
+# Copy this entire JSON object as the value of "cgAlerts" in the report.
+```
+
+The script output has this structure (include ALL fields as-is):
+
+```json
+{
+  "cgAlerts": {
+    "queriedAt": "2026-05-24T12:34:56+00:00",
+    "pipelines": [...],
+    "builds": [...],
+    "totalAlerts": 121,
+    "bySeverity": {"High": 7, "Medium": 110, "Low": 4},
+    "alerts": [
+      {
+        "id": "CVE-2024-XXXXX",
+        "component": "busybox 1.35.0-r31",
+        "severity": "Medium",
+        "sources": ["Alpine 3.17"],
+        "branches": ["main"],
+        "pipelines": ["SkiaSharp-Native"],
+        "paths": ["/some/path/to/manifest"]
+      }
+    ]
+  }
+}
+```
+
+**Do NOT:**
+- Summarize alerts into categories (the viewer does grouping itself)
+- Omit the `alerts` array
+- Replace `alerts` with `uniqueCVEs` or `categories`
+- Write `totalAlerts: N` without including the actual N alerts
+
+#### CG Portal Links
+
+- **Registration:** https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321
+- **Pipeline:** https://dev.azure.com/devdiv/DevDiv/_build?definitionId=26493
+- **Alert type filter:** Append `?_a=alerts&typeId={typeId}&alerts-view-option=active` to registration URL
+
+### Step 7: Assemble Structured JSON Report
 
 > 🛑 **MANDATORY:** The audit MUST produce a JSON file conforming to [references/report-schema.md](references/report-schema.md). This is the machine-readable output used by dashboards and CI.
 
@@ -289,7 +471,19 @@ Build the JSON object with these top-level keys:
 
 Save as `output/ai/security-audit-{date}.json` in the repo (same pattern as other AI outputs).
 
-### Step 7: Render HTML Report
+### Step 8: Validate Report
+
+> 🛑 **MANDATORY:** Always validate before rendering. Fix any errors reported.
+
+```bash
+python3 .agents/skills/security-audit/scripts/validate-security-audit.py \
+  output/ai/security-audit-{date}.json
+```
+
+Exit codes: 0=valid, 1=fixable errors (fix and retry), 2=fatal.
+Warnings are informational — errors must be fixed before proceeding.
+
+### Step 9: Render HTML Report
 
 > 🛑 **MANDATORY:** Always generate the HTML report. The human needs a readable dashboard.
 
@@ -312,7 +506,7 @@ Present the output path to the user:
    🔴 3 attention · 🆕 2 undiscovered · ⚪ 4 FP · ✅ 5 clean
 ```
 
-### Step 8: Present Markdown Summary
+### Step 10: Present Markdown Summary
 
 After generating JSON and HTML, present a concise markdown summary to the user in the conversation (using the report-template.md format). This is in ADDITION to the JSON+HTML files, not instead of them.
 
@@ -346,3 +540,6 @@ After audit, use `native-dependency-update` skill:
 
 For Skia core CVEs, the fix requires merging a newer upstream milestone into the fork.
 This is a significant undertaking — flag it in the report with the milestone gap.
+
+For CG container alerts, the fix is updating Dockerfiles under `scripts/infra/native/linux/docker/`.
+This does not require a Skia submodule update — only Docker image rebuilds.

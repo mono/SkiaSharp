@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/security-audit-schema.json",
+  "title": "SkiaSharp Security Audit Report",
+  "description": "Structured security audit output covering native dependencies, Skia upstream verification, and Component Governance alerts from build pipelines.",
+  "type": "object",
+  "required": [
+    "meta",
+    "summary",
+    "versionVerification",
+    "findings",
+    "nextSteps"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "date",
+        "schemaVersion",
+        "skiaMilestone"
+      ],
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "schemaVersion": {
+          "type": "string"
+        },
+        "skiaSubmoduleCommit": {
+          "type": "string"
+        },
+        "skiaUpstreamCommit": {
+          "type": "string"
+        },
+        "skiaMilestone": {
+          "type": "integer"
+        },
+        "upstreamVerified": {
+          "type": "boolean"
+        },
+        "upstreamVerificationNote": {
+          "type": "string"
+        },
+        "chromeM147BranchTip": {
+          "type": "string"
+        },
+        "upstreamBehindBy": {
+          "type": "integer"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "needsAttention",
+        "undiscovered",
+        "falsePositive",
+        "clean",
+        "totalCves",
+        "highestSeverity"
+      ],
+      "properties": {
+        "needsAttention": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "undiscovered": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "falsePositive": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clean": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalCves": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "highestSeverity": {
+          "type": "string",
+          "enum": [
+            "CRITICAL",
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "NONE"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "versionVerification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "depsCommit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verifiedVersion": {
+            "type": "string"
+          },
+          "cgmanifestVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latestVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "match": {
+            "type": "boolean"
+          },
+          "verificationMethod": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "dependency",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "dependency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "needs_attention",
+              "undiscovered",
+              "false_positive",
+              "clean",
+              "in_progress",
+              "ready_to_merge"
+            ]
+          },
+          "currentVersion": {
+            "type": "string"
+          },
+          "fixVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latestVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cves": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "severity"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string"
+                },
+                "cvss": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "fixedIn": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "assessment": {
+                  "type": "string"
+                },
+                "evidence": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "nonChromeCves": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["number"],
+              "properties": {
+                "number": { "type": "integer" },
+                "url": { "type": "string" },
+                "title": { "type": "string" }
+              },
+              "additionalProperties": true
+            }
+          },
+          "prs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["number"],
+              "properties": {
+                "number": { "type": "integer" },
+                "url": { "type": "string" },
+                "title": { "type": "string" }
+              },
+              "additionalProperties": true
+            }
+          },
+          "action": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "falsePositiveReason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "cgAlerts": {
+      "type": "object",
+      "required": [
+        "totalAlerts",
+        "alerts"
+      ],
+      "properties": {
+        "queriedAt": {
+          "type": "string",
+          "description": "ISO timestamp of when the CG query was run"
+        },
+        "pipelines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "id"
+            ],
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "builds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "totalAlerts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bySeverity": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "alerts": {
+          "type": "array",
+          "description": "Full alert list from query-cg-alerts.py output, grouped by component in viewer",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "component",
+              "severity"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "component": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": ["Critical", "High", "Medium", "Low"]
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "pipelines": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "branches": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "nextSteps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "priority",
+          "action"
+        ],
+        "properties": {
+          "priority": {
+            "type": "integer"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "dependency": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "command": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}
