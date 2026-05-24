@@ -315,9 +315,57 @@
             "type": "string"
           }
         },
+        "alerts": {
+          "type": "array",
+          "description": "Full alert list from query-cg-alerts.py output (preferred format, key is 'alerts')",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "component",
+              "severity"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "component": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string"
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "pipelines": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "branches": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
         "allAlerts": {
           "type": "array",
-          "description": "Full alert list from query-cg-alerts.py (preferred format)",
+          "description": "Full alert list (legacy key name, same schema as 'alerts')",
           "items": {
             "type": "object",
             "required": [

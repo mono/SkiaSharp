@@ -403,44 +403,46 @@ az devops invoke --area build --resource logs \
 
 #### Include in Report
 
-Add a `cgAlerts` section to the JSON report:
+> 🛑 **CRITICAL:** Include the **complete `alerts` array** from the script output in the report.
+> Do NOT summarize or truncate. The viewer needs every individual alert to render correctly.
+> Copy the entire JSON output from `/tmp/cg-alerts-cache.json` as the `cgAlerts` value.
+
+```bash
+# The cgAlerts section of your report MUST be the raw script output:
+cat /tmp/cg-alerts-cache.json
+# Copy this entire JSON object as the value of "cgAlerts" in the report.
+```
+
+The script output has this structure (include ALL fields as-is):
 
 ```json
 {
   "cgAlerts": {
-    "pipelines": [
-      {"type": "native", "name": "SkiaSharp-Native", "id": 26493},
-      {"type": "managed", "name": "SkiaSharp", "id": 10789}
-    ],
-    "scanDate": "2026-05-23",
-    "totalAlerts": 112,
-    "categories": [
+    "queriedAt": "2026-05-24T12:34:56+00:00",
+    "pipelines": [...],
+    "builds": [...],
+    "totalAlerts": 121,
+    "bySeverity": {"High": 7, "Medium": 110, "Low": 4},
+    "alerts": [
       {
-        "source": "Alpine 3.17 sysroot",
-        "alertCount": 93,
+        "id": "CVE-2024-XXXXX",
+        "component": "busybox 1.35.0-r31",
         "severity": "Medium",
-        "fix": "Bump to Alpine 3.21",
-        "affectedJobs": ["alpine arm64", "alpine x64", "alpine arm", "alpine x86"]
-      },
-      {
-        "source": "Build toolchain (npm/Rust/NuGet)",
-        "alertCount": 13,
-        "severity": "High/Medium/Low",
-        "fix": "Update .NET SDK or suppress",
-        "affectedJobs": ["ALL jobs"]
-      },
-      {
-        "source": "Debian base image",
-        "alertCount": 3,
-        "severity": "Medium",
-        "fix": "Wait for Debian patches or upgrade",
-        "affectedJobs": ["Debian 12-based jobs"]
+        "sources": ["Alpine 3.17"],
+        "branches": ["main"],
+        "pipelines": ["SkiaSharp-Native"],
+        "paths": ["/some/path/to/manifest"]
       }
-    ],
-    "uniqueCVEs": []
+    ]
   }
 }
 ```
+
+**Do NOT:**
+- Summarize alerts into categories (the viewer does grouping itself)
+- Omit the `alerts` array
+- Replace `alerts` with `uniqueCVEs` or `categories`
+- Write `totalAlerts: N` without including the actual N alerts
 
 #### CG Portal Links
 

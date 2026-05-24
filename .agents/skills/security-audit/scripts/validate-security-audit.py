@@ -77,26 +77,29 @@ if summary.get("totalCves", 0) != total_cves:
 # 3. CG alerts validation
 if cg:
     total_alerts = cg.get("totalAlerts", 0)
-    all_alerts = cg.get("allAlerts", [])
+    all_alerts = cg.get("alerts", []) or cg.get("allAlerts", [])
     unique_cves = cg.get("uniqueCVEs", [])
     categories = cg.get("categories", [])
 
-    # Must have at least one way to enumerate alerts
-    if not all_alerts and not unique_cves and not categories:
-        errors.append("cgAlerts has totalAlerts but no allAlerts, uniqueCVEs, or categories to enumerate them")
+    # Prefer 'alerts' array — categories alone is insufficient
+    if not all_alerts and not unique_cves:
+        if categories:
+            errors.append("cgAlerts has 'categories' but no 'alerts' array — include the raw script output")
+        else:
+            errors.append("cgAlerts has totalAlerts but no 'alerts' array to enumerate them")
 
-    # If allAlerts present, count must match totalAlerts
+    # If alerts present, count must match totalAlerts
     if all_alerts and len(all_alerts) != total_alerts:
-        warnings.append(f"cgAlerts.totalAlerts ({total_alerts}) != len(allAlerts) ({len(all_alerts)})")
+        warnings.append(f"cgAlerts.totalAlerts ({total_alerts}) != len(alerts) ({len(all_alerts)})")
 
-    # Every alert in allAlerts must have id, component, severity
+    # Every alert must have id, component, severity
     for i, a in enumerate(all_alerts):
         if not a.get("id"):
-            errors.append(f"cgAlerts.allAlerts[{i}] missing 'id'")
+            errors.append(f"cgAlerts.alerts[{i}] missing 'id'")
         if not a.get("component"):
-            errors.append(f"cgAlerts.allAlerts[{i}] missing 'component'")
+            errors.append(f"cgAlerts.alerts[{i}] missing 'component'")
         if not a.get("severity"):
-            errors.append(f"cgAlerts.allAlerts[{i}] missing 'severity'")
+            errors.append(f"cgAlerts.alerts[{i}] missing 'severity'")
 
     # bySeverity counts should match
     by_sev = cg.get("bySeverity", {})
