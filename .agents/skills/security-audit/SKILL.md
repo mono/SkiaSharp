@@ -383,13 +383,18 @@ az devops invoke --area build --resource logs \
 
 #### CG Alert Categories
 
-| Category | Source | Ships in NuGet? | Fix Mechanism |
-|----------|--------|-----------------|---------------|
-| Alpine sysroot packages | `apk add` in alpine Dockerfile | No | Bump `DISTRO_VERSION` in Dockerfile |
-| Debian base image packages | `apt-get` / base image | No | Update base image or wait for Debian patches |
-| npm build tooling | .NET SDK / Cake dependencies | No | Update .NET SDK or pin versions |
-| Rust crate deps | .NET SDK internals | No | Update .NET SDK |
-| NuGet build deps | Build-time references | No | Update package version |
+| Category | Source | Fix Mechanism |
+|----------|--------|---------------|
+| Alpine sysroot packages | `apk add` in alpine Dockerfile | Bump `DISTRO_VERSION` in Dockerfile |
+| Debian base image packages | `apt-get` / base image | Update base image or wait for Debian patches |
+| npm build tooling | .NET SDK / Cake dependencies | Update .NET SDK or pin versions |
+| Rust crate deps | .NET SDK internals | Update .NET SDK |
+| NuGet build deps | Build-time references | Update package version |
+
+> ⚠️ **Do NOT editorialize about whether CG alerts "ship" or not.**
+> A vulnerable build chain means a potentially compromised build artifact.
+> Present all CG alerts at the same importance level as other findings.
+> HIGH severity CG alerts are "needs_attention" just like any other HIGH CVE.
 
 #### Key Files for CG Fixes
 

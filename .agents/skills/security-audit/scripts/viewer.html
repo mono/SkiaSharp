@@ -124,16 +124,19 @@ const SEV_CLASS = { CRITICAL: 'sev-critical', HIGH: 'sev-high', MEDIUM: 'sev-med
 function sevClass(s) { return SEV_CLASS[(s||'').toUpperCase()] || 'sev-low'; }
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
 
-function renderSummary(s) {
+function renderSummary(s, cgAlerts) {
+  const cgCount = cgAlerts ? (cgAlerts.totalAlerts || 0) : 0;
+  const cgHigh = cgAlerts ? ((cgAlerts.bySeverity || {}).High || 0) : 0;
   const cards = [
-    ['Needs Attention', s.needsAttention, 'danger', 'exclamation-triangle'],
+    ['Needs Attention', s.needsAttention + cgHigh, 'danger', 'exclamation-triangle'],
+    ['CG Alerts', cgCount, cgHigh > 0 ? 'danger' : 'warning', 'shield-exclamation'],
     ['Undiscovered', s.undiscovered, 'primary', 'search'],
     ['False Positive', s.falsePositive, 'secondary', 'x-circle'],
     ['Clean', s.clean, 'success', 'check-circle'],
   ];
   const el = document.getElementById('summary-cards');
   el.innerHTML = cards.map(([label, count, color, icon]) => `
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card text-center p-3">
         <div class="fs-2 text-${color}"><i class="bi bi-${icon}"></i></div>
         <div class="fs-1 fw-bold">${count}</div>
@@ -142,7 +145,7 @@ function renderSummary(s) {
     </div>`).join('');
 }
 
-function renderOverview(vers, findings) {
+function renderOverview(vers, findings, cgAlerts) {
   const tbody = document.querySelector('#overview-table tbody');
   const findingMap = {};
   (findings || []).forEach((f, i) => { findingMap[f.dependency] = { ...f, idx: i }; });
@@ -151,11 +154,44 @@ function renderOverview(vers, findings) {
   const enriched = (vers || []).map(v => {
     const f = findingMap[v.name];
     const cveTotal = f ? (f.cves||[]).length + (f.nonChromeCves||[]).length : 0;
-    return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1 };
+    return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1, isCg: false };
   });
 
-  // Split into groups: has CVEs vs no CVEs, each sorted by name
-  const withCves = enriched.filter(e => e.cveTotal > 0).sort((a,b) => a.name.localeCompare(b.name));
+  // Add CG components as rows (grouped by component)
+  if (cgAlerts && cgAlerts.alerts) {
+    const byComp = {};
+    cgAlerts.alerts.forEach(a => {
+      if (!byComp[a.component]) byComp[a.component] = { alerts: [], severity: 'Low' };
+      byComp[a.component].alerts.push(a);
+      const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+      if ((sevOrder[a.severity] || 9) < (sevOrder[byComp[a.component].severity] || 9)) {
+        byComp[a.component].severity = a.severity;
+      }
+    });
+    Object.entries(byComp).forEach(([comp, data]) => {
+      enriched.push({
+        name: comp,
+        source: 'CG (Build Pipeline)',
+        verifiedVersion: '',
+        cgmanifestVersion: '',
+        latestVersion: '',
+        match: true,
+        f: { status: data.severity === 'High' || data.severity === 'Critical' ? 'needs_attention' : 'in_progress' },
+        cveTotal: data.alerts.length,
+        findingIdx: -1,
+        isCg: true,
+        cgSeverity: data.severity
+      });
+    });
+  }
+
+  // Split into groups: has CVEs vs no CVEs, each sorted by severity then name
+  const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+  const withCves = enriched.filter(e => e.cveTotal > 0).sort((a,b) => {
+    const aSev = a.isCg ? (sevOrder[a.cgSeverity] || 9) : (a.f ? sevOrder[a.f.cves?.[0]?.severity] || 5 : 5);
+    const bSev = b.isCg ? (sevOrder[b.cgSeverity] || 9) : (b.f ? sevOrder[b.f.cves?.[0]?.severity] || 5 : 5);
+    return aSev !== bSev ? aSev - bSev : a.name.localeCompare(b.name);
+  });
   const noCves = enriched.filter(e => e.cveTotal === 0).sort((a,b) => a.name.localeCompare(b.name));
 
   let mismatches = 0;
@@ -163,7 +199,12 @@ function renderOverview(vers, findings) {
   function buildRow(v) {
     if (!v.match) mismatches++;
     const rowCls = v.match ? 'overview-row' : 'overview-row overview-mismatch';
-    const onclick = v.findingIdx >= 0 ? `onclick="document.getElementById('finding-${v.findingIdx}').scrollIntoView({behavior:'smooth',block:'start'}); var col=document.getElementById('finding-${v.findingIdx}'); if(!col.classList.contains('show')){col.previousElementSibling.click();}"` : '';
+    let onclick = '';
+    if (v.isCg) {
+      onclick = `onclick="document.getElementById('cg-section').scrollIntoView({behavior:'smooth',block:'start'})"`;
+    } else if (v.findingIdx >= 0) {
+      onclick = `onclick="document.getElementById('finding-${v.findingIdx}').scrollIntoView({behavior:'smooth',block:'start'}); var col=document.getElementById('finding-${v.findingIdx}'); if(!col.classList.contains('show')){col.previousElementSibling.click();}"`;
+    }
 
     let secBadge = '<span class="status-pill st-clean">✅ Clean</span>';
     let cveCount = '';
@@ -424,8 +465,8 @@ document.addEventListener('DOMContentLoaded', () => {
     `${d.meta.date} · Skia m${d.meta.skiaMilestone} · ${d.summary.totalCves} CVEs analyzed`;
   document.getElementById('header-badges').innerHTML =
     `<span class="badge bg-${d.summary.highestSeverity === 'CRITICAL' ? 'danger' : d.summary.highestSeverity === 'HIGH' ? 'warning' : 'info'}">${d.summary.highestSeverity}</span>`;
-  renderSummary(d.summary);
-  renderOverview(d.versionVerification, d.findings);
+  renderSummary(d.summary, d.cgAlerts);
+  renderOverview(d.versionVerification, d.findings, d.cgAlerts);
   const container = document.getElementById('findings-container');
   container.innerHTML = d.findings.map((f, i) => renderFinding(f, i)).join('');
   renderNextSteps(d.nextSteps);
