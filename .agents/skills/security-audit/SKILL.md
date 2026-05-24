@@ -56,7 +56,7 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
    ├─ Get latest build IDs (native: 26493, managed: 10789)
    ├─ Extract ALL CG log IDs from timeline (every job, no sampling)
    ├─ Parse CVEs from every job's CG log
-   └─ Categorize by source (container, toolchain, NuGet)
+   └─ Deduplicate alerts by CVE ID across all jobs/branches/pipelines
 7. Assemble structured JSON report (per report-schema.md)
 8. Validate JSON (validate-security-audit.py) — fix any errors before rendering
 9. Render HTML from JSON (render-security-audit.py)
@@ -100,7 +100,7 @@ git log --oneline --merges --grep="chrome/m" -5 HEAD
 # Find the merge commit that brought in chrome/mNNN
 
 # 4. Add the upstream remote and fetch (MANDATORY — this is read-only)
-git remote add upstream https://github.com/google/skia.git 2>/dev/null
+git remote add upstream https://github.com/google/skia.git 
 git fetch upstream chrome/mNNN --depth=1
 git log --format="%H %s" -1 FETCH_HEAD
 # This gives the independently-verified upstream_merge_commit
@@ -291,10 +291,10 @@ See [dependencies.md](../../../documentation/dev/dependencies.md#known-false-pos
 
 > 🛑 **FIRST ACTION — Run the CG query script ONCE and save to file:**
 > ```bash
-> python3 .agents/skills/security-audit/scripts/query-cg-alerts.py > /tmp/cg-alerts-cache.json 2>/dev/null
+> mkdir -p output/ai && python3 .agents/skills/security-audit/scripts/query-cg-alerts.py > output/ai/cg-alerts-cache.json
 > ```
 > This takes 2-3 minutes. **Do NOT run this script again.** For ALL subsequent CG data needs,
-> read from `/tmp/cg-alerts-cache.json`. The script queries 60+ build logs via API — running it
+> read from `output/ai/cg-alerts-cache.json`. The script queries tens of build logs via API — running it
 > multiple times wastes minutes and produces identical results.
 
 > ⚠️ **MANDATORY:** The security audit MUST include CG alerts from BOTH the SkiaSharp-Native
@@ -313,17 +313,17 @@ internal Azure DevOps pipeline and flag vulnerabilities in:
 
 #### How to Query CG Alerts
 
-> 🛑 **CRITICAL — SAVE TO FILE:** This script queries 60+ build logs and takes 2-3 minutes.
+> 🛑 **CRITICAL — SAVE TO FILE:** This script queries tens of build logs and takes 2-3 minutes.
 > You MUST save the output to a **file** (not a shell variable) so it persists across tool calls.
 > Run it ONCE, save the JSON, then read from that file for the rest of the audit.
 > **NEVER run this script more than once per audit session.**
 
 ```bash
-# Run ONCE and save to a temp file — this is your CG data for the entire audit
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py > /tmp/cg-alerts-cache.json 2>/dev/null
+# Run ONCE and save — this is your CG data for the entire audit
+mkdir -p output/ai && python3 .agents/skills/security-audit/scripts/query-cg-alerts.py > output/ai/cg-alerts-cache.json
 
 # Then read from the file whenever you need CG data (fast, no API calls):
-cat /tmp/cg-alerts-cache.json | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d['totalAlerts'])"
+cat output/ai/cg-alerts-cache.json | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d['totalAlerts'])"
 ```
 
 > The output includes a `queriedAt` ISO timestamp so you can verify freshness.
@@ -351,14 +351,13 @@ The script automatically:
 1. Discovers the latest completed build from main AND all active release/* branches for BOTH pipelines
 2. Identifies ALL CG logs in each build (every job, no sampling — this is security)
 3. Parses and deduplicates all CVEs across all builds, pipelines, and jobs
-4. Categorizes alerts by source and shows "component stacks" (components with many CVEs grouped)
-5. Shows which branches and pipelines are affected
+4. Sorts by severity and reports which branches and pipelines are affected
 
 **Note:** There is no build-independent CG REST API. The `governance.visualstudio.com` service
 does not expose alert data through any documented endpoint. The CG portal UI aggregates from
-build results internally. Our script achieves the same result by sampling the latest build's
-CG logs, which report ALL active registration-level alerts regardless of which specific build
-produced them.
+build results internally. Our script achieves the same result by enumerating every CG log in
+the latest build of every active branch (no sampling), which reports ALL active registration-level
+alerts regardless of which specific build produced them.
 
 **Manual approach (for debugging):**
 
@@ -382,6 +381,9 @@ az devops invoke --area build --resource logs \
 ```
 
 #### CG Alert Categories
+
+> These categories are reference context for understanding where alerts come from and how to fix them.
+> They are **NOT** part of the report JSON — the viewer groups by component automatically.
 
 | Category | Source | Fix Mechanism |
 |----------|--------|---------------|
@@ -410,11 +412,11 @@ az devops invoke --area build --resource logs \
 
 > 🛑 **CRITICAL:** Include the **complete `alerts` array** from the script output in the report.
 > Do NOT summarize or truncate. The viewer needs every individual alert to render correctly.
-> Copy the entire JSON output from `/tmp/cg-alerts-cache.json` as the `cgAlerts` value.
+> Copy the entire JSON output from `output/ai/cg-alerts-cache.json` as the `cgAlerts` value.
 
 ```bash
 # The cgAlerts section of your report MUST be the raw script output:
-cat /tmp/cg-alerts-cache.json
+cat output/ai/cg-alerts-cache.json
 # Copy this entire JSON object as the value of "cgAlerts" in the report.
 ```
 
@@ -504,7 +506,7 @@ Present the output path to the user:
    🔴 3 attention · 🆕 2 undiscovered · ⚪ 4 FP · ✅ 5 clean
 ```
 
-### Step 9: Present Markdown Summary
+### Step 10: Present Markdown Summary
 
 After generating JSON and HTML, present a concise markdown summary to the user in the conversation (using the report-template.md format). This is in ADDITION to the JSON+HTML files, not instead of them.
 

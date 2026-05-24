@@ -75,7 +75,9 @@ if summary.get("totalCves", 0) != total_cves:
     warnings.append(f"summary.totalCves ({summary.get('totalCves')}) != actual CVE count ({total_cves})")
 
 # 3. CG alerts validation
-if cg:
+if not cg:
+    warnings.append("cgAlerts missing — Step 6 is mandatory for a complete security audit")
+elif cg:
     total_alerts = cg.get("totalAlerts", 0)
     all_alerts = cg.get("alerts", [])
 

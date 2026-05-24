@@ -15,6 +15,7 @@
     .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
     .status-pill { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 12px; }
     .st-attention { background: #fee2e2; color: #991b1b; }
+    .st-cg-tracked { background: #ede9fe; color: #5b21b6; }
     .st-undiscovered { background: #dbeafe; color: #1e40af; }
     .st-false-positive { background: #f3f4f6; color: #6b7280; }
     .st-clean { background: #dcfce7; color: #166534; }
@@ -24,6 +25,7 @@
     .sev-high { color: #991b1b; font-weight: 600; }
     .sev-medium { color: #92400e; }
     .sev-low { color: #6b7280; }
+    .sev-unknown { color: #dc2626; font-style: italic; }
     .version-match { color: #166534; }
     .version-mismatch { color: #991b1b; font-weight: 700; }
     .finding-header { cursor: pointer; }
@@ -112,6 +114,7 @@
 <script>
 const STATUS_LABELS = {
   needs_attention: ['🔴 Needs Attention', 'st-attention'],
+  cg_tracked: ['🛡️ CG Tracked', 'st-cg-tracked'],
   undiscovered: ['🆕 Undiscovered', 'st-undiscovered'],
   false_positive: ['⚪ False Positive', 'st-false-positive'],
   clean: ['✅ Clean', 'st-clean'],
@@ -121,12 +124,12 @@ const STATUS_LABELS = {
 
 const SEV_CLASS = { CRITICAL: 'sev-critical', HIGH: 'sev-high', MEDIUM: 'sev-medium', LOW: 'sev-low' };
 
-function sevClass(s) { return SEV_CLASS[(s||'').toUpperCase()] || 'sev-low'; }
+function sevClass(s) { return SEV_CLASS[(s||'').toUpperCase()] || 'sev-unknown'; }
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
 
 function renderSummary(s, cgAlerts) {
   const cgCount = cgAlerts ? (cgAlerts.totalAlerts || 0) : 0;
-  const cgHigh = cgAlerts ? ((cgAlerts.bySeverity || {}).High || 0) : 0;
+  const cgHigh = cgAlerts ? ((cgAlerts.bySeverity || {}).High || 0) + ((cgAlerts.bySeverity || {}).Critical || 0) : 0;
   const cards = [
     ['Needs Attention', s.needsAttention + cgHigh, 'danger', 'exclamation-triangle'],
     ['CG Alerts', cgCount, cgHigh > 0 ? 'danger' : 'warning', 'shield-exclamation'],
@@ -184,7 +187,7 @@ function renderOverview(vers, findings, cgAlerts) {
       const compName = verMatch ? verMatch[1] : comp;
       const compVersion = verMatch ? verMatch[2] : '';
       // Map CG severity to finding status — all CVEs need attention, severity determines urgency
-      const statusMap = { Critical: 'needs_attention', High: 'needs_attention', Medium: 'undiscovered', Low: 'undiscovered' };
+      const statusMap = { Critical: 'needs_attention', High: 'needs_attention', Medium: 'cg_tracked', Low: 'cg_tracked' };
       enriched.push({
         name: compName,
         source: 'CG (Build Pipeline)',
@@ -286,7 +289,8 @@ function renderCveTable(cves, columns) {
         return `<td class="${sevClass(cve.severity)}">${esc(String(val))}</td>`;
       }
       if (c.key === 'id') {
-        return `<td><a href="https://nvd.nist.gov/vuln/detail/${esc(val)}" target="_blank">${esc(val)}</a></td>`;
+        const url = val.startsWith('GHSA-') ? `https://github.com/advisories/${esc(val)}` : `https://nvd.nist.gov/vuln/detail/${esc(val)}`;
+        return `<td><a href="${url}" target="_blank">${esc(val)}</a></td>`;
       }
       return `<td>${esc(String(val))}</td>`;
     }).join('');
@@ -383,10 +387,17 @@ function renderNextSteps(steps) {
 
 function renderUpstream(meta) {
   const el = document.getElementById('upstream-info');
+  const milestoneNote = meta.upstreamVerified ? ' (verified from SkMilestone.h)' : ' <span class="text-danger">(NOT independently verified)</span>';
+  const forkCommit = meta.skiaSubmoduleCommit
+    ? `<code><a href="https://github.com/mono/skia/commit/${esc(meta.skiaSubmoduleCommit)}" target="_blank">${esc(meta.skiaSubmoduleCommit)}</a></code>`
+    : '<span class="text-muted">not captured</span>';
+  const upstreamCommit = meta.skiaUpstreamCommit
+    ? `<code><a href="https://github.com/google/skia/commit/${esc(meta.skiaUpstreamCommit)}" target="_blank">${esc(meta.skiaUpstreamCommit)}</a></code>`
+    : '<span class="text-muted">not captured</span>';
   el.innerHTML = `<table class="table table-sm meta-table mb-0"><tbody>
-    <tr><th>Milestone</th><td>m${meta.skiaMilestone} (verified from SkMilestone.h)</td></tr>
-    <tr><th>Fork Commit</th><td><code><a href="https://github.com/mono/skia/commit/${meta.skiaSubmoduleCommit}" target="_blank">${meta.skiaSubmoduleCommit}</a></code></td></tr>
-    <tr><th>Upstream Commit</th><td><code><a href="https://github.com/google/skia/commit/${meta.skiaUpstreamCommit}" target="_blank">${meta.skiaUpstreamCommit}</a></code></td></tr>
+    <tr><th>Milestone</th><td>m${esc(String(meta.skiaMilestone))}${milestoneNote}</td></tr>
+    <tr><th>Fork Commit</th><td>${forkCommit}</td></tr>
+    <tr><th>Upstream Commit</th><td>${upstreamCommit}</td></tr>
     <tr><th>Ancestry Verified</th><td>${meta.upstreamVerified ? '✅ Yes' : '❌ No'}</td></tr>
   </tbody></table>`;
 }
@@ -406,12 +417,13 @@ function renderCgAlerts(cg) {
   const sevCards = document.getElementById('cg-severity-cards');
   const sevData = cg.bySeverity || {};
   const sevEntries = [
+    ['Critical', sevData.Critical || 0, 'danger', 'shield-fill-exclamation'],
     ['High', sevData.High || 0, 'danger', 'exclamation-octagon'],
     ['Medium', sevData.Medium || 0, 'warning', 'exclamation-triangle'],
     ['Low', sevData.Low || 0, 'secondary', 'info-circle'],
   ];
-  sevCards.innerHTML = sevEntries.map(([label, count, color, icon]) => `
-    <div class="col-4">
+  sevCards.innerHTML = sevEntries.filter(([,count]) => count > 0).map(([label, count, color, icon]) => `
+    <div class="col-3">
       <div class="card text-center p-2">
         <div class="text-${color}"><i class="bi bi-${icon}"></i></div>
         <div class="fs-4 fw-bold">${count}</div>
@@ -446,9 +458,10 @@ function renderCgAlerts(cg) {
     container.innerHTML = groups.map((g, idx) => {
       const maxSev = g.alerts.reduce((best, a) => (sevOrder[a.severity] ?? 9) < (sevOrder[best] ?? 9) ? a.severity : best, 'Low');
       const collapseId = `cg-comp-${idx}`;
-      const cveRows = g.alerts.map(a =>
-        `<tr><td><a href="https://nvd.nist.gov/vuln/detail/${esc(a.id)}" target="_blank">${esc(a.id)}</a></td><td class="${sevClass(a.severity)}">${esc(a.severity)}</td></tr>`
-      ).join('');
+      const cveRows = g.alerts.map(a => {
+        const cveUrl = a.id.startsWith('GHSA-') ? `https://github.com/advisories/${esc(a.id)}` : `https://nvd.nist.gov/vuln/detail/${esc(a.id)}`;
+        return `<tr><td><a href="${cveUrl}" target="_blank">${esc(a.id)}</a></td><td class="${sevClass(a.severity)}">${esc(a.severity)}</td></tr>`;
+      }).join('');
       const pathList = [...g.paths].sort().map(p => `<code class="small d-block">${esc(p)}</code>`).join('');
       return `
         <div class="card mb-2">
@@ -486,8 +499,10 @@ function renderCgAlerts(cg) {
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof DATA === 'undefined') { document.body.innerHTML = '<p class="p-4 text-danger">No DATA found. JSON not injected.</p>'; return; }
   const d = DATA;
-  document.getElementById('header-subtitle').textContent =
-    `${d.meta.date} · Skia m${d.meta.skiaMilestone} · ${d.summary.totalCves} CVEs analyzed`;
+  const cgTotal = d.cgAlerts ? (d.cgAlerts.totalAlerts || 0) : 0;
+  const subtitleParts = [`${d.meta.date}`, `Skia m${d.meta.skiaMilestone}`, `${d.summary.totalCves} CVEs`];
+  if (cgTotal > 0) subtitleParts.push(`${cgTotal} CG alerts`);
+  document.getElementById('header-subtitle').textContent = subtitleParts.join(' · ');
   document.getElementById('header-badges').innerHTML =
     `<span class="badge bg-${d.summary.highestSeverity === 'CRITICAL' ? 'danger' : d.summary.highestSeverity === 'HIGH' ? 'warning' : 'info'}">${d.summary.highestSeverity}</span>`;
   renderSummary(d.summary, d.cgAlerts);
