@@ -289,6 +289,14 @@ See [dependencies.md](../../../documentation/dev/dependencies.md#known-false-pos
 
 ### Step 6: Check Component Governance (CG) Alerts
 
+> 🛑 **FIRST ACTION — Run the CG query script ONCE and save to file:**
+> ```bash
+> python3 .agents/skills/security-audit/scripts/query-cg-alerts.py > /tmp/cg-alerts-cache.json 2>/dev/null
+> ```
+> This takes 2-3 minutes. **Do NOT run this script again.** For ALL subsequent CG data needs,
+> read from `/tmp/cg-alerts-cache.json`. The script queries 60+ build logs via API — running it
+> multiple times wastes minutes and produces identical results.
+
 > ⚠️ **MANDATORY:** The security audit MUST include CG alerts from BOTH the SkiaSharp-Native
 > (pipeline 26493) and SkiaSharp (pipeline 10789) pipelines — together they make up the shipped build.
 > CG scans Docker container images used for native builds and flags CVEs in OS packages,
