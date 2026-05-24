@@ -71,7 +71,7 @@
       <table class="table table-sm table-hover mb-0 meta-table" id="overview-table">
         <thead><tr>
           <th>Dependency</th><th>Source</th><th>Current Version</th>
-          <th>Latest</th><th>Security</th><th>CVEs</th>
+          <th>Latest</th><th>Severity</th><th>Status</th><th>CVEs</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -154,7 +154,16 @@ function renderOverview(vers, findings, cgAlerts) {
   const enriched = (vers || []).map(v => {
     const f = findingMap[v.name];
     const cveTotal = f ? (f.cves||[]).length + (f.nonChromeCves||[]).length : 0;
-    return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1, isCg: false };
+    // Derive highest severity from CVEs
+    let maxSev = '';
+    if (f) {
+      const allCves = [...(f.cves||[]), ...(f.nonChromeCves||[])];
+      const sevOrd = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+      allCves.forEach(c => {
+        if (!maxSev || (sevOrd[c.severity] ?? 9) < (sevOrd[maxSev] ?? 9)) maxSev = c.severity;
+      });
+    }
+    return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1, isCg: false, cgSeverity: maxSev };
   });
 
   // Add CG components as rows (grouped by component)
@@ -215,6 +224,10 @@ function renderOverview(vers, findings, cgAlerts) {
     let secBadge = '<span class="status-pill st-clean">✅ Clean</span>';
     let cveCount = '';
     let latest = v.latestVersion || '';
+    let sevBadge = '<span class="text-muted">—</span>';
+    if (v.cgSeverity) {
+      sevBadge = `<span class="${sevClass(v.cgSeverity)}">${esc(v.cgSeverity)}</span>`;
+    }
     if (v.f) {
       const [label, cls] = STATUS_LABELS[v.f.status] || ['?', ''];
       secBadge = `<span class="status-pill ${cls}">${label}</span>`;
@@ -231,13 +244,14 @@ function renderOverview(vers, findings, cgAlerts) {
       <td class="text-muted small">${esc(v.source || 'Skia DEPS')}</td>
       <td>${versionDisplay}</td>
       <td>${latest ? esc(latest) : '<span class="text-muted">—</span>'}</td>
+      <td>${sevBadge}</td>
       <td>${secBadge}</td>
       <td>${cveCount}</td>
     </tr>`;
   }
 
   function groupHeader(label, count) {
-    return `<tr class="table-light"><td colspan="6" class="fw-bold small text-muted py-1 px-2"><i class="bi bi-${count > 0 ? 'exclamation-triangle text-danger' : 'check-circle text-success'} me-1"></i>${label} (${count})</td></tr>`;
+    return `<tr class="table-light"><td colspan="7" class="fw-bold small text-muted py-1 px-2"><i class="bi bi-${count > 0 ? 'exclamation-triangle text-danger' : 'check-circle text-success'} me-1"></i>${label} (${count})</td></tr>`;
   }
 
   let html = '';
