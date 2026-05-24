@@ -308,11 +308,12 @@ and trigger compliance alerts that block releases (partiallySucceeded builds).
 **Automated script (preferred):**
 
 ```bash
-# Get all current CG alerts across main + release branches from both pipelines (default)
+# Get all current CG alerts across main + release branches from both pipelines
+# Default output is JSON (designed for AI consumption)
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py
 
-# JSON output for inclusion in audit report
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --json
+# Human-readable text output (nothing truncated, all CVEs listed)
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --text
 
 # Query only a specific branch
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --branch main

@@ -13,10 +13,13 @@ Prerequisites:
   - Default org/project configured: az devops configure --defaults organization=https://devdiv.visualstudio.com project=DevDiv
 
 Usage:
-  python3 query-cg-alerts.py [--build-id BUILD_ID] [--branch BRANCH] [--json] [--quiet] [--pipeline PIPELINE]
+  python3 query-cg-alerts.py [--build-id BUILD_ID] [--branch BRANCH] [--text] [--quiet] [--pipeline PIPELINE]
 
-  # Query all branches and both pipelines (default)
+  # Query all branches and both pipelines — outputs JSON (default, for AI)
   python3 query-cg-alerts.py
+
+  # Human-readable text output (lists every CVE, nothing truncated)
+  python3 query-cg-alerts.py --text
 
   # Query only a specific branch
   python3 query-cg-alerts.py --branch main
@@ -28,9 +31,9 @@ Usage:
   python3 query-cg-alerts.py --build-id 14176611
 
 Output:
-  Prints a summary of all unique CG alerts grouped by severity, component, and branch.
-  Shows "stacks" — components with multiple CVEs grouped together.
-  With --json, outputs structured JSON suitable for the security audit report.
+  Default: JSON with every alert fully enumerated (id, component, severity,
+  category, source jobs, branches, pipelines). Designed for AI consumption.
+  With --text: grouped listing with all CVEs shown per component.
 """
 
 import argparse
@@ -228,7 +231,7 @@ def main():
     parser.add_argument("--branch", type=str, help="Query only this branch (e.g., 'main' or 'release/3.119.x')")
     parser.add_argument("--pipeline", type=str, choices=["native", "managed", "both"], default="both",
                         help="Which pipeline to query (default: both)")
-    parser.add_argument("--json", action="store_true", help="Output as JSON")
+    parser.add_argument("--text", action="store_true", help="Output as human-readable text instead of JSON (default is JSON for AI consumption)")
     parser.add_argument("--quiet", action="store_true", help="Suppress progress messages")
     args = parser.parse_args()
 
@@ -325,119 +328,75 @@ def main():
         sources = alert["sources"]
         alert["category"] = categorize_alert(comp, sources)
 
-    # Output
-    if args.json:
+    # Output — always structured for AI consumption.
+    # Default is JSON since this script is consumed by the security-audit skill.
+    # Use --text for a human-readable summary.
+    if not args.text:
         output = {
             "pipelines": [{"type": pt, "name": pi["name"], "id": pi["id"]} for pt, pi in pipelines_to_query],
             "builds": [{"id": bid, "branch": br, "number": num, "pipeline": PIPELINES[pt]["name"]} 
                        for bid, br, num, pt in builds_to_query],
             "totalAlerts": len(all_alerts),
+            "bySeverity": {
+                sev: len([a for a in all_alerts.values() if a["severity"] == sev])
+                for sev in ["Critical", "High", "Medium", "Low"]
+                if any(a["severity"] == sev for a in all_alerts.values())
+            },
+            "byCategory": {
+                cat: {
+                    "count": len(alerts),
+                    "severities": dict(sorted(
+                        ((s, len([a for a in alerts if a["severity"] == s]))
+                         for s in set(a["severity"] for a in alerts)),
+                        key=lambda x: {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}.get(x[0], 9)
+                    ))
+                }
+                for cat, alerts in sorted(
+                    ((cat, [a for a in all_alerts.values() if a["category"] == cat])
+                     for cat in set(a["category"] for a in all_alerts.values())),
+                    key=lambda x: -x[1].__len__()
+                )
+            },
             "alerts": sorted(all_alerts.values(), key=lambda a: (
                 {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}.get(a["severity"], 9),
-                a["category"],
+                a["component"],
                 a["id"]
             ))
         }
         print(json.dumps(output, indent=2))
     else:
-        # Group by severity
-        by_sev = defaultdict(list)
-        for alert in all_alerts.values():
-            by_sev[alert["severity"]].append(alert)
-
+        # Text mode: full listing, nothing truncated
         branches_str = ", ".join(sorted(set(b for _, b, _, _ in builds_to_query)))
         pipelines_str = ", ".join(pi["name"] for _, pi in pipelines_to_query)
-        print(f"\n{'='*70}")
-        print(f"CG ALERTS SUMMARY — {pipelines_str}")
+        print(f"CG ALERTS — {pipelines_str}")
         print(f"Branches: {branches_str}")
-        print(f"Total unique alerts: {len(all_alerts)}")
-        print(f"{'='*70}")
+        print(f"Total: {len(all_alerts)} unique alerts")
+        print()
 
-        for sev in ["Critical", "High", "Medium", "Low"]:
-            if sev not in by_sev:
-                continue
-            alerts = by_sev[sev]
-            print(f"\n### {sev} ({len(alerts)} alerts)")
-
-            # Group by category
-            by_cat = defaultdict(list)
-            for a in alerts:
-                by_cat[a["category"]].append(a)
-
-            for cat in sorted(by_cat.keys()):
-                cat_alerts = by_cat[cat]
-                print(f"\n  [{cat}]")
-                # Group by component
-                by_comp = defaultdict(list)
-                for a in cat_alerts:
-                    by_comp[a["component"]].append(a)
-                for comp in sorted(by_comp.keys()):
-                    comp_alerts = by_comp[comp]
-                    cves = sorted(a["id"] for a in comp_alerts)
-                    # Show branch info if not all branches
-                    all_branches = set()
-                    for a in comp_alerts:
-                        all_branches.update(a["branches"])
-                    branch_note = ""
-                    if len(builds_to_query) > 1:
-                        branch_note = f" [{', '.join(sorted(all_branches))}]"
-                    if len(cves) <= 3:
-                        print(f"    {comp}: {', '.join(cves)}{branch_note}")
-                    else:
-                        print(f"    {comp} ({len(cves)} CVEs): {', '.join(cves[:3])}...{branch_note}")
-
-        # Summary by category
-        print(f"\n{'='*70}")
-        print("BY CATEGORY:")
+        # Group by category, then component, list ALL CVEs
         by_cat = defaultdict(list)
         for a in all_alerts.values():
             by_cat[a["category"]].append(a)
+
         for cat in sorted(by_cat.keys()):
-            alerts = by_cat[cat]
-            sevs = defaultdict(int)
-            for a in alerts:
-                sevs[a["severity"]] += 1
-            sev_str = ", ".join(f"{s}: {c}" for s, c in sorted(sevs.items()))
-            print(f"  {cat}: {len(alerts)} alerts ({sev_str})")
-
-        # Branch coverage
-        if len(builds_to_query) > 1:
-            print(f"\nBRANCH COVERAGE:")
-            all_branches_seen = sorted(set(b for _, b, _, _ in builds_to_query))
-            for branch in all_branches_seen:
-                branch_alerts = [a for a in all_alerts.values() if branch in a["branches"]]
-                print(f"  {branch}: {len(branch_alerts)} alerts")
+            cat_alerts = by_cat[cat]
+            print(f"## {cat} ({len(cat_alerts)} alerts)")
             
-            # Show branch-exclusive alerts
-            all_branches_seen = sorted(set(b for _, b, _, _ in builds_to_query))
-            for branch in all_branches_seen:
-                exclusive = [a for a in all_alerts.values() 
-                           if a["branches"] == [branch]]
-                if exclusive:
-                    print(f"\n  Only in {branch} ({len(exclusive)}):")
-                    for a in sorted(exclusive, key=lambda x: x["id"])[:10]:
-                        print(f"    {a['id']} [{a['severity']}] {a['component']}")
-                    if len(exclusive) > 10:
-                        print(f"    ... and {len(exclusive) - 10} more")
-
-        # Component stacks (components with many CVEs grouped together)
-        print(f"\n{'='*70}")
-        print("COMPONENT STACKS (most affected first):")
-        by_comp = defaultdict(list)
-        for a in all_alerts.values():
-            by_comp[a["component"]].append(a)
-        stacks = sorted(by_comp.items(), key=lambda x: -len(x[1]))
-        for comp, comp_alerts in stacks[:15]:
-            sevs = defaultdict(int)
-            for a in comp_alerts:
-                sevs[a["severity"]] += 1
-            sev_str = ", ".join(f"{s}: {c}" for s, c in sorted(sevs.items()))
-            cat = comp_alerts[0].get("category", "unknown")
-            print(f"  {comp} — {len(comp_alerts)} CVEs ({sev_str}) [{cat}]")
-            # List CVE IDs for stacks > 5
-            if len(comp_alerts) > 5:
-                ids = sorted(a["id"] for a in comp_alerts)
-                print(f"    {', '.join(ids[:5])}... (+{len(ids)-5} more)")
+            # Group by component
+            by_comp = defaultdict(list)
+            for a in cat_alerts:
+                by_comp[a["component"]].append(a)
+            
+            for comp in sorted(by_comp.keys()):
+                comp_alerts = sorted(by_comp[comp], key=lambda a: a["id"])
+                sevs = set(a["severity"] for a in comp_alerts)
+                branches = set()
+                for a in comp_alerts:
+                    branches.update(a["branches"])
+                print(f"  {comp} [{', '.join(sorted(sevs))}] (branches: {', '.join(sorted(branches))})")
+                for a in comp_alerts:
+                    print(f"    - {a['id']} ({a['severity']})")
+            print()
 
 
 if __name__ == "__main__":
