@@ -63,11 +63,11 @@ fi
 Always run from a `main` checkout to avoid leaking release-branch-specific files
 (like `PREVIEW_LABEL`) into the PR targeting main.
 
-Ensure the working tree is on `main` and all remote refs are fetched:
+Ensure all remote refs are fetched and the working tree is on `main`:
 
 ```bash
-git checkout main
-git fetch origin --quiet
+git fetch origin main --quiet
+git checkout -B main origin/main
 ```
 
 Use the **release-notes** skill (`.agents/skills/release-notes/SKILL.md`) to generate
