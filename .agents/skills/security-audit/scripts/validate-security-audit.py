@@ -61,13 +61,13 @@ for f in findings:
         status_counts[s] += 1
 
 if summary.get("needsAttention", 0) != status_counts["needs_attention"]:
-    warnings.append(f"summary.needsAttention ({summary.get('needsAttention')}) != findings count ({status_counts['needs_attention']})")
+    errors.append(f"summary.needsAttention ({summary.get('needsAttention')}) != findings count ({status_counts['needs_attention']}) — fix the count")
 if summary.get("undiscovered", 0) != status_counts["undiscovered"]:
-    warnings.append(f"summary.undiscovered ({summary.get('undiscovered')}) != findings count ({status_counts['undiscovered']})")
+    errors.append(f"summary.undiscovered ({summary.get('undiscovered')}) != findings count ({status_counts['undiscovered']}) — fix the count")
 if summary.get("falsePositive", 0) != status_counts["false_positive"]:
-    warnings.append(f"summary.falsePositive ({summary.get('falsePositive')}) != findings count ({status_counts['false_positive']})")
+    errors.append(f"summary.falsePositive ({summary.get('falsePositive')}) != findings count ({status_counts['false_positive']}) — fix the count")
 if summary.get("clean", 0) != status_counts["clean"]:
-    warnings.append(f"summary.clean ({summary.get('clean')}) != findings count ({status_counts['clean']})")
+    errors.append(f"summary.clean ({summary.get('clean')}) != findings count ({status_counts['clean']}) — fix the count")
 
 # 2. totalCves should match sum of all CVEs across findings
 total_cves = sum(len(f.get("cves", [])) + len(f.get("nonChromeCves", [])) for f in findings)

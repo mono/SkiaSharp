@@ -409,7 +409,7 @@ function renderCgAlerts(cg) {
 
   // Badge
   const badge = document.getElementById('cg-badge');
-  const highCount = (cg.bySeverity || {}).High || 0;
+  const highCount = ((cg.bySeverity || {}).High || 0) + ((cg.bySeverity || {}).Critical || 0);
   const totalCount = cg.totalAlerts || 0;
   badge.innerHTML = `<span class="badge bg-${highCount > 0 ? 'danger' : 'warning'}">${totalCount} alerts</span>`;
 

@@ -100,7 +100,7 @@ git log --oneline --merges --grep="chrome/m" -5 HEAD
 # Find the merge commit that brought in chrome/mNNN
 
 # 4. Add the upstream remote and fetch (MANDATORY — this is read-only)
-git remote add upstream https://github.com/google/skia.git 
+git remote add upstream https://github.com/google/skia.git 2>/dev/null || git remote set-url upstream https://github.com/google/skia.git
 git fetch upstream chrome/mNNN --depth=1
 git log --format="%H %s" -1 FETCH_HEAD
 # This gives the independently-verified upstream_merge_commit
