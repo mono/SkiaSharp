@@ -156,7 +156,14 @@ def get_cg_log_ids(token: str, build_id: int) -> dict[str, tuple[str, int]]:
 
 
 def parse_cg_log(token: str, build_id: int, log_id: int) -> list[dict]:
-    """Parse CVEs from a CG log using REST API directly."""
+    """Parse CVEs and component locations from a CG log using REST API directly.
+    
+    The log has two sections:
+    1. Component manifest (--- Component: --- / --- Found at: --- pairs)
+    2. CVE alert table (|CVE-XXXX|component|severity|date|)
+    
+    We parse both and join them so each alert includes its file path(s).
+    """
     url = f"{ORG}/{PROJECT}/_apis/build/builds/{build_id}/logs/{log_id}?api-version=7.1"
     req = urllib.request.Request(url)
     req.add_header("Authorization", f"Bearer {token}")
@@ -167,18 +174,50 @@ def parse_cg_log(token: str, build_id: int, log_id: int) -> list[dict]:
         print(f"  WARNING: Failed to fetch log {log_id}: {e}", file=sys.stderr)
         return []
 
+    lines = content.split("\n")
+    
+    # Pass 1: Extract component locations (--- Component: --- / --- Found at: ---)
+    # Maps "component_name version" -> set of file paths
+    component_paths: dict[str, set] = {}
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        # Strip timestamp prefix
+        text = re.sub(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*", "", line).strip()
+        if text == "--- Component: ---" and i + 1 < len(lines):
+            comp_line = re.sub(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*", "", lines[i + 1]).strip()
+            # Component line format: "name version - Type" (e.g., "minimatch 3.1.2 - Npm")
+            comp_match = re.match(r"^(.+?)\s*-\s*\w+$", comp_line)
+            comp_key = comp_match.group(1).strip() if comp_match else comp_line
+            # Look for "--- Found at: ---" on i+2, path on i+3
+            if i + 3 < len(lines):
+                found_text = re.sub(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*", "", lines[i + 2]).strip()
+                if found_text == "--- Found at: ---":
+                    path_text = re.sub(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*", "", lines[i + 3]).strip()
+                    if path_text:
+                        component_paths.setdefault(comp_key, set()).add(path_text)
+                    i += 4
+                    continue
+            i += 2
+            continue
+        i += 1
+
+    # Pass 2: Extract CVE alerts from table
     alerts = []
-    for line in content.split("\n"):
+    for line in lines:
         # Format: |CVE-XXXX-XXXXX |component |severity |date|
         parts = [p.strip() for p in line.split("|")]
         data_parts = [p for p in parts if p and not re.match(r"^\d{4}-\d{2}-\d{2}T", p)]
         if len(data_parts) >= 3:
             cve_match = re.search(r"(CVE-\d{4}-\d+|GHSA-[\w-]+)", data_parts[0])
             if cve_match:
+                component = data_parts[1]
+                paths = sorted(component_paths.get(component, set()))
                 alerts.append({
                     "id": cve_match.group(1),
-                    "component": data_parts[1],
-                    "severity": data_parts[2]
+                    "component": component,
+                    "severity": data_parts[2],
+                    "paths": paths
                 })
 
     return alerts
@@ -269,7 +308,8 @@ def main():
                         "severity": alert["severity"],
                         "sources": [category],
                         "branches": [branch],
-                        "pipelines": [PIPELINES[ptype]["name"]]
+                        "pipelines": [PIPELINES[ptype]["name"]],
+                        "paths": list(alert.get("paths", []))
                     }
                 else:
                     if category not in all_alerts[key]["sources"]:
@@ -278,6 +318,9 @@ def main():
                         all_alerts[key]["branches"].append(branch)
                     if PIPELINES[ptype]["name"] not in all_alerts[key]["pipelines"]:
                         all_alerts[key]["pipelines"].append(PIPELINES[ptype]["name"])
+                    for p in alert.get("paths", []):
+                        if p not in all_alerts[key]["paths"]:
+                            all_alerts[key]["paths"].append(p)
 
     # Output — always structured for AI consumption.
     # Default is JSON since this script is consumed by the security-audit skill.
@@ -320,7 +363,14 @@ def main():
             branches = set()
             for a in comp_alerts:
                 branches.update(a["branches"])
+            # Collect all unique paths for this component
+            all_paths = set()
+            for a in comp_alerts:
+                all_paths.update(a.get("paths", []))
             print(f"  {comp} [{', '.join(sorted(sevs))}] (branches: {', '.join(sorted(branches))})")
+            if all_paths:
+                for p in sorted(all_paths):
+                    print(f"    path: {p}")
             for a in comp_alerts:
                 print(f"    - {a['id']} ({a['severity']})")
         print()
