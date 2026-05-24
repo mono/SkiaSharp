@@ -300,9 +300,6 @@ internal Azure DevOps pipeline and flag vulnerabilities in:
 - **Build toolchain dependencies** (npm: minimatch, path-to-regexp, ws, express; Rust: hashbrown, zerovec, time)
 - **NuGet build dependencies** (Microsoft.WindowsAppSDK)
 
-Even though these don't ship in SkiaSharp NuGet packages, they exist in Docker image layers
-and trigger compliance alerts that block releases (partiallySucceeded builds).
-
 #### How to Query CG Alerts
 
 > ⚠️ **CACHING:** This script queries 60+ build logs and takes 2-3 minutes to run.
@@ -314,7 +311,7 @@ and trigger compliance alerts that block releases (partiallySucceeded builds).
 
 ```bash
 # Run ONCE and cache the output for the duration of this audit
-CG_DATA=$(python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --quiet)
+CG_DATA=$(python3 .agents/skills/security-audit/scripts/query-cg-alerts.py)
 
 # Then parse the cached JSON as needed (no re-running):
 echo "$CG_DATA" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d['totalAlerts'])"

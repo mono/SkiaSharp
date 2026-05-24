@@ -13,7 +13,7 @@ Prerequisites:
   - Default org/project configured: az devops configure --defaults organization=https://devdiv.visualstudio.com project=DevDiv
 
 Usage:
-  python3 query-cg-alerts.py [--build-id BUILD_ID] [--branch BRANCH] [--text] [--quiet] [--pipeline PIPELINE]
+  python3 query-cg-alerts.py [--build-id BUILD_ID] [--branch BRANCH] [--text] [--verbose] [--pipeline PIPELINE]
 
   # Query all branches and both pipelines — outputs JSON (default, for AI)
   python3 query-cg-alerts.py
@@ -232,7 +232,7 @@ def main():
     parser.add_argument("--pipeline", type=str, choices=["native", "managed", "both"], default="both",
                         help="Which pipeline to query (default: both)")
     parser.add_argument("--text", action="store_true", help="Output as human-readable text instead of JSON (default is JSON for AI consumption)")
-    parser.add_argument("--quiet", action="store_true", help="Suppress progress messages")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show progress messages to stderr")
     args = parser.parse_args()
 
     token = get_token()
@@ -265,7 +265,7 @@ def main():
         for ptype, pinfo in pipelines_to_query:
             discovered = get_builds_for_branches(token, pinfo["id"], branches)
             if not discovered:
-                if not args.quiet:
+                if args.verbose:
                     print(f"WARNING: No completed builds found for {pinfo['name']}", file=sys.stderr)
                 continue
             for b in discovered:
@@ -276,7 +276,7 @@ def main():
         print("ERROR: No builds found to query", file=sys.stderr)
         sys.exit(1)
 
-    if not args.quiet:
+    if args.verbose:
         print(f"Querying {len(builds_to_query)} build(s) across {len(pipelines_to_query)} pipeline(s):", file=sys.stderr)
         for bid, branch, bnum, ptype in builds_to_query:
             print(f"  [{PIPELINES[ptype]['name']}] {branch}: build {bid} ({bnum})", file=sys.stderr)
@@ -285,20 +285,20 @@ def main():
     all_alerts = {}  # id -> {component, severity, branches, sources, pipelines}
 
     for build_id, branch, build_num, ptype in builds_to_query:
-        if not args.quiet:
+        if args.verbose:
             print(f"\n--- [{PIPELINES[ptype]['name']}] {branch} (build {build_id}) ---", file=sys.stderr)
 
         reps = get_cg_log_ids(token, build_id)
         if not reps:
-            if not args.quiet:
+            if args.verbose:
                 print(f"  WARNING: No CG logs found in build {build_id}", file=sys.stderr)
             continue
 
-        if not args.quiet:
+        if args.verbose:
             print(f"  Checking {len(reps)} CG job(s): {', '.join(sorted(reps.keys())[:5])}{'...' if len(reps) > 5 else ''}", file=sys.stderr)
 
         for category, (job_name, log_id) in sorted(reps.items()):
-            if not args.quiet:
+            if args.verbose:
                 print(f"    Parsing {category} (log {log_id})...", file=sys.stderr)
             alerts = parse_cg_log(token, build_id, log_id)
             for alert in alerts:
