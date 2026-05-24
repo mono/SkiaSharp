@@ -282,10 +282,10 @@ When a bug affects one platform but not another, **build both platforms locally*
 
 ```bash
 # Build x64 native (in Docker)
-bash ./scripts/infra/native/linux/docker/azurelinux/glibc/build-local.sh x64
+bash ./scripts/infra/native/linux/docker/glibc/build-local.sh x64
 
 # Build ARM64 cross-compile (in Docker)
-bash ./scripts/infra/native/linux/docker/azurelinux/glibc/build-local.sh arm64
+bash ./scripts/infra/native/linux/docker/glibc/build-local.sh arm64
 
 # Compare DT_NEEDED entries (the linked libraries)
 docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \

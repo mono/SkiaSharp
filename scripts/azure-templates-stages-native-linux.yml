@@ -33,21 +33,21 @@ stages:
             #                  first release arch in Trixie)
             - ${{ each arch in split('loongarch64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/infra/native/linux/docker/azurelinux/glibc
+                docker: scripts/infra/native/linux/docker/glibc
                 target: externals-linux-clang-cross
                 additionalArgs: --verifyGlibcMax=2.38
                 dockerArgs: --build-arg SYSROOT_RELEASE=trixie
             # Azure Linux + Bullseye sysroot (gcc-10, glibc 2.31).
             - ${{ each arch in split('arm,arm64,x86,x64,riscv64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/infra/native/linux/docker/azurelinux/glibc
+                docker: scripts/infra/native/linux/docker/glibc
                 target: externals-linux-clang-cross
                 additionalArgs: --verifyGlibcMax=2.31
                 dockerArgs: --build-arg SYSROOT_RELEASE=bullseye
             - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
               - arch: ${{ arch }}
                 variant: alpine
-                docker: scripts/infra/native/linux/docker/azurelinux/alpine
+                docker: scripts/infra/native/linux/docker/alpine
                 target: externals-linux-clang-cross
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
@@ -62,5 +62,5 @@ stages:
             - ${{ each arch in split('arm64,x64', ',') }}:
               - arch: ${{ arch }}
                 variant: bionic
-                docker: scripts/infra/native/linux/docker/azurelinux/bionic
+                docker: scripts/infra/native/linux/docker/bionic
 

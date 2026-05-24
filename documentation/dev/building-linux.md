@@ -82,7 +82,7 @@ Building for different Linux distributions is easier with Docker. The repository
 
 ```bash
 # Build the Docker image
-cd scripts/infra/native/linux/docker/azurelinux/alpine
+cd scripts/infra/native/linux/docker/alpine
 docker build --tag skiasharp-alpine --build-arg BUILD_ARCH=x64 .
 
 # Run the build
