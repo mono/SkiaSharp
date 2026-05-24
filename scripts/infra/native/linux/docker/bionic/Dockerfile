@@ -19,6 +19,8 @@ RUN tdnf install -y \
         tar \
         xz \
         unzip \
+        gawk \
+        ca-certificates \
     && tdnf clean all
 
 # Install the .NET SDK (needed for Cake build scripts)

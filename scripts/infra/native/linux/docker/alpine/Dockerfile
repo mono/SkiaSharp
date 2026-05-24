@@ -23,6 +23,8 @@ RUN tdnf install -y \
         curl \
         tar \
         xz \
+        gawk \
+        ca-certificates \
     && tdnf clean all
 
 # Install the .NET SDK (needed for Cake build scripts)
@@ -51,6 +53,7 @@ RUN case ${BUILD_ARCH} in \
     esac \
     && echo "export TOOLCHAIN_ARCH=${TOOLCHAIN_ARCH}" > /etc/skia-env \
     && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env \
+    && echo "export APK_ARCH=${APK_ARCH}" >> /etc/skia-env \
     && echo "export SYSROOT_PATH=/alpine/usr" >> /etc/skia-env
 
 # Create Alpine sysroot using apk.static.
@@ -67,16 +70,14 @@ RUN . /etc/skia-env \
         --create-dirs --output-dir "$APK_DIR" \
         "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.14/$MACHINE_ARCH/apk.static" \
     && chmod +x "$APK_DIR/apk.static" \
+    && mkdir -p /alpine/etc/apk \
+    && echo "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" > /alpine/etc/apk/repositories \
+    && echo "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" >> /alpine/etc/apk/repositories \
     && "$APK_DIR/apk.static" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
-        -U --allow-untrusted --root /alpine --arch "$APK_ARCH" --initdb add \
-    && "$APK_DIR/apk.static" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
-        -U --allow-untrusted --root /alpine --arch "$APK_ARCH" --no-scripts \
+        -p /alpine/packages --root /alpine --arch "$APK_ARCH" \
+        --update-cache --allow-untrusted --initdb \
         add musl-dev linux-headers fontconfig-dev \
-    && rm -rf "$APK_DIR"
+    && rm -rf "$APK_DIR" /alpine/packages
 
 WORKDIR /work
 

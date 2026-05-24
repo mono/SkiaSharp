@@ -31,8 +31,9 @@ RUN tdnf install -y \
         curl \
         tar \
         xz \
+        gawk \
+        ca-certificates \
         debootstrap \
-        dpkg \
     && tdnf clean all
 
 # Install the .NET SDK (needed for Cake build scripts)
@@ -106,11 +107,13 @@ RUN . /etc/skia-env \
                 dir=$(echo $pkg | rev | cut -d/ -f1 | rev) ; \
                 base=$(echo $pkg | rev | cut -d/ -f2- | rev) ; \
                 url="${POOL}/${base}/" ; \
-                # Download and extract — we only need data.tar
+                # Download and extract — ar x + tar (no dpkg-deb needed)
                 deb_url=$(curl -sL "$url" | grep -oP "href=\"\K${dir}_[^\"]+_all\.deb" | sort -V | tail -1) ; \
                 if [ -n "$deb_url" ]; then \
                   curl -LO "${url}${deb_url}" ; \
-                  dpkg-deb -x "${deb_url}" extract/ ; \
+                  ar x "${deb_url}" ; \
+                  mkdir -p extract && tar xf data.tar.* -C extract/ ; \
+                  rm -f control.tar.* data.tar.* debian-binary ; \
                 fi ; \
               done \
            && if [ -d extract/usr/riscv64-linux-gnu ]; then \
@@ -175,7 +178,9 @@ RUN . /etc/skia-env \
            url="${APT_REPO}/pool/main/f/fontconfig/${pkg}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb"; \
            echo "Downloading $url"; \
            curl -L -o "${pkg}.deb" "$url"; \
-           dpkg-deb -x "${pkg}.deb" ${SYSROOT_DIR}/ ; \
+           ar x "${pkg}.deb" ; \
+           tar xf data.tar.* -C ${SYSROOT_DIR}/ ; \
+           rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \
        done \
     && rm -rf /tmp/fontconfig
 
