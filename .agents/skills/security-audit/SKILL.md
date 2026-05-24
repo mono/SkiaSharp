@@ -305,13 +305,24 @@ and trigger compliance alerts that block releases (partiallySucceeded builds).
 
 #### How to Query CG Alerts
 
+> ⚠️ **CACHING:** This script queries 60+ build logs and takes 2-3 minutes to run.
+> **Run it ONCE at the start of the audit**, save the JSON output to a variable or temp file,
+> and reference that cached result for the rest of the skill execution. Do NOT re-run the
+> script each time you need a CG value. The data doesn't change during a single audit session.
+
 **Automated script (preferred):**
 
 ```bash
-# Get all current CG alerts across main + release branches from both pipelines
-# Default output is JSON (designed for AI consumption)
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py
+# Run ONCE and cache the output for the duration of this audit
+CG_DATA=$(python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --quiet)
 
+# Then parse the cached JSON as needed (no re-running):
+echo "$CG_DATA" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d['totalAlerts'])"
+```
+
+Additional flags:
+
+```bash
 # Human-readable text output (nothing truncated, all CVEs listed)
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --text
 
