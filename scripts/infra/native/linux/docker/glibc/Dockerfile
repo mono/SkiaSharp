@@ -101,7 +101,7 @@ RUN . /etc/skia-env \
            && APT_REPO=https://deb.debian.org/debian \
            && POOL="${APT_REPO}/pool/main" \
            && case "${TOOLCHAIN_ARCH_SHORT}" in \
-                loong64) PORTS_SUFFIX="-ports" ;; \
+                loong64|riscv64) PORTS_SUFFIX="-ports" ;; \
                 *)       PORTS_SUFFIX="" ;; \
               esac \
            && mkdir -p /tmp/cross-pkgs && cd /tmp/cross-pkgs \
@@ -133,9 +133,23 @@ RUN . /etc/skia-env \
          *) \
            # Standard debootstrap for architectures with Debian binary archives.
            # Produces native layout: headers at /usr/include/, libs at /usr/lib/{triple}/
+           # NOTE: --foreign only extracts essential/base packages; --include packages
+           # are downloaded to var/cache/apt/archives/ but NOT extracted. We must
+           # manually extract them after debootstrap completes.
            debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
-             --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev \
+             --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev,libc6-dev \
              ${SYSROOT_RELEASE} ${SYSROOT_DIR} https://deb.debian.org/debian \
+           && echo "Extracting --include dev packages from cache..." \
+           && for deb in \
+                ${SYSROOT_DIR}/var/cache/apt/archives/libstdc++-${TOOLCHAIN_VERSION}-dev*.deb \
+                ${SYSROOT_DIR}/var/cache/apt/archives/libgcc-${TOOLCHAIN_VERSION}-dev*.deb \
+                ${SYSROOT_DIR}/var/cache/apt/archives/linux-libc-dev*.deb \
+                ${SYSROOT_DIR}/var/cache/apt/archives/libc6-dev*.deb; do \
+                if [ -f "$deb" ]; then \
+                  echo "  Extracting: $(basename $deb)" ; \
+                  cd /tmp && ar x "$deb" && tar xf data.tar.* -C ${SYSROOT_DIR}/ && rm -f control.tar.* data.tar.* debian-binary ; \
+                fi ; \
+              done \
            && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env ;; \
        esac \
     && echo "Sysroot created: ${SYSROOT_RELEASE} ${BUILD_ARCH}"
@@ -144,15 +158,38 @@ RUN . /etc/skia-env \
 # without baking the GCC version number into the build script.
 # Debootstrap: headers at /sysroot/usr/include/c++/VERSION/
 # Cross-packages (riscv64/loongarch64): headers at /sysroot/usr/{ARCH}/include/c++/VERSION/
+#
+# Additionally, Debian native packages place arch-specific c++ headers at:
+#   /usr/include/{TOOLCHAIN_ARCH}/c++/VERSION/  (e.g. /usr/include/arm-linux-gnueabihf/c++/10/)
+# But build.cake expects them at:
+#   /usr/include/c++/VERSION/{TOOLCHAIN_ARCH}/  (the cross-toolchain layout)
+# We create a symlink to bridge this gap.
 RUN . /etc/skia-env \
     && TOOLCHAIN_VERSION=$(grep TOOLCHAIN_VERSION /etc/skia-env | cut -d= -f2) \
-    && SYSROOT_PATH_VAL=$(grep SYSROOT_PATH /etc/skia-env | cut -d= -f2) \
+    && SYSROOT_PATH_VAL=$(grep "SYSROOT_PATH=" /etc/skia-env | cut -d= -f2) \
     && INCLUDE_DIR=${SYSROOT_PATH_VAL}/include/c++ \
+    && echo "Looking for c++ headers in: ${INCLUDE_DIR}" \
+    && echo "TOOLCHAIN_VERSION=${TOOLCHAIN_VERSION}, TOOLCHAIN_ARCH=${TOOLCHAIN_ARCH}" \
+    && if [ -d "${INCLUDE_DIR}" ]; then ls ${INCLUDE_DIR}/ ; fi \
     && if [ -d "${INCLUDE_DIR}/${TOOLCHAIN_VERSION}" ]; then \
          ln -sf ${TOOLCHAIN_VERSION} ${INCLUDE_DIR}/current ; \
+         echo "Created symlink: ${INCLUDE_DIR}/current -> ${TOOLCHAIN_VERSION}" ; \
        elif [ -d "${INCLUDE_DIR}" ]; then \
-         GCC_VERSION=$(ls ${INCLUDE_DIR}/ | head -1) ; \
-         [ -n "$GCC_VERSION" ] && ln -sf ${GCC_VERSION} ${INCLUDE_DIR}/current ; \
+         GCC_VERSION=$(ls ${INCLUDE_DIR}/ | grep -E '^[0-9]' | head -1) ; \
+         if [ -n "$GCC_VERSION" ]; then \
+           ln -sf ${GCC_VERSION} ${INCLUDE_DIR}/current ; \
+           echo "Created symlink: ${INCLUDE_DIR}/current -> ${GCC_VERSION}" ; \
+           TOOLCHAIN_VERSION=${GCC_VERSION} ; \
+         else \
+           echo "ERROR: No version directory found in ${INCLUDE_DIR}" && exit 1 ; \
+         fi ; \
+       else \
+         echo "ERROR: ${INCLUDE_DIR} does not exist!" && exit 1 ; \
+       fi \
+    && ARCH_INCLUDE=${SYSROOT_PATH_VAL}/include/${TOOLCHAIN_ARCH}/c++/${TOOLCHAIN_VERSION} \
+    && if [ -d "${ARCH_INCLUDE}" ] && [ ! -e "${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH}" ]; then \
+         ln -sf ${ARCH_INCLUDE} ${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH} ; \
+         echo "Created arch symlink: ${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH} -> ${ARCH_INCLUDE}" ; \
        fi
 
 # Fix libc/libpthread linker scripts to use relative paths.

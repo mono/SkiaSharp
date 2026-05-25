@@ -83,6 +83,19 @@ RUN . /etc/skia-env \
         add musl-dev linux-headers fontconfig-dev libstdc++-dev \
     && rm -rf "$APK_DIR"
 
+# Create c++/current symlink so build.cake can find libstdc++ headers
+# without hardcoding the GCC version number. Alpine installs headers at
+# /alpine/usr/include/c++/<version>/ (e.g. 14.2.0).
+RUN . /etc/skia-env \
+    && INCLUDE_DIR=/alpine/usr/include/c++ \
+    && if [ -d "${INCLUDE_DIR}" ]; then \
+         GCC_VERSION=$(ls ${INCLUDE_DIR}/ | grep -E '^[0-9]' | head -1) ; \
+         if [ -n "$GCC_VERSION" ]; then \
+           ln -sf ${GCC_VERSION} ${INCLUDE_DIR}/current ; \
+           echo "Created symlink: ${INCLUDE_DIR}/current -> ${GCC_VERSION}" ; \
+         fi ; \
+       fi
+
 WORKDIR /work
 
 COPY ./startup.sh /
