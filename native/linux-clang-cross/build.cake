@@ -40,9 +40,16 @@ string GetGnArgs(string arch)
     // When <cmath> does #include_next <math.h>, the search continues from paths
     // AFTER the directory where cmath was found. If C headers are listed first,
     // they won't be searched by #include_next from C++ headers.
+    //
+    // The Dockerfile creates: include/c++/current -> VERSION
+    // Arch-specific headers vary by layout:
+    //   Debootstrap:     {sysroot}/include/{ARCH}/c++/current/
+    //   Cross-packages:  {sysroot}/include/c++/current/{ARCH}/
+    // We include both — non-existent paths are harmless to clang.
     var includes =
         $"'-I{sysroot}/include/c++/current', " +
         $"'-I{sysroot}/include/c++/current/{TOOLCHAIN_ARCH}', " +
+        $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}/c++/current', " +
         $"'-I{sysroot}/include', " +
         $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}' ";
 

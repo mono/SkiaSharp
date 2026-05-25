@@ -27,16 +27,21 @@ stages:
               additionalArgs: --verifyExcluded=fontconfig
               gnArgs: skia_use_fontconfig=false
           matrix:
+            # Azure Linux + loongarch64 cross-package extraction (gcc-14, glibc 2.38).
+            # loongarch64 has no Debian binary archive — uses its own Dockerfile.
+            - arch: loongarch64
+              docker: scripts/infra/native/linux/docker/loongarch64
+              target: externals-linux-clang-cross
+              additionalArgs: --verifyGlibcMax=2.38
+              dockerArgs: --build-arg SYSROOT_RELEASE=trixie
             # Azure Linux + Trixie sysroot (gcc-14, glibc 2.38) - for archs that
             # need GCC 14 (lld 18 is incompatible with GCC 10's static libstdc++.a
-            # on riscv64 due to .eh_frame discarded-section errors), or never had
-            # release-arch packages in Bullseye/Bookworm (loongarch64).
-            - ${{ each arch in split('loongarch64,riscv64', ',') }}:
-              - arch: ${{ arch }}
-                docker: scripts/infra/native/linux/docker/glibc
-                target: externals-linux-clang-cross
-                additionalArgs: --verifyGlibcMax=2.38
-                dockerArgs: --build-arg SYSROOT_RELEASE=trixie
+            # on riscv64 due to .eh_frame discarded-section errors).
+            - arch: riscv64
+              docker: scripts/infra/native/linux/docker/glibc
+              target: externals-linux-clang-cross
+              additionalArgs: --verifyGlibcMax=2.38
+              dockerArgs: --build-arg SYSROOT_RELEASE=trixie
             # Azure Linux + Bullseye sysroot (gcc-10, glibc 2.31).
             - ${{ each arch in split('arm,arm64,x86,x64', ',') }}:
               - arch: ${{ arch }}

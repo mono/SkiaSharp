@@ -122,25 +122,16 @@ RUN . /etc/skia-env \
         add musl-dev linux-headers fontconfig-dev libstdc++-dev gcc \
     && rm -rf "$APK_DIR"
 
-# Create c++/current symlink so build.cake can find libstdc++ headers
-# without hardcoding the GCC version number. Alpine installs headers at
-# /alpine/usr/include/c++/<version>/ (e.g. 14.2.0).
-RUN . /etc/skia-env \
-    && INCLUDE_DIR=/alpine/usr/include/c++ \
-    && if [ -d "${INCLUDE_DIR}" ]; then \
-         GCC_VERSION=$(ls ${INCLUDE_DIR}/ | grep -E '^[0-9]' | sort -V | tail -1) ; \
-         if [ -n "$GCC_VERSION" ]; then \
-           ln -sf ${GCC_VERSION} ${INCLUDE_DIR}/current ; \
-           echo "Created symlink: ${INCLUDE_DIR}/current -> ${GCC_VERSION}" ; \
-           GCC_LIB_DIR="/alpine/usr/lib/gcc/${TOOLCHAIN_ARCH}/${GCC_VERSION}" ; \
-           echo "export GCC_LIB_DIR=${GCC_LIB_DIR}" >> /etc/skia-env ; \
-           echo "GCC lib dir: ${GCC_LIB_DIR}" ; \
-         else \
-           echo "ERROR: No GCC version directory found in ${INCLUDE_DIR}" && exit 1 ; \
-         fi ; \
-       else \
-         echo "ERROR: ${INCLUDE_DIR} does not exist!" && exit 1 ; \
-       fi
+# Create c++/current symlink and discover GCC lib dir.
+# Alpine installs headers at /alpine/usr/include/c++/<version>/ (e.g. 14.2.0).
+# We need the version to locate the GCC lib directory for CRT files.
+RUN INCLUDE_DIR=/alpine/usr/include/c++ \
+    && GCC_VERSION=$(ls ${INCLUDE_DIR}/ | grep -E '^[0-9]' | sort -V | tail -1) \
+    && if [ -z "$GCC_VERSION" ]; then echo "ERROR: No GCC version in ${INCLUDE_DIR}" && exit 1 ; fi \
+    && ln -sf ${GCC_VERSION} ${INCLUDE_DIR}/current \
+    && . /etc/skia-env \
+    && echo "export GCC_LIB_DIR=/alpine/usr/lib/gcc/${TOOLCHAIN_ARCH}/${GCC_VERSION}" >> /etc/skia-env \
+    && echo "Created: ${INCLUDE_DIR}/current -> ${GCC_VERSION}"
 
 WORKDIR /work
 
