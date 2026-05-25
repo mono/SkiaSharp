@@ -6,8 +6,8 @@ namespace SkiaSharp
 {
 	/// <summary>
 	/// Per-plane pixel data delivered to the callback passed to
-	/// <see cref="SKGraphiteContext.RequestReadPixels"/>. Only valid for the duration
-	/// of that callback — copy what you need before returning.
+	/// <c>SKGraphiteContext.RequestReadPixels</c>. Only valid for the
+	/// duration of that callback — copy what you need before returning.
 	/// </summary>
 	public sealed unsafe class SKGraphiteAsyncReadResult : IDisposable
 	{

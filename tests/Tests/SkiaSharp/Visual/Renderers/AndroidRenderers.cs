@@ -82,10 +82,11 @@ namespace SkiaSharp.Tests.Visual
 		public override string Name => "android-ganesh-vulkan";
 	}
 
-	// Follow-ups (not in this commit):
-	//   - AndroidGaneshGlesRenderer (needs an Android-specific EGL loader
-	//     inside the host app; current EglLoader hardcodes libEGL.so.1 which
-	//     Android doesn't ship — Android has libEGL.so).
-	//   - AndroidGraphiteVulkanRenderer (waits for Skia upstream to stabilise
-	//     Graphite-on-Android-Vulkan).
+	public sealed class AndroidGaneshGlesRenderer : AndroidRendererBase
+	{
+		public override string Name => "android-ganesh-gles";
+	}
+
+	// Follow-up: AndroidGraphiteVulkanRenderer (waits for Skia upstream to
+	// stabilise Graphite-on-Android-Vulkan).
 }

@@ -31,10 +31,26 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	internal sealed unsafe class EglLoader
 	{
-		// Stock Linux ships libEGL.so.1 but not the unversioned libEGL.so
-		// (that's an -dev package symlink). Reference the versioned name
-		// directly so we resolve on a bare runtime install.
-		private const string libegl = "libEGL.so.1";
+		// Stock Linux ships libEGL.so.1; Android ships libEGL.so.
+		// The DllImport name is the abstract token "libEGL"; the static
+		// ctor below registers a NativeLibrary resolver that maps it to
+		// whichever versioned/unversioned filename the host actually has.
+		private const string libegl = "libEGL";
+
+		static EglLoader ()
+		{
+			try {
+				NativeLibrary.SetDllImportResolver (typeof (EglLoader).Assembly, (name, asm, search) => {
+					if (name == libegl) {
+						if (NativeLibrary.TryLoad ("libEGL.so.1", asm, search, out var h)) return h;
+						if (NativeLibrary.TryLoad ("libEGL.so",   asm, search, out h))     return h;
+					}
+					return IntPtr.Zero;
+				});
+			} catch (InvalidOperationException) {
+				// resolver already installed in this assembly — fine
+			}
+		}
 
 		private static EglLoader instance;
 		private static readonly object instanceLock = new object ();
