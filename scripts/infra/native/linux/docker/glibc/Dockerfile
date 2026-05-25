@@ -131,19 +131,6 @@ RUN . /etc/skia-env \
     && debootstrap ${DEBOOTSTRAP_OPTS} \
          --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev,libc6-dev \
          ${SYSROOT_RELEASE} ${SYSROOT_DIR} https://deb.debian.org/debian \
-       || { DEBOOTSTRAP_EXIT=$? ; \
-            echo "debootstrap exited ${DEBOOTSTRAP_EXIT} — verifying cache..." ; \
-            for required_pkg in \
-              "libstdc++-${TOOLCHAIN_VERSION}-dev" \
-              "libgcc-${TOOLCHAIN_VERSION}-dev" \
-              "linux-libc-dev" \
-              "libc6-dev" \
-              "libc6" \
-              "libgcc-s1"; do \
-              ls ${SYSROOT_DIR}/var/cache/apt/archives/${required_pkg}_*.deb > /dev/null 2>&1 \
-              || { echo "FATAL: required package '${required_pkg}' not in cache (debootstrap exit ${DEBOOTSTRAP_EXIT})" && exit 1 ; } ; \
-            done ; \
-            echo "All required packages found in cache — debootstrap exit was non-fatal." ; } \
     && echo "Extracting required packages into sysroot..." \
     && for required_pkg in \
          "libstdc++-${TOOLCHAIN_VERSION}-dev" \
@@ -153,12 +140,13 @@ RUN . /etc/skia-env \
          "libc6" \
          "libgcc-s1"; do \
          deb=$(ls ${SYSROOT_DIR}/var/cache/apt/archives/${required_pkg}_*.deb 2>/dev/null | head -1) ; \
-         if [ -n "$deb" ]; then \
-           echo "  Extracting: $(basename $deb)" ; \
-           cd /tmp && ar x "$deb" \
-           && tar xf data.tar.* -C ${SYSROOT_DIR}/ \
-           && rm -f control.tar.* data.tar.* debian-binary ; \
+         if [ -z "$deb" ]; then \
+           echo "FATAL: required package '${required_pkg}' not found in cache" && exit 1 ; \
          fi ; \
+         echo "  Extracting: $(basename $deb)" ; \
+         cd /tmp && ar x "$deb" \
+         && tar xf data.tar.* -C ${SYSROOT_DIR}/ \
+         && rm -f control.tar.* data.tar.* debian-binary ; \
        done \
     && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env \
     && echo "export SYSROOT_ROOT=${SYSROOT_DIR}" >> /etc/skia-env \
