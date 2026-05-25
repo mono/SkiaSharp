@@ -10,7 +10,15 @@ public class CreateXpsSample : DocumentSampleBase
 
 	public override string Title => "Create XPS Document";
 
+	public override DateOnly? DateAdded => new DateOnly(2018, 2, 8);
+
 	public override string Description => "Generate multi-page XPS documents using SkiaSharp's document API. Windows only.";
+
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKDocument", "SKDocument.CreateXps", "SKDocument.BeginPage",
+		"SKCanvas.DrawText", "SKCanvas", "SKPaint", "SKFont",
+	];
 
 	public override bool IsSupported => OperatingSystem.IsWindows();
 
@@ -33,7 +41,7 @@ public class CreateXpsSample : DocumentSampleBase
 					IsStroke = true,
 					StrokeWidth = 3,
 				};
-				using var docFont = new SKFont { Size = 64.0f };
+				using var docFont = new SKFont(SampleMedia.Fonts.Default, 64);
 
 				var pageWidth = 840;
 				var pageHeight = 1188;
@@ -52,7 +60,7 @@ public class CreateXpsSample : DocumentSampleBase
 			}
 		}
 
-		using var font = new SKFont { Size = 40 };
+		using var font = new SKFont(SampleMedia.Fonts.Default, 40);
 		using var previewPaint = new SKPaint { IsAntialias = true, Color = 0xFF9CAFB7 };
 
 		previewCanvas.DrawText(

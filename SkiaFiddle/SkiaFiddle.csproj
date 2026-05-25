@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Uno.Sdk/6.6.0-dev.208">
+  <PropertyGroup>
+    <!-- WASM-only: SkiaFiddle compiles user C# in the browser via Roslyn. -->
+    <TargetFrameworks>net10.0-browserwasm</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>SkiaFiddle</RootNamespace>
+    <UnoSingleProject>true</UnoSingleProject>
+    <ApplicationTitle>SkiaFiddle</ApplicationTitle>
+    <ApplicationId>com.companyname.skiafiddle</ApplicationId>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationPublisher>O=SkiaSharp</ApplicationPublisher>
+    <Description>SkiaFiddle — live SkiaSharp playground that compiles C# snippets in the browser with Roslyn.</Description>
+    <UnoFeatures>
+      SkiaRenderer;
+    </UnoFeatures>
+  </PropertyGroup>
+  <PropertyGroup>
+    <UnoDefaultFont>None</UnoDefaultFont>
+    <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
+    <UnoXamlResourcesTrimming>true</UnoXamlResourcesTrimming>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Roslyn emits IL at runtime; the runtime must be able to execute it. -->
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <!-- ILLink.Descriptors.xml roots Roslyn + reflection-heavy assemblies so their members survive trimming. -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <!-- Roslyn diagnostics use culture data. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- AssemblyExtensions.TryGetRawMetadata uses pointers; we wrap it in our own unsafe block. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- In-browser C# compilation -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+    <!-- Code editor -->
+    <PackageReference Include="Uno.Monaco.Editor" Version="6.4.0-dev.41.gfc42320b13" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\MonacoFocusGuard.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <UnoSupportedLanguage Include="en-US" />
+  </ItemGroup>
+</Project>

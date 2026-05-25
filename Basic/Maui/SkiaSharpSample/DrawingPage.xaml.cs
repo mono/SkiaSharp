@@ -21,7 +21,7 @@ public partial class DrawingPage : ContentPage
 	};
 
 	readonly List<(SKPath Path, SKColor Color, float Width)> strokes = new();
-	SKPath? currentPath;
+	SKPathBuilder? currentBuilder;
 	SKColor currentColor;
 	float brushSize = 4f;
 
@@ -69,27 +69,27 @@ public partial class DrawingPage : ContentPage
 		switch (e.ActionType)
 		{
 			case SKTouchAction.Pressed:
-				currentPath = new SKPath();
-				currentPath.MoveTo(e.Location);
+				currentBuilder = new SKPathBuilder();
+				currentBuilder.MoveTo(e.Location);
 				break;
 
 			case SKTouchAction.Moved:
-				currentPath?.LineTo(e.Location);
+				currentBuilder?.LineTo(e.Location);
 				skiaView.InvalidateSurface();
 				break;
 
 			case SKTouchAction.Released:
-				if (currentPath != null)
+				if (currentBuilder != null)
 				{
-					strokes.Add((currentPath, currentColor, brushSize));
-					currentPath = null;
+					strokes.Add((currentBuilder.Detach(), currentColor, brushSize));
+					currentBuilder = null;
 					skiaView.InvalidateSurface();
 				}
 				break;
 
 			case SKTouchAction.Cancelled:
-				currentPath?.Dispose();
-				currentPath = null;
+				currentBuilder?.Dispose();
+				currentBuilder = null;
 				break;
 
 			case SKTouchAction.WheelChanged:
@@ -121,11 +121,12 @@ public partial class DrawingPage : ContentPage
 			canvas.DrawPath(path, paint);
 		}
 
-		if (currentPath != null)
+		if (currentBuilder != null)
 		{
+			using var path = currentBuilder.Snapshot();
 			paint.Color = currentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(currentPath, paint);
+			canvas.DrawPath(path, paint);
 		}
 	}
 
@@ -158,8 +159,8 @@ public partial class DrawingPage : ContentPage
 		foreach (var (path, _, _) in strokes)
 			path.Dispose();
 		strokes.Clear();
-		currentPath?.Dispose();
-		currentPath = null;
+		currentBuilder?.Dispose();
+		currentBuilder = null;
 		skiaView.InvalidateSurface();
 	}
 }

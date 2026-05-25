@@ -1,52 +1,108 @@
 @{
     var isDoc = Sample is DocumentSampleBase;
     var isAnimated = Sample is CanvasSampleBase cs && cs.IsAnimated;
+    var cat = SampleManager.GetCategoryFor(Sample.Category);
 }
 
-<div class="card h-100 sample-card @(!Supported ? "sample-card-disabled" : "")"
-     style="border-left-color: @CategoryColor; background-color: @(CategoryColor)08; animation-delay: @(Index * 40)ms;">
-    <div class="card-body py-3 px-3">
-        <div class="d-flex align-items-start gap-2">
-            <i class="bi @Icon" style="font-size:1.4rem;color:@(Supported ? CategoryColor : "#bbb");flex-shrink:0;margin-top:1px;"></i>
-            <div>
-                <h6 class="card-title mb-1">@Sample.Title</h6>
-                @if (!string.IsNullOrWhiteSpace(Sample.Description))
+<div class="sample-card @(!Supported ? "sample-card-disabled" : "")"
+     style="--card-color: @cat.Color; animation-delay: @(Index * 25)ms;">
+    @* Accent bar *@
+    <div class="card-accent" style="background: linear-gradient(135deg, color-mix(in srgb, @cat.Color 50%, white), color-mix(in srgb, @cat.Color 70%, white));"></div>
+
+    @* Content *@
+    <div class="card-body">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="bi @Icon" style="color: @(Supported ? cat.Color : "#777");"></i>
+            </div>
+            <div class="card-badges">
+                @if (IsNew)
                 {
-                    <p class="card-text text-muted small mb-0" style="line-height: 1.4;">
-                        @TruncateDescription(Sample.Description)
-                    </p>
+                    <span class="badge badge-new">NEW</span>
+                }
+                @if (isAnimated)
+                {
+                    <span class="badge badge-live">Live</span>
+                }
+                else if (isDoc)
+                {
+                    <span class="badge badge-doc">Doc</span>
                 }
             </div>
         </div>
-    </div>
-    <div class="card-footer bg-transparent border-0 py-2 px-3 d-flex gap-1 flex-wrap align-items-center">
-        <span class="category-badge" style="background-color: @(CategoryColor)1A; color: @CategoryColor;">@Sample.Category</span>
-        @if (isDoc)
+
+        <h3 class="card-title">@Sample.Title</h3>
+        @if (!string.IsNullOrWhiteSpace(Sample.Description))
         {
-            <span class="type-badge type-doc">📄 Document</span>
+            <p class="card-desc">@TruncateDescription(Sample.Description)</p>
         }
-        else if (isAnimated)
+    </div>
+
+    @* Tag strip — rarest first, max 4 visible *@
+    <div class="card-tags">
+        @{ var rankedTags = GetDisplayTags(); var shownCount = Math.Min(4, rankedTags.Count); var overflow = rankedTags.Count - shownCount; }
+        @for (var i = 0; i < shownCount; i++)
         {
-            <span class="type-badge type-animated">🎬 Animated</span>
+            var tag = rankedTags[i];
+            var kind = KnownApis.Classify(tag);
+            var displayName = KnownApis.GetDisplayName(tag);
+            var isActiveTag = ActiveTags.Contains(tag);
+            var capturedTag = tag;
+            <span role="button" tabindex="@(Supported ? 0 : -1)" class="card-tag @(kind == TagKind.Type ? "ct-type" : "ct-method") @(isActiveTag ? "ct-active" : "")"
+                    @onclick="() => OnTagClicked.InvokeAsync(capturedTag)" @onclick:stopPropagation="true"
+                    @onclick:preventDefault="true"
+                    @onkeydown="e => HandleTagKeyDown(e, capturedTag)" @onkeydown:stopPropagation="true"
+                    aria-pressed="@(isActiveTag ? "true" : "false")"
+                    title="@tag">
+                @displayName
+            </span>
+        }
+        @if (overflow > 0)
+        {
+            <span class="card-tag-overflow">+@overflow</span>
+        }
+    </div>
+
+    @* Footer *@
+    <div class="card-footer">
+        <span class="card-category" style="color: @cat.Color;">@Sample.Category</span>
+        @if (Supported)
+        {
+            <span class="card-arrow">→</span>
         }
         else
         {
-            <span class="type-badge type-canvas">🖼️ Canvas</span>
-        }
-        @if (!Supported)
-        {
-            <span class="type-badge type-unsupported">🚫 Unavailable</span>
+            <span class="card-unsupported">Not supported</span>
         }
     </div>
 </div>
 
 @code {
     [Parameter, EditorRequired] public SampleBase Sample { get; set; } = default!;
-    [Parameter, EditorRequired] public string CategoryColor { get; set; } = "";
     [Parameter, EditorRequired] public string Icon { get; set; } = "";
     [Parameter] public int Index { get; set; }
     [Parameter] public bool Supported { get; set; } = true;
+    [Parameter] public bool IsNew { get; set; }
+    [Parameter] public IReadOnlySet<string> ActiveTags { get; set; } = new HashSet<string>();
+    [Parameter] public Dictionary<string, int> CorpusCounts { get; set; } = new();
+    [Parameter] public EventCallback<string> OnTagClicked { get; set; }
+
+    private IReadOnlyList<string> GetDisplayTags()
+    {
+        var active = Sample.ApiTags.Where(t => ActiveTags.Contains(t)).ToList();
+        var rest = Sample.ApiTags
+            .Where(t => !ActiveTags.Contains(t))
+            .OrderBy(t => CorpusCounts.GetValueOrDefault(t, 0))
+            .ToList();
+        return active.Concat(rest).ToList();
+    }
+
+    private async Task HandleTagKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, string tag)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+            await OnTagClicked.InvokeAsync(tag);
+    }
 
     private static string TruncateDescription(string desc) =>
-        desc.Length > 120 ? desc[..117] + "..." : desc;
+        desc.Length > 90 ? desc[..87] + "…" : desc;
 }

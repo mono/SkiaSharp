@@ -18,9 +18,17 @@ public class LottiePlayerSample : CanvasSampleBase
 
 	public override string Title => "Lottie Player";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
 	public override string Description => "Play Lottie/Skottie animations with playback speed control.";
 
-	public override string Category => SampleCategories.General;
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"Animation", "Animation.Render", "Animation.SeekFrameTime",
+		"SKCanvas", "SKRect",
+	];
+
+	public override string Category => SampleManager.General;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

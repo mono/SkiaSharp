@@ -14,9 +14,18 @@ public class NinePatchSample : CanvasSampleBase
 
 	public override string Title => "Nine-Patch Scaler";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
 	public override string Description => "Interactively resize 9-patch bitmaps with adjustable dimensions and lattice grid overlay.";
 
-	public override string Category => SampleCategories.General;
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKCanvas.DrawBitmapNinePatch", "SKBitmap", "SKBitmap.Decode", "SKManagedStream",
+		"SKPathEffect", "SKPathEffect.CreateDash",
+		"SKCanvas.DrawLine", "SKCanvas.DrawRect", "SKCanvas", "SKPaint",
+	];
+
+	public override string Category => SampleManager.General;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

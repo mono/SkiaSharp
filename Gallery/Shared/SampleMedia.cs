@@ -28,13 +28,26 @@ public static class SampleMedia
 		public static Stream AnimatedHeartGif => Embedded.Load("animated-heart.gif");
 		public static Stream OpacitySvg => Embedded.Load("opacity.svg");
 		public static Stream LottieLogo => Embedded.Load("LottieLogo1.json");
+		public static Stream SkiaSharpLogoSvg => Embedded.Load("skiasharp-logo.svg");
 	}
 
 	public static class Fonts
 	{
 		public static Stream EmbeddedFont => Embedded.Load("embedded-font.ttf");
+		public static Stream InterVariable => Embedded.Load("InterVariable.ttf");
+		public static Stream Nabla => Embedded.Load("Nabla.ttf");
 
 		public static string ContentFontPath = string.Empty;
+
+		private static SKTypeface? defaultTypeface;
+
+		public static SKTypeface Default => defaultTypeface ??= LoadDefaultTypeface();
+
+		private static SKTypeface LoadDefaultTypeface()
+		{
+			using var stream = InterVariable;
+			return SKTypeface.FromStream(stream) ?? SKTypeface.CreateDefault();
+		}
 	}
 
 	public static class Embedded
