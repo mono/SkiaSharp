@@ -189,40 +189,119 @@
             "type": "array",
             "items": {
               "type": "object",
+              "description": "CVE finding. Pattern: every essential field either has a concrete value OR a *Note field explaining why it's missing. Silent nulls are not allowed — the Python validator enforces 'value OR note' for fields marked (V|N) below.",
               "required": [
                 "id",
-                "severity"
+                "severity",
+                "description",
+                "source",
+                "assessment"
               ],
               "properties": {
                 "id": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "CVE ID, e.g., 'CVE-2026-8579'"
                 },
                 "severity": {
-                  "type": "string"
-                },
-                "cvss": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
-                },
-                "fixedIn": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+                  "description": "Always required. Use Chromium severity rating if NVD CVSS is not yet assigned."
                 },
                 "description": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Vulnerability description"
                 },
                 "source": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Where this CVE came from, e.g., 'NVD (Chrome CPE)', 'Android Security Bulletin'"
                 },
                 "assessment": {
-                  "type": "string"
+                  "type": "string",
+                  "enum": [
+                    "affected",
+                    "already_fixed",
+                    "false_positive",
+                    "needs_review",
+                    "nvd_range_error"
+                  ]
+                },
+                "cvss": {
+                  "type": ["number", "null"],
+                  "description": "CVSS score (V|N). If null, severityNote must explain why."
+                },
+                "severityNote": {
+                  "type": "string",
+                  "description": "Required when cvss is null. Explains the severity source (e.g., 'CVSS not yet assigned by NVD; using Chromium High rating')."
+                },
+                "bugId": {
+                  "type": ["string", "null"],
+                  "description": "Chromium bug ID (V|N). If null, bugIdNote must explain why."
+                },
+                "bugIdNote": {
+                  "type": "string",
+                  "description": "Required when bugId is null. Explains why no bug ID is available."
+                },
+                "bugUrl": {
+                  "type": ["string", "null"],
+                  "description": "https://issues.chromium.org/issues/{bugId}. May be null only when bugId is null."
+                },
+                "fixCommit": {
+                  "type": ["string", "null"],
+                  "description": "Upstream Skia commit SHA that fixes this CVE (V|N). If null, fixCommitNote must explain why."
+                },
+                "fixCommitNote": {
+                  "type": "string",
+                  "description": "Required when fixCommit is null. Explains why the fix commit could not be located."
+                },
+                "fixCommitTitle": {
+                  "type": ["string", "null"],
+                  "description": "Subject of the fix commit"
+                },
+                "fixMilestone": {
+                  "type": ["string", "null"],
+                  "description": "Chrome milestone containing the fix, e.g., 'm148'"
+                },
+                "filesModified": {
+                  "type": ["array", "null"],
+                  "items": { "type": "string" },
+                  "description": "Files changed by the fix commit (from git diff-tree --name-only)"
+                },
+                "onUpstreamMilestone": {
+                  "type": ["boolean", "null"],
+                  "description": "Is the fix commit on upstream/chrome/m{OUR} (V|N). If null, branchNote must explain."
+                },
+                "branchNote": {
+                  "type": "string",
+                  "description": "Required when onUpstreamMilestone is null. Explains the branch ancestry investigation."
+                },
+                "inOurTree": {
+                  "type": ["boolean", "null"],
+                  "description": "Is the fix commit an ancestor of HEAD in our fork. Always required (must be non-null)."
+                },
+                "cherryPicksCleanly": {
+                  "type": ["boolean", "null"],
+                  "description": "Did `git cherry-pick --no-commit` succeed (V|N). If null, cherryPickNote must explain (e.g., already fixed)."
+                },
+                "cherryPickNote": {
+                  "type": "string",
+                  "description": "Required when cherryPicksCleanly is null. Explains why the cherry-pick test wasn't run or wasn't needed."
+                },
+                "reachability": {
+                  "type": ["string", "null"],
+                  "enum": ["REACHABLE", "COMPILED_NOT_EXPOSED", "NOT_REACHABLE", null],
+                  "description": "Whether the vulnerable code is reachable via the SkiaSharp C API (V|N). If null, reachabilityNote must explain."
+                },
+                "reachabilityNote": {
+                  "type": "string",
+                  "description": "Required when reachability is null. Explains why reachability could not be determined."
+                },
+                "fixedIn": {
+                  "type": ["string", "null"],
+                  "description": "Legacy field — prefer fixMilestone"
                 },
                 "evidence": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Freeform evidence/summary text"
                 }
               },
               "additionalProperties": true
