@@ -30,8 +30,20 @@ internal Azure DevOps pipeline and flag vulnerabilities in:
 > Run it ONCE, save the JSON, then read from that file for the rest of the audit.
 > **NEVER run this script more than once per audit session.**
 
+> 🛑 **TAKES 5–7 MINUTES — YOU MUST WAIT:** This script queries 60+ CG jobs across 8+ builds.
+> It is NORMAL for it to take 5–7 minutes with no intermediate output. You MUST use a long
+> timeout (initial_wait of 600 seconds or more). Do NOT:
+> - Give up after 30 seconds and write empty/fake data
+> - Fabricate a `queriedAt` timestamp without actually running the script
+> - Write `"totalAlerts": 0` because you didn't wait
+> - Skip CG because "it's taking too long"
+>
+> **Empty CG results with `pipelines: []` will fail validation.** This is a security audit —
+> every step is mandatory regardless of how long it takes.
+
 ```bash
 # Run ONCE and save — this is your CG data for the entire audit
+# ⚠️ Takes 5-7 minutes! Use initial_wait: 600 (or mode: sync with 600s wait)
 mkdir -p output/ai
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
   > output/ai/cg-alerts-cache.json

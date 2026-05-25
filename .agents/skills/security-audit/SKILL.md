@@ -196,6 +196,11 @@ submodules, etc.
 CG scans Docker container images and build-time deps from both ADO pipelines. CG alerts are
 invisible to GitHub Issues and NVD searches alone.
 
+> 🛑 **THIS STEP TAKES 5–7 MINUTES.** The CG script queries 60+ jobs across 8+ builds. This
+> is NORMAL and NON-NEGOTIABLE. Use `initial_wait: 600` (or higher). Do NOT skip, fabricate
+> empty results, or write placeholder data because it's "taking too long." The validator will
+> reject reports with empty `pipelines` or fabricated timestamps.
+
 **See [references/cg-alerts.md](references/cg-alerts.md)** for:
 
 - The one-shot query script (`scripts/query-cg-alerts.py`) — run ONCE, cache to file

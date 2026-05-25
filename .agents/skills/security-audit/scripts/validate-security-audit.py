@@ -107,9 +107,28 @@ elif cg:
             if actual != count:
                 warnings.append(f"cgAlerts.bySeverity.{sev} ({count}) != actual ({actual})")
 
-    # Pipelines should be present
+    # Pipelines should be present — empty means script wasn't run or agent fabricated data
     if not cg.get("pipelines"):
-        warnings.append("cgAlerts.pipelines is empty — should list scanned pipelines")
+        errors.append(
+            "cgAlerts.pipelines is empty — the CG query script was not run successfully. "
+            "The script takes 5-7 minutes and MUST complete. Empty/fabricated CG data is "
+            "unacceptable in a security audit. Re-run with initial_wait >= 600 seconds."
+        )
+
+    # Builds should be present
+    if not cg.get("builds"):
+        errors.append(
+            "cgAlerts.builds is empty — no builds were queried. "
+            "The CG script must discover and query builds from both pipelines."
+        )
+
+    # Detect fabricated timestamps (midnight UTC = clearly fake)
+    queried_at = cg.get("queriedAt", "")
+    if queried_at and "T00:00:00" in queried_at:
+        errors.append(
+            f"cgAlerts.queriedAt '{queried_at}' appears fabricated (midnight UTC). "
+            "This timestamp must come from the actual script execution, not be invented."
+        )
 
 # 4. Findings must have unique dependencies — ONE finding per dependency, all CVEs inside it
 deps = [f.get("dependency") for f in findings]
