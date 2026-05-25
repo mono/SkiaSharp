@@ -11,11 +11,10 @@ named, deterministic `Action<SKCanvas>`; a *renderer* is a transport-agnostic
 Visual/
 ├── Scenes/        ISkiaScene + SceneCatalog + one .cs per scene
 ├── Renderers/     IRenderer + RendererCatalog + one .cs per backend
-├── Tests/         VisualMatrixTests — the one matrix theory
+├── Tests/         VisualMatrixTests — matrix theory + comparison harness + scope-aware update mode
 ├── Goldens/
 │   ├── _shared/   canonical golden per scene (used by default)
 │   └── {name}/    per-renderer override (only if that renderer diverges)
-├── VisualTestBase.cs   comparison harness + scope-aware update mode
 ├── VulkanLoader.cs     headless VkInstance/VkDevice, prefers a software CPU ICD
 ├── EglLoader.cs        headless EGL display + GL context (Linux)
 └── WglLoader.cs        headless WGL+HWND_MESSAGE (Windows)
