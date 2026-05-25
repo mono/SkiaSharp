@@ -1,4 +1,5 @@
 using System;
+using SkiaSharp.Tests.Visual;
 using Xunit;
 
 namespace SkiaSharp.Tests.Graphite
@@ -15,14 +16,12 @@ namespace SkiaSharp.Tests.Graphite
 		[SkippableFact]
 		public void Create_WithMipmapped_RendersAndReadsBack ()
 		{
-			Skip.IfNot (IsLinux, "Lavapipe smoke is Linux/CI only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
 				"Graphite/Vulkan not available in this libSkiaSharp build.");
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
-			using var fixture = LavapipeFixture.TryCreate ();
-			Skip.IfNot (fixture.IsAvailable, $"Lavapipe unavailable: {fixture.FailureReason}");
-
-			using var ctx = SKGraphiteContext.CreateVulkan (fixture.BackendContext);
+			using var ctx = MakeContext ();
 			using var recorder = ctx.CreateRecorder ();
 
 			var info = new SKImageInfo (64, 64, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -35,14 +34,12 @@ namespace SkiaSharp.Tests.Graphite
 		[SkippableFact]
 		public void Create_WithSurfaceProperties_RendersAndReadsBack ()
 		{
-			Skip.IfNot (IsLinux, "Lavapipe smoke is Linux/CI only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
 				"Graphite/Vulkan not available in this libSkiaSharp build.");
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
-			using var fixture = LavapipeFixture.TryCreate ();
-			Skip.IfNot (fixture.IsAvailable, $"Lavapipe unavailable: {fixture.FailureReason}");
-
-			using var ctx = SKGraphiteContext.CreateVulkan (fixture.BackendContext);
+			using var ctx = MakeContext ();
 			using var recorder = ctx.CreateRecorder ();
 
 			var info = new SKImageInfo (64, 64, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -56,14 +53,12 @@ namespace SkiaSharp.Tests.Graphite
 		[SkippableFact]
 		public void Create_WithMipmappedAndSurfaceProperties_RendersAndReadsBack ()
 		{
-			Skip.IfNot (IsLinux, "Lavapipe smoke is Linux/CI only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
 				"Graphite/Vulkan not available in this libSkiaSharp build.");
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
-			using var fixture = LavapipeFixture.TryCreate ();
-			Skip.IfNot (fixture.IsAvailable, $"Lavapipe unavailable: {fixture.FailureReason}");
-
-			using var ctx = SKGraphiteContext.CreateVulkan (fixture.BackendContext);
+			using var ctx = MakeContext ();
 			using var recorder = ctx.CreateRecorder ();
 
 			var info = new SKImageInfo (64, 64, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -80,6 +75,22 @@ namespace SkiaSharp.Tests.Graphite
 			// Argument-validation contract is part of the public API.
 			Assert.Throws<ArgumentNullException> (() =>
 				SKSurface.Create ((SKGraphiteRecorder)null, new SKImageInfo (16, 16, SKColorType.Rgba8888, SKAlphaType.Premul), mipmapped: false));
+		}
+
+		private static SKGraphiteContext MakeContext ()
+		{
+			var vk = VulkanLoader.Shared;
+			using var bc = new SKGraphiteVkBackendContext {
+				VkInstance         = vk.Instance,
+				VkPhysicalDevice   = vk.PhysicalDevice,
+				VkDevice           = vk.Device,
+				VkQueue            = vk.Queue,
+				GraphicsQueueIndex = vk.QueueFamilyIndex,
+				MaxApiVersion      = VulkanLoader.VK_API_VERSION_1_3,
+				ProtectedContext   = false,
+				GetProcedureAddress = (name, instance, device) => vk.GetProc (name, instance, device),
+			};
+			return SKGraphiteContext.CreateVulkan (bc);
 		}
 
 		private static unsafe void DrawAndAssertRedFill (SKGraphiteContext ctx, SKGraphiteRecorder recorder, SKSurface surface, SKImageInfo info)

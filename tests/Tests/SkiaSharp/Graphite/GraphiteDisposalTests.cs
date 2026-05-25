@@ -18,7 +18,6 @@ namespace SkiaSharp.Tests.Graphite
 		[SkippableFact]
 		public void DoubleDispose_OnContext_IsNoOp ()
 		{
-			Skip.IfNot (IsLinux, "Lavapipe-only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan), "Graphite/Vulkan unavailable.");
 			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
 				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
@@ -32,7 +31,6 @@ namespace SkiaSharp.Tests.Graphite
 		[SkippableFact]
 		public void DoubleDispose_OnVkBackendContext_IsNoOp ()
 		{
-			Skip.IfNot (IsLinux, "Lavapipe-only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan), "Graphite/Vulkan unavailable.");
 			Skip.IfNot (VulkanLoader.Shared.IsAvailable, "Vulkan loader unavailable.");
 
@@ -48,7 +46,6 @@ namespace SkiaSharp.Tests.Graphite
 			// no draws must not error. The result may be null (Skia returns
 			// no Recording if there's nothing to play back) — the contract is
 			// "no crash", not "non-null".
-			Skip.IfNot (IsLinux, "Lavapipe-only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan), "Graphite/Vulkan unavailable.");
 			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
 				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
@@ -71,7 +68,6 @@ namespace SkiaSharp.Tests.Graphite
 		{
 			// recording → surface → recorder → context → bc(already-transferred)
 			// is the safe order — each child disposed before its parent.
-			Skip.IfNot (IsLinux, "Lavapipe-only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan), "Graphite/Vulkan unavailable.");
 			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
 				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
