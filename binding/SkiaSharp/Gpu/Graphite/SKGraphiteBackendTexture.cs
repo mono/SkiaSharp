@@ -7,9 +7,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Wraps a caller-allocated GPU texture (e.g. a <c>VkImage</c> from a
 	/// swap chain) so Graphite can draw into it or sample from it. The
-	/// underlying GPU object is NOT freed by <see cref="Dispose"/> — only
-	/// this wrapper. Caller retains ownership of the GPU texture for its
-	/// full Vulkan/Metal/Dawn lifetime.
+	/// underlying GPU object is NOT freed by <c>Dispose</c> — only this
+	/// wrapper. Caller retains ownership of the GPU texture for its full
+	/// Vulkan/Metal/Dawn lifetime.
 	///
 	/// Use with <see cref="SKSurface.Create(SKGraphiteRecorder, SKGraphiteBackendTexture, SKColorType)"/>
 	/// to render into the wrapped texture.

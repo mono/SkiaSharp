@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -94,6 +95,7 @@ public class MainActivity : Activity
 		return renderer switch {
 			"android-raster"         => RenderRaster (scene, info),
 			"android-ganesh-vulkan"  => RenderGaneshVulkan (scene, info),
+			"android-ganesh-gles"    => RenderGaneshGles (scene, info),
 			_ => throw new ArgumentException ($"Unknown renderer '{renderer}'"),
 		};
 	}
@@ -135,6 +137,98 @@ public class MainActivity : Activity
 		ctx.Submit (synchronous: true);
 		return ReadRgbaPremul (surface, info);
 	}
+
+	private static unsafe byte[] RenderGaneshGles (ISkiaScene scene, SKImageInfo info)
+	{
+		// Android-specific EGL + GLES3 bring-up. The desktop EglLoader's Linux
+		// path uses EGL_EXT_platform_device + EGL_OPENGL_API, neither of which
+		// is available here — Android only ships GLES, on the default display,
+		// against a PBuffer (or surfaceless) surface.
+		var display = eglGetDisplay (IntPtr.Zero); // EGL_DEFAULT_DISPLAY
+		if (display == IntPtr.Zero)
+			throw new InvalidOperationException ("eglGetDisplay returned EGL_NO_DISPLAY");
+		if (eglInitialize (display, out _, out _) == 0)
+			throw new InvalidOperationException ($"eglInitialize failed: 0x{eglGetError ():X}");
+		if (eglBindAPI (EGL_OPENGL_ES_API) == 0)
+			throw new InvalidOperationException ($"eglBindAPI(GLES) failed: 0x{eglGetError ():X}");
+
+		var configAttribs = stackalloc int[] {
+			EGL_RED_SIZE,        8,
+			EGL_GREEN_SIZE,      8,
+			EGL_BLUE_SIZE,       8,
+			EGL_ALPHA_SIZE,      8,
+			EGL_SURFACE_TYPE,    EGL_PBUFFER_BIT,
+			EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+			EGL_NONE,
+		};
+		IntPtr config;
+		int numConfigs;
+		if (eglChooseConfig (display, configAttribs, &config, 1, &numConfigs) == 0 || numConfigs == 0)
+			throw new InvalidOperationException ($"eglChooseConfig found 0 GLES3 configs: 0x{eglGetError ():X}");
+
+		var ctxAttribs = stackalloc int[] { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
+		var context = eglCreateContext (display, config, IntPtr.Zero, ctxAttribs);
+		if (context == IntPtr.Zero)
+			throw new InvalidOperationException ($"eglCreateContext (GLES3) failed: 0x{eglGetError ():X}");
+
+		// PBuffer size is irrelevant — Skia allocates its own offscreen FBO
+		// inside the GRContext for every SKSurface. 1×1 is enough.
+		var pbufferAttribs = stackalloc int[] { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
+		var surface = eglCreatePbufferSurface (display, config, pbufferAttribs);
+		if (surface == IntPtr.Zero)
+			throw new InvalidOperationException ($"eglCreatePbufferSurface failed: 0x{eglGetError ():X}");
+
+		if (eglMakeCurrent (display, surface, surface, context) == 0)
+			throw new InvalidOperationException ($"eglMakeCurrent failed: 0x{eglGetError ():X}");
+
+		try {
+			using var glInterface = GRGlInterface.CreateGles (name => eglGetProcAddress (name))
+				?? throw new InvalidOperationException ("GRGlInterface.CreateGles returned null");
+			using var ctx = GRContext.CreateGl (glInterface)
+				?? throw new InvalidOperationException ("GRContext.CreateGl returned null on Android GLES");
+			using var skSurface = SKSurface.Create (ctx, budgeted: true, info)
+				?? throw new InvalidOperationException ("SKSurface.Create returned null on Ganesh/GLES");
+			scene.Draw (skSurface.Canvas);
+			ctx.Flush ();
+			ctx.Submit (synchronous: true);
+			return ReadRgbaPremul (skSurface, info);
+		} finally {
+			eglMakeCurrent (display, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+			eglDestroySurface (display, surface);
+			eglDestroyContext (display, context);
+			// Leave the display initialised — terminating it would tear down
+			// any other EGL state in this process (there isn't any, but a
+			// future render call would have to re-initialise).
+		}
+	}
+
+	// ---- EGL P/Invoke (Android libEGL.so) ----
+
+	private const int EGL_RED_SIZE              = 0x3024;
+	private const int EGL_GREEN_SIZE            = 0x3023;
+	private const int EGL_BLUE_SIZE             = 0x3022;
+	private const int EGL_ALPHA_SIZE            = 0x3021;
+	private const int EGL_SURFACE_TYPE          = 0x3033;
+	private const int EGL_PBUFFER_BIT           = 0x0001;
+	private const int EGL_RENDERABLE_TYPE       = 0x3040;
+	private const int EGL_OPENGL_ES3_BIT        = 0x0040;
+	private const int EGL_NONE                  = 0x3038;
+	private const int EGL_OPENGL_ES_API         = 0x30A0;
+	private const int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+	private const int EGL_WIDTH                 = 0x3057;
+	private const int EGL_HEIGHT                = 0x3056;
+
+	[DllImport ("libEGL.so")] private static extern IntPtr eglGetDisplay (IntPtr displayId);
+	[DllImport ("libEGL.so")] private static extern int eglInitialize (IntPtr display, out int major, out int minor);
+	[DllImport ("libEGL.so")] private static extern int eglBindAPI (int api);
+	[DllImport ("libEGL.so")] private static extern unsafe int eglChooseConfig (IntPtr display, int* attribList, IntPtr* configs, int configSize, int* numConfigs);
+	[DllImport ("libEGL.so")] private static extern unsafe IntPtr eglCreateContext (IntPtr display, IntPtr config, IntPtr shareContext, int* attribList);
+	[DllImport ("libEGL.so")] private static extern unsafe IntPtr eglCreatePbufferSurface (IntPtr display, IntPtr config, int* attribList);
+	[DllImport ("libEGL.so")] private static extern int eglMakeCurrent (IntPtr display, IntPtr draw, IntPtr read, IntPtr context);
+	[DllImport ("libEGL.so")] private static extern int eglDestroySurface (IntPtr display, IntPtr surface);
+	[DllImport ("libEGL.so")] private static extern int eglDestroyContext (IntPtr display, IntPtr context);
+	[DllImport ("libEGL.so", CharSet = CharSet.Ansi)] private static extern IntPtr eglGetProcAddress (string name);
+	[DllImport ("libEGL.so")] private static extern uint eglGetError ();
 
 	private static byte[] ReadRgbaPremul (SKSurface surface, SKImageInfo info)
 	{
