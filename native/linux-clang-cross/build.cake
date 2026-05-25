@@ -23,7 +23,6 @@ string GetGnArgs(string arch)
 {
     var sysrootArg = BUILD_VARIANT switch
     {
-        "alpine" or "alpinenodeps" => "'--sysroot=/alpine', ",
         _ when !string.IsNullOrEmpty(SYSROOT_ROOT) => $"'--sysroot={SYSROOT_ROOT}', ",
         _ => "",
     };
