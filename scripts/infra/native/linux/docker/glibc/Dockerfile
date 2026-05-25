@@ -224,21 +224,23 @@ RUN . /etc/skia-env \
        fi
 
 # Fix libc/libpthread linker scripts to use relative paths.
-# Debian's linker scripts contain absolute paths like:
-#   GROUP ( /usr/lib/x86_64-linux-gnu/libc.so.6 ... )
-# These must be relative for cross-compilation with --sysroot to work.
+# Only needed for cross-package builds (riscv64/loongarch64) which don't use --sysroot.
+# For debootstrap builds, --sysroot causes lld to automatically prepend the sysroot
+# to absolute paths in linker scripts, so no modification is needed.
 RUN . /etc/skia-env \
-    && for script in \
-         ${SYSROOT_DIR}/usr/lib/${TOOLCHAIN_ARCH}/libc.so \
-         ${SYSROOT_DIR}/usr/lib/${TOOLCHAIN_ARCH}/libpthread.so \
-         ${SYSROOT_DIR}/usr/lib/${TOOLCHAIN_ARCH}/libpthread.so.0 \
-         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libc.so \
-         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
-         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so.0; do \
-       if [ -f "$script" ]; then \
-         sed -i "s|/usr/${TOOLCHAIN_ARCH}/lib/||g; s|/usr/lib/${TOOLCHAIN_ARCH}/||g; s|/lib/${TOOLCHAIN_ARCH}/||g; s|/lib/||g" "$script" ; \
-       fi ; \
-    done
+    && if [ -z "$(grep 'SYSROOT_ROOT=' /etc/skia-env | cut -d= -f2)" ]; then \
+         for script in \
+              ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libc.so \
+              ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
+              ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so.0; do \
+           if [ -f "$script" ]; then \
+             sed -i "s|/usr/${TOOLCHAIN_ARCH}/lib/||g; s|/lib/${TOOLCHAIN_ARCH}/||g; s|/lib/||g" "$script" ; \
+             echo "Fixed linker script: $script" ; \
+           fi ; \
+         done ; \
+       else \
+         echo "Skipping linker script fix (--sysroot handles absolute paths)" ; \
+       fi
 
 # Install fontconfig into the sysroot.
 # Download .deb packages from Debian's pool and extract headers + libraries.
