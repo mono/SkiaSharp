@@ -36,9 +36,15 @@ RUN tdnf install -y \
 # The release binary needs libtinfo.so.5 (built on Ubuntu 18.04) but Azure Linux
 # only has libtinfo.so.6 — create a compat symlink (ABI compatible for our use).
 ARG LLVM_VERSION=18.1.8
+ARG MACHINE_ARCH=x86_64
 RUN ln -sf /usr/lib64/libtinfo.so.6 /usr/lib64/libtinfo.so.5 \
     && ln -sf /usr/lib64/libncursesw.so.6 /usr/lib64/libncurses.so.5 \
-    && curl -sL "https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz" \
+    && case "${MACHINE_ARCH}" in \
+         x86_64)  LLVM_SUFFIX="x86_64-linux-gnu-ubuntu-18.04" ;; \
+         aarch64) LLVM_SUFFIX="aarch64-linux-gnu" ;; \
+         *)       echo "Unsupported MACHINE_ARCH: ${MACHINE_ARCH}" && exit 1 ;; \
+       esac \
+    && curl -sL "https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-${LLVM_SUFFIX}.tar.xz" \
         | tar xJ --strip-components=1 -C /usr/local \
     && rm -rf /usr/local/share/doc /usr/local/share/man /usr/local/share/clang \
     && clang --version && ld.lld --version

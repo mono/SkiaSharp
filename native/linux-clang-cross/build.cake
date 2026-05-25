@@ -31,8 +31,8 @@ string GetGnArgs(string arch)
 
     var sysroot = SYSROOT_PATH;
     var init = $"{sysrootArg} '--target={TOOLCHAIN_ARCH_TARGET}'";
-    var bin = $"'-B{sysroot}/bin/', '-B{sysroot}/lib/' ";
-    var libs = $"'-L{sysroot}/lib/', '-L{sysroot}/lib/{TOOLCHAIN_ARCH}/' ";
+    var bin = $"'-B{sysroot}/bin/', '-B{sysroot}/lib/', '-B{sysroot}/lib64/' ";
+    var libs = $"'-L{sysroot}/lib/', '-L{sysroot}/lib64/', '-L{sysroot}/lib/{TOOLCHAIN_ARCH}/' ";
     // Add GCC library directory for CRT files (crtbeginS.o) and libgcc
     if (!string.IsNullOrEmpty(GCC_LIB_DIR))
         libs += $", '-L{GCC_LIB_DIR}/', '-B{GCC_LIB_DIR}/' ";
