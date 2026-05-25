@@ -104,5 +104,12 @@ namespace SkiaSharp
 			var path = SKPath.GetObject (pathOrNull, false);
 			del.Invoke (path, *matrix);
 		}
+
+		private static partial void SKMemoryThresholdProxyImplementation ()
+		{
+			// Fires on the native allocator's thread. Must return immediately
+			// without taking managed locks or calling back into Skia.
+			SKNativeMemoryPressureMonitor.OnNativeThresholdCrossed ();
+		}
 	}
 }
