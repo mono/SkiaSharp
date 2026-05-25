@@ -58,20 +58,29 @@ The output includes a `queriedAt` ISO timestamp so you can verify freshness.
 ### Additional Flags
 
 ```bash
-# Human-readable text output (nothing truncated, all CVEs listed)
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --text
+# Also print human-readable text summary alongside JSON
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
+  --text --output output/ai/cg-alerts-cache.json
+
+# With per-job verbose progress (shows each CG log being parsed)
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
+  --verbose --output output/ai/cg-alerts-cache.json
 
 # Query only a specific branch
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --branch main
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
+  --branch main --output output/ai/cg-alerts-cache.json
 
 # Query only the native pipeline
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --pipeline native
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
+  --pipeline native --output output/ai/cg-alerts-cache.json
 
 # Query only the managed pipeline
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --pipeline managed
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
+  --pipeline managed --output output/ai/cg-alerts-cache.json
 
 # Query a specific build
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py --build-id 14176611
+python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
+  --build-id 14176611 --output output/ai/cg-alerts-cache.json
 ```
 
 ### What the Script Does
@@ -136,13 +145,13 @@ az devops invoke --area build --resource logs \
 
 > 🛑 **CRITICAL:** Include the **complete `alerts` array** from the script output in the
 > report. Do NOT summarize or truncate. The viewer needs every individual alert to render
-> correctly. Copy the entire JSON output from `output/ai/cg-alerts-cache.json` as the
-> `cgAlerts` value.
+> correctly. Read the JSON from `output/ai/cg-alerts-cache.json` and embed it as the
+> `cgAlerts` value in your report.
 
 ```bash
-# The cgAlerts section of your report MUST be the raw script output:
-cat output/ai/cg-alerts-cache.json
-# Copy this entire JSON object as the value of "cgAlerts" in the report.
+# Read the cached CG data (the script already wrote it with --output):
+python3 -c "import json; d=json.load(open('output/ai/cg-alerts-cache.json')); print(f'{d[\"totalAlerts\"]} alerts, {len(d[\"pipelines\"])} pipelines')"
+# Use the entire contents of this file as the "cgAlerts" value in the report JSON.
 ```
 
 The script output has this structure (include ALL fields as-is):

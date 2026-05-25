@@ -13,36 +13,30 @@ Prerequisites:
   - Default org/project configured: az devops configure --defaults organization=https://devdiv.visualstudio.com project=DevDiv
 
 Usage:
-  python3 query-cg-alerts.py [--build-id BUILD_ID] [--branch BRANCH] [--text] [--verbose] [--pipeline PIPELINE] [--output FILE]
+  python3 query-cg-alerts.py --output FILE [--branch BRANCH] [--text] [--verbose] [--pipeline PIPELINE] [--build-id BUILD_ID]
 
-  # Query all branches and both pipelines — write JSON to file (RECOMMENDED for AI agents)
+  # Standard usage — query all branches, write JSON to file (progress on stdout)
   python3 query-cg-alerts.py --output output/ai/cg-alerts-cache.json
 
-  # Same but with per-job progress (useful for debugging)
+  # With per-job progress (shows each CG log being parsed)
   python3 query-cg-alerts.py --verbose --output output/ai/cg-alerts-cache.json
 
-  # Query all branches — outputs JSON to stdout (legacy, progress goes to stderr)
-  python3 query-cg-alerts.py
-
-  # Human-readable text output (lists every CVE, nothing truncated)
-  python3 query-cg-alerts.py --text
+  # Also print human-readable text summary
+  python3 query-cg-alerts.py --text --output output/ai/cg-alerts-cache.json
 
   # Query only a specific branch
-  python3 query-cg-alerts.py --branch main
+  python3 query-cg-alerts.py --branch main --output output/ai/cg-alerts-cache.json
 
   # Query only the native pipeline
-  python3 query-cg-alerts.py --pipeline native
+  python3 query-cg-alerts.py --pipeline native --output output/ai/cg-alerts-cache.json
 
   # Query a specific build
-  python3 query-cg-alerts.py --build-id 14176611
+  python3 query-cg-alerts.py --build-id 14176611 --output output/ai/cg-alerts-cache.json
 
 Output:
-  With --output: writes JSON to specified file, prints progress to stdout.
-  Without --output: writes JSON to stdout (no progress visible to agent!).
-  With --text: human-readable grouped listing to stdout.
-
-  Progress messages always go to stdout when --output is used, so the calling
-  agent sees activity and knows the script is working (prevents timeout abandonment).
+  JSON is always written to the --output file.
+  Progress messages print to stdout so the calling agent sees activity.
+  This prevents agents from abandoning the 5-7 minute query.
 """
 
 import argparse
@@ -239,9 +233,9 @@ def main():
     parser.add_argument("--branch", type=str, help="Query only this branch (e.g., 'main' or 'release/3.119.x')")
     parser.add_argument("--pipeline", type=str, choices=["native", "managed", "both"], default="both",
                         help="Which pipeline to query (default: both)")
-    parser.add_argument("--text", action="store_true", help="Output as human-readable text instead of JSON (default is JSON for AI consumption)")
-    parser.add_argument("--output", "-o", type=str, help="Write JSON output to this file instead of stdout (progress is always printed to stdout)")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Show progress messages to stderr")
+    parser.add_argument("--text", action="store_true", help="Also print human-readable text summary to stdout")
+    parser.add_argument("--output", "-o", type=str, required=True, help="Write JSON output to this file (required). Progress prints to stdout.")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show per-job progress (each CG log parsed)")
     args = parser.parse_args()
 
     token = get_token()
@@ -359,9 +353,9 @@ def main():
     if by_sev:
         print(f"[CG] Severity: {', '.join(f'{s}={c}' for s, c in by_sev.items())}")
 
-    # Output — write JSON to file if --output specified, otherwise stdout
+    # Output — write JSON to file, progress already printed to stdout
     if args.text:
-        # Text mode: full listing, grouped by component
+        # Text mode: also print grouped listing to stdout
         branches_str = ", ".join(sorted(set(b for _, b, _, _ in builds_to_query)))
         pipelines_str = ", ".join(pi["name"] for _, pi in pipelines_to_query)
         print(f"\nCG ALERTS — {pipelines_str}")
@@ -380,7 +374,6 @@ def main():
             branches = set()
             for a in comp_alerts:
                 branches.update(a["branches"])
-            # Collect all unique paths for this component
             all_paths = set()
             for a in comp_alerts:
                 all_paths.update(a.get("paths", []))
@@ -391,14 +384,11 @@ def main():
             for a in comp_alerts:
                 print(f"    - {a['id']} ({a['severity']})")
         print()
-    elif args.output:
-        # Write JSON to file, progress already went to stdout
-        with open(args.output, "w") as f:
-            json.dump(output, f, indent=2)
-        print(f"[CG] JSON written to: {args.output}")
-    else:
-        # No --output flag: write JSON to stdout (legacy behavior for piping)
-        print(json.dumps(output, indent=2))
+
+    # Always write JSON to the output file
+    with open(args.output, "w") as f:
+        json.dump(output, f, indent=2)
+    print(f"[CG] JSON written to: {args.output}")
 
 
 if __name__ == "__main__":
