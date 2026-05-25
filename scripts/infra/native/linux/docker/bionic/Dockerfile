@@ -8,6 +8,9 @@
 
 FROM mcr.microsoft.com/azurelinux/base/core:3.0
 
+# Use bash with strict error handling for all RUN commands.
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
 # Install host build tools from Azure Linux packages.
 # Bionic doesn't need clang/lld from host — NDK provides its own.
 # But we need python3, git, ninja for Skia's GN build system and unzip for NDK.
@@ -24,11 +27,11 @@ RUN tdnf install -y \
         binutils \
     && tdnf clean all
 
-# Install the .NET SDK (needed for Cake build scripts)
-ARG DOTNET_SDK_VERSION=10.0.1xx
+# Install the .NET SDK (needed for Cake build scripts).
+ARG DOTNET_SDK_VERSION=10.0.100
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -L -o dotnet-install.sh \
-    && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
+RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
+    && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet-install.sh \
     && dotnet help \
@@ -45,19 +48,35 @@ RUN case ${BUILD_ARCH} in \
     && echo "export ANDROID_TRIPLE=${ANDROID_TRIPLE}" > /etc/skia-env \
     && echo "export ANDROID_SYSROOT_LIB=${ANDROID_SYSROOT_LIB}" >> /etc/skia-env
 
-# Install Android NDK r26b
-# tdnf provides unzip; curl is already in base image.
-RUN tdnf install -y unzip && tdnf clean all \
-    && curl -SL https://dl.google.com/android/repository/android-ndk-r26b-linux.zip -o /tmp/ndk.zip \
+# Install Android NDK r26b with SHA-256 verification.
+ARG NDK_VERSION=r26b
+ARG NDK_SHA256=ad73c0370f0b0a87d1671ed2fd5a9ac9acfd1eb5c43a7fbfbd330f85d19dd632
+ARG MACHINE_ARCH=x86_64
+RUN curl -fSL -o /tmp/ndk.zip \
+        "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip" \
+    && echo "${NDK_SHA256}  /tmp/ndk.zip" | sha256sum -c - \
     && unzip -q /tmp/ndk.zip -d /opt \
     && rm /tmp/ndk.zip
 ENV ANDROID_NDK_HOME=/opt/android-ndk-r26b
-ENV PATH=$PATH:$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
+
+# Determine NDK host platform (supports x86_64 and aarch64 build agents).
+RUN case "${MACHINE_ARCH}" in \
+        x86_64)  NDK_HOST_TAG="linux-x86_64" ;; \
+        aarch64) NDK_HOST_TAG="linux-aarch64" ;; \
+        *)       echo "Unsupported MACHINE_ARCH for NDK: ${MACHINE_ARCH}" && exit 1 ;; \
+    esac \
+    && echo "export NDK_HOST_TAG=${NDK_HOST_TAG}" >> /etc/skia-env
+ENV PATH=$PATH:/opt/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin
 
 # Create empty libpthread stub - Bionic bundles pthreads into libc, but
 # Skia's GN build adds -lpthread for target_os='linux' builds.
 RUN . /etc/skia-env \
-    && printf '!<arch>\n' > $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$ANDROID_SYSROOT_LIB/libpthread.a
+    && NDK_SYSROOT="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/${NDK_HOST_TAG}/sysroot" \
+    && PTHREAD_TARGET="$NDK_SYSROOT/usr/lib/$ANDROID_SYSROOT_LIB/libpthread.a" \
+    && if [ -e "$PTHREAD_TARGET" ]; then \
+         echo "WARNING: NDK already ships libpthread.a — review needed" && exit 1 ; \
+       fi \
+    && printf '!<arch>\n' > "$PTHREAD_TARGET"
 
 # Set cross-compiler to NDK clang
 RUN . /etc/skia-env \

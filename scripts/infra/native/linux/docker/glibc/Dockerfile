@@ -19,6 +19,10 @@
 
 FROM mcr.microsoft.com/azurelinux/base/core:3.0
 
+# Use bash with strict error handling for all RUN commands.
+# -e: exit on error, -u: error on undefined vars, -o pipefail: pipe failures propagate.
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
 # Install host build tools from Azure Linux packages.
 # NOTE: We do NOT install clang/lld/llvm from tdnf because the Azure Linux
 # LLVM package only includes host+AMDGPU+BPF targets. We need ARM, AArch64,
@@ -44,25 +48,32 @@ RUN tdnf install -y \
 # Azure Linux's LLVM only has "host;AMDGPU;BPF" — we need all cross targets.
 # The release binary needs libtinfo.so.5 (built on Ubuntu 18.04) but Azure Linux
 # only has libtinfo.so.6 — create a compat symlink (ABI compatible for our use).
+# SHA-256 checksums computed from official GitHub releases (llvm/llvm-project).
 ARG LLVM_VERSION=18.1.8
 ARG MACHINE_ARCH=x86_64
+ARG LLVM_SHA256_X86_64=54ec30358afcc9fb8aa74307db3046f5187f9fb89fb37064cdde906e062ebf36
+ARG LLVM_SHA256_AARCH64=dcaa1bebbfbb86953fdfbdc7f938800229f75ad26c5c9375ef242edad737d999
 RUN ln -sf /usr/lib64/libtinfo.so.6 /usr/lib64/libtinfo.so.5 \
     && ln -sf /usr/lib64/libncursesw.so.6 /usr/lib64/libncurses.so.5 \
     && case "${MACHINE_ARCH}" in \
-         x86_64)  LLVM_SUFFIX="x86_64-linux-gnu-ubuntu-18.04" ;; \
-         aarch64) LLVM_SUFFIX="aarch64-linux-gnu" ;; \
+         x86_64)  LLVM_SUFFIX="x86_64-linux-gnu-ubuntu-18.04" ; LLVM_SHA256="${LLVM_SHA256_X86_64}" ;; \
+         aarch64) LLVM_SUFFIX="aarch64-linux-gnu"              ; LLVM_SHA256="${LLVM_SHA256_AARCH64}" ;; \
          *)       echo "Unsupported MACHINE_ARCH: ${MACHINE_ARCH}" && exit 1 ;; \
        esac \
-    && curl -sL "https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-${LLVM_SUFFIX}.tar.xz" \
-        | tar xJ --strip-components=1 -C /usr/local \
+    && curl -fSL -o /tmp/llvm.tar.xz \
+        "https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-${LLVM_SUFFIX}.tar.xz" \
+    && echo "${LLVM_SHA256}  /tmp/llvm.tar.xz" | sha256sum -c - \
+    && tar xJf /tmp/llvm.tar.xz --strip-components=1 -C /usr/local \
+    && rm -f /tmp/llvm.tar.xz \
     && rm -rf /usr/local/share/doc /usr/local/share/man /usr/local/share/clang \
-    && clang --version && ld.lld --version
+    && clang --version && ld.lld --version && llvm-ar --version
 
-# Install the .NET SDK (needed for Cake build scripts)
-ARG DOTNET_SDK_VERSION=10.0.1xx
+# Install the .NET SDK (needed for Cake build scripts).
+# Pin to exact version matching global.json for reproducible builds.
+ARG DOTNET_SDK_VERSION=10.0.100
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -L -o dotnet-install.sh \
-    && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
+RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
+    && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet-install.sh \
     && dotnet help \
@@ -118,10 +129,10 @@ RUN . /etc/skia-env \
            # use gcc-cross package extraction.
            # This produces the cross-package layout at /sysroot/usr/{TOOLCHAIN_ARCH}/
            mkdir -p ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH} \
-           && TOOLCHAIN_VERSION=$(grep TOOLCHAIN_VERSION /etc/skia-env | cut -d= -f2) \
            && APT_REPO=https://deb.debian.org/debian \
            && POOL="${APT_REPO}/pool/main" \
            && PORTS_SUFFIX="-ports" \
+           && FETCH_FAILURES=0 \
            && mkdir -p /tmp/cross-pkgs && cd /tmp/cross-pkgs \
            && for pkg in \
                 "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
@@ -135,18 +146,22 @@ RUN . /etc/skia-env \
                 base=$(echo $pkg | rev | cut -d/ -f2- | rev) ; \
                 url="${POOL}/${base}/" ; \
                 echo "Fetching index: $url (looking for ${dir}_*.deb)" ; \
-                deb_url=$(curl -sL "$url" | grep -o "href=\"${dir}_[^\"]*\.deb\"" | sed 's/href="//;s/"$//' | sort -V | tail -1) ; \
+                deb_url=$(curl -fsSL "$url" | grep -o "href=\"${dir}_[^\"]*\.deb\"" | sed 's/href="//;s/"$//' | sort -V | tail -1) ; \
                 if [ -n "$deb_url" ]; then \
                   echo "  Downloading: ${url}${deb_url}" ; \
-                  curl -sL -O "${url}${deb_url}" ; \
+                  curl -fsSL -O "${url}${deb_url}" ; \
                   ar x "${deb_url}" ; \
                   mkdir -p extract && tar xf data.tar.* -C extract/ ; \
                   rm -f control.tar.* data.tar.* debian-binary "${deb_url}" ; \
                 else \
-                  echo "  WARNING: No package found for ${dir}" ; \
+                  echo "  FATAL: No package found for ${dir}" ; \
+                  FETCH_FAILURES=$((FETCH_FAILURES + 1)) ; \
                 fi ; \
               done \
-           && echo "Extracted files:" && ls extract/usr/${TOOLCHAIN_ARCH}/ 2>/dev/null | head -5 || true \
+           && if [ "${FETCH_FAILURES}" -gt 0 ]; then \
+                echo "ERROR: ${FETCH_FAILURES} package(s) could not be fetched" && exit 1 ; \
+              fi \
+           && echo "Extracted files:" && ls extract/usr/${TOOLCHAIN_ARCH}/ | head -5 \
            && if [ -d extract/usr/${TOOLCHAIN_ARCH} ]; then \
                 cp -a extract/usr/${TOOLCHAIN_ARCH}/* ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/ ; \
               fi \
@@ -167,18 +182,31 @@ RUN . /etc/skia-env \
            # but debootstrap pre-creates /bin/ as a directory, causing tar to fail with
            # "Cannot create symlink: File exists" (exit 2). This is harmless — debootstrap
            # still downloads all packages to the cache and creates the symlinks afterward.
-           # We tolerate this known exit code and verify the cache was populated.
+           # We tolerate ONLY this specific scenario and verify ALL required packages cached.
            debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
              --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev,libc6-dev \
              ${SYSROOT_RELEASE} ${SYSROOT_DIR} https://deb.debian.org/debian \
-           || { echo "debootstrap exited $? (known issue with Trixie merged-usr; checking cache...)" ; \
-                ls ${SYSROOT_DIR}/var/cache/apt/archives/libstdc++-${TOOLCHAIN_VERSION}-dev*.deb > /dev/null 2>&1 \
-                || { echo "FATAL: debootstrap cache not populated" && exit 1 ; } ; } \
+           || { DEBOOTSTRAP_EXIT=$? ; \
+                echo "debootstrap exited ${DEBOOTSTRAP_EXIT} — verifying cache..." ; \
+                for required_pkg in \
+                  "libstdc++-${TOOLCHAIN_VERSION}-dev" \
+                  "libgcc-${TOOLCHAIN_VERSION}-dev" \
+                  "linux-libc-dev" \
+                  "libc6-dev" \
+                  "libc6" \
+                  "libgcc-s1"; do \
+                  ls ${SYSROOT_DIR}/var/cache/apt/archives/${required_pkg}_*.deb > /dev/null 2>&1 \
+                  || { echo "FATAL: required package '${required_pkg}' not in cache (debootstrap exit ${DEBOOTSTRAP_EXIT})" && exit 1 ; } ; \
+                done ; \
+                echo "All required packages found in cache." ; } \
            && echo "Extracting all cached packages into sysroot..." \
            && for deb in ${SYSROOT_DIR}/var/cache/apt/archives/*.deb; do \
                 if [ -f "$deb" ]; then \
                   echo "  Extracting: $(basename $deb)" ; \
-                  cd /tmp && ar x "$deb" && tar xf data.tar.* -C ${SYSROOT_DIR}/ 2>/dev/null ; rm -f control.tar.* data.tar.* debian-binary ; \
+                  cd /tmp && ar x "$deb" \
+                  && tar xf data.tar.* -C ${SYSROOT_DIR}/ 2>&1 \
+                     | { grep -v "Cannot create symlink" || true ; } \
+                  && rm -f control.tar.* data.tar.* debian-binary ; \
                 fi ; \
               done \
            && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env \
@@ -199,9 +227,7 @@ RUN . /etc/skia-env \
 #   /usr/include/c++/VERSION/{TOOLCHAIN_ARCH}/  (the cross-toolchain layout)
 # We create a symlink to bridge this gap.
 RUN . /etc/skia-env \
-    && TOOLCHAIN_VERSION=$(grep TOOLCHAIN_VERSION /etc/skia-env | cut -d= -f2) \
-    && SYSROOT_PATH_VAL=$(grep "SYSROOT_PATH=" /etc/skia-env | cut -d= -f2) \
-    && INCLUDE_DIR=${SYSROOT_PATH_VAL}/include/c++ \
+    && INCLUDE_DIR=${SYSROOT_PATH}/include/c++ \
     && echo "Looking for c++ headers in: ${INCLUDE_DIR}" \
     && echo "TOOLCHAIN_VERSION=${TOOLCHAIN_VERSION}, TOOLCHAIN_ARCH=${TOOLCHAIN_ARCH}" \
     && if [ -d "${INCLUDE_DIR}" ]; then ls ${INCLUDE_DIR}/ ; fi \
@@ -209,7 +235,7 @@ RUN . /etc/skia-env \
          ln -sf ${TOOLCHAIN_VERSION} ${INCLUDE_DIR}/current ; \
          echo "Created symlink: ${INCLUDE_DIR}/current -> ${TOOLCHAIN_VERSION}" ; \
        elif [ -d "${INCLUDE_DIR}" ]; then \
-         GCC_VERSION=$(ls ${INCLUDE_DIR}/ | grep -E '^[0-9]' | head -1) ; \
+         GCC_VERSION=$(ls ${INCLUDE_DIR}/ | grep -E '^[0-9]' | sort -V | tail -1) ; \
          if [ -n "$GCC_VERSION" ]; then \
            ln -sf ${GCC_VERSION} ${INCLUDE_DIR}/current ; \
            echo "Created symlink: ${INCLUDE_DIR}/current -> ${GCC_VERSION}" ; \
@@ -220,7 +246,7 @@ RUN . /etc/skia-env \
        else \
          echo "ERROR: ${INCLUDE_DIR} does not exist!" && exit 1 ; \
        fi \
-    && ARCH_INCLUDE=${SYSROOT_PATH_VAL}/include/${TOOLCHAIN_ARCH}/c++/${TOOLCHAIN_VERSION} \
+    && ARCH_INCLUDE=${SYSROOT_PATH}/include/${TOOLCHAIN_ARCH}/c++/${TOOLCHAIN_VERSION} \
     && if [ -d "${ARCH_INCLUDE}" ] && [ ! -e "${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH}" ]; then \
          ln -sf ${ARCH_INCLUDE} ${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH} ; \
          echo "Created arch symlink: ${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH} -> ${ARCH_INCLUDE}" ; \
@@ -238,7 +264,7 @@ RUN . /etc/skia-env \
 # For debootstrap builds, --sysroot causes lld to automatically prepend the sysroot
 # to absolute paths in linker scripts, so no modification is needed.
 RUN . /etc/skia-env \
-    && if [ -z "$(grep 'SYSROOT_ROOT=' /etc/skia-env | cut -d= -f2)" ]; then \
+    && if [ -z "${SYSROOT_ROOT:-}" ]; then \
          for script in \
               ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libc.so \
               ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
@@ -258,7 +284,6 @@ RUN . /etc/skia-env \
 # Download .deb packages from Debian's pool and extract headers + libraries.
 # For cross-package arches (loongarch64), relocate to match the SYSROOT_PATH layout.
 RUN . /etc/skia-env \
-    && SYSROOT_PATH_VAL=$(grep "SYSROOT_PATH=" /etc/skia-env | cut -d= -f2) \
     && mkdir -p /tmp/fontconfig \
     && cd /tmp/fontconfig \
     && case "${SYSROOT_RELEASE}" in \
@@ -270,7 +295,7 @@ RUN . /etc/skia-env \
     && for pkg in libfontconfig-dev libfontconfig1; do \
            url="${APT_REPO}/pool/main/f/fontconfig/${pkg}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb"; \
            echo "Downloading $url"; \
-           curl -L -o "${pkg}.deb" "$url"; \
+           curl -fSL -o "${pkg}.deb" "$url"; \
            ar x "${pkg}.deb" ; \
            tar xf data.tar.* -C /tmp/fontconfig/extract/ ; \
            rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \
@@ -278,10 +303,10 @@ RUN . /etc/skia-env \
     && case "${BUILD_ARCH}" in \
          loongarch64) \
            # Cross-package layout: put headers and libs under SYSROOT_PATH
-           mkdir -p ${SYSROOT_PATH_VAL}/include ${SYSROOT_PATH_VAL}/lib ; \
-           cp -a /tmp/fontconfig/extract/usr/include/* ${SYSROOT_PATH_VAL}/include/ ; \
+           mkdir -p ${SYSROOT_PATH}/include ${SYSROOT_PATH}/lib ; \
+           cp -a /tmp/fontconfig/extract/usr/include/* ${SYSROOT_PATH}/include/ ; \
            if [ -d "/tmp/fontconfig/extract/usr/lib/${TOOLCHAIN_ARCH}" ]; then \
-             cp -a /tmp/fontconfig/extract/usr/lib/${TOOLCHAIN_ARCH}/* ${SYSROOT_PATH_VAL}/lib/ ; \
+             cp -a /tmp/fontconfig/extract/usr/lib/${TOOLCHAIN_ARCH}/* ${SYSROOT_PATH}/lib/ ; \
            fi ;; \
          *) \
            # Debootstrap layout: extract directly to sysroot root
