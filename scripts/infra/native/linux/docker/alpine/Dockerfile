@@ -33,8 +33,12 @@ RUN tdnf install -y \
 
 # Install official LLVM 18 release with all target backends.
 # Azure Linux's LLVM only has "host;AMDGPU;BPF" — we need all cross targets.
+# The release binary needs libtinfo.so.5 (built on Ubuntu 18.04) but Azure Linux
+# only has libtinfo.so.6 — create a compat symlink (ABI compatible for our use).
 ARG LLVM_VERSION=18.1.8
-RUN curl -sL "https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz" \
+RUN ln -sf /usr/lib64/libtinfo.so.6 /usr/lib64/libtinfo.so.5 \
+    && ln -sf /usr/lib64/libncursesw.so.6 /usr/lib64/libncurses.so.5 \
+    && curl -sL "https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz" \
         | tar xJ --strip-components=1 -C /usr/local \
     && rm -rf /usr/local/share/doc /usr/local/share/man /usr/local/share/clang \
     && clang --version && lld --version
