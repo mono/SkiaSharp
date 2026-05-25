@@ -27,11 +27,15 @@ string GetGnArgs(string arch)
     var init = $"{sysrootArg} '--target={TOOLCHAIN_ARCH_TARGET}'";
     var bin = $"'-B{sysroot}/bin/' ";
     var libs = $"'-L{sysroot}/lib/', '-L{sysroot}/lib/{TOOLCHAIN_ARCH}/' ";
+    // C++ headers MUST come before C headers for #include_next to work correctly.
+    // When <cmath> does #include_next <math.h>, the search continues from paths
+    // AFTER the directory where cmath was found. If C headers are listed first,
+    // they won't be searched by #include_next from C++ headers.
     var includes =
-        $"'-I{sysroot}/include', " +
-        $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}', " +
         $"'-I{sysroot}/include/c++/current', " +
-        $"'-I{sysroot}/include/c++/current/{TOOLCHAIN_ARCH}' ";
+        $"'-I{sysroot}/include/c++/current/{TOOLCHAIN_ARCH}', " +
+        $"'-I{sysroot}/include', " +
+        $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}' ";
 
     return
         $"extra_asmflags+=[ {init}, '-no-integrated-as', {bin}, {includes} ] " +

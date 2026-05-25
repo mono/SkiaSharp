@@ -113,14 +113,19 @@ RUN . /etc/skia-env \
                 dir=$(echo $pkg | rev | cut -d/ -f1 | rev) ; \
                 base=$(echo $pkg | rev | cut -d/ -f2- | rev) ; \
                 url="${POOL}/${base}/" ; \
-                deb_url=$(curl -sL "$url" | grep -oP "href=\"\K${dir}_[^\"]+_all\.deb" | sort -V | tail -1) ; \
+                echo "Fetching index: $url (looking for ${dir}_*_all.deb)" ; \
+                deb_url=$(curl -sL "$url" | grep -o "href=\"${dir}_[^\"]*_all\.deb\"" | sed 's/href="//;s/"$//' | sort -V | tail -1) ; \
                 if [ -n "$deb_url" ]; then \
-                  curl -LO "${url}${deb_url}" ; \
+                  echo "  Downloading: ${url}${deb_url}" ; \
+                  curl -sL -O "${url}${deb_url}" ; \
                   ar x "${deb_url}" ; \
                   mkdir -p extract && tar xf data.tar.* -C extract/ ; \
-                  rm -f control.tar.* data.tar.* debian-binary ; \
+                  rm -f control.tar.* data.tar.* debian-binary "${deb_url}" ; \
+                else \
+                  echo "  WARNING: No package found for ${dir}" ; \
                 fi ; \
               done \
+           && echo "Extracted files:" && ls extract/usr/${TOOLCHAIN_ARCH}/ 2>/dev/null | head -5 || true \
            && if [ -d extract/usr/${TOOLCHAIN_ARCH} ]; then \
                 cp -a extract/usr/${TOOLCHAIN_ARCH}/* ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/ ; \
               fi \
