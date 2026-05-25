@@ -141,8 +141,10 @@ RUN . /etc/skia-env \
 RUN . /etc/skia-env \
     && ln -sf ${TOOLCHAIN_VERSION} ${SYSROOT_PATH}/include/c++/current
 
-# Install fontconfig into the sysroot.
+# Install fontconfig into the sysroot with SHA-256 verification.
 # Cross-package layout: headers go to SYSROOT_PATH/include, libs to SYSROOT_PATH/lib.
+ARG FC_DEV_SHA256=0d3aee5780ecbab1f709036cedd935f2af690bd5392227411d97e6b160537456
+ARG FC_LIB_SHA256=234a8998df450d4cd83f9c0a4a942fe1892b556122ff96fc737e0c74cb9c4421
 RUN . /etc/skia-env \
     && mkdir -p /tmp/fontconfig && cd /tmp/fontconfig \
     && case "${SYSROOT_RELEASE}" in \
@@ -150,10 +152,22 @@ RUN . /etc/skia-env \
        esac \
     && APT_REPO=https://deb.debian.org/debian \
     && mkdir -p /tmp/fontconfig/extract \
-    && for pkg in libfontconfig-dev libfontconfig1; do \
+    && for pkg_info in \
+         "libfontconfig-dev ${FC_DEV_SHA256}" \
+         "libfontconfig1 ${FC_LIB_SHA256}"; do \
+         pkg=$(echo $pkg_info | cut -d' ' -f1) ; \
+         expected_sha=$(echo $pkg_info | cut -d' ' -f2) ; \
          url="${APT_REPO}/pool/main/f/fontconfig/${pkg}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb" ; \
          echo "Downloading $url" ; \
          curl -fSL -o "${pkg}.deb" "$url" ; \
+         actual_sha=$(sha256sum "${pkg}.deb" | cut -d' ' -f1) ; \
+         if [ "$actual_sha" != "$expected_sha" ]; then \
+           echo "FATAL: SHA-256 mismatch for ${pkg}.deb" ; \
+           echo "  Expected: $expected_sha" ; \
+           echo "  Actual:   $actual_sha" ; \
+           exit 1 ; \
+         fi ; \
+         echo "  SHA-256 verified: $actual_sha" ; \
          ar x "${pkg}.deb" ; \
          tar xf data.tar.* -C /tmp/fontconfig/extract/ ; \
          rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \

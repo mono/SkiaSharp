@@ -171,7 +171,7 @@ RUN . /etc/skia-env \
          ln -sf ${TOOLCHAIN_VERSION} ${SYSROOT_PATH}/include/${TOOLCHAIN_ARCH}/c++/current ; \
        fi
 
-# Install fontconfig into the sysroot.
+# Install fontconfig into the sysroot with SHA-256 verification.
 # Download .deb packages from Debian's pool and extract headers + libraries.
 RUN . /etc/skia-env \
     && mkdir -p /tmp/fontconfig \
@@ -180,15 +180,35 @@ RUN . /etc/skia-env \
          bullseye) FC_VERSION=2.13.1-4.2 ;; \
          trixie)   FC_VERSION=2.17.1-5   ;; \
        esac \
+    && case "${SYSROOT_RELEASE}_${TOOLCHAIN_ARCH_SHORT}" in \
+         bullseye_armhf)  FC_DEV_SHA256=4e352097b99831f5898b33729602b549f87b88b5d9ceaecfea10ec122f238f92 ; FC_LIB_SHA256=a29995b90aaec6b6bde70799f487b6eb12421e507342ae9035594fd7c1822e1d ;; \
+         bullseye_arm64)  FC_DEV_SHA256=8872d11ade9fbdc818099ccbc57b8fc06d3d74d33797d6467da60c49b247acc8 ; FC_LIB_SHA256=18b13ef8a46e9d79ba6a6ba2db0c86e42583277b5d47f6942f3223e349c22641 ;; \
+         bullseye_i386)   FC_DEV_SHA256=0a5205d19e771235de1577cf92413a821d8358c05fdc4e4ddeaef9959ff157db ; FC_LIB_SHA256=373807faea5e24bd23efc1867eeb0dceca322bc906e1b9b4f5a1b7539880b3ed ;; \
+         bullseye_amd64)  FC_DEV_SHA256=7655d4238ee7e6ced13501006d20986cbf9ff08454a4e502d5aa399f83e28876 ; FC_LIB_SHA256=b92861827627a76e74d6f447a5577d039ef2f95da18af1f29aa98fb96baea4c1 ;; \
+         trixie_riscv64)  FC_DEV_SHA256=17bba653a4385c870fd0518d8af094b6469524c639d29891bde526686e1fb9fa ; FC_LIB_SHA256=3d08f8a2fc4a325a0a4821848b804ba86b047eab92ce75184ab852b77ba72bde ;; \
+         *) echo "No fontconfig SHA-256 for ${SYSROOT_RELEASE}_${TOOLCHAIN_ARCH_SHORT} — add checksum" && exit 1 ;; \
+       esac \
     && APT_REPO=https://deb.debian.org/debian \
     && mkdir -p /tmp/fontconfig/extract \
-    && for pkg in libfontconfig-dev libfontconfig1; do \
-           url="${APT_REPO}/pool/main/f/fontconfig/${pkg}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb"; \
-           echo "Downloading $url"; \
-           curl -fSL -o "${pkg}.deb" "$url"; \
-           ar x "${pkg}.deb" ; \
-           tar xf data.tar.* -C /tmp/fontconfig/extract/ ; \
-           rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \
+    && for pkg_info in \
+         "libfontconfig-dev ${FC_DEV_SHA256}" \
+         "libfontconfig1 ${FC_LIB_SHA256}"; do \
+         pkg=$(echo $pkg_info | cut -d' ' -f1) ; \
+         expected_sha=$(echo $pkg_info | cut -d' ' -f2) ; \
+         url="${APT_REPO}/pool/main/f/fontconfig/${pkg}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb"; \
+         echo "Downloading $url"; \
+         curl -fSL -o "${pkg}.deb" "$url"; \
+         actual_sha=$(sha256sum "${pkg}.deb" | cut -d' ' -f1) ; \
+         if [ "$actual_sha" != "$expected_sha" ]; then \
+           echo "FATAL: SHA-256 mismatch for ${pkg}.deb" ; \
+           echo "  Expected: $expected_sha" ; \
+           echo "  Actual:   $actual_sha" ; \
+           exit 1 ; \
+         fi ; \
+         echo "  SHA-256 verified: $actual_sha" ; \
+         ar x "${pkg}.deb" ; \
+         tar xf data.tar.* -C /tmp/fontconfig/extract/ ; \
+         rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \
        done \
     && cp -a /tmp/fontconfig/extract/* ${SYSROOT_DIR}/ \
     && rm -rf /tmp/fontconfig
