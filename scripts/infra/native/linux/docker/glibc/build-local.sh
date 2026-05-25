@@ -2,7 +2,7 @@
 set -ex
 
 # Parameters:
-# $1 - The target architecture to build for     [ arm | arm64 | riscv64 | x86 | x64 | loongarch64 ]
+# $1 - The target architecture to build for     [ arm | arm64 | riscv64 | x86 | x64 ]
 # $2+ - Additional arguments to pass to the cake script
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -13,8 +13,8 @@ EXTRA_ARGS="$@"
 
 # Determine sysroot release based on architecture
 case "$ARCH" in
-  loongarch64) SYSROOT_RELEASE=trixie ;;
-  *)           SYSROOT_RELEASE=bullseye ;;
+  riscv64) SYSROOT_RELEASE=trixie ;;
+  *)       SYSROOT_RELEASE=bullseye ;;
 esac
 
 # the docker platform to use
