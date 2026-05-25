@@ -127,6 +127,19 @@ const SEV_CLASS = { CRITICAL: 'sev-critical', HIGH: 'sev-high', MEDIUM: 'sev-med
 function sevClass(s) { return SEV_CLASS[(s||'').toUpperCase()] || 'sev-unknown'; }
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
 
+const ASSESSMENT_LABELS = {
+  affected: ['🔴 Affected', 'badge bg-danger'],
+  already_fixed: ['✅ Fixed', 'badge bg-success'],
+  false_positive: ['⚪ False Positive', 'badge bg-secondary'],
+  needs_review: ['🟡 Needs Review', 'badge bg-warning text-dark'],
+  not_in_tree: ['➖ Not In Tree', 'badge bg-light text-dark border'],
+};
+function assessmentBadge(val) {
+  const entry = ASSESSMENT_LABELS[val];
+  if (entry) return `<span class="${entry[1]}">${entry[0]}</span>`;
+  return esc(val);
+}
+
 function renderSummary(s, cgAlerts) {
   const cgCount = cgAlerts ? (cgAlerts.totalAlerts || 0) : 0;
   const cgHigh = cgAlerts ? ((cgAlerts.bySeverity || {}).High || 0) + ((cgAlerts.bySeverity || {}).Critical || 0) : 0;
@@ -291,6 +304,9 @@ function renderCveTable(cves, columns) {
       if (c.key === 'id') {
         const url = val.startsWith('GHSA-') ? `https://github.com/advisories/${esc(val)}` : `https://nvd.nist.gov/vuln/detail/${esc(val)}`;
         return `<td><a href="${url}" target="_blank">${esc(val)}</a></td>`;
+      }
+      if (c.key === 'assessment') {
+        return `<td>${assessmentBadge(String(val))}</td>`;
       }
       return `<td>${esc(String(val))}</td>`;
     }).join('');
