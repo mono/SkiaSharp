@@ -8,8 +8,8 @@ namespace SkiaSharp.Tests.Visual
 	/// missing, no Android device attached, browser can't initialise WebGPU.
 	///
 	/// <para>
-	/// Distinct from regular failures so <see cref="VisualTestBase"/> can
-	/// convert it to <c>Skip</c> without string-matching exception messages.
+	/// Distinct from regular failures so the matrix harness can convert
+	/// it to <c>Skip</c> without string-matching exception messages.
 	/// Anything else thrown from <c>RenderAsync</c> is treated as a real
 	/// test failure.
 	/// </para>
