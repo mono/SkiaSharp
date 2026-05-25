@@ -1,4 +1,5 @@
 using System;
+using SkiaSharp.Tests.Visual;
 using Xunit;
 
 namespace SkiaSharp.Tests.Graphite
@@ -15,14 +16,12 @@ namespace SkiaSharp.Tests.Graphite
 		[SkippableFact]
 		public void ToTextureImage_UploadsRasterToGraphiteBackedImage ()
 		{
-			Skip.IfNot (IsLinux, "Lavapipe smoke is Linux/CI only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
 				"Graphite/Vulkan not available in this libSkiaSharp build.");
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
-			using var fixture = LavapipeFixture.TryCreate ();
-			Skip.IfNot (fixture.IsAvailable, $"Lavapipe unavailable: {fixture.FailureReason}");
-
-			using var ctx = SKGraphiteContext.CreateVulkan (fixture.BackendContext);
+			using var ctx = MakeContext ();
 			using var recorder = ctx.CreateRecorder ();
 			Assert.NotNull (recorder);
 
@@ -52,14 +51,12 @@ namespace SkiaSharp.Tests.Graphite
 			// The instance-form ToTextureImage(recorder) wraps the static form with
 			// `this`. Verify the overload exists on a known-raster image and produces
 			// a GPU-backed copy.
-			Skip.IfNot (IsLinux, "Lavapipe smoke is Linux/CI only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
 				"Graphite/Vulkan not available in this libSkiaSharp build.");
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
-			using var fixture = LavapipeFixture.TryCreate ();
-			Skip.IfNot (fixture.IsAvailable, $"Lavapipe unavailable: {fixture.FailureReason}");
-
-			using var ctx = SKGraphiteContext.CreateVulkan (fixture.BackendContext);
+			using var ctx = MakeContext ();
 			using var recorder = ctx.CreateRecorder ();
 
 			using var bitmap = new SKBitmap (new SKImageInfo (16, 16, SKColorType.Rgba8888, SKAlphaType.Premul));
@@ -83,16 +80,14 @@ namespace SkiaSharp.Tests.Graphite
 			// Allocate a Graphite-managed GPU texture on the recorder, render into it
 			// via SKSurface.Create(recorder, bt), then wrap it as an SKImage via
 			// FromTexture. The wrapped image must be GPU-backed and readback-able.
-			Skip.IfNot (IsLinux, "Lavapipe smoke is Linux/CI only.");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
 				"Graphite/Vulkan not available in this libSkiaSharp build.");
-
-			using var fixture = LavapipeFixture.TryCreate ();
-			Skip.IfNot (fixture.IsAvailable, $"Lavapipe unavailable: {fixture.FailureReason}");
+			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
+				$"Vulkan loader unavailable: {VulkanLoader.Shared.FailureReason}");
 
 			const int W = 64, H = 64;
 
-			using var ctx = SKGraphiteContext.CreateVulkan (fixture.BackendContext);
+			using var ctx = MakeContext ();
 			using var recorder = ctx.CreateRecorder ();
 			Assert.NotNull (recorder);
 
@@ -155,6 +150,22 @@ namespace SkiaSharp.Tests.Graphite
 			}
 
 			recorder.DeleteBackendTexture (bt);
+		}
+
+		private static SKGraphiteContext MakeContext ()
+		{
+			var vk = VulkanLoader.Shared;
+			using var bc = new SKGraphiteVkBackendContext {
+				VkInstance         = vk.Instance,
+				VkPhysicalDevice   = vk.PhysicalDevice,
+				VkDevice           = vk.Device,
+				VkQueue            = vk.Queue,
+				GraphicsQueueIndex = vk.QueueFamilyIndex,
+				MaxApiVersion      = VulkanLoader.VK_API_VERSION_1_3,
+				ProtectedContext   = false,
+				GetProcedureAddress = (name, instance, device) => vk.GetProc (name, instance, device),
+			};
+			return SKGraphiteContext.CreateVulkan (bc);
 		}
 	}
 }

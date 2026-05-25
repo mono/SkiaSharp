@@ -16,7 +16,6 @@ namespace SkiaSharp.Tests.Graphite
 		[SkippableFact]
 		public unsafe void Coexist_GaneshAndGraphite_BothRenderSameScene ()
 		{
-			Skip.IfNot (IsLinux, "Coexistence test relies on Lavapipe (Linux/CI only).");
 			Skip.IfNot (SKGraphiteContext.IsBackendAvailable (SKGraphiteBackend.Vulkan),
 				"Graphite/Vulkan not available in this libSkiaSharp build.");
 			Skip.IfNot (VulkanLoader.Shared.IsAvailable,
