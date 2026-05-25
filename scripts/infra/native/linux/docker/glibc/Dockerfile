@@ -149,7 +149,8 @@ RUN . /etc/skia-env \
                 cp -a extract/usr/lib/gcc-cross/* ${SYSROOT_DIR}/usr/lib/gcc-cross/ ; \
               fi \
            && rm -rf /tmp/cross-pkgs \
-           && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}" >> /etc/skia-env ;; \
+           && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}" >> /etc/skia-env \
+           && echo "export GCC_LIB_DIR=${SYSROOT_DIR}/usr/lib/gcc-cross/${TOOLCHAIN_ARCH}/${TOOLCHAIN_VERSION}" >> /etc/skia-env ;; \
          *) \
            # Standard debootstrap for architectures with Debian binary archives.
            # Produces native layout: headers at /usr/include/, libs at /usr/lib/{triple}/
@@ -170,7 +171,9 @@ RUN . /etc/skia-env \
                   cd /tmp && ar x "$deb" && tar xf data.tar.* -C ${SYSROOT_DIR}/ && rm -f control.tar.* data.tar.* debian-binary ; \
                 fi ; \
               done \
-           && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env ;; \
+           && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env \
+           && echo "export SYSROOT_ROOT=${SYSROOT_DIR}" >> /etc/skia-env \
+           && echo "export GCC_LIB_DIR=${SYSROOT_DIR}/usr/lib/gcc/${TOOLCHAIN_ARCH}/${TOOLCHAIN_VERSION}" >> /etc/skia-env ;; \
        esac \
     && echo "Sysroot created: ${SYSROOT_RELEASE} ${BUILD_ARCH}" \
     && if [ "${TOOLCHAIN_ARCH}" != "${TOOLCHAIN_ARCH_SHORT}-linux-gnu" ] \

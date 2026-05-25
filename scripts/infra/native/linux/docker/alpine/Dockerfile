@@ -108,6 +108,9 @@ RUN . /etc/skia-env \
          if [ -n "$GCC_VERSION" ]; then \
            ln -sf ${GCC_VERSION} ${INCLUDE_DIR}/current ; \
            echo "Created symlink: ${INCLUDE_DIR}/current -> ${GCC_VERSION}" ; \
+           GCC_LIB_DIR="/alpine/usr/lib/gcc/${TOOLCHAIN_ARCH}/${GCC_VERSION}" ; \
+           echo "export GCC_LIB_DIR=${GCC_LIB_DIR}" >> /etc/skia-env ; \
+           echo "GCC lib dir: ${GCC_LIB_DIR}" ; \
          fi ; \
        fi
 
