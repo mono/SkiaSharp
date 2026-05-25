@@ -20,15 +20,16 @@ string GetGnArgs(string arch)
     var (sysrootArg, linker) = BUILD_VARIANT switch
     {
         "alpine" or "alpinenodeps" => ("'--sysroot=/alpine', ", "'-fuse-ld=lld'"),
-        _ => ("", ""),
+        _ => ("", "'-fuse-ld=lld'"),
     };
 
     var sysroot = SYSROOT_PATH;
     var init = $"{sysrootArg} '--target={TOOLCHAIN_ARCH_TARGET}'";
     var bin = $"'-B{sysroot}/bin/' ";
-    var libs = $"'-L{sysroot}/lib/' ";
+    var libs = $"'-L{sysroot}/lib/', '-L{sysroot}/lib/{TOOLCHAIN_ARCH}/' ";
     var includes =
         $"'-I{sysroot}/include', " +
+        $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}', " +
         $"'-I{sysroot}/include/c++/current', " +
         $"'-I{sysroot}/include/c++/current/{TOOLCHAIN_ARCH}' ";
 

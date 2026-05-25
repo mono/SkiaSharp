@@ -33,6 +33,7 @@ RUN tdnf install -y \
         xz \
         gawk \
         ca-certificates \
+        binutils \
         debootstrap \
     && tdnf clean all
 
@@ -91,23 +92,27 @@ RUN case ${SYSROOT_RELEASE} in \
 ARG SYSROOT_DIR=/sysroot
 RUN . /etc/skia-env \
     && case "${BUILD_ARCH}" in \
-         riscv64) \
-           # riscv64 has no Bullseye binary archive — use gcc-cross package extraction.
-           # Download the cross packages from Debian's pool and extract into sysroot.
+         riscv64|loongarch64) \
+           # riscv64/loongarch64 have no standard Debian binary archive — use gcc-cross package extraction.
+           # This produces the cross-package layout at /sysroot/usr/{TOOLCHAIN_ARCH}/
+           # loong64 packages are in -ports variants; riscv64 is in the standard pool.
            mkdir -p ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH} \
            && TOOLCHAIN_VERSION=$(grep TOOLCHAIN_VERSION /etc/skia-env | cut -d= -f2) \
-           && APT_REPO=http://deb.debian.org/debian \
+           && APT_REPO=https://deb.debian.org/debian \
            && POOL="${APT_REPO}/pool/main" \
-           && mkdir -p /tmp/riscv-pkgs && cd /tmp/riscv-pkgs \
+           && case "${TOOLCHAIN_ARCH_SHORT}" in \
+                loong64) PORTS_SUFFIX="-ports" ;; \
+                *)       PORTS_SUFFIX="" ;; \
+              esac \
+           && mkdir -p /tmp/cross-pkgs && cd /tmp/cross-pkgs \
            && for pkg in \
-                "g/gcc-${TOOLCHAIN_VERSION}-cross/libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
-                "g/gcc-${TOOLCHAIN_VERSION}-cross/libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
-                "l/linux/linux-libc-dev-${TOOLCHAIN_ARCH_SHORT}-cross"; do \
-                # Find the latest version of the package
+                "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
+                "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
+                "c/cross-toolchain-base${PORTS_SUFFIX}/libc6-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
+                "c/cross-toolchain-base${PORTS_SUFFIX}/linux-libc-dev-${TOOLCHAIN_ARCH_SHORT}-cross"; do \
                 dir=$(echo $pkg | rev | cut -d/ -f1 | rev) ; \
                 base=$(echo $pkg | rev | cut -d/ -f2- | rev) ; \
                 url="${POOL}/${base}/" ; \
-                # Download and extract — ar x + tar (no dpkg-deb needed)
                 deb_url=$(curl -sL "$url" | grep -oP "href=\"\K${dir}_[^\"]+_all\.deb" | sort -V | tail -1) ; \
                 if [ -n "$deb_url" ]; then \
                   curl -LO "${url}${deb_url}" ; \
@@ -116,32 +121,38 @@ RUN . /etc/skia-env \
                   rm -f control.tar.* data.tar.* debian-binary ; \
                 fi ; \
               done \
-           && if [ -d extract/usr/riscv64-linux-gnu ]; then \
-                cp -a extract/usr/riscv64-linux-gnu/* ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/ ; \
+           && if [ -d extract/usr/${TOOLCHAIN_ARCH} ]; then \
+                cp -a extract/usr/${TOOLCHAIN_ARCH}/* ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/ ; \
               fi \
            && if [ -d extract/usr/lib/gcc-cross ]; then \
                 mkdir -p ${SYSROOT_DIR}/usr/lib/gcc-cross ; \
                 cp -a extract/usr/lib/gcc-cross/* ${SYSROOT_DIR}/usr/lib/gcc-cross/ ; \
               fi \
-           && rm -rf /tmp/riscv-pkgs ;; \
+           && rm -rf /tmp/cross-pkgs \
+           && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}" >> /etc/skia-env ;; \
          *) \
-           # Standard debootstrap for architectures with Debian binary archives
+           # Standard debootstrap for architectures with Debian binary archives.
+           # Produces native layout: headers at /usr/include/, libs at /usr/lib/{triple}/
            debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
              --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev \
-             ${SYSROOT_RELEASE} ${SYSROOT_DIR} http://deb.debian.org/debian ;; \
+             ${SYSROOT_RELEASE} ${SYSROOT_DIR} https://deb.debian.org/debian \
+           && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env ;; \
        esac \
     && echo "Sysroot created: ${SYSROOT_RELEASE} ${BUILD_ARCH}"
 
 # Create the c++/current symlink so build.cake can reference libstdc++ headers
 # without baking the GCC version number into the build script.
+# Debootstrap: headers at /sysroot/usr/include/c++/VERSION/
+# Cross-packages (riscv64/loongarch64): headers at /sysroot/usr/{ARCH}/include/c++/VERSION/
 RUN . /etc/skia-env \
     && TOOLCHAIN_VERSION=$(grep TOOLCHAIN_VERSION /etc/skia-env | cut -d= -f2) \
-    && INCLUDE_DIR=${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/include/c++ \
+    && SYSROOT_PATH_VAL=$(grep SYSROOT_PATH /etc/skia-env | cut -d= -f2) \
+    && INCLUDE_DIR=${SYSROOT_PATH_VAL}/include/c++ \
     && if [ -d "${INCLUDE_DIR}/${TOOLCHAIN_VERSION}" ]; then \
-         ln -sf ${INCLUDE_DIR}/${TOOLCHAIN_VERSION} ${INCLUDE_DIR}/current ; \
+         ln -sf ${TOOLCHAIN_VERSION} ${INCLUDE_DIR}/current ; \
        elif [ -d "${INCLUDE_DIR}" ]; then \
          GCC_VERSION=$(ls ${INCLUDE_DIR}/ | head -1) ; \
-         [ -n "$GCC_VERSION" ] && ln -sf ${INCLUDE_DIR}/${GCC_VERSION} ${INCLUDE_DIR}/current ; \
+         [ -n "$GCC_VERSION" ] && ln -sf ${GCC_VERSION} ${INCLUDE_DIR}/current ; \
        fi
 
 # Fix libc/libpthread linker scripts to use relative paths.
@@ -163,7 +174,9 @@ RUN . /etc/skia-env \
 
 # Install fontconfig into the sysroot.
 # Download .deb packages from Debian's pool and extract headers + libraries.
+# For cross-package arches (riscv64/loongarch64), relocate to match the SYSROOT_PATH layout.
 RUN . /etc/skia-env \
+    && SYSROOT_PATH_VAL=$(grep "SYSROOT_PATH=" /etc/skia-env | cut -d= -f2) \
     && mkdir -p /tmp/fontconfig \
     && cd /tmp/fontconfig \
     && case "${SYSROOT_RELEASE}" in \
@@ -171,23 +184,31 @@ RUN . /etc/skia-env \
          trixie)   FC_VERSION=2.17.1-5   ;; \
        esac \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
-         riscv64) FC_VERSION=2.15.0-2.3 ;; \
+         riscv64)    FC_VERSION=2.15.0-2.3 ;; \
        esac \
-    && APT_REPO=http://deb.debian.org/debian \
+    && APT_REPO=https://deb.debian.org/debian \
+    && mkdir -p /tmp/fontconfig/extract \
     && for pkg in libfontconfig-dev libfontconfig1; do \
            url="${APT_REPO}/pool/main/f/fontconfig/${pkg}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb"; \
            echo "Downloading $url"; \
            curl -L -o "${pkg}.deb" "$url"; \
            ar x "${pkg}.deb" ; \
-           tar xf data.tar.* -C ${SYSROOT_DIR}/ ; \
+           tar xf data.tar.* -C /tmp/fontconfig/extract/ ; \
            rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \
        done \
+    && case "${BUILD_ARCH}" in \
+         riscv64|loongarch64) \
+           # Cross-package layout: put headers and libs under SYSROOT_PATH
+           mkdir -p ${SYSROOT_PATH_VAL}/include ${SYSROOT_PATH_VAL}/lib ; \
+           cp -a /tmp/fontconfig/extract/usr/include/* ${SYSROOT_PATH_VAL}/include/ ; \
+           if [ -d "/tmp/fontconfig/extract/usr/lib/${TOOLCHAIN_ARCH}" ]; then \
+             cp -a /tmp/fontconfig/extract/usr/lib/${TOOLCHAIN_ARCH}/* ${SYSROOT_PATH_VAL}/lib/ ; \
+           fi ;; \
+         *) \
+           # Debootstrap layout: extract directly to sysroot root
+           cp -a /tmp/fontconfig/extract/* ${SYSROOT_DIR}/ ;; \
+       esac \
     && rm -rf /tmp/fontconfig
-
-# Set the SYSROOT_PATH environment variable for build.cake to use.
-# The build script reads this to know where headers and libraries are.
-RUN . /etc/skia-env \
-    && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}" >> /etc/skia-env
 
 WORKDIR /work
 

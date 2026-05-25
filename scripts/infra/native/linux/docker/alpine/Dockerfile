@@ -25,6 +25,7 @@ RUN tdnf install -y \
         xz \
         gawk \
         ca-certificates \
+        binutils \
     && tdnf clean all
 
 # Install the .NET SDK (needed for Cake build scripts)
@@ -61,6 +62,7 @@ RUN case ${BUILD_ARCH} in \
 #   musl-dev: C library headers and runtime
 #   linux-headers: kernel headers
 #   fontconfig-dev: font configuration headers and library
+#   libstdc++-dev: C++ standard library headers (needed by Skia)
 # Avoids build-base which pulls in busybox (~35 CVEs) and binutils (~15 CVEs).
 ARG DISTRO_VERSION=3.21
 ARG MACHINE_ARCH=x86_64
@@ -70,14 +72,16 @@ RUN . /etc/skia-env \
         --create-dirs --output-dir "$APK_DIR" \
         "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.14/$MACHINE_ARCH/apk.static" \
     && chmod +x "$APK_DIR/apk.static" \
-    && mkdir -p /alpine/etc/apk \
-    && echo "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" > /alpine/etc/apk/repositories \
-    && echo "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" >> /alpine/etc/apk/repositories \
     && "$APK_DIR/apk.static" \
-        -p /alpine/packages --root /alpine --arch "$APK_ARCH" \
-        --update-cache --allow-untrusted --initdb \
-        add musl-dev linux-headers fontconfig-dev \
-    && rm -rf "$APK_DIR" /alpine/packages
+        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
+        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
+        -U --allow-untrusted --root /alpine --arch "$APK_ARCH" --initdb add \
+    && "$APK_DIR/apk.static" \
+        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
+        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
+        -U --allow-untrusted --root /alpine --arch "$APK_ARCH" --no-scripts \
+        add musl-dev linux-headers fontconfig-dev libstdc++-dev \
+    && rm -rf "$APK_DIR"
 
 WORKDIR /work
 
