@@ -77,7 +77,7 @@ RUN case ${BUILD_ARCH} in \
         arm)         TOOLCHAIN_ARCH=arm-linux-gnueabihf       ; TOOLCHAIN_ARCH_SHORT=armhf   ; TOOLCHAIN_ARCH_TARGET=armv7a-linux-gnueabihf     ;; \
         arm64)       TOOLCHAIN_ARCH=aarch64-linux-gnu         ; TOOLCHAIN_ARCH_SHORT=arm64   ; TOOLCHAIN_ARCH_TARGET=aarch64-linux-gnu          ;; \
         riscv64)     TOOLCHAIN_ARCH=riscv64-linux-gnu         ; TOOLCHAIN_ARCH_SHORT=riscv64 ; TOOLCHAIN_ARCH_TARGET=riscv64-linux-gnu          ;; \
-        x86)         TOOLCHAIN_ARCH=i686-linux-gnu            ; TOOLCHAIN_ARCH_SHORT=i386    ; TOOLCHAIN_ARCH_TARGET=i686-linux-gnu             ;; \
+        x86)         TOOLCHAIN_ARCH=i386-linux-gnu            ; TOOLCHAIN_ARCH_SHORT=i386    ; TOOLCHAIN_ARCH_TARGET=i686-linux-gnu             ;; \
         x64)         TOOLCHAIN_ARCH=x86_64-linux-gnu          ; TOOLCHAIN_ARCH_SHORT=amd64   ; TOOLCHAIN_ARCH_TARGET=x86_64-linux-gnu           ;; \
         loongarch64) TOOLCHAIN_ARCH=loongarch64-linux-gnu     ; TOOLCHAIN_ARCH_SHORT=loong64 ; TOOLCHAIN_ARCH_TARGET=loongarch64-linux-gnu      ;; \
         *) echo "Unsupported architecture: ${BUILD_ARCH}" && exit 1 ;; \
@@ -128,7 +128,9 @@ RUN . /etc/skia-env \
            && mkdir -p /tmp/cross-pkgs && cd /tmp/cross-pkgs \
            && for pkg in \
                 "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
+                "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libstdc++6-${TOOLCHAIN_ARCH_SHORT}-cross" \
                 "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
+                "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libgcc-s1-${TOOLCHAIN_ARCH_SHORT}-cross" \
                 "c/cross-toolchain-base${PORTS_SUFFIX}/libc6-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
                 "c/cross-toolchain-base${PORTS_SUFFIX}/libc6-${TOOLCHAIN_ARCH_SHORT}-cross" \
                 "c/cross-toolchain-base${PORTS_SUFFIX}/linux-libc-dev-${TOOLCHAIN_ARCH_SHORT}-cross"; do \
@@ -180,16 +182,10 @@ RUN . /etc/skia-env \
               done \
            && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env \
            && echo "export SYSROOT_ROOT=${SYSROOT_DIR}" >> /etc/skia-env \
-           && echo "export GCC_LIB_DIR=${SYSROOT_DIR}/usr/lib/gcc/${TOOLCHAIN_ARCH}/${TOOLCHAIN_VERSION}" >> /etc/skia-env ;; \
+           && GCC_DIR=$(find ${SYSROOT_DIR}/usr/lib/gcc -maxdepth 3 -name "crtbeginS.o" -exec dirname {} \; | head -1) \
+           && echo "export GCC_LIB_DIR=${GCC_DIR}" >> /etc/skia-env ;; \
        esac \
-    && echo "Sysroot created: ${SYSROOT_RELEASE} ${BUILD_ARCH}" \
-    && if [ "${TOOLCHAIN_ARCH}" != "${TOOLCHAIN_ARCH_SHORT}-linux-gnu" ] \
-         && [ -d "${SYSROOT_DIR}/usr/include/${TOOLCHAIN_ARCH_SHORT}-linux-gnu" ] \
-         && [ ! -e "${SYSROOT_DIR}/usr/include/${TOOLCHAIN_ARCH}" ]; then \
-         ln -sf ${TOOLCHAIN_ARCH_SHORT}-linux-gnu ${SYSROOT_DIR}/usr/include/${TOOLCHAIN_ARCH} ; \
-         ln -sf ${TOOLCHAIN_ARCH_SHORT}-linux-gnu ${SYSROOT_DIR}/usr/lib/${TOOLCHAIN_ARCH} 2>/dev/null || true ; \
-         echo "Created multiarch symlink: ${TOOLCHAIN_ARCH} -> ${TOOLCHAIN_ARCH_SHORT}-linux-gnu" ; \
-       fi
+    && echo "Sysroot created: ${SYSROOT_RELEASE} ${BUILD_ARCH}"
 
 # Create the c++/current symlink so build.cake can reference libstdc++ headers
 # without baking the GCC version number into the build script.
@@ -227,6 +223,13 @@ RUN . /etc/skia-env \
     && if [ -d "${ARCH_INCLUDE}" ] && [ ! -e "${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH}" ]; then \
          ln -sf ${ARCH_INCLUDE} ${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH} ; \
          echo "Created arch symlink: ${INCLUDE_DIR}/${TOOLCHAIN_VERSION}/${TOOLCHAIN_ARCH} -> ${ARCH_INCLUDE}" ; \
+       fi \
+    && if [ ! -e "${INCLUDE_DIR}/current/${TOOLCHAIN_ARCH}" ] && [ -d "${INCLUDE_DIR}/current/" ]; then \
+         EXISTING_ARCH=$(ls -d ${INCLUDE_DIR}/current/*-linux-gnu* 2>/dev/null | head -1 | xargs basename 2>/dev/null) ; \
+         if [ -n "${EXISTING_ARCH}" ] && [ "${EXISTING_ARCH}" != "${TOOLCHAIN_ARCH}" ]; then \
+           ln -sf ${EXISTING_ARCH} ${INCLUDE_DIR}/current/${TOOLCHAIN_ARCH} ; \
+           echo "Created arch compat symlink: ${TOOLCHAIN_ARCH} -> ${EXISTING_ARCH}" ; \
+         fi ; \
        fi
 
 # Fix libc/libpthread linker scripts to use relative paths.
