@@ -8,13 +8,5 @@
     <PackageFile Include="..\..\output\native\wasm\**\libSkiaSharp*.a" PackagePath="buildTransitive\netstandard1.0" />
     <PackageFile Include="buildTransitive\SkiaSharp.props" PackagePath="buildTransitive\netstandard1.0\$(PackageId).props" />
     <PackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\netstandard1.0\$(PackageId).targets" />
-    <!--
-      JS library merged into the consumer's final emcc link. Provides a C ABI
-      (sk_wasm_wgpu_init_async / acquire_frame_texture / release_texture)
-      that sits inside dotnet.native.wasm's JS shell so it has direct
-      access to Emscripten's WebGPU shim and JsValStore without relying
-      on the Module being reachable from outside JS.
-    -->
-    <PackageFile Include="..\..\native\wasm\skia_wgpu_bridge.js" PackagePath="buildTransitive\netstandard1.0" />
   </ItemGroup>
 </Project>

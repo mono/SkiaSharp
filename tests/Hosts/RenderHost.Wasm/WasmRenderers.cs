@@ -164,21 +164,6 @@ internal static partial class WasmRenderers
 		return pixels;
 	}
 
-	internal static partial class JsBridge
-	{
-		[JSImport ("globalThis.skiaSharpWebGpu.initOffscreenAsync")]
-		internal static partial Task<JSObject?> InitWebGpuOffscreenAsync ();
-
-		[JSImport ("globalThis.skiaSharpWebGpu.createOffscreenTexture")]
-		internal static partial int CreateOffscreenTexture (int width, int height);
-
-		[JSImport ("globalThis.skiaSharpWebGpu.readTextureRgbaAsync")]
-		internal static partial Task<string?> ReadTextureRgbaAsync (int textureId, int width, int height);
-
-		[JSImport ("globalThis.skiaSharpWebGpu.releaseOffscreenTexture")]
-		internal static partial void ReleaseOffscreenTexture (int textureId);
-	}
-
 	// Offscreen-WebGL2 bring-up. emscripten's `$GL` runtime registers GL
 	// contexts under integer handles that the gl* shims dispatch through.
 	// We don't reach $GL via the link-time merge-into mechanism here — we
@@ -233,13 +218,14 @@ internal static partial class WasmRenderers
 		internal static int MakeCurrent (int handle) => MakeCurrentImpl (s_gl, handle);
 	}
 
-	// All Graphite/Dawn orchestration lives in C#. The bridge JS does
-	// exactly one thing: publish Emscripten's Module onto globalThis so
-	// `globalThis.skiaSharpModule.WebGPU.mgr*` is reachable via [JSImport]
-	// from out here. Everything else — method calls on JSObject instances
-	// (`adapter.requestDevice`, `device.createTexture`, `buf.mapAsync`,
-	// etc.) — is bridged by a small set of helper closures we install via
-	// `eval` once at static-ctor time, then bind via [JSImport].
+	// All Graphite/Dawn orchestration lives in C#. The .NET 10 WASM SDK
+	// wraps dotnet.native.js in a -sMODULARIZE IIFE, so Emscripten's
+	// `Module` is hidden from external JS — but JSHost.DotnetInstance
+	// hands us a JSObject reference to the runtime from inside the IIFE.
+	// At static-ctor time we read `Module` off that, publish it onto
+	// globalThis as `skiaSharpModule`, and eval a small set of method-
+	// dispatch helpers onto globalThis too. After that, every [JSImport]
+	// is just a dotted-path lookup.
 	internal static partial class SKWebGpu
 	{
 		[JSImport ("globalThis.eval")]
@@ -247,11 +233,17 @@ internal static partial class WasmRenderers
 
 		static SKWebGpu ()
 		{
-			// One-time install of method-dispatch helpers. They exist only to
-			// turn `obj.method(...)` calls into top-level functions reachable
-			// by dotted path — that's the shape [JSImport] can bind. Each is
-			// a one-liner; the only complex one is GetMappedBase64, which
-			// fuses the repack-out-of-padded-rows step with the base64 pack.
+			// Publish Module so the Emscripten WebGPU manager tables are reachable
+			// from out here as `globalThis.skiaSharpModule.WebGPU.mgr*`.
+			var module = JSHost.DotnetInstance.GetPropertyAsJSObject ("Module")
+				?? throw new InvalidOperationException ("JSHost.DotnetInstance.Module unavailable — incompatible .NET WASM runtime.");
+			JSHost.GlobalThis.SetProperty ("skiaSharpModule", module);
+
+			// Method-dispatch helpers. They exist only to turn `obj.method(...)`
+			// calls into top-level functions reachable by dotted path — that's
+			// the shape [JSImport] can bind. Each is a one-liner; the only
+			// complex one is GetMappedBase64, which fuses the repack-out-of-
+			// padded-rows step with the base64 pack.
 			Eval (@"
 				globalThis.skiaSharpWebGpu = {
 					requestAdapter: () => navigator.gpu && navigator.gpu.requestAdapter({ powerPreference: 'low-power' }),

@@ -13,15 +13,16 @@ For the Vulkan / Metal / Dawn-native paths and the high-level API surface, read 
                                               skia_enable_graphite=true,
                                               skia_use_dawn=true,
                                               skia_use_webgpu=true)
-              → emcc final link with -sUSE_WEBGPU=1 + skia_wgpu_bridge.js
+              → emcc final link with -sUSE_WEBGPU=1
               → browser navigator.gpu → host GPU
 ```
 
-`SkiaSharp.NativeAssets.WebAssembly`'s targets file unconditionally:
-- adds `-s USE_WEBGPU=1` to the final emcc link,
-- adds `--js-library skia_wgpu_bridge.js` (a small JS shim that ships in the same nupkg),
-- adds `EXPORTED_RUNTIME_METHODS+=WebGPU` (for devtools / diagnostics),
-- adds `DEFAULT_LIBRARY_FUNCS_TO_INCLUDE+=$SkiaSharpWebGpuBridge` (force-keeps the bridge symbol so its `__postset` installs `globalThis.skiaSharpWebGpu` at module init).
+`SkiaSharp.NativeAssets.WebAssembly`'s targets file unconditionally adds
+`-s USE_WEBGPU=1` to the consumer's final emcc link. That's the entire
+build-side footprint — the WebGPU orchestration that calls into Skia is
+plain C# using `[JSImport]` over Emscripten's `$WebGPU` manager tables;
+the bindings reach those tables by reading `Module` off
+`JSHost.DotnetInstance` at startup and publishing it to globalThis.
 
 WebGPU plumbing is always linked in — consumers that don't use Graphite/Dawn still pay the binary-size cost but the WebGL-Ganesh path keeps working unchanged.
 
@@ -29,52 +30,47 @@ WebGPU plumbing is always linked in — consumers that don't use Graphite/Dawn s
 
 ## Consumer integration
 
-From any .NET WASM app:
-
-```csharp
-// After the runtime is up, ask the bridge to acquire a WebGPU device/queue
-// and bind the named canvas.
-var bridge = await JS.InvokeAsync<JSWebGpuHandles>(
-    "globalThis.skiaSharpWebGpu.initAsync", canvasElementId);
-
-var bc = new SKGraphiteDawnBackendContext {
-    WgpuInstance = (IntPtr)bridge.InstanceId,
-    WgpuDevice   = (IntPtr)bridge.DeviceId,
-    WgpuQueue    = (IntPtr)bridge.QueueId,
-};
-// On WASM/browser the backend context auto-detects non-yielding mode —
-// see "non-yielding mode" below.
-using var ctx = SKGraphiteContext.CreateDawn(bc);
-var cache = new SKGraphiteImageCache ();
-using var recorder = ctx.CreateRecorder(-1, cache.FindOrCreate, cache.Dispose);
-
-// per-frame:
-var texHandle = await JS.InvokeAsync<int>(
-    "globalThis.skiaSharpWebGpu.acquireFrameTexture", canvasElementId, lastTexId);
-using var bt = SKGraphiteBackendTexture.CreateDawn((IntPtr)texHandle);
-using var surface = SKSurface.Create(recorder, bt, SKColorType.Rgba8888);
-surface.Canvas.DrawWhatever(...);
-using (var rec = recorder.Snap()) ctx.InsertRecording(rec);
-ctx.Submit(new SKGraphiteSubmitInfo { Sync = false });
-```
+Consumers orchestrate the WebGPU bring-up entirely from C# via
+`[JSImport]`. The pattern: read `Module` off `JSHost.DotnetInstance`
+(set by the .NET runtime — see "How C# reaches Emscripten's WebGPU
+tables" below), publish it to globalThis, then call
+`Module.WebGPU.mgrDevice.create(...)` etc. via normal dotted-path
+`[JSImport]`s. A working reference implementation lives in
+`tests/Hosts/RenderHost.Wasm/WasmRenderers.cs` (the `SKWebGpu` nested
+type) and covers offscreen device acquisition, GPUTexture allocation,
+and async readback.
 
 Production renderers typically capability-detect (WebGPU → WebGL → Software).
 The WebGPU symbols are always linked; failure to initialize is the caller's signal to fall back.
 
 ---
 
-## What the JS bridge does
+## How C# reaches Emscripten's WebGPU tables
 
-`skia_wgpu_bridge.js` is merged into the consumer's final emcc link via `--js-library`. Its `__postset` runs at Emscripten module init time and installs `globalThis.skiaSharpWebGpu`, which exposes:
+The .NET 10 WASM SDK emits `dotnet.native.js` with Emscripten's
+`-sMODULARIZE`, wrapping the Emscripten runtime in an IIFE. `Module`
+(and its `Module.WebGPU.mgr*` handle tables) lives inside that closure
+and is not on globalThis. Earlier versions of this binding shipped a
+`--js-library` file that ran inside the IIFE and published `Module` to
+globalThis at module init.
 
-| Function | Purpose |
-|---|---|
-| `initAsync(canvasId)` | Requests adapter + device, configures `canvas.getContext('webgpu')`, registers the device/queue with the Emscripten `$WebGPU.mgr*` tables, returns `{instanceId, deviceId, queueId, textureId, format}`. |
-| `acquireFrameTexture(canvasId, prevTextureId)` | Per-frame hot path: releases the previous handle, grabs `getCurrentTexture()`, registers it, returns the new numeric handle. |
-| `releaseTexture(textureId)` | Drops a texture handle. |
-| `setSize(canvasId, width, height)` | Updates `canvas.width` / `canvas.height`. The next `getCurrentTexture` honors the new size automatically. |
+In .NET 8+ that file is no longer necessary: `JSHost.DotnetInstance`
+returns a `JSObject` reference to the runtime from inside C#, with
+`Module` reachable as a property:
 
-**Why a JS library instead of `Module.WebGPU.mgrDevice.create(...)` from external JS?** Starting in .NET 10, the .NET WASM SDKs wrap `dotnet.native.js` in an IIFE and replace the standard Emscripten lifecycle hooks (`preRun` / `onRuntimeInitialized`). The live Emscripten `Module` is unreachable from outside JS. A JS-library file lives *inside* that IIFE so it has direct access to the `$WebGPU` table.
+```csharp
+var module = JSHost.DotnetInstance.GetPropertyAsJSObject("Module");
+JSHost.GlobalThis.SetProperty("skiaSharpModule", module);
+// Now `globalThis.skiaSharpModule.WebGPU.mgrDevice.create(...)` is
+// callable via [JSImport].
+```
+
+For method calls on `JSObject` instances (`adapter.requestDevice()`,
+`device.createBuffer(...)`, `buf.mapAsync(...)`) — which `[JSImport]`
+can't bind directly because it expects top-level dotted-path functions —
+the bindings install a small set of one-line trampoline closures on
+`globalThis.skiaSharpWebGpu` via a single `[JSImport("globalThis.eval")]`
+call at static-ctor time.
 
 ---
 
@@ -162,7 +158,7 @@ Chromium SwiftShader Vulkan chain.
 |---|---|
 | `wasm-ld: undefined symbol: skgpu::graphite::ContextFactory::MakeDawn` | The cake archive-merge glob didn't pick up Skia's internal static libs. Check that `is_canvaskit` is true AND the glob in `native/wasm/build.cake` covers both `*.a.wasm` and `*.a`. |
 | `wasm-ld: undefined symbol: wgpuCreateInstance` etc. | `-sUSE_WEBGPU=1` not in the final emcc link. The NativeAssets.WebAssembly targets file adds it unconditionally — check it's actually being imported (PackageReference vs ProjectReference). |
-| `globalThis.skiaSharpWebGpu` is undefined at runtime | The JS library didn't get force-included. Check the link rsp has `-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=['$SkiaSharpWebGpuBridge']` (MSBuild's `$` escape is `%24`, not `$$`). |
+| `globalThis.skiaSharpModule` is undefined at runtime | The static ctor of `SKWebGpu` didn't run, or `JSHost.DotnetInstance.Module` was unavailable. Confirm you're on .NET 8 or newer; on older runtimes the property doesn't exist. |
 | `System.DllNotFoundException: libSkiaSharp` / `libHarfBuzzSharp` at runtime | The `NativeFileReference` glob didn't expand. On Linux, MSBuild does NOT normalize backslash separators — the targets file must use `/`. |
 | `Couldn't convert SkImage to a Graphite-backed representation` | No image-upload callback passed to `CreateRecorder`. Wire an `SKGraphiteImageCache`. |
 | `canvas.getContext('webgpu') returned null` | The canvas already has a different context type (likely `webgl2` grabbed by an earlier renderer or by Emscripten's GL auto-init). The WebGPU init must run BEFORE any other code touches the canvas. |
