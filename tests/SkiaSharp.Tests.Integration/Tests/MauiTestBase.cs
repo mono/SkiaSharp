@@ -140,7 +140,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         
         // Always run from TestDir (which has global.json) using relative path
         var relativeProjectDir = Path.GetRelativePath(TestDir, projectDir);
-        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework}", timeoutSeconds: 600);
+        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false", timeoutSeconds: 600);
         
         var appPath = FindAppArtifact(projectDir, projectName);
         Assert.NotNull(appPath);
@@ -170,8 +170,13 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         var projectDir = Path.Combine(TestDir, projectName);
         var relativeProjectDir = projectName;  // Relative to TestDir
         
+        // Extract the .NET version from the TargetFramework (e.g., "net10.0" from "net10.0-maccatalyst")
+        var dotnetVersion = TargetFramework.Contains('-')
+            ? TargetFramework[..TargetFramework.IndexOf('-')]
+            : "net10.0";
+        
         // Create project (run from TestDir to pick up global.json)
-        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir}");
+        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir} --framework {dotnetVersion}");
 
         // Add SkiaSharp package (run from TestDir)
         await Run("dotnet", $"add {relativeProjectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion}");
