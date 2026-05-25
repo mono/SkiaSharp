@@ -44,13 +44,13 @@ internal Azure DevOps pipeline and flag vulnerabilities in:
 ```bash
 # Run ONCE and save — this is your CG data for the entire audit
 # ⚠️ Takes 5-7 minutes! Use initial_wait: 600 (or mode: sync with 600s wait)
+# Using --output writes JSON to file while progress prints to stdout (agent sees activity)
 mkdir -p output/ai
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
-  > output/ai/cg-alerts-cache.json
+  --output output/ai/cg-alerts-cache.json
 
 # Then read from the file (fast, no API calls):
-cat output/ai/cg-alerts-cache.json | \
-  python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d['totalAlerts'])"
+python3 -c "import json; d=json.load(open('output/ai/cg-alerts-cache.json')); print(f'{d[\"totalAlerts\"]} alerts')"
 ```
 
 The output includes a `queriedAt` ISO timestamp so you can verify freshness.
