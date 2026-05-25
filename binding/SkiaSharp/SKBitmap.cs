@@ -653,11 +653,11 @@ namespace SkiaSharp
 
 		// Resize
 
-		[Obsolete ("Use Resize(SKImageInfo info, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use Resize(SKImageInfo info, SKSamplingOptions sampling) instead.", error: true)]
 		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality) =>
 			Resize (info, quality.ToSamplingOptions ());
 
-		[Obsolete ("Use Resize(SKSizeI size, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use Resize(SKSizeI size, SKSamplingOptions sampling) instead.", error: true)]
 		public SKBitmap Resize (SKSizeI size, SKFilterQuality quality) =>
 			Resize (size, quality.ToSamplingOptions ());
 
@@ -680,11 +680,11 @@ namespace SkiaSharp
 
 		// ScalePixels
 
-		[Obsolete ("Use ScalePixels(SKBitmap destination, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ScalePixels(SKBitmap destination, SKSamplingOptions sampling) instead.", error: true)]
 		public bool ScalePixels (SKBitmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
 
-		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.", error: true)]
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
 
@@ -767,7 +767,7 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) =>
 			ToShader (tmx, tmy, sampling, null);
 
-		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.", error: true)]
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality) =>
 			ToShader (tmx, tmy, quality.ToSamplingOptions(), null);
 
@@ -777,7 +777,7 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) =>
 			ToShader (tmx, tmy, sampling, &localMatrix);
 
-		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.")]
+		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.", error: true)]
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality, SKMatrix localMatrix) =>
 			ToShader (tmx, tmy, quality.ToSamplingOptions(), &localMatrix);
 

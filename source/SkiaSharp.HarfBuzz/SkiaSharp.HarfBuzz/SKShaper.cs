@@ -42,11 +42,11 @@ namespace SkiaSharp.HarfBuzz
 
 		[Obsolete("Use Shape(Buffer buffer, SKFont font) instead.")]
 		public Result Shape(Buffer buffer, SKPaint paint) =>
-			Shape(buffer, 0, 0, paint.GetFont());
+			Shape(buffer, 0, 0, paint.GetLegacyFont());
 
 		[Obsolete("Use Shape(Buffer buffer, float xOffset, float yOffset, SKFont font) instead.")]
 		public Result Shape(Buffer buffer, float xOffset, float yOffset, SKPaint paint) =>
-			Shape(buffer, xOffset, yOffset, paint.GetFont());
+			Shape(buffer, xOffset, yOffset, paint.GetLegacyFont());
 
 		public Result Shape(Buffer buffer, SKFont font) =>
 			Shape(buffer, 0, 0, font);
@@ -102,7 +102,7 @@ namespace SkiaSharp.HarfBuzz
 
 		[Obsolete("Use Shape(string text, SKFont font) instead.")]
 		public Result Shape(string text, SKPaint paint) =>
-			Shape(text, 0, 0, paint.GetFont());
+			Shape(text, 0, 0, paint.GetLegacyFont());
 
 		[Obsolete("Use Shape(string text, float xOffset, float yOffset, SKFont font) instead.")]
 		public Result Shape(string text, float xOffset, float yOffset, SKPaint paint)
@@ -114,7 +114,7 @@ namespace SkiaSharp.HarfBuzz
 
 			using var buffer = new Buffer();
 
-			switch (paint.TextEncoding)
+			switch (paint.GetLegacyTextEncoding())
 			{
 				case SKTextEncoding.Utf8:
 					buffer.AddUtf8(text);

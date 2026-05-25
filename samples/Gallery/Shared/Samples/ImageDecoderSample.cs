@@ -213,7 +213,7 @@ public class ImageDecoderSample : CanvasSampleBase
 		var y = boxTop + padding + fontSize;
 		foreach (var line in lines)
 		{
-			canvas.DrawText(line, boxLeft + padding, y, font, textPaint);
+			canvas.DrawText(line, boxLeft + padding, y, SKTextAlign.Left, font, textPaint);
 			y += lineHeight;
 		}
 	}

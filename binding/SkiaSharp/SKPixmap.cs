@@ -186,7 +186,7 @@ namespace SkiaSharp
 
 		// ScalePixels
 
-		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.", error: true)]
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
 

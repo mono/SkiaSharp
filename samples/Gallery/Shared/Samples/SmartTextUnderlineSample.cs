@@ -96,7 +96,7 @@ public class SmartTextUnderlineSample : CanvasSampleBase
 			DrawLabel(canvas, "Naïve underline (no descender gaps):", 12, baseY - textSize * 0.8f, bgColor);
 
 			using var naiveTextPaint = new SKPaint { Color = textColor, IsAntialias = true };
-			canvas.DrawText(text, x, baseY, font, naiveTextPaint);
+			canvas.DrawText(text, x, baseY, SKTextAlign.Left, font, naiveTextPaint);
 
 			var naiveUnderlineY = baseY + underlineOffset;
 			using var naiveLinePaint = new SKPaint
@@ -115,7 +115,7 @@ public class SmartTextUnderlineSample : CanvasSampleBase
 		DrawLabel(canvas, "Smart underline (gaps around descenders):", 12, smartY - textSize * 0.8f, bgColor);
 
 		using var textPaint = new SKPaint { Color = textColor, IsAntialias = true };
-		canvas.DrawText(text, x, smartY, font, textPaint);
+		canvas.DrawText(text, x, smartY, SKTextAlign.Left, font, textPaint);
 
 		// Build a text blob so we can use GetIntercepts
 		using var blob = SKTextBlob.Create(text, font, new SKPoint(x, smartY));
@@ -183,7 +183,7 @@ public class SmartTextUnderlineSample : CanvasSampleBase
 			Color = isDark ? new SKColor(180, 180, 180) : new SKColor(100, 100, 100),
 			IsAntialias = true,
 		};
-		canvas.DrawText(text, x, y, labelFont, labelPaint);
+		canvas.DrawText(text, x, y, SKTextAlign.Left, labelFont, labelPaint);
 	}
 
 	private static void DrawFooter(SKCanvas canvas, int width, int height, int gapCount, SKColor bg)
@@ -197,6 +197,6 @@ public class SmartTextUnderlineSample : CanvasSampleBase
 		};
 		var info = $"GetIntercepts() found {gapCount} descender crossing{(gapCount != 1 ? "s" : "")}";
 		var tw = footerFont.MeasureText(info);
-		canvas.DrawText(info, (width - tw) / 2f, height - 16, footerFont, footerPaint);
+		canvas.DrawText(info, (width - tw) / 2f, height - 16, SKTextAlign.Left, footerFont, footerPaint);
 	}
 }
