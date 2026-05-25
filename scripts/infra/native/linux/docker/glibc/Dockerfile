@@ -172,7 +172,14 @@ RUN . /etc/skia-env \
               done \
            && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env ;; \
        esac \
-    && echo "Sysroot created: ${SYSROOT_RELEASE} ${BUILD_ARCH}"
+    && echo "Sysroot created: ${SYSROOT_RELEASE} ${BUILD_ARCH}" \
+    && if [ "${TOOLCHAIN_ARCH}" != "${TOOLCHAIN_ARCH_SHORT}-linux-gnu" ] \
+         && [ -d "${SYSROOT_DIR}/usr/include/${TOOLCHAIN_ARCH_SHORT}-linux-gnu" ] \
+         && [ ! -e "${SYSROOT_DIR}/usr/include/${TOOLCHAIN_ARCH}" ]; then \
+         ln -sf ${TOOLCHAIN_ARCH_SHORT}-linux-gnu ${SYSROOT_DIR}/usr/include/${TOOLCHAIN_ARCH} ; \
+         ln -sf ${TOOLCHAIN_ARCH_SHORT}-linux-gnu ${SYSROOT_DIR}/usr/lib/${TOOLCHAIN_ARCH} 2>/dev/null || true ; \
+         echo "Created multiarch symlink: ${TOOLCHAIN_ARCH} -> ${TOOLCHAIN_ARCH_SHORT}-linux-gnu" ; \
+       fi
 
 # Create the c++/current symlink so build.cake can reference libstdc++ headers
 # without baking the GCC version number into the build script.
