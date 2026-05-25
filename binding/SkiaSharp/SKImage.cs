@@ -192,6 +192,28 @@ namespace SkiaSharp
 			}
 		}
 
+		// Graphite-backed: wrap a backend texture as a sampling image
+
+		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType) =>
+			FromTexture (recorder, backendTexture, colorType, alphaType, colorSpace: null);
+
+		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+			if (backendTexture == null)
+				throw new ArgumentNullException (nameof (backendTexture));
+
+			return GetObject (SkiaApi.sk_graphite_image_wrap_texture (
+				recorder.Handle,
+				backendTexture.Handle,
+				colorType.ToNative (),
+				alphaType,
+				colorSpace?.Handle ?? IntPtr.Zero,
+				/* releaseProc */ null,
+				/* releaseContext */ null));
+		}
+
 		public static SKImage FromEncodedData (SKStream data)
 		{
 			if (data == null)
@@ -571,6 +593,26 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (context));
 
 			return GetObject (SkiaApi.sk_image_make_texture_image (Handle, context.Handle, mipmapped, budgeted));
+		}
+
+		// Graphite-backed equivalents — Graphite has no separate "budgeted" knob
+		// (tracking happens at the recorder/context level), so the API is narrower
+		// than the Ganesh overloads above.
+
+		public SKImage ToTextureImage (SKGraphiteRecorder recorder) =>
+			ToTextureImage (recorder, this, false);
+
+		public SKImage ToTextureImage (SKGraphiteRecorder recorder, bool mipmapped) =>
+			ToTextureImage (recorder, this, mipmapped);
+
+		internal static SKImage ToTextureImage (SKGraphiteRecorder recorder, SKImage image, bool mipmapped)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+			if (image == null)
+				throw new ArgumentNullException (nameof (image));
+
+			return GetObject (SkiaApi.sk_graphite_image_make_texture (recorder.Handle, image.Handle, mipmapped));
 		}
 
 		// ApplyImageFilter

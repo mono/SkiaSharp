@@ -52,6 +52,13 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | [releasing.md](releasing.md) | Complete release guide: branching, workflow, checklist |
 | [versioning.md](versioning.md) | Version numbering scheme |
 
+### Graphite Backend
+| Document | Description |
+|----------|-------------|
+| [graphite.md](graphite.md) | Skia's next-gen GPU backend (Vulkan / Metal / Dawn-native) — SkiaSharp public surface, API patterns |
+| [graphite-headless.md](graphite-headless.md) | Headless Graphite testing on Linux / WSL2 via Mesa Lavapipe |
+| [graphite-wasm-webgpu.md](graphite-wasm-webgpu.md) | Graphite on WASM via Emscripten WebGPU — consumer setup, build internals, troubleshooting |
+
 ### Reference
 | Document | Description |
 |----------|-------------|

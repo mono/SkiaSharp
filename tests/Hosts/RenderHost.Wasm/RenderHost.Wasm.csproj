@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>SkiaSharp.Tests.RenderHost.Wasm</RootNamespace>
+    <AssemblyName>RenderHost.Wasm</AssemblyName>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
+  </PropertyGroup>
+
+  <!-- The scene types are discovered by reflection (SceneCatalog scans
+       Assembly.GetTypes ()). The WASM SDK's IL trimmer would strip them
+       otherwise. Pin them via TrimmerRootDescriptor — surgical and far
+       cheaper than disabling trimming wholesale. -->
+  <ItemGroup>
+    <TrimmerRootAssembly Include="RenderHost.Wasm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <!-- Pulls in the local output/native/wasm/libSkiaSharp.a static archive. -->
+  <Import Project="..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+  <!-- IncludeNativeAssets.SkiaSharp.targets only adds USE_WEBGL2=1; the
+       Graphite-on-Dawn glue (-sUSE_WEBGPU=1) lives in the
+       NativeAssets.WebAssembly nuget's targets, which we don't consume
+       here because we project-reference SkiaSharp directly. Add it back
+       inline so the final link resolves wgpu:: symbols. -->
+  <PropertyGroup>
+    <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGPU=1</EmccExtraLDFlags>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Expose Emscripten's $GL runtime on Module so SKWebGl can walk to
+         it via JSHost.DotnetInstance and dispatch registerContext /
+         makeContextCurrent from C# without needing a js-library shim. -->
+    <EmccExportedRuntimeMethod Include="GL" />
+    <!-- Expose Emscripten's WebGPU manager tables on Module so JS-side
+         code can look up Module.WebGPU.mgr{Device,Queue,Texture}.* —
+         the .NET WASM SDK concatenates this onto its default
+         EXPORTED_RUNTIME_METHODS list. -->
+    <EmccExportedRuntimeMethod Include="WebGPU" />
+  </ItemGroup>
+
+  <!-- Scenes live alongside the in-process visual tests; compile the same
+       sources into the WASM host so a scene change updates both at once. -->
+  <ItemGroup>
+    <Compile Include="..\..\Tests\SkiaSharp\Visual\Scenes\*.cs" Link="Scenes\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

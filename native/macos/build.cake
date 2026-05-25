@@ -40,6 +40,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
+            $"skia_enable_graphite=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-stdlib=libc++' ]");
 

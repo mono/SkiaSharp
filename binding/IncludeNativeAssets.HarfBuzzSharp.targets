@@ -31,10 +31,10 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
-    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86\libHarfBuzzSharp.so" Abi="x86" />
-    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86_64\libHarfBuzzSharp.so" Abi="x86_64" />
-    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\armeabi-v7a\libHarfBuzzSharp.so" Abi="armeabi-v7a" />
-    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\arm64-v8a\libHarfBuzzSharp.so" Abi="arm64-v8a" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86\libHarfBuzzSharp.so"          Abi="x86"          Condition="Exists('$(MSBuildThisFileDirectory)..\output\native\android\x86\libHarfBuzzSharp.so')" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86_64\libHarfBuzzSharp.so"       Abi="x86_64"       Condition="Exists('$(MSBuildThisFileDirectory)..\output\native\android\x86_64\libHarfBuzzSharp.so')" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\armeabi-v7a\libHarfBuzzSharp.so"  Abi="armeabi-v7a"  Condition="Exists('$(MSBuildThisFileDirectory)..\output\native\android\armeabi-v7a\libHarfBuzzSharp.so')" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\arm64-v8a\libHarfBuzzSharp.so"    Abi="arm64-v8a"    Condition="Exists('$(MSBuildThisFileDirectory)..\output\native\android\arm64-v8a\libHarfBuzzSharp.so')" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">

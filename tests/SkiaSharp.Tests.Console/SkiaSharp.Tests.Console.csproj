@@ -24,6 +24,10 @@
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="coverlet.msbuild" Version="10.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" Condition="$(TargetFramework.StartsWith('net4'))" />
+    <!-- Drives Chromium for the wasm-* renderer cells. Linux/macOS only;
+         skipped on net48 since Playwright doesn't support .NET Framework. -->
+    <PackageReference Include="Microsoft.Playwright" Version="1.49.0"
+                      Condition="!$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,8 +44,22 @@
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
   </ItemGroup>
 
+  <!-- The WASM + Android cell proxies depend on Microsoft.Playwright /
+       ValueTask / IAsyncDisposable / async TcpListener overloads, none of
+       which target .NET Framework 4.8. The Visual matrix theory still
+       runs on net48 — those cells simply don't exist there. -->
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\WasmRenderers.cs" />
+    <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\WasmHostSession.cs" />
+    <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\AndroidRenderers.cs" />
+    <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\AndroidHostSession.cs" />
+    <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\iOSRenderers.cs" />
+    <Compile Remove="..\Tests\SkiaSharp\Visual\Renderers\iOSHostSession.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="..\Content\**\*" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\Tests\SkiaSharp\Visual\Goldens\**\*.png" Link="Goldens\%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Remove="TestResults\**" />
   </ItemGroup>
 

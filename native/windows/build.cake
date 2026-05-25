@@ -22,6 +22,8 @@ string VARIANT = BUILD_VARIANT ?? "windows";
 
 Information("Native Arguments:");
 Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "(Using MSVC)" : LLVM_HOME);
+Information($"    {"SUPPORT_VULKAN".PadRight(30)} {{0}}", SUPPORT_VULKAN);
+Information($"    {"SUPPORT_DIRECT3D".PadRight(30)} {{0}}", SUPPORT_DIRECT3D);
 Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
 Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
 
@@ -59,6 +61,7 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
+            $"skia_enable_graphite=true " +
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
