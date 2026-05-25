@@ -119,11 +119,9 @@ RUN case ${SYSROOT_RELEASE} in \
 # --variant=minbase: Only essential packages (dpkg, apt, coreutils).
 # --include: Add the gcc cross-compilation development packages we need.
 #
-# NOTE: Trixie's base-files creates merged-usr symlinks (bin→usr/bin etc.)
-# but debootstrap pre-creates /bin/ as a directory, causing tar to fail with
-# "Cannot create symlink: File exists" (exit 2). This is harmless — debootstrap
-# still downloads all packages to the cache and creates the symlinks afterward.
-# We tolerate ONLY this specific scenario and verify ALL required packages cached.
+# debootstrap --foreign downloads all packages to var/cache/apt/archives/ but
+# does NOT extract the --include packages. We extract only the specific packages
+# we need (not all cached debs) to avoid conflicts with base-files symlinks.
 ARG SYSROOT_DIR=/sysroot
 RUN . /etc/skia-env \
     && debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
@@ -141,14 +139,20 @@ RUN . /etc/skia-env \
               ls ${SYSROOT_DIR}/var/cache/apt/archives/${required_pkg}_*.deb > /dev/null 2>&1 \
               || { echo "FATAL: required package '${required_pkg}' not in cache (debootstrap exit ${DEBOOTSTRAP_EXIT})" && exit 1 ; } ; \
             done ; \
-            echo "All required packages found in cache." ; } \
-    && echo "Extracting all cached packages into sysroot..." \
-    && for deb in ${SYSROOT_DIR}/var/cache/apt/archives/*.deb; do \
-         if [ -f "$deb" ]; then \
+            echo "All required packages found in cache — debootstrap exit was non-fatal." ; } \
+    && echo "Extracting required packages into sysroot..." \
+    && for required_pkg in \
+         "libstdc++-${TOOLCHAIN_VERSION}-dev" \
+         "libgcc-${TOOLCHAIN_VERSION}-dev" \
+         "linux-libc-dev" \
+         "libc6-dev" \
+         "libc6" \
+         "libgcc-s1"; do \
+         deb=$(ls ${SYSROOT_DIR}/var/cache/apt/archives/${required_pkg}_*.deb 2>/dev/null | head -1) ; \
+         if [ -n "$deb" ]; then \
            echo "  Extracting: $(basename $deb)" ; \
            cd /tmp && ar x "$deb" \
-           && tar xf data.tar.* -C ${SYSROOT_DIR}/ 2>&1 \
-              | { grep -v "Cannot create symlink" || true ; } \
+           && tar xf data.tar.* -C ${SYSROOT_DIR}/ \
            && rm -f control.tar.* data.tar.* debian-binary ; \
          fi ; \
        done \

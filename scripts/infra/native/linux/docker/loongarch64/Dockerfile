@@ -5,11 +5,12 @@
 # and manually extract them to create a sysroot.
 #
 # Architecture:
-#   Azure Linux 3.0 (host) → clang-18 → --sysroot=/sysroot/usr/loongarch64-linux-gnu → libSkiaSharp.so
+#   Azure Linux 3.0 (host) → clang-18 → --sysroot=/sysroot → libSkiaSharp.so
 #
 # The cross-package layout places headers/libs under /usr/{TOOLCHAIN_ARCH}/ rather
 # than the native /usr/include/ + /usr/lib/{triple}/ layout that debootstrap produces.
-# This requires linker-script path fixups since the scripts use absolute paths.
+# We set SYSROOT_ROOT=/sysroot so that lld resolves absolute paths in linker scripts
+# (e.g., /usr/loongarch64-linux-gnu/lib/libc.so.6) relative to the sysroot automatically.
 
 FROM mcr.microsoft.com/azurelinux/base/core:3.0
 
@@ -84,41 +85,44 @@ RUN TOOLCHAIN_ARCH=loongarch64-linux-gnu \
 
 # Download and extract gcc-cross-ports packages from Debian's package pool.
 # loongarch64 is only available via cross-compilation packages (gcc-14-cross-ports).
-# We fetch: libstdc++-dev, libstdc++6, libgcc-dev, libgcc-s1, libc6-dev, libc6, linux-libc-dev.
+# URLs and SHA-256 checksums are pinned for reproducibility — update when Debian releases new versions.
 RUN . /etc/skia-env \
     && mkdir -p ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH} \
-    && APT_REPO=https://deb.debian.org/debian \
-    && POOL="${APT_REPO}/pool/main" \
-    && PORTS_SUFFIX="-ports" \
-    && FETCH_FAILURES=0 \
     && mkdir -p /tmp/cross-pkgs && cd /tmp/cross-pkgs \
-    && for pkg in \
-         "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
-         "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libstdc++6-${TOOLCHAIN_ARCH_SHORT}-cross" \
-         "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
-         "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libgcc-s1-${TOOLCHAIN_ARCH_SHORT}-cross" \
-         "c/cross-toolchain-base${PORTS_SUFFIX}/libc6-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
-         "c/cross-toolchain-base${PORTS_SUFFIX}/libc6-${TOOLCHAIN_ARCH_SHORT}-cross" \
-         "c/cross-toolchain-base${PORTS_SUFFIX}/linux-libc-dev-${TOOLCHAIN_ARCH_SHORT}-cross"; do \
-         dir=$(echo $pkg | rev | cut -d/ -f1 | rev) ; \
-         base=$(echo $pkg | rev | cut -d/ -f2- | rev) ; \
-         url="${POOL}/${base}/" ; \
-         echo "Fetching index: $url (looking for ${dir}_*.deb)" ; \
-         deb_url=$(curl -fsSL "$url" | grep -o "href=\"${dir}_[^\"]*\.deb\"" | sed 's/href="//;s/"$//' | sort -V | tail -1) ; \
-         if [ -n "$deb_url" ]; then \
-           echo "  Downloading: ${url}${deb_url}" ; \
-           curl -fsSL -O "${url}${deb_url}" ; \
-           ar x "${deb_url}" ; \
-           mkdir -p extract && tar xf data.tar.* -C extract/ ; \
-           rm -f control.tar.* data.tar.* debian-binary "${deb_url}" ; \
-         else \
-           echo "  FATAL: No package found for ${dir}" ; \
-           FETCH_FAILURES=$((FETCH_FAILURES + 1)) ; \
+    && PACKAGES=" \
+         https://deb.debian.org/debian/pool/main/g/gcc-14-cross-ports/libstdc++-14-dev-loong64-cross_14.3.0-14cross2_all.deb \
+           81600199ccac5a0a8c019ce973ea4532530a671dd3e4ee3c552a9d5b97f5bffa \
+         https://deb.debian.org/debian/pool/main/g/gcc-14-cross-ports/libstdc++6-loong64-cross_14.2.0-19cross1_all.deb \
+           29ea1472a2b1b6c30db334bef7d7ba302db03ca46ff8a243359f6d488c62ef76 \
+         https://deb.debian.org/debian/pool/main/g/gcc-14-cross-ports/libgcc-14-dev-loong64-cross_14.3.0-14cross2_all.deb \
+           b4c019526c04c8d45ee6c7044446b2a968ab50b96c55600943312802d2d71531 \
+         https://deb.debian.org/debian/pool/main/g/gcc-14-cross-ports/libgcc-s1-loong64-cross_14.2.0-19cross1_all.deb \
+           a87453248b2a60ce083606d60950154291fc7e347df9c14263adade49fb18c41 \
+         https://deb.debian.org/debian/pool/main/c/cross-toolchain-base-ports/libc6-dev-loong64-cross_2.42-10cross1_all.deb \
+           0b47a5a3f41c6d598ed880b38eb8d3b897d3b78ec13d6529d194a390216dc988 \
+         https://deb.debian.org/debian/pool/main/c/cross-toolchain-base-ports/libc6-loong64-cross_2.42-10cross1_all.deb \
+           fc58b06c95911192f413b785a2399c3e6c72dc302680def6ad0534fa27ece3e6 \
+         https://deb.debian.org/debian/pool/main/c/cross-toolchain-base-ports/linux-libc-dev-loong64-cross_6.12.38-1cross1_all.deb \
+           b30c0c8a0d1a8480695b498c1791c930df489b94b26d15ccafa37bfc2e37f3ed \
+       " \
+    && set -- $PACKAGES \
+    && while [ $# -ge 2 ]; do \
+         url="$1"; expected_sha="$2"; shift 2 ; \
+         filename=$(basename "$url") ; \
+         echo "Downloading: $filename" ; \
+         curl -fsSL -o "$filename" "$url" ; \
+         actual_sha=$(sha256sum "$filename" | cut -d' ' -f1) ; \
+         if [ "$actual_sha" != "$expected_sha" ]; then \
+           echo "FATAL: SHA-256 mismatch for $filename" ; \
+           echo "  Expected: $expected_sha" ; \
+           echo "  Actual:   $actual_sha" ; \
+           exit 1 ; \
          fi ; \
+         echo "  SHA-256 verified: $actual_sha" ; \
+         ar x "$filename" ; \
+         mkdir -p extract && tar xf data.tar.* -C extract/ ; \
+         rm -f control.tar.* data.tar.* debian-binary "$filename" ; \
        done \
-    && if [ "${FETCH_FAILURES}" -gt 0 ]; then \
-         echo "ERROR: ${FETCH_FAILURES} package(s) could not be fetched" && exit 1 ; \
-       fi \
     && echo "Extracted cross-package contents:" && find extract/usr/${TOOLCHAIN_ARCH}/ -maxdepth 1 -type d \
     && if [ -d extract/usr/${TOOLCHAIN_ARCH} ]; then \
          cp -a extract/usr/${TOOLCHAIN_ARCH}/* ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/ ; \
@@ -129,29 +133,13 @@ RUN . /etc/skia-env \
        fi \
     && rm -rf /tmp/cross-pkgs \
     && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}" >> /etc/skia-env \
+    && echo "export SYSROOT_ROOT=${SYSROOT_DIR}" >> /etc/skia-env \
     && echo "export GCC_LIB_DIR=${SYSROOT_DIR}/usr/lib/gcc-cross/${TOOLCHAIN_ARCH}/${TOOLCHAIN_VERSION}" >> /etc/skia-env
 
 # Create "current" symlink so build.cake can reference c++ headers version-agnostically.
 #   include/c++/current -> VERSION
 RUN . /etc/skia-env \
     && ln -sf ${TOOLCHAIN_VERSION} ${SYSROOT_PATH}/include/c++/current
-
-# Fix linker scripts to use relative paths.
-# Cross-packages contain linker scripts (libc.so, libpthread.so) with absolute paths like
-# /usr/loongarch64-linux-gnu/lib/libc.so.6 — but we've relocated them to /sysroot/.
-# Strip the absolute prefixes so the linker finds libs relative to the script location.
-RUN . /etc/skia-env \
-    && for script in \
-         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libc.so \
-         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
-         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so.0 \
-         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib64/libc.so \
-         ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib64/libpthread.so; do \
-       if [ -f "$script" ]; then \
-         sed -i "s|/usr/${TOOLCHAIN_ARCH}/lib64/||g; s|/usr/${TOOLCHAIN_ARCH}/lib/||g; s|/lib/${TOOLCHAIN_ARCH}/||g; s|/lib64/||g; s|/lib/||g" "$script" ; \
-         echo "Fixed linker script: $script" ; \
-       fi ; \
-    done
 
 # Install fontconfig into the sysroot.
 # Cross-package layout: headers go to SYSROOT_PATH/include, libs to SYSROOT_PATH/lib.
