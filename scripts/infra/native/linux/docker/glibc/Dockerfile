@@ -50,7 +50,7 @@ RUN ln -sf /usr/lib64/libtinfo.so.6 /usr/lib64/libtinfo.so.5 \
     && curl -sL "https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz" \
         | tar xJ --strip-components=1 -C /usr/local \
     && rm -rf /usr/local/share/doc /usr/local/share/man /usr/local/share/clang \
-    && clang --version && lld --version
+    && clang --version && ld.lld --version
 
 # Install the .NET SDK (needed for Cake build scripts)
 ARG DOTNET_SDK_VERSION=10.0.1xx
