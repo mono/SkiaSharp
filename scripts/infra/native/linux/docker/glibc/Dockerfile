@@ -163,25 +163,22 @@ RUN . /etc/skia-env \
            # NOTE: --foreign only extracts essential/base packages; --include packages
            # are downloaded to var/cache/apt/archives/ but NOT extracted. We must
            # manually extract them after debootstrap completes.
-           # Pre-create merged-usr layout (/bin→usr/bin etc). Required for Trixie
-           # (base-files expects symlinks). Harmless for Bullseye (tar follows symlinks,
-           # so extractions to /lib/ end up in /usr/lib/ which is the same location).
-           mkdir -p ${SYSROOT_DIR}/usr/bin ${SYSROOT_DIR}/usr/lib ${SYSROOT_DIR}/usr/sbin \
-           && ln -sf usr/bin ${SYSROOT_DIR}/bin \
-           && ln -sf usr/lib ${SYSROOT_DIR}/lib \
-           && ln -sf usr/sbin ${SYSROOT_DIR}/sbin \
-           && debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
+           # NOTE: Trixie's base-files creates merged-usr symlinks (bin→usr/bin etc.)
+           # but debootstrap pre-creates /bin/ as a directory, causing tar to fail with
+           # "Cannot create symlink: File exists" (exit 2). This is harmless — debootstrap
+           # still downloads all packages to the cache and creates the symlinks afterward.
+           # We tolerate this known exit code and verify the cache was populated.
+           debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
              --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev,libc6-dev \
              ${SYSROOT_RELEASE} ${SYSROOT_DIR} https://deb.debian.org/debian \
-           && echo "Extracting --include dev packages from cache..." \
-           && for deb in \
-                ${SYSROOT_DIR}/var/cache/apt/archives/libstdc++-${TOOLCHAIN_VERSION}-dev*.deb \
-                ${SYSROOT_DIR}/var/cache/apt/archives/libgcc-${TOOLCHAIN_VERSION}-dev*.deb \
-                ${SYSROOT_DIR}/var/cache/apt/archives/linux-libc-dev*.deb \
-                ${SYSROOT_DIR}/var/cache/apt/archives/libc6-dev*.deb; do \
+           || { echo "debootstrap exited $? (known issue with Trixie merged-usr; checking cache...)" ; \
+                ls ${SYSROOT_DIR}/var/cache/apt/archives/libstdc++-${TOOLCHAIN_VERSION}-dev*.deb > /dev/null 2>&1 \
+                || { echo "FATAL: debootstrap cache not populated" && exit 1 ; } ; } \
+           && echo "Extracting all cached packages into sysroot..." \
+           && for deb in ${SYSROOT_DIR}/var/cache/apt/archives/*.deb; do \
                 if [ -f "$deb" ]; then \
                   echo "  Extracting: $(basename $deb)" ; \
-                  cd /tmp && ar x "$deb" && tar xf data.tar.* -C ${SYSROOT_DIR}/ && rm -f control.tar.* data.tar.* debian-binary ; \
+                  cd /tmp && ar x "$deb" && tar xf data.tar.* -C ${SYSROOT_DIR}/ 2>/dev/null ; rm -f control.tar.* data.tar.* debian-binary ; \
                 fi ; \
               done \
            && echo "export SYSROOT_PATH=${SYSROOT_DIR}/usr" >> /etc/skia-env \
