@@ -221,34 +221,62 @@ internal static partial class WasmRenderers
 	// All Graphite/Dawn orchestration lives in C#. The .NET 10 WASM SDK
 	// wraps dotnet.native.js in a -sMODULARIZE IIFE, so Emscripten's
 	// `Module` is hidden from external JS — but JSHost.DotnetInstance
-	// hands us a JSObject reference to the runtime from inside the IIFE.
-	// At static-ctor time we read `Module` off that, publish it onto
-	// globalThis as `skiaSharpModule`, and eval a small set of method-
-	// dispatch helpers onto globalThis too. After that, every [JSImport]
-	// is just a dotted-path lookup.
+	// hands us a JSObject handle to the runtime from inside the IIFE.
+	// At static-ctor time we walk Module → WebGPU → mgr{Device,Queue,
+	// Texture} via JSObject property reads and cache the tables. Calls
+	// are dispatched through a single variadic helper on globalThis
+	// (`__skiaCallMember`), which is the smallest globalThis footprint
+	// that [JSImport] still permits (it can bind a free function but
+	// not a method on a JSObject). A handful of helpers that need JS
+	// object/array literals (descriptors) stay as named entries on
+	// `skiaSharpWebGpu`.
 	internal static partial class SKWebGpu
 	{
 		[JSImport ("globalThis.eval")]
 		private static partial void Eval (string expr);
 
+		// Variadic method-call dispatcher. Each overload exists because
+		// [JSImport] generates per-signature marshalling; they all bind to
+		// the same JS function.
+		[JSImport ("globalThis.__skiaCallMember")]
+		private static partial int CallInt (JSObject obj, string member, JSObject arg);
+
+		[JSImport ("globalThis.__skiaCallMember")]
+		private static partial void CallVoid (JSObject obj, string member, int arg);
+
+		[JSImport ("globalThis.__skiaCallMember")]
+		private static partial JSObject CallObj (JSObject obj, string member);
+
+		[JSImport ("globalThis.__skiaCallMember")]
+		private static partial Task<JSObject?> CallObjAsync (JSObject obj, string member);
+
+		[JSImport ("globalThis.__skiaCallMember")]
+		private static partial Task CallVoidAsync (JSObject obj, string member, int arg);
+
+		// Cached at static-ctor. These are the Emscripten manager tables
+		// that vend integer handles for WGPU* objects passed across the C ABI.
+		private static readonly JSObject s_mgrDevice;
+		private static readonly JSObject s_mgrQueue;
+		private static readonly JSObject s_mgrTexture;
+
 		static SKWebGpu ()
 		{
-			// Publish Module so the Emscripten WebGPU manager tables are reachable
-			// from out here as `globalThis.skiaSharpModule.WebGPU.mgr*`.
 			var module = JSHost.DotnetInstance.GetPropertyAsJSObject ("Module")
 				?? throw new InvalidOperationException ("JSHost.DotnetInstance.Module unavailable — incompatible .NET WASM runtime.");
-			JSHost.GlobalThis.SetProperty ("skiaSharpModule", module);
+			var webgpu = module.GetPropertyAsJSObject ("WebGPU")
+				?? throw new InvalidOperationException ("Module.WebGPU missing — EXPORTED_RUNTIME_METHODS lacks 'WebGPU'.");
+			s_mgrDevice  = webgpu.GetPropertyAsJSObject ("mgrDevice")!;
+			s_mgrQueue   = webgpu.GetPropertyAsJSObject ("mgrQueue")!;
+			s_mgrTexture = webgpu.GetPropertyAsJSObject ("mgrTexture")!;
 
-			// Method-dispatch helpers. They exist only to turn `obj.method(...)`
-			// calls into top-level functions reachable by dotted path — that's
-			// the shape [JSImport] can bind. Each is a one-liner; the only
-			// complex one is GetMappedBase64, which fuses the repack-out-of-
-			// padded-rows step with the base64 pack.
+			// `__skiaCallMember` is the universal "call a JSObject method"
+			// trampoline. The named helpers below it only exist for calls
+			// that need JS object/array literals (descriptors) — those can't
+			// be built from primitive C# arguments alone.
 			Eval (@"
+				globalThis.__skiaCallMember = (o, m, ...a) => o[m](...a);
 				globalThis.skiaSharpWebGpu = {
 					requestAdapter: () => navigator.gpu && navigator.gpu.requestAdapter({ powerPreference: 'low-power' }),
-					requestDevice: a => a.requestDevice(),
-					deviceQueue: d => d.queue,
 					createInstance: () => (typeof _wgpuCreateInstance === 'function') ? _wgpuCreateInstance(0) : 1,
 					createTexture: (d, w, h) => d.createTexture({
 						size: { width: w, height: h, depthOrArrayLayers: 1 },
@@ -256,13 +284,11 @@ internal static partial class WasmRenderers
 						usage: 0x10 | 0x01, // RENDER_ATTACHMENT | COPY_SRC
 					}),
 					createBuffer: (d, sz) => d.createBuffer({ size: sz, usage: 0x09 /* COPY_DST | MAP_READ */ }),
-					createCommandEncoder: d => d.createCommandEncoder(),
 					copyTextureToBuffer: (e, tex, buf, bpr, w, h) => e.copyTextureToBuffer(
 						{ texture: tex },
 						{ buffer: buf, bytesPerRow: bpr, rowsPerImage: h },
 						{ width: w, height: h, depthOrArrayLayers: 1 }),
 					submitEncoder: (d, e) => d.queue.submit([e.finish()]),
-					mapAsync: b => b.mapAsync(0x01 /* GPUMapMode.READ */),
 					getMappedBase64: (b, bpr, w, h) => {
 						const mapped = new Uint8Array(b.getMappedRange());
 						const widthBytes = w * 4;
@@ -281,28 +307,26 @@ internal static partial class WasmRenderers
 			");
 		}
 
-		// Free dotted-path functions — no helper needed.
+		// mgr* registrations dispatch through the cached JSObjects.
+		internal static int  RegisterDevice  (JSObject device)  => CallInt  (s_mgrDevice,  "create",  device);
+		internal static int  RegisterQueue   (JSObject queue)   => CallInt  (s_mgrQueue,   "create",  queue);
+		internal static int  RegisterTexture (JSObject texture) => CallInt  (s_mgrTexture, "create",  texture);
+		internal static void ReleaseTexture  (int textureId)    => CallVoid (s_mgrTexture, "release", textureId);
+
+		// Plain method calls — also through the dispatcher.
+		internal static Task<JSObject?> RequestDevice         (JSObject adapter) => CallObjAsync   (adapter, "requestDevice");
+		internal static JSObject        CreateCommandEncoder  (JSObject device)  => CallObj        (device,  "createCommandEncoder");
+		internal static Task            MapBufferReadAsync    (JSObject buffer)  => CallVoidAsync  (buffer,  "mapAsync", 0x01 /* GPUMapMode.READ */);
+
+		// Property read — JSObject.GetPropertyAsJSObject handles this without
+		// any JS-side help.
+		internal static JSObject GetDeviceQueue (JSObject device) => device.GetPropertyAsJSObject ("queue")!;
+
+		// Descriptor- and chain-needing helpers — named entries on
+		// `skiaSharpWebGpu` because [JSImport] can't construct JS object
+		// or array literals from C# args.
 		[JSImport ("globalThis.skiaSharpWebGpu.requestAdapter")]
 		internal static partial Task<JSObject?> RequestAdapter ();
-
-		[JSImport ("globalThis.skiaSharpModule.WebGPU.mgrDevice.create")]
-		internal static partial int RegisterDevice (JSObject device);
-
-		[JSImport ("globalThis.skiaSharpModule.WebGPU.mgrQueue.create")]
-		internal static partial int RegisterQueue (JSObject queue);
-
-		[JSImport ("globalThis.skiaSharpModule.WebGPU.mgrTexture.create")]
-		internal static partial int RegisterTexture (JSObject texture);
-
-		[JSImport ("globalThis.skiaSharpModule.WebGPU.mgrTexture.release")]
-		internal static partial void ReleaseTexture (int textureId);
-
-		// Method-on-JSObject calls dispatched via eval'd helpers.
-		[JSImport ("globalThis.skiaSharpWebGpu.requestDevice")]
-		internal static partial Task<JSObject?> RequestDevice (JSObject adapter);
-
-		[JSImport ("globalThis.skiaSharpWebGpu.deviceQueue")]
-		internal static partial JSObject GetDeviceQueue (JSObject device);
 
 		[JSImport ("globalThis.skiaSharpWebGpu.createInstance")]
 		internal static partial int CreateInstance ();
@@ -313,17 +337,11 @@ internal static partial class WasmRenderers
 		[JSImport ("globalThis.skiaSharpWebGpu.createBuffer")]
 		internal static partial JSObject CreateBuffer (JSObject device, int size);
 
-		[JSImport ("globalThis.skiaSharpWebGpu.createCommandEncoder")]
-		internal static partial JSObject CreateCommandEncoder (JSObject device);
-
 		[JSImport ("globalThis.skiaSharpWebGpu.copyTextureToBuffer")]
 		internal static partial void CopyTextureToBuffer (JSObject encoder, JSObject texture, JSObject buffer, int bytesPerRow, int width, int height);
 
 		[JSImport ("globalThis.skiaSharpWebGpu.submitEncoder")]
 		internal static partial void SubmitEncoder (JSObject device, JSObject encoder);
-
-		[JSImport ("globalThis.skiaSharpWebGpu.mapAsync")]
-		internal static partial Task MapBufferReadAsync (JSObject buffer);
 
 		[JSImport ("globalThis.skiaSharpWebGpu.getMappedBase64")]
 		internal static partial string GetMappedBase64 (JSObject buffer, int bytesPerRow, int width, int height);
