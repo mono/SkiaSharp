@@ -95,7 +95,7 @@ RUN . /etc/skia-env \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
         -U --allow-untrusted --root /alpine --arch "$APK_ARCH" --no-scripts \
-        add musl-dev linux-headers fontconfig-dev libstdc++-dev \
+        add musl-dev linux-headers fontconfig-dev libstdc++-dev gcc \
     && rm -rf "$APK_DIR"
 
 # Create c++/current symlink so build.cake can find libstdc++ headers

@@ -124,12 +124,13 @@ RUN . /etc/skia-env \
                 "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
                 "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
                 "c/cross-toolchain-base${PORTS_SUFFIX}/libc6-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
+                "c/cross-toolchain-base${PORTS_SUFFIX}/libc6-${TOOLCHAIN_ARCH_SHORT}-cross" \
                 "c/cross-toolchain-base${PORTS_SUFFIX}/linux-libc-dev-${TOOLCHAIN_ARCH_SHORT}-cross"; do \
                 dir=$(echo $pkg | rev | cut -d/ -f1 | rev) ; \
                 base=$(echo $pkg | rev | cut -d/ -f2- | rev) ; \
                 url="${POOL}/${base}/" ; \
-                echo "Fetching index: $url (looking for ${dir}_*_all.deb)" ; \
-                deb_url=$(curl -sL "$url" | grep -o "href=\"${dir}_[^\"]*_all\.deb\"" | sed 's/href="//;s/"$//' | sort -V | tail -1) ; \
+                echo "Fetching index: $url (looking for ${dir}_*.deb)" ; \
+                deb_url=$(curl -sL "$url" | grep -o "href=\"${dir}_[^\"]*\.deb\"" | sed 's/href="//;s/"$//' | sort -V | tail -1) ; \
                 if [ -n "$deb_url" ]; then \
                   echo "  Downloading: ${url}${deb_url}" ; \
                   curl -sL -O "${url}${deb_url}" ; \
@@ -235,7 +236,7 @@ RUN . /etc/skia-env \
          ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
          ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH}/lib/libpthread.so.0; do \
        if [ -f "$script" ]; then \
-         sed -i "s|/usr/${TOOLCHAIN_ARCH}/lib/||g; s|/usr/lib/${TOOLCHAIN_ARCH}/||g; s|/lib/${TOOLCHAIN_ARCH}/||g" "$script" ; \
+         sed -i "s|/usr/${TOOLCHAIN_ARCH}/lib/||g; s|/usr/lib/${TOOLCHAIN_ARCH}/||g; s|/lib/${TOOLCHAIN_ARCH}/||g; s|/lib/||g" "$script" ; \
        fi ; \
     done
 
