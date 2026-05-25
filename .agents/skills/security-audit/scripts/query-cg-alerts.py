@@ -13,27 +13,30 @@ Prerequisites:
   - Default org/project configured: az devops configure --defaults organization=https://devdiv.visualstudio.com project=DevDiv
 
 Usage:
-  python3 query-cg-alerts.py [--build-id BUILD_ID] [--branch BRANCH] [--text] [--verbose] [--pipeline PIPELINE]
+  python3 query-cg-alerts.py --output FILE [--branch BRANCH] [--text] [--verbose] [--pipeline PIPELINE] [--build-id BUILD_ID]
 
-  # Query all branches and both pipelines — outputs JSON (default, for AI)
-  python3 query-cg-alerts.py
+  # Standard usage — query all branches, write JSON to file (progress on stdout)
+  python3 query-cg-alerts.py --output output/ai/cg-alerts-cache.json
 
-  # Human-readable text output (lists every CVE, nothing truncated)
-  python3 query-cg-alerts.py --text
+  # With per-job progress (shows each CG log being parsed)
+  python3 query-cg-alerts.py --verbose --output output/ai/cg-alerts-cache.json
+
+  # Also print human-readable text summary
+  python3 query-cg-alerts.py --text --output output/ai/cg-alerts-cache.json
 
   # Query only a specific branch
-  python3 query-cg-alerts.py --branch main
+  python3 query-cg-alerts.py --branch main --output output/ai/cg-alerts-cache.json
 
   # Query only the native pipeline
-  python3 query-cg-alerts.py --pipeline native
+  python3 query-cg-alerts.py --pipeline native --output output/ai/cg-alerts-cache.json
 
   # Query a specific build
-  python3 query-cg-alerts.py --build-id 14176611
+  python3 query-cg-alerts.py --build-id 14176611 --output output/ai/cg-alerts-cache.json
 
 Output:
-  Default: JSON with every alert fully enumerated (id, component, severity,
-  source jobs, branches, pipelines). Designed for AI consumption.
-  With --text: grouped listing with all CVEs shown per component.
+  JSON is always written to the --output file.
+  Progress messages print to stdout so the calling agent sees activity.
+  This prevents agents from abandoning the 5-7 minute query.
 """
 
 import argparse
@@ -230,8 +233,9 @@ def main():
     parser.add_argument("--branch", type=str, help="Query only this branch (e.g., 'main' or 'release/3.119.x')")
     parser.add_argument("--pipeline", type=str, choices=["native", "managed", "both"], default="both",
                         help="Which pipeline to query (default: both)")
-    parser.add_argument("--text", action="store_true", help="Output as human-readable text instead of JSON (default is JSON for AI consumption)")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Show progress messages to stderr")
+    parser.add_argument("--text", action="store_true", help="Also print human-readable text summary to stdout")
+    parser.add_argument("--output", "-o", type=str, required=True, help="Write JSON output to this file (required). Progress prints to stdout.")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show per-job progress (each CG log parsed)")
     args = parser.parse_args()
 
     token = get_token()
@@ -275,30 +279,31 @@ def main():
         print("ERROR: No builds found to query", file=sys.stderr)
         sys.exit(1)
 
-    if args.verbose:
-        print(f"Querying {len(builds_to_query)} build(s) across {len(pipelines_to_query)} pipeline(s):", file=sys.stderr)
-        for bid, branch, bnum, ptype in builds_to_query:
-            print(f"  [{PIPELINES[ptype]['name']}] {branch}: build {bid} ({bnum})", file=sys.stderr)
+    # Always print progress to stdout so the calling agent sees activity
+    print(f"[CG] Querying {len(builds_to_query)} build(s) across {len(pipelines_to_query)} pipeline(s)...")
+    for bid, branch, bnum, ptype in builds_to_query:
+        print(f"  [{PIPELINES[ptype]['name']}] {branch}: build {bid} ({bnum})")
+    sys.stdout.flush()
 
     # Collect alerts from all builds
     all_alerts = {}  # id -> {component, severity, branches, sources, pipelines}
 
     for build_id, branch, build_num, ptype in builds_to_query:
-        if args.verbose:
-            print(f"\n--- [{PIPELINES[ptype]['name']}] {branch} (build {build_id}) ---", file=sys.stderr)
+        print(f"\n[CG] --- [{PIPELINES[ptype]['name']}] {branch} (build {build_id}) ---")
+        sys.stdout.flush()
 
         reps = get_cg_log_ids(token, build_id)
         if not reps:
-            if args.verbose:
-                print(f"  WARNING: No CG logs found in build {build_id}", file=sys.stderr)
+            print(f"  WARNING: No CG logs found in build {build_id}")
             continue
 
-        if args.verbose:
-            print(f"  Checking {len(reps)} CG job(s): {', '.join(sorted(reps.keys())[:5])}{'...' if len(reps) > 5 else ''}", file=sys.stderr)
+        print(f"  Checking {len(reps)} CG job(s)...")
+        sys.stdout.flush()
 
         for category, (job_name, log_id) in sorted(reps.items()):
             if args.verbose:
-                print(f"    Parsing {category} (log {log_id})...", file=sys.stderr)
+                print(f"    Parsing {category} (log {log_id})...")
+                sys.stdout.flush()
             alerts = parse_cg_log(token, build_id, log_id)
             for alert in alerts:
                 key = alert["id"]
@@ -323,33 +328,37 @@ def main():
                         if p not in all_alerts[key]["paths"]:
                             all_alerts[key]["paths"].append(p)
 
-    # Output — always structured for AI consumption.
-    # Default is JSON since this script is consumed by the security-audit skill.
-    # Use --text for a human-readable summary.
-    if not args.text:
-        output = {
-            "queriedAt": datetime.now(timezone.utc).isoformat(),
-            "pipelines": [{"type": pt, "name": pi["name"], "id": pi["id"]} for pt, pi in pipelines_to_query],
-            "builds": [{"id": bid, "branch": br, "number": num, "pipeline": PIPELINES[pt]["name"]} 
-                       for bid, br, num, pt in builds_to_query],
-            "totalAlerts": len(all_alerts),
-            "bySeverity": {
-                sev: len([a for a in all_alerts.values() if a["severity"] == sev])
-                for sev in ["Critical", "High", "Medium", "Low"]
-                if any(a["severity"] == sev for a in all_alerts.values())
-            },
-            "alerts": sorted(all_alerts.values(), key=lambda a: (
-                {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}.get(a["severity"], 9),
-                a["component"],
-                a["id"]
-            ))
-        }
-        print(json.dumps(output, indent=2))
-    else:
-        # Text mode: full listing, grouped by component
+    # Build the JSON output structure
+    output = {
+        "queriedAt": datetime.now(timezone.utc).isoformat(),
+        "pipelines": [{"type": pt, "name": pi["name"], "id": pi["id"]} for pt, pi in pipelines_to_query],
+        "builds": [{"id": bid, "branch": br, "number": num, "pipeline": PIPELINES[pt]["name"]} 
+                   for bid, br, num, pt in builds_to_query],
+        "totalAlerts": len(all_alerts),
+        "bySeverity": {
+            sev: len([a for a in all_alerts.values() if a["severity"] == sev])
+            for sev in ["Critical", "High", "Medium", "Low"]
+            if any(a["severity"] == sev for a in all_alerts.values())
+        },
+        "alerts": sorted(all_alerts.values(), key=lambda a: (
+            {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}.get(a["severity"], 9),
+            a["component"],
+            a["id"]
+        ))
+    }
+
+    # Always print completion summary to stdout (agent sees this)
+    print(f"\n[CG] ✅ Complete: {len(all_alerts)} unique alerts across {len(builds_to_query)} builds")
+    by_sev = output["bySeverity"]
+    if by_sev:
+        print(f"[CG] Severity: {', '.join(f'{s}={c}' for s, c in by_sev.items())}")
+
+    # Output — write JSON to file, progress already printed to stdout
+    if args.text:
+        # Text mode: also print grouped listing to stdout
         branches_str = ", ".join(sorted(set(b for _, b, _, _ in builds_to_query)))
         pipelines_str = ", ".join(pi["name"] for _, pi in pipelines_to_query)
-        print(f"CG ALERTS — {pipelines_str}")
+        print(f"\nCG ALERTS — {pipelines_str}")
         print(f"Branches: {branches_str}")
         print(f"Total: {len(all_alerts)} unique alerts")
         print()
@@ -365,7 +374,6 @@ def main():
             branches = set()
             for a in comp_alerts:
                 branches.update(a["branches"])
-            # Collect all unique paths for this component
             all_paths = set()
             for a in comp_alerts:
                 all_paths.update(a.get("paths", []))
@@ -376,6 +384,11 @@ def main():
             for a in comp_alerts:
                 print(f"    - {a['id']} ({a['severity']})")
         print()
+
+    # Always write JSON to the output file
+    with open(args.output, "w") as f:
+        json.dump(output, f, indent=2)
+    print(f"[CG] JSON written to: {args.output}")
 
 
 if __name__ == "__main__":

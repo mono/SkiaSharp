@@ -67,7 +67,14 @@ Array of objects, one per dependency:
 
 ## `findings` — Individual Dependency Findings
 
-Array of finding objects, sorted by priority then severity:
+Array of finding objects, sorted by priority then severity.
+
+> 🛑 **ONE finding per dependency.** Every dependency (e.g., "skia", "libpng", "freetype")
+> must appear as exactly ONE object in this array. All CVEs for that dependency — regardless
+> of their status (affected, already_fixed, false_positive) — go inside that single finding's
+> `cves[]` array. Use each CVE object's `assessment` field to distinguish affected vs. fixed
+> vs. false positive. **Do NOT create multiple finding objects for the same dependency split
+> by status, milestone, or category.** The validator enforces this as an error.
 
 ```json
 {
@@ -128,6 +135,47 @@ Array of finding objects, sorted by priority then severity:
 | `false_positive` | Does not affect SkiaSharp (reason in `evidence`) |
 | `needs_review` | Cannot determine without manual analysis |
 | `nvd_range_error` | NVD version range is wrong; fix commit already in our tree |
+
+### CVE Fields — "Value OR Note" Principle
+
+> **Every essential CVE field must be either a concrete value OR a `*Note` field explaining
+> why it's missing.** Silent nulls ("we couldn't find it so we left it blank") are forbidden
+> and are rejected by the validator. This forces every CVE to be fully investigated.
+
+Examples:
+
+| ✅ Valid | ❌ Invalid |
+|---------|------------|
+| `"bugId": "496526419"` | `"bugId": null` |
+| `"bugId": null, "bugIdNote": "CVE has no issues.chromium.org reference URL in NVD"` | (no note) |
+| `"fixCommit": "4320748a..."` | `"fixCommit": null` |
+| `"fixCommit": null, "fixCommitNote": "Bug NNN has no matching commit on chrome/m147 or chrome/m148 branches after full fetch"` | (no note) |
+| `"severity": "HIGH", "cvss": 8.3` | `"severity": null` (severity is always required) |
+| `"severity": "HIGH", "cvss": null, "severityNote": "CVSS not yet assigned by NVD; using Chromium 'High' rating"` | `"cvss": null` (no note) |
+
+### CVE Object Fields
+
+| Field | Type | Required | Note Fallback | Description |
+|-------|------|----------|---------------|-------------|
+| `id` | string | ✅ Always | — | CVE ID, e.g., `CVE-2026-8579` |
+| `severity` | enum | ✅ Always | — | `CRITICAL` / `HIGH` / `MEDIUM` / `LOW`. Use Chromium rating if NVD CVSS pending. |
+| `description` | string | ✅ Always | — | What the vulnerability is |
+| `source` | string | ✅ Always | — | Where this CVE came from |
+| `assessment` | enum | ✅ Always | — | See assessment table above |
+| `bugId` | string\|null | Value or note | `bugIdNote` | Chromium bug ID |
+| `bugUrl` | string\|null | Required when `bugId` set | — | `https://issues.chromium.org/issues/{bugId}` |
+| `fixCommit` | string\|null | Value or note | `fixCommitNote` | Upstream Skia commit SHA that fixes the CVE |
+| `fixCommitTitle` | string\|null | Optional | — | Subject of the fix commit |
+| `fixMilestone` | string\|null | Optional | — | Chrome milestone, e.g., `m148` |
+| `cvss` | number\|null | Value or note | `severityNote` | CVSS score |
+| `filesModified` | string[]\|null | Optional | — | Files changed by the fix commit |
+| `onUpstreamMilestone` | bool\|null | Value or note (when `affected`) | `branchNote` | Is fix on `upstream/chrome/m{OUR}`? |
+| `inOurTree` | bool\|null | ✅ When `affected` (never null) | — | Is fix in our fork's HEAD? |
+| `cherryPicksCleanly` | bool\|null | Value or note (when `affected`) | `cherryPickNote` | Did `git cherry-pick --no-commit` succeed? |
+| `reachability` | enum\|null | Value or note (when `affected`) | `reachabilityNote` | `REACHABLE` / `COMPILED_NOT_EXPOSED` / `NOT_REACHABLE` |
+| `evidence` | string | Optional | — | Freeform summary/evidence |
+
+When `assessment == "affected"`, the resolution fields (`cherryPicksCleanly`, `reachability`, `onUpstreamMilestone`, `inOurTree`) are strictly enforced — each requires either a value or its note counterpart (with `inOurTree` always requiring a boolean).
 
 ### CVE `source` Values
 
