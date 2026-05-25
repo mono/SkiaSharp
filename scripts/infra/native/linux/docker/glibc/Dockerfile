@@ -107,24 +107,21 @@ RUN case ${SYSROOT_RELEASE} in \
 # --variant=minbase: Only essential packages (dpkg, apt, coreutils).
 # --include: Add the gcc cross-compilation development packages we need.
 #
-# NOTE: riscv64 is not a release arch in Bullseye — it's available from the
-# debian-ports archive. For riscv64+bullseye, we fall back to extracting
-# gcc-10-cross .deb packages (same approach as the old debian/11 Dockerfile).
+# NOTE: loongarch64 is not a release arch in any current Debian version — use
+# gcc-cross-ports package extraction. riscv64 became a release arch in Trixie
+# so it uses debootstrap (below) when built with Trixie.
 ARG SYSROOT_DIR=/sysroot
 RUN . /etc/skia-env \
     && case "${BUILD_ARCH}" in \
-         riscv64|loongarch64) \
-           # riscv64/loongarch64 have no standard Debian binary archive — use gcc-cross package extraction.
+         loongarch64) \
+           # loongarch64 has no standard Debian binary archive (even in Trixie) —
+           # use gcc-cross package extraction.
            # This produces the cross-package layout at /sysroot/usr/{TOOLCHAIN_ARCH}/
-           # loong64 packages are in -ports variants; riscv64 is in the standard pool.
            mkdir -p ${SYSROOT_DIR}/usr/${TOOLCHAIN_ARCH} \
            && TOOLCHAIN_VERSION=$(grep TOOLCHAIN_VERSION /etc/skia-env | cut -d= -f2) \
            && APT_REPO=https://deb.debian.org/debian \
            && POOL="${APT_REPO}/pool/main" \
-           && case "${TOOLCHAIN_ARCH_SHORT}" in \
-                loong64|riscv64) PORTS_SUFFIX="-ports" ;; \
-                *)       PORTS_SUFFIX="" ;; \
-              esac \
+           && PORTS_SUFFIX="-ports" \
            && mkdir -p /tmp/cross-pkgs && cd /tmp/cross-pkgs \
            && for pkg in \
                 "g/gcc-${TOOLCHAIN_VERSION}-cross${PORTS_SUFFIX}/libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross" \
@@ -166,7 +163,14 @@ RUN . /etc/skia-env \
            # NOTE: --foreign only extracts essential/base packages; --include packages
            # are downloaded to var/cache/apt/archives/ but NOT extracted. We must
            # manually extract them after debootstrap completes.
-           debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
+           # Pre-create merged-usr layout (/bin→usr/bin etc). Required for Trixie
+           # (base-files expects symlinks). Harmless for Bullseye (tar follows symlinks,
+           # so extractions to /lib/ end up in /usr/lib/ which is the same location).
+           mkdir -p ${SYSROOT_DIR}/usr/bin ${SYSROOT_DIR}/usr/lib ${SYSROOT_DIR}/usr/sbin \
+           && ln -sf usr/bin ${SYSROOT_DIR}/bin \
+           && ln -sf usr/lib ${SYSROOT_DIR}/lib \
+           && ln -sf usr/sbin ${SYSROOT_DIR}/sbin \
+           && debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
              --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev,libc6-dev \
              ${SYSROOT_RELEASE} ${SYSROOT_DIR} https://deb.debian.org/debian \
            && echo "Extracting --include dev packages from cache..." \
@@ -190,7 +194,7 @@ RUN . /etc/skia-env \
 # Create the c++/current symlink so build.cake can reference libstdc++ headers
 # without baking the GCC version number into the build script.
 # Debootstrap: headers at /sysroot/usr/include/c++/VERSION/
-# Cross-packages (riscv64/loongarch64): headers at /sysroot/usr/{ARCH}/include/c++/VERSION/
+# Cross-packages (loongarch64): headers at /sysroot/usr/{ARCH}/include/c++/VERSION/
 #
 # Additionally, Debian native packages place arch-specific c++ headers at:
 #   /usr/include/{TOOLCHAIN_ARCH}/c++/VERSION/  (e.g. /usr/include/arm-linux-gnueabihf/c++/10/)
@@ -233,7 +237,7 @@ RUN . /etc/skia-env \
        fi
 
 # Fix libc/libpthread linker scripts to use relative paths.
-# Only needed for cross-package builds (riscv64/loongarch64) which don't use --sysroot.
+# Only needed for cross-package builds (loongarch64) which don't use --sysroot.
 # For debootstrap builds, --sysroot causes lld to automatically prepend the sysroot
 # to absolute paths in linker scripts, so no modification is needed.
 RUN . /etc/skia-env \
@@ -255,7 +259,7 @@ RUN . /etc/skia-env \
 
 # Install fontconfig into the sysroot.
 # Download .deb packages from Debian's pool and extract headers + libraries.
-# For cross-package arches (riscv64/loongarch64), relocate to match the SYSROOT_PATH layout.
+# For cross-package arches (loongarch64), relocate to match the SYSROOT_PATH layout.
 RUN . /etc/skia-env \
     && SYSROOT_PATH_VAL=$(grep "SYSROOT_PATH=" /etc/skia-env | cut -d= -f2) \
     && mkdir -p /tmp/fontconfig \
@@ -263,9 +267,6 @@ RUN . /etc/skia-env \
     && case "${SYSROOT_RELEASE}" in \
          bullseye) FC_VERSION=2.13.1-4.2 ;; \
          trixie)   FC_VERSION=2.17.1-5   ;; \
-       esac \
-    && case "${TOOLCHAIN_ARCH_SHORT}" in \
-         riscv64)    FC_VERSION=2.15.0-2.3 ;; \
        esac \
     && APT_REPO=https://deb.debian.org/debian \
     && mkdir -p /tmp/fontconfig/extract \
@@ -278,7 +279,7 @@ RUN . /etc/skia-env \
            rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \
        done \
     && case "${BUILD_ARCH}" in \
-         riscv64|loongarch64) \
+         loongarch64) \
            # Cross-package layout: put headers and libs under SYSROOT_PATH
            mkdir -p ${SYSROOT_PATH_VAL}/include ${SYSROOT_PATH_VAL}/lib ; \
            cp -a /tmp/fontconfig/extract/usr/include/* ${SYSROOT_PATH_VAL}/include/ ; \
