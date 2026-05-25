@@ -12,11 +12,10 @@
 FROM mcr.microsoft.com/azurelinux/base/core:3.0
 
 # Install host build tools from Azure Linux packages.
+# NOTE: We do NOT install clang/lld/llvm from tdnf because the Azure Linux
+# LLVM package only includes host+AMDGPU+BPF targets. We need ARM, AArch64,
+# RISCV, LoongArch, and X86 backends for cross-compilation.
 RUN tdnf install -y \
-        clang \
-        lld \
-        llvm \
-        compiler-rt \
         ninja-build \
         python3 \
         git \
@@ -26,7 +25,19 @@ RUN tdnf install -y \
         gawk \
         ca-certificates \
         binutils \
+        libxml2 \
+        ncurses-libs \
+        zlib \
+        libffi \
     && tdnf clean all
+
+# Install official LLVM 18 release with all target backends.
+# Azure Linux's LLVM only has "host;AMDGPU;BPF" — we need all cross targets.
+ARG LLVM_VERSION=18.1.8
+RUN curl -sL "https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz" \
+        | tar xJ --strip-components=1 -C /usr/local \
+    && rm -rf /usr/local/share/doc /usr/local/share/man /usr/local/share/clang \
+    && clang --version && lld --version
 
 # Install the .NET SDK (needed for Cake build scripts)
 ARG DOTNET_SDK_VERSION=10.0.1xx
