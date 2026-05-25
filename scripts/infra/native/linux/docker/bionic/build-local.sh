@@ -8,14 +8,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 ARCH="${1:-x64}"
 
-# Use linux/amd64 for Docker on Apple Silicon because the Android NDK only
-# ships linux-x86_64 host tools.
-PLATFORM_ARGS=""
-if [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; then
-    PLATFORM_ARGS="--platform linux/amd64"
-fi
+# The .NET Android image is x86_64 only (NDK ships linux-x86_64 host tools)
+PLATFORM_ARGS="--platform linux/amd64"
 
-# Build the bionic image
+# Build the android image
 (cd "$DIR" &&
   docker build $PLATFORM_ARGS --tag "skiasharp-bionic-$ARCH" \
     --build-arg BUILD_ARCH=$ARCH \
