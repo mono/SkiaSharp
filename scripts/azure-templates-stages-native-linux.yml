@@ -28,21 +28,30 @@ stages:
               gnArgs: skia_use_fontconfig=false
           matrix:
             # .NET official cross images (glibc)
-            - ${{ each arch in split('arm,arm64,x86', ',') }}:
+            # verifyGlibcMax ensures we detect if the base image bumps its sysroot
+            - ${{ each arch in split('arm64,x86', ',') }}:
               - arch: ${{ arch }}
                 docker: scripts/infra/native/linux/docker/glibc
                 target: externals-linux-clang-cross
+                additionalArgs: --verifyGlibcMax=2.27
+            - arch: arm
+              docker: scripts/infra/native/linux/docker/glibc
+              target: externals-linux-clang-cross
+              additionalArgs: --verifyGlibcMax=2.35
             # x64 needs IMAGE_ARCH=amd64 (.NET uses "amd64" not "x64" in image tags)
             - arch: x64
               docker: scripts/infra/native/linux/docker/glibc
               target: externals-linux-clang-cross
               dockerArgs: --build-arg IMAGE_ARCH=amd64
+              additionalArgs: --verifyGlibcMax=2.27
             - arch: riscv64
               docker: scripts/infra/native/linux/docker/glibc
               target: externals-linux-clang-cross
+              additionalArgs: --verifyGlibcMax=2.39
             - arch: loongarch64
               docker: scripts/infra/native/linux/docker/glibc
               target: externals-linux-clang-cross
+              additionalArgs: --verifyGlibcMax=2.42
             # .NET official cross images (musl/Alpine)
             - ${{ each arch in split('arm,arm64,riscv64,loongarch64', ',') }}:
               - arch: ${{ arch }}
