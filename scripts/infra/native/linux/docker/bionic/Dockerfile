@@ -40,7 +40,6 @@ RUN case ${BUILD_ARCH} in \
     && echo "export ANDROID_TRIPLE=${ANDROID_TRIPLE}" > /etc/skia-env \
     && echo "export ANDROID_SYSROOT_LIB=${ANDROID_SYSROOT_LIB}" >> /etc/skia-env \
     && echo "export NDK_HOST_TAG=linux-x86_64" >> /etc/skia-env \
-    && echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}" >> /etc/skia-env \
     && echo "export CC=${ANDROID_TRIPLE}-clang" >> /etc/skia-env \
     && echo "export CXX=${ANDROID_TRIPLE}-clang++" >> /etc/skia-env \
     && echo "export AR=llvm-ar" >> /etc/skia-env \
