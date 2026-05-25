@@ -20,7 +20,7 @@ public class DrawingViewController : UIViewController
 	};
 
 	private readonly List<Stroke> strokes = new();
-	private SKPathBuilder? currentBuilder;
+	private SKPath? currentPath;
 	private SKColor currentColorLight = SKColors.Black;
 	private SKColor currentColorDark = SKColors.White;
 	private float brushSize = 4f;
@@ -108,22 +108,22 @@ public class DrawingViewController : UIViewController
 		switch (gesture.State)
 		{
 			case UIGestureRecognizerState.Began:
-				currentBuilder = new SKPathBuilder();
-				currentBuilder.MoveTo((float)loc.X, (float)loc.Y);
+				currentPath = new SKPath();
+				currentPath.MoveTo((float)loc.X, (float)loc.Y);
 				break;
 			case UIGestureRecognizerState.Changed:
-				currentBuilder?.LineTo((float)loc.X, (float)loc.Y);
+				currentPath?.LineTo((float)loc.X, (float)loc.Y);
 				break;
 			case UIGestureRecognizerState.Ended:
-				if (currentBuilder != null)
+				if (currentPath != null)
 				{
-					strokes.Add(new Stroke(currentBuilder.Detach(), CurrentColor, brushSize));
-					currentBuilder = null;
+					strokes.Add(new Stroke(currentPath, CurrentColor, brushSize));
+					currentPath = null;
 				}
 				break;
 			case UIGestureRecognizerState.Cancelled:
-				currentBuilder?.Dispose();
-				currentBuilder = null;
+				currentPath?.Dispose();
+				currentPath = null;
 				break;
 		}
 		skiaView.SetNeedsDisplay();
@@ -146,8 +146,8 @@ public class DrawingViewController : UIViewController
 		foreach (var stroke in strokes)
 			stroke.Path.Dispose();
 		strokes.Clear();
-		currentBuilder?.Dispose();
-		currentBuilder = null;
+		currentPath?.Dispose();
+		currentPath = null;
 		skiaView.SetNeedsDisplay();
 	}
 
@@ -171,12 +171,11 @@ public class DrawingViewController : UIViewController
 			canvas.DrawPath(stroke.Path, paint);
 		}
 
-		if (currentBuilder != null)
+		if (currentPath != null)
 		{
-			using var path = currentBuilder.Snapshot();
 			paint.Color = CurrentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(path, paint);
+			canvas.DrawPath(currentPath, paint);
 		}
 	}
 

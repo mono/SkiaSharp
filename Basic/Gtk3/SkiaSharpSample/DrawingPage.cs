@@ -34,7 +34,7 @@ public class DrawingPage : Box
 
 	private readonly SKDrawingArea skiaView;
 	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
-	private SKPathBuilder? currentBuilder;
+	private SKPath currentPath;
 	private SKColor currentColor;
 	private float brushSize = 4f;
 	private SKPoint cursorPosition;
@@ -150,12 +150,11 @@ public class DrawingPage : Box
 			canvas.DrawPath(path, paint);
 		}
 
-		if (currentBuilder != null)
+		if (currentPath != null)
 		{
-			using var path = currentBuilder.Snapshot();
 			paint.Color = currentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(path, paint);
+			canvas.DrawPath(currentPath, paint);
 		}
 
 		if (isCursorOver)
@@ -176,8 +175,8 @@ public class DrawingPage : Box
 	{
 		if (e.Event.Button != 1)
 			return;
-		currentBuilder = new SKPathBuilder();
-		currentBuilder.MoveTo((float)e.Event.X, (float)e.Event.Y);
+		currentPath = new SKPath();
+		currentPath.MoveTo((float)e.Event.X, (float)e.Event.Y);
 		cursorPosition = new SKPoint((float)e.Event.X, (float)e.Event.Y);
 		skiaView.QueueDraw();
 	}
@@ -185,10 +184,10 @@ public class DrawingPage : Box
 	[GLib.ConnectBefore]
 	private void OnButtonRelease(object sender, ButtonReleaseEventArgs e)
 	{
-		if (currentBuilder != null)
+		if (currentPath != null)
 		{
-			strokes.Add((currentBuilder.Detach(), currentColor, brushSize));
-			currentBuilder = null;
+			strokes.Add((currentPath, currentColor, brushSize));
+			currentPath = null;
 			skiaView.QueueDraw();
 		}
 	}
@@ -197,7 +196,7 @@ public class DrawingPage : Box
 	private void OnMotionNotify(object sender, MotionNotifyEventArgs e)
 	{
 		cursorPosition = new SKPoint((float)e.Event.X, (float)e.Event.Y);
-		currentBuilder?.LineTo((float)e.Event.X, (float)e.Event.Y);
+		currentPath?.LineTo((float)e.Event.X, (float)e.Event.Y);
 		skiaView.QueueDraw();
 	}
 
@@ -221,8 +220,8 @@ public class DrawingPage : Box
 		foreach (var (path, _, _) in strokes)
 			path.Dispose();
 		strokes.Clear();
-		currentBuilder?.Dispose();
-		currentBuilder = null;
+		currentPath?.Dispose();
+		currentPath = null;
 		skiaView.QueueDraw();
 	}
 }

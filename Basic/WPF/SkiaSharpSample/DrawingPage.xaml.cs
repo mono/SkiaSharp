@@ -25,7 +25,7 @@ public partial class DrawingPage : UserControl
 	];
 
 	readonly List<Stroke> strokes = [];
-	SKPathBuilder? currentBuilder;
+	SKPath? currentPath;
 	SKColor currentColor;
 	float brushSize = 4f;
 	float cursorX;
@@ -124,12 +124,11 @@ public partial class DrawingPage : UserControl
 			canvas.DrawPath(stroke.Path, paint);
 		}
 
-		if (currentBuilder != null)
+		if (currentPath != null)
 		{
-			using var path = currentBuilder.Snapshot();
 			paint.Color = currentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(path, paint);
+			canvas.DrawPath(currentPath, paint);
 		}
 
 		using var indicatorPaint = new SKPaint
@@ -156,8 +155,8 @@ public partial class DrawingPage : UserControl
 		cursorX = (float)pos.X;
 		cursorY = (float)pos.Y;
 
-		currentBuilder = new SKPathBuilder();
-		currentBuilder.MoveTo((float)(pos.X * dpiScale), (float)(pos.Y * dpiScale));
+		currentPath = new SKPath();
+		currentPath.MoveTo((float)(pos.X * dpiScale), (float)(pos.Y * dpiScale));
 		CanvasBorder.CaptureMouse();
 		SkCanvas.InvalidateVisual();
 	}
@@ -168,20 +167,20 @@ public partial class DrawingPage : UserControl
 		cursorX = (float)pos.X;
 		cursorY = (float)pos.Y;
 
-		if (isDrawing && currentBuilder != null)
-			currentBuilder.LineTo((float)(pos.X * dpiScale), (float)(pos.Y * dpiScale));
+		if (isDrawing && currentPath != null)
+			currentPath.LineTo((float)(pos.X * dpiScale), (float)(pos.Y * dpiScale));
 
 		SkCanvas.InvalidateVisual();
 	}
 
 	void OnMouseUp(object sender, MouseButtonEventArgs e)
 	{
-		if (!isDrawing || currentBuilder == null)
+		if (!isDrawing || currentPath == null)
 			return;
 
 		isDrawing = false;
-		strokes.Add(new Stroke(currentBuilder.Detach(), currentColor, brushSize));
-		currentBuilder = null;
+		strokes.Add(new Stroke(currentPath, currentColor, brushSize));
+		currentPath = null;
 		CanvasBorder.ReleaseMouseCapture();
 		SkCanvas.InvalidateVisual();
 	}
@@ -234,8 +233,8 @@ public partial class DrawingPage : UserControl
 			stroke.Path.Dispose();
 		strokes.Clear();
 
-		currentBuilder?.Dispose();
-		currentBuilder = null;
+		currentPath?.Dispose();
+		currentPath = null;
 		isDrawing = false;
 
 		SkCanvas.InvalidateVisual();

@@ -17,20 +17,9 @@ public class PathBuilderSample : CanvasSampleBase
 
 	public override string Title => "Path Builder";
 
-	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
-
-	public override string Category => SampleManager.Paths;
+	public override string Category => SampleCategories.Paths;
 
 	public override string Description => "Build star, Bézier, and spiral paths with bounds visualization and fill rule controls.";
-
-	public override IReadOnlyList<string> ApiTags =>
-	[
-		"SKPathFillType", "SKPath", "SKPath.GetBounds", "SKPath.GetTightBounds", "SKPathBuilder",
-		"SKPathEffect", "SKPathEffect.CreateDash",
-		"SKCanvas.DrawPath", "SKCanvas.DrawCircle", "SKCanvas.DrawLine",
-		"SKCanvas.DrawText", "SKCanvas.DrawRect",
-		"SKCanvas", "SKPaint", "SKFont",
-	];
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -193,7 +182,7 @@ public class PathBuilderSample : CanvasSampleBase
 		canvas.DrawCircle(p3, anchorRadius, anchorPaint);
 
 		// Labels
-		using var labelFont = new SKFont(SampleMedia.Fonts.Default, 11);
+		using var labelFont = new SKFont { Size = 11 };
 		using var labelPaint = new SKPaint
 		{
 			IsAntialias = true,
@@ -209,7 +198,7 @@ public class PathBuilderSample : CanvasSampleBase
 
 	private static SKPath CreateStar(float cx, float cy, float outerR, float innerRatio, int n)
 	{
-		using var builder = new SKPathBuilder();
+		var path = new SKPath();
 		var innerR = outerR * innerRatio;
 		var totalPoints = n * 2;
 
@@ -221,45 +210,45 @@ public class PathBuilderSample : CanvasSampleBase
 			var y = cy + r * MathF.Sin(angle);
 
 			if (i == 0)
-				builder.MoveTo(x, y);
+				path.MoveTo(x, y);
 			else
-				builder.LineTo(x, y);
+				path.LineTo(x, y);
 		}
 
-		builder.Close();
-		return builder.Detach();
+		path.Close();
+		return path;
 	}
 
 	private static SKPath CreateBezierCurve(float cx, float cy, float radius)
 	{
 		// A shape where control points extend well beyond the path,
 		// creating a clear difference between bounds and tight bounds.
-		using var builder = new SKPathBuilder();
+		var path = new SKPath();
 		var r = radius * 0.6f;
 		var cpExtend = radius * 1.4f;
 
 		// Start at top
-		builder.MoveTo(cx, cy - r);
+		path.MoveTo(cx, cy - r);
 
 		// Right curve with control points extending far right
-		builder.CubicTo(
+		path.CubicTo(
 			cx + cpExtend, cy - cpExtend,
 			cx + cpExtend, cy + cpExtend,
 			cx, cy + r);
 
 		// Left curve with control points extending far left
-		builder.CubicTo(
+		path.CubicTo(
 			cx - cpExtend, cy + cpExtend,
 			cx - cpExtend, cy - cpExtend,
 			cx, cy - r);
 
-		builder.Close();
-		return builder.Detach();
+		path.Close();
+		return path;
 	}
 
 	private static SKPath CreateSpiral(float cx, float cy, float maxRadius, int turns)
 	{
-		using var builder = new SKPathBuilder();
+		var path = new SKPath();
 		var steps = turns * 60;
 
 		for (var i = 0; i <= steps; i++)
@@ -271,11 +260,11 @@ public class PathBuilderSample : CanvasSampleBase
 			var y = cy + r * MathF.Sin(angle);
 
 			if (i == 0)
-				builder.MoveTo(x, y);
+				path.MoveTo(x, y);
 			else
-				builder.LineTo(x, y);
+				path.LineTo(x, y);
 		}
 
-		return builder.Detach();
+		return path;
 	}
 }

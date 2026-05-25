@@ -1,17 +1,13 @@
-using System.Threading.Tasks;
-using Uno.UI.Hosting;
-
 namespace SkiaSharpSample;
 
 public class Program
 {
-    public static async Task Main(string[] args)
-    {
-        var host = UnoPlatformHostBuilder.Create()
-            .App(() => new App())
-            .UseWebAssembly()
-            .Build();
+    private static App? _app;
 
-        await host.RunAsync();
+    public static int Main(string[] args)
+    {
+        Microsoft.UI.Xaml.Application.Start(_ => _app = new App());
+
+        return 0;
     }
 }

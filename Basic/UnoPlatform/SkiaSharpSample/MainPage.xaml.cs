@@ -1,6 +1,5 @@
-﻿using System;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
+﻿using SkiaSharp;
+using SkiaSharp.Views.Windows;
 
 namespace SkiaSharpSample;
 
@@ -9,27 +8,39 @@ public sealed partial class MainPage : Page
 	public MainPage()
 	{
 		InitializeComponent();
-		NavView.Loaded += OnNavViewLoaded;
+
+		// TODO: workaround for this not loading from XAML
+		if (Content is not SKXamlCanvas skiaCanvas)
+		{
+			skiaCanvas = new SKXamlCanvas();
+			skiaCanvas.PaintSurface += OnPaintSurface;
+			skiaCanvas.IgnorePixelScaling = true;
+			Content = skiaCanvas;
+		}
+
 		InitializeVersionsContextMenu();
 	}
 
-	private void OnNavViewLoaded(object sender, RoutedEventArgs e)
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
-		NavView.SelectedItem = NavView.MenuItems[0];
-	}
+		// the the canvas and properties
+		var canvas = e.Surface.Canvas;
 
-	private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-	{
-		if (args.SelectedItem is NavigationViewItem item)
+		// make sure the canvas is blank
+		canvas.Clear(SKColors.White);
+
+		// draw some text
+		using var paint = new SKPaint
 		{
-			Type pageType = item.Tag?.ToString() switch
-			{
-				"cpu" => typeof(CpuPage),
-				"gpu" => typeof(GpuPage),
-				"drawing" => typeof(DrawingPage),
-				_ => typeof(CpuPage),
-			};
-			ContentFrame.Navigate(pageType);
-		}
+			Color = SKColors.Black,
+			IsAntialias = true,
+			Style = SKPaintStyle.Fill
+		};
+		using var font = new SKFont
+		{
+			Size = 24
+		};
+		var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
+		canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
 	}
 }

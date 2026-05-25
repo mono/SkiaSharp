@@ -1,6 +1,6 @@
 using UIKit;
 
-namespace SkiaSharpSample.iOS;
+namespace SkiaSharpSample.MacCatalyst;
 
 public class EntryPoint
 {

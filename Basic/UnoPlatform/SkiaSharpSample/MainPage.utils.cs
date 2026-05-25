@@ -1,9 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using HarfBuzzSharp;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
 

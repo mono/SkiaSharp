@@ -20,18 +20,9 @@ public class GifPlayerSample : CanvasSampleBase
 
 	public override string Title => "GIF Player";
 
-	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
-
-	public override string Category => SampleManager.BitmapDecoding;
+	public override string Category => SampleCategories.BitmapDecoding;
 
 	public override string Description => "Play animated GIFs frame-by-frame with adjustable playback speed.";
-
-	public override IReadOnlyList<string> ApiTags =>
-	[
-		"SKBitmap.GetPixels", "SKCodecOptions", "SKCodec", "SKImageInfo", "SKManagedStream",
-		"SKBitmap", "SKCanvas.DrawBitmap", "SKCanvas.DrawText",
-		"SKCanvas", "SKPaint", "SKFont",
-	];
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -126,7 +117,7 @@ public class GifPlayerSample : CanvasSampleBase
 
 		// Draw frame info
 		using var textPaint = new SKPaint { IsAntialias = true, Color = SKColors.White };
-		using var font = new SKFont(SampleMedia.Fonts.Default, 14);
+		using var font = new SKFont(SKTypeface.Default, 14);
 		var statusText = playing ? "▶" : "⏸";
 		canvas.DrawText($"{statusText} Frame {currentFrame + 1}/{frames.Length}  Speed: {speed:F2}x", 10, height - 10, font, textPaint);
 	}

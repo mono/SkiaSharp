@@ -29,7 +29,7 @@ public class DrawingPage : View
 	readonly FpsCounter fpsCounter = new();
 	readonly TextLabel fpsLabel;
 
-	SKPathBuilder? currentBuilder;
+	SKPath? currentPath;
 	SKColor currentColor = SKColors.Black;
 	float brushSize = 6f;
 	bool isDrawing;
@@ -144,8 +144,8 @@ public class DrawingPage : View
 			foreach (var stroke in strokes)
 				stroke.Path.Dispose();
 			strokes.Clear();
-			currentBuilder?.Dispose();
-			currentBuilder = null;
+			currentPath?.Dispose();
+			currentPath = null;
 			isDrawing = false;
 			skiaView.Invalidate();
 		};
@@ -174,12 +174,11 @@ public class DrawingPage : View
 			canvas.DrawPath(stroke.Path, paint);
 		}
 
-		if (currentBuilder != null)
+		if (currentPath != null)
 		{
-			using var path = currentBuilder.Snapshot();
 			paint.Color = currentColor;
 			paint.StrokeWidth = brushSize;
-			canvas.DrawPath(path, paint);
+			canvas.DrawPath(currentPath, paint);
 		}
 
 		if (fpsCounter.Tick() is double fps)
@@ -199,21 +198,21 @@ public class DrawingPage : View
 		{
 			case PointStateType.Down:
 				isDrawing = true;
-				currentBuilder = new SKPathBuilder();
-				currentBuilder.MoveTo(pos.X, pos.Y);
+				currentPath = new SKPath();
+				currentPath.MoveTo(pos.X, pos.Y);
 				break;
 
 			case PointStateType.Motion:
-				if (isDrawing && currentBuilder != null)
-					currentBuilder.LineTo(pos.X, pos.Y);
+				if (isDrawing && currentPath != null)
+					currentPath.LineTo(pos.X, pos.Y);
 				break;
 
 			case PointStateType.Up:
 			case PointStateType.Leave:
-				if (isDrawing && currentBuilder != null)
+				if (isDrawing && currentPath != null)
 				{
-					strokes.Add(new Stroke(currentBuilder.Detach(), currentColor, brushSize));
-					currentBuilder = null;
+					strokes.Add(new Stroke(currentPath, currentColor, brushSize));
+					currentPath = null;
 					isDrawing = false;
 				}
 				break;

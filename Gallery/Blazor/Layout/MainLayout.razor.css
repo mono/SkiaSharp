@@ -2,15 +2,10 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
 }
 
 main {
     flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
 }
 
 .top-row {
@@ -19,8 +14,6 @@ main {
     display: flex;
     align-items: center;
     color: white;
-    overflow: hidden;
-    flex-shrink: 0;
 }
 
 .top-row a {
@@ -36,21 +29,13 @@ main {
     font-size: 1.2rem;
     font-weight: bold;
     color: white !important;
-    white-space: nowrap;
 }
 
 .content {
-    flex: 1;
+    padding-top: 1.5rem;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    padding-bottom: 0 !important;
+    height: calc(100vh - 3.5rem);
+    overflow: auto;
+    padding-bottom: 0.5rem !important;
 }
-
-@media (max-width: 640px) {
-    .top-row { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
-    .content { padding-left: 0 !important; padding-right: 0 !important; }
-    .navbar-brand { font-size: 1rem; }
-}
-
-[data-theme="dark"] .top-row { background-color: #0d1147; }

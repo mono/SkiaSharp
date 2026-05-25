@@ -15,19 +15,9 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	public override string Title => "Image Decoder";
 
-	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
-
 	public override string Description => "Decode images in various formats (PNG, WebP, DNG) with metadata inspection and subset decoding.";
 
-	public override IReadOnlyList<string> ApiTags =>
-	[
-		"SKColorSpace", "SKColorSpaceXyz", "SKColorSpaceTransferFn",
-		"SKBitmap", "SKBitmap.Decode", "SKCodec", "SKImageInfo", "SKData", "SKRoundRect",
-		"SKCanvas.DrawBitmap", "SKCanvas.DrawText", "SKCanvas.DrawRect",
-		"SKCanvas", "SKPaint", "SKFont",
-	];
-
-	public override string Category => SampleManager.BitmapDecoding;
+	public override string Category => SampleCategories.BitmapDecoding;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -189,7 +179,7 @@ public class ImageDecoderSample : CanvasSampleBase
 			StrokeWidth = 1,
 			IsAntialias = true,
 		};
-		using var font = new SKFont(SampleMedia.Fonts.Default, fontSize);
+		using var font = new SKFont { Size = fontSize };
 		using var textPaint = new SKPaint
 		{
 			Color = SKColors.White,
@@ -308,7 +298,7 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	private static void DrawErrorText(SKCanvas canvas, int width, int height, string message)
 	{
-		using var font = new SKFont(SampleMedia.Fonts.Default, 24);
+		using var font = new SKFont { Size = 24 };
 		using var paint = new SKPaint
 		{
 			Color = SKColors.Red,

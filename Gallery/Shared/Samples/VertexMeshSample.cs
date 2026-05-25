@@ -14,19 +14,9 @@ public class VertexMeshSample : CanvasSampleBase
 
 	public override string Title => "Vertex Mesh";
 
-	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
-
-	public override string Category => SampleManager.General;
+	public override string Category => SampleCategories.General;
 
 	public override string Description => "Render colored triangle meshes with adjustable grid density, color modes, and wireframe overlay.";
-
-	public override IReadOnlyList<string> ApiTags =>
-	[
-		"SKVertices", "SKVertices.CreateCopy", "SKColor",
-		"SKPathBuilder", "SKPath",
-		"SKCanvas.DrawVertices", "SKCanvas.DrawPath",
-		"SKCanvas", "SKPaint",
-	];
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -118,12 +108,11 @@ public class VertexMeshSample : CanvasSampleBase
 
 			for (var i = 0; i < indices.Length; i += 3)
 			{
-				using var triBuilder = new SKPathBuilder();
-				triBuilder.MoveTo(vertices[indices[i]]);
-				triBuilder.LineTo(vertices[indices[i + 1]]);
-				triBuilder.LineTo(vertices[indices[i + 2]]);
-				triBuilder.Close();
-				using var triPath = triBuilder.Detach();
+				using var triPath = new SKPath();
+				triPath.MoveTo(vertices[indices[i]]);
+				triPath.LineTo(vertices[indices[i + 1]]);
+				triPath.LineTo(vertices[indices[i + 2]]);
+				triPath.Close();
 				canvas.DrawPath(triPath, wirePaint);
 			}
 		}

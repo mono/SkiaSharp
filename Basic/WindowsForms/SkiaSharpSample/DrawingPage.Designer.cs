@@ -17,7 +17,7 @@
 			{
 				foreach (var (path, _, _) in strokes)
 					path.Dispose();
-				currentBuilder?.Dispose();
+				currentPath?.Dispose();
 				components?.Dispose();
 			}
 			base.Dispose(disposing);
