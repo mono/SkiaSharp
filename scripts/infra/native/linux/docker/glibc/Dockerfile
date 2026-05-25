@@ -118,13 +118,17 @@ RUN case ${SYSROOT_RELEASE} in \
 #   the unpacked headers + libraries for cross-compilation, not a bootable rootfs.
 # --variant=minbase: Only essential packages (dpkg, apt, coreutils).
 # --include: Add the gcc cross-compilation development packages we need.
+# --merged-usr: (Trixie only) Create /bin→/usr/bin symlinks first to avoid
+#   conflicts with base-files. Required for Debian 13+ which enforces merged-usr.
 #
 # debootstrap --foreign downloads all packages to var/cache/apt/archives/ but
 # does NOT extract the --include packages. We extract only the specific packages
-# we need (not all cached debs) to avoid conflicts with base-files symlinks.
+# we need (not all cached debs) to avoid conflicts with base-files.
 ARG SYSROOT_DIR=/sysroot
 RUN . /etc/skia-env \
-    && debootstrap --foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT} \
+    && DEBOOTSTRAP_OPTS="--foreign --variant=minbase --arch=${TOOLCHAIN_ARCH_SHORT}" \
+    && case "${SYSROOT_RELEASE}" in trixie) DEBOOTSTRAP_OPTS="${DEBOOTSTRAP_OPTS} --merged-usr" ;; esac \
+    && debootstrap ${DEBOOTSTRAP_OPTS} \
          --include=libstdc++-${TOOLCHAIN_VERSION}-dev,libgcc-${TOOLCHAIN_VERSION}-dev,linux-libc-dev,libc6-dev \
          ${SYSROOT_RELEASE} ${SYSROOT_DIR} https://deb.debian.org/debian \
        || { DEBOOTSTRAP_EXIT=$? ; \
