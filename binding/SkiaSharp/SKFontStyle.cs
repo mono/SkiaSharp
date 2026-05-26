@@ -1,16 +1,25 @@
 ﻿#nullable disable
 
 using System;
-using System.Threading;
 
 namespace SkiaSharp
 {
 	public class SKFontStyle : SKObject, ISKSkipObjectRegistration
 	{
-		private static SKFontStyle normal;
-		private static SKFontStyle bold;
-		private static SKFontStyle italic;
-		private static SKFontStyle boldItalic;
+		// Eager init via field initializers (cctor) is safe here: SKFontStyle is
+		// ISKSkipObjectRegistration (no HandleDictionary dedup risk), the ctor only
+		// reads enum constants (no cross-singleton dependencies), and the CLR's
+		// once-per-AppDomain cctor guarantee removes the race that lazy init would
+		// have for this type (sk_fontstyle_new allocates a fresh native object every
+		// call, so a concurrent lazy init would briefly leak the loser's allocation).
+		private static readonly SKFontStyle normal =
+			new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright, immortal: true);
+		private static readonly SKFontStyle bold =
+			new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright, immortal: true);
+		private static readonly SKFontStyle italic =
+			new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic, immortal: true);
+		private static readonly SKFontStyle boldItalic =
+			new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic, immortal: true);
 
 		internal SKFontStyle (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -54,26 +63,13 @@ namespace SkiaSharp
 
 		public SKFontStyleSlant Slant => SkiaApi.sk_fontstyle_get_slant (Handle);
 
-		public static SKFontStyle Normal => Ensure (ref normal, SKFontStyleWeight.Normal, SKFontStyleSlant.Upright);
+		public static SKFontStyle Normal => normal;
 
-		public static SKFontStyle Bold => Ensure (ref bold, SKFontStyleWeight.Bold, SKFontStyleSlant.Upright);
+		public static SKFontStyle Bold => bold;
 
-		public static SKFontStyle Italic => Ensure (ref italic, SKFontStyleWeight.Normal, SKFontStyleSlant.Italic);
+		public static SKFontStyle Italic => italic;
 
-		public static SKFontStyle BoldItalic => Ensure (ref boldItalic, SKFontStyleWeight.Bold, SKFontStyleSlant.Italic);
-
-		// SKFontStyle is ISKSkipObjectRegistration — HandleDictionary does not dedup, so
-		// a race here may briefly create a second native object. The loser's wrapper
-		// goes through normal finalization and unrefs the duplicate native object.
-		private static SKFontStyle Ensure (ref SKFontStyle slot, SKFontStyleWeight weight, SKFontStyleSlant slant)
-		{
-			var existing = slot;
-			if (existing is not null)
-				return existing;
-			// Immortal-from-ctor: IgnorePublicDispose is set before Handle is published.
-			var style = new SKFontStyle (weight, SKFontStyleWidth.Normal, slant, immortal: true);
-			return Interlocked.CompareExchange (ref slot, style, null) ?? style;
-		}
+		public static SKFontStyle BoldItalic => boldItalic;
 
 		//
 
