@@ -1,0 +1,188 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.57.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.57.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.57.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1570">Version 1.57.0</h1>
+
+<blockquote>
+<p><strong>Skia m57 upgrade with new encoding APIs</strong> · Released April 10, 2017 · <a href="https://www.nuget.org/packages/SkiaSharp/1.57.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.57.0">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>A major release upgrading the native Skia engine from m56 to m57. This brings direct encoding support on <code>SKBitmap</code>, <code>SKPixmap</code>, and <code>SKSurface</code>, XPS document creation on Windows, and deprecates <code>SK3dView</code> in favor of <code>SKMatrix44</code>. Several breaking changes align the API with upstream Skia removals.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<h3 id="removed-apis">Removed APIs</h3>
+<ul>
+<li><strong>Emboss and shadow <code>SKMaskFilter</code> removed</strong> — These filter types are no longer available in upstream Skia m57.</li>
+<li><strong><code>SKEncodedFormat</code> and <code>SKImageEncodeFormat</code> renamed</strong> — Use <code>SKEncodedImageFormat</code> instead.</li>
+<li><strong><code>[Obsolete]</code> members are now errors</strong> — Previously obsolete members now produce compile-time errors. Update to the recommended replacements.</li>
+</ul>
+<h3 id="deprecations">Deprecations</h3>
+<ul>
+<li><strong><code>SK3dView</code> is now obsolete</strong> — Use <code>SKMatrix44</code> instead for 3D transformations.</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="engine">Engine</h3>
+<ul>
+<li><strong>Skia m57 upgrade</strong> — Major update to the latest stable Skia milestone (chrome/m57).</li>
+</ul>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong><code>SKBitmap.Encode</code></strong> — Bitmaps can now be encoded directly without creating an intermediate image.</li>
+<li><strong><code>SKCanvas</code> draws <code>SKSurface</code> directly</strong> — Draw a surface onto a canvas without extracting an image first.</li>
+<li><strong><code>SKData</code> empty creation</strong> — <code>SKData</code> can now be created without existing data (uninitialized).</li>
+<li><strong><code>SKPixmap.Encode</code> overloads</strong> — Encode pixel data directly from a pixmap.</li>
+<li><strong><code>SKSurface</code> pixel data access</strong> — New members to access pixel data directly from a surface.</li>
+</ul>
+<h3 id="documents">Documents</h3>
+<ul>
+<li><strong>XPS document support</strong> — <code>SKDocument</code> can now create XPS documents (Windows-only). Note: there is a <a href="http://stackoverflow.com/questions/43143501/using-ixpsomobjectfactory-on-windows-10-mobile">known issue on Windows 10 Mobile</a>.</li>
+</ul>
+<h3 id="extensions-preview">Extensions (Preview)</h3>
+<ul>
+<li><strong><code>SKGeometry</code> utilities</strong> — Initial work on geometry helpers including <code>CreateSectorPath</code> for pie/donut shapes, <code>CreatePiePath</code> for charts, and methods to create regular shape paths.</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li>Resolved AOT errors on Android.</li>
+<li><code>SKCanvasView</code> and <code>SKGLView</code> now correctly resize in Xamarin.Forms in some cases.</li>
+<li>Many other bug fixes and improvements.</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🪟 Windows</td>
+<td>XPS document creation via <code>SKDocument</code></td>
+</tr>
+<tr>
+<td>🤖 Android</td>
+<td>AOT error fixes</td>
+</tr>
+<tr>
+<td>🎨 Core</td>
+<td>Skia m57 engine upgrade, new encoding APIs</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.56.2...v1.57.0">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.57.0">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/1.57.0">API Diff</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.57.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

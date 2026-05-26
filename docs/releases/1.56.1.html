@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.56.1 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.56.1 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.56.1.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1561">Version 1.56.1</h1>
+
+<blockquote>
+<p><strong>.NET Standard, .NET Core, and major API expansion</strong> · Released February 8, 2017 · <a href="https://www.nuget.org/packages/SkiaSharp/1.56.1">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.56.1">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>A landmark release that adds .NET Standard 1.3 and .NET Core support, bringing SkiaSharp to modern .NET platforms. Four new types arrive — <code>SKFontManager</code>, <code>SKSvgCanvas</code>, <code>SKMask</code>, and <code>SK3dView</code> — along with extensive additions to <code>SKPath</code>, <code>SKBitmap</code>, and <code>SKCodec</code>. Unicode, UTF-32, and emoji support is significantly improved. The Xamarin.Forms view renderers are now public and extensible, and the SVG viewbox handling is fixed.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<h3 id="renames">Renames</h3>
+<ul>
+<li><strong><code>SKStrokeJoin.Mitter</code> → <code>SKStrokeJoin.Miter</code></strong> — Corrected the typo in the enum value name. (<a href="https://github.com/mono/SkiaSharp/issues/227">#227</a>)</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong><code>SKFontManager</code></strong> — Find typefaces for a specific character, enabling better font fallback. (<a href="https://github.com/mono/SkiaSharp/issues/232">#232</a>)</li>
+<li><strong><code>SKSvgCanvas</code></strong> <em>(preview)</em> — Create SVG files programmatically via a canvas API. (<a href="https://github.com/mono/SkiaSharp/issues/107">#107</a>)</li>
+<li><strong><code>SKMask</code></strong> — New type for working with mask data, plus <code>SKBitmap</code> can now be created from an <code>SKMask</code>. (<a href="https://github.com/mono/SkiaSharp/issues/220">#220</a>)</li>
+<li><strong><code>SK3dView</code></strong> — Create 3D <code>SKMatrix</code> transformations. (<a href="https://github.com/mono/SkiaSharp/issues/214">#214</a>)</li>
+<li><strong><code>SKPath</code> expansions</strong> — Many new members including <code>AddPoly</code> and <code>SegmentMasks</code>.</li>
+<li><strong><code>SKBitmap</code> expansions</strong> — Many new members including <code>ExtractAlpha</code> and <code>ExtractSubset</code>.</li>
+<li><strong>Unicode and emoji support</strong> — Improved support for Unicode, UTF-32, and emoji rendering. (<a href="https://github.com/mono/SkiaSharp/issues/232">#232</a>)</li>
+<li><strong><code>StringUtilities</code></strong> — New string helper methods for text processing.</li>
+<li><strong>High quality <code>SKMaskFilter</code> blurring</strong> — Support for high quality blurring effects.</li>
+<li><strong><code>SKCodec</code> scanline decoding</strong> — Codecs now support scanline-by-scanline decoding.</li>
+<li><strong>PDF metadata and annotations</strong> — <code>SKDocument</code> now supports PDF metadata and link annotations.</li>
+<li><strong><code>SKImageInfo.PlatformColorType</code> fix</strong> — Now correctly obtains the platform color type.</li>
+</ul>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>.NET Standard 1.3 support</strong> — SkiaSharp now targets .NET Standard 1.3 project types. (<a href="https://github.com/mono/SkiaSharp/issues/111">#111</a>)</li>
+<li><strong>.NET Core support</strong> — Native libraries for Windows (win7, win10) and macOS. (<a href="https://github.com/mono/SkiaSharp/issues/111">#111</a>)</li>
+<li><strong>Reduced native library sizes</strong> — Native binaries reduced to ~5 MB per platform architecture. (<a href="https://github.com/mono/SkiaSharp/issues/174">#174</a>)</li>
+<li><strong>Class library native copy fix</strong> — .NET 4.5 class library builds (including tests) now correctly copy the native assembly to output. (<a href="https://github.com/mono/SkiaSharp/issues/44">#44</a>, <a href="https://github.com/mono/SkiaSharp/issues/190">#190</a>)</li>
+<li><strong>Public Xamarin.Forms renderers</strong> — <code>SKCanvasViewRenderer</code> and <code>SKGLViewRenderer</code> are now public and can be extended by apps and libraries. (<a href="https://github.com/mono/SkiaSharp/issues/218">#218</a>)</li>
+<li><strong>SVG viewbox fix</strong> — Fixed handling of the SVG viewbox in SkiaSharp.Svg. (<a href="https://github.com/mono/SkiaSharp/issues/230">#230</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li>Fixed <code>SKImageInfo.PlatformColorType</code> to correctly return the platform-specific color type.</li>
+<li>Fixed SVG viewbox handling. (<a href="https://github.com/mono/SkiaSharp/issues/230">#230</a>)</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📦 General</td>
+<td>.NET Standard 1.3 and .NET Core support; ~5 MB native libraries</td>
+</tr>
+<tr>
+<td>🪟 Windows</td>
+<td>.NET Core support (win7, win10)</td>
+</tr>
+<tr>
+<td>🍎 Apple</td>
+<td>.NET Core support (macOS)</td>
+</tr>
+<tr>
+<td>🐧 Linux</td>
+<td>Partial .NET Core Linux work in progress</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.56.0...v1.56.1">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.56.1">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/1.56.1">API Diff</a></li>
+</ul>
+<hr>
+<h2 id="beta-february-2-2017">Beta (February 2, 2017)</h2>
+<p>Initial beta with .NET Standard 1.3 and .NET Core support, new types (<code>SKSvgCanvas</code>, <code>SKMask</code>, <code>SK3dView</code>), reduced native library sizes, and various API additions.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.56.0...v1.56.1-beta">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.56.1.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

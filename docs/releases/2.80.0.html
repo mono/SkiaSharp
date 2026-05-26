@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.80.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.80.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/2.80.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2800">Version 2.80.0</h1>
+
+<blockquote>
+<p><strong>Major milestone update with Vulkan, ARM, and text overhaul</strong> · Released July 9, 2020 · <a href="https://www.nuget.org/packages/SkiaSharp/2.80.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.0">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>This is the biggest SkiaSharp release in years, upgrading to Skia milestone 80 and adding broad new platform support. Vulkan backends land on Android, Windows, and Linux. ARM64 support comes to Windows (UWP and Win32), and ARM/ARM64 support arrives for Linux — including Raspberry Pi. Text processing has been entirely rewritten around the new <code>SKFont</code> type with <code>Span&lt;T&gt;</code>-based APIs for near-zero-allocation performance. Native libraries are no longer embedded in managed DLLs, improving build times and giving developers better control over native assets. Three community contributors helped drive this release.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<h3 id="api-renames">API Renames</h3>
+<ul>
+<li><strong><code>SKEncoding</code> → <code>SKTextEncoding</code></strong> — The old <code>SKEncoding</code> enum is deprecated in favor of <code>SKTextEncoding</code>.</li>
+<li><strong><code>GRPixelConfig</code> deprecated</strong> — Use <code>SKColorType</code> instead for GPU surface configuration.</li>
+</ul>
+<h3 id="minimum-version-bumps">Minimum Version Bumps</h3>
+<ul>
+<li><strong>UWP minimum</strong> — Now requires Windows 10.0.16299 or later.</li>
+<li><strong>.NET Framework minimum</strong> — Now requires .NET Framework 4.6.2 or later.</li>
+<li><strong>Xamarin.Forms minimum</strong> — Now requires Xamarin.Forms 4.5+.</li>
+</ul>
+<h3 id="color-space-rework">Color Space Rework</h3>
+<ul>
+<li>Several <code>SKColorSpace</code>-related types have been deprecated in favor of improved types with better access to transfer functions and ICC profiles. Usage of <code>SKMatrix44</code> is being phased out.</li>
+</ul>
+<h3 id="text-processing-rewrite">Text Processing Rewrite</h3>
+<ul>
+<li><code>SKTextBlob</code> and <code>SKTextBlobBuilder</code> now focus on glyphs and only expose convenience members for text. The underlying text engine has moved to <code>SKFont</code>.</li>
+</ul>
+<h3 id="native-library-packaging">Native Library Packaging</h3>
+<ul>
+<li>Native libSkiaSharp binaries are no longer embedded in managed DLLs. This improves build performance but may require updating deployment configurations.</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="engine">Engine</h3>
+<ul>
+<li><strong>Skia milestone 80</strong> — Upgraded to the latest Skia engine with all upstream improvements. (<a href="https://github.com/mono/SkiaSharp/wiki/Native-Changelogs">Native Changelogs</a>)</li>
+</ul>
+<h3 id="gpu--rendering">GPU &amp; Rendering</h3>
+<ul>
+<li><strong>Vulkan backend support</strong> — Full Vulkan rendering support on Android, Windows, and Linux with new <code>GRVkBackendContext</code>, <code>GRVkImageInfo</code>, and related types. ❤️ @tuccio ❤️ @MarchingCube</li>
+<li><strong>SharpVk integration</strong> — New <code>GRSharpVkBackendContext</code> and extension methods for <code>GRVkExtensions</code> to use SharpVk objects directly.</li>
+<li><strong>Streamlined GPU types</strong> — <code>GRContext</code> and <code>GRGlInterface</code> creation and usage have been simplified.</li>
+</ul>
+<h3 id="text">Text</h3>
+<ul>
+<li><strong><code>SKFont</code> type</strong> — New text-focused type that is a subset of <code>SKPaint</code>, providing cleaner text APIs.</li>
+<li><strong><code>Span&lt;T&gt;</code>-based text APIs</strong> — Near-zero-allocation text processing across the text pipeline.</li>
+<li><strong>Improved <code>DrawTextOnPath</code></strong> — <code>SKCanvas.DrawTextOnPath</code> now supports not warping characters, with a better managed implementation after native support was dropped in Skia. ❤️ @Ziriax</li>
+<li><strong>Simplified <code>DrawShapedText</code></strong> — New overloads for <code>SKCanvas.DrawShapedText</code> via SkiaSharp.HarfBuzz for easier common cases.</li>
+</ul>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong><code>SKColorSpace</code> rework</strong> — New types for accessing transfer functions and ICC profiles.</li>
+<li><strong><code>SKColorF</code> on <code>SKPaint</code></strong> — Get and set colors using <code>SKColorF</code> with optional color space support.</li>
+<li><strong><code>SKPath.ToWinding()</code></strong> — Convert paths to winding fill type.</li>
+<li><strong>Additional <code>SKImageFilter</code> overloads</strong> — More factory method overloads for image filters.</li>
+<li><strong>Native version validation</strong> — The managed library now validates the native library version and throws if incompatible. (<a href="https://github.com/mono/SkiaSharp/pull/1252">#1252</a>)</li>
+</ul>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>Windows ARM64</strong> — Full ARM64 support for both UWP and Win32 platforms.</li>
+<li><strong>Linux ARM / ARM64</strong> — Native binaries for Debian ARM, ARM64, and Raspberry Pi.</li>
+<li><strong>Alpine / musl support</strong> — Linux builds for Alpine and other musl-based distributions, including no-dependency variants.</li>
+<li><strong>WASM static library (experimental)</strong> — Pre-built <code>.a</code> file for WebAssembly via <code>SkiaSharp.NativeAssets.WebAssembly</code>, for manual linking or use with Uno Platform. (<a href="https://github.com/mono/SkiaSharp/pull/1389">#1389</a>)</li>
+<li><strong>.NET Framework ARM</strong> — Proper 32/64 bit and ARM library loading for .NET Framework apps.</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🪟 Windows</td>
+<td>ARM64 for UWP and Win32, Vulkan backend, Nano Server support</td>
+</tr>
+<tr>
+<td>🐧 Linux</td>
+<td>ARM / ARM64 / Raspberry Pi, Alpine / musl, Vulkan backend</td>
+</tr>
+<tr>
+<td>🤖 Android</td>
+<td>Vulkan backend</td>
+</tr>
+<tr>
+<td>🌐 WebAssembly</td>
+<td>Experimental static library package</td>
+</tr>
+<tr>
+<td>🍎 Apple</td>
+<td>Xamarin.Forms minimum bumped to 4.5+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/tuccio">@tuccio</a></td>
+<td>Vulkan backend support</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MarchingCube">@MarchingCube</a></td>
+<td>Vulkan backend support</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Ziriax">@Ziriax</a></td>
+<td>Improved <code>DrawTextOnPath</code> with non-warping character support</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.68.3...v2.80.0">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/2.80.0">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/2.80.0">API Diff</a></li>
+</ul>
+<hr>
+<h2 id="preview-build-33-july-1-2020">Preview Build 33 (July 1, 2020)</h2>
+<p>Pre-release build leading up to the stable release.</p>
+<p><a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.0">Full Changelog</a></p>
+<hr>
+<h2 id="preview-build-24-june-27-2020">Preview Build 24 (June 27, 2020)</h2>
+<p>Pre-release build with ongoing stabilization.</p>
+<p><a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.0">Full Changelog</a></p>
+<hr>
+<h2 id="preview-build-14-june-18-2020">Preview Build 14 (June 18, 2020)</h2>
+<p>Pre-release build with ongoing stabilization.</p>
+<p><a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.0">Full Changelog</a></p>
+<hr>
+<h2 id="preview-build-12-june-16-2020">Preview Build 12 (June 16, 2020)</h2>
+<p>Pre-release build with ongoing stabilization.</p>
+<p><a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.0">Full Changelog</a></p>
+<hr>
+<h2 id="preview-build-3-june-8-2020">Preview Build 3 (June 8, 2020)</h2>
+<p>Initial preview of the 2.80.0 release cycle.</p>
+<p><a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.0">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/2.80.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

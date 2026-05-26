@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.80.2 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.80.2 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/2.80.2.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2802">Version 2.80.2</h1>
+
+<blockquote>
+<p><strong>Bug-fix release with memory debugging and Uno GPU views</strong> · Released September 12, 2020 · <a href="https://www.nuget.org/packages/SkiaSharp/2.80.2">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.2">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>A stability-focused release fixing numerous bugs across image encoding, text rendering, interop, and native library loading. New memory debugging APIs (<code>SKGraphics</code>, <code>SKTraceMemoryDump</code>) help diagnose GPU memory usage. The Uno Platform views gain GPU support via <code>SKSwapChainPanel</code> and WASM CPU rendering. Two community contributors drove key fixes.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="new-features">New Features</h2>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong>Memory debugging APIs</strong> — Added <code>SKGraphics</code> and <code>SKTraceMemoryDump</code> types, plus memory debugging members on <code>GRContext</code>, for inspecting GPU resource usage.</li>
+<li><strong><code>SKColorF</code> extension methods</strong> — New extension methods in SkiaSharp.Views to convert between native platform colors and <code>SKColorF</code>.</li>
+<li><strong>Xamarin.Forms <code>SKColorF</code> extensions</strong> — Convert between Xamarin.Forms <code>Color</code> and <code>SKColorF</code>.</li>
+<li><strong>Replacement methods for obsoleted members</strong> — Added new methods to replace previously obsoleted APIs.</li>
+</ul>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>Uno Platform WASM CPU views</strong> — CPU rendering views for WASM via Uno Platform. ❤️ @jeromelaban ❤️ @ghuntley ❤️ @MartinZikmund</li>
+<li><strong>Uno Platform GPU views</strong> — New <code>SKSwapChainPanel</code> GPU view for Android, iOS, macOS, and WASM.</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong><code>SKSurface.Create</code> origin ignored</strong> — Fixed the origin parameter being ignored when creating surfaces. ❤️ @Ziriax</li>
+<li><strong><code>SKData</code> from non-seekable stream</strong> — Fixed exception when creating <code>SKData</code> from a non-seekable stream.</li>
+<li><strong><code>SKCanvas.DrawTextOnPath</code> null reference</strong> — Fixed <code>NullReferenceException</code> in <code>DrawTextOnPath</code>. ❤️ @Ziriax</li>
+<li><strong>No-dependency builds using dependencies</strong> — Fixed Linux &quot;no dependencies&quot; builds that were still linking against dependencies.</li>
+<li><strong>Image subset encoding</strong> — Fixed an issue where encoding a subset of some images would encode the entire original image instead.</li>
+<li><strong>Text rendering crashes</strong> — Fixed several text rendering issues and crashes.</li>
+<li><strong>Transitive dependency native binaries</strong> — Fixed native binaries not reaching the final app when only referenced as a transitive dependency (also fixed for HarfBuzzSharp).</li>
+<li><strong>ASP.NET <code>DllNotFoundException</code></strong> — Fixed <code>DllNotFoundException</code> when running in ASP.NET.</li>
+<li><strong>WASM interop</strong> — Fixed invalid interop on WASM for some methods.</li>
+<li><strong><code>SKCanvas.DrawPoint</code> layering</strong> — Fixed an issue with layering in <code>SKCanvas.DrawPoint</code>.</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🐧 Linux</td>
+<td>Fixed no-dependency builds</td>
+</tr>
+<tr>
+<td>🌐 WebAssembly</td>
+<td>WASM interop fixes, Uno CPU + GPU views</td>
+</tr>
+<tr>
+<td>📦 General</td>
+<td>Transitive dependency fix for native binaries, ASP.NET loading fix</td>
+</tr>
+</tbody>
+</table>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/Ziriax">@Ziriax</a></td>
+<td>Fixed <code>SKSurface.Create</code> origin and <code>DrawTextOnPath</code> null reference</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jeromelaban">@jeromelaban</a></td>
+<td>Uno Platform WASM CPU views</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ghuntley">@ghuntley</a></td>
+<td>Uno Platform WASM CPU views</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MartinZikmund">@MartinZikmund</a></td>
+<td>Uno Platform WASM CPU views</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v2.80.1...v2.80.2">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/2.80.2">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/2.80.2">API Diff</a></li>
+</ul>
+<hr>
+<h2 id="preview-build-36-september-3-2020">Preview Build 36 (September 3, 2020)</h2>
+<p>Stabilization and final bug fixes before the stable release.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.2-preview.33...v2.80.2-preview.36">Full Changelog</a></p>
+<hr>
+<h2 id="preview-build-33-august-25-2020">Preview Build 33 (August 25, 2020)</h2>
+<p>Continued bug fixes and stability improvements.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.2-preview.19...v2.80.2-preview.33">Full Changelog</a></p>
+<hr>
+<h2 id="preview-build-19-august-4-2020">Preview Build 19 (August 4, 2020)</h2>
+<p>Bug fixes for image encoding, text rendering, and native library loading.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.2-preview.18...v2.80.2-preview.19">Full Changelog</a></p>
+<hr>
+<h2 id="preview-build-18-august-2-2020">Preview Build 18 (August 2, 2020)</h2>
+<p>Initial fixes for transitive dependency and ASP.NET loading issues.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.2-preview.9...v2.80.2-preview.18">Full Changelog</a></p>
+<hr>
+<h2 id="preview-build-9-july-27-2020">Preview Build 9 (July 27, 2020)</h2>
+<p>First preview of the 2.80.2 release cycle with early bug fixes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.1...v2.80.2-preview.9">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/2.80.2.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

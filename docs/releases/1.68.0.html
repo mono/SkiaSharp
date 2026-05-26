@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.68.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.68.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.68.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1680">Version 1.68.0</h1>
+
+<blockquote>
+<p><strong>Major Skia engine upgrade</strong> · Released December 4, 2018 · <a href="https://www.nuget.org/packages/SkiaSharp/1.68.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.68.0">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>This release upgrades SkiaSharp to <strong>Skia milestone 68</strong>, bringing a completely rewritten GPU surface creation pipeline, significant text API improvements, and major file I/O performance gains. The GPU backend changes modernize hardware-accelerated rendering across all platforms, while new <code>SKTextBlob</code> support lays the groundwork for advanced text layout. Linux users gain first-class NuGet packaging, and Windows Classic apps no longer require a separate Visual C++ Runtime install.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<h3 id="gpu-surface-creation">GPU Surface Creation</h3>
+<ul>
+<li><strong><code>GRBackendRenderTargetDesc</code> deprecated</strong> — Replaced by <code>GRBackendRenderTarget</code>. The new type provides a cleaner, more explicit API for describing render targets. See the <a href="changelogs/SkiaSharp/1.68.0/gpu-migration.md">GPU migration guide</a> for details.</li>
+<li><strong><code>GRBackendTextureDesc</code> deprecated</strong> — Replaced by <code>GRBackendTexture</code>. Update all GPU texture creation code to use the new type.</li>
+<li><strong><code>SKPaintGLSurfaceEventArgs</code> updated</strong> — Event args now surface the new GPU types. Existing handlers should migrate to the new properties.</li>
+</ul>
+<h3 id="color--pixel-formats">Color &amp; Pixel Formats</h3>
+<ul>
+<li><strong>8-bit indexed color type (<code>Index8</code>) removed</strong> — Skia m68 dropped support for indexed color. Convert indexed images to a full-color type (<code>Rgba8888</code>, <code>Bgra8888</code>, etc.) before use.</li>
+<li><strong><code>SKColorTable</code> removed</strong> — Color tables are no longer supported. Any code referencing <code>SKColorTable</code> must be updated to use direct pixel formats.</li>
+</ul>
+<h3 id="surface-properties">Surface Properties</h3>
+<ul>
+<li><strong><code>SKSurfaceProps</code> struct superseded</strong> — Use the new <code>SKSurfaceProperties</code> class instead. The class provides the same functionality with a richer API.</li>
+</ul>
+<h3 id="views--event-handling">Views &amp; Event Handling</h3>
+<ul>
+<li><strong>macOS/iOS/tvOS delegates deprecated</strong> — Use events or override <code>OnPaintSurface</code> instead.</li>
+<li><strong>Android renderer usage deprecated</strong> — Use events or override <code>OnPaintSurface</code> instead.</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="engine">Engine</h3>
+<ul>
+<li><strong>Skia m68 upgrade</strong> — Brings all upstream Skia improvements, optimizations, and bug fixes from milestone 68.</li>
+<li><strong>Major file I/O performance improvements</strong> — Decoding, encoding, and processing operations are significantly faster.</li>
+</ul>
+<h3 id="gpu--rendering">GPU &amp; Rendering</h3>
+<ul>
+<li><strong>Rewritten hardware-accelerated surface creation</strong> — The entire GPU pipeline has been modernized with <code>GRBackendRenderTarget</code> and <code>GRBackendTexture</code>, providing better device compatibility and clearer semantics. See the <a href="changelogs/SkiaSharp/1.68.0/gpu-migration.md">GPU migration guide</a>.</li>
+<li><strong>UWP GPU view rewritten</strong> — The hardware-accelerated view now supports more devices and includes multiple bug fixes.</li>
+<li><strong>Pixel scaling</strong> — <code>SKPixmap</code>, <code>SKImage</code>, and <code>SKBitmap</code> all support <code>ScalePixels</code> for high-quality image resizing.</li>
+</ul>
+<h3 id="text">Text</h3>
+<ul>
+<li><strong><code>SKTextBlob</code> and <code>SKTextBlobBuilder</code></strong> — First-class text blob support, enabling efficient batched text rendering and laying the foundation for advanced text layout.</li>
+<li><strong>Expanded <code>SKPaint</code> text API</strong> — New methods: <code>BreakText</code>, <code>GetGlyphs</code>, <code>CountGlyphs</code>, <code>ContainsGlyphs</code>, <code>GetGlyphWidths</code>, <code>GetTextIntercepts</code>, <code>GetPositionedTextIntercepts</code>, <code>GetHorizontalTextIntercepts</code>.</li>
+<li><strong>Expanded <code>SKTypeface</code> text API</strong> — New methods: <code>GetGlyphs</code>, <code>CountGlyphs</code>.</li>
+</ul>
+<h3 id="fonts">Fonts</h3>
+<ul>
+<li><strong><code>SKFontManager</code> enhancements</strong> — Load entire font family sets via <code>SKFontStyleSet</code> and match characters more precisely.</li>
+</ul>
+<h3 id="images--documents">Images &amp; Documents</h3>
+<ul>
+<li><strong>Easier <code>SKImage</code> creation</strong> — New overloads simplify image decoding and creation from various sources.</li>
+<li><strong><code>SKDocumentPdfMetadata</code></strong> — New creation options for PDF document metadata (title, author, subject, etc.).</li>
+</ul>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>Linux NuGet package</strong> — New <code>SkiaSharp.NativeAssets.Linux</code> package ships pre-built Ubuntu 16.04 amd64 binaries, with support for most Debian-based distributions. (<a href="https://github.com/mono/SkiaSharp/issues/312">#312</a>)</li>
+<li><strong>Static VC++ Runtime on Windows</strong> — The Visual C++ Runtime is now statically linked on Windows Classic, eliminating the need for a separate runtime installer.</li>
+<li><strong>Android <code>SKGLView</code> transparency</strong> — The Xamarin.Forms <code>SKGLView</code> on Android is now a transparent view.</li>
+</ul>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong>New method overloads</strong> — Additional convenience overloads for surfaces, shaders, and effects across the API.</li>
+<li><strong>Preferred <code>OnPaintSurface</code> pattern</strong> — All views now prefer <code>OnPaintSurface</code> as the primary override point for drawing.</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li>Multiple bug fixes across the core library and platform views.</li>
+<li>UWP hardware-accelerated view stability and device compatibility improvements.</li>
+</ul>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.60.3...v1.68.0">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.68.0">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/projects/18">Project Board</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/milestone/30">Milestone</a></li>
+</ul>
+<hr>
+<h2 id="preview-28-november-14-2018">Preview 28 (November 14, 2018)</h2>
+<p>Release candidate build containing all features and fixes that shipped in the stable 1.68.0 release.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.60.3...v1.68.0-preview28">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.68.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

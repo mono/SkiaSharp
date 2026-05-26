@@ -1,0 +1,310 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Integrating with .NET MAUI | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Integrating with .NET MAUI | SkiaSharp ">
+      
+      <meta name="description" content="This article explains how to create SkiaSharp graphics that respond to touch and .NET MAUI elements, and demonstrates this with sample code.">
+      <link rel="icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../TOC.html">
+      <meta name="docfx:tocrel" content="../TOC.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/basics/integration.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="integrating-with-net-maui">Integrating with .NET MAUI</h1>
+
+<p><em>Create SkiaSharp graphics that respond to touch and .NET MAUI elements</em></p>
+<p>SkiaSharp graphics can integrate with the rest of .NET MAUI in several ways. You can combine a SkiaSharp canvas and .NET MAUI elements on the same page, and even position .NET MAUI elements on top of a SkiaSharp canvas:</p>
+<p><img src="integration-images/integrationexample.png" alt="Selecting a color with sliders"></p>
+<p>Another approach to creating interactive SkiaSharp graphics in .NET MAUI is through touch.</p>
+<p>The second page in the sample program is entitled <strong>Tap Toggle Fill</strong>. It draws a simple circle two ways — without a fill and with a fill — toggled by a tap. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/TapToggleFillPage.xaml.cs"><code>TapToggleFillPage</code></a> class shows how you can alter SkiaSharp graphics in response to user input.</p>
+<p>For this page, the <code>SKCanvasView</code> class is instantiated in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/TapToggleFillPage.xaml">TapToggleFill.xaml</a> file, which also sets a .NET MAUI <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.tapgesturerecognizer"><code>TapGestureRecognizer</code></a> on the view:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.TapToggleFillPage&quot;
+             Title=&quot;Tap Toggle Fill&quot;&gt;
+
+    &lt;skia:SKCanvasView PaintSurface=&quot;OnCanvasViewPaintSurface&quot;&gt;
+        &lt;skia:SKCanvasView.GestureRecognizers&gt;
+            &lt;TapGestureRecognizer Tapped=&quot;OnCanvasViewTapped&quot; /&gt;
+        &lt;/skia:SKCanvasView.GestureRecognizers&gt;
+    &lt;/skia:SKCanvasView&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>Notice the <code>skia</code> XML namespace declaration.</p>
+<p>The <code>Tapped</code> handler for the <code>TapGestureRecognizer</code> object simply toggles the value of a Boolean field and calls the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.maui.controls.skcanvasview.invalidatesurface#skiasharp-views-maui-controls-skcanvasview-invalidatesurface"><code>InvalidateSurface</code></a> method of <code>SKCanvasView</code>:</p>
+<pre><code class="lang-csharp">bool showFill = true;
+...
+void OnCanvasViewTapped(object? sender, EventArgs args)
+{
+    showFill ^= true;
+    if (sender is SKCanvasView canvasView)
+    {
+        canvasView.InvalidateSurface();
+    }
+}
+</code></pre>
+<p>The call to <code>InvalidateSurface</code> effectively generates a call to the <code>PaintSurface</code> handler, which uses the <code>showFill</code> field to fill or not fill the circle:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = Colors.Red.ToSKColor(),
+        StrokeWidth = 50
+    };
+    canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);
+
+    if (showFill)
+    {
+        paint.Style = SKPaintStyle.Fill;
+        paint.Color = SKColors.Blue;
+        canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);
+    }
+}
+</code></pre>
+<p>The <code>StrokeWidth</code> property has been set to 50 to accentuate the difference. You can also see the whole line width by drawing the interior first and then the outline. By default, graphics figures that are drawn later in the <code>PaintSurface</code> event handler obscure those drawn earlier in the handler.</p>
+<p>The <strong>Color Explore</strong> page demonstrates how you can also integrate SkiaSharp graphics with other .NET MAUI elements, and also demonstrates the difference between two alternative methods for defining colors in SkiaSharp. The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsl#skiasharp-skcolor-fromhsl(system-single-system-single-system-single-system-byte)"><code>SKColor.FromHsl</code></a> method creates an <code>SKColor</code> value based on the Hue-Saturation-Lightness model:</p>
+<pre><code class="lang-csharp">public static SKColor FromHsl (Single h, Single s, Single l, Byte a)
+</code></pre>
+<p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsv#skiasharp-skcolor-fromhsv(system-single-system-single-system-single-system-byte)"><code>SKColor.FromHsv</code></a> method creates an <code>SKColor</code> value based on the similar Hue-Saturation-Value model:</p>
+<pre><code class="lang-csharp">public static SKColor FromHsv (Single h, Single s, Single v, Byte a)
+</code></pre>
+<p>In both cases, the <code>h</code> argument ranges from 0 to 360. The <code>s</code>, <code>l</code>, and <code>v</code> arguments range from 0 to 100. The <code>a</code> (alpha or opacity) argument ranges from 0 to 255.</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/ColorExplorePage.xaml"><strong>ColorExplorePage.xaml</strong></a> file creates two <code>SKCanvasView</code> objects in a <code>StackLayout</code> side by side with <code>Slider</code> and <code>Label</code> views that allow the user to select HSL and HSV color values:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Basics.ColorExplorePage&quot;
+             Title=&quot;Color Explore&quot;&gt;
+    &lt;StackLayout&gt;
+        &lt;!-- Hue slider --&gt;
+        &lt;Slider x:Name=&quot;hueSlider&quot;
+                Maximum=&quot;360&quot;
+                Margin=&quot;20, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label HorizontalTextAlignment=&quot;Center&quot;
+               Text=&quot;{Binding Source={x:Reference hueSlider},
+                              Path=Value,
+                              StringFormat='Hue = {0:F0}'}&quot; /&gt;
+
+        &lt;!-- Saturation slider --&gt;
+        &lt;Slider x:Name=&quot;saturationSlider&quot;
+                Maximum=&quot;100&quot;
+                Margin=&quot;20, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label HorizontalTextAlignment=&quot;Center&quot;
+               Text=&quot;{Binding Source={x:Reference saturationSlider},
+                              Path=Value,
+                              StringFormat='Saturation = {0:F0}'}&quot; /&gt;
+
+        &lt;!-- Lightness slider --&gt;
+        &lt;Slider x:Name=&quot;lightnessSlider&quot;
+                Maximum=&quot;100&quot;
+                Margin=&quot;20, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label HorizontalTextAlignment=&quot;Center&quot;
+               Text=&quot;{Binding Source={x:Reference lightnessSlider},
+                              Path=Value,
+                              StringFormat='Lightness = {0:F0}'}&quot; /&gt;
+
+        &lt;!-- HSL canvas view --&gt;
+        &lt;Grid VerticalOptions=&quot;FillAndExpand&quot;&gt;
+            &lt;skia:SKCanvasView x:Name=&quot;hslCanvasView&quot;
+                               PaintSurface=&quot;OnHslCanvasViewPaintSurface&quot; /&gt;
+
+            &lt;Label x:Name=&quot;hslLabel&quot;
+                   HorizontalOptions=&quot;Center&quot;
+                   VerticalOptions=&quot;Center&quot;
+                   BackgroundColor=&quot;Black&quot;
+                   TextColor=&quot;White&quot; /&gt;
+        &lt;/Grid&gt;
+
+        &lt;!-- Value slider --&gt;
+        &lt;Slider x:Name=&quot;valueSlider&quot;
+                Maximum=&quot;100&quot;
+                Margin=&quot;20, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label HorizontalTextAlignment=&quot;Center&quot;
+               Text=&quot;{Binding Source={x:Reference valueSlider},
+                              Path=Value,
+                              StringFormat='Value = {0:F0}'}&quot; /&gt;
+
+        &lt;!-- HSV canvas view --&gt;
+        &lt;Grid VerticalOptions=&quot;FillAndExpand&quot;&gt;
+            &lt;skia:SKCanvasView x:Name=&quot;hsvCanvasView&quot;
+                               PaintSurface=&quot;OnHsvCanvasViewPaintSurface&quot; /&gt;
+
+            &lt;Label x:Name=&quot;hsvLabel&quot;
+                   HorizontalOptions=&quot;Center&quot;
+                   VerticalOptions=&quot;Center&quot;
+                   BackgroundColor=&quot;Black&quot;
+                   TextColor=&quot;White&quot; /&gt;
+        &lt;/Grid&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The two <code>SKCanvasView</code> elements are in a single-cell <code>Grid</code> with a <code>Label</code> sitting on top for displaying the resultant RGB color value.</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/ColorExplorePage.xaml.cs"><strong>ColorExplorePage.xaml.cs</strong></a> code-behind file is relatively simple. The shared <code>ValueChanged</code> handler for the three <code>Slider</code> elements simply invalidates both <code>SKCanvasView</code> elements. The <code>PaintSurface</code> handlers clear the canvas with the color indicated by the <code>Slider</code> elements, and also set the <code>Label</code> sitting on top of the <code>SKCanvasView</code> elements:</p>
+<pre><code class="lang-csharp">public partial class ColorExplorePage : ContentPage
+{
+    public ColorExplorePage()
+    {
+        InitializeComponent();
+
+        hueSlider.Value = 0;
+        saturationSlider.Value = 100;
+        lightnessSlider.Value = 50;
+        valueSlider.Value = 100;
+    }
+
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
+    {
+        hslCanvasView.InvalidateSurface();
+        hsvCanvasView.InvalidateSurface();
+    }
+
+    void OnHslCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
+    {
+        SKColor color = SKColor.FromHsl((float)hueSlider.Value,
+                                        (float)saturationSlider.Value,
+                                        (float)lightnessSlider.Value);
+        args.Surface.Canvas.Clear(color);
+
+        hslLabel.Text = String.Format(&quot; RGB = {0:X2}-{1:X2}-{2:X2} &quot;,
+                                      color.Red, color.Green, color.Blue);
+    }
+
+    void OnHsvCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
+    {
+        SKColor color = SKColor.FromHsv((float)hueSlider.Value,
+                                        (float)saturationSlider.Value,
+                                        (float)valueSlider.Value);
+        args.Surface.Canvas.Clear(color);
+
+        hsvLabel.Text = String.Format(&quot; RGB = {0:X2}-{1:X2}-{2:X2} &quot;,
+                                      color.Red, color.Green, color.Blue);
+    }
+}
+</code></pre>
+<p>In both the HSL and HSV color models, the Hue value ranges from 0 to 360 and indicates the dominant hue of the color. These are the traditional colors of the rainbow: red, orange, yellow, green, blue, indigo, violet, and back in a circle to red.</p>
+<p>In the HSL model, a 0 value for Lightness is always black, and a 100 value is always white. When the Saturation value is 0, Lightness values between 0 and 100 are shades of gray. Increasing the Saturation adds more color. Pure colors (which are RGB values with one component equal to 255, another equal to 0, and the third ranging from 0 to 255) occur when the Saturation is 100 and the Lightness is 50.</p>
+<p>In the HSV model, pure colors result when both the Saturation and Value are 100. When Value is 0, regardless of any other settings, the color is black. Gray shades occur when the Saturation is 0 and Value ranges from 0 to 100.</p>
+<p>But the best way to get a feel for the two models is to experiment with them yourself:</p>
+<p><a href="integration-images/colorexplore-small.png#lightbox" title="Triple screenshot of the Color Explore page"><img src="integration-images/colorexplore-large.png" alt="Triple screenshot of the Color Explore page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/basics/integration.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

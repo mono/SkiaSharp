@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>SkiaSharp Transforms | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="SkiaSharp Transforms | SkiaSharp ">
+      
+      <meta name="description" content="This article explores transforms for displaying SkiaSharp graphics in .NET MAUI applications, and demonstrates this with sample code.">
+      <link rel="icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../TOC.html">
+      <meta name="docfx:tocrel" content="../TOC.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/transforms/index.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="skiasharp-transforms">SkiaSharp Transforms</h1>
+
+<p><em>Learn about transforms for displaying SkiaSharp graphics</em></p>
+<p>SkiaSharp supports traditional graphics transforms that are implemented as methods of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas"><code>SKCanvas</code></a> object. Mathematically, transforms alter the coordinates and sizes that you specify in <code>SKCanvas</code> drawing functions as the graphical objects are rendered. Transforms are often convenient for drawing repetitive graphics or for animation. Some techniques — such as rotating bitmaps or text — are not possible without the use of transforms.</p>
+<p>SkiaSharp transforms support the following operations:</p>
+<ul>
+<li><em>Translate</em> to shift coordinates from one location to another</li>
+<li><em>Scale</em> to increase or decrease coordinates and sizes</li>
+<li><em>Rotate</em> to rotate coordinates around a point</li>
+<li><em>Skew</em> to shift coordinates horizontally or vertically so that a rectangle becomes a parallelogram</li>
+</ul>
+<p>These are known as <em>affine</em> transforms. Affine transforms always preserve parallel lines and never cause a coordinate or size to become infinite. A square is never transformed into anything other than a parallelogram, and a circle is never transformed into anything other than an ellipse.</p>
+<p>SkiaSharp also supports non-affine transforms (also called <em>projective</em> or <em>perspective</em> transforms) based on a standard 3-by-3 transform matrix. A non-affine transform allows a square to be transformed into any convex quadrilateral, which is a four-sided figure with all interior angles less than 180 degrees. Non-affine transforms can cause coordinates or sizes to become infinite, but they are vital for 3D effects.</p>
+<h2 id="differences-between-skiasharp-and-net-maui-transforms">Differences between SkiaSharp and .NET MAUI Transforms</h2>
+<p>.NET MAUI also supports transforms that are similar to those in SkiaSharp. The .NET MAUI <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.visualelement"><code>VisualElement</code></a> class defines the following transform properties:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.visualelement.translationx#microsoft-maui-controls-visualelement-translationx"><code>TranslationX</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.visualelement.translationy#microsoft-maui-controls-visualelement-translationy"><code>TranslationY</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.visualelement.scale#microsoft-maui-controls-visualelement-scale"><code>Scale</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.visualelement.rotation#microsoft-maui-controls-visualelement-rotation"><code>Rotation</code></a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.visualelement.rotationx#microsoft-maui-controls-visualelement-rotationx"><code>RotationX</code></a>, and <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.visualelement.rotationy#microsoft-maui-controls-visualelement-rotationy"><code>RotationY</code></a></li>
+</ul>
+<p>The <code>RotationX</code> and <code>RotationY</code> properties are perspective transforms that create quasi-3D effects.</p>
+<p>There are several crucial differences between SkiaSharp transforms and .NET MAUI transforms:</p>
+<p>The first difference is that SkiaSharp transforms are applied to the entire <code>SKCanvas</code> object while the .NET MAUI transforms are applied to individual <code>VisualElement</code> derivatives. (You can apply the .NET MAUI transforms to the <code>SKCanvasView</code> object itself, because <code>SKCanvasView</code> derives from <code>VisualElement</code>, but within that <code>SKCanvasView</code>, the SkiaSkarp transforms apply.)</p>
+<p>The SkiaSharp transforms are relative to the upper-left corner of the <code>SKCanvas</code> while .NET MAUI transforms are relative to the upper-left corner of the <code>VisualElement</code> to which they are applied. This difference is important when applying scaling and rotation transforms because these transforms are always relative to a particular point.</p>
+<p>The really big difference is that SKiaSharp transforms are <em>methods</em> while the .NET MAUI transforms are <em>properties</em>. This is a semantic difference beyond the syntactical difference: SkiaSharp transforms perform an operation while .NET MAUI transforms set a state. SkiaSharp transforms apply to subsequently drawn graphics objects, but not to graphics objects that are drawn before the transform is applied. In contrast, a .NET MAUI transform applies to a previously rendered element as soon as the property is set. SkiaSharp transforms are cumulative as the methods are called; .NET MAUI transforms are replaced when the property is set with another value.</p>
+<p>All the sample programs in this section appear in the <strong>SkiaSharp Transforms</strong> section of the sample program. Source code can be found in the <strong>Transforms</strong> folder of the solution.</p>
+<h2 id="the-translate-transform"><a href="translate.html">The Translate Transform</a></h2>
+<p>Learn how to use the translate transform to shift SkiaSharp graphics.</p>
+<h2 id="the-scale-transform"><a href="scale.html">The Scale Transform</a></h2>
+<p>Discover the SkiaSharp scale transform for scaling objects to various sizes.</p>
+<h2 id="the-rotate-transform"><a href="rotate.html">The Rotate Transform</a></h2>
+<p>Explore the effects and animations possible with the SkiaSharp rotate transform.</p>
+<h2 id="the-skew-transform"><a href="skew.html">The Skew Transform</a></h2>
+<p>See how the skew transform can create tilted graphical object.</p>
+<h2 id="matrix-transforms"><a href="matrix.html">Matrix Transforms</a></h2>
+<p>Dive deeper into SkiaSharp transforms with the versatile transform matrix.</p>
+<h2 id="touch-manipulations"><a href="touch.html">Touch Manipulations</a></h2>
+<p>Use matrix transforms to implement touch manipulations for dragging, scaling, and rotation.</p>
+<h2 id="non-affine-transforms"><a href="non-affine.html">Non-Affine Transforms</a></h2>
+<p>Go beyond the oridinary with non-affine transform effects.</p>
+<h2 id="3d-rotation"><a href="3d-rotation.html">3D Rotation</a></h2>
+<p>Use non-affine transforms to rotate 2D objects in 3D space.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/transforms/index.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

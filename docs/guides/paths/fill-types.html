@@ -1,0 +1,307 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Path Fill Types | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Path Fill Types | SkiaSharp ">
+      
+      <meta name="description" content="This article examines the different effects possible with SkiaSharp path fill types, and demonstrates this with sample code.">
+      <link rel="icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../TOC.html">
+      <meta name="docfx:tocrel" content="../TOC.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/paths/fill-types.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-path-fill-types">The Path Fill Types</h1>
+
+<p><em>Discover the different effects possible with SkiaSharp path fill types</em></p>
+<p>Two contours in a path can overlap, and the lines that make up a single contour can overlap. Any enclosed area can potentially be filled, but you might not want to fill all the enclosed areas. Here's an example:</p>
+<p><img src="fill-types-images/filltypeexample.png" alt="Five-pointed star partially filles"></p>
+<p>You have a little control over this. The filling algorithm is governed by the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.filltype#skiasharp-skpath-filltype"><code>SKFillType</code></a> property of <code>SKPath</code>, which you set to a member of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathfilltype"><code>SKPathFillType</code></a> enumeration:</p>
+<ul>
+<li><code>Winding</code>, the default</li>
+<li><code>EvenOdd</code></li>
+<li><code>InverseWinding</code></li>
+<li><code>InverseEvenOdd</code></li>
+</ul>
+<p>Both the winding and even-odd algorithms determine if any enclosed area is filled or not filled based on a hypothetical line drawn from that area to infinity. That line crosses one or more boundary lines that make up the path. With the winding mode, if the number of boundary lines drawn in one direction balance out the number of lines drawn in the other direction, then the area is not filled. Otherwise the area is filled. The even-odd algorithm fills an area if the number of boundary lines is odd.</p>
+<p>With many routine paths, the winding algorithm often fills all the enclosed areas of a path. The even-odd algorithm generally produces more interesting results.</p>
+<p>The classic example is a five-pointed star, as demonstrated in the <strong>Five-Pointed Star</strong> page. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Paths/FivePointedStarPage.xaml"><strong>FivePointedStarPage.xaml</strong></a> file instantiates two <code>Picker</code> views to select the path fill type and whether the path is stroked or filled or both, and in what order:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Paths.FivePointedStarPage&quot;
+             Title=&quot;Five-Pointed Star&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid.ColumnDefinitions&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+        &lt;/Grid.ColumnDefinitions&gt;
+
+        &lt;Picker x:Name=&quot;fillTypePicker&quot;
+                Title=&quot;Path Fill Type&quot;
+                Grid.Row=&quot;0&quot;
+                Grid.Column=&quot;0&quot;
+                Margin=&quot;10&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKPathFillType}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKPathFillType.Winding&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKPathFillType.EvenOdd&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKPathFillType.InverseWinding&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKPathFillType.InverseEvenOdd&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;Picker x:Name=&quot;drawingModePicker&quot;
+                Title=&quot;Drawing Mode&quot;
+                Grid.Row=&quot;0&quot;
+                Grid.Column=&quot;1&quot;
+                Margin=&quot;10&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type x:String}&quot;&gt;
+                    &lt;x:String&gt;Fill only&lt;/x:String&gt;
+                    &lt;x:String&gt;Stroke only&lt;/x:String&gt;
+                    &lt;x:String&gt;Stroke then Fill&lt;/x:String&gt;
+                    &lt;x:String&gt;Fill then Stroke&lt;/x:String&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;skiaforms:SKCanvasView x:Name=&quot;canvasView&quot;
+                                Grid.Row=&quot;1&quot;
+                                Grid.Column=&quot;0&quot;
+                                Grid.ColumnSpan=&quot;2&quot;
+                                PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file uses both <code>Picker</code> values to draw a five-pointed star:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPoint center = new SKPoint(info.Width / 2, info.Height / 2);
+    float radius = 0.45f * Math.Min(info.Width, info.Height);
+
+    SKPath path = new SKPath
+    {
+        FillType = (SKPathFillType)fillTypePicker.SelectedItem
+    };
+    path.MoveTo(info.Width / 2, info.Height / 2 - radius);
+
+    for (int i = 1; i &lt; 5; i++)
+    {
+        // angle from vertical
+        double angle = i * 4 * Math.PI / 5;
+        path.LineTo(center + new SKPoint(radius * (float)Math.Sin(angle),
+                                        -radius * (float)Math.Cos(angle)));
+    }
+    path.Close();
+
+    SKPaint strokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Red,
+        StrokeWidth = 50,
+        StrokeJoin = SKStrokeJoin.Round
+    };
+
+    SKPaint fillPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Blue
+    };
+
+    switch ((string)drawingModePicker.SelectedItem)
+    {
+        case &quot;Fill only&quot;:
+            canvas.DrawPath(path, fillPaint);
+            break;
+
+        case &quot;Stroke only&quot;:
+            canvas.DrawPath(path, strokePaint);
+            break;
+
+        case &quot;Stroke then Fill&quot;:
+            canvas.DrawPath(path, strokePaint);
+            canvas.DrawPath(path, fillPaint);
+            break;
+
+        case &quot;Fill then Stroke&quot;:
+            canvas.DrawPath(path, fillPaint);
+            canvas.DrawPath(path, strokePaint);
+            break;
+    }
+}
+</code></pre>
+<p>Normally, the path fill type should affect only fills and not strokes, but the two <code>Inverse</code> modes affect both fills and strokes. For fills, the two <code>Inverse</code> types fill areas oppositely so that the area outside the star is filled. For strokes, the two <code>Inverse</code> types color everything except the stroke. Using these inverse fill types can produce some odd effects, as the iOS screenshot demonstrates:</p>
+<p><a href="fill-types-images/fivepointedstar-large.png#lightbox" title="Triple screenshot of the Five-Pointed Star page"><img src="fill-types-images/fivepointedstar-small.png" alt="Triple screenshot of the Five-Pointed Star page"></a></p>
+<p>The Android screenshot show the typical even-odd and winding effects, but the order of the stroke and fill also affects the results.</p>
+<p>The winding algorithm is dependent on the direction that lines are drawn. Usually when you're creating a path, you can control that direction as you specify that lines are drawn from one point to another. However, the <code>SKPath</code> class also defines methods like <code>AddRect</code> and <code>AddCircle</code> that draw entire contours. To control how these objects are drawn, the methods include a parameter of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathdirection"><code>SKPathDirection</code></a>, which has two members:</p>
+<ul>
+<li><code>Clockwise</code></li>
+<li><code>CounterClockwise</code></li>
+</ul>
+<p>The methods in <code>SKPath</code> that include an <code>SKPathDirection</code> parameter give it a default value of <code>Clockwise</code>.</p>
+<p>The <strong>Overlapping Circles</strong> page creates a path with four overlapping circles with an even-odd path fill type:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPoint center = new SKPoint(info.Width / 2, info.Height / 2);
+    float radius = Math.Min(info.Width, info.Height) / 4;
+
+    SKPath path = new SKPath
+    {
+        FillType = SKPathFillType.EvenOdd
+    };
+
+    path.AddCircle(center.X - radius / 2, center.Y - radius / 2, radius);
+    path.AddCircle(center.X - radius / 2, center.Y + radius / 2, radius);
+    path.AddCircle(center.X + radius / 2, center.Y - radius / 2, radius);
+    path.AddCircle(center.X + radius / 2, center.Y + radius / 2, radius);
+
+    SKPaint paint = new SKPaint()
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Cyan
+    };
+
+    canvas.DrawPath(path, paint);
+
+    paint.Style = SKPaintStyle.Stroke;
+    paint.StrokeWidth = 10;
+    paint.Color = SKColors.Magenta;
+
+    canvas.DrawPath(path, paint);
+}
+</code></pre>
+<p>It's an interesting image created with a minimum of code:</p>
+<p><a href="fill-types-images/overlappingcircles-large.png#lightbox" title="Triple screenshot of the Overlapping Circles page"><img src="fill-types-images/overlappingcircles-small.png" alt="Triple screenshot of the Overlapping Circles page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/paths/fill-types.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,254 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.68.2 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.68.2 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.68.2.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1682">Version 1.68.2</h1>
+
+<blockquote>
+<p><strong>Rich API additions and performance improvements</strong> · Released April 30, 2020 · <a href="https://www.nuget.org/packages/SkiaSharp/1.68.2">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.68.2">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>This release brings a wealth of new drawing APIs to SKCanvas, floating-point color support via SKColorF, and significant performance gains from removing all use of reflection. Structs across the library now implement <code>IEquatable&lt;T&gt;</code> with proper equality operators, and memory management has been improved with array pooling and lifetime fixes.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="new-features">New Features</h2>
+<h3 id="drawing--canvas">Drawing &amp; Canvas</h3>
+<ul>
+<li><strong>SKColorF</strong> — Added floating-point color type with overloads across the API for high-precision color workflows.</li>
+<li><strong>SKCanvas.DrawAtlas</strong> — Draw sprite atlases with per-sprite transforms and colors.</li>
+<li><strong>SKCanvas.DrawPatch</strong> — Draw Coons patches for advanced gradient meshes.</li>
+<li><strong>SKCanvas.DrawArc</strong> — Draw arcs directly on the canvas.</li>
+<li><strong>SKCanvas.DrawRoundRectDifference</strong> — Draw the difference between two rounded rectangles.</li>
+</ul>
+<h3 id="imaging--shaders">Imaging &amp; Shaders</h3>
+<ul>
+<li><strong>SKImage.ToRasterImage() overload</strong> — Request explicit pixel data loading when converting to a raster image.</li>
+<li><strong>SKImage.ToTextureImage</strong> — Copy a CPU-backed image to a GPU texture.</li>
+<li><strong>ToShader() extensions</strong> — Added <code>ToShader()</code> to <code>SKBitmap</code>, <code>SKImage</code>, and <code>SKPicture</code> for convenient shader creation.</li>
+<li><strong>Perlin noise shaders</strong> — Improved support for Perlin noise shader generation.</li>
+</ul>
+<h3 id="geometry--math">Geometry &amp; Math</h3>
+<ul>
+<li><strong>SKMatrix helpers</strong> — Added <code>Concat</code>, <code>PreConcat</code>, and <code>PostConcat</code> members for cleaner matrix composition.</li>
+<li><strong>SKRegion operations</strong> — Added &quot;quick&quot; reject/contains members and region iterators for faster spatial queries.</li>
+</ul>
+<h3 id="struct-improvements">Struct Improvements</h3>
+<ul>
+<li><strong>IEquatable&lt;T&gt;</strong> — All structs now implement <code>IEquatable&lt;T&gt;</code> with proper <code>Equals</code>, <code>GetHashCode</code>, and equality operators.</li>
+<li><strong>Readonly getters</strong> — All struct getters are now <code>readonly</code> for better performance and correctness.</li>
+<li><strong>EditorBrowsable(Never)</strong> — Obsolete members are now hidden from IntelliSense.</li>
+</ul>
+<h3 id="views--platform-extensions">Views &amp; Platform Extensions</h3>
+<ul>
+<li><strong>GTK extensions</strong> — Added extension methods for <code>SKRect</code>/<code>SKPoint</code>/<code>SKSize</code> conversion and image type conversions (<code>SKImage</code>/<code>SKBitmap</code>/<code>SKPixmap</code> ↔ <code>Pixbuf</code>).</li>
+<li><strong>SkiaSharp.Views.Forms.GTK</strong> — New package bringing SkiaSharp views to Xamarin.Forms on GTK.</li>
+<li><strong>Mouse wheel scrolling</strong> — Added scroll wheel support in Xamarin.Forms views. ❤️ <a href="https://github.com/alexandrvslv">@alexandrvslv</a></li>
+<li><strong>Touch device type &amp; pressure</strong> — Added <code>SKTouchDeviceType</code> and touch pressure support on Android. ❤️ <a href="https://github.com/mscherotter">@mscherotter</a></li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li>Fixed passing <code>null</code> for image filters throwing an exception instead of being treated as no filter. ❤️ <a href="https://github.com/Ziriax">@Ziriax</a></li>
+<li>Fixed passing <code>null</code> to <code>SKPathMeasure</code> throwing an exception. ❤️ <a href="https://github.com/Ziriax">@Ziriax</a></li>
+<li>Fixed sampling issues with GPU-based views. ❤️ <a href="https://github.com/validvoid">@validvoid</a></li>
+<li>Fixed memory leak and crash in Xamarin.Forms views. ❤️ <a href="https://github.com/zbyszekpy">@zbyszekpy</a></li>
+<li>Fixed several object lifetime and disposal bugs across the library.</li>
+</ul>
+<h2 id="performance">Performance</h2>
+<ul>
+<li>Removed all use of reflection for a significant performance boost. ❤️ <a href="https://github.com/Gillibald">@Gillibald</a></li>
+<li>Made use of array pools where possible to reduce allocations.</li>
+<li>Multiple memory management improvements throughout the library.</li>
+</ul>
+<h2 id="maintenance">Maintenance</h2>
+<ul>
+<li>Updated to Visual Studio 2019 and .NET Core 3.0.</li>
+<li>Multi-targeting improvements. ❤️ <a href="https://github.com/bender2k14">@bender2k14</a></li>
+<li>Updated minimum Android to v4.1 (API 16).</li>
+<li>Updated Android NDK to r19c, MSVC to v14.2, and Clang to v9.0.</li>
+<li>Updated ANGLE to the latest commit.</li>
+<li>Updated Xamarin.Forms dependency to v4.4+.</li>
+</ul>
+<h2 id="known-issues">Known Issues</h2>
+<ul>
+<li>WACK test false positive with <code>vcruntime140_1_app.dll</code> — this is resolved in the Windows Insider SDK.</li>
+</ul>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/Ziriax">@Ziriax</a></td>
+<td>Fixed null parameter handling in image filters and path measure</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Gillibald">@Gillibald</a></td>
+<td>Removed all reflection usage for major performance gains</td>
+</tr>
+<tr>
+<td><a href="https://github.com/validvoid">@validvoid</a></td>
+<td>Fixed GPU view sampling issues</td>
+</tr>
+<tr>
+<td><a href="https://github.com/alexandrvslv">@alexandrvslv</a></td>
+<td>Added mouse wheel scrolling support</td>
+</tr>
+<tr>
+<td><a href="https://github.com/mscherotter">@mscherotter</a></td>
+<td>Added touch device type and pressure on Android</td>
+</tr>
+<tr>
+<td><a href="https://github.com/zbyszekpy">@zbyszekpy</a></td>
+<td>Fixed memory leak and crash in views</td>
+</tr>
+<tr>
+<td><a href="https://github.com/bender2k14">@bender2k14</a></td>
+<td>Multi-targeting improvements</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.68.1.1...v1.68.2">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.68.2">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/milestone/30">Milestone</a></li>
+</ul>
+<hr>
+<h2 id="preview-60-april-13-2020">Preview 60 (April 13, 2020)</h2>
+<p>Final preview with remaining bug fixes and stabilization before the GA release.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.2-preview.50...v1.68.2-preview.60">Full Changelog</a></p>
+<h2 id="preview-50-april-3-2020">Preview 50 (April 3, 2020)</h2>
+<p>Continued memory management improvements and additional API polish.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.2-preview.45...v1.68.2-preview.50">Full Changelog</a></p>
+<h2 id="preview-45-march-24-2020">Preview 45 (March 24, 2020)</h2>
+<p>Struct equality operators and <code>IEquatable&lt;T&gt;</code> implementation across all value types.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.2-preview.43...v1.68.2-preview.45">Full Changelog</a></p>
+<h2 id="preview-43-march-18-2020">Preview 43 (March 18, 2020)</h2>
+<p>Added <code>ToTextureImage</code> and expanded shader creation methods on imaging types.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.2-preview.39...v1.68.2-preview.43">Full Changelog</a></p>
+<h2 id="preview-39-february-27-2020">Preview 39 (February 27, 2020)</h2>
+<p>New canvas drawing APIs including <code>DrawAtlas</code>, <code>DrawPatch</code>, and <code>DrawArc</code>.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.2-preview.29...v1.68.2-preview.39">Full Changelog</a></p>
+<h2 id="preview-29-february-6-2020">Preview 29 (February 6, 2020)</h2>
+<p>SKRegion enhancements and SKMatrix helper methods.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.2-preview.21...v1.68.2-preview.29">Full Changelog</a></p>
+<h2 id="preview-21-january-20-2020">Preview 21 (January 20, 2020)</h2>
+<p>GTK view extensions and Xamarin.Forms GTK package.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.2-preview.17...v1.68.2-preview.21">Full Changelog</a></p>
+<h2 id="preview-17-january-11-2020">Preview 17 (January 11, 2020)</h2>
+<p>Initial preview with SKColorF support and reflection removal for performance.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.1.1...v1.68.2-preview.17">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.68.2.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

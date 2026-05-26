@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.55.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.55.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.55.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1550">Version 1.55.0</h1>
+
+<blockquote>
+<p><strong>Skia m55, SVG preview, and comprehensive documentation</strong> · Released November 10, 2016 · <a href="https://www.nuget.org/packages/SkiaSharp/1.55.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.55.0">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>A major feature release that updates to Google's chrome/m55 Skia milestone, introduces the new <strong>SkiaSharp.Svg</strong> package for lightweight SVG parsing, and ships thousands of API documentation entries across the entire SkiaSharp surface. New APIs include <code>SKColor.Parse</code>, <code>SKPathMeasure</code>, <code>SKRegion</code>-based clipping, and <code>SKPaint.GetFillPath</code>. SkiaSharp.Views gains <code>CanvasSize</code> for pixel density calculations.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<h3 id="upstream-skia-changes">Upstream Skia changes</h3>
+<ul>
+<li><strong><code>GRContext.Flush(GRContextFlushBits)</code> obsoleted</strong> — Use the parameterless <code>GRContext.Flush()</code> instead.</li>
+<li><strong><code>SKDocument.Close()</code> return type changed</strong> — No longer returns <code>bool</code>; now returns <code>void</code>.</li>
+<li><strong><code>SKPaint.XferMode</code> obsoleted</strong> — Use <code>SKPaint.BlendMode</code> instead.</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="engine">Engine</h3>
+<ul>
+<li><strong>Skia m55 update</strong> — Updated to Google's chrome/m55 release with all upstream improvements.</li>
+</ul>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong>HTML color parsing</strong> — <code>SKColor.Parse</code> and <code>SKColor.TryParse</code> for parsing HTML hex color strings.</li>
+<li><strong>Region-based clipping</strong> — Added <code>SKRegion</code> clipping options for <code>SKCanvas</code>.</li>
+<li><strong><code>SKPaint.GetFillPath()</code></strong> — Creates a new path representing the fill outline using the paint's fill properties.</li>
+<li><strong><code>SKPathMeasure</code></strong> — New type for measuring path length and extracting path segments.</li>
+<li><strong><code>SKPath</code> additions</strong> — Numerous new overloads and members for path manipulation.</li>
+<li><strong><code>SKTypeface</code> property getters</strong> — Added getters for <code>SKTypeface</code> properties.</li>
+<li><strong>Struct expansions</strong> — Additional members and overloads for <code>SKRect*</code>, <code>SKSize*</code>, <code>SKPoint*</code>, and <code>SKMatrix</code>.</li>
+<li><strong>Improved image lattice drawing</strong> — Better support for 9-patch style image rendering.</li>
+<li><strong>Improved argument validation</strong> — Better exceptions for invalid or incorrect arguments.</li>
+</ul>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>SkiaSharp.Svg</strong> <em>(preview)</em> — A new lightweight, pure-managed SVG parser (<code>SKSvg</code>) supporting features on par with NGraphics. Lives in a <a href="https://github.com/mono/SkiaSharp/blob/v1.55.0/source/SkiaSharp.Svg/SkiaSharp.Svg/SKSvg.cs">single file</a>. ❤️ @gentledepp also contributed a more full-featured <a href="https://github.com/gentledepp/SVG/tree/skiasharp">SVG library</a> with SkiaSharp support.</li>
+<li><strong><code>CanvasSize</code> property</strong> — Views now expose <code>CanvasSize</code> for calculating scaling and pixel density: <code>var scaling = view.CanvasSize.Width / view.Width;</code></li>
+<li><strong>Views namespace update</strong> — Namespace changed to <code>SkiaSharp.Views.&lt;platform-name&gt;</code>.</li>
+<li><strong>Improved UWP internals</strong> — Better <code>GRGlInterface</code> internals for UWP.</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li><strong>Comprehensive API documentation</strong> — Added thousands of XML docs across the entire SkiaSharp API.</li>
+</ul>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/gentledepp">@gentledepp</a></td>
+<td>Added SkiaSharp support to the SVG library</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.54.1...v1.55.0">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.55.0">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/1.55.0">API Diff</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.55.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,268 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.88.4 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.88.4 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/2.88.4.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2884">Version 2.88.4</h1>
+
+<blockquote>
+<p><strong>.NET 8 preview, ARM64 macOS, and security updates</strong> · Released August 22, 2023 · <a href="https://www.nuget.org/packages/SkiaSharp/2.88.4">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.88.4">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>A substantial servicing release spanning nearly a year of work. Key additions include .NET 8 preview support, ARM64 macOS build machines, WASM multi-threading with SIMD, and Android <code>.aar</code> shipping in NuGet. Security updates cover zlib, libpng, and libexpat. Ten new community contributors helped fix disposal bugs, improve performance, and refine Uno Platform integration.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="new-features">New Features</h2>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>.NET 8 Preview support</strong> — Build infrastructure updated for .NET 8 Preview 4. ❤️ @jeromelaban (<a href="https://github.com/mono/SkiaSharp/pull/2457">#2457</a>)</li>
+<li><strong>ARM64 macOS build machines</strong> — Native builds now run on Apple Silicon (ARM64) macOS machines. (<a href="https://github.com/mono/SkiaSharp/pull/2468">#2468</a>)</li>
+<li><strong>WASM multi-threading and SIMD</strong> — Added multi-threaded and multi-threaded+SIMD WASM configurations. ❤️ @jeromelaban (<a href="https://github.com/mono/SkiaSharp/pull/2286">#2286</a>)</li>
+<li><strong>WASM Exception Handling and SIMD for .NET 8+</strong> — Enabled Wasm EH and SIMD in all configurations for .NET 8 and later. ❤️ @jeromelaban (<a href="https://github.com/mono/SkiaSharp/pull/2495">#2495</a>)</li>
+<li><strong>Blazor .NET 8 assets</strong> — New WASM assets included for Blazor on .NET 8. (<a href="https://github.com/mono/SkiaSharp/pull/2497">#2497</a>)</li>
+<li><strong>JSImport for WinUI on .NET 7</strong> — Moved from JS interop to modern <code>JSImport</code> for Uno WinUI WASM targets. ❤️ @jeromelaban (<a href="https://github.com/mono/SkiaSharp/pull/2428">#2428</a>)</li>
+<li><strong>Ship .aar with Android NuGet</strong> — Android Archive (<code>.aar</code>) now included in the NuGet for better Android tooling integration. ❤️ @dellis1972 (<a href="https://github.com/mono/SkiaSharp/pull/2465">#2465</a>)</li>
+<li><strong>iOS Hot Restart NativeReference</strong> — Added <code>NativeReference</code> metadata so iOS Hot Restart works correctly. (<a href="https://github.com/mono/SkiaSharp/pull/2553">#2553</a>)</li>
+<li><strong>iOS Simulator RID artifacts</strong> — The <code>iossimulator</code> RID now ships native assets. (<a href="https://github.com/mono/SkiaSharp/pull/2498">#2498</a>)</li>
+<li><strong>Windows App SDK update</strong> — Bumped to a newer Windows App SDK. (<a href="https://github.com/mono/SkiaSharp/pull/2276">#2276</a>)</li>
+</ul>
+<h3 id="engine">Engine</h3>
+<ul>
+<li><strong>SKColor hex parsing performance</strong> — Significantly improved hex string parsing performance for <code>SKColor</code>. ❤️ @jwikberg (<a href="https://github.com/mono/SkiaSharp/pull/2467">#2467</a>)</li>
+<li><strong>CodeQL security scanning</strong> — Enabled CodeQL analysis in CI for automated vulnerability detection. ❤️ @Redth (<a href="https://github.com/mono/SkiaSharp/pull/2303">#2303</a>)</li>
+<li><strong>CVE binary tool scanning</strong> — Added <code>cve-bin-tool</code> to CI for detecting known vulnerabilities in native binaries. (<a href="https://github.com/mono/SkiaSharp/pull/2490">#2490</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Update zlib to 1.2.13</strong> — Addresses known vulnerabilities in the compression library. (<a href="https://github.com/mono/SkiaSharp/pull/2484">#2484</a>)</li>
+<li><strong>Update libpng to v1.6.40</strong> — Addresses known vulnerabilities. (<a href="https://github.com/mono/SkiaSharp/pull/2510">#2510</a>)</li>
+<li><strong>Update libexpat to 2.5.0</strong> — Addresses known vulnerabilities. (<a href="https://github.com/mono/SkiaSharp/pull/2510">#2510</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Fix Tizen canvas size calculation</strong> — Corrected how canvas dimensions are computed on Tizen. ❤️ @myroot (<a href="https://github.com/mono/SkiaSharp/pull/2322">#2322</a>)</li>
+<li><strong>Fix Android ObjectDisposedException</strong> — Added additional checks to avoid <code>ObjectDisposedException</code> on Android views. ❤️ @FoggyFinder (<a href="https://github.com/mono/SkiaSharp/pull/2313">#2313</a>)</li>
+<li><strong>Fix SKCanvasView dispose before render</strong> — Prevents exceptions when the view is disposed before its first render. ❤️ @jjzhang12 (<a href="https://github.com/mono/SkiaSharp/pull/2472">#2472</a>)</li>
+<li><strong>Fix <code>ToRect</code> extension method</strong> — Corrected the <code>ToRect</code> extension to return proper values. ❤️ @niza93 (<a href="https://github.com/mono/SkiaSharp/pull/2392">#2392</a>)</li>
+<li><strong>Fix Uno opaque defaults on iOS/macOS</strong> — Set <code>SKSwapChainPanel</code> and <code>SKXamlCanvas</code> to non-opaque by default for consistency. ❤️ @roubachof (<a href="https://github.com/mono/SkiaSharp/pull/2398">#2398</a>, <a href="https://github.com/mono/SkiaSharp/pull/2400">#2400</a>, <a href="https://github.com/mono/SkiaSharp/pull/2401">#2401</a>)</li>
+<li><strong>Fix macOS opaque method</strong> — Used the correct method for setting <code>Opaque</code> on macOS. (<a href="https://github.com/mono/SkiaSharp/pull/2477">#2477</a>)</li>
+<li><strong>Fix bitmap SKAlphaType in WASM</strong> — Corrected alpha type when rendering bitmaps in <code>SKXamlCanvas</code> on WASM. ❤️ @roubachof (<a href="https://github.com/mono/SkiaSharp/pull/2443">#2443</a>)</li>
+<li><strong>Disambiguate SKGLView for Uno/MAUI</strong> — Resolved type conflicts between Uno and MAUI <code>SKGLView</code> targets. ❤️ @jeromelaban (<a href="https://github.com/mono/SkiaSharp/pull/2529">#2529</a>)</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🍎 Apple</td>
+<td>ARM64 macOS builds, iOS Hot Restart support, iOS Simulator RID, opaque fix</td>
+</tr>
+<tr>
+<td>🪟 Windows</td>
+<td>Updated Windows App SDK</td>
+</tr>
+<tr>
+<td>🤖 Android</td>
+<td><code>.aar</code> in NuGet, <code>ObjectDisposedException</code> fix, canvas dispose fix</td>
+</tr>
+<tr>
+<td>🌐 WebAssembly</td>
+<td>Multi-threading, SIMD, .NET 8 Blazor, JSImport for WinUI, alpha type fix</td>
+</tr>
+</tbody>
+</table>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/Redth">@Redth</a></td>
+<td>CodeQL security scanning</td>
+</tr>
+<tr>
+<td><a href="https://github.com/roubachof">@roubachof</a></td>
+<td>Uno opaque defaults and WASM alpha type fixes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dellis1972">@dellis1972</a></td>
+<td>Android <code>.aar</code> in NuGet</td>
+</tr>
+<tr>
+<td><a href="https://github.com/FoggyFinder">@FoggyFinder</a></td>
+<td>Android <code>ObjectDisposedException</code> guard</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jjzhang12">@jjzhang12</a></td>
+<td>SKCanvasView dispose-before-render fix</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jwikberg">@jwikberg</a></td>
+<td>SKColor hex parsing performance</td>
+</tr>
+<tr>
+<td><a href="https://github.com/niza93">@niza93</a></td>
+<td><code>ToRect</code> extension method fix</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JamieMagee">@JamieMagee</a></td>
+<td><code>$schema</code> for <code>cgmanifest.json</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/Lehonti">@Lehonti</a></td>
+<td>Code cleanup with block-scoped <code>using</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/myroot">@myroot</a></td>
+<td>Tizen canvas size fix</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jeromelaban">@jeromelaban</a></td>
+<td>WASM MT+SIMD, .NET 8, JSImport, SKGLView disambiguation</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v2.88.3...v2.88.4">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/2.88.4">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/2.88.4">API Diff</a></li>
+</ul>
+<hr>
+<h2 id="preview-96-august-22-2023">Preview 96 (August 22, 2023)</h2>
+<p>.NET SDK version tracking improvements.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.4-preview.95...v2.88.4-preview.96">Full Changelog</a></p>
+<hr>
+<h2 id="preview-95-august-22-2023">Preview 95 (August 22, 2023)</h2>
+<p>Updated libpng and libexpat, SKGLView disambiguation for Uno/MAUI, and iOS Hot Restart support.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.4-preview.82...v2.88.4-preview.95">Full Changelog</a></p>
+<hr>
+<h2 id="preview-82-june-26-2023">Preview 82 (June 26, 2023)</h2>
+<p>Blazor .NET 8 assets, <code>ToRect</code> fix, JSImport for WinUI, and iOS Simulator RID.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.4-preview.76...v2.88.4-preview.82">Full Changelog</a></p>
+<hr>
+<h2 id="preview-76-june-19-2023">Preview 76 (June 19, 2023)</h2>
+<p>ARM64 macOS builds, SKColor hex parsing performance, and WASM EH+SIMD for .NET 8.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.4-preview.70...v2.88.4-preview.76">Full Changelog</a></p>
+<hr>
+<h2 id="preview-70-june-16-2023">Preview 70 (June 16, 2023)</h2>
+<p>Initial preview with .NET 5 SDK removal, Windows App SDK update, WASM multi-threading, zlib 1.2.13, CodeQL scanning, and multiple Uno/Android/Tizen bug fixes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.3...v2.88.4-preview.70">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/2.88.4.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

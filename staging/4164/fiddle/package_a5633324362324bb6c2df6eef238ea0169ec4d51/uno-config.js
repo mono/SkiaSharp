@@ -1,0 +1,26 @@
+let config = {};
+config.uno_remote_managedpath = "_framework";
+config.uno_app_base = "/SkiaSharp/staging/4164/fiddle/package_a5633324362324bb6c2df6eef238ea0169ec4d51";
+config.dotnet_js_filename = "dotnet.nr7es9x21z.js";
+config.uno_dependencies = ["/SkiaSharp/staging/4164/fiddle/package_a5633324362324bb6c2df6eef238ea0169ec4d51/uno-monaco-helpers.js", "/SkiaSharp/staging/4164/fiddle/package_a5633324362324bb6c2df6eef238ea0169ec4d51/Uno.Runtime.Wasm.js", "/SkiaSharp/staging/4164/fiddle/package_a5633324362324bb6c2df6eef238ea0169ec4d51/setImmediate.js", "/SkiaSharp/staging/4164/fiddle/package_a5633324362324bb6c2df6eef238ea0169ec4d51/Uno.Wasm.js", "/SkiaSharp/staging/4164/fiddle/package_a5633324362324bb6c2df6eef238ea0169ec4d51/MonacoFocusGuard.js", "/SkiaSharp/staging/4164/fiddle/package_a5633324362324bb6c2df6eef238ea0169ec4d51/AppManifest.js"];
+config.uno_runtime_options = [];
+config.enable_pwa = false;
+config.offline_files = ['/', ];
+config.uno_shell_mode = "Browser";
+config.uno_debugging_enabled = false;
+config.uno_enable_tracing = false;
+config.uno_load_all_satellite_resources = false;
+config.uno_vfs_framework_assembly_load = false;
+config.uno_vfs_framework_assembly_load_cleanup = false;
+config.emcc_exported_runtime_methods = ['GL','IDBFS']
+config.environmentVariables = config.environmentVariables || {};
+config.environmentVariables["UNO_BOOTSTRAP_MONO_RUNTIME_MODE"] = "Interpreter";
+config.environmentVariables["UNO_BOOTSTRAP_MONO_PROFILED_AOT"] = "False";
+config.environmentVariables["UNO_BOOTSTRAP_LINKER_ENABLED"] = "False";
+config.environmentVariables["UNO_BOOTSTRAP_DEBUGGER_ENABLED"] = "False";
+config.environmentVariables["UNO_BOOTSTRAP_FETCH_RETRIES"] = "1";
+config.environmentVariables["UNO_BOOTSTRAP_MONO_RUNTIME_CONFIGURATION"] = "Release";
+config.environmentVariables["UNO_BOOTSTRAP_MONO_RUNTIME_FEATURES"] = "";
+config.environmentVariables["UNO_BOOTSTRAP_APP_BASE"] = "package_a5633324362324bb6c2df6eef238ea0169ec4d51";
+config.environmentVariables["UNO_BOOTSTRAP_WEBAPP_BASE_PATH"] = "/SkiaSharp/staging/4164/fiddle/";
+export { config };

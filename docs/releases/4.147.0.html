@@ -1,0 +1,426 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.147.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.147.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.147.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41470">Version 4.147.0</h1>
+<!--
+  RAW PR DATA — Do not remove this comment block.
+  AI uses this data to generate the polished release notes below.
+  Re-run the script to refresh this data from git history.
+
+  Generated: 2026-06-11T22:09:08Z by generate-release-notes.py
+  version:   4.147.0
+  status:    preview
+  superseded: 4.148.0 (preview only, never released as stable)
+  branch:    release/4.147.0-preview.3
+  diff:      release/3.119.4..release/4.147.0-preview.3
+  prs:       127
+
+  - docs: update release notes for 4.147.0 (unreleased) by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/4049 [community ✨] (1 commit, 1 day)
+  - Add automated API diff workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/4036 (1 commit, 1 day)
+  - [docs] Update API diff for v3.119.2 by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/4046 [community ✨] (1 commit, 1 day)
+  - Fix ANGLE WinAppSDK download failure on 1ES agents by @mattleibow in https://github.com/mono/SkiaSharp/pull/4014 (10 commits, 2 days)
+  - Add GitHub Actions workflow for API diff by @mattleibow in https://github.com/mono/SkiaSharp/pull/4038 (1 commit, 1 day)
+  - [api-docs] Fix false-positive extraction and add merge guard by @mattleibow in https://github.com/mono/SkiaSharp/pull/4030 (2 commits, 1 day)
+  - docs: update release notes for 4.147.0 (unreleased) by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/4029 [community ✨] (1 commit, 1 day)
+  - Update libjpeg-turbo to 3.1.4.1 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4012 (1 commit, 1 day)
+  - [WASM] Drop native builds for pre-.NET 8 Emscripten versions by @mattleibow in https://github.com/mono/SkiaSharp/pull/4022 (4 commits, 1 day)
+  - Add manifest generation to docs-tool.ps1 extract by @mattleibow in https://github.com/mono/SkiaSharp/pull/4025 (24 commits, 6 days)
+  - Fix font test failures in sync workflow by mounting /usr/share/fonts by @mattleibow in https://github.com/mono/SkiaSharp/pull/4023 (1 commit, 1 day)
+  - Move API docs workflow to docs repo and optimize skill architecture by @mattleibow in https://github.com/mono/SkiaSharp/pull/4024 (22 commits, 6 days)
+  - [Native/Alpine] Add retry and failure detection to apk.static download by @mattleibow in https://github.com/mono/SkiaSharp/pull/4013 (1 commit, 1 day)
+  - [CI] Use graceful skip for Skia Upstream Sync when nothing to sync by @mattleibow in https://github.com/mono/SkiaSharp/pull/4020 (1 commit, 1 day)
+  - Fix docs deploy race condition with retry loop by @mattleibow in https://github.com/mono/SkiaSharp/pull/4019 (1 commit, 1 day)
+  - Update cgmanifest.json to match actual DEPS pins by @mattleibow in https://github.com/mono/SkiaSharp/pull/3830 (1 commit, 1 day)
+  - Update freetype to 2.14.3 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3726 (1 commit, 1 day)
+  - [main] Update zlib to 1.3.2.1-motley by @mattleibow in https://github.com/mono/SkiaSharp/pull/3720 (2 commits, 2 days)
+  - Update Tizen SDK installer from 6.1 to 10.0 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3743 (1 commit, 1 day)
+  - Fix UnicodeEncodeError on Windows CI in repo-deps.py by @mattleibow in https://github.com/mono/SkiaSharp/pull/4006 (1 commit, 1 day)
+  - Add HBColor struct for proper hb_color_t representation by @mattleibow in https://github.com/mono/SkiaSharp/pull/4000 (2 commits, 1 day)
+  - Add missing API wrappers and fix naming convention violations by @mattleibow in https://github.com/mono/SkiaSharp/pull/4001 (2 commits, 1 day)
+  - Enable TreatWarningsAsErrors in binding/ and fix all warnings by @mattleibow in https://github.com/mono/SkiaSharp/pull/3752 (10 commits, 4 days)
+  - Blazor gallery redesign: API Atlas with tag cloud filtering by @mattleibow in https://github.com/mono/SkiaSharp/pull/3970 (17 commits, 3 days)
+  - Skip Skia sync workflow when upstream is already merged by @mattleibow in https://github.com/mono/SkiaSharp/pull/3971 (1 commit, 1 day)
+  - Update Uno Platform link and description n README.md by @sasakrsmanovic in https://github.com/mono/SkiaSharp/pull/3966 [community ✨] (1 commit, 1 day)
+  - [samples] Add Hero Image gallery sample by @mattleibow in https://github.com/mono/SkiaSharp/pull/3792 (1 commit, 1 day)
+  - Fix CI: samples, Docker, NanoServer, coverlet, and build chain by @mattleibow in https://github.com/mono/SkiaSharp/pull/3835 (9 commits, 6 days) (skia: mono/skia#232)
+  - Add automated API docs pipeline by @mattleibow in https://github.com/mono/SkiaSharp/pull/3918 (40 commits, 3 days)
+  - [samples] Reduce SkiaFiddle WASM application size by ~60% by @ebariche in https://github.com/mono/SkiaSharp/pull/3849 [community ✨] (11 commits, 2 days)
+  - Run stale staging sweep daily instead of weekly by @mattleibow in https://github.com/mono/SkiaSharp/pull/3911 (1 commit, 1 day)
+  - Add content-based build caching with ADO Cache@2 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3826 (141 commits, 8 days)
+  - Add automated Skia upstream sync workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/3825 (84 commits, 6 days)
+  - Add workflow to persist agentic workflow data to aw-data branch by @mattleibow in https://github.com/mono/SkiaSharp/pull/3907 (1 commit, 1 day)
+  - [docs] Release notes for 4.147.0 by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/3882 [community ✨] (3 commits, 2 days)
+  - Fix SkiaSharp references for Uno Platform's Gallery sample by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3867 [community ✨] (1 commit, 1 day)
+  - Keep raw PR data in release notes files as HTML comment by @mattleibow in https://github.com/mono/SkiaSharp/pull/3877 (1 commit, 1 day)
+  - Add SKStream.GetData() for zero-copy stream-to-data conversion by @mattleibow in https://github.com/mono/SkiaSharp/pull/3772 (9 commits, 3 days) (skia: mono/skia#200)
+  - Add animated WebP encoding support (SKWebpEncoder) by @mattleibow in https://github.com/mono/SkiaSharp/pull/3771 (10 commits, 4 days) (skia: mono/skia#199)
+  - Fix finalizer crash in SKPath when SKPathBuilder is collected first by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3796 [community ✨] (1 commit, 1 day)
+  - docs: update release notes for 4.147.0 by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/3840 [community ✨] (1 commit, 1 day)
+  - fix: skip release notes workflow when only docs/releases change by @mattleibow in https://github.com/mono/SkiaSharp/pull/3839 (1 commit, 1 day)
+  - docs: update release notes for 4.147.0 by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/3837 [community ✨] (1 commit, 1 day)
+  - fix: add recreate-ref to release notes workflow for branch reuse by @mattleibow in https://github.com/mono/SkiaSharp/pull/3836 (1 commit, 1 day)
+  - [samples] Bump Basic Uno sample to Uno.Sdk/6.6.0-dev.208 by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3821 [community ✨] (1 commit, 1 day)
+  - Disable PR artifact retrieval in get-build-type.ps1 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3827 (1 commit, 1 day)
+  - Fix update-docs workflow: add missing mdoc assembly search paths for Tizen and Gtk4 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3824 (6 commits, 1 day)
+  - fix: preserve branch name in release notes workflow to reuse PRs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3822 (1 commit, 1 day)
+  - [Gallery] Add 5 new interactive samples and redesign Blazor home page by @mattleibow in https://github.com/mono/SkiaSharp/pull/3757 (28 commits, 4 days)
+  - Fix Apple platform TFMs: use 26.0 for libraries, unversioned for apps by @mattleibow in https://github.com/mono/SkiaSharp/pull/3798 (3 commits, 1 day)
+  - Make release notes script fully git-based with cumulative rollup by @mattleibow in https://github.com/mono/SkiaSharp/pull/3815 (12 commits, 1 day)
+  - Add allowed-base-branches: [main] to release notes workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/3813 (1 commit, 1 day)
+  - Delete .github/workflows/skia-analyst.md by @mattleibow in https://github.com/mono/SkiaSharp/pull/3812 (4 commits, 1 day)
+  - Revert "Fix skia-analyst and sample-scout: no safe outputs generated (#3805)" by @mattleibow in https://github.com/mono/SkiaSharp/pull/3811 (1 commit, 1 day)
+  - Fix release notes script git fetch for CI shallow clones by @mattleibow in https://github.com/mono/SkiaSharp/pull/3808 (1 commit, 1 day)
+  - Fix skia-analyst and sample-scout: no safe outputs generated by @mattleibow in https://github.com/mono/SkiaSharp/pull/3805 (1 commit, 1 day)
+  - Simplify sample-scout to read GM files from local submodule by @mattleibow in https://github.com/mono/SkiaSharp/pull/3802 (1 commit, 1 day)
+  - Add skia-analyst and sample-scout skills with daily/weekly workflows by @mattleibow in https://github.com/mono/SkiaSharp/pull/3755 (31 commits, 3 days)
+  - Improve docs landing page layout and hero section by @mattleibow in https://github.com/mono/SkiaSharp/pull/3794 (2 commits, 1 day)
+  - Automate website release notes with branch-diffing script by @mattleibow in https://github.com/mono/SkiaSharp/pull/3787 (51 commits, 1 day)
+  - Dev/skiafiddle ux improvements by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3790 [community ✨] (17 commits, 1 day)
+  - [samples] Fix Skottie package downgrade NU1605 in Uno gallery by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3785 [community ✨] (4 commits, 1 day)
+  - [release-notes] Reuse single PR and add effort metrics to workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/3782 (5 commits, 1 day)
+  - Bump HarfBuzzSharp to 8.3.1.6 after release by @mattleibow in https://github.com/mono/SkiaSharp/pull/3780 (1 commit, 1 day)
+  - Update SKIASharp version to 4.147.0 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3774 (1 commit, 1 day)
+  - Delete samples/Gallery/Uno/nuget.config by @mattleibow in https://github.com/mono/SkiaSharp/pull/3765 (1 commit, 1 day)
+  - Bump skia to milestone 147 by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3702 [community ✨] (59 commits, 9 days) (skia: mono/skia#184)
+  - [samples] Add SkiaFiddle Uno Platform WebAssembly sample by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3762 [community ✨] (5 commits, 2 days)
+  - Add website release notes with AI-powered generation pipeline by @mattleibow in https://github.com/mono/SkiaSharp/pull/3763 (38 commits, 2 days)
+  - Update the icon for the new v4 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3764 (2 commits, 1 day)
+  - Add FillPath and TextToPath gallery samples by @mattleibow in https://github.com/mono/SkiaSharp/pull/3761 (1 commit, 1 day)
+  - Add download button and fix WASM text rendering in gallery by @mattleibow in https://github.com/mono/SkiaSharp/pull/3760 (6 commits, 1 day)
+  - [samples] Add Uno Platform WebAssembly gallery by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3758 [community ✨] (1 commit, 1 day)
+  - Add gallery sample guidance to api-add-review skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/3756 (1 commit, 1 day)
+  - Expand API design docs and rename add-api skill to api-add-review by @mattleibow in https://github.com/mono/SkiaSharp/pull/3749 (2 commits, 1 day)
+  - Add SKSamplingOptions support to SKSurface.Draw and SKCanvas.DrawSurface by @Copilot in https://github.com/mono/SkiaSharp/pull/3491 [community ✨] (6 commits, 3 days)
+  - Fix review-skia-update skill: submodule fetch, stale paths, and robustness by @mattleibow in https://github.com/mono/SkiaSharp/pull/3753 (4 commits, 1 day)
+  - Add color font palette support and improve variable font robustness by @mattleibow in https://github.com/mono/SkiaSharp/pull/3742 (43 commits, 4 days) (skia: mono/skia#197)
+  - Fix x86 .NET Framework threading test OOM failures (#3608) by @mattleibow in https://github.com/mono/SkiaSharp/pull/3674 (1 commit, 1 day)
+  - Add variable font support to SkiaSharp and HarfBuzzSharp by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3703 [community ✨] (17 commits, 4 days) (skia: mono/skia#185)
+  - Upgrade SkiaSharp major version from 3.x to 4.x by @mattleibow in https://github.com/mono/SkiaSharp/pull/3640 (9 commits, 5 days)
+  - Fix YAML syntax error in build-site workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/3750 (1 commit, 1 day)
+  - Replace release-notes-audit with skia-feature-scout skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/3746 (16 commits, 2 days)
+  - Add staging URL to docs deploy commit message by @mattleibow in https://github.com/mono/SkiaSharp/pull/3748 (1 commit, 1 day)
+  - Fix debian/13 Docker build for non-loong64/riscv64 architectures by @mattleibow in https://github.com/mono/SkiaSharp/pull/3747 (1 commit, 1 day)
+  - Update devcontainers: split into managed and native configs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3745 (1 commit, 1 day)
+  - Bump externals/skia to include sk_fontmgr_legacy_create_typeface by @mattleibow in https://github.com/mono/SkiaSharp/pull/3744 (1 commit, 1 day)
+  - Fix #3693: move default-typeface resolution to the managed layer by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3730 [community ✨] (9 commits, 2 days)
+  - Add --milestone parameter: AI extracts, orchestrator validates by @mattleibow in https://github.com/mono/SkiaSharp/pull/3731 (1 commit, 1 day)
+  - [samples] Rewrite Uno Platform sample as multi-page app by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3666 [community ✨] (3 commits, 3 days)
+  - Add Suggested Repro Platform to auto-triage workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/3729 (1 commit, 1 day)
+  - [AI] Improve native-dependency-update skill with post-mortem fixes by @mattleibow in https://github.com/mono/SkiaSharp/pull/3727 (11 commits, 1 day)
+  - [CI] Improve Android CI disk space and emulator startup by @mattleibow in https://github.com/mono/SkiaSharp/pull/3676 (1 commit, 1 day)
+  - Update libpng to 1.6.58 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3718 (1 commit, 1 day)
+  - Update libexpat to 2.7.5 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3717 (1 commit, 1 day)
+  - Bump SkiaSharpGenerator to CppAst 0.21.4 and make it work on Linux by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3714 [community ✨] (4 commits, 2 days) (skia: mono/skia#186)
+  - [CI] Free disk space on hosted Linux agents by @mattleibow in https://github.com/mono/SkiaSharp/pull/3712 (11 commits, 1 day)
+  - Update SKIASHARP_VERSION to 3.133.0 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3713 (1 commit, 1 day)
+  - [auto-triage] Upload triage reports (JSON/MD/HTML) to agent artifact by @mattleibow in https://github.com/mono/SkiaSharp/pull/3711 (5 commits, 1 day)
+  - [issue-triage] Add auto-triage agentic workflow with gh-aw by @mattleibow in https://github.com/mono/SkiaSharp/pull/3710 (13 commits, 1 day)
+  - Add gh-aw agent config and actions lock by @mattleibow in https://github.com/mono/SkiaSharp/pull/3709 (13 commits, 1 day)
+  - Clean up issue-triage skill: semantic enum ordering, cost labels, schema fixes by @mattleibow in https://github.com/mono/SkiaSharp/pull/3708 (2 commits, 1 day)
+  - Use flat /tmp paths in issue-triage skill for gh-aw sandbox compatibility by @mattleibow in https://github.com/mono/SkiaSharp/pull/3707 (1 commit, 1 day)
+  - Fix auto-triage: set min-integrity=none for public issue access by @mattleibow in https://github.com/mono/SkiaSharp/pull/3706 (3 commits, 1 day)
+  - [issue-triage] Rewrite skill in Python + add auto-triage agentic workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/3704 (16 commits, 2 days)
+  - Move skills from .claude/ to .agents/ by @mattleibow in https://github.com/mono/SkiaSharp/pull/3697 (1 commit, 1 day)
+  - Revert "Add daily-digest agentic workflow (#3694)" by @mattleibow in https://github.com/mono/SkiaSharp/pull/3696 (1 commit, 1 day)
+  - Add daily-digest agentic workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/3694 (1 commit, 1 day)
+  - Move AI agent config to shared location for Claude Code and GitHub Copilot by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3692 [community ✨] (1 commit, 1 day)
+  - [build] Split Tizen native CI into per-architecture jobs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3672 (3 commits, 1 day)
+  - Add release-notes-audit skill for Skia API gap analysis by @mattleibow in https://github.com/mono/SkiaSharp/pull/3675 (3 commits, 1 day)
+  - Add weekly sweep to clean stale PR staging directories by @mattleibow in https://github.com/mono/SkiaSharp/pull/3671 (1 commit, 1 day)
+  - Add Linux Bionic native assets support by @4Darmygeometry in https://github.com/mono/SkiaSharp/pull/3217 [community ✨] (71 commits, 15 days)
+  - Bump Skia to milestone 133 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3660 (13 commits, 3 days)
+  - Improve update-skia merge conflict guidance by @mattleibow in https://github.com/mono/SkiaSharp/pull/3662 (3 commits, 2 days)
+  - Fix docs deploy race condition by serializing Go Live deployments by @mattleibow in https://github.com/mono/SkiaSharp/pull/3670 (1 commit, 1 day)
+  - Redesign docs homepage: hero, code showcase, gallery, and resources by @mattleibow in https://github.com/mono/SkiaSharp/pull/3668 (51 commits, 1 day)
+  - [Gallery] Refine Image Decoder metadata overlay by @mattleibow in https://github.com/mono/SkiaSharp/pull/3669 (5 commits, 1 day)
+  - Add submodule init and DEPS sync to review orchestrator by @mattleibow in https://github.com/mono/SkiaSharp/pull/3667 (1 commit, 1 day)
+  - Fix review-skia-update milestone detection by @mattleibow in https://github.com/mono/SkiaSharp/pull/3665 (1 commit, 1 day)
+  - Improve the update-skia skill from m119→m133 lessons by @mattleibow in https://github.com/mono/SkiaSharp/pull/3658 (3 commits, 1 day)
+  - Fix cgmanifest.json version drift and overhaul security-audit skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/3656 (12 commits, 1 day)
+  - [Android] Fix SKGLView not rendering after tab switch in MAUI TabBar by @SimonvBez in https://github.com/mono/SkiaSharp/pull/3076 [community ✨] (2 commits, 2 days)
+  - [build] Use PolySharp for C# 13 support on legacy TFMs by @4Darmygeometry in https://github.com/mono/SkiaSharp/pull/3642 [community ✨] (14 commits, 4 days)
+  - [tizen] Add x64 and arm64 native build support by @mattleibow in https://github.com/mono/SkiaSharp/pull/3620 (3 commits, 2 days) (skia: mono/skia#175)
+  - Update build-site workflow to remove path filters by @mattleibow in https://github.com/mono/SkiaSharp/pull/3653 (2 commits, 1 day)
+  - Bump SkiaSharp to Skia milestone 132 by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3560 [community ✨] (31 commits, 11 days) (skia: mono/skia#171)
+-->
+
+<blockquote>
+<p><strong>Preview only</strong> · Superseded by <a href="4.148.0-unreleased.html">4.148.0</a> · Never released as stable — these changes rolled up into 4.148.0 · <a href="https://www.nuget.org/packages/SkiaSharp/4.147.0-preview">NuGet</a></p>
+</blockquote>
+<!-- Generated: 2026-06-11T22:15:00Z by claude-sonnet-4.6 -->
+<h2 id="highlights">Highlights</h2>
+<p>All of the work in this preview rolled up into <a href="4.148.0-unreleased.html">4.148.0</a>. The 127 PRs here represent a major milestone for SkiaSharp: the library's <strong>first major version bump</strong> (3.x → 4.x), three consecutive Skia engine updates (milestones 132, 133, and 147), and a wave of long-requested features including <strong>variable font support</strong>, <strong>animated WebP encoding</strong>, <strong>color font palettes</strong>, <strong>Linux Bionic</strong> native assets, and expanded <strong>Tizen</strong> architecture coverage. A large community contingent led by <a href="https://github.com/ramezgerges">@ramezgerges</a>, <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a>, <a href="https://github.com/SimonvBez">@SimonvBez</a>, and <a href="https://github.com/ebariche">@ebariche</a> contributed core features, platform support, and a fully reworked Uno Platform gallery.</p>
+<h2 id="-breaking-changes">⚠️ Breaking Changes</h2>
+<ul>
+<li><strong>Major version bump: 3.x → 4.x</strong> — SkiaSharp's major version was incremented for the first time. Package references must be updated from <code>3.x</code> to <code>4.x</code>. (<a href="https://github.com/mono/SkiaSharp/pull/3640">#3640</a>)</li>
+</ul>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia milestone 132</strong> — Updated the upstream Skia engine to milestone 132. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3560">#3560</a>)</li>
+<li><strong>Skia milestone 133</strong> — Updated the upstream Skia engine to milestone 133. (<a href="https://github.com/mono/SkiaSharp/pull/3660">#3660</a>)</li>
+<li><strong>Skia milestone 147</strong> — Updated the upstream Skia engine to the final milestone for this preview series. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3702">#3702</a>)</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="text--fonts">Text &amp; Fonts</h3>
+<ul>
+<li><strong>Variable font support</strong> — SkiaSharp and HarfBuzzSharp now expose variable font axis APIs, enabling full control over weight, width, and custom axes at runtime. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3703">#3703</a>)</li>
+<li><strong>Color font palette support</strong> — Added APIs for querying and applying color palettes from color fonts (e.g. emoji fonts), with improved variable font robustness. (<a href="https://github.com/mono/SkiaSharp/pull/3742">#3742</a>)</li>
+<li><strong><code>HBColor</code> struct</strong> — Adds a proper managed <code>HBColor</code> struct to represent <code>hb_color_t</code> values, replacing raw integer handling. (<a href="https://github.com/mono/SkiaSharp/pull/4000">#4000</a>)</li>
+<li><strong>Default-typeface resolution moved to managed layer</strong> — Fixes typeface resolution edge cases by handling the default typeface fallback in C# rather than the native layer. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3730">#3730</a>)</li>
+</ul>
+<h3 id="images--encoding">Images &amp; Encoding</h3>
+<ul>
+<li><strong>Animated WebP encoding (<code>SKWebpEncoder</code>)</strong> — New <code>SKWebpEncoder</code> class supporting multi-frame animated WebP output, wrapping Skia's native animated WebP support. (<a href="https://github.com/mono/SkiaSharp/pull/3771">#3771</a>)</li>
+<li><strong><code>SKStream.GetData()</code> zero-copy conversion</strong> — Adds <code>SKStream.GetData()</code> for converting a stream to <code>SKData</code> without copying when the underlying data is already contiguous. (<a href="https://github.com/mono/SkiaSharp/pull/3772">#3772</a>)</li>
+</ul>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong><code>SKSamplingOptions</code> on <code>SKSurface.Draw</code> and <code>SKCanvas.DrawSurface</code></strong> — Overloads accepting <code>SKSamplingOptions</code> bring these methods to parity with the rest of the drawing API. ❤️ <a href="https://github.com/Copilot">@Copilot</a> (<a href="https://github.com/mono/SkiaSharp/pull/3491">#3491</a>)</li>
+<li><strong>Missing API wrappers and naming fixes</strong> — Adds several previously missing C API wrapper methods and corrects naming convention violations. (<a href="https://github.com/mono/SkiaSharp/pull/4001">#4001</a>)</li>
+</ul>
+<h3 id="platform--build">Platform &amp; Build</h3>
+<ul>
+<li><strong>Linux Bionic native assets</strong> — Adds native library support for Android Bionic-based Linux environments, broadening deployment options. ❤️ <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> (<a href="https://github.com/mono/SkiaSharp/pull/3217">#3217</a>)</li>
+<li><strong>Tizen x64 and arm64 native builds</strong> — New Tizen architectures are now built and packaged, with CI split into per-architecture jobs. (<a href="https://github.com/mono/SkiaSharp/pull/3620">#3620</a>)</li>
+<li><strong>C# 13 support on legacy TFMs via PolySharp</strong> — Legacy target frameworks (.NET Framework, netstandard) now support C# 13 language features through PolySharp polyfills. ❤️ <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> (<a href="https://github.com/mono/SkiaSharp/pull/3642">#3642</a>)</li>
+<li><strong>WASM: dropped pre-.NET 8 Emscripten builds</strong> — Native WASM builds for Emscripten versions targeting runtimes older than .NET 8 are no longer produced, reducing build matrix size. (<a href="https://github.com/mono/SkiaSharp/pull/4022">#4022</a>)</li>
+<li><strong><code>TreatWarningsAsErrors</code> in binding/</strong> — All compiler warnings in the binding layer are now treated as errors, and the backlog of existing warnings has been resolved. (<a href="https://github.com/mono/SkiaSharp/pull/3752">#3752</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Fixed finalizer crash in <code>SKPath</code> when <code>SKPathBuilder</code> is collected first</strong> — A race condition between the finalizers of <code>SKPath</code> and <code>SKPathBuilder</code> could crash the process; the disposal order is now safe. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3796">#3796</a>)</li>
+<li><strong>Fixed <code>SKGLView</code> not rendering after tab switch in MAUI <code>TabBar</code> on Android</strong> — The GL view surface was not being recreated after the tab was hidden and re-shown. ❤️ <a href="https://github.com/SimonvBez">@SimonvBez</a> (<a href="https://github.com/mono/SkiaSharp/pull/3076">#3076</a>)</li>
+<li><strong>Fixed Apple platform TFMs</strong> — Library projects now use versioned TFMs (e.g. <code>ios26.0</code>) while app projects use the unversioned forms, resolving linker and deployment issues. (<a href="https://github.com/mono/SkiaSharp/pull/3798">#3798</a>)</li>
+</ul>
+<h2 id="dependency-updates">Dependency Updates</h2>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>New Version</th>
+<th>PR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>freetype</td>
+<td>2.14.3</td>
+<td><a href="https://github.com/mono/SkiaSharp/pull/3726">#3726</a></td>
+</tr>
+<tr>
+<td>libpng</td>
+<td>1.6.58</td>
+<td><a href="https://github.com/mono/SkiaSharp/pull/3718">#3718</a></td>
+</tr>
+<tr>
+<td>libexpat</td>
+<td>2.7.5</td>
+<td><a href="https://github.com/mono/SkiaSharp/pull/3717">#3717</a></td>
+</tr>
+<tr>
+<td>zlib</td>
+<td>1.3.2.1-motley</td>
+<td><a href="https://github.com/mono/SkiaSharp/pull/3720">#3720</a></td>
+</tr>
+<tr>
+<td>libjpeg-turbo</td>
+<td>3.1.4.1</td>
+<td><a href="https://github.com/mono/SkiaSharp/pull/4012">#4012</a></td>
+</tr>
+<tr>
+<td>HarfBuzzSharp</td>
+<td>8.3.1.6</td>
+<td><a href="https://github.com/mono/SkiaSharp/pull/3780">#3780</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="gallery--documentation">Gallery &amp; Documentation</h2>
+<ul>
+<li><strong>Uno Platform WebAssembly gallery</strong> — New full gallery sample running on Uno Platform / WebAssembly, with a multi-page app structure and SkiaFiddle integration. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3758">#3758</a>, <a href="https://github.com/mono/SkiaSharp/pull/3762">#3762</a>, <a href="https://github.com/mono/SkiaSharp/pull/3666">#3666</a>)</li>
+<li><strong>SkiaFiddle WASM size reduced ~60%</strong> — Significant bundle-size reduction for the SkiaFiddle WebAssembly application. ❤️ <a href="https://github.com/ebariche">@ebariche</a> (<a href="https://github.com/mono/SkiaSharp/pull/3849">#3849</a>)</li>
+<li><strong>SkiaFiddle UX improvements</strong> — Usability and visual improvements to the SkiaFiddle interactive editor. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3790">#3790</a>)</li>
+<li><strong>Blazor gallery redesign with API Atlas</strong> — The Blazor gallery was redesigned with an API Atlas view featuring tag-cloud filtering, plus 5 new interactive samples (FillPath, TextToPath, Hero Image, Image Decoder, and more). (<a href="https://github.com/mono/SkiaSharp/pull/3970">#3970</a>, <a href="https://github.com/mono/SkiaSharp/pull/3757">#3757</a>, <a href="https://github.com/mono/SkiaSharp/pull/3761">#3761</a>, <a href="https://github.com/mono/SkiaSharp/pull/3792">#3792</a>)</li>
+<li><strong>Docs homepage redesign</strong> — The documentation landing page was rebuilt with a hero section, live code showcase, gallery preview, and resources grid. (<a href="https://github.com/mono/SkiaSharp/pull/3668">#3668</a>)</li>
+</ul>
+<p>Plus extensive CI and automation improvements: content-based build caching, automated Skia upstream sync, AI-powered API docs pipeline, issue-triage workflows, release notes automation, and an agentic workflow data persistence system.</p>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🐧 Linux</td>
+<td>Bionic native assets; CI disk-space and Docker fixes</td>
+</tr>
+<tr>
+<td>🌐 WebAssembly</td>
+<td>SkiaFiddle bundle −60 %; dropped pre-.NET 8 Emscripten targets</td>
+</tr>
+<tr>
+<td>🎨 Tizen</td>
+<td>x64 and arm64 native builds</td>
+</tr>
+<tr>
+<td>🍎 Apple</td>
+<td>TFM versioning fixes for libraries vs. apps</td>
+</tr>
+<tr>
+<td>🤖 Android</td>
+<td>Fixed <code>SKGLView</code> blank after MAUI <code>TabBar</code> tab switch</td>
+</tr>
+</tbody>
+</table>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Variable font support; Skia milestone bumps (132, 147); Uno Platform gallery; SKPath finalizer fix; default-typeface resolution; SkiaFiddle UX</td>
+</tr>
+<tr>
+<td><a href="https://github.com/4Darmygeometry">@4Darmygeometry</a></td>
+<td>Linux Bionic native assets; C# 13 PolySharp support on legacy TFMs</td>
+</tr>
+<tr>
+<td><a href="https://github.com/SimonvBez">@SimonvBez</a></td>
+<td>Fixed <code>SKGLView</code> not rendering after tab switch in MAUI <code>TabBar</code> on Android</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ebariche">@ebariche</a></td>
+<td>Reduced SkiaFiddle WASM bundle size by ~60%</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Copilot">@Copilot</a></td>
+<td>Added <code>SKSamplingOptions</code> overloads to <code>SKSurface.Draw</code> and <code>SKCanvas.DrawSurface</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/sasakrsmanovic">@sasakrsmanovic</a></td>
+<td>Updated Uno Platform link and description in README</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/4.147.0-preview">NuGet Package</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.147.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

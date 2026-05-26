@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Finger Painting in SkiaSharp | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Finger Painting in SkiaSharp | SkiaSharp ">
+      
+      <meta name="description" content="This article explains how to use your fingers to paint on the SkiaSharp canvas in a .NET MAUI application, and demonstrates this with sample code.">
+      <link rel="icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../TOC.html">
+      <meta name="docfx:tocrel" content="../TOC.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/paths/finger-paint.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="finger-painting-in-skiasharp">Finger Painting in SkiaSharp</h1>
+
+<p><em>Use your fingers to paint on the canvas.</em></p>
+<p>An <code>SKPath</code> object can be continually updated and displayed. This feature allows a path to be used for interactive drawing, such as in a finger-painting program.</p>
+<p><img src="finger-paint-images/fingerpaintsample.png" alt="An exercise in finger painting"></p>
+<p>The <code>SKCanvasView</code> has built-in touch support that allows tracking individual fingers on the screen. By setting <code>EnableTouchEvents=&quot;True&quot;</code> and handling the <code>Touch</code> event, you can easily implement multi-touch drawing scenarios.</p>
+<p>The <strong>Finger Paint</strong> page in <strong>SkiaSharpFormsDemos</strong> is a simplified implementation of finger painting. It does not allow selecting color or stroke width, it has no way to clear the canvas, and of course you can't save your artwork.</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Paths/FingerPaintPage.xaml"><strong>FingerPaintPage.xaml</strong></a> file defines the <code>SKCanvasView</code> with touch events enabled:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Paths.FingerPaintPage&quot;
+             Title=&quot;Finger Paint&quot;&gt;
+
+    &lt;Grid BackgroundColor=&quot;White&quot;&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           EnableTouchEvents=&quot;True&quot;
+                           Touch=&quot;OnTouch&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The <code>EnableTouchEvents</code> property enables touch tracking, and the <code>Touch</code> event is raised for each touch action.</p>
+<p>The  <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Paths/FingerPaintPage.xaml.cs"><strong>FingerPaintPage.xaml.cs</strong></a> code-behind file defines two collections for storing the <code>SKPath</code> objects, as well as an <code>SKPaint</code> object for rendering these paths:</p>
+<pre><code class="lang-csharp">public partial class FingerPaintPage : ContentPage
+{
+    Dictionary&lt;long, SKPath&gt; inProgressPaths = new Dictionary&lt;long, SKPath&gt;();
+    List&lt;SKPath&gt; completedPaths = new List&lt;SKPath&gt;();
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Blue,
+        StrokeWidth = 10,
+        StrokeCap = SKStrokeCap.Round,
+        StrokeJoin = SKStrokeJoin.Round
+    };
+
+    public FingerPaintPage()
+    {
+        InitializeComponent();
+    }
+    ...
+}
+</code></pre>
+<p>As the name suggests, the <code>inProgressPaths</code> dictionary stores the paths that are currently being drawn by one or more fingers. The dictionary key is the touch ID that accompanies the touch events. The <code>completedPaths</code> field is a collection of paths that were finished when a finger that was drawing the path lifted from the screen.</p>
+<p>The <code>Touch</code> handler manages these two collections. When a finger first touches the screen, a new <code>SKPath</code> is added to <code>inProgressPaths</code>. As that finger moves, additional points are added to the path. When the finger is released, the path is transferred to the <code>completedPaths</code> collection. You can paint with multiple fingers simultaneously. After each change to one of the paths or collections, the <code>SKCanvasView</code> is invalidated:</p>
+<pre><code class="lang-csharp">public partial class FingerPaintPage : ContentPage
+{
+    ...
+    void OnTouch(object? sender, SKTouchEventArgs e)
+    {
+        switch (e.ActionType)
+        {
+            case SKTouchAction.Pressed:
+                if (!inProgressPaths.ContainsKey(e.Id))
+                {
+                    SKPath path = new SKPath();
+                    path.MoveTo(e.Location);
+                    inProgressPaths.Add(e.Id, path);
+                    canvasView.InvalidateSurface();
+                }
+                break;
+
+            case SKTouchAction.Moved:
+                if (inProgressPaths.ContainsKey(e.Id))
+                {
+                    SKPath path = inProgressPaths[e.Id];
+                    path.LineTo(e.Location);
+                    canvasView.InvalidateSurface();
+                }
+                break;
+
+            case SKTouchAction.Released:
+                if (inProgressPaths.ContainsKey(e.Id))
+                {
+                    completedPaths.Add(inProgressPaths[e.Id]);
+                    inProgressPaths.Remove(e.Id);
+                    canvasView.InvalidateSurface();
+                }
+                break;
+
+            case SKTouchAction.Cancelled:
+                if (inProgressPaths.ContainsKey(e.Id))
+                {
+                    inProgressPaths.Remove(e.Id);
+                    canvasView.InvalidateSurface();
+                }
+                break;
+        }
+        e.Handled = true;
+    }
+    ...
+}
+</code></pre>
+<p>The <code>e.Location</code> property provides the touch location already in pixel coordinates, so no conversion is necessary. Setting <code>e.Handled = true</code> ensures that the view continues to receive touch events for the same finger.</p>
+<p>The <code>PaintSurface</code> handler then simply renders both collections of paths. The earlier completed paths appear underneath the paths in progress:</p>
+<pre><code class="lang-csharp">public partial class FingerPaintPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
+    {
+        SKCanvas canvas = args.Surface.Canvas;
+        canvas.Clear();
+
+        foreach (SKPath path in completedPaths)
+        {
+            canvas.DrawPath(path, paint);
+        }
+
+        foreach (SKPath path in inProgressPaths.Values)
+        {
+            canvas.DrawPath(path, paint);
+        }
+    }
+    ...
+}
+</code></pre>
+<p>Your finger paintings are only limited by your talent:</p>
+<p><a href="finger-paint-images/fingerpaint-large.png#lightbox" title="Triple screenshot of the Finger Paint page"><img src="finger-paint-images/fingerpaint-small.png" alt="Triple screenshot of the Finger Paint page"></a></p>
+<p>You've now seen how to draw lines and to define curves using parametric equations. A later section on <a href="../curves/index.html"><strong>SkiaSharp Curves and Paths</strong></a> covers the various types of curves that <code>SKPath</code> supports. But a useful prerequisite is an exploration of <a href="../transforms/index.html"><strong>SkiaSharp Transforms</strong></a>.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/paths/finger-paint.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

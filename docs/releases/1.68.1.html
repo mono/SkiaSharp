@@ -1,0 +1,234 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.68.1 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.68.1 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.68.1.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1681">Version 1.68.1</h1>
+
+<blockquote>
+<p><strong>Memory reliability and .NET Core 3.0 support</strong> · Released November 22, 2019 · <a href="https://www.nuget.org/packages/SkiaSharp/1.68.1">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.68.1">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>This release focuses on memory reliability, fixing several issues with managed-native interop and
+static instance lifetimes. It also brings performance improvements via Clang on Win32, new
+<code>Span&lt;T&gt;</code> overloads across SkiaSharp and HarfBuzzSharp, and a significant expansion of the
+HarfBuzz binding surface.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="new-features">New Features</h2>
+<h3 id="memory--interop">Memory &amp; Interop</h3>
+<ul>
+<li><strong>Managed-native delegate interop overhaul</strong> — Removed intermediate dictionary for delegate
+interop, improving performance and reliability.</li>
+<li><strong>Clang on Win32</strong> — Switched native builds to Clang for improved performance on Windows.</li>
+</ul>
+<h3 id="new-apis">New APIs</h3>
+<ul>
+<li><strong><code>SKDrawable</code> bindings</strong> — Full bindings for the Skia drawable type. ❤️ @charlenni (<a href="https://github.com/mono/SkiaSharp/pull/940">#940</a>)</li>
+<li><strong><code>SKColorSpace</code> APIs</strong> — Added colorspace creation and management APIs.</li>
+<li><strong><code>SKRunBuffer</code> / <code>SKHorizontalRunBuffer</code> / <code>SKPositionedRunBuffer</code></strong> — New run buffer types for <code>SKTextBlob</code> and <code>SKTextBlobBuilder</code>.</li>
+<li><strong><code>SKShader</code> from <code>SKPicture</code></strong> — Create shaders directly from recorded pictures. ❤️ @alexandrvslv</li>
+<li><strong>Additional <code>SKRegion</code> members</strong> — Expanded region operations. ❤️ @vexx32x</li>
+<li><strong>Additional <code>SKPaint</code> and <code>SKMatrix</code> members</strong> — More paint and matrix helpers. ❤️ @MarchingCube</li>
+<li><strong><code>Span&lt;T&gt;</code> overloads</strong> — Added <code>Span&lt;T&gt;</code> alternatives alongside existing <code>byte[]</code> and <code>IntPtr</code> overloads.</li>
+</ul>
+<h3 id="packages--platform-support">Packages &amp; Platform Support</h3>
+<ul>
+<li><strong><code>SkiaSharp.NativeAssets.Linux.NoDependencies</code></strong> — New NuGet package for Linux environments without <code>libfontconfig</code>.</li>
+<li><strong>View packages split</strong> — <code>SkiaSharp.Views</code> split into dedicated packages: <code>SkiaSharp.Views.WPF</code>, <code>SkiaSharp.Views.WindowsForms</code>, <code>SkiaSharp.Views.Gtk3</code>, <code>SkiaSharp.Views.Gtk2</code>, and <code>SkiaSharp.Views.Desktop.Common</code>.</li>
+<li><strong>GTK# 3 support</strong> — New <code>SKDrawingArea</code> widget for GTK# 3 applications.</li>
+</ul>
+<h3 id="xamarinforms">Xamarin.Forms</h3>
+<ul>
+<li><strong>WPF support</strong> — Initial WPF backend via <code>SkiaSharp.Views.Forms.WPF</code>.</li>
+<li><strong>Updated to Xamarin.Forms v4.x</strong> — Compatibility with the latest Forms release.</li>
+<li><strong>Mouse wheel support</strong> — <code>SKCanvasView</code> and <code>SKGLView</code> now handle mouse wheel events. ❤️ @charlenni</li>
+</ul>
+<h3 id="harfbuzz">HarfBuzz</h3>
+<ul>
+<li><strong>Updated to HarfBuzz 2.6.1</strong> — Major version bump with new APIs. ❤️ @Gillibald</li>
+<li><strong>Expanded HarfBuzz bindings</strong> — Many new APIs for a more complete binding surface. ❤️ @Gillibald</li>
+<li><strong><code>Span&lt;T&gt;</code> overloads for HarfBuzzSharp</strong> — Consistent with SkiaSharp's new span support. ❤️ @Gillibald</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li>Fixed several issues with static instances of native objects being accidentally destroyed.</li>
+<li>Fixed several invalid memory operations in managed-native interop.</li>
+<li>Fixed <code>SKDocument</code> underlying stream being destroyed prematurely.</li>
+<li>Fixed typeface managed stream not being released correctly.</li>
+<li>Fixed incorrect native library version in Full Framework Xamarin.Mac.</li>
+<li>Fixed Android emulator rendering incorrect colors. ❤️ @inforithmics</li>
+<li>Fixed <code>System.Drawing.Bitmap</code> to <code>SKPixmap</code> conversion. ❤️ @Odirb</li>
+<li>Improved <code>SKSwapChainPanel</code> stability on UWP.</li>
+</ul>
+<h2 id="maintenance">Maintenance</h2>
+<ul>
+<li>P/Invoke layer is now generated along with structs and enums.</li>
+<li>Documentation moved to the <a href="https://github.com/mono/SkiaSharp-API-docs">SkiaSharp-API-docs</a> repository.</li>
+<li>Build improvements. ❤️ @danien</li>
+<li>Documentation improvements. ❤️ @HankiDesign</li>
+</ul>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/charlenni">@charlenni</a></td>
+<td><code>SKDrawable</code> bindings, mouse wheel support in Forms</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Gillibald">@Gillibald</a></td>
+<td>HarfBuzz 2.6.1 upgrade, expanded APIs, <code>Span&lt;T&gt;</code> overloads</td>
+</tr>
+<tr>
+<td><a href="https://github.com/vexx32x">@vexx32x</a></td>
+<td>Additional <code>SKRegion</code> members</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MarchingCube">@MarchingCube</a></td>
+<td>Additional <code>SKPaint</code> and <code>SKMatrix</code> members</td>
+</tr>
+<tr>
+<td><a href="https://github.com/alexandrvslv">@alexandrvslv</a></td>
+<td><code>SKShader</code> from <code>SKPicture</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/inforithmics">@inforithmics</a></td>
+<td>Android emulator color fix</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Odirb">@Odirb</a></td>
+<td><code>System.Drawing.Bitmap</code> conversion fix</td>
+</tr>
+<tr>
+<td><a href="https://github.com/danien">@danien</a></td>
+<td>Build improvements</td>
+</tr>
+<tr>
+<td><a href="https://github.com/HankiDesign">@HankiDesign</a></td>
+<td>Documentation improvements</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-builds">Preview Builds</h2>
+<p>Six preview builds (147, 153, 165, 169, 170, 172) were published between September and November 2019 leading up to this stable release.</p>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.68.0...v1.68.1">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.68.1">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/milestone/19">Milestone</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.68.1.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

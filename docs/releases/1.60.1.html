@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.60.1 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.60.1 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.60.1.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1601">Version 1.60.1</h1>
+
+<blockquote>
+<p><strong>Tizen support and build system overhaul</strong> · Released May 22, 2018 · <a href="https://www.nuget.org/packages/SkiaSharp/1.60.1">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.60.1">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>This release introduces preview support for Tizen OS across SkiaSharp, Views, and Xamarin.Forms. It also includes a major build system overhaul that moves almost all native code into the mono/skia repository and eliminates the managed tooling requirement for Windows and Linux native builds.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>Dropped PCL support</strong> — Portable Class Library targets have been removed. All packages now use .NET Standard 1.3.</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="tizen-os-preview">Tizen OS (Preview)</h3>
+<ul>
+<li><strong>SkiaSharp for Tizen</strong> — Added Tizen OS support for the core SkiaSharp library.</li>
+<li><strong>SKCanvasView for Tizen</strong> — Added <code>SKCanvasView</code> for CPU-backed drawing on Tizen.</li>
+<li><strong>SKGLSurfaceView for Tizen</strong> — Added <code>SKGLSurfaceView</code> for GPU-backed drawing on Tizen.</li>
+<li><strong>Xamarin.Forms for Tizen</strong> — Added Tizen platform support in SkiaSharp.Views.Forms.</li>
+</ul>
+<h3 id="api-additions">API Additions</h3>
+<ul>
+<li><strong>SKAutoCoInitialize</strong> — New helper type to assist in initializing COM on supported platforms.</li>
+<li><strong>GRGlInterface.CreateNativeEvasInterface()</strong> — Creates a GL interface from an Evas GL object for Tizen GPU rendering.</li>
+<li><strong>ISKCanvasViewController</strong> — Now public, allowing additional platforms to be added more easily.</li>
+</ul>
+<h3 id="build-system">Build System</h3>
+<ul>
+<li><strong>Build system overhaul</strong> — Major restructuring of the build pipeline.</li>
+<li><strong>Simplified native builds</strong> — Building libSkiaSharp for Windows and Linux no longer requires any managed tooling.</li>
+<li><strong>Native code consolidation</strong> — Almost all native code has been moved into the <a href="https://github.com/mono/skia">mono/skia</a> repository.</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li>Fixed a bug when copying bitmaps.</li>
+<li>Fixed a bug when opening <code>SKDocument</code>.</li>
+<li>Fixed a bug when disposing objects.</li>
+<li>Fixed a bug in Android's <code>GLTextureView</code> where the stack trace was lost.</li>
+<li>Fixed a bug in Android's <code>GLTextureView</code> where pausing the app would cause a crash.</li>
+<li>Fixed a bug in iOS where color space information was lost.</li>
+<li>Fixed a bug in GTK#'s <code>SKWidget</code> where it would try to swizzle too many pixels.</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📱 Tizen</td>
+<td>New preview support for SkiaSharp, Views, and Forms</td>
+</tr>
+<tr>
+<td>🤖 Android</td>
+<td>Fixed <code>GLTextureView</code> stack trace loss and pause crash</td>
+</tr>
+<tr>
+<td>🍎 iOS</td>
+<td>Fixed color space information loss</td>
+</tr>
+<tr>
+<td>🐧 Linux</td>
+<td>Native build no longer requires managed tooling</td>
+</tr>
+<tr>
+<td>🪟 Windows</td>
+<td>Native build no longer requires managed tooling</td>
+</tr>
+<tr>
+<td>🖥️ GTK#</td>
+<td>Fixed pixel swizzle bug in <code>SKWidget</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.60.0...v1.60.1">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.60.1">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/milestone/26">Milestone</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.60.1.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

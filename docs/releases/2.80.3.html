@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.80.3 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.80.3 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/2.80.3.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2803">Version 2.80.3</h1>
+
+<blockquote>
+<p><strong>Metal, runtime effects, WinUI, and .NET 5 support</strong> · Released July 12, 2021 · <a href="https://www.nuget.org/packages/SkiaSharp/2.80.3">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.3">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>A feature-packed release bringing Metal rendering APIs to Apple platforms, the new <code>SKRuntimeEffect</code> API for custom GPU shaders, WinUI 3 desktop support, macOS ARM64 (Apple Silicon) native builds, .NET 5.0 support, and .NET Interactive integration. This release also includes Exif SubIFD reading, <code>SKPicture</code> serialization, <code>GRContextOptions</code>, and improved musl system detection. Five community contributors helped shape this release.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="new-features">New Features</h2>
+<h3 id="gpu--rendering">GPU &amp; Rendering</h3>
+<ul>
+<li><strong>Metal API support</strong> — Full Metal rendering backend for Apple platforms (iOS, macOS), bringing hardware-accelerated GPU rendering via Metal. (<a href="https://github.com/mono/SkiaSharp/pull/1394">#1394</a>, <a href="https://github.com/mono/SkiaSharp/pull/1598">#1598</a>, <a href="https://github.com/mono/SkiaSharp/pull/1615">#1615</a>)</li>
+<li><strong><code>SKRuntimeEffect</code> API</strong> — New API for custom GPU shader effects using SkSL (Skia Shading Language). (<a href="https://github.com/mono/SkiaSharp/pull/1604">#1604</a>)</li>
+<li><strong><code>GRContextOptions</code></strong> — Exposed <code>GRContextOptions</code> for fine-grained control over GPU context creation. (<a href="https://github.com/mono/SkiaSharp/pull/1529">#1529</a>)</li>
+<li><strong><code>GRContext.IsAbandoned</code></strong> — Exposed the <code>IsAbandoned</code> property in the C# API. (<a href="https://github.com/mono/SkiaSharp/pull/1659">#1659</a>)</li>
+<li><strong>GL surface creation resilience</strong> — Better handling of GL surface creation failures. ❤️ @gmurray81 (<a href="https://github.com/mono/SkiaSharp/pull/1642">#1642</a>)</li>
+</ul>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong><code>SKPicture</code> serialization</strong> — New bindings for serializing and deserializing <code>SKPicture</code> objects. (<a href="https://github.com/mono/SkiaSharp/pull/1514">#1514</a>)</li>
+<li><strong>Exif SubIFD support</strong> — Added support for reading the Exif SubIFD from image metadata. (<a href="https://github.com/mono/SkiaSharp/pull/1518">#1518</a>)</li>
+<li><strong>ANGLE <code>GRGlInterface</code> outside UWP</strong> — Allow creating ANGLE-based <code>GRGlInterface</code> from non-UWP environments. ❤️ @Mikolaytis (<a href="https://github.com/mono/SkiaSharp/pull/1519">#1519</a>)</li>
+<li><strong>Stream copy optimization</strong> — Eliminated unnecessary array allocations when copying streams. (<a href="https://github.com/mono/SkiaSharp/pull/1510">#1510</a>)</li>
+</ul>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>macOS ARM64 (Apple Silicon)</strong> — Native ARM64 build target for macOS. (<a href="https://github.com/mono/SkiaSharp/pull/1627">#1627</a>)</li>
+<li><strong>.NET 5.0 support</strong> — Updated to target .NET 5.0. (<a href="https://github.com/mono/SkiaSharp/pull/1697">#1697</a>)</li>
+<li><strong>WinUI 3 Desktop support</strong> — New views and rendering support for WinUI 3 desktop applications. (<a href="https://github.com/mono/SkiaSharp/pull/1696">#1696</a>, <a href="https://github.com/mono/SkiaSharp/pull/1741">#1741</a>)</li>
+<li><strong>Uno Platform <code>SKXamlCanvas</code></strong> — Support for <code>SKXamlCanvas</code> on Uno Platform SkiaSharp backends v2.0. (<a href="https://github.com/mono/SkiaSharp/pull/1704">#1704</a>)</li>
+<li><strong>.NET Interactive support</strong> — SkiaSharp images can now be displayed directly in .NET Interactive notebooks. (<a href="https://github.com/mono/SkiaSharp/pull/1710">#1710</a>)</li>
+<li><strong>Improved musl detection</strong> — Properly detect and handle musl-based Linux systems. (<a href="https://github.com/mono/SkiaSharp/pull/1657">#1657</a>)</li>
+<li><strong>Multiple emscripten WASM builds</strong> — Includes all emscripten versions for WASM compatibility. (<a href="https://github.com/mono/SkiaSharp/pull/1590">#1590</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong><code>SKMatrix.IsInvertible</code> crash</strong> — Fixed a crash when calling <code>IsInvertible</code> on certain matrices. (<a href="https://github.com/mono/SkiaSharp/pull/1527">#1527</a>)</li>
+<li><strong>Image pixel reading</strong> — Fixed incorrect image pixel reading. (<a href="https://github.com/mono/SkiaSharp/pull/1636">#1636</a>)</li>
+<li><strong>iOS font loading</strong> — Fixed font loading issues on iOS. (<a href="https://github.com/mono/SkiaSharp/pull/1539">#1539</a>)</li>
+<li><strong>Display link defensiveness</strong> — More defensive handling in display link callbacks. (<a href="https://github.com/mono/SkiaSharp/pull/1620">#1620</a>)</li>
+<li><strong>Buffer swap after resize</strong> — Fixed buffer swap issues after surface resize. (<a href="https://github.com/mono/SkiaSharp/pull/1668">#1668</a>)</li>
+<li><strong>WPF <code>SKElement.OnRender</code></strong> — <code>SKElement.OnRender</code> now does nothing if there is no <code>PresentationSource</code>, preventing crashes. ❤️ @HarlanHugh (<a href="https://github.com/mono/SkiaSharp/pull/1606">#1606</a>)</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🍎 Apple</td>
+<td>Metal rendering, macOS ARM64 (Apple Silicon), iOS font loading fix</td>
+</tr>
+<tr>
+<td>🪟 Windows</td>
+<td>WinUI 3 Desktop support</td>
+</tr>
+<tr>
+<td>🐧 Linux</td>
+<td>Improved musl system detection</td>
+</tr>
+<tr>
+<td>🌐 WebAssembly</td>
+<td>Multiple emscripten builds, Uno <code>SKXamlCanvas</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/gmurray81">@gmurray81</a></td>
+<td>Improved GL surface creation failure handling</td>
+</tr>
+<tr>
+<td><a href="https://github.com/HarlanHugh">@HarlanHugh</a></td>
+<td>Fixed WPF <code>SKElement.OnRender</code> crash without <code>PresentationSource</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/Mikolaytis">@Mikolaytis</a></td>
+<td>Enabled ANGLE <code>GRGlInterface</code> creation outside UWP</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jeromelaban">@jeromelaban</a></td>
+<td>Uno Platform documentation updates</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v2.80.2...v2.80.3">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/2.80.3">NuGet Package</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/2.80.3">API Diff</a></li>
+</ul>
+<hr>
+<h2 id="preview-93-july-12-2021">Preview 93 (July 12, 2021)</h2>
+<p>Added <code>SKXamlCanvas</code> support for Uno Platform SkiaSharp backends v2.0.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.3-preview.90...v2.80.3-preview.93">Full Changelog</a></p>
+<hr>
+<h2 id="preview-90-may-30-2021">Preview 90 (May 30, 2021)</h2>
+<p>Major preview with Metal APIs, <code>SKRuntimeEffect</code>, macOS ARM64, .NET 5.0, WinUI Desktop, .NET Interactive, and musl detection improvements.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.3-preview.40...v2.80.3-preview.90">Full Changelog</a></p>
+<hr>
+<h2 id="preview-40-february-6-2021">Preview 40 (February 6, 2021)</h2>
+<p>Added Metal APIs, <code>GRContextOptions</code>, WPF rendering fix, and build improvements.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.3-preview.24...v2.80.3-preview.40">Full Changelog</a></p>
+<hr>
+<h2 id="preview-24-january-27-2021">Preview 24 (January 27, 2021)</h2>
+<p>WASM emscripten builds and build system updates.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.3-preview.18...v2.80.3-preview.24">Full Changelog</a></p>
+<hr>
+<h2 id="preview-18-november-10-2020">Preview 18 (November 10, 2020)</h2>
+<p>Initial preview with <code>SKPicture</code> serialization, Exif SubIFD support, ANGLE improvements, stream optimization, and <code>SKMatrix.IsInvertible</code> fix.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.2...v2.80.3-preview.18">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/2.80.3.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

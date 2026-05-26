@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.53.2 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.53.2 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.53.2.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1532">Version 1.53.2</h1>
+
+<blockquote>
+<p><strong>GPU rendering and SVG canvas support (pre-release)</strong> · Preview only · <a href="https://www.nuget.org/packages/SkiaSharp/1.53.2-gpu2">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.53.2-svg1">GitHub Release</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>A pre-release introducing two major capabilities: hardware-accelerated GPU rendering via OpenGL and SVG output via <code>SKSvgCanvas</code>. This release includes all changes from v1.53.1.2 and adds the ability to assemble a <code>GRGlInterface</code> from any GL library. Both GPU and SVG features were in beta and subject to API changes.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="new-features">New Features</h2>
+<h3 id="gpu--rendering">GPU &amp; Rendering</h3>
+<ul>
+<li><p><strong>OpenGL support</strong> — Hardware-accelerated rendering via OpenGL on all platforms except UWP (which was planned for DirectX/ANGLE support). (<a href="https://github.com/mono/SkiaSharp/issues/138">#138</a>)</p>
+</li>
+<li><p><strong><code>GRGlInterface.AssembleGlInterface</code> / <code>AssembleGlesInterface</code></strong> — Assemble a GL interface from any GL library by providing a function pointer lookup callback:</p>
+<pre><code class="lang-csharp">var openGLES = ObjCRuntime.Dlfcn.dlopen(
+    &quot;/System/Library/Frameworks/OpenGLES.framework/OpenGLES&quot;, 0);
+var glInterface = GRGlInterface.AssembleGlesInterface((ctx, name) =&gt; {
+    return ObjCRuntime.Dlfcn.dlsym(openGLES, name);
+});
+</code></pre>
+</li>
+</ul>
+<h3 id="svg">SVG</h3>
+<ul>
+<li><p><strong><code>SKSvgCanvas</code></strong> — Create a canvas that writes SVG output to an XML stream. Partial SVG feature coverage — not all Skia drawing operations are supported in SVG output. (<a href="https://github.com/mono/SkiaSharp/issues/107">#107</a>)</p>
+<pre><code class="lang-csharp">using (var writer = new SKXmlStreamWriter(skStream))
+using (var canvas = SKSvgCanvas.Create(bounds, writer))
+{
+    // draw as normal — canvas is just an SKCanvas
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v1.53.1.2...v1.53.2">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.53.2-gpu2">NuGet (GPU Beta 2)</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/1.53.2-svg1">NuGet (SVG Beta 1)</a></li>
+<li><a href="https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/1.53.2">API Diff</a></li>
+</ul>
+<hr>
+<h2 id="gpu-beta-2-august-24-2016">GPU Beta 2 (August 24, 2016)</h2>
+<p>Added <code>GRGlInterface.AssembleGlInterface</code> and <code>AssembleGlesInterface</code> for assembling a GL interface from any GL library.</p>
+<p><a href="https://www.nuget.org/packages/SkiaSharp/1.53.2-gpu2">NuGet</a></p>
+<hr>
+<h2 id="svg-beta-1-august-25-2016">SVG Beta 1 (August 25, 2016)</h2>
+<p>Added <code>SKSvgCanvas</code> for creating a canvas that writes SVG output to an XML stream.</p>
+<p><a href="https://www.nuget.org/packages/SkiaSharp/1.53.2-svg1">NuGet</a></p>
+<hr>
+<h2 id="gpu-beta-1-august-19-2016">GPU Beta 1 (August 19, 2016)</h2>
+<p>Initial OpenGL support across all platforms (except UWP).</p>
+<p><a href="https://www.nuget.org/packages/SkiaSharp/1.53.2-gpu1">NuGet</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/1.53.2.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · e3bca18
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
