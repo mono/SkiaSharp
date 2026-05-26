@@ -19,6 +19,11 @@ ARG BUILD_ARCH=arm64
 # CI must pass IMAGE_ARCH=amd64 when BUILD_ARCH=x64.
 # All other architectures: IMAGE_ARCH defaults to BUILD_ARCH.
 ARG IMAGE_ARCH=${BUILD_ARCH}
+
+# The x86 image lacks libc++ headers (only GCC 6/7 which don't support C++20).
+# Pull libc++ headers from the x64 image — they're architecture-independent.
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-amd64 AS libcxx-headers
+
 FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-${IMAGE_ARCH}
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -60,7 +65,62 @@ RUN case "${BUILD_ARCH}" in \
     && echo "export SYSROOT_PATH=${ROOTFS_DIR}/usr" >> /etc/skia-env \
     && echo "export SYSROOT_ROOT=${ROOTFS_DIR}" >> /etc/skia-env \
     && GCC_DIR=$(find ${ROOTFS_DIR}/usr/lib/gcc -maxdepth 3 -name "crtbeginS.o" -exec dirname {} \; | head -1) \
-    && echo "export GCC_LIB_DIR=${GCC_DIR}" >> /etc/skia-env
+    && echo "export GCC_LIB_DIR=${GCC_DIR}" >> /etc/skia-env \
+    # Create c++/current symlink for sysroots that use libstdc++ headers (no libc++/v1).
+    # The build.cake include paths reference c++/current; this ensures they resolve.
+    && if [ ! -d "${ROOTFS_DIR}/usr/include/c++/v1" ]; then \
+         CXX_VER=$(ls -1 ${ROOTFS_DIR}/usr/include/c++/ | grep -E '^[0-9]+$' | sort -n | tail -1) \
+         && ln -sf "${CXX_VER}" "${ROOTFS_DIR}/usr/include/c++/current" \
+         && echo "Created c++/current -> ${CXX_VER} (no libc++ headers in sysroot)" ; \
+       fi
+
+# For sysroots without libc++ (e.g., x86), copy the architecture-independent
+# libc++ headers from the x64 image and build libc++/libc++abi from LLVM source.
+# The x86 sysroot has GCC 6/7 headers (no C++20 support) and no libc++.a.
+ARG BUILD_ARCH
+COPY --from=libcxx-headers /crossrootfs/x64/usr/include/c++/v1 /tmp/libcxx-headers/
+RUN . /etc/skia-env \
+    && if [ ! -d "${SYSROOT_ROOT}/usr/include/c++/v1" ]; then \
+         cp -a /tmp/libcxx-headers "${SYSROOT_ROOT}/usr/include/c++/v1" \
+         && echo "Installed libc++ headers into ${SYSROOT_ROOT}/usr/include/c++/v1" ; \
+       fi \
+    && rm -rf /tmp/libcxx-headers
+
+# Build libc++ and libc++abi from source for arches that lack them (x86).
+# Must use -fPIC (CMAKE_POSITION_INDEPENDENT_CODE) since the .a is linked into .so.
+ARG LLVM_VERSION=20.1.8
+RUN . /etc/skia-env \
+    && if [ ! -f "${SYSROOT_ROOT}/usr/lib/libc++.a" ]; then \
+         echo "Building libc++ ${LLVM_VERSION} for ${TOOLCHAIN_ARCH_TARGET}..." \
+         && git clone --depth=1 --branch llvmorg-${LLVM_VERSION} \
+              --filter=blob:none --sparse \
+              https://github.com/llvm/llvm-project.git /tmp/llvm \
+         && cd /tmp/llvm \
+         && git sparse-checkout set runtimes libcxx libcxxabi libc cmake llvm/cmake llvm/utils/llvm-lit \
+         && cmake -G Ninja -S runtimes -B /tmp/llvm-build \
+              -DLLVM_COMMON_CMAKE_UTILS=/tmp/llvm/cmake \
+              -DCMAKE_C_COMPILER=clang \
+              -DCMAKE_CXX_COMPILER=clang++ \
+              -DCMAKE_C_COMPILER_TARGET=${TOOLCHAIN_ARCH_TARGET} \
+              -DCMAKE_CXX_COMPILER_TARGET=${TOOLCHAIN_ARCH_TARGET} \
+              -DCMAKE_SYSROOT=${SYSROOT_ROOT} \
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+              -DCMAKE_C_COMPILER_WORKS=ON \
+              -DCMAKE_CXX_COMPILER_WORKS=ON \
+              -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" \
+              -DLIBCXX_ENABLE_SHARED=OFF \
+              -DLIBCXXABI_ENABLE_SHARED=OFF \
+              -DLIBCXX_CXX_ABI=libcxxabi \
+              -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
+              -DLIBCXX_INCLUDE_BENCHMARKS=OFF \
+              -DLIBCXX_INCLUDE_TESTS=OFF \
+              -DLIBCXXABI_INCLUDE_TESTS=OFF \
+         && ninja -C /tmp/llvm-build cxx cxxabi \
+         && cp /tmp/llvm-build/lib/libc++.a ${SYSROOT_ROOT}/usr/lib/ \
+         && cp /tmp/llvm-build/lib/libc++abi.a ${SYSROOT_ROOT}/usr/lib/ \
+         && rm -rf /tmp/llvm /tmp/llvm-build \
+         && echo "Installed libc++.a and libc++abi.a for ${TOOLCHAIN_ARCH_TARGET}" ; \
+       fi
 
 # Install the .NET SDK (needed for Cake build scripts).
 ARG DOTNET_SDK_VERSION=10.0.108
@@ -71,6 +131,9 @@ RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-inst
     && dotnet --info
 
 ENV CC=clang CXX=clang++
+
+# zstd is needed to extract newer .deb packages (Ubuntu 22.04+ uses zstd compression).
+RUN tdnf install -y zstd && tdnf clean all
 
 # Install fontconfig headers into the sysroot.
 # Fontconfig .deb packages are downloaded and SHA-256 verified.
