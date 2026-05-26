@@ -328,7 +328,7 @@ namespace SkiaSharp
 		public SKColor[] Pixels {
 			get {
 				var info = Info;
-				var pixels = new SKColor[info.Width * info.Height];
+				var pixels = new SKColor[checked(info.Width * info.Height)];
 				fixed (SKColor* p = pixels) {
 					SkiaApi.sk_bitmap_get_pixel_colors (Handle, (uint*)p);
 				}
@@ -339,8 +339,9 @@ namespace SkiaSharp
 					throw new ArgumentNullException (nameof (value));
 
 				var info = Info;
-				if (info.Width * info.Height != value.Length)
-					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {info.Width * info.Height}.", nameof (value));
+				var expected = (long)info.Width * info.Height;
+				if (expected != value.Length)
+					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {expected}.", nameof (value));
 
 				fixed (SKColor* v = value) {
 					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);

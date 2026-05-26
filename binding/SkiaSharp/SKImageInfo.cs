@@ -109,11 +109,11 @@ namespace SkiaSharp
 
 		public readonly int BitsPerPixel => BytesPerPixel * 8;
 
-		public readonly int BytesSize => Width * Height * BytesPerPixel;
+		public readonly int BytesSize => checked(Width * Height * BytesPerPixel);
 
 		public readonly long BytesSize64 => (long)Width * (long)Height * (long)BytesPerPixel;
 
-		public readonly int RowBytes => Width * BytesPerPixel;
+		public readonly int RowBytes => checked(Width * BytesPerPixel);
 
 		public readonly long RowBytes64 => (long)Width * (long)BytesPerPixel;
 
@@ -128,7 +128,7 @@ namespace SkiaSharp
 		internal readonly int GetPixelBytesOffset (int x, int y) =>
 			ColorType == SKColorType.Unknown
 				? 0
-				: y * RowBytes + (x << ColorType.GetBitShiftPerPixel ());
+				: checked(y * RowBytes + (x << ColorType.GetBitShiftPerPixel ()));
 
 		public readonly SKImageInfo WithSize (SKSizeI size) =>
 			WithSize (size.Width, size.Height);
