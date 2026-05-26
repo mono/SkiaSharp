@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Remove staging directory from docs-live
         env:
@@ -36,7 +36,7 @@ jobs:
           fi
 
           # Switch to docs-live branch; exit cleanly if it doesn't exist yet
-          if ! git fetch origin docs-live:docs-live 2>/dev/null; then
+          if ! git fetch --depth=1 origin docs-live:docs-live 2>/dev/null; then
             echo "docs-live branch does not exist, nothing to clean up"
             exit 0
           fi
@@ -51,14 +51,24 @@ jobs:
             git config --local user.name "GitHub Action"
             git add -A
             if ! git diff --cached --quiet; then
-              git commit -m "Remove staging docs for PR #$PR_NUMBER"
-              # Retry push with rebase in case another workflow pushed in the meantime
+              # Amend the single commit to prevent history accumulation
+              git commit --amend -m "docs-live"
+              # Force-push with lease: fails atomically if another workflow pushed
               for attempt in 1 2 3 4 5; do
-                if git push origin docs-live; then
+                if git push --force-with-lease origin docs-live; then
                   break
                 fi
-                echo "Push failed (attempt $attempt), pulling with rebase and retrying..."
-                git pull --rebase origin docs-live
+                echo "Push failed (attempt $attempt), re-fetching and retrying..."
+                git fetch --depth=1 origin docs-live
+                git reset --hard origin/docs-live
+                if [ -d "staging/$PR_NUMBER" ]; then
+                  rm -rf "staging/$PR_NUMBER"
+                  git add -A
+                  git commit --amend -m "docs-live"
+                else
+                  echo "Staging directory already removed by another workflow"
+                  break
+                fi
                 if [ $attempt -eq 5 ]; then
                   echo "Failed to push after 5 attempts"
                   exit 1
