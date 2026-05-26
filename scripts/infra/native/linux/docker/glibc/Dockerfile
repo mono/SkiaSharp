@@ -11,7 +11,11 @@
 # Usage:
 #   docker build --build-arg BUILD_ARCH=arm64 .
 #
-# Supported architectures: arm, arm64, x86, x64, riscv64, loongarch64
+# NOTE: x86 uses a separate directory (glibc-x86/) with its own Dockerfile
+# because the .NET team doesn't ship libc++ for x86.
+#
+# Supported architectures: arm, arm64, x64, riscv64, loongarch64
+# (x86 uses glibc-x86/Dockerfile instead)
 
 ARG BUILD_ARCH=arm64
 
@@ -19,10 +23,6 @@ ARG BUILD_ARCH=arm64
 # CI must pass IMAGE_ARCH=amd64 when BUILD_ARCH=x64.
 # All other architectures: IMAGE_ARCH defaults to BUILD_ARCH.
 ARG IMAGE_ARCH=${BUILD_ARCH}
-
-# The x86 image lacks libc++ headers (only GCC 6/7 which don't support C++20).
-# Pull libc++ headers from the x64 image — they're architecture-independent.
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-amd64 AS libcxx-headers
 
 FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-${IMAGE_ARCH}
 
@@ -41,10 +41,6 @@ RUN case "${BUILD_ARCH}" in \
                    TOOLCHAIN_ARCH_SHORT=arm64; \
                    TOOLCHAIN_ARCH_TARGET=aarch64-linux-gnu; \
                    ROOTFS_DIR=/crossrootfs/arm64 ;; \
-      x86)         TOOLCHAIN_ARCH=i386-linux-gnu; \
-                   TOOLCHAIN_ARCH_SHORT=i386; \
-                   TOOLCHAIN_ARCH_TARGET=i686-linux-gnu; \
-                   ROOTFS_DIR=/crossrootfs/x86 ;; \
       x64)         TOOLCHAIN_ARCH=x86_64-linux-gnu; \
                    TOOLCHAIN_ARCH_SHORT=amd64; \
                    TOOLCHAIN_ARCH_TARGET=x86_64-linux-gnu; \
@@ -57,6 +53,7 @@ RUN case "${BUILD_ARCH}" in \
                    TOOLCHAIN_ARCH_SHORT=loong64; \
                    TOOLCHAIN_ARCH_TARGET=loongarch64-linux-gnu; \
                    ROOTFS_DIR=/crossrootfs/loongarch64 ;; \
+      x86)         echo "FATAL: x86 must use glibc-x86/Dockerfile (.NET doesn't ship libc++ for x86)" && exit 1 ;; \
       *) echo "FATAL: Unsupported BUILD_ARCH=${BUILD_ARCH}" && exit 1 ;; \
     esac \
     && echo "export TOOLCHAIN_ARCH=${TOOLCHAIN_ARCH}" > /etc/skia-env \
@@ -66,60 +63,11 @@ RUN case "${BUILD_ARCH}" in \
     && echo "export SYSROOT_ROOT=${ROOTFS_DIR}" >> /etc/skia-env \
     && GCC_DIR=$(find ${ROOTFS_DIR}/usr/lib/gcc -maxdepth 3 -name "crtbeginS.o" -exec dirname {} \; | head -1) \
     && echo "export GCC_LIB_DIR=${GCC_DIR}" >> /etc/skia-env \
-    # Create c++/current symlink for sysroots that use libstdc++ headers (no libc++/v1).
-    # The build.cake include paths reference c++/current; this ensures they resolve.
+    # Verify libc++ headers exist — deterministic build requirement.
     && if [ ! -d "${ROOTFS_DIR}/usr/include/c++/v1" ]; then \
-         CXX_VER=$(ls -1 ${ROOTFS_DIR}/usr/include/c++/ | grep -E '^[0-9]+$' | sort -n | tail -1) \
-         && ln -sf "${CXX_VER}" "${ROOTFS_DIR}/usr/include/c++/current" \
-         && echo "Created c++/current -> ${CXX_VER} (no libc++ headers in sysroot)" ; \
-       fi
-
-# For sysroots without libc++ (e.g., x86), copy the architecture-independent
-# libc++ headers from the x64 image and build libc++/libc++abi from LLVM source.
-# The x86 sysroot has GCC 6/7 headers (no C++20 support) and no libc++.a.
-ARG BUILD_ARCH
-COPY --from=libcxx-headers /crossrootfs/x64/usr/include/c++/v1 /tmp/libcxx-headers/
-RUN . /etc/skia-env \
-    && if [ ! -d "${SYSROOT_ROOT}/usr/include/c++/v1" ]; then \
-         cp -a /tmp/libcxx-headers "${SYSROOT_ROOT}/usr/include/c++/v1" \
-         && echo "Installed libc++ headers into ${SYSROOT_ROOT}/usr/include/c++/v1" ; \
-       fi \
-    && rm -rf /tmp/libcxx-headers
-
-# Build libc++ and libc++abi from source for arches that lack them (x86).
-# Must use -fPIC (CMAKE_POSITION_INDEPENDENT_CODE) since the .a is linked into .so.
-ARG LLVM_VERSION=20.1.8
-RUN . /etc/skia-env \
-    && if [ ! -f "${SYSROOT_ROOT}/usr/lib/libc++.a" ]; then \
-         echo "Building libc++ ${LLVM_VERSION} for ${TOOLCHAIN_ARCH_TARGET}..." \
-         && git clone --depth=1 --branch llvmorg-${LLVM_VERSION} \
-              --filter=blob:none --sparse \
-              https://github.com/llvm/llvm-project.git /tmp/llvm \
-         && cd /tmp/llvm \
-         && git sparse-checkout set runtimes libcxx libcxxabi libc cmake llvm/cmake llvm/utils/llvm-lit \
-         && cmake -G Ninja -S runtimes -B /tmp/llvm-build \
-              -DLLVM_COMMON_CMAKE_UTILS=/tmp/llvm/cmake \
-              -DCMAKE_C_COMPILER=clang \
-              -DCMAKE_CXX_COMPILER=clang++ \
-              -DCMAKE_C_COMPILER_TARGET=${TOOLCHAIN_ARCH_TARGET} \
-              -DCMAKE_CXX_COMPILER_TARGET=${TOOLCHAIN_ARCH_TARGET} \
-              -DCMAKE_SYSROOT=${SYSROOT_ROOT} \
-              -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-              -DCMAKE_C_COMPILER_WORKS=ON \
-              -DCMAKE_CXX_COMPILER_WORKS=ON \
-              -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" \
-              -DLIBCXX_ENABLE_SHARED=OFF \
-              -DLIBCXXABI_ENABLE_SHARED=OFF \
-              -DLIBCXX_CXX_ABI=libcxxabi \
-              -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
-              -DLIBCXX_INCLUDE_BENCHMARKS=OFF \
-              -DLIBCXX_INCLUDE_TESTS=OFF \
-              -DLIBCXXABI_INCLUDE_TESTS=OFF \
-         && ninja -C /tmp/llvm-build cxx cxxabi \
-         && cp /tmp/llvm-build/lib/libc++.a ${SYSROOT_ROOT}/usr/lib/ \
-         && cp /tmp/llvm-build/lib/libc++abi.a ${SYSROOT_ROOT}/usr/lib/ \
-         && rm -rf /tmp/llvm /tmp/llvm-build \
-         && echo "Installed libc++.a and libc++abi.a for ${TOOLCHAIN_ARCH_TARGET}" ; \
+         echo "FATAL: libc++ headers not found at ${ROOTFS_DIR}/usr/include/c++/v1" ; \
+         echo "       The .NET cross-image is expected to provide libc++." ; \
+         exit 1 ; \
        fi
 
 # Install the .NET SDK (needed for Cake build scripts).
@@ -150,11 +98,6 @@ RUN . /etc/skia-env \
                    FC_DEV_PKG=libfontconfig1-dev; \
                    FC_DEV_SHA256=93fc9ec2f69a87cbbc2efe7e5f3769c56ea9453a1449f28d78f192062b532975; \
                    FC_LIB_SHA256=de5942257801f0d344cc55c95cc190aae4e434b3d8d0d77a029f210da755fdc3 ;; \
-      x86)         FC_REPO=http://archive.ubuntu.com/ubuntu; \
-                   FC_VERSION=2.12.6-0ubuntu2; \
-                   FC_DEV_PKG=libfontconfig1-dev; \
-                   FC_DEV_SHA256=cd775534e5377dbb26a789781bfd06b93ca63fe366eec9304b7339b54ba55905; \
-                   FC_LIB_SHA256=f4324b87b99f1750241d9b61d2a0658ccc76ff8d85e539d4f7f4a07723941119 ;; \
       x64)         FC_REPO=http://archive.ubuntu.com/ubuntu; \
                    FC_VERSION=2.12.6-0ubuntu2; \
                    FC_DEV_PKG=libfontconfig1-dev; \

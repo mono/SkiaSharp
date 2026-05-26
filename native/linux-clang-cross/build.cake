@@ -40,65 +40,22 @@ string GetGnArgs(string arch)
     // AFTER the directory where cmath was found. If C headers are listed first,
     // they won't be searched by #include_next from C++ headers.
     //
-    // When libc++ headers (c++/v1/) exist, clang finds them automatically via
-    // -stdlib=libc++ — no explicit -I needed. When only libstdc++ exists (no v1/),
-    // we add explicit paths to c++/current (a symlink to the highest GCC version).
-    var hasLibcppHeaders = System.IO.Directory.Exists($"{sysroot}/include/c++/v1");
-    var includes = hasLibcppHeaders
-        ? $"'-I{sysroot}/include', " +
-          $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}' "
-        : $"'-I{sysroot}/include/c++/current', " +
-          $"'-I{sysroot}/include/c++/current/{TOOLCHAIN_ARCH}', " +
-          $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}/c++/current', " +
-          $"'-I{sysroot}/include', " +
-          $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}' ";
+    // All cross-images have libc++ headers installed at c++/v1/. Clang finds them
+    // automatically via -stdlib=libc++ — we only need the C system include paths.
+    var includes = $"'-I{sysroot}/include', " +
+                   $"'-I{sysroot}/include/{TOOLCHAIN_ARCH}' ";
 
-    // Detect libc++ availability. The Dockerfile ensures libc++ HEADERS (c++/v1/)
-    // exist for all arches (copied from x64 for x86). But libc++.a may not exist
-    // for all arches. When libc++.a is missing, we override the linker's stdlib to
-    // libstdc++ and link it directly.
-    //
-    // Three scenarios:
-    // 1. libc++.a + libc++abi.a both exist (x86 after Dockerfile builds them):
-    //    Let clang link naturally — -stdlib=libc++ adds -lc++ -lc++abi automatically.
-    //    No explicit ABI lib needed.
-    // 2. libc++.a exists but NOT libc++abi.a (arm64, x64, arm, riscv64, loongarch64):
-    //    ABI symbols (operator delete, __cxa_throw) come from GCC's libstdc++.
-    //    --whole-archive forces inclusion before objects reference them.
-    //    -Wl,-lstdc++ bypasses clang driver's rewrite of -lstdc++ → -lc++.
-    // 3. Neither exists: fall back to libstdc++ for both compile and link.
-    var sysrootRoot = SYSROOT_ROOT;
-    var hasLibcppLib = System.IO.File.Exists($"{sysrootRoot}/usr/lib/libc++.a")
-        || System.IO.File.Exists($"{sysroot}/lib/libc++.a");
-    var hasLibcppAbi = System.IO.File.Exists($"{sysrootRoot}/usr/lib/libc++abi.a")
-        || System.IO.File.Exists($"{sysroot}/lib/libc++abi.a");
-    string stdlibLinkOverride;
-    string abiLib;
-    if (hasLibcppLib && hasLibcppAbi)
-    {
-        // Full libc++ stack. extra_ldflags appear BEFORE object archives in GN's link
-        // command, so --whole-archive forces libc++abi symbols to be included regardless
-        // of link ordering. -Wl bypasses clang driver's library name rewriting.
-        stdlibLinkOverride = "";
-        abiLib = "'-Wl,--whole-archive,-lc++abi,--no-whole-archive'";
-    }
-    else if (hasLibcppLib)
-    {
-        // libc++.a but no libc++abi — get ABI symbols from libstdc++ (libsupc++ inside).
-        stdlibLinkOverride = "";
-        abiLib = "'-Wl,--whole-archive,-lstdc++,--no-whole-archive'";
-    }
-    else
-    {
-        // No libc++ at all — pure libstdc++ mode.
-        stdlibLinkOverride = "'-stdlib=libstdc++', ";
-        abiLib = "'-lstdc++'";
-    }
+    // All cross-images provide libc++.a built with -DLIBCXX_CXX_ABI=libstdc++.
+    // This means libc++ delegates ABI symbols (operator delete, __cxa_throw, etc.)
+    // to GCC's libstdc++. We link libstdc++ with --whole-archive so its symbols are
+    // available before GN's object archives reference them (extra_ldflags appear first
+    // in the link command). -Wl bypasses clang's driver rewrite of -lstdc++ → -lc++.
+    var abiLib = "'-Wl,--whole-archive,-lstdc++,--no-whole-archive'";
 
     return
         $"extra_asmflags+=[ {init}, '-no-integrated-as', {bin}, {includes} ] " +
         $"extra_cflags+=[ {init}, {bin}, {includes} ] " +
-        $"extra_ldflags+=[ {init}, {bin}, {libs}, {stdlibLinkOverride}{abiLib}, {linker} ] " +
+        $"extra_ldflags+=[ {init}, {bin}, {libs}, {abiLib}, {linker} ] " +
         ADDITIONAL_GN_ARGS;
 }
 

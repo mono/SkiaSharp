@@ -13,19 +13,29 @@ EXTRA_ARGS="$@"
 
 # Validate architecture and map to .NET image tag arch
 case "$ARCH" in
-  arm|arm64|x86|riscv64|loongarch64)
+  arm|arm64|riscv64|loongarch64)
     IMAGE_ARCH="$ARCH" ;;
   x64)
     IMAGE_ARCH="amd64" ;;
+  x86)
+    IMAGE_ARCH="" ;;  # x86 uses a self-contained Dockerfile (glibc-x86/)
   *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
-# Build the glibc image — the Dockerfile handles all arch-specific config internally.
-(cd "$DIR" &&
+# x86 has its own self-contained Dockerfile (builds libc++ in stage 1) since
+# the .NET team doesn't ship libc++ for x86. All other arches share one Dockerfile.
+if [ "$ARCH" = "x86" ]; then
+  DOCKER_DIR="$DIR/../glibc-x86"
+  BUILD_ARGS=""
+else
+  DOCKER_DIR="$DIR"
+  BUILD_ARGS="--build-arg BUILD_ARCH=$ARCH --build-arg IMAGE_ARCH=$IMAGE_ARCH"
+fi
+
+(cd "$DOCKER_DIR" &&
   docker build --tag skiasharp-linux-gnu-cross-$ARCH \
     --platform=linux/amd64                           \
-    --build-arg BUILD_ARCH=$ARCH                     \
-    --build-arg IMAGE_ARCH=$IMAGE_ARCH               \
+    $BUILD_ARGS                                      \
     .)
 
 (cd "$DIR/../../../../../.." &&

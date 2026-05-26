@@ -29,11 +29,16 @@ stages:
           matrix:
             # .NET official cross images (glibc)
             # verifyGlibcMax ensures we detect if the base image bumps its sysroot
-            - ${{ each arch in split('arm64,x86', ',') }}:
-              - arch: ${{ arch }}
-                docker: scripts/infra/native/linux/docker/glibc
-                target: externals-linux-clang-cross
-                additionalArgs: --verifyGlibcMax=2.27
+            - arch: arm64
+              docker: scripts/infra/native/linux/docker/glibc
+              target: externals-linux-clang-cross
+              additionalArgs: --verifyGlibcMax=2.27
+            # x86 needs libc++ built first (the .NET team doesn't ship it for x86).
+            # Uses a separate directory with a self-contained Dockerfile (multi-stage).
+            - arch: x86
+              docker: scripts/infra/native/linux/docker/glibc-x86
+              target: externals-linux-clang-cross
+              additionalArgs: --verifyGlibcMax=2.27
             - arch: arm
               docker: scripts/infra/native/linux/docker/glibc
               target: externals-linux-clang-cross
