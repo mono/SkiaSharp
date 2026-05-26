@@ -1,11 +1,74 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
+using System.Runtime.Loader;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKFontManagerTest : SKTest
 	{
+		// https://github.com/mono/SkiaSharp/issues/3817
+		// When SKFontManager.Default is the FIRST SkiaSharp type touched in a process,
+		// the static cctor chain (SKFontManager -> SKObject base -> SKTypeface) re-enters
+		// SKFontManager.Default while its cctor is still running, so defaultManager is
+		// still null and SKTypeface.cctor throws NullReferenceException, leaving the
+		// whole chain in a faulted TypeInitializationException state.
+		// Other tests in the suite usually warm static state via a different entry
+		// point, so we run the access in an isolated AssemblyLoadContext to get a
+		// fresh managed-init state.
+		[SkippableFact]
+		public void DefaultDoesNotThrowOnFirstAccess()
+		{
+			var alc = new IsolatedSkiaSharpLoadContext(typeof(SKFontManager).Assembly);
+			try
+			{
+				var asm = alc.LoadFromAssemblyName(typeof(SKFontManager).Assembly.GetName());
+				var type = asm.GetType("SkiaSharp.SKFontManager", throwOnError: true);
+				var prop = type.GetProperty(nameof(SKFontManager.Default), BindingFlags.Public | BindingFlags.Static);
+				Assert.NotNull(prop);
+
+				object value;
+				try
+				{
+					value = prop.GetValue(null);
+				}
+				catch (TargetInvocationException ex)
+				{
+					throw ex.InnerException;
+				}
+
+				Assert.NotNull(value);
+			}
+			finally
+			{
+				alc.Unload();
+			}
+		}
+
+		private sealed class IsolatedSkiaSharpLoadContext : AssemblyLoadContext
+		{
+			private readonly AssemblyDependencyResolver _resolver;
+
+			public IsolatedSkiaSharpLoadContext(Assembly hostAssembly)
+				: base("SkiaSharp.Issue3817", isCollectible: true)
+			{
+				_resolver = new AssemblyDependencyResolver(hostAssembly.Location);
+			}
+
+			protected override Assembly Load(AssemblyName assemblyName)
+			{
+				var path = _resolver.ResolveAssemblyToPath(assemblyName);
+				return path != null ? LoadFromAssemblyPath(path) : null;
+			}
+
+			protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
+			{
+				var path = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
+				return path != null ? LoadUnmanagedDllFromPath(path) : IntPtr.Zero;
+			}
+		}
+
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[SkippableFact]
 		public void TestFontManagerMatchCharacter()

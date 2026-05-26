@@ -9,12 +9,8 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 
 	static SKBlender ()
 	{
-		// TODO: This is not the best way to do this as it will create a lot of objects that
-		//       might not be needed, but it is the only way to ensure that the static
-		//       instances are created before any access is made to them.
-		//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-		// Explicitly list all enum values to avoid reflection (AoT compatibility)
+		// Explicitly list all enum values to avoid reflection (AoT compatibility).
+		// 29 fixed entries, no cross-type dependencies, so eager init is fine here.
 		var modes = new SKBlendMode[] {
 			SKBlendMode.Clear,
 			SKBlendMode.Src,
@@ -48,20 +44,20 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 		};
 
 		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (modes.Length);
-		foreach (SKBlendMode mode in modes)
-		{
-			blendModeBlenders [mode] = new SKBlenderStatic (SkiaApi.sk_blender_new_mode (mode));
+		foreach (SKBlendMode mode in modes) {
+			var blender = GetImmortalObject (SkiaApi.sk_blender_new_mode (mode));
+			blender.IgnorePublicDispose = true;
+			blendModeBlenders[mode] = blender;
 		}
-	}
-
-	internal static void EnsureStaticInstanceAreInitialized ()
-	{
-		// IMPORTANT: do not remove to ensure that the static instances
-		//            are initialized before any access is made to them
 	}
 
 	internal SKBlender(IntPtr handle, bool owns)
 		: base (handle, owns)
+	{
+	}
+
+	internal SKBlender(IntPtr handle, bool owns, bool immortal)
+		: base (handle, owns, immortal)
 	{
 	}
 
@@ -81,15 +77,6 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 	internal static SKBlender GetObject (IntPtr handle) =>
 		GetOrAddObject (handle, (h, o) => new SKBlender (h, o));
 
-	//
-
-	private sealed class SKBlenderStatic : SKBlender
-	{
-		internal SKBlenderStatic (IntPtr x)
-			: base (x, false)
-		{
-		}
-
-		protected override void Dispose (bool disposing) { }
-	}
+	internal static SKBlender GetImmortalObject (IntPtr handle) =>
+		GetOrAddObject (handle, (h, o) => new SKBlender (h, o, immortal: true));
 }

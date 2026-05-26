@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using SkiaSharp.Internals;
 
 namespace SkiaSharp
@@ -15,26 +16,15 @@ namespace SkiaSharp
 		// improvement in Copy performance.
 		internal const int CopyBufferSize = 81920;
 
-		private static readonly SKData empty;
-
-		static SKData ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			empty = new SKDataStatic (SkiaApi.sk_data_new_empty ());
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
+		private static SKData empty;
 
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
+		{
+		}
+
+		internal SKData (IntPtr x, bool owns, bool immortal)
+			: base (x, owns, immortal)
 		{
 		}
 
@@ -45,7 +35,17 @@ namespace SkiaSharp
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
 
-		public static SKData Empty => empty;
+		public static SKData Empty
+		{
+			get
+			{
+				if (empty is not null)
+					return empty;
+				var data = GetImmortalObject (SkiaApi.sk_data_new_empty ());
+				data.IgnorePublicDispose = true;
+				return Interlocked.CompareExchange (ref empty, data, null) ?? data;
+			}
+		}
 
 		// CreateCopy
 
@@ -288,6 +288,9 @@ namespace SkiaSharp
 		internal static SKData GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKData (h, o));
 
+		internal static SKData GetImmortalObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKData (h, o, immortal: true));
+
 		//
 
 		private class SKDataStream : UnmanagedMemoryStream
@@ -313,16 +316,5 @@ namespace SkiaSharp
 			}
 		}
 
-		//
-
-		private sealed class SKDataStatic : SKData
-		{
-			internal SKDataStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
-
-			protected override void Dispose (bool disposing) { }
-		}
 	}
 }

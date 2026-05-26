@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Threading;
 
 namespace SkiaSharp
 {
@@ -44,16 +45,25 @@ namespace SkiaSharp
 		// reset-to-default font. sk_compatpaint_new_with_font / sk_compatpaint_reset
 		// both *copy* the font state into SkCompatPaint::fFont, so this singleton is
 		// never mutated by callers.
-		private static readonly SKFont defaultFont;
+		private static SKFont defaultFont;
 
-		static SKPaint ()
+		private static SKFont DefaultFont
 		{
-			defaultFont = new SKFontStatic (
-				SkiaApi.sk_font_new_with_values (
-					SKTypeface.Default.Handle,
-					SKFont.DefaultSize,
-					SKFont.DefaultScaleX,
-					SKFont.DefaultSkewX));
+			get
+			{
+				if (defaultFont is not null)
+					return defaultFont;
+				// Immortal-from-ctor: IgnorePublicDispose is set before Handle is published.
+				var font = new SKFont (
+					SkiaApi.sk_font_new_with_values (
+						SKTypeface.Default.Handle,
+						SKFont.DefaultSize,
+						SKFont.DefaultScaleX,
+						SKFont.DefaultSkewX),
+					owns: true,
+					immortal: true);
+				return Interlocked.CompareExchange (ref defaultFont, font, null) ?? font;
+			}
 		}
 
 		internal SKPaint (IntPtr handle, bool owns)
@@ -62,7 +72,7 @@ namespace SkiaSharp
 		}
 
 		public SKPaint ()
-			: this (SkiaApi.sk_compatpaint_new_with_font (defaultFont.Handle), true)
+			: this (SkiaApi.sk_compatpaint_new_with_font (DefaultFont.Handle), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
@@ -91,14 +101,7 @@ namespace SkiaSharp
 		// Reset
 
 		public void Reset () =>
-			SkiaApi.sk_compatpaint_reset (Handle, defaultFont.Handle);
-
-		private sealed class SKFontStatic : SKFont
-		{
-			internal SKFontStatic (IntPtr handle) : base (handle, false) { }
-
-			protected override void Dispose (bool disposing) { }
-		}
+			SkiaApi.sk_compatpaint_reset (Handle, DefaultFont.Handle);
 
 		// properties
 

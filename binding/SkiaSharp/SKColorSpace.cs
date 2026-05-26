@@ -2,33 +2,22 @@
 
 using System;
 using System.ComponentModel;
+using System.Threading;
 
 namespace SkiaSharp
 {
 	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
-		private static readonly SKColorSpace srgb;
-		private static readonly SKColorSpace srgbLinear;
-
-		static SKColorSpace ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			srgb = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb ());
-			srgbLinear = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb_linear ());
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
+		private static SKColorSpace srgb;
+		private static SKColorSpace srgbLinear;
 
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
+		{
+		}
+
+		internal SKColorSpace (IntPtr handle, bool owns, bool immortal)
+			: base (handle, owns, immortal)
 		{
 		}
 
@@ -67,11 +56,29 @@ namespace SkiaSharp
 
 		// CreateSrgb
 
-		public static SKColorSpace CreateSrgb () => srgb;
+		public static SKColorSpace CreateSrgb ()
+		{
+			if (srgb is not null)
+				return srgb;
+			// immortal-from-ctor: closes the race where another thread could find the
+			// wrapper in HandleDictionary and dispose it before we set the flag.
+			var cs = GetImmortalObject (SkiaApi.sk_colorspace_new_srgb ());
+			// Promote an existing wrapper to immortal if one was already in HD
+			// (narrow race remains for that case).
+			cs.IgnorePublicDispose = true;
+			return Interlocked.CompareExchange (ref srgb, cs, null) ?? cs;
+		}
 
 		// CreateSrgbLinear
 
-		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
+		public static SKColorSpace CreateSrgbLinear ()
+		{
+			if (srgbLinear is not null)
+				return srgbLinear;
+			var cs = GetImmortalObject (SkiaApi.sk_colorspace_new_srgb_linear ());
+			cs.IgnorePublicDispose = true;
+			return Interlocked.CompareExchange (ref srgbLinear, cs, null) ?? cs;
+		}
 
 		// CreateIcc
 
@@ -161,14 +168,9 @@ namespace SkiaSharp
 		internal static SKColorSpace GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
 			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 
-		private sealed class SKColorSpaceStatic : SKColorSpace
-		{
-			internal SKColorSpaceStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
-
-			protected override void Dispose (bool disposing) { }
-		}
+		// Variant used by singleton accessors. Newly created wrappers are immortal from birth
+		// (IgnorePublicDispose set before the wrapper enters HandleDictionary).
+		internal static SKColorSpace GetImmortalObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o, immortal: true));
 	}
 }
