@@ -99,8 +99,8 @@ RUN . /etc/skia-env \
     && case "${BUILD_ARCH}" in \
       arm)         FC_REPO=http://ports.ubuntu.com/ubuntu-ports; \
                    FC_VERSION=2.13.1-4.2ubuntu5; \
-                   FC_DEV_PKG=libfontconfig1-dev; \
-                   FC_DEV_SHA256=afb8bd6d46df0faef0f75e0570cd9e52532afbc6cf316be83a80fa5c2d737276; \
+                   FC_DEV_PKG=libfontconfig-dev; \
+                   FC_DEV_SHA256=8e4b18145fd9990a1f8c6d05aadb4fa40f0fcab23a81c8ef801532551a341fdb; \
                    FC_LIB_SHA256=0ac3c1b2b2dcc7cabd11f7e2daa4b3c0f89fd30d97d0722302fc7db623208cef ;; \
       arm64)       FC_REPO=http://ports.ubuntu.com/ubuntu-ports; \
                    FC_VERSION=2.12.6-0ubuntu2; \
@@ -114,8 +114,8 @@ RUN . /etc/skia-env \
                    FC_LIB_SHA256=647bb8f09e751a39d488b0260db6015ce1118c56114cc771dd5bf907180f0c80 ;; \
       riscv64)     FC_REPO=http://ports.ubuntu.com/ubuntu-ports; \
                    FC_VERSION=2.15.0-1.1ubuntu2; \
-                   FC_DEV_PKG=libfontconfig1-dev; \
-                   FC_DEV_SHA256=31193095ea3678815b34a577d68b00cca7609fbea1cbe5fff04cfbe098be539b; \
+                   FC_DEV_PKG=libfontconfig-dev; \
+                   FC_DEV_SHA256=c219de19d80aa7195b1d2dcddc1b5c651eb85b4f616e7d837f2aada3e56ea5fd; \
                    FC_LIB_SHA256=eb2574c2316922efe83b5a91da5278cf8abfc65051ddce28308032c99fafd36b ;; \
       loongarch64) FC_REPO=https://deb.debian.org/debian; \
                    FC_VERSION=2.17.1-5; \
@@ -144,6 +144,14 @@ RUN . /etc/skia-env \
          tar xf data.tar.* -C ${SYSROOT_ROOT}/ ; \
          rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \
        done \
+    # Sanity check: catches empty/transitional dev packages (e.g., libfontconfig1-dev
+    # on Ubuntu 22.04+ which is a transitional shell with no headers — the real
+    # package is libfontconfig-dev without the "1").
+    && if [ ! -f "${SYSROOT_ROOT}/usr/include/fontconfig/fontconfig.h" ]; then \
+         echo "FATAL: fontconfig.h not found at ${SYSROOT_ROOT}/usr/include/fontconfig/fontconfig.h" ; \
+         echo "       The ${FC_DEV_PKG} package may be a transitional/empty shell." ; \
+         exit 1 ; \
+       fi \
     && rm -rf /tmp/fontconfig
 
 WORKDIR /work

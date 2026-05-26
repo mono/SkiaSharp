@@ -156,6 +156,11 @@ RUN . /etc/skia-env \
          tar xf data.tar.* -C ${SYSROOT_ROOT}/ ; \
          rm -f control.tar.* data.tar.* debian-binary "${pkg}.deb" ; \
        done \
+    && if [ ! -f "${SYSROOT_ROOT}/usr/include/fontconfig/fontconfig.h" ]; then \
+         echo "FATAL: fontconfig.h not found at ${SYSROOT_ROOT}/usr/include/fontconfig/fontconfig.h" ; \
+         echo "       The ${FC_DEV_PKG} package may be a transitional/empty shell." ; \
+         exit 1 ; \
+       fi \
     && rm -rf /tmp/fontconfig
 
 WORKDIR /work
