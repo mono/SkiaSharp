@@ -1,7 +1,7 @@
 # glibc cross-compilation image for x86 (i686-linux-gnu).
 #
 # This is a self-contained Dockerfile that:
-#   1. Builds libc++ for x86 (stage: libcxx-builder)
+#   1. Builds libc++ for x86 (stage: builder)
 #   2. Layers the shared SkiaSharp build environment on top (stage: final)
 #
 # The .NET team builds libc++ for amd64/arm64/arm/riscv64/loongarch64 but NOT x86
@@ -43,7 +43,7 @@
 
 ARG ROOTFS_DIR=/crossrootfs/x86
 
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-crossdeps-builder-amd64 AS libcxx-builder
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-crossdeps-builder-amd64 AS builder
 ARG ROOTFS_DIR
 
 RUN PYTHON_EXECUTABLE="$ROOTFS_PIP_HOME/bin/python" /scripts/eng/common/cross/build-rootfs.sh x86 bionic --skipunmount --skipemulation
@@ -93,8 +93,8 @@ RUN TARGET_TRIPLE="i686-linux-gnu" && \
 FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-crossdeps-llvm-amd64
 ARG ROOTFS_DIR
 
-COPY --from=libcxx-builder /usr/local/lib/clang /usr/local/lib/clang/
-COPY --from=libcxx-builder $ROOTFS_DIR $ROOTFS_DIR
+COPY --from=builder /usr/local/lib/clang /usr/local/lib/clang/
+COPY --from=builder $ROOTFS_DIR $ROOTFS_DIR
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
