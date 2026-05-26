@@ -401,12 +401,6 @@ namespace SkiaSharp
 				_builder = new SKPathBuilder (this);
 		}
 
-		// LATENT BUG: FlushBuilder/ReplaceFromBuilder swap the native handle but only
-		// the *new* handle is added to HandleDictionary (via the Handle setter side
-		// effect). The *old* handle's HD entry is not removed and lingers as a stale
-		// WeakReference until this wrapper is GC'd. If Skia ever reuses the old handle
-		// address for a different object, HD lookup for that handle would return this
-		// wrapper. Fix would require DeregisterHandle(Handle, this) before reassignment.
 		private void FlushBuilder ()
 		{
 			if (_builder == null)
