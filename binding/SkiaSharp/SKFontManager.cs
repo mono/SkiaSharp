@@ -5,38 +5,38 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace SkiaSharp
 {
 	public unsafe class SKFontManager : SKObject, ISKReferenceCounted
 	{
-		private static readonly SKFontManager defaultManager;
-
-		static SKFontManager ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			defaultManager = new SKFontManagerStatic (SkiaApi.sk_fontmgr_create_default ());
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
+		private static SKFontManager defaultManager;
 
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
+		internal SKFontManager (IntPtr handle, bool owns, bool immortal)
+			: base (handle, owns, immortal)
+		{
+		}
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKFontManager Default => defaultManager;
+		public static SKFontManager Default
+		{
+			get
+			{
+				if (defaultManager is not null)
+					return defaultManager;
+				var fm = GetImmortalObject (SkiaApi.sk_fontmgr_create_default ());
+				fm.IgnorePublicDispose = true;
+				return Interlocked.CompareExchange (ref defaultManager, fm, null) ?? fm;
+			}
+		}
 
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
 
@@ -200,16 +200,8 @@ namespace SkiaSharp
 		internal static SKFontManager GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
 
-		//
+		internal static SKFontManager GetImmortalObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o, immortal: true));
 
-		private sealed class SKFontManagerStatic : SKFontManager
-		{
-			internal SKFontManagerStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
-
-			protected override void Dispose (bool disposing) { }
-		}
 	}
 }

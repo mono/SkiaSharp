@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Threading;
 
 namespace SkiaSharp
 {
@@ -9,37 +10,39 @@ namespace SkiaSharp
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
 
-		private static readonly SKColorFilter srgbToLinear;
-		private static readonly SKColorFilter linearToSrgb;
-
-		static SKColorFilter ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			srgbToLinear = new SKColorFilterStatic (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ());
-			linearToSrgb = new SKColorFilterStatic (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ());
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
+		private static SKColorFilter srgbToLinear;
+		private static SKColorFilter linearToSrgb;
 
 		internal SKColorFilter(IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
+		internal SKColorFilter(IntPtr handle, bool owns, bool immortal)
+			: base (handle, owns, immortal)
+		{
+		}
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKColorFilter CreateSrgbToLinearGamma() => srgbToLinear;
+		public static SKColorFilter CreateSrgbToLinearGamma ()
+		{
+			if (srgbToLinear is not null)
+				return srgbToLinear;
+			var cf = GetImmortalObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ());
+			cf.IgnorePublicDispose = true;
+			return Interlocked.CompareExchange (ref srgbToLinear, cf, null) ?? cf;
+		}
 
-		public static SKColorFilter CreateLinearToSrgbGamma() => linearToSrgb;
+		public static SKColorFilter CreateLinearToSrgbGamma ()
+		{
+			if (linearToSrgb is not null)
+				return linearToSrgb;
+			var cf = GetImmortalObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ());
+			cf.IgnorePublicDispose = true;
+			return Interlocked.CompareExchange (ref linearToSrgb, cf, null) ?? cf;
+		}
 
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
@@ -158,15 +161,8 @@ namespace SkiaSharp
 
 		internal static SKColorFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
-			
-		private sealed class SKColorFilterStatic : SKColorFilter
-		{
-			internal SKColorFilterStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
 
-			protected override void Dispose (bool disposing) { }
-		}
+		internal static SKColorFilter GetImmortalObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o, immortal: true));
 	}
 }

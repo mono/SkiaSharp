@@ -11,11 +11,13 @@ namespace SkiaSharp.Tests
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void StaticSrgbToLinearIsReturnedAsTheStaticInstance()
 		{
+			var expected = SKColorFilter.CreateSrgbToLinearGamma();
 			var handle = SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma();
 			try
 			{
 				var cs = SKColorFilter.GetObject(handle);
-				Assert.Equal("SKColorFilterStatic", cs.GetType().Name);
+				Assert.Same(expected, cs);
+				Assert.True(cs.IgnorePublicDispose);
 			}
 			finally
 			{
@@ -26,11 +28,13 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StaticLinearToSrgbIsReturnedAsTheStaticInstance()
 		{
+			var expected = SKColorFilter.CreateLinearToSrgbGamma();
 			var handle = SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma();
 			try
 			{
 				var cs = SKColorFilter.GetObject(handle);
-				Assert.Equal("SKColorFilterStatic", cs.GetType().Name);
+				Assert.Same(expected, cs);
+				Assert.True(cs.IgnorePublicDispose);
 			}
 			finally
 			{

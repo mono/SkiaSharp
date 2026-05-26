@@ -10,17 +10,6 @@ namespace SkiaSharp.Tests
 {
 	public class GarbageCleanupFixture : IDisposable
 	{
-		private static readonly string[] StaticTypes = new[] {
-			"SkiaSharp.SKData+SKDataStatic",
-			"SkiaSharp.SKFontManager+SKFontManagerStatic",
-			"SkiaSharp.SKFontStyle+SKFontStyleStatic",
-			"SkiaSharp.SKTypeface+SKTypefaceStatic",
-			"SkiaSharp.SKColorSpace+SKColorSpaceStatic",
-			"SkiaSharp.SKColorFilter+SKColorFilterStatic",
-			"SkiaSharp.SKBlender+SKBlenderStatic",
-			"SkiaSharp.SKPaint+SKFontStatic",
-		};
-
 		public GarbageCleanupFixture()
 		{
 		}
@@ -74,7 +63,9 @@ namespace SkiaSharp.Tests
 
 			var skobject = Assert.IsAssignableFrom<SKObject>(instance);
 
-			if (StaticTypes.Contains(skobject.GetType().FullName))
+			// Immortal singleton wrappers are marked with IgnorePublicDispose = true
+			// and live for the process lifetime.
+			if (skobject.IgnorePublicDispose)
 				return false;
 
 			return true;

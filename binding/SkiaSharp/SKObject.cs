@@ -39,17 +39,15 @@ namespace SkiaSharp
 		static SKObject ()
 		{
 			SkiaSharpVersion.CheckNativeLibraryCompatible (true);
-
-			SKColorSpace.EnsureStaticInstanceAreInitialized ();
-			SKData.EnsureStaticInstanceAreInitialized ();
-			SKFontManager.EnsureStaticInstanceAreInitialized ();
-			SKTypeface.EnsureStaticInstanceAreInitialized ();
-			SKBlender.EnsureStaticInstanceAreInitialized ();
-			SKColorFilter.EnsureStaticInstanceAreInitialized ();
 		}
 
 		internal SKObject (IntPtr handle, bool owns)
 			: base (handle, owns)
+		{
+		}
+
+		internal SKObject (IntPtr handle, bool owns, bool immortal)
+			: base (handle, owns, immortal)
 		{
 		}
 
@@ -221,7 +219,19 @@ namespace SkiaSharp
 		}
 
 		internal SKNativeObject (IntPtr handle, bool ownsHandle)
+			: this (handle, ownsHandle, immortal: false)
 		{
+		}
+
+		// Setting `immortal: true` sets IgnorePublicDispose BEFORE Handle is published
+		// through SKObject.Handle.setter -> RegisterHandle. This closes the race where
+		// another thread could find the wrapper in HandleDictionary and call Dispose()
+		// on it between the registration and a post-construction `IgnorePublicDispose = true`
+		// assignment. See discussion in the singleton init refactor.
+		internal SKNativeObject (IntPtr handle, bool ownsHandle, bool immortal)
+		{
+			if (immortal)
+				IgnorePublicDispose = true;
 			Handle = handle;
 			OwnsHandle = ownsHandle;
 		}

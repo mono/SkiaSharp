@@ -3,44 +3,24 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 
 namespace SkiaSharp
 {
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
-		private static readonly SKTypeface empty;
-		private static readonly SKTypeface defaultTypeface;
+		private static SKTypeface empty;
+		private static SKTypeface defaultTypeface;
 
 		private SKFont font;
 
-		static SKTypeface ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			empty = new SKTypefaceStatic (SkiaApi.sk_typeface_create_empty ());
-
-			// Use legacyMakeTypeface(null) to get the platform default — this uses
-			// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
-			// then falls back to style set 0). matchFamilyStyle(null) doesn't work
-			// on Android/NDK/Custom because onMatchFamily(null) returns null.
-			var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
-				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
-			defaultTypeface = matched == IntPtr.Zero
-				? empty
-				: new SKTypefaceStatic (matched);
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
-
 		internal SKTypeface (IntPtr handle, bool owns)
 			: base (handle, owns)
+		{
+		}
+
+		internal SKTypeface (IntPtr handle, bool owns, bool immortal)
+			: base (handle, owns, immortal)
 		{
 		}
 
@@ -49,9 +29,36 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKTypeface Default => defaultTypeface;
+		public static SKTypeface Default
+		{
+			get
+			{
+				if (defaultTypeface is not null)
+					return defaultTypeface;
 
-		public static SKTypeface Empty => empty;
+				// Use legacyMakeTypeface(null) to get the platform default — this uses
+				// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
+				// then falls back to style set 0). matchFamilyStyle(null) doesn't work
+				// on Android/NDK/Custom because onMatchFamily(null) returns null.
+				var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
+					SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
+				var tf = matched == IntPtr.Zero ? Empty : GetImmortalObject (matched);
+				tf.IgnorePublicDispose = true;
+				return Interlocked.CompareExchange (ref defaultTypeface, tf, null) ?? tf;
+			}
+		}
+
+		public static SKTypeface Empty
+		{
+			get
+			{
+				if (empty is not null)
+					return empty;
+				var tf = GetImmortalObject (SkiaApi.sk_typeface_create_empty ());
+				tf.IgnorePublicDispose = true;
+				return Interlocked.CompareExchange (ref empty, tf, null) ?? tf;
+			}
+		}
 
 		public bool IsEmpty => GlyphCount == 0;
 
@@ -447,16 +454,8 @@ namespace SkiaSharp
 		internal static SKTypeface GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
 
-		//
+		internal static SKTypeface GetImmortalObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o, immortal: true));
 
-		private sealed class SKTypefaceStatic : SKTypeface
-		{
-			internal SKTypefaceStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
-
-			protected override void Dispose (bool disposing) { }
-		}
 	}
 }
