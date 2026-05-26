@@ -81,16 +81,18 @@ To customize the build, modify the `--args` value:
 Building for different Linux distributions is easier with Docker. The repository includes Dockerfiles for various configurations.
 
 ```bash
-# Build the Docker image
+# Build the Docker image (arm64 doesn't need IMAGE_ARCH mapping)
 cd scripts/infra/native/linux/docker/alpine
-docker build --tag skiasharp-alpine --build-arg BUILD_ARCH=x64 .
+docker build --tag skiasharp-alpine --build-arg BUILD_ARCH=arm64 .
 
 # Run the build
 docker run --rm --name skiasharp-alpine --volume $(pwd):/work skiasharp-alpine \
-    /bin/bash -c "dotnet tool restore && dotnet cake --target=externals-linux-clang-cross --buildarch=x64 --variant=alpine"
+    /bin/bash -c "dotnet tool restore && dotnet cake --target=externals-linux-clang-cross --buildarch=arm64 --variant=alpine"
 
 # Fix file ownership if needed
 chown -R $(id -u):$(id -g) .
 ```
+
+> Note: When building for x64, you must also pass `--build-arg IMAGE_ARCH=amd64` because the .NET cross-image tags use "amd64" instead of "x64".
 
 > See the `scripts/infra/native/linux/docker/` directory for available Dockerfiles.

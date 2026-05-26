@@ -9,6 +9,13 @@ string SYSROOT_PATH = Argument("sysrootPath", EnvironmentVariable("SYSROOT_PATH"
 string SYSROOT_ROOT = Argument("sysrootRoot", EnvironmentVariable("SYSROOT_ROOT") ?? "");
 string GCC_LIB_DIR = Argument("gccLibDir", EnvironmentVariable("GCC_LIB_DIR") ?? "");
 
+if (string.IsNullOrEmpty(SYSROOT_PATH))
+    throw new Exception("FATAL: SYSROOT_PATH is not set. Expected from /etc/skia-env in the cross-compile Docker image.");
+if (string.IsNullOrEmpty(SYSROOT_ROOT))
+    throw new Exception("FATAL: SYSROOT_ROOT is not set. Expected from /etc/skia-env in the cross-compile Docker image.");
+if (string.IsNullOrEmpty(GCC_LIB_DIR))
+    throw new Exception("FATAL: GCC_LIB_DIR is not set. Expected from /etc/skia-env in the cross-compile Docker image.");
+
 Information("Toolchain:");
 Information($"    Arch:                          {TOOLCHAIN_ARCH} ({TOOLCHAIN_ARCH_SHORT})");
 Information($"    Target                         {TOOLCHAIN_ARCH_TARGET}");
