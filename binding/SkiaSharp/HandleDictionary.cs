@@ -97,7 +97,7 @@ namespace SkiaSharp
 					}
 
 					if (immortal)
-						instance.IgnorePublicDispose = true;
+						instance.PreventPublicDisposal ();
 
 					return instance;
 				}
