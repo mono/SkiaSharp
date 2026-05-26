@@ -57,6 +57,17 @@ Setup(context =>
         DEVICE_ID = $"system-images;android-{api};google_apis;{DEVICE_ARCH}";
     }
 
+    // Pre-build the project before starting the emulator to reduce peak memory usage.
+    // Android IL linking is very memory-intensive and running it concurrently with the
+    // emulator can cause OOM on CI agents.
+    Information("Pre-building Android test project...");
+    FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+    DotNetBuild(MakeAbsolute(csproj).FullPath, new DotNetBuildSettings {
+        Configuration = "Release",
+        Framework = "net10.0-android",
+    });
+    Information("Pre-build complete.");
+
     if (!usingEmulator) {
         Information("Using a physical device:");
         DotNetTool("android device list");
@@ -109,7 +120,7 @@ Task("Default")
 {
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
 
-    RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net10.0-android");
+    RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net10.0-android", noBuild: true);
 });
 
 RunTarget(TARGET);

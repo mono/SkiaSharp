@@ -12,6 +12,7 @@ void RunDeviceRunnersTest(
     string configuration = null,
     string framework = null,
     bool allowFailure = false,
+    bool noBuild = false,
     Dictionary<string, string> properties = null)
 {
     CleanDirectories($"{PACKAGE_CACHE_PATH}/skiasharp*");
@@ -23,6 +24,7 @@ void RunDeviceRunnersTest(
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
         Framework = framework,
+        NoBuild = noBuild,
         ResultsDirectory = output,
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
