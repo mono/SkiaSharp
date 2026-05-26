@@ -153,18 +153,12 @@ namespace SkiaSharp
 			return HandleDictionary.GetInstance<TSkiaObject> (handle, out instance);
 		}
 
-		// indicate that the user cannot dispose the object
-		internal void PreventPublicDisposal ()
-		{
-			IgnorePublicDispose = true;
-		}
-
 		// indicate that the ownership of this object is now in the hands of
 		// the native object
 		internal void RevokeOwnership (SKObject newOwner)
 		{
 			OwnsHandle = false;
-			IgnorePublicDispose = true;
+			PreventPublicDisposal ();
 
 			if (newOwner == null)
 				DisposeInternal ();
@@ -251,7 +245,16 @@ namespace SkiaSharp
 
 		protected internal virtual bool OwnsHandle { get; protected set; }
 
-		protected internal bool IgnorePublicDispose { get; set; }
+		// One-way latch: once set to true, only stays true. Demoted setter prevents
+		// future contributors from accidentally flipping it back to false on a wrapper
+		// that's relying on it for immortality. Use PreventPublicDisposal() to set.
+		protected internal bool IgnorePublicDispose { get; private set; }
+
+		// Make this wrapper undisposable via the public Dispose() method.
+		internal void PreventPublicDisposal ()
+		{
+			IgnorePublicDispose = true;
+		}
 
 		protected internal bool IsDisposed => isDisposed == 1;
 
