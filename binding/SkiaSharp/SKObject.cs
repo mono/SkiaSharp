@@ -117,6 +117,15 @@ namespace SkiaSharp
 			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, objectFactory);
 		}
 
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool immortal, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject
+		{
+			if (handle == IntPtr.Zero)
+				return null;
+
+			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, immortal, objectFactory);
+		}
+
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero || instance == null)

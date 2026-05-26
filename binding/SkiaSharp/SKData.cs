@@ -42,7 +42,6 @@ namespace SkiaSharp
 				if (empty is not null)
 					return empty;
 				var data = GetImmortalObject (SkiaApi.sk_data_new_empty ());
-				data.IgnorePublicDispose = true;
 				return Interlocked.CompareExchange (ref empty, data, null) ?? data;
 			}
 		}
@@ -289,7 +288,7 @@ namespace SkiaSharp
 			GetOrAddObject (handle, (h, o) => new SKData (h, o));
 
 		internal static SKData GetImmortalObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKData (h, o, immortal: true));
+			GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKData (h, o, immortal: true));
 
 		//
 
