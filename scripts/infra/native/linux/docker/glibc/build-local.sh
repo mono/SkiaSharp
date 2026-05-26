@@ -11,14 +11,11 @@ ARCH="${1:-arm64}"
 shift 1 || true
 EXTRA_ARGS="$@"
 
-# Validate architecture and map to .NET image tag arch
+# Validate architecture (Dockerfile handles x64→amd64 image-tag mapping internally).
+# x86 uses a separate self-contained Dockerfile (glibc-x86/) — see below.
 case "$ARCH" in
-  arm|arm64|riscv64|loongarch64)
-    IMAGE_ARCH="$ARCH" ;;
-  x64)
-    IMAGE_ARCH="amd64" ;;
-  x86)
-    IMAGE_ARCH="" ;;  # x86 uses a self-contained Dockerfile (glibc-x86/)
+  arm|arm64|x64|riscv64|loongarch64) ;;
+  x86) ;;
   *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
@@ -29,7 +26,7 @@ if [ "$ARCH" = "x86" ]; then
   BUILD_ARGS=""
 else
   DOCKER_DIR="$DIR"
-  BUILD_ARGS="--build-arg BUILD_ARCH=$ARCH --build-arg IMAGE_ARCH=$IMAGE_ARCH"
+  BUILD_ARGS="--build-arg BUILD_ARCH=$ARCH"
 fi
 
 (cd "$DOCKER_DIR" &&

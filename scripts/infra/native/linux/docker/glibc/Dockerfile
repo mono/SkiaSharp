@@ -8,8 +8,10 @@
 #
 # We add: .NET SDK (Cake), fontconfig-dev headers, skia-env toolchain vars.
 #
-# Usage:
+# Usage (BUILD_ARCH is the only input — the x64→amd64 image-tag mapping is
+# handled internally via stage aliases below):
 #   docker build --build-arg BUILD_ARCH=arm64 .
+#   docker build --build-arg BUILD_ARCH=x64 .
 #
 # NOTE: x86 uses a separate directory (glibc-x86/) with its own Dockerfile
 # because the .NET team doesn't ship libc++ for x86.
@@ -19,12 +21,16 @@
 
 ARG BUILD_ARCH=arm64
 
-# .NET cross images use "amd64" where SkiaSharp uses "x64".
-# CI must pass IMAGE_ARCH=amd64 when BUILD_ARCH=x64.
-# All other architectures: IMAGE_ARCH defaults to BUILD_ARCH.
-ARG IMAGE_ARCH=${BUILD_ARCH}
+# One stage per arch — .NET cross images use "amd64" instead of "x64", so we
+# map it here in a single place. BuildKit only pulls the stage referenced by
+# the final `FROM base-${BUILD_ARCH}`; the others are inert.
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-arm         AS base-arm
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-arm64       AS base-arm64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-amd64       AS base-x64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-riscv64     AS base-riscv64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-loongarch64 AS base-loongarch64
 
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-${IMAGE_ARCH}
+FROM base-${BUILD_ARCH}
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 

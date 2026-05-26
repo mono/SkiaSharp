@@ -11,12 +11,9 @@ ARCH="${1:-arm64}"
 shift 1 || true
 EXTRA_ARGS="$@"
 
-# Validate architecture and map to .NET image tag arch
+# Validate architecture (Dockerfile handles x64→amd64 image-tag mapping internally)
 case "$ARCH" in
-  arm|arm64|riscv64|loongarch64)
-    IMAGE_ARCH="$ARCH" ;;
-  x64)
-    IMAGE_ARCH="amd64" ;;
+  arm|arm64|x64|riscv64|loongarch64) ;;
   *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
@@ -25,7 +22,6 @@ esac
   docker build --tag skiasharp-linux-musl-cross-$ARCH \
     --platform=linux/amd64                            \
     --build-arg BUILD_ARCH=$ARCH                      \
-    --build-arg IMAGE_ARCH=$IMAGE_ARCH                \
     .)
 
 (cd "$DIR/../../../../../.." &&
