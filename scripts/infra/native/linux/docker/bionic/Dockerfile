@@ -32,8 +32,7 @@ RUN case ${BUILD_ARCH} in \
         arm64) ANDROID_TRIPLE=aarch64-linux-android29 ; ANDROID_SYSROOT_LIB=aarch64-linux-android ;; \
         *) echo "FATAL: Unsupported BUILD_ARCH=${BUILD_ARCH}" && exit 1 ;; \
     esac \
-    && NDK_HOME=$(ls -d /usr/local/android-sdk/ndk/*/ 2>/dev/null | head -1 || true) \
-    && NDK_HOME=${NDK_HOME%/} \
+    && NDK_HOME=$(find /usr/local/android-sdk/ndk -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -V | tail -1 || true) \
     && if [ -z "$NDK_HOME" ] || [ ! -d "$NDK_HOME" ]; then \
          echo "FATAL: No Android NDK found in /usr/local/android-sdk/ndk/" && exit 1 ; \
        fi \

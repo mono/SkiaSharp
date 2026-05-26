@@ -188,7 +188,7 @@ grep "libs = " externals/skia/out/linux/arm64/obj/SkiaSharp.ninja
 
 # Check if library exists in cross-compile sysroot
 docker run --rm skiasharp-linux-gnu-cross-arm64 bash -c \
-  "ls -la /usr/aarch64-linux-gnu/lib/libfontconfig*"
+  "source /etc/skia-env && ls -la \${SYSROOT_ROOT}/usr/lib/aarch64-linux-gnu/libfontconfig*"
 ```
 
 **Common issue:** The `-dev` package provides a broken symlink (`libfoo.so -> libfoo.so.1.2.3`)
