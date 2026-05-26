@@ -43,7 +43,6 @@ namespace SkiaSharp
 				var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
 					SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
 				var tf = matched == IntPtr.Zero ? Empty : GetImmortalObject (matched);
-				tf.IgnorePublicDispose = true;
 				return Interlocked.CompareExchange (ref defaultTypeface, tf, null) ?? tf;
 			}
 		}
@@ -55,7 +54,6 @@ namespace SkiaSharp
 				if (empty is not null)
 					return empty;
 				var tf = GetImmortalObject (SkiaApi.sk_typeface_create_empty ());
-				tf.IgnorePublicDispose = true;
 				return Interlocked.CompareExchange (ref empty, tf, null) ?? tf;
 			}
 		}
@@ -455,7 +453,7 @@ namespace SkiaSharp
 			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
 
 		internal static SKTypeface GetImmortalObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o, immortal: true));
+			GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKTypeface (h, o, immortal: true));
 
 	}
 }

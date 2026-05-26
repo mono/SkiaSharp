@@ -33,7 +33,6 @@ namespace SkiaSharp
 				if (defaultManager is not null)
 					return defaultManager;
 				var fm = GetImmortalObject (SkiaApi.sk_fontmgr_create_default ());
-				fm.IgnorePublicDispose = true;
 				return Interlocked.CompareExchange (ref defaultManager, fm, null) ?? fm;
 			}
 		}
@@ -201,7 +200,7 @@ namespace SkiaSharp
 			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
 
 		internal static SKFontManager GetImmortalObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o, immortal: true));
+			GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKFontManager (h, o, immortal: true));
 
 	}
 }

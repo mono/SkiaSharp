@@ -31,7 +31,6 @@ namespace SkiaSharp
 			if (srgbToLinear is not null)
 				return srgbToLinear;
 			var cf = GetImmortalObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ());
-			cf.IgnorePublicDispose = true;
 			return Interlocked.CompareExchange (ref srgbToLinear, cf, null) ?? cf;
 		}
 
@@ -40,7 +39,6 @@ namespace SkiaSharp
 			if (linearToSrgb is not null)
 				return linearToSrgb;
 			var cf = GetImmortalObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ());
-			cf.IgnorePublicDispose = true;
 			return Interlocked.CompareExchange (ref linearToSrgb, cf, null) ?? cf;
 		}
 
@@ -163,6 +161,6 @@ namespace SkiaSharp
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
 
 		internal static SKColorFilter GetImmortalObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o, immortal: true));
+			GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKColorFilter (h, o, immortal: true));
 	}
 }

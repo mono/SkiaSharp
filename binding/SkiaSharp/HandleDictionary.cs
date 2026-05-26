@@ -56,6 +56,16 @@ namespace SkiaSharp
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject =>
+			GetOrAddObject (handle, owns, unrefExisting, immortal: false, objectFactory);
+
+		/// <summary>
+		/// Retrieve or create an instance for the native handle. When <paramref name="immortal"/> is true
+		/// and an existing wrapper is found, IgnorePublicDispose is set on it inside the critical section
+		/// — narrowing the promote-existing race window relative to setting it after the call returns.
+		/// </summary>
+		/// <returns>The instance, or null if the handle was null.</returns>
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool immortal, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
@@ -85,6 +95,9 @@ namespace SkiaSharp
 #endif
 						refcnt.SafeUnRef ();
 					}
+
+					if (immortal)
+						instance.IgnorePublicDispose = true;
 
 					return instance;
 				}

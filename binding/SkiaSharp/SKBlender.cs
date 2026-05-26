@@ -45,9 +45,7 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 
 		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (modes.Length);
 		foreach (SKBlendMode mode in modes) {
-			var blender = GetImmortalObject (SkiaApi.sk_blender_new_mode (mode));
-			blender.IgnorePublicDispose = true;
-			blendModeBlenders[mode] = blender;
+			blendModeBlenders[mode] = GetImmortalObject (SkiaApi.sk_blender_new_mode (mode));
 		}
 	}
 
@@ -78,5 +76,5 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 		GetOrAddObject (handle, (h, o) => new SKBlender (h, o));
 
 	internal static SKBlender GetImmortalObject (IntPtr handle) =>
-		GetOrAddObject (handle, (h, o) => new SKBlender (h, o, immortal: true));
+		GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKBlender (h, o, immortal: true));
 }

@@ -60,12 +60,10 @@ namespace SkiaSharp
 		{
 			if (srgb is not null)
 				return srgb;
-			// immortal-from-ctor: closes the race where another thread could find the
-			// wrapper in HandleDictionary and dispose it before we set the flag.
+			// Newly-created wrappers are immortal-from-ctor (flag set before Handle
+			// is registered in HD). For existing wrappers, GetImmortalObject sets
+			// IgnorePublicDispose inside the HD critical section.
 			var cs = GetImmortalObject (SkiaApi.sk_colorspace_new_srgb ());
-			// Promote an existing wrapper to immortal if one was already in HD
-			// (narrow race remains for that case).
-			cs.IgnorePublicDispose = true;
 			return Interlocked.CompareExchange (ref srgb, cs, null) ?? cs;
 		}
 
@@ -76,7 +74,6 @@ namespace SkiaSharp
 			if (srgbLinear is not null)
 				return srgbLinear;
 			var cs = GetImmortalObject (SkiaApi.sk_colorspace_new_srgb_linear ());
-			cs.IgnorePublicDispose = true;
 			return Interlocked.CompareExchange (ref srgbLinear, cs, null) ?? cs;
 		}
 
@@ -169,8 +166,10 @@ namespace SkiaSharp
 			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 
 		// Variant used by singleton accessors. Newly created wrappers are immortal from birth
-		// (IgnorePublicDispose set before the wrapper enters HandleDictionary).
+		// (IgnorePublicDispose set before the wrapper enters HandleDictionary). Existing
+		// wrappers are promoted to immortal under the HD lock — narrows the race window
+		// against a concurrent Dispose() on a reference held from before this call.
 		internal static SKColorSpace GetImmortalObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o, immortal: true));
+			GetOrAddObject (handle, owns, unrefExisting, immortal: true, (h, o) => new SKColorSpace (h, o, immortal: true));
 	}
 }
