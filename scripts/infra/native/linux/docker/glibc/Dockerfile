@@ -67,7 +67,7 @@ RUN case "${BUILD_ARCH}" in \
     && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env \
     && echo "export SYSROOT_PATH=${ROOTFS_DIR}/usr" >> /etc/skia-env \
     && echo "export SYSROOT_ROOT=${ROOTFS_DIR}" >> /etc/skia-env \
-    && GCC_DIR=$(find ${ROOTFS_DIR}/usr/lib/gcc -maxdepth 3 -name "crtbeginS.o" -exec dirname {} \; | head -1) \
+    && GCC_DIR=$(find ${ROOTFS_DIR}/usr/lib/gcc -maxdepth 3 -name "crtbeginS.o" -exec dirname {} \; | sort -V | tail -1) \
     && if [ -z "$GCC_DIR" ] || [ ! -d "$GCC_DIR" ]; then \
          echo "FATAL: GCC lib dir not found (crtbeginS.o missing under ${ROOTFS_DIR}/usr/lib/gcc)" && exit 1 ; \
        fi \

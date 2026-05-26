@@ -104,7 +104,7 @@ RUN echo "export TOOLCHAIN_ARCH=i386-linux-gnu" > /etc/skia-env \
     && echo "export TOOLCHAIN_ARCH_TARGET=i686-linux-gnu" >> /etc/skia-env \
     && echo "export SYSROOT_PATH=/crossrootfs/x86/usr" >> /etc/skia-env \
     && echo "export SYSROOT_ROOT=/crossrootfs/x86" >> /etc/skia-env \
-    && GCC_DIR=$(find /crossrootfs/x86/usr/lib/gcc -maxdepth 3 -name "crtbeginS.o" -exec dirname {} \; | head -1) \
+    && GCC_DIR=$(find /crossrootfs/x86/usr/lib/gcc -maxdepth 3 -name "crtbeginS.o" -exec dirname {} \; | sort -V | tail -1) \
     && if [ -z "$GCC_DIR" ] || [ ! -d "$GCC_DIR" ]; then \
          echo "FATAL: GCC lib dir not found (crtbeginS.o missing under /crossrootfs/x86/usr/lib/gcc)" && exit 1 ; \
        fi \
