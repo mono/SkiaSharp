@@ -83,6 +83,15 @@ Setup(context =>
     Information("Emulator started:");
     DotNetTool("android device list");
 
+    // Set up adb reverse so the app can connect to the host's TCP listener
+    // via localhost (the CLI's env injects DEVICE_RUNNERS_HOST_NAMES=localhost;10.0.2.2)
+    Information("Setting up adb reverse for TCP port forwarding...");
+    var androidHome = EnvironmentVariable("ANDROID_HOME") ?? EnvironmentVariable("ANDROID_SDK_ROOT");
+    var adb = androidHome != null
+        ? $"{androidHome}/platform-tools/adb"
+        : "adb";
+    StartProcess(adb, "reverse tcp:16384 tcp:16384");
+
     TakeSnapshot(TEST_RESULTS, "boot-complete");
 });
 
