@@ -36,11 +36,6 @@ namespace SkiaSharp
 			}
 		}
 
-		static SKObject ()
-		{
-			SkiaSharpVersion.CheckNativeLibraryCompatible (true);
-		}
-
 		internal SKObject (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
