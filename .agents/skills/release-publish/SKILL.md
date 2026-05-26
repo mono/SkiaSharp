@@ -17,7 +17,9 @@ description: >
 
 Publish packages to NuGet.org and finalize releases.
 
-⚠️ **NO UNDO:** This is step 3 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is **Step 4 of 4** in the release pipeline (final step). See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+
+**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → [Step 2: release-status](../release-status/SKILL.md) → [Step 3: release-testing](../release-testing/SKILL.md) → **Step 4 (this skill)**
 
 ## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
 
@@ -92,6 +94,17 @@ If missing, STOP and ask user to verify testing was completed.
 ## Step 2: Publish to NuGet.org
 
 Trigger the [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) to push packages to NuGet.org.
+
+### Verifying Source Build Before Publishing
+
+Before triggering the publish pipeline, confirm builds completed using the **release-status** skill:
+
+```bash
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+```
+
+The `SkiaSharp` pipeline (ID 10789) must show ✅ — this is the pipeline that produced the
+packages on the internal feed. See [release-status](../release-status/SKILL.md) for details.
 
 ### Pipeline Steps
 
