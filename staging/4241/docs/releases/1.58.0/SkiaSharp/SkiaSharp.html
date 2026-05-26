@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4241/merge/documentation/docfx/releases/1.58.0/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<blockquote>
+<p>Assembly Version Changed: 1.58.0.0 vs 1.57.0.0</p>
+</blockquote>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpgrcontextoptions">Type Changed: SkiaSharp.GRContextOptions</h4>
+<p>Removed properties:</p>
+<pre><code class="lang-csharp">public bool ClipBatchToBounds { get; set; }
+public bool DrawBatchBounds { get; set; }
+public bool ForceSWPathMasks { get; set; }
+public int MaxBatchLookahead { get; set; }
+public int MaxBatchLookback { get; set; }
+</code></pre>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public bool ClipDrawOpsToBounds { get; set; }
+public bool ForceSoftwarePathMasks { get; set; }
+public int MaxOpCombineLookahead { get; set; }
+public int MaxOpCombineLookback { get; set; }
+public bool RequireDecodeDisableForSrgb { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpgrpixelconfig">Type Changed: SkiaSharp.GRPixelConfig</h4>
+<p>Removed values:</p>
+<pre><code class="lang-csharp">Astc12x12 = 12,
+Latc = 10,
+R11Eac = 11,
+</code></pre>
+<p>Modified fields:</p>
+<pre><code class="lang-diff">-AlphaHalf = 14
++AlphaHalf = 12
+-RgbaFloat = 13
++RgbaFloat = 10
+-RgbaHalf = 15
++RgbaHalf = 13
+</code></pre>
+<p>Added value:</p>
+<pre><code class="lang-csharp">RgFloat = 11,
+</code></pre>
+<h4 id="type-changed-skiasharpskbitmap">Type Changed: SkiaSharp.SKBitmap</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public SKColorSpace ColorSpace { get; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcanvas">Type Changed: SkiaSharp.SKCanvas</h4>
+<p>Obsoleted properties:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use LocalClipBounds instead.&quot;)]
+ public SKRect ClipBounds { get; }
+ [Obsolete (&quot;Use DeviceClipBounds instead.&quot;)]
+ public SKRectI ClipDeviceBounds { get; }
+</code></pre>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public SKRectI DeviceClipBounds { get; }
+public SKRect LocalClipBounds { get; }
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use GetLocalClipBounds instead.&quot;)]
+ public bool GetClipBounds (ref SKRect bounds);
+ [Obsolete (&quot;Use GetDeviceClipBounds instead.&quot;)]
+ public bool GetClipDeviceBounds (ref SKRectI bounds);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public bool GetDeviceClipBounds (out SKRectI bounds);
+public bool GetLocalClipBounds (out SKRect bounds);
+</code></pre>
+<h4 id="type-changed-skiasharpskcolorfilter">Type Changed: SkiaSharp.SKColorFilter</h4>
+<p>Removed fields:</p>
+<pre><code class="lang-csharp">public static const int MaxColorCubeDimension;
+
+[Obsolete (&quot;Use MaxColorCubeDimension instead.&quot;)]
+public static const int MaxCubeSize;
+public static const int MinColorCubeDimension;
+
+[Obsolete (&quot;Use MinColorCubeDimension instead.&quot;)]
+public static const int MinCubeSize;
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public static SKColorFilter CreateColorCube (SKData cubeData, int cubeDimension);
+public static SKColorFilter CreateColorCube (byte[] cubeData, int cubeDimension);
+public static SKColorFilter CreateGamma (float gamma);
+public static bool IsValid3DColorCube (SKData cubeData, int cubeDimension);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKColorFilter CreateHighContrast (SKHighContrastConfig config);
+public static SKColorFilter CreateHighContrast (bool grayscale, SKHighContrastConfigInvertStyle invertStyle, float contrast);
+</code></pre>
+<h4 id="type-changed-skiasharpskdata">Type Changed: SkiaSharp.SKData</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKData Create (SKStream stream);
+public static SKData Create (System.IO.Stream stream);
+public static SKData Create (string filename);
+public static SKData Create (SKStream stream, int length);
+public static SKData Create (SKStream stream, long length);
+public static SKData Create (SKStream stream, ulong length);
+public static SKData Create (System.IO.Stream stream, int length);
+public static SKData Create (System.IO.Stream stream, long length);
+public static SKData Create (System.IO.Stream stream, ulong length);
+</code></pre>
+<h4 id="type-changed-skiasharpskimageencodeformat">Type Changed: SkiaSharp.SKImageEncodeFormat</h4>
+<p>Modified fields:</p>
+<pre><code class="lang-diff">-Bmp = 0
++Bmp = 1
+-Gif = 1
++Gif = 2
+-Ico = 2
++Ico = 3
+-Jpeg = 3
++Jpeg = 4
+-Png = 4
++Png = 5
+-Wbmp = 5
++Wbmp = 6
+-Webp = 6
++Webp = 7
+</code></pre>
+<p>Added value:</p>
+<pre><code class="lang-csharp">Unknown = 0,
+</code></pre>
+<h4 id="type-changed-skiasharpskimagefilter">Type Changed: SkiaSharp.SKImageFilter</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">public static SKImageFilter CreateMagnifier (SKRect src, float inset, SKImageFilter input);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKImageFilter CreateImage (SKImage image);
+public static SKImageFilter CreateImage (SKImage image, SKRect src, SKRect dst, SKFilterQuality filterQuality);
+public static SKImageFilter CreateMagnifier (SKRect src, float inset, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreatePaint (SKPaint paint, SKImageFilter.CropRect cropRect);
+</code></pre>
+<h4 id="type-changed-skiasharpskimageinfo">Type Changed: SkiaSharp.SKImageInfo</h4>
+<p>Added constructor:</p>
+<pre><code class="lang-csharp">public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace);
+</code></pre>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public SKColorSpace ColorSpace { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskpaint">Type Changed: SkiaSharp.SKPaint</h4>
+<p>Removed properties:</p>
+<pre><code class="lang-csharp">public bool StrikeThruText { get; set; }
+public bool UnderlineText { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskpath">Type Changed: SkiaSharp.SKPath</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public SKRect ComputeTightBounds ();
+</code></pre>
+<h4 id="type-changed-skiasharpskpatheffect">Type Changed: SkiaSharp.SKPathEffect</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public static SKPathEffect CreateArcTo (float radius);
+</code></pre>
+<h4 id="type-changed-skiasharpskpixmap">Type Changed: SkiaSharp.SKPixmap</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public SKColorSpace ColorSpace { get; }
+</code></pre>
+<h4 id="type-changed-skiasharpsksurface">Type Changed: SkiaSharp.SKSurface</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKSurface Create (SKPixmap pixmap);
+public static SKSurface Create (SKPixmap pixmap, SKSurfaceProps props);
+</code></pre>
+<h4 id="new-type-skiasharpskcolorspace">New Type: SkiaSharp.SKColorSpace</h4>
+<pre><code class="lang-csharp">public class SKColorSpace : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public bool GammaIsCloseToSrgb { get; }
+	public bool GammaIsLinear { get; }
+	// methods
+	public static SKMatrix44 ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries);
+	public static bool ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries, SKMatrix44 toXyzD50);
+	public static SKColorSpace CreateIcc (byte[] input);
+	public static SKColorSpace CreateIcc (byte[] input, long length);
+	public static SKColorSpace CreateIcc (IntPtr input, long length);
+	public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut, SKColorSpaceFlags flags);
+	public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50, SKColorSpaceFlags flags);
+	public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut, SKColorSpaceFlags flags);
+	public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50, SKColorSpaceFlags flags);
+	public static SKColorSpace CreateSrgb ();
+	public static SKColorSpace CreateSrgbLinear ();
+	protected override void Dispose (bool disposing);
+	public static bool Equal (SKColorSpace left, SKColorSpace right);
+	public SKMatrix44 ToXyzD50 ();
+	public bool ToXyzD50 (SKMatrix44 toXyzD50);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcolorspaceflags">New Type: SkiaSharp.SKColorSpaceFlags</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKColorSpaceFlags {
+	NonLinearBlending = 1,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcolorspacegamut">New Type: SkiaSharp.SKColorSpaceGamut</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKColorSpaceGamut {
+	AdobeRgb = 1,
+	Dcip3D65 = 2,
+	Rec2020 = 3,
+	Srgb = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcolorspaceprimaries">New Type: SkiaSharp.SKColorSpacePrimaries</h4>
+<pre><code class="lang-csharp">public struct SKColorSpacePrimaries {
+	// constructors
+	public SKColorSpacePrimaries (float rx, float ry, float gx, float gy, float bx, float by, float wx, float wy);
+	// properties
+	public float BX { get; set; }
+	public float BY { get; set; }
+	public float GX { get; set; }
+	public float GY { get; set; }
+	public float RX { get; set; }
+	public float RY { get; set; }
+	public float WX { get; set; }
+	public float WY { get; set; }
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcolorspacerendertargetgamma">New Type: SkiaSharp.SKColorSpaceRenderTargetGamma</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKColorSpaceRenderTargetGamma {
+	Linear = 0,
+	Srgb = 1,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcolorspacetransferfn">New Type: SkiaSharp.SKColorSpaceTransferFn</h4>
+<pre><code class="lang-csharp">public struct SKColorSpaceTransferFn {
+	// constructors
+	public SKColorSpaceTransferFn (float g, float a, float b, float c, float d, float e, float f);
+	// properties
+	public float A { get; set; }
+	public float B { get; set; }
+	public float C { get; set; }
+	public float D { get; set; }
+	public float E { get; set; }
+	public float F { get; set; }
+	public float G { get; set; }
+}
+</code></pre>
+<h4 id="new-type-skiasharpskhighcontrastconfig">New Type: SkiaSharp.SKHighContrastConfig</h4>
+<pre><code class="lang-csharp">public struct SKHighContrastConfig {
+	// constructors
+	public SKHighContrastConfig (bool grayscale, SKHighContrastConfigInvertStyle invertStyle, float contrast);
+	// fields
+	public static SKHighContrastConfig Default;
+	// properties
+	public float Contrast { get; set; }
+	public bool Grayscale { get; set; }
+	public SKHighContrastConfigInvertStyle InvertStyle { get; set; }
+	public bool IsValid { get; }
+}
+</code></pre>
+<h4 id="new-type-skiasharpskhighcontrastconfiginvertstyle">New Type: SkiaSharp.SKHighContrastConfigInvertStyle</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKHighContrastConfigInvertStyle {
+	InvertBrightness = 1,
+	InvertLightness = 2,
+	NoInvert = 0,
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4241/merge/documentation/docfx/releases/1.58.0/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4241 · mattleibow-dev-issue-2779-skmatrix-managed-math · b26e7ea
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

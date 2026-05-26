@@ -1,0 +1,240 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.88.9 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.88.9 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4276/merge/documentation/docfx/releases/2.88.9.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2889">Version 2.88.9</h1>
+<!--
+  RAW PR DATA — Do not remove this comment block.
+  AI uses this data to generate the polished release notes below.
+  Re-run the script to refresh this data from git history.
+
+  Generated: 2026-06-17T23:56:44Z by generate-release-notes.py
+  version:   2.88.9
+  status:    stable
+  branch:    release/2.88.9
+  diff:      release/2.88.8..release/2.88.9
+  prs:       14
+  api:       self=2.88.9/index.md;hb=7.3.0.3
+
+  PRs grouped by the preview they first shipped in (newest first). Render each milestone as a trailing
+  "## <label> (<date>)" section per TEMPLATE.md, and merge them all for the top-level Highlights:
+
+  ## Unreleased — not yet in a tagged preview  (2 PRs)
+    - Use a snapshot now that 4.0 has been removed by @mattleibow in https://github.com/mono/SkiaSharp/pull/3054
+    - Add symbols to the packages by @mattleibow in https://github.com/mono/SkiaSharp/pull/3046
+
+  ## Preview 2 · 2.88.9 · 2024-10-24 · https://github.com/mono/SkiaSharp/compare/v2.88.9-preview.1.1...v2.88.9-preview.2.2  (5 PRs)
+    - fix: Add WinUI native helper for GetByteBuffer by @jeromelaban in https://github.com/mono/SkiaSharp/pull/3039 [community ✨]
+    - The fancy logic stopped working long ago by @mattleibow in https://github.com/mono/SkiaSharp/pull/3043
+    - Fix CI again using the new rollback locations by @mattleibow in https://github.com/mono/SkiaSharp/pull/3041
+    - Ignore some files to aid switching branches by @mattleibow in https://github.com/mono/SkiaSharp/pull/3021
+    - feat: Add support for .NET 9 (#3010) by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/3012 [community ✨]
+
+  ## Preview 1 · 2.88.9 · 2024-07-18 · https://github.com/mono/SkiaSharp/compare/v2.88.8...v2.88.9-preview.1.1  (7 PRs)
+    - Update the signing template by @mattleibow in https://github.com/mono/SkiaSharp/pull/2932
+    - Authenticate Docker by @mattleibow in https://github.com/mono/SkiaSharp/pull/2929
+    - Fix SKXamlCanvas on Uno Skia to use Bgra8888 (#2918) by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/2919 [community ✨]
+    - Fix the GetKerningPairAdjustments API. (#2858) by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/2886 [community ✨]
+    - fix: XamlRoot may be null when the SKXamlCanvas is unloaded (#2854) by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/2884 [community ✨]
+    - Use new license expressions by @mattleibow in https://github.com/mono/SkiaSharp/pull/2877
+    - Work around annoying fake warning in the IDE by @mattleibow in https://github.com/mono/SkiaSharp/pull/2844
+-->
+<!-- Generated: 2026-06-18T00:00:00Z by claude-sonnet-4.5 -->
+
+<blockquote>
+<p><strong>Platform compatibility and .NET 9 servicing release</strong> · Released November 7, 2024 · <a href="https://www.nuget.org/packages/SkiaSharp/2.88.9">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.88.9">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="2.88.9/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/7.3.0.3.html">HarfBuzzSharp 7.3.0.3</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 2.88.9 keeps the long-lived 2.x line current with .NET 9, improves WinUI and Uno/XAML behavior, and adds symbol packages for easier diagnostics. It is a focused compatibility update for applications that are staying on 2.88 while newer 3.x work continues elsewhere.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="new-features">New Features</h2>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>Added .NET 9 support</strong> — Keeps the 2.88 line usable on the .NET 9 wave. ❤️ <a href="https://github.com/jeromelaban">@jeromelaban</a> (<a href="https://github.com/mono/SkiaSharp/pull/3012">#3012</a>)</li>
+<li><strong>Added WinUI native helper for <code>GetByteBuffer</code></strong> — Improves WinUI interop for native buffer access. ❤️ <a href="https://github.com/jeromelaban">@jeromelaban</a> (<a href="https://github.com/mono/SkiaSharp/pull/3039">#3039</a>)</li>
+</ul>
+<h3 id="packaging">Packaging</h3>
+<ul>
+<li><strong>Published symbol packages</strong> — Adds symbols to the packages to improve debugging and crash analysis. (<a href="https://github.com/mono/SkiaSharp/pull/3046">#3046</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Fixed <code>GetKerningPairAdjustments</code></strong> — Corrects the kerning adjustment API behavior. ❤️ <a href="https://github.com/pdjonov">@pdjonov</a> (<a href="https://github.com/mono/SkiaSharp/pull/2886">#2886</a>)</li>
+<li><strong>Improved XAML canvas reliability</strong> — Fixes null <code>XamlRoot</code> unload paths and corrects Uno Skia to use <code>Bgra8888</code>. ❤️ <a href="https://github.com/jeromelaban">@jeromelaban</a> <a href="https://github.com/Youssef1313">@Youssef1313</a> (<a href="https://github.com/mono/SkiaSharp/pull/2884">#2884</a>, <a href="https://github.com/mono/SkiaSharp/pull/2919">#2919</a>)</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🪟 Windows</td>
+<td>.NET 9 support and a new WinUI native helper for <code>GetByteBuffer</code></td>
+</tr>
+<tr>
+<td>🌐 XAML / Uno</td>
+<td>Fixed <code>XamlRoot</code> unload handling and <code>Bgra8888</code> rendering</td>
+</tr>
+<tr>
+<td>📦 General</td>
+<td>Symbol packages for easier debugging</td>
+</tr>
+</tbody>
+</table>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jeromelaban">@jeromelaban</a></td>
+<td>Added .NET 9 support, the WinUI native helper, and XAML unload fixes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/pdjonov">@pdjonov</a></td>
+<td>Fixed <code>GetKerningPairAdjustments</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/Youssef1313">@Youssef1313</a></td>
+<td>Fixed Uno Skia <code>SKXamlCanvas</code> to use <code>Bgra8888</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/release/2.88.8...release/2.88.9">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/2.88.9">NuGet Package</a></li>
+</ul>
+<hr>
+<h2 id="unreleased">Unreleased</h2>
+<p>Added symbol packages and moved the 2.88 line to snapshot-based versioning ahead of the final release.</p>
+<hr>
+<h2 id="preview-2-october-24-2024">Preview 2 (October 24, 2024)</h2>
+<p>Added .NET 9 support and a WinUI native helper while continuing the 2.88 compatibility fixes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.9-preview.1.1...v2.88.9-preview.2.2">Full Changelog</a></p>
+<hr>
+<h2 id="preview-1-july-18-2024">Preview 1 (July 18, 2024)</h2>
+<p>Fixed XAML and Uno rendering issues and corrected the <code>GetKerningPairAdjustments</code> API.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.8...v2.88.9-preview.1.1">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4276/merge/documentation/docfx/releases/2.88.9.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4276 · mattleibow-benchmarks-ci-workflow · 7d9968f
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

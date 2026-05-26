@@ -1,0 +1,296 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4306/merge/documentation/docfx/releases/1.60.2/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpskbitmap">Type Changed: SkiaSharp.SKBitmap</h4>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use SKPixmap.Encode instead.&quot;)]
+ public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality);
+</code></pre>
+<h4 id="type-changed-skiasharpskcanvas">Type Changed: SkiaSharp.SKCanvas</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void ClipRoundRect (SKRoundRect rect, SKClipOperation operation, bool antialias);
+public void DrawRoundRect (SKRoundRect rect, SKPaint paint);
+</code></pre>
+<h4 id="type-changed-skiasharpskpath">Type Changed: SkiaSharp.SKPath</h4>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use AddRoundRect instead.&quot;)]
+ public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void AddRoundRect (SKRoundRect rect, SKPathDirection direction);
+public void AddRoundRect (SKRoundRect rect, SKPathDirection direction, uint startIndex);
+public void AddRoundRect (SKRect rect, float rx, float ry, SKPathDirection dir);
+</code></pre>
+<h4 id="type-changed-skiasharpskpixmap">Type Changed: SkiaSharp.SKPixmap</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public SKData Encode (SKJpegEncoderOptions options);
+public SKData Encode (SKPngEncoderOptions options);
+public SKData Encode (SKWebpEncoderOptions options);
+public bool Encode (SKWStream dst, SKJpegEncoderOptions options);
+public bool Encode (SKWStream dst, SKPngEncoderOptions options);
+public bool Encode (SKWStream dst, SKWebpEncoderOptions options);
+public static bool Encode (SKWStream dst, SKPixmap src, SKJpegEncoderOptions options);
+public static bool Encode (SKWStream dst, SKPixmap src, SKPngEncoderOptions options);
+public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options);
+public static bool Encode (SKWStream dst, SKBitmap src, SKEncodedImageFormat format, int quality);
+</code></pre>
+<h4 id="new-type-skiasharpskjpegencoderalphaoption">New Type: SkiaSharp.SKJpegEncoderAlphaOption</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKJpegEncoderAlphaOption {
+	BlendOnBlack = 1,
+	Ignore = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskjpegencoderdownsample">New Type: SkiaSharp.SKJpegEncoderDownsample</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKJpegEncoderDownsample {
+	Downsample420 = 0,
+	Downsample422 = 1,
+	Downsample444 = 2,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskjpegencoderoptions">New Type: SkiaSharp.SKJpegEncoderOptions</h4>
+<pre><code class="lang-csharp">public struct SKJpegEncoderOptions {
+	// constructors
+	public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption);
+	public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption, SKTransferFunctionBehavior blendBehavior);
+	// fields
+	public static SKJpegEncoderOptions Default;
+	// properties
+	public SKJpegEncoderAlphaOption AlphaOption { get; set; }
+	public SKTransferFunctionBehavior BlendBehavior { get; set; }
+	public SKJpegEncoderDownsample Downsample { get; set; }
+	public int Quality { get; set; }
+}
+</code></pre>
+<h4 id="new-type-skiasharpsknwaycanvas">New Type: SkiaSharp.SKNWayCanvas</h4>
+<pre><code class="lang-csharp">public class SKNWayCanvas : SkiaSharp.SKNoDrawCanvas, System.IDisposable {
+	// constructors
+	public SKNWayCanvas (int width, int height);
+	// methods
+	public void AddCanvas (SKCanvas canvas);
+	public void RemoveAll ();
+	public void RemoveCanvas (SKCanvas canvas);
+}
+</code></pre>
+<h4 id="new-type-skiasharpsknodrawcanvas">New Type: SkiaSharp.SKNoDrawCanvas</h4>
+<pre><code class="lang-csharp">public class SKNoDrawCanvas : SkiaSharp.SKCanvas, System.IDisposable {
+	// constructors
+	public SKNoDrawCanvas (int width, int height);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskpngencoderfilterflags">New Type: SkiaSharp.SKPngEncoderFilterFlags</h4>
+<pre><code class="lang-csharp">[Serializable]
+[Flags]
+public enum SKPngEncoderFilterFlags {
+	AllFilters = 248,
+	Avg = 64,
+	NoFilters = 0,
+	None = 8,
+	Paeth = 128,
+	Sub = 16,
+	Up = 32,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskpngencoderoptions">New Type: SkiaSharp.SKPngEncoderOptions</h4>
+<pre><code class="lang-csharp">public struct SKPngEncoderOptions {
+	// constructors
+	public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel);
+	public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior);
+	// fields
+	public static SKPngEncoderOptions Default;
+	// properties
+	public SKPngEncoderFilterFlags FilterFlags { get; set; }
+	public SKTransferFunctionBehavior UnpremulBehavior { get; set; }
+	public int ZLibLevel { get; set; }
+}
+</code></pre>
+<h4 id="new-type-skiasharpskroundrect">New Type: SkiaSharp.SKRoundRect</h4>
+<pre><code class="lang-csharp">public class SKRoundRect : SkiaSharp.SKObject, System.IDisposable {
+	// constructors
+	public SKRoundRect ();
+	public SKRoundRect (SKRect rect);
+	public SKRoundRect (SKRoundRect rrect);
+	public SKRoundRect (SKRect rect, float xRadius, float yRadius);
+	// properties
+	public bool AllCornersCircular { get; }
+	public float Height { get; }
+	public bool IsValid { get; }
+	public SKRect Rect { get; }
+	public SKRoundRectType Type { get; }
+	public float Width { get; }
+	// methods
+	public bool CheckAllCornersCircular (float tolerance);
+	public bool Contains (SKRect rect);
+	public void Deflate (SKSize size);
+	public void Deflate (float dx, float dy);
+	protected override void Dispose (bool disposing);
+	public SKPoint GetRadii (SKRoundRectCorner corner);
+	public void Inflate (SKSize size);
+	public void Inflate (float dx, float dy);
+	public void Offset (SKPoint pos);
+	public void Offset (float dx, float dy);
+	public void SetEmpty ();
+	public void SetNinePatch (SKRect rect, float leftRadius, float topRadius, float rightRadius, float bottomRadius);
+	public void SetOval (SKRect rect);
+	public void SetRect (SKRect rect);
+	public void SetRect (SKRect rect, float xRadius, float yRadius);
+	public void SetRectRadii (SKRect rect, SKPoint[] radii);
+	public SKRoundRect Transform (SKMatrix matrix);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskroundrectcorner">New Type: SkiaSharp.SKRoundRectCorner</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKRoundRectCorner {
+	LowerLeft = 3,
+	LowerRight = 2,
+	UpperLeft = 0,
+	UpperRight = 1,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskroundrecttype">New Type: SkiaSharp.SKRoundRectType</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKRoundRectType {
+	Complex = 5,
+	Empty = 0,
+	NinePatch = 4,
+	Oval = 2,
+	Rect = 1,
+	Simple = 3,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskwebpencodercompression">New Type: SkiaSharp.SKWebpEncoderCompression</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKWebpEncoderCompression {
+	Lossless = 1,
+	Lossy = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskwebpencoderoptions">New Type: SkiaSharp.SKWebpEncoderOptions</h4>
+<pre><code class="lang-csharp">public struct SKWebpEncoderOptions {
+	// constructors
+	public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality);
+	public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality, SKTransferFunctionBehavior unpremulBehavior);
+	// fields
+	public static SKWebpEncoderOptions Default;
+	// properties
+	public SKWebpEncoderCompression Compression { get; set; }
+	public float Quality { get; set; }
+	public SKTransferFunctionBehavior UnpremulBehavior { get; set; }
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4306/merge/documentation/docfx/releases/1.60.2/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4306 · mattleibow-friendly-funicular · d6e9119
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

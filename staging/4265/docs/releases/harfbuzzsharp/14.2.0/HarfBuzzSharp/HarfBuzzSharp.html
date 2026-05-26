@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: HarfBuzzSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: HarfBuzzSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4265/merge/documentation/docfx/releases/harfbuzzsharp/14.2.0/HarfBuzzSharp/HarfBuzzSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../../index.html">
+            <img id="logo" class="svg" src="../../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-harfbuzzsharpdll">API diff: HarfBuzzSharp.dll</h1>
+
+<h2 id="harfbuzzsharpdll">HarfBuzzSharp.dll</h2>
+<h3 id="namespace-harfbuzzsharp">Namespace HarfBuzzSharp</h3>
+<h4 id="type-changed-harfbuzzsharpface">Type Changed: HarfBuzzSharp.Face</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public bool HasColorLayers { get; }
+public bool HasColorPng { get; }
+public bool HasColorSvg { get; }
+public bool HasPalettes { get; }
+public bool HasVariationData { get; }
+public int NamedInstanceCount { get; }
+public int PaletteCount { get; }
+public int VariationAxisCount { get; }
+public OpenTypeVarAxisInfo[] VariationAxisInfos { get; }
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public float[] GetNamedInstanceDesignCoords (int instanceIndex);
+public int GetNamedInstanceDesignCoords (int instanceIndex, System.Span&lt;float&gt; coords);
+public int GetNamedInstanceDesignCoordsCount (int instanceIndex);
+public OpenTypeNameId GetNamedInstancePostScriptNameId (int instanceIndex);
+public OpenTypeNameId GetNamedInstanceSubfamilyNameId (int instanceIndex);
+public OpenTypeNameId GetPaletteColorNameId (int colorIndex);
+public HBColor[] GetPaletteColors (int paletteIndex);
+public int GetPaletteColors (int paletteIndex, System.Span&lt;HBColor&gt; colors);
+public OpenTypeColorPaletteFlags GetPaletteFlags (int paletteIndex);
+public OpenTypeNameId GetPaletteNameId (int paletteIndex);
+public int GetVariationAxisInfos (System.Span&lt;OpenTypeVarAxisInfo&gt; axes);
+public bool TryFindVariationAxis (Tag tag, out OpenTypeVarAxisInfo axisInfo);
+</code></pre>
+<h4 id="type-changed-harfbuzzsharpfont">Type Changed: HarfBuzzSharp.Font</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public int[] VariationCoordsNormalized { get; }
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public int GetVariationCoordsNormalized (System.Span&lt;int&gt; coords);
+public void SetVariationCoordsDesign (System.ReadOnlySpan&lt;float&gt; coords);
+public void SetVariationCoordsNormalized (System.ReadOnlySpan&lt;int&gt; coords);
+public void SetVariationNamedInstance (int instanceIndex);
+public void SetVariations (System.ReadOnlySpan&lt;Variation&gt; variations);
+</code></pre>
+<h4 id="new-type-harfbuzzsharphbcolor">New Type: HarfBuzzSharp.HBColor</h4>
+<pre><code class="lang-csharp">public struct HBColor, System.IEquatable&lt;HBColor&gt; {
+	// constructors
+	public HBColor (uint value);
+	public HBColor (byte red, byte green, byte blue, byte alpha);
+	// properties
+	public byte Alpha { get; }
+	public byte Blue { get; }
+	public byte Green { get; }
+	public byte Red { get; }
+	public uint Value { get; }
+	// methods
+	public virtual bool Equals (HBColor other);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public override string ToString ();
+	public static bool op_Equality (HBColor left, HBColor right);
+	public static HBColor op_Explicit (uint value);
+	public static uint op_Implicit (HBColor color);
+	public static bool op_Inequality (HBColor left, HBColor right);
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4265/merge/documentation/docfx/releases/harfbuzzsharp/14.2.0/HarfBuzzSharp/HarfBuzzSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4265 · mattleibow-coretext-colr-palette-fix · d5c0883
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

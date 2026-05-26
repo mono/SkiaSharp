@@ -1,0 +1,220 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 3.119.3 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 3.119.3 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4306/merge/documentation/docfx/releases/3.119.3.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-31193">Version 3.119.3</h1>
+<!--
+  RAW PR DATA — Do not remove this comment block.
+  AI uses this data to generate the polished release notes below.
+  Re-run the script to refresh this data from git history.
+
+  Generated: 2026-06-23T19:19:54Z by generate-release-notes.py
+  version:   3.119.3
+  status:    preview
+  superseded: 3.119.4 (preview only, never released as stable)
+  branch:    release/3.119.3-preview.1
+  diff:      release/3.119.2..release/3.119.3-preview.1
+  prs:       34
+  api:       self=3.119.3/index.md;hb=8.3.1.4
+
+  PRs grouped by the preview they first shipped in (newest first). Render each milestone as a trailing
+  "## <label> (<date>)" section per TEMPLATE.md, and merge them all for the top-level Highlights:
+
+  ## Preview 1 · 3.119.3 · 2026-02-07 · https://github.com/mono/SkiaSharp/compare/v3.119.2...v3.119.3-preview.1.1  (34 PRs)
+    - Bump to the next version (3.119.3) after release by @mattleibow in https://github.com/mono/SkiaSharp/pull/3507
+    - Add Linux Docker integration tests for release testing by @mattleibow in https://github.com/mono/SkiaSharp/pull/3506
+    - Fix stable version handling in release skills by @mattleibow in https://github.com/mono/SkiaSharp/pull/3505
+    - Add semver ordering guidance to release skills by @mattleibow in https://github.com/mono/SkiaSharp/pull/3504
+    - Add Spectre mitigation flag for libSkiaSharp.so. by @sshumakov in https://github.com/mono/SkiaSharp/pull/3502 [community ✨]
+    - Fix release-testing skill consistency issues by @mattleibow in https://github.com/mono/SkiaSharp/pull/3501
+    - Add Spectre mitigation flag for libSkiaSharp.dll. by @sshumakov in https://github.com/mono/SkiaSharp/pull/3496 [community ✨]
+    - Fix Linux ARM64 crash: add fontconfig runtime library to cross-compile sysroot by @mattleibow in https://github.com/mono/SkiaSharp/pull/3494
+    - Add 'copilot' label step to bug-fix skill PR workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/3495
+    - Fix AoT crash when IlcDisableReflection=true by @Copilot in https://github.com/mono/SkiaSharp/pull/3485 [community ✨]
+    - Improve AI instructions and skills by @mattleibow in https://github.com/mono/SkiaSharp/pull/3488
+    - Add structured workflow for adding APIs to SkiaSharp by @Copilot in https://github.com/mono/SkiaSharp/pull/3483 [community ✨]
+    - Use the new CI feed to download the pre-built artifacts by @mattleibow in https://github.com/mono/SkiaSharp/pull/3486
+    - Add NuGet feed management tools and PR package download script by @mattleibow in https://github.com/mono/SkiaSharp/pull/3479
+    - Update libwebp to 1.6.0 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3478 (skia: mono/skia#167)
+    - Improve native-dependency-update skill Phase 5 instructions by @mattleibow in https://github.com/mono/SkiaSharp/pull/3477
+    - Add debugging methodology documentation by @mattleibow in https://github.com/mono/SkiaSharp/pull/3468
+    - Strengthen skill guidance on submodule merge sequence by @mattleibow in https://github.com/mono/SkiaSharp/pull/3475
+    - Fix skia submodule to point to squashed commit by @mattleibow in https://github.com/mono/SkiaSharp/pull/3474 (skia: mono/skia#165)
+    - Update brotli to 1.2.0 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3469
+    - Bump libexpat from 2.6.4 to 2.7.3 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3458
+    - Remove unused deps and add deps docs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3463 (skia: mono/skia#164)
+    - Update more skills by @mattleibow in https://github.com/mono/SkiaSharp/pull/3460
+    - Update native-dependency-update skill with guardrails by @mattleibow in https://github.com/mono/SkiaSharp/pull/3457
+    - Update SkiaSharp package source URL in nuget.config by @mattleibow in https://github.com/mono/SkiaSharp/pull/3459
+    - Update the native dependency bump skills by @mattleibow in https://github.com/mono/SkiaSharp/pull/3455
+    - Update libpng to 1.6.54 by @mattleibow in https://github.com/mono/SkiaSharp/pull/3452 (skia: mono/skia#162)
+    - Update docs submodule by @mattleibow in https://github.com/mono/SkiaSharp/pull/3454
+    - Add native dependency update skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/3453
+    - Add AI release skills and integration test suite by @mattleibow in https://github.com/mono/SkiaSharp/pull/3451
+    - Fix the version processing by @mattleibow in https://github.com/mono/SkiaSharp/pull/3450
+    - Add API guidelines and implement-issue skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/3445
+    - Document HarfBuzzSharp versioning in release process by @mattleibow in https://github.com/mono/SkiaSharp/pull/3447
+    - Bump to the next version (3.119.3) after release by @mattleibow in https://github.com/mono/SkiaSharp/pull/3446
+-->
+<!-- Generated: 2026-06-23T19:21:35Z by claude-sonnet-4.6 -->
+
+<blockquote>
+<p><strong>Preview only</strong> · Superseded by <a href="3.119.4.html">3.119.4</a> · Never released as stable — these changes rolled up into 3.119.4 · <a href="https://www.nuget.org/packages/SkiaSharp/3.119.3-preview">NuGet</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="3.119.3/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/8.3.1.4.md">HarfBuzzSharp 8.3.1.4</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>This preview-only release focused on security hardening and stability: Spectre mitigations landed for both Windows and Linux native libraries, a NativeAOT crash was fixed for apps with reflection disabled, and a fontconfig crash on Linux ARM64 was resolved. All of these changes shipped cumulatively in <a href="3.119.4.html">3.119.4</a>. Community contributors <a href="https://github.com/sshumakov">@sshumakov</a> and <a href="https://github.com/Copilot">@Copilot</a> drove both Spectre mitigation PRs and the AoT fix.</p>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Spectre mitigation for Windows</strong> — Enables <code>/Qspectre</code> for <code>libSkiaSharp.dll</code>, reducing information-disclosure risk on Windows. ❤️ <a href="https://github.com/sshumakov">@sshumakov</a> (<a href="https://github.com/mono/SkiaSharp/pull/3496">#3496</a>)</li>
+<li><strong>Spectre mitigation for Linux</strong> — Enables Spectre mitigation flags for <code>libSkiaSharp.so</code>. ❤️ <a href="https://github.com/sshumakov">@sshumakov</a> (<a href="https://github.com/mono/SkiaSharp/pull/3502">#3502</a>)</li>
+<li><strong>libwebp updated to 1.6.0</strong> — Latest security release. (<a href="https://github.com/mono/SkiaSharp/pull/3478">#3478</a>)</li>
+<li><strong>brotli updated to 1.2.0</strong> (<a href="https://github.com/mono/SkiaSharp/pull/3469">#3469</a>)</li>
+<li><strong>libexpat bumped to 2.7.3</strong> — Security fix release (from 2.6.4). (<a href="https://github.com/mono/SkiaSharp/pull/3458">#3458</a>)</li>
+<li><strong>libpng updated to 1.6.54</strong> (<a href="https://github.com/mono/SkiaSharp/pull/3452">#3452</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Fixed NativeAOT crash with <code>IlcDisableReflection=true</code></strong> — Resolves a crash in apps compiled ahead-of-time with reflection disabled. ❤️ <a href="https://github.com/Copilot">@Copilot</a> (<a href="https://github.com/mono/SkiaSharp/pull/3485">#3485</a>)</li>
+<li><strong>Fixed Linux ARM64 startup crash</strong> — Adds the fontconfig runtime library to the ARM64 cross-compile sysroot, resolving a crash at startup on Linux ARM64. (<a href="https://github.com/mono/SkiaSharp/pull/3494">#3494</a>)</li>
+</ul>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/sshumakov">@sshumakov</a></td>
+<td>Spectre mitigations for Windows and Linux native libraries</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Copilot">@Copilot</a></td>
+<td>Fixed NativeAOT crash with <code>IlcDisableReflection=true</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v3.119.2...v3.119.3-preview.1.1">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/3.119.3-preview">NuGet Package</a></li>
+</ul>
+<hr>
+<h2 id="preview-1-february-7-2026">Preview 1 (February 7, 2026)</h2>
+<p>Security hardening with Spectre mitigations for Windows and Linux, NativeAOT crash fix, Linux ARM64 fontconfig fix, and multiple native dependency security updates (libwebp, brotli, libexpat, libpng).</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.2...v3.119.3-preview.1.1">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4306/merge/documentation/docfx/releases/3.119.3.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4306 · mattleibow-friendly-funicular · d6e9119
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

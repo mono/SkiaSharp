@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>HarfBuzzSharp 8.3.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="HarfBuzzSharp 8.3.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../TOC.html">
+      <meta name="docfx:tocrel" content="../TOC.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4265/merge/documentation/docfx/releases/harfbuzzsharp/8.3.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="harfbuzzsharp-830">HarfBuzzSharp 8.3.0</h1>
+<!--
+  RAW PR DATA — Do not remove this comment block.
+  AI uses this data to generate the polished release notes below.
+  Re-run the script to refresh this data from git history.
+
+  Generated: 2026-06-17T23:59:59Z by generate-release-notes.py
+  version:   8.3.0
+  status:    stable
+  branch:    release/3.0.0-preview.5
+  diff:      release/2.88.9..release/3.0.0-preview.5
+  prs:       7
+  api:       self=8.3.0/index.md;ships=3.0.0
+
+  PRs grouped by the preview they first shipped in (newest first). Render each milestone as a trailing
+  "## <label> (<date>)" section per TEMPLATE.md, and merge them all for the top-level Highlights:
+
+  ## Preview 5 · 3.0.0 · 2024-10-24 · https://github.com/mono/SkiaSharp/compare/v3.0.0-preview.4.1...v3.0.0-preview.5.4  (3 PRs)
+    - Function pointers and LibraryImport by @maxkatz6 in https://github.com/mono/SkiaSharp/pull/2917 [community ✨]
+    - Update SDK, workloads and projects by @mattleibow in https://github.com/mono/SkiaSharp/pull/2971
+    - Update .NET to 8.0 by @mattleibow in https://github.com/mono/SkiaSharp/pull/2927
+
+  ## Preview 4 · 3.0.0 · 2024-07-18 · https://github.com/mono/SkiaSharp/compare/v3.0.0-preview.3.1...v3.0.0-preview.4.1  (0 PRs)
+    *(no PRs)*
+
+  ## Preview 3 · 3.0.0 · 2024-04-09 · https://github.com/mono/SkiaSharp/compare/v3.0.0-preview.2.1...v3.0.0-preview.3.1  (0 PRs)
+    *(no PRs)*
+
+  ## Preview 2 · 3.0.0 · 2024-02-20 · https://github.com/mono/SkiaSharp/compare/v3.0.0-preview.1.8...v3.0.0-preview.2.1  (1 PRs)
+    - Run APIScan after packaging on the packages by @mattleibow in https://github.com/mono/SkiaSharp/pull/2730
+
+  ## Preview 1 · 3.0.0 · 2024-02-06 · https://github.com/mono/SkiaSharp/compare/v2.88.9...v3.0.0-preview.1.8  (3 PRs)
+    - Update harfbuzz to 7.3.0 by @mattleibow in https://github.com/mono/SkiaSharp/pull/2582 (skia: mono/skia#104)
+    - Remove all [Obsolete] members and types by @mattleibow in https://github.com/mono/SkiaSharp/pull/2539
+    - Modernize the repository and prepare SkiaSharp 3.0 by @mattleibow in https://github.com/mono/SkiaSharp/pull/2505
+-->
+<!-- Generated: 2026-06-18T00:00:00Z by claude-sonnet-4.5 -->
+
+<blockquote>
+<p>Ships with <a href="../3.0.0.html">SkiaSharp 3.0.0</a> · <a href="https://www.nuget.org/packages/HarfBuzzSharp/8.3.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v3.0.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="8.3.0/index.html">HarfBuzzSharp API diff</a> · Ships with <a href="../3.0.0.html">SkiaSharp 3.0.0</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>HarfBuzzSharp 8.3.0 is the companion release to the SkiaSharp 3.0 wave, updating the bundled HarfBuzz build, modernizing native interop, and rolling up the cleanup work needed for the new major line.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>Obsolete APIs removed</strong> — Previously obsolete HarfBuzzSharp members and types were removed as part of the 3.0 cleanup. (<a href="https://github.com/mono/SkiaSharp/pull/2539">#2539</a>)</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="text--fonts">Text &amp; Fonts</h3>
+<ul>
+<li><strong>Updated bundled HarfBuzz</strong> — Refreshes the native HarfBuzz dependency to 7.3.0 for the 3.0 line. (<a href="https://github.com/mono/SkiaSharp/pull/2582">#2582</a>)</li>
+</ul>
+<h3 id="interop--platform">Interop &amp; Platform</h3>
+<ul>
+<li><strong>Modernized native interop</strong> — Moves the bindings toward function pointers and <code>LibraryImport</code>, reducing legacy P/Invoke plumbing. ❤️ <a href="https://github.com/maxkatz6">@maxkatz6</a> (<a href="https://github.com/mono/SkiaSharp/pull/2917">#2917</a>)</li>
+<li><strong>Prepared for the 3.0 toolchain</strong> — Aligns the HarfBuzzSharp projects and packaging with the modernized .NET 8-era release line. (<a href="https://github.com/mono/SkiaSharp/pull/2505">#2505</a>)</li>
+</ul>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/maxkatz6">@maxkatz6</a></td>
+<td>Modernized interop with function pointers and <code>LibraryImport</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/release/2.88.9...release/3.0.0-preview.5">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/HarfBuzzSharp/8.3.0">NuGet Package</a></li>
+</ul>
+<hr>
+<h2 id="preview-5-october-24-2024">Preview 5 (October 24, 2024)</h2>
+<p>Modernized HarfBuzzSharp interop with function pointers and <code>LibraryImport</code>, alongside the final 3.0 toolchain updates.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.0.0-preview.4.1...v3.0.0-preview.5.4">Full Changelog</a></p>
+<hr>
+<h2 id="preview-4-july-18-2024">Preview 4 (July 18, 2024)</h2>
+<p>No HarfBuzzSharp-specific changes landed in this preview.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.0.0-preview.3.1...v3.0.0-preview.4.1">Full Changelog</a></p>
+<hr>
+<h2 id="preview-3-april-9-2024">Preview 3 (April 9, 2024)</h2>
+<p>No HarfBuzzSharp-specific changes landed in this preview.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.0.0-preview.2.1...v3.0.0-preview.3.1">Full Changelog</a></p>
+<hr>
+<h2 id="preview-2-february-20-2024">Preview 2 (February 20, 2024)</h2>
+<p>Packaging validation updates shipped in this preview, with no user-facing HarfBuzzSharp API changes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.0.0-preview.1.8...v3.0.0-preview.2.1">Full Changelog</a></p>
+<hr>
+<h2 id="preview-1-february-6-2024">Preview 1 (February 6, 2024)</h2>
+<p>Updated HarfBuzz to 7.3.0 and removed obsolete APIs as part of the HarfBuzzSharp 3.0 transition.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.9...v3.0.0-preview.1.8">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4265/merge/documentation/docfx/releases/harfbuzzsharp/8.3.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4265 · mattleibow-coretext-colr-palette-fix · d5c0883
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

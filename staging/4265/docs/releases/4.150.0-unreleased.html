@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.150.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.150.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4265/merge/documentation/docfx/releases/4.150.0-unreleased.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41500">Version 4.150.0</h1>
+<!--
+  RAW PR DATA — Do not remove this comment block.
+  AI uses this data to generate the polished release notes below.
+  Re-run the script to refresh this data from git history.
+
+  Generated: 2026-06-23T22:14:51Z by generate-release-notes.py
+  version:   4.150.0
+  status:    unreleased
+  branch:    main
+  diff:      release/4.150.0-preview.1..main
+  prs:       28
+  api:       hb=14.2.0
+
+  - docs: drop obsolete GrVkYcbcrConversionInfo page to fix xref collision by @mattleibow in https://github.com/mono/SkiaSharp/pull/4225
+  - docs: regenerate API diffs and polish release notes by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/4224 [community ✨]
+  - Fix integration test harness for .NET 10 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4221
+  - Add mono/skia counterpart branching to release-branch skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/4220
+  - [docs] Release-notes: main-only daily workflow + GitHub Release teaser playbook by @mattleibow in https://github.com/mono/SkiaSharp/pull/4207
+  - [api-docs] Stop merge from writing unfilled remarks scaffold to XML by @mattleibow in https://github.com/mono/SkiaSharp/pull/4218
+  - Fix release-branch skill integration-branch model and add bump-version helper by @mattleibow in https://github.com/mono/SkiaSharp/pull/4211
+  - Add VERSIONS.txt step to the native-dependency-update skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/4215
+  - Sync VERSIONS.txt with harfbuzz 14.2.1 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4214
+  - Improve api-docs skill to stop recurring documentation-writer mistakes by @mattleibow in https://github.com/mono/SkiaSharp/pull/4204
+  - Make doc generation reproducible and Linux-only; unify "API diff" terminology by @mattleibow in https://github.com/mono/SkiaSharp/pull/4200
+  - [v4] Promote remaining pre-v4 obsoletes to error and trim obsolete enums from the ref assembly by @ramezgerges in https://github.com/mono/SkiaSharp/pull/4195 [community ✨]
+  - Make API-diff changelog generation host-independent by @mattleibow in https://github.com/mono/SkiaSharp/pull/4196
+  - Fix docs.cake moniker collision dropping iOS GL API docs by @mattleibow in https://github.com/mono/SkiaSharp/pull/4197
+  - docs: latest-only, local-only frameworks docs generator by @mattleibow in https://github.com/mono/SkiaSharp/pull/4192
+  - Update docs submodule to latest main by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/3919 [community ✨]
+  - [infra] Run release-notes Prepare in its own disk-managed job by @mattleibow in https://github.com/mono/SkiaSharp/pull/4193
+  - [docs] Unify API-diff + release-notes into one agentic workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/4184
+  - [security-audit] Add Chromium release heads-up to the security-audit skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/4188
+  - Remove deprecated .NET Interactive (Polyglot Notebooks) support by @mattleibow in https://github.com/mono/SkiaSharp/pull/4186
+  - docs: refresh Skia adoption claims with verified product list by @mattleibow in https://github.com/mono/SkiaSharp/pull/4185
+  - release-notes: restore in-flight -unreleased naming + per-preview rollup (R1/R2/R3) by @mattleibow in https://github.com/mono/SkiaSharp/pull/4179
+  - [docs] Unify changelog + release-notes generation: stable rollups and local skia links by @mattleibow in https://github.com/mono/SkiaSharp/pull/4177
+  - release-notes: fix --all timeout, migrate pages, and credit contributors correctly by @mattleibow in https://github.com/mono/SkiaSharp/pull/4174
+  - Unify API changelog + release-notes versioning via shared versions.json by @mattleibow in https://github.com/mono/SkiaSharp/pull/4171
+  - Migrate test suite from xUnit v2 to xUnit v3 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4143
+  - Update harfbuzz to 14.2.1 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4167 (skia: mono/skia#257)
+  - Build Tizen native dependencies in a Docker container by Matthew Leibowitz in https://github.com/mono/SkiaSharp/pull/4154 [community ✨]
+-->
+<!-- Generated: 2026-06-23T22:16:14Z by claude-sonnet-4.6 -->
+
+<blockquote>
+<p><strong>Upcoming release</strong> · In development · Not yet available on NuGet</p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="harfbuzzsharp/14.2.0.html">HarfBuzzSharp 14.2.0</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>Version 4.150.0 completes the v4 API migration by promoting all remaining pre-v4 obsolete APIs to compile errors and trimming stale enum members from the reference assembly — community contributor <a href="https://github.com/ramezgerges">@ramezgerges</a> drove that cleanup. The long-deprecated .NET Interactive (Polyglot Notebooks) support is also removed in this release. HarfBuzz 14.2.0 ships alongside SkiaSharp 4.150.0 — see the API changes above for binding details.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>Pre-v4 API cleanup</strong> — All APIs deprecated during the v4 transition now produce compile errors instead of warnings, and stale enum members have been removed from the reference assembly. Update any remaining v3-style call sites to their v4 equivalents before upgrading. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4195">#4195</a>)</li>
+<li><strong>Polyglot Notebooks / .NET Interactive support removed</strong> — The deprecated .NET Interactive (Polyglot Notebooks) integration has been removed entirely. Migrate to a supported rendering surface before upgrading. (<a href="https://github.com/mono/SkiaSharp/pull/4186">#4186</a>)</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>Tizen native builds in Docker</strong> — Tizen native dependencies are now compiled inside a Docker container, making Tizen builds more reproducible and host-independent. (<a href="https://github.com/mono/SkiaSharp/pull/4154">#4154</a>)</li>
+<li><strong>.NET 10 support</strong> — Integration test harness updated to work with .NET 10. (<a href="https://github.com/mono/SkiaSharp/pull/4221">#4221</a>)</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What's New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🎮 Tizen</td>
+<td>Native dependencies now built in Docker for reproducible builds</td>
+</tr>
+<tr>
+<td>🏗️ Build</td>
+<td>.NET 10 integration test support</td>
+</tr>
+</tbody>
+</table>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Promoted pre-v4 obsoletes to compile errors and trimmed stale enum members from the reference assembly</td>
+</tr>
+</tbody>
+</table>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4265/merge/documentation/docfx/releases/4.150.0-unreleased.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4265 · mattleibow-coretext-colr-palette-fix · d5c0883
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

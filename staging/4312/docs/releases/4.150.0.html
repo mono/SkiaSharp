@@ -1,0 +1,255 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.150.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.150.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4312/merge/documentation/docfx/releases/4.150.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41500">Version 4.150.0</h1>
+<!--
+  RAW PR DATA — Do not remove this comment block.
+  AI uses this data to generate the polished release notes below.
+  Re-run the script to refresh this data from git history.
+
+  Generated: 2026-06-29T20:14:30Z by generate-release-notes.py
+  version:   4.150.0
+  status:    preview
+  branch:    release/4.150.0-rc.1
+  diff:      release/4.148.0..release/4.150.0-rc.1
+  prs:       45
+  api:       self=4.150.0/index.md;hb=14.2.1
+
+  PRs grouped by the preview they first shipped in (newest first). Render each milestone as a trailing
+  "## <label> (<date>)" section per TEMPLATE.md, and merge them all for the top-level Highlights:
+
+  ## Unreleased — not yet in a tagged preview  (13 PRs)
+    - Add SKPaint.GetFastBounds() for quick-reject culling by @mattleibow in https://github.com/mono/SkiaSharp/pull/4271 (skia: mono/skia#271)
+    - Harden Skia upstream-sync: conflict policy, durable gn args, standalone skill, honest run signal by @mattleibow in https://github.com/mono/SkiaSharp/pull/4258
+    - Fix small-sigma raster blur regression (define SK_AVOID_SLOW_RASTER_PIPELINE_BLURS) by @ramezgerges in https://github.com/mono/SkiaSharp/pull/4269 [community ✨]
+    - Group release-notes site by support status (stable/preview) + audit drift check by @mattleibow in https://github.com/mono/SkiaSharp/pull/4267
+    - ci: regroup and rename GitHub Actions workflows; prune dead ones by @mattleibow in https://github.com/mono/SkiaSharp/pull/4260
+    - perf(SKSurface): cache the Canvas wrapper across calls by @ramezgerges in https://github.com/mono/SkiaSharp/pull/4247 [community ✨]
+    - Add a main (tip) mode to the Skia upstream sync by @mattleibow in https://github.com/mono/SkiaSharp/pull/4254 (skia: mono/skia#267)
+    - Support release-branch targeting in Skia upstream sync (+ Opus 4.7, libc++ build fix) by @mattleibow in https://github.com/mono/SkiaSharp/pull/4239
+    - Add SKColorFilter.CreateOverdraw() for overdraw visualization by @mattleibow in https://github.com/mono/SkiaSharp/pull/4227 (skia: mono/skia#262)
+    - Fix integration test harness Docker detection + command timeout, and release-testing skill filter syntax by @mattleibow in https://github.com/mono/SkiaSharp/pull/4244
+    - Add SKImageFilter.CreateCrop() by @mattleibow in https://github.com/mono/SkiaSharp/pull/4229 (skia: mono/skia#261)
+    - Add SKImageFilter.CreateEmpty() method by @mattleibow in https://github.com/mono/SkiaSharp/pull/4228 (skia: mono/skia#260)
+    - [skia-sync] Merge upstream chrome/m150 bug fixes by @mattleibow in https://github.com/mono/SkiaSharp/pull/4190 (skia: mono/skia#259)
+
+  ## Preview 2 · 4.150.0 · 2026-06-24 · https://github.com/mono/SkiaSharp/compare/v4.150.0-preview.1.1...v4.150.0-preview.2.1  (30 PRs)
+    - Update docs submodule to latest main by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/4234 [community ✨]
+    - docs: regenerate API diffs and polish release notes by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/4231 [community ✨]
+    - docs: drop obsolete GrVkYcbcrConversionInfo page to fix xref collision by @mattleibow in https://github.com/mono/SkiaSharp/pull/4225
+    - docs: regenerate API diffs and polish release notes by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/4224 [community ✨]
+    - Fix integration test harness for .NET 10 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4221
+    - Add mono/skia counterpart branching to release-branch skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/4220
+    - [docs] Release-notes: main-only daily workflow + GitHub Release teaser playbook by @mattleibow in https://github.com/mono/SkiaSharp/pull/4207
+    - [api-docs] Stop merge from writing unfilled remarks scaffold to XML by @mattleibow in https://github.com/mono/SkiaSharp/pull/4218
+    - Fix release-branch skill integration-branch model and add bump-version helper by @mattleibow in https://github.com/mono/SkiaSharp/pull/4211
+    - Add VERSIONS.txt step to the native-dependency-update skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/4215
+    - Sync VERSIONS.txt with harfbuzz 14.2.1 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4214
+    - Improve api-docs skill to stop recurring documentation-writer mistakes by @mattleibow in https://github.com/mono/SkiaSharp/pull/4204
+    - Make doc generation reproducible and Linux-only; unify "API diff" terminology by @mattleibow in https://github.com/mono/SkiaSharp/pull/4200
+    - [v4] Promote remaining pre-v4 obsoletes to error and trim obsolete enums from the ref assembly by @ramezgerges in https://github.com/mono/SkiaSharp/pull/4195 [community ✨]
+    - Make API-diff changelog generation host-independent by @mattleibow in https://github.com/mono/SkiaSharp/pull/4196
+    - Fix docs.cake moniker collision dropping iOS GL API docs by @mattleibow in https://github.com/mono/SkiaSharp/pull/4197
+    - docs: latest-only, local-only frameworks docs generator by @mattleibow in https://github.com/mono/SkiaSharp/pull/4192
+    - Update docs submodule to latest main by @github-actions[bot] in https://github.com/mono/SkiaSharp/pull/3919 [community ✨]
+    - [infra] Run release-notes Prepare in its own disk-managed job by @mattleibow in https://github.com/mono/SkiaSharp/pull/4193
+    - [docs] Unify API-diff + release-notes into one agentic workflow by @mattleibow in https://github.com/mono/SkiaSharp/pull/4184
+    - [security-audit] Add Chromium release heads-up to the security-audit skill by @mattleibow in https://github.com/mono/SkiaSharp/pull/4188
+    - Remove deprecated .NET Interactive (Polyglot Notebooks) support by @mattleibow in https://github.com/mono/SkiaSharp/pull/4186
+    - docs: refresh Skia adoption claims with verified product list by @mattleibow in https://github.com/mono/SkiaSharp/pull/4185
+    - release-notes: restore in-flight -unreleased naming + per-preview rollup (R1/R2/R3) by @mattleibow in https://github.com/mono/SkiaSharp/pull/4179
+    - [docs] Unify changelog + release-notes generation: stable rollups and local skia links by @mattleibow in https://github.com/mono/SkiaSharp/pull/4177
+    - release-notes: fix --all timeout, migrate pages, and credit contributors correctly by @mattleibow in https://github.com/mono/SkiaSharp/pull/4174
+    - Unify API changelog + release-notes versioning via shared versions.json by @mattleibow in https://github.com/mono/SkiaSharp/pull/4171
+    - Migrate test suite from xUnit v2 to xUnit v3 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4143
+    - Update harfbuzz to 14.2.1 by @mattleibow in https://github.com/mono/SkiaSharp/pull/4167 (skia: mono/skia#257)
+    - Build Tizen native dependencies in a Docker container by Matthew Leibowitz in https://github.com/mono/SkiaSharp/pull/4154 [community ✨]
+
+  ## Preview 1 · 4.150.0 · 2026-06-13 · https://github.com/mono/SkiaSharp/compare/v4.148.0...v4.150.0-preview.1.1  (2 PRs)
+    - Add job-level status to release-status pipeline script by @mattleibow in https://github.com/mono/SkiaSharp/pull/4159
+    - [skia-sync] Update Skia to milestone m150 (4.150.0) by @mattleibow in https://github.com/mono/SkiaSharp/pull/4146 (skia: mono/skia#253)
+-->
+<!-- Generated: 2026-06-29T20:15:59Z by claude-sonnet-4.6 -->
+
+<blockquote>
+<p><strong>Skia m150 upgrade with new image-filter APIs and performance improvements</strong> · Preview only · <a href="https://www.nuget.org/packages/SkiaSharp/4.150.0-preview.2.1">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v4.150.0-preview.2.1">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.150.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/14.2.1.html">HarfBuzzSharp 14.2.1</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.150.0 upgrades the underlying Skia engine to Chrome milestone m150, delivering the latest upstream rendering improvements and bug fixes. This release expands the API surface with <code>SKPaint.GetFastBounds()</code> for efficient culling, three new filter factory methods (<code>SKImageFilter.CreateCrop()</code>, <code>SKImageFilter.CreateEmpty()</code>, and <code>SKColorFilter.CreateOverdraw()</code>), and a performance improvement that caches the <code>SKSurface.Canvas</code> wrapper across calls. HarfBuzzSharp 14.2.1 ships alongside this release — see the linked page for details. Community contributor ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> delivered the canvas caching optimization, fixed a small-sigma raster blur regression, and cleaned up pre-v4 obsolete APIs.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>Pre-v4 obsolete APIs now error</strong> — Remaining pre-v4 APIs that were previously deprecated with warnings are now compile errors, and obsolete enums have been trimmed from the reference assembly. Update any code still using deprecated v3-era APIs. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4195">#4195</a>)</li>
+<li><strong>Removed .NET Interactive (Polyglot Notebooks) support</strong> — The deprecated .NET Interactive integration has been removed. Users relying on the SkiaSharp Polyglot Notebooks extension should migrate to alternative display approaches. (<a href="https://github.com/mono/SkiaSharp/pull/4186">#4186</a>)</li>
+</ul>
+<h2 id="new-features">New Features</h2>
+<h3 id="engine">Engine</h3>
+<ul>
+<li><strong>Skia milestone m150</strong> — Updates the underlying Skia engine to Chrome milestone m150, bringing the latest rendering improvements, shader optimizations, and platform fixes from upstream. (<a href="https://github.com/mono/SkiaSharp/pull/4146">#4146</a>)</li>
+<li><strong>Skia m150 upstream bug fixes</strong> — Merges additional upstream m150 stability fixes from the Chrome branch. (<a href="https://github.com/mono/SkiaSharp/pull/4190">#4190</a>)</li>
+</ul>
+<h3 id="api-surface">API Surface</h3>
+<ul>
+<li><strong><code>SKPaint.GetFastBounds()</code></strong> — Returns the conservative bounds of what a paint stroke would cover, enabling efficient quick-reject culling to skip off-screen draw calls. (<a href="https://github.com/mono/SkiaSharp/pull/4271">#4271</a>)</li>
+<li><strong><code>SKImageFilter.CreateCrop()</code></strong> — New factory that crops an image filter's output to a specified rectangle, composable with other filters in the pipeline. (<a href="https://github.com/mono/SkiaSharp/pull/4229">#4229</a>)</li>
+<li><strong><code>SKImageFilter.CreateEmpty()</code></strong> — New factory returning a no-op transparent filter, useful as a neutral element in filter compositions. (<a href="https://github.com/mono/SkiaSharp/pull/4228">#4228</a>)</li>
+<li><strong><code>SKColorFilter.CreateOverdraw()</code></strong> — New factory for overdraw visualization, enabling detection of redundant pixel coverage during rendering performance debugging. (<a href="https://github.com/mono/SkiaSharp/pull/4227">#4227</a>)</li>
+</ul>
+<h3 id="performance">Performance</h3>
+<ul>
+<li><strong><code>SKSurface.Canvas</code> wrapper caching</strong> — The <code>Canvas</code> property on <code>SKSurface</code> now caches and reuses the wrapper object across calls instead of allocating a new one each time, reducing GC pressure in render loops. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4247">#4247</a>)</li>
+</ul>
+<h3 id="platform">Platform</h3>
+<ul>
+<li><strong>HarfBuzzSharp 14.2.1</strong> — Updates HarfBuzz to version 14.2.1. See the <a href="harfbuzzsharp/14.2.1.html">HarfBuzzSharp 14.2.1</a> release page for binding details. (<a href="https://github.com/mono/SkiaSharp/pull/4167">#4167</a>)</li>
+<li><strong>Tizen native builds in Docker</strong> — Tizen native dependency builds now run inside a Docker container for better reproducibility and build isolation. (<a href="https://github.com/mono/SkiaSharp/pull/4154">#4154</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Small-sigma raster blur regression</strong> — Fixes a raster pipeline blur regression for small sigma values by enabling <code>SK_AVOID_SLOW_RASTER_PIPELINE_BLURS</code>, restoring correct fast-path blur behaviour. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4269">#4269</a>)</li>
+</ul>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td><code>SKSurface.Canvas</code> caching perf improvement; fixed small-sigma raster blur; promoted pre-v4 obsoletes to errors</td>
+</tr>
+<tr>
+<td>Matthew Leibowitz</td>
+<td>Tizen native dependency builds in Docker</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v4.148.0...v4.150.0-preview.2.1">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/SkiaSharp/4.150.0-preview.2.1">NuGet Package</a></li>
+</ul>
+<hr>
+<h2 id="preview-2-june-24-2026">Preview 2 (June 24, 2026)</h2>
+<p>Promoted pre-v4 obsoletes to compile errors, updated HarfBuzz to 14.2.1, removed deprecated .NET Interactive support, and migrated the test suite to xUnit v3.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.150.0-preview.1.1...v4.150.0-preview.2.1">Full Changelog</a></p>
+<hr>
+<h2 id="preview-1-june-13-2026">Preview 1 (June 13, 2026)</h2>
+<p>Upgraded the Skia engine to milestone m150.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.148.0...v4.150.0-preview.1.1">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4312/merge/documentation/docfx/releases/4.150.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4312 · skia-sync/m151 · 3df1cb4
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
