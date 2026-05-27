@@ -125,8 +125,9 @@ az devops invoke --area build --resource logs \
 
 | Category | Source | Fix Mechanism |
 |----------|--------|---------------|
-| Alpine sysroot packages | `apk add` in alpine Dockerfile | Bump `DISTRO_VERSION` in Dockerfile |
-| Debian base image packages | `apt-get` / base image | Update base image or wait for Debian patches |
+| Alpine sysroot packages | `apk.static add` in alpine Dockerfile (fontconfig) | Bump `ALPINE_VERSION` in `alpine/Dockerfile` |
+| Ubuntu/Debian .deb packages | SHA-pinned fontconfig .debs in glibc Dockerfiles | Bump `FC_VERSION` + new SHA-256 in `glibc/Dockerfile` or `glibc-x86/Dockerfile` |
+| .NET cross base image | `mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-*` | Bump the .NET image tag (controlled by .NET infra team) |
 | npm build tooling | .NET SDK / Cake dependencies | Update .NET SDK or pin versions |
 | Rust crate deps | .NET SDK internals | Update .NET SDK |
 | NuGet build deps | Build-time references | Update package version |
@@ -135,10 +136,10 @@ az devops invoke --area build --resource logs \
 
 | File | Controls |
 |------|----------|
-| `scripts/infra/native/linux/docker/alpine/Dockerfile` (lines 43–47) | Alpine sysroot version (`DISTRO_VERSION`) |
-| `scripts/infra/native/linux/docker/debian/11/Dockerfile` | Debian 11 base image (EOL June 2026) |
-| `scripts/infra/native/linux/docker/debian/13/Dockerfile` | Debian 13 base image |
-| `scripts/infra/native/linux/docker/bionic/Dockerfile` | Bionic/Android cross-compile |
+| `scripts/infra/native/linux/docker/glibc/Dockerfile` | Glibc cross images (arm, arm64, x64, riscv64, loongarch64) — pinned fontconfig .debs + .NET SDK version |
+| `scripts/infra/native/linux/docker/glibc-x86/Dockerfile` | x86 self-contained build (libc++ stage + fontconfig) |
+| `scripts/infra/native/linux/docker/alpine/Dockerfile` | Musl/Alpine cross images — `ALPINE_VERSION` (look for `ARG ALPINE_VERSION`) controls fontconfig source |
+| `scripts/infra/native/linux/docker/bionic/Dockerfile` | Bionic/Android cross-compile (NDK detected dynamically) |
 | `scripts/infra/native/wasm/docker/Dockerfile` | WASM build container |
 
 ## Including CG Data in the Report
