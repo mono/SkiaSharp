@@ -11,7 +11,6 @@ void RunDeviceRunnersTest(
     DirectoryPath output,
     string configuration = null,
     string framework = null,
-    bool allowFailure = false,
     bool noBuild = false,
     Dictionary<string, string> properties = null)
 {
@@ -40,29 +39,7 @@ void RunDeviceRunnersTest(
         },
     };
 
-    if (allowFailure)
-    {
-        try
-        {
-            DotNetTest(MakeAbsolute(testProject).FullPath, settings);
-        }
-        catch (Exception ex)
-        {
-            Warning($"Test run reported failures (expected for WASM): {ex.Message}");
-
-            // Copy browser console log to output for CI reporting
-            var consoleLog = testProject.GetDirectory().Combine("test-results").CombineWithFilePath("browser-console.log");
-            if (FileExists(consoleLog))
-            {
-                CopyFile(consoleLog, output.CombineWithFilePath("browser-console.log"));
-                Information($"Browser console log copied to: {output}/browser-console.log");
-            }
-        }
-    }
-    else
-    {
-        DotNetTest(MakeAbsolute(testProject).FullPath, settings);
-    }
+    DotNetTest(MakeAbsolute(testProject).FullPath, settings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
