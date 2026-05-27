@@ -54,11 +54,10 @@ string GetGnArgs(string arch)
 
     // All cross-images provide libc++.a built with -DLIBCXX_CXX_ABI=libstdc++.
     // This means libc++ delegates ABI symbols (operator delete, __cxa_throw, etc.)
-    // to GCC's libstdc++. We link the STATIC libstdc++.a (-l:libstdc++.a) from
-    // GCC_LIB_DIR so we don't add a runtime libstdc++.so.6 dependency. The
-    // --whole-archive bracketing forces inclusion before objects reference the
-    // symbols (extra_ldflags appear first in GN's link command).
-    var abiLib = "'-Wl,--whole-archive,-l:libstdc++.a,--no-whole-archive'";
+    // to GCC's libstdc++. We link libstdc++ with --whole-archive so its symbols are
+    // available before GN's object archives reference them (extra_ldflags appear first
+    // in the link command). -Wl bypasses clang's driver rewrite of -lstdc++ → -lc++.
+    var abiLib = "'-Wl,--whole-archive,-lstdc++,--no-whole-archive'";
 
     return
         $"extra_asmflags+=[ {init}, '-no-integrated-as', {bin}, {includes} ] " +
