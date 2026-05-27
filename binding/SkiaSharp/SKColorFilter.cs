@@ -11,36 +11,30 @@ namespace SkiaSharp
 		public const int TableMaxLength = 256;
 
 		private static SKColorFilter srgbToLinear;
+		private static bool srgbToLinearInitialized;
+		private static object srgbToLinearLock = new object ();
+
 		private static SKColorFilter linearToSrgb;
+		private static bool linearToSrgbInitialized;
+		private static object linearToSrgbLock = new object ();
 
 		internal SKColorFilter(IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		internal SKColorFilter(IntPtr handle, bool owns, bool immortal)
-			: base (handle, owns, immortal)
-		{
-		}
-
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKColorFilter CreateSrgbToLinearGamma ()
-		{
-			if (srgbToLinear is not null)
-				return srgbToLinear;
-			var cf = GetImmortalObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ());
-			return Interlocked.CompareExchange (ref srgbToLinear, cf, null) ?? cf;
-		}
+		public static SKColorFilter CreateSrgbToLinearGamma () =>
+			LazyInitializer.EnsureInitialized (
+				ref srgbToLinear, ref srgbToLinearInitialized, ref srgbToLinearLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ()));
 
-		public static SKColorFilter CreateLinearToSrgbGamma ()
-		{
-			if (linearToSrgb is not null)
-				return linearToSrgb;
-			var cf = GetImmortalObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ());
-			return Interlocked.CompareExchange (ref linearToSrgb, cf, null) ?? cf;
-		}
+		public static SKColorFilter CreateLinearToSrgbGamma () =>
+			LazyInitializer.EnsureInitialized (
+				ref linearToSrgb, ref linearToSrgbInitialized, ref linearToSrgbLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ()));
 
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
@@ -160,7 +154,7 @@ namespace SkiaSharp
 		internal static SKColorFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
 
-		internal static SKColorFilter GetImmortalObject (IntPtr handle) =>
-			GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKColorFilter (h, o, immortal: true));
+		internal static SKColorFilter GetDisposeProtectedObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKColorFilter (h, o));
 	}
 }

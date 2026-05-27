@@ -9,15 +9,15 @@ namespace SkiaSharp
 	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
 		private static SKColorSpace srgb;
+		private static bool srgbInitialized;
+		private static object srgbLock = new object ();
+
 		private static SKColorSpace srgbLinear;
+		private static bool srgbLinearInitialized;
+		private static object srgbLinearLock = new object ();
 
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
-		{
-		}
-
-		internal SKColorSpace (IntPtr handle, bool owns, bool immortal)
-			: base (handle, owns, immortal)
 		{
 		}
 
@@ -56,26 +56,17 @@ namespace SkiaSharp
 
 		// CreateSrgb
 
-		public static SKColorSpace CreateSrgb ()
-		{
-			if (srgb is not null)
-				return srgb;
-			// Newly-created wrappers are immortal-from-ctor (flag set before Handle
-			// is registered in HD). For existing wrappers, GetImmortalObject sets
-			// IgnorePublicDispose inside the HD critical section.
-			var cs = GetImmortalObject (SkiaApi.sk_colorspace_new_srgb ());
-			return Interlocked.CompareExchange (ref srgb, cs, null) ?? cs;
-		}
+		public static SKColorSpace CreateSrgb () =>
+			LazyInitializer.EnsureInitialized (
+				ref srgb, ref srgbInitialized, ref srgbLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb ()));
 
 		// CreateSrgbLinear
 
-		public static SKColorSpace CreateSrgbLinear ()
-		{
-			if (srgbLinear is not null)
-				return srgbLinear;
-			var cs = GetImmortalObject (SkiaApi.sk_colorspace_new_srgb_linear ());
-			return Interlocked.CompareExchange (ref srgbLinear, cs, null) ?? cs;
-		}
+		public static SKColorSpace CreateSrgbLinear () =>
+			LazyInitializer.EnsureInitialized (
+				ref srgbLinear, ref srgbLinearInitialized, ref srgbLinearLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb_linear ()));
 
 		// CreateIcc
 
@@ -165,11 +156,10 @@ namespace SkiaSharp
 		internal static SKColorSpace GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
 			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 
-		// Variant used by singleton accessors. Newly created wrappers are immortal from birth
-		// (IgnorePublicDispose set before the wrapper enters HandleDictionary). Existing
-		// wrappers are promoted to immortal under the HD lock — narrows the race window
-		// against a concurrent Dispose() on a reference held from before this call.
-		internal static SKColorSpace GetImmortalObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddObject (handle, owns, unrefExisting, immortal: true, (h, o) => new SKColorSpace (h, o, immortal: true));
+		// Variant used by singleton accessors. The returned wrapper has IgnorePublicDispose
+		// set under HandleDictionary's critical section — atomic with the HD lookup, so
+		// no other thread can observe a non-dispose-protected state.
+		internal static SKColorSpace GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 	}
 }

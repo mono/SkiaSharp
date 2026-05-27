@@ -57,15 +57,18 @@ namespace SkiaSharp
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject =>
-			GetOrAddObject (handle, owns, unrefExisting, immortal: false, objectFactory);
+			GetOrAddObject (handle, owns, unrefExisting, disposeProtected: false, objectFactory);
 
 		/// <summary>
-		/// Retrieve or create an instance for the native handle. When <paramref name="immortal"/> is true
-		/// and an existing wrapper is found, IgnorePublicDispose is set on it inside the critical section
-		/// — narrowing the promote-existing race window relative to setting it after the call returns.
+		/// Retrieve or create an instance for the native handle. When <paramref name="disposeProtected"/> is true
+		/// and an existing wrapper is found, IgnorePublicDispose is set on it via PreventPublicDisposal,
+		/// which acquires the HD write lock — so the flag set is mutually exclusive with any concurrent
+		/// Dispose() (which also holds the write lock). Combined with the recursive lock policy that
+		/// lets Dispose() hold the write lock across both its state change and the Handle setter's
+		/// DeregisterHandle, this eliminates the promote-existing race entirely.
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
-		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool immortal, Func<IntPtr, bool, TSkiaObject> objectFactory)
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool disposeProtected, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
@@ -96,13 +99,24 @@ namespace SkiaSharp
 						refcnt.SafeUnRef ();
 					}
 
-					if (immortal)
+					if (disposeProtected)
 						instance.PreventPublicDisposal ();
 
 					return instance;
 				}
 
 				var obj = objectFactory.Invoke (handle, owns);
+
+				// Mark the freshly-created wrapper disposeProtected *before* releasing the lock.
+				// The wrapper is briefly HD-observable (RegisterHandle ran inside the
+				// factory's ctor) between this point and PreventPublicDisposal setting
+				// the flag. A concurrent thread that finds W via HD lookup can only
+				// destructively act on it through public Dispose(), which takes the
+				// write lock and blocks until we exit upgradeable read — by which time
+				// PreventPublicDisposal has run. DisposeInternal/RevokeOwnership paths
+				// are not reachable for a wrapper that hasn't yet escaped this factory.
+				if (disposeProtected && obj is not null)
+					obj.PreventPublicDisposal ();
 
 				return obj;
 			} finally {

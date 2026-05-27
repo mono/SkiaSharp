@@ -45,25 +45,23 @@ namespace SkiaSharp
 		// both *copy* the font state into SkCompatPaint::fFont, so this singleton is
 		// never mutated by callers.
 		private static SKFont defaultFont;
+		private static bool defaultFontInitialized;
+		private static object defaultFontLock = new object ();
 
-		private static SKFont DefaultFont
-		{
-			get
-			{
-				if (defaultFont is not null)
-					return defaultFont;
-				// Immortal-from-ctor: IgnorePublicDispose is set before Handle is published.
-				var font = new SKFont (
-					SkiaApi.sk_font_new_with_values (
-						SKTypeface.Default.Handle,
-						SKFont.DefaultSize,
-						SKFont.DefaultScaleX,
-						SKFont.DefaultSkewX),
-					owns: true,
-					immortal: true);
-				return Interlocked.CompareExchange (ref defaultFont, font, null) ?? font;
-			}
-		}
+		private static SKFont DefaultFont =>
+			LazyInitializer.EnsureInitialized (
+				ref defaultFont, ref defaultFontInitialized, ref defaultFontLock,
+				() => {
+					var font = new SKFont (
+						SkiaApi.sk_font_new_with_values (
+							SKTypeface.Default.Handle,
+							SKFonxt.DefaultSize,
+							SKFont.DefaultScaleX,
+							SKFont.DefaultSkewX),
+						owns: true);
+					font.PreventPublicDisposal ();
+					return font;
+				});
 
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)

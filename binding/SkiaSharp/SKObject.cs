@@ -41,11 +41,6 @@ namespace SkiaSharp
 		{
 		}
 
-		internal SKObject (IntPtr handle, bool owns, bool immortal)
-			: base (handle, owns, immortal)
-		{
-		}
-
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
@@ -117,13 +112,20 @@ namespace SkiaSharp
 			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, objectFactory);
 		}
 
-		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool immortal, Func<IntPtr, bool, TSkiaObject> objectFactory)
+		// Variant that promotes the returned wrapper to dispose-protected
+		// (IgnorePublicDispose = true) inside HandleDictionary's critical section.
+		// Used by the singleton accessors (CreateSrgb, Default, etc.). "Dispose-protected"
+		// means the public Dispose() is short-circuited — the wrapper is NOT immortal
+		// from GC's perspective; finalization and DisposeInternal still tear it down.
+		// The actual long-lived persistence comes from each accessor's static-field
+		// cache acting as a GC root.
+		internal static TSkiaObject GetOrAddDisposeProtectedObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, immortal, objectFactory);
+			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, disposeProtected: true, objectFactory);
 		}
 
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
@@ -151,19 +153,6 @@ namespace SkiaSharp
 			}
 
 			return HandleDictionary.GetInstance<TSkiaObject> (handle, out instance);
-		}
-
-		// indicate that the ownership of this object is now in the hands of
-		// the native object
-		internal void RevokeOwnership (SKObject newOwner)
-		{
-			OwnsHandle = false;
-			PreventPublicDisposal ();
-
-			if (newOwner == null)
-				DisposeInternal ();
-			else
-				newOwner.OwnedObjects[Handle] = this;
 		}
 
 		// indicate that the child is controlled by the native code and
@@ -217,19 +206,7 @@ namespace SkiaSharp
 		}
 
 		internal SKNativeObject (IntPtr handle, bool ownsHandle)
-			: this (handle, ownsHandle, immortal: false)
 		{
-		}
-
-		// Setting `immortal: true` sets IgnorePublicDispose BEFORE Handle is published
-		// through SKObject.Handle.setter -> RegisterHandle. This closes the race where
-		// another thread could find the wrapper in HandleDictionary and call Dispose()
-		// on it between the registration and a post-construction `IgnorePublicDispose = true`
-		// assignment. See discussion in the singleton init refactor.
-		internal SKNativeObject (IntPtr handle, bool ownsHandle, bool immortal)
-		{
-			if (immortal)
-				IgnorePublicDispose = true;
 			Handle = handle;
 			OwnsHandle = ownsHandle;
 		}
@@ -238,6 +215,11 @@ namespace SkiaSharp
 		{
 			fromFinalizer = true;
 
+			// Claim disposal here (the CAS used to be inside Dispose(bool), but that's
+			// moved out so each entry point gates atomically with whatever check it
+			// pairs with). No outer HD lock — same reasoning as DisposeInternal.
+			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
+				return;
 			Dispose (false);
 		}
 
@@ -247,16 +229,35 @@ namespace SkiaSharp
 
 		// One-way latch: once set to true, only stays true. Demoted setter prevents
 		// future contributors from accidentally flipping it back to false on a wrapper
-		// that's relying on it for immortality. Use PreventPublicDisposal() to set.
+		// that's relying on it for dispose protection. Use PreventPublicDisposal() to set.
 		protected internal bool IgnorePublicDispose { get; private set; }
 
-		// Make this wrapper undisposable via the public Dispose() method.
+		// Make this wrapper unreachable via the public Dispose() method.
+		// Acquires the HD write lock so the flag set is serialized with any concurrent
+		// Dispose() (which holds the same lock around its check). Atomic with respect
+		// to "is this wrapper still in HD" — closes the promote-existing race in
+		// singleton init (#3817 discussion thread).
 		internal void PreventPublicDisposal ()
 		{
-			IgnorePublicDispose = true;
+			// Unlocked fast path: if the flag is already set, no work to do. A stale-read
+			// miss on weak memory models just means we enter the lock and set the flag
+			// again (idempotent).
+			if (IgnorePublicDispose)
+				return;
+
+			HandleDictionary.instancesLock.EnterWriteLock ();
+			try {
+				IgnorePublicDispose = true;
+			} finally {
+				HandleDictionary.instancesLock.ExitWriteLock ();
+			}
 		}
 
-		protected internal bool IsDisposed => isDisposed == 1;
+		// Volatile.Read for acquire semantics on weak memory models (ARM/ARM64). The
+		// post-refactor design relies on HandleDictionary.GetInstanceNoLocks reading
+		// this property to filter out disposed wrappers, so a stale read could let a
+		// disposed wrapper escape the filter and become the cached singleton.
+		protected internal bool IsDisposed => Volatile.Read (ref isDisposed) == 1;
 
 		protected virtual void DisposeUnownedManaged ()
 		{
@@ -273,11 +274,13 @@ namespace SkiaSharp
 			// dispose of any unmanaged resources
 		}
 
+		// The isDisposed CAS that used to guard this method has moved to the public
+		// entry points (Dispose, DisposeInternal, finalizer) so that each entry's CAS
+		// can be paired atomically with whatever check it needs (e.g. Dispose's
+		// IgnorePublicDispose check under the HD write lock). This method now assumes
+		// the caller has already claimed the disposal — it is the cleanup body only.
 		protected virtual void Dispose (bool disposing)
 		{
-			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
-				return;
-
 			// dispose any objects that are owned/created by native code
 			if (disposing)
 				DisposeUnownedManaged ();
@@ -295,16 +298,65 @@ namespace SkiaSharp
 
 		public void Dispose ()
 		{
-			if (IgnorePublicDispose)
+			// Hold the HD write lock only across the flag check + the isDisposed CAS.
+			// This pairs the read of IgnorePublicDispose with the disposal claim
+			// atomically: a concurrent PreventPublicDisposal (which takes the same
+			// write lock) is mutually exclusive with this section.
+			//
+			// The actual cleanup runs *outside* the lock. That's safe because:
+			// 1. If a concurrent thread is in GetOrAddObject looking up this handle
+			//    *after* our CAS landed, GetInstanceNoLocks filters out wrappers with
+			//    IsDisposed=true — it returns false and the caller falls into the
+			//    factory branch, producing a fresh wrapper.
+			// 2. RegisterHandle's replacement branch only fires for !IsDisposed
+			//    existing entries, so a fresh wrapper registering for this handle
+			//    while we're still mid-cleanup just overwrites our stale weak ref
+			//    without trying to dispose us recursively.
+			// 3. Our own Handle = 0 → DeregisterHandle path correctly handles
+			//    "weak.Target is now someone else" (no-op in release).
+			HandleDictionary.instancesLock.EnterWriteLock ();
+			bool proceed;
+			try {
+				if (IgnorePublicDispose)
+					return;
+				proceed = Interlocked.CompareExchange (ref isDisposed, 1, 0) == 0;
+			} finally {
+				HandleDictionary.instancesLock.ExitWriteLock ();
+			}
+
+			if (!proceed)
 				return;
 
-			DisposeInternal ();
+			Dispose (true);
+			GC.SuppressFinalize (this);
 		}
 
 		protected internal void DisposeInternal ()
 		{
+			// Claim disposal via the CAS; if already claimed, no-op. No outer HD lock —
+			// DisposeInternal doesn't read IgnorePublicDispose, so there's no flag
+			// check that needs to be paired with the CAS.
+			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
+				return;
 			Dispose (true);
 			GC.SuppressFinalize (this);
+		}
+
+		// Hand off ownership of the native object to native-side code that took it
+		// (e.g. SKCodec.Create / SKFontManager.CreateTypeface, where the C wrapper
+		// puts the stream into a unique_ptr that the codec/typeface then owns).
+		// Marks the wrapper as non-owning so the disposal won't unref the native,
+		// then disposes the managed wrapper. The user's reference to this wrapper
+		// becomes a disposed wrapper; subsequent use fails loudly rather than
+		// operating on a native object that's now owned elsewhere.
+		//
+		// Order matters: OwnsHandle = false MUST precede DisposeInternal. A racing
+		// Dispose() that sees OwnsHandle = true would call DisposeNative and free
+		// the native object that the receiving native code is about to use.
+		internal void TransferOwnershipToNative ()
+		{
+			OwnsHandle = false;
+			DisposeInternal ();
 		}
 	}
 
