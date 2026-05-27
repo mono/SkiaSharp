@@ -60,6 +60,9 @@ namespace SkiaSharp
 							SKFont.DefaultScaleX,
 							SKFont.DefaultSkewX),
 						owns: true);
+					// The PreventPublicDisposal call here doesn't suffer from the case of skia
+					// giving us the same handle as a return value of another pinvoke call,
+					// because sk_font_new_with_values creates a new object.
 					font.PreventPublicDisposal ();
 					return font;
 				});

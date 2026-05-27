@@ -100,6 +100,9 @@ namespace SkiaSharp
 					}
 
 					if (disposeProtected)
+						// this is safe from any race with a concurrent disposal-in-progress
+						// public Dispose paths grab a write lock so they cannot be concurrent
+						// internal Dispose paths don't matter for preventing PUBLIC disposals.
 						instance.PreventPublicDisposal ();
 
 					return instance;
@@ -113,7 +116,7 @@ namespace SkiaSharp
 				// the flag. A concurrent thread that finds W via HD lookup can only
 				// destructively act on it through public Dispose(), which takes the
 				// write lock and blocks until we exit upgradeable read — by which time
-				// PreventPublicDisposal has run. DisposeInternal/RevokeOwnership paths
+				// PreventPublicDisposal has run. DisposeInternal paths
 				// are not reachable for a wrapper that hasn't yet escaped this factory.
 				if (disposeProtected && obj is not null)
 					obj.PreventPublicDisposal ();
