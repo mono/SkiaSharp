@@ -45,7 +45,7 @@ Task ("tests-ios")
             { "DeviceRunnersDevice", udid },
         };
 
-        RunDeviceRunnersTest(csproj, results, framework: "net10.0-ios", properties: properties);
+        RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-ios", properties: properties);
     }
     finally
     {
@@ -69,7 +69,7 @@ Task ("tests-maccatalyst")
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     DirectoryPath results = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.maccatalyst/{DATE_TIME_STR}";
 
-    RunDeviceRunnersTest(csproj, results, framework: "net10.0-maccatalyst");
+    RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-maccatalyst");
 });
 
 Task ("Default")
