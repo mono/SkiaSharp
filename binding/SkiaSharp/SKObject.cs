@@ -198,6 +198,8 @@ namespace SkiaSharp
 	{
 		internal bool fromFinalizer = false;
 
+		// reads/writes of this field need to be in the same critical section as IgnorePublicDispose
+		// so that e.g. you don't set IgnorePublicDispose concurrently on an instance that's being disposed.
 		private int isDisposed = 0;
 
 		internal SKNativeObject (IntPtr handle)
@@ -227,9 +229,8 @@ namespace SkiaSharp
 
 		protected internal virtual bool OwnsHandle { get; protected set; }
 
-		// One-way latch: once set to true, only stays true. Demoted setter prevents
-		// future contributors from accidentally flipping it back to false on a wrapper
-		// that's relying on it for dispose protection. Use PreventPublicDisposal() to set.
+		// One-way latch: once set to true, only stays true. Use PreventPublicDisposal() to set.
+		// reads/writes of this property need to be in the same critical section as isDisposed.
 		protected internal bool IgnorePublicDispose { get; private set; }
 
 		// Make this wrapper unreachable via the public Dispose() method.
@@ -239,9 +240,6 @@ namespace SkiaSharp
 		// singleton init (#3817 discussion thread).
 		internal void PreventPublicDisposal ()
 		{
-			// Unlocked fast path: if the flag is already set, no work to do. A stale-read
-			// miss on weak memory models just means we enter the lock and set the flag
-			// again (idempotent).
 			if (IgnorePublicDispose)
 				return;
 

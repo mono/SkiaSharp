@@ -18,6 +18,9 @@ namespace SkiaSharp
 		private static SKFontStyle MakeDisposeProtected (SKFontStyleWeight weight, SKFontStyleSlant slant)
 		{
 			var style = new SKFontStyle (weight, SKFontStyleWidth.Normal, slant);
+			// The PreventPublicDisposal call here doesn't suffer from the case of skia
+			// giving us the same handle as a return value of another pinvoke call,
+			// because these are created by us and not returned by skia.
 			style.PreventPublicDisposal ();
 			return style;
 		}
