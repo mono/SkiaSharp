@@ -6,28 +6,24 @@ namespace SkiaSharp
 {
 	public class SKFontStyle : SKObject, ISKSkipObjectRegistration
 	{
-		// Eager init via field initializers (cctor) is safe here: SKFontStyle is
-		// ISKSkipObjectRegistration (no HandleDictionary dedup risk), the ctor only
-		// reads enum constants (no cross-singleton dependencies), and the CLR's
-		// once-per-AppDomain cctor guarantee removes the race that lazy init would
-		// have for this type (sk_fontstyle_new allocates a fresh native object every
-		// call, so a concurrent lazy init would briefly leak the loser's allocation).
 		private static readonly SKFontStyle normal =
-			new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright, immortal: true);
+			MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Upright);
 		private static readonly SKFontStyle bold =
-			new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright, immortal: true);
+			MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Upright);
 		private static readonly SKFontStyle italic =
-			new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic, immortal: true);
+			MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Italic);
 		private static readonly SKFontStyle boldItalic =
-			new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic, immortal: true);
+			MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Italic);
+
+		private static SKFontStyle MakeDisposeProtected (SKFontStyleWeight weight, SKFontStyleSlant slant)
+		{
+			var style = new SKFontStyle (weight, SKFontStyleWidth.Normal, slant);
+			style.PreventPublicDisposal ();
+			return style;
+		}
 
 		internal SKFontStyle (IntPtr handle, bool owns)
 			: base (handle, owns)
-		{
-		}
-
-		internal SKFontStyle (IntPtr handle, bool owns, bool immortal)
-			: base (handle, owns, immortal)
 		{
 		}
 
@@ -43,11 +39,6 @@ namespace SkiaSharp
 
 		public SKFontStyle (int weight, int width, SKFontStyleSlant slant)
 			: this (SkiaApi.sk_fontstyle_new (weight, width, slant), true)
-		{
-		}
-
-		internal SKFontStyle (SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, bool immortal)
-			: this (SkiaApi.sk_fontstyle_new ((int)weight, (int)width, slant), true, immortal)
 		{
 		}
 

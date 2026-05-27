@@ -17,14 +17,11 @@ namespace SkiaSharp
 		internal const int CopyBufferSize = 81920;
 
 		private static SKData empty;
+		private static bool emptyInitialized;
+		private static object emptyLock = new object ();
 
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
-		{
-		}
-
-		internal SKData (IntPtr x, bool owns, bool immortal)
-			: base (x, owns, immortal)
 		{
 		}
 
@@ -35,16 +32,10 @@ namespace SkiaSharp
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
 
-		public static SKData Empty
-		{
-			get
-			{
-				if (empty is not null)
-					return empty;
-				var data = GetImmortalObject (SkiaApi.sk_data_new_empty ());
-				return Interlocked.CompareExchange (ref empty, data, null) ?? data;
-			}
-		}
+		public static SKData Empty =>
+			LazyInitializer.EnsureInitialized (
+				ref empty, ref emptyInitialized, ref emptyLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_data_new_empty ()));
 
 		// CreateCopy
 
@@ -287,8 +278,8 @@ namespace SkiaSharp
 		internal static SKData GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKData (h, o));
 
-		internal static SKData GetImmortalObject (IntPtr handle) =>
-			GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKData (h, o, immortal: true));
+		internal static SKData GetDisposeProtectedObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKData (h, o));
 
 		//
 

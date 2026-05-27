@@ -12,30 +12,21 @@ namespace SkiaSharp
 	public unsafe class SKFontManager : SKObject, ISKReferenceCounted
 	{
 		private static SKFontManager defaultManager;
+		private static bool defaultManagerInitialized;
+		private static object defaultManagerLock = new object ();
 
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		internal SKFontManager (IntPtr handle, bool owns, bool immortal)
-			: base (handle, owns, immortal)
-		{
-		}
-
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKFontManager Default
-		{
-			get
-			{
-				if (defaultManager is not null)
-					return defaultManager;
-				var fm = GetImmortalObject (SkiaApi.sk_fontmgr_create_default ());
-				return Interlocked.CompareExchange (ref defaultManager, fm, null) ?? fm;
-			}
-		}
+		public static SKFontManager Default =>
+			LazyInitializer.EnsureInitialized (
+				ref defaultManager, ref defaultManagerInitialized, ref defaultManagerLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_fontmgr_create_default ()));
 
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
 
@@ -115,7 +106,7 @@ namespace SkiaSharp
 			}
 
 			var typeface = SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_stream (Handle, stream.Handle, index));
-			stream.RevokeOwnership (typeface);
+			stream.TransferOwnershipToNative ();
 			return typeface;
 		}
 
@@ -199,8 +190,8 @@ namespace SkiaSharp
 		internal static SKFontManager GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
 
-		internal static SKFontManager GetImmortalObject (IntPtr handle) =>
-			GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKFontManager (h, o, immortal: true));
+		internal static SKFontManager GetDisposeProtectedObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKFontManager (h, o));
 
 	}
 }

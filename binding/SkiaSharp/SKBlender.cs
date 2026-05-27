@@ -10,7 +10,6 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 	static SKBlender ()
 	{
 		// Explicitly list all enum values to avoid reflection (AoT compatibility).
-		// 29 fixed entries, no cross-type dependencies, so eager init is fine here.
 		var modes = new SKBlendMode[] {
 			SKBlendMode.Clear,
 			SKBlendMode.Src,
@@ -45,17 +44,12 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 
 		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (modes.Length);
 		foreach (SKBlendMode mode in modes) {
-			blendModeBlenders[mode] = GetImmortalObject (SkiaApi.sk_blender_new_mode (mode));
+			blendModeBlenders[mode] = GetDisposeProtectedObject (SkiaApi.sk_blender_new_mode (mode));
 		}
 	}
 
 	internal SKBlender(IntPtr handle, bool owns)
 		: base (handle, owns)
-	{
-	}
-
-	internal SKBlender(IntPtr handle, bool owns, bool immortal)
-		: base (handle, owns, immortal)
 	{
 	}
 
@@ -75,6 +69,6 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 	internal static SKBlender GetObject (IntPtr handle) =>
 		GetOrAddObject (handle, (h, o) => new SKBlender (h, o));
 
-	internal static SKBlender GetImmortalObject (IntPtr handle) =>
-		GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKBlender (h, o, immortal: true));
+	internal static SKBlender GetDisposeProtectedObject (IntPtr handle) =>
+		GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKBlender (h, o));
 }

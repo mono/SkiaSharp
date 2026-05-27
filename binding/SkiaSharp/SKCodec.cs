@@ -258,7 +258,7 @@ namespace SkiaSharp
 
 			fixed (SKCodecResult* r = &result) {
 				var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
-				stream.RevokeOwnership (codec);
+				stream.TransferOwnershipToNative ();
 				return codec;
 			}
 		}

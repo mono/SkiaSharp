@@ -17,11 +17,6 @@ namespace SkiaSharp
 		{
 		}
 
-		internal SKFont (IntPtr handle, bool owns, bool immortal)
-			: base (handle, owns, immortal)
-		{
-		}
-
 		public SKFont ()
 			: this (SKTypeface.Default, DefaultSize, DefaultScaleX, DefaultSkewX)
 		{

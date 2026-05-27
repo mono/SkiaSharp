@@ -10,7 +10,12 @@ namespace SkiaSharp
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
 		private static SKTypeface empty;
+		private static bool emptyInitialized;
+		private static object emptyLock = new object ();
+
 		private static SKTypeface defaultTypeface;
+		private static bool defaultTypefaceInitialized;
+		private static object defaultTypefaceLock = new object ();
 
 		private SKFont font;
 
@@ -19,44 +24,28 @@ namespace SkiaSharp
 		{
 		}
 
-		internal SKTypeface (IntPtr handle, bool owns, bool immortal)
-			: base (handle, owns, immortal)
-		{
-		}
-
 		// Default
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKTypeface Default
-		{
-			get
-			{
-				if (defaultTypeface is not null)
-					return defaultTypeface;
+		public static SKTypeface Default =>
+			LazyInitializer.EnsureInitialized (
+				ref defaultTypeface, ref defaultTypefaceInitialized, ref defaultTypefaceLock,
+				() => {
+					// Use legacyMakeTypeface(null) to get the platform default — this uses
+					// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
+					// then falls back to style set 0). matchFamilyStyle(null) doesn't work
+					// on Android/NDK/Custom because onMatchFamily(null) returns null.
+					var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
+						SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
+					return matched == IntPtr.Zero ? Empty : GetDisposeProtectedObject (matched);
+				});
 
-				// Use legacyMakeTypeface(null) to get the platform default — this uses
-				// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
-				// then falls back to style set 0). matchFamilyStyle(null) doesn't work
-				// on Android/NDK/Custom because onMatchFamily(null) returns null.
-				var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
-					SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
-				var tf = matched == IntPtr.Zero ? Empty : GetImmortalObject (matched);
-				return Interlocked.CompareExchange (ref defaultTypeface, tf, null) ?? tf;
-			}
-		}
-
-		public static SKTypeface Empty
-		{
-			get
-			{
-				if (empty is not null)
-					return empty;
-				var tf = GetImmortalObject (SkiaApi.sk_typeface_create_empty ());
-				return Interlocked.CompareExchange (ref empty, tf, null) ?? tf;
-			}
-		}
+		public static SKTypeface Empty =>
+			LazyInitializer.EnsureInitialized (
+				ref empty, ref emptyInitialized, ref emptyLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_typeface_create_empty ()));
 
 		public bool IsEmpty => GlyphCount == 0;
 
@@ -452,8 +441,8 @@ namespace SkiaSharp
 		internal static SKTypeface GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
 
-		internal static SKTypeface GetImmortalObject (IntPtr handle) =>
-			GetOrAddObject (handle, owns: true, unrefExisting: true, immortal: true, (h, o) => new SKTypeface (h, o, immortal: true));
+		internal static SKTypeface GetDisposeProtectedObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKTypeface (h, o));
 
 	}
 }
