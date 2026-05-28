@@ -192,6 +192,24 @@ jobs:
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
+      # install the bits needed for .NET
+      - ${{ if and(eq(parameters.installDotNet, 'true'), ne(parameters.skipInstall, 'true')) }}:
+        - task: UseDotNet@2
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          inputs:
+            packageType: 'sdk'
+            version: $(DOTNET_VERSION)
+          retryCountOnTaskFailure: 3
+          displayName: Install .NET $(DOTNET_VERSION)
+        - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
+          - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Fix the Microsoft.WinFX.* file
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        # display dotnet info
+        - pwsh: dotnet --info
+          displayName: Display all the .NET information
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
         # install ninja
@@ -217,24 +235,8 @@ jobs:
             displayName: Install Android APIs
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        # install the bits needed for .NET
+        # install workloads
         - ${{ if eq(parameters.installDotNet, 'true') }}:
-          - task: UseDotNet@2
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            inputs:
-              packageType: 'sdk'
-              version: $(DOTNET_VERSION)
-            retryCountOnTaskFailure: 3
-            displayName: Install .NET $(DOTNET_VERSION)
-          - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
-            - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-              displayName: Fix the Microsoft.WinFX.* file
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          # display dotnet info
-          - pwsh: dotnet --info
-            displayName: Display all the .NET information
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          # install workloads
           - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3
