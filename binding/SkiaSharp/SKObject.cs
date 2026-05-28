@@ -240,15 +240,7 @@ namespace SkiaSharp
 		// HandleDictionary.GetOrAddObject's critical section.
 		internal void PreventPublicDisposal ()
 		{
-			if (IgnorePublicDispose)
-				return;
-
-			HandleDictionary.instancesLock.EnterWriteLock ();
-			try {
-				IgnorePublicDispose = true;
-			} finally {
-				HandleDictionary.instancesLock.ExitWriteLock ();
-			}
+			IgnorePublicDispose = true;
 		}
 
 		// Volatile.Read for acquire semantics on weak memory models (ARM/ARM64). The
