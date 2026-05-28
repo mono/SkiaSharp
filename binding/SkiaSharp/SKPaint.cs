@@ -883,13 +883,17 @@ namespace SkiaSharp
 		internal SKFont GetLegacyFont () =>
 			font ??= OwnedBy (SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
 
-		internal SKSamplingOptions GetLegacyFilterQualitySampling () =>
-			SkiaApi.sk_compatpaint_get_filter_quality (Handle) switch {
+		internal SKSamplingOptions GetLegacyFilterQualitySampling ()
+		{
+			var quality = SkiaApi.sk_compatpaint_get_filter_quality (Handle);
+			return quality switch {
+				0 => new SKSamplingOptions (SKFilterMode.Nearest, SKMipmapMode.None),
 				1 => new SKSamplingOptions (SKFilterMode.Linear, SKMipmapMode.None),
 				2 => new SKSamplingOptions (SKFilterMode.Linear, SKMipmapMode.Linear),
 				3 => new SKSamplingOptions (SKCubicResampler.Mitchell),
-				_ => new SKSamplingOptions (SKFilterMode.Nearest, SKMipmapMode.None),
+				_ => throw new ArgumentOutOfRangeException (nameof (quality), $"Unknown filter quality: '{quality}'"),
 			};
+		}
 
 		//
 
