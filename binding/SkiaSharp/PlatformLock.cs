@@ -89,10 +89,7 @@ namespace SkiaSharp.Internals
 			public void EnterUpgradeableReadLock () => _lock.EnterUpgradeableReadLock ();
 			public void ExitUpgradeableReadLock () => _lock.ExitUpgradeableReadLock ();
 
-			// SupportsRecursion: lets Dispose() take the write lock at the top of the flow
-			// and have the Handle setter's DeregisterHandle re-enter that same lock when
-			// Handle is zeroed at the end.
-			ReaderWriterLockSlim _lock = new ReaderWriterLockSlim (LockRecursionPolicy.SupportsRecursion);
+			ReaderWriterLockSlim _lock = new ReaderWriterLockSlim (LockRecursionPolicy.NoRecursion);
 		}
 
 #if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
