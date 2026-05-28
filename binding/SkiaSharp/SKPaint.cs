@@ -55,7 +55,7 @@ namespace SkiaSharp
 					var font = new SKFont (
 						SkiaApi.sk_font_new_with_values (
 							SKTypeface.Default.Handle,
-							SKFonxt.DefaultSize,
+							SKFont.DefaultSize,
 							SKFont.DefaultScaleX,
 							SKFont.DefaultSkewX),
 						owns: true);

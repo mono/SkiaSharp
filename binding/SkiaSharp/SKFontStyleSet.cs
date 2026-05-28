@@ -38,8 +38,7 @@ namespace SkiaSharp
 			if (index < 0 || index >= Count)
 				throw new ArgumentOutOfRangeException ($"Index was out of range. Must be non-negative and less than the size of the set.", nameof (index));
 
-			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
-			tf?.PreventPublicDisposal ();
+			var tf = SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
 			GC.KeepAlive (this);
 			return tf;
 		}
@@ -49,8 +48,7 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
-			tf?.PreventPublicDisposal ();
+			var tf = SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
 			GC.KeepAlive (this);
 			return tf;
 		}

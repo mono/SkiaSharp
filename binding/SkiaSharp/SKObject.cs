@@ -217,9 +217,8 @@ namespace SkiaSharp
 		{
 			fromFinalizer = true;
 
-			// Claim disposal here (the CAS used to be inside Dispose(bool), but that's
-			// moved out so each entry point gates atomically with whatever check it
-			// pairs with). No outer HD lock — same reasoning as DisposeInternal.
+			// The public Dispose path additionally holds an HD lock to check IgnorePublicDispose
+			// but this is an internal Dispose, racing with a PreventPublicDisposal is not a concern.
 			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
 				return;
 			Dispose (false);
@@ -235,9 +234,10 @@ namespace SkiaSharp
 
 		// Make this wrapper unreachable via the public Dispose() method.
 		// Acquires the HD write lock so the flag set is serialized with any concurrent
-		// Dispose() (which holds the same lock around its check). Atomic with respect
-		// to "is this wrapper still in HD" — closes the promote-existing race in
-		// singleton init (#3817 discussion thread).
+		// public Dispose() (which holds the same lock around its check).
+		// DO NOT USE DIRECTLY except when a concurrent Dipose() is guaranteed to not be possible.
+		// The regular path for this method is to be called inside
+		// HandleDictionary.GetOrAddObject's critical section.
 		internal void PreventPublicDisposal ()
 		{
 			if (IgnorePublicDispose)
