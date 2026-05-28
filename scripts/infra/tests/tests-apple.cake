@@ -19,24 +19,18 @@ Task ("tests-ios")
     Information("Creating iOS simulator: {0} (device type: {1})...", simulatorName, IOS_SIMULATOR_NAME);
 
     // Create simulator and capture UDID from JSON output
-    IEnumerable<string> createStdout;
-    var createExitCode = StartProcess("dotnet", new ProcessSettings {
-        Arguments = $"apple simulator create \"{simulatorName}\" --device-type \"{IOS_SIMULATOR_NAME}\" --format json",
-        RedirectStandardOutput = true,
-    }, out createStdout);
-    if (createExitCode != 0)
-        throw new Exception($"Failed to create simulator (exit code {createExitCode})");
-
-    var createJson = string.Join("", createStdout);
-    var udid = System.Text.Json.JsonDocument.Parse(createJson).RootElement.GetProperty("udid").GetString();
-    Information("  Created simulator with UDID: {0}", udid);
-
-    // Boot by UDID
-    DotNetTool($"apple simulator boot \"{udid}\" --wait");
-    Information("  Simulator booted");
+    RunProcess("dotnet", $"apple simulator create \"{simulatorName}\" --device-type \"{IOS_SIMULATOR_NAME}\" --format json", out var createStdout);
 
     try
     {
+        var createJson = string.Join("", createStdout);
+        var udid = System.Text.Json.JsonDocument.Parse(createJson).RootElement.GetProperty("udid").GetString();
+        Information("  Created simulator with UDID: {0}", udid);
+
+        // Boot by UDID
+        DotNetTool($"apple simulator boot \"{udid}\" --wait");
+        Information("  Simulator booted");
+
         FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
         DirectoryPath results = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.ios/{DATE_TIME_STR}";
 

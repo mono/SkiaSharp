@@ -503,7 +503,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void DataOutLivesImageUntilFinalizersRun()
 		{
-			SkipOnMono();
+			SkipOnPlatform(IsBrowser, "WASM does not guarantee finalizers are invoked immediately");
 
 			var released = false;
 
