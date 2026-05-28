@@ -16,26 +16,36 @@ void RunDeviceRunnersTest(
 {
     CleanDirectories($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
     output = MakeAbsolute(output);
     CleanDirectories(output.FullPath);
 
+    var msb = new DotNetMSBuildSettings();
+    msb.Properties ["RestoreNoCache"] = new [] { "true" };
+    msb.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
+
+    if (properties != null) {
+        foreach (var prop in properties) {
+            if (!string.IsNullOrEmpty(prop.Value)) {
+                msb.Properties [prop.Key] = new [] { prop.Value };
+            }
+        }
+    }
+
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
         Framework = framework,
+        MSBuildSettings = msb,
         NoBuild = noBuild,
         ResultsDirectory = output,
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
-            args = args.Append("--logger").Append("trx");
-            if (properties != null) {
-                foreach (var prop in properties) {
-                    if (!string.IsNullOrEmpty(prop.Value)) {
-                        args = args.Append($"/p:{prop.Key}={prop.Value}");
-                    }
-                }
-            }
-            return args;
+            args = AppendForwardingLogger(args);
+            var sep = IsRunningOnWindows() ? ";" : "%3B";
+            return args
+                .Append($"/p:RestoreSources=\"{string.Join(sep, GetNuGetSources())}\"")
+                .Append("--logger").Append("trx");
         },
     };
 
