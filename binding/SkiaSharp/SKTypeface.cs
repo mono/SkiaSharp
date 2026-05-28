@@ -54,7 +54,7 @@ namespace SkiaSharp
 			var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
 				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
 			return matched == IntPtr.Zero
-				? empty
+				? Empty
 				: GetObject (matched);
 		}
 
