@@ -42,10 +42,7 @@ void RunDeviceRunnersTest(
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
             args = AppendForwardingLogger(args);
-            var sep = IsRunningOnWindows() ? ";" : "%3B";
-            return args
-                .Append($"/p:RestoreSources=\"{string.Join(sep, GetNuGetSources())}\"")
-                .Append("--logger").Append("trx");
+            return args.Append("--logger").Append("trx");
         },
     };
 
