@@ -17,6 +17,7 @@ import argparse
 import json
 import subprocess
 import sys
+import urllib.request
 from datetime import datetime, timezone
 
 ORG_DEVDIV = "https://devdiv.visualstudio.com"
@@ -74,6 +75,65 @@ def get_runs(pipeline_id: int, branch: str, org: str, project: str, top: int = 5
     return json.loads(out) if out else []
 
 
+def get_build_issues(build_id: int, org: str, project: str, max_issues: int = 10) -> list[dict]:
+    """Fetch timeline issues (errors/warnings) for a build.
+
+    Returns a list of dicts with keys: type, message, task_name.
+    Only returns issues from failed/warning records.
+    """
+    # Use az devops REST to get timeline
+    # URL format: {org}/{project}/_apis/build/builds/{buildId}/timeline?api-version=7.1
+    org_base = org.rstrip("/")
+    url = f"{org_base}/{project}/_apis/build/builds/{build_id}/timeline?api-version=7.1"
+
+    try:
+        # Try using az CLI token for auth
+        token = subprocess.run(
+            ["az", "account", "get-access-token", "--resource", "499b84ac-1321-427f-aa17-267ca6975798",
+             "--query", "accessToken", "-o", "tsv"],
+            capture_output=True, text=True, timeout=10
+        ).stdout.strip()
+
+        req = urllib.request.Request(url)
+        if token:
+            req.add_header("Authorization", f"Bearer {token}")
+
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read())
+    except Exception:
+        return []
+
+    issues = []
+    records = data.get("records", [])
+    for record in records:
+        # Only look at records that have issues
+        record_issues = record.get("issues", [])
+        if not record_issues:
+            continue
+
+        task_name = record.get("name", "unknown")
+        record_result = record.get("result", "")
+
+        # Only collect from failed or warning records
+        if record_result not in ("failed", "succeededWithIssues"):
+            continue
+
+        for issue in record_issues:
+            issue_type = issue.get("type", "").lower()  # "error" or "warning"
+            message = issue.get("message", "").strip()
+            if not message:
+                continue
+            issues.append({
+                "type": issue_type,
+                "message": message,
+                "task_name": task_name,
+            })
+            if len(issues) >= max_issues:
+                return issues
+
+    return issues
+
+
 def get_release_branches(top: int = 3) -> list[str]:
     """Get the most recent release branches by commit date."""
     result = subprocess.run(
@@ -109,7 +169,7 @@ def format_time(time_str: str | None) -> str:
         return time_str[:16] if time_str else "—"
 
 
-def print_pipeline_group(pipelines: list[dict], branch: str, top_builds: int, group_label: str):
+def print_pipeline_group(pipelines: list[dict], branch: str, top_builds: int, group_label: str, show_issues: bool = True):
     """Print status for a group of pipelines on a branch."""
     print(f"│  ┌ {group_label}")
 
@@ -124,7 +184,7 @@ def print_pipeline_group(pipelines: list[dict], branch: str, top_builds: int, gr
             print(f"{prefix} {pipe['name']}: no builds found")
         else:
             print(f"{prefix} {pipe['name']} (last {len(runs)}):")
-            for r in runs:
+            for idx, r in enumerate(runs):
                 status_icon = icon_for(r)
                 result_text = r.get("result") or r["status"]
                 started = format_time(r.get("startTime"))
@@ -133,19 +193,42 @@ def print_pipeline_group(pipelines: list[dict], branch: str, top_builds: int, gr
                     f"{result_text:<22} {started}  [id:{r['id']}]"
                 )
 
+                # Show issues for the most recent failed/partial build only
+                if show_issues and idx == 0 and r.get("result") in ("failed", "partiallySucceeded"):
+                    issues = get_build_issues(r["id"], pipe["org"], pipe["project"])
+                    if issues:
+                        errors = [i for i in issues if i["type"] == "error"]
+                        warnings = [i for i in issues if i["type"] == "warning"]
+                        if errors:
+                            print(f"{cont}   ┌── Errors ({len(errors)}):")
+                            for e in errors[:5]:
+                                msg = e["message"][:120]
+                                print(f"{cont}   │ ❌ [{e['task_name']}] {msg}")
+                            if len(errors) > 5:
+                                print(f"{cont}   │ ... and {len(errors) - 5} more errors")
+                            print(f"{cont}   └──")
+                        if warnings:
+                            print(f"{cont}   ┌── Warnings ({len(warnings)}):")
+                            for w in warnings[:5]:
+                                msg = w["message"][:120]
+                                print(f"{cont}   │ ⚠️  [{w['task_name']}] {msg}")
+                            if len(warnings) > 5:
+                                print(f"{cont}   │ ... and {len(warnings) - 5} more warnings")
+                            print(f"{cont}   └──")
+
     print(f"│  └")
 
 
-def print_branch_status(branch: str, top_builds: int):
+def print_branch_status(branch: str, top_builds: int, show_issues: bool = True):
     """Print status table for a single branch across all pipelines."""
     print(f"\n┌─ Branch: {branch}")
     print(f"│")
 
     # Public CI pipeline (runs on all branches)
-    print_pipeline_group(PUBLIC_PIPELINES, branch, top_builds, "Public CI")
+    print_pipeline_group(PUBLIC_PIPELINES, branch, top_builds, "Public CI", show_issues)
 
     # Internal release chain (most relevant for release/* branches)
-    print_pipeline_group(INTERNAL_PIPELINES, branch, top_builds, "Internal Release Chain")
+    print_pipeline_group(INTERNAL_PIPELINES, branch, top_builds, "Internal Release Chain", show_issues)
 
     print(f"│")
 
@@ -161,6 +244,10 @@ def main():
     parser.add_argument(
         "--builds", type=int, default=5,
         help="Number of recent builds per pipeline (default: 5)"
+    )
+    parser.add_argument(
+        "--no-issues", action="store_true",
+        help="Skip fetching errors/warnings from failed builds (faster)"
     )
     args = parser.parse_args()
 
@@ -179,7 +266,7 @@ def main():
     print(f"{'═' * 70}")
 
     for branch in branches:
-        print_branch_status(branch, args.builds)
+        print_branch_status(branch, args.builds, show_issues=not args.no_issues)
 
     print(f"{'═' * 70}")
 
