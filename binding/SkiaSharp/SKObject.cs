@@ -242,17 +242,19 @@ namespace SkiaSharp
 
 		// Make this wrapper unreachable via the public Dispose() method.
 		// This method does NOT take any lock itself: correctness relies on the CALLER
-		// holding HandleDictionary.instancesLock (the upgradeable-read lock taken by
-		// GetOrAddObject). That caller-held lock is mutually exclusive with the write
-		// lock public Dispose() holds around its IgnorePublicDispose check + CAS, so the
-		// flag set here cannot race a concurrent public disposal.
+		// holding the handle's HandleDictionary shard lock (the upgradeable-read lock taken
+		// by GetOrAddObject). That caller-held lock is mutually exclusive with the write
+		// lock public Dispose() holds (on the same shard, via HandleDictionary.GetLockFor)
+		// around its IgnorePublicDispose check + CAS, so the flag set here cannot race a
+		// concurrent public disposal.
 		// DO NOT USE DIRECTLY except from inside HandleDictionary.GetOrAddObject's
 		// critical section, or when a concurrent Dispose() is guaranteed to be impossible.
 		internal void PreventPublicDisposal ()
 		{
 #if THROW_OBJECT_EXCEPTIONS
-			// All callers (GetOrAddObject) hold the HandleDictionary upgradeable-read lock and target either a
-			// freshly-created wrapper or one that GetInstanceNoLocks just confirmed !IsDisposed.
+			// All callers (GetOrAddObject) hold the handle's HandleDictionary shard upgradeable-read
+			// lock and target either a freshly-created wrapper or one that GetInstanceNoLocks just
+			// confirmed !IsDisposed.
 			// A live target can only become disposed via: public Dispose() (blocked here by the
 			// mutually-exclusive write lock), an owned-child / ownership-handoff / replacement
 			// DisposeInternal, or the finalizer. No dispose-protected call site registers its
@@ -313,10 +315,11 @@ namespace SkiaSharp
 
 		public void Dispose ()
 		{
-			// Hold the HandleDictionary write lock only across the flag check + the isDisposed CAS.
-			// This pairs the read of IgnorePublicDispose with the disposal claim
-			// atomically: a concurrent PreventPublicDisposal (which takes the same
-			// write lock) is mutually exclusive with this section.
+			// Hold the HandleDictionary write lock for THIS handle only across the flag check
+			// + the isDisposed CAS. This pairs the read of IgnorePublicDispose with the disposal
+			// claim atomically: a concurrent PreventPublicDisposal (set under the same shard's
+			// lock via GetOrAddObject) is mutually exclusive with this section. The handle maps
+			// to a single shard, so GetLockFor returns the very lock GetOrAddObject holds for it.
 			//
 			// The actual cleanup runs *outside* the lock. That's safe because:
 			// 1. If a concurrent thread is in GetOrAddObject looking up this handle
@@ -329,14 +332,15 @@ namespace SkiaSharp
 			//    without trying to dispose us recursively.
 			// 3. Our own Handle = 0 → DeregisterHandle path correctly handles
 			//    "weak.Target is now someone else" (no-op in release).
-			HandleDictionary.instancesLock.EnterWriteLock ();
+			var disposalLock = HandleDictionary.GetLockFor (Handle);
+			disposalLock.EnterWriteLock ();
 			bool proceed;
 			try {
 				if (IgnorePublicDispose)
 					return;
 				proceed = Interlocked.CompareExchange (ref isDisposed, 1, 0) == 0;
 			} finally {
-				HandleDictionary.instancesLock.ExitWriteLock ();
+				disposalLock.ExitWriteLock ();
 			}
 
 			if (!proceed)
