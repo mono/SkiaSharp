@@ -1,9 +1,10 @@
 ---
 name: ci-status
 description: >
-  Check the CI build health of SkiaSharp across main and recent release branches.
-  Collects the last N builds from the pipeline chain (Public + Native → Managed → Tests)
-  for main and the most recent release/* branches, providing a daily dashboard view
+  Check the CI build health and automation status of SkiaSharp across main and
+  recent release branches. Collects the last N builds from the AzDO pipeline chain
+  (Public + Native → Managed → Tests) and all GitHub Actions workflows from
+  mono/SkiaSharp and mono/SkiaSharp-API-docs, providing a daily dashboard view
   with AI-powered analysis of failures, regressions, and flakes.
 
   Use when user asks to:
@@ -15,10 +16,13 @@ description: >
   - Monitor branch health
   - Identify flaky tests or chronic failures
   - Determine if a release branch is shippable
+  - Check GitHub Actions workflow health
+  - See what automation is failing
 
   Triggers: "CI status", "build health", "is main green", "CI dashboard",
   "daily build status", "check builds", "are builds passing", "CI overview",
-  "pipeline health", "branch build status", "CI report", "why is CI red".
+  "pipeline health", "branch build status", "CI report", "why is CI red",
+  "what automation is failing", "GitHub Actions status".
 ---
 
 # CI Status Skill
@@ -47,16 +51,24 @@ this skill gives a **broad overview** of CI health across multiple branches simu
 
 ### GitHub Actions (mono/SkiaSharp and mono/SkiaSharp-API-docs)
 
-| Workflow | Repository | Triggers | Why Track |
-|----------|------------|----------|-----------|
+| Workflow | Repository | Trigger | Why Track |
+|----------|------------|---------|-----------|
 | Docs - Deploy | mono/SkiaSharp | Push/PR to main | Docs site broken if failing |
 | Docs - Go Live! | mono/SkiaSharp | Workflow dispatch | Docs don't publish if failing |
-| Publish Samples | mono/SkiaSharp | Push/PR touching `samples/` | Sample projects broken if failing |
-| API Diff | mono/SkiaSharp | Weekly schedule, push to main | API regression detection |
-| Auto Docs Submodule Sync | mono/SkiaSharp | Push to main | API docs get out of sync if broken |
-| Update Release Notes | mono/SkiaSharp | Push to main/release, tags | Release notes stop auto-updating |
-| Skia Upstream Sync | mono/SkiaSharp | Scheduled | Upstream tracking breaks if failing |
-| Nightly Fix Finder | mono/SkiaSharp | Nightly schedule | Nightly automation health |
+| Docs - PR Staging - Cleanup | mono/SkiaSharp | PR close events | Stale staging deploys accumulate |
+| Docs - PR Staging - Sweep Stale | mono/SkiaSharp | Daily (06:00 UTC) | Stale staging deploys accumulate |
+| Publish Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
+| API Diff | mono/SkiaSharp | Weekly (Sun 00:00 UTC) | API regression detection |
+| Auto Docs Submodule Sync | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
+| Update Release Notes | mono/SkiaSharp | Push to main/release/tags | Release notes stop auto-updating |
+| Skia Upstream Sync | mono/SkiaSharp | Daily (07:00 UTC) | Upstream tracking breaks |
+| Nightly Fix Finder | mono/SkiaSharp | Nightly | Nightly automation health |
+| Auto-Triage SkiaSharp Issue | mono/SkiaSharp | Daily (04:05 UTC) + issue events | Triage automation stops |
+| Persist Agentic Workflow Data | mono/SkiaSharp | Push to main | AI workflow data lost |
+| Backport | mono/SkiaSharp | PR label/comment | Cherry-picks to release branches fail |
+| Automatic Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
+| Add PR Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
+| Manage NuGet Feed | mono/SkiaSharp | Disabled (manual) | Feed management broken |
 | Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch | XML docs stop being written |
 | Automerge Docs | mono/SkiaSharp-API-docs | PR events | Doc PRs won't auto-merge |
 | Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | Docs don't publish to live |
@@ -196,14 +208,20 @@ Each recommendation should include:
 ### 2.9 GitHub Actions Health
 
 For each tracked GitHub Actions workflow:
-- Current status on main (pass/fail/no recent runs)
-- Any failures or patterns across branches
+- Current status (pass/fail/skipped/no recent runs)
+- Any failures or patterns (recurring failures, recent regressions)
 - Whether failures are related to AzDO failures (same commit?) or independent
-- For SkiaSharp-API-docs workflows: note if docs generation or publishing is broken
+- Categorize by severity:
+  - **High**: Docs - Deploy, Publish Samples, Update Release Notes, Skia Upstream Sync,
+    Auto API Docs Writer (broken = user-facing impact or release process blocked)
+  - **Medium**: Auto Docs Submodule Sync, Nightly Fix Finder, Auto-Triage,
+    Backport, Go Live (broken = automation degraded, manual workaround exists)
+  - **Low**: PR Staging Cleanup, Sweep Stale, Rebase, PR Artifacts Comment,
+    Persist Agentic Workflow Data (broken = cosmetic/housekeeping)
 
-GitHub Actions failures are typically lower severity than AzDO pipeline failures
-(which block releases), but broken docs deployment or sample validation should still
-be flagged as actionable.
+GitHub Actions failures don't block releases directly (AzDO owns that), but they
+indicate broken automation that accumulates tech debt if ignored. Flag all failures
+as actionable — the goal is "what automation is failing" not just "can we release".
 
 ---
 

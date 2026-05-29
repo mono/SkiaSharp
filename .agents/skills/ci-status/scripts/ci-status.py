@@ -57,14 +57,27 @@ ICONS = {
 # GitHub Actions workflows to track
 # Each entry: repo, workflow file name, display name, relevant branches
 GITHUB_WORKFLOWS = [
+    # mono/SkiaSharp — Build & Docs
     {"repo": "mono/SkiaSharp", "workflow": "build-site.yml", "name": "Docs - Deploy"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-go-live.yml", "name": "Docs - Go Live!"},
+    {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup.yml", "name": "Docs - PR Staging - Cleanup"},
+    {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup-stale.yml", "name": "Docs - PR Staging - Sweep Stale"},
     {"repo": "mono/SkiaSharp", "workflow": "samples.yml", "name": "Publish Samples"},
     {"repo": "mono/SkiaSharp", "workflow": "api-diff.yml", "name": "API Diff"},
+    # mono/SkiaSharp — Automation & Sync
     {"repo": "mono/SkiaSharp", "workflow": "auto-docs-submodule-sync.yml", "name": "Auto Docs Submodule Sync"},
     {"repo": "mono/SkiaSharp", "workflow": "update-release-notes.lock.yml", "name": "Update Release Notes"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Skia Upstream Sync"},
     {"repo": "mono/SkiaSharp", "workflow": "nightly-fix-finder.lock.yml", "name": "Nightly Fix Finder"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-triage.lock.yml", "name": "Auto-Triage SkiaSharp Issue"},
+    {"repo": "mono/SkiaSharp", "workflow": "persist-aw-data.yml", "name": "Persist Agentic Workflow Data"},
+    # mono/SkiaSharp — PR Utilities
+    {"repo": "mono/SkiaSharp", "workflow": "backport.yml", "name": "Backport"},
+    {"repo": "mono/SkiaSharp", "workflow": "rebase.yml", "name": "Automatic Rebase"},
+    {"repo": "mono/SkiaSharp", "workflow": "pr-artifacts-comment.yml", "name": "Add PR Artifacts Comment"},
+    # mono/SkiaSharp — Dependency Management
+    {"repo": "mono/SkiaSharp", "workflow": "manage-nuget-feed.yml", "name": "Manage NuGet Feed"},
+    # mono/SkiaSharp-API-docs
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "auto-api-docs-writer.lock.yml", "name": "Auto API Docs Writer"},
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs"},
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live"},
