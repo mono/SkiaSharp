@@ -55,6 +55,8 @@ python3 .agents/skills/ci-status/scripts/ci-status.py
 |------|---------|-------------|
 | `--branches N` | 3 | Number of most recent release/* branches to include |
 | `--builds N` | 5 | Number of recent builds to show per pipeline per branch |
+| `--no-issues` | off | Skip fetching errors/warnings (faster) |
+| `--output PATH` | none | Write a formatted markdown report to the given file path |
 
 Examples:
 
@@ -67,6 +69,12 @@ python3 .agents/skills/ci-status/scripts/ci-status.py --branches 5 --builds 3
 
 # Just main with last 10 builds
 python3 .agents/skills/ci-status/scripts/ci-status.py --branches 0 --builds 10
+
+# Generate a markdown report
+python3 .agents/skills/ci-status/scripts/ci-status.py --output output/ai/ci-status.md
+
+# Quick check without issue extraction + markdown
+python3 .agents/skills/ci-status/scripts/ci-status.py --no-issues --output /tmp/report.md
 ```
 
 ---

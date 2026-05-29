@@ -131,7 +131,12 @@ def get_build_issues(build_id: int, org: str, project: str) -> list[dict]:
 
 
 def get_release_branches(top: int = 3) -> list[str]:
-    """Get the most recent release branches by commit date."""
+    """Get the most recent release branches by commit date.
+
+    Includes both versioned release branches (release/X.Y.Z-preview.N)
+    and servicing branches (release/X.Y.x) which are the main equivalent
+    for their respective major.minor.
+    """
     result = subprocess.run(
         ["git", "branch", "-r", "--sort=-committerdate"],
         capture_output=True, text=True,
@@ -139,8 +144,7 @@ def get_release_branches(top: int = 3) -> list[str]:
     branches = []
     for line in result.stdout.splitlines():
         line = line.strip()
-        # Match origin/release/X.Y.Z* branches (skip release/X.Y.x maintenance branches)
-        if "origin/release/" in line and not line.endswith(".x"):
+        if "origin/release/" in line:
             branch = line.replace("origin/", "")
             branches.append(branch)
             if len(branches) >= top:
@@ -165,64 +169,241 @@ def format_time(time_str: str | None) -> str:
         return time_str[:16] if time_str else "—"
 
 
-def print_pipeline_group(pipelines: list[dict], branch: str, top_builds: int, group_label: str, show_issues: bool = True):
-    """Print status for a group of pipelines on a branch."""
-    print(f"│  ┌ {group_label}")
-
-    for i, pipe in enumerate(pipelines):
-        is_last = i == len(pipelines) - 1
-        prefix = "│  │ └─" if is_last else "│  │ ├─"
-        cont = "│  │    " if not is_last else "│  │    "
-
-        runs = get_runs(pipe["id"], branch, pipe["org"], pipe["project"], top=top_builds)
-
-        if not runs:
-            print(f"{prefix} {pipe['name']}: no builds found")
-        else:
-            print(f"{prefix} {pipe['name']} (last {len(runs)}):")
-            for idx, r in enumerate(runs):
-                status_icon = icon_for(r)
-                result_text = r.get("result") or r["status"]
-                started = format_time(r.get("startTime"))
-                print(
-                    f"{cont}   {status_icon} {r['buildNumber']:<35} "
-                    f"{result_text:<22} {started}  [id:{r['id']}]"
-                )
-
-                # Show all issues from the most recent run if it's not clean
-                if show_issues and idx == 0 and r.get("result") in ("failed", "partiallySucceeded"):
-                    issues = get_build_issues(r["id"], pipe["org"], pipe["project"])
-                    if issues:
-                        errors = [i for i in issues if i["type"] == "error"]
-                        warnings = [i for i in issues if i["type"] == "warning"]
-                        if errors:
-                            print(f"{cont}   ┌── Errors ({len(errors)}):")
-                            for e in errors:
-                                msg = e["message"][:120]
-                                print(f"{cont}   │ ❌ [{e['task_name']}] {msg}")
-                            print(f"{cont}   └──")
-                        if warnings:
-                            print(f"{cont}   ┌── Warnings ({len(warnings)}):")
-                            for w in warnings:
-                                msg = w["message"][:120]
-                                print(f"{cont}   │ ⚠️  [{w['task_name']}] {msg}")
-                            print(f"{cont}   └──")
-
-    print(f"│  └")
+def build_url(build_id: int, org: str, project: str) -> str:
+    """Generate ADO build URL."""
+    org_base = org.rstrip("/")
+    return f"{org_base}/{project}/_build/results?buildId={build_id}"
 
 
-def print_branch_status(branch: str, top_builds: int, show_issues: bool = True):
-    """Print status table for a single branch across all pipelines."""
-    print(f"\n┌─ Branch: {branch}")
-    print(f"│")
+def collect_data(branches: list[str], top_builds: int, show_issues: bool) -> dict:
+    """Collect all CI data into a structured dict."""
+    all_pipelines = PUBLIC_PIPELINES + INTERNAL_PIPELINES
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    # Public CI pipeline (runs on all branches)
-    print_pipeline_group(PUBLIC_PIPELINES, branch, top_builds, "Public CI", show_issues)
+    data = {
+        "timestamp": timestamp,
+        "branches": [],
+    }
 
-    # Internal release chain (most relevant for release/* branches)
-    print_pipeline_group(INTERNAL_PIPELINES, branch, top_builds, "Internal Release Chain", show_issues)
+    for branch in branches:
+        branch_data = {"name": branch, "pipeline_groups": []}
 
-    print(f"│")
+        for group_label, pipelines in [("Public CI", PUBLIC_PIPELINES), ("Internal Release Chain", INTERNAL_PIPELINES)]:
+            group_data = {"label": group_label, "pipelines": []}
+
+            for pipe in pipelines:
+                runs = get_runs(pipe["id"], branch, pipe["org"], pipe["project"], top=top_builds)
+                pipe_data = {"name": pipe["name"], "org": pipe["org"], "project": pipe["project"], "runs": []}
+
+                for idx, r in enumerate(runs):
+                    run_data = {
+                        "id": r["id"],
+                        "buildNumber": r["buildNumber"],
+                        "status": r["status"],
+                        "result": r.get("result"),
+                        "startTime": r.get("startTime"),
+                        "icon": icon_for(r),
+                        "url": build_url(r["id"], pipe["org"], pipe["project"]),
+                        "issues": None,
+                    }
+                    # Collect issues for the most recent failed/partial run
+                    if show_issues and idx == 0 and r.get("result") in ("failed", "partiallySucceeded"):
+                        run_data["issues"] = get_build_issues(r["id"], pipe["org"], pipe["project"])
+
+                    pipe_data["runs"].append(run_data)
+
+                group_data["pipelines"].append(pipe_data)
+            branch_data["pipeline_groups"].append(group_data)
+
+        data["branches"].append(branch_data)
+
+    return data
+
+
+def render_console(data: dict):
+    """Render collected data to console (tree format)."""
+    print(f"{'═' * 70}")
+    print(f" SkiaSharp CI Status — {data['timestamp']}")
+    print(f"{'═' * 70}")
+    print(f" Public CI:  {' | '.join(p['name'] for p in PUBLIC_PIPELINES)}")
+    print(f" Internal:   {' → '.join(p['name'] for p in INTERNAL_PIPELINES)}")
+    print(f" Branches:   {len(data['branches'])} ({', '.join(b['name'] for b in data['branches'])})")
+    print(f"{'═' * 70}")
+
+    for branch_data in data["branches"]:
+        print(f"\n┌─ Branch: {branch_data['name']}")
+        print(f"│")
+
+        for group in branch_data["pipeline_groups"]:
+            print(f"│  ┌ {group['label']}")
+
+            for i, pipe in enumerate(group["pipelines"]):
+                is_last = i == len(group["pipelines"]) - 1
+                prefix = "│  │ └─" if is_last else "│  │ ├─"
+                cont = "│  │    " if not is_last else "│  │    "
+
+                if not pipe["runs"]:
+                    print(f"{prefix} {pipe['name']}: no builds found")
+                else:
+                    print(f"{prefix} {pipe['name']} (last {len(pipe['runs'])}):")
+                    for run in pipe["runs"]:
+                        result_text = run["result"] or run["status"]
+                        started = format_time(run["startTime"])
+                        print(
+                            f"{cont}   {run['icon']} {run['buildNumber']:<35} "
+                            f"{result_text:<22} {started}  [id:{run['id']}]"
+                        )
+
+                        if run["issues"]:
+                            errors = [i for i in run["issues"] if i["type"] == "error"]
+                            warnings = [i for i in run["issues"] if i["type"] == "warning"]
+                            if errors:
+                                print(f"{cont}   ┌── Errors ({len(errors)}):")
+                                for e in errors:
+                                    msg = e["message"][:120]
+                                    print(f"{cont}   │ ❌ [{e['task_name']}] {msg}")
+                                print(f"{cont}   └──")
+                            if warnings:
+                                print(f"{cont}   ┌── Warnings ({len(warnings)}):")
+                                for w in warnings:
+                                    msg = w["message"][:120]
+                                    print(f"{cont}   │ ⚠️  [{w['task_name']}] {msg}")
+                                print(f"{cont}   └──")
+
+            print(f"│  └")
+
+        print(f"│")
+
+    print(f"{'═' * 70}")
+
+    # Health summary
+    print("\n📊 Health Summary:")
+    all_pipelines_names = [p["name"] for p in PUBLIC_PIPELINES + INTERNAL_PIPELINES]
+    for branch_data in data["branches"]:
+        statuses = []
+        for group in branch_data["pipeline_groups"]:
+            for pipe in group["pipelines"]:
+                if pipe["runs"]:
+                    statuses.append(f"{pipe['runs'][0]['icon']} {pipe['name']}")
+                else:
+                    statuses.append(f"⏳ {pipe['name']}")
+        print(f"  {branch_data['name']:<40} {' | '.join(statuses)}")
+    print()
+
+
+def render_markdown(data: dict, output_path: str):
+    """Render collected data as a markdown report."""
+    lines = []
+
+    lines.append(f"# SkiaSharp CI Status Report")
+    lines.append(f"")
+    lines.append(f"> Generated: **{data['timestamp']}**")
+    lines.append(f"")
+
+    # Health summary table at the top
+    lines.append(f"## Health Summary")
+    lines.append(f"")
+    pipe_names = [p["name"] for p in PUBLIC_PIPELINES + INTERNAL_PIPELINES]
+    header = "| Branch | " + " | ".join(pipe_names) + " |"
+    separator = "|--------|" + "|".join(["-----" for _ in pipe_names]) + "|"
+    lines.append(header)
+    lines.append(separator)
+
+    for branch_data in data["branches"]:
+        cells = []
+        for group in branch_data["pipeline_groups"]:
+            for pipe in group["pipelines"]:
+                if pipe["runs"]:
+                    run = pipe["runs"][0]
+                    result = run["result"] or run["status"]
+                    cells.append(f"{run['icon']} {result}")
+                else:
+                    cells.append("⏳ no runs")
+        row = f"| `{branch_data['name']}` | " + " | ".join(cells) + " |"
+        lines.append(row)
+
+    lines.append(f"")
+    lines.append(f"---")
+    lines.append(f"")
+
+    # Detailed per-branch sections
+    for branch_data in data["branches"]:
+        lines.append(f"## `{branch_data['name']}`")
+        lines.append(f"")
+
+        for group in branch_data["pipeline_groups"]:
+            lines.append(f"### {group['label']}")
+            lines.append(f"")
+
+            for pipe in group["pipelines"]:
+                lines.append(f"#### {pipe['name']}")
+                lines.append(f"")
+
+                if not pipe["runs"]:
+                    lines.append(f"_No builds found._")
+                    lines.append(f"")
+                    continue
+
+                # Build history table
+                lines.append(f"| Status | Build | Result | Started | Link |")
+                lines.append(f"|--------|-------|--------|---------|------|")
+                for run in pipe["runs"]:
+                    result_text = run["result"] or run["status"]
+                    started = format_time(run["startTime"])
+                    link = f"[{run['id']}]({run['url']})"
+                    lines.append(f"| {run['icon']} | `{run['buildNumber']}` | {result_text} | {started} | {link} |")
+                lines.append(f"")
+
+                # Issues for most recent run
+                latest = pipe["runs"][0]
+                if latest["issues"]:
+                    errors = [i for i in latest["issues"] if i["type"] == "error"]
+                    warnings = [i for i in latest["issues"] if i["type"] == "warning"]
+
+                    if errors:
+                        lines.append(f"<details>")
+                        lines.append(f"<summary>❌ Errors ({len(errors)})</summary>")
+                        lines.append(f"")
+                        lines.append(f"| Task | Message |")
+                        lines.append(f"|------|---------|")
+                        for e in errors:
+                            msg = e["message"].replace("|", "\\|").replace("\n", " ")
+                            lines.append(f"| {e['task_name']} | {msg} |")
+                        lines.append(f"")
+                        lines.append(f"</details>")
+                        lines.append(f"")
+
+                    if warnings:
+                        lines.append(f"<details>")
+                        lines.append(f"<summary>⚠️ Warnings ({len(warnings)})</summary>")
+                        lines.append(f"")
+                        lines.append(f"| Task | Message |")
+                        lines.append(f"|------|---------|")
+                        for w in warnings:
+                            msg = w["message"].replace("|", "\\|").replace("\n", " ")
+                            lines.append(f"| {w['task_name']} | {msg} |")
+                        lines.append(f"")
+                        lines.append(f"</details>")
+                        lines.append(f"")
+
+        lines.append(f"---")
+        lines.append(f"")
+
+    # Footer
+    lines.append(f"## Pipeline Links")
+    lines.append(f"")
+    lines.append(f"| Pipeline | Org | Definition |")
+    lines.append(f"|----------|-----|------------|")
+    for pipe in PUBLIC_PIPELINES + INTERNAL_PIPELINES:
+        org_short = "xamarin/public" if pipe["org"] == ORG_XAMARIN else "devdiv/DevDiv"
+        url = f"{pipe['org'].rstrip('/')}/{pipe['project']}/_build?definitionId={pipe['id']}"
+        lines.append(f"| {pipe['name']} | {org_short} | [{pipe['id']}]({url}) |")
+    lines.append(f"")
+
+    content = "\n".join(lines)
+    with open(output_path, "w") as f:
+        f.write(content)
+    print(f"\n📄 Markdown report written to: {output_path}")
 
 
 def main():
@@ -241,6 +422,10 @@ def main():
         "--no-issues", action="store_true",
         help="Skip fetching errors/warnings from failed builds (faster)"
     )
+    parser.add_argument(
+        "--output", type=str, default=None,
+        help="Write a markdown report to the specified file path"
+    )
     args = parser.parse_args()
 
     # Collect branches to check
@@ -248,35 +433,16 @@ def main():
     release_branches = get_release_branches(top=args.branches)
     branches.extend(release_branches)
 
-    print(f"{'═' * 70}")
-    print(f" SkiaSharp CI Status — {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
-    print(f"{'═' * 70}")
-    print(f" Public CI:  {' | '.join(p['name'] for p in PUBLIC_PIPELINES)}")
-    print(f" Internal:   {' → '.join(p['name'] for p in INTERNAL_PIPELINES)}")
-    print(f" Branches:   main + {len(release_branches)} recent release branches")
-    print(f" Builds:     last {args.builds} per pipeline")
-    print(f"{'═' * 70}")
+    # Collect all data
+    show_issues = not args.no_issues
+    data = collect_data(branches, args.builds, show_issues)
 
-    for branch in branches:
-        print_branch_status(branch, args.builds, show_issues=not args.no_issues)
+    # Always render console output
+    render_console(data)
 
-    print(f"{'═' * 70}")
-
-    # Summary: quick health check
-    print("\n📊 Health Summary:")
-    all_pipelines = PUBLIC_PIPELINES + INTERNAL_PIPELINES
-    for branch in branches:
-        statuses = []
-        for pipe in all_pipelines:
-            runs = get_runs(pipe["id"], branch, pipe["org"], pipe["project"], top=1)
-            if runs:
-                statuses.append((pipe["name"], icon_for(runs[0]), runs[0].get("result") or runs[0]["status"]))
-            else:
-                statuses.append((pipe["name"], "⏳", "no runs"))
-        summary_line = " | ".join(f"{s[1]} {s[0]}" for s in statuses)
-        print(f"  {branch:<40} {summary_line}")
-
-    print()
+    # Optionally write markdown report
+    if args.output:
+        render_markdown(data, args.output)
 
 
 if __name__ == "__main__":
