@@ -483,16 +483,18 @@ function renderChromeReleases(cr, milestone) {
         const rows = compCves.sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9))
           .map(c => {
             const bugUrl = c.bugId ? `https://issues.chromium.org/issues/${esc(c.bugId)}` : '#';
-            return `<tr>
-              <td><span class="${sevClass(c.severity)}">${esc(c.severity)}</span></td>
-              <td>${esc(c.cveId)}</td>
-              <td>m${c.milestone}</td>
-              <td><a href="${bugUrl}" target="_blank">${esc(c.bugId || 'N/A')}</a></td>
-            </tr>`;
-          }).join('');
+          const blogLink = c.blogPostUrl ? `<a href="${esc(c.blogPostUrl)}" target="_blank" title="Blog post"><i class="bi bi-link-45deg"></i></a>` : '';
+          return `<tr>
+            <td><span class="${sevClass(c.severity)}">${esc(c.severity)}</span></td>
+            <td>${esc(c.cveId)}</td>
+            <td>m${c.milestone}</td>
+            <td><a href="${bugUrl}" target="_blank">${esc(c.bugId || 'N/A')}</a></td>
+            <td>${blogLink}</td>
+          </tr>`;
+        }).join('');
         return `<div class="mb-2"><strong>${esc(comp)}</strong> <span class="badge bg-secondary">${compCves.length}</span>
-          <table class="table table-sm cve-table mb-1"><thead><tr><th>Severity</th><th>CVE</th><th>Fixed In</th><th>Bug</th></tr></thead>
-          <tbody>${rows}</tbody></table></div>`;
+        <table class="table table-sm cve-table mb-1"><thead><tr><th>Severity</th><th>CVE</th><th>Fixed In</th><th>Bug</th><th>Blog</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
       }).join('');
   }
 
