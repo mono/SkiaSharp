@@ -471,7 +471,11 @@ function renderChromeReleases(cr, milestone) {
       byComp[c.component].push(c);
     });
     const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    const compPriority = { 'Skia': 0, 'ANGLE': 1, 'Canvas': 2, 'Fonts': 3, 'GPU': 4, 'Compositing': 5, 'WebGL': 6 };
     const sorted = Object.entries(byComp).sort((a, b) => {
+      const aPri = compPriority[a[0]] ?? 99;
+      const bPri = compPriority[b[0]] ?? 99;
+      if (aPri !== bPri) return aPri - bPri;
       const aMin = Math.min(...a[1].map(c => sevOrder[c.severity] ?? 9));
       const bMin = Math.min(...b[1].map(c => sevOrder[c.severity] ?? 9));
       return aMin - bMin;
