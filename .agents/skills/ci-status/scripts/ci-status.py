@@ -60,6 +60,7 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "build-site.yml", "name": "Docs - Deploy"},
     {"repo": "mono/SkiaSharp", "workflow": "samples.yml", "name": "Publish Samples"},
     {"repo": "mono/SkiaSharp", "workflow": "api-diff.yml", "name": "API Diff"},
+    {"repo": "mono/SkiaSharp-API-docs", "workflow": "auto-api-docs-writer.lock.yml", "name": "Auto API Docs Writer"},
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs"},
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live"},
 ]

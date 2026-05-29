@@ -52,6 +52,7 @@ this skill gives a **broad overview** of CI health across multiple branches simu
 | Docs - Deploy | mono/SkiaSharp | Push/PR to main |
 | Publish Samples | mono/SkiaSharp | Push/PR touching `samples/` |
 | API Diff | mono/SkiaSharp | Weekly schedule, push to main |
+| Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch, writes XML docs |
 | Automerge Docs | mono/SkiaSharp-API-docs | PR events |
 | Go Live | mono/SkiaSharp-API-docs | Workflow dispatch |
 
