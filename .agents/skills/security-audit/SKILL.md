@@ -42,6 +42,7 @@ combined into a single unified report.
 - **[references/security-audit-schema.json](references/security-audit-schema.json)** — Machine-readable JSON Schema (Draft 2020-12)
 - **[scripts/validate-security-audit.py](scripts/validate-security-audit.py)** — Validates report JSON against schema + semantic checks
 - **[scripts/render-security-audit.py](scripts/render-security-audit.py)** — Renders JSON → standalone HTML
+- **[scripts/render-security-audit-md.py](scripts/render-security-audit-md.py)** — Renders JSON → Markdown (for AI consumption)
 - **[scripts/viewer.html](scripts/viewer.html)** — HTML template (Bootstrap 5)
 
 ## Workflow
@@ -322,20 +323,27 @@ Warnings are informational — errors must be fixed before proceeding.
 
 ---
 
-### Step 10: Render HTML Report
+### Step 10: Render HTML + Markdown Reports
 
-> 🛑 **MANDATORY:** Always generate the HTML report. The human needs a readable dashboard.
+> 🛑 **MANDATORY:** Always generate both reports.
 
 ```bash
 python3 .agents/skills/security-audit/scripts/render-security-audit.py \
   output/ai/security-audit-{date}.json
+
+python3 .agents/skills/security-audit/scripts/render-security-audit-md.py \
+  output/ai/security-audit-{date}.json
 ```
 
-This produces a self-contained HTML file (Bootstrap 5, CDN CSS only) alongside the JSON.
+This produces:
+- **HTML** — Self-contained dashboard (Bootstrap 5) for human review
+- **Markdown** — Comprehensive report for AI consumption and action suggestions
+
 The HTML renders:
 
 - Summary cards with status counts
 - Collapsible findings with CVE tables, severity badges, NVD links
+- Chrome Releases blog section with above-milestone CVEs by component
 - Version verification table with match/mismatch indicators
 - Skia upstream verification details with commit links
 - Prioritized next steps with severity-coded borders
