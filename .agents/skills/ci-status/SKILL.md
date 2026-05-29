@@ -118,12 +118,20 @@ Group all errors/warnings across all branches and pipelines by **normalized sign
 | Downstream pipeline failed but upstream in same chain also failed | chain blockage (don't double-count) |
 | None of the above | unknown |
 
-### 2.3 Pipeline Chain Analysis
+### 2.3 Pipeline Chain Analysis (MANDATORY — always perform, even when failures look independent)
 
-The Internal chain is sequential: Native → Managed → Tests.
-- If Native fails, Managed and Tests typically don't run (or fail due to missing artifacts)
-- **Collapse cascaded failures** to the root cause pipeline
-- Report: "N failures on branch X — all root-caused to {pipeline}; downstream was blocked, not independently broken"
+The Internal chain is sequential: **Native → Managed → Tests**. A red pipeline is NOT automatically an independent failure — it is often a downstream casualty of an upstream break.
+
+For **every** branch that has ≥1 red internal pipeline, you MUST:
+1. Find the earliest-in-chain failing pipeline (Native before Managed before Tests).
+2. Decide whether each later red pipeline is an **independent failure** (its own distinct error) or a **cascade** (failed because the upstream artifact never built / a shared error).
+3. **Collapse cascades** into the upstream root cause so a single break is not counted as 2–3 problems.
+
+Emit one explicit sentence per affected branch, even if the answer is "no cascade":
+- Cascade: `"release/X: 3 red internal pipelines — root-caused to {Native}; Managed+Tests were blocked downstream, not independently broken."`
+- Independent: `"release/X: Native and Tests both red but with unrelated errors ({errA} vs {errB}) — two independent failures, not a cascade."`
+
+⚠️ Do not skip this step or list internal pipelines as separate equal-weight failures without first stating the chain verdict. This is the most common analysis miss.
 
 ### 2.4 Regression Detection
 
@@ -177,8 +185,9 @@ After analysis, present:
 
 1. **Verdict** (1 sentence + emoji)
 2. **Health matrix** (the table from the markdown report)
-3. **Top 3-5 actions** with build links
-4. **Offer follow-ups**: "Want me to investigate the regression on release/X? Open the failing build? Check if this is a known issue?"
+3. **Chain verdict** — for each branch with red internal pipelines, the one-line cascade-vs-independent statement from Step 2.3 (so the reader knows whether N red pipelines = N problems or 1 root cause)
+4. **Top 3-5 actions** with build links (root-caused — never list a cascaded downstream pipeline as its own action)
+5. **Offer follow-ups**: "Want me to investigate the regression on release/X? Open the failing build? Check if this is a known issue?"
 
 ### Example Output
 
