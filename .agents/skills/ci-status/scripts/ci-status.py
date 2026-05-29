@@ -54,6 +54,38 @@ ICONS = {
     "notStarted": "⏳",
 }
 
+# GitHub Actions workflows to track
+# Each entry: repo, workflow file name, display name
+# scope: "branch" = filter by branch, "global" = fetch latest runs regardless of branch
+# trigger: "push" = push/PR, "schedule" = cron, "dispatch" = manual, "event" = PR/issue events
+# branches: (optional) override which branches to query for branch-scoped workflows.
+#           If omitted, uses the full set (main + release/*).
+GITHUB_WORKFLOWS = [
+    # mono/SkiaSharp — Build & Docs (push-triggered, main + release/*)
+    {"repo": "mono/SkiaSharp", "workflow": "build-site.yml", "name": "Docs - Deploy", "scope": "branch", "trigger": "push"},
+    {"repo": "mono/SkiaSharp", "workflow": "samples.yml", "name": "Publish Samples", "scope": "branch", "trigger": "push"},
+    # mono/SkiaSharp — Release-path push workflow (main + release/*)
+    {"repo": "mono/SkiaSharp", "workflow": "update-release-notes.lock.yml", "name": "Update Release Notes", "scope": "branch", "trigger": "push"},
+    # mono/SkiaSharp — Automation & Sync (global: scheduled/dispatch, not branch-specific)
+    {"repo": "mono/SkiaSharp", "workflow": "build-site-go-live.yml", "name": "Docs - Go Live!", "scope": "global", "trigger": "dispatch"},
+    {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup.yml", "name": "Docs - PR Staging - Cleanup", "scope": "global", "trigger": "event"},
+    {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup-stale.yml", "name": "Docs - PR Staging - Sweep Stale", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "api-diff.yml", "name": "API Diff", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-docs-submodule-sync.yml", "name": "Auto Docs Submodule Sync", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Skia Upstream Sync", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "nightly-fix-finder.lock.yml", "name": "Nightly Fix Finder", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-triage.lock.yml", "name": "Auto-Triage SkiaSharp Issue", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "persist-aw-data.yml", "name": "Persist Agentic Workflow Data", "scope": "global", "trigger": "push"},
+    # mono/SkiaSharp — PR Utilities (global: triggered by PR events, not branch-specific)
+    {"repo": "mono/SkiaSharp", "workflow": "backport.yml", "name": "Backport", "scope": "global", "trigger": "event"},
+    {"repo": "mono/SkiaSharp", "workflow": "rebase.yml", "name": "Automatic Rebase", "scope": "global", "trigger": "event"},
+    {"repo": "mono/SkiaSharp", "workflow": "pr-artifacts-comment.yml", "name": "Add PR Artifacts Comment", "scope": "global", "trigger": "event"},
+    # mono/SkiaSharp-API-docs (global: scheduled/dispatch/PR events)
+    {"repo": "mono/SkiaSharp-API-docs", "workflow": "auto-api-docs-writer.lock.yml", "name": "Auto API Docs Writer", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp-API-docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs", "scope": "global", "trigger": "event"},
+    {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live", "scope": "global", "trigger": "dispatch"},
+]
+
 
 def az(args: list[str]) -> str:
     """Run az CLI and return stdout."""
@@ -175,6 +207,235 @@ def get_build_issues(build_id: int, org: str, project: str) -> list[dict]:
     return issues
 
 
+def gh(args: list[str]) -> str:
+    """Run gh CLI and return stdout."""
+    result = subprocess.run(
+        ["gh"] + args, capture_output=True, text=True, timeout=30
+    )
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()
+
+
+def get_github_workflow_runs(repo: str, workflow: str, branch: str | None, top: int = 5) -> list[dict]:
+    """Get recent workflow runs from GitHub Actions via gh CLI.
+
+    If branch is None, fetches runs across all branches.
+    """
+    cmd = [
+        "run", "list",
+        "--repo", repo,
+        "--workflow", workflow,
+        "--limit", str(top),
+        "--json", "databaseId,headBranch,status,conclusion,displayTitle,createdAt,updatedAt,url,event,headSha,workflowName",
+    ]
+    if branch:
+        cmd.extend(["--branch", branch])
+
+    out = gh(cmd)
+    if not out:
+        return []
+    try:
+        return json.loads(out)
+    except (json.JSONDecodeError, ValueError):
+        return []
+
+
+def gh_icon_for(run: dict) -> str:
+    """Map GitHub Actions status/conclusion to an icon."""
+    status = run.get("status", "")
+    conclusion = run.get("conclusion", "")
+
+    if status == "in_progress":
+        return "🔄"
+    if status == "queued" or status == "waiting" or status == "pending":
+        return "⏳"
+
+    # Completed runs — check conclusion
+    if conclusion == "success":
+        return "✅"
+    elif conclusion == "failure":
+        return "❌"
+    elif conclusion == "cancelled":
+        return "🚫"
+    elif conclusion == "skipped":
+        return "⏭️"
+    elif conclusion == "startup_failure":
+        return "❌"
+    else:
+        return "❓"
+
+
+def gh_result_for(run: dict) -> str:
+    """Map GitHub Actions status/conclusion to a normalized result string."""
+    status = run.get("status", "")
+    conclusion = run.get("conclusion", "")
+
+    if status in ("in_progress", "queued", "waiting", "pending"):
+        return status
+
+    return conclusion or status
+
+
+def collect_github_data(branches: list[str], top_builds: int) -> list[dict]:
+    """Collect GitHub Actions workflow run data for all tracked workflows.
+
+    Workflows with scope "branch" are queried per-branch.
+    Workflows with scope "global" are queried once without branch filter.
+    Returns a list of workflow data dicts.
+    """
+    workflows_data = []
+
+    for wf in GITHUB_WORKFLOWS:
+        scope = wf.get("scope", "global")
+        trigger = wf.get("trigger", "unknown")
+        wf_data = {
+            "repo": wf["repo"],
+            "workflow": wf["workflow"],
+            "name": wf["name"],
+            "scope": scope,
+            "trigger": trigger,
+            "branches": [],  # Used for branch-scoped workflows
+            "runs": [],      # Used for global-scoped workflows
+            "stats": None,   # Used for global-scoped workflows
+            "error": None,   # Capture collection failures
+        }
+
+        if scope == "branch":
+            # Query per-branch (push/PR workflows)
+            # Use workflow-specific branch override if defined, else full branch list
+            wf_branches = wf.get("branches", branches)
+            for branch in wf_branches:
+                runs_raw = get_github_workflow_runs(wf["repo"], wf["workflow"], branch, top=top_builds)
+                branch_runs = _parse_gh_runs(runs_raw)
+                stats = _compute_gh_stats(branch_runs)
+                wf_data["branches"].append({
+                    "name": branch,
+                    "runs": branch_runs,
+                    "stats": stats,
+                })
+        else:
+            # Query globally (scheduled/dispatch/event-driven workflows)
+            runs_raw = get_github_workflow_runs(wf["repo"], wf["workflow"], branch=None, top=top_builds)
+            wf_data["runs"] = _parse_gh_runs(runs_raw)
+            wf_data["stats"] = _compute_gh_stats(wf_data["runs"])
+
+        # Fetch failed job details for the latest failed run
+        _enrich_failed_runs(wf_data)
+
+        workflows_data.append(wf_data)
+
+    return workflows_data
+
+
+def _parse_gh_runs(runs_raw: list[dict]) -> list[dict]:
+    """Parse raw GitHub Actions run data into normalized format."""
+    parsed = []
+    for r in runs_raw:
+        duration_min = None
+        if r.get("createdAt") and r.get("updatedAt"):
+            try:
+                created = datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))
+                updated = datetime.fromisoformat(r["updatedAt"].replace("Z", "+00:00"))
+                duration_min = round((updated - created).total_seconds() / 60, 1)
+            except (ValueError, TypeError):
+                pass
+
+        parsed.append({
+            "id": r.get("databaseId"),
+            "displayTitle": r.get("displayTitle", ""),
+            "status": r.get("status", ""),
+            "conclusion": r.get("conclusion", ""),
+            "result": gh_result_for(r),
+            "createdAt": r.get("createdAt"),
+            "updatedAt": r.get("updatedAt"),
+            "durationMinutes": duration_min,
+            "headSha": (r.get("headSha") or "")[:12],
+            "headBranch": r.get("headBranch", ""),
+            "event": r.get("event", ""),
+            "url": r.get("url", ""),
+            "icon": gh_icon_for(r),
+        })
+    return parsed
+
+
+def _compute_gh_stats(runs: list[dict]) -> dict:
+    """Compute pass/fail stats for a list of GitHub Actions runs."""
+    stats = {"total": 0, "succeeded": 0, "failed": 0, "other": 0}
+    for run in runs:
+        stats["total"] += 1
+        if run["conclusion"] == "success":
+            stats["succeeded"] += 1
+        elif run["conclusion"] == "failure":
+            stats["failed"] += 1
+        else:
+            stats["other"] += 1
+
+    if stats["total"] > 0:
+        stats["pass_rate"] = round(stats["succeeded"] / stats["total"] * 100, 1)
+    else:
+        stats["pass_rate"] = None
+    return stats
+
+
+def get_failed_job_details(repo: str, run_id: int) -> list[dict]:
+    """Fetch failed job and step details for a GitHub Actions run.
+
+    Returns a list of failed jobs with their failed steps.
+    Only called for runs with conclusion == "failure".
+    """
+    out = gh([
+        "run", "view", str(run_id),
+        "--repo", repo,
+        "--json", "jobs",
+    ])
+    if not out:
+        return []
+    try:
+        data = json.loads(out)
+    except (json.JSONDecodeError, ValueError):
+        return []
+
+    failed_jobs = []
+    for job in data.get("jobs", []):
+        if job.get("conclusion") != "failure":
+            continue
+        failed_steps = []
+        for step in job.get("steps", []):
+            if step.get("conclusion") == "failure":
+                failed_steps.append({
+                    "name": step.get("name", "unknown"),
+                    "conclusion": step.get("conclusion", ""),
+                })
+        failed_jobs.append({
+            "name": job.get("name", "unknown"),
+            "conclusion": job.get("conclusion", ""),
+            "failed_steps": failed_steps,
+        })
+    return failed_jobs
+
+
+def _enrich_failed_runs(wf_data: dict):
+    """For a workflow's collected data, fetch job details for the latest failed run.
+
+    For branch-scoped workflows: fetch for the latest failed run per branch.
+    For global-scoped workflows: fetch for the latest failed run overall.
+    """
+    repo = wf_data["repo"]
+
+    if wf_data.get("scope") == "branch":
+        for branch_info in wf_data.get("branches", []):
+            for run in branch_info.get("runs", []):
+                if run.get("conclusion") == "failure":
+                    run["failed_jobs"] = get_failed_job_details(repo, run["id"])
+                    break  # Only latest failed run per branch
+    else:
+        for run in wf_data.get("runs", []):
+            if run.get("conclusion") == "failure":
+                run["failed_jobs"] = get_failed_job_details(repo, run["id"])
+                break  # Only latest failed run
+
+
 def get_release_branches(top: int = 3) -> list[str]:
     """Get the most recent release branches by commit date.
 
@@ -232,6 +493,7 @@ def collect_data(branches: list[str], top_builds: int, show_issues: bool) -> dic
              "group": "public" if p in PUBLIC_PIPELINES else "internal"}
             for p in PUBLIC_PIPELINES + INTERNAL_PIPELINES
         ],
+        "github_workflows": GITHUB_WORKFLOWS,
         "branches": [],
     }
 
@@ -315,6 +577,9 @@ def collect_data(branches: list[str], top_builds: int, show_issues: bool) -> dic
             branch_data["pipeline_groups"].append(group_data)
 
         data["branches"].append(branch_data)
+
+    # Collect GitHub Actions data
+    data["github_actions"] = collect_github_data(branches, top_builds)
 
     return data
 
@@ -414,176 +679,83 @@ def render_console(data: dict):
         print(f"  {branch_data['name']:<40} {' | '.join(statuses)}")
     print()
 
+    # GitHub Actions summary
+    if data.get("github_actions"):
+        print(f"{'═' * 70}")
+        print(f" GitHub Actions Status")
+        print(f"{'═' * 70}")
 
-def render_markdown(data: dict, output_path: str):
-    """Render collected data as a markdown report with AI analysis sections."""
-    lines = []
+        for wf_data in data["github_actions"]:
+            print(f"\n┌─ {wf_data['name']} ({wf_data['repo']})")
+            print(f"│  Workflow: {wf_data['workflow']}  [scope: {wf_data.get('scope', 'global')}]")
+            print(f"│")
 
-    lines.append(f"# SkiaSharp CI Status Report")
-    lines.append(f"")
-    lines.append(f"> Generated: **{data['timestamp']}**  ")
-    lines.append(f"> Window: last {data['window']['builds_per_pipeline']} builds × "
-                 f"{data['window']['branches_count']} branches")
-    lines.append(f"")
+            if wf_data.get("scope") == "branch":
+                # Branch-scoped: show per-branch runs
+                for branch_info in wf_data["branches"]:
+                    if not branch_info["runs"]:
+                        print(f"│  {branch_info['name']}: no runs found")
+                        continue
 
-    # Health summary table at the top
-    lines.append(f"## Health Summary")
-    lines.append(f"")
-    pipe_names = [p["name"] for p in PUBLIC_PIPELINES + INTERNAL_PIPELINES]
-    header = "| Branch | " + " | ".join(pipe_names) + " | Risk |"
-    separator = "|--------|" + "|".join(["-----" for _ in pipe_names]) + "|------|"
-    lines.append(header)
-    lines.append(separator)
-
-    for branch_data in data["branches"]:
-        cells = []
-        any_failed = False
-        all_green = True
-        for group in branch_data["pipeline_groups"]:
-            for pipe in group["pipelines"]:
-                if pipe["runs"]:
-                    run = pipe["runs"][0]
-                    result = run["result"] or run["status"]
-                    rate = pipe["stats"]["pass_rate"]
-                    # Show pass rate in cell only when there are failures in the window
-                    rate_str = f" ({rate:.0f}%)" if rate is not None and rate < 100 and result != "succeeded" else ""
-                    cells.append(f"{run['icon']} {result}{rate_str}")
-                    if result == "failed":
-                        any_failed = True
-                        all_green = False
-                    elif result != "succeeded":
-                        all_green = False
+                    print(f"│  ┌ {branch_info['name']} (last {len(branch_info['runs'])})")
+                    for run in branch_info["runs"]:
+                        started = format_time(run["createdAt"])
+                        title = run["displayTitle"][:50] if run["displayTitle"] else ""
+                        print(
+                            f"│  │   {run['icon']} {run['result']:<12} "
+                            f"{started}  {title}  [id:{run['id']}]"
+                        )
+                    print(f"│  └")
+            else:
+                # Global-scoped: show latest runs
+                runs = wf_data.get("runs", [])
+                if not runs:
+                    print(f"│  (no recent runs)")
                 else:
-                    cells.append("⏳ no runs")
-                    all_green = False
+                    for run in runs:
+                        started = format_time(run["createdAt"])
+                        title = run["displayTitle"][:50] if run["displayTitle"] else ""
+                        branch_tag = f"[{run['headBranch']}]" if run.get("headBranch") else ""
+                        print(
+                            f"│  {run['icon']} {run['result']:<12} "
+                            f"{started}  {title}  {branch_tag}  [id:{run['id']}]"
+                        )
 
-        risk = "🟢 Low" if all_green else ("🔴 High" if any_failed else "🟡 Medium")
-        row = f"| `{branch_data['name']}` | " + " | ".join(cells) + f" | {risk} |"
-        lines.append(row)
+            print(f"└")
+        print()
+        print(f"{'═' * 70}")
 
-    lines.append(f"")
+        # GitHub Actions health line
+        print("\n🐙 GitHub Actions Health:")
+        for wf_data in data["github_actions"]:
+            trigger_tag = f"[{wf_data.get('trigger', '?')}]"
+            if wf_data.get("scope") == "branch":
+                branch_statuses = []
+                for branch_info in wf_data["branches"]:
+                    if branch_info["runs"]:
+                        latest = branch_info["runs"][0]
+                        branch_statuses.append(f"{latest['icon']} {branch_info['name']}")
+                    else:
+                        branch_statuses.append(f"⏳ {branch_info['name']}")
+                print(f"  {trigger_tag:<10} {wf_data['name']:<30} {' | '.join(branch_statuses)}")
+            else:
+                runs = wf_data.get("runs", [])
+                if runs:
+                    latest = runs[0]
+                    print(f"  {trigger_tag:<10} {wf_data['name']:<30} {latest['icon']} {latest['result']} ({format_time(latest['createdAt'])})")
+                    # Show failed job details if available
+                    if latest.get("failed_jobs"):
+                        for job in latest["failed_jobs"]:
+                            steps_str = ", ".join(s["name"] for s in job.get("failed_steps", []))
+                            if steps_str:
+                                print(f"             {'':30} ↳ {job['name']}: {steps_str}")
+                            else:
+                                print(f"             {'':30} ↳ {job['name']}")
+                else:
+                    print(f"  {trigger_tag:<10} {wf_data['name']:<30} ⏳ no recent runs")
+        print()
 
-    # Regressions section
-    regressions = []
-    for branch_data in data["branches"]:
-        for group in branch_data["pipeline_groups"]:
-            for pipe in group["pipelines"]:
-                if pipe.get("regression"):
-                    regressions.append((branch_data["name"], pipe["name"], pipe["regression"]))
 
-    if regressions:
-        lines.append(f"## Regressions Detected")
-        lines.append(f"")
-        lines.append(f"| Branch | Pipeline | Last Green | First Red |")
-        lines.append(f"|--------|----------|-----------|-----------|")
-        for branch_name, pipe_name, reg in regressions:
-            lines.append(
-                f"| `{branch_name}` | {pipe_name} | "
-                f"`{reg['last_green_build_number']}` | "
-                f"[`{reg['first_red_build_number']}`]({reg['first_red_url']}) |"
-            )
-        lines.append(f"")
-
-    lines.append(f"---")
-    lines.append(f"")
-
-    # Detailed per-branch sections
-    for branch_data in data["branches"]:
-        lines.append(f"## `{branch_data['name']}`")
-        lines.append(f"")
-
-        for group in branch_data["pipeline_groups"]:
-            lines.append(f"### {group['label']}")
-            lines.append(f"")
-
-            for pipe in group["pipelines"]:
-                stats = pipe["stats"]
-                rate_str = f" — pass rate: {stats['pass_rate']:.0f}%" if stats["pass_rate"] is not None else ""
-                lines.append(f"#### {pipe['name']}{rate_str}")
-                lines.append(f"")
-
-                if not pipe["runs"]:
-                    lines.append(f"_No builds found._")
-                    lines.append(f"")
-                    continue
-
-                # Build history table
-                lines.append(f"| Status | Build | Result | Duration | Commit | Started | Link |")
-                lines.append(f"|--------|-------|--------|----------|--------|---------|------|")
-                for run in pipe["runs"]:
-                    result_text = run["result"] or run["status"]
-                    started = format_time(run["startTime"])
-                    link = f"[{run['id']}]({run['url']})"
-                    dur = f"{run['durationMinutes']}m" if run.get("durationMinutes") else "—"
-                    commit = f"`{run['sourceVersion']}`" if run.get("sourceVersion") else "—"
-                    lines.append(f"| {run['icon']} | `{run['buildNumber']}` | {result_text} | {dur} | {commit} | {started} | {link} |")
-                lines.append(f"")
-
-                # Issues for most recent run
-                latest = pipe["runs"][0]
-                if latest.get("issues"):
-                    errors = [i for i in latest["issues"] if i["type"] == "error"]
-                    warnings = [i for i in latest["issues"] if i["type"] == "warning"]
-
-                    if errors:
-                        lines.append(f"<details>")
-                        lines.append(f"<summary>❌ Errors ({len(errors)})</summary>")
-                        lines.append(f"")
-                        lines.append(f"| Task | Message |")
-                        lines.append(f"|------|---------|")
-                        for e in errors:
-                            msg = e["message"].replace("|", "\\|").replace("\n", " ")
-                            lines.append(f"| {e['task_name']} | {msg} |")
-                        lines.append(f"")
-                        lines.append(f"</details>")
-                        lines.append(f"")
-
-                    if warnings:
-                        lines.append(f"<details>")
-                        lines.append(f"<summary>⚠️ Warnings ({len(warnings)})</summary>")
-                        lines.append(f"")
-                        lines.append(f"| Task | Message |")
-                        lines.append(f"|------|---------|")
-                        for w in warnings:
-                            msg = w["message"].replace("|", "\\|").replace("\n", " ")
-                            lines.append(f"| {w['task_name']} | {msg} |")
-                        lines.append(f"")
-                        lines.append(f"</details>")
-                        lines.append(f"")
-
-                # Associated commits for failing build
-                if latest.get("changes"):
-                    lines.append(f"<details>")
-                    lines.append(f"<summary>📝 Associated commits ({len(latest['changes'])})</summary>")
-                    lines.append(f"")
-                    lines.append(f"| Commit | Author | Message |")
-                    lines.append(f"|--------|--------|---------|")
-                    for c in latest["changes"]:
-                        msg = c["message"].replace("|", "\\|")
-                        lines.append(f"| `{c['id']}` | {c['author']} | {msg} |")
-                    lines.append(f"")
-                    lines.append(f"</details>")
-                    lines.append(f"")
-
-        lines.append(f"---")
-        lines.append(f"")
-
-    # Footer
-    lines.append(f"## Pipeline Links")
-    lines.append(f"")
-    lines.append(f"| Pipeline | Org | Definition |")
-    lines.append(f"|----------|-----|------------|")
-    for pipe in PUBLIC_PIPELINES + INTERNAL_PIPELINES:
-        org_short = "xamarin/public" if pipe["org"] == ORG_XAMARIN else "devdiv/DevDiv"
-        url = f"{pipe['org'].rstrip('/')}/{pipe['project']}/_build?definitionId={pipe['id']}"
-        lines.append(f"| {pipe['name']} | {org_short} | [{pipe['id']}]({url}) |")
-    lines.append(f"")
-
-    content = "\n".join(lines)
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    with open(output_path, "w") as f:
-        f.write(content)
-    print(f"\n📄 Markdown report written to: {output_path}")
 
 
 def render_json(data: dict, output_path: str):
@@ -611,10 +783,6 @@ def main():
         help="Skip fetching errors/warnings from failed builds (faster)"
     )
     parser.add_argument(
-        "--output", type=str, default=None,
-        help="Write a markdown report to the specified file path"
-    )
-    parser.add_argument(
         "--json", type=str, default=None, dest="json_output",
         help="Write raw structured JSON data to the specified file (for AI analysis)"
     )
@@ -631,10 +799,6 @@ def main():
 
     # Always render console output
     render_console(data)
-
-    # Optionally write markdown report
-    if args.output:
-        render_markdown(data, args.output)
 
     # Optionally write JSON data
     if args.json_output:
