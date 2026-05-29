@@ -2,8 +2,9 @@
 name: ci-status
 description: >
   Check the CI build health of SkiaSharp across main and recent release branches.
-  Collects the last N builds from the 3-pipeline chain (Native → Managed → Tests)
-  for main and the most recent release/* branches, providing a daily dashboard view.
+  Collects the last N builds from the pipeline chain (Public + Native → Managed → Tests)
+  for main and the most recent release/* branches, providing a daily dashboard view
+  with AI-powered analysis of failures, regressions, and flakes.
 
   Use when user asks to:
   - Check overall CI health
@@ -12,15 +13,18 @@ description: >
   - Check if main is green
   - See recent build failures
   - Monitor branch health
+  - Identify flaky tests or chronic failures
+  - Determine if a release branch is shippable
 
   Triggers: "CI status", "build health", "is main green", "CI dashboard",
   "daily build status", "check builds", "are builds passing", "CI overview",
-  "pipeline health", "branch build status".
+  "pipeline health", "branch build status", "CI report", "why is CI red".
 ---
 
 # CI Status Skill
 
-Provide a dashboard view of SkiaSharp CI health across main and recent release branches.
+Provide a dashboard view of SkiaSharp CI health across main and recent release branches,
+with AI-powered analysis to identify patterns, regressions, and actionable fixes.
 
 Unlike the `release-status` skill (which tracks a single release through the pipeline chain),
 this skill gives a **broad overview** of CI health across multiple branches simultaneously.
@@ -43,10 +47,14 @@ this skill gives a **broad overview** of CI health across multiple branches simu
 
 ---
 
-## Step 1: Run the Status Script
+## Step 1: Collect Data
+
+Run the collector script to gather build status, issues, and commit info:
 
 ```bash
-python3 .agents/skills/ci-status/scripts/ci-status.py
+python3 .agents/skills/ci-status/scripts/ci-status.py \
+  --output output/ai/ci-status-report.md \
+  --json output/ai/ci-status-data.json
 ```
 
 ### Options
@@ -55,79 +63,155 @@ python3 .agents/skills/ci-status/scripts/ci-status.py
 |------|---------|-------------|
 | `--branches N` | 3 | Number of most recent release/* branches to include |
 | `--builds N` | 5 | Number of recent builds to show per pipeline per branch |
-| `--no-issues` | off | Skip fetching errors/warnings (faster) |
-| `--output PATH` | none | Write a formatted markdown report to the given file path |
+| `--no-issues` | off | Skip fetching errors/warnings (faster, less detail) |
+| `--output PATH` | none | Write formatted markdown report |
+| `--json PATH` | none | Write raw structured JSON (for AI analysis) |
 
-Examples:
+### Examples
 
 ```bash
-# Default: main + 3 recent release branches, 5 builds each
-python3 .agents/skills/ci-status/scripts/ci-status.py
+# Full report with all data
+python3 .agents/skills/ci-status/scripts/ci-status.py --output output/ai/ci-status-report.md --json output/ai/ci-status-data.json
 
-# More branches, fewer builds
-python3 .agents/skills/ci-status/scripts/ci-status.py --branches 5 --builds 3
+# Quick check (no timeline fetch)
+python3 .agents/skills/ci-status/scripts/ci-status.py --no-issues
 
-# Just main with last 10 builds
-python3 .agents/skills/ci-status/scripts/ci-status.py --branches 0 --builds 10
-
-# Generate a markdown report
-python3 .agents/skills/ci-status/scripts/ci-status.py --output output/ai/ci-status.md
-
-# Quick check without issue extraction + markdown
-python3 .agents/skills/ci-status/scripts/ci-status.py --no-issues --output /tmp/report.md
+# Deep analysis window (10 builds, 5 branches)
+python3 .agents/skills/ci-status/scripts/ci-status.py --branches 5 --builds 10 --output output/ai/ci-status-report.md --json output/ai/ci-status-data.json
 ```
 
 ---
 
-## Step 2: Interpret Results
+## Step 2: AI Analysis
 
-The script outputs:
-1. **Per-branch breakdown** — last N builds for each pipeline on each branch
-2. **Health summary** — one-line status per branch showing latest build from each pipeline
+After the script runs, read the JSON data (`output/ai/ci-status-data.json`) and perform the following analysis. **All claims must reference actual build IDs and URLs from the data.**
 
-### Status Icons
+### 2.1 Executive Summary (Verdict)
 
-| Icon | Meaning |
-|------|---------|
-| ✅ | Succeeded |
-| ⚠️ | Partially succeeded (some platforms had warnings) |
-| ❌ | Failed |
-| 🚫 | Canceled |
-| 🔄 | In progress |
-| ⏳ | Not started / not triggered |
+Classify overall health as one of:
+- 🟢 **Healthy** — all branches green or only warnings
+- 🟡 **Degraded** — some failures but main is green
+- 🔴 **Broken** — main is red or a release branch is blocked
+
+Write 1-2 sentences: what's broken, since when, and the top action.
+
+### 2.2 Root Cause Clustering
+
+Group all errors/warnings across all branches and pipelines by **normalized signature**:
+1. Strip volatile fragments (build IDs, timestamps, GUIDs, file paths with random hashes, agent names)
+2. Cluster on `(task_name, normalized_first_error_line)`
+3. For each cluster, determine:
+   - **Category**: one of `code regression`, `flake`, `infra/network`, `quota/resource`, `chain blockage`, `unknown`
+   - **Footprint**: which branches × pipelines are affected
+   - **First/last seen** within the window
+   - **Sample error** (verbatim from data)
+
+#### Classification Decision Tree
+
+| Signal | Category |
+|--------|----------|
+| Message contains `network`, `timeout`, `EOF`, `connection`, `nuget.org`, `429`, `503` | infra/network |
+| Message contains `No space left`, `OOM`, `killed`, `agent lost`, `pool` | quota/resource |
+| Same build passes/fails with no code change (pass/fail/pass pattern) | flake |
+| Failure appears on multiple unrelated branches simultaneously | infra (not code) |
+| Failure appears at a green→red transition on one branch only | code regression |
+| Downstream pipeline failed but upstream in same chain also failed | chain blockage (don't double-count) |
+| None of the above | unknown |
+
+### 2.3 Pipeline Chain Analysis
+
+The Internal chain is sequential: Native → Managed → Tests.
+- If Native fails, Managed and Tests typically don't run (or fail due to missing artifacts)
+- **Collapse cascaded failures** to the root cause pipeline
+- Report: "N failures on branch X — all root-caused to {pipeline}; downstream was blocked, not independently broken"
+
+### 2.4 Regression Detection
+
+For each branch × pipeline, find green→red transitions (the script pre-computes these in `regression` fields):
+- Report the last green build and the first red build
+- List the associated commits from `changes` — these are the regression suspects
+- Provide link to the first red build for investigation
+
+### 2.5 Flake Detection
+
+Look for alternating pass/fail patterns within a single branch × pipeline:
+- ✅ ❌ ✅ or ❌ ✅ ❌ pattern = likely flake
+- Same error appearing intermittently (present in some builds, absent in others with no code change)
+
+### 2.6 Cross-Branch Correlation
+
+| Pattern | Interpretation |
+|---------|---------------|
+| Same error on ≥2 unrelated branches | Infrastructure issue (toolchain, agent pool, NuGet) |
+| Error on exactly one branch | Code regression specific to that branch |
+| Same error on release/* and main | Shared code issue (or infra) |
+| Error only on release/X.Y.x but not release/X.Y.Z | Servicing-specific backport issue |
+
+### 2.7 Release Risk Assessment
+
+For each `release/*` branch:
+- Is it shippable right now? (yes / no / blocked)
+- Days since last full green chain
+- Blockers (link to root cause clusters)
+- Recommendation: `ship`, `wait`, `cherry-pick fix`, `investigate`
+
+### 2.8 Top Recommendations
+
+Provide **at most 5** prioritized actions, ordered by:
+1. Blocks a release → highest priority
+2. Breaks main → high
+3. Chronic failure → medium
+4. Flake → low
+5. Warning → informational
+
+Each recommendation should include:
+- What to do (imperative sentence)
+- Why (which branch/pipeline is affected)
+- Link to the relevant build
 
 ---
 
-## Step 3: Report to User
+## Step 3: Present to User
 
-Present a concise summary focusing on:
+After analysis, present:
 
-1. **Is main green?** — Are the most recent builds on main all passing?
-2. **Any failing branches?** — Highlight branches with failures
-3. **Trends** — Are recent builds improving or degrading?
+1. **Verdict** (1 sentence + emoji)
+2. **Health matrix** (the table from the markdown report)
+3. **Top 3-5 actions** with build links
+4. **Offer follow-ups**: "Want me to investigate the regression on release/X? Open the failing build? Check if this is a known issue?"
 
-Example report:
+### Example Output
 
 ```
-SkiaSharp CI Health — 2026-05-28 13:45 UTC
+🟡 CI is degraded — release/3.119.x is blocked by a Guardian TSA upload failure; main is green.
 
-📊 Health Summary:
-  main                    ✅ Native | ✅ Managed | ✅ Tests
-  release/4.147.0-pre.3   ✅ Native | ✅ Managed | ⚠️ Tests
-  release/4.147.0-pre.2   ✅ Native | ✅ Managed | ✅ Tests
-  release/3.119.4          ✅ Native | ✅ Managed | ✅ Tests
+📊 Health:
+  main                         ✅ Public | ✅ Native | ✅ Managed | ✅ Tests
+  release/4.147.0-preview.3    ❌ Public | ⚠️ Native | ✅ Managed | ✅ Tests
+  release/3.119.x              ❌ Public | ⚠️ Native | ⚠️ Managed | ❌ Tests
 
-Status: main is green ✅. release/4.147.0-preview.3 has test warnings.
-```
+Top actions:
+1. [release/3.119.x] Fix Guardian TSA upload — blocks Tests pipeline → build 14177772
+2. [release/4.147.0-preview.3] Public CI failure — investigate CS0016 errors → build 157985
+3. [infra] SkiaSharp-Native partial success on all release branches — Guardian warnings (non-blocking)
 
-If there are failures, include the ADO build link:
-```
-https://devdiv.visualstudio.com/DevDiv/_build/results?buildId={id}
+Full report: output/ai/ci-status-report.md
 ```
 
 ---
 
-## When to Use This vs release-status
+## Step 4: Follow-Up Investigations
+
+If asked to dig deeper:
+- Use the `hlx-azdo_*` tools to fetch specific build timelines, test results, or logs
+- Use `hlx-azdo_build_analysis` for known-issue matching
+- Use `hlx-azdo_test_results` to get specific failing test names
+- Check if failures correlate with specific platforms (look at job names in timeline)
+- For flakes, recommend looking at the last 20 builds to confirm the pattern
+
+---
+
+## When to Use This vs Other Skills
 
 | Question | Use |
 |----------|-----|
@@ -137,6 +221,8 @@ https://devdiv.visualstudio.com/DevDiv/_build/results?buildId={id}
 | "Are packages ready for release X?" | **release-status** |
 | "Any CI failures across the board?" | **ci-status** |
 | "Trace the pipeline chain for branch X" | **release-status** |
+| "Why is CI red?" | **ci-status** (with analysis) |
+| "Is release/X shippable?" | **ci-status** (risk assessment) |
 
 ---
 
@@ -145,6 +231,6 @@ https://devdiv.visualstudio.com/DevDiv/_build/results?buildId={id}
 This skill works well as a daily scheduled workflow:
 
 ```
-Prompt: "Run the ci-status skill and report the health of main and recent release branches"
+Prompt: "Run the ci-status skill and report the health of main and recent release branches. Generate a full report with AI analysis."
 Schedule: Daily at 9:00 AM
 ```
