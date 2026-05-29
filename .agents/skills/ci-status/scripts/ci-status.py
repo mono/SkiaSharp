@@ -75,13 +75,12 @@ def get_runs(pipeline_id: int, branch: str, org: str, project: str, top: int = 5
     return json.loads(out) if out else []
 
 
-def get_build_issues(build_id: int, org: str, project: str, max_issues: int = 10) -> list[dict]:
+def get_build_issues(build_id: int, org: str, project: str) -> list[dict]:
     """Fetch timeline issues (errors/warnings) for a build.
 
     Returns a list of dicts with keys: type, message, task_name.
-    Only returns issues from failed/warning records.
+    Collects all issues from failed or warning records.
     """
-    # Use az devops REST to get timeline
     # URL format: {org}/{project}/_apis/build/builds/{buildId}/timeline?api-version=7.1
     org_base = org.rstrip("/")
     url = f"{org_base}/{project}/_apis/build/builds/{build_id}/timeline?api-version=7.1"
@@ -106,7 +105,6 @@ def get_build_issues(build_id: int, org: str, project: str, max_issues: int = 10
     issues = []
     records = data.get("records", [])
     for record in records:
-        # Only look at records that have issues
         record_issues = record.get("issues", [])
         if not record_issues:
             continue
@@ -128,8 +126,6 @@ def get_build_issues(build_id: int, org: str, project: str, max_issues: int = 10
                 "message": message,
                 "task_name": task_name,
             })
-            if len(issues) >= max_issues:
-                return issues
 
     return issues
 
@@ -193,7 +189,7 @@ def print_pipeline_group(pipelines: list[dict], branch: str, top_builds: int, gr
                     f"{result_text:<22} {started}  [id:{r['id']}]"
                 )
 
-                # Show issues for the most recent failed/partial build only
+                # Show all issues from the most recent run if it's not clean
                 if show_issues and idx == 0 and r.get("result") in ("failed", "partiallySucceeded"):
                     issues = get_build_issues(r["id"], pipe["org"], pipe["project"])
                     if issues:
@@ -201,19 +197,15 @@ def print_pipeline_group(pipelines: list[dict], branch: str, top_builds: int, gr
                         warnings = [i for i in issues if i["type"] == "warning"]
                         if errors:
                             print(f"{cont}   ┌── Errors ({len(errors)}):")
-                            for e in errors[:5]:
+                            for e in errors:
                                 msg = e["message"][:120]
                                 print(f"{cont}   │ ❌ [{e['task_name']}] {msg}")
-                            if len(errors) > 5:
-                                print(f"{cont}   │ ... and {len(errors) - 5} more errors")
                             print(f"{cont}   └──")
                         if warnings:
                             print(f"{cont}   ┌── Warnings ({len(warnings)}):")
-                            for w in warnings[:5]:
+                            for w in warnings:
                                 msg = w["message"][:120]
                                 print(f"{cont}   │ ⚠️  [{w['task_name']}] {msg}")
-                            if len(warnings) > 5:
-                                print(f"{cont}   │ ... and {len(warnings) - 5} more warnings")
                             print(f"{cont}   └──")
 
     print(f"│  └")
