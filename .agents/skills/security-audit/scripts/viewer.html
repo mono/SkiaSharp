@@ -312,7 +312,9 @@ function renderCveTable(cves, columns) {
   // Filter out description from main columns — it goes in the expand row
   const mainCols = columns.filter(c => c.key !== 'description');
   const hasDesc = columns.some(c => c.key === 'description');
-  const hdrs = mainCols.map(c => `<th>${c.label}</th>`).join('') + (hasDesc ? '<th style="width:50%;">Description</th>' : '');
+  const hasSource = columns.some(c => c.key === 'source');
+  const descWidth = hasSource ? '35%' : '50%';
+  const hdrs = mainCols.map(c => `<th>${c.label}</th>`).join('') + (hasDesc ? `<th style="width:${descWidth};">Description</th>` : '');
   const rows = cves.map((cve, i) => {
     const cells = mainCols.map(c => {
       const val = cve[c.key] || '';
@@ -330,7 +332,7 @@ function renderCveTable(cves, columns) {
         return `<td style="white-space:nowrap;width:70px;">${esc(String(val))}</td>`;
       }
       if (c.key === 'source') {
-        return `<td style="white-space:nowrap;width:80px;">${esc(String(val))}</td>`;
+        return `<td style="white-space:nowrap;width:150px;">${esc(String(val))}</td>`;
       }
       return `<td style="white-space:nowrap;">${esc(String(val))}</td>`;
     }).join('');
