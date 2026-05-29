@@ -290,7 +290,8 @@ Build the JSON object with these top-level keys:
 3. **`versionVerification`** — One entry per dependency with DEPS commit, verified version, cgmanifest version, match boolean
 4. **`findings`** — Array of finding objects sorted by priority then severity. **ONE object per dependency** (e.g., one "skia" finding containing ALL Skia CVEs regardless of status). Each has `dependency`, `status`, `cves[]`, `nonChromeCves[]`, `action`, `notes`. The `status` reflects the WORST-case status among the CVEs.
 5. **`cgAlerts`** — The complete raw JSON from `query-cg-alerts.py` (full `alerts` array, do not summarize)
-6. **`nextSteps`** — Prioritized action items with severity, command, and reason
+6. **`chromeReleases`** — Chrome Releases blog data. Transform the script's snake_case output (`cve_id`→`cveId`, `bug_id`→`bugId`, `blog_post_url`→`blogPostUrl`) into `structuredCves[]`. Also copy `blogPostUrl` onto matching CVEs in `findings[].cves[]`. See [report-schema.md](references/report-schema.md#chromereleases--chrome-releases-blog-data-optional) for the full field mapping.
+7. **`nextSteps`** — Prioritized action items with severity, command, and reason
 
 > 🛑 **COMPLETENESS REQUIREMENT:** The `findings` array MUST include **every CVE returned
 > by the NVD query** (Step 3 of skia-cve-resolution.md). CVEs that are verified as already

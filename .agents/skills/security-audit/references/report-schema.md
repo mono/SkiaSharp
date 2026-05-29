@@ -24,6 +24,8 @@ JSON schema for the security audit report. The AI generates this JSON as structu
   },
   "versionVerification": [ ... ],
   "findings": [ ... ],
+  "cgAlerts": { ... },
+  "chromeReleases": { ... },
   "nextSteps": [ ... ]
 }
 ```
@@ -217,7 +219,7 @@ This section is optional — omit it only if the blog query was skipped or faile
   "postsReviewed": 12,
   "totalCvesExtracted": 45,
   "skiaRelevantCves": 8,
-  "earlyDisclosures": [
+  "structuredCves": [
     {
       "cveId": "CVE-2026-8510",
       "severity": "Critical",
@@ -230,6 +232,7 @@ This section is optional — omit it only if the blog query was skipped or faile
       "extraction": "regex"
     }
   ],
+  "earlyDisclosures": [],
   "cacheFile": "output/ai/chrome-releases-cache.json"
 }
 ```
@@ -241,8 +244,29 @@ This section is optional — omit it only if the blog query was skipped or faile
 | `postsReviewed` | integer | Yes | Number of posts that matched keywords |
 | `totalCvesExtracted` | integer | Yes | Total CVEs found across all posts (all components) |
 | `skiaRelevantCves` | integer | Yes | CVEs in Skia-relevant components |
-| `earlyDisclosures` | array | Yes | CVEs found in blog but NOT in NVD (may be empty) |
+| `structuredCves` | array | Yes | **All** Skia-relevant CVEs from the blog (the primary rendered array). Each has camelCase fields: `cveId`, `severity`, `component`, `milestone`, `bugId`, `blogPostUrl` |
+| `earlyDisclosures` | array | No | Subset: CVEs found in blog but NOT yet in NVD (may be empty). Same schema as `structuredCves` items. |
 | `cacheFile` | string | Yes | Path to the cached JSON from the script |
+
+### Field Name Mapping (Script → Report JSON)
+
+The `query-chrome-releases.py` script outputs **snake_case** fields. When building the report
+JSON, transform to **camelCase**:
+
+| Script field (`structured_cves[]`) | Report field (`structuredCves[]`) |
+|------------------------------------|-----------------------------------|
+| `cve_id` | `cveId` |
+| `bug_id` | `bugId` |
+| `blog_post_url` | `blogPostUrl` |
+| `severity` | `severity` (unchanged) |
+| `component` | `component` (unchanged) |
+| `milestone` | `milestone` (unchanged) |
+
+### Setting `blogPostUrl` on Findings CVEs
+
+When a CVE in `findings[].cves[]` also appears in `structuredCves[]`, copy the `blogPostUrl`
+onto the finding's CVE object. This enables the HTML viewer to link directly to the source
+blog post.
 
 ### CVE `source` Field (Updated)
 

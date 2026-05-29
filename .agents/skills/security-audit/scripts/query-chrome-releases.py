@@ -68,8 +68,8 @@ CVE_ENTRY_REGEX = re.compile(
     r"(Critical|High|Medium|Low)\s+"          # Severity
     r"(CVE-\d{4}-\d{4,})\s*:\s*"             # CVE ID
     r"(.+?)\.\s*"                             # Description
-    r"Reported\s+by\s+(.+?)\s+on\s+"         # Reporter
-    r"(\d{4}-\d{2}-\d{2})",                  # Date
+    r"(?:Reported\s+by\s+(.+?)\s+on\s+"      # Reporter (optional)
+    r"(\d{4}-\d{2}-\d{2}))?",                # Date (optional)
     re.IGNORECASE
 )
 
@@ -257,8 +257,8 @@ def extract_structured_cves(text: str, post_url: str, chrome_version: str, miles
         severity = match.group(3).strip()
         cve_id = match.group(4).strip()
         description = match.group(5).strip()
-        reporter = match.group(6).strip()
-        date_reported = match.group(7).strip()
+        reporter = (match.group(6) or "").strip() or None
+        date_reported = (match.group(7) or "").strip() or None
 
         # Determine component from description
         component = "Unknown"
@@ -370,12 +370,16 @@ def main():
         mtime = os.path.getmtime(args.output)
         age_hours = (time.time() - mtime) / 3600
         if age_hours < CACHE_MAX_AGE_HOURS:
-            print(f"✅ Cache is fresh ({age_hours:.1f}h old, max {CACHE_MAX_AGE_HOURS}h). Use --force to re-fetch.")
-            # Load and print summary
+            # Validate cached params match requested params
             with open(args.output) as f:
                 data = json.load(f)
-            print(f"   {data.get('skia_relevant_regex_cves', 0)} Skia-relevant CVEs from {data.get('matching_posts_count', 0)} posts")
-            sys.exit(0)
+            cached_months = data.get("months_queried", 0)
+            if cached_months >= args.months:
+                print(f"✅ Cache is fresh ({age_hours:.1f}h old, max {CACHE_MAX_AGE_HOURS}h). Use --force to re-fetch.")
+                print(f"   {data.get('skia_relevant_regex_cves', 0)} Skia-relevant CVEs from {data.get('matching_posts_count', 0)} posts")
+                sys.exit(0)
+            else:
+                print(f"⚠️  Cache covers {cached_months} months but {args.months} requested. Re-fetching...")
 
     # Parse keywords
     keywords = DEFAULT_KEYWORDS

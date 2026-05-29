@@ -77,7 +77,13 @@ def render_md(data):
     lines.append(f"**Date:** {meta.get('date', 'N/A')}")
     lines.append(f"**Skia Milestone:** m{meta.get('skiaMilestone', '?')}")
     lines.append(f"**Fork Commit:** `{meta.get('skiaSubmoduleCommit', 'N/A')[:12]}`")
+    if meta.get("skiaUpstreamCommit"):
+        lines.append(f"**Upstream Commit:** `{meta['skiaUpstreamCommit'][:12]}`")
     lines.append(f"**Upstream Verified:** {'Yes' if meta.get('upstreamVerified') else 'No'}")
+    if meta.get("upstreamVerificationNote"):
+        lines.append(f"**Verification Note:** {meta['upstreamVerificationNote']}")
+    if meta.get("upstreamBehindBy"):
+        lines.append(f"**Behind Upstream By:** {meta['upstreamBehindBy']} commits")
     lines.append("")
 
     # Summary
@@ -163,6 +169,27 @@ def render_md(data):
                 else:
                     lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {assess} | {desc} |")
             lines.append("")
+
+            # Resolution details (for AI downstream consumption)
+            resolved_cves = [c for c in cves_sorted if c.get("fixCommit") or c.get("reachability") or c.get("inOurTree") is not None]
+            if resolved_cves:
+                lines.append("**Resolution Details:**")
+                lines.append("")
+                for c in resolved_cves:
+                    cve_id = c.get("id", "?")
+                    parts = [f"**{cve_id}**"]
+                    if c.get("fixCommit"):
+                        parts.append(f"fix: `{c['fixCommit'][:12]}`")
+                    if c.get("fixCommitTitle"):
+                        parts.append(f"({sanitize_cell(c['fixCommitTitle'])})")
+                    if c.get("inOurTree") is not None:
+                        parts.append(f"in-tree: {'✅' if c['inOurTree'] else '❌'}")
+                    if c.get("reachability"):
+                        parts.append(f"reachability: {c['reachability']}")
+                    if c.get("cherryPicksCleanly") is not None:
+                        parts.append(f"cherry-pick: {'✅' if c['cherryPicksCleanly'] else '❌'}")
+                    lines.append(f"- {' | '.join(parts)}")
+                lines.append("")
 
         # Non-Chrome CVEs
         if non_chrome:
