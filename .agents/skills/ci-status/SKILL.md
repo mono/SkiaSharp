@@ -191,21 +191,7 @@ For each `release/*` branch:
 - Blockers (link to root cause clusters)
 - Recommendation: `ship`, `wait`, `cherry-pick fix`, `investigate`
 
-### 2.8 Top Recommendations
-
-Provide **at most 5** prioritized actions, ordered by:
-1. Blocks a release → highest priority
-2. Breaks main → high
-3. Chronic failure → medium
-4. Flake → low
-5. Warning → informational
-
-Each recommendation should include:
-- What to do (imperative sentence)
-- Why (which branch/pipeline is affected)
-- Link to the relevant build
-
-### 2.9 GitHub Actions Health
+### 2.8 GitHub Actions Health
 
 For each tracked GitHub Actions workflow:
 - Current status (pass/fail/skipped/no recent runs)
@@ -223,6 +209,22 @@ GitHub Actions failures don't block releases directly (AzDO owns that), but they
 indicate broken automation that accumulates tech debt if ignored. Flag all failures
 as actionable — the goal is "what automation is failing" not just "can we release".
 
+### 2.9 Top Recommendations
+
+Provide **at most 5** prioritized actions, ordered by:
+1. Blocks a release → highest priority
+2. Breaks main → high
+3. High-severity GitHub Actions failure → high
+4. Chronic failure → medium
+5. Medium-severity GitHub Actions failure → medium
+6. Flake → low
+7. Warning / low-severity GitHub Actions → informational
+
+Each recommendation should include:
+- What to do (imperative sentence)
+- Why (which branch/pipeline/workflow is affected)
+- Link to the relevant build or run
+
 ---
 
 ## Step 3: Present to User
@@ -230,9 +232,9 @@ as actionable — the goal is "what automation is failing" not just "can we rele
 After analysis, present:
 
 1. **Verdict** (1 sentence + emoji)
-2. **Health matrix** (the table from the markdown report)
-3. **GitHub Actions health** (one-line summary per workflow)
-4. **Chain verdict** — for each branch with red internal pipelines, the one-line cascade-vs-independent statement from Step 2.3 (so the reader knows whether N red pipelines = N problems or 1 root cause)
+2. **AzDO health matrix** (the table from the markdown report)
+3. **Chain verdict** — for each branch with red internal pipelines, the one-line cascade-vs-independent statement from §2.3 (so the reader knows whether N red pipelines = N problems or 1 root cause)
+4. **GitHub Actions health** (one-line summary per workflow, grouped by severity)
 5. **Top 3-5 actions** with build links (root-caused — never list a cascaded downstream pipeline as its own action)
 6. **Offer follow-ups**: "Want me to investigate the regression on release/X? Open the failing build? Check if this is a known issue?"
 
@@ -283,9 +285,11 @@ If asked to dig deeper:
 | "Daily CI check" | **ci-status** |
 | "Are packages ready for release X?" | **release-status** |
 | "Any CI failures across the board?" | **ci-status** |
+| "What automation is failing?" | **ci-status** |
 | "Trace the pipeline chain for branch X" | **release-status** |
 | "Why is CI red?" | **ci-status** (with analysis) |
 | "Is release/X shippable?" | **ci-status** (risk assessment) |
+| "GitHub Actions status?" | **ci-status** |
 
 ---
 
