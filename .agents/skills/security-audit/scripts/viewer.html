@@ -158,19 +158,20 @@ function renderSummary(s, cgAlerts) {
   const cgCount = cgAlerts ? (cgAlerts.totalAlerts || 0) : 0;
   const cgHigh = cgAlerts ? ((cgAlerts.bySeverity || {}).High || 0) + ((cgAlerts.bySeverity || {}).Critical || 0) : 0;
   const cards = [
-    ['Needs Attention', s.needsAttention + cgHigh, 'danger', 'exclamation-triangle'],
-    ['CG Alerts', cgCount, cgHigh > 0 ? 'danger' : 'warning', 'shield-exclamation'],
-    ['Undiscovered', s.undiscovered, 'primary', 'search'],
-    ['False Positive', s.falsePositive, 'secondary', 'x-circle'],
-    ['Clean', s.clean, 'success', 'check-circle'],
+    ['Needs Attention', s.needsAttention + cgHigh, 'danger', 'exclamation-triangle', 'CVEs requiring action or patches'],
+    ['CG Alerts', cgCount, cgHigh > 0 ? 'danger' : 'warning', 'shield-exclamation', 'Build pipeline container vulnerabilities'],
+    ['Undiscovered', s.undiscovered, 'primary', 'search', 'Proactively found, no issue filed yet'],
+    ['False Positive', s.falsePositive, 'secondary', 'x-circle', 'Not applicable to SkiaSharp'],
+    ['Clean', s.clean, 'success', 'check-circle', 'Dependencies with no open CVEs'],
   ];
   const el = document.getElementById('summary-cards');
-  el.innerHTML = cards.map(([label, count, color, icon]) => `
+  el.innerHTML = cards.map(([label, count, color, icon, desc]) => `
     <div class="col-6 col-md">
       <div class="card text-center p-3">
         <div class="fs-2 text-${color}"><i class="bi bi-${icon}"></i></div>
         <div class="fs-1 fw-bold">${count}</div>
         <div class="text-muted small">${label}</div>
+        <div class="text-muted" style="font-size:0.7rem;">${desc}</div>
       </div>
     </div>`).join('');
 }
