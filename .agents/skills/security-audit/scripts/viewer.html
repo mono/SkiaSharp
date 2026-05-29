@@ -98,6 +98,20 @@
     </div>
   </div>
 
+  <!-- Chrome Releases Blog -->
+  <div class="card mb-4" id="cr-section" style="display:none;">
+    <div class="card-header bg-white d-flex align-items-center">
+      <i class="bi bi-rss me-2"></i><strong>Chrome Releases Blog</strong>
+      <a href="https://chromereleases.googleblog.com/" target="_blank" class="ms-2 small">Open Blog</a>
+      <span class="ms-auto" id="cr-badge"></span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3 mb-3" id="cr-summary-cards"></div>
+      <div id="cr-cve-table"></div>
+      <div class="text-muted small mt-3" id="cr-meta"></div>
+    </div>
+  </div>
+
   <!-- Next Steps -->
   <div class="card mb-4">
     <div class="card-header bg-white"><i class="bi bi-list-check me-2"></i><strong>Next Steps</strong></div>
@@ -418,6 +432,75 @@ function renderUpstream(meta) {
   </tbody></table>`;
 }
 
+function renderChromeReleases(cr, milestone) {
+  if (!cr || !cr.skiaRelevantCves) return;
+  const section = document.getElementById('cr-section');
+  section.style.display = '';
+
+  // Badge
+  const badge = document.getElementById('cr-badge');
+  const aboveMilestone = (cr.structuredCves || []).filter(c => c.milestone > milestone).length;
+  badge.innerHTML = `<span class="badge bg-${aboveMilestone > 0 ? 'warning' : 'success'}">${cr.skiaRelevantCves} relevant CVEs</span>`;
+
+  // Summary cards
+  const cards = document.getElementById('cr-summary-cards');
+  const sevCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+  (cr.structuredCves || []).forEach(c => { sevCounts[c.severity] = (sevCounts[c.severity] || 0) + 1; });
+  const cardEntries = [
+    ['Critical', sevCounts.Critical, 'danger'],
+    ['High', sevCounts.High, 'warning'],
+    ['Medium', sevCounts.Medium, 'info'],
+    ['Low', sevCounts.Low, 'secondary'],
+    ['Above m' + milestone, aboveMilestone, aboveMilestone > 0 ? 'danger' : 'success'],
+    ['Posts Reviewed', cr.postsReviewed, 'primary'],
+  ];
+  cards.innerHTML = cardEntries.filter(([,count]) => count > 0).map(([label, count, color]) => `
+    <div class="col-2">
+      <div class="card text-center p-2">
+        <div class="fs-5 fw-bold text-${color}">${count}</div>
+        <div class="text-muted small">${label}</div>
+      </div>
+    </div>`).join('');
+
+  // CVE table (group by component, show only those above our milestone)
+  const cves = (cr.structuredCves || []).filter(c => c.milestone > milestone);
+  if (cves.length > 0) {
+    const byComp = {};
+    cves.forEach(c => {
+      if (!byComp[c.component]) byComp[c.component] = [];
+      byComp[c.component].push(c);
+    });
+    const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    const sorted = Object.entries(byComp).sort((a, b) => {
+      const aMin = Math.min(...a[1].map(c => sevOrder[c.severity] ?? 9));
+      const bMin = Math.min(...b[1].map(c => sevOrder[c.severity] ?? 9));
+      return aMin - bMin;
+    });
+
+    const table = document.getElementById('cr-cve-table');
+    table.innerHTML = `<h6 class="mb-2">CVEs Above Current Milestone (m${milestone})</h6>` +
+      sorted.map(([comp, compCves]) => {
+        const rows = compCves.sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9))
+          .map(c => {
+            const bugUrl = c.bugId ? `https://issues.chromium.org/issues/${esc(c.bugId)}` : '#';
+            return `<tr>
+              <td><span class="${sevClass(c.severity)}">${esc(c.severity)}</span></td>
+              <td>${esc(c.cveId)}</td>
+              <td>m${c.milestone}</td>
+              <td><a href="${bugUrl}" target="_blank">${esc(c.bugId || 'N/A')}</a></td>
+            </tr>`;
+          }).join('');
+        return `<div class="mb-2"><strong>${esc(comp)}</strong> <span class="badge bg-secondary">${compCves.length}</span>
+          <table class="table table-sm cve-table mb-1"><thead><tr><th>Severity</th><th>CVE</th><th>Fixed In</th><th>Bug</th></tr></thead>
+          <tbody>${rows}</tbody></table></div>`;
+      }).join('');
+  }
+
+  // Meta
+  const meta = document.getElementById('cr-meta');
+  meta.textContent = `Queried ${cr.monthsQueried} months (${cr.postsReviewed} posts) • ${cr.totalCvesExtracted} total CVEs extracted • ${cr.skiaRelevantCves} Skia-relevant`;
+}
+
 function renderCgAlerts(cg) {
   if (!cg || !cg.totalAlerts) return;
   const section = document.getElementById('cg-section');
@@ -516,8 +599,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof DATA === 'undefined') { document.body.innerHTML = '<p class="p-4 text-danger">No DATA found. JSON not injected.</p>'; return; }
   const d = DATA;
   const cgTotal = d.cgAlerts ? (d.cgAlerts.totalAlerts || 0) : 0;
+  const crTotal = d.chromeReleases ? (d.chromeReleases.skiaRelevantCves || 0) : 0;
   const subtitleParts = [`${d.meta.date}`, `Skia m${d.meta.skiaMilestone}`, `${d.summary.totalCves} CVEs`];
   if (cgTotal > 0) subtitleParts.push(`${cgTotal} CG alerts`);
+  if (crTotal > 0) subtitleParts.push(`${crTotal} Chrome blog CVEs`);
   document.getElementById('header-subtitle').textContent = subtitleParts.join(' · ');
   document.getElementById('header-badges').innerHTML =
     `<span class="badge bg-${d.summary.highestSeverity === 'CRITICAL' ? 'danger' : d.summary.highestSeverity === 'HIGH' ? 'warning' : 'info'}">${d.summary.highestSeverity}</span>`;
@@ -527,6 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
   container.innerHTML = d.findings.map((f, i) => renderFinding(f, i)).join('');
   renderNextSteps(d.nextSteps);
   if (d.cgAlerts) renderCgAlerts(d.cgAlerts);
+  if (d.chromeReleases) renderChromeReleases(d.chromeReleases, d.meta.skiaMilestone);
   renderUpstream(d.meta);
 });
 </script>
