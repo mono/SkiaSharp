@@ -60,10 +60,12 @@ namespace SkiaSharp
 			GetOrAddObject (handle, owns, unrefExisting, disposeProtected: false, objectFactory);
 
 		/// <summary>
-		/// Retrieve or create an instance for the native handle. When <paramref name="disposeProtected"/> is true
-		/// and an existing wrapper is found, IgnorePublicDispose is set on it via PreventPublicDisposal,
-		/// which acquires the HD write lock — so the flag set is mutually exclusive with any concurrent
-		/// public Dispose() (which also holds the write lock).
+		/// Retrieve or create an instance for the native handle. When <paramref name="disposeProtected"/> is true,
+		/// IgnorePublicDispose is set via PreventPublicDisposal on the wrapper that is returned (whether an
+		/// existing one was found or a new one was created).
+		/// This is safe because this method holds the upgradeable-read lock for its whole duration, which is
+		/// mutually exclusive with the write lock public Dispose() holds around its IgnorePublicDispose check —
+		/// so the flag set cannot race a concurrent public disposal. (PreventPublicDisposal itself takes no lock.)
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool disposeProtected, Func<IntPtr, bool, TSkiaObject> objectFactory)
@@ -98,9 +100,10 @@ namespace SkiaSharp
 					}
 
 					if (disposeProtected)
-						// this is safe from any race with a concurrent disposal-in-progress
-						// public Dispose paths grab a write lock so they cannot be concurrent
-						// internal Dispose paths don't matter for preventing PUBLIC disposals.
+						// Safe against a concurrent PUBLIC Dispose: it holds the write lock, which is
+						// mutually exclusive with the upgradeable-read lock held here. Internal Dispose
+						// paths don't affect the flag's purpose, and no dispose-protected target can be
+						// internally disposed concurrently either (see PreventPublicDisposal's guard).
 						instance.PreventPublicDisposal ();
 
 					return instance;
