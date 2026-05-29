@@ -81,15 +81,18 @@ The collector script requires:
 
 ---
 
-## Step 1: Collect Data
+## Step 1: Collect Raw Data
 
 Run the collector script to gather build status, issues, and commit info:
 
 ```bash
 python3 .agents/skills/ci-status/scripts/ci-status.py \
-  --output output/ai/ci-status-report.md \
   --json output/ai/ci-status-data.json
 ```
+
+This produces `ci-status-data.json` containing raw pipeline runs, GitHub Actions statuses,
+regression markers, issues/errors, and associated commits. The script also prints a console
+summary for quick visual inspection.
 
 ### Options
 
@@ -98,21 +101,30 @@ python3 .agents/skills/ci-status/scripts/ci-status.py \
 | `--branches N` | 3 | Number of most recent release/* branches to include |
 | `--builds N` | 5 | Number of recent builds to show per pipeline per branch |
 | `--no-issues` | off | Skip fetching errors/warnings (faster, less detail) |
-| `--output PATH` | none | Write formatted markdown report |
 | `--json PATH` | none | Write raw structured JSON (for AI analysis) |
 
 ### Examples
 
 ```bash
-# Full report with all data
-python3 .agents/skills/ci-status/scripts/ci-status.py --output output/ai/ci-status-report.md --json output/ai/ci-status-data.json
+# Standard collection
+python3 .agents/skills/ci-status/scripts/ci-status.py --json output/ai/ci-status-data.json
 
 # Quick check (no timeline fetch)
 python3 .agents/skills/ci-status/scripts/ci-status.py --no-issues
 
 # Deep analysis window (10 builds, 5 branches)
-python3 .agents/skills/ci-status/scripts/ci-status.py --branches 5 --builds 10 --output output/ai/ci-status-report.md --json output/ai/ci-status-data.json
+python3 .agents/skills/ci-status/scripts/ci-status.py --branches 5 --builds 10 --json output/ai/ci-status-data.json
 ```
+
+### File Boundary
+
+| File | Produced By | Consumed By |
+|------|-------------|-------------|
+| `output/ai/ci-status-data.json` | Collector script (Step 1) | AI analysis only (Step 2) |
+| `output/ai/ci-status-YYYY-MM-DD.json` | AI (Step 3) | Validator + Renderers (Steps 4–5) |
+
+> ⚠️ **Never pass `ci-status-data.json` to validate or render scripts.** Those scripts expect the
+> augmented report JSON that the AI assembles in Step 3.
 
 ---
 
@@ -135,7 +147,7 @@ Group all errors/warnings across all branches and pipelines by **normalized sign
 1. Strip volatile fragments (build IDs, timestamps, GUIDs, file paths with random hashes, agent names)
 2. Cluster on `(task_name, normalized_first_error_line)`
 3. For each cluster, determine:
-   - **Category**: one of `code regression`, `flake`, `infra/network`, `quota/resource`, `chain blockage`, `unknown`
+   - **Category**: one of `code_regression`, `flake`, `infra_network`, `quota_resource`, `chain_blockage`, `unknown`
    - **Footprint**: which branches × pipelines are affected
    - **First/last seen** within the window
    - **Sample error** (verbatim from data)
@@ -146,12 +158,12 @@ Group all errors/warnings across all branches and pipelines by **normalized sign
 
 | Signal | Category |
 |--------|----------|
-| Message contains `network`, `timeout`, `EOF`, `connection`, `nuget.org`, `429`, `503` | infra/network |
-| Message contains `No space left`, `OOM`, `killed`, `agent lost`, `pool` | quota/resource |
+| Message contains `network`, `timeout`, `EOF`, `connection`, `nuget.org`, `429`, `503` | infra_network |
+| Message contains `No space left`, `OOM`, `killed`, `agent lost`, `pool` | quota_resource |
 | Same build passes/fails with no code change (pass/fail/pass pattern) | flake |
-| Failure appears on multiple unrelated branches simultaneously | infra (not code) |
-| Failure appears at a green→red transition on one branch only | code regression |
-| Downstream pipeline failed but upstream in same chain also failed | chain blockage (don't double-count) |
+| Failure appears on multiple unrelated branches simultaneously | infra_network |
+| Failure appears at a green→red transition on one branch only | code_regression |
+| Downstream pipeline failed but upstream in same chain also failed | chain_blockage |
 | None of the above | unknown |
 
 ### 2.3 Pipeline Chain Analysis (MANDATORY — always perform, even when failures look independent)
@@ -197,7 +209,7 @@ For each `release/*` branch:
 - Is it shippable right now? (yes / no / blocked)
 - Days since last full green chain
 - Blockers (link to root cause clusters)
-- Recommendation: `ship`, `wait`, `cherry-pick fix`, `investigate`
+- Recommendation: `ship`, `wait`, `cherry-pick`, `investigate`
 
 ### 2.8 GitHub Actions Health
 
@@ -235,16 +247,83 @@ Each recommendation should include:
 
 ---
 
-## Step 3: Present to User
+## Step 3: Assemble Report JSON
 
-After analysis, present:
+After completing the analysis, assemble a **single JSON file** that combines the raw data
+with your analysis. This JSON is the source of truth for rendering.
+
+Write the JSON to: `output/ai/ci-status-YYYY-MM-DD.json`
+
+The schema is documented in `references/report-schema.md`. Top-level keys:
+
+```json
+{
+  "meta": { "date", "timestamp", "schemaVersion": "1.0", "window", "branches" },
+  "verdict": { "status", "emoji", "summary" },
+  "azdoHealth": { "branches": [...], "regressions": [...] },
+  "chainAnalysis": [ { "branch", "verdict", "summary", "rootPipeline", "cascadedPipelines" } ],
+  "rootCauses": [ { "id", "title", "category", "severity", "footprint", "sampleError", ... } ],
+  "githubActions": { "workflows": [...], "summary": { "total", "healthy", "failing", ... } },
+  "flakes": [ { "branch", "pipeline", "pattern", "confidence", "description" } ],
+  "releaseRisk": [ { "branch", "shippable", "daysSinceGreen", "blockers", "recommendation" } ],
+  "recommendations": [ { "priority", "severity", "action", "reason", "target", "buildUrl" } ]
+}
+```
+
+**Rules for assembling the JSON:**
+1. The `azdoHealth` section contains the raw pipeline data from `ci-status-data.json`, restructured to match the schema
+2. The `githubActions` section combines raw workflow data with your severity/status classifications
+3. All other sections (`verdict`, `chainAnalysis`, `rootCauses`, `flakes`, `releaseRisk`, `recommendations`) are your AI analysis
+4. Every `buildUrl` and `buildEvidence` must reference real builds from the collected data
+5. Maximum 5 recommendations, sorted by priority
+
+---
+
+## Step 4: Validate Report
+
+Run the validator to check the assembled JSON:
+
+```bash
+python3 .agents/skills/ci-status/scripts/validate-ci-status.py output/ai/ci-status-YYYY-MM-DD.json
+```
+
+If validation fails, fix the JSON and re-validate. Common issues:
+- Missing required keys
+- Invalid enum values (e.g., verdict.status must be healthy/degraded/broken)
+- rootCauseId references that don't exist
+- recommendations not sorted by priority
+
+---
+
+## Step 5: Render Reports
+
+Generate HTML and Markdown reports from the validated JSON:
+
+```bash
+# HTML dashboard (self-contained, opens in browser)
+python3 .agents/skills/ci-status/scripts/render-ci-status.py output/ai/ci-status-YYYY-MM-DD.json
+
+# Markdown report (for AI consumption and downstream agents)
+python3 .agents/skills/ci-status/scripts/render-ci-status-md.py output/ai/ci-status-YYYY-MM-DD.json
+```
+
+This produces:
+- `output/ai/ci-status-YYYY-MM-DD.html` — Bootstrap 5 dashboard viewable in any browser
+- `output/ai/ci-status-YYYY-MM-DD.md` — Comprehensive markdown for AI agents
+
+---
+
+## Step 6: Present to User
+
+After rendering, present a brief summary in chat and point to the files:
 
 1. **Verdict** (1 sentence + emoji)
-2. **AzDO health matrix** (the table from the markdown report)
-3. **Chain verdict** — for each branch with red internal pipelines, the one-line cascade-vs-independent statement from §2.3 (so the reader knows whether N red pipelines = N problems or 1 root cause)
-4. **GitHub Actions health** (one-line summary per workflow, grouped by severity)
-5. **Top 3-5 actions** with build links (root-caused — never list a cascaded downstream pipeline as its own action)
-6. **Offer follow-ups**: "Want me to investigate the regression on release/X? Open the failing build? Check if this is a known issue?"
+2. **AzDO health matrix** (compact table)
+3. **Chain verdict** — one-line cascade-vs-independent statement per affected branch
+4. **GitHub Actions health** — one-line summary per workflow, grouped by severity
+5. **Top 3-5 actions** with build links
+6. **File locations** — point to the JSON, HTML, and MD files
+7. **Offer follow-ups**: "Want me to investigate the regression on release/X? Open the failing build?"
 
 ### Example Output
 
@@ -257,28 +336,28 @@ After analysis, present:
   release/3.119.x              ❌ Public | ⚠️ Native | ⚠️ Managed | ❌ Tests
 
 🔗 Chain verdict:
-  release/3.119.x: Tests red independently (Guardian TSA upload); Native/Managed are warnings only — no cascade.
-  release/4.147.0-preview.3: Public CI red (CS0016 errors); internal chain unaffected — independent failure.
+  release/3.119.x: Tests red independently (Guardian TSA); Native/Managed warnings only — no cascade.
+  release/4.147.0-preview.3: Public CI red (CS0016 errors); internal chain unaffected.
 
 🐙 GitHub Actions:
-  Docs - Deploy                ✅ success (2026-05-29 15:19)
-  Publish Samples              ✅ success (2026-05-28 10:00)
-  Skia Upstream Sync           ✅ success (2026-05-29 07:00)
-  Auto API Docs Writer         ❌ failure (2026-05-29 04:00)
-  Backport                     ✅ success (2026-05-28 22:15)
+  🟠 High:    Docs - Deploy ✅ | Publish Samples ✅ | Auto API Docs Writer ❌
+  🟡 Medium:  Backport ✅ | Go Live ✅ | Auto-Triage ✅
+  ⚪ Low:     All passing
 
 Top actions:
-1. [release/3.119.x] Fix Guardian TSA upload — blocks Tests pipeline → build 14177772
-2. [release/4.147.0-preview.3] Public CI failure — investigate CS0016 errors → build 157985
-3. [GitHub Actions] Auto API Docs Writer failing — XML docs not being generated → run 26651087356
-4. [infra] SkiaSharp-Native partial success on all release branches — Guardian warnings (non-blocking)
+1. [release/3.119.x] Fix Guardian TSA upload — blocks Tests → build 14177772
+2. [release/4.147.0-preview.3] Investigate CS0016 errors → build 157985
+3. [GitHub Actions] Auto API Docs Writer failing → run 26651087356
 
-Full report: output/ai/ci-status-report.md
+📁 Reports:
+  JSON: output/ai/ci-status-2026-05-29.json
+  HTML: output/ai/ci-status-2026-05-29.html
+  MD:   output/ai/ci-status-2026-05-29.md
 ```
 
 ---
 
-## Step 4: Follow-Up Investigations
+## Step 7: Follow-Up Investigations
 
 If asked to dig deeper:
 - Use the `hlx-azdo_*` tools to fetch specific build timelines, test results, or logs
