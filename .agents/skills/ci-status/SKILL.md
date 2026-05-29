@@ -45,6 +45,16 @@ this skill gives a **broad overview** of CI health across multiple branches simu
 | 2 | `SkiaSharp` | 10789 | [link](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=10789) |
 | 3 | `SkiaSharp-Tests` | 15756 | [link](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=15756) |
 
+### GitHub Actions (mono/SkiaSharp and mono/SkiaSharp-API-docs)
+
+| Workflow | Repository | Triggers |
+|----------|------------|----------|
+| Docs - Deploy | mono/SkiaSharp | Push/PR to main |
+| Publish Samples | mono/SkiaSharp | Push/PR touching `samples/` |
+| API Diff | mono/SkiaSharp | Weekly schedule, push to main |
+| Automerge Docs | mono/SkiaSharp-API-docs | PR events |
+| Go Live | mono/SkiaSharp-API-docs | Workflow dispatch |
+
 ---
 
 ## Step 1: Collect Data
@@ -89,7 +99,7 @@ After the script runs, read the JSON data (`output/ai/ci-status-data.json`) and 
 ### 2.1 Executive Summary (Verdict)
 
 Classify overall health as one of:
-- 🟢 **Healthy** — all branches green or only warnings
+- 🟢 **Healthy** — all branches green or only warnings (both AzDO and GitHub Actions)
 - 🟡 **Degraded** — some failures but main is green
 - 🔴 **Broken** — main is red or a release branch is blocked
 
@@ -177,6 +187,18 @@ Each recommendation should include:
 - Why (which branch/pipeline is affected)
 - Link to the relevant build
 
+### 2.9 GitHub Actions Health
+
+For each tracked GitHub Actions workflow:
+- Current status on main (pass/fail/no recent runs)
+- Any failures or patterns across branches
+- Whether failures are related to AzDO failures (same commit?) or independent
+- For SkiaSharp-API-docs workflows: note if docs generation or publishing is broken
+
+GitHub Actions failures are typically lower severity than AzDO pipeline failures
+(which block releases), but broken docs deployment or sample validation should still
+be flagged as actionable.
+
 ---
 
 ## Step 3: Present to User
@@ -185,9 +207,10 @@ After analysis, present:
 
 1. **Verdict** (1 sentence + emoji)
 2. **Health matrix** (the table from the markdown report)
-3. **Chain verdict** — for each branch with red internal pipelines, the one-line cascade-vs-independent statement from Step 2.3 (so the reader knows whether N red pipelines = N problems or 1 root cause)
-4. **Top 3-5 actions** with build links (root-caused — never list a cascaded downstream pipeline as its own action)
-5. **Offer follow-ups**: "Want me to investigate the regression on release/X? Open the failing build? Check if this is a known issue?"
+3. **GitHub Actions health** (one-line summary per workflow)
+4. **Chain verdict** — for each branch with red internal pipelines, the one-line cascade-vs-independent statement from Step 2.3 (so the reader knows whether N red pipelines = N problems or 1 root cause)
+5. **Top 3-5 actions** with build links (root-caused — never list a cascaded downstream pipeline as its own action)
+6. **Offer follow-ups**: "Want me to investigate the regression on release/X? Open the failing build? Check if this is a known issue?"
 
 ### Example Output
 
@@ -198,6 +221,13 @@ After analysis, present:
   main                         ✅ Public | ✅ Native | ✅ Managed | ✅ Tests
   release/4.147.0-preview.3    ❌ Public | ⚠️ Native | ✅ Managed | ✅ Tests
   release/3.119.x              ❌ Public | ⚠️ Native | ⚠️ Managed | ❌ Tests
+
+🐙 GitHub Actions:
+  Docs - Deploy                ✅ main
+  Publish Samples              ✅ main
+  API Diff                     ✅ main
+  Automerge Docs               ✅ main (SkiaSharp-API-docs)
+  Go Live                      ✅ main (SkiaSharp-API-docs)
 
 Top actions:
 1. [release/3.119.x] Fix Guardian TSA upload — blocks Tests pipeline → build 14177772

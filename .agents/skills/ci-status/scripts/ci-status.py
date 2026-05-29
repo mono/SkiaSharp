@@ -54,6 +54,16 @@ ICONS = {
     "notStarted": "⏳",
 }
 
+# GitHub Actions workflows to track
+# Each entry: repo, workflow file name, display name, relevant branches
+GITHUB_WORKFLOWS = [
+    {"repo": "mono/SkiaSharp", "workflow": "build-site.yml", "name": "Docs - Deploy"},
+    {"repo": "mono/SkiaSharp", "workflow": "samples.yml", "name": "Publish Samples"},
+    {"repo": "mono/SkiaSharp", "workflow": "api-diff.yml", "name": "API Diff"},
+    {"repo": "mono/SkiaSharp-API-docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs"},
+    {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live"},
+]
+
 
 def az(args: list[str]) -> str:
     """Run az CLI and return stdout."""
@@ -175,6 +185,150 @@ def get_build_issues(build_id: int, org: str, project: str) -> list[dict]:
     return issues
 
 
+def gh(args: list[str]) -> str:
+    """Run gh CLI and return stdout."""
+    result = subprocess.run(
+        ["gh"] + args, capture_output=True, text=True, timeout=30
+    )
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()
+
+
+def get_github_workflow_runs(repo: str, workflow: str, branch: str | None, top: int = 5) -> list[dict]:
+    """Get recent workflow runs from GitHub Actions via gh CLI.
+
+    If branch is None, fetches runs across all branches.
+    """
+    cmd = [
+        "run", "list",
+        "--repo", repo,
+        "--workflow", workflow,
+        "--limit", str(top),
+        "--json", "databaseId,headBranch,status,conclusion,displayTitle,createdAt,updatedAt,url,event,headSha,workflowName",
+    ]
+    if branch:
+        cmd.extend(["--branch", branch])
+
+    out = gh(cmd)
+    if not out:
+        return []
+    try:
+        return json.loads(out)
+    except (json.JSONDecodeError, ValueError):
+        return []
+
+
+def gh_icon_for(run: dict) -> str:
+    """Map GitHub Actions status/conclusion to an icon."""
+    status = run.get("status", "")
+    conclusion = run.get("conclusion", "")
+
+    if status == "in_progress":
+        return "🔄"
+    if status == "queued" or status == "waiting" or status == "pending":
+        return "⏳"
+
+    # Completed runs — check conclusion
+    if conclusion == "success":
+        return "✅"
+    elif conclusion == "failure":
+        return "❌"
+    elif conclusion == "cancelled":
+        return "🚫"
+    elif conclusion == "skipped":
+        return "⏭️"
+    elif conclusion == "startup_failure":
+        return "❌"
+    else:
+        return "❓"
+
+
+def gh_result_for(run: dict) -> str:
+    """Map GitHub Actions status/conclusion to a normalized result string."""
+    status = run.get("status", "")
+    conclusion = run.get("conclusion", "")
+
+    if status in ("in_progress", "queued", "waiting", "pending"):
+        return status
+
+    return conclusion or status
+
+
+def collect_github_data(branches: list[str], top_builds: int) -> list[dict]:
+    """Collect GitHub Actions workflow run data for all tracked workflows.
+
+    Returns a list of workflow data dicts, each containing runs per branch.
+    """
+    workflows_data = []
+
+    for wf in GITHUB_WORKFLOWS:
+        wf_data = {
+            "repo": wf["repo"],
+            "workflow": wf["workflow"],
+            "name": wf["name"],
+            "branches": [],
+        }
+
+        for branch in branches:
+            runs = get_github_workflow_runs(wf["repo"], wf["workflow"], branch, top=top_builds)
+            branch_runs = []
+
+            for r in runs:
+                # Calculate duration if possible
+                duration_min = None
+                if r.get("createdAt") and r.get("updatedAt"):
+                    try:
+                        created = datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))
+                        updated = datetime.fromisoformat(r["updatedAt"].replace("Z", "+00:00"))
+                        duration_min = round((updated - created).total_seconds() / 60, 1)
+                    except (ValueError, TypeError):
+                        pass
+
+                run_data = {
+                    "id": r.get("databaseId"),
+                    "displayTitle": r.get("displayTitle", ""),
+                    "status": r.get("status", ""),
+                    "conclusion": r.get("conclusion", ""),
+                    "result": gh_result_for(r),
+                    "createdAt": r.get("createdAt"),
+                    "updatedAt": r.get("updatedAt"),
+                    "durationMinutes": duration_min,
+                    "headSha": (r.get("headSha") or "")[:12],
+                    "headBranch": r.get("headBranch", ""),
+                    "event": r.get("event", ""),
+                    "url": r.get("url", ""),
+                    "icon": gh_icon_for(r),
+                }
+                branch_runs.append(run_data)
+
+            # Compute stats
+            stats = {"total": 0, "succeeded": 0, "failed": 0, "other": 0}
+            for run in branch_runs:
+                stats["total"] += 1
+                if run["conclusion"] == "success":
+                    stats["succeeded"] += 1
+                elif run["conclusion"] == "failure":
+                    stats["failed"] += 1
+                else:
+                    stats["other"] += 1
+
+            if stats["total"] > 0:
+                stats["pass_rate"] = round(stats["succeeded"] / stats["total"] * 100, 1)
+            else:
+                stats["pass_rate"] = None
+
+            wf_data["branches"].append({
+                "name": branch,
+                "runs": branch_runs,
+                "stats": stats,
+            })
+
+        workflows_data.append(wf_data)
+
+    return workflows_data
+
+
 def get_release_branches(top: int = 3) -> list[str]:
     """Get the most recent release branches by commit date.
 
@@ -232,6 +386,7 @@ def collect_data(branches: list[str], top_builds: int, show_issues: bool) -> dic
              "group": "public" if p in PUBLIC_PIPELINES else "internal"}
             for p in PUBLIC_PIPELINES + INTERNAL_PIPELINES
         ],
+        "github_workflows": GITHUB_WORKFLOWS,
         "branches": [],
     }
 
@@ -315,6 +470,9 @@ def collect_data(branches: list[str], top_builds: int, show_issues: bool) -> dic
             branch_data["pipeline_groups"].append(group_data)
 
         data["branches"].append(branch_data)
+
+    # Collect GitHub Actions data
+    data["github_actions"] = collect_github_data(branches, top_builds)
 
     return data
 
@@ -413,6 +571,49 @@ def render_console(data: dict):
                     statuses.append(f"⏳ {pipe['name']}")
         print(f"  {branch_data['name']:<40} {' | '.join(statuses)}")
     print()
+
+    # GitHub Actions summary
+    if data.get("github_actions"):
+        print(f"{'═' * 70}")
+        print(f" GitHub Actions Status")
+        print(f"{'═' * 70}")
+
+        for wf_data in data["github_actions"]:
+            print(f"\n┌─ {wf_data['name']} ({wf_data['repo']})")
+            print(f"│  Workflow: {wf_data['workflow']}")
+            print(f"│")
+
+            for branch_info in wf_data["branches"]:
+                if not branch_info["runs"]:
+                    print(f"│  {branch_info['name']}: no runs found")
+                    continue
+
+                print(f"│  ┌ {branch_info['name']} (last {len(branch_info['runs'])})")
+                for run in branch_info["runs"]:
+                    started = format_time(run["createdAt"])
+                    title = run["displayTitle"][:50] if run["displayTitle"] else ""
+                    print(
+                        f"│  │   {run['icon']} {run['result']:<12} "
+                        f"{started}  {title}  [id:{run['id']}]"
+                    )
+                print(f"│  └")
+
+            print(f"└")
+        print()
+        print(f"{'═' * 70}")
+
+        # GitHub Actions health line
+        print("\n🐙 GitHub Actions Health:")
+        for wf_data in data["github_actions"]:
+            branch_statuses = []
+            for branch_info in wf_data["branches"]:
+                if branch_info["runs"]:
+                    latest = branch_info["runs"][0]
+                    branch_statuses.append(f"{latest['icon']} {branch_info['name']}")
+                else:
+                    branch_statuses.append(f"⏳ {branch_info['name']}")
+            print(f"  {wf_data['name']:<35} {' | '.join(branch_statuses)}")
+        print()
 
 
 def render_markdown(data: dict, output_path: str):
@@ -568,6 +769,54 @@ def render_markdown(data: dict, output_path: str):
         lines.append(f"---")
         lines.append(f"")
 
+    # GitHub Actions section
+    if data.get("github_actions"):
+        lines.append(f"## GitHub Actions")
+        lines.append(f"")
+
+        # Summary table
+        lines.append(f"| Workflow | Repository | " + " | ".join(b["name"] for b in data["github_actions"][0]["branches"]) + " |")
+        lines.append(f"|----------|------------|" + "|".join(["------" for _ in data["github_actions"][0]["branches"]]) + "|")
+        for wf_data in data["github_actions"]:
+            cells = []
+            for branch_info in wf_data["branches"]:
+                if branch_info["runs"]:
+                    latest = branch_info["runs"][0]
+                    rate = branch_info["stats"]["pass_rate"]
+                    rate_str = f" ({rate:.0f}%)" if rate is not None and rate < 100 else ""
+                    cells.append(f"{latest['icon']} {latest['result']}{rate_str}")
+                else:
+                    cells.append("— no runs")
+            lines.append(f"| {wf_data['name']} | `{wf_data['repo']}` | " + " | ".join(cells) + " |")
+        lines.append(f"")
+
+        # Detailed per-workflow sections
+        for wf_data in data["github_actions"]:
+            lines.append(f"### {wf_data['name']} (`{wf_data['repo']}`)")
+            lines.append(f"")
+
+            for branch_info in wf_data["branches"]:
+                if not branch_info["runs"]:
+                    continue
+
+                stats = branch_info["stats"]
+                rate_str = f" — pass rate: {stats['pass_rate']:.0f}%" if stats["pass_rate"] is not None else ""
+                lines.append(f"#### `{branch_info['name']}`{rate_str}")
+                lines.append(f"")
+                lines.append(f"| Status | Title | Result | Duration | Commit | Started | Link |")
+                lines.append(f"|--------|-------|--------|----------|--------|---------|------|")
+                for run in branch_info["runs"]:
+                    started = format_time(run["createdAt"])
+                    title = run["displayTitle"][:60] if run["displayTitle"] else "—"
+                    dur = f"{run['durationMinutes']}m" if run.get("durationMinutes") else "—"
+                    commit = f"`{run['headSha']}`" if run.get("headSha") else "—"
+                    link = f"[{run['id']}]({run['url']})" if run.get("url") else str(run.get("id", "—"))
+                    lines.append(f"| {run['icon']} | {title} | {run['result']} | {dur} | {commit} | {started} | {link} |")
+                lines.append(f"")
+
+        lines.append(f"---")
+        lines.append(f"")
+
     # Footer
     lines.append(f"## Pipeline Links")
     lines.append(f"")
@@ -578,6 +827,15 @@ def render_markdown(data: dict, output_path: str):
         url = f"{pipe['org'].rstrip('/')}/{pipe['project']}/_build?definitionId={pipe['id']}"
         lines.append(f"| {pipe['name']} | {org_short} | [{pipe['id']}]({url}) |")
     lines.append(f"")
+
+    # GitHub workflow links
+    if GITHUB_WORKFLOWS:
+        lines.append(f"| Workflow | Repository | File |")
+        lines.append(f"|----------|------------|------|")
+        for wf in GITHUB_WORKFLOWS:
+            url = f"https://github.com/{wf['repo']}/actions/workflows/{wf['workflow']}"
+            lines.append(f"| {wf['name']} | `{wf['repo']}` | [{wf['workflow']}]({url}) |")
+        lines.append(f"")
 
     content = "\n".join(lines)
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
