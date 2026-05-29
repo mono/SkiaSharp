@@ -196,12 +196,10 @@ def render_md(data):
                 fixed = c.get("fixedIn") or c.get("fixMilestone") or ""
                 assess = c.get("assessment", "?")
                 desc = c.get("description", "")
-                # Truncate description for table readability
-                short_desc = desc[:80] + "…" if len(desc) > 80 else desc
                 if has_fixed_in:
-                    lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {fixed} | {assess} | {short_desc} |")
+                    lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {fixed} | {assess} | {desc} |")
                 else:
-                    lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {assess} | {short_desc} |")
+                    lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {assess} | {desc} |")
             lines.append("")
 
         # Non-Chrome CVEs
@@ -216,8 +214,7 @@ def render_md(data):
                 source = c.get("source", "?")
                 assess = c.get("assessment", "?")
                 desc = c.get("description", "")
-                short_desc = desc[:80] + "…" if len(desc) > 80 else desc
-                lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {source} | {assess} | {short_desc} |")
+                lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {source} | {assess} | {desc} |")
             lines.append("")
 
         # Action
