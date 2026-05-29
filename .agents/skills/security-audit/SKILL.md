@@ -32,29 +32,32 @@ combined into a single unified report.
 
 ## Key References
 
+- **[references/chrome-releases.md](references/chrome-releases.md)** — Chrome Releases blog: RSS query, two-pass extraction (regex + AI review), cross-referencing with NVD
 - **[references/skia-cve-resolution.md](references/skia-cve-resolution.md)** — Skia core CVE pipeline (NVD → Bug ID → Commit → Branch → Cherry-pick → Reachability). **The Skia process is fine-grained — read this before auditing Skia.**
 - **[references/third-party-deps.md](references/third-party-deps.md)** — Third-party CVE process (libpng, freetype, harfbuzz, etc.): version verification, fix-commit ancestry, known false positives
 - **[references/cg-alerts.md](references/cg-alerts.md)** — Component Governance alerts: ADO pipeline queries, Docker container CVEs, fix locations
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency list, cgmanifest format, Skia-specific tracking notes
-- **[references/report-template.md](references/report-template.md)** — Markdown report format
+- **[references/report-template.md](references/report-template.md)** — Markdown format guide (used by `render-security-audit-md.py`)
 - **[references/report-schema.md](references/report-schema.md)** — JSON schema for structured output
 - **[references/security-audit-schema.json](references/security-audit-schema.json)** — Machine-readable JSON Schema (Draft 2020-12)
 - **[scripts/validate-security-audit.py](scripts/validate-security-audit.py)** — Validates report JSON against schema + semantic checks
 - **[scripts/render-security-audit.py](scripts/render-security-audit.py)** — Renders JSON → standalone HTML
+- **[scripts/render-security-audit-md.py](scripts/render-security-audit-md.py)** — Renders JSON → Markdown (for AI consumption)
 - **[scripts/viewer.html](scripts/viewer.html)** — HTML template (Bootstrap 5)
 
 ## Workflow
 
 1. Search GitHub issues/PRs (all deps including Skia)
-2. Verify dependency versions from submodule/DEPS/headers (NOT cgmanifest.json)
-3. Audit Skia core CVEs — see [Skia CVE Resolution](references/skia-cve-resolution.md)
-4. Audit third-party dependency CVEs — see [Third-Party Deps](references/third-party-deps.md)
-5. Query Component Governance alerts — see [CG Alerts](references/cg-alerts.md)
-6. Check false positives
-7. Assemble structured JSON report
-8. Validate report (`validate-security-audit.py`)
-9. Render HTML (`render-security-audit.py`)
-10. Present markdown summary to user
+2. Query Chrome Releases blog (`query-chrome-releases.py`) — see [Chrome Releases](references/chrome-releases.md)
+3. Verify dependency versions from submodule/DEPS/headers (NOT cgmanifest.json)
+4. Audit Skia core CVEs — see [Skia CVE Resolution](references/skia-cve-resolution.md)
+5. Audit third-party dependency CVEs — see [Third-Party Deps](references/third-party-deps.md)
+6. Query Component Governance alerts — see [CG Alerts](references/cg-alerts.md)
+7. Check false positives
+8. Assemble structured JSON report
+9. Validate report (`validate-security-audit.py`)
+10. Render HTML (`render-security-audit.py`)
+11. Present markdown summary to user
 
 ---
 
@@ -70,7 +73,50 @@ Search PRs in both `mono/SkiaSharp` and `mono/skia` for dependency updates alrea
 
 ---
 
-### Step 2: Verify Dependency Versions
+### Step 1.5: Query Chrome Releases Blog
+
+> 🔍 The Chrome Releases blog often discloses Skia CVEs **before NVD** processes them.
+> This step provides early detection and cross-validation.
+
+**See [references/chrome-releases.md](references/chrome-releases.md)** for full details on the
+data source, script usage, and AI review instructions.
+
+#### Run the script
+
+```bash
+python3 .agents/skills/security-audit/scripts/query-chrome-releases.py \
+  --verbose --output output/ai/chrome-releases-cache.json
+```
+
+This takes ~10-30 seconds (fetches RSS feed pages). Cache is reused if < 24 hours old.
+
+#### Two-pass review
+
+1. **Deterministic (regex):** Read `structured_cves[]` from the JSON output. These are
+   high-confidence CVEs extracted from the known blog format. Each has a CVE ID, severity,
+   component, bug ID, and milestone already parsed.
+
+2. **AI review (broad):** Scan `posts[].text_content` for anything the regex missed:
+   - CVE mentions not captured by regex (format variations, line breaks)
+   - Indirect Skia references ("type confusion in Rendering")
+   - Wild exploitation notices (highest priority!)
+   - Related component CVEs (GPU, Compositing) that may involve Skia code
+
+#### Cross-reference with NVD (Step 3)
+
+After the NVD query in Step 3, compare results:
+
+| Chrome Releases | NVD | Interpretation |
+|-----------------|-----|----------------|
+| ✅ Found | ✅ Found | Normal — use NVD CVSS, Chrome Releases for milestone |
+| ✅ Found | ❌ Not found | **Early disclosure** — NVD may be delayed. Use Chrome severity. |
+| ❌ Not found | ✅ Found | Vendor bulletin CVE (Android/Huawei) — not in Chrome stable |
+
+Set the `source` field on each CVE object: `"both"`, `"chrome_releases"`, or `"nvd"`.
+
+---
+
+### Step 3: Verify Dependency Versions
 
 > ⚠️ **CRITICAL: Never trust `cgmanifest.json` blindly.** Always verify versions against the
 > actual submodule, DEPS file, and source headers. cgmanifest.json is manually maintained
@@ -156,7 +202,7 @@ Report mismatches as findings.
 
 ---
 
-### Step 3: Audit Skia Core CVEs
+### Step 4: Audit Skia Core CVEs
 
 > 🛑 Skia is the product, not just a dependency. Every Skia CVE must be resolved to a
 > specific fix commit, branch, cherry-pick test, and reachability assessment. Classification
@@ -176,7 +222,7 @@ process**, including:
 
 ---
 
-### Step 4: Audit Third-Party Dependency CVEs
+### Step 5: Audit Third-Party Dependency CVEs
 
 For libpng, freetype, harfbuzz, libexpat, brotli, zlib, libjpeg-turbo, libwebp, ANGLE
 submodules, etc.
@@ -191,7 +237,7 @@ submodules, etc.
 
 ---
 
-### Step 5: Query Component Governance Alerts
+### Step 6: Query Component Governance Alerts
 
 CG scans Docker container images and build-time deps from both ADO pipelines. CG alerts are
 invisible to GitHub Issues and NVD searches alone.
@@ -212,7 +258,7 @@ invisible to GitHub Issues and NVD searches alone.
 
 ---
 
-### Step 6: Check False Positives
+### Step 7: Check False Positives
 
 Before flagging anything, verify the CVE actually affects SkiaSharp.
 
@@ -231,7 +277,7 @@ Before flagging anything, verify the CVE actually affects SkiaSharp.
 
 ---
 
-### Step 7: Assemble Structured JSON Report
+### Step 8: Assemble Structured JSON Report
 
 > 🛑 **MANDATORY:** The audit MUST produce a JSON file conforming to
 > [references/report-schema.md](references/report-schema.md). This is the machine-readable
@@ -244,7 +290,8 @@ Build the JSON object with these top-level keys:
 3. **`versionVerification`** — One entry per dependency with DEPS commit, verified version, cgmanifest version, match boolean
 4. **`findings`** — Array of finding objects sorted by priority then severity. **ONE object per dependency** (e.g., one "skia" finding containing ALL Skia CVEs regardless of status). Each has `dependency`, `status`, `cves[]`, `nonChromeCves[]`, `action`, `notes`. The `status` reflects the WORST-case status among the CVEs.
 5. **`cgAlerts`** — The complete raw JSON from `query-cg-alerts.py` (full `alerts` array, do not summarize)
-6. **`nextSteps`** — Prioritized action items with severity, command, and reason
+6. **`chromeReleases`** — Chrome Releases blog data. Transform the script's snake_case output (`cve_id`→`cveId`, `bug_id`→`bugId`, `blog_post_url`→`blogPostUrl`) into `structuredCves[]`. Also copy `blogPostUrl` onto matching CVEs in `findings[].cves[]`. See [report-schema.md](references/report-schema.md#chromereleases--chrome-releases-blog-data-optional) for the full field mapping.
+7. **`nextSteps`** — Prioritized action items with severity, command, and reason
 
 > 🛑 **COMPLETENESS REQUIREMENT:** The `findings` array MUST include **every CVE returned
 > by the NVD query** (Step 3 of skia-cve-resolution.md). CVEs that are verified as already
@@ -263,7 +310,7 @@ Save as `output/ai/security-audit-{date}.json`.
 
 ---
 
-### Step 8: Validate Report
+### Step 9: Validate Report
 
 > 🛑 **MANDATORY:** Always validate before rendering. Fix any errors reported.
 
@@ -277,20 +324,27 @@ Warnings are informational — errors must be fixed before proceeding.
 
 ---
 
-### Step 9: Render HTML Report
+### Step 10: Render HTML + Markdown Reports
 
-> 🛑 **MANDATORY:** Always generate the HTML report. The human needs a readable dashboard.
+> 🛑 **MANDATORY:** Always generate both reports.
 
 ```bash
 python3 .agents/skills/security-audit/scripts/render-security-audit.py \
   output/ai/security-audit-{date}.json
+
+python3 .agents/skills/security-audit/scripts/render-security-audit-md.py \
+  output/ai/security-audit-{date}.json
 ```
 
-This produces a self-contained HTML file (Bootstrap 5, CDN CSS only) alongside the JSON.
+This produces:
+- **HTML** — Self-contained dashboard (Bootstrap 5) for human review
+- **Markdown** — Comprehensive report for AI consumption and action suggestions
+
 The HTML renders:
 
 - Summary cards with status counts
 - Collapsible findings with CVE tables, severity badges, NVD links
+- Chrome Releases blog section with above-milestone CVEs by component
 - Version verification table with match/mismatch indicators
 - Skia upstream verification details with commit links
 - Prioritized next steps with severity-coded borders
@@ -305,23 +359,30 @@ Present the output path to the user:
 
 ---
 
-### Step 10: Present Markdown Summary
+### Step 11: Present Summary to User
 
-After generating JSON and HTML, present a concise markdown summary to the user in the
-conversation (using the report-template.md format). This is in ADDITION to the JSON+HTML
-files, not instead of them.
+The Markdown report was already generated in Step 10. Present a brief summary in the
+conversation pointing to the generated files:
 
-**Priority order** (applies equally to Skia core and third-party deps):
+```
+✅ Reports generated:
+   • output/ai/security-audit-{date}.json (structured data)
+   • output/ai/security-audit-{date}.html (interactive dashboard)
+   • output/ai/security-audit-{date}.md  (full markdown for AI review)
 
-1. 🔴 User-reported + no PR
-2. ✅ User-reported + PR ready
-3. 🟡 User-reported + PR needs work
-4. 🆕 Undiscovered CVEs (proactively found, no user-filed issue)
-5. ⚪ False positives
+   m147 • 2026-05-29 • 102 CVEs • Highest: CRITICAL
+   🔴 0 attention · 🆕 0 undiscovered · ⚪ 1 FP · ✅ 6 clean
+   📰 Chrome Releases: 146 Skia-relevant CVEs (16 above current milestone)
+```
 
-Within each priority level, sort by severity (CRITICAL > HIGH > MEDIUM > LOW).
+Then highlight the **top actionable items** from the report:
+- Any `needs_attention` or `undiscovered` findings
+- Chrome Releases CVEs above our current milestone (especially Skia/ANGLE)
+- Critical/High CG alerts
 
 #### Report quality rules
+
+These rules apply to the JSON assembly (Step 8) and are enforced by the renderers:
 
 1. **Skia bump recommendations must target the highest-severity CVE**, not the lowest. If
    there are HIGH CVEs at m146 and a MEDIUM at m133, recommend m146 as the target.

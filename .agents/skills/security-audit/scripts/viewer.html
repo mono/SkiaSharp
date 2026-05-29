@@ -98,6 +98,20 @@
     </div>
   </div>
 
+  <!-- Chrome Releases Blog -->
+  <div class="card mb-4" id="cr-section" style="display:none;">
+    <div class="card-header bg-white d-flex align-items-center">
+      <i class="bi bi-rss me-2"></i><strong>Chrome Releases Blog</strong>
+      <a href="https://chromereleases.googleblog.com/" target="_blank" class="ms-2 small">Open Blog</a>
+      <span class="ms-auto" id="cr-badge"></span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3 mb-3" id="cr-summary-cards"></div>
+      <div id="cr-cve-table"></div>
+      <div class="text-muted small mt-3" id="cr-meta"></div>
+    </div>
+  </div>
+
   <!-- Next Steps -->
   <div class="card mb-4">
     <div class="card-header bg-white"><i class="bi bi-list-check me-2"></i><strong>Next Steps</strong></div>
@@ -144,19 +158,20 @@ function renderSummary(s, cgAlerts) {
   const cgCount = cgAlerts ? (cgAlerts.totalAlerts || 0) : 0;
   const cgHigh = cgAlerts ? ((cgAlerts.bySeverity || {}).High || 0) + ((cgAlerts.bySeverity || {}).Critical || 0) : 0;
   const cards = [
-    ['Needs Attention', s.needsAttention + cgHigh, 'danger', 'exclamation-triangle'],
-    ['CG Alerts', cgCount, cgHigh > 0 ? 'danger' : 'warning', 'shield-exclamation'],
-    ['Undiscovered', s.undiscovered, 'primary', 'search'],
-    ['False Positive', s.falsePositive, 'secondary', 'x-circle'],
-    ['Clean', s.clean, 'success', 'check-circle'],
+    ['Needs Attention', s.needsAttention + cgHigh, 'danger', 'exclamation-triangle', 'CVEs requiring action or patches'],
+    ['CG Alerts', cgCount, cgHigh > 0 ? 'danger' : 'warning', 'shield-exclamation', 'Build pipeline container vulnerabilities'],
+    ['Undiscovered', s.undiscovered, 'primary', 'search', 'Proactively found, no issue filed yet'],
+    ['False Positive', s.falsePositive, 'secondary', 'x-circle', 'Not applicable to SkiaSharp'],
+    ['Clean', s.clean, 'success', 'check-circle', 'Dependencies with no open CVEs'],
   ];
   const el = document.getElementById('summary-cards');
-  el.innerHTML = cards.map(([label, count, color, icon]) => `
+  el.innerHTML = cards.map(([label, count, color, icon, desc]) => `
     <div class="col-6 col-md">
       <div class="card text-center p-3">
         <div class="fs-2 text-${color}"><i class="bi bi-${icon}"></i></div>
         <div class="fs-1 fw-bold">${count}</div>
         <div class="text-muted small">${label}</div>
+        <div class="text-muted" style="font-size:0.7rem;">${desc}</div>
       </div>
     </div>`).join('');
 }
@@ -294,25 +309,52 @@ function renderOverview(vers, findings, cgAlerts) {
 
 function renderCveTable(cves, columns) {
   if (!cves || cves.length === 0) return '';
-  const hdrs = columns.map(c => `<th>${c.label}</th>`).join('');
-  const rows = cves.map(cve => {
-    const cells = columns.map(c => {
+  // Sort: affected/potentially_affected first, then by severity desc
+  const assessOrder = { potentially_affected: 0, affected: 0, needs_attention: 0, undiscovered: 1, already_fixed: 2, false_positive: 3 };
+  const sevOrder2 = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+  const sorted = [...cves].sort((a, b) => {
+    const aAssess = assessOrder[(a.assessment || '').toLowerCase()] ?? 1;
+    const bAssess = assessOrder[(b.assessment || '').toLowerCase()] ?? 1;
+    if (aAssess !== bAssess) return aAssess - bAssess;
+    const aSev = sevOrder2[(a.severity || '').toUpperCase()] ?? 9;
+    const bSev = sevOrder2[(b.severity || '').toUpperCase()] ?? 9;
+    return aSev - bSev;
+  });
+  // Filter out description from main columns — it goes in the expand row
+  const mainCols = columns.filter(c => c.key !== 'description');
+  const hasDesc = columns.some(c => c.key === 'description');
+  const hasSource = columns.some(c => c.key === 'source');
+  const descWidth = hasSource ? '35%' : '50%';
+  const hdrs = mainCols.map(c => `<th>${c.label}</th>`).join('') + (hasDesc ? `<th style="width:${descWidth};">Description</th>` : '');
+  const rows = sorted.map((cve, i) => {
+    const cells = mainCols.map(c => {
       const val = cve[c.key] || '';
       if (c.key === 'severity' || c.key === 'cvss') {
-        return `<td class="${sevClass(cve.severity)}">${esc(String(val))}</td>`;
+        return `<td class="${sevClass(cve.severity)}" style="white-space:nowrap;width:70px;overflow:hidden;">${esc(String(val))}</td>`;
       }
       if (c.key === 'id') {
         const url = val.startsWith('GHSA-') ? `https://github.com/advisories/${esc(val)}` : `https://nvd.nist.gov/vuln/detail/${esc(val)}`;
-        return `<td><a href="${url}" target="_blank">${esc(val)}</a></td>`;
+        return `<td style="white-space:nowrap;width:145px;"><a href="${url}" target="_blank">${esc(val)}</a></td>`;
       }
       if (c.key === 'assessment') {
-        return `<td>${assessmentBadge(String(val))}</td>`;
+        return `<td style="width:90px;">${assessmentBadge(String(val))}</td>`;
       }
-      return `<td>${esc(String(val))}</td>`;
+      if (c.key === 'fixedIn') {
+        return `<td style="white-space:nowrap;width:70px;">${esc(String(val))}</td>`;
+      }
+      if (c.key === 'source') {
+        return `<td style="white-space:nowrap;width:150px;">${esc(String(val))}</td>`;
+      }
+      return `<td style="white-space:nowrap;">${esc(String(val))}</td>`;
     }).join('');
-    return `<tr>${cells}</tr>`;
+    const desc = cve.description || '';
+    const descCell = hasDesc ? `<td class="cve-desc-cell" style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="this.closest('tr').nextElementSibling.classList.toggle('d-none')" title="${esc(desc)}">${esc(desc)} ${desc.length > 30 ? '<i class="bi bi-chevron-down small text-muted"></i>' : ''}</td>` : '';
+    const expandRow = hasDesc && desc.length > 30
+      ? `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="py-2 ps-4 small text-muted border-0" style="white-space:normal;">${esc(desc)}</td></tr>`
+      : `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="border-0"></td></tr>`;
+    return `<tr>${cells}${descCell}</tr>${expandRow}`;
   }).join('');
-  return `<table class="table table-sm cve-table mb-2"><thead><tr>${hdrs}</tr></thead><tbody>${rows}</tbody></table>`;
+  return `<table class="table table-sm cve-table mb-2" style="table-layout:fixed;width:100%;"><thead><tr>${hdrs}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderFinding(f, idx) {
@@ -343,12 +385,15 @@ function renderFinding(f, idx) {
 
   // Chrome CVEs
   if (f.cves && f.cves.length > 0) {
+    // Normalize: populate fixedIn from fixMilestone if missing
+    f.cves.forEach(c => { if (!c.fixedIn && c.fixMilestone) c.fixedIn = c.fixMilestone; });
+    const hasFixedIn = f.cves.some(c => c.fixedIn);
     body += `<h6>CVEs</h6>`;
-    body += renderCveTable(f.cves, [
-      {key:'id', label:'CVE'}, {key:'fixedIn', label:'Fixed In'},
-      {key:'severity', label:'Severity'}, {key:'cvss', label:'CVSS'},
-      {key:'description', label:'Description'}, {key:'assessment', label:'Status'}
-    ]);
+    const cveCols = [{key:'id', label:'CVE'}];
+    if (hasFixedIn) cveCols.push({key:'fixedIn', label:'Fixed In'});
+    cveCols.push({key:'severity', label:'Severity'}, {key:'cvss', label:'CVSS'},
+      {key:'description', label:'Description'}, {key:'assessment', label:'Status'});
+    body += renderCveTable(f.cves, cveCols);
   }
 
   // Non-Chrome CVEs
@@ -416,6 +461,81 @@ function renderUpstream(meta) {
     <tr><th>Upstream Commit</th><td>${upstreamCommit}</td></tr>
     <tr><th>Ancestry Verified</th><td>${meta.upstreamVerified ? '✅ Yes' : '❌ No'}</td></tr>
   </tbody></table>`;
+}
+
+function renderChromeReleases(cr, milestone) {
+  if (!cr || !cr.skiaRelevantCves) return;
+  const section = document.getElementById('cr-section');
+  section.style.display = '';
+
+  // Badge
+  const badge = document.getElementById('cr-badge');
+  const aboveMilestone = (cr.structuredCves || []).filter(c => c.milestone > milestone).length;
+  badge.innerHTML = `<span class="badge bg-${aboveMilestone > 0 ? 'warning' : 'success'}">${cr.skiaRelevantCves} relevant CVEs</span>`;
+
+  // Summary cards
+  const cards = document.getElementById('cr-summary-cards');
+  const sevCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+  (cr.structuredCves || []).forEach(c => { sevCounts[c.severity] = (sevCounts[c.severity] || 0) + 1; });
+  const cardEntries = [
+    ['Critical', sevCounts.Critical, 'danger'],
+    ['High', sevCounts.High, 'warning'],
+    ['Medium', sevCounts.Medium, 'info'],
+    ['Low', sevCounts.Low, 'secondary'],
+    ['Above m' + milestone, aboveMilestone, aboveMilestone > 0 ? 'danger' : 'success'],
+    ['Posts Reviewed', cr.postsReviewed, 'primary'],
+  ];
+  cards.innerHTML = cardEntries.filter(([,count]) => count > 0).map(([label, count, color]) => `
+    <div class="col-2">
+      <div class="card text-center p-2">
+        <div class="fs-5 fw-bold text-${color}">${count}</div>
+        <div class="text-muted small">${label}</div>
+      </div>
+    </div>`).join('');
+
+  // CVE table (group by component, show only those above our milestone)
+  const cves = (cr.structuredCves || []).filter(c => c.milestone > milestone);
+  if (cves.length > 0) {
+    const byComp = {};
+    cves.forEach(c => {
+      if (!byComp[c.component]) byComp[c.component] = [];
+      byComp[c.component].push(c);
+    });
+    const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    const compPriority = { 'Skia': 0, 'ANGLE': 1, 'Canvas': 2, 'Fonts': 3, 'GPU': 4, 'Compositing': 5, 'WebGL': 6 };
+    const sorted = Object.entries(byComp).sort((a, b) => {
+      const aPri = compPriority[a[0]] ?? 99;
+      const bPri = compPriority[b[0]] ?? 99;
+      if (aPri !== bPri) return aPri - bPri;
+      const aMin = Math.min(...a[1].map(c => sevOrder[c.severity] ?? 9));
+      const bMin = Math.min(...b[1].map(c => sevOrder[c.severity] ?? 9));
+      return aMin - bMin;
+    });
+
+    const table = document.getElementById('cr-cve-table');
+    table.innerHTML = `<h6 class="mb-2">CVEs Above Current Milestone (m${milestone})</h6>` +
+      sorted.map(([comp, compCves]) => {
+        const rows = compCves.sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9))
+          .map(c => {
+            const bugUrl = c.bugId ? `https://issues.chromium.org/issues/${esc(c.bugId)}` : '#';
+          const blogLink = c.blogPostUrl ? `<a href="${esc(c.blogPostUrl)}" target="_blank" title="Blog post"><i class="bi bi-link-45deg"></i></a>` : '';
+          return `<tr>
+            <td><span class="${sevClass(c.severity)}">${esc(c.severity)}</span></td>
+            <td>${esc(c.cveId)}</td>
+            <td>m${c.milestone}</td>
+            <td><a href="${bugUrl}" target="_blank">${esc(c.bugId || 'N/A')}</a></td>
+            <td>${blogLink}</td>
+          </tr>`;
+        }).join('');
+        return `<div class="mb-2"><strong>${esc(comp)}</strong> <span class="badge bg-secondary">${compCves.length}</span>
+        <table class="table table-sm cve-table mb-1"><thead><tr><th>Severity</th><th>CVE</th><th>Fixed In</th><th>Bug</th><th>Blog</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+      }).join('');
+  }
+
+  // Meta
+  const meta = document.getElementById('cr-meta');
+  meta.textContent = `Queried ${cr.monthsQueried} months (${cr.postsReviewed} posts) • ${cr.totalCvesExtracted} total CVEs extracted • ${cr.skiaRelevantCves} Skia-relevant`;
 }
 
 function renderCgAlerts(cg) {
@@ -516,8 +636,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof DATA === 'undefined') { document.body.innerHTML = '<p class="p-4 text-danger">No DATA found. JSON not injected.</p>'; return; }
   const d = DATA;
   const cgTotal = d.cgAlerts ? (d.cgAlerts.totalAlerts || 0) : 0;
+  const crTotal = d.chromeReleases ? (d.chromeReleases.skiaRelevantCves || 0) : 0;
   const subtitleParts = [`${d.meta.date}`, `Skia m${d.meta.skiaMilestone}`, `${d.summary.totalCves} CVEs`];
   if (cgTotal > 0) subtitleParts.push(`${cgTotal} CG alerts`);
+  if (crTotal > 0) subtitleParts.push(`${crTotal} Chrome blog CVEs`);
   document.getElementById('header-subtitle').textContent = subtitleParts.join(' · ');
   document.getElementById('header-badges').innerHTML =
     `<span class="badge bg-${d.summary.highestSeverity === 'CRITICAL' ? 'danger' : d.summary.highestSeverity === 'HIGH' ? 'warning' : 'info'}">${d.summary.highestSeverity}</span>`;
@@ -527,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
   container.innerHTML = d.findings.map((f, i) => renderFinding(f, i)).join('');
   renderNextSteps(d.nextSteps);
   if (d.cgAlerts) renderCgAlerts(d.cgAlerts);
+  if (d.chromeReleases) renderChromeReleases(d.chromeReleases, d.meta.skiaMilestone);
   renderUpstream(d.meta);
 });
 </script>
