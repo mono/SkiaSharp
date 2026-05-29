@@ -47,14 +47,19 @@ this skill gives a **broad overview** of CI health across multiple branches simu
 
 ### GitHub Actions (mono/SkiaSharp and mono/SkiaSharp-API-docs)
 
-| Workflow | Repository | Triggers |
-|----------|------------|----------|
-| Docs - Deploy | mono/SkiaSharp | Push/PR to main |
-| Publish Samples | mono/SkiaSharp | Push/PR touching `samples/` |
-| API Diff | mono/SkiaSharp | Weekly schedule, push to main |
-| Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch, writes XML docs |
-| Automerge Docs | mono/SkiaSharp-API-docs | PR events |
-| Go Live | mono/SkiaSharp-API-docs | Workflow dispatch |
+| Workflow | Repository | Triggers | Why Track |
+|----------|------------|----------|-----------|
+| Docs - Deploy | mono/SkiaSharp | Push/PR to main | Docs site broken if failing |
+| Docs - Go Live! | mono/SkiaSharp | Workflow dispatch | Docs don't publish if failing |
+| Publish Samples | mono/SkiaSharp | Push/PR touching `samples/` | Sample projects broken if failing |
+| API Diff | mono/SkiaSharp | Weekly schedule, push to main | API regression detection |
+| Auto Docs Submodule Sync | mono/SkiaSharp | Push to main | API docs get out of sync if broken |
+| Update Release Notes | mono/SkiaSharp | Push to main/release, tags | Release notes stop auto-updating |
+| Skia Upstream Sync | mono/SkiaSharp | Scheduled | Upstream tracking breaks if failing |
+| Nightly Fix Finder | mono/SkiaSharp | Nightly schedule | Nightly automation health |
+| Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch | XML docs stop being written |
+| Automerge Docs | mono/SkiaSharp-API-docs | PR events | Doc PRs won't auto-merge |
+| Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | Docs don't publish to live |
 
 ---
 

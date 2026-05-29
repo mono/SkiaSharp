@@ -58,8 +58,13 @@ ICONS = {
 # Each entry: repo, workflow file name, display name, relevant branches
 GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "build-site.yml", "name": "Docs - Deploy"},
+    {"repo": "mono/SkiaSharp", "workflow": "build-site-go-live.yml", "name": "Docs - Go Live!"},
     {"repo": "mono/SkiaSharp", "workflow": "samples.yml", "name": "Publish Samples"},
     {"repo": "mono/SkiaSharp", "workflow": "api-diff.yml", "name": "API Diff"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-docs-submodule-sync.yml", "name": "Auto Docs Submodule Sync"},
+    {"repo": "mono/SkiaSharp", "workflow": "update-release-notes.lock.yml", "name": "Update Release Notes"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Skia Upstream Sync"},
+    {"repo": "mono/SkiaSharp", "workflow": "nightly-fix-finder.lock.yml", "name": "Nightly Fix Finder"},
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "auto-api-docs-writer.lock.yml", "name": "Auto API Docs Writer"},
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs"},
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live"},
