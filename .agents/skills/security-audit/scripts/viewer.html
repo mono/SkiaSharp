@@ -312,7 +312,7 @@ function renderCveTable(cves, columns) {
   // Filter out description from main columns — it goes in the expand row
   const mainCols = columns.filter(c => c.key !== 'description');
   const hasDesc = columns.some(c => c.key === 'description');
-  const hdrs = mainCols.map(c => `<th>${c.label}</th>`).join('') + (hasDesc ? '<th>Description</th>' : '');
+  const hdrs = mainCols.map(c => `<th>${c.label}</th>`).join('') + (hasDesc ? '<th style="width:50%;">Description</th>' : '');
   const rows = cves.map((cve, i) => {
     const cells = mainCols.map(c => {
       const val = cve[c.key] || '';
@@ -335,7 +335,7 @@ function renderCveTable(cves, columns) {
       return `<td style="white-space:nowrap;">${esc(String(val))}</td>`;
     }).join('');
     const desc = cve.description || '';
-    const descCell = hasDesc ? `<td class="cve-desc-cell" style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;" onclick="this.closest('tr').nextElementSibling.classList.toggle('d-none')" title="${esc(desc)}">${esc(desc)} ${desc.length > 30 ? '<i class="bi bi-chevron-down small text-muted"></i>' : ''}</td>` : '';
+    const descCell = hasDesc ? `<td class="cve-desc-cell" style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="this.closest('tr').nextElementSibling.classList.toggle('d-none')" title="${esc(desc)}">${esc(desc)} ${desc.length > 30 ? '<i class="bi bi-chevron-down small text-muted"></i>' : ''}</td>` : '';
     const expandRow = hasDesc && desc.length > 30
       ? `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="py-2 ps-4 small text-muted border-0" style="white-space:normal;">${esc(desc)}</td></tr>`
       : `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="border-0"></td></tr>`;
