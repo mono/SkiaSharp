@@ -198,8 +198,12 @@ namespace SkiaSharp
 	{
 		internal bool fromFinalizer = false;
 
-		// reads/writes of this field need to be in the same critical section as IgnorePublicDispose
-		// so that e.g. you don't set IgnorePublicDispose concurrently on an instance that's being disposed.
+		// The public Dispose() decision atomically compare-and-swaps (CAS) this field under the
+		// HandleDictionary write lock, paired with its read of IgnorePublicDispose, so a concurrent
+		// PreventPublicDisposal (which runs under the mutually-exclusive upgradeable-read lock)
+		// can't latch dispose-protection onto an instance that is simultaneously claiming public
+		// disposal. Internal paths (DisposeInternal, finalizer) CAS this field with no lock — they
+		// never read IgnorePublicDispose, so they have nothing to pair.
 		private int isDisposed = 0;
 
 		internal SKNativeObject (IntPtr handle)
@@ -217,7 +221,7 @@ namespace SkiaSharp
 		{
 			fromFinalizer = true;
 
-			// The public Dispose path additionally holds an HD lock to check IgnorePublicDispose
+			// The public Dispose path additionally holds a HandleDictionary lock to check IgnorePublicDispose
 			// but this is an internal Dispose, racing with a PreventPublicDisposal is not a concern.
 			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
 				return;
@@ -229,17 +233,38 @@ namespace SkiaSharp
 		protected internal virtual bool OwnsHandle { get; protected set; }
 
 		// One-way latch: once set to true, only stays true. Use PreventPublicDisposal() to set.
-		// reads/writes of this property need to be in the same critical section as isDisposed.
+		// The set happens under the HandleDictionary upgradeable-read lock (via GetOrAddObject); the
+		// public Dispose() decision reads it under the mutually-exclusive HandleDictionary write lock,
+		// paired with the isDisposed CAS. So the latch can never be set on an instance that is concurrently
+		// claiming public disposal. (The only unpaired read is the post-disposal diagnostic
+		// re-check in Dispose(), which runs after isDisposed is already set.)
 		protected internal bool IgnorePublicDispose { get; private set; }
 
 		// Make this wrapper unreachable via the public Dispose() method.
-		// Acquires the HD write lock so the flag set is serialized with any concurrent
-		// public Dispose() (which holds the same lock around its check).
-		// DO NOT USE DIRECTLY except when a concurrent Dipose() is guaranteed to not be possible.
-		// The regular path for this method is to be called inside
-		// HandleDictionary.GetOrAddObject's critical section.
+		// This method does NOT take any lock itself: correctness relies on the CALLER
+		// holding HandleDictionary.instancesLock (the upgradeable-read lock taken by
+		// GetOrAddObject). That caller-held lock is mutually exclusive with the write
+		// lock public Dispose() holds around its IgnorePublicDispose check + CAS, so the
+		// flag set here cannot race a concurrent public disposal.
+		// DO NOT USE DIRECTLY except from inside HandleDictionary.GetOrAddObject's
+		// critical section, or when a concurrent Dispose() is guaranteed to be impossible.
 		internal void PreventPublicDisposal ()
 		{
+#if THROW_OBJECT_EXCEPTIONS
+			// All callers (GetOrAddObject) hold the HandleDictionary upgradeable-read lock and target either a
+			// freshly-created wrapper or one that GetInstanceNoLocks just confirmed !IsDisposed.
+			// A live target can only become disposed via: public Dispose() (blocked here by the
+			// mutually-exclusive write lock), an owned-child / ownership-handoff / replacement
+			// DisposeInternal, or the finalizer. No dispose-protected call site registers its
+			// singleton as an owned child, hands off its ownership, or lets it be replaced, and
+			// the promoting thread holds a strong reference (so no finalizer race). Observing a
+			// disposed wrapper here therefore means one of those invariants was broken — a real
+			// bug worth surfacing.
+			if (IsDisposed)
+				throw new InvalidOperationException (
+					$"Attempted to dispose-protect an already-disposed wrapper. " +
+					$"H: {Handle.ToString ("x")} Type: {GetType ()}");
+#endif
 			IgnorePublicDispose = true;
 		}
 
@@ -267,7 +292,7 @@ namespace SkiaSharp
 		// The isDisposed CAS that used to guard this method has moved to the public
 		// entry points (Dispose, DisposeInternal, finalizer) so that each entry's CAS
 		// can be paired atomically with whatever check it needs (e.g. Dispose's
-		// IgnorePublicDispose check under the HD write lock). This method now assumes
+		// IgnorePublicDispose check under the HandleDictionary write lock). This method now assumes
 		// the caller has already claimed the disposal — it is the cleanup body only.
 		protected virtual void Dispose (bool disposing)
 		{
@@ -288,7 +313,7 @@ namespace SkiaSharp
 
 		public void Dispose ()
 		{
-			// Hold the HD write lock only across the flag check + the isDisposed CAS.
+			// Hold the HandleDictionary write lock only across the flag check + the isDisposed CAS.
 			// This pairs the read of IgnorePublicDispose with the disposal claim
 			// atomically: a concurrent PreventPublicDisposal (which takes the same
 			// write lock) is mutually exclusive with this section.
@@ -317,13 +342,32 @@ namespace SkiaSharp
 			if (!proceed)
 				return;
 
+#if THROW_OBJECT_EXCEPTIONS
+			// Capture before cleanup: Dispose(true) zeroes Handle, and the diagnostic throw
+			// path must not leak the native object. So claim+clean up first, then signal.
+			var raced = IgnorePublicDispose;
+			var racedHandle = Handle;
+			var racedType = GetType ();
+#endif
+
 			Dispose (true);
 			GC.SuppressFinalize (this);
+
+#if THROW_OBJECT_EXCEPTIONS
+			// We claimed the public disposal with IgnorePublicDispose observed false inside
+			// the lock. Once isDisposed is set, GetInstanceNoLocks filters this wrapper out,
+			// so no correct path can promote it afterwards. Seeing the flag set now means a
+			// PreventPublicDisposal raced this disposal without holding the HandleDictionary lock.
+			if (raced)
+				throw new InvalidOperationException (
+					$"A wrapper was dispose-protected concurrently with its public disposal. " +
+					$"H: {racedHandle.ToString ("x")} Type: {racedType}");
+#endif
 		}
 
 		protected internal void DisposeInternal ()
 		{
-			// Claim disposal via the CAS; if already claimed, no-op. No outer HD lock —
+			// Claim disposal via the CAS; if already claimed, no-op. No outer HandleDictionary lock —
 			// DisposeInternal doesn't read IgnorePublicDispose, so there's no flag
 			// check that needs to be paired with the CAS.
 			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
