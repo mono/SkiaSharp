@@ -309,23 +309,32 @@ function renderOverview(vers, findings, cgAlerts) {
 
 function renderCveTable(cves, columns) {
   if (!cves || cves.length === 0) return '';
-  const hdrs = columns.map(c => `<th>${c.label}</th>`).join('');
-  const rows = cves.map(cve => {
-    const cells = columns.map(c => {
+  // Filter out description from main columns — it goes in the expand row
+  const mainCols = columns.filter(c => c.key !== 'description');
+  const hasDesc = columns.some(c => c.key === 'description');
+  const hdrs = mainCols.map(c => `<th>${c.label}</th>`).join('') + (hasDesc ? '<th>Description</th>' : '');
+  const rows = cves.map((cve, i) => {
+    const cells = mainCols.map(c => {
       const val = cve[c.key] || '';
       if (c.key === 'severity' || c.key === 'cvss') {
-        return `<td class="${sevClass(cve.severity)}">${esc(String(val))}</td>`;
+        return `<td class="${sevClass(cve.severity)}" style="white-space:nowrap;">${esc(String(val))}</td>`;
       }
       if (c.key === 'id') {
         const url = val.startsWith('GHSA-') ? `https://github.com/advisories/${esc(val)}` : `https://nvd.nist.gov/vuln/detail/${esc(val)}`;
-        return `<td><a href="${url}" target="_blank">${esc(val)}</a></td>`;
+        return `<td style="white-space:nowrap;"><a href="${url}" target="_blank">${esc(val)}</a></td>`;
       }
       if (c.key === 'assessment') {
         return `<td>${assessmentBadge(String(val))}</td>`;
       }
-      return `<td>${esc(String(val))}</td>`;
+      return `<td style="white-space:nowrap;">${esc(String(val))}</td>`;
     }).join('');
-    return `<tr>${cells}</tr>`;
+    const desc = cve.description || '';
+    const shortDesc = desc.length > 60 ? desc.substring(0, 60) + '…' : desc;
+    const descCell = hasDesc ? `<td class="cve-desc-cell" style="cursor:pointer;max-width:300px;" onclick="this.closest('tr').nextElementSibling.classList.toggle('d-none')"><span class="text-truncate d-inline-block" style="max-width:280px;" title="${esc(desc)}">${esc(shortDesc)}</span> ${desc.length > 60 ? '<i class="bi bi-chevron-down small text-muted"></i>' : ''}</td>` : '';
+    const expandRow = hasDesc && desc.length > 60
+      ? `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="py-2 ps-4 small text-muted border-0">${esc(desc)}</td></tr>`
+      : `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="border-0"></td></tr>`;
+    return `<tr>${cells}${descCell}</tr>${expandRow}`;
   }).join('');
   return `<table class="table table-sm cve-table mb-2"><thead><tr>${hdrs}</tr></thead><tbody>${rows}</tbody></table>`;
 }
