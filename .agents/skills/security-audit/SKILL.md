@@ -37,7 +37,7 @@ combined into a single unified report.
 - **[references/third-party-deps.md](references/third-party-deps.md)** — Third-party CVE process (libpng, freetype, harfbuzz, etc.): version verification, fix-commit ancestry, known false positives
 - **[references/cg-alerts.md](references/cg-alerts.md)** — Component Governance alerts: ADO pipeline queries, Docker container CVEs, fix locations
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency list, cgmanifest format, Skia-specific tracking notes
-- **[references/report-template.md](references/report-template.md)** — Markdown report format
+- **[references/report-template.md](references/report-template.md)** — Markdown format guide (used by `render-security-audit-md.py`)
 - **[references/report-schema.md](references/report-schema.md)** — JSON schema for structured output
 - **[references/security-audit-schema.json](references/security-audit-schema.json)** — Machine-readable JSON Schema (Draft 2020-12)
 - **[scripts/validate-security-audit.py](scripts/validate-security-audit.py)** — Validates report JSON against schema + semantic checks
@@ -358,23 +358,30 @@ Present the output path to the user:
 
 ---
 
-### Step 11: Present Markdown Summary
+### Step 11: Present Summary to User
 
-After generating JSON and HTML, present a concise markdown summary to the user in the
-conversation (using the report-template.md format). This is in ADDITION to the JSON+HTML
-files, not instead of them.
+The Markdown report was already generated in Step 10. Present a brief summary in the
+conversation pointing to the generated files:
 
-**Priority order** (applies equally to Skia core and third-party deps):
+```
+✅ Reports generated:
+   • output/ai/security-audit-{date}.json (structured data)
+   • output/ai/security-audit-{date}.html (interactive dashboard)
+   • output/ai/security-audit-{date}.md  (full markdown for AI review)
 
-1. 🔴 User-reported + no PR
-2. ✅ User-reported + PR ready
-3. 🟡 User-reported + PR needs work
-4. 🆕 Undiscovered CVEs (proactively found, no user-filed issue)
-5. ⚪ False positives
+   m147 • 2026-05-29 • 102 CVEs • Highest: CRITICAL
+   🔴 0 attention · 🆕 0 undiscovered · ⚪ 1 FP · ✅ 6 clean
+   📰 Chrome Releases: 146 Skia-relevant CVEs (16 above current milestone)
+```
 
-Within each priority level, sort by severity (CRITICAL > HIGH > MEDIUM > LOW).
+Then highlight the **top actionable items** from the report:
+- Any `needs_attention` or `undiscovered` findings
+- Chrome Releases CVEs above our current milestone (especially Skia/ANGLE)
+- Critical/High CG alerts
 
 #### Report quality rules
+
+These rules apply to the JSON assembly (Step 8) and are enforced by the renderers:
 
 1. **Skia bump recommendations must target the highest-severity CVE**, not the lowest. If
    there are HIGH CVEs at m146 and a MEDIUM at m133, recommend m146 as the target.
