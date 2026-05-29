@@ -35,6 +35,13 @@ this skill gives a **broad overview** of CI health across multiple branches simu
 
 ## Pipelines Tracked
 
+### Prerequisites
+
+The collector script requires:
+- **`az` CLI** — authenticated with access to `xamarin/public` and `devdiv/DevDiv` orgs
+- **`gh` CLI** — authenticated with read access to `mono/SkiaSharp` and `mono/SkiaSharp-API-docs`
+- **Git remotes** — fetched recently so `git branch -r` returns up-to-date release branches
+
 ### Public CI (xamarin/public org — triggers on push/PR to main, develop, release/*)
 
 | Pipeline Name | Org/Project | Definition ID | URL |
@@ -68,7 +75,6 @@ this skill gives a **broad overview** of CI health across multiple branches simu
 | Backport | mono/SkiaSharp | PR label/comment | Cherry-picks to release branches fail |
 | Automatic Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
 | Add PR Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
-| Manage NuGet Feed | mono/SkiaSharp | Disabled (manual) | Feed management broken |
 | Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch | XML docs stop being written |
 | Automerge Docs | mono/SkiaSharp-API-docs | PR events | Doc PRs won't auto-merge |
 | Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | Docs don't publish to live |
@@ -133,6 +139,8 @@ Group all errors/warnings across all branches and pipelines by **normalized sign
    - **Footprint**: which branches × pipelines are affected
    - **First/last seen** within the window
    - **Sample error** (verbatim from data)
+
+> ⚠️ **Important:** Finalize root-cause clusters only AFTER performing the Pipeline Chain Analysis (§2.3). Downstream cascade failures must be collapsed into the upstream root cause, not counted as independent clusters.
 
 #### Classification Decision Tree
 
@@ -243,22 +251,27 @@ After analysis, present:
 ```
 🟡 CI is degraded — release/3.119.x is blocked by a Guardian TSA upload failure; main is green.
 
-📊 Health:
+📊 AzDO Health:
   main                         ✅ Public | ✅ Native | ✅ Managed | ✅ Tests
   release/4.147.0-preview.3    ❌ Public | ⚠️ Native | ✅ Managed | ✅ Tests
   release/3.119.x              ❌ Public | ⚠️ Native | ⚠️ Managed | ❌ Tests
 
+🔗 Chain verdict:
+  release/3.119.x: Tests red independently (Guardian TSA upload); Native/Managed are warnings only — no cascade.
+  release/4.147.0-preview.3: Public CI red (CS0016 errors); internal chain unaffected — independent failure.
+
 🐙 GitHub Actions:
-  Docs - Deploy                ✅ main
-  Publish Samples              ✅ main
-  API Diff                     ✅ main
-  Automerge Docs               ✅ main (SkiaSharp-API-docs)
-  Go Live                      ✅ main (SkiaSharp-API-docs)
+  Docs - Deploy                ✅ success (2026-05-29 15:19)
+  Publish Samples              ✅ success (2026-05-28 10:00)
+  Skia Upstream Sync           ✅ success (2026-05-29 07:00)
+  Auto API Docs Writer         ❌ failure (2026-05-29 04:00)
+  Backport                     ✅ success (2026-05-28 22:15)
 
 Top actions:
 1. [release/3.119.x] Fix Guardian TSA upload — blocks Tests pipeline → build 14177772
 2. [release/4.147.0-preview.3] Public CI failure — investigate CS0016 errors → build 157985
-3. [infra] SkiaSharp-Native partial success on all release branches — Guardian warnings (non-blocking)
+3. [GitHub Actions] Auto API Docs Writer failing — XML docs not being generated → run 26651087356
+4. [infra] SkiaSharp-Native partial success on all release branches — Guardian warnings (non-blocking)
 
 Full report: output/ai/ci-status-report.md
 ```
