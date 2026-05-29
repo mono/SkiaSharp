@@ -374,12 +374,15 @@ function renderFinding(f, idx) {
 
   // Chrome CVEs
   if (f.cves && f.cves.length > 0) {
+    // Normalize: populate fixedIn from fixMilestone if missing
+    f.cves.forEach(c => { if (!c.fixedIn && c.fixMilestone) c.fixedIn = c.fixMilestone; });
+    const hasFixedIn = f.cves.some(c => c.fixedIn);
     body += `<h6>CVEs</h6>`;
-    body += renderCveTable(f.cves, [
-      {key:'id', label:'CVE'}, {key:'fixedIn', label:'Fixed In'},
-      {key:'severity', label:'Severity'}, {key:'cvss', label:'CVSS'},
-      {key:'description', label:'Description'}, {key:'assessment', label:'Status'}
-    ]);
+    const cveCols = [{key:'id', label:'CVE'}];
+    if (hasFixedIn) cveCols.push({key:'fixedIn', label:'Fixed In'});
+    cveCols.push({key:'severity', label:'Severity'}, {key:'cvss', label:'CVSS'},
+      {key:'description', label:'Description'}, {key:'assessment', label:'Status'});
+    body += renderCveTable(f.cves, cveCols);
   }
 
   // Non-Chrome CVEs
