@@ -309,13 +309,24 @@ function renderOverview(vers, findings, cgAlerts) {
 
 function renderCveTable(cves, columns) {
   if (!cves || cves.length === 0) return '';
+  // Sort: affected/potentially_affected first, then by severity desc
+  const assessOrder = { potentially_affected: 0, affected: 0, needs_attention: 0, undiscovered: 1, already_fixed: 2, false_positive: 3 };
+  const sevOrder2 = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+  const sorted = [...cves].sort((a, b) => {
+    const aAssess = assessOrder[(a.assessment || '').toLowerCase()] ?? 1;
+    const bAssess = assessOrder[(b.assessment || '').toLowerCase()] ?? 1;
+    if (aAssess !== bAssess) return aAssess - bAssess;
+    const aSev = sevOrder2[(a.severity || '').toUpperCase()] ?? 9;
+    const bSev = sevOrder2[(b.severity || '').toUpperCase()] ?? 9;
+    return aSev - bSev;
+  });
   // Filter out description from main columns — it goes in the expand row
   const mainCols = columns.filter(c => c.key !== 'description');
   const hasDesc = columns.some(c => c.key === 'description');
   const hasSource = columns.some(c => c.key === 'source');
   const descWidth = hasSource ? '35%' : '50%';
   const hdrs = mainCols.map(c => `<th>${c.label}</th>`).join('') + (hasDesc ? `<th style="width:${descWidth};">Description</th>` : '');
-  const rows = cves.map((cve, i) => {
+  const rows = sorted.map((cve, i) => {
     const cells = mainCols.map(c => {
       const val = cve[c.key] || '';
       if (c.key === 'severity' || c.key === 'cvss') {
