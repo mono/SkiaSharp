@@ -317,26 +317,31 @@ function renderCveTable(cves, columns) {
     const cells = mainCols.map(c => {
       const val = cve[c.key] || '';
       if (c.key === 'severity' || c.key === 'cvss') {
-        return `<td class="${sevClass(cve.severity)}" style="white-space:nowrap;">${esc(String(val))}</td>`;
+        return `<td class="${sevClass(cve.severity)}" style="white-space:nowrap;width:70px;overflow:hidden;">${esc(String(val))}</td>`;
       }
       if (c.key === 'id') {
         const url = val.startsWith('GHSA-') ? `https://github.com/advisories/${esc(val)}` : `https://nvd.nist.gov/vuln/detail/${esc(val)}`;
-        return `<td style="white-space:nowrap;"><a href="${url}" target="_blank">${esc(val)}</a></td>`;
+        return `<td style="white-space:nowrap;width:145px;"><a href="${url}" target="_blank">${esc(val)}</a></td>`;
       }
       if (c.key === 'assessment') {
-        return `<td>${assessmentBadge(String(val))}</td>`;
+        return `<td style="width:90px;">${assessmentBadge(String(val))}</td>`;
+      }
+      if (c.key === 'fixedIn') {
+        return `<td style="white-space:nowrap;width:70px;">${esc(String(val))}</td>`;
+      }
+      if (c.key === 'source') {
+        return `<td style="white-space:nowrap;width:80px;">${esc(String(val))}</td>`;
       }
       return `<td style="white-space:nowrap;">${esc(String(val))}</td>`;
     }).join('');
     const desc = cve.description || '';
-    const shortDesc = desc.length > 60 ? desc.substring(0, 60) + '…' : desc;
-    const descCell = hasDesc ? `<td class="cve-desc-cell" style="cursor:pointer;max-width:300px;" onclick="this.closest('tr').nextElementSibling.classList.toggle('d-none')"><span class="text-truncate d-inline-block" style="max-width:280px;" title="${esc(desc)}">${esc(shortDesc)}</span> ${desc.length > 60 ? '<i class="bi bi-chevron-down small text-muted"></i>' : ''}</td>` : '';
-    const expandRow = hasDesc && desc.length > 60
-      ? `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="py-2 ps-4 small text-muted border-0">${esc(desc)}</td></tr>`
+    const descCell = hasDesc ? `<td class="cve-desc-cell" style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;" onclick="this.closest('tr').nextElementSibling.classList.toggle('d-none')" title="${esc(desc)}">${esc(desc)} ${desc.length > 30 ? '<i class="bi bi-chevron-down small text-muted"></i>' : ''}</td>` : '';
+    const expandRow = hasDesc && desc.length > 30
+      ? `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="py-2 ps-4 small text-muted border-0" style="white-space:normal;">${esc(desc)}</td></tr>`
       : `<tr class="d-none"><td colspan="${mainCols.length + 1}" class="border-0"></td></tr>`;
     return `<tr>${cells}${descCell}</tr>${expandRow}`;
   }).join('');
-  return `<table class="table table-sm cve-table mb-2"><thead><tr>${hdrs}</tr></thead><tbody>${rows}</tbody></table>`;
+  return `<table class="table table-sm cve-table mb-2" style="table-layout:fixed;width:100%;"><thead><tr>${hdrs}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderFinding(f, idx) {
