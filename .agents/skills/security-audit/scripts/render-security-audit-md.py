@@ -277,7 +277,7 @@ def render_md(data):
         lines.append("| Dependency | Source | Verified Version | cgmanifest | Match |")
         lines.append("|------------|--------|------------------|------------|-------|")
         for v in ver:
-            dep = v.get("dependency", "?")
+            dep = v.get("name") or v.get("dependency") or "?"
             source = v.get("source", "?")
             verified = v.get("verifiedVersion", "?")
             cgver = v.get("cgmanifestVersion") or "N/A"
