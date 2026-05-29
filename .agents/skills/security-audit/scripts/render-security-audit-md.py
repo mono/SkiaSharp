@@ -49,6 +49,17 @@ def status_label(status):
     return m.get(status, status or "Unknown")
 
 
+def sanitize_cell(text):
+    """Sanitize text for use in a markdown table cell."""
+    if not text:
+        return ""
+    # Replace newlines with spaces
+    text = text.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+    # Escape pipe characters
+    text = text.replace("|", "\\|")
+    return text
+
+
 def render_md(data):
     meta = data["meta"]
     summary = data["summary"]
@@ -81,55 +92,6 @@ def render_md(data):
     lines.append(f"| **Total CVEs** | **{summary.get('totalCves', 0)}** |")
     lines.append(f"| **Highest Severity** | **{summary.get('highestSeverity', 'N/A')}** |")
     lines.append("")
-
-    # Chrome Releases
-    if cr and cr.get("skiaRelevantCves"):
-        lines.append("## Chrome Releases Blog")
-        lines.append("")
-        lines.append(f"**Queried:** {cr.get('monthsQueried', '?')} months ({cr.get('postsReviewed', '?')} posts reviewed)")
-        lines.append(f"**Total CVEs extracted:** {cr.get('totalCvesExtracted', '?')}")
-        lines.append(f"**Skia-relevant CVEs:** {cr.get('skiaRelevantCves', '?')}")
-        lines.append("")
-
-        structured = cr.get("structuredCves", [])
-        milestone = meta.get("skiaMilestone", 0)
-        above = [c for c in structured if (c.get("milestone") or 0) > milestone]
-
-        if above:
-            lines.append(f"### CVEs Above Current Milestone (m{milestone})")
-            lines.append("")
-            lines.append("| Severity | CVE | Component | Fixed In | Bug | Blog |")
-            lines.append("|----------|-----|-----------|----------|-----|------|")
-
-            # Sort: Skia first, then by severity
-            comp_order = {"Skia": 0, "ANGLE": 1, "Canvas": 2, "Fonts": 3, "GPU": 4, "Compositing": 5, "WebGL": 6}
-            sev_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
-            above.sort(key=lambda c: (comp_order.get(c.get("component", ""), 99), sev_order.get(c.get("severity", ""), 9)))
-
-            for c in above:
-                sev = c.get("severity", "?")
-                cve_id = c.get("cveId", "?")
-                comp = c.get("component", "?")
-                ms = c.get("milestone", "?")
-                bug = c.get("bugId", "")
-                bug_link = f"[{bug}](https://issues.chromium.org/issues/{bug})" if bug else "N/A"
-                blog = c.get("blogPostUrl", "")
-                blog_link = f"[Post]({blog})" if blog else ""
-                lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {comp} | m{ms} | {bug_link} | {blog_link} |")
-            lines.append("")
-
-        # Summary by component
-        comp_counts = {}
-        for c in structured:
-            comp = c.get("component", "Other")
-            comp_counts[comp] = comp_counts.get(comp, 0) + 1
-        lines.append("### By Component (all milestones)")
-        lines.append("")
-        lines.append("| Component | CVEs |")
-        lines.append("|-----------|------|")
-        for comp, count in sorted(comp_counts.items(), key=lambda x: -x[1]):
-            lines.append(f"| {comp} | {count} |")
-        lines.append("")
 
     # Findings
     lines.append("## Findings")
@@ -195,7 +157,7 @@ def render_md(data):
                 cve_id = c.get("id", "?")
                 fixed = c.get("fixedIn") or c.get("fixMilestone") or ""
                 assess = c.get("assessment", "?")
-                desc = c.get("description", "")
+                desc = sanitize_cell(c.get("description", ""))
                 if has_fixed_in:
                     lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {fixed} | {assess} | {desc} |")
                 else:
@@ -213,7 +175,7 @@ def render_md(data):
                 cve_id = c.get("id", "?")
                 source = c.get("source", "?")
                 assess = c.get("assessment", "?")
-                desc = c.get("description", "")
+                desc = sanitize_cell(c.get("description", ""))
                 lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {source} | {assess} | {desc} |")
             lines.append("")
 
@@ -258,6 +220,55 @@ def render_md(data):
         if pipelines:
             lines.append(f"**Pipelines scanned:** {', '.join(p.get('name','') for p in pipelines)}")
             lines.append("")
+
+    # Chrome Releases (after CG, before Version Verification)
+    if cr and cr.get("skiaRelevantCves"):
+        lines.append("## Chrome Releases Blog")
+        lines.append("")
+        lines.append(f"**Queried:** {cr.get('monthsQueried', '?')} months ({cr.get('postsReviewed', '?')} posts reviewed)")
+        lines.append(f"**Total CVEs extracted:** {cr.get('totalCvesExtracted', '?')}")
+        lines.append(f"**Skia-relevant CVEs:** {cr.get('skiaRelevantCves', '?')}")
+        lines.append("")
+
+        structured = cr.get("structuredCves", [])
+        milestone = meta.get("skiaMilestone", 0)
+        above = [c for c in structured if (c.get("milestone") or 0) > milestone]
+
+        if above:
+            lines.append(f"### CVEs Above Current Milestone (m{milestone})")
+            lines.append("")
+            lines.append("| Severity | CVE | Component | Fixed In | Bug | Blog |")
+            lines.append("|----------|-----|-----------|----------|-----|------|")
+
+            # Sort: Skia first, then by severity
+            comp_order = {"Skia": 0, "ANGLE": 1, "Canvas": 2, "Fonts": 3, "GPU": 4, "Compositing": 5, "WebGL": 6}
+            sev_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+            above.sort(key=lambda c: (comp_order.get(c.get("component", ""), 99), sev_order.get(c.get("severity", ""), 9)))
+
+            for c in above:
+                sev = c.get("severity", "?")
+                cve_id = c.get("cveId", "?")
+                comp = c.get("component", "?")
+                ms = c.get("milestone", "?")
+                bug = c.get("bugId", "")
+                bug_link = f"[{bug}](https://issues.chromium.org/issues/{bug})" if bug else "N/A"
+                blog = c.get("blogPostUrl", "")
+                blog_link = f"[Post]({blog})" if blog else ""
+                lines.append(f"| {sev_emoji(sev)} {sev} | {cve_id} | {comp} | m{ms} | {bug_link} | {blog_link} |")
+            lines.append("")
+
+        # Summary by component
+        comp_counts = {}
+        for c in structured:
+            comp = c.get("component", "Other")
+            comp_counts[comp] = comp_counts.get(comp, 0) + 1
+        lines.append("### By Component (all milestones)")
+        lines.append("")
+        lines.append("| Component | CVEs |")
+        lines.append("|-----------|------|")
+        for comp, count in sorted(comp_counts.items(), key=lambda x: -x[1]):
+            lines.append(f"| {comp} | {count} |")
+        lines.append("")
 
     # Version Verification
     if ver:
