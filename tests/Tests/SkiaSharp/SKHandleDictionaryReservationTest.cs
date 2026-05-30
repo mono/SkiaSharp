@@ -477,6 +477,114 @@ namespace SkiaSharp.Tests
 			Assert.True (seen.Count > 1, "Routing collapsed every handle onto a single shard.");
 		}
 
+#if THROW_OBJECT_EXCEPTIONS
+		// --- Publish-phase failure leaves a "retired but present" reservation; the ORIGINAL owner
+		//     thread retrying the same handle must take it over and reconstruct, NOT be mistaken for
+		//     active same-thread re-entrancy. This pins the ordering of the Phase 1b guards: a retired
+		//     reservation is fully unwound, so the retired-takeover branch is checked before the
+		//     re-entrancy throw. Without the fault-injection seam this branch is unreachable. ---
+
+		[SkippableFact]
+		public void RetiredReservationTakenOverBySameThreadAfterPublishFailure ()
+		{
+			var handle = NextHandle ();
+			var armed = 1;
+
+			// Throw exactly once, only for our handle, the first time the publish phase runs for it.
+			HandleDictionary.PublishPhaseHook = h => {
+				if (h == handle && Interlocked.Exchange (ref armed, 0) == 1)
+					throw new InvalidOperationException ("injected publish-phase failure");
+			};
+
+			try {
+				// The factory SUCCEEDS, but the publish phase throws before Remove runs, so the
+				// reservation is left in the map with retired == true and its gate already signaled.
+				var ex = Assert.Throws<InvalidOperationException> (() =>
+					HandleDictionary.GetOrAddObject<FakeNativeObject> (
+						handle, owns: false, unrefExisting: false,
+						(h, o) => new FakeNativeObject (h)));
+				Assert.Contains ("injected publish-phase failure", ex.Message);
+
+				// Nothing reached "instances".
+				Assert.False (HandleDictionary.GetInstance<FakeNativeObject> (handle, out _));
+
+				// The SAME thread (matching the retired reservation's ownerThreadId) retries the SAME
+				// handle. The retired reservation must be taken over and reconstructed. The takeover
+				// path waits on no gate, so a correct implementation returns synchronously; a wrong one
+				// would instead throw "Re-entrant ..." (caught by the assertion below).
+				var rebuilt = HandleDictionary.GetOrAddObject<FakeNativeObject> (
+					handle, owns: false, unrefExisting: false,
+					(h, o) => new FakeNativeObject (h));
+
+				try {
+					Assert.NotNull (rebuilt);
+					Assert.False (rebuilt.IsDisposed);
+					Assert.True (HandleDictionary.GetInstance<FakeNativeObject> (handle, out var fetched));
+					Assert.Same (rebuilt, fetched);
+				} finally {
+					rebuilt.Dispose ();
+				}
+			} finally {
+				HandleDictionary.PublishPhaseHook = null;
+			}
+		}
+
+		// --- Same scenario, but a DIFFERENT thread observes the retired reservation: it must take over
+		//     and reconstruct rather than livelocking on the already-signaled gate (the canonical H1
+		//     recovery the "retired" flag exists for). ---
+
+		[SkippableFact]
+		public void RetiredReservationTakenOverByOtherThreadAfterPublishFailure ()
+		{
+			var handle = NextHandle ();
+			var armed = 1;
+
+			HandleDictionary.PublishPhaseHook = h => {
+				if (h == handle && Interlocked.Exchange (ref armed, 0) == 1)
+					throw new InvalidOperationException ("injected publish-phase failure");
+			};
+
+			try {
+				// Owner runs on its own dedicated thread so its ManagedThreadId is distinct from the
+				// waiter's, exercising the cross-thread arm of the retired-takeover branch.
+				Exception ownerEx = null;
+				var owner = new Thread (() => {
+					try {
+						HandleDictionary.GetOrAddObject<FakeNativeObject> (
+							handle, owns: false, unrefExisting: false,
+							(h, o) => new FakeNativeObject (h));
+					} catch (Exception e) {
+						ownerEx = e;
+					}
+				});
+				owner.IsBackground = true;
+				owner.Start ();
+				Assert.True (owner.Join (10_000), "Owner thread hung during the failing publish phase.");
+				Assert.IsType<InvalidOperationException> (ownerEx);
+				Assert.False (HandleDictionary.GetInstance<FakeNativeObject> (handle, out _));
+
+				// A different thread takes over the retired reservation and reconstructs, within timeout.
+				FakeNativeObject rebuilt = null;
+				RunWithTimeout (() => {
+					rebuilt = HandleDictionary.GetOrAddObject<FakeNativeObject> (
+						handle, owns: false, unrefExisting: false,
+						(h, o) => new FakeNativeObject (h));
+				}, 10_000, "Waiter livelocked on a retired reservation's already-signaled gate.");
+
+				try {
+					Assert.NotNull (rebuilt);
+					Assert.False (rebuilt.IsDisposed);
+					Assert.True (HandleDictionary.GetInstance<FakeNativeObject> (handle, out var fetched));
+					Assert.Same (rebuilt, fetched);
+				} finally {
+					rebuilt?.Dispose ();
+				}
+			} finally {
+				HandleDictionary.PublishPhaseHook = null;
+			}
+		}
+#endif
+
 		// Finds two synthetic handles that land on two different shard locks, so a test can
 		// drive opposite-order construction across distinct shards. Returns false when the
 		// machine only has a single shard.

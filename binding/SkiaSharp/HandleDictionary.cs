@@ -46,6 +46,13 @@ namespace SkiaSharp
 #if THROW_OBJECT_EXCEPTIONS
 		// One process-wide bag (already concurrent); not part of the striped state.
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
+
+		// Debug-only test seam (compiled out of Release): invoked in ConstructAndPublish right before the
+		// Phase 3 publish write-lock is acquired. A test can throw from here for a specific handle to
+		// simulate a publish-phase failure (e.g. the write lock could not be acquired), driving the
+		// reservation into the "retired but still present" state so the takeover path can be exercised
+		// deterministically. Must be one-shot + handle-filtered + reset in a finally by the test.
+		internal static Action<IntPtr> PublishPhaseHook;
 #endif
 
 		// An in-flight construction for a single handle. Concurrent same-handle callers wait on the
@@ -292,20 +299,17 @@ namespace SkiaSharp
 
 					// Phase 1b: is another thread already constructing this handle?
 					if (shard.reservations.TryGetValue (handle, out var existing)) {
-						if (existing.ownerThreadId == Environment.CurrentManagedThreadId) {
-							// Re-entrant same-thread, same-handle construction (e.g. a native callback
-							// during the factory re-enters GetOrAddObject for the same handle). Waiting on
-							// our own gate would self-deadlock, so fail fast instead of hanging.
-							throw new InvalidOperationException (
-								$"Re-entrant construction of the same handle on the same thread. " +
-								$"H: {handle.ToString ("x")} Type: {typeof (TSkiaObject)}");
-						}
-
 						if (existing.retired) {
 							// The owner finished with this reservation but could not remove it from the map
 							// (its publish-phase write-lock acquisition threw). Nothing was published (Phase
 							// 1a above already checked), so take the stale reservation over and reconstruct
 							// rather than waiting on its already-signaled gate (which would busy-livelock).
+							//
+							// This is checked BEFORE the same-thread re-entrancy guard on purpose: a retired
+							// reservation is fully unwound (ConstructAndPublish's outer finally has already
+							// run), so it can never be the current thread's own *active* construction. Taking
+							// it over is therefore always safe, even for the thread that originally owned it
+							// (e.g. a caller that retries the same handle after catching the publish failure).
 							mine = new Reservation ();
 							shard.instancesLock.EnterWriteLock ();
 							try {
@@ -313,6 +317,14 @@ namespace SkiaSharp
 							} finally {
 								shard.instancesLock.ExitWriteLock ();
 							}
+						} else if (existing.ownerThreadId == Environment.CurrentManagedThreadId) {
+							// Re-entrant same-thread, same-handle construction (e.g. a native callback
+							// during the factory re-enters GetOrAddObject for the same handle) while the
+							// reservation is still LIVE. Waiting on our own gate would self-deadlock, so
+							// fail fast instead of hanging.
+							throw new InvalidOperationException (
+								$"Re-entrant construction of the same handle on the same thread. " +
+								$"H: {handle.ToString ("x")} Type: {typeof (TSkiaObject)}");
 						} else {
 							// Another thread owns it: wait outside the lock, then retry from the top.
 							waitFor = existing;
@@ -355,6 +367,12 @@ namespace SkiaSharp
 				completed = true;
 			} finally {
 				try {
+#if THROW_OBJECT_EXCEPTIONS
+					// Debug-only fault-injection point (see PublishPhaseHook). If a test throws here the
+					// write lock below is never entered, so Remove never runs and the reservation is left
+					// "retired but present" for a waiter to take over.
+					PublishPhaseHook?.Invoke (handle);
+#endif
 					// Phase 3: publish the finished wrapper (or just clear the reservation on failure),
 					// under this shard's write lock.
 					shard.instancesLock.EnterWriteLock ();
