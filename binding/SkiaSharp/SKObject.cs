@@ -242,26 +242,30 @@ namespace SkiaSharp
 
 		// Make this wrapper unreachable via the public Dispose() method.
 		// This method does NOT take any lock itself: correctness relies on the CALLER
-		// holding the handle's HandleDictionary shard lock (the upgradeable-read lock taken
-		// by GetOrAddObject). That caller-held lock is mutually exclusive with the write
-		// lock public Dispose() holds (on the same shard, via HandleDictionary.GetLockFor)
-		// around its IgnorePublicDispose check + CAS, so the flag set here cannot race a
-		// concurrent public disposal.
-		// DO NOT USE DIRECTLY except from inside HandleDictionary.GetOrAddObject's
-		// critical section, or when a concurrent Dispose() is guaranteed to be impossible.
+		// holding the handle's HandleDictionary shard lock. Two callers satisfy this:
+		// GetOrAddObject (holds the upgradeable-read lock when promoting a singleton),
+		// and TransferOwnershipToNative (takes the write lock via GetLockFor before the
+		// ownership handoff). Either lock is mutually exclusive with the write lock
+		// public Dispose() holds (on the same shard) around its IgnorePublicDispose
+		// check + CAS, so the flag set here cannot race a concurrent public disposal.
+		// DO NOT USE DIRECTLY except from inside one of those locked critical sections,
+		// or when a concurrent Dispose() is guaranteed to be impossible.
 		internal void PreventPublicDisposal ()
 		{
 #if THROW_OBJECT_EXCEPTIONS
-			// All callers (GetOrAddObject) hold the handle's HandleDictionary shard upgradeable-read
-			// lock and target either a freshly-created wrapper or one that GetInstanceNoLocks just
-			// confirmed !IsDisposed.
-			// A live target can only become disposed via: public Dispose() (blocked here by the
-			// mutually-exclusive write lock), an owned-child / ownership-handoff / replacement
-			// DisposeInternal, or the finalizer. No dispose-protected call site registers its
-			// singleton as an owned child, hands off its ownership, or lets it be replaced, and
-			// the promoting thread holds a strong reference (so no finalizer race). Observing a
-			// disposed wrapper here therefore means one of those invariants was broken — a real
-			// bug worth surfacing.
+			// Callers hold the handle's HandleDictionary shard lock and target either a
+			// freshly-created wrapper (GetOrAddObject promotion / internally-created
+			// handoff stream) or one that GetInstanceNoLocks just confirmed !IsDisposed.
+			// A live target can only become disposed via: public Dispose() (blocked here
+			// by the mutually-exclusive write lock), an owned-child / ownership-handoff /
+			// replacement DisposeInternal, or the finalizer. For the GetOrAddObject path
+			// no dispose-protected singleton is registered as an owned child, handed off,
+			// or replaced, and the promoting thread holds a strong reference (no finalizer
+			// race). For the TransferOwnershipToNative path the wrapper is either created
+			// internally (no external disposer) or a user-supplied stream — observing it
+			// disposed here means the user disposed a stream they had already handed to
+			// Create()/CreateTypeface() on another thread, i.e. genuine misuse. Either
+			// way, a disposed wrapper here signals a broken invariant worth surfacing.
 			if (IsDisposed)
 				throw new InvalidOperationException (
 					$"Attempted to dispose-protect an already-disposed wrapper. " +
@@ -383,18 +387,65 @@ namespace SkiaSharp
 		// Hand off ownership of the native object to native-side code that took it
 		// (e.g. SKCodec.Create / SKFontManager.CreateTypeface, where the C wrapper
 		// puts the stream into a unique_ptr that the codec/typeface then owns).
-		// Marks the wrapper as non-owning so the disposal won't unref the native,
-		// then disposes the managed wrapper. The user's reference to this wrapper
-		// becomes a disposed wrapper; subsequent use fails loudly rather than
-		// operating on a native object that's now owned elsewhere.
+		// Marks the wrapper as non-owning so the disposal won't unref the native.
 		//
-		// Order matters: OwnsHandle = false MUST precede DisposeInternal. A racing
+		// There are two cases, matching the pre-refactor RevokeOwnership semantics:
+		//
+		// 1. newOwner == null (native creation failed, so there is no receiver to
+		//    keep the wrapper alive): dispose the managed wrapper eagerly.
+		//
+		// 2. newOwner != null: the receiving native object (codec/typeface) may read
+		//    through this wrapper LAZILY. For example SKManagedStream /
+		//    SKFrontBufferedManagedStream invoke managed read callbacks on demand
+		//    (during SKCodec.GetPixels()), long after Create() returned. Disposing
+		//    the wrapper now would close/null the underlying managed stream and crash
+		//    that later read across the native->managed boundary. Instead we keep the
+		//    wrapper alive by re-parenting it as a non-owning owned-child of newOwner;
+		//    it is torn down only when newOwner is disposed. DisposeUnownedManaged()
+		//    disposes !OwnsHandle children BEFORE the owner frees its native object, so
+		//    the wrapper stops being read before the codec/typeface is freed.
+		//
+		// Order matters: OwnsHandle = false MUST precede any disposal. A racing
 		// Dispose() that sees OwnsHandle = true would call DisposeNative and free
 		// the native object that the receiving native code is about to use.
-		internal void TransferOwnershipToNative ()
+		//
+		// For the reparenting case we latch OwnsHandle = false AND IgnorePublicDispose
+		// (via PreventPublicDisposal) together under the same shard write lock that
+		// public Dispose() takes before reading IgnorePublicDispose + claiming the
+		// isDisposed CAS. This is essential: if we set OwnsHandle = false outside the
+		// lock first, a racing Dispose() could observe IgnorePublicDispose == false,
+		// win the disposal claim, skip DisposeNative (OwnsHandle already false) and run
+		// DisposeManaged() — closing/nulling the managed stream the native owner still
+		// reads lazily, re-creating the crash as a race. Setting both flags atomically
+		// under the lock makes the two operations mutually exclusive with Dispose().
+		//
+		// Note: a public Dispose() that fully wins the lock BEFORE this method runs (the
+		// caller disposed the stream concurrently with the Create() that is consuming it)
+		// is unsupported misuse and out of scope here — that races native ownership itself.
+		internal void TransferOwnershipToNative (SKObject newOwner)
 		{
-			OwnsHandle = false;
-			DisposeInternal ();
+			if (newOwner == null) {
+				// Native creation failed: no receiver to keep the wrapper alive.
+				// DisposeInternal claims via the isDisposed CAS (no IgnorePublicDispose
+				// read), so no shard lock is required to pair with Dispose().
+				OwnsHandle = false;
+				DisposeInternal ();
+				return;
+			}
+
+			// Capture the handle before touching flags: if a racing Dispose() zeroed
+			// Handle, keying OwnedObjects with the captured value keeps teardown reliable.
+			var handle = Handle;
+			var disposalLock = HandleDictionary.GetLockFor (handle);
+			disposalLock.EnterWriteLock ();
+			try {
+				OwnsHandle = false;
+				PreventPublicDisposal ();
+			} finally {
+				disposalLock.ExitWriteLock ();
+			}
+
+			newOwner.OwnedObjects[handle] = (SKObject)this;
 		}
 	}
 

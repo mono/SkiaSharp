@@ -290,7 +290,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public unsafe void StreamIsDisposedAfterOwnershipTransfer()
+		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
 			var stream = new SKMemoryStream(File.ReadAllBytes(path));
@@ -302,15 +302,25 @@ namespace SkiaSharp.Tests
 
 			var typeface = SKTypeface.FromStream(stream);
 
+			// Ownership of the native stream is handed to the typeface, which may read
+			// it lazily. The wrapper is reparented (kept alive) and dispose-protected,
+			// NOT disposed.
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+			Assert.False(stream.IsDisposed);
+			Assert.True(stream.IgnorePublicDispose);
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 
+			// A public Dispose() is ignored while the typeface owns the native stream.
 			stream.Dispose();
+			Assert.False(stream.IsDisposed);
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 
 			Assert.NotEmpty(typeface.GetTableTags());
 
+			// Disposing the owner tears down the reparented wrapper.
 			typeface.Dispose();
+			Assert.True(stream.IsDisposed);
+			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 		}
 
 		[SkippableFact]
@@ -451,10 +461,10 @@ namespace SkiaSharp.Tests
 
 				Assert.NotEmpty(typeface.GetTableTags());
 
-				// The managed stream wrapper was disposed at the ownership transfer
-				// inside SKTypeface.FromStream — the native stream is owned by the
-				// typeface now.
-				Assert.False(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
+				// While the typeface is alive it roots the reparented stream wrapper,
+				// so the wrapper is still registered (not yet forgotten). It is only
+				// torn down once the typeface itself becomes unreachable / disposed.
+				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
 			}
 
 			SKTypeface CreateTypeface(out IntPtr streamHandle)

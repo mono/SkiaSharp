@@ -79,7 +79,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public unsafe void StreamIsDisposedAfterOwnershipTransfer()
+		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
 			var stream = new SKMemoryStream(File.ReadAllBytes(path));
@@ -91,16 +91,27 @@ namespace SkiaSharp.Tests
 
 			var codec = SKCodec.Create(stream);
 
+			// Ownership of the native stream is handed to the codec, which may read
+			// it lazily. The wrapper is therefore reparented (kept alive) and
+			// dispose-protected, NOT disposed: disposing it now would tear the native
+			// stream out from under the codec.
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+			Assert.False(stream.IsDisposed);
+			Assert.True(stream.IgnorePublicDispose);
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 
+			// A public Dispose() is ignored while the codec owns the native stream.
 			stream.Dispose();
+			Assert.False(stream.IsDisposed);
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 
 			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 			Assert.NotEmpty(pixels);
 
+			// Disposing the owner tears down the reparented wrapper.
 			codec.Dispose();
+			Assert.True(stream.IsDisposed);
+			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 		}
 
 		[SkippableFact]
@@ -144,9 +155,10 @@ namespace SkiaSharp.Tests
 				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 				Assert.NotEmpty(pixels);
 
-				// The managed stream wrapper was disposed at the ownership transfer
-				// inside SKCodec.Create — the native stream is owned by the codec now.
-				Assert.False(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
+				// While the codec is alive it roots the reparented stream wrapper, so
+				// the wrapper is still registered (not yet forgotten). It is only torn
+				// down once the codec itself becomes unreachable / disposed.
+				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
 			}
 
 			SKCodec CreateCodec(out IntPtr streamHandle)
@@ -439,6 +451,36 @@ namespace SkiaSharp.Tests
 			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
 			using (var codec = SKCodec.Create(stream))
 				Assert.NotNull(codec);
+		}
+
+		[SkippableFact]
+		public void CanDecodeManagedStreamAfterCreate()
+		{
+			// Regression: SKCodec.Create(Stream) wraps the managed .NET stream and the
+			// codec decodes lazily. The underlying managed stream MUST stay readable
+			// until the codec is disposed.
+			using var stream = new MemoryStream(File.ReadAllBytes(Path.Combine(PathToImages, "baboon.png")));
+			using var codec = SKCodec.Create(stream);
+			Assert.NotNull(codec);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
+
+		[SkippableFact]
+		public void CanDecodeNonSeekableManagedStreamAfterCreate()
+		{
+			// Regression: a non-seekable .NET stream is wrapped in a
+			// SKFrontBufferedManagedStream (a different code path from the seekable
+			// SKManagedStream). The codec still decodes lazily, so the underlying
+			// managed stream MUST stay readable until the codec is disposed.
+			using var inner = new MemoryStream(File.ReadAllBytes(Path.Combine(PathToImages, "baboon.png")));
+			using var nonSeekable = new NonSeekableReadOnlyStream(inner);
+			using var codec = SKCodec.Create(nonSeekable);
+			Assert.NotNull(codec);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
 		}
 
 		[SkippableFact(Skip = "This keeps breaking CI for some reason.")]

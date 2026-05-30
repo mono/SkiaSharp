@@ -322,11 +322,12 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public unsafe void StreamIsDisposedAfterOwnershipTransfer()
+		public unsafe void StreamLosesOwnershipButManagedStreamStaysOpenUntilOwnerDisposed()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
 			var bytes = File.ReadAllBytes(path);
-			var stream = new SKManagedStream(new MemoryStream(bytes), true);
+			var dotnetStream = new MemoryStream(bytes);
+			var stream = new SKManagedStream(dotnetStream, true);
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
@@ -335,21 +336,30 @@ namespace SkiaSharp.Tests
 
 			var codec = SKCodec.Create(stream);
 
-			// After ownership transfer the managed wrapper is disposed: the native
-			// stream is now owned by the codec, so the wrapper must not hold an
-			// outstanding ref or be available for further use.
+			// The codec reads the managed stream LAZILY (on GetPixels), so the
+			// wrapper must NOT be disposed at ownership transfer: doing so would
+			// close the underlying .NET stream and crash the later managed read.
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			Assert.False(stream.IsDisposed);
+			Assert.True(stream.IgnorePublicDispose);
+			Assert.True(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			Assert.True(dotnetStream.CanRead);
 
-			// Disposing the already-disposed wrapper is a no-op.
+			// A public Dispose() is ignored while the codec owns the native stream.
 			stream.Dispose();
+			Assert.False(stream.IsDisposed);
+			Assert.True(dotnetStream.CanRead);
 
-			// Codec still works — it owns the native stream now.
+			// The lazy managed read must succeed — this is the regression guard.
 			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 			Assert.NotEmpty(pixels);
 
+			// Disposing the owner tears down the wrapper and closes the .NET stream
+			// (disposeManagedStream: true), now that nothing reads it any more.
 			codec.Dispose();
+			Assert.True(stream.IsDisposed);
+			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			Assert.False(dotnetStream.CanRead);
 		}
 
 		[SkippableFact]
@@ -393,9 +403,10 @@ namespace SkiaSharp.Tests
 				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 				Assert.NotEmpty(pixels);
 
-				// The managed stream wrapper was disposed at the ownership transfer
-				// inside SKCodec.Create — the native stream is owned by the codec now.
-				Assert.False(SKObject.GetInstance<SKManagedStream>(streamHandle, out _));
+				// While the codec is alive it roots the reparented stream wrapper, so
+				// the wrapper is still registered (not yet forgotten). It is only torn
+				// down once the codec itself becomes unreachable / disposed.
+				Assert.True(SKObject.GetInstance<SKManagedStream>(streamHandle, out _));
 			}
 
 			SKCodec CreateCodec(out IntPtr streamHandle)
