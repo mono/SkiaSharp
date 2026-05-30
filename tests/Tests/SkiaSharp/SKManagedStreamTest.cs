@@ -668,5 +668,147 @@ namespace SkiaSharp.Tests
 
 			dupe.Dispose();
 		}
+
+		// The SKObject.Owned write-stream path (used by SKSvgCanvas.Create(Stream) and
+		// SKDocument.Create*(Stream)) is the mirror image of the codec/typeface read path.
+		// There the internally-created SKManagedWStream is registered as an OwnsHandle child,
+		// so it is torn down in DisposeManaged() — AFTER DisposeNative(). That ordering is
+		// load-bearing for write streams: the native object (e.g. the SVG canvas footer
+		// writer, or the PDF document serializer) flushes its final bytes into the managed
+		// stream as it is destroyed, so the .NET stream MUST still be open at DisposeNative
+		// time. These tests lock in that guarantee and prove writes triggered AFTER Create
+		// (lazy writes) reach the underlying .NET stream without crossing a closed boundary.
+
+		[SkippableFact]
+		public void SvgCanvasWritesLazilyAndKeepsManagedStreamOpenUntilOwnerDisposed()
+		{
+			var tracking = new LifecycleTrackingStream();
+
+			var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), tracking);
+
+			// Create must NOT dispose or close the caller's stream.
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.CanWrite);
+
+			// Drawing happens AFTER Create returns: this is a lazy write through the
+			// still-alive owned wstream. It must not crash or hit a closed stream.
+			using (var paint = new SKPaint { Color = SKColors.Red, Style = SKPaintStyle.Fill })
+			{
+				svg.DrawRect(SKRect.Create(10, 10, 80, 80), paint);
+			}
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.CanWrite);
+
+			// Disposing the owner runs DisposeNative() (native canvas flushes the SVG
+			// footer into the managed stream) BEFORE the owned wstream's DisposeManaged().
+			// The final native flush must therefore land in a still-open .NET stream.
+			svg.Dispose();
+
+			// disposeManagedStream defaults to false for the Stream overload, so the
+			// caller's stream stays open after the canvas is gone.
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.BytesWritten > 0);
+			Assert.False(tracking.WroteAfterClose);
+
+			tracking.Position = 0;
+			using var reader = new StreamReader(tracking);
+			var xml = reader.ReadToEnd();
+			Assert.Contains("<svg", xml);
+			Assert.Contains("rect", xml);
+		}
+
+		[SkippableFact]
+		public void PdfDocumentWritesLazilyAndKeepsManagedStreamOpenUntilOwnerDisposed()
+		{
+			var tracking = new LifecycleTrackingStream();
+
+			var document = SKDocument.CreatePdf(tracking);
+			Assert.NotNull(document);
+
+			// Create must NOT dispose or close the caller's stream.
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.CanWrite);
+
+			// Page content is produced AFTER Create — a lazy write into the owned wstream.
+			var canvas = document.BeginPage(100, 100);
+			using (var paint = new SKPaint { Color = SKColors.Blue, Style = SKPaintStyle.Fill })
+			{
+				canvas.DrawRect(SKRect.Create(10, 10, 80, 80), paint);
+			}
+			document.EndPage();
+
+			// Close() serializes the PDF body into the managed stream. The stream must
+			// still be open here — Close runs before any disposal of the owned wstream.
+			document.Close();
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.CanWrite);
+			Assert.True(tracking.BytesWritten > 0);
+
+			// Disposing the owner tears down the owned wstream in DisposeManaged(), after
+			// DisposeNative(). With disposeManagedStream: false the .NET stream survives.
+			document.Dispose();
+			Assert.False(tracking.IsDisposed);
+			Assert.False(tracking.WroteAfterClose);
+
+			var header = new byte[5];
+			tracking.Position = 0;
+			Assert.Equal(5, tracking.Read(header, 0, 5));
+			Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(header));
+		}
+
+		// A MemoryStream that records disposal and rejects (rather than silently swallowing)
+		// any write that arrives after the stream has been closed — so a premature close in
+		// the owned-wstream teardown ordering would surface as WroteAfterClose / an exception.
+		private sealed class LifecycleTrackingStream : Stream
+		{
+			private readonly MemoryStream inner = new MemoryStream();
+			private bool closed;
+
+			public bool IsDisposed => closed;
+			public long BytesWritten { get; private set; }
+			public bool WroteAfterClose { get; private set; }
+
+			public override bool CanRead => !closed && inner.CanRead;
+			public override bool CanSeek => !closed && inner.CanSeek;
+			public override bool CanWrite => !closed && inner.CanWrite;
+			public override long Length => inner.Length;
+
+			public override long Position
+			{
+				get => inner.Position;
+				set => inner.Position = value;
+			}
+
+			public override void Flush() => inner.Flush();
+
+			public override int Read(byte[] buffer, int offset, int count) =>
+				inner.Read(buffer, offset, count);
+
+			public override long Seek(long offset, SeekOrigin origin) =>
+				inner.Seek(offset, origin);
+
+			public override void SetLength(long value) => inner.SetLength(value);
+
+			public override void Write(byte[] buffer, int offset, int count)
+			{
+				if (closed)
+				{
+					WroteAfterClose = true;
+					throw new ObjectDisposedException(nameof(LifecycleTrackingStream));
+				}
+
+				BytesWritten += count;
+				inner.Write(buffer, offset, count);
+			}
+
+			protected override void Dispose(bool disposing)
+			{
+				if (disposing)
+					closed = true;
+
+				// keep the underlying buffer readable for post-dispose assertions
+				base.Dispose(disposing);
+			}
+		}
 	}
 }
