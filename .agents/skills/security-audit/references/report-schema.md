@@ -24,6 +24,8 @@ JSON schema for the security audit report. The AI generates this JSON as structu
   },
   "versionVerification": [ ... ],
   "findings": [ ... ],
+  "cgAlerts": { ... },
+  "chromeReleases": { ... },
   "nextSteps": [ ... ]
 }
 ```
@@ -204,3 +206,89 @@ Array of action objects:
 | `dependency` | string | Yes | Which dependency |
 | `reason` | string | Yes | Why (cite CVE count/severity) |
 | `command` | string | No | CLI command if applicable (e.g., `bump libpng to 1.6.56`) |
+
+## `chromeReleases` — Chrome Releases Blog Data (Optional)
+
+When the Chrome Releases blog was queried (Step 1.5), include this section for traceability.
+This section is optional — omit it only if the blog query was skipped or failed.
+
+```json
+{
+  "queriedAt": "2026-04-10T14:30:00Z",
+  "monthsQueried": 6,
+  "postsReviewed": 12,
+  "totalCvesExtracted": 45,
+  "skiaRelevantCves": 8,
+  "structuredCves": [
+    {
+      "cveId": "CVE-2026-8510",
+      "severity": "Critical",
+      "component": "Skia",
+      "description": "Integer overflow in Skia",
+      "bugId": "502636904",
+      "milestone": 148,
+      "blogPostUrl": "https://chromereleases.googleblog.com/...",
+      "inNvd": false,
+      "extraction": "regex"
+    }
+  ],
+  "earlyDisclosures": [],
+  "cacheFile": "output/ai/chrome-releases-cache.json"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `queriedAt` | string | Yes | ISO timestamp of the query |
+| `monthsQueried` | integer | Yes | How many months back were queried |
+| `postsReviewed` | integer | Yes | Number of posts that matched keywords |
+| `totalCvesExtracted` | integer | Yes | Total CVEs found across all posts (all components) |
+| `skiaRelevantCves` | integer | Yes | CVEs in Skia-relevant components |
+| `structuredCves` | array | Yes | **All** Skia-relevant CVEs from the blog (the primary rendered array). Each has camelCase fields: `cveId`, `severity`, `component`, `milestone`, `bugId`, `blogPostUrl` |
+| `earlyDisclosures` | array | No | Subset: CVEs found in blog but NOT yet in NVD (may be empty). Same schema as `structuredCves` items. |
+| `cacheFile` | string | Yes | Path to the cached JSON from the script |
+
+### Field Name Mapping (Script → Report JSON)
+
+The `query-chrome-releases.py` script outputs **snake_case** fields. When building the report
+JSON, transform to **camelCase**:
+
+| Script field (`structured_cves[]`) | Report field (`structuredCves[]`) |
+|------------------------------------|-----------------------------------|
+| `cve_id` | `cveId` |
+| `bug_id` | `bugId` |
+| `blog_post_url` | `blogPostUrl` |
+| `severity` | `severity` (unchanged) |
+| `component` | `component` (unchanged) |
+| `milestone` | `milestone` (unchanged) |
+
+### Setting `blogPostUrl` on Findings CVEs
+
+When a CVE in `findings[].cves[]` also appears in `structuredCves[]`, copy the `blogPostUrl`
+onto the finding's CVE object. This enables the HTML viewer to link directly to the source
+blog post.
+
+### CVE `source` Field (Updated)
+
+The `source` field on individual CVE objects in `findings[].cves[]` should indicate provenance:
+
+| Value | Meaning |
+|-------|---------|
+| `"NVD (Chrome CPE)"` | Found via NVD query with Chrome CPE match |
+| `"NVD web search"` | Found via NVD keyword search |
+| `"Chrome Releases blog"` | Found in Chrome Releases blog only (early disclosure) |
+| `"NVD + Chrome Releases"` | Found in both sources (most common) |
+| `"Android Security Bulletin"` | Vendor bulletin — Android |
+| `"Huawei HarmonyOS Bulletin"` | Vendor bulletin — Huawei |
+| `"Chromium severity rating (CVSS pending)"` | Severity from Chromium, NVD CVSS not yet published |
+
+### CVE `extraction` Field (New, Optional)
+
+For CVEs that came from Chrome Releases data, indicate how they were extracted:
+
+| Value | Meaning |
+|-------|---------|
+| `"regex"` | Deterministically extracted by the script's regex parser |
+| `"ai_review"` | Found by AI reviewing the raw post text (format variation) |
+
+This helps track reliability and identify if the regex needs updating.
