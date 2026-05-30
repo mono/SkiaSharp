@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Running;
+﻿using System.Reflection;
+using BenchmarkDotNet.Running;
 
 namespace SkiaSharp.Benchmarks;
 
@@ -6,6 +7,8 @@ public class Program
 {
 	public static void Main(string[] args)
 	{
-		var summary = BenchmarkRunner.Run<TheBenchmark>();
+		BenchmarkSwitcher
+			.FromAssembly(Assembly.GetExecutingAssembly())
+			.Run(args);
 	}
 }
