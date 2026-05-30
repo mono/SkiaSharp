@@ -75,7 +75,6 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 ### 7. Utility Projects
 
 - [ ] `utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj`
-- [ ] `utils/WasmTestRunner/WasmTestRunner.csproj`
 - [ ] `utils/NativeLibraryMiniTest/docker/NativeLibraryMiniTest.csproj`
 
 ### 8. Sample Projects
