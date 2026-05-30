@@ -22,15 +22,36 @@ namespace SkiaSharp
 
 			empty = new SKTypefaceStatic (SkiaApi.sk_typeface_create_empty ());
 
-			// Use legacyMakeTypeface(null) to get the platform default — this uses
-			// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
-			// then falls back to style set 0). matchFamilyStyle(null) doesn't work
-			// on Android/NDK/Custom because onMatchFamily(null) returns null.
-			var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
-				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
-			defaultTypeface = matched == IntPtr.Zero
-				? empty
-				: new SKTypefaceStatic (matched);
+			// Obtain the default font manager and font style as raw native handles
+			// instead of reading the SKFontManager.Default / SKFontStyle.Normal managed
+			// singletons. Those singletons are SKObject types whose static constructors
+			// participate in the same eager-initialization cascade (see
+			// SKObject.EnsureStaticInstanceAreInitialized). Reading them here can re-enter
+			// a static constructor that is still running on the current thread and observe
+			// a not-yet-assigned (null) singleton, throwing a NullReferenceException.
+			// See issue #3817.
+			var fontManager = IntPtr.Zero;
+			var fontStyle = IntPtr.Zero;
+			try {
+				fontManager = SkiaApi.sk_fontmgr_create_default ();
+				fontStyle = SkiaApi.sk_fontstyle_new (
+					(int)SKFontStyleWeight.Normal, (int)SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+
+				// Use legacyMakeTypeface(null) to get the platform default — this uses
+				// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
+				// then falls back to style set 0). matchFamilyStyle(null) doesn't work
+				// on Android/NDK/Custom because onMatchFamily(null) returns null.
+				var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
+					fontManager, IntPtr.Zero, fontStyle);
+				defaultTypeface = matched == IntPtr.Zero
+					? empty
+					: new SKTypefaceStatic (matched);
+			} finally {
+				if (fontStyle != IntPtr.Zero)
+					SkiaApi.sk_fontstyle_delete (fontStyle);
+				if (fontManager != IntPtr.Zero)
+					SkiaApi.sk_fontmgr_unref (fontManager);
+			}
 		}
 
 		internal static void EnsureStaticInstanceAreInitialized ()
