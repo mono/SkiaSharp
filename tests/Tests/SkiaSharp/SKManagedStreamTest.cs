@@ -756,6 +756,110 @@ namespace SkiaSharp.Tests
 			Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(header));
 		}
 
+		// ---- fromNative destroy-callback re-entrancy (mirrors the SKDrawable invariant) ----
+		// SKManagedStream / SKManagedWStream own a native object whose destruction triggers a
+		// managed destroy proxy (DelegateProxies.*stream*) that flips `fromNative` to 1 and calls
+		// Dispose() re-entrantly. Under the lock-paired SKObject.Dispose, DisposeNative() runs
+		// OUTSIDE the shard lock, so the synchronous native destroy can re-enter Dispose() on the
+		// same thread; the re-entrant call re-acquires the lock fresh and no-ops on isDisposed==1.
+		// These tests pin the single-free + deregistration + fromNative-flip invariants.
+
+		[SkippableFact]
+		public void DisposingManagedStreamFiresNativeDestroyCallback()
+		{
+			var dotnet = CreateTestStream();
+			var stream = new SKManagedStream(dotnet, true);
+			var handle = stream.Handle;
+
+			try
+			{
+				Assert.NotEqual(IntPtr.Zero, handle);
+				Assert.Equal(0, stream.fromNative);
+				Assert.True(HandleDictionary.GetInstance<SKManagedStream>(handle, out var live));
+				Assert.Same(stream, live);
+			}
+			finally
+			{
+				stream.Dispose();
+			}
+
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+			Assert.False(HandleDictionary.GetInstance<SKManagedStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public void DisposingManagedWStreamFiresNativeDestroyCallback()
+		{
+			var dotnet = new MemoryStream();
+			var stream = new SKManagedWStream(dotnet, true);
+			var handle = stream.Handle;
+
+			try
+			{
+				Assert.NotEqual(IntPtr.Zero, handle);
+				Assert.Equal(0, stream.fromNative);
+				Assert.True(HandleDictionary.GetInstance<SKManagedWStream>(handle, out var live));
+				Assert.Same(stream, live);
+			}
+			finally
+			{
+				stream.Dispose();
+			}
+
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+			Assert.False(HandleDictionary.GetInstance<SKManagedWStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public void DisposingManagedStreamTwiceIsNoOp()
+		{
+			var stream = new SKManagedStream(CreateTestStream(), true);
+			var handle = stream.Handle;
+
+			stream.Dispose();
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+
+			stream.Dispose();
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+			Assert.False(HandleDictionary.GetInstance<SKManagedStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public void ConcurrentDisposeOfSameManagedStreamIsIdempotent()
+		{
+			// Many threads racing Dispose() on the SAME wrapper must funnel through the single
+			// isDisposed CAS: one cleanup, native freed once, destroy callback flips fromNative once.
+			var stream = new SKManagedStream(CreateTestStream(), true);
+			var handle = stream.Handle;
+
+			System.Threading.Tasks.Parallel.For(0, 64, _ => stream.Dispose());
+
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+			Assert.False(HandleDictionary.GetInstance<SKManagedStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public void ConcurrentDisposeOfManyManagedStreamsIsSafe()
+		{
+			const int count = 128;
+			var streams = new List<SKManagedStream>(count);
+			for (var i = 0; i < count; i++)
+				streams.Add(new SKManagedStream(CreateTestStream(), true));
+
+			System.Threading.Tasks.Parallel.For(0, count, i => streams[i].Dispose());
+
+			foreach (var stream in streams)
+			{
+				Assert.Equal(1, stream.fromNative);
+				Assert.True(stream.IsDisposed);
+			}
+		}
+
 		// A MemoryStream that records disposal and rejects (rather than silently swallowing)
 		// any write that arrives after the stream has been closed — so a premature close in
 		// the owned-wstream teardown ordering would surface as WroteAfterClose / an exception.
