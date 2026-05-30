@@ -344,9 +344,143 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		// Probes synthetic handles until it collects two distinct shards with two handles each,
-		// using the same GetLockFor identity HandleDictionary uses to pick a shard.
-		private static bool TryFindHandlesOnTwoShards (out IntPtr[] shardA, out IntPtr[] shardB)
+		// --- Address reuse (ABA): a handle freed then re-used for a new native object. The registry
+		//     must hand out a fresh wrapper, not the disposed one. ---
+
+		[SkippableFact]
+		public void AddressReuseAfterDisposeConstructsFreshWrapper ()
+		{
+			var handle = NextHandle ();
+
+			var first = HandleDictionary.GetOrAddObject<FakeNativeObject> (
+				handle, owns: false, unrefExisting: false,
+				(h, o) => new FakeNativeObject (h));
+			Assert.NotNull (first);
+			Assert.True (HandleDictionary.GetInstance<FakeNativeObject> (handle, out var fetchedFirst));
+			Assert.Same (first, fetchedFirst);
+
+			// Free the handle: public Dispose deregisters it from the shard.
+			first.Dispose ();
+			Assert.True (first.IsDisposed);
+			Assert.False (HandleDictionary.GetInstance<FakeNativeObject> (handle, out _));
+
+			// A new native object reuses the same pointer value: must build a brand-new wrapper.
+			var second = HandleDictionary.GetOrAddObject<FakeNativeObject> (
+				handle, owns: false, unrefExisting: false,
+				(h, o) => new FakeNativeObject (h));
+
+			try {
+				Assert.NotNull (second);
+				Assert.NotSame (first, second);
+				Assert.False (second.IsDisposed);
+				Assert.True (HandleDictionary.GetInstance<FakeNativeObject> (handle, out var fetchedSecond));
+				Assert.Same (second, fetchedSecond);
+			} finally {
+				second.Dispose ();
+			}
+		}
+
+		// --- Promote (disposeProtected) racing a concurrent public Dispose() on the SAME handle.
+		//     Invariant #1: PreventPublicDisposal (under the shard upgradeable-read lock) and
+		//     Dispose()'s IgnorePublicDispose check + isDisposed CAS (under the shard write lock) are
+		//     mutually exclusive, so the outcome is always well-defined and never torn: the
+		//     disposeProtected caller ALWAYS gets back a live, protected wrapper (the original if it
+		//     promoted in time, or a freshly reconstructed one if Dispose won the race). ---
+
+		[SkippableFact]
+		public void DisposeProtectedRacingPublicDisposeNeverTears ()
+		{
+			const int iterations = 300;
+			var created = new System.Collections.Concurrent.ConcurrentBag<FakeNativeObject> ();
+
+			RunWithTimeout (() => {
+				for (var i = 0; i < iterations; i++) {
+					var handle = NextHandle ();
+
+					var original = HandleDictionary.GetOrAddObject<FakeNativeObject> (
+						handle, owns: false, unrefExisting: false,
+						(h, o) => {
+							var obj = new FakeNativeObject (h);
+							created.Add (obj);
+							return obj;
+						});
+
+					using var gate = new Barrier (2);
+					FakeNativeObject promoted = null;
+
+					Parallel.Invoke (
+						() => {
+							gate.SignalAndWait ();
+							// Promote: returns the live instance protected, or reconstructs if Dispose won.
+							promoted = HandleDictionary.GetOrAddObject<FakeNativeObject> (
+								handle, owns: false, unrefExisting: false, disposeProtected: true,
+								(h, o) => {
+									var obj = new FakeNativeObject (h);
+									created.Add (obj);
+									return obj;
+								});
+						},
+						() => {
+							gate.SignalAndWait ();
+							original.Dispose ();
+						});
+
+					// The disposeProtected contract: always a live, protected wrapper for this handle.
+					Assert.NotNull (promoted);
+					Assert.False (promoted.IsDisposed);
+					Assert.True (promoted.IgnorePublicDispose);
+					Assert.True (HandleDictionary.GetInstance<FakeNativeObject> (handle, out var current));
+					Assert.Same (promoted, current);
+				}
+			}, 30_000, "Promote-vs-dispose race deadlocked.");
+
+			// Tear everything down via the internal path (ignores IgnorePublicDispose).
+			foreach (var obj in created)
+				obj.DisposeInternal ();
+		}
+
+		// --- ShardCount == 1 parity: with a single shard every handle routes to index 0, i.e. the
+		//     registry collapses to the original single-lock / single-dictionary behavior. Verified on
+		//     the pure routing function so it holds regardless of this process's actual ShardCount. ---
+
+		[SkippableFact]
+		public void SingleShardRoutesEveryHandleToZero ()
+		{
+			for (var i = 0; i < 10_000; i++) {
+				var handle = NextHandle ();
+				Assert.Equal (0, HandleDictionary.ShardIndexFor (handle, mask: 0));
+			}
+
+			// Sanity: a few hand-picked edge values also collapse to 0 under a single shard.
+			foreach (var raw in new long[] { 0x1, -1, long.MaxValue, long.MinValue, 0x1000, unchecked((long)0x9E3779B97F4A7C15UL) }) {
+				Assert.Equal (0, HandleDictionary.ShardIndexFor (new IntPtr (raw), mask: 0));
+			}
+		}
+
+		// --- Multi-shard routing stays in range and actually spreads handles across shards. ---
+
+		[SkippableFact]
+		public void MultiShardRoutingStaysInRangeAndDistributes ()
+		{
+			Skip.If (HandleDictionary.ShardCount < 2, "Only one shard configured on this machine.");
+
+			var mask = HandleDictionary.ShardCount - 1;
+			var seen = new HashSet<int> ();
+
+			for (var i = 0; i < 10_000; i++) {
+				var idx = HandleDictionary.ShardIndexFor (NextHandle (), mask);
+				Assert.InRange (idx, 0, HandleDictionary.ShardCount - 1);
+				seen.Add (idx);
+			}
+
+			// With thousands of distinct handles, more than one shard must be hit.
+			Assert.True (seen.Count > 1, "Routing collapsed every handle onto a single shard.");
+		}
+
+		// Finds two synthetic handles that land on two different shard locks, so a test can
+		// drive opposite-order construction across distinct shards. Returns false when the
+		// machine only has a single shard.
+		static bool TryFindHandlesOnTwoShards (out IntPtr[] shardA, out IntPtr[] shardB)
 		{
 			shardA = null;
 			shardB = null;

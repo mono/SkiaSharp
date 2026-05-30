@@ -125,17 +125,23 @@ namespace SkiaSharp
 			return 0;
 		}
 
-		private static Shard ShardFor (IntPtr handle)
+		private static Shard ShardFor (IntPtr handle) => shards[ShardIndexFor (handle, shardMask)];
+
+		/// <summary>
+		/// Maps a handle to a shard index in [0, mask]. Pure function of (handle, mask) so the
+		/// routing can be verified in isolation. When mask == 0 (ShardCount == 1) every handle
+		/// collapses to shard 0, i.e. byte-for-byte the original single-lock/single-dictionary design.
+		/// </summary>
+		internal static int ShardIndexFor (IntPtr handle, int mask)
 		{
-			if (shardMask == 0)
-				return shards[0];
+			if (mask == 0)
+				return 0;
 
 			// Native handles are aligned pointers, so their low bits are always zero.
 			// Multiplicative (Fibonacci) mixing on the 64-bit value spreads them before
 			// we mask the high word with (N-1).
 			var mixed = unchecked ((ulong) handle.ToInt64 () * 0x9E3779B97F4A7C15UL);
-			var idx = (int) (mixed >> 32) & shardMask;
-			return shards[idx];
+			return (int) (mixed >> 32) & mask;
 		}
 
 		/// <summary>
