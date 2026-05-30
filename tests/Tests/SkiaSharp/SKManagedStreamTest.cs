@@ -1026,6 +1026,177 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public unsafe void NonSeekableStreamReparentedToCodecTearsDownNestedStreamExactlyOnce()
+		{
+			// A NON-SEEKABLE stream routes SKCodec.Create through SKFrontBufferedManagedStream, which
+			// holds a private *inner* SKManagedStream wrapping the user's .NET stream. Only the OUTER
+			// front-buffered wrapper is reparented onto the codec (OwnsHandle=false, IgnorePublicDispose
+			// =true); the inner SKManagedStream is UNTOUCHED (still owns its handle, still forwards public
+			// Dispose). The user's racing fb.Dispose() must be a no-op, and codec teardown must walk
+			// fb -> inner -> .NET stream and close the .NET stream EXACTLY once. We supply the inner
+			// explicitly (public ctor) so both wrappers' deregistration is asserted without reflection.
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+
+			var dotnet = new NonSeekableGatedCountingStream(bytes);
+			var inner = new SKManagedStream(dotnet, true);
+			var innerHandle = inner.Handle;
+			var fb = new SKFrontBufferedManagedStream(inner, SKCodec.MinBufferedBytesNeeded, true);
+			var fbHandle = fb.Handle;
+			var codec = SKCodec.Create(fb);
+			try
+			{
+				Assert.NotNull(codec);
+
+				// Only the outer front-buffered wrapper is reparented; the inner stays a normal owner.
+				Assert.False(fb.OwnsHandle);
+				Assert.True(fb.IgnorePublicDispose);
+				Assert.True(inner.OwnsHandle);
+				Assert.False(inner.IgnorePublicDispose);
+
+				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out _));
+
+				// The user still holds fb and (wrongly) disposes it: it is reparented, so this is a no-op.
+				fb.Dispose();
+				Assert.False(fb.IsDisposed);
+				Assert.False(inner.IsDisposed);
+				Assert.Equal(0, dotnet.DisposeCount);
+			}
+			finally
+			{
+				codec.Dispose();
+			}
+
+			// Codec teardown is the sole disposer: fb -> inner -> .NET stream, closed exactly once.
+			Assert.True(fb.IsDisposed);
+			Assert.True(inner.IsDisposed);
+			Assert.Equal(1, dotnet.DisposeCount);
+			Assert.False(HandleDictionary.GetInstance<SKFrontBufferedManagedStream>(fbHandle, out _));
+			Assert.False(HandleDictionary.GetInstance<SKManagedStream>(innerHandle, out _));
+		}
+
+		[SkippableFact]
+		public unsafe void PublicDisposeWhileFrontBufferedCodecReadIsInFlightIsIgnored()
+		{
+			// DETERMINISTIC in-flight-read race for the NESTED non-seekable graph. Park the native lazy
+			// read inside the underlying .NET Stream.Read() (reached through fb's front buffer -> inner
+			// SKManagedStream), fire the reparented fb's public Dispose() while that read is provably
+			// in-flight, then release. The ignored public Dispose must not close anything mid-read, so
+			// GetPixels succeeds and the .NET stream is closed exactly once by codec teardown.
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+
+			using var readEntered = new ManualResetEventSlim(false);
+			using var releaseRead = new ManualResetEventSlim(false);
+
+			var dotnet = new NonSeekableGatedCountingStream(bytes);
+			var fb = new SKFrontBufferedManagedStream(dotnet, SKCodec.MinBufferedBytesNeeded, true);
+			var fbHandle = fb.Handle;
+			var codec = SKCodec.Create(fb);
+			Task reader = null;
+			try
+			{
+				Assert.False(fb.OwnsHandle);
+				Assert.True(fb.IgnorePublicDispose);
+
+				// Arm only AFTER Create() so the gate trips on a GetPixels read past the front buffer, not
+				// on the header bytes buffered during format detection.
+				dotnet.Arm(readEntered, releaseRead);
+
+				var result = SKCodecResult.InternalError;
+				reader = Task.Run(() => result = codec.GetPixels(out _));
+
+				Assert.True(readEntered.Wait(TimeSpan.FromSeconds(30)), "Native lazy read never reached the underlying non-seekable stream.");
+
+				// The native read is parked inside the underlying Read(); a public Dispose now must no-op.
+				fb.Dispose();
+				Assert.False(fb.IsDisposed);
+				Assert.Equal(0, dotnet.DisposeCount);
+
+				releaseRead.Set();
+				Assert.True(reader.Wait(TimeSpan.FromSeconds(30)), "GetPixels did not complete after the read was released.");
+
+				Assert.Equal(SKCodecResult.Success, result);
+				Assert.False(fb.IsDisposed);
+				Assert.Equal(0, dotnet.DisposeCount);
+			}
+			finally
+			{
+				releaseRead.Set();
+				try { reader?.Wait(TimeSpan.FromSeconds(30)); } catch { }
+				codec.Dispose();
+			}
+
+			// The codec is the sole disposer; the underlying .NET stream was closed exactly once.
+			Assert.True(fb.IsDisposed);
+			Assert.Equal(1, dotnet.DisposeCount);
+			Assert.False(HandleDictionary.GetInstance<SKFrontBufferedManagedStream>(fbHandle, out _));
+		}
+
+		[SkippableFact]
+		public unsafe void InvalidNonSeekableStreamFailedCodecCreateClosesNestedStreamExactlyOnce()
+		{
+			// FAILURE path for the nested non-seekable graph: when the codec cannot be created, Create
+			// still transfers ownership to a null native object, which disposes the front-buffered
+			// wrapper immediately. That teardown must walk fb -> inner -> .NET stream and close it
+			// exactly once, and both wrappers must deregister — no leak, no double-free.
+			var bytes = new byte[256];
+			for (var i = 0; i < bytes.Length; i++)
+				bytes[i] = (byte)(i + 1);
+
+			var dotnet = new NonSeekableGatedCountingStream(bytes);
+			var inner = new SKManagedStream(dotnet, true);
+			var innerHandle = inner.Handle;
+			var fb = new SKFrontBufferedManagedStream(inner, SKCodec.MinBufferedBytesNeeded, true);
+			var fbHandle = fb.Handle;
+
+			var codec = SKCodec.Create(fb, out var result);
+
+			Assert.Null(codec);
+			Assert.NotEqual(SKCodecResult.Success, result);
+
+			// The failed Create disposed fb immediately, which tore down the whole nested chain once.
+			Assert.True(fb.IsDisposed);
+			Assert.True(inner.IsDisposed);
+			Assert.Equal(1, dotnet.DisposeCount);
+			Assert.False(HandleDictionary.GetInstance<SKFrontBufferedManagedStream>(fbHandle, out _));
+			Assert.False(HandleDictionary.GetInstance<SKManagedStream>(innerHandle, out _));
+		}
+
+		[SkippableFact]
+		public unsafe void FrontBufferedCodecWithoutOwnershipDoesNotCloseUnderlyingStream()
+		{
+			// disposeUnderlyingStream:false — the user keeps ownership of the .NET stream. The nested
+			// SKManagedStream is still disposed by codec teardown, but it must NOT close the user's .NET
+			// stream. We then close it ourselves to prove the count is driven solely by the user, not the
+			// codec chain.
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+
+			var dotnet = new NonSeekableGatedCountingStream(bytes);
+			var fb = new SKFrontBufferedManagedStream(dotnet, SKCodec.MinBufferedBytesNeeded, false);
+			var fbHandle = fb.Handle;
+			var codec = SKCodec.Create(fb);
+			try
+			{
+				Assert.NotNull(codec);
+				Assert.False(fb.OwnsHandle);
+				Assert.True(fb.IgnorePublicDispose);
+				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out _));
+			}
+			finally
+			{
+				codec.Dispose();
+			}
+
+			// Codec teardown disposed the wrappers but, lacking ownership, left the .NET stream open.
+			Assert.True(fb.IsDisposed);
+			Assert.False(HandleDictionary.GetInstance<SKFrontBufferedManagedStream>(fbHandle, out _));
+			Assert.Equal(0, dotnet.DisposeCount);
+
+			// The user is the only owner: closing now is the first and only close.
+			dotnet.Dispose();
+			Assert.Equal(1, dotnet.DisposeCount);
+		}
+
 		// A seekable .NET Stream over a byte buffer that (a) counts how many times it is disposed and
 		// (b) can park the FIRST read after Arm() until released — used to drive a deterministic
 		// "public Dispose while the native lazy read is in-flight" race and to count exact teardown.
@@ -1083,6 +1254,64 @@ namespace SkiaSharp.Tests
 			public override long Position { get => inner.Position; set => inner.Position = value; }
 			public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
 			public override void Flush() => inner.Flush();
+			public override void SetLength(long value) => throw new NotSupportedException();
+			public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+		}
+
+		// A NON-SEEKABLE .NET Stream over a byte buffer that (a) counts how many times it is disposed,
+		// (b) records the disposing thread id, and (c) can park the first read after Arm() until
+		// released. Non-seekable so SKCodec.Create routes it through the SKFrontBufferedManagedStream
+		// (nested SKManagedStream) path — a different teardown graph from the flat seekable wrapper.
+		private sealed class NonSeekableGatedCountingStream : Stream
+		{
+			private readonly MemoryStream inner;
+			private ManualResetEventSlim readEntered;
+			private ManualResetEventSlim releaseRead;
+			private int gateArmed;
+			private int disposeCount;
+			private int firstDisposeThreadId;
+
+			public NonSeekableGatedCountingStream(byte[] bytes) => inner = new MemoryStream(bytes, writable: false);
+
+			public int DisposeCount => Volatile.Read(ref disposeCount);
+
+			public int FirstDisposeThreadId => Volatile.Read(ref firstDisposeThreadId);
+
+			public void Arm(ManualResetEventSlim entered, ManualResetEventSlim release)
+			{
+				readEntered = entered;
+				releaseRead = release;
+				Volatile.Write(ref gateArmed, 1);
+			}
+
+			public override int Read(byte[] buffer, int offset, int count)
+			{
+				if (Interlocked.CompareExchange(ref gateArmed, 0, 1) == 1)
+				{
+					readEntered.Set();
+					releaseRead.Wait();
+				}
+				return inner.Read(buffer, offset, count);
+			}
+
+			protected override void Dispose(bool disposing)
+			{
+				if (disposing)
+				{
+					if (Interlocked.Increment(ref disposeCount) == 1)
+						Volatile.Write(ref firstDisposeThreadId, Environment.CurrentManagedThreadId);
+					inner.Dispose();
+				}
+				base.Dispose(disposing);
+			}
+
+			public override bool CanRead => true;
+			public override bool CanSeek => false;
+			public override bool CanWrite => false;
+			public override long Length => throw new NotSupportedException();
+			public override long Position { get => inner.Position; set => throw new NotSupportedException(); }
+			public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+			public override void Flush() => throw new NotSupportedException();
 			public override void SetLength(long value) => throw new NotSupportedException();
 			public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 		}
