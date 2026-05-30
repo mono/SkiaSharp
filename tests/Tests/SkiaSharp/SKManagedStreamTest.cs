@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SkiaSharp.Tests
 {
@@ -858,6 +860,231 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, stream.fromNative);
 				Assert.True(stream.IsDisposed);
 			}
+		}
+
+		// After SKCodec.Create reparents the managed stream (OwnsHandle=false, IgnorePublicDispose
+		// latched under the shard lock), the user STILL holds the wrapper and may call Dispose() on it
+		// from another thread. The PR's lock-paired public Dispose must IGNORE that call so the codec
+		// keeps reading through a live stream and remains its sole disposer. Before the LAZY-reparent
+		// fix an eager public close here tore the native stream out from under an in-flight native read
+		// -> use-after-free / host crash. The existing concurrency tests only race Dispose() against
+		// itself on an OWNED stream; these two pin the reparented supported concurrency: (1) an ignored
+		// public Dispose racing a lazy native read, and (2) an ignored public Dispose racing the codec's
+		// owner-teardown (which must still be the single, exactly-once disposer of the wrapper).
+
+		[SkippableFact]
+		public unsafe void PublicDisposeWhileCodecReadIsInFlightIsIgnored()
+		{
+			// DETERMINISTIC version of the race: park the native lazy read INSIDE the .NET
+			// Stream.Read() callback, fire the (reparented) wrapper's public Dispose() while the
+			// native read is provably in-flight, then release the read. The public Dispose must be
+			// ignored (IgnorePublicDispose latched), so the in-flight native read completes against a
+			// live stream and GetPixels succeeds. This is the exact use-after-free the LAZY-reparent
+			// fix prevents — an eager public close here would close the .NET stream mid-read.
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+
+			using var readEntered = new ManualResetEventSlim(false);
+			using var releaseRead = new ManualResetEventSlim(false);
+
+			var dotnet = new GatedCountingStream(bytes);
+			var stream = new SKManagedStream(dotnet, true);
+			var handle = stream.Handle;
+			var codec = SKCodec.Create(stream);
+			Task reader = null;
+			try
+			{
+				Assert.False(stream.OwnsHandle);
+				Assert.True(stream.IgnorePublicDispose);
+
+				// Arm only AFTER Create() so the gate trips on a GetPixels read, not header parsing.
+				dotnet.Arm(readEntered, releaseRead);
+
+				var result = SKCodecResult.InternalError;
+				reader = Task.Run(() => result = codec.GetPixels(out _));
+
+				Assert.True(readEntered.Wait(TimeSpan.FromSeconds(30)), "Native lazy read never entered the managed stream.");
+
+				// The native read is parked inside Read(); a public Dispose now must be a no-op.
+				stream.Dispose();
+				Assert.False(stream.IsDisposed);
+
+				releaseRead.Set();
+				Assert.True(reader.Wait(TimeSpan.FromSeconds(30)), "GetPixels did not complete after the read was released.");
+
+				// If the ignored Dispose had wrongly closed the .NET stream, the parked inner.Read would
+				// have thrown and GetPixels would not be Success; DisposeCount would also not be 0.
+				Assert.Equal(SKCodecResult.Success, result);
+				Assert.False(stream.IsDisposed);
+				Assert.Equal(0, dotnet.DisposeCount);
+			}
+			finally
+			{
+				// Drain the reader before tearing the codec down so no background decode runs against a
+				// disposed codec. Swallow here so a primary in-try assertion failure is not masked.
+				releaseRead.Set();
+				try { reader?.Wait(TimeSpan.FromSeconds(30)); } catch { }
+				codec.Dispose();
+			}
+
+			// The codec is the sole disposer; the underlying .NET stream was closed exactly once.
+			Assert.True(stream.IsDisposed);
+			Assert.Equal(1, dotnet.DisposeCount);
+			Assert.False(HandleDictionary.GetInstance<SKManagedStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public unsafe void PublicDisposeAroundLazyCodecReadIsIgnoredStress()
+		{
+			// STRESS version: barrier-synchronised public Dispose vs a full GetPixels, repeated many
+			// times to shake out interleavings beyond the single overlap the deterministic gate pins.
+			// (The barrier only co-starts the two operations; it does NOT guarantee Dispose overlaps an
+			// in-flight Read — that exact overlap is proven deterministically by the gated test above.)
+			const int iterations = 100;
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+
+			for (var i = 0; i < iterations; i++)
+			{
+				var stream = new SKManagedStream(new MemoryStream(bytes), true);
+				var handle = stream.Handle;
+				var codec = SKCodec.Create(stream);
+				try
+				{
+					Assert.False(stream.OwnsHandle);
+					Assert.True(stream.IgnorePublicDispose);
+
+					var result = SKCodecResult.InternalError;
+					using (var barrier = new Barrier(2))
+					{
+						var read = Task.Run(() => { barrier.SignalAndWait(); result = codec.GetPixels(out _); });
+						var dispose = Task.Run(() => { barrier.SignalAndWait(); stream.Dispose(); });
+						Assert.True(Task.WaitAll(new[] { read, dispose }, TimeSpan.FromSeconds(30)), "Dispose/GetPixels race did not complete in time.");
+					}
+
+					// The lazy native read saw a live stream; the racing public Dispose was a no-op.
+					Assert.Equal(SKCodecResult.Success, result);
+					Assert.False(stream.IsDisposed);
+					Assert.True(HandleDictionary.GetInstance<SKManagedStream>(handle, out _));
+				}
+				finally
+				{
+					codec.Dispose();
+				}
+
+				// The codec is the sole disposer; teardown ran after the race.
+				Assert.Equal(1, stream.fromNative);
+				Assert.True(stream.IsDisposed);
+				Assert.False(HandleDictionary.GetInstance<SKManagedStream>(handle, out _));
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void PublicDisposeRacingCodecTeardownClosesManagedStreamExactlyOnce()
+		{
+			// Ignored public Dispose (no-ops on IgnorePublicDispose) racing the codec's owner-teardown
+			// (the sole disposer, via DisposeUnownedManaged -> child.DisposeInternal). The underlying
+			// .NET stream must be closed EXACTLY once — proven by DisposeCount. fromNative is only a
+			// one-way latch (Interlocked.Exchange), so fromNative==1 asserts the native destroy callback
+			// was OBSERVED, not that it fired exactly once; DisposeCount carries the exactly-once proof.
+			const int iterations = 200;
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+
+			for (var i = 0; i < iterations; i++)
+			{
+				var dotnet = new GatedCountingStream(bytes);
+				var stream = new SKManagedStream(dotnet, true);
+				var handle = stream.Handle;
+				var codec = SKCodec.Create(stream);
+				try
+				{
+					Assert.False(stream.OwnsHandle);
+					Assert.True(stream.IgnorePublicDispose);
+
+					using (var barrier = new Barrier(2))
+					{
+						var teardownThreadId = 0;
+						var dispose = Task.Run(() => { barrier.SignalAndWait(); stream.Dispose(); });
+						var teardown = Task.Run(() => { barrier.SignalAndWait(); teardownThreadId = Environment.CurrentManagedThreadId; codec.Dispose(); });
+						Assert.True(Task.WaitAll(new[] { dispose, teardown }, TimeSpan.FromSeconds(30)), "Dispose/teardown race did not complete in time.");
+
+						// The ignored public Dispose never closes the stream; the codec owner-teardown is the
+						// real disposer. Proven by the closing thread being the teardown task, not the public
+						// Dispose task — DisposeCount==1 alone could not distinguish which path won.
+						Assert.Equal(teardownThreadId, dotnet.FirstDisposeThreadId);
+					}
+				}
+				finally
+				{
+					// Idempotent: redundant if the racing thread already tore the codec down.
+					codec.Dispose();
+				}
+
+				// Ignored public Dispose + single owner teardown => one .NET stream close, one latch flip.
+				Assert.Equal(1, dotnet.DisposeCount);
+				Assert.Equal(1, stream.fromNative);
+				Assert.True(stream.IsDisposed);
+				Assert.False(HandleDictionary.GetInstance<SKManagedStream>(handle, out _));
+			}
+		}
+
+		// A seekable .NET Stream over a byte buffer that (a) counts how many times it is disposed and
+		// (b) can park the FIRST read after Arm() until released — used to drive a deterministic
+		// "public Dispose while the native lazy read is in-flight" race and to count exact teardown.
+		private sealed class GatedCountingStream : Stream
+		{
+			private readonly MemoryStream inner;
+			private ManualResetEventSlim readEntered;
+			private ManualResetEventSlim releaseRead;
+			private int gateArmed;
+			private int disposeCount;
+			private int firstDisposeThreadId;
+
+			public GatedCountingStream(byte[] bytes) => inner = new MemoryStream(bytes, writable: false);
+
+			public int DisposeCount => Volatile.Read(ref disposeCount);
+
+			// Managed thread id of whoever closed the .NET stream first. Lets a test prove the codec
+			// owner-teardown — not the ignored public Dispose — was the actual disposer.
+			public int FirstDisposeThreadId => Volatile.Read(ref firstDisposeThreadId);
+
+			public void Arm(ManualResetEventSlim entered, ManualResetEventSlim release)
+			{
+				readEntered = entered;
+				releaseRead = release;
+				Volatile.Write(ref gateArmed, 1);
+			}
+
+			public override int Read(byte[] buffer, int offset, int count)
+			{
+				if (Interlocked.CompareExchange(ref gateArmed, 0, 1) == 1)
+				{
+					readEntered.Set();
+					releaseRead.Wait();
+				}
+				return inner.Read(buffer, offset, count);
+			}
+
+			protected override void Dispose(bool disposing)
+			{
+				if (disposing)
+				{
+					if (Interlocked.Increment(ref disposeCount) == 1)
+						Volatile.Write(ref firstDisposeThreadId, Environment.CurrentManagedThreadId);
+					// Actually close the backing buffer: a premature close during an in-flight read
+					// then surfaces as an ObjectDisposedException from the parked inner.Read.
+					inner.Dispose();
+				}
+				base.Dispose(disposing);
+			}
+
+			public override bool CanRead => true;
+			public override bool CanSeek => true;
+			public override bool CanWrite => false;
+			public override long Length => inner.Length;
+			public override long Position { get => inner.Position; set => inner.Position = value; }
+			public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
+			public override void Flush() => inner.Flush();
+			public override void SetLength(long value) => throw new NotSupportedException();
+			public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 		}
 
 		// A MemoryStream that records disposal and rejects (rather than silently swallowing)
