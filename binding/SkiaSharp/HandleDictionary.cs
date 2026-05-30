@@ -11,23 +11,34 @@ using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
-	// EXPERIMENT (issue #4101): lock striping for the handle registry.
+	// EXPERIMENT (issue #4101): lock striping for the handle registry, with two-phase
+	// (reservation-gate) construction so the object factory NEVER runs under a shard lock.
 	//
-	// The registry is partitioned into ShardCount independently-locked shards. The
-	// shard for a handle is a bit-mixed hash of the handle value. Every public
-	// operation here is keyed on a SINGLE handle, so an object's handle always maps
-	// to exactly one shard; its GetOrAddObject (upgradeable/write) and its public
-	// Dispose (write, via GetLockFor) therefore contend on the SAME shard lock. This
-	// preserves the promote/dispose mutual-exclusion invariant of the original
-	// single-lock design while letting unrelated handles proceed in parallel.
+	// The registry is partitioned into ShardCount independently-locked shards. The shard for a
+	// handle is a bit-mixed hash of the handle value. Every public operation here is keyed on a
+	// SINGLE handle, so an object's handle always maps to exactly one shard; its registration and
+	// its public Dispose (write, via GetLockFor) contend on the SAME shard lock. This preserves the
+	// promote/dispose mutual-exclusion invariant of the original single-lock design while letting
+	// unrelated handles proceed in parallel. ShardCount == 1 reduces to single-lock behavior.
 	//
-	// ShardCount == 1 reduces EXACTLY to the original single-lock behavior.
+	// Two-phase construction (removes the cross-shard deadlock hazard):
+	//   Phase 1 (under shard lock, O(1)): dedup against a live instance; else if another thread is
+	//           already constructing this handle, wait on its per-handle gate and retry; else install
+	//           our own Reservation and release the lock.
+	//   Phase 2 (NO lock held): run the object factory. The wrapper ctor's RegisterHandle sees our
+	//           reservation and SUPPRESSES publication (so a half-built wrapper is never visible).
+	//   Phase 3 (under shard lock, O(1)): publish the finished wrapper into "instances", drop the
+	//           reservation, then signal the gate so waiters observe only the completed object.
 	//
-	// KNOWN OPEN HAZARD (the un-drafting blocker, see #4101): GetOrAddObject invokes
-	// the object factory WHILE holding a shard lock. If a wrapper constructor were to
-	// construct and register a DIFFERENT-handle SKObject, a second shard lock would be
-	// acquired while the first is held — a cross-shard lock-ordering risk that cannot
-	// occur with a single global lock. This must be resolved before this is shippable.
+	// Because no shard lock is ever held across the factory, a thread holds at most ONE shard lock at
+	// a time, so nested different-handle construction cannot form a cross-shard AB-BA cycle. The only
+	// residual hazards are (a) re-entrant same-thread same-handle construction (detected and thrown,
+	// never hung) and (b) a genuine cross-object construction-time data-dependency cycle between two
+	// threads (an application bug, far rarer than the structural hazard this removes).
+	//
+	// "instances" only ever holds fully-constructed wrappers; in-flight handles live in the separate
+	// "reservations" map. So GetInstance/GetInstanceNoLocks/DeregisterHandle and the aggregating
+	// diagnostics need no awareness of reservations.
 	internal static class HandleDictionary
 	{
 		private static readonly Type SkipObjectRegistrationType = typeof (ISKSkipObjectRegistration);
@@ -37,9 +48,21 @@ namespace SkiaSharp
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
 #endif
 
+		// An in-flight construction for a single handle. Concurrent same-handle callers wait on the
+		// gate; the owning thread publishes the finished wrapper and signals it. ownerThreadId is set
+		// at creation and read under the owning shard's instancesLock.
+		private sealed class Reservation
+		{
+			public readonly int ownerThreadId = Environment.CurrentManagedThreadId;
+			public readonly ManualResetEventSlim gate = new ManualResetEventSlim (false);
+		}
+
 		private sealed class Shard
 		{
 			public readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference> ();
+			// Handles currently mid-construction. A reservation masks the handle from dedup until
+			// GetOrAddObject Phase 3 publishes the finished wrapper into "instances". Guarded by instancesLock.
+			public readonly Dictionary<IntPtr, Reservation> reservations = new Dictionary<IntPtr, Reservation> ();
 #if DEBUG
 			public readonly Dictionary<IntPtr, string> stackTraces = new Dictionary<IntPtr, string> ();
 #endif
@@ -79,6 +102,7 @@ namespace SkiaSharp
 		{
 			// Additive, ABI-clean override resolved once at first use (same constraint as
 			// PlatformLock.Factory): AppContext data first, then environment variable.
+#if !NETFRAMEWORK
 			try {
 				var data = AppContext.GetData ("SkiaSharp.HandleDictionary.ShardCount");
 				if (data is int i && i > 0)
@@ -88,6 +112,7 @@ namespace SkiaSharp
 			} catch {
 				// ignore and fall through to env / auto
 			}
+#endif
 
 			try {
 				var env = Environment.GetEnvironmentVariable ("SKIASHARP_HANDLE_SHARDS");
@@ -114,7 +139,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// The shard lock that protects a given handle. Used by <see cref="SKObject.Dispose()"/>
+		/// The shard lock that protects a given handle. Used by SKObject.Dispose()
 		/// so its IgnorePublicDispose check + isDisposed claim pair against the same lock that
 		/// GetOrAddObject holds for that handle.
 		/// </summary>
@@ -199,7 +224,8 @@ namespace SkiaSharp
 		/// Retrieve or create an instance for the native handle. When <paramref name="disposeProtected"/> is true,
 		/// IgnorePublicDispose is set via PreventPublicDisposal on the wrapper that is returned (whether an
 		/// existing one was found or a new one was created).
-		/// This is safe because this method holds the shard's upgradeable-read lock for its whole duration, which is
+		/// This is safe because the flag is set while this method holds the shard lock (the upgradeable-read
+		/// lock for an existing instance, or the Phase 3 write lock for a freshly constructed one), which is
 		/// mutually exclusive with the write lock public Dispose() holds (on the same shard) around its
 		/// IgnorePublicDispose check — so the flag set cannot race a concurrent public disposal.
 		/// (PreventPublicDisposal itself takes no lock.)
@@ -222,45 +248,117 @@ namespace SkiaSharp
 			}
 
 			var shard = ShardFor (handle);
-			shard.instancesLock.EnterUpgradeableReadLock ();
-			try {
-				if (GetInstanceNoLocks<TSkiaObject> (shard, handle, out var instance)) {
-					// some object get automatically referenced on the native side,
-					// but managed code just has the same reference
-					if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+
+			while (true) {
+				Reservation mine = null;
+				Reservation waitFor = null;
+
+				shard.instancesLock.EnterUpgradeableReadLock ();
+				try {
+					// Phase 1a: dedup against a fully-constructed, living instance.
+					if (GetInstanceNoLocks<TSkiaObject> (shard, handle, out var instance)) {
+						// some objects get automatically referenced on the native side,
+						// but managed code just has the same reference
+						if (unrefExisting && instance is ISKReferenceCounted refcnt) {
 #if THROW_OBJECT_EXCEPTIONS
-						if (refcnt.GetReferenceCount () == 1)
-							throw new InvalidOperationException (
-								$"About to unreference an object that has no references. " +
-								$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
+							if (refcnt.GetReferenceCount () == 1)
+								throw new InvalidOperationException (
+									$"About to unreference an object that has no references. " +
+									$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
 #endif
-						refcnt.SafeUnRef ();
+							refcnt.SafeUnRef ();
+						}
+
+						if (disposeProtected)
+							// Safe against a concurrent PUBLIC Dispose: it holds this shard's write lock,
+							// mutually exclusive with the upgradeable-read lock held here.
+							instance.PreventPublicDisposal ();
+
+						return instance;
 					}
 
-					if (disposeProtected)
-						// Safe against a concurrent PUBLIC Dispose: it holds this shard's write lock, which is
-						// mutually exclusive with the upgradeable-read lock held here. Internal Dispose
-						// paths don't affect the flag's purpose, and no dispose-protected target can be
-						// internally disposed concurrently either (see PreventPublicDisposal's guard).
-						instance.PreventPublicDisposal ();
+					// Phase 1b: is another thread already constructing this handle?
+					if (shard.reservations.TryGetValue (handle, out var existing)) {
+						if (existing.ownerThreadId == Environment.CurrentManagedThreadId) {
+							// Re-entrant same-thread, same-handle construction (e.g. a native callback
+							// during the factory re-enters GetOrAddObject for the same handle). Waiting on
+							// our own gate would self-deadlock, so fail fast instead of hanging.
+							throw new InvalidOperationException (
+								$"Re-entrant construction of the same handle on the same thread. " +
+								$"H: {handle.ToString ("x")} Type: {typeof (TSkiaObject)}");
+						}
 
-					return instance;
+						// Another thread owns it: wait outside the lock, then retry from the top.
+						waitFor = existing;
+					} else {
+						// Phase 1c: claim the handle so concurrent callers wait instead of double-constructing.
+						mine = new Reservation ();
+						shard.instancesLock.EnterWriteLock ();
+						try {
+							shard.reservations[handle] = mine;
+						} finally {
+							shard.instancesLock.ExitWriteLock ();
+						}
+					}
+				} finally {
+					shard.instancesLock.ExitUpgradeableReadLock ();
 				}
 
-				// NOTE: the factory runs under this shard's lock. Registering the SAME handle (the
-				// normal case) re-enters this same shard lock on the same thread (upgradeable->write,
-				// permitted). Registering a DIFFERENT handle here would take a second shard lock — the
-				// cross-shard hazard documented at the top of this file.
-				var obj = objectFactory.Invoke (handle, owns);
+				// Phase 2 + 3 run with NO shard lock held across the factory.
+				if (mine != null)
+					return ConstructAndPublish (shard, handle, owns, disposeProtected, mine, objectFactory);
 
-				// Cannot race with a concurrent public Dispose call. same reasoning as above.
-				if (disposeProtected && obj is not null)
-					obj.PreventPublicDisposal ();
-
-				return obj;
-			} finally {
-				shard.instancesLock.ExitUpgradeableReadLock ();
+				// Block (holding no shard lock) until the owner finishes, then retry from the top.
+				waitFor.gate.Wait ();
 			}
+		}
+
+		// Phase 2 (construct outside the lock) + Phase 3 (publish under the lock, then signal). Kept in
+		// its own method so the shard lock acquired in Phase 1 is fully released before the factory runs.
+		private static TSkiaObject ConstructAndPublish<TSkiaObject> (Shard shard, IntPtr handle, bool owns, bool disposeProtected, Reservation reservation, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject
+		{
+			TSkiaObject obj = null;
+			var completed = false;
+			try {
+				// Phase 2: construct WITHOUT holding any shard lock. The wrapper ctor's Handle setter calls
+				// RegisterHandle, which sees this reservation (same thread, same handle) and suppresses
+				// publication so a half-built wrapper is never exposed to other threads.
+				obj = objectFactory.Invoke (handle, owns);
+				completed = true;
+			} finally {
+				try {
+					// Phase 3: publish the finished wrapper (or just clear the reservation on failure),
+					// under this shard's write lock.
+					shard.instancesLock.EnterWriteLock ();
+					try {
+						shard.reservations.Remove (handle);
+
+						// Only publish a wrapper the factory FULLY constructed. If the factory threw
+						// (completed == false) or returned null, leave "instances" empty so a waiter
+						// reconstructs from scratch instead of receiving a half-built object.
+						if (completed && obj != null) {
+							shard.instances[handle] = new WeakReference (obj);
+#if DEBUG
+							shard.stackTraces[handle] = Environment.StackTrace;
+#endif
+							if (disposeProtected)
+								// Set under this shard's write lock, mutually exclusive with public Dispose's
+								// check+CAS on the same lock. (No public Dispose can run before we return
+								// anyway, since user code has no reference to a still-constructing object.)
+								obj.PreventPublicDisposal ();
+						}
+					} finally {
+						shard.instancesLock.ExitWriteLock ();
+					}
+				} finally {
+					// ALWAYS release waiters, even if publication above threw, so they never hang. The
+					// reservation is already removed, so a woken waiter reconstructs if nothing was published.
+					reservation.gate.Set ();
+				}
+			}
+
+			return obj;
 		}
 
 		/// <summary>
@@ -311,6 +409,23 @@ namespace SkiaSharp
 			var shard = ShardFor (handle);
 			shard.instancesLock.EnterWriteLock ();
 			try {
+				// Reserved-handle fast path: this handle is mid-construction via GetOrAddObject. If WE own
+				// that reservation, do NOT publish into "instances" here — that would expose a not-yet-
+				// fully-constructed wrapper. GetOrAddObject Phase 3 publishes once the factory returns.
+				// A reservation owned by a DIFFERENT thread means two objects are racing to claim the same
+				// live native handle (pathological); refuse rather than overwrite the in-flight wrapper.
+				if (shard.reservations.TryGetValue (handle, out var reservation)) {
+					if (reservation.ownerThreadId == Environment.CurrentManagedThreadId)
+						return;
+#if THROW_OBJECT_EXCEPTIONS
+					throw new InvalidOperationException (
+						$"A managed object is being constructed for a handle that another thread is already constructing. " +
+						$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
+#else
+					return;
+#endif
+				}
+
 				if (shard.instances.TryGetValue (handle, out var oldValue) && oldValue.Target is SKObject obj && !obj.IsDisposed) {
 #if THROW_OBJECT_EXCEPTIONS
 					if (obj.OwnsHandle) {
