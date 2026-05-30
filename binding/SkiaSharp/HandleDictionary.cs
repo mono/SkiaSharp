@@ -55,6 +55,13 @@ namespace SkiaSharp
 		{
 			public readonly int ownerThreadId = Environment.CurrentManagedThreadId;
 			public readonly ManualResetEventSlim gate = new ManualResetEventSlim (false);
+
+			// Set true (before the gate is signaled) once the owner is completely finished with this
+			// reservation, whether it published a wrapper or failed. If the owner could NOT remove the
+			// reservation from its shard map on the failure path (e.g. re-acquiring the publish write
+			// lock threw), a waiter that later observes this still-present-but-retired reservation takes
+			// it over and reconstructs, instead of livelocking on an already-signaled gate.
+			public volatile bool retired;
 		}
 
 		private sealed class Shard
@@ -294,8 +301,22 @@ namespace SkiaSharp
 								$"H: {handle.ToString ("x")} Type: {typeof (TSkiaObject)}");
 						}
 
-						// Another thread owns it: wait outside the lock, then retry from the top.
-						waitFor = existing;
+						if (existing.retired) {
+							// The owner finished with this reservation but could not remove it from the map
+							// (its publish-phase write-lock acquisition threw). Nothing was published (Phase
+							// 1a above already checked), so take the stale reservation over and reconstruct
+							// rather than waiting on its already-signaled gate (which would busy-livelock).
+							mine = new Reservation ();
+							shard.instancesLock.EnterWriteLock ();
+							try {
+								shard.reservations[handle] = mine;
+							} finally {
+								shard.instancesLock.ExitWriteLock ();
+							}
+						} else {
+							// Another thread owns it: wait outside the lock, then retry from the top.
+							waitFor = existing;
+						}
 					} else {
 						// Phase 1c: claim the handle so concurrent callers wait instead of double-constructing.
 						mine = new Reservation ();
@@ -358,8 +379,11 @@ namespace SkiaSharp
 						shard.instancesLock.ExitWriteLock ();
 					}
 				} finally {
-					// ALWAYS release waiters, even if publication above threw, so they never hang. The
-					// reservation is already removed, so a woken waiter reconstructs if nothing was published.
+					// ALWAYS retire and release waiters, even if the publish above threw (e.g. the write
+					// lock could not be acquired) so they never hang. "retired" is set BEFORE the gate so a
+					// waiter that finds the reservation still in the map (because Remove never ran) takes it
+					// over and reconstructs instead of livelocking on the already-signaled gate.
+					reservation.retired = true;
 					reservation.gate.Set ();
 				}
 			}
