@@ -104,7 +104,7 @@ namespace SkiaSharp
 			}
 
 			var typeface = SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_stream (Handle, stream.Handle, index));
-			stream.TransferOwnershipToNative ();
+			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
 

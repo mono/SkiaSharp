@@ -292,27 +292,28 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public unsafe void StreamIsDisposedAfterOwnershipTransfer()
+		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
 			var stream = new SKMemoryStream(File.ReadAllBytes(path));
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IsDisposed);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 
 			var typeface = SKTypeface.FromStream(stream);
-
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+			Assert.True(stream.IgnorePublicDispose);
 
 			stream.Dispose();
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out var inst));
+			Assert.Same(stream, inst);
 
 			Assert.NotEmpty(typeface.GetTableTags());
 
 			typeface.Dispose();
+			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 		}
 
 		[SkippableFact]
@@ -322,13 +323,13 @@ namespace SkiaSharp.Tests
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IsDisposed);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
 
 			Assert.Null(SKTypeface.FromStream(stream));
 
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IsDisposed);
+			Assert.True(stream.IgnorePublicDispose);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
@@ -453,10 +454,9 @@ namespace SkiaSharp.Tests
 
 				Assert.NotEmpty(typeface.GetTableTags());
 
-				// The managed stream wrapper was disposed at the ownership transfer
-				// inside SKTypeface.FromStream — the native stream is owned by the
-				// typeface now.
-				Assert.False(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
+				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
+				Assert.False(stream.OwnsHandle);
+				Assert.True(stream.IgnorePublicDispose);
 			}
 
 			SKTypeface CreateTypeface(out IntPtr streamHandle)
@@ -465,7 +465,7 @@ namespace SkiaSharp.Tests
 				streamHandle = stream.Handle;
 
 				Assert.True(stream.OwnsHandle);
-				Assert.False(stream.IsDisposed);
+				Assert.False(stream.IgnorePublicDispose);
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
 
 				return SKTypeface.FromStream(stream);

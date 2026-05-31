@@ -192,6 +192,28 @@ namespace SkiaSharp
 
 			return owner;
 		}
+
+		internal void RevokeOwnership (SKObject newOwner)
+		{
+			// We cannot dispose this wrapper because the native object might
+			// call back into the wrapper e.g. via the proxies in SKAbstractManagedStream
+			// so we have to wait until newOwner's lifetime ends.
+
+			OwnsHandle = false;
+
+			if (newOwner == null) {
+				DisposeInternal ();
+			}
+			else {
+				HandleDictionary.instancesLock.EnterWriteLock ();
+				try {
+					PreventPublicDisposal ();
+				} finally {
+					HandleDictionary.instancesLock.ExitWriteLock ();
+				}
+				newOwner.OwnedObjects[Handle] = this;
+			}
+		}
 	}
 
 	public abstract class SKNativeObject : IDisposable
@@ -376,22 +398,6 @@ namespace SkiaSharp
 			GC.SuppressFinalize (this);
 		}
 
-		// Hand off ownership of the native object to native-side code that took it
-		// (e.g. SKCodec.Create / SKFontManager.CreateTypeface, where the C wrapper
-		// puts the stream into a unique_ptr that the codec/typeface then owns).
-		// Marks the wrapper as non-owning so the disposal won't unref the native,
-		// then disposes the managed wrapper. The user's reference to this wrapper
-		// becomes a disposed wrapper; subsequent use fails loudly rather than
-		// operating on a native object that's now owned elsewhere.
-		//
-		// Order matters: OwnsHandle = false MUST precede DisposeInternal. A racing
-		// Dispose() that sees OwnsHandle = true would call DisposeNative and free
-		// the native object that the receiving native code is about to use.
-		internal void TransferOwnershipToNative ()
-		{
-			OwnsHandle = false;
-			DisposeInternal ();
-		}
 	}
 
 	internal static class SKObjectExtensions
