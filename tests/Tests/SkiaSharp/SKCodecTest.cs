@@ -79,28 +79,29 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public unsafe void StreamIsDisposedAfterOwnershipTransfer()
+		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
 			var stream = new SKMemoryStream(File.ReadAllBytes(path));
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IsDisposed);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 
 			var codec = SKCodec.Create(stream);
-
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+			Assert.True(stream.IgnorePublicDispose);
 
 			stream.Dispose();
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out var inst));
+			Assert.Same(stream, inst);
 
 			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 			Assert.NotEmpty(pixels);
 
 			codec.Dispose();
+			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 		}
 
 		[SkippableFact]
@@ -110,13 +111,13 @@ namespace SkiaSharp.Tests
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IsDisposed);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
 
 			Assert.Null(SKCodec.Create(stream));
 
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IsDisposed);
+			Assert.True(stream.IgnorePublicDispose);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
@@ -144,9 +145,9 @@ namespace SkiaSharp.Tests
 				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 				Assert.NotEmpty(pixels);
 
-				// The managed stream wrapper was disposed at the ownership transfer
-				// inside SKCodec.Create — the native stream is owned by the codec now.
-				Assert.False(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
+				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
+				Assert.False(stream.OwnsHandle);
+				Assert.True(stream.IgnorePublicDispose);
 			}
 
 			SKCodec CreateCodec(out IntPtr streamHandle)
@@ -155,7 +156,7 @@ namespace SkiaSharp.Tests
 				streamHandle = stream.Handle;
 
 				Assert.True(stream.OwnsHandle);
-				Assert.False(stream.IsDisposed);
+				Assert.False(stream.IgnorePublicDispose);
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
 
 				return SKCodec.Create(stream);
