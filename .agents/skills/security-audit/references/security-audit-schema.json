@@ -461,6 +461,52 @@
       },
       "additionalProperties": false
     },
+    "chromeReleases": {
+      "type": "object",
+      "required": [
+        "queriedAt",
+        "postsReviewed",
+        "totalCvesExtracted",
+        "skiaRelevantCves",
+        "structuredCves",
+        "cacheFile"
+      ],
+      "properties": {
+        "queriedAt": {
+          "type": ["string", "null"]
+        },
+        "monthsQueried": {
+          "type": ["integer", "null"]
+        },
+        "postsReviewed": {
+          "type": "integer"
+        },
+        "totalCvesExtracted": {
+          "type": "integer"
+        },
+        "skiaRelevantCves": {
+          "type": "integer"
+        },
+        "structuredCves": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "earlyDisclosures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "cacheFile": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
     "nextSteps": {
       "type": "array",
       "items": {

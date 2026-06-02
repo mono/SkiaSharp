@@ -91,9 +91,14 @@ Task("libSkiaSharp")
         // Bionic (Android NDK) builds need SK_BUILD_FOR_UNIX to prevent the
         // NDK's __ANDROID__ define from suppressing SkDebugf (stdio port).
         // Fontconfig is not available on Bionic.
+        // The Android NDK ships libc++ as both static and shared — without
+        // -static-libstdc++ clang would pick libc++_shared.so as a runtime dep
+        // that we don't bundle. The .NET glibc/musl cross-images ship libc++
+        // static-only, so this flag is a no-op there but doesn't hurt.
         var isBionic = VARIANT.ToLower().StartsWith("bionic");
         var bionicDefine = isBionic ? ", '-DSK_BUILD_FOR_UNIX'" : "";
         var bionicArgs = isBionic ? "skia_use_fontconfig=false " : "";
+        var staticLibcxx = isBionic ? ", '-static-libstdc++'" : "";
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
@@ -112,8 +117,8 @@ Task("libSkiaSharp")
             $"skia_use_vulkan=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
-            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
+            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
@@ -137,6 +142,9 @@ Task("libHarfBuzzSharp")
         if (Skip(arch)) return;
 
         var skiaArch = GetSkiaArch(arch);
+        var isBionicHB = VARIANT.ToLower().StartsWith("bionic");
+        var bionicDefineHB = isBionicHB ? ", '-DSK_BUILD_FOR_UNIX'" : "";
+        var staticLibcxxHB = isBionicHB ? ", '-static-libstdc++'" : "";
 
         var soname = GetVersion("HarfBuzz", "soname");
         var map = MakeAbsolute((FilePath)"libHarfBuzzSharp/libHarfBuzzSharp.map");
@@ -146,8 +154,8 @@ Task("libHarfBuzzSharp")
             $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ {(VARIANT.ToLower().StartsWith("bionic") ? "'-DSK_BUILD_FOR_UNIX'" : "")} ] " +
-            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
+            $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
+            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);

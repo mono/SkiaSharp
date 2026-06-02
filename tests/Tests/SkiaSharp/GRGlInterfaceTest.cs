@@ -11,6 +11,7 @@ namespace SkiaSharp.Tests
 		public void InterfaceConstructionWithoutContextDoesNotCrash()
 		{
 			SkipOnPlatform(IsIOS || IsMacCatalyst, "GRGlInterface construction without context crashes on iOS/MacCatalyst");
+			SkipOnPlatform(IsBrowser, "GRGlInterface native call aborts the WASM runtime without a WebGL canvas");
 
 			var glInterface = GRGlInterface.Create();
 
