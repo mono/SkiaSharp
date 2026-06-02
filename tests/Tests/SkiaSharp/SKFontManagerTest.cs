@@ -10,6 +10,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestFontManagerMatchCharacter()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+
 			var fonts = SKFontManager.Default;
 			var emoji = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(emoji, SKTextEncoding.Utf32);
@@ -49,6 +51,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestGetFontStyles()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+
 			var fonts = SKFontManager.Default;
 
 			var set = fonts.GetFontStyles(DefaultFontFamily);
@@ -60,6 +64,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestMatchFamilyStyle()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+
 			var fonts = SKFontManager.Default;
 
 			var tf = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Bold);
@@ -237,6 +243,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void FromFamilyDisposeDoesNotDispose()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+
 			var fonts = SKFontManager.Default;
 
 			var tf1 = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
@@ -253,6 +261,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void TypefaceAndFontManagerReturnsSameObject()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+
 			var fonts = SKFontManager.Default;
 
 			// Use a font family known to exist on the current platform

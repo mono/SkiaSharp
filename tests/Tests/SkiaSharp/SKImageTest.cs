@@ -503,6 +503,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void DataOutLivesImageUntilFinalizersRun()
 		{
+			SkipOnPlatform(IsBrowser, "WASM does not guarantee finalizers are invoked immediately");
+
 			var released = false;
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "baboon.jpg"));

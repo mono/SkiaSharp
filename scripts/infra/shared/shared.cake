@@ -300,5 +300,9 @@ void TakeSnapshot(DirectoryPath output, string name)
     var fname = $"screenshot-{DateTime.Now:yyyyMMdd_hhmmss}-{name}.jpg";
     var dest = output.CombineWithFilePath(fname);
 
-    RunProcess("screencapture", dest.FullPath);
+    try {
+        RunProcess("screencapture", dest.FullPath);
+    } catch (Exception ex) {
+        Warning("Failed to take screenshot: {0}", ex.Message);
+    }
 }
