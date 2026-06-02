@@ -1,6 +1,8 @@
 using System;
 using System.Reflection;
+#if !NETFRAMEWORK
 using System.Runtime.Loader;
+#endif
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -143,6 +145,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(paint);
 		}
 
+#if !NETFRAMEWORK
 		// --- #3817 cold-start cctor cycle (best-effort) ---
 
 		// When SKFontManager.Default is the FIRST SkiaSharp managed type touched
@@ -212,5 +215,6 @@ namespace SkiaSharp.Tests
 				return path != null ? LoadUnmanagedDllFromPath(path) : IntPtr.Zero;
 			}
 		}
+#endif
 	}
 }
