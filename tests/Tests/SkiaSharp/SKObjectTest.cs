@@ -240,11 +240,21 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		// Verifies that many threads can concurrently decode bitmaps through SkiaSharp
+		// without throwing or corrupting native state. The high-iteration variants stress
+		// concurrent allocation and the GC/finalizer pipeline under heavy parallel load.
 		[SkippableTheory]
 		[InlineData(1)]
+		[InlineData(100)]
 		[InlineData(1000)]
 		public async Task EnsureMultithreadingDoesNotThrow(int iterations)
 		{
+			// 1000 concurrent bitmap decodes exceed x86's 2GB address space. This is a genuine
+			// address-space limit, not a leak, so skip it on x86. The (100) variant still
+			// validates concurrent GC/finalizer behavior at lower load. See #3608.
+			if (IntPtr.Size == 4 && iterations >= 1000)
+				throw new SkipException("Stress test skipped on x86 due to address space limit.");
+
 			var imagePath = Path.Combine(PathToImages, "baboon.jpg");
 
 			var tasks = new Task[iterations];
