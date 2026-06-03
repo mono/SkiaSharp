@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 #if !NETFRAMEWORK
 using System.Runtime.Loader;
 #endif
@@ -163,7 +164,12 @@ namespace SkiaSharp.Tests
 				}
 				catch (TargetInvocationException ex)
 				{
-					throw ex.InnerException;
+					// Surface the real cold-start failure (the Issue #3817 cctor
+					// cycle) with its original stack intact, rather than throw
+					// ex.InnerException; which resets the stack and NREs when
+					// InnerException is null.
+					ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw();
+					throw; // unreachable; satisfies definite-assignment of value
 				}
 
 				Assert.NotNull(value);
