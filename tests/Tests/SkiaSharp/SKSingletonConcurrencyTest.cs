@@ -4,6 +4,7 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	// Proposed gap-filling tests for PR #4080.
+	[Collection (HandleDictionaryThreadingCollection.Name)]
 	public class SKSingletonConcurrencyTest : SKTest
 	{
 		// PROBABILISTIC deadlock canary (NOT a deterministic race proof).

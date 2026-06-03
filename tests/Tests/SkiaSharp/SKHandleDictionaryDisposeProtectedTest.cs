@@ -15,6 +15,7 @@ namespace SkiaSharp.Tests
 	// gets back a live, protected wrapper, even when racing a concurrent public Dispose() for the same
 	// handle. They use a fake, non-owning SKObject (see SKHandleDictionaryTestHelpers) so no native
 	// memory is touched.
+	[Collection (HandleDictionaryThreadingCollection.Name)]
 	public class SKHandleDictionaryDisposeProtectedTest : SKTest
 	{
 		// --- dispose-protected fresh construction sets the IgnorePublicDispose latch ---

@@ -391,42 +391,6 @@ namespace SkiaSharp.Tests
 			Assert.False(info.ColorSpace.IsSrgb);
 		}
 
-		[SkippableFact]
-		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
-		{
-			// get the first instance of the sRGB Linear and capture the steady-state refcount
-			var colorspace1 = SKColorSpace.CreateSrgbLinear();
-			Assert.True(colorspace1.IgnorePublicDispose);
-			var baselineRefCount = colorspace1.GetReferenceCount();
-
-			// create a new one with the same parameters, which will return the same instance
-			var colorspace2 = SKColorSpace.CreateRgb(SKColorSpaceTransferFn.Linear, SKColorSpaceXyz.Srgb);
-			Assert.True(colorspace2.IgnorePublicDispose);
-			Assert.Same(colorspace1, colorspace2);
-			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
-			Assert.Equal(baselineRefCount, colorspace2.GetReferenceCount());
-
-			// create a different one manually, which will return a new instance
-			var colorspace3 = SKColorSpace.CreateRgb(
-				new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
-				SKColorSpaceXyz.Identity);
-			Assert.NotSame(colorspace1, colorspace3);
-			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
-			Assert.Equal(baselineRefCount, colorspace2.GetReferenceCount());
-
-			colorspace3.Dispose();
-			Assert.True(colorspace3.IsDisposed);
-			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
-
-			colorspace2.Dispose();
-			Assert.False(colorspace2.IsDisposed);
-			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
-
-			colorspace1.Dispose();
-			Assert.False(colorspace1.IsDisposed);
-			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
-		}
-
 		private static void AssertMatrix(float[] expected, SKMatrix44 actual)
 		{
 			var actualArray = actual

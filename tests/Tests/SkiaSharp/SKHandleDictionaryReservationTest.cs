@@ -22,6 +22,7 @@ namespace SkiaSharp.Tests
 	// LockRecursionPolicy.NoRecursion on non-Windows), a nested GetOrAddObject would throw
 	// LockRecursionException rather than recurse — and on Windows (recursive CRITICAL_SECTION) it
 	// would not — so any such test is platform-dependent and is omitted by design.
+	[Collection (HandleDictionaryThreadingCollection.Name)]
 	public class SKHandleDictionaryReservationTest : SKTest
 	{
 		// --- Exactly-once construction under contention ---

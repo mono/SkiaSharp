@@ -190,8 +190,8 @@ namespace SkiaSharp.Tests
 					$"Disposed {typeof (TSkiaObject).Name} is still registered under handle 0x{handle.ToString ("x")}.");
 		}
 
-		// A dedicated-thread replacement for Task.Run used by the white-box stale-wrapper tests. Those
-		// tests need one worker that PARKS inside a gated managed-cleanup window while a SECOND worker
+		// A dedicated-thread replacement for Task.Run used by the white-box stale-wrapper tests and the
+		// managed-stream concurrency tests. Those tests need one worker that PARKS inside a gated window while a SECOND worker
 		// concurrently registers a replacement for the same handle. On the mobile interpreter runtimes
 		// (iOS / Mac Catalyst / Android) the thread pool is scheduled so sparsely that a parked Task.Run
 		// worker plus a second Task.Run worker can exhaust the available pool threads, starving the
