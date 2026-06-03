@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -25,19 +23,18 @@ namespace SkiaSharp.Tests
 		// The Assert.Same checks are the deterministic part: a correct singleton must
 		// always return one instance regardless of interleaving.
 		//
-		// NOTE: explicit Thread[] is used deliberately instead of Parallel.For. A
-		// Barrier(N) combined with Parallel.For can deadlock spuriously because
-		// Parallel.For does not guarantee N concurrent workers — a worker blocked on
-		// SignalAndWait never runs its remaining assigned iterations, so the barrier
-		// may never reach N participants. Real threads guarantee the barrier is
-		// satisfiable, so a hang here means a genuine product-side lock-ordering bug.
+		// Execution is delegated to RunConcurrent, which runs the body on N dedicated
+		// background threads released together by a Barrier and joins them against a
+		// shared deadline. That matters here: if the product code does have a
+		// lock-order inversion across these factories, the contention surfaces as a
+		// failed Join (a deterministic test FAILURE) instead of a hung suite, and the
+		// background threads never keep the host process alive after a hang.
 		[SkippableFact]
 		public void AllSingletonAccessorsAreStableUnderContention()
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
 
 			const int threadCount = 32;
-			using var barrier = new Barrier(threadCount);
 
 			var colorSpaces = new SKColorSpace[threadCount];
 			var colorSpaceLinears = new SKColorSpace[threadCount];
@@ -47,37 +44,17 @@ namespace SkiaSharp.Tests
 			var empties = new SKTypeface[threadCount];
 			var blenders = new SKBlender[threadCount];
 
-			var errors = new ConcurrentBag<Exception>();
-			var threads = new Thread[threadCount];
-			for (var t = 0; t < threadCount; t++)
+			SKHandleDictionaryTestHelpers.RunConcurrent(threadCount, i =>
 			{
-				var i = t;
-				threads[i] = new Thread(() =>
-				{
-					try
-					{
-						barrier.SignalAndWait();
-						colorSpaces[i] = SKColorSpace.CreateSrgb();
-						colorSpaceLinears[i] = SKColorSpace.CreateSrgbLinear();
-						datas[i] = SKData.Empty;
-						fontManagers[i] = SKFontManager.Default;
-						typefaces[i] = SKTypeface.Default;
-						empties[i] = SKTypeface.Empty;
-						blenders[i] = SKBlender.CreateBlendMode(SKBlendMode.SrcOver);
-					}
-					catch (Exception ex)
-					{
-						errors.Add(ex);
-					}
-				});
-			}
+				colorSpaces[i] = SKColorSpace.CreateSrgb();
+				colorSpaceLinears[i] = SKColorSpace.CreateSrgbLinear();
+				datas[i] = SKData.Empty;
+				fontManagers[i] = SKFontManager.Default;
+				typefaces[i] = SKTypeface.Default;
+				empties[i] = SKTypeface.Empty;
+				blenders[i] = SKBlender.CreateBlendMode(SKBlendMode.SrcOver);
+			}, deadlockMessage: "Singleton accessors deadlocked under contention (possible product-side lock-order inversion).");
 
-			foreach (var thread in threads)
-				thread.Start();
-			foreach (var thread in threads)
-				thread.Join();
-
-			Assert.Empty(errors);
 			AssertAllSame(colorSpaces);
 			AssertAllSame(colorSpaceLinears);
 			AssertAllSame(datas);
