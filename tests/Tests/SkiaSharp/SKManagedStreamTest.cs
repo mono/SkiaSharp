@@ -1006,8 +1006,8 @@ namespace SkiaSharp.Tests
 						var completed = read.Join (TimeSpan.FromSeconds (30));
 						completed &= dispose.Join (TimeSpan.FromSeconds (30));
 						Assert.True (completed, "Dispose/GetPixels race did not complete in time.");
-						if (readError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw (readError);
-						if (disposeError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw (disposeError);
+						if (readError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture (readError).Throw ();
+						if (disposeError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture (disposeError).Throw ();
 					}
 
 					// The lazy native read saw a live stream; the racing public Dispose was a no-op.
@@ -1063,8 +1063,8 @@ namespace SkiaSharp.Tests
 						var completed = dispose.Join (TimeSpan.FromSeconds (30));
 						completed &= teardown.Join (TimeSpan.FromSeconds (30));
 						Assert.True (completed, "Dispose/teardown race did not complete in time.");
-						if (disposeError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw (disposeError);
-						if (teardownError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw (teardownError);
+						if (disposeError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture (disposeError).Throw ();
+						if (teardownError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture (teardownError).Throw ();
 
 						// The ignored public Dispose never closes the stream; the codec owner-teardown is the
 						// real disposer. Proven by the closing thread being the teardown task, not the public
