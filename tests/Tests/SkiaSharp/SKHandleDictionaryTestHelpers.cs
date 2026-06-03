@@ -124,10 +124,10 @@ namespace SkiaSharp.Tests
 			// Attempt to join every worker before asserting so that a single timed-out
 			// thread cannot leave the others unjoined (a worker still holding
 			// instancesLock would otherwise cascade into later-test hangs).
-			var deadline = Environment.TickCount64 + timeoutMs;
+			var sw = System.Diagnostics.Stopwatch.StartNew ();
 			var allJoined = true;
 			foreach (var t in threads) {
-				var remaining = (int) Math.Max (0, deadline - Environment.TickCount64);
+				var remaining = (int) Math.Max (0, timeoutMs - sw.ElapsedMilliseconds);
 				allJoined &= t.Join (remaining);
 			}
 
@@ -159,7 +159,7 @@ namespace SkiaSharp.Tests
 			Assert.True (runner.Join (timeoutMs), deadlockMessage);
 
 			if (captured != null)
-				System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw (captured);
+				System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture (captured).Throw ();
 		}
 
 		// Asserts that a disposed wrapper has been deregistered from the HandleDictionary.
