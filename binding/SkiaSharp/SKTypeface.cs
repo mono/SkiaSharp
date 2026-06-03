@@ -247,28 +247,35 @@ namespace SkiaSharp
 
 		// CountGlyphs
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public int CountGlyphs (string str) =>
 			GetFont ().CountGlyphs (str);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public int CountGlyphs (ReadOnlySpan<char> str) =>
 			GetFont ().CountGlyphs (str);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public int CountGlyphs (byte[] str, SKTextEncoding encoding) =>
 			GetFont ().CountGlyphs (str, encoding);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public int CountGlyphs (ReadOnlySpan<byte> str, SKTextEncoding encoding) =>
 			GetFont ().CountGlyphs (str, encoding);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public int CountGlyphs (IntPtr str, int strLen, SKTextEncoding encoding) =>
 			GetFont ().CountGlyphs (str, strLen * encoding.GetCharacterByteSize (), encoding);
 
 		// GetGlyph
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public ushort GetGlyph (int codepoint) =>
 			GetFont ().GetGlyph (codepoint);
 
 		// GetGlyphs
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public ushort[] GetGlyphs (ReadOnlySpan<int> codepoints) =>
 			GetFont ().GetGlyphs (codepoints);
 
@@ -295,28 +302,35 @@ namespace SkiaSharp
 
 		// ContainsGlyph
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public bool ContainsGlyph (int codepoint) =>
 			GetFont ().ContainsGlyph (codepoint);
 
 		// ContainsGlyphs
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public bool ContainsGlyphs (ReadOnlySpan<int> codepoints) =>
 			GetFont ().ContainsGlyphs (codepoints);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public bool ContainsGlyphs (string text) =>
 			GetFont ().ContainsGlyphs (text);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public bool ContainsGlyphs (ReadOnlySpan<char> text) =>
 			GetFont ().ContainsGlyphs (text);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
 			GetFont ().ContainsGlyphs (text, encoding);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		public bool ContainsGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
 			GetFont ().ContainsGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
 
 		// GetFont
 
+		[Obsolete ("Use SKFont directly instead.")]
 		internal SKFont GetFont () =>
 			font ??= OwnedBy (new SKFont (this), this);
 

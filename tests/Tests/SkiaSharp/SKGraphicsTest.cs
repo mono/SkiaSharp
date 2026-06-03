@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
@@ -74,7 +74,7 @@ namespace SkiaSharp.Tests
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
 			using var image = SKImage.FromEncodedData(data);
 
-			canvas.DrawImage(image, 0, 0);
+			canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 
 			using var dump = new TextWriterDump(true, true);
 
@@ -97,7 +97,7 @@ namespace SkiaSharp.Tests
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
 			using var image = SKImage.FromEncodedData(data);
 
-			canvas.DrawImage(image, 0, 0);
+			canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 
 			using var dump = new TextWriterDump(true, true);
 
@@ -121,7 +121,7 @@ namespace SkiaSharp.Tests
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
 			using var image = SKImage.FromEncodedData(data);
 
-			canvas.DrawImage(image, 0, 0);
+			canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 
 			using var dump = new TextWriterDump(true, true);
 

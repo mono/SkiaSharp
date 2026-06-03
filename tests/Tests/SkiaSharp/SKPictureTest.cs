@@ -120,7 +120,7 @@ namespace SkiaSharp.Tests
 			// create a picture that has an image in it
 			using var picRecorder = new SKPictureRecorder();
 			using var picCanvas = picRecorder.BeginRecording(SKRect.Create(0, 0, 40, 40));
-			picCanvas.DrawBitmap(sourceBitmap, 0, 0);
+			picCanvas.DrawBitmap(sourceBitmap, 0, 0, SKSamplingOptions.Default);
 			using var picture = picRecorder.EndRecording();
 
 			// serialize and then deserialize the picture

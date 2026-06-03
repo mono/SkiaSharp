@@ -548,6 +548,7 @@ namespace SkiaSharp
 
 		// DrawImage
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawImage (SKImage image, SKPoint p, SKPaint paint = null)
 		{
 			DrawImage (image, p.X, p.Y, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
@@ -558,6 +559,7 @@ namespace SkiaSharp
 			DrawImage (image, p.X, p.Y, sampling, paint);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawImage (SKImage image, float x, float y, SKPaint paint = null)
 		{
 			DrawImage (image, x, y, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
@@ -573,6 +575,7 @@ namespace SkiaSharp
 			GC.KeepAlive (this);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawImage (SKImage image, SKRect dest, SKPaint paint = null)
 		{
 			DrawImage (image, null, &dest, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
@@ -583,6 +586,7 @@ namespace SkiaSharp
 			DrawImage (image, null, &dest, sampling, paint);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawImage (SKImage image, SKRect source, SKRect dest, SKPaint paint = null)
 		{
 			DrawImage (image, &source, &dest, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
@@ -667,25 +671,50 @@ namespace SkiaSharp
 
 		// DrawBitmap
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawBitmap (SKBitmap bitmap, SKPoint p, SKPaint paint = null) =>
 			DrawBitmap (bitmap, p.X, p.Y, paint);
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawBitmap (SKBitmap bitmap, float x, float y, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
-			DrawImage (image, x, y, paint);
+			DrawImage (image, x, y, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
-			DrawImage (image, dest, paint);
+			DrawImage (image, dest, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawBitmap (SKBitmap bitmap, SKRect source, SKRect dest, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
-			DrawImage (image, source, dest, paint);
+			DrawImage (image, source, dest, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
+		}
+
+		public void DrawBitmap (SKBitmap bitmap, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null) =>
+			DrawBitmap (bitmap, p.X, p.Y, sampling, paint);
+
+		public void DrawBitmap (SKBitmap bitmap, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
+		{
+			using var image = SKImage.FromBitmap (bitmap);
+			DrawImage (image, x, y, sampling, paint);
+		}
+
+		public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
+		{
+			using var image = SKImage.FromBitmap (bitmap);
+			DrawImage (image, dest, sampling, paint);
+		}
+
+		public void DrawBitmap (SKBitmap bitmap, SKRect source, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
+		{
+			using var image = SKImage.FromBitmap (bitmap);
+			DrawImage (image, source, dest, sampling, paint);
 		}
 
 		// DrawSurface
@@ -735,11 +764,11 @@ namespace SkiaSharp
 
 		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawText (string text, SKPoint p, SKPaint paint) =>
-			DrawText (text, p, paint.TextAlign, paint.GetFont (), paint);
+			DrawText (text, p, paint.TextAlign, paint.GetLegacyFont (), paint);
 
 		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawText (string text, float x, float y, SKPaint paint) =>
-			DrawText (text, x, y, paint.TextAlign, paint.GetFont (), paint);
+			DrawText (text, x, y, paint.TextAlign, paint.GetLegacyFont (), paint);
 
 		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =>
@@ -787,20 +816,23 @@ namespace SkiaSharp
 
 		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKPaint paint) =>
-			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetFont (), paint);
+			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetLegacyFont (), paint);
 
+		[Obsolete ("Use the overload with SKTextAlign parameter instead.")]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, offset, true, paint.GetLegacyTextAlign (), font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, offset, true, textAlign, font, paint);
 
+		[Obsolete ("Use the overload with SKTextAlign parameter instead.")]
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint.GetLegacyTextAlign (), font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, textAlign, font, paint);
 
+		[Obsolete ("Use the overload with SKTextAlign parameter instead.")]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetLegacyTextAlign (), font, paint);
 
@@ -1119,18 +1151,21 @@ namespace SkiaSharp
 
 		// DrawAtlas
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, null, paint);
 
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, sampling, null, paint);
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, null, paint);
 
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, null, paint);
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, &cullRect, paint);
 

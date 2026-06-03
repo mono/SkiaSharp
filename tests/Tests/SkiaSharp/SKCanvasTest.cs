@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Xml.Linq;
 using Xunit;
@@ -185,7 +185,7 @@ namespace SkiaSharp.Tests
 			var sprites = new[] { SKRect.Empty, SKRect.Empty };
 			var transforms = new[] { SKRotationScaleMatrix.Empty };
 
-			Assert.Throws<ArgumentException>("transforms", () => canvas.DrawAtlas(img, sprites, transforms, paint));
+			Assert.Throws<ArgumentException>("transforms", () => canvas.DrawAtlas(img, sprites, transforms, SKSamplingOptions.Default, paint));
 		}
 
 		[SkippableFact]
@@ -358,9 +358,9 @@ namespace SkiaSharp.Tests
 			};
 
 			canvas.Clear(SKColors.White);
-			canvas.DrawAtlas(atlas, tex, xform, paint);
+			canvas.DrawAtlas(atlas, tex, xform, SKSamplingOptions.Default, paint);
 			canvas.Translate(0, 100);
-			canvas.DrawAtlas(atlas, tex, xform, colors, SKBlendMode.SrcIn, paint);
+			canvas.DrawAtlas(atlas, tex, xform, colors, SKBlendMode.SrcIn, SKSamplingOptions.Default, paint);
 
 			Assert.Equal(SKColors.Blue, bitmap.GetPixel(32, 41));
 			Assert.Equal(SKColors.Blue, bitmap.GetPixel(156, 77));
