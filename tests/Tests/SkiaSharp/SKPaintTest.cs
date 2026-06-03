@@ -92,7 +92,7 @@ namespace SkiaSharp.Tests
 				{
 					canvas.Clear(SKColors.White);
 					canvas.Scale(1, 2);
-					canvas.DrawText("Skia", 10, 60, font, paint);
+						canvas.DrawText("Skia", 10, 60, SKTextAlign.Left, font, paint);
 
 					try
 					{
@@ -115,7 +115,7 @@ namespace SkiaSharp.Tests
 				{
 					canvas.Clear(SKColors.White);
 					canvas.Scale(1, 2);
-					canvas.DrawText("Skia", 10, 60, font, paint);
+					canvas.DrawText("Skia", 10, 60, SKTextAlign.Left, font, paint);
 
 					try
 					{
