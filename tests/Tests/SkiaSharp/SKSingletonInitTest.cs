@@ -8,6 +8,12 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	// Serialized: SameColorSpaceCreatedDifferentWaysAreTheSameObject asserts the EXACT native refcount
+	// of the process-wide srgb-linear singleton, which any parallel test creating/decoding into
+	// srgb-linear would transiently perturb. Running in the DisableParallelization phase removes that
+	// interference. The remaining identity/flag/cold-start tests here are race-immune and microsecond-fast,
+	// so serializing the whole (small) class costs nothing meaningful.
+	[Collection (HandleDictionaryThreadingCollection.Name)]
 	public class SKSingletonInitTest : SKTest
 	{
 		// --- Singleton identity + dispose-protected flag ---
@@ -28,6 +34,47 @@ namespace SkiaSharp.Tests
 			var b = SKColorSpace.CreateSrgbLinear();
 			Assert.Same(a, b);
 			Assert.True(a.IgnorePublicDispose);
+		}
+
+		[SkippableFact]
+		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
+		{
+			// Drain pending finalizers first so a srgb-linear holder created during the earlier parallel
+			// phase cannot decrement the native refcount below baseline mid-test. Combined with the
+			// serialized collection (no concurrent test increments), the count is then deterministic.
+			CollectGarbage();
+
+			// get the first instance of the sRGB Linear and capture the steady-state refcount
+			var colorspace1 = SKColorSpace.CreateSrgbLinear();
+			Assert.True(colorspace1.IgnorePublicDispose);
+			var baselineRefCount = colorspace1.GetReferenceCount();
+
+			// create a new one with the same parameters, which will return the same instance
+			var colorspace2 = SKColorSpace.CreateRgb(SKColorSpaceTransferFn.Linear, SKColorSpaceXyz.Srgb);
+			Assert.True(colorspace2.IgnorePublicDispose);
+			Assert.Same(colorspace1, colorspace2);
+			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
+			Assert.Equal(baselineRefCount, colorspace2.GetReferenceCount());
+
+			// create a different one manually, which will return a new instance
+			var colorspace3 = SKColorSpace.CreateRgb(
+				new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
+				SKColorSpaceXyz.Identity);
+			Assert.NotSame(colorspace1, colorspace3);
+			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
+			Assert.Equal(baselineRefCount, colorspace2.GetReferenceCount());
+
+			colorspace3.Dispose();
+			Assert.True(colorspace3.IsDisposed);
+			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
+
+			colorspace2.Dispose();
+			Assert.False(colorspace2.IsDisposed);
+			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
+
+			colorspace1.Dispose();
+			Assert.False(colorspace1.IsDisposed);
+			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
 		}
 
 		[SkippableFact]

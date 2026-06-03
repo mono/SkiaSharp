@@ -11,6 +11,7 @@ namespace SkiaSharp.Tests
 	// Verified empirically (macOS) before being written:
 	//   reentrant GetInstance (read)        -> succeeds
 	//   nested   GetOrAddObject (create)     -> throws LockRecursionException (non-Windows)
+	[Collection (HandleDictionaryThreadingCollection.Name)]
 	public class SKHandleDictionaryReentrancyTest : SKTest
 	{
 		// A factory MAY read the dictionary. GetInstance takes a read lock, and a thread already

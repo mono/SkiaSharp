@@ -14,6 +14,7 @@ namespace SkiaSharp.Tests
 	// exact window (via GatedCleanupObject) and prove the late DeregisterHandle of the stale wrapper
 	// never evicts the live replacement and never raises a THROW_OBJECT_EXCEPTIONS diagnostic. They use
 	// a fake, non-owning SKObject (see SKHandleDictionaryTestHelpers) so no native memory is touched.
+	[Collection (HandleDictionaryThreadingCollection.Name)]
 	public class SKHandleDictionaryStaleWrapperTest : SKTest
 	{
 		// --- Address reuse (ABA): a handle freed then re-used for a new native object. The registry
