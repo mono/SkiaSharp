@@ -10,12 +10,18 @@ namespace SkiaSharp.Tests
 	{
 		// PROBABILISTIC deadlock canary (NOT a deterministic race proof).
 		//
-		// SKTypeface.Default's factory acquires several locks in order:
+		// Every thread touches the same set of singleton accessors. Each accessor's factory
+		// transitively acquires several locks, e.g. SKTypeface.Default:
 		//   defaultTypefaceLock -> SKFontManager.Default lock -> SKFontStyle cctor -> HD lock.
-		// No other test exercises this multi-lock acquisition path (the author's
-		// concurrent test only hammers CreateSrgb, a single-lock path). If a future
-		// change introduces a reverse acquisition order, 32 threads slamming every
-		// accessor at a barrier will very likely deadlock here and hang the run.
+		// No other test exercises this multi-lock path (the author's concurrent test only
+		// hammers CreateSrgb, a single-lock path). Because the threads run unsynchronized
+		// after the barrier, at any instant they sit at different accessors and therefore
+		// hold different locks. If the PRODUCT code ever acquires the same pair of locks in
+		// opposite orders across two of these factories (a lock-order inversion in our code,
+		// not one the test manufactures), this contention can surface it as a hang. The test
+		// cannot create an inversion the product does not have, so a clean run is necessary
+		// but not sufficient evidence.
+		//
 		// The Assert.Same checks are the deterministic part: a correct singleton must
 		// always return one instance regardless of interleaving.
 		//
@@ -28,6 +34,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void AllSingletonAccessorsAreStableUnderContention()
 		{
+			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			const int threadCount = 32;
 			using var barrier = new Barrier(threadCount);
 

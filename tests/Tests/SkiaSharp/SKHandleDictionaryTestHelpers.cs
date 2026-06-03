@@ -78,7 +78,11 @@ namespace SkiaSharp.Tests
 
 	internal static class SKHandleDictionaryTestHelpers
 	{
-		private static long handleSeed = 0x6000_0000_0000_0000L;
+		// Synthetic-handle seed kept well away from any real native pointer range. On 64-bit targets
+		// that is a high 64-bit value. On 32-bit targets (x86 Windows, x86 Linux, browser WASM) IntPtr
+		// is 32-bit, so a 64-bit seed would overflow new IntPtr(long); use a high 32-bit value there.
+		// 0x4000_0000 fits in Int32 and leaves room for many +0x1000 increments before overflow.
+		private static long handleSeed = IntPtr.Size == 4 ? 0x4000_0000L : 0x6000_0000_0000_0000L;
 
 		// Hands out unique synthetic handles well away from any real native pointer range.
 		public static IntPtr NextHandle () =>

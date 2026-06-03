@@ -24,11 +24,18 @@ namespace SkiaSharp.Tests
 	// would not — so any such test is platform-dependent and is omitted by design.
 	public class SKHandleDictionaryReservationTest : SKTest
 	{
-		// --- Exactly-once construction under concurrency ---
+		// --- Exactly-once construction under contention ---
+		//
+		// The upgradeable-read lock serializes the contending callers, so factoryCalls == 1
+		// is the guaranteed outcome of the lock-the-whole-factory model rather than a race
+		// the test wins. The value is a regression guard: narrowing the lock scope so two
+		// callers could run the factory concurrently for the same handle would make this fail.
 
 		[SkippableFact]
 		public void ConcurrentSameHandleConstructsExactlyOnce ()
 		{
+			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			var handle = NextHandle ();
 			var factoryCalls = 0;
 
@@ -60,6 +67,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void WaitersOnlyObserveFullyConstructedWrapper ()
 		{
+			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			var handle = NextHandle ();
 
 			const int threadCount = 16;
@@ -88,7 +97,11 @@ namespace SkiaSharp.Tests
 				for (var i = 0; i < threadCount; i++) {
 					Assert.NotNull (results[i]);
 					Assert.Same (results[0], results[i]);
-					// If a waiter ever saw the object before its ctor finished, this would be 0.
+					// Under the lock-the-whole-factory model a waiter can only obtain the wrapper
+					// through GetOrAddObject's return value, i.e. after the ctor has run, so this
+					// is 1 by construction. The assert is a regression guard: if the lock scope
+					// were ever narrowed to publish the entry before the factory completed, a
+					// waiter could observe FullyConstructed == 0 here.
 					Assert.Equal (1, results[i].FullyConstructed);
 				}
 			} finally {
@@ -125,11 +138,18 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		// --- Concurrent storm where the FIRST owner's factory fails: a waiter recovers ---
+		// --- The FIRST owner's factory fails; a later caller recovers ---
+		//
+		// The callers contend, but the upgradeable-read lock serializes them, so this reduces
+		// to "first caller throws under the lock -> registry left empty -> next caller in line
+		// reconstructs". It pins that a throwing factory leaves no stranded half-state for the
+		// callers queued behind it.
 
 		[SkippableFact]
 		public void ConcurrentFactoryFailureRecoveredByWaiter ()
 		{
+			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			var handle = NextHandle ();
 			var failFirst = 1;
 			var successfulFactoryCalls = 0;

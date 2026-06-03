@@ -3,8 +3,6 @@ using System.Reflection;
 #if !NETFRAMEWORK
 using System.Runtime.Loader;
 #endif
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -100,25 +98,6 @@ namespace SkiaSharp.Tests
 			Assert.Same(srgb, SKColorSpace.CreateSrgb());
 		}
 
-		// --- Concurrent init smoke test ---
-
-		[SkippableFact]
-		public void ConcurrentSingletonAccessReturnsSameInstance()
-		{
-			const int threadCount = 32;
-			using var barrier = new Barrier(threadCount);
-			var results = new SKColorSpace[threadCount];
-
-			Parallel.For(0, threadCount, i =>
-			{
-				barrier.SignalAndWait();
-				results[i] = SKColorSpace.CreateSrgb();
-			});
-
-			for (int i = 1; i < threadCount; i++)
-				Assert.Same(results[0], results[i]);
-		}
-
 		// --- SKTypeface.CreateDefault never returns null even on a cold backing field ---
 
 		[SkippableFact]
@@ -167,6 +146,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void Issue3817_SKFontManagerDefaultDoesNotThrowFromColdStart()
 		{
+			SkipOnPlatform(IsBrowser, "Browser WASM does not support custom AssemblyLoadContext / AssemblyDependencyResolver");
+
 			var alc = new IsolatedSkiaSharpLoadContext(typeof(SKFontManager).Assembly);
 			try
 			{
