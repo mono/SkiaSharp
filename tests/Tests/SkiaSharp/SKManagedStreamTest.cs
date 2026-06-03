@@ -883,13 +883,20 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
 
-			const int count = 128;
+			// Mobile interpreter runtimes (iOS / Mac Catalyst / Android) schedule the thread pool too
+			// sparsely to push 128 work items through the native dispose path before the timeout, so the
+			// stress is sized down there. The work is driven through dedicated threads (RunConcurrent),
+			// not Parallel.For: all N threads rendezvous at a barrier and then Dispose() simultaneously,
+			// which is both deterministic (no pool dependency) and a stronger test of the registry's
+			// concurrent-deregister path than pool-scheduled work items.
+			var count = (IsAndroid || IsIOS || IsMacCatalyst) ? 16 : 128;
 			var streams = new List<SKManagedStream>(count);
 			for (var i = 0; i < count; i++)
 				streams.Add(new SKManagedStream(CreateTestStream(), true));
 
-			SKHandleDictionaryTestHelpers.RunWithTimeout(
-				() => Parallel.For(0, count, i => streams[i].Dispose()),
+			SKHandleDictionaryTestHelpers.RunConcurrent(
+				count,
+				i => streams[i].Dispose(),
 				deadlockMessage: "Concurrent Dispose() of many managed streams deadlocked.");
 
 			foreach (var stream in streams)

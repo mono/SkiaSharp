@@ -172,13 +172,97 @@ namespace SkiaSharp.Tests
 		// lifecycle invariant we care about is narrower and address-reuse-safe: OUR specific disposed
 		// wrapper must no longer be reachable through the registry under its handle. A different live
 		// wrapper that legitimately reused the freed address is fine and must not fail the test.
+		//
+		// The lookup is intentionally typed as the base SKObject, NOT TSkiaObject. Under
+		// THROW_OBJECT_EXCEPTIONS (Debug), HandleDictionary.GetInstance<T> throws when a reused handle
+		// holds a LIVE owning object of a DIFFERENT concrete type than T — exactly the legal
+		// address-reuse case above. Looking up as SKObject (the common base) can never hit that
+		// wrong-type diagnostic, so a parallel test's unrelated wrapper at the reused address yields a
+		// benign reference-mismatch instead of an InvalidOperationException. The reference-identity
+		// assertion below is unchanged: a disposed instance is filtered out by GetInstance (returns
+		// false), and any returned object is compared by reference against ours.
 		public static void AssertDeregistered<TSkiaObject> (IntPtr handle, TSkiaObject instance)
 			where TSkiaObject : SKObject
 		{
-			if (HandleDictionary.GetInstance<TSkiaObject> (handle, out var found))
+			if (HandleDictionary.GetInstance<SKObject> (handle, out var found))
 				Assert.False (
 					ReferenceEquals (found, instance),
 					$"Disposed {typeof (TSkiaObject).Name} is still registered under handle 0x{handle.ToString ("x")}.");
 		}
+
+		// A dedicated-thread replacement for Task.Run used by the white-box stale-wrapper tests. Those
+		// tests need one worker that PARKS inside a gated managed-cleanup window while a SECOND worker
+		// concurrently registers a replacement for the same handle. On the mobile interpreter runtimes
+		// (iOS / Mac Catalyst / Android) the thread pool is scheduled so sparsely that a parked Task.Run
+		// worker plus a second Task.Run worker can exhaust the available pool threads, starving the
+		// handshake and hanging the test. A dedicated background Thread is always scheduled, so the
+		// interleaving the test relies on actually happens. Browser WASM has no OS threads at all and is
+		// skipped by the callers. Body exceptions are captured and resurfaced when the caller Waits.
+		public static ThreadResult RunOnThread (Action body) =>
+			new ThreadResult (body);
+
+		public static ThreadResult<T> RunOnThread<T> (Func<T> body) =>
+			new ThreadResult<T> (body);
+	}
+
+	// Fire-and-join handle around a single dedicated background thread, mirroring the slice of the Task
+	// API the stale-wrapper tests use: Wait(timeoutMs) joins with a deadline (false == still running ==
+	// deadlock) and rethrows a captured body exception on the caller once the worker has joined.
+	internal sealed class ThreadResult
+	{
+		private readonly Thread thread;
+		private Exception error;
+
+		internal ThreadResult (Action body)
+		{
+			thread = new Thread (() => {
+				try {
+					body ();
+				} catch (Exception ex) {
+					error = ex;
+				}
+			}) { IsBackground = true };
+			thread.Start ();
+		}
+
+		public bool Wait (int timeoutMs)
+		{
+			if (!thread.Join (timeoutMs))
+				return false;
+			if (error != null)
+				System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture (error).Throw ();
+			return true;
+		}
+	}
+
+	internal sealed class ThreadResult<T>
+	{
+		private readonly Thread thread;
+		private Exception error;
+		private T result;
+
+		internal ThreadResult (Func<T> body)
+		{
+			thread = new Thread (() => {
+				try {
+					result = body ();
+				} catch (Exception ex) {
+					error = ex;
+				}
+			}) { IsBackground = true };
+			thread.Start ();
+		}
+
+		public bool Wait (int timeoutMs)
+		{
+			if (!thread.Join (timeoutMs))
+				return false;
+			if (error != null)
+				System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture (error).Throw ();
+			return true;
+		}
+
+		// Valid only after a successful Wait: the worker has joined, so the field write is published.
+		public T Result => result;
 	}
 }
