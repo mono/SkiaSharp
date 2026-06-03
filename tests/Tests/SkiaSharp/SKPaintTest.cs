@@ -80,6 +80,7 @@ namespace SkiaSharp.Tests
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
 			SkipOnPlatform(IsAndroid, "TODO: figure out why the font has changed");
+			SkipOnPlatform(IsBrowser, "WASM text rendering produces slightly different pixel values");
 
 			using (var bitmapAA = new SKBitmap(new SKImageInfo(200, 200)))
 			using (var bitmapNoAA = new SKBitmap(new SKImageInfo(200, 200)))
