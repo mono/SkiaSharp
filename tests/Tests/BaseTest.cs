@@ -63,9 +63,16 @@ namespace SkiaSharp.Tests
 			false;
 #endif
 
+		protected static bool IsBrowser =>
+#if NET5_0_OR_GREATER
+			OperatingSystem.IsBrowser();
+#else
+			false;
+#endif
+
 		protected static void SkipOnMono(string reason = "Mono does not guarantee finalizers are invoked immediately")
 		{
-			Skip.If(IsAndroid || IsIOS || IsMacCatalyst, reason);
+			Skip.If(IsAndroid || IsIOS || IsMacCatalyst || IsBrowser, reason);
 		}
 
 		protected static void SkipOnNonWindows(string reason = "Exceptions cannot be thrown in native delegates on non-Windows platforms")
