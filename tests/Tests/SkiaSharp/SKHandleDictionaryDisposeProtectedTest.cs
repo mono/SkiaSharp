@@ -51,6 +51,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void DisposeProtectedRacingPublicDisposeNeverTears ()
 		{
+			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			const int iterations = 300;
 			var created = new System.Collections.Concurrent.ConcurrentBag<FakeNativeObject> ();
 

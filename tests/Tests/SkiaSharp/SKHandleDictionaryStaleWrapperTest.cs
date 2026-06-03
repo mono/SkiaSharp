@@ -66,6 +66,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StaleWrapperCleanupDoesNotEvictGetOrAddReplacementForReusedHandle ()
 		{
+			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			var handle = NextHandle ();
 
 			using var enteredCleanup = new ManualResetEventSlim (false);
@@ -126,6 +128,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StaleWrapperCleanupDoesNotEvictDirectCtorReplacementForReusedHandle ()
 		{
+			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			var handle = NextHandle ();
 
 			using var enteredCleanup = new ManualResetEventSlim (false);
@@ -179,6 +183,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TwoStaleWrappersDeregisteringDoNotEvictThirdReplacementForReusedHandle ()
 		{
+			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			var handle = NextHandle ();
 
 			using var entered1 = new ManualResetEventSlim (false);

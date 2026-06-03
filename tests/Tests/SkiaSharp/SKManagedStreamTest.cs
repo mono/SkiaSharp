@@ -862,6 +862,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ConcurrentDisposeOfSameManagedStreamIsIdempotent()
 		{
+			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			// Many threads racing Dispose() on the SAME wrapper must funnel through the single
 			// isDisposed CAS: one cleanup, native freed once, destroy callback flips fromNative once.
 			var stream = new SKManagedStream(CreateTestStream(), true);
@@ -879,6 +881,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ConcurrentDisposeOfManyManagedStreamsIsSafe()
 		{
+			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			const int count = 128;
 			var streams = new List<SKManagedStream>(count);
 			for (var i = 0; i < count; i++)
@@ -908,6 +912,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void PublicDisposeWhileCodecReadIsInFlightIsIgnored()
 		{
+			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			// DETERMINISTIC version of the race: park the native lazy read INSIDE the .NET
 			// Stream.Read() callback, fire the (reparented) wrapper's public Dispose() while the
 			// native read is provably in-flight, then release the read. The public Dispose must be
@@ -968,6 +974,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void PublicDisposeAroundLazyCodecReadIsIgnoredStress()
 		{
+			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			// STRESS version: barrier-synchronised public Dispose vs a full GetPixels, repeated many
 			// times to shake out interleavings beyond the single overlap the deterministic gate pins.
 			// (The barrier only co-starts the two operations; it does NOT guarantee Dispose overlaps an
@@ -1022,6 +1030,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void PublicDisposeRacingCodecTeardownClosesManagedStreamExactlyOnce()
 		{
+			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			// Ignored public Dispose (no-ops on IgnorePublicDispose) racing the codec's owner-teardown
 			// (the sole disposer, via DisposeUnownedManaged -> child.DisposeInternal). The underlying
 			// .NET stream must be closed EXACTLY once — proven by DisposeCount. fromNative is only a
@@ -1060,6 +1070,11 @@ namespace SkiaSharp.Tests
 						// real disposer. Proven by the closing thread being the teardown task, not the public
 						// Dispose task — DisposeCount==1 alone could not distinguish which path won.
 						Assert.Equal (teardownThreadId, dotnet.FirstDisposeThreadId);
+
+						// Keep both wrappers rooted across the race assertion so a GC + finalizer
+						// can never flip FirstDisposeThreadId from the finalizer thread mid-assert.
+						GC.KeepAlive (stream);
+						GC.KeepAlive (dotnet);
 					}
 				}
 				finally
@@ -1128,6 +1143,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void PublicDisposeWhileFrontBufferedCodecReadIsInFlightIsIgnored()
 		{
+			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			// DETERMINISTIC in-flight-read race for the NESTED non-seekable graph. Park the native lazy
 			// read inside the underlying .NET Stream.Read() (reached through fb's front buffer -> inner
 			// SKManagedStream), fire the reparented fb's public Dispose() while that read is provably
