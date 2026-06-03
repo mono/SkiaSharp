@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 using static SkiaSharp.Tests.SKHandleDictionaryTestHelpers;
 
@@ -81,7 +80,7 @@ namespace SkiaSharp.Tests
 			try {
 				// Public-dispose W1 on another thread: it claims isDisposed under the write lock,
 				// releases the lock, then parks in DisposeManaged BEFORE Handle=0 -> DeregisterHandle runs.
-				var disposer = Task.Run (() => first.Dispose ());
+				var disposer = RunOnThread (() => first.Dispose ());
 				try {
 					Assert.True (enteredCleanup.Wait (10_000), "W1 never entered the managed-cleanup window.");
 					Assert.True (first.IsDisposed);
@@ -89,7 +88,7 @@ namespace SkiaSharp.Tests
 					// While W1 is parked mid-cleanup, a new native object reuses the handle. Run the
 					// construction under a timeout: if cleanup ever regressed to holding the lock,
 					// this would block on the lock and we want a deterministic failure, not a suite hang.
-					var creator = Task.Run (() => HandleDictionary.GetOrAddObject<GatedCleanupObject> (
+					var creator = RunOnThread (() => HandleDictionary.GetOrAddObject<GatedCleanupObject> (
 						handle, owns: false, unrefExisting: false, (h, o) => new GatedCleanupObject (h)));
 					Assert.True (creator.Wait (10_000), "Replacement construction blocked — cleanup may hold the lock.");
 					second = creator.Result;
@@ -141,7 +140,7 @@ namespace SkiaSharp.Tests
 
 			GatedCleanupObject second = null;
 			try {
-				var disposer = Task.Run (() => first.Dispose ());
+				var disposer = RunOnThread (() => first.Dispose ());
 				try {
 					Assert.True (enteredCleanup.Wait (10_000), "W1 never entered the managed-cleanup window.");
 					Assert.True (first.IsDisposed);
@@ -149,7 +148,7 @@ namespace SkiaSharp.Tests
 					// Direct-construct the replacement: its base ctor RegisterHandle sees the disposed W1
 					// entry, skips the dispose-the-old branch (!obj.IsDisposed is false), and overwrites it.
 					// Timeout-guarded so a cleanup-holds-the-lock regression fails deterministically.
-					var creator = Task.Run (() => new GatedCleanupObject (handle));
+					var creator = RunOnThread (() => new GatedCleanupObject (handle));
 					Assert.True (creator.Wait (10_000), "Replacement construction blocked — cleanup may hold the lock.");
 					second = creator.Result;
 
@@ -194,29 +193,29 @@ namespace SkiaSharp.Tests
 
 			var w1 = new GatedCleanupObject (handle, entered1, release1);
 			GatedCleanupObject w2 = null, w3 = null;
-			Task disposer1 = null, disposer2 = null;
+			ThreadResult disposer1 = null, disposer2 = null;
 
 			try {
 				// Park W1 (disposed) in its cleanup window.
-				disposer1 = Task.Run (() => w1.Dispose ());
+				disposer1 = RunOnThread (() => w1.Dispose ());
 				Assert.True (entered1.Wait (10_000), "W1 never entered the managed-cleanup window.");
 				Assert.True (w1.IsDisposed);
 
 				// Overwrite the disposed W1 with W2 (direct ctor -> RegisterHandle overwrite-stale branch),
 				// then park W2 (disposed) in ITS cleanup window too. Now two stale wrappers are pending.
-				var make2 = Task.Run (() => new GatedCleanupObject (handle, entered2, release2));
+				var make2 = RunOnThread (() => new GatedCleanupObject (handle, entered2, release2));
 				Assert.True (make2.Wait (10_000), "W2 construction blocked — cleanup may hold the lock.");
 				w2 = make2.Result;
 				Assert.NotSame (w1, w2);
 				Assert.True (HandleDictionary.GetInstance<GatedCleanupObject> (handle, out var afterW2));
 				Assert.Same (w2, afterW2);
 
-				disposer2 = Task.Run (() => w2.Dispose ());
+				disposer2 = RunOnThread (() => w2.Dispose ());
 				Assert.True (entered2.Wait (10_000), "W2 never entered the managed-cleanup window.");
 				Assert.True (w2.IsDisposed);
 
 				// Overwrite the disposed W2 with the live W3.
-				var make3 = Task.Run (() => new GatedCleanupObject (handle));
+				var make3 = RunOnThread (() => new GatedCleanupObject (handle));
 				Assert.True (make3.Wait (10_000), "W3 construction blocked — cleanup may hold the lock.");
 				w3 = make3.Result;
 				Assert.NotSame (w1, w3);

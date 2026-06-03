@@ -147,7 +147,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void Issue3817_SKFontManagerDefaultDoesNotThrowFromColdStart()
 		{
-			SkipOnPlatform(IsBrowser, "Browser WASM does not support custom AssemblyLoadContext / AssemblyDependencyResolver");
+			SkipOnPlatform(IsBrowser || IsAndroid || IsIOS || IsMacCatalyst, "AssemblyDependencyResolver is not supported on this platform (browser WASM, Android, iOS, Mac Catalyst); cold-start ALC isolation is a desktop-only technique.");
 
 			var alc = new IsolatedSkiaSharpLoadContext(typeof(SKFontManager).Assembly);
 			try
