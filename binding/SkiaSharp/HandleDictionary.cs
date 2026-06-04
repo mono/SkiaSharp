@@ -87,6 +87,15 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return null;
 
+			// Eager-on-first-touch: make sure every process-global singleton is registered as an
+			// immortal wrapper BEFORE we look this handle up, so a handle the singleton shares with a
+			// getter route (e.g. sk_image_get_colorspace returning the global sRGB handle) dedups to the
+			// dispose-proof wrapper instead of a fresh mortal one. This MUST run before the lock below so
+			// the lock order is always (init gate -> HandleDictionary lock) and the two can never invert.
+			// Re-entrant calls from inside initialization bail out fast without re-taking this path. See
+			// SkiaSharpStatics for the full rationale (#3817).
+			SkiaSharpStatics.EnsureInitialized ();
+
 			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject))) {
 #if THROW_OBJECT_EXCEPTIONS
 				throw new InvalidOperationException (

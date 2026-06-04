@@ -6,14 +6,23 @@ namespace SkiaSharp
 {
 	public class SKFontStyle : SKObject, ISKSkipObjectRegistration
 	{
-		private static readonly SKFontStyle normal =
-			MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Upright);
-		private static readonly SKFontStyle bold =
-			MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Upright);
-		private static readonly SKFontStyle italic =
-			MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Italic);
-		private static readonly SKFontStyle boldItalic =
-			MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Italic);
+		// Process-global preset font-style singletons. Populated eagerly (in dependency order, before the
+		// default typeface which reads Normal) by SkiaSharpStatics.EnsureInitialized and rooted here so
+		// the GC never collects the immortal wrappers. See SkiaSharpStatics (#3817).
+		private static SKFontStyle normal;
+		private static SKFontStyle bold;
+		private static SKFontStyle italic;
+		private static SKFontStyle boldItalic;
+
+		internal static void InitializeStatics ()
+		{
+			// Idempotent so a retry after a partial-init failure does not create new immortal native
+			// font styles (SKFontStyle bypasses the HandleDictionary dedup, so re-creating would leak).
+			normal ??= MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Upright);
+			bold ??= MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Upright);
+			italic ??= MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Italic);
+			boldItalic ??= MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Italic);
+		}
 
 		private static SKFontStyle MakeDisposeProtected (SKFontStyleWeight weight, SKFontStyleSlant slant)
 		{
@@ -60,13 +69,33 @@ namespace SkiaSharp
 
 		public SKFontStyleSlant Slant => SkiaApi.sk_fontstyle_get_slant (Handle);
 
-		public static SKFontStyle Normal => normal;
+		public static SKFontStyle Normal {
+			get {
+				SkiaSharpStatics.EnsureInitialized ();
+				return normal;
+			}
+		}
 
-		public static SKFontStyle Bold => bold;
+		public static SKFontStyle Bold {
+			get {
+				SkiaSharpStatics.EnsureInitialized ();
+				return bold;
+			}
+		}
 
-		public static SKFontStyle Italic => italic;
+		public static SKFontStyle Italic {
+			get {
+				SkiaSharpStatics.EnsureInitialized ();
+				return italic;
+			}
+		}
 
-		public static SKFontStyle BoldItalic => boldItalic;
+		public static SKFontStyle BoldItalic {
+			get {
+				SkiaSharpStatics.EnsureInitialized ();
+				return boldItalic;
+			}
+		}
 
 		//
 

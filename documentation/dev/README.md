@@ -30,6 +30,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 |----------|-------------|
 | [architecture.md](architecture.md) | Three layers, type mappings, call flow, threading |
 | [memory-management.md](memory-management.md) | Pointer types, ownership, lifecycle |
+| [singleton-lifecycle.md](singleton-lifecycle.md) | Process-global singletons: eager-on-first-touch init, #3817, lock ordering |
 | [error-handling.md](error-handling.md) | Error patterns across layers |
 
 ### Contributing

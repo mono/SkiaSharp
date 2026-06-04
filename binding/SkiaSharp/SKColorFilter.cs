@@ -10,13 +10,18 @@ namespace SkiaSharp
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
 
+		// Process-global gamma color-filter singletons. Populated eagerly by
+		// SkiaSharpStatics.EnsureInitialized and rooted here so the GC never collects the immortal
+		// wrappers. See SkiaSharpStatics (#3817).
 		private static SKColorFilter srgbToLinear;
-		private static bool srgbToLinearInitialized;
-		private static object srgbToLinearLock = new object ();
-
 		private static SKColorFilter linearToSrgb;
-		private static bool linearToSrgbInitialized;
-		private static object linearToSrgbLock = new object ();
+
+		internal static void InitializeStatics ()
+		{
+			// Idempotent so a retry after a partial-init failure does not create a second wrapper.
+			srgbToLinear ??= GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ());
+			linearToSrgb ??= GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ());
+		}
 
 		internal SKColorFilter(IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -26,15 +31,17 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKColorFilter CreateSrgbToLinearGamma () =>
-			LazyInitializer.EnsureInitialized (
-				ref srgbToLinear, ref srgbToLinearInitialized, ref srgbToLinearLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ()));
+		public static SKColorFilter CreateSrgbToLinearGamma ()
+		{
+			SkiaSharpStatics.EnsureInitialized ();
+			return srgbToLinear;
+		}
 
-		public static SKColorFilter CreateLinearToSrgbGamma () =>
-			LazyInitializer.EnsureInitialized (
-				ref linearToSrgb, ref linearToSrgbInitialized, ref linearToSrgbLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ()));
+		public static SKColorFilter CreateLinearToSrgbGamma ()
+		{
+			SkiaSharpStatics.EnsureInitialized ();
+			return linearToSrgb;
+		}
 
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{

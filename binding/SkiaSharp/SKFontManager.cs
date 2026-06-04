@@ -11,9 +11,14 @@ namespace SkiaSharp
 {
 	public unsafe class SKFontManager : SKObject, ISKReferenceCounted
 	{
+		// Process-global default font manager singleton. Populated eagerly by
+		// SkiaSharpStatics.EnsureInitialized and rooted here so the GC never collects the immortal
+		// wrapper. See SkiaSharpStatics (#3817).
 		private static SKFontManager defaultManager;
-		private static bool defaultManagerInitialized;
-		private static object defaultManagerLock = new object ();
+
+		internal static void InitializeStatics () =>
+			// Idempotent so a retry after a partial-init failure does not create a second wrapper.
+			defaultManager ??= GetDisposeProtectedObject (SkiaApi.sk_fontmgr_create_default ());
 
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -23,10 +28,12 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKFontManager Default =>
-			LazyInitializer.EnsureInitialized (
-				ref defaultManager, ref defaultManagerInitialized, ref defaultManagerLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_fontmgr_create_default ()));
+		public static SKFontManager Default {
+			get {
+				SkiaSharpStatics.EnsureInitialized ();
+				return defaultManager;
+			}
+		}
 
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
 

@@ -8,13 +8,21 @@ namespace SkiaSharp
 {
 	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
+		// Process-global singletons. Populated eagerly (in dependency order) by
+		// SkiaSharpStatics.EnsureInitialized the first time any SkiaSharp object is touched, and rooted
+		// here so the GC never collects the immortal wrappers. See SkiaSharpStatics for why this lives
+		// outside the CLR type-initializer graph (#3817).
 		private static SKColorSpace srgb;
-		private static bool srgbInitialized;
-		private static object srgbLock = new object ();
-
 		private static SKColorSpace srgbLinear;
-		private static bool srgbLinearInitialized;
-		private static object srgbLinearLock = new object ();
+
+		internal static void InitializeStatics ()
+		{
+			// Idempotent: a retry after a partial-init failure (SkiaSharpStatics resets to Uninitialized
+			// and re-runs the whole chain) must not create a second immortal wrapper for an
+			// already-initialized singleton.
+			srgb ??= GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb ());
+			srgbLinear ??= GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb_linear ());
+		}
 
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -56,17 +64,19 @@ namespace SkiaSharp
 
 		// CreateSrgb
 
-		public static SKColorSpace CreateSrgb () =>
-			LazyInitializer.EnsureInitialized (
-				ref srgb, ref srgbInitialized, ref srgbLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb ()));
+		public static SKColorSpace CreateSrgb ()
+		{
+			SkiaSharpStatics.EnsureInitialized ();
+			return srgb;
+		}
 
 		// CreateSrgbLinear
 
-		public static SKColorSpace CreateSrgbLinear () =>
-			LazyInitializer.EnsureInitialized (
-				ref srgbLinear, ref srgbLinearInitialized, ref srgbLinearLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb_linear ()));
+		public static SKColorSpace CreateSrgbLinear ()
+		{
+			SkiaSharpStatics.EnsureInitialized ();
+			return srgbLinear;
+		}
 
 		// CreateIcc
 

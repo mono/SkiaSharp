@@ -5,10 +5,24 @@ namespace SkiaSharp;
 
 public unsafe class SKBlender : SKObject, ISKReferenceCounted
 {
-	private static readonly Dictionary<SKBlendMode, SKBlender> blendModeBlenders;
+	// Process-global blend-mode blender singletons. Populated eagerly by
+	// SkiaSharpStatics.EnsureInitialized and rooted here so the GC never collects the immortal wrappers.
+	// See SkiaSharpStatics (#3817).
+	private static Dictionary<SKBlendMode, SKBlender>? blendModeBlenders;
+	// Completion latch kept separate from the dictionary reference: the dictionary is rooted up-front
+	// (before it is filled) so that every immortal wrapper created below is strongly held even if a
+	// later iteration throws. Using the dictionary's non-null-ness as the "done" signal would early-out
+	// on a retry with a half-filled dictionary, so a dedicated flag marks full population instead.
+	private static bool blendModeBlendersInitialized;
 
-	static SKBlender ()
+	internal static void InitializeStatics ()
 	{
+		// Idempotent: a retry after a partial-init failure must neither replace the dictionary (dropping
+		// the only strong roots for already-created immortal wrappers) nor re-create wrappers it already
+		// holds. The dictionary is rooted before the loop and we fill in only the still-missing modes.
+		if (blendModeBlendersInitialized)
+			return;
+
 		// Explicitly list all enum values to avoid reflection (AoT compatibility).
 		var modes = new SKBlendMode[] {
 			SKBlendMode.Clear,
@@ -42,10 +56,14 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 			SKBlendMode.Luminosity,
 		};
 
-		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (modes.Length);
+		// Root the dictionary up-front so each immortal wrapper is held even if a later mode throws.
+		blendModeBlenders ??= new Dictionary<SKBlendMode, SKBlender> (modes.Length);
 		foreach (SKBlendMode mode in modes) {
-			blendModeBlenders[mode] = GetDisposeProtectedObject (SkiaApi.sk_blender_new_mode (mode));
+			if (!blendModeBlenders.ContainsKey (mode))
+				blendModeBlenders[mode] = GetDisposeProtectedObject (SkiaApi.sk_blender_new_mode (mode));
 		}
+
+		blendModeBlendersInitialized = true;
 	}
 
 	internal SKBlender(IntPtr handle, bool owns)
@@ -58,7 +76,8 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 
 	public static SKBlender CreateBlendMode (SKBlendMode mode)
 	{
-		if (!blendModeBlenders.TryGetValue (mode, out var value))
+		SkiaSharpStatics.EnsureInitialized ();
+		if (!blendModeBlenders!.TryGetValue (mode, out var value))
 			throw new ArgumentOutOfRangeException (nameof (mode));
 		return value;
 	}

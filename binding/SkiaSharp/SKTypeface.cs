@@ -9,13 +9,29 @@ namespace SkiaSharp
 {
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
+		// Process-global default/empty typeface singletons. Populated eagerly (last, after the font
+		// manager and font styles they depend on) by SkiaSharpStatics.EnsureInitialized and rooted here
+		// so the GC never collects the immortal wrappers. Moving this out of the CLR type-initializer
+		// graph is what eliminates the re-entrant static-init crash in #3817. See SkiaSharpStatics.
 		private static SKTypeface empty;
-		private static bool emptyInitialized;
-		private static object emptyLock = new object ();
-
 		private static SKTypeface defaultTypeface;
-		private static bool defaultTypefaceInitialized;
-		private static object defaultTypefaceLock = new object ();
+
+		internal static void InitializeStatics ()
+		{
+			// Idempotent so a retry after a partial-init failure does not create a second wrapper.
+			empty ??= GetImmortalSingletonObject (SkiaApi.sk_typeface_create_empty ());
+
+			if (defaultTypeface == null) {
+				// Use legacyMakeTypeface(null) to get the platform default — this uses fDefaultStyleSet
+				// on Android (which searches "sans-serif", "Roboto", then falls back to style set 0).
+				// matchFamilyStyle(null) doesn't work on Android/NDK/Custom because onMatchFamily(null)
+				// returns null. SkiaSharpStatics initializes the font manager and font styles BEFORE the
+				// typeface, so their backing fields are already populated here.
+				var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
+					SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
+				defaultTypeface = matched == IntPtr.Zero ? empty : GetImmortalSingletonObject (matched);
+			}
+		}
 
 		private SKFont font;
 
@@ -29,23 +45,19 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKTypeface Default =>
-			LazyInitializer.EnsureInitialized (
-				ref defaultTypeface, ref defaultTypefaceInitialized, ref defaultTypefaceLock,
-				() => {
-					// Use legacyMakeTypeface(null) to get the platform default — this uses
-					// fDefaultStyleSet on Android (which searches "sans-serif", "Roboto",
-					// then falls back to style set 0). matchFamilyStyle(null) doesn't work
-					// on Android/NDK/Custom because onMatchFamily(null) returns null.
-					var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
-						SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
-					return matched == IntPtr.Zero ? Empty : GetImmortalSingletonObject (matched);
-				});
+		public static SKTypeface Default {
+			get {
+				SkiaSharpStatics.EnsureInitialized ();
+				return defaultTypeface;
+			}
+		}
 
-		public static SKTypeface Empty =>
-			LazyInitializer.EnsureInitialized (
-				ref empty, ref emptyInitialized, ref emptyLock,
-				() => GetImmortalSingletonObject (SkiaApi.sk_typeface_create_empty ()));
+		public static SKTypeface Empty {
+			get {
+				SkiaSharpStatics.EnsureInitialized ();
+				return empty;
+			}
+		}
 
 		public bool IsEmpty => GlyphCount == 0;
 
