@@ -90,6 +90,14 @@ void RunDotNetTest(
         ArgumentCustomization = args => {
             args = args
                 .Append("/p:Platform=\"AnyCPU\"");
+            // TEMP DIAGNOSTIC (PR #4117 only): capture a full crash dump + ordered test
+            // sequence when the test host crashes natively, so the intermittent teardown
+            // crash can be root-caused from CI hardware. Dumps land in ResultsDirectory,
+            // which is published as the testlogs artifact.
+            args = args
+                .Append("--blame-crash")
+                .Append("--blame-crash-dump-type")
+                .Append("full");
             if (COVERAGE)
                 args = args
                     .Append("/p:CollectCoverage=true")
