@@ -128,6 +128,23 @@ namespace SkiaSharp
 			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, disposeProtected: true, objectFactory);
 		}
 
+		// Variant for process-global immortal singletons (sRGB color spaces, SKData.Empty, the
+		// default font manager/typeface, blend-mode blenders, the gamma color filters). In addition
+		// to dispose-protection it latches the wrapper immortal (MakeImmortalSingleton) inside
+		// HandleDictionary's critical section, so neither DisposeInternal() nor the finalizer can
+		// ever free the shared native object. If the handle is already wrapped (e.g. a default
+		// typeface previously returned mortally by MatchFamily), the EXISTING wrapper is promoted to
+		// immortal — the dictionary keeps one wrapper per handle, so promotion is the only safe way
+		// to make the shared global permanent.
+		internal static TSkiaObject GetOrAddImmortalSingletonObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject
+		{
+			if (handle == IntPtr.Zero)
+				return null;
+
+			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, disposeProtected: true, immortal: true, objectFactory);
+		}
+
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero || instance == null)
@@ -228,6 +245,22 @@ namespace SkiaSharp
 		// never read IgnorePublicDispose, so they have nothing to pair.
 		private int isDisposed = 0;
 
+		// One-way latch marking this wrapper as a process-global immortal singleton (sRGB color
+		// spaces, SKData.Empty, the default font manager/typeface, blend-mode blenders, the gamma
+		// color filters, SKPaint.DefaultFont, the SKFontStyle presets). Such a wrapper shares a
+		// native object that is kept alive for the whole process by a static field, and that native
+		// object must NEVER be unreffed/freed by this managed wrapper — not by public Dispose(),
+		// not by DisposeInternal() (owned-child teardown, ownership handoff, dict replacement), and
+		// not by the finalizer. IgnorePublicDispose alone only guards the PUBLIC Dispose() path; the
+		// finalizer and DisposeInternal() would still CAS isDisposed and run Dispose(true) ->
+		// DisposeNative() -> SafeUnRef(), freeing the shared global. This latch closes those two
+		// paths too, restoring the pre-rework "truly immortal" behaviour for singletons while
+		// keeping normal owns:true semantics for everything else. Volatile is sufficient: the latch
+		// is published either under the HandleDictionary upgradeable-read lock (GetOrAddObject) or
+		// during single-threaded static initialization, both of which happen-before any wrapper the
+		// caller can reach and try to tear down.
+		private int isImmortalSingleton = 0;
+
 		internal SKNativeObject (IntPtr handle)
 			: this (handle, true)
 		{
@@ -242,6 +275,13 @@ namespace SkiaSharp
 		~SKNativeObject ()
 		{
 			fromFinalizer = true;
+
+			// Immortal process-global singletons must never free their shared native object, even
+			// from the finalizer. (In practice a static field roots them so this rarely runs, but a
+			// promoted sibling wrapper — see HandleDictionary — can be finalizable while still
+			// pointing at the shared global handle.)
+			if (IsImmortalSingleton)
+				return;
 
 			// The public Dispose path additionally holds a HandleDictionary lock to check IgnorePublicDispose
 			// but this is an internal Dispose, racing with a PreventPublicDisposal is not a concern.
@@ -295,6 +335,19 @@ namespace SkiaSharp
 		// this property to filter out disposed wrappers, so a stale read could let a
 		// disposed wrapper escape the filter and become the cached singleton.
 		protected internal bool IsDisposed => Volatile.Read (ref isDisposed) == 1;
+
+		// True once this wrapper has been latched as a process-global immortal singleton. Read
+		// locklessly by the three disposal entry points (Dispose, DisposeInternal, finalizer) to
+		// short-circuit BEFORE their isDisposed CAS, so the shared native object is never freed.
+		// Volatile.Read pairs with the Volatile.Write in MakeImmortalSingleton for acquire/release
+		// ordering on weak memory models.
+		protected internal bool IsImmortalSingleton => Volatile.Read (ref isImmortalSingleton) == 1;
+
+		// Latch this wrapper as a process-global immortal singleton (see isImmortalSingleton). One-way:
+		// once set it never clears. Called either under the HandleDictionary upgradeable-read lock (via
+		// GetOrAddObject, alongside PreventPublicDisposal) or during single-threaded static
+		// initialization (SKPaint.DefaultFont, the SKFontStyle presets).
+		internal void MakeImmortalSingleton () => Volatile.Write (ref isImmortalSingleton, 1);
 
 		protected virtual void DisposeUnownedManaged ()
 		{
@@ -356,6 +409,11 @@ namespace SkiaSharp
 			try {
 				if (IgnorePublicDispose)
 					return;
+				// Belt-and-braces: every immortal singleton also sets IgnorePublicDispose, so the
+				// check above already returned. This explicit guard documents the invariant and keeps
+				// the public path safe even if a future singleton sets immortality without it.
+				if (IsImmortalSingleton)
+					return;
 				proceed = Interlocked.CompareExchange (ref isDisposed, 1, 0) == 0;
 			} finally {
 				HandleDictionary.instancesLock.ExitWriteLock ();
@@ -389,6 +447,14 @@ namespace SkiaSharp
 
 		protected internal void DisposeInternal ()
 		{
+			// Immortal process-global singletons must never free their shared native object. This is
+			// THE path the lifecycle rework reopened: owned-child teardown, ownership handoff and dict
+			// replacement all funnel through DisposeInternal(), which (unlike public Dispose) does not
+			// consult IgnorePublicDispose. Guard before the CAS so isDisposed is never set and the
+			// cleanup body never runs.
+			if (IsImmortalSingleton)
+				return;
+
 			// Claim disposal via the CAS; if already claimed, no-op. No outer HandleDictionary lock —
 			// DisposeInternal doesn't read IgnorePublicDispose, so there's no flag
 			// check that needs to be paired with the CAS.

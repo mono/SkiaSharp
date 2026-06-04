@@ -278,8 +278,10 @@ namespace SkiaSharp
 		internal static SKData GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKData (h, o));
 
+		// Used only by the Empty singleton: latch the process-global empty SKData immortal so it is
+		// never freed by this wrapper's finalizer or DisposeInternal.
 		internal static SKData GetDisposeProtectedObject (IntPtr handle) =>
-			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKData (h, o));
+			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKData (h, o));
 
 		//
 

@@ -69,6 +69,8 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 	internal static SKBlender GetObject (IntPtr handle) =>
 		GetOrAddObject (handle, (h, o) => new SKBlender (h, o));
 
+	// Used only by the process-global blend-mode cache: latch each shared native blender immortal so it
+	// is never freed by this wrapper's finalizer or DisposeInternal.
 	internal static SKBlender GetDisposeProtectedObject (IntPtr handle) =>
-		GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKBlender (h, o));
+		GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKBlender (h, o));
 }

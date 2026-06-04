@@ -186,8 +186,10 @@ namespace SkiaSharp
 		internal static SKFontManager GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
 
+		// Used only by the Default singleton: latch the process-global default font manager immortal so
+		// it is never freed by this wrapper's finalizer or DisposeInternal.
 		internal static SKFontManager GetDisposeProtectedObject (IntPtr handle) =>
-			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKFontManager (h, o));
+			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKFontManager (h, o));
 
 	}
 }

@@ -39,13 +39,13 @@ namespace SkiaSharp
 					// on Android/NDK/Custom because onMatchFamily(null) returns null.
 					var matched = SkiaApi.sk_fontmgr_legacy_create_typeface (
 						SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle);
-					return matched == IntPtr.Zero ? Empty : GetDisposeProtectedObject (matched);
+					return matched == IntPtr.Zero ? Empty : GetImmortalSingletonObject (matched);
 				});
 
 		public static SKTypeface Empty =>
 			LazyInitializer.EnsureInitialized (
 				ref empty, ref emptyInitialized, ref emptyLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_typeface_create_empty ()));
+				() => GetImmortalSingletonObject (SkiaApi.sk_typeface_create_empty ()));
 
 		public bool IsEmpty => GlyphCount == 0;
 
@@ -443,6 +443,12 @@ namespace SkiaSharp
 
 		internal static SKTypeface GetDisposeProtectedObject (IntPtr handle) =>
 			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKTypeface (h, o));
+
+		// Used only by the process-global Empty/Default singletons: latch the shared native typeface
+		// immortal so it is never freed by this wrapper's finalizer or DisposeInternal. (Distinct from
+		// GetDisposeProtectedObject, which match-family/character use for ordinary collectible typefaces.)
+		internal static SKTypeface GetImmortalSingletonObject (IntPtr handle) =>
+			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKTypeface (h, o));
 
 	}
 }

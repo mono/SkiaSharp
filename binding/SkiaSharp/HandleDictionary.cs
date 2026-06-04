@@ -57,7 +57,7 @@ namespace SkiaSharp
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject =>
-			GetOrAddObject (handle, owns, unrefExisting, disposeProtected: false, objectFactory);
+			GetOrAddObject (handle, owns, unrefExisting, disposeProtected: false, immortal: false, objectFactory);
 
 		/// <summary>
 		/// Retrieve or create an instance for the native handle. When <paramref name="disposeProtected"/> is true,
@@ -69,6 +69,19 @@ namespace SkiaSharp
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool disposeProtected, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject =>
+			GetOrAddObject (handle, owns, unrefExisting, disposeProtected, immortal: false, objectFactory);
+
+		/// <summary>
+		/// Retrieve or create an instance for the native handle. When <paramref name="immortal"/> is true (only
+		/// valid together with <paramref name="disposeProtected"/>), the returned wrapper is additionally latched
+		/// as a process-global immortal singleton (MakeImmortalSingleton), so neither its finalizer nor
+		/// DisposeInternal() can ever free the shared native object. An EXISTING wrapper found for the handle is
+		/// promoted to immortal as well — the dictionary holds one wrapper per handle, so promotion is the only
+		/// way to make the shared global permanent.
+		/// </summary>
+		/// <returns>The instance, or null if the handle was null.</returns>
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool disposeProtected, bool immortal, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
@@ -106,6 +119,12 @@ namespace SkiaSharp
 						// internally disposed concurrently either (see PreventPublicDisposal's guard).
 						instance.PreventPublicDisposal ();
 
+					// Promote an already-cached wrapper (possibly a mortal one previously handed out by
+					// e.g. SKFontManager.MatchFamily for the default typeface) to immortal. Done under the
+					// same lock as PreventPublicDisposal, so it cannot race a concurrent public disposal.
+					if (immortal)
+						instance.MakeImmortalSingleton ();
+
 					return instance;
 				}
 
@@ -114,6 +133,9 @@ namespace SkiaSharp
 				// Cannot race with a concurrent public Dispose call. same reasoning as above.
 				if (disposeProtected && obj is not null)
 					obj.PreventPublicDisposal ();
+
+				if (immortal && obj is not null)
+					obj.MakeImmortalSingleton ();
 
 				return obj;
 			} finally {
@@ -169,6 +191,15 @@ namespace SkiaSharp
 			instancesLock.EnterWriteLock ();
 			try {
 				if (instances.TryGetValue (handle, out var oldValue) && oldValue.Target is SKObject obj && !obj.IsDisposed) {
+					// If the handle already belongs to an immortal process-global singleton, never replace
+					// or dispose it. Latch the newcomer immortal too (so its own teardown can't free the
+					// shared native object) and keep the original registered. This is near-unreachable in
+					// practice — all singleton handles are obtained through the deduped immortal accessors —
+					// but it strictly preserves the "one immortal wrapper owns the global forever" invariant.
+					if (obj.IsImmortalSingleton) {
+						instance.MakeImmortalSingleton ();
+						return;
+					}
 #if THROW_OBJECT_EXCEPTIONS
 					if (obj.OwnsHandle) {
 						// a mostly recoverable error

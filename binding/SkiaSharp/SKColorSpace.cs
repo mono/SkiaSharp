@@ -156,10 +156,11 @@ namespace SkiaSharp
 		internal static SKColorSpace GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
 			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 
-		// Variant used by singleton accessors. The returned wrapper has IgnorePublicDispose
-		// set under HandleDictionary's critical section — atomic with the HD lookup, so
-		// no other thread can observe a non-dispose-protected state.
+		// Variant used by singleton accessors (CreateSrgb/CreateSrgbLinear). The returned wrapper has
+		// IgnorePublicDispose set AND is latched immortal under HandleDictionary's critical section —
+		// atomic with the HD lookup, so the process-global sRGB native object is never freed by this
+		// wrapper's finalizer or DisposeInternal.
 		internal static SKColorSpace GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
+			GetOrAddImmortalSingletonObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 	}
 }

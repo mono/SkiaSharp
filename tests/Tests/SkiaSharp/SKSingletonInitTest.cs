@@ -146,6 +146,85 @@ namespace SkiaSharp.Tests
 			Assert.Same(srgb, SKColorSpace.CreateSrgb());
 		}
 
+		// --- Process-global singletons are latched immortal ---
+
+		// IgnorePublicDispose alone only guards the PUBLIC Dispose() entry point. The lifecycle rework
+		// made singletons normal owns:true wrappers and moved the isDisposed CAS out of Dispose(bool)
+		// into the three entry points, so DisposeInternal() and the finalizer — neither of which consults
+		// IgnorePublicDispose — could still free the shared native singleton. The immortal latch closes
+		// those paths. These tests assert every singleton sets it.
+
+		[SkippableFact]
+		public void AllSingletonsAreImmortal()
+		{
+			Assert.True(SKColorSpace.CreateSrgb().IsImmortalSingleton);
+			Assert.True(SKColorSpace.CreateSrgbLinear().IsImmortalSingleton);
+			Assert.True(SKData.Empty.IsImmortalSingleton);
+			Assert.True(SKFontManager.Default.IsImmortalSingleton);
+			Assert.True(SKTypeface.Default.IsImmortalSingleton);
+			Assert.True(SKTypeface.Empty.IsImmortalSingleton);
+			Assert.True(SKBlender.CreateBlendMode(SKBlendMode.SrcOver).IsImmortalSingleton);
+			Assert.True(SKColorFilter.CreateSrgbToLinearGamma().IsImmortalSingleton);
+			Assert.True(SKColorFilter.CreateLinearToSrgbGamma().IsImmortalSingleton);
+			Assert.True(SKFontStyle.Normal.IsImmortalSingleton);
+			Assert.True(SKFontStyle.Bold.IsImmortalSingleton);
+			Assert.True(SKFontStyle.Italic.IsImmortalSingleton);
+			Assert.True(SKFontStyle.BoldItalic.IsImmortalSingleton);
+		}
+
+		// DisposeInternal() is THE path the rework reopened (owned-child teardown, ownership handoff and
+		// dict replacement all funnel through it). On a real process-global singleton it must be a no-op:
+		// isDisposed stays false, the handle is unchanged, and the singleton accessor keeps returning the
+		// same live instance. Without the immortal guard this CAS+Dispose(true) would unref/free the
+		// shared native object and corrupt every other consumer of it.
+
+		[SkippableFact]
+		public void DisposeInternalOnRefCountedSingletonIsNoOp()
+		{
+			var srgb = SKColorSpace.CreateSrgb();
+			var handleBefore = srgb.Handle;
+			var refCountBefore = srgb.GetReferenceCount();
+
+			srgb.DisposeInternal();
+
+			Assert.False(srgb.IsDisposed);
+			Assert.Equal(handleBefore, srgb.Handle);
+			Assert.Equal(refCountBefore, srgb.GetReferenceCount());
+			Assert.Same(srgb, SKColorSpace.CreateSrgb());
+			Assert.Equal(handleBefore, SKColorSpace.CreateSrgb().Handle);
+		}
+
+		[SkippableFact]
+		public void DisposeInternalOnNonVirtualRefCountedSingletonIsNoOp()
+		{
+			// SKData is ISKNonVirtualReferenceCounted — a different unref path than SKColorSpace — so
+			// cover SKData.Empty independently.
+			var empty = SKData.Empty;
+			var handleBefore = empty.Handle;
+
+			empty.DisposeInternal();
+
+			Assert.False(empty.IsDisposed);
+			Assert.Equal(handleBefore, empty.Handle);
+			Assert.Same(empty, SKData.Empty);
+			Assert.Equal(handleBefore, SKData.Empty.Handle);
+		}
+
+		[SkippableFact]
+		public void DisposeInternalOnDefaultTypefaceSingletonIsNoOp()
+		{
+			// The default typeface handle can ALSO be reached mortally via SKFontManager.MatchFamily,
+			// so its wrapper is the promote-to-immortal case. Guard it explicitly.
+			var typeface = SKTypeface.Default;
+			var handleBefore = typeface.Handle;
+
+			typeface.DisposeInternal();
+
+			Assert.False(typeface.IsDisposed);
+			Assert.Equal(handleBefore, typeface.Handle);
+			Assert.Same(typeface, SKTypeface.Default);
+		}
+
 		// --- SKTypeface.CreateDefault never returns null even on a cold backing field ---
 
 		[SkippableFact]

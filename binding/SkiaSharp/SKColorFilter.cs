@@ -154,7 +154,9 @@ namespace SkiaSharp
 		internal static SKColorFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
 
+		// Used only by the two process-global gamma singletons: latch each shared native color filter
+		// immortal so it is never freed by this wrapper's finalizer or DisposeInternal.
 		internal static SKColorFilter GetDisposeProtectedObject (IntPtr handle) =>
-			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKColorFilter (h, o));
+			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKColorFilter (h, o));
 	}
 }

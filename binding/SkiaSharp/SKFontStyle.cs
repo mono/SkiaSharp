@@ -22,6 +22,9 @@ namespace SkiaSharp
 			// giving us the same handle as a return value of another pinvoke call,
 			// because these are created by us and not returned by skia.
 			style.PreventPublicDisposal ();
+			// Process-global preset singleton: latch immortal so neither the finalizer nor DisposeInternal
+			// can free the shared native font style.
+			style.MakeImmortalSingleton ();
 			return style;
 		}
 
