@@ -1,0 +1,307 @@
+# Issue Triage Report — #4031
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-06-04T05:49:19Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/Build (0.90 (90%)) |
+| Suggested action | ready-to-fix (0.88 (88%)) |
+
+**Issue Summary:** SkiaSharp.NativeAssets.MacCatalyst 3.119.4 (including preview.1.1) targets maccatalyst26.2 instead of maccatalyst26.0, breaking apps that use a lower Mac Catalyst SDK version such as Avalonia targeting 26.0.
+
+**Analysis:** The NativeAssets.MacCatalyst package for the 3.119.4 release used an incorrect maccatalyst26.2 TFM (the SDK version used when building was 26.2), while the correct minimum should be 26.0 to match Avalonia and other consumers. PR #3798 fixed this for the 4.x line; the fix (TPVMacCatalystCurrent=26.0) is already in main but the 3.x branch release was not updated.
+
+**Recommendations:** **ready-to-fix** — Root cause is clear (wrong TPVMacCatalystCurrent=26.2 in 3.x release), fix path is known (backport PR #3798 to 3.119.x branch and re-release), and the fix is trivial.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | os/macOS |
+| Backends | — |
+| Tenets | tenet/compatibility |
+| Partner | — |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a Mac Catalyst app that targets maccatalyst26.0 (without explicitly pinning SDK version)
+2. Add SkiaSharp.NativeAssets.MacCatalyst 3.119.4-preview.1.1 or 3.119.4
+3. Build and run — libskiasharp dylib fails to load
+
+**Environment:** Mac Catalyst, SkiaSharp 3.119.4-preview.1.1 and 3.119.4 (stable). Affected consumers include Avalonia which sets maccatalyst to 26.0.
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/pull/3798 — PR #3798 — fixed the maccatalyst SDK version in 4.x line
+- https://www.nuget.org/packages/SkiaSharp.NativeAssets.MacCatalyst/3.119.4-preview.1.1 — Broken 3.x preview package
+- https://www.nuget.org/packages/SkiaSharp.NativeAssets.MacCatalyst/4.147.0-preview.2.1 — Fixed 4.x package
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | build-error |
+| Error message | libskiasharp dylib fails to load when maccatalyst TFM version is below 26.2 |
+| Repro quality | partial |
+| Target frameworks | net9.0-maccatalyst, net10.0-maccatalyst |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.119.4-preview.1.1, 3.119.4, 4.147.0-preview.2.1, 4.147.0-preview.3.1 |
+| Worked in | — |
+| Broke in | 3.119.4-preview.1.1 |
+| Current relevance | likely |
+| Relevance reason | Reporter confirmed 3.119.4 (stable) is still broken. The fix from PR #3798 was only applied to the 4.x line and has not been backported to the 3.119.x release. |
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | True |
+| Confidence | 0.85 (85%) |
+| Reason | Current main branch source/SkiaSharp.Build.props shows TPVMacCatalystCurrent=26.0 (correct), meaning the fix exists in main but was not released in the 3.119.4 NuGet package. |
+| Related PRs | #3798 |
+| Related commits | — |
+| Fixed in version | — |
+
+## Analysis
+
+### Technical Summary
+
+The NativeAssets.MacCatalyst package for the 3.119.4 release used an incorrect maccatalyst26.2 TFM (the SDK version used when building was 26.2), while the correct minimum should be 26.0 to match Avalonia and other consumers. PR #3798 fixed this for the 4.x line; the fix (TPVMacCatalystCurrent=26.0) is already in main but the 3.x branch release was not updated.
+
+### Rationale
+
+This is a packaging bug: the NativeAssets project TFM is driven by TPVMacCatalystCurrent in source/SkiaSharp.Build.props. The current main has 26.0 which is correct. The 3.119.4 release package was built before the fix landed or the fix was not backported to the 3.x release branch.
+
+### Key Signals
+
+- "The newest 3.x preview version (3.119.4-preview.1.1) contains an SDK version of maccatalyst26.2" — **issue body** (TPVMacCatalystCurrent was set to 26.2 when the 3.119.4-preview.1.1 package was built)
+- "This was fixed with https://github.com/mono/SkiaSharp/pull/3798" — **issue body** (Fix already exists in the codebase via PR #3798)
+- "Still broken in 3.119.4" — **comment by drasticactions (2026-05-27)** (The stable 3.119.4 release also has the wrong SDK version — fix was not backported to 3.x release)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp.NativeAssets.MacCatalyst/SkiaSharp.NativeAssets.MacCatalyst.csproj` | 3 | direct | TargetFrameworks uses $(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent), so the packaged TFM is entirely controlled by TPVMacCatalystCurrent in SkiaSharp.Build.props |
+| `source/SkiaSharp.Build.props` | 84 | direct | TPVMacCatalystCurrent is currently 26.0 (correct). The 3.119.4 package was built with 26.2, meaning it was built from a state of the repo where this value was 26.2 and PR #3798's fix was not yet applied or not backported. |
+
+### Resolution Proposals
+
+**Hypothesis:** The 3.x release branch was built with TPVMacCatalystCurrent=26.2. PR #3798 fixed this but either landed only in 4.x or was not cherry-picked into the 3.119.x release branch before the stable release was cut.
+
+1. **Backport PR #3798 fix to 3.119.x and issue a 3.119.4.1 or 3.119.5 patch release** — fix, confidence 0.90 (90%), cost/s, validated=untested
+   - Cherry-pick the TPVMacCatalystCurrent change from PR #3798 onto the 3.119.x release branch and re-cut the NativeAssets.MacCatalyst package.
+
+**Recommended proposal:** Backport PR #3798 fix to 3.119.x and issue a 3.119.4.1 or 3.119.5 patch release
+
+**Why:** Minimal effort fix since the correct value (26.0) is already known and in main. Only a cherry-pick and re-release is needed.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.88 (88%) |
+| Reason | Root cause is clear (wrong TPVMacCatalystCurrent=26.2 in 3.x release), fix path is known (backport PR #3798 to 3.119.x branch and re-release), and the fix is trivial. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.92 (92%) | Apply build, maccatalyst, compatibility labels | labels=type/bug, area/Build, os/macOS, tenet/compatibility |
+| add-comment | medium | 0.88 (88%) | Acknowledge bug and explain fix path | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report and for tracking down PR #3798!
+
+This is confirmed — the `3.119.4` release was built with `TPVMacCatalystCurrent=26.2` in `source/SkiaSharp.Build.props`. The fix from PR #3798 (which sets it back to `26.0`) is already in `main` and is correct in the 4.x line, but it was not backported to the `3.119.x` release branch before `3.119.4` was cut.
+
+The fix is to cherry-pick the `TPVMacCatalystCurrent=26.0` change onto the `3.119.x` release branch and ship a patch release.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4031,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-06-04T05:49:19Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SkiaSharp.NativeAssets.MacCatalyst 3.119.4 (including preview.1.1) targets maccatalyst26.2 instead of maccatalyst26.0, breaking apps that use a lower Mac Catalyst SDK version such as Avalonia targeting 26.0.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/macOS"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "libskiasharp dylib fails to load when maccatalyst TFM version is below 26.2",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net9.0-maccatalyst",
+        "net10.0-maccatalyst"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Mac Catalyst app that targets maccatalyst26.0 (without explicitly pinning SDK version)",
+        "Add SkiaSharp.NativeAssets.MacCatalyst 3.119.4-preview.1.1 or 3.119.4",
+        "Build and run — libskiasharp dylib fails to load"
+      ],
+      "environmentDetails": "Mac Catalyst, SkiaSharp 3.119.4-preview.1.1 and 3.119.4 (stable). Affected consumers include Avalonia which sets maccatalyst to 26.0.",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3798",
+          "description": "PR #3798 — fixed the maccatalyst SDK version in 4.x line"
+        },
+        {
+          "url": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.MacCatalyst/3.119.4-preview.1.1",
+          "description": "Broken 3.x preview package"
+        },
+        {
+          "url": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.MacCatalyst/4.147.0-preview.2.1",
+          "description": "Fixed 4.x package"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.4-preview.1.1",
+        "3.119.4",
+        "4.147.0-preview.2.1",
+        "4.147.0-preview.3.1"
+      ],
+      "brokeIn": "3.119.4-preview.1.1",
+      "currentRelevance": "likely",
+      "relevanceReason": "Reporter confirmed 3.119.4 (stable) is still broken. The fix from PR #3798 was only applied to the 4.x line and has not been backported to the 3.119.x release."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.85,
+      "reason": "Current main branch source/SkiaSharp.Build.props shows TPVMacCatalystCurrent=26.0 (correct), meaning the fix exists in main but was not released in the 3.119.4 NuGet package.",
+      "relatedPRs": [
+        3798
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The NativeAssets.MacCatalyst package for the 3.119.4 release used an incorrect maccatalyst26.2 TFM (the SDK version used when building was 26.2), while the correct minimum should be 26.0 to match Avalonia and other consumers. PR #3798 fixed this for the 4.x line; the fix (TPVMacCatalystCurrent=26.0) is already in main but the 3.x branch release was not updated.",
+    "rationale": "This is a packaging bug: the NativeAssets project TFM is driven by TPVMacCatalystCurrent in source/SkiaSharp.Build.props. The current main has 26.0 which is correct. The 3.119.4 release package was built before the fix landed or the fix was not backported to the 3.x release branch.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.MacCatalyst/SkiaSharp.NativeAssets.MacCatalyst.csproj",
+        "lines": "3",
+        "finding": "TargetFrameworks uses $(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent), so the packaged TFM is entirely controlled by TPVMacCatalystCurrent in SkiaSharp.Build.props",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Build.props",
+        "lines": "84",
+        "finding": "TPVMacCatalystCurrent is currently 26.0 (correct). The 3.119.4 package was built with 26.2, meaning it was built from a state of the repo where this value was 26.2 and PR #3798's fix was not yet applied or not backported.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The newest 3.x preview version (3.119.4-preview.1.1) contains an SDK version of maccatalyst26.2",
+        "source": "issue body",
+        "interpretation": "TPVMacCatalystCurrent was set to 26.2 when the 3.119.4-preview.1.1 package was built"
+      },
+      {
+        "text": "This was fixed with https://github.com/mono/SkiaSharp/pull/3798",
+        "source": "issue body",
+        "interpretation": "Fix already exists in the codebase via PR #3798"
+      },
+      {
+        "text": "Still broken in 3.119.4",
+        "source": "comment by drasticactions (2026-05-27)",
+        "interpretation": "The stable 3.119.4 release also has the wrong SDK version — fix was not backported to 3.x release"
+      }
+    ],
+    "resolution": {
+      "hypothesis": "The 3.x release branch was built with TPVMacCatalystCurrent=26.2. PR #3798 fixed this but either landed only in 4.x or was not cherry-picked into the 3.119.x release branch before the stable release was cut.",
+      "proposals": [
+        {
+          "title": "Backport PR #3798 fix to 3.119.x and issue a 3.119.4.1 or 3.119.5 patch release",
+          "description": "Cherry-pick the TPVMacCatalystCurrent change from PR #3798 onto the 3.119.x release branch and re-cut the NativeAssets.MacCatalyst package.",
+          "category": "fix",
+          "confidence": 0.9,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Backport PR #3798 fix to 3.119.x and issue a 3.119.4.1 or 3.119.5 patch release",
+      "recommendedReason": "Minimal effort fix since the correct value (26.0) is already known and in main. Only a cherry-pick and re-release is needed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.88,
+      "reason": "Root cause is clear (wrong TPVMacCatalystCurrent=26.2 in 3.x release), fix path is known (backport PR #3798 to 3.119.x branch and re-release), and the fix is trivial.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply build, maccatalyst, compatibility labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "os/macOS",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge bug and explain fix path",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the report and for tracking down PR #3798!\n\nThis is confirmed — the `3.119.4` release was built with `TPVMacCatalystCurrent=26.2` in `source/SkiaSharp.Build.props`. The fix from PR #3798 (which sets it back to `26.0`) is already in `main` and is correct in the 4.x line, but it was not backported to the `3.119.x` release branch before `3.119.4` was cut.\n\nThe fix is to cherry-pick the `TPVMacCatalystCurrent=26.0` change onto the `3.119.x` release branch and ship a patch release."
+      }
+    ]
+  }
+}
+```
+
+</details>
