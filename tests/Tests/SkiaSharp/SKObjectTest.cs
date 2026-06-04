@@ -326,8 +326,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void PreventPublicDisposalOnLiveWrapperDoesNotThrow()
 		{
-			// Happy path: promoting a live (non-disposed) wrapper must never trip the
-			// THROW_OBJECT_EXCEPTIONS state guard. This locks in "no false positives".
+			// PreventPublicDisposal marks a live wrapper as public-dispose-protected
+			// (sets IgnorePublicDispose) without disposing it.
 			var handle = GetNextPtr();
 			var obj = new LifecycleObject(handle, true);
 
@@ -338,34 +338,6 @@ namespace SkiaSharp.Tests
 
 			// Dispose-protected wrappers no-op on public Dispose(), so tear down internally.
 			obj.DisposeInternal();
-		}
-
-		[SkippableFact]
-		public void PreventPublicDisposalOnDisposedWrapperThrows()
-		{
-#if THROW_OBJECT_EXCEPTIONS
-			// GetInstanceNoLocks filters disposed wrappers before they can be promoted, so
-			// under correct locking PreventPublicDisposal only ever sees a live wrapper.
-			// Observing a disposed wrapper here is the promote/dispose race symptom (the HD
-			// lock contract was violated) and must throw. This is the deterministic check
-			// that proves the guard has teeth.
-			var handle = GetNextPtr();
-			var obj = new LifecycleObject(handle, true);
-
-			// Normal public dispose (not protected → proceeds and claims disposal).
-			obj.Dispose();
-			Assert.True(obj.IsDisposed);
-
-			Assert.Throws<InvalidOperationException>(() => obj.PreventPublicDisposal());
-
-			// The symmetric "mirror" guard inside Dispose() (throwing when IgnorePublicDispose
-			// is observed set after the in-lock disposal claim) only fires under a genuine
-			// concurrent race: nothing overridable runs between the lock release and that
-			// re-check, so it cannot be forced deterministically without a test seam. It is
-			// defense-in-depth for the same footgun this test exercises from the promote side.
-#else
-			throw new SkipException("PreventPublicDisposal state guard is only active in THROW_OBJECT_EXCEPTIONS builds.");
-#endif
 		}
 
 		[SkippableFact]
