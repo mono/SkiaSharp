@@ -166,6 +166,7 @@ namespace SkiaSharp
 			internal SKColorSpaceStatic (IntPtr x)
 				: base (x, false)
 			{
+				PreventPublicDisposal ();
 			}
 
 			protected override void Dispose (bool disposing) { }

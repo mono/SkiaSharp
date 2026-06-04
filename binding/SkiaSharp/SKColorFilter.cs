@@ -164,6 +164,7 @@ namespace SkiaSharp
 			internal SKColorFilterStatic (IntPtr x)
 				: base (x, false)
 			{
+				PreventPublicDisposal ();
 			}
 
 			protected override void Dispose (bool disposing) { }

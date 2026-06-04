@@ -95,7 +95,10 @@ namespace SkiaSharp
 
 		private sealed class SKFontStatic : SKFont
 		{
-			internal SKFontStatic (IntPtr handle) : base (handle, false) { }
+			internal SKFontStatic (IntPtr handle) : base (handle, false)
+			{
+				PreventPublicDisposal ();
+			}
 
 			protected override void Dispose (bool disposing) { }
 		}

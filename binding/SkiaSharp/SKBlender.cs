@@ -88,6 +88,7 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 		internal SKBlenderStatic (IntPtr x)
 			: base (x, false)
 		{
+			PreventPublicDisposal ();
 		}
 
 		protected override void Dispose (bool disposing) { }

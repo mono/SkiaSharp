@@ -69,6 +69,7 @@ namespace SkiaSharp
 			internal SKFontStyleStatic (SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
 				: base (weight, width, slant)
 			{
+				PreventPublicDisposal ();
 			}
 
 			protected override void Dispose (bool disposing) { }
