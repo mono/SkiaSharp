@@ -225,9 +225,6 @@ namespace SkiaSharp.Tests
 
 			public static LifecycleObject GetObject(IntPtr handle, bool owns = true) =>
 				GetOrAddObject(handle, owns, (h, o) => new LifecycleObject(h, o));
-
-			public static LifecycleObject GetProtectedObject(IntPtr handle, bool owns = true) =>
-				GetOrAddDisposeProtectedObject(handle, owns, unrefExisting: false, (h, o) => new LifecycleObject(h, o));
 		}
 
 		private class BrokenObject : SKObject
@@ -341,26 +338,6 @@ namespace SkiaSharp.Tests
 
 			// Dispose-protected wrappers no-op on public Dispose(), so tear down internally.
 			obj.DisposeInternal();
-		}
-
-		[SkippableFact]
-		public void GetOrAddDisposeProtectedOnLiveExistingInstanceReturnsSameInstanceWithoutThrowing()
-		{
-			// Real promotion path (not the internal method in isolation): an already-registered,
-			// live wrapper is fetched again as dispose-protected. GetInstanceNoLocks finds it
-			// live and PreventPublicDisposal promotes the SAME instance under the HD lock — the
-			// state guard must not trip. This covers the production GetOrAddDisposeProtectedObject
-			// flow that the singleton accessors use.
-			var handle = GetNextPtr();
-			var original = new LifecycleObject(handle, true);
-
-			var promoted = LifecycleObject.GetProtectedObject(handle);
-
-			Assert.Same(original, promoted);
-			Assert.True(promoted.IgnorePublicDispose);
-			Assert.False(promoted.IsDisposed);
-
-			promoted.DisposeInternal();
 		}
 
 		[SkippableFact]

@@ -56,18 +56,6 @@ namespace SkiaSharp
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
-			where TSkiaObject : SKObject =>
-			GetOrAddObject (handle, owns, unrefExisting, disposeProtected: false, objectFactory);
-
-		/// <summary>
-		/// Retrieve or create an instance for the native handle. When <paramref name="disposeProtected"/> is true,
-		/// PreventPublicDisposal is called on the returned wrapper (whether an existing one was found or a new one
-		/// was created). This overload exists to enable the dispose-protected lifecycle tests; on this build's
-		/// lifecycle the flag-set is not atomic against a concurrent public Dispose (that atomicity is part of the
-		/// alternate rework being compared against), which is exactly what those tests probe.
-		/// </summary>
-		/// <returns>The instance, or null if the handle was null.</returns>
-		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool disposeProtected, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
@@ -98,16 +86,10 @@ namespace SkiaSharp
 						refcnt.SafeUnRef ();
 					}
 
-					if (disposeProtected)
-						instance.PreventPublicDisposal ();
-
 					return instance;
 				}
 
 				var obj = objectFactory.Invoke (handle, owns);
-
-				if (disposeProtected && obj is not null)
-					obj.PreventPublicDisposal ();
 
 				return obj;
 			} finally {

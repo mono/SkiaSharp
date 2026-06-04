@@ -124,20 +124,6 @@ namespace SkiaSharp
 			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, objectFactory);
 		}
 
-		// Retrieve or create an instance for the native handle, calling PreventPublicDisposal
-		// on the returned wrapper so that a user-initiated Dispose() is short-circuited. This
-		// does NOT make the wrapper immortal — finalization and DisposeInternal still tear it
-		// down; long-lived persistence comes from the accessor's static-field cache acting as a
-		// GC root. Used by the dispose-protected lifecycle tests.
-		internal static TSkiaObject GetOrAddDisposeProtectedObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
-			where TSkiaObject : SKObject
-		{
-			if (handle == IntPtr.Zero)
-				return null;
-
-			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, disposeProtected: true, objectFactory);
-		}
-
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero || instance == null)
