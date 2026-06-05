@@ -28,6 +28,15 @@ string GetSkiaArch(string arch) =>
 
 string VARIANT = string.IsNullOrEmpty(BUILD_VARIANT) ? "linux" : BUILD_VARIANT?.Trim();
 
+// Use libc++ when available (e.g. .NET glibc/musl cross-images ship it static-only).
+// Fall back to libstdc++ on bare Linux runners (e.g. GitHub Actions without libc++ installed).
+bool HAS_LIBCXX = System.IO.File.Exists("/usr/include/c++/v1/cstddef") ||
+    System.IO.Directory.GetDirectories("/usr/lib", "llvm-*")
+        .Any(d => System.IO.File.Exists(System.IO.Path.Combine(d, "include/c++/v1/cstddef")));
+string STDLIB_CFLAG = HAS_LIBCXX ? "'-stdlib=libc++'" : "'-stdlib=libstdc++'";
+string STDLIB_LDFLAG = HAS_LIBCXX ? "'-stdlib=libc++'" : "'-stdlib=libstdc++'";
+string STATIC_LIBSTDCXX = HAS_LIBCXX ? "" : ", '-static-libstdc++'";
+
 if (BUILD_ARCH.Length == 0)
     BUILD_ARCH = new [] { "x64" };
 
@@ -117,8 +126,8 @@ Task("libSkiaSharp")
             $"skia_use_vulkan=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
-            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', {STDLIB_CFLAG}{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
+            $"extra_ldflags=[ {STDLIB_LDFLAG}, '-static-libgcc'{STATIC_LIBSTDCXX}{staticLibcxx}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
@@ -154,8 +163,8 @@ Task("libHarfBuzzSharp")
             $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
-            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +
+            $"extra_cflags=[ {STDLIB_CFLAG}{bionicDefineHB} ] " +
+            $"extra_ldflags=[ {STDLIB_LDFLAG}, '-static-libgcc'{STATIC_LIBSTDCXX}{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
