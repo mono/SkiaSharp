@@ -136,11 +136,21 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var img = DoWork(out var colorSpaceHandle, out var weakColorspace);
+			var img = DoWork(out var colorSpaceHandle, out var weakColorspace, out var colorspace);
 
 			CheckBeforeCollection(colorSpaceHandle);
 
 			CheckExistingImage(4, img, colorSpaceHandle);
+
+			// Up to this point the asserts assume the wrapper is still alive: its native
+			// ref is part of the expected counts (and CheckBeforeCollection asserts the
+			// weak target is non-null). The wrapper is only weakly reachable, so on a slow,
+			// memory-pressured agent an incidental GC could finalize it early and drop the
+			// count by one. Keep it explicitly rooted through that window, then release it
+			// only now, when the test deliberately collects it to prove the image keeps the
+			// native color space alive on its own.
+			GC.KeepAlive(colorspace);
+			colorspace = null;
 
 			CollectGarbage();
 
@@ -179,9 +189,9 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(cs);
 			}
 
-			SKImage DoWork(out IntPtr handle, out WeakReference weak)
+			SKImage DoWork(out IntPtr handle, out WeakReference weak, out SKColorSpace colorspace)
 			{
-				var colorspace = SKColorSpace.CreateRgb(
+				colorspace = SKColorSpace.CreateRgb(
 					new SKColorSpaceTransferFn { A = 0.1f, B = 0.2f, C = 0.3f, D = 0.4f, E = 0.5f, F = 0.6f },
 					SKColorSpaceXyz.Identity);
 
