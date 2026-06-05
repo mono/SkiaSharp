@@ -10,17 +10,18 @@ namespace SkiaSharp
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
 
-		// Process-global gamma color-filter singletons. Populated eagerly by
-		// SkiaSharpStatics.EnsureInitialized and rooted here so the GC never collects the immortal
-		// wrappers. See SkiaSharpStatics (#3817).
-		private static SKColorFilter srgbToLinear;
-		private static SKColorFilter linearToSrgb;
+		// Process-global immortal gamma color-filter singletons, built once by this type's static
+		// constructor from the raw handles SkiaSharpStatics acquired, and rooted here so the GC never
+		// collects them. The explicit static constructor makes the type NOT 'beforefieldinit', so the
+		// wrappers are registered as immortal before any static method body (including GetObject) runs.
+		// See SkiaSharpStatics (#3817).
+		private static readonly SKColorFilter srgbToLinear;
+		private static readonly SKColorFilter linearToSrgb;
 
-		internal static void InitializeStatics ()
+		static SKColorFilter ()
 		{
-			// Idempotent so a retry after a partial-init failure does not create a second wrapper.
-			srgbToLinear ??= GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ());
-			linearToSrgb ??= GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ());
+			srgbToLinear = GetDisposeProtectedObject (SkiaSharpStatics.SrgbToLinearGamma);
+			linearToSrgb = GetDisposeProtectedObject (SkiaSharpStatics.LinearToSrgbGamma);
 		}
 
 		internal SKColorFilter(IntPtr handle, bool owns)
@@ -31,17 +32,9 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKColorFilter CreateSrgbToLinearGamma ()
-		{
-			SkiaSharpStatics.EnsureInitialized ();
-			return srgbToLinear;
-		}
+		public static SKColorFilter CreateSrgbToLinearGamma () => srgbToLinear;
 
-		public static SKColorFilter CreateLinearToSrgbGamma ()
-		{
-			SkiaSharpStatics.EnsureInitialized ();
-			return linearToSrgb;
-		}
+		public static SKColorFilter CreateLinearToSrgbGamma () => linearToSrgb;
 
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{

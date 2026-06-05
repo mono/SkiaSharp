@@ -6,27 +6,26 @@ namespace SkiaSharp
 {
 	public class SKFontStyle : SKObject, ISKSkipObjectRegistration
 	{
-		// Process-global preset font-style singletons. Populated eagerly (in dependency order, before the
-		// default typeface which reads Normal) by SkiaSharpStatics.EnsureInitialized and rooted here so
-		// the GC never collects the immortal wrappers. See SkiaSharpStatics (#3817).
-		private static SKFontStyle normal;
-		private static SKFontStyle bold;
-		private static SKFontStyle italic;
-		private static SKFontStyle boldItalic;
+		// Process-global immortal preset font-style singletons, built once by this type's static
+		// constructor from the raw handles SkiaSharpStatics acquired, and rooted here so the GC never
+		// collects them. SKFontStyle bypasses the HandleDictionary (ISKSkipObjectRegistration), so each
+		// wrapper directly latches its native handle immortal. See SkiaSharpStatics (#3817).
+		private static readonly SKFontStyle normal;
+		private static readonly SKFontStyle bold;
+		private static readonly SKFontStyle italic;
+		private static readonly SKFontStyle boldItalic;
 
-		internal static void InitializeStatics ()
+		static SKFontStyle ()
 		{
-			// Idempotent so a retry after a partial-init failure does not create new immortal native
-			// font styles (SKFontStyle bypasses the HandleDictionary dedup, so re-creating would leak).
-			normal ??= MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Upright);
-			bold ??= MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Upright);
-			italic ??= MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Italic);
-			boldItalic ??= MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Italic);
+			normal = MakeImmortal (SkiaSharpStatics.NormalFontStyle);
+			bold = MakeImmortal (SkiaSharpStatics.BoldFontStyle);
+			italic = MakeImmortal (SkiaSharpStatics.ItalicFontStyle);
+			boldItalic = MakeImmortal (SkiaSharpStatics.BoldItalicFontStyle);
 		}
 
-		private static SKFontStyle MakeDisposeProtected (SKFontStyleWeight weight, SKFontStyleSlant slant)
+		private static SKFontStyle MakeImmortal (IntPtr handle)
 		{
-			var style = new SKFontStyle (weight, SKFontStyleWidth.Normal, slant);
+			var style = new SKFontStyle (handle, true);
 			// The PreventPublicDisposal call here doesn't suffer from the case of skia
 			// giving us the same handle as a return value of another pinvoke call,
 			// because these are created by us and not returned by skia.
@@ -69,33 +68,13 @@ namespace SkiaSharp
 
 		public SKFontStyleSlant Slant => SkiaApi.sk_fontstyle_get_slant (Handle);
 
-		public static SKFontStyle Normal {
-			get {
-				SkiaSharpStatics.EnsureInitialized ();
-				return normal;
-			}
-		}
+		public static SKFontStyle Normal => normal;
 
-		public static SKFontStyle Bold {
-			get {
-				SkiaSharpStatics.EnsureInitialized ();
-				return bold;
-			}
-		}
+		public static SKFontStyle Bold => bold;
 
-		public static SKFontStyle Italic {
-			get {
-				SkiaSharpStatics.EnsureInitialized ();
-				return italic;
-			}
-		}
+		public static SKFontStyle Italic => italic;
 
-		public static SKFontStyle BoldItalic {
-			get {
-				SkiaSharpStatics.EnsureInitialized ();
-				return boldItalic;
-			}
-		}
+		public static SKFontStyle BoldItalic => boldItalic;
 
 		//
 

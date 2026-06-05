@@ -16,7 +16,8 @@ itself shares for the lifetime of the process:
 Because these native objects are shared, the managed wrappers that front them must be **immortal**:
 disposing one (directly, via a finalizer, or via a transitive `DisposeInternal`) would free or unref a
 native object that other live aliases still point at, corrupting every other consumer of that handle.
-This document explains how those wrappers are created and kept alive.
+This document describes how those wrappers are created and kept alive in the **current** implementation,
+and then traces how the design evolved to get here.
 
 ## Two requirements that pull in opposite directions
 
@@ -26,121 +27,165 @@ This document explains how those wrappers are created and kept alive.
    wrapper**, not to a fresh mortal wrapper that a caller could legitimately dispose. This was the
    3.119.x behaviour and it must be preserved: see [memory-management.md](memory-management.md).
 
-2. **No re-entrant static-init crash (#3817).** The singletons have cross-type dependencies (the default
-   typeface needs the font manager and the `Normal` font style). Historically the eager initialization
-   lived in `SKObject`'s static constructor, which chained into every singleton type. That put the whole
-   graph inside the CLR type-initializer machinery and produced a re-entrant `NullReferenceException`.
+2. **No re-entrant static-init crash (#3817).** The singletons have one cross-type dependency: the
+   default typeface is resolved through the default font manager and the `Normal` font style. If that
+   dependency is expressed as one wrapper type's static constructor reading **another wrapper type**, the
+   whole graph sits inside the CLR type-initializer machinery and can deadlock against its re-entrancy
+   rules (see the history section below).
 
-Requirement 1 wants eager, dedup-aware registration of every singleton *before* any handle lookup.
-Requirement 2 forbids doing that from a type/module initializer. The solution is to keep initialization
-**eager-on-first-touch** but move it **out of the CLR type-initializer graph**.
+The current design satisfies both: every singleton is built **eagerly and exactly once** by its own
+type's static constructor, but the one cross-type dependency is resolved at the **raw-handle level** so
+that no wrapper static constructor ever reads another wrapper type.
 
-## Why not a `.cctor` or `[ModuleInitializer]`? (the #3817 root cause)
+## The design: per-type static constructors over a shared handle holder
 
-A `[ModuleInitializer]` compiles to the module's type initializer, so it has exactly the same hazards as
-a `.cctor`. With initialization in a type initializer, the dependency cycle deadlocks against two CLR
-rules:
+Two pieces work together:
 
-```
-SKFontManager.Default
-  → SKFontManager..cctor                 (constructs the default-manager wrapper)
-    → SKObject..ctor (base)              → triggers SKObject..cctor for the FIRST time, mid-cctor
-      → SKTypeface..cctor                → reads SKFontManager.Default
-        → SKFontManager..cctor is ALREADY running on this thread
-          → the CLR returns the half-built type with a null field → NullReferenceException
-```
+### 1. `SkiaSharpStatics` — the raw-handle holder
 
-1. **Same-thread re-entrancy returns the partially-initialized type** instead of blocking, so a
-   cross-type dependency observes null fields.
-2. **A throw is cached for the lifetime of the process.** The type/module is permanently poisoned and
-   every later access rethrows the same `TypeInitializationException`, with no way to retry.
+`binding/SkiaSharp/SkiaSharpStatics.cs` is a plain `static class`. Its static constructor calls **only**
+`SkiaApi.sk_*` functions and stores the resulting `IntPtr` handles in `internal static readonly` fields
+(`Srgb`, `EmptyData`, `NormalFontStyle`, `DefaultFontManager`, `EmptyTypeface`, `DefaultTypeface`,
+the blend-mode handle map, …). It touches **no managed `SKObject` type**.
 
-## The design: `SkiaSharpStatics.EnsureInitialized()`
+The one true cross-type dependency — the default typeface — is resolved here, from the font-manager and
+`Normal`-style **handles** (not their wrappers):
 
-All initialization is centralized in `binding/SkiaSharp/SkiaSharpStatics.cs`, a plain
-self-synchronized orchestrator — **not** a type or module initializer.
-
-- **Tri-state + reentrant monitor.** A `state` field moves `Uninitialized → Initializing → Initialized`
-  under `lock (gate)`. The fast path is a single `Volatile.Read`; once initialized there is no locking.
-- **Explicit re-entrancy handling.** A re-entrant call during initialization (a registered singleton's
-  construction routes back through the `HandleDictionary` hook) re-enters the monitor on the same thread,
-  sees `state != Uninitialized`, and bails — returning the already-assigned backing field of an
-  **earlier-initialized** dependency. This replaces the CLR's "return the half-built type" rule with a
-  deterministic, correct answer.
-- **Recoverable failure.** If any `InitializeStatics` throws, the orchestrator resets `state` to
-  `Uninitialized` and rethrows the *original* exception at the real call site (with a meaningful stack).
-  The assembly is never poisoned; a later touch retries the whole chain.
-
-### Where it is called from
-
-```
-EnsureInitialized()  ← every public singleton accessor (CreateSrgb, Default, Empty, …)
-EnsureInitialized()  ← the top of HandleDictionary.GetOrAddObject, BEFORE its lock is taken
+```csharp
+IntPtr matched = SkiaApi.sk_fontmgr_legacy_create_typeface(DefaultFontManager, IntPtr.Zero, NormalFontStyle);
+DefaultTypeface = matched == IntPtr.Zero ? EmptyTypeface : matched;
 ```
 
-The accessor hook lets each accessor simply `return` its eagerly-populated field. The
-`GetOrAddObject` hook is what satisfies **requirement 1**: the very first time *any* native handle is
-looked up, the singletons are already registered as immortal wrappers, so a shared handle dedups to the
-dispose-proof wrapper.
+Because `SkiaSharpStatics..cctor` depends on no wrapper type, and each wrapper type's `.cctor` reads
+only `SkiaSharpStatics` (an `IntPtr`), the static-initializer graph is **acyclic** and the #3817
+re-entrancy is gone.
 
-### Initialization order (dependencies last)
+### 2. Each wrapper type's static constructor adopts its handles
 
+Every singleton wrapper type has an **explicit** static constructor that wraps the relevant handle(s)
+into immortal `readonly` fields, and its accessors just return those fields:
+
+```csharp
+public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
+{
+    private static readonly SKColorSpace srgb;
+    private static readonly SKColorSpace srgbLinear;
+
+    static SKColorSpace()
+    {
+        srgb = GetDisposeProtectedObject(SkiaSharpStatics.Srgb);
+        srgbLinear = GetDisposeProtectedObject(SkiaSharpStatics.SrgbLinear);
+    }
+
+    public static SKColorSpace CreateSrgb() => srgb;
+    public static SKColorSpace CreateSrgbLinear() => srgbLinear;
+}
 ```
-SKColorSpace → SKColorFilter → SKData → SKFontStyle → SKBlender → SKFontManager → SKTypeface
+
+`GetDisposeProtectedObject(IntPtr)` routes to `GetOrAddImmortalSingletonObject(...)`, which registers the
+wrapper in the `HandleDictionary` as immortal. `SKFontStyle` is special — it is
+`ISKSkipObjectRegistration`, so it bypasses the dictionary and latches each handle immortal directly.
+
+#### Why static constructors (and why they must be *explicit*)
+
+- **Lock-free and run-once.** The CLR guarantees a type initializer runs exactly once, on first use of
+  the type, in a thread-safe way — with no locks of our own and no orchestrator. The backing fields can
+  be `readonly`.
+- **The fields can satisfy getter-route dedup.** Requirement 1 needs the immortal wrapper to be
+  registered **before** any handle lookup on that type dedups a shared handle. The CLR gives us this
+  *only if the type is not `beforefieldinit`*. A type whose statics are written as bare field
+  initializers (`static readonly SKColorSpace srgb = ...;`) **is** `beforefieldinit`, which lets the CLR
+  run a static **method** body (such as `GetObject`) *before* the field initializers. An **explicit**
+  `static SKColorSpace() { ... }` removes `beforefieldinit`, so the cctor is guaranteed to complete
+  before the body of any static method on the type runs. **Every singleton wrapper type therefore
+  declares an explicit static constructor — do not collapse them into field initializers.**
+
+## Eager, one-shot, lazy-on-first-touch
+
+- **Eager within a type.** The first access to any member of, say, `SKColorSpace` triggers its static
+  constructor, which builds *both* sRGB wrappers up front. Touching `SkiaSharpStatics` (transitively,
+  the first time any singleton type initializes) acquires **all** raw handles at once, matching the
+  3.119.x behaviour where touching any `SKObject` created every singleton.
+- **Lazy across the assembly.** Nothing forces initialization at assembly load. The handles and wrappers
+  come into existence the first time a singleton type is touched — not before.
+- **One-shot — there is no retry.** A type initializer that throws is cached by the CLR: the type is
+  poisoned and every later access rethrows `TypeInitializationException`. This is deliberate. The only
+  realistic failure here is an incompatible / broken native library, in which case the library is
+  unusable and retrying cannot help. `SkiaSharpStatics` throws a clear `InvalidOperationException` (via
+  `ThrowIfZero`) if any native call returns a null handle, rather than caching a null that would surface
+  later as an opaque `NullReferenceException`.
+
+## Reference counting
+
+Each `sk_*_new`/`sk_*_create` call in `SkiaSharpStatics..cctor` returns a native object with a `+1`
+reference. That reference is held by the `IntPtr` field and then **adopted** (`owns: true`) by the
+immortal wrapper built in the owning type's static constructor; the immortal wrapper never releases it,
+so the singleton lives for the process lifetime. The font-manager and `Normal`-style handles passed to
+`sk_fontmgr_legacy_create_typeface` are **borrowed** (not consumed) by that call, so they stay owned by
+their own wrappers — no double counting.
+
+When the platform has no default typeface, `DefaultTypeface` aliases `EmptyTypeface` (same handle).
+`SKTypeface..cctor` detects that aliasing and adopts the single already-registered empty wrapper rather
+than registering the same handle twice:
+
+```csharp
+defaultTypeface = SkiaSharpStatics.DefaultTypeface == SkiaSharpStatics.EmptyTypeface
+    ? empty
+    : GetImmortalSingletonObject(SkiaSharpStatics.DefaultTypeface);
 ```
 
-A singleton that references another is initialized **after** it, so the dependant reads an
-already-assigned backing field. `SKFontStyle` precedes `SKBlender`/`SKFontManager` because the default
-typeface (initialized last) reads `SKFontStyle.Normal`; `SKFontManager` precedes `SKTypeface` because
-the default typeface is matched through the default manager.
+## Relationship to the module initializer
 
-## Lock ordering (deadlock-freedom)
+`binding/SkiaSharp/SkiaSharpModuleInitializer.cs` is **separate** and stays that way. It runs the native
+**library-compatibility check** (`SkiaSharpVersion.CheckNativeLibraryCompatible`) from a
+`[ModuleInitializer]`, i.e. once at **assembly load**, before any SkiaSharp API call. That guard must run
+for *every* consumer — including code that only uses non-singleton types like `SKBitmap` or `SKCanvas` —
+so it cannot live in the singleton path, which only initializes when a singleton is first touched.
+Conversely, the singleton handles must **not** be forced at module load (that would impose ~40 native
+allocations on consumers that never use a singleton). The two concerns have different lifecycles and are
+intentionally kept apart.
 
-There are two process-wide locks: the `SkiaSharpStatics` `gate` and the single
-`HandleDictionary.instancesLock`. The ordering is **always** `gate → instancesLock` and can never
-invert:
+## How this evolved (and why each step happened)
 
-- `EnsureInitialized()` runs at the **top** of `GetOrAddObject`, *before* `instancesLock` is taken.
-- The `SKObject` constructors that register singletons run **inside** `GetOrAddObject`'s factory while
-  `instancesLock` is held — i.e. strictly after the gate was already passed on this thread.
+- **3.119.x — eager, self-contained static initialization.** Each singleton was created eagerly and the
+  default typeface was resolved without reading another *managed* singleton across a live cctor, so the
+  graph stayed effectively acyclic. Disposing a shared color space was a safe no-op because the wrappers
+  were dispose-protected. This is the behaviour the current design re-establishes.
 
-No path takes `instancesLock` and then the gate, so the two locks cannot deadlock. **Do not move the
-hook into `SKObject..ctor`** — that would invert the order to `instancesLock → gate`.
+- **`main` — the #3817 regression.** Default-typeface resolution changed to read the managed
+  `SKFontManager.Default` and `SKFontStyle.Normal` **wrappers** from inside the type-initializer graph,
+  while eager init still chained through `SKObject`'s static constructor. Touching `SKFontManager.Default`
+  first re-entered the still-running `SKFontManager`/`SKTypeface` initializer on the same thread; the CLR
+  returned the half-built type with a null field, producing a `NullReferenceException` surfaced as a
+  cached `TypeInitializationException` (#3817):
 
-## Idempotency (retry after partial failure)
+  ```
+  SKFontManager.Default
+    → SKFontManager..cctor
+      → SKObject..ctor (base) → triggers SKObject..cctor mid-cctor
+        → SKTypeface..cctor → reads SKFontManager.Default (already running on this thread)
+          → CLR returns the half-built type with a null field → NullReferenceException
+  ```
 
-Because a failed init resets to `Uninitialized` and a retry re-runs the **whole** chain, every
-`InitializeStatics` must be idempotent — it must reuse the wrappers it already created and never
-construct a second immortal wrapper. The patterns:
+- **#4080 — the immortal-wrapper mechanism.** Introduced `GetOrAddImmortalSingletonObject` and the
+  promote-to-immortal / dispose-protected machinery in `SKObject`/`HandleDictionary` so shared handles
+  dedup to a dispose-proof wrapper (requirement 1). An interim version of that PR centralized init in a
+  lock-based `SkiaSharpStatics.EnsureInitialized()` orchestrator (a tri-state monitor with retry, plus a
+  hook at the top of `GetOrAddObject`).
 
-- **Registered types** (`SKColorSpace`, `SKData`, `SKColorFilter`, `SKFontManager`, `SKTypeface`) use
-  `field ??= GetDisposeProtectedObject(...)`. Each roots its wrapper in its own static field, and the
-  helper routes to `GetOrAddImmortalSingletonObject(..., unrefExisting: true)`, which dedups against the
-  `HandleDictionary`, unrefs the redundant native ref, and re-promotes to immortal.
-- **`SKFontStyle`** (`ISKSkipObjectRegistration`, so it **bypasses** the `HandleDictionary` dedup) uses
-  `??=` per field. Without the guard a retry would construct four new immortal native font styles whose
-  finalizers never run — a leak. The guard is the fix, not an optimization.
-- **`SKBlender`** roots all blenders in a single static dictionary, so it cannot rebuild the dictionary
-  on retry (that would drop the only strong references to the already-created immortal wrappers). It
-  roots the dictionary up-front, fills only still-missing modes (`if (!ContainsKey(mode))`), and uses a
-  **separate** `blendModeBlendersInitialized` latch as the "done" signal — the dictionary's non-nullness
-  cannot be the signal because that would early-out on a half-filled dictionary.
-
-## Behavioural note: all-or-nothing failure isolation
-
-The old per-type `LazyInitializer` initialized each singleton independently, so a failure in one did not
-affect the others. Under the centralized orchestrator, the **first touch initializes the entire graph**,
-so a failure anywhere makes every accessor and every `GetOrAddObject` retry the full chain (e.g.
-`CreateSrgb()` can throw because typeface init is broken). This is acceptable because the only realistic
-failure mode is native-library incompatibility — in which case the whole library is unusable anyway — and
-it buys the dependency-ordered, re-entrancy-safe, retriable behaviour described above.
+- **This PR — static constructors over a shared handle holder.** Replaces the lock-based orchestrator and
+  its `GetOrAddObject` hook with the design above: a dependency-free `SkiaSharpStatics..cctor` that
+  acquires every raw handle, and one explicit static constructor per wrapper type that adopts those
+  handles into immortal `readonly` fields. This keeps the immortal mechanism from #4080, drops the locks
+  and the retry, and resolves the #3817 cross-type dependency at the handle level so the
+  static-initializer graph is acyclic.
 
 ## Tests
 
-- `tests/Tests/SkiaSharp/SKSingletonInitTest.cs` — identity, immortality, `DisposeInternal` no-op,
-  cross-type ordering, and the retry-idempotency tests
-  (`ReinitializingStaticsReusesSameSingletonInstances`,
-  `ReinitializingBlendersAfterPartialResetFillsOnlyMissingModes`). The class is in a
-  `DisableParallelization` collection so the reflection-based `state` resets are safe.
+- `tests/Tests/SkiaSharp/SKSingletonInitTest.cs` — singleton identity, immortality, `DisposeInternal`
+  no-op, `CreateDefault` non-null, and `SKPaint` smoke coverage. The class is in a
+  `DisableParallelization` collection (`HandleDictionaryThreadingCollection`) because one test asserts
+  exact native refcounts on a process-global singleton.
 - `tests/SkiaSharp.Tests.SingletonInit.Console/` — a dedicated cold-start project that touches
-  `SKFontManager.Default` first in a fresh process to guard the exact #3817 regression.
+  `SKFontManager.Default` first in a fresh process, guarding the exact #3817 regression against any
+  future re-introduction of a cross-type cctor cycle.

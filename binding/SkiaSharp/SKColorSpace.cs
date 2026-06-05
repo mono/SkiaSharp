@@ -8,20 +8,20 @@ namespace SkiaSharp
 {
 	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
-		// Process-global singletons. Populated eagerly (in dependency order) by
-		// SkiaSharpStatics.EnsureInitialized the first time any SkiaSharp object is touched, and rooted
-		// here so the GC never collects the immortal wrappers. See SkiaSharpStatics for why this lives
-		// outside the CLR type-initializer graph (#3817).
-		private static SKColorSpace srgb;
-		private static SKColorSpace srgbLinear;
+		// Process-global immortal singletons, built once by this type's static constructor from the raw
+		// handles SkiaSharpStatics acquired, and rooted here so the GC never collects them. The explicit
+		// static constructor (rather than bare field initializers) is required: it makes the type NOT
+		// 'beforefieldinit', so the CLR guarantees these wrappers are registered as immortal BEFORE the
+		// body of any static method on this type runs — including GetObject. That is what lets a handle
+		// the sRGB singleton shares with a getter route (e.g. sk_image_get_colorspace) dedup to the
+		// dispose-proof immortal wrapper instead of a fresh mortal one. See SkiaSharpStatics (#3817).
+		private static readonly SKColorSpace srgb;
+		private static readonly SKColorSpace srgbLinear;
 
-		internal static void InitializeStatics ()
+		static SKColorSpace ()
 		{
-			// Idempotent: a retry after a partial-init failure (SkiaSharpStatics resets to Uninitialized
-			// and re-runs the whole chain) must not create a second immortal wrapper for an
-			// already-initialized singleton.
-			srgb ??= GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb ());
-			srgbLinear ??= GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb_linear ());
+			srgb = GetDisposeProtectedObject (SkiaSharpStatics.Srgb);
+			srgbLinear = GetDisposeProtectedObject (SkiaSharpStatics.SrgbLinear);
 		}
 
 		internal SKColorSpace (IntPtr handle, bool owns)
@@ -64,19 +64,11 @@ namespace SkiaSharp
 
 		// CreateSrgb
 
-		public static SKColorSpace CreateSrgb ()
-		{
-			SkiaSharpStatics.EnsureInitialized ();
-			return srgb;
-		}
+		public static SKColorSpace CreateSrgb () => srgb;
 
 		// CreateSrgbLinear
 
-		public static SKColorSpace CreateSrgbLinear ()
-		{
-			SkiaSharpStatics.EnsureInitialized ();
-			return srgbLinear;
-		}
+		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
 
 		// CreateIcc
 

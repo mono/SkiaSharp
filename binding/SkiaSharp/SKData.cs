@@ -16,13 +16,14 @@ namespace SkiaSharp
 		// improvement in Copy performance.
 		internal const int CopyBufferSize = 81920;
 
-		// Process-global empty SKData singleton. Populated eagerly by SkiaSharpStatics.EnsureInitialized
-		// and rooted here so the GC never collects the immortal wrapper. See SkiaSharpStatics (#3817).
-		private static SKData empty;
+		// Process-global immortal empty SKData singleton, built once by this type's static constructor
+		// from the raw handle SkiaSharpStatics acquired, and rooted here so the GC never collects it. The
+		// explicit static constructor makes the type NOT 'beforefieldinit', so the wrapper is registered
+		// as immortal before any static method body (including GetObject) runs. See SkiaSharpStatics (#3817).
+		private static readonly SKData empty;
 
-		internal static void InitializeStatics () =>
-			// Idempotent so a retry after a partial-init failure does not create a second wrapper.
-			empty ??= GetDisposeProtectedObject (SkiaApi.sk_data_new_empty ());
+		static SKData () =>
+			empty = GetDisposeProtectedObject (SkiaSharpStatics.EmptyData);
 
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
@@ -36,12 +37,7 @@ namespace SkiaSharp
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
 
-		public static SKData Empty {
-			get {
-				SkiaSharpStatics.EnsureInitialized ();
-				return empty;
-			}
-		}
+		public static SKData Empty => empty;
 
 		// CreateCopy
 
