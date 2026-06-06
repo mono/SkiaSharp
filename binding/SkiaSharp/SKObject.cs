@@ -257,8 +257,8 @@ namespace SkiaSharp
 		// paths too, restoring the pre-rework "truly immortal" behaviour for singletons while
 		// keeping normal owns:true semantics for everything else. Volatile is sufficient: the latch
 		// is published either under the HandleDictionary upgradeable-read lock (GetOrAddObject) or
-		// during single-threaded static initialization, both of which happen-before any wrapper the
-		// caller can reach and try to tear down.
+		// during single-threaded initialization (a static constructor, or a LazyInitializer one-shot),
+		// both of which happen-before any wrapper the caller can reach and try to tear down.
 		private int isImmortalSingleton = 0;
 
 		internal SKNativeObject (IntPtr handle)
@@ -345,8 +345,8 @@ namespace SkiaSharp
 
 		// Latch this wrapper as a process-global immortal singleton (see isImmortalSingleton). One-way:
 		// once set it never clears. Called either under the HandleDictionary upgradeable-read lock (via
-		// GetOrAddObject, alongside PreventPublicDisposal) or during single-threaded static
-		// initialization (SKPaint.DefaultFont, the SKFontStyle presets).
+		// GetOrAddObject, alongside PreventPublicDisposal) or during single-threaded initialization
+		// (the SKFontStyle presets in a static ctor; SKPaint.DefaultFont via a LazyInitializer one-shot).
 		internal void MakeImmortalSingleton () => Volatile.Write (ref isImmortalSingleton, 1);
 
 		protected virtual void DisposeUnownedManaged ()

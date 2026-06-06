@@ -108,6 +108,15 @@ because they are not process-global singletons. The two helper names mean exactl
 `SKFontStyle` is special — it is `ISKSkipObjectRegistration`, so it bypasses the dictionary and, for each
 preset handle, calls **both** `PreventPublicDisposal()` and `MakeImmortalSingleton()` directly.
 
+`SKPaint.DefaultFont` is the other deliberate exception. Unlike the wrapper singletons above, it is built
+**lazily** via `LazyInitializer.EnsureInitialized` (guarded by `defaultFontLock`), *not* in a static
+constructor. The reason is the same cross-type rule that motivates the whole design: its factory reads
+`SKTypeface.Default.Handle` — the *wrapper*, not a raw handle from `SkiaSharpStatics` — so running it inside
+`static SKPaint()` would reintroduce exactly the wrapper-cctor-reads-another-wrapper dependency the rework
+exists to forbid. Deferring it to first use moves that read out of the type-initializer graph entirely. The
+lazy one-shot still gives a clean happens-before barrier, after which it calls `PreventPublicDisposal()` and
+`MakeImmortalSingleton()` directly, just like the eager singletons.
+
 ### Why static constructors (and why they must be *explicit*)
 
 - **Lock-free and run-once.** The CLR guarantees a type initializer runs exactly once, on first use of

@@ -20,12 +20,12 @@ namespace SkiaSharp.Tests
 		// PROBABILISTIC deadlock canary (NOT a deterministic race proof).
 		//
 		// Every thread touches the same set of singleton accessors. Each accessor's factory
-		// transitively acquires several locks, e.g. SKTypeface.Default:
-		//   defaultTypefaceLock -> SKFontManager.Default lock -> SKFontStyle cctor -> HD lock.
-		// No other test exercises this multi-lock path (the author's concurrent test only
-		// hammers CreateSrgb, a single-lock path). Because the threads run unsynchronized
-		// after the barrier, at any instant they sit at different accessors and therefore
-		// hold different locks. If the PRODUCT code ever acquires the same pair of locks in
+		// transitively runs its type's static constructor (which reads raw handles from
+		// SkiaSharpStatics) and then takes the HandleDictionary lock to dedup/latch the wrapper.
+		// No other test exercises this many distinct singleton factories at once (the author's
+		// concurrent test only hammers CreateSrgb, a single factory). Because the threads run
+		// unsynchronized after the barrier, at any instant they sit at different accessors and
+		// therefore hold different locks. If the PRODUCT code ever acquires the same pair of locks in
 		// opposite orders across two of these factories (a lock-order inversion in our code,
 		// not one the test manufactures), this contention can surface it as a hang. The test
 		// cannot create an inversion the product does not have, so a clean run is necessary
@@ -54,6 +54,9 @@ namespace SkiaSharp.Tests
 			var typefaces = new SKTypeface[threadCount];
 			var empties = new SKTypeface[threadCount];
 			var blenders = new SKBlender[threadCount];
+			var srgbToLinear = new SKColorFilter[threadCount];
+			var linearToSrgb = new SKColorFilter[threadCount];
+			var fontStyles = new SKFontStyle[threadCount];
 
 			SKHandleDictionaryTestHelpers.RunConcurrent(threadCount, i =>
 			{
@@ -64,6 +67,9 @@ namespace SkiaSharp.Tests
 				typefaces[i] = SKTypeface.Default;
 				empties[i] = SKTypeface.Empty;
 				blenders[i] = SKBlender.CreateBlendMode(SKBlendMode.SrcOver);
+				srgbToLinear[i] = SKColorFilter.CreateSrgbToLinearGamma();
+				linearToSrgb[i] = SKColorFilter.CreateLinearToSrgbGamma();
+				fontStyles[i] = SKFontStyle.Normal;
 			}, deadlockMessage: "Singleton accessors deadlocked under contention (possible product-side lock-order inversion).");
 
 			AssertAllSame(colorSpaces);
@@ -73,6 +79,9 @@ namespace SkiaSharp.Tests
 			AssertAllSame(typefaces);
 			AssertAllSame(empties);
 			AssertAllSame(blenders);
+			AssertAllSame(srgbToLinear);
+			AssertAllSame(linearToSrgb);
+			AssertAllSame(fontStyles);
 
 			Assert.True(colorSpaces[0].IgnorePublicDispose);
 			Assert.False(colorSpaces[0].IsDisposed);
@@ -80,6 +89,10 @@ namespace SkiaSharp.Tests
 			Assert.False(fontManagers[0].IsDisposed);
 			Assert.True(typefaces[0].IgnorePublicDispose);
 			Assert.False(typefaces[0].IsDisposed);
+			Assert.True(srgbToLinear[0].IgnorePublicDispose);
+			Assert.False(srgbToLinear[0].IsDisposed);
+			Assert.True(fontStyles[0].IgnorePublicDispose);
+			Assert.False(fontStyles[0].IsDisposed);
 		}
 
 		// DETERMINISTIC clear-path test for the PR's central new behavior.

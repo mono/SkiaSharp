@@ -123,6 +123,24 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void SKColorFilterSrgbToLinearGammaReturnsSameInstanceAndIsDisposeProtected()
+		{
+			var a = SKColorFilter.CreateSrgbToLinearGamma();
+			var b = SKColorFilter.CreateSrgbToLinearGamma();
+			Assert.Same(a, b);
+			Assert.True(a.IgnorePublicDispose);
+		}
+
+		[SkippableFact]
+		public void SKColorFilterLinearToSrgbGammaReturnsSameInstanceAndIsDisposeProtected()
+		{
+			var a = SKColorFilter.CreateLinearToSrgbGamma();
+			var b = SKColorFilter.CreateLinearToSrgbGamma();
+			Assert.Same(a, b);
+			Assert.True(a.IgnorePublicDispose);
+		}
+
+		[SkippableFact]
 		public void SKFontStyleStaticsAreDisposeProtected()
 		{
 			Assert.True(SKFontStyle.Normal.IgnorePublicDispose);
