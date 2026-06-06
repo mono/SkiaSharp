@@ -84,8 +84,8 @@ public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 
     static SKColorSpace()
     {
-        srgb = GetDisposeProtectedObject(SkiaSharpStatics.Srgb);
-        srgbLinear = GetDisposeProtectedObject(SkiaSharpStatics.SrgbLinear);
+        srgb = GetImmortalSingletonObject(SkiaSharpStatics.Srgb);
+        srgbLinear = GetImmortalSingletonObject(SkiaSharpStatics.SrgbLinear);
     }
 
     public static SKColorSpace CreateSrgb() => srgb;
@@ -93,16 +93,17 @@ public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 }
 ```
 
-For `SKColorSpace`, `SKData`, `SKColorFilter`, `SKBlender` and `SKFontManager` this `GetDisposeProtected
-Object(IntPtr)` helper routes to `GetOrAddImmortalSingletonObject(...)`, which dedups the handle in the
-`HandleDictionary` and latches the resulting wrapper immortal (the wrapper itself is registered in
-`SKObject`'s constructor via `RegisterHandle`).
+Every singleton-creating type uses the same `GetImmortalSingletonObject(IntPtr)` helper, which routes to
+the base `GetOrAddImmortalSingletonObject(...)`: it dedups the handle in the `HandleDictionary` and latches
+the resulting wrapper immortal (the wrapper itself is registered in `SKObject`'s constructor via
+`RegisterHandle`). The naming is uniform across all of `SKColorSpace`, `SKData`, `SKColorFilter`,
+`SKBlender`, `SKFontManager` and `SKTypeface`.
 
-> **Naming caveat.** `SKTypeface` is the exception: its `GetDisposeProtectedObject` routes to
-> `GetOrAddDisposeProtectedObject` (dispose-protected, *not* immortal — used for ordinary collectible
-> typefaces from the match families), and its **immortal** singleton path is the separately named
-> `GetImmortalSingletonObject`. So the same method name means different things across types — check the
-> routing, not the name.
+`SKTypeface` additionally has a separate `GetDisposeProtectedObject` helper (routing to
+`GetOrAddDisposeProtectedObject`) used for *ordinary collectible* typefaces returned from match-family /
+match-style lookups — those are dispose-protected (public `Dispose()` ignored) but **not** immortal,
+because they are not process-global singletons. The two helper names mean exactly what they say:
+`*ImmortalSingleton*` = immortal, `*DisposeProtected*` = dispose-protected.
 
 `SKFontStyle` is special — it is `ISKSkipObjectRegistration`, so it bypasses the dictionary and, for each
 preset handle, calls **both** `PreventPublicDisposal()` and `MakeImmortalSingleton()` directly.

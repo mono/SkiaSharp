@@ -20,8 +20,8 @@ namespace SkiaSharp
 
 		static SKColorSpace ()
 		{
-			srgb = GetDisposeProtectedObject (SkiaSharpStatics.Srgb);
-			srgbLinear = GetDisposeProtectedObject (SkiaSharpStatics.SrgbLinear);
+			srgb = GetImmortalSingletonObject (SkiaSharpStatics.Srgb);
+			srgbLinear = GetImmortalSingletonObject (SkiaSharpStatics.SrgbLinear);
 		}
 
 		internal SKColorSpace (IntPtr handle, bool owns)
@@ -162,7 +162,7 @@ namespace SkiaSharp
 		// IgnorePublicDispose set AND is latched immortal under HandleDictionary's critical section —
 		// atomic with the HD lookup, so the process-global sRGB native object is never freed by this
 		// wrapper's finalizer or DisposeInternal.
-		internal static SKColorSpace GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+		internal static SKColorSpace GetImmortalSingletonObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
 			GetOrAddImmortalSingletonObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 	}
 }

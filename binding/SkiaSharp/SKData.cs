@@ -23,7 +23,7 @@ namespace SkiaSharp
 		private static readonly SKData empty;
 
 		static SKData () =>
-			empty = GetDisposeProtectedObject (SkiaSharpStatics.EmptyData);
+			empty = GetImmortalSingletonObject (SkiaSharpStatics.EmptyData);
 
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
@@ -282,7 +282,7 @@ namespace SkiaSharp
 
 		// Used only by the Empty singleton: latch the process-global empty SKData immortal so it is
 		// never freed by this wrapper's finalizer or DisposeInternal.
-		internal static SKData GetDisposeProtectedObject (IntPtr handle) =>
+		internal static SKData GetImmortalSingletonObject (IntPtr handle) =>
 			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKData (h, o));
 
 		//

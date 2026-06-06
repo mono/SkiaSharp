@@ -17,7 +17,7 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 		var source = SkiaSharpStatics.BlendModeBlenders;
 		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (source.Count);
 		foreach (var pair in source)
-			blendModeBlenders[pair.Key] = GetDisposeProtectedObject (pair.Value);
+			blendModeBlenders[pair.Key] = GetImmortalSingletonObject (pair.Value);
 	}
 
 	internal SKBlender(IntPtr handle, bool owns)
@@ -43,6 +43,6 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 
 	// Used only by the process-global blend-mode cache: latch each shared native blender immortal so it
 	// is never freed by this wrapper's finalizer or DisposeInternal.
-	internal static SKBlender GetDisposeProtectedObject (IntPtr handle) =>
+	internal static SKBlender GetImmortalSingletonObject (IntPtr handle) =>
 		GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKBlender (h, o));
 }

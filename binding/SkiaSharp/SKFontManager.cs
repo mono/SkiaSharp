@@ -19,7 +19,7 @@ namespace SkiaSharp
 		private static readonly SKFontManager defaultManager;
 
 		static SKFontManager () =>
-			defaultManager = GetDisposeProtectedObject (SkiaSharpStatics.DefaultFontManager);
+			defaultManager = GetImmortalSingletonObject (SkiaSharpStatics.DefaultFontManager);
 
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -191,7 +191,7 @@ namespace SkiaSharp
 
 		// Used only by the Default singleton: latch the process-global default font manager immortal so
 		// it is never freed by this wrapper's finalizer or DisposeInternal.
-		internal static SKFontManager GetDisposeProtectedObject (IntPtr handle) =>
+		internal static SKFontManager GetImmortalSingletonObject (IntPtr handle) =>
 			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKFontManager (h, o));
 
 	}
