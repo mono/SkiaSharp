@@ -63,9 +63,11 @@ namespace SkiaSharp.Tests
 
 			var skobject = Assert.IsAssignableFrom<SKObject>(instance);
 
-			// Dispose-protected singleton wrappers are marked with IgnorePublicDispose = true
-			// and live for the process lifetime.
-			if (skobject.IgnorePublicDispose)
+			// Immortal singleton wrappers live for the process lifetime and are never collected.
+			// Use IsImmortalSingleton (not IgnorePublicDispose) as the lifetime marker: ordinary
+			// dispose-protected typefaces (from match-family/match-character) also set
+			// IgnorePublicDispose but ARE collectible, and must still be subject to leak detection.
+			if (skobject.IsImmortalSingleton)
 				return false;
 
 			return true;

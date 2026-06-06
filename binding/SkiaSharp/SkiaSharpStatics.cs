@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace SkiaSharp
 {
@@ -85,7 +86,8 @@ namespace SkiaSharp
 		internal static readonly IntPtr EmptyTypeface;
 		internal static readonly IntPtr DefaultTypeface;
 
-		// Blend-mode blenders (one per SKBlendMode). Read-only so callers cannot mutate the shared map.
+		// Blend-mode blenders (one per SKBlendMode). Wrapped in a ReadOnlyDictionary so the shared map
+		// is genuinely immutable — callers cannot mutate it even via an in-assembly downcast.
 		internal static readonly IReadOnlyDictionary<SKBlendMode, IntPtr> BlendModeBlenders;
 
 		// Acquire every singleton handle in dependency order using ONLY native calls. Runs exactly once
@@ -109,7 +111,7 @@ namespace SkiaSharp
 			var blenders = new Dictionary<SKBlendMode, IntPtr> (BlendModes.Length);
 			foreach (var mode in BlendModes)
 				blenders[mode] = ThrowIfZero (SkiaApi.sk_blender_new_mode (mode), $"Blender({mode})");
-			BlendModeBlenders = blenders;
+			BlendModeBlenders = new ReadOnlyDictionary<SKBlendMode, IntPtr> (blenders);
 
 			// The default font manager and empty typeface are independent.
 			DefaultFontManager = ThrowIfZero (SkiaApi.sk_fontmgr_create_default (), nameof (DefaultFontManager));

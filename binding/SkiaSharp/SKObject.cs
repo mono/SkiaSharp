@@ -300,7 +300,12 @@ namespace SkiaSharp
 		// paired with the isDisposed CAS. So the latch can never be set on an instance that is concurrently
 		// claiming public disposal. (The only unpaired read is the post-disposal diagnostic
 		// re-check in Dispose(), which runs after isDisposed is already set.)
-		protected internal bool IgnorePublicDispose { get; private set; }
+		//
+		// The setter keeps its historical 'protected internal' accessibility for binary compatibility
+		// (SKObject has only an internal constructor, so no external type can actually subclass it and
+		// reach the setter). Internal code must never assign it directly — always route through
+		// PreventPublicDisposal() so the lock discipline above is honored.
+		protected internal bool IgnorePublicDispose { get; set; }
 
 		// Make this wrapper unreachable via the public Dispose() method.
 		// This method does NOT take any lock itself: correctness relies on the CALLER
@@ -389,9 +394,11 @@ namespace SkiaSharp
 		public void Dispose ()
 		{
 			// Hold the HandleDictionary write lock only across the flag check + the isDisposed CAS.
-			// This pairs the read of IgnorePublicDispose with the disposal claim
-			// atomically: a concurrent PreventPublicDisposal (which takes the same
-			// write lock) is mutually exclusive with this section.
+			// This pairs the read of IgnorePublicDispose with the disposal claim atomically: a concurrent
+			// PreventPublicDisposal does not take a lock itself, but its sole caller (GetOrAddObject)
+			// runs under the HandleDictionary upgradeable-read lock, which is mutually exclusive with the
+			// write lock held here. So the flag can never be set on an instance that is concurrently
+			// claiming public disposal inside this section.
 			//
 			// The actual cleanup runs *outside* the lock. That's safe because:
 			// 1. If a concurrent thread is in GetOrAddObject looking up this handle
@@ -423,9 +430,8 @@ namespace SkiaSharp
 				return;
 
 #if THROW_OBJECT_EXCEPTIONS
-			// Capture before cleanup: Dispose(true) zeroes Handle, and the diagnostic throw
+			// Capture identity before cleanup: Dispose(true) zeroes Handle, and the diagnostic throw
 			// path must not leak the native object. So claim+clean up first, then signal.
-			var raced = IgnorePublicDispose;
 			var racedHandle = Handle;
 			var racedType = GetType ();
 #endif
@@ -434,11 +440,12 @@ namespace SkiaSharp
 			GC.SuppressFinalize (this);
 
 #if THROW_OBJECT_EXCEPTIONS
-			// We claimed the public disposal with IgnorePublicDispose observed false inside
-			// the lock. Once isDisposed is set, GetInstanceNoLocks filters this wrapper out,
-			// so no correct path can promote it afterwards. Seeing the flag set now means a
-			// PreventPublicDisposal raced this disposal without holding the HandleDictionary lock.
-			if (raced)
+			// We claimed the public disposal with IgnorePublicDispose observed false inside the lock.
+			// Once isDisposed is set, GetInstanceNoLocks filters this wrapper out, so no correct path can
+			// promote it afterwards. Re-read the flag now (after the whole claim+cleanup section, not just
+			// before it) to widen the detection window: seeing it set means a PreventPublicDisposal raced
+			// this disposal at any point without holding the HandleDictionary lock.
+			if (IgnorePublicDispose)
 				throw new InvalidOperationException (
 					$"A wrapper was dispose-protected concurrently with its public disposal. " +
 					$"H: {racedHandle.ToString ("x")} Type: {racedType}");

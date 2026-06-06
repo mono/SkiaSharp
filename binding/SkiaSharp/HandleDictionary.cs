@@ -87,6 +87,14 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return null;
 
+			// immortal implies dispose-protected: an immortal wrapper must also ignore public Dispose(),
+			// otherwise the shared global could be torn down through the public path. Enforce the
+			// invariant so a future caller can't latch immortality without dispose-protection.
+			if (immortal && !disposeProtected)
+				throw new ArgumentException (
+					$"{nameof (immortal)} requires {nameof (disposeProtected)} to also be set.",
+					nameof (immortal));
+
 			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject))) {
 #if THROW_OBJECT_EXCEPTIONS
 				throw new InvalidOperationException (
