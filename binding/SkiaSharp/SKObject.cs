@@ -301,11 +301,10 @@ namespace SkiaSharp
 		// claiming public disposal. (The only unpaired read is the post-disposal diagnostic
 		// re-check in Dispose(), which runs after isDisposed is already set.)
 		//
-		// The setter keeps its historical 'protected internal' accessibility for binary compatibility
-		// (SKObject has only an internal constructor, so no external type can actually subclass it and
-		// reach the setter). Internal code must never assign it directly — always route through
-		// PreventPublicDisposal() so the lock discipline above is honored.
-		protected internal bool IgnorePublicDispose { get; set; }
+		// The setter is private so the only way to flip the latch is PreventPublicDisposal(), which keeps
+		// the lock discipline above enforceable. (SKObject has only an internal constructor, so no external
+		// type can subclass it; the narrowed setter is therefore not a reachable break for derived types.)
+		protected internal bool IgnorePublicDispose { get; private set; }
 
 		// Make this wrapper unreachable via the public Dispose() method.
 		// This method does NOT take any lock itself: correctness relies on the CALLER
