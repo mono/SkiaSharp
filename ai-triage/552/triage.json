@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 552,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-06-07T05:44:00Z",
+    "currentLabels": ["type/enhancement", "area/SkiaSharp.Views"]
+  },
+  "summary": "Performance investigation: SKSurface is reconstructed on every draw cycle in most platform view implementations; reusing the SKSurface instance when the canvas size has not changed could reduce per-frame allocation overhead.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.93 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
+    "tenets": ["tenet/performance"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [534],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/534", "description": "GTK slow rendering issue that prompted this investigation" },
+        { "url": "https://devdiv.visualstudio.com/DevDiv/_workitems/edit/736294", "description": "Internal VS bug tracking item" }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Most platform SKCanvasView implementations create a new SKSurface wrapper on every draw call even when the underlying pixel buffer is already cached. GTK's SKDrawingArea already reuses the SKSurface instance. The remaining platforms (iOS/tvOS/macOS via SKCGSurfaceFactory, Android via SurfaceFactory, WPF SKElement, WinForms SKControl) should be updated to cache and reuse the SKSurface when the canvas dimensions have not changed. The MAUI SKCanvasView handlers added since 2018 also need evaluation.",
+    "rationale": "Maintainer-filed investigation issue requesting SKSurface reuse across draw cycles. Code inspection confirms the work is still incomplete: GTK already reuses SKSurface but iOS, Android, WPF, WinForms, and MAUI handlers do not. The underlying memory buffers (NSMutableData on Apple, Android Bitmap, WriteableBitmap on WPF) are already reused; only the SKSurface wrapper itself is recreated each frame. Issue remains valid and open 8 years after filing.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs",
+        "lines": "87",
+        "finding": "Creates `using var surface = drawable.CreateSurface(...)` on every Draw() invocation — SKSurface is disposed at end of each frame even though the underlying NSMutableData buffer in SKCGSurfaceFactory is preserved across draws.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKCGSurfaceFactory.cs",
+        "lines": "41-66",
+        "finding": "NSMutableData bitmap buffer is reused across draws (only reallocated when BytesSize changes), but CreateSurface() always returns a brand-new SKSurface wrapping that buffer via SKSurface.Create(). The SKSurface instance itself is not cached.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SurfaceFactory.cs",
+        "lines": "30-51",
+        "finding": "Android Bitmap is reused across draws, but CreateSurface() always returns a new SKSurface via SKSurface.Create(). DrawSurface() explicitly calls surface.Dispose() (line 57) on every frame.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+        "lines": "66-83",
+        "finding": "WriteableBitmap is reused when size hasn't changed (line 66-68), but SKSurface is created inside a `using` block on every OnRender() call — not cached.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+        "lines": "36-52",
+        "finding": "System.Drawing.Bitmap is reused via CreateBitmap() guard, but SKSurface is created in a `using` block on every OnPaint() call — not cached.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk3/SKDrawingArea.cs",
+        "lines": "12-13",
+        "finding": "GTK implementation already reuses SKSurface: private fields `private ImageSurface pix` and `private SKSurface surface` are kept alive between draws; only recreated in CreateDrawingObjects() when size changes. This is the pattern other platforms should follow.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "It appears the constructing a SKSurface is expensive, so we should see if we can reuse instances across draws.",
+        "source": "issue body",
+        "interpretation": "Maintainer identified SKSurface construction cost as the root concern for draw performance."
+      },
+      {
+        "text": "Here is PR that was created to improve drawing: https://github.com/mono/SkiaSharp/issues/534",
+        "source": "issue body",
+        "interpretation": "This investigation was triggered by the GTK slow-rendering bug (#534), which was closed after partial fixes. The remaining platform reuse work was tracked here."
+      }
+    ],
+    "nextQuestions": [
+      "Is the SKSurface wrapper itself expensive to construct (native allocation), or is the cost dominated by the memory buffer allocation that is already cached?",
+      "Do the MAUI SKCanvasViewHandler implementations on Apple, Android, Windows, and Tizen also recreate SKSurface on every frame?",
+      "For platforms that use a GPU surface (SKGLView/SKMetalView), does SKSurface reuse apply, or is it already handled by the GL/Metal framebuffer lifecycle?"
+    ],
+    "resolution": {
+      "hypothesis": "SKSurface can be cached as a field in the view or factory class and only recreated when the canvas dimensions change — following the existing GTK SKDrawingArea pattern. This eliminates per-frame native object allocation on iOS, Android, WPF, WinForms, and MAUI raster views.",
+      "proposals": [
+        {
+          "title": "Cache SKSurface in factory/view classes using GTK pattern",
+          "description": "Add a private SKSurface field to SKCGSurfaceFactory (Apple), SurfaceFactory (Android), SKElement (WPF), and SKControl (WinForms). Invalidate and recreate only when size changes. Dispose on cleanup. This mirrors the existing GTK SKDrawingArea implementation.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Benchmark first to confirm measurable impact",
+          "description": "Profile frame times with and without SKSurface caching on at least one mobile platform. If the SKSurface constructor is just a thin managed wrapper over an existing native buffer pointer, the gain may be negligible and the complexity not justified.",
+          "category": "investigation",
+          "confidence": 0.85,
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Benchmark first to confirm measurable impact",
+      "recommendedReason": "The underlying memory buffers are already reused. The actual cost of reconstructing the thin SKSurface managed wrapper each frame should be measured before investing in the refactor across all platform implementations."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Legitimate maintainer-filed performance enhancement. Code investigation confirms work is still incomplete (iOS, Android, WPF, WinForms do not cache SKSurface; only GTK does). Worth benchmarking before implementing across all platforms. No blocker; low risk to keep open.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels already correct; add tenet/performance to reflect investigation focus",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views", "tenet/performance"]
+      }
+    ]
+  }
+}
