@@ -79,7 +79,14 @@ Task("libSkiaSharp")
     var mergeDir = skiaOut.Combine("obj/merge");
     EnsureDirectoryExists(mergeDir);
     CleanDirectories(mergeDir.FullPath);
-    foreach (var file in GetFiles($"{skiaOut}/*.a.wasm")) {
+    var staticLibs = GetFiles($"{skiaOut}/*.a.wasm").ToArray();
+    // Guard against a silent mis-build: if the GN toolchain ever changes the
+    // wasm static-lib suffix (e.g. upstream m148 flipped ".a.wasm" -> ".wasm.a"),
+    // this glob would match nothing and we'd archive only the font, producing a
+    // tiny broken libSkiaSharp.a. Fail loudly instead.
+    if (staticLibs.Length == 0)
+        throw new Exception($"No '*.a.wasm' static libraries found in {skiaOut}. The Skia wasm archive naming may have changed.");
+    foreach (var file in staticLibs) {
         RunProcess(AR, new ProcessSettings {
             Arguments = $"x \"{file}\"",
             WorkingDirectory = mergeDir.FullPath,
@@ -96,6 +103,8 @@ Task("libSkiaSharp")
     RunProcess(CC, $"-std=c++17 -I. {input}.cpp -r -o {mergeDir}/NotoMonoRegularttf.o");
 
     // merge all the .o files into the final .a file
+    if (FileExists(a))
+        DeleteFile(a);
     var oFiles = GetFiles($"{mergeDir}/*.o");
     RunProcess(AR, $"-crs {a} {string.Join(" ", oFiles)}");
 
