@@ -76,11 +76,13 @@ Assert.Null (codec);
 public void ThrowingManagedWStreamWriteDoesNotCrashProcess ()
 {
 // The failed encode below makes libpng emit a native "sk_write_fn cannot write to
-// stream" diagnostic to the console. The WASM test harness translates any native
-// "error :" console output into a fatal build error even though this test passes,
-// so it is skipped there. The isolation mechanism is identical to the read-stream
-// tests above, which run on every platform.
-SkipOnPlatform (IsBrowser, "WASM treats the expected native libpng write-failure log as a fatal console error.");
+// stream" diagnostic to the console. The device/browser test harnesses (WASM and the
+// Apple/Android mlaunch runners) translate any native "error :" console output into a
+// fatal build error even though this test passes, so it is skipped on those legs. The
+// isolation mechanism is identical to the read-stream tests above, which run on every
+// platform, and the never-crash property is fully exercised by the desktop/.NET Core
+// legs where an unisolated callback throw would FailFast the host.
+SkipOnPlatform (IsBrowser || IsIOS || IsMacCatalyst || IsAndroid, "Device/browser test harnesses treat the expected native libpng write-failure log as a fatal console error.");
 
 using var bitmap = new SKBitmap (16, 16);
 using var managed = new SKManagedWStream (new ThrowingWriteStream ());
