@@ -23,28 +23,6 @@ namespace SkiaSharp
 
 	internal static partial class DelegateProxies
 	{
-		// Reverse-P/Invoke exception isolation.
-		//
-		// These proxy methods are invoked BY native Skia. A managed exception must
-		// never be allowed to unwind through the native stack frames that called us:
-		// on .NET Framework (notably x86) that corrupts the native heap/stack and
-		// later surfaces as an AccessViolationException in an unrelated, concurrently
-		// running native call; on .NET (Core) it triggers a fatal FailFast. Every
-		// proxy therefore catches all managed exceptions, records them here for
-		// diagnostics, and returns a safe sentinel so native aborts the operation
-		// cleanly instead of crashing the process.
-
-		// The most recent exception that escaped a native callback and was contained.
-		// Exposed for tests/diagnostics; never used to alter control flow.
-		internal static volatile Exception LastCallbackException;
-
-		internal static void ReportCallbackException (Exception ex, string callbackName)
-		{
-			LastCallbackException = ex;
-			System.Diagnostics.Debug.WriteLine (
-				$"SkiaSharp: a managed exception escaped native callback '{callbackName}' and was contained to avoid corrupting native frames: {ex}");
-		}
-
 		// normal delegates
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
