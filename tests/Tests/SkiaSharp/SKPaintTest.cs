@@ -80,6 +80,7 @@ namespace SkiaSharp.Tests
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
 			SkipOnPlatform(IsAndroid, "TODO: figure out why the font has changed");
+			SkipOnPlatform(IsBrowser, "WASM text rendering produces slightly different pixel values");
 
 			using (var bitmapAA = new SKBitmap(new SKImageInfo(200, 200)))
 			using (var bitmapNoAA = new SKBitmap(new SKImageInfo(200, 200)))
@@ -396,6 +397,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
+
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
@@ -429,6 +432,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ContainsUnicodeTextIsCorrect()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
+
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
@@ -557,6 +562,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void GetGlyphWidthsAreCorrect()
 		{
+			SkipOnPlatform(IsBrowser, "WASM has no system fonts for glyph width measurement");
+
 			var paint = new SKPaint();
 
 			var widths = paint.GetGlyphWidths("Hello World!", out var bounds);

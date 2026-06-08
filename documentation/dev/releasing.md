@@ -12,13 +12,14 @@ How to release SkiaSharp: create branch → wait for CI → test → publish →
 
 ## Skills
 
-The release process is handled by three skills in order:
+The release process is handled by four skills in order:
 
 | Step | Skill | Purpose | Trigger |
 |------|-------|---------|---------|
-| 1 | [release-branch](../../.claude/skills/release-branch/SKILL.md) | Create release branch, trigger CI | "release now", "release X.Y.Z" |
-| 2 | [release-testing](../../.claude/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
-| 3 | [release-publish](../../.claude/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
+| 1 | [release-branch](../../.agents/skills/release-branch/SKILL.md) | Create release branch, trigger CI | "release now", "release X.Y.Z" |
+| 2 | [release-status](../../.agents/skills/release-status/SKILL.md) | Track pipeline chain progress | "check release status", "how is the build" |
+| 3 | [release-testing](../../.agents/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
+| 4 | [release-publish](../../.agents/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
 
 Each skill confirms with `ask_user` before executing destructive operations.
 
@@ -140,7 +141,18 @@ flowchart TB
     class START,CI,DONE endpoint
 ```
 
-### Stage 2: Testing (release-testing skill)
+### Stage 2: Status Tracking (release-status skill)
+
+After the branch is pushed, track the pipeline chain until packages are available:
+
+```bash
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+```
+
+The pipeline chain is: `SkiaSharp-Native` → `SkiaSharp` (signs & publishes) → `SkiaSharp-Tests`.
+Packages appear on the internal feed after `SkiaSharp` (ID 10789) completes.
+
+### Stage 3: Testing (release-testing skill)
 
 ```mermaid
 flowchart TB
@@ -195,7 +207,7 @@ flowchart TB
     class START,READY endpoint
 ```
 
-### Stage 3: Publishing (release-publish skill)
+### Stage 4: Publishing (release-publish skill)
 
 ```mermaid
 flowchart TB

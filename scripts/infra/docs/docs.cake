@@ -281,9 +281,19 @@ Task ("docs-api-diff")
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
+        if (string.IsNullOrEmpty(version)) {
+            Information ($"Skipping '{id}' — no version found in VERSIONS.txt.");
+            continue;
+        }
         var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
             ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
             : version;
+
+        var localNupkgPath = $"{OUTPUT_NUGETS_PATH}/{id}.{localNugetVersion}.nupkg";
+        if (!FileExists(localNupkgPath)) {
+            Information ($"Skipping '{id}' — local nupkg not found: {localNupkgPath}");
+            continue;
+        }
 
         var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
         Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");

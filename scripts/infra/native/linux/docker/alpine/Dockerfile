@@ -1,74 +1,97 @@
-# Arguments:
-#   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 10.0 | * ]
-#   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
-#   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-alpine-linux-musleabihf | aarch64-alpine-linux-musl | riscv64-alpine-linux-musl | loongarch64-alpine-linux-musl ]
+# musl (Alpine) cross-compilation image.
+#
+# Thin layer on top of .NET's official musl cross-compilation images which provide:
+#   - Azure Linux 3.0 host (clean CG surface)
+#   - Clang 20 + lld (built from source, GPG-verified)
+#   - Complete Alpine sysroot with musl headers, kernel headers
+#   - Cross-compiled libc++ (static)
+#
+# We add: .NET SDK (Cake), fontconfig-dev from Alpine repos, skia-env toolchain vars.
+#
+# Usage (BUILD_ARCH is the only input — the x64→amd64 image-tag mapping is
+# handled internally via stage aliases below):
+#   docker build --build-arg BUILD_ARCH=arm64 .
+#   docker build --build-arg BUILD_ARCH=x64 .
+#
+# Supported architectures: arm, arm64, x64, riscv64, loongarch64
 
-# Use --platform flag when building to select architecture
-FROM mcr.microsoft.com/mirror/docker/library/debian:12
-
-# Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
-RUN case ${BUILD_ARCH} in \
-        arm)         TOOLCHAIN_ARCH=armv7-alpine-linux-musleabihf     ; TOOLCHAIN_ARCH_TARGET=armv7-alpine-linux-musleabihf     ;; \
-        arm64)       TOOLCHAIN_ARCH=aarch64-alpine-linux-musl         ; TOOLCHAIN_ARCH_TARGET=aarch64-alpine-linux-musl         ;; \
-        loongarch64) TOOLCHAIN_ARCH=loongarch64-alpine-linux-musl     ; TOOLCHAIN_ARCH_TARGET=loongarch64-alpine-linux-musl     ;; \
-        riscv64)     TOOLCHAIN_ARCH=riscv64-alpine-linux-musl         ; TOOLCHAIN_ARCH_TARGET=riscv64-alpine-linux-musl         ;; \
-        x86)         TOOLCHAIN_ARCH=i586-alpine-linux-musl            ; TOOLCHAIN_ARCH_TARGET=i586-alpine-linux-musl            ;; \
-        x64)         TOOLCHAIN_ARCH=x86_64-alpine-linux-musl          ; TOOLCHAIN_ARCH_TARGET=x86_64-alpine-linux-musl          ;; \
-        *) echo "Unsupported architecture: ${BUILD_ARCH}" && exit 1 ;; \
+
+# One stage per arch — .NET cross images use "amd64" instead of "x64", so we
+# map it here in a single place. BuildKit only pulls the stage referenced by
+# the final `FROM base-${BUILD_ARCH}`; the others are inert.
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-arm-musl         AS base-arm
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-arm64-musl       AS base-arm64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-amd64-musl       AS base-x64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-riscv64-musl     AS base-riscv64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-loongarch64-musl AS base-loongarch64
+
+FROM base-${BUILD_ARCH}
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+ARG BUILD_ARCH
+
+# Derive all toolchain variables from BUILD_ARCH.
+RUN case "${BUILD_ARCH}" in \
+      arm)         TOOLCHAIN_ARCH=armv7-alpine-linux-musleabihf; \
+                   APK_ARCH=armv7; \
+                   ROOTFS_DIR=/crossrootfs/arm ;; \
+      arm64)       TOOLCHAIN_ARCH=aarch64-alpine-linux-musl; \
+                   APK_ARCH=aarch64; \
+                   ROOTFS_DIR=/crossrootfs/arm64 ;; \
+      x64)         TOOLCHAIN_ARCH=x86_64-alpine-linux-musl; \
+                   APK_ARCH=x86_64; \
+                   ROOTFS_DIR=/crossrootfs/x64 ;; \
+      riscv64)     TOOLCHAIN_ARCH=riscv64-alpine-linux-musl; \
+                   APK_ARCH=riscv64; \
+                   ROOTFS_DIR=/crossrootfs/riscv64 ;; \
+      loongarch64) TOOLCHAIN_ARCH=loongarch64-alpine-linux-musl; \
+                   APK_ARCH=loongarch64; \
+                   ROOTFS_DIR=/crossrootfs/loongarch64 ;; \
+      *) echo "FATAL: Unsupported BUILD_ARCH=${BUILD_ARCH}" && exit 1 ;; \
     esac \
     && echo "export TOOLCHAIN_ARCH=${TOOLCHAIN_ARCH}" > /etc/skia-env \
-    && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env
+    && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH}" >> /etc/skia-env \
+    && echo "export SYSROOT_PATH=${ROOTFS_DIR}/usr" >> /etc/skia-env \
+    && echo "export SYSROOT_ROOT=${ROOTFS_DIR}" >> /etc/skia-env \
+    && echo "export APK_ARCH=${APK_ARCH}" >> /etc/skia-env \
+    && GCC_VER=$(ls ${ROOTFS_DIR}/usr/lib/gcc/${TOOLCHAIN_ARCH}/ 2>/dev/null | sort -V | tail -1) \
+    && echo "export GCC_LIB_DIR=${ROOTFS_DIR}/usr/lib/gcc/${TOOLCHAIN_ARCH}/${GCC_VER}" >> /etc/skia-env
 
-# Install the required packages
-ARG LLVM_VERSION=19
-RUN apt-get update \
-    && apt-get install -y \
-        curl python3 git clang-${LLVM_VERSION} lld-${LLVM_VERSION} ninja-build xz-utils \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install the cross-compilation musl toolchain
-# First, obtain apk.static from https://gitlab.alpinelinux.org/alpine/apk-tools/-/releases/v2.12.14
-ARG MACHINE_ARCH=x86_64
-RUN . /etc/skia-env \
-    && case "${BUILD_ARCH}" in \
-         arm)           APK_ARCH=armv7       ;; \
-         arm64)         APK_ARCH=aarch64     ;; \
-         loongarch64)   APK_ARCH=loongarch64 ;; \
-         riscv64)       APK_ARCH=riscv64     ;; \
-         x86)           APK_ARCH=x86         ;; \
-         x64)           APK_ARCH=x86_64      ;; \
-         *) echo "Unsupported architecture: ${BUILD_ARCH}" && exit 1 ;; \
-         esac \
-    && case "${BUILD_ARCH}" in \
-         loongarch64) DISTRO_VERSION=3.21 ;; \
-         riscv64)     DISTRO_VERSION=3.20 ;; \
-         *)           DISTRO_VERSION=3.17 ;; \
-         esac \
-    && APK_DIR="$(mktemp -d)" \
-    && curl -SLO --fail --retry 5 --retry-delay 10 --retry-all-errors --create-dirs --output-dir "$APK_DIR" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.14/$MACHINE_ARCH/apk.static" \
-    && chmod +x "$APK_DIR/apk.static" \
-    && "$APK_DIR/apk.static" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
-        -U --allow-untrusted --root /alpine --arch "$APK_ARCH" --initdb add \
-    && "$APK_DIR/apk.static" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
-        -U --allow-untrusted --root /alpine --arch "$APK_ARCH" --no-scripts \
-        add fontconfig-dev build-base linux-headers
-
-# Install the .NET SDK
-ARG DOTNET_SDK_VERSION=10.0.1xx
+# Install the .NET SDK (needed for Cake build scripts).
+ARG DOTNET_SDK_VERSION=10.0.108
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -L -o dotnet-install.sh \
-    && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
-    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
+    && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
     && rm dotnet-install.sh \
-    && dotnet help \
     && dotnet --info
 
-ENV CC=clang-${LLVM_VERSION} CXX=clang++-${LLVM_VERSION}
+ENV CC=clang CXX=clang++
+
+# Install fontconfig-dev into the sysroot from Alpine repos.
+# The sysroot is Alpine 3.17 but we pull fontconfig from 3.21 (newer keys needed).
+# SSL_CERT_FILE is needed because apk.static (musl) can't find Azure Linux's CA bundle.
+ARG APK_STATIC_VERSION=2.12.14
+ARG APK_STATIC_SHA256=cd282c693059c39b68ce0575fbdc4e0c162af85ed633a7834f9cfd01b8b1d58b
+ARG ALPINE_VERSION=3.21
+RUN . /etc/skia-env \
+    && APK_DIR="$(mktemp -d)" \
+    && curl -fSL --retry 5 --retry-delay 10 --retry-all-errors \
+        -o "$APK_DIR/apk.static" \
+        "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v${APK_STATIC_VERSION}/x86_64/apk.static" \
+    && echo "${APK_STATIC_SHA256}  $APK_DIR/apk.static" | sha256sum -c - \
+    && chmod +x "$APK_DIR/apk.static" \
+    && curl -fsSL -o ${SYSROOT_ROOT}/etc/apk/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub \
+        "https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub" \
+    && curl -fsSL -o ${SYSROOT_ROOT}/etc/apk/keys/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub \
+        "https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub" \
+    && SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt "$APK_DIR/apk.static" \
+        -X "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main" \
+        -X "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/community" \
+        --no-cache --root ${SYSROOT_ROOT} --arch "${APK_ARCH}" --no-scripts \
+        add fontconfig-dev \
+    && rm -rf "$APK_DIR"
 
 WORKDIR /work
 

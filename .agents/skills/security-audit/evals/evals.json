@@ -28,7 +28,13 @@
         "The final markdown lists findings sorted by priority: user-reported+no-PR first, then undiscovered CVEs, then false positives",
         "The final markdown includes a Next Steps section with specific actionable recommendations",
         "For Skia CVEs, the report includes a Chrome-versioned CVEs table showing CVE ID, Fixed-In milestone, Severity, and Description",
-        "The report correctly identifies which Skia CVEs are 'potentially affected' (fix milestone > our verified milestone) vs 'already fixed' (fix milestone <= our verified milestone)"
+        "The report correctly identifies which Skia CVEs are 'potentially affected' (fix milestone > our verified milestone) vs 'already fixed' (fix milestone <= our verified milestone)",
+        "The audit runs query-chrome-releases.py to fetch Chrome Releases blog data",
+        "The JSON report contains a top-level 'chromeReleases' key with queriedAt, monthsQueried, postsReviewed, totalCvesExtracted, skiaRelevantCves, and structuredCves fields",
+        "The chromeReleases.postsReviewed is greater than 0 (blog was actually queried)",
+        "The chromeReleases.structuredCves array contains CVE objects with cveId, severity, component, bugId, and milestone fields",
+        "The chromeReleases.skiaRelevantCves count is greater than 0 (Skia-relevant CVEs were found)",
+        "The audit cross-references Chrome Releases CVEs with NVD results, using the source field ('chrome_releases', 'nvd', or 'both') on CVE objects in findings"
       ]
     },
     {
@@ -63,6 +69,24 @@
         "The report includes the actual mono/skia fork commit AND the upstream google/skia commit (not just one of them)",
         "The report uses the verified milestone (not cgmanifest.json) when classifying which Skia CVEs are potentially affected vs already fixed",
         "The report ends with prioritized, actionable next steps"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "check the Chrome Releases blog for any Skia security issues we should know about",
+      "expected_output": "A report showing Skia-relevant CVEs extracted from the Chrome Releases blog, with structured data including CVE IDs, severities, components, bug IDs, and milestones. Should cross-reference with our current milestone to identify what's fixed vs what needs attention.",
+      "files": [],
+      "expectations": [
+        "The audit runs query-chrome-releases.py (or equivalent RSS fetch) to get Chrome Releases blog data",
+        "The output includes CVEs with 'Skia' as the component (direct Skia CVEs)",
+        "The output includes CVEs from related components (ANGLE, GPU, Canvas, Fonts, WebGL)",
+        "Each structured CVE has a severity level (Critical, High, Medium, or Low)",
+        "Each structured CVE has a milestone number indicating which Chrome version fixed it",
+        "The audit identifies which CVEs are beyond our current milestone (m147) and thus potentially unpatched",
+        "The audit identifies CVEs already covered by our milestone as 'already fixed'",
+        "The output mentions the date range queried (approximately 6 months)",
+        "The audit uses both regex extraction (Pass 1) and AI review of raw text (Pass 2)",
+        "If any CVEs mention 'wild exploitation' or 'actively exploited', they are flagged as highest priority"
       ]
     }
   ]
