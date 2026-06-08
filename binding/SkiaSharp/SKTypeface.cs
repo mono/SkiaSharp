@@ -9,10 +9,11 @@ namespace SkiaSharp
 {
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
-		// Process-global immortal default/empty typeface singletons, built once by this type's static
+		// Process-global default/empty typeface singletons, built once by this type's static
 		// constructor from the raw handles SkiaSharpStatics acquired, and rooted here so the GC never
-		// collects them. The explicit static constructor makes the type NOT 'beforefieldinit', so the
-		// wrappers are registered as immortal before any static method body (including GetObject) runs.
+		// collects them (which also guarantees their finalizers never run). The explicit static
+		// constructor makes the type NOT 'beforefieldinit', so the dispose-protected wrappers are
+		// registered before any static method body (including GetObject) runs.
 		// Resolving the default typeface from raw handles inside SkiaSharpStatics (instead of reading
 		// SKFontManager.Default / SKFontStyle.Normal wrapper properties here) keeps this type's static
 		// constructor free of cross-type wrapper dependencies, which is what eliminates the re-entrant
@@ -22,14 +23,14 @@ namespace SkiaSharp
 
 		static SKTypeface ()
 		{
-			empty = GetImmortalSingletonObject (SkiaSharpStatics.EmptyTypeface);
+			empty = GetDisposeProtectedObject (SkiaSharpStatics.EmptyTypeface);
 
 			// SkiaSharpStatics resolves the default typeface handle, falling back to the empty typeface
 			// handle when the platform has no default. When the two handles alias, adopt the single
 			// already-registered empty wrapper rather than registering the same handle twice.
 			defaultTypeface = SkiaSharpStatics.DefaultTypeface == SkiaSharpStatics.EmptyTypeface
 				? empty
-				: GetImmortalSingletonObject (SkiaSharpStatics.DefaultTypeface);
+				: GetDisposeProtectedObject (SkiaSharpStatics.DefaultTypeface);
 		}
 
 		private SKFont font;
@@ -444,12 +445,6 @@ namespace SkiaSharp
 
 		internal static SKTypeface GetDisposeProtectedObject (IntPtr handle) =>
 			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKTypeface (h, o));
-
-		// Used only by the process-global Empty/Default singletons: latch the shared native typeface
-		// immortal so it is never freed by this wrapper's finalizer or DisposeInternal. (Distinct from
-		// GetDisposeProtectedObject, which match-family/character use for ordinary collectible typefaces.)
-		internal static SKTypeface GetImmortalSingletonObject (IntPtr handle) =>
-			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKTypeface (h, o));
 
 	}
 }

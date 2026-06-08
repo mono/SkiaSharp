@@ -8,20 +8,21 @@ namespace SkiaSharp
 {
 	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
-		// Process-global immortal singletons, built once by this type's static constructor from the raw
-		// handles SkiaSharpStatics acquired, and rooted here so the GC never collects them. The explicit
-		// static constructor (rather than bare field initializers) is required: it makes the type NOT
-		// 'beforefieldinit', so the CLR guarantees these wrappers are registered as immortal BEFORE the
-		// body of any static method on this type runs — including GetObject. That is what lets a handle
-		// the sRGB singleton shares with a getter route (e.g. sk_image_get_colorspace) dedup to the
-		// dispose-proof immortal wrapper instead of a fresh mortal one. See SkiaSharpStatics (#3817).
+		// Process-global singletons, built once by this type's static constructor from the raw
+		// handles SkiaSharpStatics acquired, and rooted here so the GC never collects them (which also
+		// guarantees their finalizers never run). The explicit static constructor (rather than bare
+		// field initializers) is required: it makes the type NOT 'beforefieldinit', so the CLR
+		// guarantees these dispose-protected wrappers are registered BEFORE the body of any static
+		// method on this type runs — including GetObject. That is what lets a handle the sRGB singleton
+		// shares with a getter route (e.g. sk_image_get_colorspace) dedup to the dispose-protected
+		// wrapper instead of a fresh mortal one. See SkiaSharpStatics (#3817).
 		private static readonly SKColorSpace srgb;
 		private static readonly SKColorSpace srgbLinear;
 
 		static SKColorSpace ()
 		{
-			srgb = GetImmortalSingletonObject (SkiaSharpStatics.Srgb);
-			srgbLinear = GetImmortalSingletonObject (SkiaSharpStatics.SrgbLinear);
+			srgb = GetDisposeProtectedSingletonObject (SkiaSharpStatics.Srgb);
+			srgbLinear = GetDisposeProtectedSingletonObject (SkiaSharpStatics.SrgbLinear);
 		}
 
 		internal SKColorSpace (IntPtr handle, bool owns)
@@ -159,10 +160,10 @@ namespace SkiaSharp
 			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 
 		// Variant used by singleton accessors (CreateSrgb/CreateSrgbLinear). The returned wrapper has
-		// IgnorePublicDispose set AND is latched immortal under HandleDictionary's critical section —
-		// atomic with the HD lookup, so the process-global sRGB native object is never freed by this
-		// wrapper's finalizer or DisposeInternal.
-		internal static SKColorSpace GetImmortalSingletonObject (IntPtr handle) =>
-			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKColorSpace (h, o));
+		// IgnorePublicDispose set under HandleDictionary's critical section — atomic with the HD lookup,
+		// so the process-global sRGB native object is never freed by a public Dispose(). The static-field
+		// root keeps it alive (and unfinalized) for the process lifetime.
+		internal static SKColorSpace GetDisposeProtectedSingletonObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKColorSpace (h, o));
 	}
 }

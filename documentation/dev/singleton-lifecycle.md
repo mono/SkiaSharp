@@ -13,9 +13,18 @@ itself shares for the lifetime of the process:
 | `SKFontManager.Default` | the platform default font manager |
 | `SKTypeface.Default` / `SKTypeface.Empty` | the default / empty typefaces |
 
-Because these native objects are shared, the managed wrappers that front them must be **immortal**:
-disposing one (directly, via a finalizer, or via a transitive `DisposeInternal`) would free or unref a
-native object that other live aliases still point at, corrupting every other consumer of that handle.
+Because these native objects are shared, the managed wrappers that front them must never tear down their
+native object while other live aliases still point at it: disposing one (directly, via a finalizer, or via
+a transitive `DisposeInternal`) would free or unref a native object that other live aliases still point at,
+corrupting every other consumer of that handle.
+
+> **This document was originally written for the immortal-latch design (#4119) and updated when the latch
+> was removed.** The current implementation makes every singleton a **dispose-protected** wrapper rooted by
+> a static field — there is no "immortal" latch. The latch was found to be redundant under the *eager*
+> design; the reasoning is in
+> [Why no immortal latch](#why-no-immortal-latch-and-why-it-was-redundant). Passages below have been
+> updated to match; the Part 2 history deliberately preserves the immortal-era reasoning as the record of
+> how we got here.
 
 > **How to read this document.** It is deliberately split into two parts.
 > **Part 1 is the current implementation and the reasoning behind each decision** — read this to
@@ -34,7 +43,7 @@ native object that other live aliases still point at, corrupting every other con
 
 1. **Dispose-safety (getter-route dedup).** A handle the singleton shares can also arrive through an
    unrelated getter — e.g. `sk_image_get_colorspace` can return the *same* native pointer as the global
-   sRGB color space. When that handle is looked up it must dedup to the **dispose-proof immortal
+   sRGB color space. When that handle is looked up it must dedup to the **dispose-protected
    wrapper**, not to a fresh mortal wrapper that a caller could legitimately dispose. This was the
    3.119.x behaviour and it must be preserved: see [memory-management.md](memory-management.md).
 
@@ -74,7 +83,7 @@ re-entrancy is gone.
 ### 2. Each wrapper type's static constructor adopts its handles
 
 Every singleton wrapper type has an **explicit** static constructor that wraps the relevant handle(s)
-into immortal `readonly` fields, and its accessors just return those fields:
+into dispose-protected `readonly` fields, and its accessors just return those fields:
 
 ```csharp
 public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
@@ -84,8 +93,8 @@ public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 
     static SKColorSpace()
     {
-        srgb = GetImmortalSingletonObject(SkiaSharpStatics.Srgb);
-        srgbLinear = GetImmortalSingletonObject(SkiaSharpStatics.SrgbLinear);
+        srgb = GetDisposeProtectedSingletonObject(SkiaSharpStatics.Srgb);
+        srgbLinear = GetDisposeProtectedSingletonObject(SkiaSharpStatics.SrgbLinear);
     }
 
     public static SKColorSpace CreateSrgb() => srgb;
@@ -93,20 +102,20 @@ public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 }
 ```
 
-Every singleton-creating type uses the same `GetImmortalSingletonObject(IntPtr)` helper, which routes to
-the base `GetOrAddImmortalSingletonObject(...)`: it dedups the handle in the `HandleDictionary` and latches
-the resulting wrapper immortal (the wrapper itself is registered in `SKObject`'s constructor via
-`RegisterHandle`). The naming is uniform across all of `SKColorSpace`, `SKData`, `SKColorFilter`,
-`SKBlender`, `SKFontManager` and `SKTypeface`.
+Every singleton-creating type uses a `GetDisposeProtectedSingletonObject(IntPtr)` helper, which routes to
+the base `GetOrAddDisposeProtectedObject(...)`: it dedups the handle in the `HandleDictionary` and sets
+`IgnorePublicDispose` on the resulting wrapper (the wrapper itself is registered in `SKObject`'s
+constructor via `RegisterHandle`). The naming is uniform across `SKColorSpace`, `SKData`, `SKColorFilter`,
+`SKBlender` and `SKFontManager`. `SKTypeface` reuses its general-purpose `GetDisposeProtectedObject` helper
+(the dispose-protected path is identical for the singletons and for match-family results).
 
-`SKTypeface` additionally has a separate `GetDisposeProtectedObject` helper (routing to
-`GetOrAddDisposeProtectedObject`) used for *ordinary collectible* typefaces returned from match-family /
-match-style lookups — those are dispose-protected (public `Dispose()` ignored) but **not** immortal,
-because they are not process-global singletons. The two helper names mean exactly what they say:
-`*ImmortalSingleton*` = immortal, `*DisposeProtected*` = dispose-protected.
+`SKTypeface`'s `GetDisposeProtectedObject` helper (routing to `GetOrAddDisposeProtectedObject`) is also
+used for *ordinary collectible* typefaces returned from match-family / match-style lookups — those are
+dispose-protected (public `Dispose()` ignored) but, unlike the singletons, are **not** rooted by a static
+field, so they remain collectible. Dispose-protection is the same; only the static-field root differs.
 
 `SKFontStyle` is special — it is `ISKSkipObjectRegistration`, so it bypasses the dictionary and, for each
-preset handle, calls **both** `PreventPublicDisposal()` and `MakeImmortalSingleton()` directly.
+preset handle, calls `PreventPublicDisposal()` directly.
 
 `SKPaint.DefaultFont` is the other deliberate exception. Unlike the wrapper singletons above, it is built
 **lazily** via `LazyInitializer.EnsureInitialized` (guarded by `defaultFontLock`), *not* in a static
@@ -114,15 +123,15 @@ constructor. The reason is the same cross-type rule that motivates the whole des
 `SKTypeface.Default.Handle` — the *wrapper*, not a raw handle from `SkiaSharpStatics` — so running it inside
 `static SKPaint()` would reintroduce exactly the wrapper-cctor-reads-another-wrapper dependency the rework
 exists to forbid. Deferring it to first use moves that read out of the type-initializer graph entirely. The
-lazy one-shot still gives a clean happens-before barrier, after which it calls `PreventPublicDisposal()` and
-`MakeImmortalSingleton()` directly, just like the eager singletons.
+lazy one-shot still gives a clean happens-before barrier, after which it calls `PreventPublicDisposal()`
+directly, just like the eager singletons.
 
 ### Why static constructors (and why they must be *explicit*)
 
 - **Lock-free and run-once.** The CLR guarantees a type initializer runs exactly once, on first use of
   the type, in a thread-safe way — with no locks of our own and no orchestrator. The backing fields can
   be `readonly`.
-- **The fields can satisfy getter-route dedup.** Requirement 1 needs the immortal wrapper to be
+- **The fields can satisfy getter-route dedup.** Requirement 1 needs the dispose-protected wrapper to be
   registered **before** any handle lookup on that type dedups a shared handle. The CLR gives us this
   *only if the type is not `beforefieldinit`*. A type whose statics are written as bare field
   initializers (`static readonly SKColorSpace srgb = ...;`) **is** `beforefieldinit`, which lets the CLR
@@ -199,8 +208,9 @@ P/Invoke transition itself — ~0.35% on CoreCLR, statistically zero (sign-unsta
 
 Each `sk_*_new`/`sk_*_create` call in `SkiaSharpStatics..cctor` returns a native object with a `+1`
 reference. That reference is held by the `IntPtr` field and then **adopted** (`owns: true`) by the
-immortal wrapper built in the owning type's static constructor; the immortal wrapper never releases it,
-so the singleton lives for the process lifetime. The font-manager and `Normal`-style handles passed to
+dispose-protected wrapper built in the owning type's static constructor. The wrapper's public `Dispose()`
+is short-circuited and the static-field root keeps it alive (so its finalizer never runs), so the
+singleton lives for the process lifetime. The font-manager and `Normal`-style handles passed to
 `sk_fontmgr_legacy_create_typeface` are **borrowed** (not consumed) by that call, so they stay owned by
 their own wrappers — no double counting.
 
@@ -211,36 +221,71 @@ than registering the same handle twice:
 ```csharp
 defaultTypeface = SkiaSharpStatics.DefaultTypeface == SkiaSharpStatics.EmptyTypeface
     ? empty
-    : GetImmortalSingletonObject(SkiaSharpStatics.DefaultTypeface);
+    : GetDisposeProtectedObject(SkiaSharpStatics.DefaultTypeface);
 ```
 
-## What makes a wrapper "immortal" (the `HandleDictionary` mechanism)
+## What makes a singleton persistent (the `HandleDictionary` mechanism)
 
-Immortality is implemented in `SKObject`/`HandleDictionary`, not in the singleton types. The relevant
-pieces:
+Persistence is implemented by **dispose-protection plus a static-field root**, in
+`SKObject`/`HandleDictionary` and the accessor types — not by any per-wrapper "immortal" latch. The
+relevant pieces:
 
 - `HandleDictionary` stores wrappers as **weak** references (`Dictionary<IntPtr, WeakReference>`) keyed by
   native handle, guarded by a **platform-abstracted lock** (`IPlatformLock`, see `PlatformLock.cs`): on
   non-Windows a `ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion)`, on Windows a Win32
   `CRITICAL_SECTION` (chosen to fix the #1383 STA message-pump alertable-deadlock). `GetOrAddObject`
   deduplicates: if a live wrapper already fronts a handle it is returned; flags on the call
-  (`unrefExisting`, `disposeProtected`, `immortal`) control how a duplicate handle is reconciled.
-- An **immortal** wrapper has a one-way latch (`MakeImmortalSingleton`, a `Volatile.Write`) read by
-  `IsImmortalSingleton` (`Volatile.Read`). Every teardown path — public `Dispose`, the finalizer, and the
-  transitive `DisposeInternal` — checks the latch *before* it would unref/free and becomes a no-op for an
-  immortal wrapper.
-- **Dispose-protected** (`PreventPublicDisposal` / `IgnorePublicDispose`) is the weaker cousin: public
-  `Dispose()` is ignored but internal teardown still runs. Singletons use the immortal latch; a few
-  ownership-handoff paths use dispose-protection. See [memory-management.md](memory-management.md).
+  (`unrefExisting`, `disposeProtected`) control how a duplicate handle is reconciled.
+- **Dispose-protected** (`PreventPublicDisposal` / `IgnorePublicDispose`) makes the **public** `Dispose()`
+  a no-op. Set under `GetOrAddObject`'s upgradeable-read lock, it is read by public `Dispose()` under the
+  mutually-exclusive write lock, so the flag set cannot race a concurrent public disposal.
+- **The static-field root** in each accessor type (`private static readonly SKColorSpace srgb;`, …) keeps
+  the singleton wrapper reachable for the whole process. Because it is never unreachable, its **finalizer
+  never runs**. And because the handle is deduped (`unrefExisting: true`), no second *disposable* wrapper
+  is ever minted over the same handle — so the only `DisposeInternal`/finalizer-capable wrapper for the
+  shared handle is the rooted, dispose-protected one, which never becomes garbage. See
+  [Why no immortal latch](#why-no-immortal-latch-and-why-it-was-redundant).
 
 This is the mechanism that satisfies requirement 1: a shared handle arriving via an unrelated getter
-dedups in `GetOrAddObject` to the already-registered immortal wrapper, so a caller who disposes "their"
-color space cannot free the global one.
+dedups in `GetOrAddObject` to the already-registered dispose-protected wrapper, so a caller who disposes
+"their" color space cannot free the global one.
+
+## Why no immortal latch (and why it was redundant)
+
+An earlier iteration (#4119) added a one-way **immortal latch** (`MakeImmortalSingleton` /
+`IsImmortalSingleton`) checked *before the unref* on all three teardown paths — public `Dispose`, the
+finalizer, and the transitive `DisposeInternal` — so none of them could ever free a singleton's shared
+native object. This PR removes it. Under the **eager** design above, every teardown path the latch
+defended is already structurally unreachable for a singleton:
+
+1. **Public `Dispose()`** — already a no-op via `IgnorePublicDispose` (dispose-protection), which every
+   singleton sets. The latch added nothing here.
+2. **The finalizer** — never runs. Each singleton wrapper is rooted by a `static readonly` field for the
+   whole process, so it is never eligible for finalization.
+3. **`DisposeInternal()`** — only reached two ways, neither of which applies to a singleton:
+   (a) *owned-child teardown / ownership handoff* (`RevokeOwnership`, `TransferOwnershipToNative`): no
+   production path hands a singleton wrapper to any of these; and (b) *dictionary replacement* in
+   `RegisterHandle`, which disposes the *previous* wrapper when a **new** wrapper registers the same
+   handle. Because singleton handles are obtained through the deduping dispose-protected accessors with
+   `unrefExisting: true`, a second wrapper for a singleton handle is never constructed, so the replacement
+   branch never fires for a singleton.
+
+In short: **eager registration closes the lazy window, static rooting removes the finalizer, and dedup
+removes the disposable sibling.** What remained for the latch to guard was the empty set. (This is exactly
+why #4080's *lazy* design needed more care: before a singleton's accessor had run, a getter route could
+mint a transient `owns: true` sibling over the shared handle whose teardown *would* unref the global. The
+eager static constructors register the dispose-protected wrapper first, eliminating that window.)
+
+The net48/x86 `AccessViolationException` that the immortal-era history (Part 2) attributes to singleton
+over-unref was, in #4119, separately root-caused and fixed as a **callback-exception-isolation** bug (a
+managed-stream callback throwing *through* native Skia frames corrupted the heap on net48/x86). With that
+real fix in place, and the three structural arguments above, the latch guards nothing reachable. The
+net48/x86 CI leg is the oracle: removing the latch must leave it green.
 
 ## Tests
 
-- `tests/Tests/SkiaSharp/SKSingletonInitTest.cs` — singleton identity, immortality, `DisposeInternal`
-  no-op, `CreateDefault` non-null, and `SKPaint` smoke coverage. The class is in a
+- `tests/Tests/SkiaSharp/SKSingletonInitTest.cs` — singleton identity, dispose-protection,
+  `CreateDefault` non-null, and `SKPaint` smoke coverage. The class is in a
   `DisableParallelization` collection (`HandleDictionaryThreadingCollection`) because one test asserts
   exact native refcounts on a process-global singleton.
 - `tests/SkiaSharp.Tests.SingletonInit.Console/` — a dedicated **cold-start** project that touches
@@ -295,11 +340,15 @@ exactly what `SkiaSharpStatics` (raw handles, no wrapper reads) does.
 | **#4080** | ramezgerges | Full rework: fully **lazy** init + heal/promote-to-immortal. Eliminates the cctor graph (no re-entrancy by construction). Introduced `GetOrAddImmortalSingletonObject` and the immortal/dispose-protected machinery. | Lazy window opened a getter-route disposal hazard and a net48 teardown AccessViolation (see below). Immortality only partially covered until "healed." |
 | **#4116** | mattleibow | Minimal alternative: keep eager `SK*Static`, surgically fix the one re-entrant cctor (typeface) via #4107's raw-handle try/finally, add `PreventPublicDisposal`. | Smaller and green, but keeps the fragile cctor graph (patches the symptom site, not the structure) and the "ugly" raw-handle code. |
 | **#4117** | mattleibow | Immortal latch on top of #4080's lazy orchestrator. | Helped, but a residual teardown crash remained; still built on the lazy orchestrator + a `GetOrAddObject` hook. |
-| **#4119** (current) | mattleibow | Replace the lazy orchestrator and its `GetOrAddObject` hook with the Part 1 design: a dependency-free `SkiaSharpStatics..cctor` plus one explicit static cctor per wrapper type. Keeps #4080's immortal mechanism; drops the locks, the retry, and the orchestrator hook. | The current implementation. |
+| **#4119** | mattleibow | Replace the lazy orchestrator and its `GetOrAddObject` hook with the Part 1 design: a dependency-free `SkiaSharpStatics..cctor` plus one explicit static cctor per wrapper type. Kept #4080's immortal mechanism; dropped the locks, the retry, and the orchestrator hook. | Superseded: the immortal latch was later shown redundant under this eager design. |
+| **this PR** (current) | mattleibow | The #4119 design with the **immortal latch removed**: singletons are dispose-protected wrappers rooted by static fields. | The current implementation. See [Why no immortal latch](#why-no-immortal-latch-and-why-it-was-redundant). |
 
-The throughline: keep the **immortal wrapper** mechanism from #4080 (it is what makes getter-route dedup
-dispose-safe), but move *initialization* out of the CLR type-initializer cycle and out of any custom
-lock-based orchestrator, into a small acyclic set of static constructors.
+The throughline: keep the **dedup-on-the-shared-handle** mechanism from #4080 (it is what makes
+getter-route dedup dispose-safe), but move *initialization* out of the CLR type-initializer cycle and out
+of any custom lock-based orchestrator, into a small acyclic set of static constructors. The immortal latch
+that #4080–#4119 layered on top turned out to be redundant once init was eager (the rooted,
+dispose-protected, deduped wrapper is the only teardown-capable wrapper for the handle, and it never
+becomes garbage).
 
 ## The net48 AccessViolationException saga
 
@@ -311,8 +360,12 @@ only appeared in CI and was repeatedly masked by the test-retry harness. Key fin
 - Root cause was an **over-unref of a process-global singleton**: under the lazy design a singleton
   wrapper could be created `owns: true` and then have its single shared native reference released (via
   `Dispose`/finalizer) while other aliases were still live — corrupting the shared `SkData`/colorspace/
-  typeface. The immortal latch (checked *before* any unref on all three teardown paths) is what closes
-  this.
+  typeface. The immortal latch (checked *before* any unref on all three teardown paths) closed this **for
+  the lazy design**. *Update:* under the current **eager** design this over-unref is structurally
+  unreachable (eager registration closes the lazy window, static rooting removes the finalizer, dedup
+  removes the disposable sibling), and the net48/x86 AVE was separately root-caused to a
+  callback-exception-isolation bug and fixed there — so the latch was removed as redundant. See
+  [Why no immortal latch](#why-no-immortal-latch-and-why-it-was-redundant).
 - **Windows vs non-Windows lock semantics matter.** `HandleDictionary`'s lock is platform-abstracted
   (`IPlatformLock`). On non-Windows it is a `ReaderWriterLockSlim` with `LockRecursionPolicy.NoRecursion`,
   so a re-entrant/nested `GetOrAddObject` from inside a factory **throws `LockRecursionException`**. On
@@ -460,9 +513,9 @@ Hard-won rules that keep them deterministic and meaningful:
 |---------|----------------|-------------------|
 | Native version/ABI check | `static SkiaApi()` (first P/Invoke) | Module init = eager at load; `SkiaSharpStatics` = singleton-only coverage; base ctor = too late for factories. |
 | Singleton handle acquisition | `SkiaSharpStatics..cctor` (raw handles) | In a wrapper cctor it would re-enter another wrapper cctor (#3817). |
-| Singleton wrapper adoption + immortality | each wrapper type's explicit `static T()` | Field initializers are `beforefieldinit` → a static method could run before registration, breaking getter-route dedup. |
-| Dispose-safety of shared handles | `HandleDictionary` immortal latch | Must apply to *all* arrival routes (accessor and unrelated getter), so it belongs at the dedup layer, not the accessor. |
+| Singleton wrapper adoption + dispose-protection | each wrapper type's explicit `static T()` | Field initializers are `beforefieldinit` → a static method could run before registration, breaking getter-route dedup. |
+| Dispose-safety of shared handles | `HandleDictionary` dedup + dispose-protection + static-field root | Must apply to *all* arrival routes (accessor and unrelated getter), so it belongs at the dedup layer, not the accessor. |
 
 The recurring principle: **keep initialization out of the CLR type-initializer cycle where it can
-re-enter, push the version gate to the single P/Invoke choke point, and let the immortal latch — not the
-accessor — enforce dispose-safety.**
+re-enter, push the version gate to the single P/Invoke choke point, and let dedup + dispose-protection +
+static rooting — not the accessor — enforce dispose-safety.**

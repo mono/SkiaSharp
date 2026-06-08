@@ -64,9 +64,6 @@ namespace SkiaSharp
 					// giving us the same handle as a return value of another pinvoke call,
 					// because sk_font_new_with_values creates a new object.
 					font.PreventPublicDisposal ();
-					// Process-global singleton: latch immortal so neither the finalizer nor DisposeInternal
-					// can free the shared native font.
-					font.MakeImmortalSingleton ();
 					return font;
 				});
 

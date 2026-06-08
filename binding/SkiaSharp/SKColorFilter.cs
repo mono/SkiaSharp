@@ -10,18 +10,19 @@ namespace SkiaSharp
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
 
-		// Process-global immortal gamma color-filter singletons, built once by this type's static
+		// Process-global gamma color-filter singletons, built once by this type's static
 		// constructor from the raw handles SkiaSharpStatics acquired, and rooted here so the GC never
-		// collects them. The explicit static constructor makes the type NOT 'beforefieldinit', so the
-		// wrappers are registered as immortal before any static method body (including GetObject) runs.
+		// collects them (which also guarantees their finalizers never run). The explicit static
+		// constructor makes the type NOT 'beforefieldinit', so the dispose-protected wrappers are
+		// registered before any static method body (including GetObject) runs.
 		// See SkiaSharpStatics (#3817).
 		private static readonly SKColorFilter srgbToLinear;
 		private static readonly SKColorFilter linearToSrgb;
 
 		static SKColorFilter ()
 		{
-			srgbToLinear = GetImmortalSingletonObject (SkiaSharpStatics.SrgbToLinearGamma);
-			linearToSrgb = GetImmortalSingletonObject (SkiaSharpStatics.LinearToSrgbGamma);
+			srgbToLinear = GetDisposeProtectedSingletonObject (SkiaSharpStatics.SrgbToLinearGamma);
+			linearToSrgb = GetDisposeProtectedSingletonObject (SkiaSharpStatics.LinearToSrgbGamma);
 		}
 
 		internal SKColorFilter(IntPtr handle, bool owns)
@@ -154,9 +155,9 @@ namespace SkiaSharp
 		internal static SKColorFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
 
-		// Used only by the two process-global gamma singletons: latch each shared native color filter
-		// immortal so it is never freed by this wrapper's finalizer or DisposeInternal.
-		internal static SKColorFilter GetImmortalSingletonObject (IntPtr handle) =>
-			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKColorFilter (h, o));
+		// Used only by the two process-global gamma singletons: dispose-protect each shared native color
+		// filter so the public Dispose() is short-circuited. The static-field root keeps them alive (and unfinalized).
+		internal static SKColorFilter GetDisposeProtectedSingletonObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKColorFilter (h, o));
 	}
 }

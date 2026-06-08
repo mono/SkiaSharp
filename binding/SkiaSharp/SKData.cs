@@ -16,14 +16,15 @@ namespace SkiaSharp
 		// improvement in Copy performance.
 		internal const int CopyBufferSize = 81920;
 
-		// Process-global immortal empty SKData singleton, built once by this type's static constructor
-		// from the raw handle SkiaSharpStatics acquired, and rooted here so the GC never collects it. The
-		// explicit static constructor makes the type NOT 'beforefieldinit', so the wrapper is registered
-		// as immortal before any static method body (including GetObject) runs. See SkiaSharpStatics (#3817).
+		// Process-global empty SKData singleton, built once by this type's static constructor
+		// from the raw handle SkiaSharpStatics acquired, and rooted here so the GC never collects it
+		// (which also guarantees its finalizer never runs). The explicit static constructor makes the
+		// type NOT 'beforefieldinit', so the dispose-protected wrapper is registered before any static
+		// method body (including GetObject) runs. See SkiaSharpStatics (#3817).
 		private static readonly SKData empty;
 
 		static SKData () =>
-			empty = GetImmortalSingletonObject (SkiaSharpStatics.EmptyData);
+			empty = GetDisposeProtectedSingletonObject (SkiaSharpStatics.EmptyData);
 
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
@@ -280,10 +281,10 @@ namespace SkiaSharp
 		internal static SKData GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKData (h, o));
 
-		// Used only by the Empty singleton: latch the process-global empty SKData immortal so it is
-		// never freed by this wrapper's finalizer or DisposeInternal.
-		internal static SKData GetImmortalSingletonObject (IntPtr handle) =>
-			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKData (h, o));
+		// Used only by the Empty singleton: dispose-protect the process-global empty SKData so the
+		// public Dispose() is short-circuited. The static-field root keeps it alive (and unfinalized).
+		internal static SKData GetDisposeProtectedSingletonObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKData (h, o));
 
 		//
 

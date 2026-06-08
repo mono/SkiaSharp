@@ -11,15 +11,16 @@ namespace SkiaSharp
 {
 	public unsafe class SKFontManager : SKObject, ISKReferenceCounted
 	{
-		// Process-global immortal default font manager singleton, built once by this type's static
+		// Process-global default font manager singleton, built once by this type's static
 		// constructor from the raw handle SkiaSharpStatics acquired, and rooted here so the GC never
-		// collects it. The explicit static constructor makes the type NOT 'beforefieldinit', so the
-		// wrapper is registered as immortal before any static method body (including GetObject) runs.
+		// collects it (which also guarantees its finalizer never runs). The explicit static constructor
+		// makes the type NOT 'beforefieldinit', so the dispose-protected wrapper is registered before
+		// any static method body (including GetObject) runs.
 		// See SkiaSharpStatics (#3817).
 		private static readonly SKFontManager defaultManager;
 
 		static SKFontManager () =>
-			defaultManager = GetImmortalSingletonObject (SkiaSharpStatics.DefaultFontManager);
+			defaultManager = GetDisposeProtectedSingletonObject (SkiaSharpStatics.DefaultFontManager);
 
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -189,10 +190,10 @@ namespace SkiaSharp
 		internal static SKFontManager GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
 
-		// Used only by the Default singleton: latch the process-global default font manager immortal so
-		// it is never freed by this wrapper's finalizer or DisposeInternal.
-		internal static SKFontManager GetImmortalSingletonObject (IntPtr handle) =>
-			GetOrAddImmortalSingletonObject (handle, owns: true, unrefExisting: true, (h, o) => new SKFontManager (h, o));
+		// Used only by the Default singleton: dispose-protect the process-global default font manager so
+		// the public Dispose() is short-circuited. The static-field root keeps it alive (and unfinalized).
+		internal static SKFontManager GetDisposeProtectedSingletonObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKFontManager (h, o));
 
 	}
 }

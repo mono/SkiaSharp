@@ -53,8 +53,9 @@ namespace SkiaSharp
 	// REFERENCE COUNTING
 	// ------------------
 	// Each sk_*_new/create call below returns a native object with a +1 reference. That reference is
-	// "held" by the IntPtr field and later adopted (owns: true) by the immortal wrapper built in the
-	// owning type's static constructor; the immortal wrapper never releases it, so the singleton lives
+	// "held" by the IntPtr field and later adopted (owns: true) by the dispose-protected wrapper built
+	// in the owning type's static constructor; that wrapper's public Dispose() is short-circuited and
+	// its static-field root keeps it alive (and unfinalized), so the singleton lives
 	// for the process lifetime. The font manager and normal-style handles passed to
 	// sk_fontmgr_legacy_create_typeface are BORROWED (not consumed) by that call, so they remain owned
 	// by their own wrappers — no double counting.
