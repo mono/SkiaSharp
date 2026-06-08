@@ -7,7 +7,6 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	[Collection (NativeRenderSerialCollection.Name)]
 	public class AnimationBuilderTest : SKTest
 	{
 		public static TheoryData<string> DefaultLottieFiles =>
