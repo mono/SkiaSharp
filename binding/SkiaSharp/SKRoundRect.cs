@@ -46,6 +46,7 @@ namespace SkiaSharp
 		public SKRoundRect (SKRoundRect rrect)
 			: this (SkiaApi.sk_rrect_new_copy (rrect.Handle), true)
 		{
+			GC.KeepAlive (rrect);
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -69,13 +70,33 @@ namespace SkiaSharp
 			GetRadii(SKRoundRectCorner.LowerLeft),
 		};
 
-		public SKRoundRectType Type => SkiaApi.sk_rrect_get_type (Handle);
+		public SKRoundRectType Type {
+			get {
+				var r = SkiaApi.sk_rrect_get_type (Handle);
+				return r;
+			}
+		}
 
-		public float Width => SkiaApi.sk_rrect_get_width (Handle);
+		public float Width {
+			get {
+				var r = SkiaApi.sk_rrect_get_width (Handle);
+				return r;
+			}
+		}
 
-		public float Height => SkiaApi.sk_rrect_get_height (Handle);
+		public float Height {
+			get {
+				var r = SkiaApi.sk_rrect_get_height (Handle);
+				return r;
+			}
+		}
 
-		public bool IsValid => SkiaApi.sk_rrect_is_valid (Handle);
+		public bool IsValid {
+			get {
+				var r = SkiaApi.sk_rrect_is_valid (Handle);
+				return r;
+			}
+		}
 
 		public bool AllCornersCircular => CheckAllCornersCircular (Utils.NearlyZero);
 
@@ -138,7 +159,8 @@ namespace SkiaSharp
 
 		public bool Contains (SKRect rect)
 		{
-			return SkiaApi.sk_rrect_contains (Handle, &rect);
+			var r = SkiaApi.sk_rrect_contains (Handle, &rect);
+			return r;
 		}
 
 		public SKPoint GetRadii (SKRoundRectCorner corner)
@@ -181,7 +203,8 @@ namespace SkiaSharp
 		public bool TryTransform (SKMatrix matrix, out SKRoundRect transformed)
 		{
 			var destHandle = SkiaApi.sk_rrect_new ();
-			if (SkiaApi.sk_rrect_transform (Handle, &matrix, destHandle)) {
+			var success = SkiaApi.sk_rrect_transform (Handle, &matrix, destHandle);
+			if (success) {
 				transformed = new SKRoundRect (destHandle, true);
 				return true;
 			}

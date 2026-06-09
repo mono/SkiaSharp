@@ -87,8 +87,12 @@ namespace SkiaSharp
 
 		// properties
 
-		public int UniformSize =>
-			(int)SkiaApi.sk_runtimeeffect_get_uniform_byte_size (Handle);
+		public int UniformSize {
+			get {
+				var size = (int)SkiaApi.sk_runtimeeffect_get_uniform_byte_size (Handle);
+				return size;
+			}
+		}
 
 		public IReadOnlyList<string> Children =>
 			children ??= GetChildrenNames ().ToArray ();
@@ -138,7 +142,9 @@ namespace SkiaSharp
 			using var childrenHandles = Utils.RentHandlesArray (children, true);
 
 			fixed (IntPtr* ch = childrenHandles) {
-				return SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length, localMatrix));
+				var shader = SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length, localMatrix));
+				GC.KeepAlive (uniforms);
+				return shader;
 			}
 		}
 
@@ -162,7 +168,9 @@ namespace SkiaSharp
 			using var childrenHandles = Utils.RentHandlesArray (children, true);
 
 			fixed (IntPtr* ch = childrenHandles) {
-				return SKColorFilter.GetObject (SkiaApi.sk_runtimeeffect_make_color_filter (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length));
+				var colorFilter = SKColorFilter.GetObject (SkiaApi.sk_runtimeeffect_make_color_filter (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length));
+				GC.KeepAlive (uniforms);
+				return colorFilter;
 			}
 		}
 
@@ -186,7 +194,9 @@ namespace SkiaSharp
 			using var childrenHandles = Utils.RentHandlesArray (children, true);
 
 			fixed (IntPtr* ch = childrenHandles) {
-				return SKBlender.GetObject (SkiaApi.sk_runtimeeffect_make_blender (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length));
+				var blender = SKBlender.GetObject (SkiaApi.sk_runtimeeffect_make_blender (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length));
+				GC.KeepAlive (uniforms);
+				return blender;
 			}
 		}
 

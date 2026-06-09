@@ -52,7 +52,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException(nameof(outer));
 			if (inner == null)
 				throw new ArgumentNullException(nameof(inner));
-			return GetObject (SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
+			var colorFilter = GetObject (SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
+			GC.KeepAlive (outer);
+			GC.KeepAlive (inner);
+			return colorFilter;
 		}
 
 		public static SKColorFilter CreateLerp(float weight, SKColorFilter filter0, SKColorFilter filter1)
@@ -60,7 +63,10 @@ namespace SkiaSharp
 			_ = filter0 ?? throw new ArgumentNullException(nameof(filter0));
 			_ = filter1 ?? throw new ArgumentNullException(nameof(filter1));
 
-			return GetObject (SkiaApi.sk_colorfilter_new_lerp(weight, filter0.Handle, filter1.Handle));
+			var colorFilter = GetObject (SkiaApi.sk_colorfilter_new_lerp(weight, filter0.Handle, filter1.Handle));
+			GC.KeepAlive (filter0);
+			GC.KeepAlive (filter1);
+			return colorFilter;
 		}
 
 		public static SKColorFilter CreateColorMatrix(float[] matrix)

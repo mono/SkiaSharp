@@ -94,31 +94,81 @@ namespace SkiaSharp
 
 		// Properties
 
-		public string FamilyName => (string)SKString.GetObject (SkiaApi.sk_typeface_get_family_name (Handle));
+		public string FamilyName {
+			get {
+				var r = (string)SKString.GetObject (SkiaApi.sk_typeface_get_family_name (Handle));
+				return r;
+			}
+		}
 
-		public SKFontStyle FontStyle => SKFontStyle.GetObject (SkiaApi.sk_typeface_get_fontstyle (Handle));
+		public SKFontStyle FontStyle {
+			get {
+				var r = SKFontStyle.GetObject (SkiaApi.sk_typeface_get_fontstyle (Handle));
+				return r;
+			}
+		}
 
-		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
+		public int FontWeight {
+			get {
+				var r = SkiaApi.sk_typeface_get_font_weight (Handle);
+				return r;
+			}
+		}
 
-		public int FontWidth => SkiaApi.sk_typeface_get_font_width (Handle);
+		public int FontWidth {
+			get {
+				var r = SkiaApi.sk_typeface_get_font_width (Handle);
+				return r;
+			}
+		}
 
-		public SKFontStyleSlant FontSlant => SkiaApi.sk_typeface_get_font_slant (Handle);
+		public SKFontStyleSlant FontSlant {
+			get {
+				var r = SkiaApi.sk_typeface_get_font_slant (Handle);
+				return r;
+			}
+		}
 
 		public bool IsBold => FontStyle.Weight >= (int)SKFontStyleWeight.SemiBold;
 
 		public bool IsItalic => FontStyle.Slant != SKFontStyleSlant.Upright;
 
-		public bool IsFixedPitch => SkiaApi.sk_typeface_is_fixed_pitch (Handle);
+		public bool IsFixedPitch {
+			get {
+				var r = SkiaApi.sk_typeface_is_fixed_pitch (Handle);
+				return r;
+			}
+		}
 
-		public int UnitsPerEm => SkiaApi.sk_typeface_get_units_per_em (Handle);
+		public int UnitsPerEm {
+			get {
+				var r = SkiaApi.sk_typeface_get_units_per_em (Handle);
+				return r;
+			}
+		}
 
-		public int GlyphCount => SkiaApi.sk_typeface_count_glyphs (Handle);
+		public int GlyphCount {
+			get {
+				var r = SkiaApi.sk_typeface_count_glyphs (Handle);
+				return r;
+			}
+		}
 
-		public string PostScriptName => (string)SKString.GetObject (SkiaApi.sk_typeface_get_post_script_name (Handle));
+		public string PostScriptName {
+			get {
+				var r = (string)SKString.GetObject (SkiaApi.sk_typeface_get_post_script_name (Handle));
+				return r;
+			}
+		}
 
 		// GetTableTags
 
-		public int TableCount => SkiaApi.sk_typeface_count_tables (Handle);
+		public int TableCount {
+			get {
+				var r = SkiaApi.sk_typeface_count_tables (Handle);
+				return r;
+			}
+		}
 
 		public UInt32[] GetTableTags ()
 		{
@@ -143,8 +193,11 @@ namespace SkiaSharp
 
 		// GetTableSize
 
-		public int GetTableSize (UInt32 tag) =>
-			(int)SkiaApi.sk_typeface_get_table_size (Handle, tag);
+		public int GetTableSize (UInt32 tag)
+		{
+			var r = (int)SkiaApi.sk_typeface_get_table_size (Handle, tag);
+			return r;
+		}
 
 		// GetTableData
 
@@ -267,7 +320,8 @@ namespace SkiaSharp
 		public SKStreamAsset OpenStream (out int ttcIndex)
 		{
 			fixed (int* ttc = &ttcIndex) {
-				return SKStreamAsset.GetObject (SkiaApi.sk_typeface_open_stream (Handle, ttc));
+				var r = SKStreamAsset.GetObject (SkiaApi.sk_typeface_open_stream (Handle, ttc));
+				return r;
 			}
 		}
 
@@ -277,8 +331,12 @@ namespace SkiaSharp
 		/// If false, then <see cref="GetKerningPairAdjustments(ReadOnlySpan{ushort})"/> will never return nonzero
 		/// adjustments for any possible pair of glyphs.
 		/// </summary>
-		public bool HasGetKerningPairAdjustments =>
-			SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, null, 0, null);
+		public bool HasGetKerningPairAdjustments {
+			get {
+				var r = SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, null, 0, null);
+				return r;
+			}
+		}
 
 		/// <summary>
 		/// Gets a kerning adjustment for each sequential pair of glyph indices in <paramref name="glyphs"/>.
@@ -336,8 +394,12 @@ namespace SkiaSharp
 
 		// Variable fonts
 
-		public int VariationDesignParameterCount =>
-			SkiaApi.sk_typeface_get_variation_design_parameters (Handle, null, 0);
+		public int VariationDesignParameterCount {
+			get {
+				var r = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, null, 0);
+				return r;
+			}
+		}
 
 		public SKFontVariationAxis[] VariationDesignParameters
 		{
@@ -361,8 +423,9 @@ namespace SkiaSharp
 
 			fixed (SKFontVariationAxis* ptr = axes) {
 				var total = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, axes.Length);
-				if (total <= axes.Length)
+				if (total <= axes.Length) {
 					return total;
+				}
 
 				// Skia is all-or-nothing: if buffer is undersized it writes nothing.
 				// Retry with a pooled buffer and copy what fits.
@@ -375,8 +438,12 @@ namespace SkiaSharp
 			}
 		}
 
-		public int VariationDesignPositionCount =>
-			SkiaApi.sk_typeface_get_variation_design_position (Handle, null, 0);
+		public int VariationDesignPositionCount {
+			get {
+				var r = SkiaApi.sk_typeface_get_variation_design_position (Handle, null, 0);
+				return r;
+			}
+		}
 
 		public SKFontVariationPositionCoordinate[] VariationDesignPosition
 		{
@@ -400,8 +467,9 @@ namespace SkiaSharp
 
 			fixed (SKFontVariationPositionCoordinate* ptr = coordinates) {
 				var total = SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, coordinates.Length);
-				if (total <= coordinates.Length)
+				if (total <= coordinates.Length) {
 					return total;
+				}
 
 				// Skia is all-or-nothing: if buffer is undersized it writes nothing.
 				// Retry with a pooled buffer and copy what fits.
@@ -417,7 +485,8 @@ namespace SkiaSharp
 		public SKTypeface Clone (ReadOnlySpan<SKFontVariationPositionCoordinate> position)
 		{
 			fixed (SKFontVariationPositionCoordinate* ptr = position) {
-				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, ptr, position.Length, 0, 0, null, 0));
+				var r = GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, ptr, position.Length, 0, 0, null, 0));
+				return r;
 			}
 		}
 
@@ -425,14 +494,16 @@ namespace SkiaSharp
 		{
 			if (paletteIndex < 0)
 				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
-			return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, null, 0, 0, paletteIndex, null, 0));
+			var r = GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, null, 0, 0, paletteIndex, null, 0));
+			return r;
 		}
 
 		public SKTypeface Clone (SKFontArguments args)
 		{
 			fixed (SKFontVariationPositionCoordinate* posPtr = args.VariationDesignPosition)
 			fixed (SKFontPaletteOverride* palPtr = args.PaletteOverrides) {
-				return GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, posPtr, args.VariationDesignPosition.Length, args.CollectionIndex, args.PaletteIndex, palPtr, args.PaletteOverrides.Length));
+				var r = GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, posPtr, args.VariationDesignPosition.Length, args.CollectionIndex, args.PaletteIndex, palPtr, args.PaletteOverrides.Length));
+				return r;
 			}
 		}
 

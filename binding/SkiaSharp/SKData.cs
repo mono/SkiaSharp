@@ -28,9 +28,15 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_data_ref (Handle);
+		void ISKNonVirtualReferenceCounted.ReferenceNative ()
+		{
+			SkiaApi.sk_data_ref (Handle);
+		}
 
-		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
+		void ISKNonVirtualReferenceCounted.UnreferenceNative ()
+		{
+			SkiaApi.sk_data_unref (Handle);
+		}
 
 		public static SKData Empty =>
 			LazyInitializer.EnsureInitialized (
@@ -218,7 +224,8 @@ namespace SkiaSharp
 				if (offset > UInt32.MaxValue)
 					throw new ArgumentOutOfRangeException (nameof (offset), "The offset exceeds the size of pointers.");
 			}
-			return GetObject (SkiaApi.sk_data_new_subset (Handle, (IntPtr)offset, (IntPtr)length));
+			var result = GetObject (SkiaApi.sk_data_new_subset (Handle, (IntPtr)offset, (IntPtr)length));
+			return result;
 		}
 
 		// ToArray
@@ -226,7 +233,6 @@ namespace SkiaSharp
 		public byte[] ToArray ()
 		{
 			var array = AsSpan ().ToArray ();
-			GC.KeepAlive (this);
 			return array;
 		}
 
@@ -234,9 +240,19 @@ namespace SkiaSharp
 
 		public bool IsEmpty => Size == 0;
 
-		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
+		public long Size {
+			get {
+				var result = (long)SkiaApi.sk_data_get_size (Handle);
+				return result;
+			}
+		}
 
-		public IntPtr Data => (IntPtr)SkiaApi.sk_data_get_data (Handle);
+		public IntPtr Data {
+			get {
+				var result = (IntPtr)SkiaApi.sk_data_get_data (Handle);
+				return result;
+			}
+		}
 
 		public Span<byte> Span => new Span<byte> ((void*)Data, (int)Size);
 
@@ -272,7 +288,6 @@ namespace SkiaSharp
 				ptr += copyCount;
 				target.Write ((byte[])buffer, 0, copyCount);
 			}
-			GC.KeepAlive (this);
 		}
 
 		internal static SKData GetObject (IntPtr handle) =>

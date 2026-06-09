@@ -21,9 +21,17 @@ namespace HarfBuzzSharp
 
 		public static FontFunctions Empty => emptyFontFunctions.Value;
 
-		public bool IsImmutable => HarfBuzzApi.hb_font_funcs_is_immutable (Handle);
+		public bool IsImmutable {
+			get {
+				var r = HarfBuzzApi.hb_font_funcs_is_immutable (Handle);
+				return r;
+			}
+		}
 
-		public void MakeImmutable () => HarfBuzzApi.hb_font_funcs_make_immutable (Handle);
+		public void MakeImmutable ()
+		{
+			HarfBuzzApi.hb_font_funcs_make_immutable (Handle);
+		}
 
 		public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy = null)
 		{

@@ -15,8 +15,12 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public uint UniqueId =>
-			SkiaApi.sk_picture_get_unique_id (Handle);
+		public uint UniqueId {
+			get {
+				var result = SkiaApi.sk_picture_get_unique_id (Handle);
+				return result;
+			}
+		}
 
 		public SKRect CullRect {
 			get {
@@ -26,19 +30,29 @@ namespace SkiaSharp
 			}
 		}
 
-		public int ApproximateBytesUsed =>
-			(int)SkiaApi.sk_picture_approximate_bytes_used (Handle);
+		public int ApproximateBytesUsed {
+			get {
+				var result = (int)SkiaApi.sk_picture_approximate_bytes_used (Handle);
+				return result;
+			}
+		}
 
 		public int ApproximateOperationCount =>
 			GetApproximateOperationCount (false);
 
-		public int GetApproximateOperationCount(bool includeNested) =>
-			SkiaApi.sk_picture_approximate_op_count (Handle, includeNested);
+		public int GetApproximateOperationCount(bool includeNested)
+		{
+			var result = SkiaApi.sk_picture_approximate_op_count (Handle, includeNested);
+			return result;
+		}
 
 		// Serialize
 
-		public SKData Serialize () =>
-			SKData.GetObject (SkiaApi.sk_picture_serialize_to_data (Handle));
+		public SKData Serialize ()
+		{
+			var result = SKData.GetObject (SkiaApi.sk_picture_serialize_to_data (Handle));
+			return result;
+		}
 
 		public void Serialize (Stream stream)
 		{
@@ -55,6 +69,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 
 			SkiaApi.sk_picture_serialize_to_stream (Handle, stream.Handle);
+			GC.KeepAlive (stream);
 		}
 
 		// Playback
@@ -65,6 +80,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_picture_playback (Handle, canvas.Handle);
+			GC.KeepAlive (canvas);
 		}
 
 		// ToShader
@@ -90,8 +106,11 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKMatrix localMatrix, SKRect tile) =>
 			ToShader (tmx, tmy, filterMode, &localMatrix, &tile);
 
-		private SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKMatrix* localMatrix, SKRect* tile) =>
-			SKShader.GetObject (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, filterMode, localMatrix, tile));
+		private SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKMatrix* localMatrix, SKRect* tile)
+		{
+			var result = SKShader.GetObject (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, filterMode, localMatrix, tile));
+			return result;
+		}
 
 		// Deserialize
 
@@ -121,7 +140,9 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject (SkiaApi.sk_picture_deserialize_from_data (data.Handle));
+			var picture = GetObject (SkiaApi.sk_picture_deserialize_from_data (data.Handle));
+			GC.KeepAlive (data);
+			return picture;
 		}
 
 		public static SKPicture Deserialize (Stream stream)
@@ -138,7 +159,9 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject (SkiaApi.sk_picture_deserialize_from_stream (stream.Handle));
+			var picture = GetObject (SkiaApi.sk_picture_deserialize_from_stream (stream.Handle));
+			GC.KeepAlive (stream);
+			return picture;
 		}
 
 		//

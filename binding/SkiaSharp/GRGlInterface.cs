@@ -108,11 +108,17 @@ namespace SkiaSharp
 
 		//
 
-		public bool Validate () =>
-			SkiaApi.gr_glinterface_validate (Handle);
+		public bool Validate ()
+		{
+			var result = SkiaApi.gr_glinterface_validate (Handle);
+			return result;
+		}
 
-		public bool HasExtension (string extension) =>
-			SkiaApi.gr_glinterface_has_extension (Handle, extension);
+		public bool HasExtension (string extension)
+		{
+			var result = SkiaApi.gr_glinterface_has_extension (Handle, extension);
+			return result;
+		}
 
 		//
 

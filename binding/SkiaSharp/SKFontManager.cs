@@ -28,7 +28,12 @@ namespace SkiaSharp
 				ref defaultManager, ref defaultManagerInitialized, ref defaultManagerLock,
 				() => GetDisposeProtectedObject (SkiaApi.sk_fontmgr_create_default ()));
 
-		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
+		public int FontFamilyCount {
+			get {
+				var r = SkiaApi.sk_fontmgr_count_families (Handle);
+				return r;
+			}
+		}
 
 		public IEnumerable<string> FontFamilies {
 			get {
@@ -50,14 +55,16 @@ namespace SkiaSharp
 
 		public SKFontStyleSet GetFontStyles (int index)
 		{
-			return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
+			var styleSet = SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
+			return styleSet;
 		}
 
 		public SKFontStyleSet GetFontStyles (string familyName)
 		{
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
 			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
-				return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, new IntPtr (familyNamePointer)));
+				var styleSet = SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, new IntPtr (familyNamePointer)));
+				return styleSet;
 			}
 		}
 
@@ -70,7 +77,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (style));
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
 			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
-				return SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontmgr_match_family_style (Handle, new IntPtr (familyNamePointer), style.Handle));
+				var typeface = SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontmgr_match_family_style (Handle, new IntPtr (familyNamePointer), style.Handle));
+				GC.KeepAlive (style);
+				return typeface;
 			}
 		}
 
@@ -81,7 +90,8 @@ namespace SkiaSharp
 
 			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8, true);
 			fixed (byte* u = utf8path) {
-				return SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_file (Handle, u, index));
+				var typeface = SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_file (Handle, u, index));
+				return typeface;
 			}
 		}
 
@@ -113,7 +123,9 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_data (Handle, data.Handle, index));
+			var typeface = SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_data (Handle, data.Handle, index));
+			GC.KeepAlive (data);
+			return typeface;
 		}
 
 		public SKTypeface MatchCharacter (char character)
@@ -172,7 +184,9 @@ namespace SkiaSharp
 
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
 			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
-				return SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontmgr_match_family_style_character (Handle, new IntPtr (familyNamePointer), style.Handle, bcp47, bcp47?.Length ?? 0, character));
+				var typeface = SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontmgr_match_family_style_character (Handle, new IntPtr (familyNamePointer), style.Handle, bcp47, bcp47?.Length ?? 0, character));
+				GC.KeepAlive (style);
+				return typeface;
 			}
 		}
 

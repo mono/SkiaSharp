@@ -91,12 +91,42 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.gr_backendrendertarget_delete (Handle);
 
-		public bool IsValid => SkiaApi.gr_backendrendertarget_is_valid (Handle);
-		public int Width => SkiaApi.gr_backendrendertarget_get_width (Handle);
-		public int Height => SkiaApi.gr_backendrendertarget_get_height (Handle);
-		public int SampleCount => SkiaApi.gr_backendrendertarget_get_samples (Handle);
-		public int StencilBits => SkiaApi.gr_backendrendertarget_get_stencils (Handle);
-		public GRBackend Backend => SkiaApi.gr_backendrendertarget_get_backend (Handle).FromNative ();
+		public bool IsValid {
+			get {
+				var result = SkiaApi.gr_backendrendertarget_is_valid (Handle);
+				return result;
+			}
+		}
+		public int Width {
+			get {
+				var result = SkiaApi.gr_backendrendertarget_get_width (Handle);
+				return result;
+			}
+		}
+		public int Height {
+			get {
+				var result = SkiaApi.gr_backendrendertarget_get_height (Handle);
+				return result;
+			}
+		}
+		public int SampleCount {
+			get {
+				var result = SkiaApi.gr_backendrendertarget_get_samples (Handle);
+				return result;
+			}
+		}
+		public int StencilBits {
+			get {
+				var result = SkiaApi.gr_backendrendertarget_get_stencils (Handle);
+				return result;
+			}
+		}
+		public GRBackend Backend {
+			get {
+				var result = SkiaApi.gr_backendrendertarget_get_backend (Handle).FromNative ();
+				return result;
+			}
+		}
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
@@ -106,7 +136,8 @@ namespace SkiaSharp
 		public bool GetGlFramebufferInfo (out GRGlFramebufferInfo glInfo)
 		{
 			fixed (GRGlFramebufferInfo* g = &glInfo) {
-				return SkiaApi.gr_backendrendertarget_get_gl_framebufferinfo (Handle, g);
+				var result = SkiaApi.gr_backendrendertarget_get_gl_framebufferinfo (Handle, g);
+				return result;
 			}
 		}
 	}

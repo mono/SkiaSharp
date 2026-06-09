@@ -21,25 +21,41 @@ namespace SkiaSharp
 		{
 		}
 
-		void ISKNonVirtualReferenceCounted.ReferenceNative () =>
+		void ISKNonVirtualReferenceCounted.ReferenceNative ()
+		{
 			SkiaApi.sk_colorspace_ref (Handle);
+		}
 
-		void ISKNonVirtualReferenceCounted.UnreferenceNative () =>
+		void ISKNonVirtualReferenceCounted.UnreferenceNative ()
+		{
 			SkiaApi.sk_colorspace_unref (Handle);
+		}
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
 		// properties
 
-		public bool GammaIsCloseToSrgb =>
-			SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
+		public bool GammaIsCloseToSrgb {
+			get {
+				var result = SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
+				return result;
+			}
+		}
 
-		public bool GammaIsLinear =>
-			SkiaApi.sk_colorspace_gamma_is_linear (Handle);
+		public bool GammaIsLinear {
+			get {
+				var result = SkiaApi.sk_colorspace_gamma_is_linear (Handle);
+				return result;
+			}
+		}
 
-		public bool IsSrgb =>
-			SkiaApi.sk_colorspace_is_srgb (Handle);
+		public bool IsSrgb {
+			get {
+				var result = SkiaApi.sk_colorspace_is_srgb (Handle);
+				return result;
+			}
+		}
 
 		public bool IsNumericalTransferFunction =>
 			GetNumericalTransferFunction (out _);
@@ -51,7 +67,10 @@ namespace SkiaSharp
 			if (right == null)
 				throw new ArgumentNullException (nameof (right));
 
-			return SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
+			var result = SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
+			GC.KeepAlive (left);
+			GC.KeepAlive (right);
+			return result;
 		}
 
 		// CreateSrgb
@@ -118,7 +137,8 @@ namespace SkiaSharp
 		public bool GetNumericalTransferFunction (out SKColorSpaceTransferFn fn)
 		{
 			fixed (SKColorSpaceTransferFn* f = &fn) {
-				return SkiaApi.sk_colorspace_is_numerical_transfer_fn (Handle, f);
+				var result = SkiaApi.sk_colorspace_is_numerical_transfer_fn (Handle, f);
+				return result;
 			}
 		}
 
@@ -136,7 +156,8 @@ namespace SkiaSharp
 		public bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50)
 		{
 			fixed (SKColorSpaceXyz* xyz = &toXyzD50) {
-				return SkiaApi.sk_colorspace_to_xyzd50 (Handle, xyz);
+				var result = SkiaApi.sk_colorspace_to_xyzd50 (Handle, xyz);
+				return result;
 			}
 		}
 
@@ -145,11 +166,17 @@ namespace SkiaSharp
 
 		// To*Gamma
 
-		public SKColorSpace ToLinearGamma () =>
-			GetObject (SkiaApi.sk_colorspace_make_linear_gamma (Handle));
+		public SKColorSpace ToLinearGamma ()
+		{
+			var result = GetObject (SkiaApi.sk_colorspace_make_linear_gamma (Handle));
+			return result;
+		}
 
-		public SKColorSpace ToSrgbGamma () =>
-			GetObject (SkiaApi.sk_colorspace_make_srgb_gamma (Handle));
+		public SKColorSpace ToSrgbGamma ()
+		{
+			var result = GetObject (SkiaApi.sk_colorspace_make_srgb_gamma (Handle));
+			return result;
+		}
 
 		//
 

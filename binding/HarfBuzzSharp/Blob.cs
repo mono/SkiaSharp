@@ -36,13 +36,31 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public int Length => (int)HarfBuzzApi.hb_blob_get_length (Handle);
+		public int Length {
+			get {
+				var r = (int)HarfBuzzApi.hb_blob_get_length (Handle);
+				return r;
+			}
+		}
 
-		public int FaceCount => (int)HarfBuzzApi.hb_face_count (Handle);
+		public int FaceCount {
+			get {
+				var r = (int)HarfBuzzApi.hb_face_count (Handle);
+				return r;
+			}
+		}
 
-		public bool IsImmutable => HarfBuzzApi.hb_blob_is_immutable (Handle);
+		public bool IsImmutable {
+			get {
+				var r = HarfBuzzApi.hb_blob_is_immutable (Handle);
+				return r;
+			}
+		}
 
-		public void MakeImmutable () => HarfBuzzApi.hb_blob_make_immutable (Handle);
+		public void MakeImmutable ()
+		{
+			HarfBuzzApi.hb_blob_make_immutable (Handle);
+		}
 
 		public unsafe Stream AsStream ()
 		{

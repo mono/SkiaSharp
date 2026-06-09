@@ -20,7 +20,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException(nameof(outer));
 			if (inner == null)
 				throw new ArgumentNullException(nameof(inner));
-			return GetObject(SkiaApi.sk_path_effect_create_compose(outer.Handle, inner.Handle));
+			var result = GetObject(SkiaApi.sk_path_effect_create_compose(outer.Handle, inner.Handle));
+			GC.KeepAlive (outer);
+			GC.KeepAlive (inner);
+			return result;
 		}
 
 		public static SKPathEffect CreateSum(SKPathEffect first, SKPathEffect second)
@@ -29,7 +32,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException(nameof(first));
 			if (second == null)
 				throw new ArgumentNullException(nameof(second));
-			return GetObject(SkiaApi.sk_path_effect_create_sum(first.Handle, second.Handle));
+			var result = GetObject(SkiaApi.sk_path_effect_create_sum(first.Handle, second.Handle));
+			GC.KeepAlive (first);
+			GC.KeepAlive (second);
+			return result;
 		}
 
 		public static SKPathEffect CreateDiscrete(float segLength, float deviation, UInt32 seedAssist = 0)
@@ -46,7 +52,9 @@ namespace SkiaSharp
 		{
 			if (path == null)
 				throw new ArgumentNullException(nameof(path));
-			return GetObject(SkiaApi.sk_path_effect_create_1d_path(path.Handle, advance, phase, style));
+			var result = GetObject(SkiaApi.sk_path_effect_create_1d_path(path.Handle, advance, phase, style));
+			GC.KeepAlive (path);
+			return result;
 		}
 
 		public static SKPathEffect Create2DLine(float width, SKMatrix matrix)
@@ -58,7 +66,9 @@ namespace SkiaSharp
 		{
 			if (path == null)
 				throw new ArgumentNullException(nameof(path));
-			return GetObject(SkiaApi.sk_path_effect_create_2d_path(&matrix, path.Handle));
+			var result = GetObject(SkiaApi.sk_path_effect_create_2d_path(&matrix, path.Handle));
+			GC.KeepAlive (path);
+			return result;
 		}
 
 		public static SKPathEffect CreateDash(float[] intervals, float phase)

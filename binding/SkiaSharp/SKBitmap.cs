@@ -81,13 +81,15 @@ namespace SkiaSharp
 		public bool TryAllocPixels (SKImageInfo info, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, &cinfo, (IntPtr)rowBytes);
+			var result = SkiaApi.sk_bitmap_try_alloc_pixels (Handle, &cinfo, (IntPtr)rowBytes);
+			return result;
 		}
 
 		public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, &cinfo, (uint)flags);
+			var result = SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, &cinfo, (uint)flags);
+			return result;
 		}
 
 		// Reset
@@ -118,14 +120,18 @@ namespace SkiaSharp
 
 		// GetAddress
 
-		public IntPtr GetAddress (int x, int y) =>
-			(IntPtr)SkiaApi.sk_bitmap_get_addr (Handle, x, y);
+		public IntPtr GetAddress (int x, int y)
+		{
+			var result = (IntPtr)SkiaApi.sk_bitmap_get_addr (Handle, x, y);
+			return result;
+		}
 
 		// Pixels (color)
 
 		public SKColor GetPixel (int x, int y)
 		{
-			return SkiaApi.sk_bitmap_get_pixel_color (Handle, x, y);
+			var result = SkiaApi.sk_bitmap_get_pixel_color (Handle, x, y);
+			return result;
 		}
 
 		public void SetPixel (int x, int y, SKColor color)
@@ -218,7 +224,9 @@ namespace SkiaSharp
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
-			return SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, &subset);
+			var result = SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, &subset);
+			GC.KeepAlive (destination);
+			return result;
 		}
 
 		// ExtractAlpha
@@ -244,13 +252,21 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (destination));
 			}
 			fixed (SKPointI* o = &offset) {
-				return SkiaApi.sk_bitmap_extract_alpha (Handle, destination.Handle, paint == null ? IntPtr.Zero : paint.Handle, o);
+				var result = SkiaApi.sk_bitmap_extract_alpha (Handle, destination.Handle, paint == null ? IntPtr.Zero : paint.Handle, o);
+				GC.KeepAlive (destination);
+				GC.KeepAlive (paint);
+				return result;
 			}
 		}
 
 		// properties
 
-		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle);
+		public bool ReadyToDraw {
+			get {
+				var result = SkiaApi.sk_bitmap_ready_to_draw (Handle);
+				return result;
+			}
+		}
 
 		public SKImageInfo Info {
 			get {
@@ -285,11 +301,17 @@ namespace SkiaSharp
 		}
 
 		public int RowBytes {
-			get { return (int)SkiaApi.sk_bitmap_get_row_bytes (Handle); }
+			get {
+				var result = (int)SkiaApi.sk_bitmap_get_row_bytes (Handle);
+				return result;
+			}
 		}
 
 		public int ByteCount {
-			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
+			get {
+				var result = (int)SkiaApi.sk_bitmap_get_byte_count (Handle);
+				return result;
+			}
 		}
 
 		// *Pixels*
@@ -306,7 +328,8 @@ namespace SkiaSharp
 		public IntPtr GetPixels (out IntPtr length)
 		{
 			fixed (IntPtr* l = &length) {
-				return (IntPtr)SkiaApi.sk_bitmap_get_pixels (Handle, l);
+				var result = (IntPtr)SkiaApi.sk_bitmap_get_pixels (Handle, l);
+				return result;
 			}
 		}
 
@@ -320,7 +343,6 @@ namespace SkiaSharp
 		public byte[] Bytes {
 			get {
 				var array = GetPixelSpan ().ToArray ();
-				GC.KeepAlive (this);
 				return array;
 			}
 		}
@@ -365,7 +387,10 @@ namespace SkiaSharp
 		}
 
 		public bool IsNull {
-			get { return SkiaApi.sk_bitmap_is_null (Handle); }
+			get {
+				var result = SkiaApi.sk_bitmap_is_null (Handle);
+				return result;
+			}
 		}
 
 		public bool DrawsNothing {
@@ -373,7 +398,10 @@ namespace SkiaSharp
 		}
 
 		public bool IsImmutable {
-			get { return SkiaApi.sk_bitmap_is_immutable (Handle); }
+			get {
+				var result = SkiaApi.sk_bitmap_is_immutable (Handle);
+				return result;
+			}
 		}
 
 		// DecodeBounds
@@ -612,12 +640,15 @@ namespace SkiaSharp
 				: releaseProc;
 			DelegateProxies.Create (del, out _, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKBitmapReleaseProxy : null;
-			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
+			var result = SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
+			return result;
 		}
 
 		public bool InstallPixels (SKPixmap pixmap)
 		{
-			return SkiaApi.sk_bitmap_install_pixels_with_pixmap (Handle, pixmap.Handle);
+			var result = SkiaApi.sk_bitmap_install_pixels_with_pixmap (Handle, pixmap.Handle);
+			GC.KeepAlive (pixmap);
+			return result;
 		}
 
 		// NotifyPixelsChanged
@@ -647,6 +678,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixmap));
 			}
 			var result = SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			GC.KeepAlive (pixmap);
 			if (result)
 				pixmap.pixelSource = this;
 			return result;
@@ -756,6 +788,7 @@ namespace SkiaSharp
 		private void Swap (SKBitmap other)
 		{
 			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
+			GC.KeepAlive (other);
 		}
 
 		// ToShader
@@ -782,7 +815,10 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality, SKMatrix localMatrix) =>
 			ToShader (tmx, tmy, quality.ToSamplingOptions(), &localMatrix);
 
-		private SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix* localMatrix) =>
-			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &sampling, localMatrix));
+		private SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix* localMatrix)
+		{
+			var result = SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &sampling, localMatrix));
+			return result;
+		}
 	}
 }
