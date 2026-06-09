@@ -328,7 +328,7 @@ namespace SkiaSharp
 		public SKColor[] Pixels {
 			get {
 				var info = Info;
-				var pixels = new SKColor[info.Width * info.Height];
+				var pixels = new SKColor[checked(info.Width * info.Height)];
 				fixed (SKColor* p = pixels) {
 					SkiaApi.sk_bitmap_get_pixel_colors (Handle, (uint*)p);
 				}
@@ -339,8 +339,9 @@ namespace SkiaSharp
 					throw new ArgumentNullException (nameof (value));
 
 				var info = Info;
-				if (info.Width * info.Height != value.Length)
-					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {info.Width * info.Height}.", nameof (value));
+				var expected = (long)info.Width * info.Height;
+				if (expected != value.Length)
+					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {expected}.", nameof (value));
 
 				fixed (SKColor* v = value) {
 					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
@@ -653,11 +654,11 @@ namespace SkiaSharp
 
 		// Resize
 
-		[Obsolete ("Use Resize(SKImageInfo info, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use Resize(SKImageInfo info, SKSamplingOptions sampling) instead.", error: true)]
 		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality) =>
 			Resize (info, quality.ToSamplingOptions ());
 
-		[Obsolete ("Use Resize(SKSizeI size, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use Resize(SKSizeI size, SKSamplingOptions sampling) instead.", error: true)]
 		public SKBitmap Resize (SKSizeI size, SKFilterQuality quality) =>
 			Resize (size, quality.ToSamplingOptions ());
 
@@ -680,11 +681,11 @@ namespace SkiaSharp
 
 		// ScalePixels
 
-		[Obsolete ("Use ScalePixels(SKBitmap destination, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ScalePixels(SKBitmap destination, SKSamplingOptions sampling) instead.", error: true)]
 		public bool ScalePixels (SKBitmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
 
-		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.", error: true)]
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
 
@@ -767,7 +768,7 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) =>
 			ToShader (tmx, tmy, sampling, null);
 
-		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.", error: true)]
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality) =>
 			ToShader (tmx, tmy, quality.ToSamplingOptions(), null);
 
@@ -777,7 +778,7 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) =>
 			ToShader (tmx, tmy, sampling, &localMatrix);
 
-		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.")]
+		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.", error: true)]
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality, SKMatrix localMatrix) =>
 			ToShader (tmx, tmy, quality.ToSamplingOptions(), &localMatrix);
 

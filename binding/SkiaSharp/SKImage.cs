@@ -409,14 +409,14 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling) =>
 			ToShader (tileX, tileY, sampling, null);
 
-		[Obsolete ("Use ToShader(SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ToShader(SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling) instead.", error: true)]
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKFilterQuality quality) =>
 			ToShader (tileX, tileY, quality.ToSamplingOptions(), null);
 
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix) =>
 			ToShader (tileX, tileY, sampling, &localMatrix);
 
-		[Obsolete ("Use ToShader(SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix) instead.")]
+		[Obsolete ("Use ToShader(SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix) instead.", error: true)]
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKFilterQuality quality, SKMatrix localMatrix) =>
 			ToShader (tileX, tileY, quality.ToSamplingOptions(), &localMatrix);
 
@@ -515,11 +515,11 @@ namespace SkiaSharp
 
 		// ScalePixels
 
-		[Obsolete("Use ScalePixels(SKPixmap dst, SKSamplingOptions sampling) instead.")]
+		[Obsolete("Use ScalePixels(SKPixmap dst, SKSamplingOptions sampling) instead.", error: true)]
 		public bool ScalePixels (SKPixmap dst, SKFilterQuality quality) =>
 			ScalePixels (dst, quality.ToSamplingOptions ());
 
-		[Obsolete("Use ScalePixels(SKPixmap dst, SKSamplingOptions sampling, SKImageCachingHint cachingHint) instead.")]
+		[Obsolete("Use ScalePixels(SKPixmap dst, SKSamplingOptions sampling, SKImageCachingHint cachingHint) instead.", error: true)]
 		public bool ScalePixels (SKPixmap dst, SKFilterQuality quality, SKImageCachingHint cachingHint) =>
 			ScalePixels (dst, quality.ToSamplingOptions (), cachingHint);
 

@@ -19,6 +19,44 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Rgb565, info.ColorType);
 			Assert.Equal(SKColorType.Gray8, copy.ColorType);
 		}
+
+		[SkippableFact]
+		public void BytesSizeThrowsOnInt32Overflow()
+		{
+			// Width*Height*BytesPerPixel = 65536*65536*4 = 17179869184, which wraps to 0
+			// as int32. Without the overflow check, downstream callers (SKImage.Create,
+			// SKCodec.GetPixels) would allocate a zero-sized buffer that native code
+			// then writes ~17 GB into. Guard with checked() so this throws instead.
+			var info = new SKImageInfo(65536, 65536, SKColorType.Bgra8888);
+
+			Assert.Throws<OverflowException>(() => info.BytesSize);
+
+			// The 64-bit variant still returns the correct value.
+			Assert.Equal(17179869184L, info.BytesSize64);
+		}
+
+		[SkippableFact]
+		public void RowBytesThrowsOnInt32Overflow()
+		{
+			// Width=2^30, BytesPerPixel=4 -> RowBytes mathematical product = 2^32,
+			// which wraps to 0 as int32. Must throw rather than silently corrupt.
+			var info = new SKImageInfo(1 << 30, 1, SKColorType.Bgra8888);
+
+			Assert.Throws<OverflowException>(() => info.RowBytes);
+
+			Assert.Equal(1L << 32, info.RowBytes64);
+		}
+
+		[SkippableFact]
+		public void BytesSizeIsExactForLargeButValidDimensions()
+		{
+			// Just under the int32 boundary - must compute exactly, not throw.
+			// 23170*23170*4 = 2147395600 < int.MaxValue.
+			var info = new SKImageInfo(23170, 23170, SKColorType.Bgra8888);
+
+			Assert.Equal(2147395600, info.BytesSize);
+			Assert.Equal(2147395600L, info.BytesSize64);
+		}
 	}
 
 	public class SKRectTest : SKTest

@@ -230,7 +230,7 @@ namespace SkiaSharp.Tests
 			using (var paint = new SKPaint())
 			using (var font = new SKFont())
 			{
-				canvas.DrawText("text", 150, 175, font, paint);
+				canvas.DrawText("text", 150, 175, SKTextAlign.Left, font, paint);
 			}
 		}
 
@@ -242,7 +242,7 @@ namespace SkiaSharp.Tests
 			using (var paint = new SKPaint())
 			using (var font = new SKFont())
 			{
-				canvas.DrawText("", 150, 175, font, paint);
+				canvas.DrawText("", 150, 175, SKTextAlign.Left, font, paint);
 			}
 		}
 

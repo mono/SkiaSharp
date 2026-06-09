@@ -6,24 +6,20 @@ namespace SkiaSharp.HarfBuzz
 	{
 		[Obsolete("Use DrawShapedText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKPaint paint) =>
-			canvas.DrawShapedText(text, p.X, p.Y, paint.TextAlign, paint.GetFont(), paint);
+			canvas.DrawShapedText(text, p.X, p.Y, paint.GetLegacyTextAlign(), paint.GetLegacyFont(), paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			canvas.DrawShapedText(text, p.X, p.Y, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			canvas.DrawShapedText(text, p.X, p.Y, paint.GetLegacyTextAlign(), font, paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			canvas.DrawShapedText(text, p.X, p.Y, textAlign, font, paint);
 
 		[Obsolete("Use DrawShapedText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public static void DrawShapedText(this SKCanvas canvas, string text, float x, float y, SKPaint paint) =>
-			canvas.DrawShapedText(text, x, y, paint.TextAlign, paint.GetFont(), paint);
+			canvas.DrawShapedText(text, x, y, paint.GetLegacyTextAlign(), paint.GetLegacyFont(), paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, string text, float x, float y, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			canvas.DrawShapedText(text, x, y, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			canvas.DrawShapedText(text, x, y, paint.GetLegacyTextAlign(), font, paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
@@ -36,24 +32,20 @@ namespace SkiaSharp.HarfBuzz
 
 		[Obsolete("Use DrawShapedText(SKShaper shaper, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, SKPoint p, SKPaint paint) =>
-			canvas.DrawShapedText(shaper, text, p.X, p.Y, paint.TextAlign, paint.GetFont(), paint);
+			canvas.DrawShapedText(shaper, text, p.X, p.Y, paint.GetLegacyTextAlign(), paint.GetLegacyFont(), paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, SKPoint p, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			canvas.DrawShapedText(shaper, text, p.X, p.Y, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			canvas.DrawShapedText(shaper, text, p.X, p.Y, paint.GetLegacyTextAlign(), font, paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			canvas.DrawShapedText(shaper, text, p.X, p.Y, textAlign, font, paint);
 
 		[Obsolete("Use DrawShapedText(SKShaper shaper, string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, float x, float y, SKPaint paint) =>
-			canvas.DrawShapedText(shaper, text, x, y, paint.TextAlign, paint.GetFont(), paint);
+			canvas.DrawShapedText(shaper, text, x, y, paint.GetLegacyTextAlign(), paint.GetLegacyFont(), paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, float x, float y, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			canvas.DrawShapedText(shaper, text, x, y, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			canvas.DrawShapedText(shaper, text, x, y, paint.GetLegacyTextAlign(), font, paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{

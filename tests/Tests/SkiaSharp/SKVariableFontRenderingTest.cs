@@ -17,7 +17,7 @@ public class SKVariableFontRenderingTest : SKTest
 		using var paint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
 
 		canvas.Clear (SKColors.White);
-		canvas.DrawText (text, 10, height / 2 + fontSize / 3, font, paint);
+		canvas.DrawText (text, 10, height / 2 + fontSize / 3, SKTextAlign.Left, font, paint);
 		canvas.Flush ();
 
 		return bmp.Bytes;

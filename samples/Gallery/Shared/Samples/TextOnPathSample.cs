@@ -107,7 +107,7 @@ public class TextOnPathSample : CanvasSampleBase
 		// Draw labels
 		using var labelPaint = new SKPaint { IsAntialias = true, Color = SKColors.White };
 		using var labelFont = new SKFont(SKTypeface.Default, 14);
-		canvas.DrawText($"Shape: {PathShapes[pathShapeIndex]}  Warp: {(warpGlyphs ? "on" : "off")}  Offset: {textOffset:F2}", 10, 20, labelFont, labelPaint);
+		canvas.DrawText($"Shape: {PathShapes[pathShapeIndex]}  Warp: {(warpGlyphs ? "on" : "off")}  Offset: {textOffset:F2}", 10, 20, SKTextAlign.Left, labelFont, labelPaint);
 	}
 
 	private static SKPath CreateCirclePath(float cx, float cy, float radius)
