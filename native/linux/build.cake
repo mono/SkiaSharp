@@ -95,10 +95,18 @@ Task("libSkiaSharp")
         // -static-libstdc++ clang would pick libc++_shared.so as a runtime dep
         // that we don't bundle. The .NET glibc/musl cross-images ship libc++
         // static-only, so this flag is a no-op there but doesn't hurt.
+        // When libc++ headers are not installed (e.g. bare GitHub Actions runner),
+        // fall back to libstdc++. Detection via try-compile is more reliable than
+        // path checks because CI Docker images ship libc++ as a static archive
+        // not a .so, and the directory layout varies by LLVM version.
         var isBionic = VARIANT.ToLower().StartsWith("bionic");
         var bionicDefine = isBionic ? ", '-DSK_BUILD_FOR_UNIX'" : "";
         var bionicArgs = isBionic ? "skia_use_fontconfig=false " : "";
-        var staticLibcxx = isBionic ? ", '-static-libstdc++'" : "";
+        var libcxxProbe = StartProcess("sh", new ProcessSettings {
+            Arguments = "-c \"echo '#include <cstddef>' | clang++ -stdlib=libc++ -x c++ - -E > /dev/null 2>&1\"",
+        });
+        var stdlibFlag = libcxxProbe == 0 ? "libc++" : "libstdc++";
+        var staticLibcxx = isBionic ? ", '-static-libstdc++'" : (stdlibFlag == "libstdc++" ? ", '-static-libstdc++'" : "");
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
@@ -117,8 +125,8 @@ Task("libSkiaSharp")
             $"skia_use_vulkan=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
-            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-stdlib={stdlibFlag}'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
+            $"extra_ldflags=[ '-stdlib={stdlibFlag}', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
@@ -144,7 +152,11 @@ Task("libHarfBuzzSharp")
         var skiaArch = GetSkiaArch(arch);
         var isBionicHB = VARIANT.ToLower().StartsWith("bionic");
         var bionicDefineHB = isBionicHB ? ", '-DSK_BUILD_FOR_UNIX'" : "";
-        var staticLibcxxHB = isBionicHB ? ", '-static-libstdc++'" : "";
+        var libcxxProbeHB = StartProcess("sh", new ProcessSettings {
+            Arguments = "-c \"echo '#include <cstddef>' | clang++ -stdlib=libc++ -x c++ - -E > /dev/null 2>&1\"",
+        });
+        var stdlibFlagHB = libcxxProbeHB == 0 ? "libc++" : "libstdc++";
+        var staticLibcxxHB = isBionicHB ? ", '-static-libstdc++'" : (stdlibFlagHB == "libstdc++" ? ", '-static-libstdc++'" : "");
 
         var soname = GetVersion("HarfBuzz", "soname");
         var map = MakeAbsolute((FilePath)"libHarfBuzzSharp/libHarfBuzzSharp.map");
@@ -154,8 +166,8 @@ Task("libHarfBuzzSharp")
             $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
-            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +
+            $"extra_cflags=[ '-stdlib={stdlibFlagHB}'{bionicDefineHB} ] " +
+            $"extra_ldflags=[ '-stdlib={stdlibFlagHB}', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
