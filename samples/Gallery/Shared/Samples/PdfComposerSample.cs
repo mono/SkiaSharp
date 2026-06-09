@@ -145,7 +145,7 @@ public class PdfComposerSample : DocumentSampleBase
 		var textWidth = font.MeasureText(text);
 		var x = (pageWidth - textWidth) / 2;
 		var y = pageHeight - 40;
-		canvas.DrawText(text, x, y, font, paint);
+		canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
 
 		using var underline = new SKPaint { IsAntialias = true, Color = LinkColor, StrokeWidth = 0.5f, IsStroke = true };
 		canvas.DrawLine(x, y + 2, x + textWidth, y + 2, underline);
@@ -204,7 +204,7 @@ public class PdfComposerSample : DocumentSampleBase
 		var x = 100f;
 		foreach (var (text, dest) in entries)
 		{
-			canvas.DrawText(text, x, y, tocFont, tocPaint);
+			canvas.DrawText(text, x, y, SKTextAlign.Left, tocFont, tocPaint);
 			var tw = tocFont.MeasureText(text);
 			canvas.DrawLine(x, y + 2, x + tw, y + 2, tocUnderline);
 			canvas.DrawLinkDestinationAnnotation(new SKRect(x, y - 16, x + tw, y + 4), dest)?.Dispose();
@@ -218,7 +218,7 @@ public class PdfComposerSample : DocumentSampleBase
 		var urlW = footerFont.MeasureText(url);
 		var urlX = (pageWidth - urlW) / 2;
 		var urlY = pageHeight - 50;
-		canvas.DrawText(url, urlX, urlY, footerFont, footerPaint);
+		canvas.DrawText(url, urlX, urlY, SKTextAlign.Left, footerFont, footerPaint);
 		canvas.DrawUrlAnnotation(new SKRect(urlX, urlY - 12, urlX + urlW, urlY + 4), url)?.Dispose();
 	}
 
@@ -313,22 +313,22 @@ public class PdfComposerSample : DocumentSampleBase
 		using var bodyPaint = new SKPaint { IsAntialias = true, Color = BodyColor };
 
 		// Different sizes
-		canvas.DrawText("Text Sizes", margin, y, sectionFont, sectionPaint);
+		canvas.DrawText("Text Sizes", margin, y, SKTextAlign.Left, sectionFont, sectionPaint);
 		y += 10;
 		foreach (var size in new[] { 12, 24, 36, 48 })
 		{
 			using var sizedFont = new SKFont(SampleMedia.Fonts.Default, size);
 			y += size + 8;
-			canvas.DrawText($"{size}pt Sample Text", margin, y, sizedFont, bodyPaint);
+			canvas.DrawText($"{size}pt Sample Text", margin, y, SKTextAlign.Left, sizedFont, bodyPaint);
 		}
 		y += 40;
 
 		// Text styles
-		canvas.DrawText("Text Styles", margin, y, sectionFont, sectionPaint);
+		canvas.DrawText("Text Styles", margin, y, SKTextAlign.Left, sectionFont, sectionPaint);
 		y += 30;
 
 		using var styleFont = new SKFont(SampleMedia.Fonts.Default, 20);
-		canvas.DrawText("Normal text style", margin, y, styleFont, bodyPaint);
+		canvas.DrawText("Normal text style", margin, y, SKTextAlign.Left, styleFont, bodyPaint);
 		y += 30;
 
 		using var boldPaint = new SKPaint
@@ -338,22 +338,22 @@ public class PdfComposerSample : DocumentSampleBase
 			Style = SKPaintStyle.StrokeAndFill,
 			StrokeWidth = 1.0f,
 		};
-		canvas.DrawText("Bold text style (stroke)", margin, y, styleFont, boldPaint);
+		canvas.DrawText("Bold text style (stroke)", margin, y, SKTextAlign.Left, styleFont, boldPaint);
 		y += 30;
 
 		using var italicFont = new SKFont(SampleMedia.Fonts.Default, 20, 1, -0.25f);
-		canvas.DrawText("Italic text style (skew)", margin, y, italicFont, bodyPaint);
+		canvas.DrawText("Italic text style (skew)", margin, y, SKTextAlign.Left, italicFont, bodyPaint);
 		y += 50;
 
 		// Alignment
-		canvas.DrawText("Text Alignment", margin, y, sectionFont, sectionPaint);
+		canvas.DrawText("Text Alignment", margin, y, SKTextAlign.Left, sectionFont, sectionPaint);
 		y += 30;
 
 		using var alignFont = new SKFont(SampleMedia.Fonts.Default, 16);
 		using var guidePaint = new SKPaint { IsAntialias = true, Color = LightGray, StrokeWidth = 1, IsStroke = true };
 		canvas.DrawLine(pageWidth / 2, y - 16, pageWidth / 2, y + 60, guidePaint);
 
-		canvas.DrawText("Left-aligned text", margin, y, alignFont, bodyPaint);
+		canvas.DrawText("Left-aligned text", margin, y, SKTextAlign.Left, alignFont, bodyPaint);
 		y += 24;
 		canvas.DrawText("Center-aligned text", pageWidth / 2, y, SKTextAlign.Center, alignFont, bodyPaint);
 		y += 24;
@@ -376,7 +376,7 @@ public class PdfComposerSample : DocumentSampleBase
 		// Description
 		using var descFont = new SKFont(SampleMedia.Fonts.Default, 13);
 		using var descPaint = new SKPaint { IsAntialias = true, Color = BodyColor };
-		canvas.DrawText("SkiaSharp can decode and embed bitmap images in PDF documents.", margin, y, descFont, descPaint);
+		canvas.DrawText("SkiaSharp can decode and embed bitmap images in PDF documents.", margin, y, SKTextAlign.Left, descFont, descPaint);
 		y += 30;
 
 		// Load and draw baboon image
@@ -393,7 +393,7 @@ public class PdfComposerSample : DocumentSampleBase
 				// Label
 				using var labelFont = new SKFont(SampleMedia.Fonts.Default, 11);
 				using var labelPaint = new SKPaint { IsAntialias = true, Color = SubtitleColor };
-				canvas.DrawText($"baboon.png ({baboonBitmap.Width}×{baboonBitmap.Height})", margin, y + imgSize + 16, labelFont, labelPaint);
+				canvas.DrawText($"baboon.png ({baboonBitmap.Width}×{baboonBitmap.Height})", margin, y + imgSize + 16, SKTextAlign.Left, labelFont, labelPaint);
 
 				// Draw the same image with effects on the right side
 				var rightX = margin + imgSize + 30;
@@ -409,7 +409,7 @@ public class PdfComposerSample : DocumentSampleBase
 				});
 				using var grayPaint = new SKPaint { ColorFilter = grayFilter };
 				canvas.DrawBitmap(baboonBitmap, SKRect.Create(rightX, y, smallSize, smallSize), grayPaint);
-				canvas.DrawText("Grayscale filter", rightX, y + smallSize + 16, labelFont, labelPaint);
+				canvas.DrawText("Grayscale filter", rightX, y + smallSize + 16, SKTextAlign.Left, labelFont, labelPaint);
 
 				// Sepia version
 				using var sepiaFilter = SKColorFilter.CreateColorMatrix(new float[]
@@ -421,7 +421,7 @@ public class PdfComposerSample : DocumentSampleBase
 				});
 				using var sepiaPaint = new SKPaint { ColorFilter = sepiaFilter };
 				canvas.DrawBitmap(baboonBitmap, SKRect.Create(rightX, y + smallSize + 30, smallSize, smallSize), sepiaPaint);
-				canvas.DrawText("Sepia filter", rightX, y + smallSize * 2 + 46, labelFont, labelPaint);
+				canvas.DrawText("Sepia filter", rightX, y + smallSize * 2 + 46, SKTextAlign.Left, labelFont, labelPaint);
 
 				y += imgSize + 40;
 			}
@@ -439,7 +439,7 @@ public class PdfComposerSample : DocumentSampleBase
 
 				using var cwLabel = new SKFont(SampleMedia.Fonts.Default, 11);
 				using var cwPaint = new SKPaint { IsAntialias = true, Color = SubtitleColor };
-				canvas.DrawText($"color-wheel.png ({cwBitmap.Width}×{cwBitmap.Height})", margin, y + cwSize + 16, cwLabel, cwPaint);
+				canvas.DrawText($"color-wheel.png ({cwBitmap.Width}×{cwBitmap.Height})", margin, y + cwSize + 16, SKTextAlign.Left, cwLabel, cwPaint);
 			}
 		}
 

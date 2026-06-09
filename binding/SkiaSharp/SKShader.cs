@@ -80,7 +80,7 @@ namespace SkiaSharp
 		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) =>
 			src?.ToShader (tmx, tmy, sampling) ?? throw new ArgumentNullException (nameof (src));
 
-		[Obsolete ("Use CreateImage(SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use CreateImage(SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.", error: true)]
 		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality) =>
 			src?.ToShader (tmx, tmy, quality.ToSamplingOptions()) ?? throw new ArgumentNullException (nameof (src));
 
@@ -90,7 +90,7 @@ namespace SkiaSharp
 		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) =>
 			src?.ToShader (tmx, tmy, sampling, localMatrix) ?? throw new ArgumentNullException (nameof (src));
 
-		[Obsolete ("Use CreateImage(SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.")]
+		[Obsolete ("Use CreateImage(SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.", error: true)]
 		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality, SKMatrix localMatrix) =>
 			src?.ToShader (tmx, tmy, quality.ToSamplingOptions(), localMatrix) ?? throw new ArgumentNullException (nameof (src));
 

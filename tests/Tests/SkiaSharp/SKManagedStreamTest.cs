@@ -299,7 +299,7 @@ namespace SkiaSharp.Tests
 					foreach (var pair in paintList)
 					{
 						for (var i = 0; i < 100; i++)
-							pageCanvas.DrawText("Text", 0, 5 * i, pair.Font, pair.Paint);
+							pageCanvas.DrawText("Text", 0, 5 * i, SKTextAlign.Left, pair.Font, pair.Paint);
 					}
 
 					document.EndPage();

@@ -156,10 +156,10 @@ namespace SkiaSharp
 				if (bpp != size)
 					throw new ArgumentException ($"Size of T ({size}) is not the same as the size of each pixel ({bpp}).", nameof (T));
 
-				spanLength = info.Width * info.Height;
+				spanLength = checked(info.Width * info.Height);
 
 				if (x != 0 || y != 0)
-					spanOffset = y * info.Width + x;
+					spanOffset = checked(y * info.Width + x);
 			}
 
 			var addr = SkiaApi.sk_pixmap_get_writable_addr (Handle);
@@ -186,7 +186,7 @@ namespace SkiaSharp
 
 		// ScalePixels
 
-		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.", error: true)]
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
 

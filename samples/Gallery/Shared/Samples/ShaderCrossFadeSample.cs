@@ -212,13 +212,13 @@ half4 main(float2 fragCoord) {
 
 		using var font = new SKFont { Size = 15 };
 		using var paint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-		canvas.DrawText("Runtime Shader Threshold Cross-Fade", 12, 20, font, paint);
+		canvas.DrawText("Runtime Shader Threshold Cross-Fade", 12, 20, SKTextAlign.Left, font, paint);
 
 		using var smallFont = new SKFont { Size = 12 };
 		paint.Color = new SKColor(200, 200, 200);
 		canvas.DrawText(
 			$"threshold: {threshold:F2}  noise: {noiseScale:F1}  softness: {edgeSoftness:F2}",
-			12, 42, smallFont, paint);
+			12, 42, SKTextAlign.Left, smallFont, paint);
 	}
 
 	private void DrawError(SKCanvas canvas, int width)
