@@ -45,7 +45,9 @@ namespace SkiaSharp
 		public static SKTypeface Empty =>
 			LazyInitializer.EnsureInitialized (
 				ref empty, ref emptyInitialized, ref emptyLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_typeface_create_empty ()));
+				// Immortal Skia singleton (SkNoDestructor<SkEmptyTypeface>) — never unref it.
+				// See SKColorFilter.GetDisposeProtectedObject for the full teardown-crash rationale.
+				() => GetDisposeProtectedObject (SkiaApi.sk_typeface_create_empty (), owns: false, unrefExisting: false));
 
 		public bool IsEmpty => GlyphCount == 0;
 
@@ -540,8 +542,8 @@ namespace SkiaSharp
 		internal static SKTypeface GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
 
-		internal static SKTypeface GetDisposeProtectedObject (IntPtr handle) =>
-			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKTypeface (h, o));
+		internal static SKTypeface GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKTypeface (h, o));
 
 	}
 }

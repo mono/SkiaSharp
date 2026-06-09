@@ -29,12 +29,12 @@ namespace SkiaSharp
 		public static SKColorFilter CreateSrgbToLinearGamma () =>
 			LazyInitializer.EnsureInitialized (
 				ref srgbToLinear, ref srgbToLinearInitialized, ref srgbToLinearLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ()));
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma (), owns: false, unrefExisting: false));
 
 		public static SKColorFilter CreateLinearToSrgbGamma () =>
 			LazyInitializer.EnsureInitialized (
 				ref linearToSrgb, ref linearToSrgbInitialized, ref linearToSrgbLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ()));
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma (), owns: false, unrefExisting: false));
 
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
@@ -160,7 +160,15 @@ namespace SkiaSharp
 		internal static SKColorFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
 
-		internal static SKColorFilter GetDisposeProtectedObject (IntPtr handle) =>
-			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKColorFilter (h, o));
+		// owns/unrefExisting default to true for the general dispose-protected (but mortal) case.
+		// The srgb<->linear gamma singletons pass owns:false because Skia returns an *immortal*
+		// SkNoDestructor singleton (gSingleton) living in static storage. Unreffing it at
+		// finalization drives the native refcount to 0 and runs ~SkColorSpaceXformColorFilter,
+		// which calls free()/delete on non-heap memory => STATUS_HEAP_CORRUPTION at teardown.
+		// owns:false makes Dispose(bool) skip DisposeNative (it gates on OwnsHandle), so the
+		// binding never releases the immortal static. Leaking our single ref is correct: the
+		// object is never destroyed by Skia anyway.
+		internal static SKColorFilter GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKColorFilter (h, o));
 	}
 }

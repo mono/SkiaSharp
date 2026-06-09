@@ -44,7 +44,9 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 
 		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (modes.Length);
 		foreach (SKBlendMode mode in modes) {
-			blendModeBlenders[mode] = GetDisposeProtectedObject (SkiaApi.sk_blender_new_mode (mode));
+			// Immortal Skia singletons (SkNoDestructor<SkBlendModeBlender> per mode) — never unref them.
+			// See SKColorFilter.GetDisposeProtectedObject for the full teardown-crash rationale.
+			blendModeBlenders[mode] = GetDisposeProtectedObject (SkiaApi.sk_blender_new_mode (mode), owns: false, unrefExisting: false);
 		}
 	}
 
@@ -69,6 +71,6 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 	internal static SKBlender GetObject (IntPtr handle) =>
 		GetOrAddObject (handle, (h, o) => new SKBlender (h, o));
 
-	internal static SKBlender GetDisposeProtectedObject (IntPtr handle) =>
-		GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKBlender (h, o));
+	internal static SKBlender GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+		GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKBlender (h, o));
 }

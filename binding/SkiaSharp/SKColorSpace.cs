@@ -83,14 +83,17 @@ namespace SkiaSharp
 		public static SKColorSpace CreateSrgb () =>
 			LazyInitializer.EnsureInitialized (
 				ref srgb, ref srgbInitialized, ref srgbLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb ()));
+				// Immortal Skia singleton (sk_srgb_singleton, function-local static) — never unref it.
+				// See SKColorFilter.GetDisposeProtectedObject for the full teardown-crash rationale.
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb (), owns: false, unrefExisting: false));
 
 		// CreateSrgbLinear
 
 		public static SKColorSpace CreateSrgbLinear () =>
 			LazyInitializer.EnsureInitialized (
 				ref srgbLinear, ref srgbLinearInitialized, ref srgbLinearLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb_linear ()));
+				// Immortal Skia singleton (sk_srgb_linear_singleton, function-local static) — never unref it.
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb_linear (), owns: false, unrefExisting: false));
 
 		// CreateIcc
 

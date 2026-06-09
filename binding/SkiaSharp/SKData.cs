@@ -43,7 +43,9 @@ namespace SkiaSharp
 		public static SKData Empty =>
 			LazyInitializer.EnsureInitialized (
 				ref empty, ref emptyInitialized, ref emptyLock,
-				() => GetDisposeProtectedObject (SkiaApi.sk_data_new_empty ()));
+				// Immortal Skia singleton (SkData::MakeEmpty's function-local static) — never unref it.
+				// See SKColorFilter.GetDisposeProtectedObject for the full teardown-crash rationale.
+				() => GetDisposeProtectedObject (SkiaApi.sk_data_new_empty (), owns: false, unrefExisting: false));
 
 		// CreateCopy
 
@@ -300,8 +302,8 @@ namespace SkiaSharp
 		internal static SKData GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKData (h, o));
 
-		internal static SKData GetDisposeProtectedObject (IntPtr handle) =>
-			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKData (h, o));
+		internal static SKData GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKData (h, o));
 
 		//
 
