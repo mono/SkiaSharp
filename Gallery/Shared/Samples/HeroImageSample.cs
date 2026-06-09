@@ -274,7 +274,7 @@ public class HeroImageSample : CanvasSampleBase
 			Shader = titleShader,
 			IsAntialias = true,
 		};
-		canvas.DrawText(titleText, titleX, titleY, titleFont, titlePaint);
+		canvas.DrawText(titleText, titleX, titleY, SKTextAlign.Left, titleFont, titlePaint);
 	}
 
 	private static void DrawFrostedCard(SKCanvas canvas, SKImage bgSnapshot, SKRect cardRect)

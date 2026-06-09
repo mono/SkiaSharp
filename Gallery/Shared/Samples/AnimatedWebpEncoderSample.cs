@@ -209,10 +209,10 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 				IsAntialias = true,
 				MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6),
 			};
-			canvas.DrawText(ch, x, y, font, glowPaint);
+			canvas.DrawText(ch, x, y, SKTextAlign.Left, font, glowPaint);
 
 			// letter
-			canvas.DrawText(ch, x, y, font, textPaint);
+			canvas.DrawText(ch, x, y, SKTextAlign.Left, font, textPaint);
 			x += charW;
 		}
 	}

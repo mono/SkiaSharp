@@ -128,6 +128,6 @@ public class GifPlayerSample : CanvasSampleBase
 		using var textPaint = new SKPaint { IsAntialias = true, Color = SKColors.White };
 		using var font = new SKFont(SampleMedia.Fonts.Default, 14);
 		var statusText = playing ? "▶" : "⏸";
-		canvas.DrawText($"{statusText} Frame {currentFrame + 1}/{frames.Length}  Speed: {speed:F2}x", 10, height - 10, font, textPaint);
+		canvas.DrawText($"{statusText} Frame {currentFrame + 1}/{frames.Length}  Speed: {speed:F2}x", 10, height - 10, SKTextAlign.Left, font, textPaint);
 	}
 }
