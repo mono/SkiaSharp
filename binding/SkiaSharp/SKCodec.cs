@@ -29,6 +29,7 @@ namespace SkiaSharp
 			get {
 				SKImageInfoNative cinfo;
 				SkiaApi.sk_codec_get_info (Handle, &cinfo);
+				GC.KeepAlive (this);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -36,6 +37,7 @@ namespace SkiaSharp
 		public SKEncodedOrigin EncodedOrigin {
 			get {
 				var result = SkiaApi.sk_codec_get_origin (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -43,6 +45,7 @@ namespace SkiaSharp
 		public SKEncodedImageFormat EncodedFormat {
 			get {
 				var result = SkiaApi.sk_codec_get_encoded_format (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -51,6 +54,7 @@ namespace SkiaSharp
 		{
 			SKSizeI dimensions;
 			SkiaApi.sk_codec_get_scaled_dimensions (Handle, desiredScale, &dimensions);
+			GC.KeepAlive (this);
 			return dimensions;
 		}
 
@@ -58,6 +62,7 @@ namespace SkiaSharp
 		{
 			fixed (SKRectI* ds = &desiredSubset) {
 				var result = SkiaApi.sk_codec_get_valid_subset (Handle, ds);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -77,6 +82,7 @@ namespace SkiaSharp
 		public int RepetitionCount {
 			get {
 				var result = SkiaApi.sk_codec_get_repetition_count (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -84,6 +90,7 @@ namespace SkiaSharp
 		public int FrameCount {
 			get {
 				var result = SkiaApi.sk_codec_get_frame_count (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -95,6 +102,7 @@ namespace SkiaSharp
 				fixed (SKCodecFrameInfo* i = info) {
 					SkiaApi.sk_codec_get_frame_info (Handle, i);
 				}
+				GC.KeepAlive (this);
 				return info;
 			}
 		}
@@ -103,6 +111,7 @@ namespace SkiaSharp
 		{
 			fixed (SKCodecFrameInfo* f = &frameInfo) {
 				var result = SkiaApi.sk_codec_get_frame_info_for_index (Handle, index, f);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -152,6 +161,7 @@ namespace SkiaSharp
 				nOptions.fSubset = &subset;
 			}
 			var result = SkiaApi.sk_codec_get_pixels (Handle, &nInfo, (void*)pixels, (IntPtr)rowBytes, &nOptions);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -176,6 +186,7 @@ namespace SkiaSharp
 			}
 
 			var result = SkiaApi.sk_codec_start_incremental_decode (Handle, &nInfo, (void*)pixels, (IntPtr)rowBytes, &nOptions);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -183,6 +194,7 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			var result = SkiaApi.sk_codec_start_incremental_decode (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, null);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -192,6 +204,7 @@ namespace SkiaSharp
 		{
 			fixed (int* r = &rowsDecoded) {
 				var result = SkiaApi.sk_codec_incremental_decode (Handle, r);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -199,6 +212,7 @@ namespace SkiaSharp
 		public SKCodecResult IncrementalDecode ()
 		{
 			var result = SkiaApi.sk_codec_incremental_decode (Handle, null);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -220,6 +234,7 @@ namespace SkiaSharp
 			}
 
 			var result = SkiaApi.sk_codec_start_scanline_decode (Handle, &nInfo, &nOptions);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -227,6 +242,7 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			var result = SkiaApi.sk_codec_start_scanline_decode (Handle, &cinfo, null);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -238,18 +254,21 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 
 			var result = SkiaApi.sk_codec_get_scanlines (Handle, (void*)dst, countLines, (IntPtr)rowBytes);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public bool SkipScanlines (int countLines)
 		{
 			var result = SkiaApi.sk_codec_skip_scanlines (Handle, countLines);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public SKCodecScanlineOrder ScanlineOrder {
 			get {
 				var result = SkiaApi.sk_codec_get_scanline_order (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -257,6 +276,7 @@ namespace SkiaSharp
 		public int NextScanline {
 			get {
 				var result = SkiaApi.sk_codec_next_scanline (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -264,6 +284,7 @@ namespace SkiaSharp
 		public int GetOutputScanline (int inputScanline)
 		{
 			var result = SkiaApi.sk_codec_output_scanline (Handle, inputScanline);
+			GC.KeepAlive (this);
 			return result;
 		}
 

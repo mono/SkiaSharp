@@ -56,6 +56,7 @@ namespace SkiaSharp
 		public void Reset ()
 		{
 			SkiaApi.sk_pixmap_reset (Handle);
+			GC.KeepAlive (this);
 			pixelSource = null;
 		}
 
@@ -63,6 +64,7 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			SkiaApi.sk_pixmap_reset_with_params (Handle, &cinfo, (void*)addr, (IntPtr)rowBytes);
+			GC.KeepAlive (this);
 			pixelSource = null;
 		}
 
@@ -72,6 +74,7 @@ namespace SkiaSharp
 			get {
 				SKImageInfoNative cinfo;
 				SkiaApi.sk_pixmap_get_info (Handle, &cinfo);
+				GC.KeepAlive (this);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -96,6 +99,7 @@ namespace SkiaSharp
 		public SKColorSpace? ColorSpace {
 			get {
 				var result = SKColorSpace.GetObject (SkiaApi.sk_pixmap_get_colorspace (Handle));
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -107,6 +111,7 @@ namespace SkiaSharp
 		public int RowBytes {
 			get {
 				var result = (int)SkiaApi.sk_pixmap_get_row_bytes (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -120,12 +125,14 @@ namespace SkiaSharp
 		public IntPtr GetPixels ()
 		{
 			var result = (IntPtr)SkiaApi.sk_pixmap_get_writable_addr (Handle);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public IntPtr GetPixels (int x, int y)
 		{
 			var result = (IntPtr)SkiaApi.sk_pixmap_get_writeable_addr_with_xy (Handle, x, y);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -178,6 +185,7 @@ namespace SkiaSharp
 			}
 
 			var addr = SkiaApi.sk_pixmap_get_writable_addr (Handle);
+			GC.KeepAlive (this);
 			var span = new Span<T> (addr, spanLength);
 
 			if (spanOffset != 0)
@@ -189,6 +197,7 @@ namespace SkiaSharp
 		public SKColor GetPixelColor (int x, int y)
 		{
 			var result = SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -196,12 +205,14 @@ namespace SkiaSharp
 		{
 			SKColorF color;
 			SkiaApi.sk_pixmap_get_pixel_color4f (Handle, x, y, &color);
+			GC.KeepAlive (this);
 			return color;
 		}
 
 		public float GetPixelAlpha (int x, int y)
 		{
 			var result = SkiaApi.sk_pixmap_get_pixel_alphaf (Handle, x, y);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -218,6 +229,7 @@ namespace SkiaSharp
 		{
 			_ = destination ?? throw new ArgumentNullException (nameof (destination));
 			var result = SkiaApi.sk_pixmap_scale_pixels (Handle, destination.Handle, &sampling);
+			GC.KeepAlive (this);
 			GC.KeepAlive (destination);
 			return result;
 		}
@@ -228,6 +240,7 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
 			var result = SkiaApi.sk_pixmap_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -289,6 +302,7 @@ namespace SkiaSharp
 		{
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			var result = SkiaApi.sk_webpencoder_encode (dst.Handle, Handle, &options);
+			GC.KeepAlive (this);
 			GC.KeepAlive (dst);
 			return result;
 		}
@@ -313,6 +327,7 @@ namespace SkiaSharp
 		{
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			var result = SkiaApi.sk_jpegencoder_encode (dst.Handle, Handle, &options);
+			GC.KeepAlive (this);
 			GC.KeepAlive (dst);
 			return result;
 		}
@@ -337,6 +352,7 @@ namespace SkiaSharp
 		{
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			var result = SkiaApi.sk_pngencoder_encode (dst.Handle, Handle, &options);
+			GC.KeepAlive (this);
 			GC.KeepAlive (dst);
 			return result;
 		}
@@ -357,6 +373,7 @@ namespace SkiaSharp
 		{
 			_ = result ?? throw new ArgumentNullException (nameof (result));
 			var extracted = SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, &subset);
+			GC.KeepAlive (this);
 			GC.KeepAlive (result);
 			return extracted;
 		}
@@ -369,6 +386,7 @@ namespace SkiaSharp
 		public bool Erase (SKColor color, SKRectI subset)
 		{
 			var result = SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -378,6 +396,7 @@ namespace SkiaSharp
 		public bool Erase (SKColorF color, SKRectI subset)
 		{
 			var result = SkiaApi.sk_pixmap_erase_color4f (Handle, &color, &subset);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -386,6 +405,7 @@ namespace SkiaSharp
 		public bool ComputeIsOpaque ()
 		{
 			var result = SkiaApi.sk_pixmap_compute_is_opaque (Handle);
+			GC.KeepAlive (this);
 			return result;
 		}
 

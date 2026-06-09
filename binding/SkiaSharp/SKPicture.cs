@@ -18,6 +18,7 @@ namespace SkiaSharp
 		public uint UniqueId {
 			get {
 				var result = SkiaApi.sk_picture_get_unique_id (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -26,6 +27,7 @@ namespace SkiaSharp
 			get {
 				SKRect rect;
 				SkiaApi.sk_picture_get_cull_rect (Handle, &rect);
+				GC.KeepAlive (this);
 				return rect;
 			}
 		}
@@ -33,6 +35,7 @@ namespace SkiaSharp
 		public int ApproximateBytesUsed {
 			get {
 				var result = (int)SkiaApi.sk_picture_approximate_bytes_used (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -43,6 +46,7 @@ namespace SkiaSharp
 		public int GetApproximateOperationCount(bool includeNested)
 		{
 			var result = SkiaApi.sk_picture_approximate_op_count (Handle, includeNested);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -51,6 +55,7 @@ namespace SkiaSharp
 		public SKData Serialize ()
 		{
 			var result = SKData.GetObject (SkiaApi.sk_picture_serialize_to_data (Handle));
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -70,6 +75,7 @@ namespace SkiaSharp
 
 			SkiaApi.sk_picture_serialize_to_stream (Handle, stream.Handle);
 			GC.KeepAlive (stream);
+			GC.KeepAlive (this);
 		}
 
 		// Playback
@@ -81,6 +87,7 @@ namespace SkiaSharp
 
 			SkiaApi.sk_picture_playback (Handle, canvas.Handle);
 			GC.KeepAlive (canvas);
+			GC.KeepAlive (this);
 		}
 
 		// ToShader
@@ -109,6 +116,7 @@ namespace SkiaSharp
 		private SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKMatrix* localMatrix, SKRect* tile)
 		{
 			var result = SKShader.GetObject (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, filterMode, localMatrix, tile));
+			GC.KeepAlive (this);
 			return result;
 		}
 

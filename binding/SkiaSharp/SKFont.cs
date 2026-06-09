@@ -33,126 +33,151 @@ namespace SkiaSharp
 		protected override void DisposeNative ()
 		{
 			SkiaApi.sk_font_delete (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public bool ForceAutoHinting {
 			get {
 				var r = SkiaApi.sk_font_is_force_auto_hinting (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_force_auto_hinting (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public bool EmbeddedBitmaps {
 			get {
 				var r = SkiaApi.sk_font_is_embedded_bitmaps (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_embedded_bitmaps (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public bool Subpixel {
 			get {
 				var r = SkiaApi.sk_font_is_subpixel (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_subpixel (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public bool LinearMetrics {
 			get {
 				var r = SkiaApi.sk_font_is_linear_metrics (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_linear_metrics (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public bool Embolden {
 			get {
 				var r = SkiaApi.sk_font_is_embolden (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_embolden (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public bool BaselineSnap {
 			get {
 				var r = SkiaApi.sk_font_is_baseline_snap (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_baseline_snap (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKFontEdging Edging {
 			get {
 				var r = SkiaApi.sk_font_get_edging (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_edging (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKFontHinting Hinting {
 			get {
 				var r = SkiaApi.sk_font_get_hinting (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_hinting (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKTypeface Typeface {
 			get {
 				var r = SKTypeface.GetObject (SkiaApi.sk_font_get_typeface (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
 				GC.KeepAlive (value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public float Size {
 			get {
 				var r = SkiaApi.sk_font_get_size (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_size (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public float ScaleX {
 			get {
 				var r = SkiaApi.sk_font_get_scale_x (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_scale_x (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public float SkewX {
 			get {
 				var r = SkiaApi.sk_font_get_skew_x (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_font_set_skew_x (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -161,6 +186,7 @@ namespace SkiaSharp
 		public float Spacing {
 			get {
 				var r = SkiaApi.sk_font_get_metrics (Handle, null);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -178,6 +204,7 @@ namespace SkiaSharp
 		{
 			fixed (SKFontMetrics* m = &metrics) {
 				var r = SkiaApi.sk_font_get_metrics (Handle, m);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -187,6 +214,7 @@ namespace SkiaSharp
 		public ushort GetGlyph (int codepoint)
 		{
 			var r = SkiaApi.sk_font_unichar_to_glyph (Handle, codepoint);
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -210,6 +238,7 @@ namespace SkiaSharp
 			fixed (int* up = codepoints)
 			fixed (ushort* gp = glyphs) {
 				SkiaApi.sk_font_unichars_to_glyphs (Handle, up, codepoints.Length, gp);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -276,6 +305,7 @@ namespace SkiaSharp
 
 			fixed (ushort* gp = glyphs) {
 				SkiaApi.sk_font_text_to_glyphs (Handle, text, (IntPtr)length, encoding, gp, glyphs.Length);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -332,6 +362,7 @@ namespace SkiaSharp
 				return 0;
 
 			var r = SkiaApi.sk_font_text_to_glyphs (Handle, text, (IntPtr)length, encoding, null, 0);
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -391,6 +422,7 @@ namespace SkiaSharp
 			float measuredWidth;
 			SkiaApi.sk_font_measure_text_no_return (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero, &measuredWidth);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 			return measuredWidth;
 		}
 
@@ -459,6 +491,7 @@ namespace SkiaSharp
 
 			var result = (int)SkiaApi.sk_font_break_text (Handle, text, (IntPtr)length, encoding, maxWidth, measuredWidth, paint?.Handle ?? IntPtr.Zero);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -549,6 +582,7 @@ namespace SkiaSharp
 			fixed (ushort* gp = glyphs)
 			fixed (SKPoint* pp = positions) {
 				SkiaApi.sk_font_get_pos (Handle, gp, glyphs.Length, pp, &origin);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -639,6 +673,7 @@ namespace SkiaSharp
 			fixed (ushort* gp = glyphs)
 			fixed (float* pp = offsets) {
 				SkiaApi.sk_font_get_xpos (Handle, gp, glyphs.Length, pp, origin);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -784,6 +819,7 @@ namespace SkiaSharp
 				SkiaApi.sk_font_get_widths_bounds (Handle, gp, glyphs.Length, w, b, paint?.Handle ?? IntPtr.Zero);
 			}
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// GetGlyphPath
@@ -795,6 +831,7 @@ namespace SkiaSharp
 				path.Dispose ();
 				path = null;
 			}
+			GC.KeepAlive (this);
 			return path;
 		}
 
@@ -827,6 +864,7 @@ namespace SkiaSharp
 
 			var path = new SKPath ();
 			SkiaApi.sk_text_utils_get_path (text, (IntPtr)length, encoding, origin.X, origin.Y, Handle, path.Handle);
+			GC.KeepAlive (this);
 			return path;
 		}
 
@@ -860,6 +898,7 @@ namespace SkiaSharp
 			var path = new SKPath ();
 			fixed (SKPoint* p = positions) {
 				SkiaApi.sk_text_utils_get_pos_path (text, (IntPtr)length, encoding, p, Handle, path.Handle);
+				GC.KeepAlive (this);
 			}
 			return path;
 		}
@@ -873,6 +912,7 @@ namespace SkiaSharp
 			try {
 				fixed (ushort* g = glyphs) {
 					SkiaApi.sk_font_get_paths (Handle, g, glyphs.Length, proxy, (void*)ctx);
+					GC.KeepAlive (this);
 				}
 			} finally {
 				gch.Free ();

@@ -71,10 +71,12 @@ namespace SkiaSharp
 		public SKPathFillType FillType {
 			get {
 				var r = SkiaApi.sk_path_get_filltype (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_path_set_filltype (Handle, value);
+				GC.KeepAlive (this);
 				if (_builder != null)
 					_builder.FillType = value;
 			}
@@ -110,6 +112,7 @@ namespace SkiaSharp
 			get {
 				SKPoint point;
 				SkiaApi.sk_path_get_last_point (Handle, &point);
+				GC.KeepAlive (this);
 				return point;
 			}
 		}
@@ -118,6 +121,7 @@ namespace SkiaSharp
 			get {
 				SKRect rect;
 				SkiaApi.sk_path_get_bounds (Handle, &rect);
+				GC.KeepAlive (this);
 				return rect;
 			}
 		}
@@ -136,6 +140,7 @@ namespace SkiaSharp
 		{
 			SKRect bounds;
 			var isOval = SkiaApi.sk_path_is_oval (Handle, &bounds);
+			GC.KeepAlive (this);
 			if (isOval) {
 				return bounds;
 			} else {
@@ -147,6 +152,7 @@ namespace SkiaSharp
 		{
 			var rrect = new SKRoundRect ();
 			var result = SkiaApi.sk_path_is_rrect (Handle, rrect.Handle);
+			GC.KeepAlive (this);
 			if (result) {
 				return rrect;
 			} else {
@@ -160,6 +166,7 @@ namespace SkiaSharp
 			var temp = new SKPoint[2];
 			fixed (SKPoint* t = temp) {
 				var result = SkiaApi.sk_path_is_line (Handle, t);
+				GC.KeepAlive (this);
 				if (result) {
 					return temp;
 				} else {
@@ -177,6 +184,7 @@ namespace SkiaSharp
 			fixed (SKPathDirection* d = &direction) {
 				SKRect rect;
 				var result = SkiaApi.sk_path_is_rect (Handle, &rect, &c, d);
+				GC.KeepAlive (this);
 				isClosed = c > 0;
 				if (result) {
 					return rect;
@@ -193,6 +201,7 @@ namespace SkiaSharp
 
 			SKPoint point;
 			SkiaApi.sk_path_get_point (Handle, index, &point);
+			GC.KeepAlive (this);
 			return point;
 		}
 
@@ -207,6 +216,7 @@ namespace SkiaSharp
 		{
 			fixed (SKPoint* p = points) {
 				var r = SkiaApi.sk_path_get_points (Handle, p, max);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -214,6 +224,7 @@ namespace SkiaSharp
 		public bool Contains (float x, float y)
 		{
 			var r = SkiaApi.sk_path_contains (Handle, x, y);
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -233,6 +244,7 @@ namespace SkiaSharp
 				_builder = null;
 			}
 			SkiaApi.sk_path_reset (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public bool GetBounds (out SKRect rect)
@@ -243,6 +255,7 @@ namespace SkiaSharp
 			} else {
 				fixed (SKRect* r = &rect) {
 					SkiaApi.sk_path_get_bounds (Handle, r);
+					GC.KeepAlive (this);
 				}
 			}
 			return !isEmpty;
@@ -252,6 +265,7 @@ namespace SkiaSharp
 		{
 			SKRect rect;
 			SkiaApi.sk_path_compute_tight_bounds (Handle, &rect);
+			GC.KeepAlive (this);
 			return rect;
 		}
 
@@ -259,6 +273,7 @@ namespace SkiaSharp
 		{
 			fixed (SKMatrix* m = &matrix) {
 				SkiaApi.sk_path_transform (Handle, m);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -270,6 +285,7 @@ namespace SkiaSharp
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_path_transform_to_dest (Handle, m, destination.Handle);
 			GC.KeepAlive (destination);
+			GC.KeepAlive (this);
 		}
 
 		[Obsolete("Use Transform(in SKMatrix) instead.", true)]
@@ -300,6 +316,7 @@ namespace SkiaSharp
 			var success = SkiaApi.sk_pathop_op (Handle, other.Handle, op, result.Handle);
 			GC.KeepAlive (other);
 			GC.KeepAlive (result);
+			GC.KeepAlive (this);
 			return success;
 		}
 
@@ -321,6 +338,7 @@ namespace SkiaSharp
 
 			var success = SkiaApi.sk_pathop_simplify (Handle, result.Handle);
 			GC.KeepAlive (result);
+			GC.KeepAlive (this);
 			return success;
 		}
 
@@ -339,6 +357,7 @@ namespace SkiaSharp
 		{
 			fixed (SKRect* r = &result) {
 				var success = SkiaApi.sk_pathop_tight_bounds (Handle, r);
+				GC.KeepAlive (this);
 				return success;
 			}
 		}
@@ -350,6 +369,7 @@ namespace SkiaSharp
 
 			var success = SkiaApi.sk_pathop_as_winding (Handle, result.Handle);
 			GC.KeepAlive (result);
+			GC.KeepAlive (this);
 			return success;
 		}
 
@@ -368,6 +388,7 @@ namespace SkiaSharp
 		{
 			using var str = new SKString ();
 			SkiaApi.sk_path_to_svg_string (Handle, str.Handle);
+			GC.KeepAlive (this);
 			return (string)str;
 		}
 
@@ -427,6 +448,7 @@ namespace SkiaSharp
 			_builder.Dispose ();
 			_builder = null;
 			SkiaApi.sk_path_delete (Handle);
+			GC.KeepAlive (this);
 			Handle = newHandle;
 		}
 
@@ -439,6 +461,7 @@ namespace SkiaSharp
 			var newHandle = SkiaApi.sk_pathbuilder_detach_path (builder.Handle);
 			GC.KeepAlive (builder);
 			SkiaApi.sk_path_delete (Handle);
+			GC.KeepAlive (this);
 			Handle = newHandle;
 		}
 
@@ -801,6 +824,7 @@ namespace SkiaSharp
 
 				fixed (SKPoint* p = points) {
 					var r = SkiaApi.sk_path_iter_next (Handle, p);
+					GC.KeepAlive (this);
 					return r;
 				}
 			}
@@ -808,18 +832,21 @@ namespace SkiaSharp
 			public float ConicWeight ()
 			{
 				var r = SkiaApi.sk_path_iter_conic_weight (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 
 			public bool IsCloseLine ()
 			{
 				var r = SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
+				GC.KeepAlive (this);
 				return r;
 			}
 
 			public bool IsCloseContour ()
 			{
 				var r = SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -849,6 +876,7 @@ namespace SkiaSharp
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 				fixed (SKPoint* p = points) {
 					var r = SkiaApi.sk_path_rawiter_next (Handle, p);
+					GC.KeepAlive (this);
 					return r;
 				}
 			}
@@ -856,12 +884,14 @@ namespace SkiaSharp
 			public float ConicWeight ()
 			{
 				var r = SkiaApi.sk_path_rawiter_conic_weight (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 
 			public SKPathVerb Peek ()
 			{
 				var r = SkiaApi.sk_path_rawiter_peek (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -877,6 +907,7 @@ namespace SkiaSharp
 			{
 				SkiaApi.sk_opbuilder_add (Handle, path.Handle, op);
 				GC.KeepAlive (path);
+				GC.KeepAlive (this);
 			}
 
 			public bool Resolve (SKPath result)
@@ -886,6 +917,7 @@ namespace SkiaSharp
 
 				var success = SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
 				GC.KeepAlive (result);
+				GC.KeepAlive (this);
 				return success;
 			}
 

@@ -94,36 +94,42 @@ namespace SkiaSharp
 		public bool IsValid {
 			get {
 				var result = SkiaApi.gr_backendrendertarget_is_valid (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public int Width {
 			get {
 				var result = SkiaApi.gr_backendrendertarget_get_width (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public int Height {
 			get {
 				var result = SkiaApi.gr_backendrendertarget_get_height (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public int SampleCount {
 			get {
 				var result = SkiaApi.gr_backendrendertarget_get_samples (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public int StencilBits {
 			get {
 				var result = SkiaApi.gr_backendrendertarget_get_stencils (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public GRBackend Backend {
 			get {
 				var result = SkiaApi.gr_backendrendertarget_get_backend (Handle).FromNative ();
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -137,6 +143,7 @@ namespace SkiaSharp
 		{
 			fixed (GRGlFramebufferInfo* g = &glInfo) {
 				var result = SkiaApi.gr_backendrendertarget_get_gl_framebufferinfo (Handle, g);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}

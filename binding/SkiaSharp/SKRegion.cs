@@ -45,6 +45,7 @@ namespace SkiaSharp
 		public bool IsEmpty {
 			get {
 				var result = SkiaApi.sk_region_is_empty (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -52,6 +53,7 @@ namespace SkiaSharp
 		public bool IsRect {
 			get {
 				var result = SkiaApi.sk_region_is_rect (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -59,6 +61,7 @@ namespace SkiaSharp
 		public bool IsComplex {
 			get {
 				var result = SkiaApi.sk_region_is_complex (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -67,6 +70,7 @@ namespace SkiaSharp
 			get {
 				SKRectI rect;
 				SkiaApi.sk_region_get_bounds (Handle, &rect);
+				GC.KeepAlive (this);
 				return rect;
 			}
 		}
@@ -80,6 +84,7 @@ namespace SkiaSharp
 				path.Dispose ();
 				path = null;
 			}
+			GC.KeepAlive (this);
 			return path;
 		}
 
@@ -101,24 +106,28 @@ namespace SkiaSharp
 
 			var result = SkiaApi.sk_region_contains (Handle, src.Handle);
 			GC.KeepAlive (src);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public bool Contains (SKPointI xy)
 		{
 			var result = SkiaApi.sk_region_contains_point (Handle, xy.X, xy.Y);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public bool Contains (int x, int y)
 		{
 			var result = SkiaApi.sk_region_contains_point (Handle, x, y);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public bool Contains (SKRectI rect)
 		{
 			var result = SkiaApi.sk_region_contains_rect (Handle, &rect);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -127,6 +136,7 @@ namespace SkiaSharp
 		public bool QuickContains (SKRectI rect)
 		{
 			var result = SkiaApi.sk_region_quick_contains (Handle, &rect);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -135,6 +145,7 @@ namespace SkiaSharp
 		public bool QuickReject (SKRectI rect)
 		{
 			var result = SkiaApi.sk_region_quick_reject_rect (Handle, &rect);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -145,6 +156,7 @@ namespace SkiaSharp
 
 			var result = SkiaApi.sk_region_quick_reject (Handle, region.Handle);
 			GC.KeepAlive (region);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -175,12 +187,14 @@ namespace SkiaSharp
 
 			var result = SkiaApi.sk_region_intersects (Handle, region.Handle);
 			GC.KeepAlive (region);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public bool Intersects (SKRectI rect)
 		{
 			var result = SkiaApi.sk_region_intersects_rect (Handle, &rect);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -189,6 +203,7 @@ namespace SkiaSharp
 		public void SetEmpty ()
 		{
 			SkiaApi.sk_region_set_empty (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public bool SetRegion (SKRegion region)
@@ -198,12 +213,14 @@ namespace SkiaSharp
 
 			var result = SkiaApi.sk_region_set_region (Handle, region.Handle);
 			GC.KeepAlive (region);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public bool SetRect (SKRectI rect)
 		{
 			var result = SkiaApi.sk_region_set_rect (Handle, &rect);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -211,6 +228,7 @@ namespace SkiaSharp
 		{
 			fixed (SKRectI* r = rects) {
 				var result = SkiaApi.sk_region_set_rects (Handle, r, rects.Length);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -225,6 +243,7 @@ namespace SkiaSharp
 			var result = SkiaApi.sk_region_set_path (Handle, path.Handle, clip.Handle);
 			GC.KeepAlive (path);
 			GC.KeepAlive (clip);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -240,6 +259,7 @@ namespace SkiaSharp
 
 			var result = SkiaApi.sk_region_set_path (Handle, path.Handle, clip.Handle);
 			GC.KeepAlive (path);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -248,6 +268,7 @@ namespace SkiaSharp
 		public void Translate (int x, int y)
 		{
 			SkiaApi.sk_region_translate (Handle, x, y);
+			GC.KeepAlive (this);
 		}
 
 		// Op
@@ -255,6 +276,7 @@ namespace SkiaSharp
 		public bool Op (SKRectI rect, SKRegionOperation op)
 		{
 			var result = SkiaApi.sk_region_op_rect (Handle, &rect, op);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -265,6 +287,7 @@ namespace SkiaSharp
 		{
 			var result = SkiaApi.sk_region_op (Handle, region.Handle, op);
 			GC.KeepAlive (region);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -304,6 +327,7 @@ namespace SkiaSharp
 			{
 				if (SkiaApi.sk_region_iterator_done (Handle)) {
 					rect = SKRectI.Empty;
+					GC.KeepAlive (this);
 					return false;
 				}
 
@@ -312,6 +336,7 @@ namespace SkiaSharp
 				}
 
 				SkiaApi.sk_region_iterator_next (Handle);
+				GC.KeepAlive (this);
 
 				return true;
 			}
@@ -336,6 +361,7 @@ namespace SkiaSharp
 			{
 				if (SkiaApi.sk_region_cliperator_done (Handle)) {
 					rect = SKRectI.Empty;
+					GC.KeepAlive (this);
 					return false;
 				}
 
@@ -344,6 +370,7 @@ namespace SkiaSharp
 				}
 
 				SkiaApi.sk_region_cliperator_next (Handle);
+				GC.KeepAlive (this);
 
 				return true;
 			}
@@ -366,11 +393,13 @@ namespace SkiaSharp
 				if (SkiaApi.sk_region_spanerator_next (Handle, &l, &r)) {
 					left = l;
 					right = r;
+					GC.KeepAlive (this);
 					return true;
 				}
 
 				left = 0;
 				right = 0;
+				GC.KeepAlive (this);
 				return false;
 			}
 		}

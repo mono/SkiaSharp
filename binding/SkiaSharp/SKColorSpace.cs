@@ -24,11 +24,13 @@ namespace SkiaSharp
 		void ISKNonVirtualReferenceCounted.ReferenceNative ()
 		{
 			SkiaApi.sk_colorspace_ref (Handle);
+			GC.KeepAlive (this);
 		}
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative ()
 		{
 			SkiaApi.sk_colorspace_unref (Handle);
+			GC.KeepAlive (this);
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -39,6 +41,7 @@ namespace SkiaSharp
 		public bool GammaIsCloseToSrgb {
 			get {
 				var result = SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -46,6 +49,7 @@ namespace SkiaSharp
 		public bool GammaIsLinear {
 			get {
 				var result = SkiaApi.sk_colorspace_gamma_is_linear (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -53,6 +57,7 @@ namespace SkiaSharp
 		public bool IsSrgb {
 			get {
 				var result = SkiaApi.sk_colorspace_is_srgb (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -138,6 +143,7 @@ namespace SkiaSharp
 		{
 			fixed (SKColorSpaceTransferFn* f = &fn) {
 				var result = SkiaApi.sk_colorspace_is_numerical_transfer_fn (Handle, f);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -148,6 +154,7 @@ namespace SkiaSharp
 		{
 			var profile = new SKColorSpaceIccProfile ();
 			SkiaApi.sk_colorspace_to_profile (Handle, profile.Handle);
+			GC.KeepAlive (this);
 			return profile;
 		}
 
@@ -157,6 +164,7 @@ namespace SkiaSharp
 		{
 			fixed (SKColorSpaceXyz* xyz = &toXyzD50) {
 				var result = SkiaApi.sk_colorspace_to_xyzd50 (Handle, xyz);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -169,12 +177,14 @@ namespace SkiaSharp
 		public SKColorSpace ToLinearGamma ()
 		{
 			var result = GetObject (SkiaApi.sk_colorspace_make_linear_gamma (Handle));
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public SKColorSpace ToSrgbGamma ()
 		{
 			var result = GetObject (SkiaApi.sk_colorspace_make_srgb_gamma (Handle));
+			GC.KeepAlive (this);
 			return result;
 		}
 

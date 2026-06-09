@@ -291,6 +291,7 @@ namespace SkiaSharp
 		public SKCanvas Canvas {
 			get {
 				var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -298,6 +299,7 @@ namespace SkiaSharp
 		public SKSurfaceProperties SurfaceProperties {
 			get {
 				var result = OwnedBy (SKSurfaceProperties.GetObject (SkiaApi.sk_surface_get_props (Handle), false), this);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -305,6 +307,7 @@ namespace SkiaSharp
 		public GRRecordingContext Context {
 			get {
 				var result = GRRecordingContext.GetObject (SkiaApi.sk_surface_get_recording_context (Handle), false, unrefExisting: false);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -312,12 +315,14 @@ namespace SkiaSharp
 		public SKImage Snapshot ()
 		{
 			var result = SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public SKImage Snapshot (SKRectI bounds)
 		{
 			var result = SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot_with_crop (Handle, &bounds));
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -327,6 +332,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_surface_draw (Handle, canvas.Handle, x, y, paint == null ? IntPtr.Zero : paint.Handle);
+			GC.KeepAlive (this);
 			GC.KeepAlive (canvas);
 			GC.KeepAlive (paint);
 		}
@@ -342,6 +348,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_surface_draw_with_sampling (Handle, canvas.Handle, x, y, &sampling, paint == null ? IntPtr.Zero : paint.Handle);
+			GC.KeepAlive (this);
 			GC.KeepAlive (canvas);
 			GC.KeepAlive (paint);
 		}
@@ -364,6 +371,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixmap));
 
 			var result = SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+			GC.KeepAlive (this);
 			GC.KeepAlive (pixmap);
 			if (result)
 				pixmap.pixelSource = this;
@@ -374,6 +382,7 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
 			var result = SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			GC.KeepAlive (this);
 			return result;
 		}
 

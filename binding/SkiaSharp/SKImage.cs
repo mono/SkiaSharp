@@ -391,6 +391,7 @@ namespace SkiaSharp
 		public int Width {
 			get {
 				var result = SkiaApi.sk_image_get_width (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -398,6 +399,7 @@ namespace SkiaSharp
 		public int Height {
 			get {
 				var result = SkiaApi.sk_image_get_height (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -405,6 +407,7 @@ namespace SkiaSharp
 		public uint UniqueId {
 			get {
 				var result = SkiaApi.sk_image_get_unique_id (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -412,6 +415,7 @@ namespace SkiaSharp
 		public SKAlphaType AlphaType {
 			get {
 				var result = SkiaApi.sk_image_get_alpha_type (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -419,6 +423,7 @@ namespace SkiaSharp
 		public SKColorType ColorType {
 			get {
 				var result = SkiaApi.sk_image_get_color_type (Handle).FromNative ();
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -426,6 +431,7 @@ namespace SkiaSharp
 		public SKColorSpace ColorSpace {
 			get {
 				var result = SKColorSpace.GetObject (SkiaApi.sk_image_get_colorspace (Handle));
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -433,6 +439,7 @@ namespace SkiaSharp
 		public bool IsAlphaOnly {
 			get {
 				var result = SkiaApi.sk_image_is_alpha_only (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -440,6 +447,7 @@ namespace SkiaSharp
 		public SKData EncodedData {
 			get {
 				var result = SKData.GetObject (SkiaApi.sk_image_ref_encoded (Handle));
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -475,6 +483,7 @@ namespace SkiaSharp
 		private SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix* localMatrix)
 		{
 			var result = SKShader.GetObject (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, &sampling, localMatrix));
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -498,6 +507,7 @@ namespace SkiaSharp
 		private SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix* localMatrix)
 		{
 			var result = SKShader.GetObject (SkiaApi.sk_image_make_raw_shader (Handle, tileX, tileY, &sampling, localMatrix));
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -509,6 +519,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixmap));
 
 			var result = SkiaApi.sk_image_peek_pixels (Handle, pixmap.Handle);
+			GC.KeepAlive (this);
 			GC.KeepAlive (pixmap);
 			if (result)
 				pixmap.pixelSource = this;
@@ -528,6 +539,7 @@ namespace SkiaSharp
 		public bool IsTextureBacked {
 			get {
 				var result = SkiaApi.sk_image_is_texture_backed (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -535,6 +547,7 @@ namespace SkiaSharp
 		public bool IsLazyGenerated {
 			get {
 				var result = SkiaApi.sk_image_is_lazy_generated (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -545,6 +558,7 @@ namespace SkiaSharp
 		public bool IsValid (GRRecordingContext context)
 		{
 			var result = SkiaApi.sk_image_is_valid (Handle, context?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (this);
 			GC.KeepAlive (context);
 			return result;
 		}
@@ -564,6 +578,7 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
 			var result = SkiaApi.sk_image_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY, cachingHint);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -579,6 +594,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixmap));
 
 			var result = SkiaApi.sk_image_read_pixels_into_pixmap (Handle, pixmap.Handle, srcX, srcY, cachingHint);
+			GC.KeepAlive (this);
 			GC.KeepAlive (pixmap);
 			return result;
 		}
@@ -603,6 +619,7 @@ namespace SkiaSharp
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
 			var result = SkiaApi.sk_image_scale_pixels (Handle, dst.Handle, &sampling, cachingHint);
+			GC.KeepAlive (this);
 			GC.KeepAlive (dst);
 			return result;
 		}
@@ -612,12 +629,14 @@ namespace SkiaSharp
 		public SKImage Subset (SKRectI subset)
 		{
 			var image = GetObject (SkiaApi.sk_image_make_subset_raster (Handle, &subset));
+			GC.KeepAlive (this);
 			return image;
 		}
 
 		public SKImage Subset (GRRecordingContext context, SKRectI subset)
 		{
 			var image = GetObject (SkiaApi.sk_image_make_subset (Handle, context?.Handle ?? IntPtr.Zero, &subset));
+			GC.KeepAlive (this);
 			GC.KeepAlive (context);
 			return image;
 		}
@@ -632,6 +651,7 @@ namespace SkiaSharp
 			var image = ensurePixelData
 				? GetObject (SkiaApi.sk_image_make_raster_image (Handle))
 				: GetObject (SkiaApi.sk_image_make_non_texture_image (Handle));
+			GC.KeepAlive (this);
 			return image;
 		}
 
@@ -649,6 +669,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (context));
 
 			var image = GetObject (SkiaApi.sk_image_make_texture_image (Handle, context.Handle, mipmapped, budgeted));
+			GC.KeepAlive (this);
 			GC.KeepAlive (context);
 			return image;
 		}
@@ -670,6 +691,7 @@ namespace SkiaSharp
 			fixed (SKRectI* os = &outSubset)
 			fixed (SKPointI* oo = &outOffset) {
 				var image = GetObject (SkiaApi.sk_image_make_with_filter_raster (Handle, filter.Handle, &subset, &clipBounds, os, oo));
+				GC.KeepAlive (this);
 				GC.KeepAlive (filter);
 				return image;
 			}
@@ -686,6 +708,7 @@ namespace SkiaSharp
 			fixed (SKRectI* os = &outSubset)
 			fixed (SKPointI* oo = &outOffset) {
 				var image = GetObject (SkiaApi.sk_image_make_with_filter (Handle, context?.Handle ?? IntPtr.Zero, filter.Handle, &subset, &clipBounds, os, oo));
+				GC.KeepAlive (this);
 				GC.KeepAlive (context);
 				GC.KeepAlive (filter);
 				return image;

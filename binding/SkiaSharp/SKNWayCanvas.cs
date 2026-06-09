@@ -24,6 +24,7 @@ namespace SkiaSharp
 
 			SkiaApi.sk_nway_canvas_add_canvas (Handle, canvas.Handle);
 			GC.KeepAlive (canvas);
+			GC.KeepAlive (this);
 		}
 
 		public void RemoveCanvas (SKCanvas canvas)
@@ -33,11 +34,13 @@ namespace SkiaSharp
 
 			SkiaApi.sk_nway_canvas_remove_canvas (Handle, canvas.Handle);
 			GC.KeepAlive (canvas);
+			GC.KeepAlive (this);
 		}
 
 		public void RemoveAll ()
 		{
 			SkiaApi.sk_nway_canvas_remove_all (Handle);
+			GC.KeepAlive (this);
 		}
 	}
 }

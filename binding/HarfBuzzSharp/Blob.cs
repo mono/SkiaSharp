@@ -39,6 +39,7 @@ namespace HarfBuzzSharp
 		public int Length {
 			get {
 				var r = (int)HarfBuzzApi.hb_blob_get_length (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -46,6 +47,7 @@ namespace HarfBuzzSharp
 		public int FaceCount {
 			get {
 				var r = (int)HarfBuzzApi.hb_face_count (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -53,6 +55,7 @@ namespace HarfBuzzSharp
 		public bool IsImmutable {
 			get {
 				var r = HarfBuzzApi.hb_blob_is_immutable (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -60,12 +63,14 @@ namespace HarfBuzzSharp
 		public void MakeImmutable ()
 		{
 			HarfBuzzApi.hb_blob_make_immutable (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public unsafe Stream AsStream ()
 		{
 			uint length;
 			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, &length);
+			GC.KeepAlive (this);
 			return new UnmanagedMemoryStream ((byte*)dataPtr, length);
 		}
 
@@ -73,6 +78,7 @@ namespace HarfBuzzSharp
 		{
 			uint length;
 			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, &length);
+			GC.KeepAlive (this);
 			return new Span<byte> (dataPtr, (int)length);
 		}
 

@@ -111,12 +111,14 @@ namespace SkiaSharp
 		public bool Validate ()
 		{
 			var result = SkiaApi.gr_glinterface_validate (Handle);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public bool HasExtension (string extension)
 		{
 			var result = SkiaApi.gr_glinterface_has_extension (Handle, extension);
+			GC.KeepAlive (this);
 			return result;
 		}
 

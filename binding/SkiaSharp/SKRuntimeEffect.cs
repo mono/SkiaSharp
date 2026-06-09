@@ -90,6 +90,7 @@ namespace SkiaSharp
 		public int UniformSize {
 			get {
 				var size = (int)SkiaApi.sk_runtimeeffect_get_uniform_byte_size (Handle);
+				GC.KeepAlive (this);
 				return size;
 			}
 		}
@@ -110,6 +111,7 @@ namespace SkiaSharp
 				SkiaApi.sk_runtimeeffect_get_child_name (Handle, i, str.Handle);
 				yield return str.ToString ();
 			}
+			GC.KeepAlive (this);
 		}
 
 		private IEnumerable<string> GetUniformNames ()
@@ -120,6 +122,7 @@ namespace SkiaSharp
 				SkiaApi.sk_runtimeeffect_get_uniform_name (Handle, i, str.Handle);
 				yield return str.ToString ();
 			}
+			GC.KeepAlive (this);
 		}
 
 		// ToShader
@@ -144,6 +147,7 @@ namespace SkiaSharp
 			fixed (IntPtr* ch = childrenHandles) {
 				var shader = SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length, localMatrix));
 				GC.KeepAlive (uniforms);
+				GC.KeepAlive (this);
 				return shader;
 			}
 		}
@@ -170,6 +174,7 @@ namespace SkiaSharp
 			fixed (IntPtr* ch = childrenHandles) {
 				var colorFilter = SKColorFilter.GetObject (SkiaApi.sk_runtimeeffect_make_color_filter (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length));
 				GC.KeepAlive (uniforms);
+				GC.KeepAlive (this);
 				return colorFilter;
 			}
 		}
@@ -196,6 +201,7 @@ namespace SkiaSharp
 			fixed (IntPtr* ch = childrenHandles) {
 				var blender = SKBlender.GetObject (SkiaApi.sk_runtimeeffect_make_blender (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length));
 				GC.KeepAlive (uniforms);
+				GC.KeepAlive (this);
 				return blender;
 			}
 		}

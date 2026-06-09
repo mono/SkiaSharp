@@ -28,6 +28,7 @@ namespace SkiaSharp
 		public SKCanvas BeginRecording (SKRect cullRect)
 		{
 			var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false), this);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -43,6 +44,7 @@ namespace SkiaSharp
 			try {
 				rtreeHandle = SkiaApi.sk_rtree_factory_new ();
 				var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_picture_recorder_begin_recording_with_bbh_factory (Handle, &cullRect, rtreeHandle), false), this);
+				GC.KeepAlive (this);
 				return result;
 			} finally {
 				if (rtreeHandle != IntPtr.Zero) {
@@ -54,18 +56,21 @@ namespace SkiaSharp
 		public SKPicture EndRecording ()
 		{
 			var result = SKPicture.GetObject (SkiaApi.sk_picture_recorder_end_recording (Handle));
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public SKDrawable EndRecordingAsDrawable ()
 		{
 			var result = SKDrawable.GetObject (SkiaApi.sk_picture_recorder_end_recording_as_drawable (Handle));
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public SKCanvas RecordingCanvas {
 			get {
 				var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_picture_get_recording_canvas (Handle), false), this);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}

@@ -79,30 +79,35 @@ namespace SkiaSharp
 		public bool IsValid {
 			get {
 				var result = SkiaApi.gr_backendtexture_is_valid (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public int Width {
 			get {
 				var result = SkiaApi.gr_backendtexture_get_width (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public int Height {
 			get {
 				var result = SkiaApi.gr_backendtexture_get_height (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public bool HasMipMaps {
 			get {
 				var result = SkiaApi.gr_backendtexture_has_mipmaps (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
 		public GRBackend Backend {
 			get {
 				var result = SkiaApi.gr_backendtexture_get_backend (Handle).FromNative ();
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -116,6 +121,7 @@ namespace SkiaSharp
 		{
 			fixed (GRGlTextureInfo* g = &glInfo) {
 				var result = SkiaApi.gr_backendtexture_get_gl_textureinfo (Handle, g);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}

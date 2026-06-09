@@ -36,6 +36,7 @@ namespace SkiaSharp
 		public void Discard ()
 		{
 			SkiaApi.sk_canvas_discard (Handle);
+			GC.KeepAlive (this);
 		}
 
 		// QuickReject
@@ -43,6 +44,7 @@ namespace SkiaSharp
 		public bool QuickReject (SKRect rect)
 		{
 			var result = SkiaApi.sk_canvas_quick_reject (Handle, &rect);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -61,6 +63,7 @@ namespace SkiaSharp
 			if (Handle == IntPtr.Zero)
 				throw new ObjectDisposedException ("SKCanvas");
 			var result = SkiaApi.sk_canvas_save (Handle);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -68,6 +71,7 @@ namespace SkiaSharp
 		{
 			var result = SkiaApi.sk_canvas_save_layer (Handle, &limit, paint?.Handle ?? IntPtr.Zero);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -75,6 +79,7 @@ namespace SkiaSharp
 		{
 			var result = SkiaApi.sk_canvas_save_layer (Handle, null, paint?.Handle ?? IntPtr.Zero);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -82,12 +87,14 @@ namespace SkiaSharp
 		{
 			var native = rec.ToNative ();
 			var result = SkiaApi.sk_canvas_save_layer_rec (Handle, &native);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public int SaveLayer ()
 		{
 			var result = SkiaApi.sk_canvas_save_layer (Handle, null, IntPtr.Zero);
+			GC.KeepAlive (this);
 			return result;
 		}
 #nullable disable
@@ -97,11 +104,13 @@ namespace SkiaSharp
 		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src)
 		{
 			SkiaApi.sk_canvas_draw_color (Handle, (uint)color, mode);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawColor (SKColorF color, SKBlendMode mode = SKBlendMode.Src)
 		{
 			SkiaApi.sk_canvas_draw_color4f (Handle, color, mode);
+			GC.KeepAlive (this);
 		}
 
 		// DrawLine
@@ -117,6 +126,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_line (Handle, x0, y0, x1, y1, paint.Handle);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// Clear
@@ -127,11 +137,13 @@ namespace SkiaSharp
 		public void Clear (SKColor color)
 		{
 			SkiaApi.sk_canvas_clear (Handle, (uint)color);
+			GC.KeepAlive (this);
 		}
 
 		public void Clear (SKColorF color)
 		{
 			SkiaApi.sk_canvas_clear_color4f (Handle, color);
+			GC.KeepAlive (this);
 		}
 
 		// Restore*
@@ -139,11 +151,13 @@ namespace SkiaSharp
 		public void Restore ()
 		{
 			SkiaApi.sk_canvas_restore (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public void RestoreToCount (int count)
 		{
 			SkiaApi.sk_canvas_restore_to_count (Handle, count);
+			GC.KeepAlive (this);
 		}
 
 		// Translate
@@ -154,6 +168,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_translate (Handle, dx, dy);
+			GC.KeepAlive (this);
 		}
 
 		public void Translate (SKPoint point)
@@ -162,6 +177,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_translate (Handle, point.X, point.Y);
+			GC.KeepAlive (this);
 		}
 
 		// Scale
@@ -172,6 +188,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_scale (Handle, s, s);
+			GC.KeepAlive (this);
 		}
 
 		public void Scale (float sx, float sy)
@@ -180,6 +197,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_scale (Handle, sx, sy);
+			GC.KeepAlive (this);
 		}
 
 		public void Scale (SKPoint size)
@@ -188,6 +206,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_scale (Handle, size.X, size.Y);
+			GC.KeepAlive (this);
 		}
 
 		public void Scale (float sx, float sy, float px, float py)
@@ -208,6 +227,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_rotate_degrees (Handle, degrees);
+			GC.KeepAlive (this);
 		}
 
 		public void RotateRadians (float radians)
@@ -216,6 +236,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_rotate_radians (Handle, radians);
+			GC.KeepAlive (this);
 		}
 
 		public void RotateDegrees (float degrees, float px, float py)
@@ -246,6 +267,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_skew (Handle, sx, sy);
+			GC.KeepAlive (this);
 		}
 
 		public void Skew (SKPoint skew)
@@ -254,6 +276,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_skew (Handle, skew.X, skew.Y);
+			GC.KeepAlive (this);
 		}
 
 		// Concat
@@ -266,6 +289,7 @@ namespace SkiaSharp
 			fixed (SKMatrix44* ptr = &m) {
 				SkiaApi.sk_canvas_concat (Handle, ptr);
 			}
+			GC.KeepAlive (this);
 		}
 
 		// Clip*
@@ -273,6 +297,7 @@ namespace SkiaSharp
 		public void ClipRect (SKRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
 		{
 			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, &rect, operation, antialias);
+			GC.KeepAlive (this);
 		}
 
 		public void ClipRoundRect (SKRoundRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
@@ -282,6 +307,7 @@ namespace SkiaSharp
 
 			SkiaApi.sk_canvas_clip_rrect_with_operation (Handle, rect.Handle, operation, antialias);
 			GC.KeepAlive (rect);
+			GC.KeepAlive (this);
 		}
 
 		public void ClipPath (SKPath path, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
@@ -291,6 +317,7 @@ namespace SkiaSharp
 
 			SkiaApi.sk_canvas_clip_path_with_operation (Handle, path.Handle, operation, antialias);
 			GC.KeepAlive (path);
+			GC.KeepAlive (this);
 		}
 
 		public void ClipRegion (SKRegion region, SKClipOperation operation = SKClipOperation.Intersect)
@@ -300,6 +327,7 @@ namespace SkiaSharp
 
 			SkiaApi.sk_canvas_clip_region (Handle, region.Handle, operation);
 			GC.KeepAlive (region);
+			GC.KeepAlive (this);
 		}
 
 		public SKRect LocalClipBounds {
@@ -319,6 +347,7 @@ namespace SkiaSharp
 		public bool IsClipEmpty {
 			get {
 				var result = SkiaApi.sk_canvas_is_clip_empty (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -326,6 +355,7 @@ namespace SkiaSharp
 		public bool IsClipRect {
 			get {
 				var result = SkiaApi.sk_canvas_is_clip_rect (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -334,6 +364,7 @@ namespace SkiaSharp
 		{
 			fixed (SKRect* b = &bounds) {
 				var result = SkiaApi.sk_canvas_get_local_clip_bounds (Handle, b);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -342,6 +373,7 @@ namespace SkiaSharp
 		{
 			fixed (SKRectI* b = &bounds) {
 				var result = SkiaApi.sk_canvas_get_device_clip_bounds (Handle, b);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -354,6 +386,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_paint (Handle, paint.Handle);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawRegion
@@ -367,6 +400,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_region (Handle, region.Handle, paint.Handle);
 			GC.KeepAlive (region);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawRect
@@ -382,6 +416,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_rect (Handle, &rect, paint.Handle);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawRoundRect
@@ -395,6 +430,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_rrect (Handle, rect.Handle, paint.Handle);
 			GC.KeepAlive (rect);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawRoundRect (float x, float y, float w, float h, float rx, float ry, SKPaint paint)
@@ -408,6 +444,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_round_rect (Handle, &rect, rx, ry, paint.Handle);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawRoundRect (SKRect rect, SKSize r, SKPaint paint)
@@ -433,6 +470,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_oval (Handle, &rect, paint.Handle);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawCircle
@@ -443,6 +481,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_circle (Handle, cx, cy, radius, paint.Handle);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawCircle (SKPoint c, float radius, SKPaint paint)
@@ -461,6 +500,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_path (Handle, path.Handle, paint.Handle);
 			GC.KeepAlive (path);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawPoints
@@ -475,6 +515,7 @@ namespace SkiaSharp
 				SkiaApi.sk_canvas_draw_points (Handle, mode, (IntPtr)points.Length, p, paint.Handle);
 			}
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawPoint
@@ -490,6 +531,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_point (Handle, x, y, paint.Handle);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawPoint (SKPoint p, SKColor color)
@@ -528,6 +570,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_image (Handle, image.Handle, x, y, &sampling, paint?.Handle ?? IntPtr.Zero);
 			GC.KeepAlive (image);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawImage (SKImage image, SKRect dest, SKPaint paint = null)
@@ -557,6 +600,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_image_rect (Handle, image.Handle, source, dest, &sampling, paint?.Handle ?? IntPtr.Zero);
 			GC.KeepAlive (image);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawPicture
@@ -580,6 +624,7 @@ namespace SkiaSharp
 				SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, m, paint == null ? IntPtr.Zero : paint.Handle);
 			GC.KeepAlive (picture);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawPicture (SKPicture picture, SKPaint paint = null)
@@ -589,6 +634,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, null, paint == null ? IntPtr.Zero : paint.Handle);
 			GC.KeepAlive (picture);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawDrawable
@@ -600,6 +646,7 @@ namespace SkiaSharp
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, m);
 			GC.KeepAlive (drawable);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawDrawable (SKDrawable drawable, float x, float y)
@@ -681,6 +728,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text_blob (Handle, text.Handle, x, y, paint.Handle);
 			GC.KeepAlive (text);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawText
@@ -783,6 +831,7 @@ namespace SkiaSharp
 		public SKSurface? Surface {
 			get {
 				var result = SKSurface.GetObject (SkiaApi.sk_get_surface (Handle), owns: false, unrefExisting: false);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -794,6 +843,7 @@ namespace SkiaSharp
 		public GRRecordingContext? Context {
 			get {
 				var result = GRRecordingContext.GetObject (SkiaApi.sk_get_recording_context (Handle), owns: false, unrefExisting: false);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -815,12 +865,14 @@ namespace SkiaSharp
 				SkiaApi.sk_canvas_draw_annotation (base.Handle, &rect, b, value == null ? IntPtr.Zero : value.Handle);
 			}
 			GC.KeepAlive (value);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawUrlAnnotation (SKRect rect, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_url_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
 			GC.KeepAlive (value);
+			GC.KeepAlive (this);
 		}
 
 		public SKData DrawUrlAnnotation (SKRect rect, string value)
@@ -834,6 +886,7 @@ namespace SkiaSharp
 		{
 			SkiaApi.sk_canvas_draw_named_destination_annotation (Handle, &point, value == null ? IntPtr.Zero : value.Handle);
 			GC.KeepAlive (value);
+			GC.KeepAlive (this);
 		}
 
 		public SKData DrawNamedDestinationAnnotation (SKPoint point, string value)
@@ -847,6 +900,7 @@ namespace SkiaSharp
 		{
 			SkiaApi.sk_canvas_draw_link_destination_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
 			GC.KeepAlive (value);
+			GC.KeepAlive (this);
 		}
 
 		public SKData DrawLinkDestinationAnnotation (SKRect rect, string value)
@@ -881,6 +935,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_image_nine (Handle, image.Handle, &center, &dst, filterMode, paint == null ? IntPtr.Zero : paint.Handle);
 			GC.KeepAlive (image);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// Draw*Lattice
@@ -948,6 +1003,7 @@ namespace SkiaSharp
 			}
 			GC.KeepAlive (image);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// *Matrix
@@ -955,6 +1011,7 @@ namespace SkiaSharp
 		public void ResetMatrix ()
 		{
 			SkiaApi.sk_canvas_reset_matrix (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public void SetMatrix (in SKMatrix matrix) =>
@@ -969,6 +1026,7 @@ namespace SkiaSharp
 			fixed (SKMatrix44* ptr = &matrix) {
 				SkiaApi.sk_canvas_set_matrix (Handle, ptr);
 			}
+			GC.KeepAlive (this);
 		}
 
 		public SKMatrix TotalMatrix => TotalMatrix44.Matrix;
@@ -977,6 +1035,7 @@ namespace SkiaSharp
 			get {
 				SKMatrix44 matrix;
 				SkiaApi.sk_canvas_get_matrix (Handle, &matrix);
+				GC.KeepAlive (this);
 				return matrix;
 			}
 		}
@@ -986,6 +1045,7 @@ namespace SkiaSharp
 		public int SaveCount {
 			get {
 				var result = SkiaApi.sk_canvas_get_save_count (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -1025,6 +1085,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_vertices (Handle, vertices.Handle, mode, paint.Handle);
 			GC.KeepAlive (vertices);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawArc
@@ -1035,6 +1096,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_arc (Handle, &oval, startAngle, sweepAngle, useCenter, paint.Handle);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawRoundRectDifference
@@ -1052,6 +1114,7 @@ namespace SkiaSharp
 			GC.KeepAlive (outer);
 			GC.KeepAlive (inner);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawAtlas
@@ -1095,6 +1158,7 @@ namespace SkiaSharp
 			}
 			GC.KeepAlive (atlas);
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawPatch
@@ -1124,6 +1188,7 @@ namespace SkiaSharp
 				SkiaApi.sk_canvas_draw_patch (Handle, cubes, (uint*)cols, coords, mode, paint.Handle);
 			}
 			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		internal static SKCanvas GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>

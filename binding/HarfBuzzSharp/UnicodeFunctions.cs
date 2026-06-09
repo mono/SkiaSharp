@@ -37,6 +37,7 @@ namespace HarfBuzzSharp
 		public bool IsImmutable {
 			get {
 				var r = HarfBuzzApi.hb_unicode_funcs_is_immutable (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -44,6 +45,7 @@ namespace HarfBuzzSharp
 		public void MakeImmutable ()
 		{
 			HarfBuzzApi.hb_unicode_funcs_make_immutable (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public UnicodeCombiningClass GetCombiningClass (int unicode) => GetCombiningClass ((uint)unicode);
@@ -51,6 +53,7 @@ namespace HarfBuzzSharp
 		public UnicodeCombiningClass GetCombiningClass (uint unicode)
 		{
 			var r = HarfBuzzApi.hb_unicode_combining_class (Handle, unicode);
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -59,6 +62,7 @@ namespace HarfBuzzSharp
 		public UnicodeGeneralCategory GetGeneralCategory (uint unicode)
 		{
 			var r = HarfBuzzApi.hb_unicode_general_category (Handle, unicode);
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -67,6 +71,7 @@ namespace HarfBuzzSharp
 		public uint GetMirroring (uint unicode)
 		{
 			var r = HarfBuzzApi.hb_unicode_mirroring (Handle, unicode);
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -75,6 +80,7 @@ namespace HarfBuzzSharp
 		public Script GetScript (uint unicode)
 		{
 			var r = HarfBuzzApi.hb_unicode_script (Handle, unicode);
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -91,6 +97,7 @@ namespace HarfBuzzSharp
 		{
 			fixed (uint* abPtr = &ab) {
 				var r = HarfBuzzApi.hb_unicode_compose (Handle, a, b, abPtr);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -111,6 +118,7 @@ namespace HarfBuzzSharp
 			fixed (uint* aPtr = &a)
 			fixed (uint* bPtr = &b) {
 				var r = HarfBuzzApi.hb_unicode_decompose (Handle, ab, aPtr, bPtr);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -122,6 +130,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_combining_class_func (
 				Handle, DelegateProxies.UnicodeCombiningClassProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetGeneralCategoryDelegate (GeneralCategoryDelegate del, ReleaseDelegate destroy = null)
@@ -131,6 +140,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_general_category_func (
 				Handle, DelegateProxies.UnicodeGeneralCategoryProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetMirroringDelegate (MirroringDelegate del, ReleaseDelegate destroy = null)
@@ -140,6 +150,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_mirroring_func (
 				Handle, DelegateProxies.UnicodeMirroringProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetScriptDelegate (ScriptDelegate del, ReleaseDelegate destroy = null)
@@ -149,6 +160,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_script_func (
 				Handle, DelegateProxies.UnicodeScriptProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetComposeDelegate (ComposeDelegate del, ReleaseDelegate destroy = null)
@@ -158,6 +170,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_compose_func (
 				Handle, DelegateProxies.UnicodeComposeProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetDecomposeDelegate (DecomposeDelegate del, ReleaseDelegate destroy = null)
@@ -167,6 +180,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_decompose_func (
 				Handle, DelegateProxies.UnicodeDecomposeProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		private void VerifyParameters (Delegate del)

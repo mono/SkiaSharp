@@ -97,6 +97,7 @@ namespace SkiaSharp
 		public string FamilyName {
 			get {
 				var r = (string)SKString.GetObject (SkiaApi.sk_typeface_get_family_name (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -104,6 +105,7 @@ namespace SkiaSharp
 		public SKFontStyle FontStyle {
 			get {
 				var r = SKFontStyle.GetObject (SkiaApi.sk_typeface_get_fontstyle (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -111,6 +113,7 @@ namespace SkiaSharp
 		public int FontWeight {
 			get {
 				var r = SkiaApi.sk_typeface_get_font_weight (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -118,6 +121,7 @@ namespace SkiaSharp
 		public int FontWidth {
 			get {
 				var r = SkiaApi.sk_typeface_get_font_width (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -125,6 +129,7 @@ namespace SkiaSharp
 		public SKFontStyleSlant FontSlant {
 			get {
 				var r = SkiaApi.sk_typeface_get_font_slant (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -136,6 +141,7 @@ namespace SkiaSharp
 		public bool IsFixedPitch {
 			get {
 				var r = SkiaApi.sk_typeface_is_fixed_pitch (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -143,6 +149,7 @@ namespace SkiaSharp
 		public int UnitsPerEm {
 			get {
 				var r = SkiaApi.sk_typeface_get_units_per_em (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -150,6 +157,7 @@ namespace SkiaSharp
 		public int GlyphCount {
 			get {
 				var r = SkiaApi.sk_typeface_count_glyphs (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -157,6 +165,7 @@ namespace SkiaSharp
 		public string PostScriptName {
 			get {
 				var r = (string)SKString.GetObject (SkiaApi.sk_typeface_get_post_script_name (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -166,6 +175,7 @@ namespace SkiaSharp
 		public int TableCount {
 			get {
 				var r = SkiaApi.sk_typeface_count_tables (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -183,9 +193,11 @@ namespace SkiaSharp
 			var buffer = new UInt32[TableCount];
 			fixed (UInt32* b = buffer) {
 				if (SkiaApi.sk_typeface_get_table_tags (Handle, b) == 0) {
+					GC.KeepAlive (this);
 					tags = null;
 					return false;
 				}
+				GC.KeepAlive (this);
 			}
 			tags = buffer;
 			return true;
@@ -196,6 +208,7 @@ namespace SkiaSharp
 		public int GetTableSize (UInt32 tag)
 		{
 			var r = (int)SkiaApi.sk_typeface_get_table_size (Handle, tag);
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -226,6 +239,7 @@ namespace SkiaSharp
 		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData)
 		{
 			var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)tableData);
+			GC.KeepAlive (this);
 			return actual != IntPtr.Zero;
 		}
 
@@ -321,6 +335,7 @@ namespace SkiaSharp
 		{
 			fixed (int* ttc = &ttcIndex) {
 				var r = SKStreamAsset.GetObject (SkiaApi.sk_typeface_open_stream (Handle, ttc));
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -334,6 +349,7 @@ namespace SkiaSharp
 		public bool HasGetKerningPairAdjustments {
 			get {
 				var r = SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, null, 0, null);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -381,6 +397,7 @@ namespace SkiaSharp
 			fixed (ushort* gp = glyphs)
 			fixed (int* ap = adjustments) {
 				res = SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, gp, glyphs.Length, ap);
+				GC.KeepAlive (this);
 			}
 
 			if (!res && glyphs.Length > 1)
@@ -397,6 +414,7 @@ namespace SkiaSharp
 		public int VariationDesignParameterCount {
 			get {
 				var r = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, null, 0);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -411,6 +429,7 @@ namespace SkiaSharp
 				var axes = new SKFontVariationAxis[count];
 				fixed (SKFontVariationAxis* ptr = axes) {
 					SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, count);
+					GC.KeepAlive (this);
 				}
 				return axes;
 			}
@@ -424,6 +443,7 @@ namespace SkiaSharp
 			fixed (SKFontVariationAxis* ptr = axes) {
 				var total = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, ptr, axes.Length);
 				if (total <= axes.Length) {
+					GC.KeepAlive (this);
 					return total;
 				}
 
@@ -432,6 +452,7 @@ namespace SkiaSharp
 				using var temp = Utils.RentArray<SKFontVariationAxis> (total);
 				fixed (SKFontVariationAxis* tempPtr = temp.Span) {
 					SkiaApi.sk_typeface_get_variation_design_parameters (Handle, tempPtr, total);
+					GC.KeepAlive (this);
 				}
 				temp.Span.Slice (0, axes.Length).CopyTo (axes);
 				return axes.Length;
@@ -441,6 +462,7 @@ namespace SkiaSharp
 		public int VariationDesignPositionCount {
 			get {
 				var r = SkiaApi.sk_typeface_get_variation_design_position (Handle, null, 0);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -455,6 +477,7 @@ namespace SkiaSharp
 				var coords = new SKFontVariationPositionCoordinate[count];
 				fixed (SKFontVariationPositionCoordinate* ptr = coords) {
 					SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, count);
+					GC.KeepAlive (this);
 				}
 				return coords;
 			}
@@ -468,6 +491,7 @@ namespace SkiaSharp
 			fixed (SKFontVariationPositionCoordinate* ptr = coordinates) {
 				var total = SkiaApi.sk_typeface_get_variation_design_position (Handle, ptr, coordinates.Length);
 				if (total <= coordinates.Length) {
+					GC.KeepAlive (this);
 					return total;
 				}
 
@@ -476,6 +500,7 @@ namespace SkiaSharp
 				using var temp = Utils.RentArray<SKFontVariationPositionCoordinate> (total);
 				fixed (SKFontVariationPositionCoordinate* tempPtr = temp.Span) {
 					SkiaApi.sk_typeface_get_variation_design_position (Handle, tempPtr, total);
+					GC.KeepAlive (this);
 				}
 				temp.Span.Slice (0, coordinates.Length).CopyTo (coordinates);
 				return coordinates.Length;
@@ -486,6 +511,7 @@ namespace SkiaSharp
 		{
 			fixed (SKFontVariationPositionCoordinate* ptr = position) {
 				var r = GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, ptr, position.Length, 0, 0, null, 0));
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -495,6 +521,7 @@ namespace SkiaSharp
 			if (paletteIndex < 0)
 				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
 			var r = GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, null, 0, 0, paletteIndex, null, 0));
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -503,6 +530,7 @@ namespace SkiaSharp
 			fixed (SKFontVariationPositionCoordinate* posPtr = args.VariationDesignPosition)
 			fixed (SKFontPaletteOverride* palPtr = args.PaletteOverrides) {
 				var r = GetObject (SkiaApi.sk_typeface_clone_with_arguments (Handle, posPtr, args.VariationDesignPosition.Length, args.CollectionIndex, args.PaletteIndex, palPtr, args.PaletteOverrides.Length));
+				GC.KeepAlive (this);
 				return r;
 			}
 		}

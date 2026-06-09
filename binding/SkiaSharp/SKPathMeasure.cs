@@ -44,6 +44,7 @@ namespace SkiaSharp
 		public float Length {
 			get {
 				var r = SkiaApi.sk_pathmeasure_get_length (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -51,6 +52,7 @@ namespace SkiaSharp
 		public bool IsClosed {
 			get {
 				var r = SkiaApi.sk_pathmeasure_is_closed (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -64,6 +66,7 @@ namespace SkiaSharp
 		{
 			SkiaApi.sk_pathmeasure_set_path (Handle, path == null ? IntPtr.Zero : path.Handle, forceClosed);
 			GC.KeepAlive (path);
+			GC.KeepAlive (this);
 		}
 
 		// GetPositionAndTangent
@@ -73,6 +76,7 @@ namespace SkiaSharp
 			fixed (SKPoint* p = &position)
 			fixed (SKPoint* t = &tangent) {
 				var r = SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, t);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -90,6 +94,7 @@ namespace SkiaSharp
 		{
 			fixed (SKPoint* p = &position) {
 				var r = SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, null);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -107,6 +112,7 @@ namespace SkiaSharp
 		{
 			fixed (SKPoint* t = &tangent) {
 				var r = SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, null, t);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -124,6 +130,7 @@ namespace SkiaSharp
 		{
 			fixed (SKMatrix* m = &matrix) {
 				var r = SkiaApi.sk_pathmeasure_get_matrix (Handle, distance, m, flags);
+				GC.KeepAlive (this);
 				return r;
 			}
 		}
@@ -136,6 +143,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 			var result = SkiaApi.sk_pathmeasure_get_segment (Handle, start, stop, dst.Handle, startWithMoveTo);
 			GC.KeepAlive (dst);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -167,6 +175,7 @@ namespace SkiaSharp
 		public bool NextContour ()
 		{
 			var r = SkiaApi.sk_pathmeasure_next_contour (Handle);
+			GC.KeepAlive (this);
 			return r;
 		}
 	}

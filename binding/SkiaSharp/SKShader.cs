@@ -24,6 +24,7 @@ namespace SkiaSharp
 
 			var shader = GetObject (SkiaApi.sk_shader_with_color_filter (Handle, filter.Handle));
 			GC.KeepAlive (filter);
+			GC.KeepAlive (this);
 			return shader;
 		}
 
@@ -32,6 +33,7 @@ namespace SkiaSharp
 		public SKShader WithLocalMatrix (SKMatrix localMatrix)
 		{
 			var shader = GetObject (SkiaApi.sk_shader_with_local_matrix (Handle, &localMatrix));
+			GC.KeepAlive (this);
 			return shader;
 		}
 

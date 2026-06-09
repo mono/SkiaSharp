@@ -21,28 +21,33 @@ namespace SkiaSharp
 		public void Abort ()
 		{
 			SkiaApi.sk_document_abort (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public SKCanvas BeginPage (float width, float height)
 		{
 			var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public SKCanvas BeginPage (float width, float height, SKRect content)
 		{
 			var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public void EndPage ()
 		{
 			SkiaApi.sk_document_end_page (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public void Close ()
 		{
 			SkiaApi.sk_document_close (Handle);
+			GC.KeepAlive (this);
 		}
 
 		// CreateXps

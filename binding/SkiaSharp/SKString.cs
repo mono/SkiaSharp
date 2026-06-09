@@ -50,6 +50,7 @@ namespace SkiaSharp
 			var cstr = SkiaApi.sk_string_get_c_str (Handle);
 			var clen = SkiaApi.sk_string_get_size (Handle);
 			var result = StringUtilities.GetString ((IntPtr)cstr, (int)clen, SKTextEncoding.Utf8);
+			GC.KeepAlive (this);
 			return result;
 		}
 

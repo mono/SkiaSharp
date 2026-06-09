@@ -31,11 +31,13 @@ namespace SkiaSharp
 		void ISKNonVirtualReferenceCounted.ReferenceNative ()
 		{
 			SkiaApi.sk_data_ref (Handle);
+			GC.KeepAlive (this);
 		}
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative ()
 		{
 			SkiaApi.sk_data_unref (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public static SKData Empty =>
@@ -225,6 +227,7 @@ namespace SkiaSharp
 					throw new ArgumentOutOfRangeException (nameof (offset), "The offset exceeds the size of pointers.");
 			}
 			var result = GetObject (SkiaApi.sk_data_new_subset (Handle, (IntPtr)offset, (IntPtr)length));
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -233,6 +236,7 @@ namespace SkiaSharp
 		public byte[] ToArray ()
 		{
 			var array = AsSpan ().ToArray ();
+			GC.KeepAlive (this);
 			return array;
 		}
 
@@ -243,6 +247,7 @@ namespace SkiaSharp
 		public long Size {
 			get {
 				var result = (long)SkiaApi.sk_data_get_size (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -250,6 +255,7 @@ namespace SkiaSharp
 		public IntPtr Data {
 			get {
 				var result = (IntPtr)SkiaApi.sk_data_get_data (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -288,6 +294,7 @@ namespace SkiaSharp
 				ptr += copyCount;
 				target.Write ((byte[])buffer, 0, copyCount);
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal static SKData GetObject (IntPtr handle) =>

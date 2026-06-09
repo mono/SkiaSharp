@@ -99,6 +99,7 @@ namespace SkiaSharp
 		protected override void DisposeNative ()
 		{
 			SkiaApi.sk_compatpaint_delete (Handle);
+			GC.KeepAlive (this);
 		}
 
 		// Reset
@@ -106,6 +107,7 @@ namespace SkiaSharp
 		public void Reset ()
 		{
 			SkiaApi.sk_compatpaint_reset (Handle, DefaultFont.Handle);
+			GC.KeepAlive (this);
 		}
 
 		// properties
@@ -113,20 +115,24 @@ namespace SkiaSharp
 		public bool IsAntialias {
 			get {
 				var r = SkiaApi.sk_paint_is_antialias (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_compatpaint_set_is_antialias (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public bool IsDither {
 			get {
 				var r = SkiaApi.sk_paint_is_dither (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_dither (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -146,10 +152,12 @@ namespace SkiaSharp
 		public bool LcdRenderText {
 			get {
 				var r = SkiaApi.sk_compatpaint_get_lcd_render_text (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_compatpaint_set_lcd_render_text (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -185,20 +193,24 @@ namespace SkiaSharp
 		public SKPaintStyle Style {
 			get {
 				var r = SkiaApi.sk_paint_get_style (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_style (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKColor Color {
 			get {
 				var r = SkiaApi.sk_paint_get_color (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_color (Handle, (uint)value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -206,10 +218,12 @@ namespace SkiaSharp
 			get {
 				SKColorF color4f;
 				SkiaApi.sk_paint_get_color4f (Handle, &color4f);
+				GC.KeepAlive (this);
 				return color4f;
 			}
 			set {
 				SkiaApi.sk_paint_set_color4f (Handle, &value, IntPtr.Zero);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -217,110 +231,131 @@ namespace SkiaSharp
 		{
 			SkiaApi.sk_paint_set_color4f (Handle, &color, colorspace?.Handle ?? IntPtr.Zero);
 			GC.KeepAlive (colorspace);
+			GC.KeepAlive (this);
 		}
 
 		public float StrokeWidth {
 			get {
 				var r = SkiaApi.sk_paint_get_stroke_width (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_stroke_width (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public float StrokeMiter {
 			get {
 				var r = SkiaApi.sk_paint_get_stroke_miter (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_stroke_miter (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKStrokeCap StrokeCap {
 			get {
 				var r = SkiaApi.sk_paint_get_stroke_cap (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_stroke_cap (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKStrokeJoin StrokeJoin {
 			get {
 				var r = SkiaApi.sk_paint_get_stroke_join (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_stroke_join (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKShader Shader {
 			get {
 				var r = SKShader.GetObject (SkiaApi.sk_paint_get_shader (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
 				GC.KeepAlive (value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKMaskFilter MaskFilter {
 			get {
 				var r = SKMaskFilter.GetObject (SkiaApi.sk_paint_get_maskfilter (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 				GC.KeepAlive (value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKColorFilter ColorFilter {
 			get {
 				var r = SKColorFilter.GetObject (SkiaApi.sk_paint_get_colorfilter (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 				GC.KeepAlive (value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKImageFilter ImageFilter {
 			get {
 				var r = SKImageFilter.GetObject (SkiaApi.sk_paint_get_imagefilter (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 				GC.KeepAlive (value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKBlendMode BlendMode {
 			get {
 				var r = SkiaApi.sk_paint_get_blendmode (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_blendmode (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public SKBlender Blender {
 			get {
 				var r = SKBlender.GetObject (SkiaApi.sk_paint_get_blender (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_blender (Handle, value == null ? IntPtr.Zero : value.Handle);
 				GC.KeepAlive (value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -328,10 +363,12 @@ namespace SkiaSharp
 		public SKFilterQuality FilterQuality {
 			get {
 				var r = (SKFilterQuality)SkiaApi.sk_compatpaint_get_filter_quality (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_compatpaint_set_filter_quality (Handle, (int)value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -351,10 +388,12 @@ namespace SkiaSharp
 		public SKTextAlign TextAlign {
 			get {
 				var r = SkiaApi.sk_compatpaint_get_text_align (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_compatpaint_set_text_align (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -362,10 +401,12 @@ namespace SkiaSharp
 		public SKTextEncoding TextEncoding {
 			get {
 				var r = SkiaApi.sk_compatpaint_get_text_encoding (Handle);
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_compatpaint_set_text_encoding (Handle, value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -384,11 +425,13 @@ namespace SkiaSharp
 		public SKPathEffect PathEffect {
 			get {
 				var r = SKPathEffect.GetObject (SkiaApi.sk_paint_get_path_effect (Handle));
+				GC.KeepAlive (this);
 				return r;
 			}
 			set {
 				SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
 				GC.KeepAlive (value);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -416,6 +459,7 @@ namespace SkiaSharp
 		public SKPaint Clone ()
 		{
 			var r = GetObject (SkiaApi.sk_compatpaint_clone (Handle))!;
+			GC.KeepAlive (this);
 			return r;
 		}
 
@@ -685,6 +729,7 @@ namespace SkiaSharp
 			var result = SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, cullRect, &matrix);
 			GC.KeepAlive (src);
 			GC.KeepAlive (dst);
+			GC.KeepAlive (this);
 			return result;
 		}
 
@@ -983,6 +1028,7 @@ namespace SkiaSharp
 		public SKFont ToFont ()
 		{
 			var r = SKFont.GetObject (SkiaApi.sk_compatpaint_make_font (Handle));
+			GC.KeepAlive (this);
 			return r;
 		}
 

@@ -110,6 +110,7 @@ namespace SkiaSharp
 		public override bool IsAbandoned {
 			get {
 				var result = SkiaApi.gr_direct_context_is_abandoned (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -120,17 +121,20 @@ namespace SkiaSharp
 				SkiaApi.gr_direct_context_release_resources_and_abandon_context (Handle);
 			else
 				SkiaApi.gr_direct_context_abandon_context (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public long GetResourceCacheLimit ()
 		{
 			var result = (long)SkiaApi.gr_direct_context_get_resource_cache_limit (Handle);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public void SetResourceCacheLimit (long maxResourceBytes)
 		{
 			SkiaApi.gr_direct_context_set_resource_cache_limit (Handle, (IntPtr)maxResourceBytes);
+			GC.KeepAlive (this);
 		}
 
 		public void GetResourceCacheUsage (out int maxResources, out long maxResourceBytes)
@@ -138,6 +142,7 @@ namespace SkiaSharp
 			IntPtr maxResBytes;
 			fixed (int* maxRes = &maxResources) {
 				SkiaApi.gr_direct_context_get_resource_cache_usage (Handle, maxRes, &maxResBytes);
+				GC.KeepAlive (this);
 			}
 			maxResourceBytes = (long)maxResBytes;
 		}
@@ -151,6 +156,7 @@ namespace SkiaSharp
 		public void ResetContext (uint state)
 		{
 			SkiaApi.gr_direct_context_reset_context (Handle, state);
+			GC.KeepAlive (this);
 		}
 
 		public void Flush () => Flush (true);
@@ -161,11 +167,13 @@ namespace SkiaSharp
 				SkiaApi.gr_direct_context_flush_and_submit (Handle, synchronous);
 			else
 				SkiaApi.gr_direct_context_flush (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public void Submit (bool synchronous = false)
 		{
 			SkiaApi.gr_direct_context_submit (Handle, synchronous);
+			GC.KeepAlive (this);
 		}
 
 		public void Flush (SKImage image)
@@ -176,6 +184,7 @@ namespace SkiaSharp
 
 			SkiaApi.gr_direct_context_flush_image (Handle, image.Handle);
 			GC.KeepAlive (image);
+			GC.KeepAlive (this);
 		}
 
 		public void Flush (SKSurface surface)
@@ -186,6 +195,7 @@ namespace SkiaSharp
 
 			SkiaApi.gr_direct_context_flush_surface (Handle, surface.Handle);
 			GC.KeepAlive (surface);
+			GC.KeepAlive (this);
 		}
 
 		public new int GetMaxSurfaceSampleCount (SKColorType colorType) =>
@@ -195,26 +205,31 @@ namespace SkiaSharp
 		{
 			SkiaApi.gr_direct_context_dump_memory_statistics (Handle, dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
 			GC.KeepAlive (dump);
+			GC.KeepAlive (this);
 		}
 
 		public void PurgeResources ()
 		{
 			SkiaApi.gr_direct_context_free_gpu_resources (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public void PurgeUnusedResources (long milliseconds)
 		{
 			SkiaApi.gr_direct_context_perform_deferred_cleanup (Handle, milliseconds);
+			GC.KeepAlive (this);
 		}
 
 		public void PurgeUnlockedResources (bool scratchResourcesOnly)
 		{
 			SkiaApi.gr_direct_context_purge_unlocked_resources (Handle, scratchResourcesOnly);
+			GC.KeepAlive (this);
 		}
 
 		public void PurgeUnlockedResources (long bytesToPurge, bool preferScratchResources)
 		{
 			SkiaApi.gr_direct_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
+			GC.KeepAlive (this);
 		}
 
 		internal new static GRContext GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>

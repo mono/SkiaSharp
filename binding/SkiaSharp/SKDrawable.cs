@@ -57,6 +57,7 @@ namespace SkiaSharp
 		public uint GenerationId {
 			get {
 				var result = SkiaApi.sk_drawable_get_generation_id (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -65,6 +66,7 @@ namespace SkiaSharp
 			get {
 				SKRect bounds;
 				SkiaApi.sk_drawable_get_bounds (Handle, &bounds);
+				GC.KeepAlive (this);
 				return bounds;
 			}
 		}
@@ -72,6 +74,7 @@ namespace SkiaSharp
 		public int ApproximateBytesUsed {
 			get {
 				var result = (int)SkiaApi.sk_drawable_approximate_bytes_used (Handle);
+				GC.KeepAlive (this);
 				return result;
 			}
 		}
@@ -81,6 +84,7 @@ namespace SkiaSharp
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_drawable_draw (Handle, canvas.Handle, m);
 			GC.KeepAlive (canvas);
+			GC.KeepAlive (this);
 		}
 
 		public void Draw (SKCanvas canvas, float x, float y)
@@ -93,12 +97,14 @@ namespace SkiaSharp
 		public SKPicture Snapshot ()
 		{
 			var result = SKPicture.GetObject (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
+			GC.KeepAlive (this);
 			return result;
 		}
 
 		public void NotifyDrawingChanged ()
 		{
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
+			GC.KeepAlive (this);
 		}
 
 		protected internal virtual void OnDraw (SKCanvas canvas)
