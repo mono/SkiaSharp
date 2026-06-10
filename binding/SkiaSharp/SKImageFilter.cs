@@ -323,8 +323,7 @@ namespace SkiaSharp
 
 		public static SKImageFilter CreateTile (SKRect src, SKRect dst, SKImageFilter? input)
 		{
-			_ = input ?? throw new ArgumentNullException (nameof (input));
-			return GetObject (SkiaApi.sk_imagefilter_new_tile (&src, &dst, input.Handle));
+			return GetObject (SkiaApi.sk_imagefilter_new_tile (&src, &dst, input?.Handle ?? IntPtr.Zero));
 		}
 
 		// CreateBlendMode
