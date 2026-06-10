@@ -31,6 +31,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void PathMeasureCtorKeepsPathAliveAcrossNativeCall ()
 		{
+			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
+
 			var stop = 0;
 
 			// Continuously collect and drain finalizers so any wrapper that becomes unrooted
