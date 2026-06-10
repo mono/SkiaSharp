@@ -368,23 +368,33 @@ def main():
     # 1h. Sync third-party dependencies (harfbuzz, freetype, etc.)
     # These live under externals/skia/third_party/externals/ and are fetched
     # by Skia's DEPS mechanism, not git submodules.
-    eprint("▸ Syncing third-party dependencies (dotnet cake git-sync-deps)...")
+    #
+    # We invoke Skia's tools/git-sync-deps directly from the submodule rather
+    # than via "dotnet cake --target=git-sync-deps". The cake target is only
+    # defined in scripts/infra/native/shared/native-shared.cake, which is loaded
+    # exclusively by the per-platform native/*/build.cake files — never by the
+    # root build.cake. Running it from the repo root fails with "target not
+    # found". The cake wrapper's only other behavior is a milestone/increment
+    # version check, already covered by Phase 1 validation. (The emsdk
+    # activation step is a no-op for this fork: the in-tree emsdk is not fetched
+    # by DEPS, so bin/activate-emsdk returns early.)
+    eprint("▸ Syncing third-party dependencies (skia tools/git-sync-deps)...")
     sync_result = subprocess.run(
-        ["dotnet", "cake", "--target=git-sync-deps"],
-        cwd=repo_root,
+        [sys.executable, os.path.join("tools", "git-sync-deps")],
+        cwd=skia_root,
         capture_output=True,
         text=True,
     )
     for line in sync_result.stdout.strip().split("\n"):
-        if line and ("@" in line or "Task" in line or "Total:" in line or "error" in line.lower()):
+        if line and ("@" in line or "Skipping" in line or "error" in line.lower()):
             eprint(f"   {line.strip()}")
     if sync_result.returncode != 0:
-        eprint(f"   ❌ dotnet cake git-sync-deps failed (exit {sync_result.returncode})")
+        eprint(f"   ❌ tools/git-sync-deps failed (exit {sync_result.returncode})")
         for line in sync_result.stderr.strip().split("\n"):
             if line:
                 eprint(f"   {line.strip()}")
         raise RuntimeError(
-            f"Failed to sync third-party dependencies (dotnet cake exit {sync_result.returncode}). "
+            f"Failed to sync third-party dependencies (git-sync-deps exit {sync_result.returncode}). "
             f"Check that the skia submodule milestone matches VERSIONS.txt."
         )
     harfbuzz_path = os.path.join(skia_root, "third_party", "externals", "harfbuzz")
