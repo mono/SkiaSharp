@@ -29,7 +29,9 @@ namespace SkiaSharp
 		public static SKSurface Create (SKImageInfo info, int rowBytes, SKSurfaceProperties props)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject (SkiaApi.sk_surface_new_raster (&cinfo, (IntPtr)rowBytes, props?.Handle ?? IntPtr.Zero));
+			var surface = GetObject (SkiaApi.sk_surface_new_raster (&cinfo, (IntPtr)rowBytes, props?.Handle ?? IntPtr.Zero));
+			GC.KeepAlive (props);
+			return surface;
 		}
 
 		// convenience RASTER DIRECT to use a SKPixmap instead of SKImageInfo and IntPtr
@@ -70,7 +72,9 @@ namespace SkiaSharp
 				: releaseProc;
 			DelegateProxies.Create (del, out _, out var ctx);
 			var proxy = del != null ? DelegateProxies.SKSurfaceRasterReleaseProxy : null;
-			return GetObject (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
+			var surface = GetObject (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
+			GC.KeepAlive (props);
+			return surface;
 		}
 
 		// GPU BACKEND RENDER TARGET surface
@@ -115,7 +119,12 @@ namespace SkiaSharp
 			if (renderTarget == null)
 				throw new ArgumentNullException (nameof (renderTarget));
 
-			return GetObject (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			var surface = GetObject (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			GC.KeepAlive (context);
+			GC.KeepAlive (renderTarget);
+			GC.KeepAlive (colorspace);
+			GC.KeepAlive (props);
+			return surface;
 		}
 
 		// GPU BACKEND TEXTURE surface
@@ -172,7 +181,12 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			var surface = GetObject (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			GC.KeepAlive (context);
+			GC.KeepAlive (texture);
+			GC.KeepAlive (colorspace);
+			GC.KeepAlive (props);
+			return surface;
 		}
 
 		// GPU NEW surface
@@ -216,7 +230,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (context));
 
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
+			var surface = GetObject (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
+			GC.KeepAlive (context);
+			GC.KeepAlive (props);
+			return surface;
 		}
 
 #if __MACOS__ || __IOS__ || __TVOS__
@@ -240,6 +257,9 @@ namespace SkiaSharp
 		{
 			void* drawablePtr;
 			var surface = GetObject (SkiaApi.sk_surface_new_metal_layer (context.Handle, (void*)(IntPtr)layer.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero, &drawablePtr));
+			GC.KeepAlive (context);
+			GC.KeepAlive (colorspace);
+			GC.KeepAlive (props);
 			drawable = ObjCRuntime.Runtime.GetINativeObject<CoreAnimation.ICAMetalDrawable> ((IntPtr)drawablePtr, true);
 			return surface;
 		}
@@ -250,8 +270,14 @@ namespace SkiaSharp
 		public static SKSurface Create (GRRecordingContext context, MetalKit.MTKView view, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace) =>
 			Create (context, view, origin, sampleCount, colorType, colorspace, null);
 
-		public static SKSurface Create (GRRecordingContext context, MetalKit.MTKView view, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props) =>
-			GetObject (SkiaApi.sk_surface_new_metal_view (context.Handle, (void*)(IntPtr)view.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+		public static SKSurface Create (GRRecordingContext context, MetalKit.MTKView view, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props)
+		{
+			var surface = GetObject (SkiaApi.sk_surface_new_metal_view (context.Handle, (void*)(IntPtr)view.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			GC.KeepAlive (context);
+			GC.KeepAlive (colorspace);
+			GC.KeepAlive (props);
+			return surface;
+		}
 
 #endif
 
@@ -262,20 +288,43 @@ namespace SkiaSharp
 
 		//
 
-		public SKCanvas Canvas =>
-			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
+		public SKCanvas Canvas {
+			get {
+				var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
-		public SKSurfaceProperties SurfaceProperties =>
-			OwnedBy (SKSurfaceProperties.GetObject (SkiaApi.sk_surface_get_props (Handle), false), this);
+		public SKSurfaceProperties SurfaceProperties {
+			get {
+				var result = OwnedBy (SKSurfaceProperties.GetObject (SkiaApi.sk_surface_get_props (Handle), false), this);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
-		public GRRecordingContext Context =>
-			GRRecordingContext.GetObject (SkiaApi.sk_surface_get_recording_context (Handle), false, unrefExisting: false);
+		public GRRecordingContext Context {
+			get {
+				var result = GRRecordingContext.GetObject (SkiaApi.sk_surface_get_recording_context (Handle), false, unrefExisting: false);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
-		public SKImage Snapshot () =>
-			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
+		public SKImage Snapshot ()
+		{
+			var result = SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
+			GC.KeepAlive (this);
+			return result;
+		}
 
-		public SKImage Snapshot (SKRectI bounds) =>
-			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot_with_crop (Handle, &bounds));
+		public SKImage Snapshot (SKRectI bounds)
+		{
+			var result = SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot_with_crop (Handle, &bounds));
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		public void Draw (SKCanvas canvas, float x, float y, SKPaint paint)
 		{
@@ -283,6 +332,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_surface_draw (Handle, canvas.Handle, x, y, paint == null ? IntPtr.Zero : paint.Handle);
+			GC.KeepAlive (this);
+			GC.KeepAlive (canvas);
+			GC.KeepAlive (paint);
 		}
 
 		public void Draw (SKCanvas canvas, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null)
@@ -296,6 +348,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_surface_draw_with_sampling (Handle, canvas.Handle, x, y, &sampling, paint == null ? IntPtr.Zero : paint.Handle);
+			GC.KeepAlive (this);
+			GC.KeepAlive (canvas);
+			GC.KeepAlive (paint);
 		}
 
 		public SKPixmap PeekPixels ()
@@ -316,6 +371,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixmap));
 
 			var result = SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+			GC.KeepAlive (this);
+			GC.KeepAlive (pixmap);
 			if (result)
 				pixmap.pixelSource = this;
 			return result;

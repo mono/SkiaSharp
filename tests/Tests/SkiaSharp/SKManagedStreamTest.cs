@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SkiaSharp.Tests
 {
@@ -360,8 +362,11 @@ namespace SkiaSharp.Tests
 
 			Assert.Null(SKCodec.Create(stream));
 
+			// Failed Create has no new native owner, so RevokeOwnership(null) runs
+			// DisposeInternal(): the wrapper is genuinely disposed and deregistered,
+			// not merely public-dispose-guarded. Hence IsDisposed (not IgnorePublicDispose).
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnorePublicDispose);
+			Assert.True(stream.IsDisposed);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
@@ -652,6 +657,261 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, dupe.Position);
 
 			dupe.Dispose();
+		}
+
+		[SkippableFact]
+		public unsafe void StreamLosesOwnershipButManagedStreamStaysOpenUntilOwnerDisposed()
+		{
+			var path = Path.Combine(PathToImages, "color-wheel.png");
+			var bytes = File.ReadAllBytes(path);
+			var dotnetStream = new MemoryStream(bytes);
+			var stream = new SKManagedStream(dotnetStream, true);
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.False(stream.IsDisposed);
+			Assert.True(SKObject.GetInstance<SKManagedStream>(handle, out _));
+
+			var codec = SKCodec.Create(stream);
+
+			// The codec reads the managed stream LAZILY (on GetPixels), so the
+			// wrapper must NOT be disposed at ownership transfer: doing so would
+			// close the underlying .NET stream and crash the later managed read.
+			Assert.False(stream.OwnsHandle);
+			Assert.False(stream.IsDisposed);
+			Assert.True(stream.IgnorePublicDispose);
+			Assert.True(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			Assert.True(dotnetStream.CanRead);
+
+			// A public Dispose() is ignored while the codec owns the native stream.
+			stream.Dispose();
+			Assert.False(stream.IsDisposed);
+			Assert.True(dotnetStream.CanRead);
+
+			// The lazy managed read must succeed — this is the regression guard.
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+
+			// Disposing the owner tears down the wrapper and closes the .NET stream
+			// (disposeManagedStream: true), now that nothing reads it any more.
+			codec.Dispose();
+			Assert.True(stream.IsDisposed);
+			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
+			Assert.False(dotnetStream.CanRead);
+		}
+
+		// The SKObject.Owned write-stream path (used by SKSvgCanvas.Create(Stream) and
+		// SKDocument.Create*(Stream)) is the mirror image of the codec/typeface read path.
+		// There the internally-created SKManagedWStream is registered as an OwnsHandle child,
+		// so it is torn down in DisposeManaged() — AFTER DisposeNative(). That ordering is
+		// load-bearing for write streams: the native object (e.g. the SVG canvas footer
+		// writer, or the PDF document serializer) flushes its final bytes into the managed
+		// stream as it is destroyed, so the .NET stream MUST still be open at DisposeNative
+		// time. These tests lock in that guarantee and prove writes triggered AFTER Create
+		// (lazy writes) reach the underlying .NET stream without crossing a closed boundary.
+
+		[SkippableFact]
+		public void SvgCanvasWritesLazilyAndKeepsManagedStreamOpenUntilOwnerDisposed()
+		{
+			var tracking = new LifecycleTrackingStream();
+
+			var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), tracking);
+
+			// Create must NOT dispose or close the caller's stream.
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.CanWrite);
+
+			// Drawing happens AFTER Create returns: this is a lazy write through the
+			// still-alive owned wstream. It must not crash or hit a closed stream.
+			using (var paint = new SKPaint { Color = SKColors.Red, Style = SKPaintStyle.Fill })
+			{
+				svg.DrawRect(SKRect.Create(10, 10, 80, 80), paint);
+			}
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.CanWrite);
+
+			// Disposing the owner runs DisposeNative() (native canvas flushes the SVG
+			// footer into the managed stream) BEFORE the owned wstream's DisposeManaged().
+			// The final native flush must therefore land in a still-open .NET stream.
+			svg.Dispose();
+
+			// disposeManagedStream defaults to false for the Stream overload, so the
+			// caller's stream stays open after the canvas is gone.
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.BytesWritten > 0);
+			Assert.False(tracking.WroteAfterClose);
+
+			tracking.Position = 0;
+			using var reader = new StreamReader(tracking);
+			var xml = reader.ReadToEnd();
+			Assert.Contains("<svg", xml);
+			Assert.Contains("rect", xml);
+		}
+
+		[SkippableFact]
+		public void PdfDocumentWritesLazilyAndKeepsManagedStreamOpenUntilOwnerDisposed()
+		{
+			var tracking = new LifecycleTrackingStream();
+
+			var document = SKDocument.CreatePdf(tracking);
+			Assert.NotNull(document);
+
+			// Create must NOT dispose or close the caller's stream.
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.CanWrite);
+
+			// Page content is produced AFTER Create — a lazy write into the owned wstream.
+			var canvas = document.BeginPage(100, 100);
+			using (var paint = new SKPaint { Color = SKColors.Blue, Style = SKPaintStyle.Fill })
+			{
+				canvas.DrawRect(SKRect.Create(10, 10, 80, 80), paint);
+			}
+			document.EndPage();
+
+			// Close() serializes the PDF body into the managed stream. The stream must
+			// still be open here — Close runs before any disposal of the owned wstream.
+			document.Close();
+			Assert.False(tracking.IsDisposed);
+			Assert.True(tracking.CanWrite);
+			Assert.True(tracking.BytesWritten > 0);
+
+			// Disposing the owner tears down the owned wstream in DisposeManaged(), after
+			// DisposeNative(). With disposeManagedStream: false the .NET stream survives.
+			document.Dispose();
+			Assert.False(tracking.IsDisposed);
+			Assert.False(tracking.WroteAfterClose);
+
+			var header = new byte[5];
+			tracking.Position = 0;
+			Assert.Equal(5, tracking.Read(header, 0, 5));
+			Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(header));
+		}
+
+		// ---- fromNative destroy-callback re-entrancy (mirrors the SKDrawable invariant) ----
+		// SKManagedStream / SKManagedWStream own a native object whose destruction triggers a
+		// managed destroy proxy (DelegateProxies.*stream*) that flips `fromNative` to 1 and calls
+		// Dispose() re-entrantly. Under the lock-paired SKObject.Dispose, DisposeNative() runs
+		// OUTSIDE the lock, so the synchronous native destroy can re-enter Dispose() on the
+		// same thread; the re-entrant call re-acquires the lock fresh and no-ops on isDisposed==1.
+		// These tests pin the single-free + deregistration + fromNative-flip invariants.
+
+		[SkippableFact]
+		public void DisposingManagedStreamFiresNativeDestroyCallback()
+		{
+			var dotnet = CreateTestStream();
+			var stream = new SKManagedStream(dotnet, true);
+			var handle = stream.Handle;
+
+			try
+			{
+				Assert.NotEqual(IntPtr.Zero, handle);
+				Assert.Equal(0, stream.fromNative);
+				Assert.True(HandleDictionary.GetInstance<SKManagedStream>(handle, out var live));
+				Assert.Same(stream, live);
+			}
+			finally
+			{
+				stream.Dispose();
+			}
+
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
+		}
+
+		[SkippableFact]
+		public void DisposingManagedWStreamFiresNativeDestroyCallback()
+		{
+			var dotnet = new MemoryStream();
+			var stream = new SKManagedWStream(dotnet, true);
+			var handle = stream.Handle;
+
+			try
+			{
+				Assert.NotEqual(IntPtr.Zero, handle);
+				Assert.Equal(0, stream.fromNative);
+				Assert.True(HandleDictionary.GetInstance<SKManagedWStream>(handle, out var live));
+				Assert.Same(stream, live);
+			}
+			finally
+			{
+				stream.Dispose();
+			}
+
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedWStream>(handle, stream);
+		}
+
+		[SkippableFact]
+		public void DisposingManagedStreamTwiceIsNoOp()
+		{
+			var stream = new SKManagedStream(CreateTestStream(), true);
+			var handle = stream.Handle;
+
+			stream.Dispose();
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+
+			stream.Dispose();
+			Assert.Equal(1, stream.fromNative);
+			Assert.True(stream.IsDisposed);
+			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
+		}
+
+		// A MemoryStream that records disposal and rejects (rather than silently swallowing)
+		// any write that arrives after the stream has been closed — so a premature close in
+		// the owned-wstream teardown ordering would surface as WroteAfterClose / an exception.
+		private sealed class LifecycleTrackingStream : Stream
+		{
+			private readonly MemoryStream inner = new MemoryStream();
+			private bool closed;
+
+			public bool IsDisposed => closed;
+			public long BytesWritten { get; private set; }
+			public bool WroteAfterClose { get; private set; }
+
+			public override bool CanRead => !closed && inner.CanRead;
+			public override bool CanSeek => !closed && inner.CanSeek;
+			public override bool CanWrite => !closed && inner.CanWrite;
+			public override long Length => inner.Length;
+
+			public override long Position
+			{
+				get => inner.Position;
+				set => inner.Position = value;
+			}
+
+			public override void Flush() => inner.Flush();
+
+			public override int Read(byte[] buffer, int offset, int count) =>
+				inner.Read(buffer, offset, count);
+
+			public override long Seek(long offset, SeekOrigin origin) =>
+				inner.Seek(offset, origin);
+
+			public override void SetLength(long value) => inner.SetLength(value);
+
+			public override void Write(byte[] buffer, int offset, int count)
+			{
+				if (closed)
+				{
+					WroteAfterClose = true;
+					throw new ObjectDisposedException(nameof(LifecycleTrackingStream));
+				}
+
+				BytesWritten += count;
+				inner.Write(buffer, offset, count);
+			}
+
+			protected override void Dispose(bool disposing)
+			{
+				if (disposing)
+					closed = true;
+
+				// keep the underlying buffer readable for post-dispose assertions
+				base.Dispose(disposing);
+			}
 		}
 	}
 }

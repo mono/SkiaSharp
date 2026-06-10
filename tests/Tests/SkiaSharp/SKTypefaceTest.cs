@@ -329,7 +329,11 @@ namespace SkiaSharp.Tests
 			Assert.Null(SKTypeface.FromStream(stream));
 
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnorePublicDispose);
+			// Failed FromStream runs RevokeOwnership(null) -> DisposeInternal(): the wrapper is genuinely
+			// disposed (and deregistered, asserted below), NOT dispose-protected. (ff18b0f's blanket
+			// IsDisposed->IgnorePublicDispose rename was correct for the success/reparent path but wrong
+			// for this failure path, where there is no new owner to protect the wrapper for.)
+			Assert.True(stream.IsDisposed);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
@@ -406,7 +410,10 @@ namespace SkiaSharp.Tests
 
 			typeface.Dispose();
 
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			// Address-reuse safe: under xUnit's parallel collections a parallel test can
+			// reallocate a fresh wrapper at this freed native pointer, so asserting the
+			// address is simply absent is racy. Assert by reference identity instead.
+			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 		}
 

@@ -116,8 +116,11 @@ namespace SkiaSharp.Tests
 
 			Assert.Null(SKCodec.Create(stream));
 
+			// Failed Create has no new native owner, so RevokeOwnership(null) runs
+			// DisposeInternal(): the wrapper is genuinely disposed and deregistered,
+			// not merely public-dispose-guarded. Hence IsDisposed (not IgnorePublicDispose).
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnorePublicDispose);
+			Assert.True(stream.IsDisposed);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
@@ -487,6 +490,37 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(data);
 
 			using var codec = SKCodec.Create(data);
+			Assert.NotNull(codec);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
+
+		[SkippableFact]
+		public void CanDecodeManagedStreamAfterCreate()
+		{
+			// Regression: SKCodec.Create(Stream) wraps the managed .NET stream and the
+			// codec decodes lazily. The underlying managed stream MUST stay readable
+			// until the codec is disposed — the singleton/lifecycle rework must not let
+			// the reparented wrapper's ownership transfer eagerly close the .NET stream.
+			using var stream = new MemoryStream(File.ReadAllBytes(Path.Combine(PathToImages, "baboon.png")));
+			using var codec = SKCodec.Create(stream);
+			Assert.NotNull(codec);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
+
+		[SkippableFact]
+		public void CanDecodeNonSeekableManagedStreamAfterCreate()
+		{
+			// Non-seekable managed streams route through SKFrontBufferedManagedStream
+			// (a nested SKManagedStream). The lazy decode must still reach the underlying
+			// .NET stream through the front buffer + nested wrapper without it being
+			// closed early by the ownership transfer.
+			using var backing = new MemoryStream(File.ReadAllBytes(Path.Combine(PathToImages, "baboon.png")));
+			using var nonSeekable = new NonSeekableReadOnlyStream(backing);
+			using var codec = SKCodec.Create(nonSeekable);
 			Assert.NotNull(codec);
 
 			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));

@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Threading;
 
 namespace SkiaSharp
 {
@@ -9,25 +10,13 @@ namespace SkiaSharp
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
 
-		private static readonly SKColorFilter srgbToLinear;
-		private static readonly SKColorFilter linearToSrgb;
+		private static SKColorFilter srgbToLinear;
+		private static bool srgbToLinearInitialized;
+		private static object srgbToLinearLock = new object ();
 
-		static SKColorFilter ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			srgbToLinear = new SKColorFilterStatic (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ());
-			linearToSrgb = new SKColorFilterStatic (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ());
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
+		private static SKColorFilter linearToSrgb;
+		private static bool linearToSrgbInitialized;
+		private static object linearToSrgbLock = new object ();
 
 		internal SKColorFilter(IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -37,9 +26,15 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKColorFilter CreateSrgbToLinearGamma() => srgbToLinear;
+		public static SKColorFilter CreateSrgbToLinearGamma () =>
+			LazyInitializer.EnsureInitialized (
+				ref srgbToLinear, ref srgbToLinearInitialized, ref srgbToLinearLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma (), owns: false, unrefExisting: false));
 
-		public static SKColorFilter CreateLinearToSrgbGamma() => linearToSrgb;
+		public static SKColorFilter CreateLinearToSrgbGamma () =>
+			LazyInitializer.EnsureInitialized (
+				ref linearToSrgb, ref linearToSrgbInitialized, ref linearToSrgbLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma (), owns: false, unrefExisting: false));
 
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
@@ -57,7 +52,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException(nameof(outer));
 			if (inner == null)
 				throw new ArgumentNullException(nameof(inner));
-			return GetObject (SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
+			var colorFilter = GetObject (SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
+			GC.KeepAlive (outer);
+			GC.KeepAlive (inner);
+			return colorFilter;
 		}
 
 		public static SKColorFilter CreateLerp(float weight, SKColorFilter filter0, SKColorFilter filter1)
@@ -65,7 +63,10 @@ namespace SkiaSharp
 			_ = filter0 ?? throw new ArgumentNullException(nameof(filter0));
 			_ = filter1 ?? throw new ArgumentNullException(nameof(filter1));
 
-			return GetObject (SkiaApi.sk_colorfilter_new_lerp(weight, filter0.Handle, filter1.Handle));
+			var colorFilter = GetObject (SkiaApi.sk_colorfilter_new_lerp(weight, filter0.Handle, filter1.Handle));
+			GC.KeepAlive (filter0);
+			GC.KeepAlive (filter1);
+			return colorFilter;
 		}
 
 		public static SKColorFilter CreateColorMatrix(float[] matrix)
@@ -158,15 +159,16 @@ namespace SkiaSharp
 
 		internal static SKColorFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
-			
-		private sealed class SKColorFilterStatic : SKColorFilter
-		{
-			internal SKColorFilterStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
 
-			protected override void Dispose (bool disposing) { }
-		}
+		// owns/unrefExisting default to true for the general dispose-protected (but mortal) case.
+		// The srgb<->linear gamma singletons pass owns:false because Skia returns an *immortal*
+		// SkNoDestructor singleton (gSingleton) living in static storage. Unreffing it at
+		// finalization drives the native refcount to 0 and runs ~SkColorSpaceXformColorFilter,
+		// which calls free()/delete on non-heap memory => STATUS_HEAP_CORRUPTION at teardown.
+		// owns:false makes Dispose(bool) skip DisposeNative (it gates on OwnsHandle), so the
+		// binding never releases the immortal static. Leaking our single ref is correct: the
+		// object is never destroyed by Skia anyway.
+		internal static SKColorFilter GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKColorFilter (h, o));
 	}
 }

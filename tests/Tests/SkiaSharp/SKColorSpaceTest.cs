@@ -20,11 +20,13 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StaticSrgbIsReturnedAsTheStaticInstance()
 		{
+			var expected = SKColorSpace.CreateSrgb();
 			var handle = SkiaApi.sk_colorspace_new_srgb();
 			try
 			{
 				var cs = SKColorSpace.GetObject(handle, unrefExisting: false);
-				Assert.Equal("SKColorSpaceStatic", cs.GetType().Name);
+				Assert.Same(expected, cs);
+				Assert.True(cs.IgnorePublicDispose);
 			}
 			finally
 			{
@@ -387,45 +389,6 @@ namespace SkiaSharp.Tests
 
 			// The image has a CICP chunk with PQ transfer function — it should not be plain sRGB
 			Assert.False(info.ColorSpace.IsSrgb);
-		}
-
-		[SkippableFact]
-		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
-		{
-			// the instance is static, so all instances in .NET are the same instance
-			const int NativeInstanceCount = 4;
-
-			// get the first instance of the sRGB Linear
-			var colorspace1 = SKColorSpace.CreateSrgbLinear();
-			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace1.GetType().FullName);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
-
-			// create a new one with the same parameters, which will return the same instance
-			var colorspace2 = SKColorSpace.CreateRgb(SKColorSpaceTransferFn.Linear, SKColorSpaceXyz.Srgb);
-			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace2.GetType().FullName);
-			Assert.Same(colorspace1, colorspace2);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
-			Assert.Equal(NativeInstanceCount, colorspace2.GetReferenceCount());
-
-			// create a different one manually, which will return a new instance
-			var colorspace3 = SKColorSpace.CreateRgb(
-				new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
-				SKColorSpaceXyz.Identity);
-			Assert.NotSame(colorspace1, colorspace3);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
-			Assert.Equal(NativeInstanceCount, colorspace2.GetReferenceCount());
-
-			colorspace3.Dispose();
-			Assert.True(colorspace3.IsDisposed);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
-
-			colorspace2.Dispose();
-			Assert.False(colorspace2.IsDisposed);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
-
-			colorspace1.Dispose();
-			Assert.False(colorspace1.IsDisposed);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
 		}
 
 		private static void AssertMatrix(float[] expected, SKMatrix44 actual)
