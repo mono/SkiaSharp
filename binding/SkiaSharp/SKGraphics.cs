@@ -61,5 +61,24 @@ namespace SkiaSharp
 
 		public static void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
 			SkiaApi.sk_graphics_dump_memory_statistics (dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
+
+		// native memory accounting
+
+		/// <summary>
+		/// Returns the total number of bytes currently held by SkiaSharp's
+		/// native allocator (the sum of all outstanding
+		/// <c>sk_malloc</c>/<c>sk_realloc</c> allocations, measured via the
+		/// platform's <c>malloc_usable_size</c>/<c>_msize</c>/<c>malloc_size</c>).
+		/// </summary>
+		/// <remarks>
+		/// This counter is updated atomically by the allocator on every
+		/// alloc/free. It does not include allocations made by third-party
+		/// libraries linked into the SkiaSharp native binary (libpng,
+		/// freetype, harfbuzz, etc.) that call <c>malloc</c> directly
+		/// without going through Skia's allocator.
+		/// </remarks>
+		/// <seealso cref="SKNativeMemoryPressureMonitor"/>
+		public static long GetNativeMemoryAllocated () =>
+			(long)SkiaApi.sk_memory_get_native_allocated ();
 	}
 }

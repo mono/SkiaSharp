@@ -8455,6 +8455,48 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_memory.h
+
+		// uint64_t sk_memory_get_native_allocated()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt64 sk_memory_get_native_allocated ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt64 sk_memory_get_native_allocated ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt64 sk_memory_get_native_allocated ();
+		}
+		private static Delegates.sk_memory_get_native_allocated sk_memory_get_native_allocated_delegate;
+		internal static UInt64 sk_memory_get_native_allocated () =>
+			(sk_memory_get_native_allocated_delegate ??= GetSymbol<Delegates.sk_memory_get_native_allocated> ("sk_memory_get_native_allocated")).Invoke ();
+		#endif
+
+		// void sk_memory_set_threshold_callback(sk_memory_threshold_proc callback, uint64_t threshold_bytes)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_memory_set_threshold_callback (void* callback, UInt64 threshold_bytes);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_memory_set_threshold_callback (SKMemoryThresholdProxyDelegate callback, UInt64 threshold_bytes);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_memory_set_threshold_callback (SKMemoryThresholdProxyDelegate callback, UInt64 threshold_bytes);
+		}
+		private static Delegates.sk_memory_set_threshold_callback sk_memory_set_threshold_callback_delegate;
+		internal static void sk_memory_set_threshold_callback (SKMemoryThresholdProxyDelegate callback, UInt64 threshold_bytes) =>
+			(sk_memory_set_threshold_callback_delegate ??= GetSymbol<Delegates.sk_memory_set_threshold_callback> ("sk_memory_set_threshold_callback")).Invoke (callback, threshold_bytes);
+		#endif
+
+		#endregion
+
 		#region sk_paint.h
 
 		// sk_paint_t* sk_paint_clone(sk_paint_t*)
@@ -17722,6 +17764,10 @@ namespace SkiaSharp {
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedWStreamWriteProxyDelegate(sk_wstream_managedstream_t s, void* context, void* buffer, /* size_t */ IntPtr size);
 
+	// typedef void (*)()* sk_memory_threshold_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKMemoryThresholdProxyDelegate();
+
 	// typedef void (*)(void* addr, void* context)* sk_surface_raster_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKSurfaceRasterReleaseProxyDelegate(void* addr, void* context);
@@ -21923,6 +21969,16 @@ internal static unsafe partial class DelegateProxies {
 #endif
 	[return: MarshalAs (UnmanagedType.I1)]
 	private static partial bool SKManagedWStreamWriteProxyImplementation(sk_wstream_managedstream_t s,void* context,void* buffer,/* size_t */ IntPtr size);
+
+	/// Proxy for sk_memory_threshold_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void> SKMemoryThresholdProxy = &SKMemoryThresholdProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKMemoryThresholdProxyDelegate SKMemoryThresholdProxy = SKMemoryThresholdProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKMemoryThresholdProxyDelegate))]
+#endif
+	private static partial void SKMemoryThresholdProxyImplementation();
 
 	/// Proxy for sk_surface_raster_release_proc native function.
 #if USE_LIBRARY_IMPORT
