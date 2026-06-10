@@ -1,0 +1,330 @@
+# Issue Triage Report — #4127
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-06-10T05:44:59Z |
+| Type | type/bug (0.98 (98%)) |
+| Area | area/SkiaSharp (0.97 (97%)) |
+| Suggested action | ready-to-fix (0.90 (90%)) |
+
+**Issue Summary:** On the net48 test leg, managed SKObject wrappers intermittently crash with AccessViolationException because the GC can finalize a wrapper (and free its native object) while an in-flight P/Invoke is still using the same handle. The reporter provides full page-heap and cdb evidence for two concrete cases (SKPath.PointCount and Skottie.Animation.Version), rules out managed refcount bugs via three independent checks, and proposes a structural fix: back SKObject's handle with a SafeHandle so the P/Invoke marshaller pins the handle for the duration of every native call.
+
+**Analysis:** SKNativeObject backs its native handle as a raw IntPtr. After a P/Invoke reads Handle and enters native code, the GC is free to collect and finalize 'this', which calls DisposeNative/SafeUnRef and frees the native object — a use-after-free while native code is still executing. The reporter rules out managed refcount bugs via page-heap, a net-owned-ref ledger, and serialized-threading tests. The structural fix (backing with SafeHandle) has been prototyped, confirmed to close the class, and measured at ~10–20 ns overhead per handle argument.
+
+**Recommendations:** **ready-to-fix** — Root cause is thoroughly diagnosed (page-heap + cdb + three independent ruling-out experiments). Fix is well-defined (SafeHandle) and validated by a working prototype. Implementation is substantial (generator changes + per-type SafeHandle subclasses) but the path is unambiguous.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Run the full SkiaSharp test suite on net48 with parallel test execution (GC pressure)
+2. Observe intermittent AccessViolationException at various native call sites (e.g., SKPath.PointCount → sk_path_count_points, Skottie.Animation.Version → skottie_animation_get_version)
+3. Crash is non-deterministic per-site but near-deterministic overall under PR #4080 lifecycle rework
+
+**Environment:** net48, concurrent GC, full parallel test run. PR #4080 lifecycle rework amplifies GC/finalization pressure making the race near-deterministic.
+
+**Related issues:** #4080
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | crash |
+| Error message | AccessViolationException — native code dereferences freed memory after managed wrapper is GC-finalized mid-P/Invoke |
+| Repro quality | complete |
+| Target frameworks | net48 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | SKNativeObject still stores its handle as a raw IntPtr with no GC-rooting across P/Invoke calls. The race is present in current code and the partial GC.KeepAlive mitigation from PR #4080 covers only specific call sites. |
+
+## Analysis
+
+### Technical Summary
+
+SKNativeObject backs its native handle as a raw IntPtr. After a P/Invoke reads Handle and enters native code, the GC is free to collect and finalize 'this', which calls DisposeNative/SafeUnRef and frees the native object — a use-after-free while native code is still executing. The reporter rules out managed refcount bugs via page-heap, a net-owned-ref ledger, and serialized-threading tests. The structural fix (backing with SafeHandle) has been prototyped, confirmed to close the class, and measured at ~10–20 ns overhead per handle argument.
+
+### Rationale
+
+Classified type/bug because this produces crashes (AccessViolationException) caused by broken lifetime management in SKNativeObject. Classified area/SkiaSharp because the root cause is in SKNativeObject/SKObject in binding/SkiaSharp/SKObject.cs. Tenet reliability because this is an intermittent crash during normal test execution. No platform label because the race is present on all runtimes — net48 concurrent GC simply makes it observable; the same class exists on net10. suggestedAction is ready-to-fix because the root cause is thoroughly understood, the fix is validated by a prototype, and the implementation scope is well-defined.
+
+### Key Signals
+
+- "nothing keeps `this` (or wrapper arguments) rooted for the duration of the native call" — **issue body** (Classic use-after-free: IntPtr P/Invoke does not root the managed object, GC is free to finalize it mid-call.)
+- "a managed net-owned-ref ledger logged zero over-releases across a full crashing run" — **issue body** (Confirms this is NOT a managed refcount bug — it is purely a GC finalization timing race.)
+- "SafeHandle closes the `this`-collection class structurally, with zero per-call-site work" — **comment by ramezgerges** (The reporter prototyped and validated the fix on both net48 and net10.)
+- "Per-call overhead ~10–20 ns (DangerousAddRef/Release, per handle argument)" — **comment by ramezgerges** (Acceptable overhead for draw calls; measurable for trivial getters in tight loops — warrants benchmarking before full rollout.)
+- "per-site GC.KeepAlive is whack-a-mole: any of the hundreds of instance native calls whose `this` goes unrooted can still crash" — **issue body** (The existing partial mitigation cannot be made exhaustive or verifiable — structural fix is required.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKObject.cs` | 229-233 | direct | SKNativeObject finalizer calls Dispose(false), which at line 269-271 calls DisposeNative() if Handle != IntPtr.Zero && OwnsHandle. This can race with an in-flight P/Invoke that already read Handle before the finalizer ran. |
+| `binding/SkiaSharp/SKObject.cs` | 94-98 | direct | SKObject.DisposeNative() calls SafeUnRef(), which decrements the native refcount and may free the native object — the dangerous operation that races with an in-flight P/Invoke. |
+| `binding/SkiaSharp/SKObject.cs` | 236-237 | direct | Handle is a plain IntPtr virtual property on SKNativeObject with no runtime-level GC-rooting, thread-safety, or lifetime protection. |
+| `binding/SkiaSharp/SKData.cs` | 239,285 | related | GC.KeepAlive(this) added at specific call sites — demonstrates the partial per-site mitigation approach from PR #4080 and its whack-a-mole nature. |
+| `binding/SkiaSharp/SKImage.cs` | 496,512 | related | GC.KeepAlive(this) in SKImage — same partial mitigation pattern; covers only specific sites, not all instance P/Invoke calls. |
+
+### Next Questions
+
+- What is the perf impact on a real draw-heavy end-to-end benchmark vs the micro-benchmark (20M calls of sk_data_get_size)?
+- How should the public IntPtr SKObject.Handle be maintained for ABI compatibility while switching the internal backing to SafeHandle?
+- Does the interop generator (pwsh ./utils/generate.ps1) need structural changes to emit SafeHandle parameter/return types in SkiaApi.generated.cs?
+- Are there P/Invoke call sites that bypass SkiaApi.generated.cs and use raw IntPtr, which would remain unprotected?
+- Should high-frequency trivial getters (Width, PointCount) be kept on a fast path to bound the per-call overhead?
+
+### Resolution Proposals
+
+**Hypothesis:** The fix is to back SKNativeObject's handle with a typed SafeHandle subclass per native type. The P/Invoke marshaller will then call DangerousAddRef/DangerousRelease around every native call, automatically keeping the handle alive for the call's duration and eliminating the GC race across all call sites.
+
+1. **Back SKObject handle with SafeHandle (structural fix)** — fix, confidence 0.92 (92%), cost/xl, validated=yes
+   - Create per-native-type SafeHandle subclasses whose ReleaseHandle maps to the correct teardown (sk_*_unref for ref-counted, sk_*_delete for owned, no-op for borrowed/owns:false). Update the interop generator to emit SafeHandle parameter/return types in SkiaApi.generated.cs instead of IntPtr. Maintain public IntPtr SKObject.Handle for ABI compatibility via a thin wrapper over the SafeHandle's DangerousGetHandle.
+2. **Comprehensive GC.KeepAlive audit (interim workaround)** — workaround, confidence 0.65 (65%), cost/l, validated=untested
+   - Audit all instance native call sites across binding/SkiaSharp/ and add GC.KeepAlive(this) at the end of every method that passes Handle or an argument's Handle to a P/Invoke. This extends the PR #4080 partial coverage to complete coverage as an interim measure until the SafeHandle structural fix lands.
+
+**Recommended proposal:** Back SKObject handle with SafeHandle (structural fix)
+
+**Why:** Closes the entire use-after-free class at the root with zero per-call-site work. Prototype confirms correctness on both net48 and net10. The GC.KeepAlive approach is incomplete by construction and cannot be exhaustively verified.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.90 (90%) |
+| Reason | Root cause is thoroughly diagnosed (page-heap + cdb + three independent ruling-out experiments). Fix is well-defined (SafeHandle) and validated by a working prototype. Implementation is substantial (generator changes + per-type SafeHandle subclasses) but the path is unambiguous. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply bug, core SkiaSharp, and reliability tenet labels | labels=type/bug, area/SkiaSharp, tenet/reliability |
+| add-comment | medium | 0.88 (88%) | Acknowledge the thorough diagnosis, confirm the bug is real, validate the SafeHandle approach, and outline the implementation work items | — |
+| link-related | low | 0.97 (97%) | Cross-reference PR #4080 which contains the partial GC.KeepAlive mitigation and amplified the GC pressure | linkedIssue=#4080 |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the exceptionally thorough diagnosis and for prototyping the SafeHandle fix @ramezgerges! The evidence is conclusive — this is a real use-after-free class rooted in the raw IntPtr P/Invoke model, and it cannot be closed exhaustively by per-site `GC.KeepAlive`.
+
+The SafeHandle approach is the right structural fix and the prototype confirms it closes the entire class with acceptable overhead (~10–20 ns/handle argument). Before a full implementation, a few things to nail down:
+
+1. **ABI compatibility**: `SKObject.Handle` is a public `IntPtr` — needs a compatibility story (e.g., thin-wrap `SafeHandle.DangerousGetHandle()`).
+2. **Generator support**: Confirm that `pwsh ./utils/generate.ps1` can emit `SafeHandle` parameter/return types in `SkiaApi.generated.cs`, or scope the generator changes needed.
+3. **Ownership mapping**: Enumerate which native types are ref-counted (`sk_*_unref`), owned-delete (`sk_*_delete`), and borrowed (`owns: false`) for the `ReleaseHandle` per-type mapping.
+4. **End-to-end benchmark**: Run a real draw-heavy benchmark before/after to confirm the ~10–20 ns micro-overhead is acceptable at the application level.
+
+PR #4080's `GC.KeepAlive` additions remain a valid interim mitigation; this issue tracks the structural fix.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4127,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-06-10T05:44:59Z"
+  },
+  "summary": "On the net48 test leg, managed SKObject wrappers intermittently crash with AccessViolationException because the GC can finalize a wrapper (and free its native object) while an in-flight P/Invoke is still using the same handle. The reporter provides full page-heap and cdb evidence for two concrete cases (SKPath.PointCount and Skottie.Animation.Version), rules out managed refcount bugs via three independent checks, and proposes a structural fix: back SKObject's handle with a SafeHandle so the P/Invoke marshaller pins the handle for the duration of every native call.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.97
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "AccessViolationException — native code dereferences freed memory after managed wrapper is GC-finalized mid-P/Invoke",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net48"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run the full SkiaSharp test suite on net48 with parallel test execution (GC pressure)",
+        "Observe intermittent AccessViolationException at various native call sites (e.g., SKPath.PointCount → sk_path_count_points, Skottie.Animation.Version → skottie_animation_get_version)",
+        "Crash is non-deterministic per-site but near-deterministic overall under PR #4080 lifecycle rework"
+      ],
+      "environmentDetails": "net48, concurrent GC, full parallel test run. PR #4080 lifecycle rework amplifies GC/finalization pressure making the race near-deterministic.",
+      "relatedIssues": [
+        4080
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKNativeObject still stores its handle as a raw IntPtr with no GC-rooting across P/Invoke calls. The race is present in current code and the partial GC.KeepAlive mitigation from PR #4080 covers only specific call sites."
+    }
+  },
+  "analysis": {
+    "summary": "SKNativeObject backs its native handle as a raw IntPtr. After a P/Invoke reads Handle and enters native code, the GC is free to collect and finalize 'this', which calls DisposeNative/SafeUnRef and frees the native object — a use-after-free while native code is still executing. The reporter rules out managed refcount bugs via page-heap, a net-owned-ref ledger, and serialized-threading tests. The structural fix (backing with SafeHandle) has been prototyped, confirmed to close the class, and measured at ~10–20 ns overhead per handle argument.",
+    "rationale": "Classified type/bug because this produces crashes (AccessViolationException) caused by broken lifetime management in SKNativeObject. Classified area/SkiaSharp because the root cause is in SKNativeObject/SKObject in binding/SkiaSharp/SKObject.cs. Tenet reliability because this is an intermittent crash during normal test execution. No platform label because the race is present on all runtimes — net48 concurrent GC simply makes it observable; the same class exists on net10. suggestedAction is ready-to-fix because the root cause is thoroughly understood, the fix is validated by a prototype, and the implementation scope is well-defined.",
+    "keySignals": [
+      {
+        "text": "nothing keeps `this` (or wrapper arguments) rooted for the duration of the native call",
+        "source": "issue body",
+        "interpretation": "Classic use-after-free: IntPtr P/Invoke does not root the managed object, GC is free to finalize it mid-call."
+      },
+      {
+        "text": "a managed net-owned-ref ledger logged zero over-releases across a full crashing run",
+        "source": "issue body",
+        "interpretation": "Confirms this is NOT a managed refcount bug — it is purely a GC finalization timing race."
+      },
+      {
+        "text": "SafeHandle closes the `this`-collection class structurally, with zero per-call-site work",
+        "source": "comment by ramezgerges",
+        "interpretation": "The reporter prototyped and validated the fix on both net48 and net10."
+      },
+      {
+        "text": "Per-call overhead ~10–20 ns (DangerousAddRef/Release, per handle argument)",
+        "source": "comment by ramezgerges",
+        "interpretation": "Acceptable overhead for draw calls; measurable for trivial getters in tight loops — warrants benchmarking before full rollout."
+      },
+      {
+        "text": "per-site GC.KeepAlive is whack-a-mole: any of the hundreds of instance native calls whose `this` goes unrooted can still crash",
+        "source": "issue body",
+        "interpretation": "The existing partial mitigation cannot be made exhaustive or verifiable — structural fix is required."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "229-233",
+        "finding": "SKNativeObject finalizer calls Dispose(false), which at line 269-271 calls DisposeNative() if Handle != IntPtr.Zero && OwnsHandle. This can race with an in-flight P/Invoke that already read Handle before the finalizer ran.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "94-98",
+        "finding": "SKObject.DisposeNative() calls SafeUnRef(), which decrements the native refcount and may free the native object — the dangerous operation that races with an in-flight P/Invoke.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "236-237",
+        "finding": "Handle is a plain IntPtr virtual property on SKNativeObject with no runtime-level GC-rooting, thread-safety, or lifetime protection.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKData.cs",
+        "lines": "239,285",
+        "finding": "GC.KeepAlive(this) added at specific call sites — demonstrates the partial per-site mitigation approach from PR #4080 and its whack-a-mole nature.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "496,512",
+        "finding": "GC.KeepAlive(this) in SKImage — same partial mitigation pattern; covers only specific sites, not all instance P/Invoke calls.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "What is the perf impact on a real draw-heavy end-to-end benchmark vs the micro-benchmark (20M calls of sk_data_get_size)?",
+      "How should the public IntPtr SKObject.Handle be maintained for ABI compatibility while switching the internal backing to SafeHandle?",
+      "Does the interop generator (pwsh ./utils/generate.ps1) need structural changes to emit SafeHandle parameter/return types in SkiaApi.generated.cs?",
+      "Are there P/Invoke call sites that bypass SkiaApi.generated.cs and use raw IntPtr, which would remain unprotected?",
+      "Should high-frequency trivial getters (Width, PointCount) be kept on a fast path to bound the per-call overhead?"
+    ],
+    "resolution": {
+      "hypothesis": "The fix is to back SKNativeObject's handle with a typed SafeHandle subclass per native type. The P/Invoke marshaller will then call DangerousAddRef/DangerousRelease around every native call, automatically keeping the handle alive for the call's duration and eliminating the GC race across all call sites.",
+      "proposals": [
+        {
+          "title": "Back SKObject handle with SafeHandle (structural fix)",
+          "description": "Create per-native-type SafeHandle subclasses whose ReleaseHandle maps to the correct teardown (sk_*_unref for ref-counted, sk_*_delete for owned, no-op for borrowed/owns:false). Update the interop generator to emit SafeHandle parameter/return types in SkiaApi.generated.cs instead of IntPtr. Maintain public IntPtr SKObject.Handle for ABI compatibility via a thin wrapper over the SafeHandle's DangerousGetHandle.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/xl",
+          "validated": "yes"
+        },
+        {
+          "title": "Comprehensive GC.KeepAlive audit (interim workaround)",
+          "description": "Audit all instance native call sites across binding/SkiaSharp/ and add GC.KeepAlive(this) at the end of every method that passes Handle or an argument's Handle to a P/Invoke. This extends the PR #4080 partial coverage to complete coverage as an interim measure until the SafeHandle structural fix lands.",
+          "category": "workaround",
+          "confidence": 0.65,
+          "effort": "cost/l",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Back SKObject handle with SafeHandle (structural fix)",
+      "recommendedReason": "Closes the entire use-after-free class at the root with zero per-call-site work. Prototype confirms correctness on both net48 and net10. The GC.KeepAlive approach is incomplete by construction and cannot be exhaustively verified."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.9,
+      "reason": "Root cause is thoroughly diagnosed (page-heap + cdb + three independent ruling-out experiments). Fix is well-defined (SafeHandle) and validated by a working prototype. Implementation is substantial (generator changes + per-type SafeHandle subclasses) but the path is unambiguous.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core SkiaSharp, and reliability tenet labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the thorough diagnosis, confirm the bug is real, validate the SafeHandle approach, and outline the implementation work items",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the exceptionally thorough diagnosis and for prototyping the SafeHandle fix @ramezgerges! The evidence is conclusive — this is a real use-after-free class rooted in the raw IntPtr P/Invoke model, and it cannot be closed exhaustively by per-site `GC.KeepAlive`.\n\nThe SafeHandle approach is the right structural fix and the prototype confirms it closes the entire class with acceptable overhead (~10–20 ns/handle argument). Before a full implementation, a few things to nail down:\n\n1. **ABI compatibility**: `SKObject.Handle` is a public `IntPtr` — needs a compatibility story (e.g., thin-wrap `SafeHandle.DangerousGetHandle()`).\n2. **Generator support**: Confirm that `pwsh ./utils/generate.ps1` can emit `SafeHandle` parameter/return types in `SkiaApi.generated.cs`, or scope the generator changes needed.\n3. **Ownership mapping**: Enumerate which native types are ref-counted (`sk_*_unref`), owned-delete (`sk_*_delete`), and borrowed (`owns: false`) for the `ReleaseHandle` per-type mapping.\n4. **End-to-end benchmark**: Run a real draw-heavy benchmark before/after to confirm the ~10–20 ns micro-overhead is acceptable at the application level.\n\nPR #4080's `GC.KeepAlive` additions remain a valid interim mitigation; this issue tracks the structural fix."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference PR #4080 which contains the partial GC.KeepAlive mitigation and amplified the GC pressure",
+        "risk": "low",
+        "confidence": 0.97,
+        "linkedIssue": 4080
+      }
+    ]
+  }
+}
+```
+
+</details>
