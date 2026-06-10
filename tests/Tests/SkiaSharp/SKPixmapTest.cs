@@ -315,7 +315,7 @@ namespace SkiaSharp.Tests
 			{
 				for (var y = 0; y < info.Height; y++)
 				{
-					var expectedLength = (info.Width * info.Height) - (y * info.Height + x);
+					var expectedLength = (info.Width * info.Height) - (y * info.Width + x);
 
 					// no need for swizzle
 					Assert.Equal(rgb888, pixmap.GetPixelColor(x, y));
@@ -351,7 +351,7 @@ namespace SkiaSharp.Tests
 			{
 				for (var y = 0; y < info.Height; y++)
 				{
-					var expectedLength = (info.Width * info.Height) - (y * info.Height + x);
+					var expectedLength = (info.Width * info.Height) - (y * info.Width + x);
 
 					var ushorts = pixmap.GetPixelSpan<ushort>(x, y);
 					Assert.Equal(expectedLength, ushorts.Length);
@@ -379,13 +379,82 @@ namespace SkiaSharp.Tests
 			{
 				for (var y = 0; y < info.Height; y++)
 				{
-					var expectedLength = (info.Width * info.Height) - (y * info.Height + x);
+					var expectedLength = (info.Width * info.Height) - (y * info.Width + x);
 
 					var bytes = pixmap.GetPixelSpan<byte>(x, y);
 					Assert.Equal(expectedLength, bytes.Length);
 					Assert.Equal(gray8, bytes[0]);
 				}
 			}
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanWithOffsetWorksForNonSquarePixmaps()
+		{
+			// Use a non-square pixmap to expose the bug where Width and Height were swapped
+			var info = new SKImageInfo(10, 5);
+			using var bmp = new SKBitmap(info);
+			using var canvas = new SKCanvas(bmp);
+
+			canvas.Clear(SKColors.Red);
+
+			using var pixmap = bmp.PeekPixels();
+
+			// Verify offset calculation produces correct span lengths for all positions
+			for (var y = 0; y < info.Height; y++)
+			{
+				for (var x = 0; x < info.Width; x++)
+				{
+					var span = pixmap.GetPixelSpan<SKColor>(x, y);
+
+					// The span should start at pixel (x, y) and extend to end
+					var expectedLength = info.Width * info.Height - (y * info.Width + x);
+					Assert.Equal(expectedLength, span.Length);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanWithOffsetReturnsCorrectPixelForNonSquare()
+		{
+			// Create a wide pixmap and draw distinct colors in known positions
+			var info = new SKImageInfo(8, 3);
+			using var bmp = new SKBitmap(info);
+			using var canvas = new SKCanvas(bmp);
+			canvas.Clear(SKColors.Transparent);
+
+			// Draw colored rectangles in specific rows
+			using var paint = new SKPaint();
+			paint.Color = SKColors.Red;
+			canvas.DrawRect(0, 0, 8, 1, paint);
+			paint.Color = SKColors.Green;
+			canvas.DrawRect(0, 1, 8, 1, paint);
+			paint.Color = SKColors.Blue;
+			canvas.DrawRect(0, 2, 8, 1, paint);
+
+			using var pixmap = bmp.PeekPixels();
+
+			// Verify that GetPixelSpan at different rows returns data matching that row's color
+			// by checking that span[0] matches what GetPixelColor reports at that position
+			var spanRow0 = pixmap.GetPixelSpan<SKColor>(0, 0);
+			var spanRow1 = pixmap.GetPixelSpan<SKColor>(0, 1);
+			var spanRow2 = pixmap.GetPixelSpan<SKColor>(0, 2);
+
+			// All pixels in each row should have the same raw value
+			// Compare within the same span to verify offset is pointing to the right row
+			Assert.Equal(spanRow0[0], spanRow0[3]); // same row, same color
+			Assert.Equal(spanRow1[0], spanRow1[5]); // same row, same color
+			Assert.Equal(spanRow2[0], spanRow2[7]); // same row, same color
+
+			// Different rows should have different colors
+			Assert.NotEqual(spanRow0[0], spanRow1[0]);
+			Assert.NotEqual(spanRow1[0], spanRow2[0]);
+			Assert.NotEqual(spanRow0[0], spanRow2[0]);
+
+			// Verify mid-row access: GetPixelSpan(4, 1) should give same first pixel as
+			// GetPixelSpan(0, 1) offset by 4 (same row)
+			var spanMidRow1 = pixmap.GetPixelSpan<SKColor>(4, 1);
+			Assert.Equal(spanRow1[4], spanMidRow1[0]);
 		}
 	}
 }

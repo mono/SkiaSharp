@@ -181,7 +181,7 @@ namespace SkiaSharp
 				spanLength = checked(info.Width * info.Height);
 
 				if (x != 0 || y != 0)
-					spanOffset = checked(y * info.Height + x);
+					spanOffset = checked(y * info.Width + x);
 			}
 
 			var addr = SkiaApi.sk_pixmap_get_writable_addr (Handle);
