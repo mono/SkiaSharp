@@ -9,15 +9,23 @@ namespace SkiaSharp.Views.Gtk4.Tests
 	{
 		private static void InitGtk()
 		{
+			var initialized = false;
 			try
 			{
 				global::Gtk.Module.Initialize();
-				global::Gtk.Functions.Init();
+
+				// Use gtk_init_check() rather than gtk_init(): the latter calls exit() (aborting the
+				// whole test host) when no display is available, which cannot be caught as a managed
+				// exception. InitCheck() returns false instead, so headless agents skip gracefully.
+				initialized = global::Gtk.Functions.InitCheck();
 			}
 			catch (Exception ex)
 			{
 				Assert.Skip($"GTK cannot be initialized: {ex.Message}");
 			}
+
+			if (!initialized)
+				Assert.Skip("GTK cannot be initialized: no display available");
 		}
 
 		[Fact]
