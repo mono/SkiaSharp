@@ -118,6 +118,97 @@ def _is_stable_branch(branch):
     return not re.search(r"-preview\.", branch)
 
 
+def _version_has_stable_tag(version):
+    # type: (str) -> bool
+    """True if a stable git tag (vX.Y.Z, no -preview/-rc) exists for version."""
+    tags = run(["git", "tag", "-l", "v{}*".format(version)], check=False)
+    for tag in tags.splitlines():
+        tag = tag.strip()
+        if not tag:
+            continue
+        if "-preview" in tag or "-rc" in tag:
+            continue
+        # Match vX.Y.Z exactly or with a trailing build suffix (vX.Y.Z.N)
+        rest = tag[len("v" + version):] if tag.startswith("v" + version) else None
+        if rest is not None and (rest == "" or rest.startswith(".")):
+            return True
+    return False
+
+
+def _all_known_base_versions(all_branches):
+    # type: (list[str]) -> set[str]
+    """Collect every base version (X.Y.Z) known from release branches and tags."""
+    versions = set()
+    for b in all_branches:
+        if b.endswith(".x"):
+            continue
+        versions.add(version_from_branch(b))
+    tags = run(["git", "tag", "-l", "v*"], check=False)
+    for tag in tags.splitlines():
+        tag = tag.strip()
+        if tag.startswith("v"):
+            versions.add(extract_base_version(tag))
+    return versions
+
+
+def _main_upcoming_version():
+    # type: () -> Optional[str]
+    """Main's in-development version (origin/main, falling back to local)."""
+    return get_version_from_remote_branch("main") or get_upcoming_version()
+
+
+def detect_superseded_by(version, all_branches):
+    # type: (str, list[str]) -> Optional[str]
+    """Auto-detect whether a preview-only version was skipped for a later one.
+
+    A version is "superseded" when it never shipped a stable tag AND a strictly
+    later version exists. Returns the smallest later base version, preferring
+    one that actually shipped stable. This covers a skipped minor
+    (4.147.0 -> 4.148.0), an abandoned patch preview (3.119.3 -> 3.119.4), and
+    a minor skipped on main itself: when main's in-development version is newer
+    and the checked version's minor line was never branched for servicing
+    (no release/X.Y.x), main's version supersedes it — e.g. main on 4.148.0
+    with only release/4.147.0-preview.* and no release/4.147.x.
+    Returns None while the version is still the latest line (just a preview).
+    """
+    if _version_has_stable_tag(version):
+        return None
+    vkey = version_key(version)
+    later = {v for v in _all_known_base_versions(all_branches)
+             if version_key(v) > vkey}
+
+    # Main's in-development version supersedes a preview-only version when that
+    # version's minor line was never branched for servicing (it was skipped).
+    main_version = _main_upcoming_version()
+    if main_version and version_key(main_version) > vkey:
+        servicing = "release/{}.x".format(minor_group(version))
+        if servicing not in all_branches:
+            later.add(main_version)
+
+    if not later:
+        return None
+    stable_later = [v for v in later if _version_has_stable_tag(v)]
+    pool = sorted(stable_later or later, key=version_key)
+    return pool[0]
+
+
+def resolve_superseded_by(version, all_branches):
+    # type: (str, list[str]) -> Optional[str]
+    """Whether a version was superseded (auto-detected)."""
+    return detect_superseded_by(version, all_branches)
+
+
+def _is_valid_stable_base(branch):
+    # type: (str) -> bool
+    """True if a release branch may serve as a cumulative "previous stable" base.
+
+    A branch is rejected if its version never shipped a stable tag. This makes
+    cross-minor rollups reach back to the last version that actually released as
+    stable, so preview-only/skipped minors are excluded automatically.
+    """
+    return _version_has_stable_tag(version_from_branch(branch))
+
+
 def _login_from_email(email):
     # type: (str) -> str
     """Extract GitHub login from a commit email.
@@ -364,37 +455,40 @@ def find_previous_stable_base(all_branches, major, minor_num, patch):
     """Find the previous stable release branch to use as the cumulative diff base.
 
     For version X.Y.Z:
-    1. If Z > 0: look for release/X.Y.(Z-1) stable, fall back to latest preview
-    2. If Z == 0: look for the latest branch from any previous minor/major
+    1. If Z > 0: use the most recent previous patch that shipped stable,
+       skipping preview-only / superseded patches (cumulative rollup).
+    2. If Z == 0: look for the latest branch from a previous minor/major that
+       actually shipped as stable, skipping any minor that was superseded or
+       never produced a stable tag (so its work rolls up into this version).
 
     Falls back to None if nothing found.
     """
     minor = "{}.{}".format(major, minor_num)
 
-    # Case 1: Z > 0 — look for stable release of previous patch
+    # Case 1: Z > 0 — the cumulative base is the most recent PREVIOUS patch
+    # that actually shipped as stable. Preview-only / superseded patches are
+    # skipped so the next stable rolls up their work (e.g. 3.119.4 bases on
+    # 3.119.2, absorbing the preview-only 3.119.3). Falls through to Case 2
+    # (previous minor) when no previous patch shipped stable.
     if patch > 0:
-        prev_version = "{}.{}".format(minor, patch - 1)
-        # Prefer stable
-        prev_stable = "release/{}".format(prev_version)
-        if prev_stable in all_branches:
-            return prev_stable
-        # No stable — find latest preview of that patch
-        prev_candidates = [b for b in all_branches
-                           if b.startswith("release/{}-preview.".format(
-                               prev_version))]
-        if prev_candidates:
-            prev_candidates.sort(key=release_branch_sort_key)
-            return prev_candidates[-1]
-        # No previous patch at all — fall back to any earlier patch
-        earlier = [b for b in all_branches
-                   if b.startswith("release/{}.".format(minor))
-                   and not b.endswith(".x")]
-        earlier = [b for b in earlier
-                   if release_branch_sort_key(b) <
-                   (major, minor_num, patch, 0, 0)]
-        if earlier:
-            earlier.sort(key=release_branch_sort_key)
-            return earlier[-1]
+        for p in range(patch - 1, -1, -1):
+            prev_version = "{}.{}".format(minor, p)
+            # A stable release/X.Y.Z branch (exact, no -preview) or a stable
+            # tag both signal that this patch shipped (or is shipping) stable.
+            prev_stable = "release/{}".format(prev_version)
+            has_stable_branch = prev_stable in all_branches
+            if not has_stable_branch and not _version_has_stable_tag(prev_version):
+                continue
+            if has_stable_branch:
+                return prev_stable
+            # Stable tag but no exact branch — use its latest preview branch.
+            prev_candidates = [b for b in all_branches
+                               if b.startswith("release/{}-preview.".format(
+                                   prev_version))]
+            if prev_candidates:
+                prev_candidates.sort(key=release_branch_sort_key)
+                return prev_candidates[-1]
+        # No previous patch shipped stable — fall through to Case 2.
 
     # Case 2: Z == 0 (or no previous patch found) — search previous minors
     all_versioned = [b for b in all_branches if not b.endswith(".x")]
@@ -405,6 +499,14 @@ def find_previous_stable_base(all_branches, major, minor_num, patch):
     candidates = [b for b in all_versioned
                   if release_branch_sort_key(b) < target_key]
     if candidates:
+        # Prefer the latest branch that genuinely shipped as stable, so a
+        # skipped/preview-only minor (e.g. 4.147) does not become the base
+        # and its work is rolled up into this version instead.
+        stable = [b for b in candidates
+                  if _is_valid_stable_base(b)]
+        if stable:
+            return stable[-1]
+        # No stable predecessor found — fall back to the latest candidate.
         return candidates[-1]
 
     return None
@@ -430,22 +532,35 @@ def determine_diff_range(branch):
                 "scripts/azure-templates-variables.yml")
         minor = minor_group(version)
 
-        # Find latest release branch for the same minor
-        candidates = [b for b in all_branches
+        # Find latest release branch for the same minor. These are the active
+        # line for the upcoming version, so the latest one is always the base
+        # (main shows work beyond the most recent preview cut).
+        same_minor = [b for b in all_branches
                       if b.startswith("release/{}.".format(minor))
                       and not b.endswith(".x")]
 
-        # Fallback: latest release branch across ALL minors
-        if not candidates:
-            candidates = [b for b in all_branches if not b.endswith(".x")]
+        if same_minor:
+            same_minor.sort(key=release_branch_sort_key)
+            return ("origin/{}".format(same_minor[-1]),
+                    "origin/main", version)
 
-        if not candidates:
+        # No branch yet for the upcoming minor — fall back across ALL minors,
+        # preferring the latest that genuinely shipped as stable so a skipped
+        # / preview-only minor does not shrink main's rollup.
+        all_versioned = [b for b in all_branches if not b.endswith(".x")]
+        all_versioned.sort(key=release_branch_sort_key)
+
+        if not all_versioned:
             raise RuntimeError(
                 "No release branches found. Cannot determine diff range "
                 "for main. Ensure release branches are fetched.")
 
-        candidates.sort(key=release_branch_sort_key)
-        latest = candidates[-1]
+        stable = [b for b in all_versioned
+                  if _is_valid_stable_base(b)]
+        if stable:
+            latest = stable[-1]
+        else:
+            latest = all_versioned[-1]
         return "origin/{}".format(latest), "origin/main", version
 
     # ── servicing branch (release/X.Y.x) ────────────────────────
@@ -606,6 +721,12 @@ def format_pr_list(prs, metadata):
         "",
     ]
 
+    superseded_by = metadata.get("superseded_by")
+    if superseded_by:
+        # Insert right after the status line for visibility.
+        lines.insert(8, "  superseded: {} (preview only, never released as stable)".format(
+            superseded_by))
+
     if not prs:
         lines.append("  *No changes found.*")
     else:
@@ -635,7 +756,20 @@ def format_pr_list(prs, metadata):
 
     # Status-appropriate header
     status = metadata["status"]
-    if status == "unreleased":
+    if superseded_by:
+        if (RELEASES_DIR / "{}.md".format(superseded_by)).exists():
+            sup_link = "[{sup}]({sup}.md)".format(sup=superseded_by)
+        elif (RELEASES_DIR / "{}-unreleased.md".format(superseded_by)).exists():
+            sup_link = "[{sup}]({sup}-unreleased.md)".format(sup=superseded_by)
+        else:
+            sup_link = superseded_by
+        lines.append(
+            "> **Preview only** · Superseded by "
+            "{sup_link} · Never released as stable — these changes "
+            "rolled up into {sup} "
+            "· [NuGet](https://www.nuget.org/packages/SkiaSharp/"
+            "{ver}-preview)".format(sup_link=sup_link, sup=superseded_by, ver=version))
+    elif status == "unreleased":
         lines.append(
             "> **Upcoming release** · In development "
             "· Not yet available on NuGet")
@@ -685,17 +819,45 @@ def get_version_files():
     return versions, next_versions
 
 
+def cleanup_stale_unreleased():
+    # type: () -> list[str]
+    """Delete {version}-unreleased.md files whose stable {version}.md exists.
+
+    Once a version has a published page, its in-progress "unreleased" page is
+    obsolete: the servicing line has moved on to the next patch (e.g. once
+    3.119.4.md ships, 3.119.4-unreleased.md is stale and the line tracks
+    3.119.5-unreleased.md instead). Returns the removed file paths.
+    """
+    removed = []
+    for f in sorted(RELEASES_DIR.iterdir()):
+        if f.suffix != ".md" or not f.stem.endswith("-unreleased"):
+            continue
+        version = f.stem[:-11]  # strip "-unreleased"
+        if (RELEASES_DIR / "{}.md".format(version)).exists():
+            f.unlink()
+            removed.append(str(f))
+    return removed
+
+
 def generate_toc(versions, next_versions):
     # type: (list[str], list[str]) -> str
-    """Generate TOC.yml grouped by major.minor, obsolete under one node."""
-    next_set = set(next_versions)
-    groups = defaultdict(list)
+    """Generate TOC.yml grouped by major.minor, obsolete under one node.
+
+    Unreleased pages are listed in their minor group even when no stable page
+    of that exact version exists yet (e.g. 3.119.5-unreleased before 3.119.5
+    ships, or 4.148.0-unreleased before 4.148.0 ships).
+    """
+    stable_groups = defaultdict(list)
+    unreleased_groups = defaultdict(list)
     for v in versions:
-        groups[minor_group(v)].append(v)
+        stable_groups[minor_group(v)].append(v)
+    for v in next_versions:
+        unreleased_groups[minor_group(v)].append(v)
 
     current = []
     obsolete = []
-    for g in sorted(groups.keys(), key=lambda x: version_key(x), reverse=True):
+    for g in sorted(set(stable_groups) | set(unreleased_groups),
+                    key=lambda x: version_key(x), reverse=True):
         if int(g.split(".")[0]) < 3:
             obsolete.append(g)
         else:
@@ -704,23 +866,32 @@ def generate_toc(versions, next_versions):
     lines = ["- name: Overview", "  href: index.md"]
 
     for g in current:
-        members = groups[g]
+        stable = stable_groups.get(g, [])
+        unreleased = unreleased_groups.get(g, [])
+        header = "{}.md".format(stable[0]) if stable \
+            else "{}-unreleased.md".format(unreleased[0])
         lines.append("- name: Version {}.x".format(g))
-        lines.append("  href: {}.md".format(members[0]))
+        lines.append("  href: {}".format(header))
         lines.append("  items:")
-        for v in members:
-            if v in next_set:
+        entries = [(v, True) for v in unreleased] + [(v, False) for v in stable]
+        entries.sort(key=lambda t: version_key(t[0]), reverse=True)
+        for v, is_unrel in entries:
+            if is_unrel:
                 lines.append("    - name: Version {} (Unreleased)".format(v))
                 lines.append("      href: {}-unreleased.md".format(v))
-            lines.append("    - name: Version {}".format(v))
-            lines.append("      href: {}.md".format(v))
+            else:
+                lines.append("    - name: Version {}".format(v))
+                lines.append("      href: {}.md".format(v))
 
     if obsolete:
+        first = stable_groups.get(obsolete[0]) or unreleased_groups.get(obsolete[0])
         lines.append("- name: Obsolete Versions")
-        lines.append("  href: {}.md".format(groups[obsolete[0]][0]))
+        lines.append("  href: {}.md".format(first[0]))
         lines.append("  items:")
         for g in obsolete:
-            members = groups[g]
+            members = stable_groups.get(g, [])
+            if not members:
+                continue
             lines.append("    - name: Version {}.x".format(g))
             lines.append("      href: {}.md".format(members[0]))
             if len(members) > 1:
@@ -734,8 +905,11 @@ def generate_toc(versions, next_versions):
 
 def generate_index(versions, next_versions):
     # type: (list[str], list[str]) -> str
-    """Generate index.md with version list grouped by major."""
-    next_set = set(next_versions)
+    """Generate index.md with version list grouped by major.
+
+    Unreleased pages are listed even when no stable page of that exact version
+    exists yet.
+    """
     lines = [
         "# Release Notes",
         "",
@@ -743,25 +917,29 @@ def generate_index(versions, next_versions):
         "",
     ]
 
+    entries = [(v, False) for v in versions] + [(v, True) for v in next_versions]
+
     major_groups = defaultdict(list)
-    for v in versions:
-        major_groups[v.split(".")[0]].append(v)
+    for v, is_unrel in entries:
+        major_groups[v.split(".")[0]].append((v, is_unrel))
 
     for major in sorted(major_groups.keys(), key=int, reverse=True):
         lines.extend(["### SkiaSharp {}.x".format(major), ""])
 
         minor_groups_map = defaultdict(list)
-        for v in major_groups[major]:
-            minor_groups_map[minor_group(v)].append(v)
+        for v, is_unrel in major_groups[major]:
+            minor_groups_map[minor_group(v)].append((v, is_unrel))
 
         for g in sorted(minor_groups_map.keys(),
                         key=lambda x: version_key(x), reverse=True):
-            members = minor_groups_map[g]
+            members = sorted(minor_groups_map[g],
+                             key=lambda t: version_key(t[0]), reverse=True)
             lines.append("- **Version {}.x**".format(g))
-            for v in members:
-                if v in next_set:
+            for v, is_unrel in members:
+                if is_unrel:
                     lines.append("  - [Version {} (Unreleased)]({}-unreleased.md)".format(v, v))
-                lines.append("  - [Version {}]({}.md)".format(v, v))
+                else:
+                    lines.append("  - [Version {}]({}.md)".format(v, v))
         lines.append("")
 
     return "\n".join(lines)
@@ -771,10 +949,13 @@ def generate_index(versions, next_versions):
 
 
 def cmd_update_toc():
-    """Regenerate TOC.yml and index.md."""
+    """Regenerate TOC.yml and index.md (and prune stale unreleased pages)."""
     if not RELEASES_DIR.is_dir():
         print("Error: {} does not exist".format(RELEASES_DIR), file=sys.stderr)
         sys.exit(1)
+
+    for removed in cleanup_stale_unreleased():
+        print("Removed stale {}".format(removed))
 
     versions, next_versions = get_version_files()
 
@@ -838,9 +1019,21 @@ def cmd_branch(branch):
         elif has_preview:
             status = "preview"
 
+    # Supersede marker: a minor that never ships stable (e.g. 4.147.0 skipped
+    # for 4.148.0). Auto-detected once a newer minor line appears. Forces
+    # "preview" status and a "superseded" label so the page makes clear it
+    # never released as stable.
+    superseded_by = None
+    if not is_main and not is_servicing:
+        superseded_by = resolve_superseded_by(version, all_branches)
+        if superseded_by:
+            status = "preview"
+
     print("Branch: {}".format(branch))
     print("Version: {}".format(version))
     print("Status: {}".format(status))
+    if superseded_by:
+        print("Superseded by: {}".format(superseded_by))
     print("Diff: {}..{}".format(from_display, to_display))
 
     prs = get_prs_from_diff(from_ref, to_ref)
@@ -864,6 +1057,8 @@ def cmd_branch(branch):
         "from": from_display,
         "to": to_display,
     }
+    if superseded_by:
+        metadata["superseded_by"] = superseded_by
     content = format_pr_list(prs, metadata)
 
     output_path = RELEASES_DIR / filename

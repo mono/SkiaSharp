@@ -50,6 +50,13 @@ This writes raw PR data to `documentation/docfx/releases/{version}.md` or
 `documentation/docfx/releases/{version}-unreleased.md` depending on the branch type,
 and regenerates TOC/index. All data comes from git history — no API calls or tokens needed.
 
+When TOC/index are regenerated, the script also **prunes stale unreleased pages**: any
+`{version}-unreleased.md` whose stable `{version}.md` already exists is deleted, because
+that version has shipped and the line has moved on to the next patch (e.g. once
+`3.119.4.md` exists, `3.119.4-unreleased.md` is removed in favour of `3.119.5-unreleased.md`).
+An unreleased page is still listed in its minor group even when no stable page of that exact
+version exists yet (e.g. `3.119.5-unreleased.md` before `3.119.5` ships).
+
 The file starts with an HTML comment block containing both metadata (version, status, branch,
 diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
 placeholder for polished content. The raw data comment must be preserved in the final file.
@@ -60,8 +67,8 @@ placeholder for polished content. The raw data comment must be preserved in the 
 ========================================
 Files to polish:
   - documentation/docfx/releases/4.147.0.md
-  - documentation/docfx/releases/4.147.0-unreleased.md
-  - documentation/docfx/releases/3.119.4-unreleased.md
+  - documentation/docfx/releases/3.119.5-unreleased.md
+  - documentation/docfx/releases/4.148.0-unreleased.md
 ========================================
 ```
 
@@ -77,6 +84,43 @@ Determine the version's status from the HTML comment block in the file (`status:
 - **Stable**: header uses `Released {date}` + NuGet link + GitHub Release link
 - **Preview**: header uses `Preview only` + preview NuGet link + GitHub Release link
 - **Unreleased**: header uses `> **Upcoming release** · In development · Not yet available on NuGet`
+- **Superseded** (a `superseded:` line is present in the comment block): the version was a
+  preview that will never ship as stable. Keep the script-generated
+  `> **Preview only** · Superseded by [X.Y.Z](...) · Never released as stable …` header and
+  add a short note in Highlights that the work rolled up into the superseding version.
+
+### Skipped / superseded minors (preview-only versions)
+
+Occasionally a minor ships previews but is **skipped** before going stable — e.g. `4.147`
+was previewed but abandoned in favour of `4.148`. This is handled **automatically** — no
+configuration is normally required:
+
+1. **Automatic cumulative base.** When choosing the diff base for a new minor (and for
+   `main`), the script picks the most recent prior version that actually shipped a **stable
+   git tag**, skipping any minor that only had previews. So `4.148`'s notes roll up *all*
+   the skipped `4.147` work instead of showing a tiny delta. The same skip applies to
+   **point releases**: a stable patch bases on the most recent previous patch that shipped
+   stable, so e.g. `3.119.4` rolls up the preview-only `3.119.3` (the `3.119.3` page still
+   keeps its own notes — duplication across the two pages is expected and fine).
+
+2. **Automatic supersede label.** A version that has only preview tags is flagged as
+   *superseded* once a **newer version is known**. A newer version is "known" from a later
+   `release/*` branch or `v*` tag, **or from `main` itself**: if `main`'s in-development
+   `SKIASHARP_VERSION` is newer and the preview-only version's minor line was never branched
+   for servicing (no `release/X.Y.x`), `main`'s version supersedes it. So with `main` on
+   `4.148.0` and only `release/4.147.0-preview.*` branches (no `release/4.147.x`), `4.147.0`
+   is flagged *superseded by 4.148.0* immediately — no `4.148` branch or tag required. The
+   page is forced to `preview` status and rendered with a *"Preview only · Superseded by
+   4.148.0 · Never released as stable"* header. The label links to the successor's published
+   page (`{ver}.md`) when it exists, otherwise to its in-development page
+   (`{ver}-unreleased.md`). Until a newer version is known, the version is just a normal preview.
+
+> Detection is purely tag/branch/`main`-version based, so no configuration file is needed. (If a
+> manual override is ever required it can be reintroduced later; for now the automatic
+> behaviour is the only path.)
+
+When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
+header and add a one-line note in Highlights that the work rolled up into the successor.
 
 ### Step 4 — Write polished pages
 
