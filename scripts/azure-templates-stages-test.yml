@@ -193,9 +193,6 @@ stages:
             name: tests_netcore_linux
             displayName: Linux (.NET Core)
             buildAgent: ${{ parameters.buildAgentLinux }}
-            # libgtk-4-1 (and its graphene/cairo/gdk dependencies) lets the SkiaSharp.Views.Gtk4.Tests
-            # GTK4 conversion tests actually execute on Linux instead of skipping; the display-dependent
-            # tests still skip on the headless agent.
             packages: $(MANAGED_LINUX_PACKAGES) libgtk-4-1
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
