@@ -24,6 +24,7 @@ Requirements: git, Python 3.7+
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -116,6 +117,115 @@ def _is_stable_branch(branch):
     if branch.endswith(".x"):
         return False
     return not re.search(r"-preview\.", branch)
+
+
+SUPERSEDED_FILE = RELEASES_DIR / "superseded.json"
+
+
+def load_superseded():
+    # type: () -> dict
+    """Load the OPTIONAL version -> superseded_by override map from superseded.json.
+
+    Supersede is normally auto-detected (see detect_superseded_by): a version
+    that has only preview tags AND has been overtaken by a newer minor line is
+    treated as preview-only/superseded. This file is only needed to:
+      - flag a skip EARLY, before the successor branch/tag exists yet, or
+      - force the behaviour when a stray stable tag would otherwise confuse
+        detection.
+
+    Explicit entries always win over auto-detection.
+
+    Format (keys/values are base versions like "4.147.0"):
+        { "4.147.0": "4.148.0" }
+    """
+    if SUPERSEDED_FILE.exists():
+        try:
+            data = json.loads(SUPERSEDED_FILE.read_text())
+            if isinstance(data, dict):
+                return data
+        except (ValueError, OSError):
+            pass
+    return {}
+
+
+def _version_has_stable_tag(version):
+    # type: (str) -> bool
+    """True if a stable git tag (vX.Y.Z, no -preview/-rc) exists for version."""
+    tags = run(["git", "tag", "-l", "v{}*".format(version)], check=False)
+    for tag in tags.splitlines():
+        tag = tag.strip()
+        if not tag:
+            continue
+        if "-preview" in tag or "-rc" in tag:
+            continue
+        # Match vX.Y.Z exactly or with a trailing build suffix (vX.Y.Z.N)
+        rest = tag[len("v" + version):] if tag.startswith("v" + version) else None
+        if rest is not None and (rest == "" or rest.startswith(".")):
+            return True
+    return False
+
+
+def _all_known_base_versions(all_branches):
+    # type: (list[str]) -> set[str]
+    """Collect every base version (X.Y.Z) known from release branches and tags."""
+    versions = set()
+    for b in all_branches:
+        if b.endswith(".x"):
+            continue
+        versions.add(version_from_branch(b))
+    tags = run(["git", "tag", "-l", "v*"], check=False)
+    for tag in tags.splitlines():
+        tag = tag.strip()
+        if tag.startswith("v"):
+            versions.add(extract_base_version(tag))
+    return versions
+
+
+def detect_superseded_by(version, all_branches):
+    # type: (str, list[str]) -> Optional[str]
+    """Auto-detect whether a preview-only version was skipped for a later one.
+
+    A version is "superseded" when it never shipped a stable tag AND a strictly
+    later version exists. Returns the smallest later base version, preferring
+    one that actually shipped stable. This covers both a skipped minor
+    (4.147.0 -> 4.148.0) and an abandoned patch preview (3.119.3 -> 3.119.4).
+    Returns None while the version is still the latest line (just a preview).
+    """
+    if _version_has_stable_tag(version):
+        return None
+    vkey = version_key(version)
+    later = [v for v in _all_known_base_versions(all_branches)
+             if version_key(v) > vkey]
+    if not later:
+        return None
+    stable_later = [v for v in later if _version_has_stable_tag(v)]
+    pool = sorted(stable_later or later, key=version_key)
+    return pool[0]
+
+
+def resolve_superseded_by(version, all_branches):
+    # type: (str, list[str]) -> Optional[str]
+    """Explicit superseded.json override, falling back to auto-detection."""
+    explicit = load_superseded().get(version)
+    if explicit:
+        return explicit
+    return detect_superseded_by(version, all_branches)
+
+
+def _is_valid_stable_base(branch, superseded):
+    # type: (str, dict) -> bool
+    """True if a release branch may serve as a cumulative "previous stable" base.
+
+    A branch is rejected if its base version is explicitly superseded, or if
+    that version never shipped a stable tag. This makes cross-minor rollups
+    reach back to the last version that actually released as stable. The
+    stable-tag check means preview-only/skipped minors are excluded
+    automatically, even without an explicit superseded.json entry.
+    """
+    ver = version_from_branch(branch)
+    if ver in superseded:
+        return False
+    return _version_has_stable_tag(ver)
 
 
 def _login_from_email(email):
@@ -365,23 +475,27 @@ def find_previous_stable_base(all_branches, major, minor_num, patch):
 
     For version X.Y.Z:
     1. If Z > 0: look for release/X.Y.(Z-1) stable, fall back to latest preview
-    2. If Z == 0: look for the latest branch from any previous minor/major
+    2. If Z == 0: look for the latest branch from a previous minor/major that
+       actually shipped as stable, skipping any minor that was superseded or
+       never produced a stable tag (so its work rolls up into this version).
 
     Falls back to None if nothing found.
     """
     minor = "{}.{}".format(major, minor_num)
+    superseded = load_superseded()
 
     # Case 1: Z > 0 — look for stable release of previous patch
     if patch > 0:
         prev_version = "{}.{}".format(minor, patch - 1)
         # Prefer stable
         prev_stable = "release/{}".format(prev_version)
-        if prev_stable in all_branches:
+        if prev_stable in all_branches and prev_version not in superseded:
             return prev_stable
         # No stable — find latest preview of that patch
         prev_candidates = [b for b in all_branches
                            if b.startswith("release/{}-preview.".format(
-                               prev_version))]
+                               prev_version))
+                           and prev_version not in superseded]
         if prev_candidates:
             prev_candidates.sort(key=release_branch_sort_key)
             return prev_candidates[-1]
@@ -391,7 +505,8 @@ def find_previous_stable_base(all_branches, major, minor_num, patch):
                    and not b.endswith(".x")]
         earlier = [b for b in earlier
                    if release_branch_sort_key(b) <
-                   (major, minor_num, patch, 0, 0)]
+                   (major, minor_num, patch, 0, 0)
+                   and version_from_branch(b) not in superseded]
         if earlier:
             earlier.sort(key=release_branch_sort_key)
             return earlier[-1]
@@ -405,6 +520,18 @@ def find_previous_stable_base(all_branches, major, minor_num, patch):
     candidates = [b for b in all_versioned
                   if release_branch_sort_key(b) < target_key]
     if candidates:
+        # Prefer the latest branch that genuinely shipped as stable, so a
+        # skipped/preview-only minor (e.g. 4.147) does not become the base
+        # and its work is rolled up into this version instead.
+        stable = [b for b in candidates
+                  if _is_valid_stable_base(b, superseded)]
+        if stable:
+            return stable[-1]
+        # No stable predecessor found — fall back to latest non-superseded.
+        not_superseded = [b for b in candidates
+                          if version_from_branch(b) not in superseded]
+        if not_superseded:
+            return not_superseded[-1]
         return candidates[-1]
 
     return None
@@ -429,23 +556,39 @@ def determine_diff_range(branch):
                 "Cannot read SKIASHARP_VERSION from "
                 "scripts/azure-templates-variables.yml")
         minor = minor_group(version)
+        superseded = load_superseded()
 
-        # Find latest release branch for the same minor
-        candidates = [b for b in all_branches
+        # Find latest release branch for the same minor. These are the active
+        # line for the upcoming version, so the latest one is always the base
+        # (main shows work beyond the most recent preview cut).
+        same_minor = [b for b in all_branches
                       if b.startswith("release/{}.".format(minor))
                       and not b.endswith(".x")]
 
-        # Fallback: latest release branch across ALL minors
-        if not candidates:
-            candidates = [b for b in all_branches if not b.endswith(".x")]
+        if same_minor:
+            same_minor.sort(key=release_branch_sort_key)
+            return ("origin/{}".format(same_minor[-1]),
+                    "origin/main", version)
 
-        if not candidates:
+        # No branch yet for the upcoming minor — fall back across ALL minors,
+        # preferring the latest that genuinely shipped as stable so a skipped
+        # / preview-only minor does not shrink main's rollup.
+        all_versioned = [b for b in all_branches if not b.endswith(".x")]
+        all_versioned.sort(key=release_branch_sort_key)
+
+        if not all_versioned:
             raise RuntimeError(
                 "No release branches found. Cannot determine diff range "
                 "for main. Ensure release branches are fetched.")
 
-        candidates.sort(key=release_branch_sort_key)
-        latest = candidates[-1]
+        stable = [b for b in all_versioned
+                  if _is_valid_stable_base(b, superseded)]
+        if stable:
+            latest = stable[-1]
+        else:
+            not_superseded = [b for b in all_versioned
+                              if version_from_branch(b) not in superseded]
+            latest = not_superseded[-1] if not_superseded else all_versioned[-1]
         return "origin/{}".format(latest), "origin/main", version
 
     # ── servicing branch (release/X.Y.x) ────────────────────────
@@ -606,6 +749,12 @@ def format_pr_list(prs, metadata):
         "",
     ]
 
+    superseded_by = metadata.get("superseded_by")
+    if superseded_by:
+        # Insert right after the status line for visibility.
+        lines.insert(8, "  superseded: {} (preview only, never released as stable)".format(
+            superseded_by))
+
     if not prs:
         lines.append("  *No changes found.*")
     else:
@@ -635,7 +784,14 @@ def format_pr_list(prs, metadata):
 
     # Status-appropriate header
     status = metadata["status"]
-    if status == "unreleased":
+    if superseded_by:
+        lines.append(
+            "> **Preview only** · Superseded by "
+            "[{sup}]({sup}.md) · Never released as stable — these changes "
+            "rolled up into {sup} "
+            "· [NuGet](https://www.nuget.org/packages/SkiaSharp/"
+            "{ver}-preview)".format(sup=superseded_by, ver=version))
+    elif status == "unreleased":
         lines.append(
             "> **Upcoming release** · In development "
             "· Not yet available on NuGet")
@@ -838,9 +994,21 @@ def cmd_branch(branch):
         elif has_preview:
             status = "preview"
 
+    # Supersede marker: a minor that never ships stable (e.g. 4.147.0 skipped
+    # for 4.148.0). Auto-detected once a newer minor line appears; an explicit
+    # superseded.json entry can force/override it. Forces "preview" status and
+    # a "superseded" label so the page makes clear it never released as stable.
+    superseded_by = None
+    if not is_main and not is_servicing:
+        superseded_by = resolve_superseded_by(version, all_branches)
+        if superseded_by:
+            status = "preview"
+
     print("Branch: {}".format(branch))
     print("Version: {}".format(version))
     print("Status: {}".format(status))
+    if superseded_by:
+        print("Superseded by: {}".format(superseded_by))
     print("Diff: {}..{}".format(from_display, to_display))
 
     prs = get_prs_from_diff(from_ref, to_ref)
@@ -864,6 +1032,8 @@ def cmd_branch(branch):
         "from": from_display,
         "to": to_display,
     }
+    if superseded_by:
+        metadata["superseded_by"] = superseded_by
     content = format_pr_list(prs, metadata)
 
     output_path = RELEASES_DIR / filename

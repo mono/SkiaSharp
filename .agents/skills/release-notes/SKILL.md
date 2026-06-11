@@ -77,6 +77,43 @@ Determine the version's status from the HTML comment block in the file (`status:
 - **Stable**: header uses `Released {date}` + NuGet link + GitHub Release link
 - **Preview**: header uses `Preview only` + preview NuGet link + GitHub Release link
 - **Unreleased**: header uses `> **Upcoming release** · In development · Not yet available on NuGet`
+- **Superseded** (a `superseded:` line is present in the comment block): the version was a
+  preview that will never ship as stable. Keep the script-generated
+  `> **Preview only** · Superseded by [X.Y.Z](...) · Never released as stable …` header and
+  add a short note in Highlights that the work rolled up into the superseding version.
+
+### Skipped / superseded minors (preview-only versions)
+
+Occasionally a minor ships previews but is **skipped** before going stable — e.g. `4.147`
+was previewed but abandoned in favour of `4.148`. This is handled **automatically** — no
+configuration is normally required:
+
+1. **Automatic cumulative base.** When choosing the diff base for a new minor (and for
+   `main`), the script picks the most recent prior version that actually shipped a **stable
+   git tag**, skipping any minor that only had previews. So `4.148`'s notes roll up *all*
+   the skipped `4.147` work instead of showing a tiny delta.
+
+2. **Automatic supersede label.** A version that has only preview tags is flagged as
+   *superseded* once a **newer minor line appears** (a `4.148.*` branch or tag). Its page is
+   then forced to `preview` status and rendered with a *"Preview only · Superseded by
+   4.148.0 · Never released as stable"* header. Until the successor exists, the version is
+   just a normal preview.
+
+3. **Optional `superseded.json` override.** You only need this to flag a skip **early**,
+   before the successor branch/tag exists yet, or to override detection when a stray stable
+   tag would confuse it. Create `documentation/docfx/releases/superseded.json` mapping the
+   skipped base version to its replacement; explicit entries always win:
+
+   ```json
+   {
+     "4.147.0": "4.148.0"
+   }
+   ```
+
+   Remove the entry (or the file) once the successor branch exists — detection takes over.
+
+When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
+header and add a one-line note in Highlights that the work rolled up into the successor.
 
 ### Step 4 — Write polished pages
 
