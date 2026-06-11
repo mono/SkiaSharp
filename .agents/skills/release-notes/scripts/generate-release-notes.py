@@ -151,21 +151,40 @@ def _all_known_base_versions(all_branches):
     return versions
 
 
+def _main_upcoming_version():
+    # type: () -> Optional[str]
+    """Main's in-development version (origin/main, falling back to local)."""
+    return get_version_from_remote_branch("main") or get_upcoming_version()
+
+
 def detect_superseded_by(version, all_branches):
     # type: (str, list[str]) -> Optional[str]
     """Auto-detect whether a preview-only version was skipped for a later one.
 
     A version is "superseded" when it never shipped a stable tag AND a strictly
     later version exists. Returns the smallest later base version, preferring
-    one that actually shipped stable. This covers both a skipped minor
-    (4.147.0 -> 4.148.0) and an abandoned patch preview (3.119.3 -> 3.119.4).
+    one that actually shipped stable. This covers a skipped minor
+    (4.147.0 -> 4.148.0), an abandoned patch preview (3.119.3 -> 3.119.4), and
+    a minor skipped on main itself: when main's in-development version is newer
+    and the checked version's minor line was never branched for servicing
+    (no release/X.Y.x), main's version supersedes it — e.g. main on 4.148.0
+    with only release/4.147.0-preview.* and no release/4.147.x.
     Returns None while the version is still the latest line (just a preview).
     """
     if _version_has_stable_tag(version):
         return None
     vkey = version_key(version)
-    later = [v for v in _all_known_base_versions(all_branches)
-             if version_key(v) > vkey]
+    later = {v for v in _all_known_base_versions(all_branches)
+             if version_key(v) > vkey}
+
+    # Main's in-development version supersedes a preview-only version when that
+    # version's minor line was never branched for servicing (it was skipped).
+    main_version = _main_upcoming_version()
+    if main_version and version_key(main_version) > vkey:
+        servicing = "release/{}.x".format(minor_group(version))
+        if servicing not in all_branches:
+            later.add(main_version)
+
     if not later:
         return None
     stable_later = [v for v in later if _version_has_stable_tag(v)]
@@ -738,12 +757,18 @@ def format_pr_list(prs, metadata):
     # Status-appropriate header
     status = metadata["status"]
     if superseded_by:
+        if (RELEASES_DIR / "{}.md".format(superseded_by)).exists():
+            sup_link = "[{sup}]({sup}.md)".format(sup=superseded_by)
+        elif (RELEASES_DIR / "{}-unreleased.md".format(superseded_by)).exists():
+            sup_link = "[{sup}]({sup}-unreleased.md)".format(sup=superseded_by)
+        else:
+            sup_link = superseded_by
         lines.append(
             "> **Preview only** · Superseded by "
-            "[{sup}]({sup}.md) · Never released as stable — these changes "
+            "{sup_link} · Never released as stable — these changes "
             "rolled up into {sup} "
             "· [NuGet](https://www.nuget.org/packages/SkiaSharp/"
-            "{ver}-preview)".format(sup=superseded_by, ver=version))
+            "{ver}-preview)".format(sup_link=sup_link, sup=superseded_by, ver=version))
     elif status == "unreleased":
         lines.append(
             "> **Upcoming release** · In development "

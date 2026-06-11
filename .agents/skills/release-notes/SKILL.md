@@ -104,14 +104,20 @@ configuration is normally required:
    keeps its own notes — duplication across the two pages is expected and fine).
 
 2. **Automatic supersede label.** A version that has only preview tags is flagged as
-   *superseded* once a **newer minor line appears** (a `4.148.*` branch or tag). Its page is
-   then forced to `preview` status and rendered with a *"Preview only · Superseded by
-   4.148.0 · Never released as stable"* header. Until the successor exists, the version is
-   just a normal preview.
+   *superseded* once a **newer version is known**. A newer version is "known" from a later
+   `release/*` branch or `v*` tag, **or from `main` itself**: if `main`'s in-development
+   `SKIASHARP_VERSION` is newer and the preview-only version's minor line was never branched
+   for servicing (no `release/X.Y.x`), `main`'s version supersedes it. So with `main` on
+   `4.148.0` and only `release/4.147.0-preview.*` branches (no `release/4.147.x`), `4.147.0`
+   is flagged *superseded by 4.148.0* immediately — no `4.148` branch or tag required. The
+   page is forced to `preview` status and rendered with a *"Preview only · Superseded by
+   4.148.0 · Never released as stable"* header. The label links to the successor's published
+   page (`{ver}.md`) when it exists, otherwise to its in-development page
+   (`{ver}-unreleased.md`). Until a newer version is known, the version is just a normal preview.
 
-> Detection is purely tag/branch based, so no configuration file is needed. (If a manual
-> override is ever required — e.g. to flag a skip *before* the successor branch exists — it
-> can be reintroduced later; for now the automatic behaviour is the only path.)
+> Detection is purely tag/branch/`main`-version based, so no configuration file is needed. (If a
+> manual override is ever required it can be reintroduced later; for now the automatic
+> behaviour is the only path.)
 
 When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
 header and add a one-line note in Highlights that the work rolled up into the successor.
