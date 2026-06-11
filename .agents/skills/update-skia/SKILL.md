@@ -325,7 +325,7 @@ You should still be inside `externals/skia` from Phase 4.
 > If you had a pending increment that must survive, capture it before running.
 
 > 📋 **This phase is handled by a script.** The script updates VERSIONS.txt, cgmanifest.json,
-> azure-pipelines-variables.yml, and verifies SK_C_INCREMENT — then runs the mandatory
+> azure-templates-variables.yml, and verifies SK_C_INCREMENT — then runs the mandatory
 > verification greps. It exits non-zero if any stale references remain.
 
 In the **SkiaSharp parent repo**, run:
@@ -337,7 +337,7 @@ pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -
 The script handles all of these (so you don't have to do them manually):
 - `scripts/VERSIONS.txt`: milestone, increment→0, soname, assembly, file, ALL ~30 nuget lines
 - `cgmanifest.json`: commitHash, version, chrome_milestone, upstream_merge_commit
-- `scripts/azure-pipelines-variables.yml` (if it exists)
+- `scripts/azure-templates-variables.yml`: `SKIASHARP_VERSION` (must match VERSIONS.txt nuget version)
 - Verifies `SK_C_INCREMENT` is 0 in `externals/skia/include/c/sk_types.h`
 - Runs mandatory `grep` verification — fails if any stale references remain
 
