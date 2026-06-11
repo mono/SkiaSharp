@@ -286,7 +286,7 @@ namespace SkiaSharp.Tests
 		public void GetPixelBytesOffsetIsCorrect(SKColorType ct, int w, int h, int x, int y, int offset)
 		{
 			var info = new SKImageInfo(w, h, ct);
-			Assert.Equal(offset, info.GetPixelBytesOffset(x, y));
+			Assert.Equal(offset, info.GetPixelBytesOffset(x, y, info.RowBytes));
 		}
 
 		[SkippableTheory]
