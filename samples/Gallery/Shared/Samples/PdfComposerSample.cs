@@ -388,7 +388,7 @@ public class PdfComposerSample : DocumentSampleBase
 			{
 				var imgSize = Math.Min(pageWidth - margin * 2, 300);
 				var imgRect = SKRect.Create(margin, y, imgSize, imgSize);
-				canvas.DrawBitmap(baboonBitmap, imgRect);
+				canvas.DrawBitmap(baboonBitmap, imgRect, SKSamplingOptions.Default);
 
 				// Label
 				using var labelFont = new SKFont(SampleMedia.Fonts.Default, 11);
@@ -408,7 +408,7 @@ public class PdfComposerSample : DocumentSampleBase
 					0,     0,     0,     1, 0,
 				});
 				using var grayPaint = new SKPaint { ColorFilter = grayFilter };
-				canvas.DrawBitmap(baboonBitmap, SKRect.Create(rightX, y, smallSize, smallSize), grayPaint);
+				canvas.DrawBitmap(baboonBitmap, SKRect.Create(rightX, y, smallSize, smallSize), SKSamplingOptions.Default, grayPaint);
 				canvas.DrawText("Grayscale filter", rightX, y + smallSize + 16, SKTextAlign.Left, labelFont, labelPaint);
 
 				// Sepia version
@@ -420,7 +420,7 @@ public class PdfComposerSample : DocumentSampleBase
 					0,      0,      0,      1, 0,
 				});
 				using var sepiaPaint = new SKPaint { ColorFilter = sepiaFilter };
-				canvas.DrawBitmap(baboonBitmap, SKRect.Create(rightX, y + smallSize + 30, smallSize, smallSize), sepiaPaint);
+				canvas.DrawBitmap(baboonBitmap, SKRect.Create(rightX, y + smallSize + 30, smallSize, smallSize), SKSamplingOptions.Default, sepiaPaint);
 				canvas.DrawText("Sepia filter", rightX, y + smallSize * 2 + 46, SKTextAlign.Left, labelFont, labelPaint);
 
 				y += imgSize + 40;
@@ -435,7 +435,7 @@ public class PdfComposerSample : DocumentSampleBase
 			if (cwBitmap != null)
 			{
 				var cwSize = 150f;
-				canvas.DrawBitmap(cwBitmap, SKRect.Create(margin, y, cwSize, cwSize));
+				canvas.DrawBitmap(cwBitmap, SKRect.Create(margin, y, cwSize, cwSize), SKSamplingOptions.Default);
 
 				using var cwLabel = new SKFont(SampleMedia.Fonts.Default, 11);
 				using var cwPaint = new SKPaint { IsAntialias = true, Color = SubtitleColor };

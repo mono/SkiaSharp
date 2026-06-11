@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Xunit;
 
@@ -206,6 +206,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Obsolete ("Tests obsolete SKTypeface.CountGlyphs/GetGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public unsafe void UnicharCountReturnsCorrectCount()
 		{
 			var text = new uint[] { 79 };
@@ -223,6 +224,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Obsolete ("Tests obsolete SKTypeface.CountGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			const string text = "Hello World!";
@@ -235,6 +237,7 @@ namespace SkiaSharp.Tests
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[SkippableFact]
+		[Obsolete ("Tests obsolete SKTypeface.CountGlyphs/GetGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
@@ -254,6 +257,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Obsolete ("Tests obsolete SKTypeface.ContainsGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public void ContainsGlyphsWithByteSpanDoesNotStackOverflow ()
 		{
 			using var typeface = SKTypeface.Default;

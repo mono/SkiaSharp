@@ -361,7 +361,7 @@ namespace SkiaSharp.Tests
 			{
 				var canvas = surface.Canvas;
 				canvas.Clear(SKColors.White);
-				canvas.DrawBitmap(bitmap, 0, 0);
+				canvas.DrawBitmap(bitmap, 0, 0, SKSamplingOptions.Default);
 
 				using (var img = surface.Snapshot())
 				using (var bmp = SKBitmap.FromImage(img))

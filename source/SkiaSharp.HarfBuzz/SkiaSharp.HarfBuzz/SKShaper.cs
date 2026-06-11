@@ -40,11 +40,11 @@ namespace SkiaSharp.HarfBuzz
 			hbBuffer?.Dispose();
 		}
 
-		[Obsolete("Use Shape(Buffer buffer, SKFont font) instead.")]
+		[Obsolete("Use Shape(Buffer buffer, SKFont font) instead.", error: true)]
 		public Result Shape(Buffer buffer, SKPaint paint) =>
 			Shape(buffer, 0, 0, paint.GetLegacyFont());
 
-		[Obsolete("Use Shape(Buffer buffer, float xOffset, float yOffset, SKFont font) instead.")]
+		[Obsolete("Use Shape(Buffer buffer, float xOffset, float yOffset, SKFont font) instead.", error: true)]
 		public Result Shape(Buffer buffer, float xOffset, float yOffset, SKPaint paint) =>
 			Shape(buffer, xOffset, yOffset, paint.GetLegacyFont());
 
@@ -100,11 +100,11 @@ namespace SkiaSharp.HarfBuzz
 			return new Result(codepoints, clusters, points, width);
 		}
 
-		[Obsolete("Use Shape(string text, SKFont font) instead.")]
+		[Obsolete("Use Shape(string text, SKFont font) instead.", error: true)]
 		public Result Shape(string text, SKPaint paint) =>
 			Shape(text, 0, 0, paint.GetLegacyFont());
 
-		[Obsolete("Use Shape(string text, float xOffset, float yOffset, SKFont font) instead.")]
+		[Obsolete("Use Shape(string text, float xOffset, float yOffset, SKFont font) instead.", error: true)]
 		public Result Shape(string text, float xOffset, float yOffset, SKPaint paint)
 		{
 			if (string.IsNullOrEmpty(text))

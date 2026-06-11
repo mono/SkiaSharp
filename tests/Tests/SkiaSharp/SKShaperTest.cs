@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using HarfBuzzSharp;
@@ -21,7 +21,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			{
 				canvas.Clear(SKColors.White);
 
-				canvas.DrawShapedText(shaper, "متن", 100, 200, font, paint);
+				canvas.DrawShapedText(shaper, "متن", 100, 200, SKTextAlign.Left, font, paint);
 
 				canvas.Flush();
 

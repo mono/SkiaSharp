@@ -121,7 +121,7 @@ public class GifPlayerSample : CanvasSampleBase
 			var scaledH = info.Height * scale;
 			var destRect = SKRect.Create((width - scaledW) / 2, (height - scaledH) / 2, scaledW, scaledH);
 
-			canvas.DrawBitmap(bitmap, destRect);
+			canvas.DrawBitmap(bitmap, destRect, SKSamplingOptions.Default);
 		}
 
 		// Draw frame info

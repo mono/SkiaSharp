@@ -4,20 +4,22 @@ namespace SkiaSharp.HarfBuzz
 {
 	public static class CanvasExtensions
 	{
-		[Obsolete("Use DrawShapedText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete("Use DrawShapedText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKPaint paint) =>
 			canvas.DrawShapedText(text, p.X, p.Y, paint.GetLegacyTextAlign(), paint.GetLegacyFont(), paint);
 
+		[Obsolete("Use the overload with SKTextAlign parameter instead.")]
 		public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKFont font, SKPaint paint) =>
 			canvas.DrawShapedText(text, p.X, p.Y, paint.GetLegacyTextAlign(), font, paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			canvas.DrawShapedText(text, p.X, p.Y, textAlign, font, paint);
 
-		[Obsolete("Use DrawShapedText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete("Use DrawShapedText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public static void DrawShapedText(this SKCanvas canvas, string text, float x, float y, SKPaint paint) =>
 			canvas.DrawShapedText(text, x, y, paint.GetLegacyTextAlign(), paint.GetLegacyFont(), paint);
 
+		[Obsolete("Use the overload with SKTextAlign parameter instead.")]
 		public static void DrawShapedText(this SKCanvas canvas, string text, float x, float y, SKFont font, SKPaint paint) =>
 			canvas.DrawShapedText(text, x, y, paint.GetLegacyTextAlign(), font, paint);
 
@@ -30,20 +32,22 @@ namespace SkiaSharp.HarfBuzz
 			canvas.DrawShapedText(shaper, text, x, y, textAlign, font, paint);
 		}
 
-		[Obsolete("Use DrawShapedText(SKShaper shaper, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete("Use DrawShapedText(SKShaper shaper, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, SKPoint p, SKPaint paint) =>
 			canvas.DrawShapedText(shaper, text, p.X, p.Y, paint.GetLegacyTextAlign(), paint.GetLegacyFont(), paint);
 
+		[Obsolete("Use the overload with SKTextAlign parameter instead.")]
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, SKPoint p, SKFont font, SKPaint paint) =>
 			canvas.DrawShapedText(shaper, text, p.X, p.Y, paint.GetLegacyTextAlign(), font, paint);
 
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			canvas.DrawShapedText(shaper, text, p.X, p.Y, textAlign, font, paint);
 
-		[Obsolete("Use DrawShapedText(SKShaper shaper, string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete("Use DrawShapedText(SKShaper shaper, string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, float x, float y, SKPaint paint) =>
 			canvas.DrawShapedText(shaper, text, x, y, paint.GetLegacyTextAlign(), paint.GetLegacyFont(), paint);
 
+		[Obsolete("Use the overload with SKTextAlign parameter instead.")]
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, float x, float y, SKFont font, SKPaint paint) =>
 			canvas.DrawShapedText(shaper, text, x, y, paint.GetLegacyTextAlign(), font, paint);
 

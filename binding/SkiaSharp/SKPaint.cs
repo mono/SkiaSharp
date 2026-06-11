@@ -38,6 +38,7 @@ namespace SkiaSharp
 
 	public unsafe class SKPaint : SKObject, ISKSkipObjectRegistration
 	{
+		[Obsolete]
 		private SKFont font;
 
 		// Shared template that backs SKPaint()'s default font and SKPaint.Reset()'s
@@ -1033,7 +1034,7 @@ namespace SkiaSharp
 		}
 
 		[Obsolete ($"Use {nameof (SKFont)} instead.", error: true)]
-		internal SKFont GetFont () =>
+		private SKFont GetFont () =>
 			font ??= OwnedBy (SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
 
 		// Internal compat-paint bypass helpers used by the non-obsolete public APIs
@@ -1044,15 +1045,19 @@ namespace SkiaSharp
 		// when called from a non-obsolete context. Exposed to SkiaSharp.HarfBuzz
 		// via InternalsVisibleTo. Remove together with SkCompatPaint in Phase 2
 		// of #3732.
+		[Obsolete ("Use SKFont directly instead.")]
 		internal SKTextAlign GetLegacyTextAlign () =>
 			SkiaApi.sk_compatpaint_get_text_align (Handle);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		internal SKTextEncoding GetLegacyTextEncoding () =>
 			SkiaApi.sk_compatpaint_get_text_encoding (Handle);
 
+		[Obsolete ("Use SKFont directly instead.")]
 		internal SKFont GetLegacyFont () =>
-			font ??= OwnedBy (SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
+			GetFont ();
 
+		[Obsolete ("Use SKSamplingOptions directly instead.")]
 		internal SKSamplingOptions GetLegacyFilterQualitySampling ()
 		{
 			var quality = SkiaApi.sk_compatpaint_get_filter_quality (Handle);

@@ -128,7 +128,7 @@ public class WorldTextSample : CanvasSampleBase
 				canvas.DrawText("▸ Shaped (HarfBuzz):", x, y, SKTextAlign.Left, labelFont, labelPaint);
 				y += textSize + 10;
 				using var shaper = new SKShaper(typeface);
-				canvas.DrawShapedText(shaper, text, x, y, font, textPaint);
+				canvas.DrawShapedText(shaper, text, x, y, SKTextAlign.Left, font, textPaint);
 				y += textSize + 20;
 
 				// Divider
@@ -154,7 +154,7 @@ public class WorldTextSample : CanvasSampleBase
 				canvas.DrawText("▸ Shaped text:", x, y, SKTextAlign.Left, labelFont, labelPaint);
 				y += textSize + 10;
 				using var shaper = new SKShaper(typeface);
-				canvas.DrawShapedText(shaper, text, x, y, font, textPaint);
+				canvas.DrawShapedText(shaper, text, x, y, SKTextAlign.Left, font, textPaint);
 				y += textSize + 30;
 
 				using var noteFont = new SKFont(GetEmbeddedTypeface(), 13);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -247,7 +247,7 @@ namespace SkiaSharp.Tests
 			{
 				var canvas = surface.Canvas;
 				canvas.Clear(SKColors.White);
-				canvas.DrawImage(image, 0, 0);
+				canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 
 				using (var snap = surface.Snapshot())
 				using (var bmp = SKBitmap.FromImage(snap))
@@ -271,7 +271,7 @@ namespace SkiaSharp.Tests
 			{
 				var canvas = surface.Canvas;
 				canvas.Clear(SKColors.White);
-				canvas.DrawImage(image, 0, 0);
+				canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 
 				using (var snap = surface.Snapshot())
 				using (var bmp = SKBitmap.FromImage(snap))
@@ -295,7 +295,7 @@ namespace SkiaSharp.Tests
 			{
 				var canvas = surface.Canvas;
 				canvas.Clear(SKColors.White);
-				canvas.DrawImage(image, 0, 0);
+				canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 
 				using (var snap = surface.Snapshot())
 				using (var bmp = SKBitmap.FromImage(snap))
@@ -319,7 +319,7 @@ namespace SkiaSharp.Tests
 			{
 				var canvas = surface.Canvas;
 				canvas.Clear(SKColors.White);
-				canvas.DrawImage(image, 0, 0);
+				canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 
 				using (var snap = surface.Snapshot())
 				using (var bmp = SKBitmap.FromImage(snap))
@@ -696,7 +696,7 @@ namespace SkiaSharp.Tests
 					using (var data = SKData.Create(path))
 					using (var image = SKImage.FromEncodedData(data))
 					{
-						canvas.DrawImage(image, 0, 0);
+						canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 					}
 
 					using (var bmp = new SKBitmap(info))
@@ -732,7 +732,7 @@ namespace SkiaSharp.Tests
 					using (var bitmap = SKBitmap.Decode(path))
 					using (var image = SKImage.FromBitmap(bitmap))
 					{
-						canvas.DrawImage(image, 0, 0);
+						canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 					}
 
 					using (var bmp = new SKBitmap(info))
@@ -767,7 +767,7 @@ namespace SkiaSharp.Tests
 
 					using (var image = SKImage.FromEncodedData(path))
 					{
-						canvas.DrawImage(image, 0, 0);
+						canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 					}
 
 					using (var bmp = new SKBitmap(info))
@@ -796,7 +796,7 @@ namespace SkiaSharp.Tests
 				using (var data = SKData.Create(path))
 				using (var image = SKImage.FromEncodedData(data))
 				{
-					canvas.DrawImage(image, 0, 0);
+					canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 				}
 
 				Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
@@ -819,7 +819,7 @@ namespace SkiaSharp.Tests
 				using (var bitmap = SKBitmap.Decode(path))
 				using (var image = SKImage.FromBitmap(bitmap))
 				{
-					canvas.DrawImage(image, 0, 0);
+					canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 				}
 
 				Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
@@ -841,7 +841,7 @@ namespace SkiaSharp.Tests
 
 				using (var image = SKImage.FromEncodedData(path))
 				{
-					canvas.DrawImage(image, 0, 0);
+					canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 				}
 
 				Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
@@ -885,7 +885,7 @@ namespace SkiaSharp.Tests
 			{
 				using var bmp = new SKBitmap(image.Width, image.Height);
 				using var cnv = new SKCanvas(bmp);
-				cnv.DrawImage(image, 0, 0);
+				cnv.DrawImage(image, 0, 0, SKSamplingOptions.Default);
 				return bmp.Pixels;
 			}
 		}
