@@ -339,6 +339,9 @@ namespace SkiaSharp
 		public Span<byte> GetPixelSpan (int x, int y)
 		{
 			var info = Info;
+			if (info.IsEmpty)
+				return GetPixelSpan ();
+
 			if (x < 0 || x >= info.Width)
 				throw new ArgumentOutOfRangeException (nameof (x));
 			if (y < 0 || y >= info.Height)

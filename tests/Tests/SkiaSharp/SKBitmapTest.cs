@@ -725,6 +725,18 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentOutOfRangeException>(() => bmp.GetPixelSpan(x, y));
 		}
 
+		[SkippableFact]
+		public void GetPixelSpanReturnsEmptyForEmptyBitmap()
+		{
+			using var bmp = new SKBitmap();
+			Assert.True(bmp.Info.IsEmpty);
+
+			// an empty bitmap returns an empty span rather than throwing,
+			// matching SKPixmap.GetPixelSpan<T>
+			Assert.Equal(0, bmp.GetPixelSpan().Length);
+			Assert.Equal(0, bmp.GetPixelSpan(0, 0).Length);
+		}
+
 		[SkippableTheory]
 		[InlineData("baboon.jpg", "baboon-reencoded.jpg")]
 		public void CanEncodeImageStreams(string filename, string encodedFilename)
