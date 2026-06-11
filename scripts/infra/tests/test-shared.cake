@@ -1,7 +1,5 @@
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 
-#tool nuget:?package=xunit.runner.console&version=2.4.2
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEVICE RUNNERS — shared helper for DeviceRunners.Testing.Targets based tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,20 +54,28 @@ void RunDeviceRunnersTest(
 // TEST UTILITIES — shared by desktop test cakes
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void RunTests(FilePath testAssembly, DirectoryPath output, bool is32)
+// Runs a Microsoft.Testing.Platform test executable directly (used for .NET Framework, where
+// the v3 test project builds a runnable exe). MTP report + hang-dump args are passed natively.
+void RunTests(FilePath testApp, DirectoryPath output, bool is32)
 {
-    var dir = testAssembly.GetDirectory();
-    var settings = new XUnit2Settings {
-        ReportName = "TestResults",
-        XmlReport = true,
-        UseX86 = is32,
-        NoAppDomain = true,
-        Parallelism = ParallelismOption.All,
-        OutputDirectory = MakeAbsolute(output).FullPath,
+    var dir = testApp.GetDirectory();
+    output = MakeAbsolute(output);
+    EnsureDirectoryExists(output);
+
+    var exitCode = StartProcess(testApp, new ProcessSettings {
         WorkingDirectory = dir,
-        ArgumentCustomization = args => args.Append("-verbose"),
-    };
-    XUnit2(new [] { testAssembly }, settings);
+        Arguments = new ProcessArgumentBuilder()
+            .Append("--results-directory").AppendQuoted(output.FullPath)
+            .Append("--report-trx")
+            .Append("--report-trx-filename").Append("TestResults.trx")
+            .Append("--hangdump")
+            .Append("--hangdump-timeout").Append("15m")
+            .Append("--hangdump-type").Append("Mini")
+            .Append("--ignore-exit-code").Append("8"),
+    });
+
+    if (exitCode != 0)
+        throw new Exception($"Tests failed: {testApp.GetFilename()} returned exit code {exitCode}.");
 }
 
 void RunDotNetTest(
@@ -83,9 +89,7 @@ void RunDotNetTest(
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
         NoBuild = true,
-        Loggers = new [] { "xunit" },
         WorkingDirectory = dir,
-        ResultsDirectory = output,
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
             args = args
@@ -103,6 +107,16 @@ void RunDotNetTest(
                     }
                 }
             }
+            // Everything after "--" is forwarded to the Microsoft.Testing.Platform runner.
+            args = args
+                .Append("--")
+                .Append("--results-directory").AppendQuoted(output.FullPath)
+                .Append("--report-trx")
+                .Append("--report-trx-filename").Append("TestResults.trx")
+                .Append("--hangdump")
+                .Append("--hangdump-timeout").Append("15m")
+                .Append("--hangdump-type").Append("Mini")
+                .Append("--ignore-exit-code").Append("8");
             return args;
         },
     };

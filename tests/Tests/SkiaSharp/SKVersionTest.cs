@@ -4,14 +4,14 @@ namespace SkiaSharp.Tests
 {
 	public class SKVersionTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void NativeLibraryIsCompatible()
 		{
 			Assert.True(SkiaSharpVersion.CheckNativeLibraryCompatible());
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void NativeVersionIsNotZero()
 		{
@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 			Assert.True(native > new System.Version(0, 0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void NativeMinimumMatchesNativeVersion()
 		{

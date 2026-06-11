@@ -16,11 +16,11 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			}
 			catch (Exception ex)
 			{
-				throw new SkipException($"GTK cannot be initialized: {ex.Message}");
+				Assert.Skip($"GTK cannot be initialized: {ex.Message}");
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateDrawingArea()
 		{
 			InitGtk();
@@ -29,7 +29,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.NotNull(area);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void InitialCanvasSizeIsEmpty()
 		{
 			InitGtk();
@@ -38,7 +38,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(SKSize.Empty, area.CanvasSize);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PaintSurfaceEventCanBeSubscribed()
 		{
 			InitGtk();

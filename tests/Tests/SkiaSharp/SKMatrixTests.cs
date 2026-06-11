@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKMatrixTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void MatrixCanInvert()
 		{
@@ -16,7 +16,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKMatrix.CreateTranslation(-10, -20).Values, inverse.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixCanConcat()
 		{
 			var a = SKMatrix.CreateTranslation(10, 20);
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, c.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixCanPreConcat()
 		{
 			var a = SKMatrix.CreateTranslation(10, 20);
@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, c.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixCanPostConcat()
 		{
 			var a = SKMatrix.CreateTranslation(10, 20);
@@ -49,7 +49,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, c.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixMapsPoints()
 		{
 			var source = new[] {
@@ -82,7 +82,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedResult, source);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixMapsSpanPoints()
 		{
 			Span<SKPoint> source = stackalloc[] {
@@ -115,7 +115,7 @@ namespace SkiaSharp.Tests
 			Assert.True(expectedResult.SequenceEqual(source));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MapRectCreatesModifiedRect()
 		{
 			var rect = SKRect.Create(2, 4, 6, 8);
@@ -126,7 +126,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Create(12, 16, 6, 8), mapped);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixMapsPoint()
 		{
 			var matrix = SKMatrix.CreateTranslation(2, 4);
@@ -135,7 +135,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPoint(5, 10), expectedResult);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixMapsVectors()
 		{
 			var source = new[] {
@@ -168,7 +168,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedResult, source);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixMapsSpanVectors()
 		{
 			Span<SKPoint> source = stackalloc[] {
@@ -201,7 +201,7 @@ namespace SkiaSharp.Tests
 			Assert.True(expectedResult.SequenceEqual(source));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixMapsVector()
 		{
 			var matrix = SKMatrix.CreateTranslation(2, 4);
@@ -210,7 +210,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPoint(3, 6), expectedResult);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ArrayConstructorSetsAllValues()
 		{
 			var values = new float[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -219,13 +219,13 @@ namespace SkiaSharp.Tests
 			Assert.Equal(values, matrix.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ArrayConstructorThrowsOnInvalidLength()
 		{
 			Assert.Throws<ArgumentException>(() => new SKMatrix(new float[] { 1f, 2f, 3f }));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ValuesPropertySetsAllValues()
 		{
 			var matrix = SKMatrix.Identity;
@@ -236,7 +236,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(values, matrix.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ValuesPropertyThrowsOnInvalidLength()
 		{
 			var matrix = SKMatrix.Identity;
@@ -244,7 +244,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentException>(() => matrix.Values = new float[] { 1f, 2f, 3f });
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IsInvertibleIsFalseForNonInvertableMatrix()
 		{
 			var matrix = new SKMatrix(
@@ -255,7 +255,7 @@ namespace SkiaSharp.Tests
 			Assert.False(matrix.IsInvertible);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IsInvertibleIsTrueForInvertableMatrix()
 		{
 			var matrix = new SKMatrix(
@@ -266,7 +266,7 @@ namespace SkiaSharp.Tests
 			Assert.True(matrix.IsInvertible);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void InverseOfMatrixIsCorrect()
 		{
 			var rowMajor = new float[] {
@@ -286,7 +286,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedRowMajor, inverse.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyMatrixForNonInvertableMatrix()
 		{
 			var matrix = SKMatrix.CreateScale(0, 1);
@@ -294,7 +294,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKMatrix.Empty, matrix.Invert());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanRotatePoints()
 		{
 			var point = new SKPoint(40, -10);

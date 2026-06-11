@@ -8,7 +8,7 @@ namespace SkiaSharp.Tests
 	{
 		// SKColorSpacePrimaries
 
-		[SkippableFact]
+		[Fact]
 		public void PrimariesGoFullCircle()
 		{
 			var primaries = new float[] { 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(primaries, csp.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PrimariesToXyz()
 		{
 			var primaries = new float[] {
@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 
 		// SKColorSpaceTransferFn
 
-		[SkippableFact]
+		[Fact]
 		public void TransferFnIsFullCircle()
 		{
 			var values = new float[7] { 1, 2, 3, 4, 5, 6, 7 };
@@ -49,7 +49,7 @@ namespace SkiaSharp.Tests
 
 		// SKColorSpaceXyz
 
-		[SkippableFact]
+		[Fact]
 		public void XyzIndexerWorks()
 		{
 			var values = new float[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -65,7 +65,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void XyzCanInvert()
 		{
 			var values = new float[] {
@@ -85,7 +85,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(invertedValues, inverted.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void XyzCanInverts()
 		{
 			var values = new[]
@@ -108,7 +108,7 @@ namespace SkiaSharp.Tests
 			AssertSimilar(invertedValues, inverted.Values, 3);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void XyzCanConcat()
 		{
 			var expected = new SKColorSpaceXyz(new float[] {
@@ -133,7 +133,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expected, concat);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NamedGamutIsCorrect()
 		{
 			var csxyz = SKColorSpaceXyz.DisplayP3;
@@ -149,7 +149,7 @@ namespace SkiaSharp.Tests
 
 		// SKColorSpaceIccProfile
 
-		[SkippableFact]
+		[Fact]
 		public void IccCanBeConstructedFromData()
 		{
 			var path = Path.Combine(PathToImages, "AdobeRGB1998.icc");
@@ -162,7 +162,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(data.Size, icc.Size);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IccToXyzIsCorrect()
 		{
 			var path = Path.Combine(PathToImages, "AdobeRGB1998.icc");
@@ -174,7 +174,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorSpaceXyz.AdobeRgb, xyz);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IccIsNullWithInvalidData()
 		{
 			var data = CreateTestData();

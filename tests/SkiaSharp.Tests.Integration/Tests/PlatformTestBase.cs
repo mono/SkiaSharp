@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using SkiaSharp;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests.Integration;
 

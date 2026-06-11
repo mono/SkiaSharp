@@ -16,7 +16,7 @@ namespace SkiaSharp.Tests
 
 		public unsafe class Generic : SKRuntimeEffectTest
 		{
-			[SkippableFact]
+			[Fact]
 			public void UniformIsConvertedFromEmpty()
 			{
 				var uniform = SKRuntimeEffectUniform.Empty;
@@ -30,7 +30,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(new byte[] { 0, 0, 0, 0 }, data);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(3, new byte[] { 3, 0, 0, 0 })]
 			[InlineData(255, new byte[] { 255, 0, 0, 0 })]
 			[InlineData(511, new byte[] { 255, 1, 0, 0 })]
@@ -47,7 +47,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expectedData, data);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(3f, new byte[] { 0, 0, 64, 64 })]
 			[InlineData(255f, new byte[] { 0, 0, 127, 67 })]
 			[InlineData(511f, new byte[] { 0, 128, 255, 67 })]
@@ -64,7 +64,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expectedData, data);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(new[] { 6, 9 }, new byte[] { 6, 0, 0, 0, 9, 0, 0, 0 })]
 			[InlineData(new[] { 255, 511 }, new byte[] { 255, 0, 0, 0, 255, 1, 0, 0 })]
 			public void UniformIsConvertedFromInt32Array(int[] value, byte[] expectedData)
@@ -80,7 +80,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expectedData, data);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(new[] { 6f, 9f }, new byte[] { 0, 0, 192, 64, 0, 0, 16, 65 })]
 			[InlineData(new[] { 255f, 511f }, new byte[] { 0, 0, 127, 67, 0, 128, 255, 67 })]
 			public void UniformIsConvertedFromFloatArray(float[] value, byte[] expectedData)
@@ -96,7 +96,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expectedData, data);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(0xFFFF0000, 3, new byte[] { 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0 })]
 			[InlineData(0xFFFF0000, 4, new byte[] { 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63 })]
 			[InlineData(0xFFFF69B4, 3, new byte[] { 0, 0, 128, 63, 212, 210, 210, 62, 181, 180, 52, 63 })]
@@ -117,7 +117,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expectedData, data);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(0xFFFF0000, 0)]
 			[InlineData(0xFFFF0000, 1)]
 			[InlineData(0xFFFF0000, 2)]
@@ -137,7 +137,7 @@ namespace SkiaSharp.Tests
 
 		public unsafe class Shaders : SKRuntimeEffectTest
 		{
-			[SkippableTheory]
+			[Theory]
 			[InlineData("in bool b;", "'in'")]
 			public void InVariablesFailCreation(string prefix, string errorContains)
 			{
@@ -152,7 +152,7 @@ namespace SkiaSharp.Tests
 				Assert.Contains(errorContains, errorText);
 			}
 
-			[SkippableFact]
+			[Fact]
 			[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 			public void UndefinedFunctionsFailsCreation()
 			{
@@ -162,7 +162,7 @@ namespace SkiaSharp.Tests
 				Assert.Contains("main", errorText);
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void MissingMainFailsCreation()
 			{
 				var src = """
@@ -178,7 +178,7 @@ namespace SkiaSharp.Tests
 				Assert.Contains("function 'half4 missing()' is not defined", errorText);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData("", "construction of array type")]
 			[InlineData("#version 100", "construction of array type")]
 			[InlineData("#version 300", null)]
@@ -204,7 +204,7 @@ namespace SkiaSharp.Tests
 				}
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData("half4  main(float2 p) { return p.xyxy; }")]
 			[InlineData("float4 main(float2 p) { return p.xyxy; }")]
 			[InlineData("vec4   main(float2 p) { return p.xyxy; }")]
@@ -218,7 +218,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(effect);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			// The 'half4 main(float2, half4|float4)' signature is disallowed
 			[InlineData("half4  main(float2 p, half4  c) { return c; }", "'main' parameter")]
 			[InlineData("half4  main(float2 p, float4 c) { return c; }", "'main' parameter")]
@@ -242,7 +242,7 @@ namespace SkiaSharp.Tests
 				Assert.Contains(errorContains, errorText);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData("shader", "p")]
 			[InlineData("colorFilter", "half4(1)")]
 			[InlineData("blender", "half4(0.5), half4(0.6)")]
@@ -261,7 +261,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(effect);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(@"", new string[0])]
 			[InlineData(@"uniform shader color_map;", new string[] { "color_map" })]
 			[InlineData(@"uniform shader color_map; uniform shader normal_map;", new string[] { "color_map", "normal_map" })]
@@ -278,7 +278,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(children, effect.Children);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(@"", new string[0])]
 			[InlineData(@"uniform shader color_map;", new string[] { "color_map" })]
 			[InlineData(@"uniform shader color_map; uniform shader normal_map;", new string[] { "color_map", "normal_map" })]
@@ -295,7 +295,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(new SKShader[children.Length], builder.Children.ToArray());
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(@"", new string[0])]
 			[InlineData(@"uniform float scale;", new string[] { "scale" })]
 			[InlineData(@"uniform float scale; uniform half in_exp; uniform float3 in_colors0;", new string[] { "scale", "in_exp", "in_colors0" })]
@@ -312,7 +312,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(uniforms, effect.Uniforms);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(@"", new string[0])]
 			[InlineData(@"uniform float scale;", new string[] { "scale" })]
 			[InlineData(@"uniform float scale; uniform half in_exp; uniform float3 in_colors0;", new string[] { "scale", "in_exp", "in_colors0" })]
@@ -331,7 +331,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(uniforms, builder.Uniforms);
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void ChildrenWorksCorrectly()
 			{
 				using var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, "blue-shirt.jpg"));
@@ -358,7 +358,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(new SKObject[] { null, null }, builder.Children.ToArray());
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void ChildrenWorksCorrectlyWithCollectionInitializer()
 			{
 				using var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, "blue-shirt.jpg"));
@@ -401,7 +401,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(new SKObject[] { null, null }, children.ToArray());
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void ChildrenWorksCorrectlyWithCollectionIndexer()
 			{
 				using var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, "blue-shirt.jpg"));
@@ -444,7 +444,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(new SKObject[] { null, null }, children.ToArray());
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData("uniform_int", 1)]
 			[InlineData("uniform_int_array", new[] { 1, 1 })]
 			[InlineData("uniform_int2", new[] { 1, 1 })]
@@ -480,7 +480,7 @@ namespace SkiaSharp.Tests
 					throw new ArgumentException($"Invalid test data type {value}");
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void UniformsThrowsWithInvalidName()
 			{
 				var src = $"""
@@ -496,7 +496,7 @@ namespace SkiaSharp.Tests
 				Assert.Throws<ArgumentOutOfRangeException>(() => uniforms.Add("invalid", 1f));
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData("uniform_int", 1f)]
 			[InlineData("uniform_int", new[] { 1 })]
 			[InlineData("uniform_int", new[] { 1f })]
@@ -560,7 +560,7 @@ namespace SkiaSharp.Tests
 					throw new ArgumentException($"Invalid test data type {value}");
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void UniformsWorksCorrectlyWithCollectionInitializer()
 			{
 				var src = $"""
@@ -581,7 +581,7 @@ namespace SkiaSharp.Tests
 				};
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void UniformsWorksCorrectlyWithCollectionIndexer()
 			{
 				var src = $"""
@@ -605,7 +605,7 @@ namespace SkiaSharp.Tests
 
 		public unsafe class ColorFilters : SKRuntimeEffectTest
 		{
-			[SkippableTheory]
+			[Theory]
 			[InlineData("half4  main(half4  c) { return c; }")]
 			[InlineData("float4 main(half4  c) { return c; }")]
 			[InlineData("half4  main(float4 c) { return c; }")]
@@ -621,7 +621,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(effect);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			// Invalid return types
 			[InlineData("void  main(half4 c) {}", "'main' must return")]
 			[InlineData("half3 main(half4 c) { return c.rgb; }", "'main' must return")]
@@ -639,7 +639,7 @@ namespace SkiaSharp.Tests
 				Assert.Contains(errorContains, errorText);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData("shader", "c.rg")]
 			[InlineData("colorFilter", "c")]
 			[InlineData("blender", "c, c")]
@@ -667,7 +667,7 @@ namespace SkiaSharp.Tests
 
 			protected abstract void CreateSurface(int width, int height);
 
-			[SkippableFact]
+			[Fact]
 			public void LocalCoordinatesAreSuccessful()
 			{
 				var src = """
@@ -680,7 +680,7 @@ namespace SkiaSharp.Tests
 				Test(builder, new[] { 0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF });
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void SimpleFloatUniform()
 			{
 				var src = """
@@ -701,7 +701,7 @@ namespace SkiaSharp.Tests
 				Test(builder, 0x7F0000FF);
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void SimpleInt32Uniform()
 			{
 				var src = """
@@ -722,7 +722,7 @@ namespace SkiaSharp.Tests
 				Test(builder, 0x7F0000FF);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData("half4")]
 			[InlineData("float4")]
 			[InlineData("vec4")]
@@ -739,7 +739,7 @@ namespace SkiaSharp.Tests
 				Test(builder, new[] { 0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF });
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void CoordinatesCanBeMutated()
 			{
 				var src = """
@@ -754,7 +754,7 @@ namespace SkiaSharp.Tests
 				Test(builder, new[] { 0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF });
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void CoordinatesCanBeMutatedInASeparateMethod()
 			{
 				var src = """
@@ -772,7 +772,7 @@ namespace SkiaSharp.Tests
 				Test(builder, new[] { 0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF });
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void NullShaderChildDrawsPaintColor()
 			{
 				var src = """
@@ -789,7 +789,7 @@ namespace SkiaSharp.Tests
 				Test(builder, 0x00000000, (c, p) => p.ColorF = new SKColorF(1.0f, 1.0f, 0.0f, 1.0f));
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void NullColorFilterChildDrawsPaintColor()
 			{
 				var src = """
@@ -806,7 +806,7 @@ namespace SkiaSharp.Tests
 				Test(builder, 0xFF00FFFF);
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void SamplingChildAtLocalCoordinates()
 			{
 				var src = """
@@ -823,7 +823,7 @@ namespace SkiaSharp.Tests
 				Test(builder, new[] { 0xFF0000FF, 0xFF00FF00, 0xFFFF0000, 0xFFFFFFFF });
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void SamplingChildAtExplicitCoordinates()
 			{
 				var src = """
@@ -840,7 +840,7 @@ namespace SkiaSharp.Tests
 				Test(builder, new[] { 0xFF0000FF, 0xFFFF0000, 0xFF00FF00, 0xFFFFFFFF });
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void ChildrenAreNotRequiredToBeUsed()
 			{
 				var src = """
@@ -857,7 +857,7 @@ namespace SkiaSharp.Tests
 				Test(builder, 0xFF00FF00);
 			}
 
-			[SkippableTheory]
+			[Theory]
 			[InlineData(1.05f, 1.5f, 0xFF000000, 0xFFE98404)]
 			[InlineData(1.26f, 1.35f, 0xFF000000, 0xFF000000)]
 			[InlineData(0f, 6.5f, 0xFFFFFFFF, 0xFFE98404)]
@@ -918,7 +918,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(shirtColor, actual[230 * Info.Width + 300]);
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void CoolEffectCanBeSeen()
 			{
 				CreateSurface(256, 256);
@@ -953,7 +953,7 @@ namespace SkiaSharp.Tests
 				Draw(builder);
 			}
 
-			[SkippableFact]
+			[Fact]
 			public void CoolLightsSphereCanBeSeen()
 			{
 				CreateSurface(256, 256);

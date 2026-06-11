@@ -8,7 +8,7 @@ namespace SkiaSharp.Tests
 	public class SKCanvasTest : SKTest
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuCanvasReferencesSameSurface()
 		{
 			using var ctx = CreateGlContext();
@@ -23,7 +23,7 @@ namespace SkiaSharp.Tests
 			Assert.Same(surface, canvasSurface);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RasterCanvasReferencesSameSurface()
 		{
 			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuCanvasReferencesSameContext()
 		{
 			using var ctx = CreateGlContext();
@@ -49,7 +49,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void RasterCanvasHasNoContext()
 		{
 			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
@@ -59,7 +59,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CanvasCanRestoreOnGpu()
 		{
 			using (var ctx = CreateGlContext())
@@ -87,7 +87,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextAlign.Left)]
 		//[InlineData(SKTextAlign.Center)]
 		//[InlineData(SKTextAlign.Right)]
@@ -136,7 +136,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(textPixels, glyphsPixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawRoundRectDifference()
 		{
 			using var outer = new SKRoundRect(SKRect.Create(50, 50, 200, 200), 20);
@@ -174,7 +174,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(paths, diff);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DrawAtlasThrowsOnMismatchingArgs()
 		{
 			using var bmp = new SKBitmap(new SKImageInfo(300, 300));
@@ -188,7 +188,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentException>("transforms", () => canvas.DrawAtlas(img, sprites, transforms, SKSamplingOptions.Default, paint));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawPatch()
 		{
 			var cubics = new SKPoint[12] {
@@ -221,7 +221,7 @@ namespace SkiaSharp.Tests
 			canvas.DrawPatch(cubics, null, tex, paint);
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanDrawText()
 		{
@@ -234,7 +234,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawEmptyText()
 		{
 			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
@@ -246,7 +246,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanvasCanClipRoundRect()
 		{
 			using (var canvas = new SKNWayCanvas(100, 100))
@@ -255,7 +255,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanvasCanDrawRoundRect()
 		{
@@ -266,7 +266,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NWayCanvasCanBeConstructed()
 		{
 			using (var canvas = new SKNWayCanvas(100, 100))
@@ -275,7 +275,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NWayCanvasDrawsToMultipleCanvases()
 		{
 			using (var firstBitmap = new SKBitmap(new SKImageInfo(100, 100)))
@@ -304,7 +304,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OverdrawCanvasDrawsProperly()
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(100, 100)))
@@ -323,7 +323,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DrawAtlasSupportsTransforms()
 		{
 			var target = new SKRect(50, 50, 80, 90);
@@ -412,7 +412,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TotalMatrixIsCorrect()
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(100, 100)))
@@ -428,7 +428,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SvgCanvasSavesFile()
 		{
 			var stream = new MemoryStream();
@@ -468,7 +468,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextAlign.Left, 300)]
 		[InlineData(SKTextAlign.Center, 162)]
 		[InlineData(SKTextAlign.Right, 23)]
@@ -495,7 +495,7 @@ namespace SkiaSharp.Tests
 			AssertTextAlign(bitmap, offset, 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextAlign.Left, 300)]
 		//[InlineData(SKTextAlign.Center, 162)]
 		//[InlineData(SKTextAlign.Right, 23)]
@@ -528,7 +528,7 @@ namespace SkiaSharp.Tests
 			AssertTextAlign(bitmap, offset, 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextAlign.Left, 300)]
 		[InlineData(SKTextAlign.Center, 300)]
 		[InlineData(SKTextAlign.Right, 300)]
@@ -569,7 +569,7 @@ namespace SkiaSharp.Tests
 			AssertTextAlign(bitmap, offset, 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextAlign.Left, 300)]
 		[InlineData(SKTextAlign.Center, 300)]
 		[InlineData(SKTextAlign.Right, 300)]
@@ -610,7 +610,7 @@ namespace SkiaSharp.Tests
 			AssertTextAlign(bitmap, offset, 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextAlign.Left, 300, 300)]
 		//[InlineData(SKTextAlign.Center, 300, 162)]
 		//[InlineData(SKTextAlign.Right, 300, 23)]
@@ -675,7 +675,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 113));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0xFFFF0000, 0xFFFF0000)]
 		[InlineData(0xFFFF0000, 0xFF00FF00)]
 		[InlineData(0xAAFF0000, 0xFF00FF00)]
@@ -693,7 +693,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(color, bmp.GetPixel(0, 0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SaveLayerRecWithPaintIsCorrect()
 		{
 			using var bmp = new SKBitmap(100, 100);
@@ -723,7 +723,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((SKColor)0xFF00FF00, bmp.GetPixel(15, 15));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SaveLayerRecWithImageFilterIsCorrect()
 		{
 			using var bmp = new SKBitmap(80, 80);

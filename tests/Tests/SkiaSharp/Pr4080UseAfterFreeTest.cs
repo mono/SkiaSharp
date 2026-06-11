@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 		// Long enough to land the race on a regressed build, short enough for CI on a fixed one.
 		private static readonly TimeSpan Budget = TimeSpan.FromSeconds (4);
 
-		[SkippableFact]
+		[Fact]
 		public void PathMeasureCtorKeepsPathAliveAcrossNativeCall ()
 		{
 			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");

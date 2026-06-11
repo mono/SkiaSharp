@@ -11,7 +11,7 @@ namespace SkiaSharp.Tests
 	[Collection (HandleDictionaryThreadingCollection.Name)]
 	public class SKManagedStreamConcurrencyTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void ConcurrentDisposeOfSameManagedStreamIsIdempotent()
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -30,7 +30,7 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ConcurrentDisposeOfManyManagedStreamsIsSafe()
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -68,7 +68,7 @@ namespace SkiaSharp.Tests
 		// public Dispose racing a lazy native read, and (2) an ignored public Dispose racing the codec's
 		// owner-teardown (which must still be the single, exactly-once disposer of the wrapper).
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void PublicDisposeWhileCodecReadIsInFlightIsIgnored()
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -129,7 +129,7 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void PublicDisposeAroundLazyCodecReadIsIgnoredStress()
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -179,7 +179,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void PublicDisposeRacingCodecTeardownClosesManagedStreamExactlyOnce()
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -236,7 +236,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void NonSeekableStreamReparentedToCodecTearsDownNestedStreamExactlyOnce()
 		{
 			// A NON-SEEKABLE stream routes SKCodec.Create through SKFrontBufferedManagedStream, which
@@ -285,7 +285,7 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(innerHandle, inner);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void PublicDisposeWhileFrontBufferedCodecReadIsInFlightIsIgnored()
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -343,7 +343,7 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertDeregistered<SKFrontBufferedManagedStream>(fbHandle, fb);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void InvalidNonSeekableStreamFailedCodecCreateClosesNestedStreamExactlyOnce()
 		{
 			// FAILURE path for the nested non-seekable graph: when the codec cannot be created, Create
@@ -373,7 +373,7 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(innerHandle, inner);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void InvalidSeekableManagedStreamFailedCodecCreateClosesStreamExactlyOnce()
 		{
 			// FAILURE path for the FLAT seekable graph (no front-buffering): a seekable managed Stream
@@ -404,7 +404,7 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FrontBufferedCodecWithoutOwnershipDoesNotCloseUnderlyingStream()
 		{
 			// disposeUnderlyingStream:false — the user keeps ownership of the .NET stream. The nested

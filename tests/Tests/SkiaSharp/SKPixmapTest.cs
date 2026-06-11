@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKPixmapTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void CanScalePixels()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ReadPixelSucceeds()
 		{
@@ -51,7 +51,7 @@ namespace SkiaSharp.Tests
 			Assert.True(result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void WithMethodsDoNotModifySource()
 		{
 			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
@@ -68,7 +68,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((IntPtr)123, copy.GetPixels());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReadPixelCopiesData()
 		{
 			var info = new SKImageInfo(10, 10);
@@ -91,7 +91,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SwizzleSwapsRedAndBlue()
 		{
 			var info = new SKImageInfo(10, 10);
@@ -108,7 +108,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EraseWithColor()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -121,7 +121,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, pixmap.GetPixelColor(0, 0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EraseWithColorF()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -134,7 +134,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, pixmap.GetPixelColor(0, 0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodeWithPngEncoder()
 		{
 			var bitmap = CreateTestBitmap();
@@ -149,7 +149,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKEncodedImageFormat.Png, codec.EncodedFormat);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodeWithJpegEncoder()
 		{
 			var bitmap = CreateTestBitmap();
@@ -164,7 +164,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKEncodedImageFormat.Jpeg, codec.EncodedFormat);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodeWithWebpEncoder()
 		{
 			var bitmap = CreateTestBitmap();
@@ -179,7 +179,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MismatchingColorTypesThrow()
 		{
 			var info = new SKImageInfo(1, 1, SKColorType.Rgba8888);
@@ -189,7 +189,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentException>(() => pixmap.GetPixelSpan<ushort>());
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void ByteWorksForEverything(SKColorType colortype)
 		{
@@ -200,7 +200,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(info.BytesSize, pixmap?.GetPixelSpan<byte>().Length ?? 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000)]
 		[InlineData(0xFF000000)]
 		[InlineData(0xFFFF0000)]
@@ -228,7 +228,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rgb888, pixmap.GetPixelSpan<uint>()[0]);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000, 0x0000)]
 		[InlineData(0xFF000000, 0x0000)]
 		[InlineData(0xFFFF0000, 0xF800)]
@@ -246,7 +246,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rgb565, pixmap.GetPixelSpan<ushort>()[0]);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000, 0)]
 		[InlineData(0xFF000000, 0)]
 		[InlineData(0xFFFF0000, 54)]
@@ -264,7 +264,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(gray8, pixmap.GetPixelSpan<byte>()[0]);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		// Rgb565 => 2 bytes per pixel
 		[InlineData(SKColorType.Rgb565, 1, 1, 0, 0, 0)]
 		[InlineData(SKColorType.Rgb565, 2, 2, 0, 0, 0)]
@@ -289,7 +289,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(offset, info.GetPixelBytesOffset(x, y));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000)]
 		[InlineData(0xFF000000)]
 		[InlineData(0xFFFF0000)]
@@ -332,7 +332,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000, 0x0000)]
 		[InlineData(0xFF000000, 0x0000)]
 		[InlineData(0xFFFF0000, 0xF800)]
@@ -360,7 +360,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000, 0)]
 		[InlineData(0xFF000000, 0)]
 		[InlineData(0xFFFF0000, 54)]
@@ -388,7 +388,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanWithOffsetWorksForNonSquarePixmaps()
 		{
 			// Use a non-square pixmap to expose the bug where Width and Height were swapped
@@ -414,7 +414,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanWithOffsetReturnsCorrectPixelForNonSquare()
 		{
 			// Create a wide pixmap and draw distinct colors in known positions
