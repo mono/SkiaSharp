@@ -14,25 +14,35 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
-    Build("appletvsimulator", "x86_64", "x64");
-    Build("appletvsimulator", "arm64", "arm64");
-    Build("appletvos", "arm64", "arm64");
+    var simX64 = Build("appletvsimulator", "x86_64", "x64");
+    var simArm64 = Build("appletvsimulator", "arm64", "arm64");
+    var deviceArm64 = Build("appletvos", "arm64", "arm64");
 
-    SafeCopy(
-        $"libSkiaSharp/bin/{CONFIGURATION}/appletvsimulator/x86_64.xcarchive",
-        OUTPUT_PATH.Combine($"tvos/libSkiaSharp/x86_64.xcarchive"));
+    // device framework (runtimes/tvos): device-arm64 + legacy simulator-x86_64,
+    // preserving the exact arch layout the NuGet shipped from xcodebuild.
+    CreateFrameworkFromDylibs(
+        OUTPUT_PATH.Combine("tvos/libSkiaSharp.framework"),
+        new[] { deviceArm64, simX64 }.Where(d => d != null).ToArray(),
+        GetDeploymentTarget("arm64"),
+        new[] { "AppleTVOS" },
+        new[] { 3 });
 
-    CreateFatFramework(OUTPUT_PATH.Combine("tvos/libSkiaSharp"));
-    CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libSkiaSharp"));
+    // simulator framework (runtimes/tvossimulator): simulator-x86_64 + simulator-arm64.
+    CreateFrameworkFromDylibs(
+        OUTPUT_PATH.Combine("tvossimulator/libSkiaSharp.framework"),
+        new[] { simX64, simArm64 }.Where(d => d != null).ToArray(),
+        GetDeploymentTarget("arm64"),
+        new[] { "AppleTVSimulator" },
+        new[] { 3 });
 
-    void Build(string sdk, string arch, string skiaArch)
+    FilePath Build(string sdk, string arch, string skiaArch)
     {
-        if (Skip(arch)) return;
+        if (Skip(arch)) return null;
 
         var isSim = sdk.EndsWith("simulator");
         var platform = isSim ? "tvossimulator" : "tvos";
 
-        GnNinja($"{platform}/{arch}", "skia modules/skottie",
+        GnNinja($"{platform}/{arch}", "SkiaSharp",
             $"target_os='tvos' " +
             $"target_cpu='{skiaArch}' " +
             $"min_tvos_version='{GetDeploymentTarget(arch)}' " +
@@ -47,16 +57,14 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] ");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] " +
+            ADDITIONAL_GN_ARGS);
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch, properties: new Dictionary<string, string> {
-            { "TVOS_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
-            { "SKIA_PLATFORM", platform },
-        });
-
-        SafeCopy(
-            $"libSkiaSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
-            OUTPUT_PATH.Combine($"{platform}/libSkiaSharp/{arch}.xcarchive"));
+        // GN's solink already emits the dynamic-library framework binary; the wrapper
+        // lipos these per-arch dylibs and builds the .framework bundle.
+        var dylib = SKIA_PATH.CombineWithFilePath($"out/{platform}/{arch}/libSkiaSharp.dylib");
+        EnsureSingleArch(dylib, skiaArch == "x64" ? "x86_64" : skiaArch);
+        return dylib;
     }
 });
 
