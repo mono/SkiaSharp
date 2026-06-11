@@ -13,13 +13,12 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Version>1.0.0</Version>
     
-    <!-- Package versions. The release pipeline / release-testing skill pins the exact version
-         being verified (e.g. dotnet test -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N).
-         When not pinned, default to the latest stable release currently published. Keep these in
-         sync when a newer stable ships; never use a floating ("*") version so a bare run always
-         resolves a known, explicit version. -->
-    <SkiaSharpVersion Condition="'$(SkiaSharpVersion)' == ''">3.119.4</SkiaSharpVersion>
-    <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''">8.3.1.5</HarfBuzzSharpVersion>
+    <!-- Package versions must be specified explicitly; there is no default and no floating ("*")
+         version. The release pipeline / release-testing skill passes the exact version under test
+         (e.g. dotnet test -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N). A bare run
+         with no version fails fast via the ValidateVersions target below. -->
+    <SkiaSharpVersion Condition="'$(SkiaSharpVersion)' == ''"></SkiaSharpVersion>
+    <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''"></HarfBuzzSharpVersion>
     
     <!-- Device configuration - can be overridden via command line -->
     <!-- dotnet test -p:iOSDevice="iPad Pro 13-inch (M4)" -p:iOSVersion="18.5" -->
