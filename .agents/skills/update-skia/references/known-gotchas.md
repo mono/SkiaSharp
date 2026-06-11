@@ -65,9 +65,14 @@ Upstream may move previously-core modules into separate optional targets. If the
 
 Every platform — Windows, Linux, WASM, Android, macOS, iOS, tvOS, and MacCatalyst — builds
 `libSkiaSharp`/`libHarfBuzzSharp` from the `skiasharp_build("SkiaSharp")` /
-`skiasharp_build("HarfBuzzSharp")` GN targets in `externals/skia/BUILD.gn`. The Apple
-`native/*/build.cake` tasks run `GnNinja` and then wrap the resulting GN dylib into a `.framework`
-(macOS ships a plain `.dylib`); see `scripts/infra/native/apple/apple.cake`. What to do when updating Skia:
+`skiasharp_build("HarfBuzzSharp")` GN targets in `externals/skia/BUILD.gn`. On iOS/tvOS/MacCatalyst
+the GN build itself emits a complete single-arch `lib<Name>.framework` in the out dir — bundle
+layout, framework-relative install_name (link-time ldflags) and the provenance Info.plist
+(CFBundle* + DT*/BuildMachineOSBuild keys App Store/notarization validation expects) all come from
+GN via the `skiasharp_apple_framework` arg + `gn/skiasharp/assemble_apple_framework.{py,sh}`. The
+Apple `native/*/build.cake` tasks just `GnNinja` per arch and then lipo the per-arch frameworks
+together and code-sign (`CombineFrameworks` in `scripts/infra/native/apple/apple.cake`); macOS ships
+a plain `.dylib`. What to do when updating Skia:
 
 - **Adding/removing a C API source file** (`src/c/*.cpp`, `src/xamarin/*.cpp`): add it to the source
   list in the `skiasharp_build("SkiaSharp")` target in `BUILD.gn`, and to Tizen's
