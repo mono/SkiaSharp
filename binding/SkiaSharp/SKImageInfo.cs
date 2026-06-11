@@ -126,9 +126,14 @@ namespace SkiaSharp
 		public readonly SKRectI Rect => SKRectI.Create (Width, Height);
 
 		internal readonly int GetPixelBytesOffset (int x, int y) =>
+			GetPixelBytesOffset (x, y, RowBytes);
+
+		// uses the supplied stride rather than the info's packed RowBytes, so it is
+		// correct for buffers whose row stride differs (e.g. a subset of a larger image)
+		internal readonly int GetPixelBytesOffset (int x, int y, int rowBytes) =>
 			ColorType == SKColorType.Unknown
 				? 0
-				: checked(y * RowBytes + (x << ColorType.GetBitShiftPerPixel ()));
+				: checked(y * rowBytes + (x << ColorType.GetBitShiftPerPixel ()));
 
 		public readonly SKImageInfo WithSize (SKSizeI size) =>
 			WithSize (size.Width, size.Height);

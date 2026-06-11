@@ -163,21 +163,18 @@ namespace SkiaSharp
 			// (Width * BytesPerPixel) when the pixmap is a subset of a larger one
 			var rowBytes = RowBytes;
 
-			// the span covers from the first pixel up to and including the last
-			// valid pixel of the last row, accounting for any row padding
-			var spanLengthBytes = checked((info.Height - 1) * rowBytes + info.Width * bpp);
-			var spanOffsetBytes = (x != 0 || y != 0)
-				? checked(y * rowBytes + x * bpp)
-				: 0;
-
 			int spanLength;
 			int spanOffset;
 			if (typeof (T) == typeof (byte))
 			{
-				// byte is always valid
+				// byte is always valid, so work in bytes
 
-				spanLength = spanLengthBytes;
-				spanOffset = spanOffsetBytes;
+				// the span covers from the first pixel up to and including the
+				// last valid pixel of the last row, accounting for row padding
+				spanLength = checked((info.Height - 1) * rowBytes + info.Width * bpp);
+				spanOffset = (x != 0 || y != 0)
+					? info.GetPixelBytesOffset (x, y, rowBytes)
+					: 0;
 			}
 			else
 			{
@@ -187,8 +184,14 @@ namespace SkiaSharp
 				if (bpp != size)
 					throw new ArgumentException ($"Size of T ({size}) is not the same as the size of each pixel ({bpp}).", nameof (T));
 
-				spanLength = spanLengthBytes / size;
-				spanOffset = spanOffsetBytes / size;
+				// work in T elements: since each pixel is exactly one T, the only
+				// unit conversion is the stride from bytes to elements
+				var rowLength = rowBytes / size;
+
+				spanLength = checked((info.Height - 1) * rowLength + info.Width);
+				spanOffset = (x != 0 || y != 0)
+					? checked(y * rowLength + x)
+					: 0;
 			}
 
 			var addr = SkiaApi.sk_pixmap_get_writable_addr (Handle);
