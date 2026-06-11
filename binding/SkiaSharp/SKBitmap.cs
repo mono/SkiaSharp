@@ -334,7 +334,7 @@ namespace SkiaSharp
 			GetPixels (out _);
 
 		public Span<byte> GetPixelSpan () =>
-			new Span<byte> ((void*)GetPixels (out var length), (int)length);
+			new Span<byte> ((void*)GetPixels (out var length), checked((int)length));
 
 		public Span<byte> GetPixelSpan (int x, int y)
 		{

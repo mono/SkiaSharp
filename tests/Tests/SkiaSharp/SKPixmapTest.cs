@@ -269,24 +269,31 @@ namespace SkiaSharp.Tests
 		[InlineData(SKColorType.Rgb565, 1, 1, 0, 0, 0)]
 		[InlineData(SKColorType.Rgb565, 2, 2, 0, 0, 0)]
 		[InlineData(SKColorType.Rgb565, 2, 2, 1, 0, 2)]
-		[InlineData(SKColorType.Rgb565, 2, 2, 1, 0, 2)]
 		[InlineData(SKColorType.Rgb565, 2, 2, 0, 1, 4)]
-		[InlineData(SKColorType.Rgb565, 2, 2, 0, 1, 4)]
-		[InlineData(SKColorType.Rgb565, 2, 2, 1, 1, 6)]
 		[InlineData(SKColorType.Rgb565, 2, 2, 1, 1, 6)]
 		// Rgba8888 => 4 bytes per pixel
 		[InlineData(SKColorType.Rgba8888, 1, 1, 0, 0, 0)]
 		[InlineData(SKColorType.Rgba8888, 2, 2, 0, 0, 0)]
 		[InlineData(SKColorType.Rgba8888, 2, 2, 1, 0, 4)]
-		[InlineData(SKColorType.Rgba8888, 2, 2, 1, 0, 4)]
 		[InlineData(SKColorType.Rgba8888, 2, 2, 0, 1, 8)]
-		[InlineData(SKColorType.Rgba8888, 2, 2, 0, 1, 8)]
-		[InlineData(SKColorType.Rgba8888, 2, 2, 1, 1, 12)]
 		[InlineData(SKColorType.Rgba8888, 2, 2, 1, 1, 12)]
 		public void GetPixelBytesOffsetIsCorrect(SKColorType ct, int w, int h, int x, int y, int offset)
 		{
 			var info = new SKImageInfo(w, h, ct);
 			Assert.Equal(offset, info.GetPixelBytesOffset(x, y, info.RowBytes));
+		}
+
+		[SkippableTheory]
+		// the offset must honor a stride that is larger than the packed width
+		// Rgba8888 (4 bpp), 2px wide, but a 16-byte stride (8 bytes of padding)
+		[InlineData(SKColorType.Rgba8888, 2, 16, 0, 0, 0)]
+		[InlineData(SKColorType.Rgba8888, 2, 16, 1, 0, 4)]
+		[InlineData(SKColorType.Rgba8888, 2, 16, 0, 1, 16)]
+		[InlineData(SKColorType.Rgba8888, 2, 16, 1, 1, 20)]
+		public void GetPixelBytesOffsetHonorsStride(SKColorType ct, int w, int rowBytes, int x, int y, int offset)
+		{
+			var info = new SKImageInfo(w, 4, ct);
+			Assert.Equal(offset, info.GetPixelBytesOffset(x, y, rowBytes));
 		}
 
 		[SkippableTheory]
@@ -572,6 +579,38 @@ namespace SkiaSharp.Tests
 			// offset for row 1 is one full stride
 			var row1 = pixmap.GetPixelSpan<byte>(0, 1);
 			Assert.Equal(span.Length - pixmap.RowBytes, row1.Length);
+
+			// the last valid pixel must reduce to exactly one pixel of bytes,
+			// proving the byte-branch offset never reads past the parent buffer
+			var lastByte = pixmap.GetPixelSpan<byte>(pixmap.Width - 1, pixmap.Height - 1);
+			Assert.Equal(pixmap.BytesPerPixel, lastByte.Length);
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanHandlesSubsetForHighBitShiftColorType()
+		{
+			// RgbaF32 is 16 bytes per pixel (shift 4) - the largest multiplier
+			// and the most relevant to the offset overflow surface
+			var info = new SKImageInfo(4, 4, SKColorType.RgbaF32);
+			using var bmp = new SKBitmap(info);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(0, 0, 2, 2)));
+
+			using var pixmap = roi.PeekPixels();
+			Assert.Equal(16, pixmap.BytesPerPixel);
+			Assert.True(pixmap.RowBytes > pixmap.Width * pixmap.BytesPerPixel);
+
+			// typed: the last valid pixel reduces to exactly one element
+			var rowLength = pixmap.RowBytes / pixmap.BytesPerPixel;
+			var span = pixmap.GetPixelSpan<SKColorF>();
+			Assert.Equal((2 - 1) * rowLength + 2, span.Length);
+			var lastTyped = pixmap.GetPixelSpan<SKColorF>(pixmap.Width - 1, pixmap.Height - 1);
+			Assert.Equal(1, lastTyped.Length);
+
+			// byte: the last valid pixel reduces to exactly BytesPerPixel
+			var lastByte = pixmap.GetPixelSpan<byte>(pixmap.Width - 1, pixmap.Height - 1);
+			Assert.Equal(pixmap.BytesPerPixel, lastByte.Length);
 		}
 
 		[SkippableFact]
@@ -671,6 +710,31 @@ namespace SkiaSharp.Tests
 			Assert.True(pixmap.GetPixelSpan<byte>(0, 0).IsEmpty);
 			Assert.True(pixmap.GetPixelSpan<byte>(-1, 5).IsEmpty);
 			Assert.True(pixmap.GetPixelSpan<SKColor>(0, 0).IsEmpty);
+			Assert.True(pixmap.GetPixelSpan<SKColor>(-1, 5).IsEmpty);
+		}
+
+		[SkippableFact]
+		public unsafe void GetPixelSpanReturnsEmptyForUnknownColorType()
+		{
+			// a non-empty buffer with an unknown color type has no pixel size, so
+			// it returns an empty span rather than throwing
+			var info = new SKImageInfo(4, 4, SKColorType.Unknown);
+			Assert.False(info.IsEmpty);
+			Assert.Equal(0, info.BytesPerPixel);
+
+			var buffer = Marshal.AllocCoTaskMem(64);
+			try
+			{
+				using var pixmap = new SKPixmap(info, buffer);
+
+				Assert.True(pixmap.GetPixelSpan<byte>(0, 0).IsEmpty);
+				Assert.True(pixmap.GetPixelSpan<byte>(2, 3).IsEmpty);
+				Assert.True(pixmap.GetPixelSpan<byte>(-1, 99).IsEmpty);
+			}
+			finally
+			{
+				Marshal.FreeCoTaskMem(buffer);
+			}
 		}
 	}
 }

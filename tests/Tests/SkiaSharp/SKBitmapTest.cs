@@ -726,21 +726,22 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void GetPixelSpanLastPixelOfSubsetHasSinglePixelLength()
 		{
-			// a multi-row, multi-column subset: the span at the last valid pixel
-			// must reduce to exactly one pixel, proving the offset uses the real
-			// stride and column and never overruns the parent buffer
-			var info = new SKImageInfo(10, 10, SKColorType.Rgba8888);
+			// a non-square, multi-row, multi-column subset: the span at the last
+			// valid pixel must reduce to exactly one pixel, proving the offset uses
+			// the real stride and column and never overruns the parent buffer
+			var info = new SKImageInfo(8, 6, SKColorType.Rgba8888);
 			using var bmp = new SKBitmap(info);
 
 			using SKBitmap roi = new();
-			Assert.True(bmp.ExtractSubset(roi, new SKRectI(7, 7, 10, 10)));
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(5, 4, 8, 6)));
 
 			Assert.Equal(3, roi.Width);
-			Assert.Equal(3, roi.Height);
+			Assert.Equal(2, roi.Height);
 			Assert.True(roi.RowBytes > roi.Info.Width * roi.BytesPerPixel);
 
-			var last = roi.GetPixelSpan(roi.Width - 1, roi.Height - 1);
-			Assert.Equal(roi.BytesPerPixel, last.Length);
+			// an interior non-zero (x, y) and the extreme (Width-1, Height-1) both
+			// reduce to exactly one pixel
+			Assert.Equal(roi.BytesPerPixel, roi.GetPixelSpan(roi.Width - 1, roi.Height - 1).Length);
 		}
 
 		[SkippableTheory]
@@ -766,6 +767,20 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, bmp.GetPixelSpan().Length);
 			Assert.Equal(0, bmp.GetPixelSpan(0, 0).Length);
 			Assert.Equal(0, bmp.GetPixelSpan(-1, 5).Length);
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanReturnsEmptyForUnknownColorType()
+		{
+			// a non-empty buffer with an unknown color type has no pixel size, so
+			// it returns an empty span rather than throwing, matching SKPixmap
+			using var bmp = new SKBitmap(new SKImageInfo(4, 4, SKColorType.Unknown));
+			Assert.False(bmp.Info.IsEmpty);
+			Assert.Equal(0, bmp.Info.BytesPerPixel);
+
+			Assert.Equal(0, bmp.GetPixelSpan(0, 0).Length);
+			Assert.Equal(0, bmp.GetPixelSpan(2, 3).Length);
+			Assert.Equal(0, bmp.GetPixelSpan(-1, 99).Length);
 		}
 
 		[SkippableTheory]
