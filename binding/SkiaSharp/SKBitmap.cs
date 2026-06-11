@@ -339,7 +339,7 @@ namespace SkiaSharp
 		public Span<byte> GetPixelSpan (int x, int y)
 		{
 			var info = Info;
-			if (info.IsEmpty)
+			if (info.IsEmpty || info.BytesPerPixel <= 0)
 				return GetPixelSpan ();
 
 			if (x < 0 || x >= info.Width)

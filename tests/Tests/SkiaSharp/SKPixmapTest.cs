@@ -633,5 +633,44 @@ namespace SkiaSharp.Tests
 				Marshal.FreeCoTaskMem(buffer);
 			}
 		}
+
+		[SkippableFact]
+		public unsafe void GetPixelSpanTypedAllowsStrideNotMultipleOfElementForSingleRow()
+		{
+			// a single-row pixmap never crosses the stride padding, so even a
+			// stride that is not a whole number of pixels is representable as a
+			// typed span of exactly Width elements
+			var info = new SKImageInfo(1, 1, SKColorType.Rgba8888);
+			var rowBytes = info.Width * info.BytesPerPixel + 1; // 5
+			var buffer = Marshal.AllocCoTaskMem(rowBytes * info.Height);
+			try
+			{
+				using var pixmap = new SKPixmap(info, buffer, rowBytes);
+
+				var span = pixmap.GetPixelSpan<SKColor>();
+				Assert.Equal(info.Width, span.Length);
+
+				var atOrigin = pixmap.GetPixelSpan<SKColor>(0, 0);
+				Assert.Equal(info.Width, atOrigin.Length);
+			}
+			finally
+			{
+				Marshal.FreeCoTaskMem(buffer);
+			}
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanReturnsEmptyForEmptyPixmap()
+		{
+			using var pixmap = new SKPixmap();
+			Assert.True(pixmap.Info.IsEmpty);
+
+			// an empty pixmap returns an empty span rather than throwing, and the
+			// empty short-circuit wins even over out-of-range coordinates
+			Assert.True(pixmap.GetPixelSpan<byte>().IsEmpty);
+			Assert.True(pixmap.GetPixelSpan<byte>(0, 0).IsEmpty);
+			Assert.True(pixmap.GetPixelSpan<byte>(-1, 5).IsEmpty);
+			Assert.True(pixmap.GetPixelSpan<SKColor>(0, 0).IsEmpty);
+		}
 	}
 }
