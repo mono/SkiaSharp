@@ -74,12 +74,12 @@ Task("libSkiaSharp")
 
     var a = SKIA_PATH.CombineWithFilePath($"out/wasm/libSkiaSharp.a");
 
-    // separate all the .a.wasm files into .o files
+    // separate all the .wasm.a files into .o files
     var skiaOut = SKIA_PATH.Combine("out/wasm");
     var mergeDir = skiaOut.Combine("obj/merge");
     EnsureDirectoryExists(mergeDir);
     CleanDirectories(mergeDir.FullPath);
-    foreach (var file in GetFiles($"{skiaOut}/*.a.wasm")) {
+    foreach (var file in GetFiles($"{skiaOut}/*.wasm.a")) {
         RunProcess(AR, new ProcessSettings {
             Arguments = $"x \"{file}\"",
             WorkingDirectory = mergeDir.FullPath,
@@ -137,7 +137,7 @@ Task("libHarfBuzzSharp")
     if (emscriptenFeaturesModifiers.Length != 0)
         outDir = outDir.Combine(string.Join(",", emscriptenFeaturesModifiers));
     EnsureDirectoryExists(outDir);
-    var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a.wasm");
+    var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.wasm.a");
     CopyFileToDirectory(so, outDir);
     CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
 });
