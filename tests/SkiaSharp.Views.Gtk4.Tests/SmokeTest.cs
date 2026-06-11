@@ -3,11 +3,12 @@ using Xunit;
 
 namespace SkiaSharp.Views.Gtk4.Tests
 {
-	// The other tests in this assembly initialise native GTK4 in their constructors and skip every
-	// test when those libraries are unavailable (e.g. a headless agent). This managed-only test
-	// exercises pure-managed SkiaSharp geometry types (no GTK, no native SkiaSharp call) so the
-	// suite always has at least one executed test — Microsoft.Testing.Platform fails a run that
-	// executes zero tests with exit code 8.
+	// The GTK-specific tests in this assembly initialise native GTK4 in their constructors and skip
+	// every test when those libraries are unavailable (e.g. a headless agent). The GirCore GTK types
+	// (Gdk.Rectangle, Gdk.RGBA, Graphene.*) all P/Invoke into native glib/graphene even to construct,
+	// so no GTK conversion can run without the native runtime. This managed-only test exercises pure
+	// SkiaSharp geometry types (no GTK, no native SkiaSharp call) so the suite always has at least one
+	// executed test — Microsoft.Testing.Platform fails a run that executes zero tests with exit code 8.
 	public class SmokeTest
 	{
 		[Fact]
