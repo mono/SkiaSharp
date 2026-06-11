@@ -61,6 +61,34 @@ The C API shims (`src/c/gr_context.cpp` etc.) compile as part of `:core`, but ba
 
 Upstream may move previously-core modules into separate optional targets. If the C API exposes functions from that module, add it as an explicit dependency of the `SkiaSharp` target in `BUILD.gn` rather than merging sources into core.
 
+### 23. Native Sources & Flags Live in `BUILD.gn` (single source of truth)
+
+Every platform — Windows, Linux, WASM, Android, macOS, iOS, tvOS, and MacCatalyst — builds
+`libSkiaSharp`/`libHarfBuzzSharp` from the `skiasharp_build("SkiaSharp")` /
+`skiasharp_build("HarfBuzzSharp")` GN targets in `externals/skia/BUILD.gn`. On iOS/tvOS/MacCatalyst
+the GN build itself emits a complete single-arch `lib<Name>.framework` in the out dir — bundle
+layout, framework-relative install_name (link-time ldflags) and the provenance Info.plist
+(CFBundle* + DT*/BuildMachineOSBuild keys App Store/notarization validation expects) all come from
+GN via the `skiasharp_apple_framework` arg + `gn/skiasharp/assemble_apple_framework.{py,sh}`. The
+Apple `native/*/build.cake` tasks just `GnNinja` per arch and then lipo the per-arch frameworks
+together and code-sign (`CombineFrameworks` in `scripts/infra/native/apple/apple.cake`); macOS ships
+a plain `.dylib`. What to do when updating Skia:
+
+- **Adding/removing a C API source file** (`src/c/*.cpp`, `src/xamarin/*.cpp`): add it to the source
+  list in the `skiasharp_build("SkiaSharp")` target in `BUILD.gn`, and to Tizen's
+  `native/tizen/.../project_def.prop`. Those two are the only places — the same GN list feeds all
+  desktop, mobile, and Apple builds.
+- **Adding/removing a HarfBuzz source file**: update the `skiasharp_build("HarfBuzzSharp")` target.
+  Keep its defines (`HAVE_OT`, `HAVE_CONFIG_OVERRIDE_H`, `HB_NO_FALLBACK_SHAPE`) and the `HB_EXTERN`
+  visibility export (which publishes the `hb_*` symbols) intact.
+- **Changing a feature define or warning flag** (e.g. `SK_*`, `-Werror=deprecated-declarations`): set
+  it once on the GN target and it applies everywhere, Apple included.
+- After any native change, rebuild from source per platform (`dotnet cake --target=externals-<plat>`);
+  `externals-download` is forbidden for native work.
+
+Xcode (Command Line Tools) is still required on macOS build agents for the Apple SDK + clang
+toolchain that GN drives, but the build is pure `gn`/`ninja` — there are no Xcode project files.
+
 ## Dependencies & Bindings
 
 ### 8. DEPS: Fork-Customized Dependencies
