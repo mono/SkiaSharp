@@ -1,32 +1,3 @@
-#addin nuget:?package=Cake.XCode&version=5.0.0
-
-void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, Dictionary<string, string> properties = null)
-{
-    var dir = project.GetDirectory();
-
-    var settings = new XCodeBuildSettings {
-        Project = project.FullPath,
-        Scheme = scheme,
-        Sdk = sdk,
-        Arch = arch,
-        Archive = true,
-        Configuration = CONFIGURATION,
-        DerivedDataPath = dir.Combine($"obj/{CONFIGURATION}/{sdk}/{arch}"),
-        ArchivePath = dir.Combine($"bin/{CONFIGURATION}/{sdk}/{arch}"),
-        BuildSettings = new Dictionary<string, string> {
-            { "SKIP_INSTALL", "NO" },
-            { "BUILD_LIBRARIES_FOR_DISTRIBUTION", "YES" },
-        },
-    };
-    if (properties != null) {
-        foreach (var prop in properties) {
-            settings.BuildSettings[prop.Key] = prop.Value;
-        }
-    }
-
-    XCodeBuild(settings);
-}
-
 void StripSign(FilePath target)
 {
     if (!IsRunningOnMacOs())
@@ -49,20 +20,6 @@ void StripSign(FilePath target)
     });
 }
 
-void RunLipo(DirectoryPath directory, FilePath output, FilePath[] inputs)
-{
-    if (!IsRunningOnMacOs())
-        throw new InvalidOperationException("lipo is only available on macOS.");
-
-    EnsureDirectoryExists(directory.CombineWithFilePath(output).GetDirectory());
-
-    var inputString = string.Join(" ", inputs.Select(i => string.Format("\"{0}\"", i)));
-    RunProcess("lipo", new ProcessSettings {
-        Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
-        WorkingDirectory = directory,
-    });
-}
-
 void RunLipo(FilePath output, FilePath[] inputs)
 {
     if (!IsRunningOnMacOs())
@@ -72,46 +29,6 @@ void RunLipo(FilePath output, FilePath[] inputs)
     RunProcess("lipo", new ProcessSettings {
         Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
     });
-}
-
-void CreateFatDylib(DirectoryPath archives)
-{
-    var libName = archives.GetDirectoryName();
-
-    var binaries = GetFiles($"{archives}/*.xcarchive/Products/@rpath/{libName}.dylib").ToArray();
-    RunLipo($"{archives}.dylib", binaries);
-
-    StripSign($"{archives}.dylib");
-}
-
-void CreateFatFramework(DirectoryPath archives)
-{
-    var libName = archives.GetDirectoryName();
-
-    var frameworks = GetDirectories($"{archives}/*.xcarchive/Products/Library/Frameworks/{libName}.framework").ToArray();
-    SafeCopy(frameworks[0], $"{archives}.framework");
-    DeleteFile($"{archives}.framework/{libName}");
-
-    var binaries = GetFiles($"{archives}/*.xcarchive/Products/Library/Frameworks/{libName}.framework/{libName}").ToArray();
-    RunLipo($"{archives}.framework/{libName}", binaries);
-
-    StripSign($"{archives}.framework");
-}
-
-void CreateFatVersionedFramework(DirectoryPath archives)
-{
-    var libName = archives.GetDirectoryName();
-
-    var frameworks = GetDirectories($"{archives}/*.xcarchive/Products/Library/Frameworks/{libName}.framework").ToArray();
-    SafeCopy(frameworks[0], $"{archives}.framework");
-    DeleteFile($"{archives}.framework/Versions/A/{libName}");
-
-    var binaries = GetFiles($"{archives}/*.xcarchive/Products/Library/Frameworks/{libName}.framework/Versions/A/{libName}").ToArray();
-    RunLipo($"{archives}.framework/Versions/A/{libName}", binaries);
-
-    StripSign($"{archives}.framework");
-
-    RunZip($"{archives}.framework");
 }
 
 // mono/skia: build a .framework bundle directly from GN-produced dylibs, replacing the
@@ -222,13 +139,6 @@ void WriteFrameworkPlist(FilePath path, string libName, string minOsVersion, str
 
     EnsureDirectoryExists(path.GetDirectory());
     System.IO.File.WriteAllText(path.FullPath, sb.ToString());
-}
-
-void SafeCopy(DirectoryPath src, DirectoryPath dst)
-{
-    EnsureDirectoryExists(dst);
-    DeleteDir(dst);
-    RunProcess("cp", $"-R {src} {dst}");
 }
 
 void RunZip(DirectoryPath src)
