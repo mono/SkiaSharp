@@ -687,6 +687,42 @@ namespace SkiaSharp.Tests
 			var full = roi.GetPixelSpan();
 			var row1 = roi.GetPixelSpan(0, 1);
 			Assert.Equal(roi.RowBytes, full.Length - row1.Length);
+
+			// the offset must also land on the correct pixel data
+			var firstColor = MemoryMarshal.Cast<byte, SKColor>(roi.GetPixelSpan(0, 0))[0];
+			var row1Color = MemoryMarshal.Cast<byte, SKColor>(row1)[0];
+			Assert.Equal(roi.GetPixel(0, 0), firstColor);
+			Assert.Equal(roi.GetPixel(0, 1), row1Color);
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanHandlesBottomRightSubset()
+		{
+			// the native byte count must already exclude trailing row padding so the
+			// full-image span does not read past the end of the parent buffer
+			var info = new SKImageInfo(10, 10, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(9, 9, 10, 10)));
+
+			Assert.Equal(1, roi.Width);
+			Assert.Equal(1, roi.Height);
+
+			// a single pixel: exactly BytesPerPixel, never Height * RowBytes
+			Assert.Equal(roi.BytesPerPixel, roi.GetPixelSpan().Length);
+			Assert.Equal(roi.BytesPerPixel, roi.GetPixelSpan(0, 0).Length);
+		}
+
+		[SkippableTheory]
+		[InlineData(-1, 0)]
+		[InlineData(0, -1)]
+		[InlineData(0, 40)]
+		[InlineData(40, 0)]
+		public void GetPixelSpanThrowsForOutOfRangeCoordinates(int x, int y)
+		{
+			using var bmp = CreateTestBitmap();
+			Assert.Throws<ArgumentOutOfRangeException>(() => bmp.GetPixelSpan(x, y));
 		}
 
 		[SkippableTheory]

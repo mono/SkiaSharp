@@ -159,6 +159,11 @@ namespace SkiaSharp
 			if (bpp <= 0)
 				return null;
 
+			if (x < 0 || x >= info.Width)
+				throw new ArgumentOutOfRangeException (nameof (x));
+			if (y < 0 || y >= info.Height)
+				throw new ArgumentOutOfRangeException (nameof (y));
+
 			// use the actual stride of the pixmap as it may differ from
 			// (Width * BytesPerPixel) when the pixmap is a subset of a larger one
 			var rowBytes = RowBytes;
@@ -183,6 +188,11 @@ namespace SkiaSharp
 				var size = sizeof (T);
 				if (bpp != size)
 					throw new ArgumentException ($"Size of T ({size}) is not the same as the size of each pixel ({bpp}).", nameof (T));
+
+				// a typed span cannot represent a row stride that is not a whole
+				// number of T elements (the byte overload supports any stride)
+				if (rowBytes % size != 0)
+					throw new ArgumentException ($"The row stride ({rowBytes}) is not a multiple of the size of T ({size}).", nameof (T));
 
 				// work in T elements: since each pixel is exactly one T, the only
 				// unit conversion is the stride from bytes to elements

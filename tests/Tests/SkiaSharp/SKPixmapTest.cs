@@ -497,5 +497,141 @@ namespace SkiaSharp.Tests
 			var roiSpanRow1 = roiPixmap.GetPixelSpan<SKColor>(0, 1);
 			Assert.Equal(roiSpan[stridePixels], roiSpanRow1[0]);
 		}
+
+		[SkippableFact]
+		public void GetPixelSpanHandlesNonSquareSubset()
+		{
+			// distinct dimensions so a Width/Height swap would be caught
+			var info = new SKImageInfo(6, 4, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			using (var canvas = new SKCanvas(bmp))
+				canvas.Clear(SKColors.Red);
+
+			// non-square, non-square subset
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(0, 0, 3, 2)));
+
+			using var pixmap = roi.PeekPixels();
+			Assert.Equal(3, pixmap.Width);
+			Assert.Equal(2, pixmap.Height);
+			Assert.True(pixmap.RowBytes > pixmap.Width * pixmap.BytesPerPixel);
+
+			var rowLength = pixmap.RowBytes / pixmap.BytesPerPixel;
+
+			// length = (Height - 1) * rowLength + Width
+			var span = pixmap.GetPixelSpan<SKColor>();
+			Assert.Equal((2 - 1) * rowLength + 3, span.Length);
+
+			// offset of (2, 1) = 1 * rowLength + 2
+			var spanX2Y1 = pixmap.GetPixelSpan<SKColor>(2, 1);
+			Assert.Equal(span.Length - (rowLength + 2), spanX2Y1.Length);
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanHandlesBottomRightSubset()
+		{
+			// a subset whose last row is the parent's last row: a naively padded
+			// last row would read past the end of the parent buffer
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			using (var canvas = new SKCanvas(bmp))
+				canvas.Clear(SKColors.Blue);
+			bmp.SetPixel(3, 3, SKColors.Green);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(2, 2, 4, 4)));
+
+			using var pixmap = roi.PeekPixels();
+			var rowLength = pixmap.RowBytes / pixmap.BytesPerPixel;
+
+			// length stops at the last valid pixel of the last row
+			var span = pixmap.GetPixelSpan<SKColor>();
+			Assert.Equal((2 - 1) * rowLength + 2, span.Length);
+
+			// the last valid pixel (1, 1) is the green parent pixel (3, 3)
+			var green = pixmap.GetPixelColor(1, 1);
+			Assert.Equal(green, span[span.Length - 1]);
+			Assert.Equal(SKColors.Green, green);
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanByteBranchHandlesSubsetStride()
+		{
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(0, 0, 2, 2)));
+
+			using var pixmap = roi.PeekPixels();
+
+			// (Height - 1) * RowBytes + Width * BytesPerPixel = 1 * 16 + 2 * 4
+			var span = pixmap.GetPixelSpan<byte>();
+			Assert.Equal(24, span.Length);
+
+			// offset for row 1 is one full stride
+			var row1 = pixmap.GetPixelSpan<byte>(0, 1);
+			Assert.Equal(span.Length - pixmap.RowBytes, row1.Length);
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanHandlesSubsetForMultiByteColorType()
+		{
+			// Rgb565 is 2 bytes per pixel, exercising a different bpp/shift
+			var info = new SKImageInfo(4, 4, SKColorType.Rgb565);
+			using var bmp = new SKBitmap(info);
+			using (var canvas = new SKCanvas(bmp))
+				canvas.Clear(SKColors.Red);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(0, 0, 2, 2)));
+
+			using var pixmap = roi.PeekPixels();
+			Assert.True(pixmap.RowBytes > pixmap.Width * pixmap.BytesPerPixel);
+
+			var rowLength = pixmap.RowBytes / pixmap.BytesPerPixel;
+			var span = pixmap.GetPixelSpan<ushort>();
+			Assert.Equal((2 - 1) * rowLength + 2, span.Length);
+		}
+
+		[SkippableTheory]
+		[InlineData(-1, 0)]
+		[InlineData(0, -1)]
+		[InlineData(0, 4)]
+		[InlineData(4, 0)]
+		public void GetPixelSpanThrowsForOutOfRangeCoordinates(int x, int y)
+		{
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			Assert.Throws<ArgumentOutOfRangeException>(() => pixmap.GetPixelSpan<SKColor>(x, y));
+			Assert.Throws<ArgumentOutOfRangeException>(() => pixmap.GetPixelSpan(x, y));
+		}
+
+		[SkippableFact]
+		public unsafe void GetPixelSpanTypedThrowsForStrideNotMultipleOfElement()
+		{
+			// a stride that is not a whole number of pixels cannot be represented
+			// by a typed span, but the byte overload must still work
+			var info = new SKImageInfo(1, 2, SKColorType.Rgba8888);
+			var rowBytes = info.Width * info.BytesPerPixel + 1; // 5
+			var buffer = Marshal.AllocCoTaskMem(rowBytes * info.Height);
+			try
+			{
+				using var pixmap = new SKPixmap(info, buffer, rowBytes);
+
+				// byte overload works with any stride
+				var bytes = pixmap.GetPixelSpan<byte>(0, 1);
+				Assert.Equal(rowBytes, pixmap.GetPixelSpan<byte>().Length - bytes.Length);
+
+				// typed overload cannot represent the fractional stride
+				Assert.Throws<ArgumentException>(() => pixmap.GetPixelSpan<SKColor>());
+			}
+			finally
+			{
+				Marshal.FreeCoTaskMem(buffer);
+			}
+		}
 	}
 }

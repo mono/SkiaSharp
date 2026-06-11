@@ -336,8 +336,16 @@ namespace SkiaSharp
 		public Span<byte> GetPixelSpan () =>
 			new Span<byte> ((void*)GetPixels (out var length), (int)length);
 
-		public Span<byte> GetPixelSpan (int x, int y) =>
-			GetPixelSpan ().Slice (Info.GetPixelBytesOffset (x, y, RowBytes));
+		public Span<byte> GetPixelSpan (int x, int y)
+		{
+			var info = Info;
+			if (x < 0 || x >= info.Width)
+				throw new ArgumentOutOfRangeException (nameof (x));
+			if (y < 0 || y >= info.Height)
+				throw new ArgumentOutOfRangeException (nameof (y));
+
+			return GetPixelSpan ().Slice (info.GetPixelBytesOffset (x, y, RowBytes));
+		}
 
 		public IntPtr GetPixels (out IntPtr length)
 		{
