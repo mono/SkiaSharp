@@ -89,7 +89,9 @@ void RunDotNetTest(
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
             args = args
-                .Append("/p:Platform=\"AnyCPU\"");
+                .Append("/p:Platform=\"AnyCPU\"")
+                .Append("--blame-hang-timeout").Append("15m")
+                .Append("--blame-hang-dump-type").Append("none");
             if (COVERAGE)
                 args = args
                     .Append("/p:CollectCoverage=true")
