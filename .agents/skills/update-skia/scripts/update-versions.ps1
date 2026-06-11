@@ -151,7 +151,13 @@ if ($Current -eq $Target) {
 
     $staleCgmanifest = Select-String -Path $cgPath -Pattern "m$Current|`"$Current`""
 
-    $stalePipeline = Select-String -Path $pipelinePath -Pattern "SKIASHARP_VERSION:\s*\S*$Current"
+    # Positive assertion: the SKIASHARP_VERSION must end up EXACTLY at the target
+    # nuget version. A stale-only check (looking for $Current) would pass if the
+    # value were stuck on a different milestone (e.g. 4.146.0) or carried a suffix
+    # (e.g. 4.147.0-preview.2 -> 4.148.0-preview.2 no longer contains 147).
+    $pipelineNow = Get-Content $pipelinePath -Raw
+    $pipelineVerMatch = [regex]::Match($pipelineNow, 'SKIASHARP_VERSION:\s*(?<ver>\S+)')
+    $pipelineVer = if ($pipelineVerMatch.Success) { $pipelineVerMatch.Groups['ver'].Value } else { '<missing>' }
 
     $failures = @()
 
@@ -169,11 +175,8 @@ if ($Current -eq $Target) {
         }
     }
 
-    if ($stalePipeline) {
-        $failures += "azure-templates-variables.yml SKIASHARP_VERSION still contains '$Current':"
-        foreach ($match in $stalePipeline) {
-            $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
-        }
+    if ($pipelineVer -ne $targetNuget) {
+        $failures += "azure-templates-variables.yml SKIASHARP_VERSION is '$pipelineVer', expected '$targetNuget' (must match VERSIONS.txt nuget version)"
     }
 
     if ($failures.Count -gt 0) {
@@ -185,6 +188,6 @@ if ($Current -eq $Target) {
         Write-Host "  SK_C_INCREMENT: 0" -ForegroundColor Green
         Write-Host "  VERSIONS.txt: clean" -ForegroundColor Green
         Write-Host "  cgmanifest.json: clean" -ForegroundColor Green
-        Write-Host "  azure-templates-variables.yml: clean" -ForegroundColor Green
+        Write-Host "  azure-templates-variables.yml: SKIASHARP_VERSION = $targetNuget" -ForegroundColor Green
     }
 }
