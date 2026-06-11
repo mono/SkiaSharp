@@ -88,6 +88,12 @@ Determine the version's status from the HTML comment block in the file (`status:
   preview that will never ship as stable. Keep the script-generated
   `> **Preview only** · Superseded by [X.Y.Z](...) · Never released as stable …` header and
   add a short note in Highlights that the work rolled up into the superseding version.
+- **Successor** (a `supersedes:` line is present in the comment block): this version rolls
+  up one or more skipped preview-only versions. Keep the script-generated
+  `> **Supersedes [X.Y.Z](...)** · Rolls up preview-only work …` note and mention in
+  Highlights that the skipped preview work is rolled up cumulatively. This is the back-link
+  that makes the supersede relationship **two-way** (the superseded page points forward, the
+  successor points back).
 
 ### Skipped / superseded minors (preview-only versions)
 
@@ -103,7 +109,7 @@ configuration is normally required:
    stable, so e.g. `3.119.4` rolls up the preview-only `3.119.3` (the `3.119.3` page still
    keeps its own notes — duplication across the two pages is expected and fine).
 
-2. **Automatic supersede label.** A version that has only preview tags is flagged as
+2. **Automatic supersede label (two-way).** A version that has only preview tags is flagged as
    *superseded* once a **newer version is known**. A newer version is "known" from a later
    `release/*` branch or `v*` tag, **or from `main` itself**: if `main`'s in-development
    `SKIASHARP_VERSION` is newer and the preview-only version's minor line was never branched
@@ -115,12 +121,20 @@ configuration is normally required:
    page (`{ver}.md`) when it exists, otherwise to its in-development page
    (`{ver}-unreleased.md`). Until a newer version is known, the version is just a normal preview.
 
+   The relationship is rendered **both ways**: the successor page (computed by the inverse
+   `detect_supersedes`) carries a `supersedes:` data-block line and a
+   *"Supersedes [X.Y.Z] · Rolls up preview-only work …"* note, so e.g. `4.148.0` points back
+   to `4.147.0`, `3.119.4` to `3.119.3`, and `3.119.0` to `3.118.0` — automatically, without
+   the AI having to infer it from the diff base.
+
 > Detection is purely tag/branch/`main`-version based, so no configuration file is needed. (If a
 > manual override is ever required it can be reintroduced later; for now the automatic
 > behaviour is the only path.)
 
 When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
 header and add a one-line note in Highlights that the work rolled up into the successor.
+When polishing a **successor** page, keep the script-generated *"Supersedes …"* note and add a
+one-line note in Highlights that the skipped preview work is rolled up cumulatively.
 
 ### Step 4 — Write polished pages
 
