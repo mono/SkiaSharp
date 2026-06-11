@@ -19,6 +19,8 @@ string SkiaGnArgs(string skiaArch, string arch, bool isSim) =>
     $"target_os='{VARIANT}' " +
     $"min_{VARIANT}_version='{GetDeploymentTarget(arch)}' " +
     $"ios_use_simulator={(isSim ? "true" : "false")} " +
+    $"skiasharp_apple_framework=true " +
+    $"skiasharp_apple_framework_versioned={(VARIANT == "maccatalyst" ? "true" : "false")} " +
     $"skia_use_harfbuzz=false " +
     $"skia_use_icu=false " +
     $"skia_use_metal=true " +

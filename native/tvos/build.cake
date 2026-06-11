@@ -14,6 +14,7 @@ string SkiaGnArgs(string skiaArch, string arch, bool isSim) =>
     $"target_cpu='{skiaArch}' " +
     $"min_tvos_version='{GetDeploymentTarget(arch)}' " +
     $"ios_use_simulator={(isSim ? "true" : "false")} " +
+    $"skiasharp_apple_framework=true " +
     $"skia_use_harfbuzz=false " +
     $"skia_use_icu=false " +
     $"skia_use_metal=true " +

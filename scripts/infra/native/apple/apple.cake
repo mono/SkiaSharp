@@ -31,12 +31,19 @@ void RunLipo(FilePath output, FilePath[] inputs)
     });
 }
 
-// Build a .framework bundle directly from the GN-produced dylibs. The framework binary is the
-// Mach-O dynamic library GN emits (MH_DYLIB); we lipo the per-arch slices together, rename the
-// binary to the framework convention (no extension), rewrite its install_name to the
-// framework-relative @rpath, write a deterministic Info.plist, ad-hoc codesign, and (for
-// MacCatalyst) lay out the versioned bundle and zip it. iOS/tvOS/MacCatalyst ship this framework;
-// macOS ships the plain dylib instead and does not call this.
+// Assemble a .framework bundle from the GN-produced dylibs. A framework is just a Mach-O dynamic
+// library (MH_DYLIB) plus an Info.plist and a code signature in a bundle directory, so:
+//   1. lipo the per-arch GN dylibs into the single universal framework binary (GN/ninja builds one
+//      arch per out dir, so combining the slices into a fat binary is intrinsic and unavoidable -
+//      Xcode itself does the same). The dylib's install_name was already set to the
+//      framework-relative @rpath at LINK time by GN (skiasharp_apple_framework), so there is no
+//      post-link install_name_tool surgery here;
+//   2. generate the Info.plist with make-framework-plist.sh, which reproduces exactly what Xcode's
+//      PROCESS_INFOPLIST emitted - including the DT*/BuildMachineOSBuild build-provenance keys that
+//      Apple's App Store / notarization validation expects on embedded frameworks;
+//   3. lay out the macOS-style versioned bundle (Mac Catalyst) and zip it;
+//   4. strip and ad-hoc codesign LAST, after the universal binary and plist are in place.
+// iOS/tvOS/MacCatalyst ship this framework; macOS ships the plain dylib and does not call this.
 void CreateFrameworkFromDylibs(
     DirectoryPath frameworkPath,
     FilePath[] dylibs,
@@ -60,19 +67,11 @@ void CreateFrameworkFromDylibs(
     EnsureDirectoryExists(binDir);
     EnsureDirectoryExists(resourcesDir);
 
-    // combine the per-arch GN dylibs into the framework binary (no file extension)
+    // combine the per-arch GN dylibs into the universal framework binary (no file extension)
     var binary = binDir.CombineWithFilePath(libName);
     RunLipo(binary, dylibs);
 
-    // GN's solink sets the install name to @rpath/<lib>.dylib; a framework needs the
-    // framework-relative install name so the runtime resolves @rpath/<lib>.framework/<lib>.
-    var installName = versioned
-        ? $"@rpath/{libName}.framework/Versions/A/{libName}"
-        : $"@rpath/{libName}.framework/{libName}";
-    RunProcess("install_name_tool", $"-id \"{installName}\" \"{binary}\"");
-
-    // deterministic Info.plist with only the stable, contract-relevant keys (omit volatile
-    // DT*/BuildMachineOSBuild build-environment keys, which are not part of the shipped contract).
+    // Info.plist generated the way Xcode did (incl. DT*/BuildMachineOSBuild provenance keys).
     WriteFrameworkPlist(resourcesDir.CombineWithFilePath("Info.plist"), libName, minOsVersion, supportedPlatforms, deviceFamily);
 
     if (versioned) {
@@ -87,57 +86,49 @@ void CreateFrameworkFromDylibs(
         RunZip(frameworkPath);
 }
 
+// Map the framework's primary CFBundleSupportedPlatforms entry to the SDK whose build/version
+// provenance the Info.plist should record (matching the SDK Xcode processed the plist under).
+string SupportedPlatformToSdk(string platform)
+{
+    switch (platform) {
+        case "iPhoneOS": return "iphoneos";
+        case "iPhoneSimulator": return "iphonesimulator";
+        case "AppleTVOS": return "appletvos";
+        case "AppleTVSimulator": return "appletvsimulator";
+        case "MacOSX": return "macosx";
+        default: throw new InvalidOperationException($"Unknown framework platform '{platform}'.");
+    }
+}
+
+// Generate the framework Info.plist by delegating to make-framework-plist.sh, which uses
+// first-party Apple tools only (plutil + xcrun/xcodebuild/sw_vers) to reproduce Xcode's
+// PROCESS_INFOPLIST output - including the DT*/BuildMachineOSBuild keys required for App Store /
+// notarization validation.
 void WriteFrameworkPlist(FilePath path, string libName, string minOsVersion, string[] supportedPlatforms, int[] deviceFamily)
 {
-    var sb = new System.Text.StringBuilder();
-    sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-    sb.AppendLine("<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">");
-    sb.AppendLine("<plist version=\"1.0\">");
-    sb.AppendLine("<dict>");
-    sb.AppendLine("\t<key>CFBundleDevelopmentRegion</key>");
-    sb.AppendLine("\t<string>en</string>");
-    sb.AppendLine("\t<key>CFBundleExecutable</key>");
-    sb.AppendLine($"\t<string>{libName}</string>");
-    sb.AppendLine("\t<key>CFBundleIdentifier</key>");
-    sb.AppendLine($"\t<string>com.microsoft.{libName}</string>");
-    sb.AppendLine("\t<key>CFBundleInfoDictionaryVersion</key>");
-    sb.AppendLine("\t<string>6.0</string>");
-    sb.AppendLine("\t<key>CFBundleName</key>");
-    sb.AppendLine($"\t<string>{libName}</string>");
-    sb.AppendLine("\t<key>CFBundlePackageType</key>");
-    sb.AppendLine("\t<string>FMWK</string>");
-    sb.AppendLine("\t<key>CFBundleShortVersionString</key>");
-    sb.AppendLine("\t<string>1.0</string>");
-    sb.AppendLine("\t<key>CFBundleSignature</key>");
-    sb.AppendLine("\t<string>????</string>");
-    sb.AppendLine("\t<key>CFBundleVersion</key>");
-    sb.AppendLine("\t<string>1</string>");
-    if (supportedPlatforms != null && supportedPlatforms.Length > 0) {
-        sb.AppendLine("\t<key>CFBundleSupportedPlatforms</key>");
-        sb.AppendLine("\t<array>");
-        foreach (var p in supportedPlatforms)
-            sb.AppendLine($"\t\t<string>{p}</string>");
-        sb.AppendLine("\t</array>");
-    }
-    if (!string.IsNullOrEmpty(minOsVersion)) {
-        // MacCatalyst frameworks express their minimum as the macOS-form LSMinimumSystemVersion;
-        // iOS/tvOS frameworks use the iOS-form MinimumOSVersion.
-        var isMacCatalyst = supportedPlatforms != null && System.Array.IndexOf(supportedPlatforms, "MacOSX") >= 0;
-        sb.AppendLine(isMacCatalyst ? "\t<key>LSMinimumSystemVersion</key>" : "\t<key>MinimumOSVersion</key>");
-        sb.AppendLine($"\t<string>{minOsVersion}</string>");
-    }
-    if (deviceFamily != null && deviceFamily.Length > 0) {
-        sb.AppendLine("\t<key>UIDeviceFamily</key>");
-        sb.AppendLine("\t<array>");
-        foreach (var d in deviceFamily)
-            sb.AppendLine($"\t\t<integer>{d}</integer>");
-        sb.AppendLine("\t</array>");
-    }
-    sb.AppendLine("</dict>");
-    sb.AppendLine("</plist>");
-
     EnsureDirectoryExists(path.GetDirectory());
-    System.IO.File.WriteAllText(path.FullPath, sb.ToString());
+
+    var isMacCatalyst = supportedPlatforms != null && System.Array.IndexOf(supportedPlatforms, "MacOSX") >= 0;
+    var sdk = SupportedPlatformToSdk(supportedPlatforms[0]);
+    var script = MakeAbsolute(ROOT_PATH.CombineWithFilePath("scripts/infra/native/apple/make-framework-plist.sh"));
+
+    var args = new System.Collections.Generic.List<string> {
+        "--output", $"\"{path}\"",
+        "--name", libName,
+        "--identifier", $"com.microsoft.{libName}",
+        "--sdk", sdk,
+        "--min-os", minOsVersion,
+        "--supported-platforms",
+    };
+    args.AddRange(supportedPlatforms);
+    if (deviceFamily != null && deviceFamily.Length > 0) {
+        args.Add("--device-family");
+        args.AddRange(deviceFamily.Select(d => d.ToString()));
+    }
+    if (isMacCatalyst)
+        args.Add("--catalyst");
+
+    RunProcess("bash", $"\"{script}\" {string.Join(" ", args)}");
 }
 
 void RunZip(DirectoryPath src)
