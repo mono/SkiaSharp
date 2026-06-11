@@ -45,35 +45,27 @@ Task("libSkiaSharp")
         var deviceArm64 = Build("iphoneos", "arm64", "arm64");
 
         // device framework (runtimes/ios): device-arm64 + legacy simulator-x86_64,
-        // the exact arch layout the published iOS NuGet expects.
-        CreateFrameworkFromDylibs(
+        // the exact arch layout the published iOS NuGet expects. The device (iphoneos)
+        // framework is the base, so the shipped bundle advertises the device SDK.
+        CombineFrameworks(
             OUTPUT_PATH.Combine("ios/libSkiaSharp.framework"),
-            new[] { deviceArm64, simX64 }.Where(d => d != null).ToArray(),
-            GetDeploymentTarget("arm64"),
-            new[] { "iPhoneOS" },
-            new[] { 1, 2 });
+            new[] { deviceArm64, simX64 });
 
         // simulator framework (runtimes/iossimulator): simulator-x86_64 + simulator-arm64.
-        CreateFrameworkFromDylibs(
+        CombineFrameworks(
             OUTPUT_PATH.Combine("iossimulator/libSkiaSharp.framework"),
-            new[] { simX64, simArm64 }.Where(d => d != null).ToArray(),
-            GetDeploymentTarget("arm64"),
-            new[] { "iPhoneSimulator" },
-            new[] { 1, 2 });
+            new[] { simX64, simArm64 });
     } else if (VARIANT == "maccatalyst") {
         var x64 = Build("macosx", "x86_64", "x64");
         var arm64 = Build("macosx", "arm64", "arm64");
 
-        CreateFrameworkFromDylibs(
+        CombineFrameworks(
             OUTPUT_PATH.Combine("maccatalyst/libSkiaSharp.framework"),
-            new[] { x64, arm64 }.Where(d => d != null).ToArray(),
-            "10.15",
-            new[] { "MacOSX" },
-            new[] { 2 },
+            new[] { x64, arm64 },
             versioned: true);
     }
 
-    FilePath Build(string sdk, string arch, string skiaArch, string xcodeArch = null)
+    DirectoryPath Build(string sdk, string arch, string skiaArch, string xcodeArch = null)
     {
         if (Skip(arch)) return null;
 
@@ -83,13 +75,12 @@ Task("libSkiaSharp")
         if (VARIANT == "ios" && isSim)
             platform += "simulator";
 
+        // GN produces the complete single-arch lib*.framework (bundle layout, install_name,
+        // arm64e-thinned binary and provenance Info.plist) in its out dir; we only fuse the
+        // per-arch frameworks together afterwards.
         GnNinja($"{platform}/{xcodeArch}", "SkiaSharp", SkiaGnArgs(skiaArch, arch, isSim));
 
-        // GN's solink already emits the dynamic-library framework binary; the wrapper
-        // lipos these per-arch dylibs and builds the .framework bundle.
-        var dylib = SKIA_PATH.CombineWithFilePath($"out/{platform}/{xcodeArch}/libSkiaSharp.dylib");
-        EnsureSingleArch(dylib, skiaArch == "x64" ? "x86_64" : skiaArch);
-        return dylib;
+        return SKIA_PATH.Combine($"out/{platform}/{xcodeArch}/libSkiaSharp.framework");
     }
 });
 
@@ -103,33 +94,24 @@ Task("libHarfBuzzSharp")
         var simArm64 = Build("iphonesimulator", "arm64", "arm64");
         var deviceArm64 = Build("iphoneos", "arm64", "arm64");
 
-        CreateFrameworkFromDylibs(
+        CombineFrameworks(
             OUTPUT_PATH.Combine("ios/libHarfBuzzSharp.framework"),
-            new[] { deviceArm64, simX64 }.Where(d => d != null).ToArray(),
-            GetDeploymentTarget("arm64"),
-            new[] { "iPhoneOS" },
-            new[] { 1, 2 });
+            new[] { deviceArm64, simX64 });
 
-        CreateFrameworkFromDylibs(
+        CombineFrameworks(
             OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp.framework"),
-            new[] { simX64, simArm64 }.Where(d => d != null).ToArray(),
-            GetDeploymentTarget("arm64"),
-            new[] { "iPhoneSimulator" },
-            new[] { 1, 2 });
+            new[] { simX64, simArm64 });
     } else if (VARIANT == "maccatalyst") {
         var x64 = Build("macosx", "x86_64", "x64");
         var arm64 = Build("macosx", "arm64", "arm64");
 
-        CreateFrameworkFromDylibs(
+        CombineFrameworks(
             OUTPUT_PATH.Combine("maccatalyst/libHarfBuzzSharp.framework"),
-            new[] { x64, arm64 }.Where(d => d != null).ToArray(),
-            "10.15",
-            new[] { "MacOSX" },
-            new[] { 2 },
+            new[] { x64, arm64 },
             versioned: true);
     }
 
-    FilePath Build(string sdk, string arch, string skiaArch)
+    DirectoryPath Build(string sdk, string arch, string skiaArch)
     {
         if (Skip(arch)) return null;
 
@@ -142,9 +124,7 @@ Task("libHarfBuzzSharp")
         // only the ninja target differs. The HarfBuzzSharp GN target is self-contained.
         GnNinja($"{platform}/{arch}", "HarfBuzzSharp", SkiaGnArgs(skiaArch, arch, isSim));
 
-        var dylib = SKIA_PATH.CombineWithFilePath($"out/{platform}/{arch}/libHarfBuzzSharp.dylib");
-        EnsureSingleArch(dylib, skiaArch == "x64" ? "x86_64" : skiaArch);
-        return dylib;
+        return SKIA_PATH.Combine($"out/{platform}/{arch}/libHarfBuzzSharp.framework");
     }
 });
 

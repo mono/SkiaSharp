@@ -31,104 +31,57 @@ void RunLipo(FilePath output, FilePath[] inputs)
     });
 }
 
-// Assemble a .framework bundle from the GN-produced dylibs. A framework is just a Mach-O dynamic
-// library (MH_DYLIB) plus an Info.plist and a code signature in a bundle directory, so:
-//   1. lipo the per-arch GN dylibs into the single universal framework binary (GN/ninja builds one
-//      arch per out dir, so combining the slices into a fat binary is intrinsic and unavoidable -
-//      Xcode itself does the same). The dylib's install_name was already set to the
-//      framework-relative @rpath at LINK time by GN (skiasharp_apple_framework), so there is no
-//      post-link install_name_tool surgery here;
-//   2. generate the Info.plist with make-framework-plist.sh, which reproduces exactly what Xcode's
-//      PROCESS_INFOPLIST emitted - including the DT*/BuildMachineOSBuild build-provenance keys that
-//      Apple's App Store / notarization validation expects on embedded frameworks;
-//   3. lay out the macOS-style versioned bundle (Mac Catalyst) and zip it;
-//   4. strip and ad-hoc codesign LAST, after the universal binary and plist are in place.
+// Combine the per-arch, single-SDK .framework bundles that GN/ninja produced (one per arch out dir)
+// into the single shipped framework. GN already owns the bundle: its layout, the framework-relative
+// install_name (set at link time), the arm64e thinning, and the provenance-complete Info.plist
+// (incl. the DT*/BuildMachineOSBuild keys App Store / notarization validation expects). The only
+// thing that cannot live inside a single GN invocation is fusing slices from different arch/SDK out
+// dirs, so all this does is:
+//   1. copy the base framework (gnFrameworks[0]) - its Info.plist and bundle layout are the shipped
+//      ones, so the base must be the framework whose SDK the shipped artifact should advertise (e.g.
+//      the iphoneos slice for the device framework, which also carries a legacy simulator slice);
+//   2. lipo every slice's binary into the base's universal binary;
+//   3. strip and ad-hoc codesign LAST, after lipo (which would otherwise invalidate the signature);
+//   4. zip the macOS-style versioned bundle (Mac Catalyst).
 // iOS/tvOS/MacCatalyst ship this framework; macOS ships the plain dylib and does not call this.
-void CreateFrameworkFromDylibs(
-    DirectoryPath frameworkPath,
-    FilePath[] dylibs,
-    string minOsVersion,
-    string[] supportedPlatforms,
-    int[] deviceFamily,
-    bool versioned = false)
+void CombineFrameworks(DirectoryPath outputFramework, DirectoryPath[] gnFrameworks, bool versioned = false)
 {
     if (!IsRunningOnMacOs())
         throw new InvalidOperationException("framework creation is only available on macOS.");
 
-    var libName = frameworkPath.GetDirectoryName();
-    if (libName.EndsWith(".framework"))
-        libName = libName.Substring(0, libName.Length - ".framework".Length);
+    gnFrameworks = gnFrameworks.Where(f => f != null).ToArray();
+    if (gnFrameworks.Length == 0)
+        throw new InvalidOperationException($"no GN frameworks to combine into '{outputFramework}'.");
 
-    if (DirectoryExists(frameworkPath))
-        DeleteDir(frameworkPath);
+    if (DirectoryExists(outputFramework))
+        DeleteDir(outputFramework);
+    EnsureDirectoryExists(outputFramework.Combine(".."));
 
-    var binDir = versioned ? frameworkPath.Combine("Versions/A") : (DirectoryPath)frameworkPath;
-    var resourcesDir = versioned ? frameworkPath.Combine("Versions/A/Resources") : (DirectoryPath)frameworkPath;
-    EnsureDirectoryExists(binDir);
-    EnsureDirectoryExists(resourcesDir);
+    // The base framework's Info.plist + bundle layout (and symlinks, for versioned bundles) become
+    // the shipped ones; -R preserves the symlink structure of versioned frameworks.
+    RunProcess("cp", $"-R \"{MakeAbsolute(gnFrameworks[0])}\" \"{MakeAbsolute(outputFramework)}\"");
 
-    // combine the per-arch GN dylibs into the universal framework binary (no file extension)
-    var binary = binDir.CombineWithFilePath(libName);
-    RunLipo(binary, dylibs);
+    // Fuse every per-arch slice into the framework's universal binary.
+    var binary = FrameworkBinary(outputFramework, versioned);
+    var slices = gnFrameworks.Select(f => FrameworkBinary(f, versioned)).ToArray();
+    RunLipo(binary, slices);
 
-    // Info.plist generated the way Xcode did (incl. DT*/BuildMachineOSBuild provenance keys).
-    WriteFrameworkPlist(resourcesDir.CombineWithFilePath("Info.plist"), libName, minOsVersion, supportedPlatforms, deviceFamily);
-
-    if (versioned) {
-        RunProcess("ln", $"-sfh A \"{frameworkPath}/Versions/Current\"");
-        RunProcess("ln", $"-sfh Versions/Current/{libName} \"{frameworkPath}/{libName}\"");
-        RunProcess("ln", $"-sfh Versions/Current/Resources \"{frameworkPath}/Resources\"");
-    }
-
-    StripSign($"{frameworkPath}");
+    StripSign($"{outputFramework}");
 
     if (versioned)
-        RunZip(frameworkPath);
+        RunZip(outputFramework);
 }
 
-// Map the framework's primary CFBundleSupportedPlatforms entry to the SDK whose build/version
-// provenance the Info.plist should record (matching the SDK Xcode processed the plist under).
-string SupportedPlatformToSdk(string platform)
+// The Mach-O binary inside a .framework is the extension-less file named after the framework, at the
+// bundle root (flat iOS/tvOS layout) or under Versions/A (macOS/Mac Catalyst versioned layout).
+FilePath FrameworkBinary(DirectoryPath framework, bool versioned)
 {
-    switch (platform) {
-        case "iPhoneOS": return "iphoneos";
-        case "iPhoneSimulator": return "iphonesimulator";
-        case "AppleTVOS": return "appletvos";
-        case "AppleTVSimulator": return "appletvsimulator";
-        case "MacOSX": return "macosx";
-        default: throw new InvalidOperationException($"Unknown framework platform '{platform}'.");
-    }
-}
-
-// Generate the framework Info.plist by delegating to make-framework-plist.sh, which uses
-// first-party Apple tools only (plutil + xcrun/xcodebuild/sw_vers) to reproduce Xcode's
-// PROCESS_INFOPLIST output - including the DT*/BuildMachineOSBuild keys required for App Store /
-// notarization validation.
-void WriteFrameworkPlist(FilePath path, string libName, string minOsVersion, string[] supportedPlatforms, int[] deviceFamily)
-{
-    EnsureDirectoryExists(path.GetDirectory());
-
-    var isMacCatalyst = supportedPlatforms != null && System.Array.IndexOf(supportedPlatforms, "MacOSX") >= 0;
-    var sdk = SupportedPlatformToSdk(supportedPlatforms[0]);
-    var script = MakeAbsolute(ROOT_PATH.CombineWithFilePath("scripts/infra/native/apple/make-framework-plist.sh"));
-
-    var args = new System.Collections.Generic.List<string> {
-        "--output", $"\"{path}\"",
-        "--name", libName,
-        "--identifier", $"com.microsoft.{libName}",
-        "--sdk", sdk,
-        "--min-os", minOsVersion,
-        "--supported-platforms",
-    };
-    args.AddRange(supportedPlatforms);
-    if (deviceFamily != null && deviceFamily.Length > 0) {
-        args.Add("--device-family");
-        args.AddRange(deviceFamily.Select(d => d.ToString()));
-    }
-    if (isMacCatalyst)
-        args.Add("--catalyst");
-
-    RunProcess("bash", $"\"{script}\" {string.Join(" ", args)}");
+    var name = framework.GetDirectoryName();
+    if (name.EndsWith(".framework"))
+        name = name.Substring(0, name.Length - ".framework".Length);
+    return versioned
+        ? framework.Combine("Versions/A").CombineWithFilePath(name)
+        : framework.CombineWithFilePath(name);
 }
 
 void RunZip(DirectoryPath src)
@@ -141,24 +94,5 @@ void RunZip(DirectoryPath src)
         Arguments = $"-yr {dst} {src.GetDirectoryName()}",
         WorkingDirectory = dir.FullPath,
     });
-}
-
-// mono/skia: GN's is_ios config force-adds an "arm64e" slice for non-simulator arm64
-// builds. The shipped frameworks have only the plain arm64 slice, so thin any GN dylib
-// down to the single requested arch to keep the produced binaries drop-in identical.
-void EnsureSingleArch(FilePath dylib, string machArch)
-{
-    if (!IsRunningOnMacOs())
-        throw new InvalidOperationException("lipo is only available on macOS.");
-
-    RunProcess("lipo", $"-archs \"{dylib}\"", out var lines);
-    var archs = string.Join(" ", lines).Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-    if (archs.Length <= 1)
-        return;
-
-    var tmp = dylib.GetDirectory().CombineWithFilePath($"{dylib.GetFilename()}.thin");
-    RunProcess("lipo", $"\"{dylib}\" -thin {machArch} -output \"{tmp}\"");
-    DeleteFile(dylib);
-    MoveFile(tmp, dylib);
 }
 

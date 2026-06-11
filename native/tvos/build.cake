@@ -38,36 +38,30 @@ Task("libSkiaSharp")
     var deviceArm64 = Build("appletvos", "arm64", "arm64");
 
     // device framework (runtimes/tvos): device-arm64 + legacy simulator-x86_64,
-    // the exact arch layout the published tvOS NuGet expects.
-    CreateFrameworkFromDylibs(
+    // the exact arch layout the published tvOS NuGet expects. The device (appletvos)
+    // framework is the base, so the shipped bundle advertises the device SDK.
+    CombineFrameworks(
         OUTPUT_PATH.Combine("tvos/libSkiaSharp.framework"),
-        new[] { deviceArm64, simX64 }.Where(d => d != null).ToArray(),
-        GetDeploymentTarget("arm64"),
-        new[] { "AppleTVOS" },
-        new[] { 3 });
+        new[] { deviceArm64, simX64 });
 
     // simulator framework (runtimes/tvossimulator): simulator-x86_64 + simulator-arm64.
-    CreateFrameworkFromDylibs(
+    CombineFrameworks(
         OUTPUT_PATH.Combine("tvossimulator/libSkiaSharp.framework"),
-        new[] { simX64, simArm64 }.Where(d => d != null).ToArray(),
-        GetDeploymentTarget("arm64"),
-        new[] { "AppleTVSimulator" },
-        new[] { 3 });
+        new[] { simX64, simArm64 });
 
-    FilePath Build(string sdk, string arch, string skiaArch)
+    DirectoryPath Build(string sdk, string arch, string skiaArch)
     {
         if (Skip(arch)) return null;
 
         var isSim = sdk.EndsWith("simulator");
         var platform = isSim ? "tvossimulator" : "tvos";
 
+        // GN produces the complete single-arch lib*.framework (bundle layout, install_name,
+        // arm64e-thinned binary and provenance Info.plist) in its out dir; we only fuse the
+        // per-arch frameworks together afterwards.
         GnNinja($"{platform}/{arch}", "SkiaSharp", SkiaGnArgs(skiaArch, arch, isSim));
 
-        // GN's solink already emits the dynamic-library framework binary; the wrapper
-        // lipos these per-arch dylibs and builds the .framework bundle.
-        var dylib = SKIA_PATH.CombineWithFilePath($"out/{platform}/{arch}/libSkiaSharp.dylib");
-        EnsureSingleArch(dylib, skiaArch == "x64" ? "x86_64" : skiaArch);
-        return dylib;
+        return SKIA_PATH.Combine($"out/{platform}/{arch}/libSkiaSharp.framework");
     }
 });
 
@@ -80,21 +74,15 @@ Task("libHarfBuzzSharp")
     var simArm64 = Build("appletvsimulator", "arm64", "arm64");
     var deviceArm64 = Build("appletvos", "arm64", "arm64");
 
-    CreateFrameworkFromDylibs(
+    CombineFrameworks(
         OUTPUT_PATH.Combine("tvos/libHarfBuzzSharp.framework"),
-        new[] { deviceArm64, simX64 }.Where(d => d != null).ToArray(),
-        GetDeploymentTarget("arm64"),
-        new[] { "AppleTVOS" },
-        new[] { 3 });
+        new[] { deviceArm64, simX64 });
 
-    CreateFrameworkFromDylibs(
+    CombineFrameworks(
         OUTPUT_PATH.Combine("tvossimulator/libHarfBuzzSharp.framework"),
-        new[] { simX64, simArm64 }.Where(d => d != null).ToArray(),
-        GetDeploymentTarget("arm64"),
-        new[] { "AppleTVSimulator" },
-        new[] { 3 });
+        new[] { simX64, simArm64 });
 
-    FilePath Build(string sdk, string arch, string skiaArch)
+    DirectoryPath Build(string sdk, string arch, string skiaArch)
     {
         if (Skip(arch)) return null;
 
@@ -105,9 +93,7 @@ Task("libHarfBuzzSharp")
         // only the ninja target differs. The HarfBuzzSharp GN target is self-contained.
         GnNinja($"{platform}/{arch}", "HarfBuzzSharp", SkiaGnArgs(skiaArch, arch, isSim));
 
-        var dylib = SKIA_PATH.CombineWithFilePath($"out/{platform}/{arch}/libHarfBuzzSharp.dylib");
-        EnsureSingleArch(dylib, skiaArch == "x64" ? "x86_64" : skiaArch);
-        return dylib;
+        return SKIA_PATH.Combine($"out/{platform}/{arch}/libHarfBuzzSharp.framework");
     }
 });
 
