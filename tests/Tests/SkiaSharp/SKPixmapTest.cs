@@ -487,7 +487,7 @@ namespace SkiaSharp.Tests
 			var roiSpan = roiPixmap.GetPixelSpan<SKColor>();
 			Assert.Equal(6, roiSpan.Length);
 
-			// the four top-left pixels are white in the subset's first row
+			// both pixels in the subset's first row are white
 			var white = roiPixmap.GetPixelColor(0, 0);
 			Assert.Equal(white, roiSpan[0]);
 			Assert.Equal(white, roiSpan[1]);
