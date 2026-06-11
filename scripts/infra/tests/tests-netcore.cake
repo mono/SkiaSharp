@@ -32,12 +32,6 @@ Task ("Default")
         "SkiaSharp.Vulkan.Tests.Console",
         "SkiaSharp.Direct3D.Tests.Console",
     };
-    // Hardware-gated suites may skip every test on agents without the GPU backend; allow an
-    // all-skipped (exit code 8) run to pass there. Other suites must always run something.
-    var allowNoTests = new HashSet<string> {
-        "SkiaSharp.Vulkan.Tests.Console",
-        "SkiaSharp.Direct3D.Tests.Console",
-    };
     foreach (var testAssembly in testAssemblies) {
         var csproj = $"{ROOT_PATH}/tests/{testAssembly}/{testAssembly}.csproj";
 
@@ -51,7 +45,7 @@ Task ("Default")
         try {
             RunDotNetTest (csproj, results, properties: new Dictionary<string, string> {
                 { "TargetFramework", tfm }
-            }, allowNoTests: allowNoTests.Contains(testAssembly));
+            });
         } catch {
             failedTests++;
             if (THROW_ON_FIRST_TEST_FAILURE)

@@ -56,32 +56,21 @@ void RunDeviceRunnersTest(
 
 // Runs a Microsoft.Testing.Platform test executable directly (used for .NET Framework, where
 // the v3 test project builds a runnable exe). MTP report + hang-dump args are passed natively.
-//
-// allowNoTests: Microsoft.Testing.Platform returns exit code 8 ("Zero tests ran") both when no
-// tests are discovered AND when every discovered test is dynamically skipped (it does not count
-// skipped tests as having run, and the two cases are indistinguishable by exit code). Leave this
-// false for suites that must always run something — there an exit 8 is a real misconfiguration and
-// should fail the leg. Set it true only for hardware-gated suites (e.g. Vulkan/Direct3D) where an
-// agent legitimately skips every test, matching the previous xUnit v2 all-skipped-is-success behavior.
-void RunTests(FilePath testApp, DirectoryPath output, bool allowNoTests = false)
+void RunTests(FilePath testApp, DirectoryPath output)
 {
     var dir = testApp.GetDirectory();
     output = MakeAbsolute(output);
     EnsureDirectoryExists(output);
 
-    var args = new ProcessArgumentBuilder()
-        .Append("--results-directory").AppendQuoted(output.FullPath)
-        .Append("--report-trx")
-        .Append("--report-trx-filename").Append("TestResults.trx")
-        .Append("--hangdump")
-        .Append("--hangdump-timeout").Append("15m")
-        .Append("--hangdump-type").Append("Mini");
-    if (allowNoTests)
-        args.Append("--ignore-exit-code").Append("8");
-
     var exitCode = StartProcess(testApp, new ProcessSettings {
         WorkingDirectory = dir,
-        Arguments = args,
+        Arguments = new ProcessArgumentBuilder()
+            .Append("--results-directory").AppendQuoted(output.FullPath)
+            .Append("--report-trx")
+            .Append("--report-trx-filename").Append("TestResults.trx")
+            .Append("--hangdump")
+            .Append("--hangdump-timeout").Append("15m")
+            .Append("--hangdump-type").Append("Mini"),
     });
 
     if (exitCode != 0)
@@ -92,8 +81,7 @@ void RunDotNetTest(
     FilePath testProject,
     DirectoryPath output,
     string configuration = null,
-    Dictionary<string, string> properties = null,
-    bool allowNoTests = false)
+    Dictionary<string, string> properties = null)
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
@@ -127,11 +115,6 @@ void RunDotNetTest(
                 .Append("--hangdump")
                 .Append("--hangdump-timeout").Append("15m")
                 .Append("--hangdump-type").Append("Mini");
-            // See RunTests: exit code 8 covers both "no tests discovered" and "all tests skipped".
-            // Only suppress it for hardware-gated suites that may legitimately skip everything.
-            if (allowNoTests)
-                args = args
-                    .Append("--ignore-exit-code").Append("8");
             return args;
         },
     };
