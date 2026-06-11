@@ -17,16 +17,22 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
+    var dylibs = new List<FilePath>();
+
     Build("x86_64", "x64");
     Build("arm64", "arm64");
 
-    CreateFatDylib(OUTPUT_PATH.Combine("libSkiaSharp"));
+    // combine the per-architecture GN/ninja dylibs into a single fat dylib
+    var fatDylib = OUTPUT_PATH.CombineWithFilePath("libSkiaSharp.dylib");
+    EnsureDirectoryExists(OUTPUT_PATH);
+    RunLipo(fatDylib, dylibs.ToArray());
+    StripSign(fatDylib);
 
     void Build(string arch, string skiaArch)
     {
         if (Skip(arch)) return;
 
-        GnNinja($"macos/{arch}", "skia modules/skottie",
+        GnNinja($"macos/{arch}", "SkiaSharp",
             $"target_os='mac' " +
             $"target_cpu='{skiaArch}' " +
             $"min_macos_version='{GetDeploymentTarget(arch)}' " +
@@ -43,13 +49,9 @@ Task("libSkiaSharp")
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-stdlib=libc++' ]");
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch, properties: new Dictionary<string, string> {
-            { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
-        });
-
-        SafeCopy(
-            $"libSkiaSharp/bin/{CONFIGURATION}/macosx/{arch}.xcarchive",
-            OUTPUT_PATH.Combine($"libSkiaSharp/{arch}.xcarchive"));
+        // GN's solink rule already sets the install name to
+        // @rpath/libSkiaSharp.dylib, matching the old xcodeproj output.
+        dylibs.Add(SKIA_PATH.CombineWithFilePath($"out/macos/{arch}/libSkiaSharp.dylib"));
     }
 });
 
