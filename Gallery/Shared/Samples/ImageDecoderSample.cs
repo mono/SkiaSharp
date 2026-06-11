@@ -125,7 +125,7 @@ public class ImageDecoderSample : CanvasSampleBase
 			// Draw checkered background for transparency
 			DrawCheckerboard(canvas, destRect);
 
-			canvas.DrawBitmap(bitmap, destRect);
+			canvas.DrawBitmap(bitmap, destRect, SKSamplingOptions.Default);
 
 			if (_showInfo)
 				DrawMetadata(canvas, width, height, codec, info);

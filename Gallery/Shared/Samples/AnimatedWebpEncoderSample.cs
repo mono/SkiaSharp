@@ -306,7 +306,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 			(width - dw) / 2f, (height - dh) / 2f,
 			(width + dw) / 2f, (height + dh) / 2f);
 
-		canvas.DrawBitmap(_currentBitmap, destRect);
+		canvas.DrawBitmap(_currentBitmap, destRect, SKSamplingOptions.Default);
 
 		// info bar
 		using var infoPaint = new SKPaint { Color = new SKColor(200, 200, 200), IsAntialias = true };

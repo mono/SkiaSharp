@@ -184,7 +184,7 @@ public class WideGamutP3Sample : CanvasSampleBase
 		offCanvas.DrawRect(0, 0, w, h, paint);
 
 		using var image = surface.Snapshot();
-		canvas.DrawImage(image, rect);
+		canvas.DrawImage(image, rect, SKSamplingOptions.Default);
 
 		// Border
 		using var borderPaint = new SKPaint
