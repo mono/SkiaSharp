@@ -56,6 +56,14 @@ void RunDeviceRunnersTest(
 
 // Runs a Microsoft.Testing.Platform test executable directly (used for .NET Framework, where
 // the v3 test project builds a runnable exe). MTP report + hang-dump args are passed natively.
+//
+// Hang protection (the MTP equivalent of #4142's VSTest `--blame-hang-timeout 15m`): MTP only
+// detects a per-test hang via the HangDump extension, and that extension always writes a dump
+// (`--hangdump-type` accepts only Mini/Heap/Triage/Full — there is no "none"). #4142 used a dump
+// type of none, but MTP cannot do per-test hang detection without a dump, so the smallest (Mini)
+// is used. The global `--timeout` option aborts without a dump but is a whole-session timeout, not
+// per-test, so it is unsuitable (a healthy-but-slow suite would fail). The Mini dump only
+// materialises if a test actually hangs and lands in the published results directory.
 void RunTests(FilePath testApp, DirectoryPath output)
 {
     var dir = testApp.GetDirectory();
