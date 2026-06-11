@@ -41,7 +41,7 @@ public class SKVariableFontRenderingTest : SKTest
 	private static bool PixelsDiffer (byte[] a, byte[] b) =>
 		CountDifferingPixelBytes (a, b) > 0;
 
-	[SkippableFact]
+	[Fact]
 	public void DifferentWeightVariationProducesDifferentRendering ()
 	{
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
@@ -73,7 +73,7 @@ public class SKVariableFontRenderingTest : SKTest
 			"Rendering with min and max variation values should produce different pixel output.");
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void VariationPositionIsPreservedAfterClone ()
 	{
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
@@ -107,7 +107,7 @@ public class SKVariableFontRenderingTest : SKTest
 			"Cloned typeface at min should render differently from max.");
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void IncreasingVariationChangesInkCoverage ()
 	{
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
@@ -149,7 +149,7 @@ public class SKVariableFontRenderingTest : SKTest
 		Assert.NotEqual (minInk, maxInk);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void ClonedVariationPreservesPositionInRendering ()
 	{
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
@@ -177,7 +177,7 @@ public class SKVariableFontRenderingTest : SKTest
 			"Two clones with the same variation value should render identically.");
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void MultipleIntermediateValuesProduceDistinctRenderings ()
 	{
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);
@@ -212,7 +212,7 @@ public class SKVariableFontRenderingTest : SKTest
 			"Min and max variation should render differently.");
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void StaticFontRenderingUnaffectedByVariationAttempt ()
 	{
 		using var staticTypeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
@@ -239,7 +239,7 @@ public class SKVariableFontRenderingTest : SKTest
 			"Static font rendering should not change with variation parameters.");
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void VariationDoesNotAffectGlyphCount ()
 	{
 		using var baseTypeface = SKTypeface.FromFile (DistortableFontPath);

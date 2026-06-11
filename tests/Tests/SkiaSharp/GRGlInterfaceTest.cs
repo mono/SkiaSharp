@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void InterfaceConstructionWithoutContextDoesNotCrash()
 		{
 			SkipOnPlatform(IsIOS || IsMacCatalyst, "GRGlInterface construction without context crashes on iOS/MacCatalyst");
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CreateDefaultInterfaceIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -33,7 +33,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void AssembleInterfaceIsValid()
 		{
 			using (var ctx = CreateGlContext()) {

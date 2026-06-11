@@ -30,7 +30,7 @@ namespace SkiaSharp.Tests
 		// lock-order inversion across these factories, the contention surfaces as a
 		// failed Join (a deterministic test FAILURE) instead of a hung suite, and the
 		// background threads never keep the host process alive after a hang.
-		[SkippableFact]
+		[Fact]
 		public void AllSingletonAccessorsAreStableUnderContention()
 		{
 			SkipOnPlatform(IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -89,7 +89,7 @@ namespace SkiaSharp.Tests
 		//   3. The trailing DeregisterHandle(this) is a no-op because the entry now
 		//      points at the fresh wrapper (weak.Target != this), so the replacement
 		//      survives.
-		[SkippableFact]
+		[Fact]
 		public void DisposedWrapperIsFilteredAndReplacedDuringReentrantGetObject()
 		{
 			var handle = GetNextPtr();

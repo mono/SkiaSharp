@@ -131,8 +131,8 @@ stages:
                 displayName: Publish the .NET Framework test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Windows .NET Framework Tests'
             publishArtifacts:
               - name: testlogs_netfx_windows
@@ -154,8 +154,8 @@ stages:
                 displayName: Publish the .NET Core test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Windows .NET Core Tests'
             publishArtifacts:
               - name: testlogs_netcore_windows
@@ -179,8 +179,8 @@ stages:
                 displayName: Publish the .NET Core test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'macOS .NET Core Tests'
             publishArtifacts:
               - name: testlogs_netcore_macos
@@ -205,8 +205,8 @@ stages:
                 displayName: Publish the .NET Core test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Linux .NET Core Tests'
             publishArtifacts:
               - name: testlogs_netcore_linux

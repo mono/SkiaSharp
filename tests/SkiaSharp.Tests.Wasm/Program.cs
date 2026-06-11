@@ -14,7 +14,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<TestRunnerApp>("#app");
 
 builder.UseVisualTestRunner(conf => conf
-	.AddXunit(useReflection: true)
+	.AddXunit3()
 	.AddTestAssembly(typeof(WasmTests).Assembly)
 	.AddTestAssembly(typeof(SKPaintTest).Assembly)
 	.AddConsoleResultChannel());

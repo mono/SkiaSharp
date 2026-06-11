@@ -11,7 +11,7 @@ namespace SkiaSharp.Tests
 	{
 		private const int Precision = 2;
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ColorWithComponent()
 		{
@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(255, alpha.Alpha);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ColorRgbToHsl()
 		{
 			var tuples = new List<ToOtherColor> {
@@ -84,7 +84,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ColorRgbToHsv()
 		{
 			var tuples = new List<ToOtherColor> {
@@ -122,7 +122,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HexToColor()
 		{
 			var tuples = new List<Tuple<string, SKColor>> {
@@ -156,7 +156,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void InvalidHexToColor()
 		{
 			var tuples = new List<string> {
@@ -178,7 +178,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PremultipliedColorsHaveCorrectBitShift()
 		{
 			var isARGB =
@@ -226,7 +226,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MakeSureColorsAreNotBroken()
 		{
 			var color = new SKColor(100, 0, 0, 100);
@@ -237,7 +237,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(color, paint.Color);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetHashCodeIsConsistent()
 		{
 			var color1 = new SKColor(100, 0, 0, 100);
@@ -247,7 +247,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[SkippableFact]
+		[Fact]
 		public void CanPreMultiplyArrays()
 		{
 			var colors = new SKColor[] { 0x33008200, 0x33008200, 0x33008200, 0x33008200, 0x33008200 };
@@ -259,7 +259,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[SkippableFact]
+		[Fact]
 		public void CanUnPreultiplyArrays()
 		{
 			var colors = new SKColor[] { 0x33008200, 0x33008200, 0x33008200, 0x33008200, 0x33008200 };

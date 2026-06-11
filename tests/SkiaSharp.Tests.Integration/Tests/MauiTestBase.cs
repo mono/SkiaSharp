@@ -2,7 +2,6 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using SkiaSharp;
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace SkiaSharp.Tests.Integration;
@@ -128,7 +127,8 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     private async Task RunMauiTest(string canvasView, string eventArgsType)
     {
         var skipReason = CanRunOnCurrentMachine();
-        Skip.If(skipReason != null, skipReason);
+        if (skipReason != null)
+            Assert.Skip(skipReason);
         
         Output.WriteLine($"Testing SkiaSharp {SkiaVersion} in MAUI {PlatformName} ({canvasView})");
         

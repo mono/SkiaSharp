@@ -5,7 +5,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKShaderTest : SKTest
 	{
-		[SkippableTheory]
+		[Theory]
 		[InlineData(null)]
 		[InlineData(new[] { 0f, 0.3f, 1f })]
 		[InlineData(new[] { 0f, 0f, 1f })]
@@ -25,7 +25,7 @@ namespace SkiaSharp.Tests
 			canvas.DrawRect(SKRect.Create(size, size), p);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(null)]
 		[InlineData(new[] { 0f, 0.3f, 1f })]
 		[InlineData(new[] { 0f, 0f, 1f })]
@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests
 			canvas.DrawRect(SKRect.Create(size, size), p);
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void LinearShaderDrawColorCorrectly()
 		{
@@ -68,7 +68,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, bitmap.GetPixel(159, 0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void LinearShaderDrawColorFCorrectly()
 		{
 			var size = 160;
@@ -90,7 +90,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, bitmap.GetPixel(159, 0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void LinearGradientWithIncorrectColorPositionsThrows()
 		{
 			var colors = new[] { SKColors.Blue, SKColors.Yellow, SKColors.Green };
@@ -99,7 +99,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentException>(() => SKShader.CreateLinearGradient(new SKPoint(10, 10), new SKPoint(150, 10), colors, pos, SKShaderTileMode.Clamp));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void LinearGradientWithIncorrectColorPositionsThrowsColorF()
 		{
 			var colors = new SKColorF[] { SKColors.Blue, SKColors.Yellow, SKColors.Green };
@@ -109,7 +109,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentException>(() => SKShader.CreateLinearGradient(new SKPoint(10, 10), new SKPoint(150, 10), colors, colorspace, pos, SKShaderTileMode.Clamp));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawWithCreateSweepGradientShader()
 		{
 			var size = 160;
@@ -147,7 +147,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawWithCreatePictureShader()
 		{
 			var breakSize = new SKSize(50, 10);

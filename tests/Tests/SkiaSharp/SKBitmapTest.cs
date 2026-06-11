@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests
 {
@@ -17,7 +16,7 @@ namespace SkiaSharp.Tests
 		{
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CanCopyToIsCorrect(SKColorType colorType)
 		{
@@ -31,13 +30,13 @@ namespace SkiaSharp.Tests
 				Assert.True(canCopy);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyToSucceeds(SKColorType colorType)
 		{
 
 			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
-				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
+				Assert.Skip("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
 
 			var alphaType = colorType.GetAlphaType();
 
@@ -66,13 +65,13 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyWithAlphaToSucceeds(SKColorType colorType)
 		{
 
 			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
-				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
+				Assert.Skip("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
 
 			var alphaType = colorType.GetAlphaType();
 
@@ -129,7 +128,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DoesNotCrashWhenDecodingInvalidPath()
 		{
 			var path = Path.Combine(PathToImages, "file-does-not-exist.png");
@@ -137,7 +136,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(SKBitmap.Decode(path));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CopyIndex8ToPlatformPreservesData()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");
@@ -149,7 +148,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKImageInfo.PlatformColorType, platform.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OverwriteIndex8ToPlatformPreservesData()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");
@@ -161,7 +160,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKImageInfo.PlatformColorType, bmp.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToAlpha8PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -175,7 +174,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Alpha8, alpha8.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapWithAlphaCopyToAlpha8PreservesData()
 		{
 			var bmp = CreateTestBitmap(127);
@@ -189,7 +188,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Alpha8, alpha8.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToArgb4444PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -203,7 +202,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Argb4444, argb4444.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapWithAlphaCopyToArgb4444PreservesData()
 		{
 			var bmp = CreateTestBitmap(127);
@@ -217,7 +216,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Argb4444, argb4444.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToRgb565PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -231,7 +230,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Rgb565, rgb565.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapWithAlphaCopyToRgb565PreservesData()
 		{
 			var bmp = CreateTestBitmap(127);
@@ -245,7 +244,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Rgb565, rgb565.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToRgbaF16PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -259,7 +258,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.RgbaF16, rgbaF16.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapWithAlphaCopyToRgbaF16PreservesData()
 		{
 			var bmp = CreateTestBitmap(127);
@@ -273,7 +272,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.RgbaF16, rgbaF16.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToInvalidIsNull()
 		{
 			var bmp = CreateTestBitmap();
@@ -284,7 +283,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(bmp.Copy(SKColorType.Unknown));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
 			bool released = false;
@@ -307,7 +306,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKBitmapReleaseDelegate was not called.");
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ImageCreateDoesNotThrow()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -318,7 +317,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReleaseBitmapPixelsWithNullDelegate()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -332,7 +331,7 @@ namespace SkiaSharp.Tests
 			Marshal.FreeCoTaskMem(pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestExtractAlpha()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -351,7 +350,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPointI(-12, -12), offset);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestBitmapDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -361,7 +360,7 @@ namespace SkiaSharp.Tests
 			{
 				var canvas = surface.Canvas;
 				canvas.Clear(SKColors.White);
-				canvas.DrawBitmap(bitmap, 0, 0, SKSamplingOptions.Default);
+				canvas.DrawBitmap(bitmap, 0, 0);
 
 				using (var img = surface.Snapshot())
 				using (var bmp = SKBitmap.FromImage(img))
@@ -374,7 +373,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void BitmapAndPixmapAreValid()
 		{
@@ -406,7 +405,7 @@ namespace SkiaSharp.Tests
 			yield return new object[] { new SKSamplingOptions(SKCubicResampler.Mitchell) };
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetSamplingData))]
 		public void BitmapResizes(SKSamplingOptions sampling)
 		{
@@ -432,7 +431,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(-1, -1)]
 		[InlineData(0, 0)]
 		[InlineData(-1, 10)]
@@ -452,7 +451,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(newBitmap);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanScalePixels()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
@@ -477,7 +476,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SwizzleRedBlueTest()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -494,7 +493,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SupportsNonASCIICharactersInPath()
 		{
 			var fileName = Path.Combine(PathToImages, "上田雅美.jpg");
@@ -505,7 +504,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateUsingRowBytes()
 		{
 			using var src = CreateTestBitmap();
@@ -526,7 +525,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Yellow, bmp.GetPixel(1, 1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PixelsPropertyReadsTheColors()
 		{
 			using var bitmap = CreateTestBitmap();
@@ -554,7 +553,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IncorrectPixelSizeThrowsWhenWriting()
 		{
 			SKColor[] sourcePixels;
@@ -569,7 +568,7 @@ namespace SkiaSharp.Tests
 			Assert.Contains("800", ex.Message);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PixelsPropertyWritesTheColors()
 		{
 			SKColor[] sourcePixels;
@@ -585,7 +584,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(sourcePixels, pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IncorrectPixelLocationThrowsWhenWritingPixel()
 		{
 			using var bitmap = new SKBitmap(20, 40);
@@ -593,7 +592,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal("y", ex.ParamName);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetPixelWritesTheColor()
 		{
 			SKColor[] expectedPixels =
@@ -614,7 +613,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedPixels, bitmap.Pixels);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("osm-liberty.png")]
 		[InlineData("testimage.png")]
 		public void CanDecodePotentiallyCorruptPngFiles(string filename)
@@ -643,7 +642,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(bitmap);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanHasCorrectLength()
 		{
 			using var bmp = CreateTestBitmap();
@@ -653,7 +652,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(totalBytes, bmp.GetPixelSpan().Length);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0, 0, 40 * 40 * 4)]
 		[InlineData(0, 20, 40 * 20 * 4)]
 		[InlineData(39, 39, 4)]
@@ -664,7 +663,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedLength, span.Length);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("baboon.jpg", "baboon-reencoded.jpg")]
 		public void CanEncodeImageStreams(string filename, string encodedFilename)
 		{
