@@ -198,6 +198,30 @@ def resolve_superseded_by(version, all_branches):
     return detect_superseded_by(version, all_branches)
 
 
+def detect_supersedes(version, all_branches):
+    # type: (str, list[str]) -> list[str]
+    """Inverse of detect_superseded_by: the versions this release rolls up.
+
+    Returns every earlier base version whose auto-detected successor is exactly
+    `version` — i.e. the preview-only / skipped versions that were superseded by
+    this one and whose work is rolled up cumulatively. This is the back-link that
+    makes the supersede relationship two-way: the superseded page already points
+    forward ("Superseded by X"), and this lets the successor page point back
+    ("Supersedes Y"). Covers a skipped minor (4.148.0 supersedes 4.147.0) and an
+    abandoned patch preview (3.119.4 supersedes 3.119.3). Returns [] when this
+    version supersedes nothing.
+    """
+    vkey = version_key(version)
+    rolled = []
+    for cand in _all_known_base_versions(all_branches):
+        if cand == version or version_key(cand) >= vkey:
+            continue
+        if resolve_superseded_by(cand, all_branches) == version:
+            rolled.append(cand)
+    rolled.sort(key=version_key)
+    return rolled
+
+
 def _is_valid_stable_base(branch):
     # type: (str) -> bool
     """True if a release branch may serve as a cumulative "previous stable" base.
@@ -722,10 +746,19 @@ def format_pr_list(prs, metadata):
     ]
 
     superseded_by = metadata.get("superseded_by")
+    supersedes = metadata.get("supersedes")
+    meta_extra = []
     if superseded_by:
-        # Insert right after the status line for visibility.
-        lines.insert(8, "  superseded: {} (preview only, never released as stable)".format(
-            superseded_by))
+        meta_extra.append(
+            "  superseded: {} (preview only, never released as stable)".format(
+                superseded_by))
+    if supersedes:
+        meta_extra.append(
+            "  supersedes: {} (preview only, rolled up)".format(
+                ", ".join(supersedes)))
+    # Insert right after the status line for visibility.
+    for i, extra in enumerate(meta_extra):
+        lines.insert(8 + i, extra)
 
     if not prs:
         lines.append("  *No changes found.*")
@@ -784,12 +817,38 @@ def format_pr_list(prs, metadata):
                 version))
     lines.append("")
 
+    # Back-link making the supersede relationship two-way: this release rolls up
+    # one or more preview-only versions that never shipped stable. The superseded
+    # page already links forward ("Superseded by X"); this points back to it.
+    if supersedes:
+        sup_links = []
+        for sup in supersedes:
+            if (RELEASES_DIR / "{}.md".format(sup)).exists():
+                sup_links.append("[{s}]({s}.md)".format(s=sup))
+            elif (RELEASES_DIR / "{}-unreleased.md".format(sup)).exists():
+                sup_links.append("[{s}]({s}-unreleased.md)".format(s=sup))
+            else:
+                sup_links.append(sup)
+        lines.append(
+            "> **Supersedes {}** · Rolls up preview-only work that was never "
+            "released as stable — those changes are included cumulatively "
+            "below.".format(", ".join(sup_links)))
+        lines.append("")
+
     lines.append(
         "<!-- AI: Use the raw PR data in the comment above to write polished")
     lines.append(
         "     release notes here. Follow documentation/docfx/releases/"
         "TEMPLATE.md")
-    lines.append("     for structure and tone. -->")
+    if supersedes:
+        lines.append("     for structure and tone.")
+        lines.append(
+            "     This release SUPERSEDES {} (preview-only, rolled up). Keep "
+            "the \"Supersedes\" note above and mention in the Highlights that "
+            "this release rolls up that skipped preview work cumulatively. -->"
+            .format(", ".join(supersedes)))
+    else:
+        lines.append("     for structure and tone. -->")
     lines.append("")
 
     return "\n".join(lines)
@@ -1029,11 +1088,18 @@ def cmd_branch(branch):
         if superseded_by:
             status = "preview"
 
+    # Inverse relationship (two-way link): the preview-only versions that this
+    # release supersedes / rolls up. Applies to any successor — main, a
+    # servicing .x line, or a stable release branch.
+    supersedes = detect_supersedes(version, all_branches)
+
     print("Branch: {}".format(branch))
     print("Version: {}".format(version))
     print("Status: {}".format(status))
     if superseded_by:
         print("Superseded by: {}".format(superseded_by))
+    if supersedes:
+        print("Supersedes: {}".format(", ".join(supersedes)))
     print("Diff: {}..{}".format(from_display, to_display))
 
     prs = get_prs_from_diff(from_ref, to_ref)
@@ -1059,6 +1125,8 @@ def cmd_branch(branch):
     }
     if superseded_by:
         metadata["superseded_by"] = superseded_by
+    if supersedes:
+        metadata["supersedes"] = supersedes
     content = format_pr_list(prs, metadata)
 
     output_path = RELEASES_DIR / filename
