@@ -108,7 +108,7 @@ public abstract class PlatformTestBase : IDisposable
         using var cropped = new SKBitmap(rect.Width, rect.Height);
         using var canvas = new SKCanvas(cropped);
         
-        canvas.DrawBitmap(original, rect, SKRect.Create(rect.Width, rect.Height), SKSamplingOptions.Default);
+        canvas.DrawBitmap(original, rect, SKRect.Create(rect.Width, rect.Height));
         
         using var image = SKImage.FromBitmap(cropped);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
@@ -137,7 +137,7 @@ public abstract class PlatformTestBase : IDisposable
             Output.WriteLine($"Resizing actual ({actualImage.Width}x{actualImage.Height}) to match expected ({expectedImage.Width}x{expectedImage.Height})");
             using var resizedBitmap = new SKBitmap(expectedImage.Width, expectedImage.Height);
             using var canvas = new SKCanvas(resizedBitmap);
-            canvas.DrawImage(actualImage, new SKRect(0, 0, expectedImage.Width, expectedImage.Height), SKSamplingOptions.Default);
+            canvas.DrawImage(actualImage, new SKRect(0, 0, expectedImage.Width, expectedImage.Height));
             compareActual = SKImage.FromBitmap(resizedBitmap);
         }
         

@@ -70,7 +70,7 @@ namespace SkiaSharp.Tests
 			using var canvas = new SKCanvas(bitmap);
 
 			canvas.Clear(SKColors.Transparent);
-			canvas.DrawImage(img, 0, 0, SKSamplingOptions.Default);
+			canvas.DrawImage(img, 0, 0);
 			canvas.Flush();
 
 			using var stream = File.OpenWrite(Path.Combine(PathToImages, filename));
@@ -98,7 +98,7 @@ namespace SkiaSharp.Tests
 			var canvas = surface.Canvas;
 
 			canvas.Clear(SKColors.Transparent);
-			canvas.DrawImage(img, 0, 0, SKSamplingOptions.Default);
+			canvas.DrawImage(img, 0, 0);
 			canvas.Flush();
 
 			using var snap = surface.Snapshot();

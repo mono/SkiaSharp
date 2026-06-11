@@ -185,7 +185,7 @@ namespace SkiaSharp.Tests
 			var sprites = new[] { SKRect.Empty, SKRect.Empty };
 			var transforms = new[] { SKRotationScaleMatrix.Empty };
 
-			Assert.Throws<ArgumentException>("transforms", () => canvas.DrawAtlas(img, sprites, transforms, SKSamplingOptions.Default, paint));
+			Assert.Throws<ArgumentException>("transforms", () => canvas.DrawAtlas(img, sprites, transforms, paint));
 		}
 
 		[Fact]
@@ -358,9 +358,9 @@ namespace SkiaSharp.Tests
 			};
 
 			canvas.Clear(SKColors.White);
-			canvas.DrawAtlas(atlas, tex, xform, SKSamplingOptions.Default, paint);
+			canvas.DrawAtlas(atlas, tex, xform, paint);
 			canvas.Translate(0, 100);
-			canvas.DrawAtlas(atlas, tex, xform, colors, SKBlendMode.SrcIn, SKSamplingOptions.Default, paint);
+			canvas.DrawAtlas(atlas, tex, xform, colors, SKBlendMode.SrcIn, paint);
 
 			Assert.Equal(SKColors.Blue, bitmap.GetPixel(32, 41));
 			Assert.Equal(SKColors.Blue, bitmap.GetPixel(156, 77));
