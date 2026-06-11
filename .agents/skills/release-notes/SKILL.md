@@ -91,7 +91,10 @@ configuration is normally required:
 1. **Automatic cumulative base.** When choosing the diff base for a new minor (and for
    `main`), the script picks the most recent prior version that actually shipped a **stable
    git tag**, skipping any minor that only had previews. So `4.148`'s notes roll up *all*
-   the skipped `4.147` work instead of showing a tiny delta.
+   the skipped `4.147` work instead of showing a tiny delta. The same skip applies to
+   **point releases**: a stable patch bases on the most recent previous patch that shipped
+   stable, so e.g. `3.119.4` rolls up the preview-only `3.119.3` (the `3.119.3` page still
+   keeps its own notes — duplication across the two pages is expected and fine).
 
 2. **Automatic supersede label.** A version that has only preview tags is flagged as
    *superseded* once a **newer minor line appears** (a `4.148.*` branch or tag). Its page is
@@ -99,18 +102,9 @@ configuration is normally required:
    4.148.0 · Never released as stable"* header. Until the successor exists, the version is
    just a normal preview.
 
-3. **Optional `superseded.json` override.** You only need this to flag a skip **early**,
-   before the successor branch/tag exists yet, or to override detection when a stray stable
-   tag would confuse it. Create `documentation/docfx/releases/superseded.json` mapping the
-   skipped base version to its replacement; explicit entries always win:
-
-   ```json
-   {
-     "4.147.0": "4.148.0"
-   }
-   ```
-
-   Remove the entry (or the file) once the successor branch exists — detection takes over.
+> Detection is purely tag/branch based, so no configuration file is needed. (If a manual
+> override is ever required — e.g. to flag a skip *before* the successor branch exists — it
+> can be reintroduced later; for now the automatic behaviour is the only path.)
 
 When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
 header and add a one-line note in Highlights that the work rolled up into the successor.
