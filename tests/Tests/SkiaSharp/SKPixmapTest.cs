@@ -505,6 +505,60 @@ namespace SkiaSharp.Tests
 			Assert.Equal(roiSpan[stridePixels], roiSpanRow1[0]);
 		}
 
+		// Bgra8888 stores bytes as B, G, R, A; reinterpreting those bytes as a
+		// little-endian SKColor (0xAARRGGBB) reproduces the logical color exactly,
+		// so the span contents can be compared without any channel swizzle.
+		private static SKColor UniqueColor(int x, int y) =>
+			new SKColor((byte)(x + 1), (byte)(y + 1), 0xAB, 0xFF);
+
+		private static SKBitmap CreateUniquePixelBitmap(int width, int height)
+		{
+			var bmp = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul));
+			for (var y = 0; y < height; y++)
+				for (var x = 0; x < width; x++)
+					bmp.SetPixel(x, y, UniqueColor(x, y));
+			return bmp;
+		}
+
+		[SkippableTheory]
+		[InlineData(0, 0, 3, 2)]   // origin (0, 0)
+		[InlineData(3, 2, 7, 5)]   // interior origin, non-square
+		[InlineData(2, 0, 5, 3)]   // top edge, non-zero x
+		[InlineData(0, 3, 3, 6)]   // left edge, non-zero y
+		[InlineData(5, 4, 8, 6)]   // bottom-right, touches the parent's last row/col
+		public void GetPixelSpanReturnsExactSubsetPixels(int left, int top, int right, int bottom)
+		{
+			// every parent pixel has a unique colour encoding its (x, y), so reading
+			// the wrong row or column (the original bug) produces a wrong colour
+			using var bmp = CreateUniquePixelBitmap(8, 6);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(left, top, right, bottom)));
+
+			using var pixmap = roi.PeekPixels();
+
+			// the subset is narrower than the parent, so its stride must differ
+			Assert.True(pixmap.RowBytes > pixmap.Width * pixmap.BytesPerPixel);
+
+			for (var y = 0; y < pixmap.Height; y++)
+			{
+				for (var x = 0; x < pixmap.Width; x++)
+				{
+					var expected = UniqueColor(left + x, top + y);
+
+					// the typed span at (x, y) must point at exactly the parent pixel
+					var fromSpan = pixmap.GetPixelSpan<SKColor>(x, y)[0];
+					Assert.Equal(expected, fromSpan);
+
+					// cross-check against the independent logical accessor
+					Assert.Equal(expected, pixmap.GetPixelColor(x, y));
+				}
+			}
+
+			// the full span's first element is the subset's top-left pixel
+			Assert.Equal(UniqueColor(left, top), pixmap.GetPixelSpan<SKColor>()[0]);
+		}
+
 		[SkippableFact]
 		public void GetPixelSpanHandlesNonSquareSubset()
 		{
