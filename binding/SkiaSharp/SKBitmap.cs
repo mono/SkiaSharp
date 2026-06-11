@@ -337,7 +337,7 @@ namespace SkiaSharp
 			new Span<byte> ((void*)GetPixels (out var length), (int)length);
 
 		public Span<byte> GetPixelSpan (int x, int y) =>
-			GetPixelSpan ().Slice (Info.GetPixelBytesOffset (x, y));
+			GetPixelSpan ().Slice (checked(y * RowBytes + (x << Info.ColorType.GetBitShiftPerPixel ())));
 
 		public IntPtr GetPixels (out IntPtr length)
 		{

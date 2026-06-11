@@ -664,6 +664,31 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedLength, span.Length);
 		}
 
+		[SkippableFact]
+		public void GetPixelSpanXYUsesStrideForSubset()
+		{
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			for (int y = 0; y < 4; y++)
+			{
+				for (int x = 0; x < 4; x++)
+				{
+					bmp.SetPixel(x, y, x < 2 && y < 2 ? SKColors.White : SKColors.Black);
+				}
+			}
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(0, 0, 2, 2)));
+
+			// the subset shares the parent buffer, so its stride is the parent's row bytes
+			Assert.True(roi.RowBytes > roi.Info.Width * roi.BytesPerPixel);
+
+			// the offset for row 1 must use the actual stride, not Width * bpp
+			var full = roi.GetPixelSpan();
+			var row1 = roi.GetPixelSpan(0, 1);
+			Assert.Equal(roi.RowBytes, full.Length - row1.Length);
+		}
+
 		[SkippableTheory]
 		[InlineData("baboon.jpg", "baboon-reencoded.jpg")]
 		public void CanEncodeImageStreams(string filename, string encodedFilename)

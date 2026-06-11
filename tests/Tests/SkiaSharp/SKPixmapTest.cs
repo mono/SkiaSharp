@@ -456,5 +456,46 @@ namespace SkiaSharp.Tests
 			var spanMidRow1 = pixmap.GetPixelSpan<SKColor>(4, 1);
 			Assert.Equal(spanRow1[4], spanMidRow1[0]);
 		}
+
+		[SkippableFact]
+		public void GetPixelSpanHandlesStrideCorrectly()
+		{
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			for (int y = 0; y < 4; y++)
+			{
+				for (int x = 0; x < 4; x++)
+				{
+					bmp.SetPixel(x, y, x < 2 && y < 2 ? SKColors.White : SKColors.Black);
+				}
+			}
+
+			using var pixmap = bmp.PeekPixels();
+			var span = pixmap.GetPixelSpan<SKColor>();
+			Assert.Equal(16, span.Length);
+
+			using SKBitmap roi = new();
+			bool ok = bmp.ExtractSubset(roi, new SKRectI(0, 0, 2, 2));
+			Assert.True(ok);
+
+			using var roiPixmap = roi.PeekPixels();
+
+			// the subset shares the parent buffer, so its stride is the parent's
+			// row bytes; the span must reach the last valid pixel of the last row
+			Assert.True(roiPixmap.RowBytes > roiPixmap.Info.Width * roiPixmap.BytesPerPixel);
+
+			var roiSpan = roiPixmap.GetPixelSpan<SKColor>();
+			Assert.Equal(6, roiSpan.Length);
+
+			// the four top-left pixels are white in the subset's first row
+			var white = roiPixmap.GetPixelColor(0, 0);
+			Assert.Equal(white, roiSpan[0]);
+			Assert.Equal(white, roiSpan[1]);
+
+			// row 1 of the subset starts at the stride offset
+			var stridePixels = roiPixmap.RowBytes / roiPixmap.BytesPerPixel;
+			var roiSpanRow1 = roiPixmap.GetPixelSpan<SKColor>(0, 1);
+			Assert.Equal(roiSpan[stridePixels], roiSpanRow1[0]);
+		}
 	}
 }
