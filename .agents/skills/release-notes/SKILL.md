@@ -50,6 +50,13 @@ This writes raw PR data to `documentation/docfx/releases/{version}.md` or
 `documentation/docfx/releases/{version}-unreleased.md` depending on the branch type,
 and regenerates TOC/index. All data comes from git history — no API calls or tokens needed.
 
+When TOC/index are regenerated, the script also **prunes stale unreleased pages**: any
+`{version}-unreleased.md` whose stable `{version}.md` already exists is deleted, because
+that version has shipped and the line has moved on to the next patch (e.g. once
+`3.119.4.md` exists, `3.119.4-unreleased.md` is removed in favour of `3.119.5-unreleased.md`).
+An unreleased page is still listed in its minor group even when no stable page of that exact
+version exists yet (e.g. `3.119.5-unreleased.md` before `3.119.5` ships).
+
 The file starts with an HTML comment block containing both metadata (version, status, branch,
 diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
 placeholder for polished content. The raw data comment must be preserved in the final file.
@@ -60,8 +67,8 @@ placeholder for polished content. The raw data comment must be preserved in the 
 ========================================
 Files to polish:
   - documentation/docfx/releases/4.147.0.md
-  - documentation/docfx/releases/4.147.0-unreleased.md
-  - documentation/docfx/releases/3.119.4-unreleased.md
+  - documentation/docfx/releases/3.119.5-unreleased.md
+  - documentation/docfx/releases/4.148.0-unreleased.md
 ========================================
 ```
 

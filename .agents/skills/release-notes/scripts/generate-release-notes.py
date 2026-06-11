@@ -794,17 +794,45 @@ def get_version_files():
     return versions, next_versions
 
 
+def cleanup_stale_unreleased():
+    # type: () -> list[str]
+    """Delete {version}-unreleased.md files whose stable {version}.md exists.
+
+    Once a version has a published page, its in-progress "unreleased" page is
+    obsolete: the servicing line has moved on to the next patch (e.g. once
+    3.119.4.md ships, 3.119.4-unreleased.md is stale and the line tracks
+    3.119.5-unreleased.md instead). Returns the removed file paths.
+    """
+    removed = []
+    for f in sorted(RELEASES_DIR.iterdir()):
+        if f.suffix != ".md" or not f.stem.endswith("-unreleased"):
+            continue
+        version = f.stem[:-11]  # strip "-unreleased"
+        if (RELEASES_DIR / "{}.md".format(version)).exists():
+            f.unlink()
+            removed.append(str(f))
+    return removed
+
+
 def generate_toc(versions, next_versions):
     # type: (list[str], list[str]) -> str
-    """Generate TOC.yml grouped by major.minor, obsolete under one node."""
-    next_set = set(next_versions)
-    groups = defaultdict(list)
+    """Generate TOC.yml grouped by major.minor, obsolete under one node.
+
+    Unreleased pages are listed in their minor group even when no stable page
+    of that exact version exists yet (e.g. 3.119.5-unreleased before 3.119.5
+    ships, or 4.148.0-unreleased before 4.148.0 ships).
+    """
+    stable_groups = defaultdict(list)
+    unreleased_groups = defaultdict(list)
     for v in versions:
-        groups[minor_group(v)].append(v)
+        stable_groups[minor_group(v)].append(v)
+    for v in next_versions:
+        unreleased_groups[minor_group(v)].append(v)
 
     current = []
     obsolete = []
-    for g in sorted(groups.keys(), key=lambda x: version_key(x), reverse=True):
+    for g in sorted(set(stable_groups) | set(unreleased_groups),
+                    key=lambda x: version_key(x), reverse=True):
         if int(g.split(".")[0]) < 3:
             obsolete.append(g)
         else:
@@ -813,23 +841,32 @@ def generate_toc(versions, next_versions):
     lines = ["- name: Overview", "  href: index.md"]
 
     for g in current:
-        members = groups[g]
+        stable = stable_groups.get(g, [])
+        unreleased = unreleased_groups.get(g, [])
+        header = "{}.md".format(stable[0]) if stable \
+            else "{}-unreleased.md".format(unreleased[0])
         lines.append("- name: Version {}.x".format(g))
-        lines.append("  href: {}.md".format(members[0]))
+        lines.append("  href: {}".format(header))
         lines.append("  items:")
-        for v in members:
-            if v in next_set:
+        entries = [(v, True) for v in unreleased] + [(v, False) for v in stable]
+        entries.sort(key=lambda t: version_key(t[0]), reverse=True)
+        for v, is_unrel in entries:
+            if is_unrel:
                 lines.append("    - name: Version {} (Unreleased)".format(v))
                 lines.append("      href: {}-unreleased.md".format(v))
-            lines.append("    - name: Version {}".format(v))
-            lines.append("      href: {}.md".format(v))
+            else:
+                lines.append("    - name: Version {}".format(v))
+                lines.append("      href: {}.md".format(v))
 
     if obsolete:
+        first = stable_groups.get(obsolete[0]) or unreleased_groups.get(obsolete[0])
         lines.append("- name: Obsolete Versions")
-        lines.append("  href: {}.md".format(groups[obsolete[0]][0]))
+        lines.append("  href: {}.md".format(first[0]))
         lines.append("  items:")
         for g in obsolete:
-            members = groups[g]
+            members = stable_groups.get(g, [])
+            if not members:
+                continue
             lines.append("    - name: Version {}.x".format(g))
             lines.append("      href: {}.md".format(members[0]))
             if len(members) > 1:
@@ -843,8 +880,11 @@ def generate_toc(versions, next_versions):
 
 def generate_index(versions, next_versions):
     # type: (list[str], list[str]) -> str
-    """Generate index.md with version list grouped by major."""
-    next_set = set(next_versions)
+    """Generate index.md with version list grouped by major.
+
+    Unreleased pages are listed even when no stable page of that exact version
+    exists yet.
+    """
     lines = [
         "# Release Notes",
         "",
@@ -852,25 +892,29 @@ def generate_index(versions, next_versions):
         "",
     ]
 
+    entries = [(v, False) for v in versions] + [(v, True) for v in next_versions]
+
     major_groups = defaultdict(list)
-    for v in versions:
-        major_groups[v.split(".")[0]].append(v)
+    for v, is_unrel in entries:
+        major_groups[v.split(".")[0]].append((v, is_unrel))
 
     for major in sorted(major_groups.keys(), key=int, reverse=True):
         lines.extend(["### SkiaSharp {}.x".format(major), ""])
 
         minor_groups_map = defaultdict(list)
-        for v in major_groups[major]:
-            minor_groups_map[minor_group(v)].append(v)
+        for v, is_unrel in major_groups[major]:
+            minor_groups_map[minor_group(v)].append((v, is_unrel))
 
         for g in sorted(minor_groups_map.keys(),
                         key=lambda x: version_key(x), reverse=True):
-            members = minor_groups_map[g]
+            members = sorted(minor_groups_map[g],
+                             key=lambda t: version_key(t[0]), reverse=True)
             lines.append("- **Version {}.x**".format(g))
-            for v in members:
-                if v in next_set:
+            for v, is_unrel in members:
+                if is_unrel:
                     lines.append("  - [Version {} (Unreleased)]({}-unreleased.md)".format(v, v))
-                lines.append("  - [Version {}]({}.md)".format(v, v))
+                else:
+                    lines.append("  - [Version {}]({}.md)".format(v, v))
         lines.append("")
 
     return "\n".join(lines)
@@ -880,10 +924,13 @@ def generate_index(versions, next_versions):
 
 
 def cmd_update_toc():
-    """Regenerate TOC.yml and index.md."""
+    """Regenerate TOC.yml and index.md (and prune stale unreleased pages)."""
     if not RELEASES_DIR.is_dir():
         print("Error: {} does not exist".format(RELEASES_DIR), file=sys.stderr)
         sys.exit(1)
+
+    for removed in cleanup_stale_unreleased():
+        print("Removed stale {}".format(removed))
 
     versions, next_versions = get_version_files()
 
