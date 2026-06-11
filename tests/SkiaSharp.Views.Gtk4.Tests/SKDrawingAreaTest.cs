@@ -9,23 +9,26 @@ namespace SkiaSharp.Views.Gtk4.Tests
 	{
 		private static void InitGtk()
 		{
-			var initialized = false;
+			// gtk_init()/gtk_init_check() call native exit() when no display can be opened, which
+			// cannot be caught as a managed exception and aborts the whole test host. Skip up-front on
+			// headless environments (no X11/Wayland display) before touching any GTK display API.
+			var hasDisplay =
+				!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) ||
+				!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
+			if (!hasDisplay)
+				Assert.Skip("GTK cannot be initialized: no display available");
+
 			try
 			{
 				global::Gtk.Module.Initialize();
 
-				// Use gtk_init_check() rather than gtk_init(): the latter calls exit() (aborting the
-				// whole test host) when no display is available, which cannot be caught as a managed
-				// exception. InitCheck() returns false instead, so headless agents skip gracefully.
-				initialized = global::Gtk.Functions.InitCheck();
+				if (!global::Gtk.Functions.InitCheck())
+					Assert.Skip("GTK cannot be initialized: no display available");
 			}
 			catch (Exception ex)
 			{
 				Assert.Skip($"GTK cannot be initialized: {ex.Message}");
 			}
-
-			if (!initialized)
-				Assert.Skip("GTK cannot be initialized: no display available");
 		}
 
 		[Fact]
