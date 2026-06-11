@@ -43,7 +43,7 @@ Task("libSkiaSharp")
         var deviceArm64 = Build("iphoneos", "arm64", "arm64");
 
         // device framework (runtimes/ios): device-arm64 + legacy simulator-x86_64,
-        // preserving the exact arch layout the NuGet shipped from xcodebuild.
+        // the exact arch layout the published iOS NuGet expects.
         CreateFrameworkFromDylibs(
             OUTPUT_PATH.Combine("ios/libSkiaSharp.framework"),
             new[] { deviceArm64, simX64 }.Where(d => d != null).ToArray(),

@@ -31,13 +31,12 @@ void RunLipo(FilePath output, FilePath[] inputs)
     });
 }
 
-// mono/skia: build a .framework bundle directly from GN-produced dylibs, replacing the
-// xcodebuild-produced dynamic framework. The framework binary is the SAME Mach-O dynamic
-// library GN already emits (MH_DYLIB); we only lipo the per-arch slices together, rename
-// the binary to the framework convention (no extension), rewrite its install_name to the
+// Build a .framework bundle directly from the GN-produced dylibs. The framework binary is the
+// Mach-O dynamic library GN emits (MH_DYLIB); we lipo the per-arch slices together, rename the
+// binary to the framework convention (no extension), rewrite its install_name to the
 // framework-relative @rpath, write a deterministic Info.plist, ad-hoc codesign, and (for
-// MacCatalyst) lay out the versioned bundle and zip it. This makes a drop-in replacement
-// for the old xcodebuild framework without any hand-maintained xcodeproj.
+// MacCatalyst) lay out the versioned bundle and zip it. iOS/tvOS/MacCatalyst ship this framework;
+// macOS ships the plain dylib instead and does not call this.
 void CreateFrameworkFromDylibs(
     DirectoryPath frameworkPath,
     FilePath[] dylibs,
@@ -72,8 +71,8 @@ void CreateFrameworkFromDylibs(
         : $"@rpath/{libName}.framework/{libName}";
     RunProcess("install_name_tool", $"-id \"{installName}\" \"{binary}\"");
 
-    // deterministic Info.plist with only the stable, contract-relevant keys (the volatile
-    // DT*/BuildMachineOSBuild keys xcodebuild emits differ build-to-build and are not shipped contract).
+    // deterministic Info.plist with only the stable, contract-relevant keys (omit volatile
+    // DT*/BuildMachineOSBuild build-environment keys, which are not part of the shipped contract).
     WriteFrameworkPlist(resourcesDir.CombineWithFilePath("Info.plist"), libName, minOsVersion, supportedPlatforms, deviceFamily);
 
     if (versioned) {

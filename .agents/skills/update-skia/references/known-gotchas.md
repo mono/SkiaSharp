@@ -61,25 +61,28 @@ The C API shims (`src/c/gr_context.cpp` etc.) compile as part of `:core`, but ba
 
 Upstream may move previously-core modules into separate optional targets. If the C API exposes functions from that module, add it as an explicit dependency of the `SkiaSharp` target in `BUILD.gn` rather than merging sources into core.
 
-### 23. Native Sources Live ONLY in `BUILD.gn` (no Apple Xcode projects)
+### 23. Native Sources & Flags Live in `BUILD.gn` (single source of truth)
 
-All platforms — Windows, Linux, WASM, Android, **and Apple (macOS/iOS/tvOS/MacCatalyst)** — build
-`libSkiaSharp`/`libHarfBuzzSharp` from the `skiasharp_build("SkiaSharp")` / `skiasharp_build("HarfBuzzSharp")`
-GN targets in `externals/skia/BUILD.gn`. The hand-maintained Apple `.xcodeproj`s were **deleted** —
-the Apple `native/*/build.cake` tasks now run `GnNinja` then wrap the GN dylib into a `.framework`
-(see `scripts/infra/native/apple/apple.cake`). Practical consequences when updating Skia:
+Every platform — Windows, Linux, WASM, Android, macOS, iOS, tvOS, and MacCatalyst — builds
+`libSkiaSharp`/`libHarfBuzzSharp` from the `skiasharp_build("SkiaSharp")` /
+`skiasharp_build("HarfBuzzSharp")` GN targets in `externals/skia/BUILD.gn`. The Apple
+`native/*/build.cake` tasks run `GnNinja` and then wrap the resulting GN dylib into a `.framework`
+(macOS ships a plain `.dylib`); see `scripts/infra/native/apple/apple.cake`. What to do when updating Skia:
 
-- **Adding/removing a C API source file** (`src/c/*.cpp`, `src/xamarin/*.cpp`): update the source
-  list in `BUILD.gn` **only** (plus Tizen's `native/tizen/.../project_def.prop`). There is no longer
-  any Apple project `Sources` build phase to mirror — that duplication is gone.
-- **Changing a feature define or warning flag** (e.g. `SK_*`, `-Werror=deprecated-declarations`):
-  set it once in `BUILD.gn`; it applies to every platform including Apple.
-- HarfBuzz on Apple now has a real GN/ninja step (it previously compiled `harfbuzz-subset.cc` inside
-  the xcodeproj). Its sources/defines (`HAVE_OT`, `HAVE_CONFIG_OVERRIDE_H`, `HB_NO_FALLBACK_SHAPE`)
-  and `hb_*` symbol export (`HB_EXTERN` visibility) are all in the GN target.
+- **Adding/removing a C API source file** (`src/c/*.cpp`, `src/xamarin/*.cpp`): add it to the source
+  list in the `skiasharp_build("SkiaSharp")` target in `BUILD.gn`, and to Tizen's
+  `native/tizen/.../project_def.prop`. Those two are the only places — the same GN list feeds all
+  desktop, mobile, and Apple builds.
+- **Adding/removing a HarfBuzz source file**: update the `skiasharp_build("HarfBuzzSharp")` target.
+  Keep its defines (`HAVE_OT`, `HAVE_CONFIG_OVERRIDE_H`, `HB_NO_FALLBACK_SHAPE`) and the `HB_EXTERN`
+  visibility export (which publishes the `hb_*` symbols) intact.
+- **Changing a feature define or warning flag** (e.g. `SK_*`, `-Werror=deprecated-declarations`): set
+  it once on the GN target and it applies everywhere, Apple included.
+- After any native change, rebuild from source per platform (`dotnet cake --target=externals-<plat>`);
+  `externals-download` is forbidden for native work.
 
-Xcode (Command Line Tools) is still required on macOS agents for the SDK + clang toolchain GN drives;
-only the `.xcodeproj`s and `xcodebuild`/`Cake.XCode` invocation are gone.
+Xcode (Command Line Tools) is still required on macOS build agents for the Apple SDK + clang
+toolchain that GN drives, but the build is pure `gn`/`ninja` — there are no Xcode project files.
 
 ## Dependencies & Bindings
 

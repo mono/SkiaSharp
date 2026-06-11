@@ -51,8 +51,8 @@ Task("libSkiaSharp")
 
         GnNinja($"macos/{arch}", "SkiaSharp", SkiaGnArgs(skiaArch, arch));
 
-        // GN's solink rule already sets the install name to
-        // @rpath/libSkiaSharp.dylib, matching the old xcodeproj output.
+        // GN's solink rule sets the install name to @rpath/libSkiaSharp.dylib,
+        // which is what the macOS NuGet consumes.
         dylibs.Add(SKIA_PATH.CombineWithFilePath($"out/macos/{arch}/libSkiaSharp.dylib"));
     }
 });
