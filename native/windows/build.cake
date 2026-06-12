@@ -59,7 +59,11 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
-            $"win_sdk_version='10.0.22621.0' " +
+            // m150's SkFontMgr_win_dw.cpp uses IDWriteFontSet4, which needs the
+            // Windows 11 SDK (10.0.22621). Skia's gn picks the LOWEST installed
+            // SDK >= min_win_sdk_version, so raise that floor rather than pinning
+            // an exact version (tolerates newer SDKs if 22621 isn't present).
+            $"min_win_sdk_version='10.0.22621.0' " +
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
