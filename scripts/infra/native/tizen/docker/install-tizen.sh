@@ -59,5 +59,20 @@ if [ ! -x "${TIZEN_CLI}" ]; then
     exit 1
 fi
 
+# The package-manager can exit 0 without fully installing the native packages.
+# Assert the exact rootstraps the build consumes (native/tizen/build.cake) and a
+# cross llvm toolchain are present, so a partial install fails here at image
+# build time rather than confusingly later at `tizen build-native`.
+for rootstrap in tizen-8.0-emulator64.core tizen-8.0-device64.core; do
+    if ! ls -d "${DESTINATION}"/platforms/*/*/rootstraps/"${rootstrap}" >/dev/null 2>&1; then
+        echo "ERROR: required rootstrap '${rootstrap}' not found — package install incomplete." >&2
+        exit 1
+    fi
+done
+if ! ls -d "${DESTINATION}"/tools/llvm-* >/dev/null 2>&1; then
+    echo "ERROR: Tizen llvm toolchain not found under '${DESTINATION}/tools' — package install incomplete." >&2
+    exit 1
+fi
+
 echo "Tizen Studio installed successfully at '${DESTINATION}'."
 "${TIZEN_CLI}" version || true
