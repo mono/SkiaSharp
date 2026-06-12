@@ -1,0 +1,302 @@
+# Issue Triage Report — #4074
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-06-12T05:47:38Z |
+| Type | type/bug (0.95 (95%)) |
+| Area | area/Build (0.93 (93%)) |
+| Suggested action | ready-to-fix (0.90 (90%)) |
+
+**Issue Summary:** The Update Release Notes agentic workflow fails because no model is specified in the workflow frontmatter, causing the copilot harness to use an unsupported default model; subsequent auto-retry jobs also fail via SIGKILL on agent startup.
+
+**Analysis:** The update-release-notes workflow omits a model specification in its frontmatter, so the copilot harness falls back to a default model unavailable for this subscription; subsequent auto-retry jobs are SIGKILLed on startup (likely a separate auth or binary issue). The fix is to add model: claude-sonnet-4.6 and optionally bump timeout-minutes from 10 to 20 in the frontmatter.
+
+**Recommendations:** **ready-to-fix** — Root cause is confirmed by harness logs (model not specified, default unavailable for subscription); code investigation verifies the missing field; fix is a trivial one-line frontmatter change.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Partner | — |
+| Current labels | agentic-workflows |
+
+## Evidence
+
+### Reproduction
+
+1. Push code to main or a release/* branch
+2. The Update Release Notes agentic workflow triggers automatically
+3. The copilot harness starts and immediately fails with isModelNotSupportedError=true
+4. Auto-retry jobs spawned by assigning the issue to Copilot also fail (SIGKILL, no output)
+
+**Environment:** GitHub Actions, copilot engine, no model field in .github/workflows/update-release-notes.md frontmatter
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/actions/runs/26458843511 — Original failed workflow run (May 26 2026)
+- https://github.com/mono/SkiaSharp/pull/3645 — PR that triggered the original failure
+- https://github.com/mono/SkiaSharp/actions/runs/27381287647 — Auto-retry job 1 — SIGKILL after 9s, no output
+- https://github.com/mono/SkiaSharp/actions/runs/27386216324 — Auto-retry job 2 — SIGKILL after 30s, no output
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | build-error |
+| Error message | the requested model is unavailable for this subscription tier; specify a supported model in the workflow frontmatter |
+| Repro quality | complete |
+| Target frameworks | — |
+
+## Analysis
+
+### Technical Summary
+
+The update-release-notes workflow omits a model specification in its frontmatter, so the copilot harness falls back to a default model unavailable for this subscription; subsequent auto-retry jobs are SIGKILLed on startup (likely a separate auth or binary issue). The fix is to add model: claude-sonnet-4.6 and optionally bump timeout-minutes from 10 to 20 in the frontmatter.
+
+### Rationale
+
+The harness output in the issue body explicitly reports isModelNotSupportedError=true and provides the fix directive. Inspection of .github/workflows/update-release-notes.md confirms no model: field is present. The issue is a CI configuration gap, not a SkiaSharp library defect. Subsequent SIGKILL failures are auto-retry agent jobs failing for a different reason and do not change the root cause.
+
+### Key Signals
+
+- "isModelNotSupportedError=true" — **issue body (copilot-harness log)** (Harness explicitly flags that the default model is unavailable for the subscription tier — root cause confirmed.)
+- "the requested model is unavailable for this subscription tier; specify a supported model in the workflow frontmatter" — **issue body (copilot-harness log)** (Exact fix directive from the harness: add a model: field to the workflow frontmatter.)
+- "attempt 2: process exit event exitCode=1 signal=SIGKILL ... no output produced" — **issue comment (copilot-harness log, runs 27381287647 and 27386216324)** (Auto-retry jobs die immediately with SIGKILL and no stdout — a separate agent startup/auth failure unrelated to the model config.)
+- "timeout-minutes: 10" — **.github/workflows/update-release-notes.md frontmatter** (Low timeout may cause failures on release branches with many PRs; harness auto-retry comment explicitly suggests 20 minutes.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `.github/workflows/update-release-notes.md` | — | direct | Workflow frontmatter includes description, on, concurrency, timeout-minutes (10), permissions, tools, network, and safe-outputs — no 'model:' field. The copilot harness therefore uses its default model, which is not available for this subscription tier, causing isModelNotSupportedError=true. |
+| `.github/workflows/update-release-notes.md` | — | related | timeout-minutes is set to 10. The release-notes skill runs git log queries, calls an LLM to polish text, and may create a PR. This frequently exceeds 10 minutes on branches with many PRs, as evidenced by subsequent retry run durations (one timed out at 2m 59s, another at 4m 20s before SIGKILL). |
+
+### Next Questions
+
+- What model should be used for this subscription tier — claude-sonnet-4.6 or another?
+- Why are the auto-retry jobs (27381287647, 27386216324) failing with SIGKILL immediately (binary not found, permission denied, or auth failure)?
+- Is the 10-minute timeout consistently too low for all release branches, or only main with many PRs?
+
+### Resolution Proposals
+
+**Hypothesis:** Adding model: claude-sonnet-4.6 (or another supported model) to the update-release-notes.md frontmatter will fix the original failure. Increasing timeout-minutes from 10 to 20 will prevent future timeout failures.
+
+1. **Add model to workflow frontmatter** — fix, confidence 0.92 (92%), cost/xs, validated=yes
+   - Add 'model: claude-sonnet-4.6' to the update-release-notes.md frontmatter. This directly addresses the isModelNotSupportedError. The model claude-sonnet-4.6 is confirmed to work in this repo (PR #4100 was generated with it).
+2. **Increase timeout-minutes to 20** — fix, confidence 0.82 (82%), cost/xs, validated=yes
+   - Change timeout-minutes from 10 to 20 in the update-release-notes.md frontmatter to prevent timeout failures when the release-notes skill processes branches with many PRs.
+
+**Recommended proposal:** Add model to workflow frontmatter
+
+**Why:** Directly resolves the confirmed root cause (isModelNotSupportedError=true). One-line change with high confidence.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.90 (90%) |
+| Reason | Root cause is confirmed by harness logs (model not specified, default unavailable for subscription); code investigation verifies the missing field; fix is a trivial one-line frontmatter change. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.95 (95%) | Apply type/bug, area/Build, and tenet/reliability labels | labels=type/bug, area/Build, tenet/reliability |
+| add-comment | medium | 0.90 (90%) | Post root cause analysis and recommended fix | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+The failure in [run 26458843511](https://github.com/mono/SkiaSharp/actions/runs/26458843511) is caused by the `update-release-notes.md` workflow **not specifying a `model:` in its frontmatter** — the copilot harness falls back to a default model that isn't available for this subscription tier (`isModelNotSupportedError=true`).
+
+**Fix:** Add a supported model and consider bumping the timeout:
+
+```yaml
+---
+description: "Update website release notes when code changes land on main, release branches, or tags are pushed."
+model: claude-sonnet-4.6
+timeout-minutes: 20
+# ... rest of frontmatter unchanged
+---
+```
+
+`claude-sonnet-4.6` is confirmed to work in this repo (see PR #4100 generated by the same workflow). The timeout bump from 10→20 minutes prevents future failures on branches with many PRs.
+
+The later SIGKILL failures in the comments (runs [27381287647](https://github.com/mono/SkiaSharp/actions/runs/27381287647) and [27386216324](https://github.com/mono/SkiaSharp/actions/runs/27386216324)) are auto-retry agent jobs triggered by assigning this issue to Copilot; they appear to be failing for a separate reason (binary startup or auth) and should clear up once the model issue is resolved.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4074,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-06-12T05:47:38Z",
+    "currentLabels": [
+      "agentic-workflows"
+    ]
+  },
+  "summary": "The Update Release Notes agentic workflow fails because no model is specified in the workflow frontmatter, causing the copilot harness to use an unsupported default model; subsequent auto-retry jobs also fail via SIGKILL on agent startup.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.93
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "the requested model is unavailable for this subscription tier; specify a supported model in the workflow frontmatter",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Push code to main or a release/* branch",
+        "The Update Release Notes agentic workflow triggers automatically",
+        "The copilot harness starts and immediately fails with isModelNotSupportedError=true",
+        "Auto-retry jobs spawned by assigning the issue to Copilot also fail (SIGKILL, no output)"
+      ],
+      "environmentDetails": "GitHub Actions, copilot engine, no model field in .github/workflows/update-release-notes.md frontmatter",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/actions/runs/26458843511",
+          "description": "Original failed workflow run (May 26 2026)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3645",
+          "description": "PR that triggered the original failure"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/actions/runs/27381287647",
+          "description": "Auto-retry job 1 — SIGKILL after 9s, no output"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/actions/runs/27386216324",
+          "description": "Auto-retry job 2 — SIGKILL after 30s, no output"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The update-release-notes workflow omits a model specification in its frontmatter, so the copilot harness falls back to a default model unavailable for this subscription; subsequent auto-retry jobs are SIGKILLed on startup (likely a separate auth or binary issue). The fix is to add model: claude-sonnet-4.6 and optionally bump timeout-minutes from 10 to 20 in the frontmatter.",
+    "rationale": "The harness output in the issue body explicitly reports isModelNotSupportedError=true and provides the fix directive. Inspection of .github/workflows/update-release-notes.md confirms no model: field is present. The issue is a CI configuration gap, not a SkiaSharp library defect. Subsequent SIGKILL failures are auto-retry agent jobs failing for a different reason and do not change the root cause.",
+    "keySignals": [
+      {
+        "text": "isModelNotSupportedError=true",
+        "source": "issue body (copilot-harness log)",
+        "interpretation": "Harness explicitly flags that the default model is unavailable for the subscription tier — root cause confirmed."
+      },
+      {
+        "text": "the requested model is unavailable for this subscription tier; specify a supported model in the workflow frontmatter",
+        "source": "issue body (copilot-harness log)",
+        "interpretation": "Exact fix directive from the harness: add a model: field to the workflow frontmatter."
+      },
+      {
+        "text": "attempt 2: process exit event exitCode=1 signal=SIGKILL ... no output produced",
+        "source": "issue comment (copilot-harness log, runs 27381287647 and 27386216324)",
+        "interpretation": "Auto-retry jobs die immediately with SIGKILL and no stdout — a separate agent startup/auth failure unrelated to the model config."
+      },
+      {
+        "text": "timeout-minutes: 10",
+        "source": ".github/workflows/update-release-notes.md frontmatter",
+        "interpretation": "Low timeout may cause failures on release branches with many PRs; harness auto-retry comment explicitly suggests 20 minutes."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": ".github/workflows/update-release-notes.md",
+        "finding": "Workflow frontmatter includes description, on, concurrency, timeout-minutes (10), permissions, tools, network, and safe-outputs — no 'model:' field. The copilot harness therefore uses its default model, which is not available for this subscription tier, causing isModelNotSupportedError=true.",
+        "relevance": "direct"
+      },
+      {
+        "file": ".github/workflows/update-release-notes.md",
+        "finding": "timeout-minutes is set to 10. The release-notes skill runs git log queries, calls an LLM to polish text, and may create a PR. This frequently exceeds 10 minutes on branches with many PRs, as evidenced by subsequent retry run durations (one timed out at 2m 59s, another at 4m 20s before SIGKILL).",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "What model should be used for this subscription tier — claude-sonnet-4.6 or another?",
+      "Why are the auto-retry jobs (27381287647, 27386216324) failing with SIGKILL immediately (binary not found, permission denied, or auth failure)?",
+      "Is the 10-minute timeout consistently too low for all release branches, or only main with many PRs?"
+    ],
+    "resolution": {
+      "hypothesis": "Adding model: claude-sonnet-4.6 (or another supported model) to the update-release-notes.md frontmatter will fix the original failure. Increasing timeout-minutes from 10 to 20 will prevent future timeout failures.",
+      "proposals": [
+        {
+          "title": "Add model to workflow frontmatter",
+          "description": "Add 'model: claude-sonnet-4.6' to the update-release-notes.md frontmatter. This directly addresses the isModelNotSupportedError. The model claude-sonnet-4.6 is confirmed to work in this repo (PR #4100 was generated with it).",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Increase timeout-minutes to 20",
+          "description": "Change timeout-minutes from 10 to 20 in the update-release-notes.md frontmatter to prevent timeout failures when the release-notes skill processes branches with many PRs.",
+          "category": "fix",
+          "confidence": 0.82,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Add model to workflow frontmatter",
+      "recommendedReason": "Directly resolves the confirmed root cause (isModelNotSupportedError=true). One-line change with high confidence."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.9,
+      "reason": "Root cause is confirmed by harness logs (model not specified, default unavailable for subscription); code investigation verifies the missing field; fix is a trivial one-line frontmatter change.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/Build, and tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post root cause analysis and recommended fix",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "The failure in [run 26458843511](https://github.com/mono/SkiaSharp/actions/runs/26458843511) is caused by the `update-release-notes.md` workflow **not specifying a `model:` in its frontmatter** — the copilot harness falls back to a default model that isn't available for this subscription tier (`isModelNotSupportedError=true`).\n\n**Fix:** Add a supported model and consider bumping the timeout:\n\n```yaml\n---\ndescription: \"Update website release notes when code changes land on main, release branches, or tags are pushed.\"\nmodel: claude-sonnet-4.6\ntimeout-minutes: 20\n# ... rest of frontmatter unchanged\n---\n```\n\n`claude-sonnet-4.6` is confirmed to work in this repo (see PR #4100 generated by the same workflow). The timeout bump from 10→20 minutes prevents future failures on branches with many PRs.\n\nThe later SIGKILL failures in the comments (runs [27381287647](https://github.com/mono/SkiaSharp/actions/runs/27381287647) and [27386216324](https://github.com/mono/SkiaSharp/actions/runs/27386216324)) are auto-retry agent jobs triggered by assigning this issue to Copilot; they appear to be failing for a separate reason (binary startup or auth) and should clear up once the model issue is resolved."
+      }
+    ]
+  }
+}
+```
+
+</details>
