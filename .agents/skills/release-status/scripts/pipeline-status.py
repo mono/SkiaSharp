@@ -32,20 +32,6 @@ ICONS = {
     "notStarted": "⏳",
 }
 
-# Compliance/security tasks that commonly fail but don't block builds.
-# These are filtered from job failure counts and reported separately.
-COMPLIANCE_TASKS = {
-    "binskim",
-    "component governance",
-    "container security sbom",
-    "1es pt pre-job",
-    "post-job: component governance",
-    "componentgovernancecomponentdetection",
-    "credscan",
-    "guardian",
-}
-
-
 def az(args: list[str], timeout: int = 30) -> str:
     result = subprocess.run(
         ["az"] + args, capture_output=True, text=True, timeout=timeout
@@ -92,15 +78,6 @@ def get_timeline(build_id: int) -> list[dict]:
     return data.get("records", [])
 
 
-def is_compliance_task(name: str) -> bool:
-    """Check if a task/job name matches a known compliance/security task."""
-    lower = name.lower()
-    for pattern in COMPLIANCE_TASKS:
-        if pattern in lower:
-            return True
-    return False
-
-
 def format_job_summary(records: list[dict], cont: str) -> None:
     """Print a summary of job-level status from timeline records."""
     # Filter to only Job-type records (not Stage or Task)
@@ -110,6 +87,7 @@ def format_job_summary(records: list[dict], cont: str) -> None:
         return
 
     completed = []
+    failed = []
     running = []
     pending = []
 
@@ -119,26 +97,21 @@ def format_job_summary(records: list[dict], cont: str) -> None:
         result = job.get("result", "")
 
         if state == "completed":
-            completed.append({"name": name, "result": result})
+            if result in ("failed", "canceled"):
+                failed.append(name)
+            else:
+                completed.append(name)
         elif state == "inProgress":
             running.append(name)
         else:
-            # pending, notStarted, or any other state
             pending.append(name)
-
-    # Count compliance task failures at the Task level
-    tasks = [r for r in records if r.get("type") == "Task"]
-    compliance_failures = sum(
-        1 for t in tasks
-        if t.get("state") == "completed"
-        and t.get("result") in ("failed", "succeededWithIssues")
-        and is_compliance_task(t.get("name", ""))
-    )
 
     # Build the summary line
     parts = []
     if completed:
         parts.append(f"{len(completed)} ✅ completed")
+    if failed:
+        parts.append(f"{len(failed)} ❌ failed")
     if running:
         parts.append(f"{len(running)} 🔄 running")
     if pending:
@@ -146,6 +119,11 @@ def format_job_summary(records: list[dict], cont: str) -> None:
 
     print(f"{cont}")
     print(f"{cont} Jobs: {' | '.join(parts)}")
+
+    if failed:
+        names = ", ".join(failed[:8])
+        suffix = f", … (+{len(failed) - 8} more)" if len(failed) > 8 else ""
+        print(f"{cont} Failed: {names}{suffix}")
 
     if running:
         names = ", ".join(running[:8])
@@ -156,9 +134,6 @@ def format_job_summary(records: list[dict], cont: str) -> None:
         names = ", ".join(pending[:8])
         suffix = f", … (+{len(pending) - 8} more)" if len(pending) > 8 else ""
         print(f"{cont} Pending: {names}{suffix}")
-
-    if compliance_failures > 0:
-        print(f"{cont} ⚠️  {compliance_failures} compliance tasks failed (non-blocking)")
 
 
 def icon_for(run: dict) -> str:

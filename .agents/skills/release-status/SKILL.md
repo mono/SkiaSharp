@@ -76,26 +76,17 @@ breakdown below the pipeline entry:
 ┌─ SkiaSharp-Native (ID 26493) — native binaries
 │  🔄 id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
 │  
-│  Jobs: 35 ✅ completed | 8 🔄 running | 3 ⏳ pending
+│  Jobs: 35 ✅ completed | 2 ❌ failed | 8 🔄 running | 3 ⏳ pending
+│  Failed: Job_Name_1, Job_Name_2
 │  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
 │  Pending: Wasm, Linux ARM, Linux ARM64
-│  ⚠️  12 compliance tasks failed (non-blocking)
 ```
 
 **Reading job status:**
-- **Completed count** — jobs that finished (succeeded or failed)
+- **Completed count** — jobs that finished successfully (or with warnings)
+- **Failed list** — jobs that failed (names shown so you can investigate)
 - **Running list** — jobs actively executing (tells you what's left)
 - **Pending list** — jobs not yet started (queued or waiting for agents)
-- **Compliance warnings** — security/governance tasks (BinSkim, Component Governance, etc.)
-  that commonly fail but do NOT block the build or affect packages
-
-**Compliance tasks are non-blocking.** The following tasks are filtered as compliance warnings
-and should not be treated as build failures:
-- BinSkim
-- Component Governance
-- Container Security SBOM
-- 1ES PT Pre-Job
-- CredScan / Guardian
 
 ---
 
