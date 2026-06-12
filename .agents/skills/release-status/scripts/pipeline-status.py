@@ -32,10 +32,9 @@ ICONS = {
     "notStarted": "⏳",
 }
 
-
-def az(args: list[str]) -> str:
+def az(args: list[str], timeout: int = 30) -> str:
     result = subprocess.run(
-        ["az"] + args, capture_output=True, text=True, timeout=30
+        ["az"] + args, capture_output=True, text=True, timeout=timeout
     )
     return result.stdout.strip()
 
@@ -60,6 +59,81 @@ def get_trigger_info(build_id: int) -> dict:
         "--query", "triggerInfo", "-o", "json",
     ])
     return json.loads(out) if out else {}
+
+
+def get_timeline(build_id: int) -> list[dict]:
+    """Fetch the build timeline (stages, jobs, tasks) from the ADO REST API."""
+    out = az([
+        "devops", "invoke",
+        "--area", "build",
+        "--resource", "timeline",
+        "--route-parameters", f"project={PROJECT}", f"buildId={build_id}",
+        "--org", ORG,
+        "--api-version", "7.0",
+        "-o", "json",
+    ], timeout=60)
+    if not out:
+        return []
+    data = json.loads(out)
+    return data.get("records", [])
+
+
+def format_job_summary(records: list[dict], cont: str) -> None:
+    """Print a summary of job-level status from timeline records."""
+    # Filter to only Job-type records (not Stage or Task)
+    jobs = [r for r in records if r.get("type") == "Job"]
+
+    if not jobs:
+        return
+
+    completed = []
+    failed = []
+    running = []
+    pending = []
+
+    for job in jobs:
+        name = job.get("name", "Unknown")
+        state = job.get("state", "")
+        result = job.get("result", "")
+
+        if state == "completed":
+            if result in ("failed", "canceled"):
+                failed.append(name)
+            else:
+                completed.append(name)
+        elif state == "inProgress":
+            running.append(name)
+        else:
+            pending.append(name)
+
+    # Build the summary line
+    parts = []
+    if completed:
+        parts.append(f"{len(completed)} ✅ completed")
+    if failed:
+        parts.append(f"{len(failed)} ❌ failed")
+    if running:
+        parts.append(f"{len(running)} 🔄 running")
+    if pending:
+        parts.append(f"{len(pending)} ⏳ pending")
+
+    print(f"{cont}")
+    print(f"{cont} Jobs: {' | '.join(parts)}")
+
+    if failed:
+        names = ", ".join(failed[:8])
+        suffix = f", … (+{len(failed) - 8} more)" if len(failed) > 8 else ""
+        print(f"{cont} Failed: {names}{suffix}")
+
+    if running:
+        names = ", ".join(running[:8])
+        suffix = f", … (+{len(running) - 8} more)" if len(running) > 8 else ""
+        print(f"{cont} Running: {names}{suffix}")
+
+    if pending:
+        names = ", ".join(pending[:8])
+        suffix = f", … (+{len(pending) - 8} more)" if len(pending) > 8 else ""
+        print(f"{cont} Pending: {names}{suffix}")
 
 
 def icon_for(run: dict) -> str:
@@ -111,6 +185,17 @@ def main():
             for r in runs:
                 print(f"{cont} {icon_for(r)} id={r['id']:<10}  {r['status']:<12}  "
                       f"{r.get('result') or 'pending':<20}  {r['buildNumber']}")
+
+            # Show job-level details for in-progress builds
+            latest_run = runs[0]
+            if latest_run["status"] == "inProgress":
+                try:
+                    records = get_timeline(latest_run["id"])
+                    if records:
+                        format_job_summary(records, cont)
+                except (json.JSONDecodeError, subprocess.TimeoutExpired, OSError):
+                    print(f"{cont} (could not fetch job details)")
+
             # Show trigger info (skip for first pipeline — it has no upstream)
             if i > 0:
                 trigger = get_trigger_info(runs[0]["id"])
