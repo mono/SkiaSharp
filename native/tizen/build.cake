@@ -42,6 +42,7 @@ Task("libSkiaSharp")
            $"target_os='tizen' " +
            $"target_cpu='{skiaArch}' " +
            $"skia_enable_ganesh=true " +
+           $"skia_enable_pdf=false " +
            $"skia_use_harfbuzz=false " +
            $"skia_use_icu=false " +
            $"skia_use_piex=true " +
