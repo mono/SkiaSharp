@@ -51,28 +51,30 @@ chmod +x "${INSTALLER}"
 # Install. The CLI installer is built for Ubuntu but is glibc-based, so it
 # runs on other glibc distros too. --no-java-check skips the JRE bitness probe.
 #
-# The original install-tizen.ps1 did NOT treat the installer/package-manager
-# exit codes as fatal: PowerShell's $ErrorActionPreference='Stop' does not trap
-# non-zero exits from native executables, and it never checked $LASTEXITCODE
-# after these calls (Tizen's CLI installer is known to be flaky on CI — see the
-# links in the old .ps1). To preserve that behaviour under `set -e` we must not
-# let a non-zero exit here abort the build; the artifact-based validation below
-# is the positive success signal instead. Exit codes are captured for logging.
+# Fail fast: if the installer or package-manager exits non-zero we abort the
+# build, even though the original install-tizen.ps1 tolerated non-zero native
+# exit codes (PowerShell's $ErrorActionPreference='Stop' did not trap them).
+# We deliberately prefer failing a build that might have been fine over silently
+# producing a broken toolchain and shipping bad native libraries to customers.
+# The artifact validation further below is a second layer of defence for the
+# cases where a tool exits 0 without actually installing everything.
 echo "Installing SDK..."
-installer_rc=0
-bash "${INSTALLER}" --accept-license --no-java-check "${DESTINATION}" || installer_rc=$?
-echo "Installer exited with ${installer_rc}."
+if ! bash "${INSTALLER}" --accept-license --no-java-check "${DESTINATION}"; then
+    echo "ERROR: Tizen Studio installer exited non-zero — aborting." >&2
+    exit 1
+fi
 
 # Add the native app development packages (rootstraps + llvm toolchain).
 echo "Installing additional packages: '${PACKAGES}'..."
 PACKAGE_MANAGER="${DESTINATION}/package-manager/package-manager-cli.${EXT}"
-packages_rc=0
-bash "${PACKAGE_MANAGER}" install --no-java-check --accept-license "${PACKAGES}" || packages_rc=$?
-echo "Package manager exited with ${packages_rc}."
+if ! bash "${PACKAGE_MANAGER}" install --no-java-check --accept-license "${PACKAGES}"; then
+    echo "ERROR: Tizen package install exited non-zero — aborting." >&2
+    exit 1
+fi
 
-# Validate the install actually produced the build CLI. Per the note above we do
-# not rely on the installer exit code, so the presence of this artifact is the
-# real success signal.
+# Validate the install actually produced the build CLI. The exit-code checks
+# above catch hard failures; this catches a tool that exits 0 without producing
+# the expected artifacts.
 TIZEN_CLI="${DESTINATION}/tools/ide/bin/tizen"
 if [ ! -x "${TIZEN_CLI}" ]; then
     echo "ERROR: Tizen CLI not found at '${TIZEN_CLI}' — install failed." >&2
