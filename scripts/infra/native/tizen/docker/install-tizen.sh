@@ -51,10 +51,13 @@ chmod +x "${INSTALLER}"
 # Install. The CLI installer is built for Ubuntu but is glibc-based, so it
 # runs on other glibc distros too. --no-java-check skips the JRE bitness probe.
 #
-# The installer and package-manager can exit non-zero even on an otherwise
-# successful install, so do not let `set -e` abort here — the artifact-based
-# validation below is the source of truth. We still capture and log the exit
-# codes for diagnostics.
+# The original install-tizen.ps1 did NOT treat the installer/package-manager
+# exit codes as fatal: PowerShell's $ErrorActionPreference='Stop' does not trap
+# non-zero exits from native executables, and it never checked $LASTEXITCODE
+# after these calls (Tizen's CLI installer is known to be flaky on CI — see the
+# links in the old .ps1). To preserve that behaviour under `set -e` we must not
+# let a non-zero exit here abort the build; the artifact-based validation below
+# is the positive success signal instead. Exit codes are captured for logging.
 echo "Installing SDK..."
 installer_rc=0
 bash "${INSTALLER}" --accept-license --no-java-check "${DESTINATION}" || installer_rc=$?
@@ -67,8 +70,9 @@ packages_rc=0
 bash "${PACKAGE_MANAGER}" install --no-java-check --accept-license "${PACKAGES}" || packages_rc=$?
 echo "Package manager exited with ${packages_rc}."
 
-# Validate the install actually produced the build CLI. The installer can exit
-# non-zero / oddly even on success, so trust the artifact, not the exit code.
+# Validate the install actually produced the build CLI. Per the note above we do
+# not rely on the installer exit code, so the presence of this artifact is the
+# real success signal.
 TIZEN_CLI="${DESTINATION}/tools/ide/bin/tizen"
 if [ ! -x "${TIZEN_CLI}" ]; then
     echo "ERROR: Tizen CLI not found at '${TIZEN_CLI}' — install failed." >&2
