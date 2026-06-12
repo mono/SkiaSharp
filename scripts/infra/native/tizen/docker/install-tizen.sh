@@ -18,7 +18,14 @@ set -euo pipefail
 
 VERSION="${1:-10.0}"
 DESTINATION="${2:-/opt/tizen-studio}"
-PACKAGES="${3:-MOBILE-6.0-NativeAppDevelopment,TIZEN-8.0-NativeAppDevelopment}"
+# Use the CLI ("-CLI") native app development packages, not the IDE ones. They
+# install the identical build toolchain (NativeToolchain-Gcc-9.2, the tizen-8.0
+# rootstraps, llvm-10 and the `tizen build-native` CLI) but skip the GUI-only
+# NativeIDE / Certificate-Manager components. NativeIDE has a post-install step
+# that hangs indefinitely in a headless container (no display), so the IDE
+# packages must not be used here. The produced toolchain — and therefore the
+# built libraries — is the same as the old agent install.
+PACKAGES="${3:-MOBILE-6.0-NativeAppDevelopment-CLI,TIZEN-8.0-NativeAppDevelopment-CLI}"
 
 PLATFORM="ubuntu-64"
 EXT="bin"

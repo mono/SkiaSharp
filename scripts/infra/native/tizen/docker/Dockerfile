@@ -68,8 +68,13 @@ RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-inst
 # backend also validates that the destination is *under the user's home
 # directory*, so install into the tizen user's home. The build itself (run as
 # root via `docker run`) can still read/execute the toolchain afterwards.
+#
+# Use the "-CLI" native app development packages: they install the same build
+# toolchain + tizen-8.0 rootstraps + `tizen build-native` CLI as the IDE
+# packages, but without the GUI-only NativeIDE (whose post-install hangs
+# headless). See install-tizen.sh for details.
 ARG TIZEN_VERSION=10.0
-ARG TIZEN_PACKAGES=MOBILE-6.0-NativeAppDevelopment,TIZEN-8.0-NativeAppDevelopment
+ARG TIZEN_PACKAGES=MOBILE-6.0-NativeAppDevelopment-CLI,TIZEN-8.0-NativeAppDevelopment-CLI
 ENV TIZEN_STUDIO_HOME=/home/tizen/tizen-studio
 COPY ./install-tizen.sh /tmp/install-tizen.sh
 RUN useradd --create-home --shell /bin/bash tizen \
