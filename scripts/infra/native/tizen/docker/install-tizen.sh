@@ -33,13 +33,15 @@ INSTALLER_SHA256="65d2a569cbf0351dca4b94254f2c642d49195ac4964e08a76b4eaabc9ce4be
 # / startup.sh (and therefore what native/tizen/build.cake reads).
 DESTINATION="${HOME}/tizen-studio"
 
-# Use the CLI ("-CLI") native app development packages, not the IDE ones. They
-# install the identical build toolchain (NativeToolchain-Gcc-9.2, the tizen-8.0
-# rootstraps, llvm-10 and the `tizen build-native` CLI) but skip the GUI-only
-# NativeIDE / Certificate-Manager components. NativeIDE has a post-install step
-# that hangs indefinitely in a headless container (no display), so the IDE
-# packages must not be used here. The produced toolchain — and therefore the
-# built libraries — is the same as the old agent install.
+# Use the CLI ("-CLI") native app development packages, not the IDE ones. The
+# old agent install (install-tizen.ps1) used the IDE variants
+# (MOBILE-6.0-NativeAppDevelopment, TIZEN-8.0-NativeAppDevelopment). The "-CLI"
+# variants install the identical build toolchain (NativeToolchain-Gcc-9.2, the
+# tizen-8.0 rootstraps, llvm-10 and the `tizen build-native` CLI) but skip the
+# GUI-only NativeIDE / Certificate-Manager components. NativeIDE has a
+# post-install step that hangs indefinitely in a headless container (no
+# display), so the IDE packages must not be used here. The build toolchain —
+# and therefore the built libraries — is the same as the old agent install.
 PACKAGES="MOBILE-6.0-NativeAppDevelopment-CLI,TIZEN-8.0-NativeAppDevelopment-CLI"
 
 TEMP_DIR="$(mktemp -d)"

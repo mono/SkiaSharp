@@ -7,12 +7,12 @@
 # Tizen Studio ships its own clang-10 / gcc-9.2 toolchain + the tizen-8.0
 # rootstraps, so beyond a handful of host dependencies the base only needs: the
 # .NET SDK (Cake scripts), python3 + ninja + git (the Skia gn/ninja build), and
-# a JRE (the Tizen installer / CLI). Unlike the old agent install we hand-pick
-# the host dependencies here rather than relying on Tizen's apt-based resolver,
-# which keeps us on a current, security-supported Debian base while the Tizen
-# toolchain and rootstraps stay pinned to the exact versions used before (see
-# install-tizen.sh). The installer is built for "ubuntu-64" but is glibc-based
-# and runs on Debian.
+# a JRE (the Tizen installer / CLI). We pre-install the Tizen host dependencies
+# explicitly (rather than letting the Tizen package-manager apt-install them on
+# demand), which keeps us on a current, security-supported Debian base while the
+# Tizen toolchain and rootstraps stay pinned to the exact versions used before
+# (see install-tizen.sh). The installer is built for "ubuntu-64" but is
+# glibc-based and runs on Debian.
 
 FROM mcr.microsoft.com/mirror/docker/library/debian:12
 
@@ -68,6 +68,11 @@ RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-inst
 # The build itself (run as root via `docker run`) can still read/execute the
 # toolchain afterwards. The version, packages, install location and pinned
 # installer hash are all fixed inside install-tizen.sh — there are no knobs here.
+#
+# The tizen user gets passwordless sudo so that, if the Tizen package-manager
+# ever needs to apt-install a host dependency we did not pre-install above, it
+# can do so instead of failing. With the dependencies above it is not exercised
+# in practice, but it keeps the install robust to package-set changes.
 ENV TIZEN_STUDIO_HOME=/home/tizen/tizen-studio
 COPY ./install-tizen.sh /tmp/install-tizen.sh
 RUN useradd --create-home --shell /bin/bash tizen \
