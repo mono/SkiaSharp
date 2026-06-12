@@ -50,13 +50,22 @@ chmod +x "${INSTALLER}"
 
 # Install. The CLI installer is built for Ubuntu but is glibc-based, so it
 # runs on other glibc distros too. --no-java-check skips the JRE bitness probe.
+#
+# The installer and package-manager can exit non-zero even on an otherwise
+# successful install, so do not let `set -e` abort here — the artifact-based
+# validation below is the source of truth. We still capture and log the exit
+# codes for diagnostics.
 echo "Installing SDK..."
-bash "${INSTALLER}" --accept-license --no-java-check "${DESTINATION}"
+installer_rc=0
+bash "${INSTALLER}" --accept-license --no-java-check "${DESTINATION}" || installer_rc=$?
+echo "Installer exited with ${installer_rc}."
 
 # Add the native app development packages (rootstraps + llvm toolchain).
 echo "Installing additional packages: '${PACKAGES}'..."
 PACKAGE_MANAGER="${DESTINATION}/package-manager/package-manager-cli.${EXT}"
-bash "${PACKAGE_MANAGER}" install --no-java-check --accept-license "${PACKAGES}"
+packages_rc=0
+bash "${PACKAGE_MANAGER}" install --no-java-check --accept-license "${PACKAGES}" || packages_rc=$?
+echo "Package manager exited with ${packages_rc}."
 
 # Validate the install actually produced the build CLI. The installer can exit
 # non-zero / oddly even on success, so trust the artifact, not the exit code.
