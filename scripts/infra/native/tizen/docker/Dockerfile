@@ -2,34 +2,29 @@
 #
 # Builds libSkiaSharp.so / libHarfBuzzSharp.so for Tizen 8.0 (x86_64 + aarch64)
 # inside a container, instead of on the build agent. Mirrors the WASM image
-# (scripts/infra/native/wasm/docker/Dockerfile).
+# (scripts/infra/native/wasm/docker/Dockerfile), including its Debian 12 base.
 #
-# Base: Ubuntu 20.04. Tizen Studio's CLI installer ships as a "ubuntu-64"
-# package and its package-manager resolves the native-toolchain host
-# dependencies via apt using Ubuntu package names (e.g. python3.8 / libpython3.8,
-# rpm2cpio, make, cpio, gettext, libkf5*), so a Debian/Ubuntu base is required.
-# Azure Linux was evaluated first but its package manager (tdnf) is incompatible
-# with Tizen's apt-based dependency resolver.
-#
-# Tizen Studio ships its own clang/gcc toolchain + rootstraps, so beyond the
-# Tizen host dependencies the base only needs: the .NET SDK (Cake scripts),
-# python3 + ninja + git (the Skia gn/ninja build), and a JRE.
-#
-# Arguments:
-#   DOTNET_SDK_VERSION  - the .NET SDK version for the Cake scripts
-#   TIZEN_VERSION       - the Tizen Studio version to install
-#   TIZEN_PACKAGES      - the Tizen Studio packages to install
+# Tizen Studio ships its own clang-10 / gcc-9.2 toolchain + the tizen-8.0
+# rootstraps, so beyond a handful of host dependencies the base only needs: the
+# .NET SDK (Cake scripts), python3 + ninja + git (the Skia gn/ninja build), and
+# a JRE (the Tizen installer / CLI). Unlike the old agent install we hand-pick
+# the host dependencies here rather than relying on Tizen's apt-based resolver,
+# which keeps us on a current, security-supported Debian base while the Tizen
+# toolchain and rootstraps stay pinned to the exact versions used before (see
+# install-tizen.sh). The installer is built for "ubuntu-64" but is glibc-based
+# and runs on Debian.
 
-FROM mcr.microsoft.com/mirror/docker/library/ubuntu:20.04
+FROM mcr.microsoft.com/mirror/docker/library/debian:12
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Base utilities + JRE + Skia build tools + the Tizen native-toolchain host
-# dependencies. We pre-install the host deps so the Tizen package-manager finds
-# them already present; the `tizen` user also gets passwordless sudo as a safety
-# net for anything the package-manager still wants to apt-install.
+# Base utilities + JRE + the Skia/Tizen build host dependencies.
+#
+# libtinfo5: Tizen Studio's bundled llvm-10 clang links the legacy ncurses 5
+# library (libtinfo.so.5). Debian 12 ships a supported compat package for it,
+# so the cross compiler runs without pulling anything from archived repos.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -46,13 +41,16 @@ RUN apt-get update \
         gettext \
         ninja-build \
         python3 \
-        python3.8 \
-        libpython3.8 \
-        libncurses6 \
+        libtinfo5 \
         openjdk-17-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the .NET SDK (needed for the Cake build scripts).
+#
+# Run .NET in invariant globalization mode (like the WASM image) so the runtime
+# does not require ICU. The Cake build only shells out to the Tizen toolchain and
+# does path/string work, so culture-insensitive formatting has no effect on the
+# produced native libraries.
 ARG DOTNET_SDK_VERSION=10.0.108
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
@@ -66,36 +64,25 @@ RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-inst
 # The installer refuses to run as root, so create an unprivileged user and
 # install as that user (via a login shell so $HOME is set). The installer's Java
 # backend also validates that the destination is *under the user's home
-# directory*, so install into the tizen user's home. The build itself (run as
-# root via `docker run`) can still read/execute the toolchain afterwards.
-#
-# Use the "-CLI" native app development packages: they install the same build
-# toolchain + tizen-8.0 rootstraps + `tizen build-native` CLI as the IDE
-# packages, but without the GUI-only NativeIDE (whose post-install hangs
-# headless). See install-tizen.sh for details.
-ARG TIZEN_VERSION=10.0
-ARG TIZEN_PACKAGES=MOBILE-6.0-NativeAppDevelopment-CLI,TIZEN-8.0-NativeAppDevelopment-CLI
+# directory*, which is why install-tizen.sh installs to "$HOME/tizen-studio".
+# The build itself (run as root via `docker run`) can still read/execute the
+# toolchain afterwards. The version, packages, install location and pinned
+# installer hash are all fixed inside install-tizen.sh — there are no knobs here.
 ENV TIZEN_STUDIO_HOME=/home/tizen/tizen-studio
 COPY ./install-tizen.sh /tmp/install-tizen.sh
 RUN useradd --create-home --shell /bin/bash tizen \
     && echo "tizen ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/tizen \
     && chmod 0440 /etc/sudoers.d/tizen \
-    && apt-get update \
     && chmod +x /tmp/install-tizen.sh \
-    && runuser -l tizen -c "/tmp/install-tizen.sh '${TIZEN_VERSION}' '${TIZEN_STUDIO_HOME}' '${TIZEN_PACKAGES}'" \
-    && rm -f /tmp/install-tizen.sh \
-    && rm -rf /var/lib/apt/lists/*
+    && runuser -l tizen -c "/tmp/install-tizen.sh" \
+    && rm -f /tmp/install-tizen.sh
 
 # Skia's gn/ninja build compiles a set of host tools (e.g. the SkSL compiler)
 # using the host toolchain, which defaults to `cc` / `c++`. Tizen Studio only
 # ships the cross toolchains, so install a host C/C++ compiler for the host
 # tools (the target objects are still built with the Tizen llvm via `ncli`).
-#
-# Tizen Studio's bundled llvm-10 clang links against the legacy ncurses 5
-# library (`libtinfo.so.5`), which is not installed by default on Ubuntu 20.04
-# (it ships libtinfo6). Install libtinfo5 so the cross compiler can run.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc g++ libtinfo5 \
+    && apt-get install -y --no-install-recommends gcc g++ \
     && rm -rf /var/lib/apt/lists/* \
     && cc --version \
     && c++ --version
