@@ -32,10 +32,23 @@ ICONS = {
     "notStarted": "⏳",
 }
 
+# Compliance/security tasks that commonly fail but don't block builds.
+# These are filtered from job failure counts and reported separately.
+COMPLIANCE_TASKS = {
+    "binskim",
+    "component governance",
+    "container security sbom",
+    "1es pt pre-job",
+    "post-job: component governance",
+    "componentgovernancecomponentdetection",
+    "credscan",
+    "guardian",
+}
 
-def az(args: list[str]) -> str:
+
+def az(args: list[str], timeout: int = 30) -> str:
     result = subprocess.run(
-        ["az"] + args, capture_output=True, text=True, timeout=30
+        ["az"] + args, capture_output=True, text=True, timeout=timeout
     )
     return result.stdout.strip()
 
@@ -60,6 +73,92 @@ def get_trigger_info(build_id: int) -> dict:
         "--query", "triggerInfo", "-o", "json",
     ])
     return json.loads(out) if out else {}
+
+
+def get_timeline(build_id: int) -> list[dict]:
+    """Fetch the build timeline (stages, jobs, tasks) from the ADO REST API."""
+    out = az([
+        "devops", "invoke",
+        "--area", "build",
+        "--resource", "timeline",
+        "--route-parameters", f"project={PROJECT}", f"buildId={build_id}",
+        "--org", ORG,
+        "--api-version", "7.0",
+        "-o", "json",
+    ], timeout=60)
+    if not out:
+        return []
+    data = json.loads(out)
+    return data.get("records", [])
+
+
+def is_compliance_task(name: str) -> bool:
+    """Check if a task/job name matches a known compliance/security task."""
+    lower = name.lower()
+    for pattern in COMPLIANCE_TASKS:
+        if pattern in lower:
+            return True
+    return False
+
+
+def format_job_summary(records: list[dict], cont: str) -> None:
+    """Print a summary of job-level status from timeline records."""
+    # Filter to only Job-type records (not Stage or Task)
+    jobs = [r for r in records if r.get("type") == "Job"]
+
+    if not jobs:
+        return
+
+    completed = []
+    running = []
+    pending = []
+
+    for job in jobs:
+        name = job.get("name", "Unknown")
+        state = job.get("state", "")
+        result = job.get("result", "")
+
+        if state == "completed":
+            completed.append({"name": name, "result": result})
+        elif state == "inProgress":
+            running.append(name)
+        else:
+            # pending, notStarted, or any other state
+            pending.append(name)
+
+    # Count compliance task failures at the Task level
+    tasks = [r for r in records if r.get("type") == "Task"]
+    compliance_failures = sum(
+        1 for t in tasks
+        if t.get("state") == "completed"
+        and t.get("result") in ("failed", "succeededWithIssues")
+        and is_compliance_task(t.get("name", ""))
+    )
+
+    # Build the summary line
+    parts = []
+    if completed:
+        parts.append(f"{len(completed)} ✅ completed")
+    if running:
+        parts.append(f"{len(running)} 🔄 running")
+    if pending:
+        parts.append(f"{len(pending)} ⏳ pending")
+
+    print(f"{cont}")
+    print(f"{cont} Jobs: {' | '.join(parts)}")
+
+    if running:
+        names = ", ".join(running[:8])
+        suffix = f", … (+{len(running) - 8} more)" if len(running) > 8 else ""
+        print(f"{cont} Running: {names}{suffix}")
+
+    if pending:
+        names = ", ".join(pending[:8])
+        suffix = f", … (+{len(pending) - 8} more)" if len(pending) > 8 else ""
+        print(f"{cont} Pending: {names}{suffix}")
+
+    if compliance_failures > 0:
+        print(f"{cont} ⚠️  {compliance_failures} compliance tasks failed (non-blocking)")
 
 
 def icon_for(run: dict) -> str:
@@ -111,6 +210,17 @@ def main():
             for r in runs:
                 print(f"{cont} {icon_for(r)} id={r['id']:<10}  {r['status']:<12}  "
                       f"{r.get('result') or 'pending':<20}  {r['buildNumber']}")
+
+            # Show job-level details for in-progress builds
+            latest_run = runs[0]
+            if latest_run["status"] == "inProgress":
+                try:
+                    records = get_timeline(latest_run["id"])
+                    if records:
+                        format_job_summary(records, cont)
+                except (json.JSONDecodeError, subprocess.TimeoutExpired, OSError):
+                    print(f"{cont} (could not fetch job details)")
+
             # Show trigger info (skip for first pipeline — it has no upstream)
             if i > 0:
                 trigger = get_trigger_info(runs[0]["id"])

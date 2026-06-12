@@ -67,6 +67,36 @@ This outputs:
 | Any ❌ | Pipeline failed | Investigate via ADO link, retry or fix |
 | Native ⚠️ (partiallySucceeded) | Some native platforms had warnings | Usually OK — check which platforms |
 
+### Job-Level Details (In-Progress Builds)
+
+When a pipeline is `inProgress`, the script queries the ADO timeline API and shows job-level
+breakdown below the pipeline entry:
+
+```
+┌─ SkiaSharp-Native (ID 26493) — native binaries
+│  🔄 id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
+│  
+│  Jobs: 35 ✅ completed | 8 🔄 running | 3 ⏳ pending
+│  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
+│  Pending: Wasm, Linux ARM, Linux ARM64
+│  ⚠️  12 compliance tasks failed (non-blocking)
+```
+
+**Reading job status:**
+- **Completed count** — jobs that finished (succeeded or failed)
+- **Running list** — jobs actively executing (tells you what's left)
+- **Pending list** — jobs not yet started (queued or waiting for agents)
+- **Compliance warnings** — security/governance tasks (BinSkim, Component Governance, etc.)
+  that commonly fail but do NOT block the build or affect packages
+
+**Compliance tasks are non-blocking.** The following tasks are filtered as compliance warnings
+and should not be treated as build failures:
+- BinSkim
+- Component Governance
+- Container Security SBOM
+- 1ES PT Pre-Job
+- CredScan / Guardian
+
 ---
 
 ## Step 3: Report to User
