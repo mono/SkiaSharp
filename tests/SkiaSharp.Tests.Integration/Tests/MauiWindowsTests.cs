@@ -1,5 +1,6 @@
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Windows;
+using SkiaSharp;
 using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests.Integration;
@@ -30,4 +31,26 @@ public class MauiWindowsTests(ITestOutputHelper output) : MauiTestBase(output)
         Directory.GetFiles(
             Path.Combine(projectDir, "bin", BuildConfiguration, TargetFramework),
             $"{projectName}.exe", SearchOption.AllDirectories).FirstOrDefault();
+
+    /// <summary>
+    /// Returns the canvas bounds in window-relative coordinates.
+    ///
+    /// WinUI MAUI apps don't expose individual page elements in the UIA tree — the entire page
+    /// content is a single opaque Custom element with no children. We anchor on the commandBar
+    /// AppBar (which IS in the UIA tree) to find where the content area starts, then calculate
+    /// the canvas position geometrically. The MAUI XAML centers the canvas (VerticalOptions=Center,
+    /// HorizontalOptions=Center) within the content area below the commandBar.
+    /// </summary>
+    protected override (SKPointI location, SKSizeI size) GetCanvasBounds(AppiumDriver driver, string bundleId)
+    {
+        var appBar = driver.FindElement("accessibility id", "commandBar");
+        int contentTop = appBar.Location.Y + appBar.Size.Height;
+        Output.WriteLine($"commandBar: y={appBar.Location.Y} h={appBar.Size.Height} → contentTop={contentTop}");
+
+        var windowSize = driver.Manage().Window.Size;
+        int x = (windowSize.Width  - CanvasWidth)  / 2;
+        int y = contentTop + (windowSize.Height - contentTop - CanvasHeight) / 2;
+        Output.WriteLine($"Canvas position: ({x},{y}) in {windowSize.Width}x{windowSize.Height} window");
+        return (new SKPointI(x, y), new SKSizeI(CanvasWidth, CanvasHeight));
+    }
 }
