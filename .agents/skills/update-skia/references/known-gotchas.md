@@ -61,6 +61,47 @@ The C API shims (`src/c/gr_context.cpp` etc.) compile as part of `:core`, but ba
 
 Upstream may move previously-core modules into separate optional targets. If the C API exposes functions from that module, add it as an explicit dependency of the `SkiaSharp` target in `BUILD.gn` rather than merging sources into core.
 
+### 23. Apple Builds Are Pure GN — GN Emits the `.framework`
+
+Every platform — Windows, Linux, WASM, Android, macOS, iOS, tvOS, and MacCatalyst — builds
+`libSkiaSharp`/`libHarfBuzzSharp` from the `skiasharp_build("SkiaSharp")` /
+`skiasharp_build("HarfBuzzSharp")` GN targets in `externals/skia/BUILD.gn`. There are **no Xcode
+project files** — the Apple `native/{ios,tvos,macos}/build.cake` tasks drive `gn`/`ninja` directly,
+exactly like the other platforms.
+
+On iOS/tvOS/MacCatalyst the GN build itself emits a complete single-arch `lib<Name>.framework` in
+its out dir — bundle layout, framework-relative install_name (set via link-time ldflags), arm64e
+thinning, and the provenance Info.plist (CFBundle* + DT*/BuildMachineOSBuild keys App Store /
+notarization validation expects) all come from GN. The framework path is keyed entirely off the
+**OS** — there are no separate `skiasharp_apple_framework*` GN args: the `skiasharp_build` template
+in `gn/BUILDCONFIG.gn` emits a framework whenever `is_ios` is true (iOS/tvOS/MacCatalyst), uses the
+macOS-style versioned `Versions/A` layout when `is_maccatalyst`, and the install_name ldflags in
+`BUILD.gn` are gated the same way. The single GN `action` runs
+`gn/skiasharp/assemble_apple_framework.py` (self-contained Python — it shells out only to first-party
+Apple tools `lipo`/`xcrun`/`xcodebuild`/`sw_vers` and writes the plist with `plistlib`). The cake
+`CombineFrameworks` helper (`scripts/infra/native/apple/apple.cake`) then only lipos the per-arch
+frameworks together and code-signs last. macOS ships a plain fat `.dylib` (install_name
+`@rpath/libSkiaSharp.dylib`, set by GN's solink rule) and does not call `CombineFrameworks`.
+
+What to do when updating Skia:
+
+- **Adding/removing a C API source file** (`src/c/*.cpp`): update the list in `gn/core.gni` — these
+  shims compile into `:core` (see gotcha #21), which `skiasharp_build` reaches via `:skia`, so the
+  same list feeds desktop, mobile, and Apple builds. `src/xamarin/*.cpp` sources live directly on the
+  `skiasharp_build("SkiaSharp")` target in `BUILD.gn`.
+- **Adding/removing a HarfBuzz source file**: update the `skiasharp_build("HarfBuzzSharp")` target.
+  Keep its defines (`HAVE_OT`, `HAVE_CONFIG_OVERRIDE_H`, `HB_NO_FALLBACK_SHAPE`) and the `HB_EXTERN`
+  visibility export (which publishes the `hb_*` symbols) intact.
+- **Changing a feature define or warning flag** (e.g. `SK_*`): set it on the GN target/config and it
+  applies everywhere, Apple included.
+- After any native change, rebuild from source per platform (`dotnet cake --target=externals-<plat>`);
+  `externals-download` is forbidden for native work.
+
+A full Xcode install is still required on macOS build agents (not just the Command Line
+Tools): GN drives the Apple SDK + clang toolchain, and the framework-assembly action shells
+out to `xcodebuild -version` and `xcrun --show-sdk-version` for the provenance `Info.plist`,
+which need a full, license-accepted Xcode. The build itself is otherwise pure `gn`/`ninja`.
+
 ## Dependencies & Bindings
 
 ### 8. DEPS: Fork-Customized Dependencies
