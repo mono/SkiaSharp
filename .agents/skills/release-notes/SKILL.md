@@ -16,7 +16,8 @@ description: >
 
   NOTE: Website release notes are normally updated automatically by the
   `update-release-notes` agentic workflow when code lands on main, release branches,
-  or tags are pushed. This skill is for manual regeneration or corrections only.
+  or tags are pushed. That workflow drives this skill in `--all` mode; the same
+  skill is also used manually for regeneration or corrections.
 ---
 
 # Release Notes Skill
@@ -31,6 +32,10 @@ correcting, or bulk-processing release notes.
 
 ### Step 1 — Determine versions
 
+> **Running unattended (e.g. from the `update-release-notes` workflow)?** There is
+> no user to ask — skip straight to the `--all` invocation in
+> [Step 2](#step-2--run-the-script), which regenerates every branch automatically.
+
 Ask the user which version(s) to generate, or infer from context:
 - A specific version: `3.119.2`
 - A branch: `release/4.147.0-preview.1` or `main`
@@ -39,7 +44,8 @@ Ask the user which version(s) to generate, or infer from context:
 
 ### Step 2 — Run the script
 
-Run the script to collect raw PR data and write it to the version file:
+Run the script **from the repository root** to collect raw PR data and write it to
+the version file:
 
 ```bash
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1
@@ -117,7 +123,7 @@ and records the outcome in the file's data-block; you only render what's there:
 - The diff base is already chosen and baked into the `from..to` range, so a skipped line is
   rolled up automatically (e.g. `4.148`'s data already covers all the `4.147` work). You never
   pick a base yourself — just summarise the PRs in the file.
-- A `superseded_by:` line means the version was a preview that never shipped stable. Render the
+- A `superseded:` line means the version was a preview that never shipped stable. Render the
   script-generated *"Preview only · Superseded by …"* header (kept verbatim).
 - A `supersedes:` line is the two-way back-link on the successor page. Render the
   script-generated *"Supersedes …"* note (kept verbatim).
@@ -200,3 +206,7 @@ Follow these rules:
 
 When regenerating multiple versions, process them in parallel — each version is independent.
 Fetch all raw data in one script call, then launch one agent per version to write the polished page.
+
+> This applies to **interactive/manual** use where sub-agents are available. When running
+> unattended (e.g. the automated workflow), just polish the listed files **sequentially** in
+> the one agent — do not try to spawn sub-agents.

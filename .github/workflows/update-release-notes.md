@@ -38,9 +38,10 @@ Do not restate the skill's steps here.
 
 ## Prep
 
-Release notes are generated from `origin/` refs, so run from a clean `main`
+Release notes are generated from `origin/` refs, so start from a clean `main`
 checkout. This avoids leaking release-branch-only files (e.g. `PREVIEW_LABEL`)
-into the main-targeted PR:
+into the main-targeted PR. The skill's `--all` script fetches the `release/*`
+branches it needs itself, so this only has to put you on `main`:
 
 ```bash
 git fetch origin main --quiet
@@ -50,11 +51,15 @@ git checkout -B main origin/main
 ## Do the work
 
 Use the **release-notes skill** to regenerate and polish, running it in `--all`
-mode (regenerates every branch idempotently and lists only changed files). Polish
-exactly the files it reports. If it reports "(none — all files up to date)",
-stop — make no PR.
+mode (regenerates every branch idempotently and lists only changed files). Edit
+exactly the files it lists under "Files to polish". If it reports
+"(none — all files up to date)", **make no file edits** — leave any existing
+`bot/release-notes` PR untouched and exit.
 
 ## Automation
 
-Open a single consolidated pull request on branch `bot/release-notes` targeting
-`main`, so there is at most one open release-notes PR rather than one-per-version.
+The PR is created by the `create-pull-request` safe-output from whatever files
+you edited — you do **not** git commit or push manually. It targets `main` on the
+single consolidated branch `bot/release-notes`, so there is at most one open
+release-notes PR rather than one-per-version. If you made no edits, no PR is
+created or updated.
