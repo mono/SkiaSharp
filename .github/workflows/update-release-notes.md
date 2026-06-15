@@ -30,15 +30,31 @@ safe-outputs:
 
 # Update Release Notes
 
-Run the **release-notes** skill in its automated `--all` flow. The skill is the
-single source of truth — follow **"Automated workflow mode"** in
-[`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md),
-which lists the exact steps (prep main checkout → run `--all` → polish changed
-files → open one PR). Do not restate or renumber those steps here.
+Automation that keeps the website release notes current. This file owns only the
+**prep and automation**. The actual work — running the script and polishing the
+pages — is the **release-notes skill**
+([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md)).
+Do not restate the skill's steps here.
 
-This workflow only specifies the CI-specific values the skill defers to it:
+## Prep
 
-- **PR branch:** single consolidated `bot/release-notes` (one PR at a time, not
-  per-version).
-- **Base branch:** `main` (release notes always live on main for the docs site).
-- **No-op:** if the script reports "(none — all files up to date)", make no PR.
+Release notes are generated from `origin/` refs, so run from a clean `main`
+checkout. This avoids leaking release-branch-only files (e.g. `PREVIEW_LABEL`)
+into the main-targeted PR:
+
+```bash
+git fetch origin main --quiet
+git checkout -B main origin/main
+```
+
+## Do the work
+
+Use the **release-notes skill** to regenerate and polish, running it in `--all`
+mode (regenerates every branch idempotently and lists only changed files). Polish
+exactly the files it reports. If it reports "(none — all files up to date)",
+stop — make no PR.
+
+## Automation
+
+Open a single consolidated pull request on branch `bot/release-notes` targeting
+`main`, so there is at most one open release-notes PR rather than one-per-version.
