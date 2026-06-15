@@ -86,12 +86,23 @@ def _versions_config_lookup(version):
     return None
 
 
-def _is_content_unchanged(output_path, new_prs_count, new_diff_range):
-    # type: (Path, int, str) -> bool
-    """Check if the existing file has the same PR count and diff range.
+def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
+                          new_status=None, new_superseded_by=None,
+                          new_supersedes=None):
+    # type: (Path, int, str, Optional[str], Optional[str], Optional[list[str]]) -> bool
+    """Check whether the existing file already encodes identical raw data.
+
+    Compares the fields the script controls: PR count, diff range, and the
+    supersession metadata (status + the ``superseded:`` / ``supersedes:``
+    markers). The supersession fields must be part of this check because
+    toggling a version's supersession in versions.json can change ONLY the page
+    banner without touching the diff range — when a preview line is newly marked
+    superseded its OWN diff/PR set is unchanged (supersession only affects it as
+    a baseline for LATER versions), but its page must still gain a "Superseded
+    by" banner. Returns True only when every tracked field matches, so those
+    metadata-only changes still force a rewrite.
 
     Reads the metadata from the HTML comment block at the top of the file.
-    Returns True if the content would be identical (skip writing).
     """
     if not output_path.exists():
         return False
@@ -102,9 +113,32 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range):
     m_diff = re.search(r"^\s*diff:\s*(\S+)", content, re.MULTILINE)
     if not m_prs or not m_diff:
         return False
-    existing_prs = int(m_prs.group(1))
-    existing_diff = m_diff.group(1)
-    return existing_prs == new_prs_count and existing_diff == new_diff_range
+    if int(m_prs.group(1)) != new_prs_count or m_diff.group(1) != new_diff_range:
+        return False
+
+    # status: only compare when the caller supplies the new value.
+    if new_status is not None:
+        m_status = re.search(r"^\s*status:\s*(\S+)", content, re.MULTILINE)
+        existing_status = m_status.group(1) if m_status else None
+        if existing_status != new_status:
+            return False
+
+    # superseded: <version> (...) — the marker carries the successor version as
+    # its first token; absent line means "not superseded".
+    m_sup_by = re.search(r"^\s*superseded:\s*(\S+)", content, re.MULTILINE)
+    existing_superseded_by = m_sup_by.group(1) if m_sup_by else None
+    if (new_superseded_by or None) != existing_superseded_by:
+        return False
+
+    # supersedes: <v1>, <v2> (...) — compare the set of rolled-up versions.
+    m_supersedes = re.search(r"^\s*supersedes:\s*([^(\n]+)", content, re.MULTILINE)
+    existing_supersedes = (
+        [s.strip() for s in m_supersedes.group(1).split(",") if s.strip()]
+        if m_supersedes else [])
+    if sorted(new_supersedes or []) != sorted(existing_supersedes):
+        return False
+
+    return True
 
 
 def _removeprefix(s, prefix):
@@ -252,14 +286,24 @@ def detect_superseded_by(version, all_branches):
 
 def resolve_superseded_by(version, all_branches):
     # type: (str, list[str]) -> Optional[str]
-    """Whether a version was superseded. Checks versions.json first, then auto-detects."""
+    """Whether a version was superseded. versions.json is authoritative; only
+    versions with NO config entry fall back to auto-detection.
+
+    A config entry is the final word: if it explicitly says
+    ``status: superseded`` the version is superseded (using the configured
+    ``superseded_by``, or auto-detecting the successor when that field is
+    omitted); any other listed version — e.g. one carrying only ``compare_to``
+    / ``supersedes`` like 4.148.0 — is a real, non-skipped release and is NEVER
+    auto-detected as superseded. This matches Cake's ``IsVersionSuperseded``,
+    which also treats only an explicit ``status: superseded`` as superseded.
+    Without this guard, auto-detection would wrongly flag any version lacking a
+    stable git tag (the whole 4.x line, for now) as superseded by a later one.
+    """
     entry = _versions_config_lookup(version)
     if entry:
-        if entry.get("status") == "superseded" and entry.get("superseded_by"):
-            return entry["superseded_by"]
-        # If config explicitly lists this version without superseded status, not superseded
-        if entry.get("status") and entry["status"] != "superseded":
-            return None
+        if entry.get("status") == "superseded":
+            return entry.get("superseded_by") or detect_superseded_by(version, all_branches)
+        return None
     return detect_superseded_by(version, all_branches)
 
 
@@ -1244,7 +1288,8 @@ def cmd_branch(branch):
 
     # Skip writing if the existing file already has the same data
     diff_range_str = "{}..{}".format(from_display, to_display)
-    if _is_content_unchanged(output_path, len(prs), diff_range_str):
+    if _is_content_unchanged(output_path, len(prs), diff_range_str,
+                             status, superseded_by, supersedes):
         print("Skipping {} (unchanged: {} PRs, diff {})".format(
             output_path, len(prs), diff_range_str))
         files_to_polish = []
@@ -1453,20 +1498,23 @@ def cmd_all():
         print("  Found {} PR(s), diff: {}..{}".format(
             len(prs), from_display, to_display))
 
-        # Skip-unchanged check
-        diff_range_str = "{}..{}".format(from_display, to_display)
-        if _is_content_unchanged(output_path, len(prs), diff_range_str):
-            print("  Skipping {} (unchanged)".format(output_path))
-            skipped_count += 1
-            continue
-
-        # Supersede markers
+        # Supersede markers — computed BEFORE the unchanged-check so a
+        # supersession change in versions.json (which may not move the diff
+        # range) still forces a rewrite of the affected page.
         superseded_by = None
         if not is_main_branch and not is_servicing:
             superseded_by = resolve_superseded_by(ver, all_branches)
             if superseded_by:
                 status = "preview"
         supersedes = detect_supersedes(ver, all_branches)
+
+        # Skip-unchanged check
+        diff_range_str = "{}..{}".format(from_display, to_display)
+        if _is_content_unchanged(output_path, len(prs), diff_range_str,
+                                 status, superseded_by, supersedes):
+            print("  Skipping {} (unchanged)".format(output_path))
+            skipped_count += 1
+            continue
 
         metadata = {
             "branch": branch,
