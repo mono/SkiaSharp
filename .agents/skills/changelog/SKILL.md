@@ -131,7 +131,10 @@ baseline. Entry shape:
 
 ## Relationship to the workflow
 
-`.github/workflows/api-diff.yml` is intentionally thin: it checks out the repo,
-calls this script, then commits the result to the single `bot/api-diff` PR
-branch (force-pushed each run; no PR if nothing changed). Keep generation logic
-in the script, not the workflow, so local and CI runs stay identical.
+This skill is the **source of truth** for changelog generation. The
+`.github/workflows/api-diff.yml` workflow is intentionally thin: it runs this
+skill's `generate-changelogs.sh`, then commits the result to the single
+`bot/api-diff` PR branch (force-pushed each run; no PR if nothing changed). The
+workflow does not re-document the process — it only sets workflow-specific
+choices (which mode to run, the PR branch). Keep all generation logic here in the
+skill/script, not the workflow, so local and CI runs stay identical.

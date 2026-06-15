@@ -249,3 +249,35 @@ Follow these rules:
 
 When regenerating multiple versions, process them in parallel — each version is independent.
 Fetch all raw data in one script call, then launch one agent per version to write the polished page.
+
+## Automated workflow mode (source of truth for `update-release-notes`)
+
+The `update-release-notes` workflow is a thin wrapper: it just runs this skill in
+its automated `--all` flow. **This section is the canonical procedure** — the
+workflow only supplies CI-specific values (PR branch, base branch), it does not
+restate the steps. Run these in order:
+
+1. **Prep a clean `main` checkout.** All git history queries use `origin/` refs,
+   so the working tree must be on `main` to avoid leaking release-branch-only
+   files (e.g. `PREVIEW_LABEL`) into a main-targeted PR:
+
+   ```bash
+   git fetch origin main --quiet
+   git checkout -B main origin/main
+   ```
+
+2. **Generate raw data for every branch** with `--all` (see [Step 2](#step-2--run-the-script)):
+
+   ```bash
+   python3 .agents/skills/release-notes/scripts/generate-release-notes.py --all
+   ```
+
+3. **Polish only the changed files.** Polish every path in the script's "Files to
+   polish" output, following [Step 3](#step-3--read-the-template) and
+   [Step 4](#step-4--write-polished-pages). If the output is
+   "(none — all files up to date)", stop here — there is nothing to polish and
+   **no PR should be created**.
+
+4. **Open/refresh one PR.** Commit all changed release-notes files to a single
+   consolidated branch (the workflow uses `bot/release-notes`) targeting `main`,
+   so there is at most one open release-notes PR rather than one-per-version.

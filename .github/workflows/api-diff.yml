@@ -3,17 +3,14 @@ name: API Diff
 # ─────────────────────────────────────────────────────────────────────────────
 # API Diff workflow
 #
-# Regenerates the per-assembly API changelogs under changelogs/ and opens (or
-# updates) a single PR with the result. ALL generation logic lives in
-# .agents/skills/changelog/scripts/generate-changelogs.sh so that the exact same
-# steps can be run locally — this workflow is just "run the script, then make a
-# PR". See .agents/skills/changelog/SKILL.md for the full explanation.
-#
-# Modes (workflow_dispatch only; pushes/schedule always use 'past'):
-#   past     Regenerate every changelog from NuGet.org. Baselines + supersession
-#            come from scripts/versions.json. This is the committed output.
-#   preview  Diff a branch/tag/SHA's CI build against its baseline to preview an
-#            unreleased version. Artifact-only — never committed.
+# Thin wrapper around the `changelog` skill. The skill is the source of truth for
+# how changelogs are generated (modes, baselines, versions.json, local usage) —
+# see .agents/skills/changelog/SKILL.md. This workflow only runs the skill's
+# script and turns its output into a single PR; it does not re-document the
+# process. Workflow-specific choices:
+#   * mode: pushes/schedule always 'past' (committed); manual runs may pick
+#     'preview' (artifact-only, never committed / no PR).
+#   * single rolling PR branch 'bot/api-diff', force-pushed each run.
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
