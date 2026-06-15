@@ -3,14 +3,27 @@ name: API Diff
 # ─────────────────────────────────────────────────────────────────────────────
 # API Diff workflow
 #
-# Thin wrapper around the `changelog` skill. The skill is the source of truth for
-# how changelogs are generated (modes, baselines, versions.json, local usage) —
-# see .agents/skills/changelog/SKILL.md. This workflow only runs the skill's
-# script and turns its output into a single PR; it does not re-document the
-# process. Workflow-specific choices:
-#   * mode: pushes/schedule always 'past' (committed); manual runs may pick
-#     'preview' (artifact-only, never committed / no PR).
-#   * single rolling PR branch 'bot/api-diff', force-pushed each run.
+# Keeps the committed API changelogs under changelogs/ up to date. It is a thin
+# runner around a single Cake target — there is no skill and no shell wrapper to
+# keep in sync:
+#
+#     dotnet cake --target=docs-api-diff-past
+#
+# That target wraps Mono.ApiTools.NuGetDiff, walks every version published to
+# NuGet.org (prereleases included) and writes a per-assembly markdown diff to
+# changelogs/{PackageId}/{version}/{Assembly}.md. Baseline selection and
+# superseded-version handling are driven by scripts/versions.json — see that
+# file's $comment fields and the docs-api-diff-past target in
+# scripts/infra/docs/docs.cake. To reproduce a run locally, just run that one
+# command from the repo root.
+#
+# This workflow only adds the automation around that command: when to run it and
+# how to turn its output into a single rolling PR. It deliberately does NOT
+# re-document how diffs are generated.
+#
+# Preview ("what will an unreleased branch's diff look like?") is intentionally
+# NOT automated here. It is a manual, multi-step operation — see the "Previewing
+# an unreleased branch" section in documentation/dev/writing-docs.md.
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -29,19 +42,8 @@ on:
     - cron: '0 0 * * 0'
   workflow_dispatch:
     inputs:
-      mode:
-        description: 'Mode: past (all historical from NuGet.org) or preview (current CI build vs baseline)'
-        type: choice
-        options:
-          - past
-          - preview
-        default: 'past'
-      ref:
-        description: 'Branch/tag/SHA for preview mode (ignored in past mode)'
-        required: false
-        default: 'main'
       prerelease:
-        description: 'Include prerelease versions'
+        description: 'Include prerelease versions in the diff set'
         type: boolean
         required: false
         default: true
@@ -60,21 +62,19 @@ jobs:
     permissions:
       contents: read
     env:
-      # Pushes and the schedule always regenerate the committed 'past' set.
-      # Only manual runs may request 'preview'.
-      MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'past' }}
+      # Default to including prereleases (the 4.x line ships only as prereleases
+      # for now, so they must appear in the changelog set).
       PRERELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease || 'true' }}
-      REF: ${{ inputs.ref || 'main' }}
     outputs:
       has_changes: ${{ steps.check.outputs.has_changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          # Always work from main; the script fetches other refs itself in
-          # preview mode. fetch-depth:0 so preview's `git fetch <ref>` works.
+          # Always regenerate the full historical set from main; the diff source
+          # is NuGet.org, not the checked-out tree.
           ref: main
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
 
       - name: Setup .NET
@@ -82,17 +82,14 @@ jobs:
         with:
           global-json-file: global.json
 
-      # Single entry point — same script humans run locally. It restores tools,
-      # runs the right Cake targets for the mode, and (preview) overlays the
-      # ref's nuget versions + downloads CI packages.
+      # Single Cake target — the exact same command a human runs locally. It
+      # reads scripts/versions.json for compare_to / supersession overrides and
+      # writes the changelogs under changelogs/.
       - name: Generate changelogs
         run: |
           set -euo pipefail
-          if [ "$MODE" = "preview" ]; then
-            .agents/skills/changelog/scripts/generate-changelogs.sh preview "$REF" --prerelease "$PRERELEASE"
-          else
-            .agents/skills/changelog/scripts/generate-changelogs.sh past --prerelease "$PRERELEASE"
-          fi
+          dotnet tool restore
+          dotnet cake --target=docs-api-diff-past --nugetDiffPrerelease="$PRERELEASE"
 
       - name: Check for changes
         id: check
@@ -102,14 +99,6 @@ jobs:
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Upload API diff artifact (preview mode)
-        if: env.MODE == 'preview'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: api-diff
-          path: output/api-diff/
-          if-no-files-found: warn
 
       - name: Upload changelogs
         if: steps.check.outputs.has_changes == 'true'
@@ -122,9 +111,7 @@ jobs:
   publish:
     name: Create PR
     needs: generate
-    # Only the committed 'past' output is turned into a PR. Preview is artifact-
-    # only, so a manual preview run never opens a PR.
-    if: needs.generate.outputs.has_changes == 'true' && (github.event_name != 'workflow_dispatch' || inputs.mode == 'past')
+    if: needs.generate.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
