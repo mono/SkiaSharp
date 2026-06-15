@@ -339,10 +339,48 @@ Task ("docs-api-diff-past")
     var baseDir = $"{ROOT_PATH}/output/api-diffs-past";
     CleanDirectories (baseDir);
 
+    // Load versions.json for comparison overrides
+    var versionsConfigPath = $"{ROOT_PATH}/scripts/versions.json";
+    var versionsConfig = new JArray ();
+    if (FileExists (versionsConfigPath)) {
+        Information ("Loading versions.json...");
+        var json = System.IO.File.ReadAllText (versionsConfigPath);
+        var doc = JObject.Parse (json);
+        versionsConfig = (JArray)doc ["versions"];
+    }
+
+    // Helper: check if a version (major.minor.patch) is superseded
+    bool IsSuperseded (string normalizedVersion) {
+        var nv = new NuGetVersion (normalizedVersion);
+        var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+        return versionsConfig.Any (v => (string)v ["version"] == key && (string)v ["status"] == "superseded");
+    }
+
+    // Helper: find compare_to override for a version (match on major.minor.patch)
+    string FindCompareToOverride (string normalizedVersion, NuGetVersion[] allVersions) {
+        var nv = new NuGetVersion (normalizedVersion);
+        var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+        var entry = versionsConfig.FirstOrDefault (v => (string)v ["version"] == key && v ["compare_to"] != null);
+        if (entry == null)
+            return null;
+
+        var compareTo = (string)entry ["compare_to"];
+        // Find the best matching version from allVersions: latest that starts with compare_to prefix
+        var candidates = allVersions
+            .Where (v => $"{v.Major}.{v.Minor}.{v.Patch}" == compareTo)
+            .OrderByDescending (v => v)
+            .ToArray ();
+        return candidates.Length > 0 ? candidates [0].ToNormalizedString () : null;
+    }
+
     Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
+
+    var filter = new NuGetVersions.Filter {
+        IncludePrerelease = NUGET_DIFF_PRERELEASE
+    };
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for NativeAssets as that has nothing but a native binary
@@ -351,11 +389,22 @@ Task ("docs-api-diff-past")
 
         Information ($"Comparing the assemblies in '{id}'...");
 
-        var allVersions = await NuGetVersions.GetAllAsync (id);
+        var allVersions = await NuGetVersions.GetAllAsync (id, filter);
         for (var idx = 0; idx < allVersions.Length; idx++) {
             // get the versions for the diff
             var version = allVersions [idx].ToNormalizedString ();
-            var previous = idx == 0 ? null : allVersions [idx - 1].ToNormalizedString ();
+
+            // skip superseded versions
+            if (IsSuperseded (version)) {
+                Debug ($"Skipping superseded version '{version}' of '{id}'.");
+                continue;
+            }
+
+            // determine the previous version: check for compare_to override first
+            var previous = FindCompareToOverride (version, allVersions);
+            if (previous == null && idx > 0)
+                previous = allVersions [idx - 1].ToNormalizedString ();
+
             Information ($"Comparing version '{previous}' vs '{version}' of '{id}'...");
 
             // pre-cache so we can have better logs

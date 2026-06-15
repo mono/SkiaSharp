@@ -10,6 +10,9 @@ Commands:
     python3 generate-release-notes.py --branch release/3.119.x
     python3 generate-release-notes.py --branch release/4.147.0-preview.1
 
+    # Process ALL branches (main + all release/*), skip unchanged files
+    python3 generate-release-notes.py --all
+
     # Regenerate TOC.yml and index.md from files on disk + create upcoming version file
     python3 generate-release-notes.py --update-toc
 
@@ -18,12 +21,19 @@ with a YAML front-matter header containing metadata (branch, version, status, di
 range, PR count) followed by the raw PR list. AI then rewrites this file with
 polished content. TOC and index are regenerated automatically.
 
+The --all command iterates every branch and only writes files whose PR count or
+diff range has changed (idempotent). Use this for automated workflows.
+
+Reads scripts/versions.json (if present) for comparison overrides and supersession
+markers, falling back to auto-detection for versions not listed in the config.
+
 Requirements: git, Python 3.7+
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -45,8 +55,56 @@ SKIA_PR_PATTERNS = [
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 
+# Versions config (loaded lazily from scripts/versions.json)
+_VERSIONS_CONFIG = None  # type: Optional[list[dict]]
 
-# ── Helpers ──────────────────────────────────────────────────────────
+VERSIONS_JSON_PATH = Path("scripts/versions.json")
+
+
+def load_versions_config():
+    # type: () -> list[dict]
+    """Load scripts/versions.json override config (cached)."""
+    global _VERSIONS_CONFIG
+    if _VERSIONS_CONFIG is not None:
+        return _VERSIONS_CONFIG
+    if VERSIONS_JSON_PATH.exists():
+        with open(VERSIONS_JSON_PATH) as f:
+            data = json.load(f)
+        _VERSIONS_CONFIG = data.get("versions", [])
+    else:
+        _VERSIONS_CONFIG = []
+    return _VERSIONS_CONFIG
+
+
+def _versions_config_lookup(version):
+    # type: (str) -> Optional[dict]
+    """Find an entry in versions.json matching a base version (X.Y.Z)."""
+    config = load_versions_config()
+    for entry in config:
+        if entry.get("version") == version:
+            return entry
+    return None
+
+
+def _is_content_unchanged(output_path, new_prs_count, new_diff_range):
+    # type: (Path, int, str) -> bool
+    """Check if the existing file has the same PR count and diff range.
+
+    Reads the metadata from the HTML comment block at the top of the file.
+    Returns True if the content would be identical (skip writing).
+    """
+    if not output_path.exists():
+        return False
+    content = output_path.read_text()
+    # Extract prs count
+    m_prs = re.search(r"^\s*prs:\s*(\d+)", content, re.MULTILINE)
+    # Extract diff range
+    m_diff = re.search(r"^\s*diff:\s*(\S+)", content, re.MULTILINE)
+    if not m_prs or not m_diff:
+        return False
+    existing_prs = int(m_prs.group(1))
+    existing_diff = m_diff.group(1)
+    return existing_prs == new_prs_count and existing_diff == new_diff_range
 
 
 def _removeprefix(s, prefix):
@@ -194,7 +252,14 @@ def detect_superseded_by(version, all_branches):
 
 def resolve_superseded_by(version, all_branches):
     # type: (str, list[str]) -> Optional[str]
-    """Whether a version was superseded (auto-detected)."""
+    """Whether a version was superseded. Checks versions.json first, then auto-detects."""
+    entry = _versions_config_lookup(version)
+    if entry:
+        if entry.get("status") == "superseded" and entry.get("superseded_by"):
+            return entry["superseded_by"]
+        # If config explicitly lists this version without superseded status, not superseded
+        if entry.get("status") and entry["status"] != "superseded":
+            return None
     return detect_superseded_by(version, all_branches)
 
 
@@ -556,6 +621,18 @@ def determine_diff_range(branch):
                 "scripts/azure-templates-variables.yml")
         minor = minor_group(version)
 
+        # Check versions.json for explicit compare_to override for main's version
+        config_entry = _versions_config_lookup(version)
+        if config_entry and config_entry.get("compare_to"):
+            compare_to = config_entry["compare_to"]
+            compare_branches = [b for b in all_branches
+                                if b.startswith("release/{}".format(compare_to))
+                                and not b.endswith(".x")]
+            if compare_branches:
+                compare_branches.sort(key=release_branch_sort_key)
+                return ("origin/{}".format(compare_branches[-1]),
+                        "origin/main", version)
+
         # Find latest release branch for the same minor. These are the active
         # line for the upcoming version, so the latest one is always the base
         # (main shows work beyond the most recent preview cut).
@@ -632,6 +709,31 @@ def determine_diff_range(branch):
     minor_num = int(m_ver.group(2))
     patch = int(m_ver.group(3))
     version = version_from_branch(branch)  # strips preview suffix
+
+    # Check versions.json for explicit compare_to override
+    config_entry = _versions_config_lookup(version)
+    if config_entry and config_entry.get("compare_to"):
+        compare_to = config_entry["compare_to"]
+        # Find the best matching release branch for the compare_to version
+        compare_branches = [b for b in all_branches
+                            if b.startswith("release/{}".format(compare_to))
+                            and not b.endswith(".x")]
+        if compare_branches:
+            compare_branches.sort(key=release_branch_sort_key)
+            return ("origin/{}".format(compare_branches[-1]),
+                    "origin/{}".format(branch),
+                    version)
+        # No branch — try stable branch directly
+        exact_branch = "release/{}".format(compare_to)
+        if exact_branch in all_branches:
+            return ("origin/{}".format(exact_branch),
+                    "origin/{}".format(branch),
+                    version)
+        # Last fallback for config override: look for a tag
+        tag_sha = run(["git", "rev-parse", "v{}".format(compare_to)],
+                      check=False).strip()
+        if tag_sha:
+            return (tag_sha, "origin/{}".format(branch), version)
 
     # Find the cumulative base: previous stable (or previous minor for Z==0)
     base = find_previous_stable_base(all_branches, major, minor_num, patch)
@@ -1127,14 +1229,21 @@ def cmd_branch(branch):
         metadata["superseded_by"] = superseded_by
     if supersedes:
         metadata["supersedes"] = supersedes
-    content = format_pr_list(prs, metadata)
 
     output_path = RELEASES_DIR / filename
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(content)
-    print("Wrote {}".format(output_path))
 
-    files_to_polish = [str(output_path)]
+    # Skip writing if the existing file already has the same data
+    diff_range_str = "{}..{}".format(from_display, to_display)
+    if _is_content_unchanged(output_path, len(prs), diff_range_str):
+        print("Skipping {} (unchanged: {} PRs, diff {})".format(
+            output_path, len(prs), diff_range_str))
+        files_to_polish = []
+    else:
+        content = format_pr_list(prs, metadata)
+        output_path.write_text(content)
+        print("Wrote {}".format(output_path))
+        files_to_polish = [str(output_path)]
 
     # When a versioned branch is pushed, also regenerate the unreleased
     # file(s) — the diff range for main or the .x branch may have changed
@@ -1239,6 +1348,157 @@ def _regen_unreleased(trigger_branch):
 # ── Main ─────────────────────────────────────────────────────────────
 
 
+def cmd_all():
+    # type: () -> None
+    """Process all branches (main + all release/*). Skip unchanged files.
+
+    This is the idempotent "regenerate everything" mode. It iterates over
+    all known branches, generates release notes for each, but only writes
+    files that have genuinely changed (new PRs landed). The "Files to polish"
+    output only includes files that were actually written.
+    """
+    print("Fetching remote branches...")
+    try:
+        run(["git", "fetch", "origin", "--unshallow", "--quiet"], check=False)
+        run(["git", "fetch", "origin",
+             "refs/heads/release/*:refs/remotes/origin/release/*",
+             "refs/heads/main:refs/remotes/origin/main",
+             "--quiet"], check=True)
+    except subprocess.CalledProcessError:
+        print("ERROR: git fetch failed.")
+        sys.exit(1)
+
+    all_branches = list_remote_release_branches()
+    if not all_branches:
+        print("ERROR: No release branches found after fetch.")
+        sys.exit(1)
+
+    # Collect all branches to process: main + all release branches
+    branches_to_process = ["main"] + all_branches
+
+    # Filter out superseded versions (no point regenerating their page)
+    config = load_versions_config()
+    superseded_versions = {
+        entry["version"] for entry in config
+        if entry.get("status") == "superseded"
+    }
+
+    files_to_polish = []
+    skipped_count = 0
+    processed_count = 0
+
+    for branch in branches_to_process:
+        if branch == "main":
+            version = get_upcoming_version()
+            if not version:
+                print("WARNING: Cannot determine main version, skipping main.")
+                continue
+        else:
+            version = version_from_branch(branch)
+
+        # Skip superseded versions
+        if version in superseded_versions:
+            print("Skipping superseded version {} ({})".format(version, branch))
+            skipped_count += 1
+            continue
+
+        print("\n--- Processing: {} (version: {}) ---".format(branch, version))
+        try:
+            from_ref, to_ref, ver = determine_diff_range(branch)
+        except (RuntimeError, subprocess.CalledProcessError) as e:
+            print("  WARNING: Could not determine diff range: {}".format(e))
+            continue
+
+        from_display = _removeprefix(from_ref, "origin/")
+        to_display = _removeprefix(to_ref, "origin/")
+        if re.match(r"^[0-9a-f]{7,}$", from_display):
+            from_display = from_display[:12]
+
+        # Determine output filename
+        is_main_branch = (branch == "main")
+        is_servicing = branch.endswith(".x")
+        if is_main_branch or is_servicing:
+            filename = "{}-unreleased.md".format(ver)
+        else:
+            filename = "{}.md".format(ver)
+
+        output_path = RELEASES_DIR / filename
+
+        # Determine status
+        status = "unreleased"
+        if not is_main_branch and not is_servicing:
+            tags = run(["git", "tag", "-l", "v{}*".format(ver)], check=False)
+            has_stable = False
+            has_preview = False
+            for tag in tags.splitlines():
+                tag = tag.strip()
+                if not tag:
+                    continue
+                if "-preview" in tag or "-rc" in tag:
+                    has_preview = True
+                else:
+                    has_stable = True
+            if has_stable:
+                status = "stable"
+            elif has_preview:
+                status = "preview"
+
+        # Get PRs
+        prs = get_prs_from_diff(from_ref, to_ref)
+        print("  Found {} PR(s), diff: {}..{}".format(
+            len(prs), from_display, to_display))
+
+        # Skip-unchanged check
+        diff_range_str = "{}..{}".format(from_display, to_display)
+        if _is_content_unchanged(output_path, len(prs), diff_range_str):
+            print("  Skipping {} (unchanged)".format(output_path))
+            skipped_count += 1
+            continue
+
+        # Supersede markers
+        superseded_by = None
+        if not is_main_branch and not is_servicing:
+            superseded_by = resolve_superseded_by(ver, all_branches)
+            if superseded_by:
+                status = "preview"
+        supersedes = detect_supersedes(ver, all_branches)
+
+        metadata = {
+            "branch": branch,
+            "version": ver,
+            "status": status,
+            "from": from_display,
+            "to": to_display,
+        }
+        if superseded_by:
+            metadata["superseded_by"] = superseded_by
+        if supersedes:
+            metadata["supersedes"] = supersedes
+
+        content = format_pr_list(prs, metadata)
+        RELEASES_DIR.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(content)
+        print("  Wrote {}".format(output_path))
+        files_to_polish.append(str(output_path))
+        processed_count += 1
+
+    # Regenerate TOC and index
+    cmd_update_toc()
+
+    # Print summary for the AI agent
+    print("")
+    print("========================================")
+    print("Processed: {}, Skipped (unchanged): {}".format(
+        processed_count, skipped_count))
+    print("Files to polish:")
+    if files_to_polish:
+        for f in files_to_polish:
+            print("  - {}".format(f))
+    else:
+        print("  (none — all files up to date)")
+    print("========================================")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Fetch SkiaSharp release data for the website",
@@ -1249,6 +1509,8 @@ def main():
             "Raw PR data -> releases/4.147.0.md\n"
             "  %(prog)s --branch release/3.119.x            "
             "Raw PR data -> releases/3.119.5.md\n"
+            "  %(prog)s --all                               "
+            "Process all branches (skip unchanged)\n"
             "  %(prog)s --update-toc                        "
             "Regenerate TOC + index\n"
         ),
@@ -1257,20 +1519,26 @@ def main():
         "--branch",
         help="Diff branch against its predecessor and write raw PR data")
     parser.add_argument(
+        "--all", action="store_true",
+        help="Process all branches (main + release/*), skip unchanged files")
+    parser.add_argument(
         "--update-toc", action="store_true",
         help="Regenerate TOC.yml + index.md")
 
     args = parser.parse_args()
 
-    if not args.branch and not args.update_toc:
+    if not args.branch and not args.update_toc and not args.all:
         parser.print_help()
         sys.exit(1)
 
-    if args.branch and args.update_toc:
-        parser.error("Specify only one of --branch or --update-toc")
+    num_modes = sum([bool(args.branch), args.update_toc, args.all])
+    if num_modes > 1:
+        parser.error("Specify only one of --branch, --all, or --update-toc")
 
     if args.update_toc:
         cmd_update_toc()
+    elif args.all:
+        cmd_all()
     elif args.branch:
         cmd_branch(args.branch)
 

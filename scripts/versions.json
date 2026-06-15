@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Shared version comparison config for API changelogs and release notes. Override-only: only declare versions that need non-default comparison baselines or supersession tracking.",
+  "versions": [
+    {
+      "version": "3.0.0",
+      "status": "superseded",
+      "superseded_by": "3.116.0",
+      "$comment": "3.0.x series was replaced by the 3.116 rewrite"
+    },
+    {
+      "version": "3.116.0",
+      "compare_to": "2.88.9",
+      "supersedes": ["3.0.0"],
+      "$comment": "First stable after the rewrite; compare against last 2.x stable"
+    },
+    {
+      "version": "3.118.0",
+      "status": "superseded",
+      "superseded_by": "3.119.0",
+      "$comment": "3.118.x never went stable"
+    },
+    {
+      "version": "3.119.0",
+      "compare_to": "3.116.1",
+      "supersedes": ["3.118.0"],
+      "$comment": "Skips over 3.118.x which never shipped stable"
+    },
+    {
+      "version": "3.119.3",
+      "status": "superseded",
+      "superseded_by": "3.119.4",
+      "$comment": "Hotfix 3.119.4 replaced 3.119.3"
+    },
+    {
+      "version": "3.119.4",
+      "compare_to": "3.119.2",
+      "supersedes": ["3.119.3"],
+      "$comment": "Supersedes 3.119.3; compare against last good patch before it"
+    },
+    {
+      "version": "4.147.0",
+      "status": "superseded",
+      "superseded_by": "4.148.0",
+      "$comment": "4.147.x was preview-only, never went stable"
+    },
+    {
+      "version": "4.148.0",
+      "compare_to": "3.119.4",
+      "supersedes": ["4.147.0"],
+      "$comment": "First 4.x RC; compare against last stable (3.119.4)"
+    },
+    {
+      "version": "4.150.0",
+      "compare_to": "4.148.0",
+      "$comment": "Compares against previous 4.x release"
+    }
+  ]
+}
