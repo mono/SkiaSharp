@@ -46,24 +46,6 @@ stages:
           cacheJob: native/android
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm64
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|x64 (Win)
-        parameters:
-          name: native_tizen_x64_windows
-          displayName: Tizen x64
-          buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          target: externals-tizen
-          cacheJob: native/tizen
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x64
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|arm64 (Win)
-        parameters:
-          name: native_tizen_arm64_windows
-          displayName: Tizen arm64
-          buildAgent: ${{ parameters.buildAgentWindowsNative }}
-          target: externals-tizen
-          cacheJob: native/tizen
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Win32|x86 (Win)
         parameters:
           name: native_win32_x86_windows

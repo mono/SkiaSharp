@@ -23,7 +23,6 @@ parameters:
   dockerArgs: ''                                # any additional arguments to pass to docker build
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installAndroidSdk: true                       # whether or not to install the Android SDK
-  installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
   installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
@@ -173,12 +172,6 @@ jobs:
           - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
             - pwsh: .\scripts\infra\native\android\install-android-ndk.ps1
               displayName: Install the Android NDK
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          # install tizen
-          - ${{ if and(eq(parameters.installTizenSdk, 'true'), contains(parameters.name, '_tizen_')) }}:
-            - pwsh: .\scripts\infra\native\tizen\install-tizen.ps1
-              displayName: Install the Tizen SDK
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install llvm

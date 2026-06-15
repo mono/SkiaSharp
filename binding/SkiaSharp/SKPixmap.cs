@@ -159,16 +159,27 @@ namespace SkiaSharp
 			if (bpp <= 0)
 				return null;
 
-			var spanLength = 0;
-			var spanOffset = 0;
+			if (x < 0 || x >= info.Width)
+				throw new ArgumentOutOfRangeException (nameof (x));
+			if (y < 0 || y >= info.Height)
+				throw new ArgumentOutOfRangeException (nameof (y));
+
+			// use the actual stride of the pixmap as it may differ from
+			// (Width * BytesPerPixel) when the pixmap is a subset of a larger one
+			var rowBytes = RowBytes;
+
+			int spanLength;
+			int spanOffset;
 			if (typeof (T) == typeof (byte))
 			{
-				// byte is always valid
+				// byte is always valid, so work in bytes
 
-				spanLength = info.BytesSize;
-
-				if (x != 0 || y != 0)
-					spanOffset = info.GetPixelBytesOffset (x, y);
+				// the span covers from the first pixel up to and including the
+				// last valid pixel of the last row, accounting for row padding
+				spanLength = checked((info.Height - 1) * rowBytes + info.Width * bpp);
+				spanOffset = (x != 0 || y != 0)
+					? info.GetPixelBytesOffset (x, y, rowBytes)
+					: 0;
 			}
 			else
 			{
@@ -178,10 +189,21 @@ namespace SkiaSharp
 				if (bpp != size)
 					throw new ArgumentException ($"Size of T ({size}) is not the same as the size of each pixel ({bpp}).", nameof (T));
 
-				spanLength = checked(info.Width * info.Height);
+				// a typed span cannot represent a row stride that is not a whole
+				// number of T elements, but only when the span actually spans
+				// multiple rows; a single-row pixmap never crosses the stride so
+				// any stride is fine (the byte overload supports any stride too)
+				if (info.Height > 1 && rowBytes % size != 0)
+					throw new ArgumentException ($"The row stride ({rowBytes}) is not a multiple of the size of each pixel ({size}).");
 
-				if (x != 0 || y != 0)
-					spanOffset = checked(y * info.Width + x);
+				// work in T elements: since each pixel is exactly one T, the only
+				// unit conversion is the stride from bytes to elements
+				var rowLength = rowBytes / size;
+
+				spanLength = checked((info.Height - 1) * rowLength + info.Width);
+				spanOffset = (x != 0 || y != 0)
+					? checked(y * rowLength + x)
+					: 0;
 			}
 
 			var addr = SkiaApi.sk_pixmap_get_writable_addr (Handle);
