@@ -252,6 +252,96 @@ Task ("docs-download-output")
     await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 });
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHARED API-DIFF HELPERS
+//
+// The two API-changelog targets — docs-api-diff ("current": diff the unpublished
+// local CI build against the feed) and docs-api-diff-past ("historical":
+// regenerate changelogs for every published version) — answer different
+// questions and take a different NEW side (a local .nupkg vs a published
+// version). But the actual diff mechanics and the version-comparison rules are
+// identical, so they live here and both targets call them. This keeps the two
+// targets thin and guarantees they treat supersession the same way.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Load the shared version-comparison config (scripts/versions.json). This is the
+// single source of truth for how versions relate to each other. It is "override
+// only": versions NOT listed fall back to the default behaviour of diffing
+// against the immediately-preceding published version. Returns the "versions"
+// array (empty when the file is absent). See versions.json for the schema.
+JArray LoadVersionsConfig ()
+{
+    var path = $"{ROOT_PATH}/scripts/versions.json";
+    if (!FileExists (path))
+        return new JArray ();
+    var doc = JObject.Parse (System.IO.File.ReadAllText (path));
+    return (JArray)doc ["versions"] ?? new JArray ();
+}
+
+// A "superseded" version is one that was previewed but never shipped stable
+// (e.g. 4.147 was abandoned in favour of 4.148). It still gets its OWN changelog
+// generated — it is only excluded from acting as a *baseline* for other
+// versions, so a later release diffs against the last real predecessor instead.
+// Matched on major.minor.patch so all previews of that line count.
+bool IsVersionSuperseded (JArray config, string normalizedVersion)
+{
+    var nv = new NuGetVersion (normalizedVersion);
+    var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+    return config.Any (v => (string)v ["version"] == key && (string)v ["status"] == "superseded");
+}
+
+// Return the explicit "compare_to" baseline declared for a version in
+// versions.json (e.g. 4.148 → 3.119.4, deliberately skipping 4.147), resolved to
+// the newest actual package that matches that major.minor.patch. Returns null
+// when no override exists, in which case the caller falls back to a walk-back.
+string FindCompareToBaseline (JArray config, string normalizedVersion, NuGetVersion[] allVersions)
+{
+    var nv = new NuGetVersion (normalizedVersion);
+    var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+    var entry = config.FirstOrDefault (v => (string)v ["version"] == key && v ["compare_to"] != null);
+    if (entry == null)
+        return null;
+
+    var compareTo = (string)entry ["compare_to"];
+    var candidates = allVersions
+        .Where (v => $"{v.Major}.{v.Minor}.{v.Patch}" == compareTo)
+        .OrderByDescending (v => v)
+        .ToArray ();
+    return candidates.Length > 0 ? candidates [0].ToNormalizedString () : null;
+}
+
+// Run the standard two-pass diff (breaking-only, then full/non-breaking) and copy
+// the resulting markdown into changelogs/{id}/{changelogVersion}. The two passes
+// produce the {dll}.breaking.md and {dll}.md files respectively.
+//
+// Overload 1 — NEW side is an unpublished local .nupkg (the current CI build).
+async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVersion, PackageArchiveReader newReader, string changelogVersion, string diffRoot)
+{
+    comparer.MarkdownDiffFileExtension = ".breaking.md";
+    comparer.IgnoreNonBreakingChanges = true;
+    await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newReader, diffRoot);
+
+    comparer.MarkdownDiffFileExtension = null;
+    comparer.IgnoreNonBreakingChanges = false;
+    await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newReader, diffRoot);
+
+    CopyChangelogs (diffRoot, id, changelogVersion);
+}
+
+// Overload 2 — NEW side is a published feed version (historical regeneration).
+async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVersion, string newVersion, string diffRoot)
+{
+    comparer.MarkdownDiffFileExtension = ".breaking.md";
+    comparer.IgnoreNonBreakingChanges = true;
+    await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newVersion, diffRoot);
+
+    comparer.MarkdownDiffFileExtension = null;
+    comparer.IgnoreNonBreakingChanges = false;
+    await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newVersion, diffRoot);
+
+    CopyChangelogs (diffRoot, id, newVersion);
+}
+
 Task ("docs-api-diff")
     .Does (async () =>
 {
@@ -268,6 +358,12 @@ Task ("docs-api-diff")
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
+
+    // Shared version-comparison config — same source of truth used by
+    // docs-api-diff-past. Here it lets us pick a sensible baseline for the
+    // unpublished local build instead of blindly diffing against the newest
+    // feed version (which could be a superseded preview).
+    var versionsConfig = LoadVersionsConfig ();
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
@@ -295,8 +391,25 @@ Task ("docs-api-diff")
             continue;
         }
 
-        var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
-        Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
+        // Pick the baseline to diff the local build against:
+        //   1. An explicit compare_to override in versions.json wins.
+        //   2. Otherwise use the newest published version that is NOT superseded
+        //      and is not the build's own version — this skips abandoned preview
+        //      lines (e.g. 4.147) the same way docs-api-diff-past does.
+        var allVersions = await NuGetVersions.GetAllAsync (id, filter);
+        var latestVersion = FindCompareToBaseline (versionsConfig, version, allVersions);
+        if (latestVersion == null) {
+            foreach (var candidate in allVersions.OrderByDescending (v => v)) {
+                var normalized = candidate.ToNormalizedString ();
+                if (normalized == localNugetVersion)
+                    continue;
+                if (IsVersionSuperseded (versionsConfig, normalized))
+                    continue;
+                latestVersion = normalized;
+                break;
+            }
+        }
+        Debug ($"Version '{latestVersion}' is the baseline for '{id}'...");
 
         // pre-cache so we can have better logs
         if (!string.IsNullOrEmpty (latestVersion)) {
@@ -308,16 +421,8 @@ Task ("docs-api-diff")
         Debug ($"Running a diff on '{latestVersion}' vs '{localNugetVersion}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
         using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id}.{localNugetVersion}.nupkg")) {
-            // run the diff with just the breaking changes
-            comparer.MarkdownDiffFileExtension = ".breaking.md";
-            comparer.IgnoreNonBreakingChanges = true;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
-            // run the diff on everything
-            comparer.MarkdownDiffFileExtension = null;
-            comparer.IgnoreNonBreakingChanges = false;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
+            await RunBreakingAndFullDiff (comparer, id, latestVersion, reader, version, diffRoot);
         }
-        CopyChangelogs (diffRoot, id, version);
 
         // copy pretty version
         foreach (var md in GetFiles ($"{diffRoot}/*/*.md")) {
@@ -339,50 +444,11 @@ Task ("docs-api-diff-past")
     var baseDir = $"{ROOT_PATH}/output/api-diffs-past";
     CleanDirectories (baseDir);
 
-    // Load the shared version-comparison config (scripts/versions.json). This is
-    // the single source of truth for how versions relate to each other. It is
-    // "override only": versions NOT listed fall back to the default behaviour of
-    // diffing against the immediately-preceding published version. See the file
-    // header in versions.json for the schema and rationale.
-    var versionsConfigPath = $"{ROOT_PATH}/scripts/versions.json";
-    var versionsConfig = new JArray ();
-    if (FileExists (versionsConfigPath)) {
-        Information ("Loading versions.json...");
-        var json = System.IO.File.ReadAllText (versionsConfigPath);
-        var doc = JObject.Parse (json);
-        versionsConfig = (JArray)doc ["versions"];
-    }
-
-    // A "superseded" version is one that was previewed but never shipped stable
-    // (e.g. 4.147 was abandoned in favour of 4.148). It still gets its OWN
-    // changelog generated — it is only excluded from acting as a *baseline* for
-    // other versions, so a later release diffs against the last real predecessor
-    // instead. Matched on major.minor.patch so all previews of that line count.
-    bool IsSuperseded (string normalizedVersion) {
-        var nv = new NuGetVersion (normalizedVersion);
-        var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
-        return versionsConfig.Any (v => (string)v ["version"] == key && (string)v ["status"] == "superseded");
-    }
-
-    // Return the explicit "compare_to" baseline for a version if versions.json
-    // declares one (e.g. 4.148 → 3.119.4, deliberately skipping 4.147). Resolves
-    // the configured major.minor.patch to the newest actual package that matches
-    // (so "3.119.4" picks the latest 3.119.4* on the feed). Returns null when no
-    // override exists, in which case the caller falls back to the walk-back below.
-    string FindCompareToOverride (string normalizedVersion, NuGetVersion[] allVersions) {
-        var nv = new NuGetVersion (normalizedVersion);
-        var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
-        var entry = versionsConfig.FirstOrDefault (v => (string)v ["version"] == key && v ["compare_to"] != null);
-        if (entry == null)
-            return null;
-
-        var compareTo = (string)entry ["compare_to"];
-        var candidates = allVersions
-            .Where (v => $"{v.Major}.{v.Minor}.{v.Patch}" == compareTo)
-            .OrderByDescending (v => v)
-            .ToArray ();
-        return candidates.Length > 0 ? candidates [0].ToNormalizedString () : null;
-    }
+    // Shared version-comparison config — see LoadVersionsConfig and the
+    // versions.json header. Drives both the supersession skips and the
+    // compare_to overrides below.
+    Information ("Loading versions.json...");
+    var versionsConfig = LoadVersionsConfig ();
 
     Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
@@ -416,11 +482,11 @@ Task ("docs-api-diff-past")
             // 4.148 we walk past all of 4.147.* (superseded) and land on 3.119.4.
             // The same walk-back is used for superseded versions themselves, so
             // e.g. each 4.147 preview diffs cumulatively against 3.119.4.
-            var previous = FindCompareToOverride (version, allVersions);
+            var previous = FindCompareToBaseline (versionsConfig, version, allVersions);
             if (previous == null) {
                 for (var j = idx - 1; j >= 0; j--) {
                     var candidate = allVersions [j].ToNormalizedString ();
-                    if (!IsSuperseded (candidate)) {
+                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
                         previous = candidate;
                         break;
                     }
@@ -440,15 +506,7 @@ Task ("docs-api-diff-past")
             // generate the diff and copy to the changelogs
             Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
             var diffRoot = $"{baseDir}/{id}/{version}";
-            // run the diff with just the breaking changes
-            comparer.MarkdownDiffFileExtension = ".breaking.md";
-            comparer.IgnoreNonBreakingChanges = true;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, previous, version, diffRoot);
-            // run the diff on everything
-            comparer.MarkdownDiffFileExtension = null;
-            comparer.IgnoreNonBreakingChanges = false;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, previous, version, diffRoot);
-            CopyChangelogs (diffRoot, id, version);
+            await RunBreakingAndFullDiff (comparer, id, previous, version, diffRoot);
 
             Debug ($"Diff complete of version '{version}' of '{id}'.");
         }
