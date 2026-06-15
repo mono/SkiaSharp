@@ -1,0 +1,163 @@
+name: Auto-milestone PRs
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: ['main', 'release/**']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Log actions without making changes'
+        type: boolean
+        default: true
+      pr-number:
+        description: 'PR number to process (required for manual runs)'
+        type: number
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+concurrency:
+  group: auto-milestone-${{ github.event.pull_request.number || github.event.inputs.pr-number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  assign-milestone:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/auto-milestone/auto-milestone.js
+            scripts/azure-templates-variables.yml
+          sparse-checkout-cone-mode: false
+
+      - name: Assign milestone
+        uses: actions/github-script@v7
+        env:
+          # Evaluates to 'true' only for workflow_dispatch with dry-run checked.
+          # For pull_request_target: (false && _) || false → 'false'
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || false }}
+        with:
+          script: |
+            const fs = require('fs');
+            const { resolveMilestone, findOrCreateMilestone, parsePipelineVariables } = require('./.github/workflows/auto-milestone/auto-milestone.js');
+            const DRY_RUN = process.env.DRY_RUN === 'true';
+
+            if (DRY_RUN) core.info('DRY RUN — no changes will be made');
+
+            // --- Resolve PR ---
+            let pr;
+            if (context.payload.pull_request) {
+              pr = context.payload.pull_request;
+            } else {
+              const prNumber = Number(context.payload.inputs?.['pr-number']);
+              if (!Number.isSafeInteger(prNumber) || prNumber <= 0) {
+                core.setFailed(`Invalid PR number: ${context.payload.inputs?.['pr-number']}`);
+                return;
+              }
+              const { data } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              pr = data;
+              if (!pr.merged) {
+                core.setFailed(`PR #${prNumber} has not been merged`);
+                return;
+              }
+            }
+
+            // Skip if already milestoned
+            if (pr.milestone) {
+              core.info(`PR #${pr.number} already has milestone "${pr.milestone.title}", skipping`);
+              return;
+            }
+
+            core.info(`PR #${pr.number} merged to ${pr.base.ref}`);
+
+            // --- Read version from pipeline variables ---
+            let skiaSharpVersion = null;
+            try {
+              const content = fs.readFileSync('scripts/azure-templates-variables.yml', 'utf8');
+              skiaSharpVersion = parsePipelineVariables(content);
+            } catch (e) {
+              core.warning(`Could not read azure-templates-variables.yml: ${e.message}`);
+            }
+
+            // --- Fetch all milestones (single call avoids TOCTOU race) ---
+            const allMilestones = await github.paginate(github.rest.issues.listMilestones, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100,
+            });
+            const openMilestones = allMilestones.filter(m => m.state === 'open');
+            const closedMilestones = allMilestones.filter(m => m.state === 'closed');
+
+            // --- Resolve milestone name ---
+            const milestoneName = resolveMilestone(
+              skiaSharpVersion,
+              openMilestones.map(m => m.title)
+            );
+
+            if (!milestoneName) {
+              core.warning(`Could not determine milestone (version: ${skiaSharpVersion})`);
+              return;
+            }
+
+            core.info(`Resolved milestone: "${milestoneName}"`);
+
+            // --- Find or create milestone ---
+            const milestone = await findOrCreateMilestone({
+              milestoneName,
+              openMilestones: openMilestones.map(m => ({ title: m.title, number: m.number })),
+              closedMilestones: closedMilestones.map(m => ({ title: m.title, number: m.number })),
+              createMilestone: async (title) => {
+                const { data } = await github.rest.issues.createMilestone({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title,
+                });
+                return { title: data.title, number: data.number };
+              },
+              listMilestones: async () => {
+                const refreshed = await github.paginate(github.rest.issues.listMilestones, {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'all',
+                  per_page: 100,
+                });
+                return refreshed.map(m => ({ title: m.title, number: m.number }));
+              },
+              dryRun: DRY_RUN,
+              log: core.info,
+            });
+
+            if (DRY_RUN) {
+              const action = milestone ? `assign existing milestone "${milestoneName}" (#${milestone.number})` : `create and assign milestone "${milestoneName}"`;
+              core.info(`[DRY RUN] Would ${action} to PR #${pr.number}`);
+              return;
+            }
+
+            if (!milestone) {
+              core.setFailed(`Failed to find or create milestone "${milestoneName}"`);
+              return;
+            }
+
+            // --- Apply milestone ---
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              milestone: milestone.number,
+            });
+
+            core.info(`✅ Assigned milestone "${milestoneName}" to PR #${pr.number}`);
