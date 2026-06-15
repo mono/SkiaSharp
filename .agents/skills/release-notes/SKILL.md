@@ -46,6 +46,20 @@ python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch 
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
 ```
 
+To regenerate **every** branch in one idempotent pass (this is what the
+`update-release-notes` workflow runs), use `--all`:
+
+```bash
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --all
+```
+
+`--all` loops over `main` plus every `release/*` branch and regenerates each
+version's raw data, but **only rewrites files that actually changed** (same PR
+count AND same diff range ⇒ skipped, so the AI never re-polishes an unchanged
+page). Superseded versions are still generated — they keep their own page; the
+supersede marker only excludes them from being a diff *baseline*. The "Files to
+polish" output therefore lists only genuinely-changed pages.
+
 This writes raw PR data to `documentation/docfx/releases/{version}.md` or
 `documentation/docfx/releases/{version}-unreleased.md` depending on the branch type,
 and regenerates TOC/index. All data comes from git history — no API calls or tokens needed.
@@ -127,14 +141,44 @@ configuration is normally required:
    to `4.147.0`, `3.119.4` to `3.119.3`, and `3.119.0` to `3.118.0` — automatically, without
    the AI having to infer it from the diff base.
 
-> Detection is purely tag/branch/`main`-version based, so no configuration file is needed. (If a
-> manual override is ever required it can be reintroduced later; for now the automatic
-> behaviour is the only path.)
+> Detection is automatic (tag/branch/`main`-version based), so **no configuration is
+> normally required**. When the automatic heuristic is wrong — most importantly for
+> **preview-only versions that never ship a stable tag** (e.g. `4.147`, `4.148-rc`) — the
+> shared `scripts/versions.json` override file takes priority. See
+> [Configuration: `scripts/versions.json`](#configuration-scriptsversionsjson) below.
 
 When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
 header and add a one-line note in Highlights that the work rolled up into the successor.
 When polishing a **successor** page, keep the script-generated *"Supersedes …"* note and add a
 one-line note in Highlights that the skipped preview work is rolled up cumulatively.
+
+### Configuration: `scripts/versions.json`
+
+`scripts/versions.json` is a small, override-only config **shared with the
+`changelog` (API diff) skill** so both systems pick the same baselines and
+supersession relationships. The script reads it first and falls back to the
+automatic tag/branch heuristic for anything not listed. You normally only edit it
+a few times a year. Entry shape:
+
+```json
+{
+  "version": "4.148.0",
+  "compare_to": "3.119.4",
+  "supersedes": ["4.147.0"]
+}
+```
+
+- `status: "superseded"` + `superseded_by` — the version still gets its own page
+  but is never used as a *baseline* when diffing other versions. This is the
+  authoritative override for preview-only minors like `4.147` that the stable-tag
+  heuristic can't always classify on its own.
+- `compare_to` — force a specific diff baseline (matched on `major.minor.patch`
+  prefix). Takes priority over the automatic walk-back.
+- `supersedes` — the inverse back-link, so the successor page renders its
+  *"Supersedes …"* note without inferring it.
+
+Because the same file drives the API changelogs, a supersession declared once is
+reflected consistently in both the release notes and the changelogs.
 
 ### Step 4 — Write polished pages
 

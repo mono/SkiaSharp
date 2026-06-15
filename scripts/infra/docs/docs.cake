@@ -339,7 +339,11 @@ Task ("docs-api-diff-past")
     var baseDir = $"{ROOT_PATH}/output/api-diffs-past";
     CleanDirectories (baseDir);
 
-    // Load versions.json for comparison overrides
+    // Load the shared version-comparison config (scripts/versions.json). This is
+    // the single source of truth for how versions relate to each other. It is
+    // "override only": versions NOT listed fall back to the default behaviour of
+    // diffing against the immediately-preceding published version. See the file
+    // header in versions.json for the schema and rationale.
     var versionsConfigPath = $"{ROOT_PATH}/scripts/versions.json";
     var versionsConfig = new JArray ();
     if (FileExists (versionsConfigPath)) {
@@ -349,14 +353,22 @@ Task ("docs-api-diff-past")
         versionsConfig = (JArray)doc ["versions"];
     }
 
-    // Helper: check if a version (major.minor.patch) is superseded
+    // A "superseded" version is one that was previewed but never shipped stable
+    // (e.g. 4.147 was abandoned in favour of 4.148). It still gets its OWN
+    // changelog generated — it is only excluded from acting as a *baseline* for
+    // other versions, so a later release diffs against the last real predecessor
+    // instead. Matched on major.minor.patch so all previews of that line count.
     bool IsSuperseded (string normalizedVersion) {
         var nv = new NuGetVersion (normalizedVersion);
         var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
         return versionsConfig.Any (v => (string)v ["version"] == key && (string)v ["status"] == "superseded");
     }
 
-    // Helper: find compare_to override for a version (match on major.minor.patch)
+    // Return the explicit "compare_to" baseline for a version if versions.json
+    // declares one (e.g. 4.148 → 3.119.4, deliberately skipping 4.147). Resolves
+    // the configured major.minor.patch to the newest actual package that matches
+    // (so "3.119.4" picks the latest 3.119.4* on the feed). Returns null when no
+    // override exists, in which case the caller falls back to the walk-back below.
     string FindCompareToOverride (string normalizedVersion, NuGetVersion[] allVersions) {
         var nv = new NuGetVersion (normalizedVersion);
         var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
@@ -365,7 +377,6 @@ Task ("docs-api-diff-past")
             return null;
 
         var compareTo = (string)entry ["compare_to"];
-        // Find the best matching version from allVersions: latest that starts with compare_to prefix
         var candidates = allVersions
             .Where (v => $"{v.Major}.{v.Minor}.{v.Patch}" == compareTo)
             .OrderByDescending (v => v)
@@ -378,6 +389,9 @@ Task ("docs-api-diff-past")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
+    // Include prerelease packages when --nugetDiffPrerelease=true. The 4.x line
+    // ships only as prereleases for now, so the workflow passes true to make sure
+    // those versions get changelogs.
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
     };
@@ -391,19 +405,27 @@ Task ("docs-api-diff-past")
 
         var allVersions = await NuGetVersions.GetAllAsync (id, filter);
         for (var idx = 0; idx < allVersions.Length; idx++) {
-            // get the versions for the diff
+            // get the version we are generating a changelog FOR (every version,
+            // including superseded ones, gets its own changelog)
             var version = allVersions [idx].ToNormalizedString ();
 
-            // skip superseded versions
-            if (IsSuperseded (version)) {
-                Debug ($"Skipping superseded version '{version}' of '{id}'.");
-                continue;
-            }
-
-            // determine the previous version: check for compare_to override first
+            // Pick the baseline to diff against:
+            //   1. An explicit compare_to override in versions.json wins.
+            //   2. Otherwise walk back to the most recent NON-superseded version.
+            // Step 2 is what makes a skipped line transparent: when generating
+            // 4.148 we walk past all of 4.147.* (superseded) and land on 3.119.4.
+            // The same walk-back is used for superseded versions themselves, so
+            // e.g. each 4.147 preview diffs cumulatively against 3.119.4.
             var previous = FindCompareToOverride (version, allVersions);
-            if (previous == null && idx > 0)
-                previous = allVersions [idx - 1].ToNormalizedString ();
+            if (previous == null) {
+                for (var j = idx - 1; j >= 0; j--) {
+                    var candidate = allVersions [j].ToNormalizedString ();
+                    if (!IsSuperseded (candidate)) {
+                        previous = candidate;
+                        break;
+                    }
+                }
+            }
 
             Information ($"Comparing version '{previous}' vs '{version}' of '{id}'...");
 

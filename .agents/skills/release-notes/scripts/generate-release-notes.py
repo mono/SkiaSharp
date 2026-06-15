@@ -291,11 +291,20 @@ def _is_valid_stable_base(branch):
     # type: (str) -> bool
     """True if a release branch may serve as a cumulative "previous stable" base.
 
-    A branch is rejected if its version never shipped a stable tag. This makes
-    cross-minor rollups reach back to the last version that actually released as
-    stable, so preview-only/skipped minors are excluded automatically.
+    A branch is rejected when:
+      1. versions.json explicitly marks its version as superseded (the config is
+         the authoritative override — e.g. 4.147 → never a base for 4.148), or
+      2. its version never shipped a stable git tag (the automatic fallback for
+         versions not listed in the config).
+
+    This makes cross-minor rollups reach back to the last version that actually
+    released as stable, so preview-only/skipped minors are excluded.
     """
-    return _version_has_stable_tag(version_from_branch(branch))
+    version = version_from_branch(branch)
+    entry = _versions_config_lookup(version)
+    if entry and entry.get("status") == "superseded":
+        return False
+    return _version_has_stable_tag(version)
 
 
 def _login_from_email(email):
@@ -1352,10 +1361,18 @@ def cmd_all():
     # type: () -> None
     """Process all branches (main + all release/*). Skip unchanged files.
 
-    This is the idempotent "regenerate everything" mode. It iterates over
-    all known branches, generates release notes for each, but only writes
-    files that have genuinely changed (new PRs landed). The "Files to polish"
-    output only includes files that were actually written.
+    This is the idempotent "regenerate everything" mode used by the automated
+    workflow. It iterates over every known branch and regenerates its raw PR
+    data, but only WRITES files whose content actually changed (same PR count
+    AND same diff range == no write). The "Files to polish" output therefore
+    only lists files that genuinely changed, so the AI never re-polishes pages
+    that are already up to date.
+
+    Superseded versions (e.g. 4.147, which was skipped for 4.148) are still
+    generated — they keep their own page with a "superseded by" label. The
+    supersede marker only affects which version is used as a *baseline* when
+    diffing others (handled in determine_diff_range / _is_valid_stable_base),
+    never whether a page is produced.
     """
     print("Fetching remote branches...")
     try:
@@ -1373,15 +1390,9 @@ def cmd_all():
         print("ERROR: No release branches found after fetch.")
         sys.exit(1)
 
-    # Collect all branches to process: main + all release branches
+    # Process main plus every release branch. Superseded versions are NOT
+    # filtered out here — they still get a page (see docstring).
     branches_to_process = ["main"] + all_branches
-
-    # Filter out superseded versions (no point regenerating their page)
-    config = load_versions_config()
-    superseded_versions = {
-        entry["version"] for entry in config
-        if entry.get("status") == "superseded"
-    }
 
     files_to_polish = []
     skipped_count = 0
@@ -1395,12 +1406,6 @@ def cmd_all():
                 continue
         else:
             version = version_from_branch(branch)
-
-        # Skip superseded versions
-        if version in superseded_versions:
-            print("Skipping superseded version {} ({})".format(version, branch))
-            skipped_count += 1
-            continue
 
         print("\n--- Processing: {} (version: {}) ---".format(branch, version))
         try:
