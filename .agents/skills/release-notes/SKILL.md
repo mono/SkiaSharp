@@ -112,73 +112,25 @@ Determine the version's status from the HTML comment block in the file (`status:
 ### Skipped / superseded minors (preview-only versions)
 
 Occasionally a minor ships previews but is **skipped** before going stable — e.g. `4.147`
-was previewed but abandoned in favour of `4.148`. This is handled **automatically** — no
-configuration is normally required:
+was previewed but abandoned in favour of `4.148`. **The script handles all of this for you**
+and records the outcome in the file's data-block; you only render what's there:
 
-1. **Automatic cumulative base.** When choosing the diff base for a new minor (and for
-   `main`), the script picks the most recent prior version that actually shipped a **stable
-   git tag**, skipping any minor that only had previews. So `4.148`'s notes roll up *all*
-   the skipped `4.147` work instead of showing a tiny delta. The same skip applies to
-   **point releases**: a stable patch bases on the most recent previous patch that shipped
-   stable, so e.g. `3.119.4` rolls up the preview-only `3.119.3` (the `3.119.3` page still
-   keeps its own notes — duplication across the two pages is expected and fine).
+- The diff base is already chosen and baked into the `from..to` range, so a skipped line is
+  rolled up automatically (e.g. `4.148`'s data already covers all the `4.147` work). You never
+  pick a base yourself — just summarise the PRs in the file.
+- A `superseded_by:` line means the version was a preview that never shipped stable. Render the
+  script-generated *"Preview only · Superseded by …"* header (kept verbatim).
+- A `supersedes:` line is the two-way back-link on the successor page. Render the
+  script-generated *"Supersedes …"* note (kept verbatim).
 
-2. **Automatic supersede label (two-way).** A version that has only preview tags is flagged as
-   *superseded* once a **newer version is known**. A newer version is "known" from a later
-   `release/*` branch or `v*` tag, **or from `main` itself**: if `main`'s in-development
-   `SKIASHARP_VERSION` is newer and the preview-only version's minor line was never branched
-   for servicing (no `release/X.Y.x`), `main`'s version supersedes it. So with `main` on
-   `4.148.0` and only `release/4.147.0-preview.*` branches (no `release/4.147.x`), `4.147.0`
-   is flagged *superseded by 4.148.0* immediately — no `4.148` branch or tag required. The
-   page is forced to `preview` status and rendered with a *"Preview only · Superseded by
-   4.148.0 · Never released as stable"* header. The label links to the successor's published
-   page (`{ver}.md`) when it exists, otherwise to its in-development page
-   (`{ver}-unreleased.md`). Until a newer version is known, the version is just a normal preview.
-
-   The relationship is rendered **both ways**: the successor page (computed by the inverse
-   `detect_supersedes`) carries a `supersedes:` data-block line and a
-   *"Supersedes [X.Y.Z] · Rolls up preview-only work …"* note, so e.g. `4.148.0` points back
-   to `4.147.0`, `3.119.4` to `3.119.3`, and `3.119.0` to `3.118.0` — automatically, without
-   the AI having to infer it from the diff base.
-
-> Detection is automatic (tag/branch/`main`-version based), so **no configuration is
-> normally required**. When the automatic heuristic is wrong — most importantly for
-> **preview-only versions that never ship a stable tag** (e.g. `4.147`, `4.148-rc`) — the
-> shared `scripts/versions.json` override file takes priority. See
-> [Configuration: `scripts/versions.json`](#configuration-scriptsversionsjson) below.
+> You never compute supersession or base selection — just render whatever markers the file
+> contains. The mechanics (and the optional `scripts/versions.json` overrides) are script
+> internals.
 
 When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
 header and add a one-line note in Highlights that the work rolled up into the successor.
 When polishing a **successor** page, keep the script-generated *"Supersedes …"* note and add a
 one-line note in Highlights that the skipped preview work is rolled up cumulatively.
-
-### Configuration: `scripts/versions.json`
-
-`scripts/versions.json` is a small, override-only config **shared with the
-`changelog` (API diff) skill** so both systems pick the same baselines and
-supersession relationships. The script reads it first and falls back to the
-automatic tag/branch heuristic for anything not listed. You normally only edit it
-a few times a year. Entry shape:
-
-```json
-{
-  "version": "4.148.0",
-  "compare_to": "3.119.4",
-  "supersedes": ["4.147.0"]
-}
-```
-
-- `status: "superseded"` + `superseded_by` — the version still gets its own page
-  but is never used as a *baseline* when diffing other versions. This is the
-  authoritative override for preview-only minors like `4.147` that the stable-tag
-  heuristic can't always classify on its own.
-- `compare_to` — force a specific diff baseline (matched on `major.minor.patch`
-  prefix). Takes priority over the automatic walk-back.
-- `supersedes` — the inverse back-link, so the successor page renders its
-  *"Supersedes …"* note without inferring it.
-
-Because the same file drives the API changelogs, a supersession declared once is
-reflected consistently in both the release notes and the changelogs.
 
 ### Step 4 — Write polished pages
 
