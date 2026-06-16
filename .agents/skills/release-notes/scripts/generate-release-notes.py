@@ -47,11 +47,23 @@ from typing import Optional, Tuple
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
 
-SKIA_REPO = "mono/skia"
 SKIA_PR_PATTERNS = [
     re.compile(r"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+https?://github\.com/mono/skia/pull/(\d+)", re.IGNORECASE),
     re.compile(r"https?://github\.com/mono/skia/pull/(\d+)"),
+    re.compile(r"mono/skia#(\d+)"),
 ]
+
+# A skia bump commit in mono/skia names its own PR in its subject, either as a
+# squash "(#N)" suffix or a "Merge pull request #N" merge subject. Used to
+# recover the companion link locally from the submodule when the SkiaSharp PR
+# body didn't spell it out (see resolve_skia_links).
+_SKIA_SELF_PR_PATTERNS = [
+    re.compile(r"^Merge pull request #(\d+)"),
+    re.compile(r"\(#(\d+)\)\s*$"),
+]
+_SKIA_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+SKIA_SUBMODULE = Path("externals/skia")
+SKIA_REMOTE_URL = "https://github.com/mono/skia.git"
 
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
@@ -415,163 +427,84 @@ def resolve_pr_authors(prs):
     return prs
 
 
-# ── Effort computation ───────────────────────────────────────────────
+def _ensure_skia_repo():
+    # type: () -> bool
+    """Make ``externals/skia`` usable as a local object store for ``git log``.
 
-
-def _get_pr_effort_from_git(pr_num, target_ref="origin/main", git_dir="."):
-    # type: (int, str, str) -> Tuple[int, set[str], set[str]]
-    """Get commit count, working days, and author names from a PR via git refs.
-
-    Fetches refs/pull/{N}/head, then uses merge-base with the target branch
-    to determine the base commit. Works for both squash-merged and
-    regular-merged PRs.
-
-    Returns (commit_count, set_of_date_strings, set_of_author_names).
+    Works whether the submodule is already checked out (a ``.git`` gitlink file)
+    or absent (we ``git init`` an empty repo there and wire up the origin
+    remote). Only commit metadata is ever fetched into it; the working tree is
+    never populated, so this stays cheap.
     """
-    ref_head = "refs/pull/{}/head".format(pr_num)
-    local_ref = "refs/pr-tmp/{}".format(pr_num)
-
-    try:
-        run(["git", "-C", git_dir, "fetch", "origin",
-             "{}:{}".format(ref_head, local_ref), "--quiet"])
-    except subprocess.CalledProcessError:
-        return 0, set(), set()
-
-    try:
-        head_sha = run(["git", "-C", git_dir, "rev-parse", local_ref])
-        base_sha = run(["git", "-C", git_dir, "merge-base",
-                        local_ref, target_ref])
-    except subprocess.CalledProcessError:
-        run(["git", "-C", git_dir, "update-ref", "-d", local_ref], check=False)
-        return 0, set(), set()
-
-    log_output = run([
-        "git", "-C", git_dir, "log",
-        "--format=%ad\t%an", "--date=short",
-        "{}..{}".format(base_sha, head_sha),
-    ], check=False)
-
-    run(["git", "-C", git_dir, "update-ref", "-d", local_ref], check=False)
-
-    if not log_output:
-        return 0, set(), set()
-
-    count = 0
-    days = set()  # type: set[str]
-    authors = set()  # type: set[str]
-    for line in log_output.splitlines():
-        parts = line.split("\t", 1)
-        if len(parts) != 2:
-            continue
-        date_str, author_name = parts
-        count += 1
-        days.add(date_str)
-        authors.add(author_name)
-
-    return count, days, authors
+    gitdir = SKIA_SUBMODULE / ".git"
+    if not gitdir.exists():
+        SKIA_SUBMODULE.mkdir(parents=True, exist_ok=True)
+        run(["git", "init", "-q", str(SKIA_SUBMODULE)], check=False)
+    if not gitdir.exists():
+        return False
+    remotes = run(["git", "-C", str(SKIA_SUBMODULE), "remote"], check=False).split()
+    if "origin" not in remotes:
+        run(["git", "-C", str(SKIA_SUBMODULE), "remote", "add", "origin",
+             SKIA_REMOTE_URL], check=False)
+    return True
 
 
-def compute_pr_effort(pr):
-    # type: (dict) -> dict
-    """Compute commit count and unique working days from git refs.
+def resolve_skia_links(prs):
+    # type: (list[dict]) -> list[dict]
+    """Fill in companion mono/skia PR numbers for skia-bump PRs, purely locally.
 
-    Uses refs/pull/N/head to get the base..head range for commit counting.
-    If the PR body references a companion mono/skia PR, fetches that PR's
-    commits too (filtered to SkiaSharp contributor authors only).
+    Most SkiaSharp PRs that bump the ``externals/skia`` submodule don't spell out
+    the companion PR in their body (dependency bumps, milestone merges). For
+    those we read the bumped skia commit's own subject from the submodule and
+    parse its ``(#N)`` / ``Merge pull request #N`` self-reference.
+
+    Whether a PR bumped the submodule — and to which skia SHA — is determined
+    locally from the superproject tree (``git rev-parse <commit>:externals/skia``
+    vs its parent), for free. The only network is a single batched, blobless,
+    shallow ``git fetch`` of just the bumped SHAs into the submodule (no working
+    tree, no per-PR fetch); already-present commits are skipped, so ``--all``
+    pays for each skia commit at most once. Anything unresolved keeps
+    ``skiaPr=None``. Mutates and returns ``prs``.
     """
-    pr_num = pr.get("number", 0)
-    commit_count, unique_days, pr_author_names = _get_pr_effort_from_git(pr_num)
-
-    skia_pr_num = None
-    body = pr.get("body") or ""
-    for pattern in SKIA_PR_PATTERNS:
-        m = pattern.search(body)
-        if m:
-            skia_pr_num = m.group(1)
-            break
-
-    skia_commits = 0
-    if skia_pr_num:
-        skia_commits, skia_days = _fetch_skia_pr_effort(
-            skia_pr_num, pr_author_names)
-        unique_days |= skia_days
-
-    return {
-        "commitCount": commit_count + skia_commits,
-        "workingDays": len(unique_days),
-        "skiaPr": int(skia_pr_num) if skia_pr_num else None,
-    }
-
-
-def _fetch_skia_pr_effort(pr_num, author_names):
-    # type: (str, set[str]) -> Tuple[int, set[str]]
-    """Fetch effort from a mono/skia PR using git refs on the submodule.
-
-    Fetches refs/pull/N/head and uses merge-base to find the range,
-    then filters commits to only those by SkiaSharp PR authors
-    (excluding upstream Google committers).
-
-    Returns (commit_count, set_of_date_strings).
-    """
-    skia_dir = Path("externals/skia")
-    if not (skia_dir / ".git").exists():
-        return 0, set()
-
-    ref_head = "refs/pull/{}/head".format(pr_num)
-    local_ref = "refs/pr-tmp/skia-{}".format(pr_num)
-
-    try:
-        run(["git", "-C", str(skia_dir), "fetch", "origin",
-             "{}:{}".format(ref_head, local_ref), "--quiet"])
-    except subprocess.CalledProcessError:
-        return 0, set()
-
-    # Use merge-base with the skiasharp branch (the usual target for mono/skia PRs)
-    base_sha = None
-    for target in ["origin/skiasharp", "origin/main"]:
-        try:
-            base_sha = run(["git", "-C", str(skia_dir), "merge-base",
-                            local_ref, target])
-            break
-        except subprocess.CalledProcessError:
+    pending = []  # type: list[tuple[dict, str]]
+    for pr in prs:
+        if pr.get("skiaPr"):
             continue
-
-    if not base_sha:
-        run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
-            check=False)
-        return 0, set()
-
-    try:
-        head_sha = run(["git", "-C", str(skia_dir), "rev-parse", local_ref])
-    except subprocess.CalledProcessError:
-        run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
-            check=False)
-        return 0, set()
-
-    log_output = run([
-        "git", "-C", str(skia_dir), "log",
-        "--format=%ad\t%an", "--date=short",
-        "{}..{}".format(base_sha, head_sha),
-    ], check=False)
-
-    run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
-        check=False)
-
-    if not log_output:
-        return 0, set()
-
-    count = 0
-    days = set()  # type: set[str]
-    for line in log_output.splitlines():
-        parts = line.split("\t", 1)
-        if len(parts) != 2:
+        commit = pr.get("commit")
+        if not commit:
             continue
-        date_str, author_name = parts
-        if author_name in author_names:
-            count += 1
-            days.add(date_str)
+        revs = run(["git", "rev-parse",
+                    "{}:externals/skia".format(commit),
+                    "{}^:externals/skia".format(commit)], check=False).split()
+        if len(revs) != 2:
+            continue
+        new, old = revs[0], revs[1]
+        if new == old or not _SKIA_SHA_RE.match(new):
+            continue
+        pending.append((pr, new))
 
-    return count, days
+    if not pending or not _ensure_skia_repo():
+        return prs
+
+    missing = sorted({sha for _, sha in pending if subprocess.run(
+        ["git", "-C", str(SKIA_SUBMODULE), "cat-file", "-e", sha],
+        capture_output=True).returncode != 0})
+    if missing:
+        print("  Fetching {} skia commit(s) to resolve companion links...".format(
+            len(missing)), file=sys.stderr)
+        run(["git", "-C", str(SKIA_SUBMODULE), "fetch", "-q", "--depth=1",
+             "--filter=blob:none", "origin"] + missing, check=False)
+
+    for pr, sha in pending:
+        subject = run(["git", "-C", str(SKIA_SUBMODULE), "log", "-1",
+                       "--format=%s", sha], check=False)
+        for pat in _SKIA_SELF_PR_PATTERNS:
+            m = pat.search(subject)
+            if m:
+                pr["skiaPr"] = int(m.group(1))
+                break
+    return prs
+
 
 
 # ── Branch diffing ──────────────────────────────────────────────────
@@ -922,10 +855,8 @@ def get_prs_from_diff(from_ref, to_ref):
     """Extract merged PRs from git log between two refs.
 
     Parses PR numbers, titles, authors, and bodies from commit messages.
-    No GitHub API calls needed — everything comes from git. This is the cheap
-    part: a single ``git log`` plus regex parsing (sub-second even for hundreds
-    of commits). The expensive per-PR effort metrics are computed separately by
-    ``add_pr_effort`` so callers can skip them for unchanged pages.
+    No GitHub API calls needed — everything comes from git: a single ``git log``
+    plus regex parsing, sub-second even for hundreds of commits.
     """
     # Use a format that gives us everything: hash, author email, author name,
     # subject, body. The name is kept as a safe fallback credit for PRs whose
@@ -964,6 +895,16 @@ def get_prs_from_diff(from_ref, to_ref):
         # Title is the subject minus the PR ref
         title = re.sub(r"\s*\(#\d+\)\s*$", "", subject)
 
+        # A companion mono/skia PR link, if the body references one. Parsed
+        # locally from the body — no network — so it stays a cheap hint for the
+        # AI when writing notes about Skia bumps.
+        skia_pr = None
+        for pattern in SKIA_PR_PATTERNS:
+            sm = pattern.search(body)
+            if sm:
+                skia_pr = int(sm.group(1))
+                break
+
         # A GitHub login is only certain from a noreply address; otherwise leave
         # it None and let resolve_pr_authors look up the real handle. We never
         # guess a handle from an email local part — that mis-credits real users.
@@ -979,29 +920,10 @@ def get_prs_from_diff(from_ref, to_ref):
             "url": "https://github.com/{}/pull/{}".format(REPO, num),
             "number": num,
             "body": body,
+            "commit": commit_hash,
+            "skiaPr": skia_pr,
         })
 
-    return prs
-
-
-def add_pr_effort(prs):
-    # type: (list[dict]) -> list[dict]
-    """Annotate each PR in-place with effort metrics (commit count, days).
-
-    This is the SLOW part: it fetches ``refs/pull/{N}/head`` (and any companion
-    mono/skia PR) per PR, so it costs ~1s per PR over the network. Call it ONLY
-    for pages that are actually being (re)written — never for pages that the
-    unchanged check will skip — otherwise an all-unchanged ``--all`` run pays
-    minutes of network cost for output it then discards.
-    """
-    for i, pr in enumerate(prs, 1):
-        try:
-            pr.update(compute_pr_effort(pr))
-        except subprocess.CalledProcessError:
-            pass  # effort stays unset, that's fine
-        if i % 20 == 0:
-            print("  Processed {}/{} PRs...".format(i, len(prs)),
-                  file=sys.stderr)
     return prs
 
 
@@ -1058,11 +980,6 @@ def format_pr_list(prs, metadata):
             url = pr.get("url", "")
             is_community = login != "mattleibow"
             community_str = " [community ✨]" if is_community else ""
-            commits = pr.get("commitCount", 0)
-            days = pr.get("workingDays", 0)
-            effort = " ({} commit{}, {} day{})".format(
-                commits, "s" if commits != 1 else "",
-                days, "s" if days != 1 else "") if commits else ""
             skia_pr = pr.get("skiaPr")
             skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
 
@@ -1071,8 +988,8 @@ def format_pr_list(prs, metadata):
             # never mention — and notify — the wrong GitHub user.
             by = "by @{}".format(login) if login else "by {}".format(name)
 
-            lines.append("  - {} {} in {}{}{}{}".format(
-                title, by, url, community_str, effort, skia_str))
+            lines.append("  - {} {} in {}{}{}".format(
+                title, by, url, community_str, skia_str))
 
     lines.append("-->")
     lines.append("")
@@ -1435,12 +1352,12 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         print("  Skipping {} (unchanged)".format(output_path))
         return None
 
-    # The page is changing, so it's worth the network work now: resolving the
-    # true GitHub handles (API, cached) and the per-PR effort fetches. Doing this
-    # AFTER the unchanged check is what keeps an all-unchanged --all run cheap:
-    # skipped pages never pay the network cost.
+    # The page is changing, so it's worth the one network step now: resolving
+    # the true GitHub handles (API, cached). Doing this AFTER the unchanged
+    # check keeps an all-unchanged --all run cheap: skipped pages never pay the
+    # network cost.
     resolve_pr_authors(prs)
-    add_pr_effort(prs)
+    resolve_skia_links(prs)
 
     metadata = {
         "branch": branch,
