@@ -685,6 +685,17 @@ def determine_diff_range(branch):
                 compare_branches.sort(key=release_branch_sort_key)
                 return ("origin/{}".format(compare_branches[-1]),
                         "origin/main", version)
+            # No prefix match — try the exact stable branch directly.
+            exact_branch = "release/{}".format(compare_to)
+            if exact_branch in all_branches:
+                return ("origin/{}".format(exact_branch),
+                        "origin/main", version)
+            # Last fallback for the override: resolve a tag (baselines that
+            # exist only as v<compare_to>, never as a release/* branch).
+            tag_sha = run(["git", "rev-parse", "v{}".format(compare_to)],
+                          check=False).strip()
+            if tag_sha:
+                return (tag_sha, "origin/main", version)
 
         # Find latest release branch for the same minor. These are the active
         # line for the upcoming version, so the latest one is always the base

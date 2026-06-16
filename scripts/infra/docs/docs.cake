@@ -860,7 +860,7 @@ JArray LoadVersionsConfig ()
     if (!FileExists (path))
         return new JArray ();
     var doc = JObject.Parse (System.IO.File.ReadAllText (path));
-    return (JArray)doc ["versions"] ?? new JArray ();
+    return doc ["versions"] as JArray ?? new JArray ();
 }
 
 // A "superseded" version is one that was previewed but never shipped stable

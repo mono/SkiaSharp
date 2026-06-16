@@ -63,8 +63,12 @@ jobs:
       contents: read
     env:
       # Default to including prereleases (the 4.x line ships only as prereleases
-      # for now, so they must appear in the changelog set).
-      PRERELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease || 'true' }}
+      # for now, so they must appear in the changelog set). Only an explicit
+      # workflow_dispatch with prerelease=false turns them off; every other
+      # trigger (and the default) yields 'true'. Written this way to avoid the
+      # `&& inputs || 'true'` boolean footgun, where false would collapse back
+      # to 'true' and make the input impossible to disable.
+      PRERELEASE: ${{ (github.event_name == 'workflow_dispatch' && inputs.prerelease == false) && 'false' || 'true' }}
     outputs:
       has_changes: ${{ steps.check.outputs.has_changes }}
     steps:
@@ -94,7 +98,10 @@ jobs:
       - name: Check for changes
         id: check
         run: |
-          if [ -d changelogs ] && [ "$(find changelogs -name '*.md' | head -1)" ]; then
+          # Detect ACTUAL changes to the changelogs, not merely the presence of
+          # files. changelogs/README.md is committed, so a bare existence check
+          # would always be true and the publish job would run every time.
+          if [ -n "$(git status --porcelain changelogs/)" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
