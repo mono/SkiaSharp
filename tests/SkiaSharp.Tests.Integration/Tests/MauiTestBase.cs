@@ -61,7 +61,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     /// Override in platform tests to verify API level, etc.
     /// </summary>
     protected virtual Task ValidateDeviceAsync() => Task.CompletedTask;
-    
+
     /// <summary>
     /// Configure platform-specific Appium options.
     /// </summary>
@@ -71,12 +71,19 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     /// Create the platform-specific Appium driver.
     /// </summary>
     protected abstract AppiumDriver CreateDriver(AppiumOptions options);
-    
+
     /// <summary>
-    /// Find the canvas element in the app. Override for platform-specific locators.
+    /// Get the canvas bounds (location and size) in window coordinates.
+    /// The MAUI app exposes a Grid wrapper with AutomationId="SkiaCanvas" — a Grid has
+    /// automation peers on all platforms (WinUI UIA, Android contentDescription, iOS accessibilityId).
+    /// Override only when the platform uses a different locator strategy.
     /// </summary>
-    protected virtual IWebElement FindCanvasElement(AppiumDriver driver, string bundleId) =>
-        driver.FindElement("accessibility id", "SkiaCanvas");
+    protected virtual (SKPointI location, SKSizeI size) GetCanvasBounds(AppiumDriver driver, string bundleId)
+    {
+        var element = driver.FindElement("accessibility id", "SkiaCanvas");
+        return (new SKPointI(element.Location.X, element.Location.Y),
+                new SKSizeI(element.Size.Width, element.Size.Height));
+    }
     
     /// <summary>
     /// Find the built app artifact (apk, app bundle, exe, etc.)
@@ -195,9 +202,12 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
                          xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
                          x:Class="{projectName}.MainPage"
                          BackgroundColor="Black">
-                <Grid HorizontalOptions="Center" VerticalOptions="Center">
-                    <skia:{canvasView} x:Name="CanvasView" 
-                                       AutomationId="SkiaCanvas"
+                <Grid AutomationId="SkiaCanvas"
+                      WidthRequest="{CanvasWidth}"
+                      HeightRequest="{CanvasHeight}"
+                      HorizontalOptions="Center"
+                      VerticalOptions="Center">
+                    <skia:{canvasView} x:Name="CanvasView"
                                        WidthRequest="{CanvasWidth}"
                                        HeightRequest="{CanvasHeight}"
                                        IgnorePixelScaling="True"
@@ -343,8 +353,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             Output.WriteLine($"Page source saved: {pageSourcePath}");
             
             // Full screenshot
-            var screenshot = driver.GetScreenshot();
-            var fullScreenshot = screenshot.AsByteArray;
+            var fullScreenshot = driver.GetScreenshot().AsByteArray;
             await SaveScreenshot(fullScreenshot, $"{screenshotName}-full");
             Output.WriteLine("Full screenshot saved");
             
@@ -354,9 +363,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             
             // Now find the canvas element
             Output.WriteLine("Looking for canvas element...");
-            var canvasElement = FindCanvasElement(driver, bundleId);
-            var canvasLocation = new SKPointI(canvasElement.Location.X, canvasElement.Location.Y);
-            var canvasSize = new SKSizeI(canvasElement.Size.Width, canvasElement.Size.Height);
+            var (canvasLocation, canvasSize) = GetCanvasBounds(driver, bundleId);
             Output.WriteLine($"Canvas element: {canvasLocation} {canvasSize}");
             
             // Get scale factor - derived class decides how to calculate it
@@ -371,8 +378,6 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
                 (int)(canvasSize.Width * scaleFactor),
                 (int)(canvasSize.Height * scaleFactor));
             cropRect = SKRectI.Intersect(cropRect, SKRectI.Create(screenshotSize));
-            
-            Output.WriteLine($"Crop region: {cropRect}");
             
             await VerifyCanvasScreenshot(fullScreenshot, screenshotName, cropRect);
         }

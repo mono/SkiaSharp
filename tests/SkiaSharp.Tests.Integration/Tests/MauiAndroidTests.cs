@@ -41,7 +41,8 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
         var androidHome = Environment.GetEnvironmentVariable("ANDROID_HOME") 
             ?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Android/sdk");
-        return Path.Combine(androidHome, "platform-tools", "adb");
+        var exe = OperatingSystem.IsWindows() ? "adb.exe" : "adb";
+        return Path.Combine(androidHome, "platform-tools", exe);
     }
 
     /// <summary>
@@ -170,13 +171,6 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
             "*.apk", SearchOption.AllDirectories).FirstOrDefault();
 
     /// <summary>
-    /// On Android, MAUI's AutomationId maps to resource-id, not content-desc (accessibility id).
-    /// Use the "id" locator strategy with the full resource ID.
-    /// </summary>
-    protected override IWebElement FindCanvasElement(AppiumDriver driver, string bundleId) =>
-        driver.FindElement("id", $"{bundleId}:id/SkiaCanvas");
-
-    /// <summary>
     /// Android-specific recovery: dismiss system dialogs and verify emulator is healthy.
     /// </summary>
     protected override async Task PerformRecoveryActions()
@@ -234,8 +228,10 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
         };
         
         using var process = Process.Start(psi)!;
-        var output = await process.StandardOutput.ReadToEndAsync();
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        await Task.WhenAll(stdoutTask, stderrTask);
         await process.WaitForExitAsync();
-        return output;
+        return await stdoutTask;
     }
 }

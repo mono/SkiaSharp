@@ -202,15 +202,25 @@ public abstract class PlatformTestBase : IDisposable
         ClearDotNetEnvironmentVariables(psi);
         
         using var process = Process.Start(psi)!;
-        
-        var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
-        
-        if (!process.WaitForExit(timeoutSeconds * 1000))
+
+        // Read stdout and stderr concurrently to prevent deadlock when buffers fill up
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+
+        await Task.WhenAny(
+            Task.WhenAll(stdoutTask, stderrTask),
+            Task.Delay(timeoutSeconds * 1000));
+
+        if (!stdoutTask.IsCompleted || !stderrTask.IsCompleted)
         {
-            process.Kill();
+            process.Kill(entireProcessTree: true);
             throw new TimeoutException($"Command timed out after {timeoutSeconds}s");
         }
+
+        await process.WaitForExitAsync();
+
+        var output = await stdoutTask;
+        var error = await stderrTask;
         
         Output.WriteLine($"Process exited with code {process.ExitCode}");
 
@@ -220,7 +230,10 @@ public abstract class PlatformTestBase : IDisposable
             Output.WriteLine(combined);
             throw new Exception($"Command failed with exit code {process.ExitCode}:\n{combined}");
         }
-        
+
+        if (!string.IsNullOrWhiteSpace(combined))
+            Output.WriteLine(combined);
+
         return combined;
     }
     
