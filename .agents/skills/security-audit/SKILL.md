@@ -33,6 +33,7 @@ combined into a single unified report.
 ## Key References
 
 - **[references/chrome-releases.md](references/chrome-releases.md)** — Chrome Releases blog: RSS query, two-pass extraction (regex + AI review), cross-referencing with NVD
+- **[references/milestone-schedule.md](references/milestone-schedule.md)** — Chromium milestone release schedule: branch/stable dates per milestone, release heads-up for pending Skia bumps
 - **[references/skia-cve-resolution.md](references/skia-cve-resolution.md)** — Skia core CVE pipeline (NVD → Bug ID → Commit → Branch → Cherry-pick → Reachability). **The Skia process is fine-grained — read this before auditing Skia.**
 - **[references/third-party-deps.md](references/third-party-deps.md)** — Third-party CVE process (libpng, freetype, harfbuzz, etc.): version verification, fix-commit ancestry, known false positives
 - **[references/cg-alerts.md](references/cg-alerts.md)** — Component Governance alerts: ADO pipeline queries, Docker container CVEs, fix locations
@@ -49,15 +50,16 @@ combined into a single unified report.
 
 1. Search GitHub issues/PRs (all deps including Skia)
 2. Query Chrome Releases blog (`query-chrome-releases.py`) — see [Chrome Releases](references/chrome-releases.md)
-3. Verify dependency versions from submodule/DEPS/headers (NOT cgmanifest.json)
-4. Audit Skia core CVEs — see [Skia CVE Resolution](references/skia-cve-resolution.md)
-5. Audit third-party dependency CVEs — see [Third-Party Deps](references/third-party-deps.md)
-6. Query Component Governance alerts — see [CG Alerts](references/cg-alerts.md)
-7. Check false positives
-8. Assemble structured JSON report
-9. Validate report (`validate-security-audit.py`)
-10. Render HTML (`render-security-audit.py`)
-11. Present markdown summary to user
+3. Query Chromium milestone schedule (`query-milestone-schedule.py`) — see [Milestone Schedule](references/milestone-schedule.md)
+4. Verify dependency versions from submodule/DEPS/headers (NOT cgmanifest.json)
+5. Audit Skia core CVEs — see [Skia CVE Resolution](references/skia-cve-resolution.md)
+6. Audit third-party dependency CVEs — see [Third-Party Deps](references/third-party-deps.md)
+7. Query Component Governance alerts — see [CG Alerts](references/cg-alerts.md)
+8. Check false positives
+9. Assemble structured JSON report
+10. Validate report (`validate-security-audit.py`)
+11. Render HTML (`render-security-audit.py`)
+12. Present markdown summary to user
 
 ---
 
@@ -113,6 +115,41 @@ After the NVD query in Step 3, compare results:
 | ❌ Not found | ✅ Found | Vendor bulletin CVE (Android/Huawei) — not in Chrome stable |
 
 Set the `source` field on each CVE object: `"both"`, `"chrome_releases"`, or `"nvd"`.
+
+---
+
+### Step 1.6: Query Chromium Milestone Schedule (Release Heads-Up)
+
+> 🗓️ This step is scheduling context, **not** a security check on its own. It tells us *when*
+> the next Skia milestone goes stable so pending bumps are ready before CVEs reach users.
+
+Skia milestones track Chrome milestones, so the Chromium release calendar tells us the deadline
+for each pending Skia bump. **See [references/milestone-schedule.md](references/milestone-schedule.md)**
+for the data source and alert levels.
+
+#### Run the script
+
+```bash
+python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py \
+  --verbose --output output/ai/milestone-schedule-cache.json
+```
+
+This reads the current Skia milestone from `scripts/VERSIONS.txt`, fetches a window of milestones
+around it from chromiumdash, and prints prioritized heads-up alerts:
+
+| Level | Meaning |
+|-------|---------|
+| 🔴 `critical` | A milestone we have **not** bumped to is **already stable** — we are behind. |
+| 🟠 `urgent` | A pending milestone goes stable within the window (default 14 days). |
+| 🟡 `watch` | A pending milestone branches within the window — start the bump. |
+| 🔵 `info` | The current milestone's stable window is ending. |
+
+#### Use the result
+
+- Escalate Skia bump recommendations in `nextSteps` when an `urgent`/`critical` milestone also
+  carries HIGH/CRITICAL CVEs from the Chrome Releases / NVD passes.
+- Cite the target milestone's **stable date** when recommending a bump so the deadline is clear.
+- Treat a `critical` heads-up as a finding even if no GitHub issue has been filed yet.
 
 ---
 
@@ -378,6 +415,7 @@ conversation pointing to the generated files:
 Then highlight the **top actionable items** from the report:
 - Any `needs_attention` or `undiscovered` findings
 - Chrome Releases CVEs above our current milestone (especially Skia/ANGLE)
+- 🔴/🟠 milestone-schedule heads-up (Step 1.6) — pending Skia bumps that are stable or going stable soon
 - Critical/High CG alerts
 
 #### Report quality rules
