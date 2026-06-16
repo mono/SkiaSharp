@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKColorSpaceTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateSrgb()
 		{
@@ -17,7 +17,7 @@ namespace SkiaSharp.Tests
 			Assert.True(SKColorSpace.Equal(colorspace, colorspace));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StaticSrgbIsReturnedAsTheStaticInstance()
 		{
 			var expected = SKColorSpace.CreateSrgb();
@@ -34,7 +34,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ImageInfoHasColorSpace()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests
 			Assert.Same(colorspace, image.PeekPixels().ColorSpace);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ImageInfoColorSpaceIsReferencedCorrectly()
 		{
 			SkipOnMono();
@@ -106,7 +106,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void ReferencesCountedCorrectly()
 		{
 			var colorspace = SKColorSpace.CreateRgb(
@@ -131,7 +131,7 @@ namespace SkiaSharp.Tests
 			GC.KeepAlive(colorspace);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ColorSpaceIsNotDisposedPrematurely()
 		{
 			SkipOnMono();
@@ -204,7 +204,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void AdobeRGB1998IsRGB()
 		{
 			var icc = Path.Combine(PathToImages, "AdobeRGB1998.icc");
@@ -227,7 +227,7 @@ namespace SkiaSharp.Tests
 			AssertSimilar(toXYZ, xyz.Values, 3);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void USWebCoatedSWOPIsUnsupportedCMYK()
 		{
 			var path = Path.Combine(PathToImages, "USWebCoatedSWOP.icc");
@@ -240,7 +240,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(colorspace);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SrgbColorSpaceIsCloseToSrgb()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -248,7 +248,7 @@ namespace SkiaSharp.Tests
 			Assert.True(colorspace.GammaIsCloseToSrgb);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ColorSpaceCorrectlyReferencesSrgbSingleton()
 		{
 			var handle1 = SkiaApi.sk_colorspace_new_srgb();
@@ -269,7 +269,7 @@ namespace SkiaSharp.Tests
 			SkiaApi.sk_refcnt_safe_unref(handle1);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SrgbColorSpaceIsCorrect()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -281,7 +281,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void LinearSrgbColorSpaceIsCorrect()
 		{
 			var colorspace = SKColorSpace.CreateSrgbLinear();
@@ -293,7 +293,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CicpSrgbColorSpaceIsCorrect()
 		{
 			var colorspace = SKColorSpace.CreateCicp(
@@ -308,7 +308,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CicpPqRec2020CreatesHdrColorSpace()
 		{
 			var colorspace = SKColorSpace.CreateCicp(
@@ -328,7 +328,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CicpHlgDisplayP3CreatesHdrColorSpace()
 		{
 			var colorspace = SKColorSpace.CreateCicp(
@@ -341,7 +341,7 @@ namespace SkiaSharp.Tests
 			Assert.False(colorspace.GammaIsLinear);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CicpRec2020LinearCreatesWideGamutLinearColorSpace()
 		{
 			var colorspace = SKColorSpace.CreateCicp(
@@ -356,7 +356,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CicpUnknownPrimariesReturnsNull()
 		{
 			var colorspace = SKColorSpace.CreateCicp(
@@ -366,7 +366,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(colorspace);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CicpUnknownTransferFnReturnsNull()
 		{
 			var colorspace = SKColorSpace.CreateCicp(
@@ -376,7 +376,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(colorspace);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CicpPqPngImageHasPqTransferFunction()
 		{
 			var path = Path.Combine(PathToImages, "cicp_pq.png");

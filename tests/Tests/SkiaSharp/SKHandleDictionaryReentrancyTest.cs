@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 		// holding the upgradeable-read lock is permitted to enter read mode under
 		// ReaderWriterLockSlim(NoRecursion) (a legal upgradeable->read downgrade) and may also
 		// recurse on the Windows CRITICAL_SECTION. So this is safe on every platform.
-		[SkippableFact]
+		[Fact]
 		public void FactoryMayReadDictionaryFromWithinTheLock ()
 		{
 			var probe = SKHandleDictionaryTestHelpers.NextHandle ();
@@ -41,10 +41,10 @@ namespace SkiaSharp.Tests
 		// on Windows the lock is a recursive Win32 CRITICAL_SECTION (the #1383 STA-pump fix) and it
 		// would NOT throw. We assert only the platform we can run here; the throw aborts the lock
 		// re-acquire before any wrapper is constructed, so nothing leaks into the registry.
-		[SkippableFact]
+		[Fact]
 		public void FactoryCannotCreateNestedRegisteredObjectOnNonWindows ()
 		{
-			Skip.If (IsWindows, "Windows uses a recursive CRITICAL_SECTION (#1383); nested creation does not throw there.");
+			Assert.SkipWhen (IsWindows, "Windows uses a recursive CRITICAL_SECTION (#1383); nested creation does not throw there.");
 
 			var nested = SKHandleDictionaryTestHelpers.NextHandle ();
 			var outer = SKHandleDictionaryTestHelpers.NextHandle ();

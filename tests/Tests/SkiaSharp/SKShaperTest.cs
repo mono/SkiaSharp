@@ -9,7 +9,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 {
 	public class SKShaperTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void DrawShapedTextExtensionMethodDraws()
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(512, 512)))
@@ -35,7 +35,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CorrectlyShapesArabicScriptAtAnOffset()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
@@ -54,7 +54,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CorrectlyShapesArabicScript()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
@@ -73,7 +73,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateFaceShaperFromTypeface()
 		{
 			var skiaTypeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
@@ -103,7 +103,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextAlign.Left, 300)]
 		[InlineData(SKTextAlign.Center, 162)]
 		[InlineData(SKTextAlign.Right, 23)]

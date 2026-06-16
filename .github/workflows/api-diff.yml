@@ -1,28 +1,56 @@
 name: API Diff
 
+# ─────────────────────────────────────────────────────────────────────────────
+# API Diff workflow
+#
+# Keeps the committed API changelogs under changelogs/ up to date. It is a thin
+# runner around a single Cake target — there is no skill and no shell wrapper to
+# keep in sync:
+#
+#     dotnet cake --target=docs-api-diff-past
+#
+# That target wraps Mono.ApiTools.NuGetDiff, walks every version published to
+# NuGet.org (prereleases included) and writes a per-assembly markdown diff to
+# changelogs/{PackageId}/{version}/{Assembly}.md. Baseline selection and
+# superseded-version handling are driven by scripts/versions.json — see that
+# file's $comment fields and the docs-api-diff-past target in
+# scripts/infra/docs/docs.cake. To reproduce a run locally, just run that one
+# command from the repo root.
+#
+# This workflow only adds the automation around that command: when to run it and
+# how to turn its output into a single rolling PR. It deliberately does NOT
+# re-document how diffs are generated.
+#
+# Preview ("what will an unreleased branch's diff look like?") is intentionally
+# NOT automated here. It is a manual, multi-step operation — see the "Previewing
+# an unreleased branch" section in documentation/dev/writing-docs.md.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
   push:
-    branches: [main]
-    paths:
+    branches:
+      - main
+      - 'release/**'
+    paths-ignore:
+      # Don't loop: the workflow's own changelog commits must not retrigger it.
+      - 'changelogs/**'
       - '.github/workflows/api-diff.yml'
+    tags:
+      - 'v*'
   schedule:
-    # Weekly on Sunday at 00:00 UTC
+    # Weekly safety net on Sunday at 00:00 UTC, in case a publish was missed.
     - cron: '0 0 * * 0'
   workflow_dispatch:
     inputs:
-      ref:
-        description: 'Branch, tag, or SHA to diff (e.g., main, release/3.119.x, v3.119.3-preview.1.1)'
-        required: false
-        default: 'main'
       prerelease:
-        description: 'Include prerelease versions as baseline'
+        description: 'Include prerelease versions in the diff set'
         type: boolean
         required: false
-        default: false
+        default: true
 
 concurrency:
-  group: api-diff-${{ github.event_name == 'workflow_dispatch' && inputs.ref || 'main' }}
-  cancel-in-progress: false
+  group: api-diff
+  cancel-in-progress: true
 
 permissions: {}
 
@@ -30,123 +58,57 @@ jobs:
   generate:
     name: Generate API Diff
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: read
+    env:
+      # Default to including prereleases (the 4.x line ships only as prereleases
+      # for now, so they must appear in the changelog set). Only an explicit
+      # workflow_dispatch with prerelease=false turns them off; every other
+      # trigger (and the default) yields 'true'. Written this way to avoid the
+      # `&& inputs || 'true'` boolean footgun, where false would collapse back
+      # to 'true' and make the input impossible to disable.
+      PRERELEASE: ${{ (github.event_name == 'workflow_dispatch' && inputs.prerelease == false) && 'false' || 'true' }}
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      has_changes: ${{ steps.check.outputs.has_changes }}
     steps:
-      - name: Resolve ref
-        id: resolve
-        env:
-          INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || 'main' }}
-        run: |
-          set -euo pipefail
-
-          # Determine download mode based on ref format
-          if [[ "$INPUT_REF" =~ ^(main|release/[0-9]+\.[0-9]+\.[0-9a-z._-]+)$ ]]; then
-            echo "mode=branch" >> "$GITHUB_OUTPUT"
-          elif [[ "$INPUT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9][0-9a-z._+-]*$ ]]; then
-            echo "mode=tag" >> "$GITHUB_OUTPUT"
-          elif [[ "$INPUT_REF" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "mode=sha" >> "$GITHUB_OUTPUT"
-          else
-            echo "::error::Invalid ref: '$INPUT_REF'. Must be a branch (main, release/X.Y.Z), tag (vX.Y.Z...), or 40-char SHA."
-            exit 1
-          fi
-          echo "ref=$INPUT_REF" >> "$GITHUB_OUTPUT"
-          echo "Ref: $INPUT_REF"
-
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.ref }}
+          # Always regenerate the full historical set from main; the diff source
+          # is NuGet.org, not the checked-out tree.
+          ref: main
           fetch-depth: 1
           persist-credentials: false
-
-      - name: Get package versions from ref
-        id: fetch-ref
-        if: steps.resolve.outputs.mode != 'branch' || steps.resolve.outputs.ref != 'main'
-        env:
-          DIFF_REF: ${{ steps.resolve.outputs.ref }}
-        run: |
-          set -euo pipefail
-          # Fetch the target ref to resolve SHA and get package versions
-          git fetch --depth=1 origin "$DIFF_REF"
-          RESOLVED_SHA=$(git rev-parse FETCH_HEAD)
-          echo "sha=$RESOLVED_SHA" >> "$GITHUB_OUTPUT"
-          echo "Resolved SHA: $RESOLVED_SHA"
-
-          # Extract only the nuget version lines from the ref's VERSIONS.txt
-          # Keep main's dependency (release/url) lines intact for compatibility
-          REF_NUGET_LINES=$(git show FETCH_HEAD:scripts/VERSIONS.txt | grep -E '[[:space:]]nuget[[:space:]]')
-
-          # Replace nuget lines in main's VERSIONS.txt with the ref's versions
-          grep -v -E '[[:space:]]nuget[[:space:]]' scripts/VERSIONS.txt | grep -v '^# nuget versions' > scripts/VERSIONS.tmp
-          mv scripts/VERSIONS.tmp scripts/VERSIONS.txt
-          # Append the ref's nuget lines
-          printf '\n# nuget versions\n' >> scripts/VERSIONS.txt
-          echo "$REF_NUGET_LINES" >> scripts/VERSIONS.txt
-
-          echo "Updated nuget versions from $DIFF_REF:"
-          grep 'nuget' scripts/VERSIONS.txt | head -5
 
       - name: Setup .NET
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           global-json-file: global.json
 
-      - name: Restore tools
-        run: dotnet tool restore
-
-      - name: Download CI packages
-        env:
-          DIFF_MODE: ${{ steps.resolve.outputs.mode }}
-          DIFF_REF: ${{ steps.resolve.outputs.ref }}
-          RESOLVED_SHA: ${{ steps.fetch-ref.outputs.sha }}
+      # Single Cake target — the exact same command a human runs locally. It
+      # reads scripts/versions.json for compare_to / supersession overrides and
+      # writes the changelogs under changelogs/.
+      - name: Generate changelogs
         run: |
           set -euo pipefail
-          if [[ "$DIFF_MODE" == "branch" ]]; then
-            dotnet cake --target=docs-download-output --gitBranch="$DIFF_REF"
+          dotnet tool restore
+          dotnet cake --target=docs-api-diff-past --nugetDiffPrerelease="$PRERELEASE"
+
+      - name: Check for changes
+        id: check
+        run: |
+          # Detect ACTUAL changes to the changelogs, not merely the presence of
+          # files. changelogs/README.md is committed, so a bare existence check
+          # would always be true and the publish job would run every time.
+          if [ -n "$(git status --porcelain changelogs/)" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Downloading packages for SHA: $RESOLVED_SHA"
-            dotnet cake --target=docs-download-output --gitSha="$RESOLVED_SHA"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Generate API diff
-        env:
-          DIFF_MODE: ${{ steps.resolve.outputs.mode }}
-          DIFF_REF: ${{ steps.resolve.outputs.ref }}
-          RESOLVED_SHA: ${{ steps.fetch-ref.outputs.sha }}
-          PRERELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease || 'false' }}
-        run: |
-          set -euo pipefail
-          if [[ "$DIFF_MODE" == "branch" ]]; then
-            dotnet cake --target=docs-api-diff --gitBranch="$DIFF_REF" --nugetDiffPrerelease="$PRERELEASE"
-          else
-            dotnet cake --target=docs-api-diff --gitSha="$RESOLVED_SHA" --nugetDiffPrerelease="$PRERELEASE"
-          fi
-
-      - name: Upload API diff artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: api-diff
-          path: output/api-diff/
-          if-no-files-found: warn
-
-      - name: Detect version
-        id: version
-        run: |
-          set -euo pipefail
-          VERSION=$(awk '/^SkiaSharp[[:space:]]/ && /nuget/ {print $NF; exit}' scripts/VERSIONS.txt)
-          if [[ -z "$VERSION" || ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            echo "::error::Failed to detect valid SkiaSharp version from VERSIONS.txt (got: '$VERSION')"
-            exit 1
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Detected version: $VERSION"
 
       - name: Upload changelogs
+        if: steps.check.outputs.has_changes == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: changelogs
@@ -156,6 +118,7 @@ jobs:
   publish:
     name: Create PR
     needs: generate
+    if: needs.generate.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -168,6 +131,19 @@ jobs:
           ref: main
           fetch-depth: 1
 
+      - name: Clear committed changelogs
+        run: |
+          set -euo pipefail
+          # The artifact holds the COMPLETE desired changelogs/ tree (every
+          # generated diff plus the committed README). download-artifact only
+          # ever ADDS/overwrites files, so a file the generate job removed —
+          # e.g. a stale *.breaking.md after a baseline change — would survive
+          # here and the deletion would be silently lost. Clearing the tree
+          # first makes the artifact authoritative, so removals are staged as
+          # deletions by `git add -A` below.
+          rm -rf changelogs
+          mkdir changelogs
+
       - name: Download changelogs artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
@@ -177,42 +153,45 @@ jobs:
       - name: Commit and create PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.generate.outputs.version }}
         run: |
           set -euo pipefail
 
-          PR_BRANCH="bot/api-diff-v${VERSION}"
+          # Single rolling PR branch — force-pushed each run so there is at most
+          # one open API-changelog PR, never one-per-version.
+          PR_BRANCH="bot/api-diff"
 
-          # Check for changes (tracked + untracked)
-          git add changelogs/
+          # No-op guard: if regeneration produced byte-identical output, don't
+          # open/refresh a PR. `-A` stages additions, modifications AND the
+          # deletions exposed by the clear-before-extract step above.
+          git add -A changelogs/
           if git diff --cached --quiet; then
             echo "No changelog changes detected. Skipping PR."
             exit 0
           fi
 
-          # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Create/reset the PR branch and commit
           git checkout -B "$PR_BRANCH"
-          git commit -m "[docs] Update API diff for v${VERSION}" \
-            -m "Generated by the api-diff workflow."
+          git commit -m "[docs] Update API changelogs" \
+            -m "Regenerated by the api-diff workflow using Mono.ApiTools.NuGetDiff.
+          Compares all published NuGet.org versions (including prereleases).
+          Respects scripts/versions.json for comparison overrides."
 
           git push --force origin "$PR_BRANCH"
 
-          # Create PR if one doesn't already exist
-          existing=$(gh pr list --head "$PR_BRANCH" --base main --state open --json number --jq '.[0].number')
+          existing=$(gh pr list --head "$PR_BRANCH" --base main --state open --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
             echo "PR #$existing already exists, force-pushed update"
           else
             gh pr create --base main --head "$PR_BRANCH" \
-              --title "[docs] API diff for v${VERSION}" \
+              --title "[docs] API changelogs" \
               --label "documentation" \
-              --body "Automated API diff comparing v${VERSION} against the latest published NuGet.org release. Generated by the \`api-diff\` workflow using \`Mono.ApiTools.NuGetDiff\`.
+              --body "Automated API changelogs comparing all published NuGet.org versions.
+          Generated by the \`api-diff\` workflow using \`Mono.ApiTools.NuGetDiff\`.
+
+          Respects \`scripts/versions.json\` for comparison overrides and supersession tracking.
 
           ---
-          - **Version:** ${VERSION}
           - **Workflow run:** ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           fi
-

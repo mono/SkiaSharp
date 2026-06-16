@@ -4,7 +4,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKPictureRecorderTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void CanCreateRecorder()
 		{
 			var recorder = new SKPictureRecorder();
@@ -12,7 +12,7 @@ namespace SkiaSharp.Tests
 			recorder.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanBeginRecording()
 		{
 			using var recorder = new SKPictureRecorder();
@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 			recorder.BeginRecording(SKRect.Create(100, 100));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DisposingCanvasBeforeRecorderDoesNotCrash()
 		{
 			var recorder = new SKPictureRecorder();
@@ -34,7 +34,7 @@ namespace SkiaSharp.Tests
 
 		[InlineData(true)]
 		[InlineData(false)]
-		[SkippableTheory]
+		[Theory]
 		public void CanCreateRecorderAndDrawOnCanvas(bool useRTree)
 		{
 			var cullRect = SKRect.Create(100, 100);
@@ -51,7 +51,7 @@ namespace SkiaSharp.Tests
 
 		[InlineData(true)]
 		[InlineData(false)]
-		[SkippableTheory]
+		[Theory]
 		public void CanCreateDrawableFromRecorder(bool useRTree)
 		{
 			var cullRect = SKRect.Create(100, 100);
@@ -68,7 +68,7 @@ namespace SkiaSharp.Tests
 
 		[InlineData(false, 0, 0, 100, 100)]
 		[InlineData(true, 20, 20, 60, 60)]
-		[SkippableTheory]
+		[Theory]
 		public void UsingRTreeClipsOperations(bool useRTree, int x, int y, int w, int h)
 		{
 			using var recorder = new SKPictureRecorder();

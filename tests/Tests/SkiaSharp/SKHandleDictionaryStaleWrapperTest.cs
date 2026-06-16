@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 		// --- Address reuse (ABA): a handle freed then re-used for a new native object. The registry
 		//     must hand out a fresh wrapper, not the disposed one. ---
 
-		[SkippableFact]
+		[Fact]
 		public void AddressReuseAfterDisposeConstructsFreshWrapper ()
 		{
 			var handle = NextHandle ();
@@ -63,7 +63,7 @@ namespace SkiaSharp.Tests
 		//          (the deregistering instance is itself already disposed).
 		//     Variant below covers claim #2 (RegisterHandle's replacement branch). ---
 
-		[SkippableFact]
+		[Fact]
 		public void StaleWrapperCleanupDoesNotEvictGetOrAddReplacementForReusedHandle ()
 		{
 			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -125,7 +125,7 @@ namespace SkiaSharp.Tests
 		//     !obj.IsDisposed) — a stale disposed W1 is simply overwritten, never recursively disposed,
 		//     and W1's later DeregisterHandle still no-ops without evicting W2 or throwing. ---
 
-		[SkippableFact]
+		[Fact]
 		public void StaleWrapperCleanupDoesNotEvictDirectCtorReplacementForReusedHandle ()
 		{
 			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 		//     if the entry still points to THIS instance" guard across overlapping stale deregistrations,
 		//     which the single-stale-wrapper tests above do not exercise. ---
 
-		[SkippableFact]
+		[Fact]
 		public void TwoStaleWrappersDeregisteringDoNotEvictThirdReplacementForReusedHandle ()
 		{
 			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");

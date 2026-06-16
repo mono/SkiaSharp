@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKPixmapTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void CanScalePixels()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ReadPixelSucceeds()
 		{
@@ -51,7 +51,7 @@ namespace SkiaSharp.Tests
 			Assert.True(result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void WithMethodsDoNotModifySource()
 		{
 			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
@@ -68,7 +68,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((IntPtr)123, copy.GetPixels());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReadPixelCopiesData()
 		{
 			var info = new SKImageInfo(10, 10);
@@ -91,7 +91,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SwizzleSwapsRedAndBlue()
 		{
 			var info = new SKImageInfo(10, 10);
@@ -108,7 +108,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EraseWithColor()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -121,7 +121,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, pixmap.GetPixelColor(0, 0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EraseWithColorF()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -134,7 +134,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, pixmap.GetPixelColor(0, 0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodeWithPngEncoder()
 		{
 			var bitmap = CreateTestBitmap();
@@ -149,7 +149,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKEncodedImageFormat.Png, codec.EncodedFormat);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodeWithJpegEncoder()
 		{
 			var bitmap = CreateTestBitmap();
@@ -164,7 +164,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKEncodedImageFormat.Jpeg, codec.EncodedFormat);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodeWithWebpEncoder()
 		{
 			var bitmap = CreateTestBitmap();
@@ -179,7 +179,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MismatchingColorTypesThrow()
 		{
 			var info = new SKImageInfo(1, 1, SKColorType.Rgba8888);
@@ -189,7 +189,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentException>(() => pixmap.GetPixelSpan<ushort>());
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void ByteWorksForEverything(SKColorType colortype)
 		{
@@ -200,7 +200,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(info.BytesSize, pixmap?.GetPixelSpan<byte>().Length ?? 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000)]
 		[InlineData(0xFF000000)]
 		[InlineData(0xFFFF0000)]
@@ -228,7 +228,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rgb888, pixmap.GetPixelSpan<uint>()[0]);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000, 0x0000)]
 		[InlineData(0xFF000000, 0x0000)]
 		[InlineData(0xFFFF0000, 0xF800)]
@@ -246,7 +246,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rgb565, pixmap.GetPixelSpan<ushort>()[0]);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000, 0)]
 		[InlineData(0xFF000000, 0)]
 		[InlineData(0xFFFF0000, 54)]
@@ -264,7 +264,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(gray8, pixmap.GetPixelSpan<byte>()[0]);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		// Rgb565 => 2 bytes per pixel
 		[InlineData(SKColorType.Rgb565, 1, 1, 0, 0, 0)]
 		[InlineData(SKColorType.Rgb565, 2, 2, 0, 0, 0)]
@@ -283,7 +283,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(offset, info.GetPixelBytesOffset(x, y, info.RowBytes));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		// the offset must honor a stride that is larger than the packed width
 		// Rgba8888 (4 bpp), 2px wide, but a 16-byte stride (8 bytes of padding)
 		[InlineData(SKColorType.Rgba8888, 2, 16, 0, 0, 0)]
@@ -296,7 +296,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(offset, info.GetPixelBytesOffset(x, y, rowBytes));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000)]
 		[InlineData(0xFF000000)]
 		[InlineData(0xFFFF0000)]
@@ -339,7 +339,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000, 0x0000)]
 		[InlineData(0xFF000000, 0x0000)]
 		[InlineData(0xFFFF0000, 0xF800)]
@@ -367,7 +367,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0x00000000, 0)]
 		[InlineData(0xFF000000, 0)]
 		[InlineData(0xFFFF0000, 54)]
@@ -395,7 +395,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanWithOffsetWorksForNonSquarePixmaps()
 		{
 			// Use a non-square pixmap to expose the bug where Width and Height were swapped
@@ -421,7 +421,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanWithOffsetReturnsCorrectPixelForNonSquare()
 		{
 			// Create a wide pixmap and draw distinct colors in known positions
@@ -464,7 +464,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(spanRow1[4], spanMidRow1[0]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanHandlesStrideCorrectly()
 		{
 			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888);
@@ -520,7 +520,7 @@ namespace SkiaSharp.Tests
 			return bmp;
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0, 0, 3, 2)]   // origin (0, 0)
 		[InlineData(3, 2, 7, 5)]   // interior origin, non-square
 		[InlineData(2, 0, 5, 3)]   // top edge, non-zero x
@@ -559,7 +559,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(UniqueColor(left, top), pixmap.GetPixelSpan<SKColor>()[0]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanHandlesNonSquareSubset()
 		{
 			// distinct dimensions so a Width/Height swap would be caught
@@ -588,7 +588,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(span.Length - (rowLength + 2), spanX2Y1.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanHandlesBottomRightSubset()
 		{
 			// a subset whose last row is the parent's last row: a naively padded
@@ -615,7 +615,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Green, green);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanByteBranchHandlesSubsetStride()
 		{
 			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888);
@@ -640,7 +640,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(pixmap.BytesPerPixel, lastByte.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanHandlesSubsetForHighBitShiftColorType()
 		{
 			// RgbaF32 is 16 bytes per pixel (shift 4) - the largest multiplier
@@ -667,7 +667,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(pixmap.BytesPerPixel, lastByte.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanHandlesSubsetForMultiByteColorType()
 		{
 			// Rgb565 is 2 bytes per pixel, exercising a different bpp/shift
@@ -687,7 +687,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((2 - 1) * rowLength + 2, span.Length);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(-1, 0)]
 		[InlineData(0, -1)]
 		[InlineData(0, 4)]
@@ -702,7 +702,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentOutOfRangeException>(() => pixmap.GetPixelSpan(x, y));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void GetPixelSpanTypedThrowsForStrideNotMultipleOfElement()
 		{
 			// a stride that is not a whole number of pixels cannot be represented
@@ -727,7 +727,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void GetPixelSpanTypedAllowsStrideNotMultipleOfElementForSingleRow()
 		{
 			// a single-row pixmap never crosses the stride padding, so even a
@@ -752,7 +752,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanReturnsEmptyForEmptyPixmap()
 		{
 			using var pixmap = new SKPixmap();
@@ -767,7 +767,7 @@ namespace SkiaSharp.Tests
 			Assert.True(pixmap.GetPixelSpan<SKColor>(-1, 5).IsEmpty);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void GetPixelSpanReturnsEmptyForUnknownColorType()
 		{
 			// a non-empty buffer with an unknown color type has no pixel size, so

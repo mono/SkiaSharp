@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKImageInfoTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void MethodsDoNotModifySource()
 		{
 			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Gray8, copy.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BytesSizeThrowsOnInt32Overflow()
 		{
 			// Width*Height*BytesPerPixel = 65536*65536*4 = 17179869184, which wraps to 0
@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(17179869184L, info.BytesSize64);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RowBytesThrowsOnInt32Overflow()
 		{
 			// Width=2^30, BytesPerPixel=4 -> RowBytes mathematical product = 2^32,
@@ -47,7 +47,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1L << 32, info.RowBytes64);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BytesSizeIsExactForLargeButValidDimensions()
 		{
 			// Just under the int32 boundary - must compute exactly, not throw.
@@ -61,7 +61,7 @@ namespace SkiaSharp.Tests
 
 	public class SKRectTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void HasCorrectProperties()
 		{
 			var rect = new SKRect(15, 25, 55, 75);
@@ -78,7 +78,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(50f, rect.MidY);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OffsetsCorrectly()
 		{
 			var expected = new SKRect(25, 30, 65, 80);
@@ -93,7 +93,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expected, rect2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void InflatesCorrectly()
 		{
 			var rect = new SKRect(15, 25, 55, 75);
@@ -111,7 +111,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(95f, rect.Bottom);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StandardizeCorrectly()
 		{
 			var rect = new SKRect(5, 5, 15, 15);
@@ -136,7 +136,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, negWH.Standardized);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 5, 10, /*result:*/ 5 + 5, 5 + 0, 10, 20)] // tall image in a square frame
 		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 10, 5, /*result:*/ 5 + 0, 5 + 5, 20, 10)] // wide image in a square frame
 		public void AspectFitIsCorrect(float rX, float rY, float rW, float rH, float sW, float sH, float eX, float eY, float eW, float eH)
@@ -151,7 +151,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expected, fit);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 5, 10, /*result:*/ 5 + 0, 5 - 10, 20, 40)] // tall image in a square frame
 		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 10, 5, /*result:*/ 5 - 10, 5 + 0, 40, 20)] // wide image in a square frame
 		[InlineData(/*frame:*/ 0, 0, 1024, 767, /*size:*/ 1024, 1024, /*result:*/ 0, -128.5f, 1024, 1024)] // #2562
@@ -170,7 +170,7 @@ namespace SkiaSharp.Tests
 
 	public class SKRectITest : SKTest
 	{
-		[SkippableTheory]
+		[Theory]
 		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 5, 10, /*result:*/ 5 + 5, 5 + 0, 10, 20)] // tall image in a square frame
 		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 10, 5, /*result:*/ 5 + 0, 5 + 5, 20, 10)] // wide image in a square frame
 		public void AspectFitIsCorrect(int rX, int rY, int rW, int rH, int sW, int sH, int eX, int eY, int eW, int eH)
@@ -185,7 +185,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expected, fit);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 5, 10, /*result:*/ 5 + 0, 5 - 10, 20, 40)] // tall image in a square frame
 		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 10, 5, /*result:*/ 5 - 10, 5 + 0, 40, 20)] // wide image in a square frame
 		[InlineData(/*frame:*/ 0, 0, 1024, 767, /*size:*/ 1024, 1024, /*result:*/ 0, -129f, 1024, 1024)] // #2562
@@ -201,7 +201,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expected, fit);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CeilingWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(6, 6, 21, 21), SKRectI.Ceiling(new SKRect(5.5f, 5.5f, 20.5f, 20.5f)));
@@ -212,7 +212,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRectI(21, 21, 5, 5), SKRectI.Ceiling(new SKRect(20.4f, 20.6f, 5.4f, 5.6f), true));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FloorWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(5, 5, 20, 20), SKRectI.Floor(new SKRect(5.5f, 5.5f, 20.5f, 20.5f)));
@@ -223,7 +223,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRectI(20, 20, 6, 6), SKRectI.Floor(new SKRect(20.4f, 20.6f, 5.4f, 5.6f), true));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RoundWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(6, 6, 21, 21), SKRectI.Round(new SKRect(5.51f, 5.51f, 20.51f, 20.51f)));

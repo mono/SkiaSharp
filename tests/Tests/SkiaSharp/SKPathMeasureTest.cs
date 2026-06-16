@@ -5,14 +5,14 @@ namespace SkiaSharp.Tests
 {
 	public class SKPathMeasureTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void ConstructorThrowsOnNullPathArgument()
 		{
 			var ex = Assert.Throws<ArgumentNullException>(() => new SKPathMeasure(null));
 			Assert.Equal("path", ex.ParamName);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ConstructorDoesNotThrownOnNonNullPathArgument()
 		{
 			var path = new SKPath();
@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(pm);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyConstructorDoesNotThrow()
 		{
 			var pm = new SKPathMeasure();

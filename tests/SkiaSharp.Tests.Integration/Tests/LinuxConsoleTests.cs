@@ -1,5 +1,4 @@
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests.Integration;
 
@@ -29,10 +28,10 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
         }
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task SkiaSharpRunsOnLinux()
     {
-        Skip.IfNot(IsDockerAvailable(), "Docker is not available");
+        Assert.SkipUnless(IsDockerAvailable(), "Docker is not available");
 
         Output.WriteLine($"Testing SkiaSharp {SkiaVersion} in Linux Docker container");
 
@@ -62,10 +61,10 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
         await VerifyScreenshot(actualImage, "linux-console-skiasharp");
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task HarfBuzzSharpRunsOnLinux()
     {
-        Skip.IfNot(IsDockerAvailable(), "Docker is not available");
+        Assert.SkipUnless(IsDockerAvailable(), "Docker is not available");
 
         Output.WriteLine($"Testing HarfBuzzSharp {HarfBuzzVersion} in Linux Docker container");
 

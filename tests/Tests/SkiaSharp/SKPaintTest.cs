@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests
 {
@@ -13,7 +12,7 @@ namespace SkiaSharp.Tests
 		{
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void StrokePropertyValuesAreCorrect()
 		{
@@ -28,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKPaintStyle.Fill, paint.Style);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetFillPathIsWorking()
 		{
 			var paint = new SKPaint();
@@ -46,7 +45,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(4, fillPath.PointCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetFillPathIsWorkingWithLine()
 		{
 			var paint = new SKPaint();
@@ -76,7 +75,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for issue #276
-		[SkippableFact]
+		[Fact]
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
 			SkipOnPlatform(IsAndroid, "TODO: figure out why the font has changed");
@@ -135,7 +134,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for issue #282
-		[SkippableFact(Skip = "Known to fail, see: https://github.com/mono/SkiaSharp/issues/282")]
+		[Fact(Skip = "Known to fail, see: https://github.com/mono/SkiaSharp/issues/282")]
 		public void DrawTransparentImageWithHighFilterQualityWithUnpremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
@@ -168,7 +167,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for the "workaround" for issue #282
-		[SkippableFact]
+		[Fact]
 		public void DrawTransparentImageWithHighFilterQualityWithPremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
@@ -203,7 +202,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(landColor, bitmap.GetPixel(270, 270));
 			}
 		}
-		[SkippableFact]
+		[Fact]
 		public void Clone()
 		{
 			using var paint = new SKPaint();

@@ -16,14 +16,14 @@ namespace HarfBuzzSharp.Tests
 
 		// US1: Query Variable Font Axes
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetVariationAxisCount ()
 		{
 			using var face = CreateVariableFace ();
 			Assert.True (face.VariationAxisCount > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetVariationAxisInfos ()
 		{
 			using var face = CreateVariableFace ();
@@ -37,14 +37,14 @@ namespace HarfBuzzSharp.Tests
 			Assert.True (axis.DefaultValue <= axis.MaxValue);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void VariationAxisCountIsZeroForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
 			Assert.Equal (0, face.VariationAxisCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TryFindVariationAxisReturnsTrueForExistingAxis ()
 		{
 			using var face = CreateVariableFace ();
@@ -57,7 +57,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (axes[0].Tag, axisInfo.Tag);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TryFindVariationAxisReturnsFalseForMissingAxis ()
 		{
 			using var face = CreateVariableFace ();
@@ -68,7 +68,7 @@ namespace HarfBuzzSharp.Tests
 
 		// US3: Named Instances
 
-		[SkippableFact]
+		[Fact]
 		public void VariationAxisCountMatchesArrayLength ()
 		{
 			using var face = CreateVariableFace ();
@@ -76,7 +76,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (face.VariationAxisCount, axes.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationAxisInfosMatchesArrayVersion ()
 		{
 			using var face = CreateVariableFace ();
@@ -95,7 +95,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationAxisInfosWithOversizedBuffer ()
 		{
 			using var face = CreateVariableFace ();
@@ -108,7 +108,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (axisCount, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationAxisInfosWithUndersizedBuffer ()
 		{
 			using var face = CreateVariableFace ();
@@ -121,7 +121,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (1, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationAxisInfosWithEmptyBuffer ()
 		{
 			using var face = CreateVariableFace ();
@@ -132,7 +132,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (0, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetNamedInstanceCount ()
 		{
 			using var face = CreateVariableFace ();
@@ -140,7 +140,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.True (face.NamedInstanceCount > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NamedInstanceDesignCoordsCountMatchesAxisCount ()
 		{
 			using var face = CreateVariableFace ();
@@ -151,7 +151,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (face.VariationAxisCount, coordsCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NamedInstanceDesignCoordsArrayLengthMatchesCount ()
 		{
 			using var face = CreateVariableFace ();
@@ -163,7 +163,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.NotEmpty (coords);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetNamedInstanceDesignCoordsMatchesArrayVersion ()
 		{
 			using var face = CreateVariableFace ();
@@ -180,7 +180,7 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal (arrayResult[i], spanBuffer[i]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetNamedInstanceDesignCoordsWithUndersizedBuffer ()
 		{
 			using var face = CreateVariableFace ();
@@ -195,7 +195,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (1, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetNamedInstanceDesignCoordsWithEmptyBuffer ()
 		{
 			using var face = CreateVariableFace ();
@@ -206,7 +206,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (0, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetNamedInstanceDesignCoordsWithOversizedBuffer ()
 		{
 			using var face = CreateVariableFace ();
@@ -218,7 +218,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (totalCoords, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EachNamedInstanceHasDesignCoords ()
 		{
 			using var face = CreateVariableFace ();
@@ -232,7 +232,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NamedInstanceSubfamilyNameIdIsValid ()
 		{
 			using var face = CreateVariableFace ();
@@ -243,7 +243,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.True ((uint)nameId > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NamedInstancePostScriptNameIdDoesNotThrow ()
 		{
 			using var face = CreateVariableFace ();
@@ -254,56 +254,56 @@ namespace HarfBuzzSharp.Tests
 			// Just verify it returns without error
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeInstanceIndexThrowsForSubfamilyNameId ()
 		{
 			using var face = CreateVariableFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstanceSubfamilyNameId (-1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeInstanceIndexThrowsForPostScriptNameId ()
 		{
 			using var face = CreateVariableFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstancePostScriptNameId (-1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeInstanceIndexThrowsForDesignCoords ()
 		{
 			using var face = CreateVariableFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstanceDesignCoords (-1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeInstanceIndexThrowsForDesignCoordsCount ()
 		{
 			using var face = CreateVariableFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstanceDesignCoordsCount (-1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeInstanceIndexThrowsForDesignCoordsSpan ()
 		{
 			using var face = CreateVariableFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstanceDesignCoords (-1, new float[1]));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NamedInstanceCountIsZeroForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
 			Assert.Equal (0, face.NamedInstanceCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HasVariationDataIsTrueForVariableFont ()
 		{
 			using var face = CreateVariableFace ();
 			Assert.True (face.HasVariationData);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HasVariationDataIsFalseForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
@@ -318,21 +318,21 @@ namespace HarfBuzzSharp.Tests
 			return new Face (blob, 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HasPalettesIsTrueForColorFont ()
 		{
 			using var face = CreateColorFace ();
 			Assert.True (face.HasPalettes);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HasPalettesIsFalseForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
 			Assert.False (face.HasPalettes);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PaletteCountIsNonZeroForColorFont ()
 		{
 			using var face = CreateColorFace ();
@@ -340,14 +340,14 @@ namespace HarfBuzzSharp.Tests
 			Assert.True (face.PaletteCount >= 3);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PaletteCountIsZeroForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
 			Assert.Equal (0, face.PaletteCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetPaletteColors ()
 		{
 			using var face = CreateColorFace ();
@@ -357,7 +357,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.NotEmpty (colors);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetPaletteColorsMatchesArrayVersion ()
 		{
 			using var face = CreateColorFace ();
@@ -374,7 +374,7 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal (arrayResult[i], spanBuffer[i]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetPaletteColorsWithUndersizedBuffer ()
 		{
 			using var face = CreateColorFace ();
@@ -389,7 +389,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (1, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetPaletteColorsWithOversizedBuffer ()
 		{
 			using var face = CreateColorFace ();
@@ -402,7 +402,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (totalColors, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetPaletteColorsWithEmptyBuffer ()
 		{
 			using var face = CreateColorFace ();
@@ -413,7 +413,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (0, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DifferentPalettesHaveDifferentColors ()
 		{
 			using var face = CreateColorFace ();
@@ -434,7 +434,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.True (anyDifferent);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetPaletteFlags ()
 		{
 			using var face = CreateColorFace ();
@@ -443,7 +443,7 @@ namespace HarfBuzzSharp.Tests
 			var flags = face.GetPaletteFlags (0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetPaletteNameId ()
 		{
 			using var face = CreateColorFace ();
@@ -452,7 +452,7 @@ namespace HarfBuzzSharp.Tests
 			var nameId = face.GetPaletteNameId (0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetPaletteColorNameId ()
 		{
 			using var face = CreateColorFace ();
@@ -462,63 +462,63 @@ namespace HarfBuzzSharp.Tests
 			var nameId = face.GetPaletteColorNameId (0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HasColorLayersIsTrueForColorFont ()
 		{
 			using var face = CreateColorFace ();
 			Assert.True (face.HasColorLayers);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HasColorLayersIsFalseForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
 			Assert.False (face.HasColorLayers);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HasColorPngIsFalseForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
 			Assert.False (face.HasColorPng);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void HasColorSvgIsFalseForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
 			Assert.False (face.HasColorSvg);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeIndexThrowsForPaletteColors ()
 		{
 			using var face = CreateColorFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteColors (-1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeIndexThrowsForPaletteFlags ()
 		{
 			using var face = CreateColorFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteFlags (-1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeIndexThrowsForPaletteNameId ()
 		{
 			using var face = CreateColorFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteNameId (-1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeIndexThrowsForPaletteColorNameId ()
 		{
 			using var face = CreateColorFace ();
 			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteColorNameId (-1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PaletteColorsHaveCorrectChannels ()
 		{
 			// GetPaletteColors() returns HBColor[] with correct channel accessors.
@@ -532,7 +532,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Contains (colors, c => c.Alpha > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveGlyphCount()
 		{
 			using (var face = new Face(Blob, 0))
@@ -541,7 +541,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldBeImmutable()
 		{
 			using (var face = new Face(Blob, 0))
@@ -552,7 +552,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveIndex()
 		{
 			using (var face = new Face(Blob, 0))
@@ -561,7 +561,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveUnitsPerEm()
 		{
 			using (var face = new Face(Blob, 0))
@@ -570,7 +570,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveTableTags()
 		{
 			using (var face = new Face(Blob, 0))
@@ -579,7 +579,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldReferenceTable()
 		{
 			using (var face = new Face(Blob, 0))
@@ -589,7 +589,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldCreateWithTableFunc()
 		{
 			var tag = Tag.Parse("kern");
@@ -602,7 +602,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DelegateBasedConstructionSucceededs()
 		{
 			var didReference = 0;
@@ -648,7 +648,7 @@ namespace HarfBuzzSharp.Tests
 		}
 
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyFacesAreExactlyTheSameInstance()
 		{
 			var emptyFace1 = Face.Empty;
@@ -659,7 +659,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Same(emptyFace1, emptyFace2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyFacesAreNotDisposed()
 		{
 			var emptyFace = Face.Empty;

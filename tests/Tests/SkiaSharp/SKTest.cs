@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 using SkiaSharp.Extended;
 
 namespace SkiaSharp.Tests
@@ -71,7 +70,7 @@ namespace SkiaSharp.Tests
 			using var canvas = new SKCanvas(bitmap);
 
 			canvas.Clear(SKColors.Transparent);
-			canvas.DrawImage(img, 0, 0, SKSamplingOptions.Default);
+			canvas.DrawImage(img, 0, 0);
 			canvas.Flush();
 
 			using var stream = File.OpenWrite(Path.Combine(PathToImages, filename));
@@ -99,7 +98,7 @@ namespace SkiaSharp.Tests
 			var canvas = surface.Canvas;
 
 			canvas.Clear(SKColors.Transparent);
-			canvas.DrawImage(img, 0, 0, SKSamplingOptions.Default);
+			canvas.DrawImage(img, 0, 0);
 			canvas.Flush();
 
 			using var snap = surface.Snapshot();
@@ -240,7 +239,8 @@ namespace SkiaSharp.Tests
 			}
 			catch (Exception ex)
 			{
-				throw new SkipException($"Unable to create GL context: {ex.Message}");
+				Assert.Skip($"Unable to create GL context: {ex.Message}");
+				throw;
 			}
 		}
 

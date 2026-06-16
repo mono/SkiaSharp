@@ -6,7 +6,7 @@ namespace HarfBuzzSharp.Tests
 {
 	public class HBFeatureTest : HBTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void ShouldCreateFeatureFromString()
 		{
 			var feature = Feature.Parse("Kern");
@@ -14,7 +14,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal(Tag.Parse("Kern"), feature.Tag);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToStringIsCorrect()
 		{
 			var feature = Feature.Parse("Kern");
@@ -22,7 +22,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal("Kern", feature.ToString());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldThrowFromUnknownString()
 		{
 			Assert.False(Feature.TryParse("", out var script));

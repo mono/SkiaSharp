@@ -23,225 +23,6 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/shared.cake"
 #load "../shared/download.cake"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// DOCS UTILITIES
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void DecompressArchive(FilePath archive, DirectoryPath outputDir)
-{
-    using (var stream = System.IO.File.OpenRead(archive.FullPath))
-    using (var reader = ReaderFactory.Open(stream)) {
-        while(reader.MoveToNextEntry()) {
-            if (!reader.Entry.IsDirectory) {
-                reader.WriteEntryToDirectory(outputDir.FullPath, new ExtractionOptions {
-                    ExtractFullPath = true,
-                    Overwrite = true
-                });
-            }
-        }
-    }
-}
-
-IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(DirectoryPath rootDir)
-{
-    var platformDirs = GetDirectories($"{rootDir}/*");
-
-    // try find any cross-platform frameworks
-    foreach (var dir in platformDirs) {
-        var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("netstandard") || d.StartsWith("portable") || d.Equals("net6.0") || d.Equals("net7.0") || d.Equals("net8.0") || d.Equals("net9.0") || d.Equals("net10.0")) {
-            // we just want this single platform
-            yield return (dir, null);
-            yield break;
-        }
-    }
-
-    // there were no cross-platform libraries, so process each platform
-    foreach (var dir in platformDirs) {
-        var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
-            yield return (dir, "android");
-        else if (d.StartsWith("net4"))
-            yield return (dir, "net");
-        else if (d.StartsWith("uap"))
-            yield return (dir, "uwp");
-        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
-            yield return (dir, "ios");
-        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
-            yield return (dir, "macos");
-        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
-            yield return (dir, "tvos");
-        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
-            yield return (dir, "watchos");
-        else if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
-            yield return (dir, "tizen");
-        else if (d.StartsWith("net") && d.Contains("-windows"))
-            yield return (dir, "windows");
-        else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
-            yield return (dir, "maccatalyst");
-        else if (d.StartsWith("netcoreapp"))
-            continue; // skip this one for now
-        else
-            throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
-    }
-}
-
-async Task<NuGetDiff> CreateNuGetDiffAsync()
-{
-    var comparer = new NuGetDiff();
-    comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
-    comparer.IgnoreResolutionErrors = true;
-    
-    Verbose ($"Adding dependencies...");
-
-    await AddDep("OpenTK.GLControl", "NET20");
-    await AddDep("GtkSharp", "netstandard2.0");
-    await AddDep("GdkSharp", "netstandard2.0");
-    await AddDep("GLibSharp", "netstandard2.0");
-    await AddDep("AtkSharp", "netstandard2.0");
-    await AddDep("System.Memory", "netstandard2.0");
-    await AddDep("System.Runtime.CompilerServices.Unsafe", "netstandard2.1");
-    await AddDep("Microsoft.WindowsAppSDK", "net6.0-windows10.0.18362.0");
-    await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
-    await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
-    await AddDep("Microsoft.Windows.SDK.Contracts", "netstandard2.0");
-    await AddDep("System.Runtime.WindowsRuntime", "netstandard2.0");
-    await AddDep("System.Runtime.WindowsRuntime.UI.Xaml", "netstandard2.0");
-    await AddDep("Microsoft.WindowsDesktop.App.Ref", "net6.0");
-    await AddDep("Microsoft.AspNetCore.Components", "net6.0");
-    await AddDep("OpenTK.GLWpfControl", "netcoreapp3.1");
-    await AddDep("Microsoft.Maui.Core", "net10.0");
-    await AddDep("Microsoft.Maui.Controls.Core", "net10.0");
-    await AddDep("Microsoft.iOS.Ref.net10.0_26.0", "net10.0");
-    await AddDep("Microsoft.MacCatalyst.Ref.net10.0_26.0", "net10.0");
-    await AddDep("Microsoft.tvOS.Ref.net10.0_26.0", "net10.0");
-    await AddDep("Microsoft.macOS.Ref.net10.0_26.0", "net10.0");
-    await AddDep("Samsung.Tizen.Ref", "net10.0");
-    await AddDep("GirCore.Gdk-4.0", "net10.0");
-    await AddDep("GirCore.Gtk-4.0", "net10.0");
-    await AddDep("GirCore.Cairo-1.0", "net10.0");
-    await AddDep("GirCore.FreeType2-2.0", "net10.0");
-    await AddDep("GirCore.GdkPixbuf-2.0", "net10.0");
-    await AddDep("GirCore.Gio-2.0", "net10.0");
-    await AddDep("GirCore.GLib-2.0", "net10.0");
-    await AddDep("GirCore.GObject-2.0", "net10.0");
-    await AddDep("GirCore.Graphene-1.0", "net10.0");
-    await AddDep("GirCore.Gsk-4.0", "net10.0");
-    await AddDep("GirCore.HarfBuzz-0.0", "net10.0");
-    await AddDep("GirCore.Pango-1.0", "net10.0");
-    await AddDep("GirCore.PangoCairo-1.0", "net10.0");
-    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.iOS/v1.0");
-    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.TVOS/v1.0");
-    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0");
-    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.Mac/v2.0");
-    await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v1.0");
-    await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v13.0");
-    await AddDep("Uno.UI", "netstandard2.0");
-    await AddDep("Xamarin.Forms", "netstandard2.0");
-    await AddDep("Xamarin.Forms.Platform.WPF", "net461");
-    await AddDep("Xamarin.Forms.Platform.GTK", "net461");
-
-    // some parts of SkiaSharp depend on other parts
-    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
-        comparer.SearchPaths.Add(dir.FullPath);
-    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard2.0"))
-        comparer.SearchPaths.Add(dir.FullPath);
-    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard1.3"))
-        comparer.SearchPaths.Add(dir.FullPath);
-
-    Verbose("Added search paths:");
-    foreach (var path in comparer.SearchPaths) {
-        var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();
-        Verbose($"    {(found ? " " : "!")} {path}");
-    }
-
-    return comparer;
-
-    async Task AddVsixDep(string id, string localPath, string type = "url")
-    {
-        var url = GetVersion(id, type);
-        var fileName = System.IO.Path.GetFileName(new Uri(url).LocalPath);
-        Verbose ($"    Adding VSIX dependency {id} ({fileName})...");
-        var dest = System.IO.Path.Combine(PACKAGE_CACHE_PATH.FullPath, id.ToLower(), fileName);
-        if (!FileExists(dest)) {
-            EnsureDirectoryExists(System.IO.Path.GetDirectoryName(dest));
-            Verbose($"      Downloading {url} to {dest}");
-            DownloadFile(url, dest);
-        }
-        var extractDir = System.IO.Path.Combine(PACKAGE_CACHE_PATH.FullPath, id.ToLower(), System.IO.Path.GetFileNameWithoutExtension(fileName));
-        if (!DirectoryExists(extractDir)) {
-            Verbose($"      Extracting {dest} to {extractDir}");
-            EnsureDirectoryExists(extractDir);
-            DecompressArchive(dest, extractDir);
-        }
-        var searchPath = System.IO.Path.Combine(extractDir, localPath);
-        if (DirectoryExists(searchPath)) {
-            Verbose($"      Adding VSIX search path: {searchPath}");
-            comparer.SearchPaths.Add(searchPath);
-        } else {
-            Verbose($"      No VSIX search path found at: {searchPath}");
-        }
-    }
-        
-    async Task AddDep(string id, string platform, string type = "release")
-    {
-        var version = GetVersion(id, type);
-        Verbose ($"    Adding dependency {id} version {version}...");
-        var root = await comparer.ExtractCachedPackageAsync(id, version);
-        var libPath = System.IO.Path.Combine(root, "lib", platform);
-        var refPath = System.IO.Path.Combine(root, "ref", platform);
-        if (DirectoryExists(libPath)) {
-            Verbose ($"      lib path {libPath}");
-            comparer.SearchPaths.Add(libPath);
-        } else if (DirectoryExists(refPath)) {
-            Verbose ($"      ref path {libPath}");
-            comparer.SearchPaths.Add(refPath);
-        } else {
-            Verbose ($"      no lib or ref path");
-        }
-    }
-}
-
-void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
-{
-    foreach (var (path, platform) in GetPlatformDirectories (diffRoot)) {
-        // first, make sure to create markdown files for unchanged assemblies
-        var xmlFiles = $"{path}/*.new.info.xml";
-        foreach (var file in GetFiles (xmlFiles)) {
-            var dll = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
-            var md = $"{path}/{dll}.diff.md";
-            if (!FileExists (md)) {
-                var n = Environment.NewLine;
-                var noChangesText = $"# API diff: {dll}{n}{n}## {dll}{n}{n}> No changes.{n}";
-                FileWriteText (md, noChangesText);
-            }
-        }
-
-        // now copy the markdown files to the changelogs
-        var mdFiles = $"{path}/*.*.md";
-        ReplaceTextInFiles (mdFiles, "<h4>", "> ");
-        ReplaceTextInFiles (mdFiles, "</h4>", Environment.NewLine);
-        ReplaceTextInFiles (mdFiles, "\r\r", "\r");
-        foreach (var file in GetFiles (mdFiles)) {
-            var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
-            if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
-                // skip over breaking changes without any breaking changes
-                if (!FindTextInFiles (file.FullPath, "###").Any ()) {
-                    DeleteFile (file);
-                    continue;
-                }
-
-                dllName += ".breaking";
-            }
-            var changelogPath = (FilePath)$"{ROOT_PATH}/changelogs/{id}/{version}/{dllName}.md";
-            EnsureDirectoryExists (changelogPath.GetDirectory ());
-            CopyFile (file, changelogPath);
-            var changelogOutputPath = (FilePath)$"{ROOT_PATH}/output/logs/changelogs/{id}/{version}/{dllName}.md";
-            EnsureDirectoryExists (changelogOutputPath.GetDirectory ());
-            CopyFile (file, changelogOutputPath);
-        }
-    }
-}
 
 Task ("docs-download-output")
     .Does (async () =>
@@ -251,6 +32,7 @@ Task ("docs-download-output")
     await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
     await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 });
+
 
 Task ("docs-api-diff")
     .Does (async () =>
@@ -268,6 +50,12 @@ Task ("docs-api-diff")
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
+
+    // Shared version-comparison config — same source of truth used by
+    // docs-api-diff-past. Here it lets us pick a sensible baseline for the
+    // unpublished local build instead of blindly diffing against the newest
+    // feed version (which could be a superseded preview).
+    var versionsConfig = LoadVersionsConfig ();
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
@@ -295,8 +83,25 @@ Task ("docs-api-diff")
             continue;
         }
 
-        var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
-        Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
+        // Pick the baseline to diff the local build against:
+        //   1. An explicit compare_to override in versions.json wins.
+        //   2. Otherwise use the newest published version that is NOT superseded
+        //      and is not the build's own version — this skips abandoned preview
+        //      lines (e.g. 4.147) the same way docs-api-diff-past does.
+        var allVersions = await NuGetVersions.GetAllAsync (id, filter);
+        var latestVersion = FindCompareToBaseline (versionsConfig, version, allVersions);
+        if (latestVersion == null) {
+            foreach (var candidate in allVersions.OrderByDescending (v => v)) {
+                var normalized = candidate.ToNormalizedString ();
+                if (normalized == localNugetVersion)
+                    continue;
+                if (IsVersionSuperseded (versionsConfig, normalized))
+                    continue;
+                latestVersion = normalized;
+                break;
+            }
+        }
+        Debug ($"Version '{latestVersion}' is the baseline for '{id}'...");
 
         // pre-cache so we can have better logs
         if (!string.IsNullOrEmpty (latestVersion)) {
@@ -308,16 +113,8 @@ Task ("docs-api-diff")
         Debug ($"Running a diff on '{latestVersion}' vs '{localNugetVersion}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
         using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id}.{localNugetVersion}.nupkg")) {
-            // run the diff with just the breaking changes
-            comparer.MarkdownDiffFileExtension = ".breaking.md";
-            comparer.IgnoreNonBreakingChanges = true;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
-            // run the diff on everything
-            comparer.MarkdownDiffFileExtension = null;
-            comparer.IgnoreNonBreakingChanges = false;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
+            await RunBreakingAndFullDiff (comparer, id, latestVersion, reader, version, diffRoot);
         }
-        CopyChangelogs (diffRoot, id, version);
 
         // copy pretty version
         foreach (var md in GetFiles ($"{diffRoot}/*/*.md")) {
@@ -339,10 +136,36 @@ Task ("docs-api-diff-past")
     var baseDir = $"{ROOT_PATH}/output/api-diffs-past";
     CleanDirectories (baseDir);
 
+    // Make the regenerated set authoritative: clear the per-package changelog
+    // directories first. docs-api-diff-past rebuilds the COMPLETE historical
+    // set for every tracked package, so any version/assembly/breaking file that
+    // should no longer exist — e.g. a stale *.breaking.md after a baseline
+    // change in versions.json, or a package removed from TRACKED_NUGETS — is
+    // pruned instead of left behind to drift. Top-level files such as README.md
+    // are preserved (only subdirectories are removed).
+    var changelogsDir = $"{ROOT_PATH}/changelogs";
+    if (DirectoryExists (changelogsDir)) {
+        foreach (var dir in GetSubDirectories (changelogsDir))
+            DeleteDirectory (dir, new DeleteDirectorySettings { Recursive = true, Force = true });
+    }
+
+    // Shared version-comparison config — see LoadVersionsConfig and the
+    // versions.json header. Drives both the supersession skips and the
+    // compare_to overrides below.
+    Information ("Loading versions.json...");
+    var versionsConfig = LoadVersionsConfig ();
+
     Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
+
+    // Include prerelease packages when --nugetDiffPrerelease=true. The 4.x line
+    // ships only as prereleases for now, so the workflow passes true to make sure
+    // those versions get changelogs.
+    var filter = new NuGetVersions.Filter {
+        IncludePrerelease = NUGET_DIFF_PRERELEASE
+    };
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for NativeAssets as that has nothing but a native binary
@@ -351,11 +174,30 @@ Task ("docs-api-diff-past")
 
         Information ($"Comparing the assemblies in '{id}'...");
 
-        var allVersions = await NuGetVersions.GetAllAsync (id);
+        var allVersions = await NuGetVersions.GetAllAsync (id, filter);
         for (var idx = 0; idx < allVersions.Length; idx++) {
-            // get the versions for the diff
+            // get the version we are generating a changelog FOR (every version,
+            // including superseded ones, gets its own changelog)
             var version = allVersions [idx].ToNormalizedString ();
-            var previous = idx == 0 ? null : allVersions [idx - 1].ToNormalizedString ();
+
+            // Pick the baseline to diff against:
+            //   1. An explicit compare_to override in versions.json wins.
+            //   2. Otherwise walk back to the most recent NON-superseded version.
+            // Step 2 is what makes a skipped line transparent: when generating
+            // 4.148 we walk past all of 4.147.* (superseded) and land on 3.119.4.
+            // The same walk-back is used for superseded versions themselves, so
+            // e.g. each 4.147 preview diffs cumulatively against 3.119.4.
+            var previous = FindCompareToBaseline (versionsConfig, version, allVersions);
+            if (previous == null) {
+                for (var j = idx - 1; j >= 0; j--) {
+                    var candidate = allVersions [j].ToNormalizedString ();
+                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
+                        previous = candidate;
+                        break;
+                    }
+                }
+            }
+
             Information ($"Comparing version '{previous}' vs '{version}' of '{id}'...");
 
             // pre-cache so we can have better logs
@@ -369,15 +211,7 @@ Task ("docs-api-diff-past")
             // generate the diff and copy to the changelogs
             Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
             var diffRoot = $"{baseDir}/{id}/{version}";
-            // run the diff with just the breaking changes
-            comparer.MarkdownDiffFileExtension = ".breaking.md";
-            comparer.IgnoreNonBreakingChanges = true;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, previous, version, diffRoot);
-            // run the diff on everything
-            comparer.MarkdownDiffFileExtension = null;
-            comparer.IgnoreNonBreakingChanges = false;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, previous, version, diffRoot);
-            CopyChangelogs (diffRoot, id, version);
+            await RunBreakingAndFullDiff (comparer, id, previous, version, diffRoot);
 
             Debug ($"Diff complete of version '{version}' of '{id}'.");
         }
@@ -793,5 +627,319 @@ Task ("update-docs")
 
 Task ("Default")
     .IsDependentOn ("update-docs");
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// DOCS UTILITIES
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void DecompressArchive(FilePath archive, DirectoryPath outputDir)
+{
+    using (var stream = System.IO.File.OpenRead(archive.FullPath))
+    using (var reader = ReaderFactory.Open(stream)) {
+        while(reader.MoveToNextEntry()) {
+            if (!reader.Entry.IsDirectory) {
+                reader.WriteEntryToDirectory(outputDir.FullPath, new ExtractionOptions {
+                    ExtractFullPath = true,
+                    Overwrite = true
+                });
+            }
+        }
+    }
+}
+
+IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(DirectoryPath rootDir)
+{
+    var platformDirs = GetDirectories($"{rootDir}/*");
+
+    // try find any cross-platform frameworks
+    foreach (var dir in platformDirs) {
+        var d = dir.GetDirectoryName().ToLower();
+        if (d.StartsWith("netstandard") || d.StartsWith("portable") || d.Equals("net6.0") || d.Equals("net7.0") || d.Equals("net8.0") || d.Equals("net9.0") || d.Equals("net10.0")) {
+            // we just want this single platform
+            yield return (dir, null);
+            yield break;
+        }
+    }
+
+    // there were no cross-platform libraries, so process each platform
+    foreach (var dir in platformDirs) {
+        var d = dir.GetDirectoryName().ToLower();
+        if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
+            yield return (dir, "android");
+        else if (d.StartsWith("net4"))
+            yield return (dir, "net");
+        else if (d.StartsWith("uap"))
+            yield return (dir, "uwp");
+        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
+            yield return (dir, "ios");
+        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
+            yield return (dir, "macos");
+        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
+            yield return (dir, "tvos");
+        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
+            yield return (dir, "watchos");
+        else if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
+            yield return (dir, "tizen");
+        else if (d.StartsWith("net") && d.Contains("-windows"))
+            yield return (dir, "windows");
+        else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
+            yield return (dir, "maccatalyst");
+        else if (d.StartsWith("netcoreapp"))
+            continue; // skip this one for now
+        else
+            throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
+    }
+}
+
+async Task<NuGetDiff> CreateNuGetDiffAsync()
+{
+    var comparer = new NuGetDiff();
+    comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+    comparer.IgnoreResolutionErrors = true;
+    
+    Verbose ($"Adding dependencies...");
+
+    await AddDep("OpenTK.GLControl", "NET20");
+    await AddDep("GtkSharp", "netstandard2.0");
+    await AddDep("GdkSharp", "netstandard2.0");
+    await AddDep("GLibSharp", "netstandard2.0");
+    await AddDep("AtkSharp", "netstandard2.0");
+    await AddDep("System.Memory", "netstandard2.0");
+    await AddDep("System.Runtime.CompilerServices.Unsafe", "netstandard2.1");
+    await AddDep("Microsoft.WindowsAppSDK", "net6.0-windows10.0.18362.0");
+    await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
+    await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
+    await AddDep("Microsoft.Windows.SDK.Contracts", "netstandard2.0");
+    await AddDep("System.Runtime.WindowsRuntime", "netstandard2.0");
+    await AddDep("System.Runtime.WindowsRuntime.UI.Xaml", "netstandard2.0");
+    await AddDep("Microsoft.WindowsDesktop.App.Ref", "net6.0");
+    await AddDep("Microsoft.AspNetCore.Components", "net6.0");
+    await AddDep("OpenTK.GLWpfControl", "netcoreapp3.1");
+    await AddDep("Microsoft.Maui.Core", "net10.0");
+    await AddDep("Microsoft.Maui.Controls.Core", "net10.0");
+    await AddDep("Microsoft.iOS.Ref.net10.0_26.0", "net10.0");
+    await AddDep("Microsoft.MacCatalyst.Ref.net10.0_26.0", "net10.0");
+    await AddDep("Microsoft.tvOS.Ref.net10.0_26.0", "net10.0");
+    await AddDep("Microsoft.macOS.Ref.net10.0_26.0", "net10.0");
+    await AddDep("Samsung.Tizen.Ref", "net10.0");
+    await AddDep("GirCore.Gdk-4.0", "net10.0");
+    await AddDep("GirCore.Gtk-4.0", "net10.0");
+    await AddDep("GirCore.Cairo-1.0", "net10.0");
+    await AddDep("GirCore.FreeType2-2.0", "net10.0");
+    await AddDep("GirCore.GdkPixbuf-2.0", "net10.0");
+    await AddDep("GirCore.Gio-2.0", "net10.0");
+    await AddDep("GirCore.GLib-2.0", "net10.0");
+    await AddDep("GirCore.GObject-2.0", "net10.0");
+    await AddDep("GirCore.Graphene-1.0", "net10.0");
+    await AddDep("GirCore.Gsk-4.0", "net10.0");
+    await AddDep("GirCore.HarfBuzz-0.0", "net10.0");
+    await AddDep("GirCore.Pango-1.0", "net10.0");
+    await AddDep("GirCore.PangoCairo-1.0", "net10.0");
+    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.iOS/v1.0");
+    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.TVOS/v1.0");
+    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0");
+    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.Mac/v2.0");
+    await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v1.0");
+    await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v13.0");
+    await AddDep("Uno.UI", "netstandard2.0");
+    await AddDep("Xamarin.Forms", "netstandard2.0");
+    await AddDep("Xamarin.Forms.Platform.WPF", "net461");
+    await AddDep("Xamarin.Forms.Platform.GTK", "net461");
+
+    // some parts of SkiaSharp depend on other parts
+    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
+        comparer.SearchPaths.Add(dir.FullPath);
+    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard2.0"))
+        comparer.SearchPaths.Add(dir.FullPath);
+    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard1.3"))
+        comparer.SearchPaths.Add(dir.FullPath);
+
+    Verbose("Added search paths:");
+    foreach (var path in comparer.SearchPaths) {
+        var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();
+        Verbose($"    {(found ? " " : "!")} {path}");
+    }
+
+    return comparer;
+
+    async Task AddVsixDep(string id, string localPath, string type = "url")
+    {
+        var url = GetVersion(id, type);
+        var fileName = System.IO.Path.GetFileName(new Uri(url).LocalPath);
+        Verbose ($"    Adding VSIX dependency {id} ({fileName})...");
+        var dest = System.IO.Path.Combine(PACKAGE_CACHE_PATH.FullPath, id.ToLower(), fileName);
+        if (!FileExists(dest)) {
+            EnsureDirectoryExists(System.IO.Path.GetDirectoryName(dest));
+            Verbose($"      Downloading {url} to {dest}");
+            DownloadFile(url, dest);
+        }
+        var extractDir = System.IO.Path.Combine(PACKAGE_CACHE_PATH.FullPath, id.ToLower(), System.IO.Path.GetFileNameWithoutExtension(fileName));
+        if (!DirectoryExists(extractDir)) {
+            Verbose($"      Extracting {dest} to {extractDir}");
+            EnsureDirectoryExists(extractDir);
+            DecompressArchive(dest, extractDir);
+        }
+        var searchPath = System.IO.Path.Combine(extractDir, localPath);
+        if (DirectoryExists(searchPath)) {
+            Verbose($"      Adding VSIX search path: {searchPath}");
+            comparer.SearchPaths.Add(searchPath);
+        } else {
+            Verbose($"      No VSIX search path found at: {searchPath}");
+        }
+    }
+        
+    async Task AddDep(string id, string platform, string type = "release")
+    {
+        var version = GetVersion(id, type);
+        Verbose ($"    Adding dependency {id} version {version}...");
+        var root = await comparer.ExtractCachedPackageAsync(id, version);
+        var libPath = System.IO.Path.Combine(root, "lib", platform);
+        var refPath = System.IO.Path.Combine(root, "ref", platform);
+        if (DirectoryExists(libPath)) {
+            Verbose ($"      lib path {libPath}");
+            comparer.SearchPaths.Add(libPath);
+        } else if (DirectoryExists(refPath)) {
+            Verbose ($"      ref path {refPath}");
+            comparer.SearchPaths.Add(refPath);
+        } else {
+            Verbose ($"      no lib or ref path");
+        }
+    }
+}
+
+void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
+{
+    foreach (var (path, platform) in GetPlatformDirectories (diffRoot)) {
+        // first, make sure to create markdown files for unchanged assemblies
+        var xmlFiles = $"{path}/*.new.info.xml";
+        foreach (var file in GetFiles (xmlFiles)) {
+            var dll = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
+            var md = $"{path}/{dll}.diff.md";
+            if (!FileExists (md)) {
+                var n = Environment.NewLine;
+                var noChangesText = $"# API diff: {dll}{n}{n}## {dll}{n}{n}> No changes.{n}";
+                FileWriteText (md, noChangesText);
+            }
+        }
+
+        // now copy the markdown files to the changelogs
+        var mdFiles = $"{path}/*.*.md";
+        ReplaceTextInFiles (mdFiles, "<h4>", "> ");
+        ReplaceTextInFiles (mdFiles, "</h4>", Environment.NewLine);
+        ReplaceTextInFiles (mdFiles, "\r\r", "\r");
+        foreach (var file in GetFiles (mdFiles)) {
+            var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
+            if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
+                // skip over breaking changes without any breaking changes
+                if (!FindTextInFiles (file.FullPath, "###").Any ()) {
+                    DeleteFile (file);
+                    continue;
+                }
+
+                dllName += ".breaking";
+            }
+            var changelogPath = (FilePath)$"{ROOT_PATH}/changelogs/{id}/{version}/{dllName}.md";
+            EnsureDirectoryExists (changelogPath.GetDirectory ());
+            CopyFile (file, changelogPath);
+            var changelogOutputPath = (FilePath)$"{ROOT_PATH}/output/logs/changelogs/{id}/{version}/{dllName}.md";
+            EnsureDirectoryExists (changelogOutputPath.GetDirectory ());
+            CopyFile (file, changelogOutputPath);
+        }
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHARED API-DIFF HELPERS
+//
+// The two API-changelog targets — docs-api-diff ("current": diff the unpublished
+// local CI build against the feed) and docs-api-diff-past ("historical":
+// regenerate changelogs for every published version) — answer different
+// questions and take a different NEW side (a local .nupkg vs a published
+// version). But the actual diff mechanics and the version-comparison rules are
+// identical, so they live here and both targets call them. This keeps the two
+// targets thin and guarantees they treat supersession the same way.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Load the shared version-comparison config (scripts/versions.json). This is the
+// single source of truth for how versions relate to each other. It is "override
+// only": versions NOT listed fall back to the default behaviour of diffing
+// against the immediately-preceding published version. Returns the "versions"
+// array (empty when the file is absent). See versions.json for the schema.
+JArray LoadVersionsConfig ()
+{
+    var path = $"{ROOT_PATH}/scripts/versions.json";
+    if (!FileExists (path))
+        return new JArray ();
+    var doc = JObject.Parse (System.IO.File.ReadAllText (path));
+    return doc ["versions"] as JArray ?? new JArray ();
+}
+
+// A "superseded" version is one that was previewed but never shipped stable
+// (e.g. 4.147 was abandoned in favour of 4.148). It still gets its OWN changelog
+// generated — it is only excluded from acting as a *baseline* for other
+// versions, so a later release diffs against the last real predecessor instead.
+// Matched on major.minor.patch, so an entry for "4.147.0" covers every
+// 4.147.0-preview.* (all previews of that exact patch), but not a different
+// patch such as 4.147.1.
+bool IsVersionSuperseded (JArray config, string normalizedVersion)
+{
+    var nv = new NuGetVersion (normalizedVersion);
+    var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+    return config.Any (v => (string)v ["version"] == key && (string)v ["status"] == "superseded");
+}
+
+// Return the explicit "compare_to" baseline declared for a version in
+// versions.json (e.g. 4.148 → 3.119.4, deliberately skipping 4.147), resolved to
+// the newest actual package that matches that major.minor.patch. Returns null
+// when no override exists, in which case the caller falls back to a walk-back.
+string FindCompareToBaseline (JArray config, string normalizedVersion, NuGetVersion[] allVersions)
+{
+    var nv = new NuGetVersion (normalizedVersion);
+    var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+    var entry = config.FirstOrDefault (v => (string)v ["version"] == key && v ["compare_to"] != null);
+    if (entry == null)
+        return null;
+
+    var compareTo = (string)entry ["compare_to"];
+    var candidates = allVersions
+        .Where (v => $"{v.Major}.{v.Minor}.{v.Patch}" == compareTo)
+        .OrderByDescending (v => v)
+        .ToArray ();
+    return candidates.Length > 0 ? candidates [0].ToNormalizedString () : null;
+}
+
+// Run the standard two-pass diff (breaking-only, then full/non-breaking) and copy
+// the resulting markdown into changelogs/{id}/{changelogVersion}. The two passes
+// produce the {dll}.breaking.md and {dll}.md files respectively.
+//
+// Overload 1 — NEW side is an unpublished local .nupkg (the current CI build).
+async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVersion, PackageArchiveReader newReader, string changelogVersion, string diffRoot)
+{
+    comparer.MarkdownDiffFileExtension = ".breaking.md";
+    comparer.IgnoreNonBreakingChanges = true;
+    await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newReader, diffRoot);
+
+    comparer.MarkdownDiffFileExtension = null;
+    comparer.IgnoreNonBreakingChanges = false;
+    await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newReader, diffRoot);
+
+    CopyChangelogs (diffRoot, id, changelogVersion);
+}
+
+// Overload 2 — NEW side is a published feed version (historical regeneration).
+async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVersion, string newVersion, string diffRoot)
+{
+    comparer.MarkdownDiffFileExtension = ".breaking.md";
+    comparer.IgnoreNonBreakingChanges = true;
+    await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newVersion, diffRoot);
+
+    comparer.MarkdownDiffFileExtension = null;
+    comparer.IgnoreNonBreakingChanges = false;
+    await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newVersion, diffRoot);
+
+    CopyChangelogs (diffRoot, id, newVersion);
+}
 
 RunTarget(TARGET);

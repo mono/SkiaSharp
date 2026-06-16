@@ -8,13 +8,13 @@ namespace SkiaSharp.Tests
 {
 	public class SKCodecTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void MinBufferedBytesNeededHasAValue()
 		{
 			Assert.True(SKCodec.MinBufferedBytesNeeded > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void ImageCanBeDecodedManyTimes()
 		{
 			var codec = SKCodec.Create(Path.Combine(PathToImages, "color-wheel.png"));
@@ -25,7 +25,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("P8211052.JPG", SKEncodedOrigin.LeftBottom)]
 		[InlineData("PA010741.JPG", SKEncodedOrigin.LeftBottom)]
 		public void CodecCanLoadCorrectOrigin(string image, SKEncodedOrigin origin)
@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(origin, codec.EncodedOrigin);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheCodecWasFinished()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -58,7 +58,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipToCodecButIsNotForgotten()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
@@ -78,7 +78,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -104,7 +104,7 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void InvalidStreamIsDisposedImmediately()
 		{
 			var stream = CreateTestSKStream();
@@ -124,7 +124,7 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
 			SkipOnMono();
@@ -166,7 +166,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateStreamCodec()
 		{
@@ -182,7 +182,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKImageInfo.PlatformColorType, codec.Info.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateStreamCodecWithResult()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
@@ -198,7 +198,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKImageInfo.PlatformColorType, codec.Info.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetGifFrames()
 		{
 			const int FrameCount = 16;
@@ -252,7 +252,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetSingleGifFrame()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "animated-heart.gif"));
@@ -267,7 +267,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetEncodedInfo()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
@@ -279,7 +279,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetPixels()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "baboon.png"));
@@ -290,7 +290,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodeImageScanlines()
 		{
 			var path = Path.Combine(PathToImages, "CMYK.jpg");
@@ -341,7 +341,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodePartialImage()
 		{
 			// read the data here, so we can fake a throttle/download
@@ -398,7 +398,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapDecodesCorrectly()
 		{
 			byte[] codecPixels;
@@ -417,7 +417,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(codecPixels, bitmapPixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapDecodesCorrectlyWithManagedStream()
 		{
 			byte[] codecPixels;
@@ -437,7 +437,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(codecPixels, bitmapPixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanReadManagedStream()
 		{
 			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
@@ -445,7 +445,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(codec);
 		}
 
-		[SkippableFact(Skip = "This keeps breaking CI for some reason.")]
+		[Fact(Skip = "This keeps breaking CI for some reason.")]
 		public async Task DownloadedStream()
 		{
 			var httpClient = new HttpClient();
@@ -454,7 +454,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(bitmap);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReadOnlyStream()
 		{
 			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
@@ -463,7 +463,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(bitmap);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("CMYK.jpg")]
 		[InlineData("baboon.png")]
 		[InlineData("color-wheel.png")]
@@ -478,7 +478,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("CMYK.jpg")]
 		[InlineData("baboon.png")]
 		[InlineData("color-wheel.png")]
@@ -496,7 +496,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDecodeManagedStreamAfterCreate()
 		{
 			// Regression: SKCodec.Create(Stream) wraps the managed .NET stream and the
@@ -511,7 +511,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDecodeNonSeekableManagedStreamAfterCreate()
 		{
 			// Non-seekable managed streams route through SKFrontBufferedManagedStream

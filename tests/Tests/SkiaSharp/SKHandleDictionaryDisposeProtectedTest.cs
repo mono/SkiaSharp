@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 	{
 		// --- dispose-protected fresh construction sets the IgnorePublicDispose latch ---
 
-		[SkippableFact]
+		[Fact]
 		public void DisposeProtectedFreshConstructionSetsFlag ()
 		{
 			var handle = NextHandle ();
@@ -49,7 +49,7 @@ namespace SkiaSharp.Tests
 		//     protected wrapper (the original if it promoted in time, or a freshly reconstructed one if
 		//     Dispose won the race). ---
 
-		[SkippableFact]
+		[Fact]
 		public void DisposeProtectedRacingPublicDisposeNeverTears ()
 		{
 			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");

@@ -32,7 +32,7 @@ namespace SkiaSharp.Tests
 		// the test wins. The value is a regression guard: narrowing the lock scope so two
 		// callers could run the factory concurrently for the same handle would make this fail.
 
-		[SkippableFact]
+		[Fact]
 		public void ConcurrentSameHandleConstructsExactlyOnce ()
 		{
 			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -65,7 +65,7 @@ namespace SkiaSharp.Tests
 
 		// --- Publication safety: waiters never observe a half-built wrapper ---
 
-		[SkippableFact]
+		[Fact]
 		public void WaitersOnlyObserveFullyConstructedWrapper ()
 		{
 			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");
@@ -112,7 +112,7 @@ namespace SkiaSharp.Tests
 
 		// --- A throwing factory leaves nothing registered and lets a later call reconstruct ---
 
-		[SkippableFact]
+		[Fact]
 		public void FactoryFailureLeavesNothingRegisteredAndAllowsReconstruction ()
 		{
 			var handle = NextHandle ();
@@ -146,7 +146,7 @@ namespace SkiaSharp.Tests
 		// reconstructs". It pins that a throwing factory leaves no stranded half-state for the
 		// callers queued behind it.
 
-		[SkippableFact]
+		[Fact]
 		public void ConcurrentFactoryFailureRecoveredByWaiter ()
 		{
 			SkipOnPlatform (IsBrowser, "WASM is single-threaded; this test requires real OS threads");

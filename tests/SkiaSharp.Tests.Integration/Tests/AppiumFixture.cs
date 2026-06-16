@@ -12,7 +12,7 @@ public class AppiumFixture : IAsyncLifetime
     public const int Port = 4723;
     private Process? _appiumProcess;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         // Check if Appium is already running
         if (await IsAppiumRunning())
@@ -50,7 +50,7 @@ public class AppiumFixture : IAsyncLifetime
         Console.WriteLine($"[AppiumFixture] Appium ready on port {Port}");
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_appiumProcess != null && !_appiumProcess.HasExited)
         {

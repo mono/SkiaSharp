@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
-  group: update-release-notes-${{ github.ref }}
+  group: update-release-notes
   cancel-in-progress: true
-timeout-minutes: 10
+timeout-minutes: 15
 permissions:
   contents: read
 tools:
@@ -30,62 +30,36 @@ safe-outputs:
 
 # Update Release Notes
 
-Automatically update website release notes when code changes land on `main`,
-`release/*` branches, or when release tags are pushed.
+Automation that keeps the website release notes current. This file owns only the
+**prep and automation**. The actual work — running the script and polishing the
+pages — is the **release-notes skill**
+([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md)).
+Do not restate the skill's steps here.
 
-## Step 1 — Determine the branch
+## Prep
 
-```bash
-echo "Ref: $GITHUB_REF"
-```
-
-Determine the branch name based on the ref type:
-
-```bash
-if echo "$GITHUB_REF" | grep -q "^refs/tags/"; then
-  # Tag push — derive release branch from tag
-  TAG=${GITHUB_REF#refs/tags/}
-  TAG_NO_V=${TAG#v}
-  if echo "$TAG_NO_V" | grep -qE "\-preview\.[0-9]+\.[0-9]+$"; then
-    BRANCH="release/$(echo "$TAG_NO_V" | sed 's|\.[0-9]*$||')"
-  else
-    BRANCH="release/${TAG_NO_V}"
-  fi
-else
-  # Branch push — extract branch name directly
-  BRANCH="${GITHUB_REF#refs/heads/}"
-fi
-```
-
-## Step 2 — Generate release notes using the skill
-
-**Important:** The script uses `origin/` remote refs for all git history queries.
-Always run from a `main` checkout to avoid leaking release-branch-specific files
-(like `PREVIEW_LABEL`) into the PR targeting main.
-
-Ensure all remote refs are fetched and the working tree is on `main`:
+Release notes are generated from `origin/` refs, so start from a clean `main`
+checkout. This avoids leaking release-branch-only files (e.g. `PREVIEW_LABEL`)
+into the main-targeted PR. The skill's `--all` script fetches the `release/*`
+branches it needs itself, so this only has to put you on `main`:
 
 ```bash
 git fetch origin main --quiet
 git checkout -B main origin/main
 ```
 
-Use the **release-notes** skill (`.agents/skills/release-notes/SKILL.md`) to generate
-polished release notes for the branch determined above. Pass the branch name to the skill.
+## Do the work
 
-The skill handles everything: running the script, reading the template, writing the
-polished file, and regenerating the TOC.
+Use the **release-notes skill** to regenerate and polish, running it in `--all`
+mode (regenerates every branch idempotently and lists only changed files). Edit
+exactly the files it lists under "Files to polish". If it reports
+"(none — all files up to date)", **make no file edits** — leave any existing
+`bot/release-notes` PR untouched and exit.
 
-## Step 3 — Create or update the pull request
+## Automation
 
-Use a branch name that includes both the version and the release status to avoid collisions
-between release-branch triggers and main-branch triggers:
-
-- For versioned release branches (e.g. `release/4.147.0-preview.3`): use `dev/release-notes-{VERSION}-released`
-- For `main` (unreleased content): use `dev/release-notes-{VERSION}-unreleased`
-
-This ensures each workflow run updates the **same PR** for a given version and status
-instead of opening duplicates, and prevents a main push from force-pushing over a
-release-branch PR (or vice versa).
-
-The PR targets `main` — release notes always live on main for the docs site.
+The PR is created by the `create-pull-request` safe-output from whatever files
+you edited — you do **not** git commit or push manually. It targets `main` on the
+single consolidated branch `bot/release-notes`, so there is at most one open
+release-notes PR rather than one-per-version. If you made no edits, no PR is
+created or updated.

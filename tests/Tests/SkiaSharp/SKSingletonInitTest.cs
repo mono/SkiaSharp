@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 	{
 		// --- Singleton identity + dispose-protected flag ---
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorSpaceSrgbReturnsSameInstanceAndIsDisposeProtected()
 		{
 			var a = SKColorSpace.CreateSrgb();
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.True(a.IgnorePublicDispose);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorSpaceSrgbLinearReturnsSameInstanceAndIsDisposeProtected()
 		{
 			var a = SKColorSpace.CreateSrgbLinear();
@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 			Assert.True(a.IgnorePublicDispose);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
 		{
 			// Drain pending finalizers first so a srgb-linear holder created during the earlier parallel
@@ -77,7 +77,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(baselineRefCount, colorspace1.GetReferenceCount());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKDataEmptyReturnsSameInstanceAndIsDisposeProtected()
 		{
 			var a = SKData.Empty;
@@ -86,7 +86,7 @@ namespace SkiaSharp.Tests
 			Assert.True(a.IgnorePublicDispose);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKFontManagerDefaultReturnsSameInstanceAndIsDisposeProtected()
 		{
 			var a = SKFontManager.Default;
@@ -95,7 +95,7 @@ namespace SkiaSharp.Tests
 			Assert.True(a.IgnorePublicDispose);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKTypefaceDefaultReturnsSameInstanceAndIsDisposeProtected()
 		{
 			var a = SKTypeface.Default;
@@ -104,7 +104,7 @@ namespace SkiaSharp.Tests
 			Assert.True(a.IgnorePublicDispose);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKTypefaceEmptyReturnsSameInstanceAndIsDisposeProtected()
 		{
 			var a = SKTypeface.Empty;
@@ -113,7 +113,7 @@ namespace SkiaSharp.Tests
 			Assert.True(a.IgnorePublicDispose);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKBlenderForModeReturnsSameInstanceAndIsDisposeProtected()
 		{
 			var a = SKBlender.CreateBlendMode(SKBlendMode.SrcOver);
@@ -122,7 +122,7 @@ namespace SkiaSharp.Tests
 			Assert.True(a.IgnorePublicDispose);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKFontStyleStaticsAreDisposeProtected()
 		{
 			Assert.True(SKFontStyle.Normal.IgnorePublicDispose);
@@ -133,7 +133,7 @@ namespace SkiaSharp.Tests
 
 		// --- Dispose() is a no-op on dispose-protected wrappers ---
 
-		[SkippableFact]
+		[Fact]
 		public void DisposeOnDisposeProtectedSingletonIsNoOp()
 		{
 			var srgb = SKColorSpace.CreateSrgb();
@@ -148,7 +148,7 @@ namespace SkiaSharp.Tests
 
 		// --- SKTypeface.CreateDefault never returns null even on a cold backing field ---
 
-		[SkippableFact]
+		[Fact]
 		public void SKTypefaceCreateDefaultIsNotNull()
 		{
 			// Regression net for an earlier draft of this PR where CreateDefault
@@ -160,7 +160,7 @@ namespace SkiaSharp.Tests
 
 		// --- SKPaint construction touches the DefaultFont lazy initializer ---
 
-		[SkippableFact]
+		[Fact]
 		public void SKPaintConstructionDoesNotThrow()
 		{
 			// Smoke test: exercises the SKPaint -> DefaultFont path. The factory
@@ -191,7 +191,7 @@ namespace SkiaSharp.Tests
 		// runtime's choice of which dependent cctor to trigger first. We
 		// minimize that by accessing SKFontManager.Default *via reflection*
 		// and not touching any other SkiaSharp type from inside the ALC.
-		[SkippableFact]
+		[Fact]
 		public void Issue3817_SKFontManagerDefaultDoesNotThrowFromColdStart()
 		{
 			SkipOnPlatform(IsBrowser || IsAndroid || IsIOS || IsMacCatalyst, "AssemblyDependencyResolver is not supported on this platform (browser WASM, Android, iOS, Mac Catalyst); cold-start ALC isolation is a desktop-only technique.");
