@@ -4,8 +4,10 @@ Release notes for all SkiaSharp versions.
 
 ### SkiaSharp 4.x
 
+- **Version 4.150.x**
+  - [Version 4.150.0](4.150.0.md)
 - **Version 4.148.x**
-  - [Version 4.148.0 (Unreleased)](4.148.0-unreleased.md)
+  - [Version 4.148.0](4.148.0.md)
 - **Version 4.147.x**
   - [Version 4.147.0](4.147.0.md)
 
@@ -81,6 +83,7 @@ Release notes for all SkiaSharp versions.
   - [Version 1.55.1](1.55.1.md)
   - [Version 1.55.0](1.55.0.md)
 - **Version 1.54.x**
+  - [Version 1.54.1.1](1.54.1.1.md)
   - [Version 1.54.1](1.54.1.md)
   - [Version 1.54.0](1.54.0.md)
 - **Version 1.53.x**

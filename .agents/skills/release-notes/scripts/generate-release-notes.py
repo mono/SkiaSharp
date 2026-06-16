@@ -801,7 +801,10 @@ def get_prs_from_diff(from_ref, to_ref):
     """Extract merged PRs from git log between two refs.
 
     Parses PR numbers, titles, authors, and bodies from commit messages.
-    No GitHub API calls needed — everything comes from git.
+    No GitHub API calls needed — everything comes from git. This is the cheap
+    part: a single ``git log`` plus regex parsing (sub-second even for hundreds
+    of commits). The expensive per-PR effort metrics are computed separately by
+    ``add_pr_effort`` so callers can skip them for unchanged pages.
     """
     # Use a format that gives us everything: hash, author email, subject, body
     # Separator between commits: a line that won't appear in commit messages
@@ -849,22 +852,28 @@ def get_prs_from_diff(from_ref, to_ref):
             "body": body,
         })
 
-    if not prs:
-        return []
+    return prs
 
-    # Compute effort for each PR (uses git refs/pull/N/merge)
-    result = []
+
+def add_pr_effort(prs):
+    # type: (list[dict]) -> list[dict]
+    """Annotate each PR in-place with effort metrics (commit count, days).
+
+    This is the SLOW part: it fetches ``refs/pull/{N}/head`` (and any companion
+    mono/skia PR) per PR, so it costs ~1s per PR over the network. Call it ONLY
+    for pages that are actually being (re)written — never for pages that the
+    unchanged check will skip — otherwise an all-unchanged ``--all`` run pays
+    minutes of network cost for output it then discards.
+    """
     for i, pr in enumerate(prs, 1):
         try:
             pr.update(compute_pr_effort(pr))
         except subprocess.CalledProcessError:
             pass  # effort stays unset, that's fine
-        result.append(pr)
         if i % 20 == 0:
             print("  Processed {}/{} PRs...".format(i, len(prs)),
                   file=sys.stderr)
-
-    return result
+    return prs
 
 
 def format_pr_list(prs, metadata):
@@ -1289,6 +1298,11 @@ def _write_page(branch, all_branches, verbose=False):
                              status, superseded_by, supersedes):
         print("  Skipping {} (unchanged)".format(output_path))
         return None
+
+    # The page is changing, so it's worth the per-PR effort fetches now. Doing
+    # this AFTER the unchanged check is what keeps an all-unchanged --all run
+    # cheap: skipped pages never pay the ~1s/PR network cost.
+    add_pr_effort(prs)
 
     metadata = {
         "branch": branch,
