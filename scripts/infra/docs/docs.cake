@@ -136,6 +136,19 @@ Task ("docs-api-diff-past")
     var baseDir = $"{ROOT_PATH}/output/api-diffs-past";
     CleanDirectories (baseDir);
 
+    // Make the regenerated set authoritative: clear the per-package changelog
+    // directories first. docs-api-diff-past rebuilds the COMPLETE historical
+    // set for every tracked package, so any version/assembly/breaking file that
+    // should no longer exist — e.g. a stale *.breaking.md after a baseline
+    // change in versions.json, or a package removed from TRACKED_NUGETS — is
+    // pruned instead of left behind to drift. Top-level files such as README.md
+    // are preserved (only subdirectories are removed).
+    var changelogsDir = $"{ROOT_PATH}/changelogs";
+    if (DirectoryExists (changelogsDir)) {
+        foreach (var dir in GetSubDirectories (changelogsDir))
+            DeleteDirectory (dir, new DeleteDirectorySettings { Recursive = true, Force = true });
+    }
+
     // Shared version-comparison config — see LoadVersionsConfig and the
     // versions.json header. Drives both the supersession skips and the
     // compare_to overrides below.

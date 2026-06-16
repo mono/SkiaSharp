@@ -1,5 +1,5 @@
 {
-  "$comment": "Shared version comparison config for API changelogs and release notes. Override-only: only declare versions that need non-default comparison baselines or supersession tracking.",
+  "$comment": "Shared version comparison config for API changelogs and release notes. Override-only: list a version only when it needs a non-default comparison baseline (compare_to) or is superseded (status + superseded_by). The default baseline is the previous version; the inverse 'supersedes' link is derived automatically from superseded_by, so it is not configured here.",
   "versions": [
     {
       "version": "3.0.0",
@@ -10,7 +10,6 @@
     {
       "version": "3.116.0",
       "compare_to": "2.88.9",
-      "supersedes": ["3.0.0"],
       "$comment": "First stable after the rewrite; compare against last 2.x stable"
     },
     {
@@ -22,7 +21,6 @@
     {
       "version": "3.119.0",
       "compare_to": "3.116.1",
-      "supersedes": ["3.118.0"],
       "$comment": "Skips over 3.118.x which never shipped stable"
     },
     {
@@ -34,7 +32,6 @@
     {
       "version": "3.119.4",
       "compare_to": "3.119.2",
-      "supersedes": ["3.119.3"],
       "$comment": "Supersedes 3.119.3; compare against last good patch before it"
     },
     {
@@ -46,7 +43,6 @@
     {
       "version": "4.148.0",
       "compare_to": "3.119.4",
-      "supersedes": ["4.147.0"],
       "$comment": "First 4.x RC; compare against last stable (3.119.4)"
     },
     {

@@ -207,6 +207,13 @@ source of truth for two decisions, and both systems honour it identically:
 - **`compare_to` baselines** — when present, both sides diff against the same
   baseline version (e.g. `4.148.0` → `3.119.4`).
 
+For any version *not* carrying a `compare_to` override, each system picks the
+default baseline (the previous version) on its own, and the two can differ
+slightly: the Python release-notes generator additionally skips any candidate
+baseline that has no stable git tag, whereas Cake walks purely by version order.
+This only matters for unlisted, preview-only versions; add a `compare_to` entry
+to `versions.json` to pin both systems to the same baseline.
+
 Where they intentionally differ is **granularity**, and this is by design — do
 not "fix" them into agreement:
 
