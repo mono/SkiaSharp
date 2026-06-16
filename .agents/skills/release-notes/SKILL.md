@@ -16,7 +16,8 @@ description: >
 
   NOTE: Website release notes are normally updated automatically by the
   `update-release-notes` agentic workflow when code lands on main, release branches,
-  or tags are pushed. This skill is for manual regeneration or corrections only.
+  or tags are pushed. That workflow drives this skill in `--all` mode; the same
+  skill is also used manually for regeneration or corrections.
 ---
 
 # Release Notes Skill
@@ -31,6 +32,10 @@ correcting, or bulk-processing release notes.
 
 ### Step 1 — Determine versions
 
+> **Running unattended (e.g. from the `update-release-notes` workflow)?** There is
+> no user to ask — skip straight to the `--all` invocation in
+> [Step 2](#step-2--run-the-script), which regenerates every branch automatically.
+
 Ask the user which version(s) to generate, or infer from context:
 - A specific version: `3.119.2`
 - A branch: `release/4.147.0-preview.1` or `main`
@@ -39,12 +44,26 @@ Ask the user which version(s) to generate, or infer from context:
 
 ### Step 2 — Run the script
 
-Run the script to collect raw PR data and write it to the version file:
+Run the script **from the repository root** to collect raw PR data and write it to
+the version file:
 
 ```bash
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1
 python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
 ```
+
+To regenerate **every** branch in one idempotent pass, use `--all`:
+
+```bash
+python3 .agents/skills/release-notes/scripts/generate-release-notes.py --all
+```
+
+`--all` loops over `main` plus every `release/*` branch and regenerates each
+version's raw data, but **only rewrites files that actually changed** (same PR
+count AND same diff range ⇒ skipped, so the AI never re-polishes an unchanged
+page). Superseded versions are still generated — they keep their own page; the
+supersede marker only excludes them from being a diff *baseline*. The "Files to
+polish" output therefore lists only genuinely-changed pages.
 
 This writes raw PR data to `documentation/docfx/releases/{version}.md` or
 `documentation/docfx/releases/{version}-unreleased.md` depending on the branch type,
@@ -98,38 +117,20 @@ Determine the version's status from the HTML comment block in the file (`status:
 ### Skipped / superseded minors (preview-only versions)
 
 Occasionally a minor ships previews but is **skipped** before going stable — e.g. `4.147`
-was previewed but abandoned in favour of `4.148`. This is handled **automatically** — no
-configuration is normally required:
+was previewed but abandoned in favour of `4.148`. **The script handles all of this for you**
+and records the outcome in the file's data-block; you only render what's there:
 
-1. **Automatic cumulative base.** When choosing the diff base for a new minor (and for
-   `main`), the script picks the most recent prior version that actually shipped a **stable
-   git tag**, skipping any minor that only had previews. So `4.148`'s notes roll up *all*
-   the skipped `4.147` work instead of showing a tiny delta. The same skip applies to
-   **point releases**: a stable patch bases on the most recent previous patch that shipped
-   stable, so e.g. `3.119.4` rolls up the preview-only `3.119.3` (the `3.119.3` page still
-   keeps its own notes — duplication across the two pages is expected and fine).
+- The diff base is already chosen and baked into the `from..to` range, so a skipped line is
+  rolled up automatically (e.g. `4.148`'s data already covers all the `4.147` work). You never
+  pick a base yourself — just summarise the PRs in the file.
+- A `superseded:` line means the version was a preview that never shipped stable. Render the
+  script-generated *"Preview only · Superseded by …"* header (kept verbatim).
+- A `supersedes:` line is the two-way back-link on the successor page. Render the
+  script-generated *"Supersedes …"* note (kept verbatim).
 
-2. **Automatic supersede label (two-way).** A version that has only preview tags is flagged as
-   *superseded* once a **newer version is known**. A newer version is "known" from a later
-   `release/*` branch or `v*` tag, **or from `main` itself**: if `main`'s in-development
-   `SKIASHARP_VERSION` is newer and the preview-only version's minor line was never branched
-   for servicing (no `release/X.Y.x`), `main`'s version supersedes it. So with `main` on
-   `4.148.0` and only `release/4.147.0-preview.*` branches (no `release/4.147.x`), `4.147.0`
-   is flagged *superseded by 4.148.0* immediately — no `4.148` branch or tag required. The
-   page is forced to `preview` status and rendered with a *"Preview only · Superseded by
-   4.148.0 · Never released as stable"* header. The label links to the successor's published
-   page (`{ver}.md`) when it exists, otherwise to its in-development page
-   (`{ver}-unreleased.md`). Until a newer version is known, the version is just a normal preview.
-
-   The relationship is rendered **both ways**: the successor page (computed by the inverse
-   `detect_supersedes`) carries a `supersedes:` data-block line and a
-   *"Supersedes [X.Y.Z] · Rolls up preview-only work …"* note, so e.g. `4.148.0` points back
-   to `4.147.0`, `3.119.4` to `3.119.3`, and `3.119.0` to `3.118.0` — automatically, without
-   the AI having to infer it from the diff base.
-
-> Detection is purely tag/branch/`main`-version based, so no configuration file is needed. (If a
-> manual override is ever required it can be reintroduced later; for now the automatic
-> behaviour is the only path.)
+> You never compute supersession or base selection — just render whatever markers the file
+> contains. The mechanics (and the optional `scripts/versions.json` overrides) are script
+> internals.
 
 When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
 header and add a one-line note in Highlights that the work rolled up into the successor.
@@ -205,3 +206,7 @@ Follow these rules:
 
 When regenerating multiple versions, process them in parallel — each version is independent.
 Fetch all raw data in one script call, then launch one agent per version to write the polished page.
+
+> This applies to **interactive/manual** use where sub-agents are available. When running
+> unattended (e.g. the automated workflow), just polish the listed files **sequentially** in
+> the one agent — do not try to spawn sub-agents.
