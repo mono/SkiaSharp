@@ -24,7 +24,7 @@ polished content. TOC and index are regenerated automatically.
 The --all command iterates every branch and only writes files whose PR count or
 diff range has changed (idempotent). Use this for automated workflows.
 
-Reads scripts/versions.json (if present) for comparison overrides and
+Reads scripts/infra/docs/versions.json (if present) for comparison overrides and
 supersession markers. versions.json is the single source of truth: only the
 versions listed there get a non-default baseline or a superseded marker.
 
@@ -56,15 +56,15 @@ SKIA_PR_PATTERNS = [
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 
-# Versions config (loaded lazily from scripts/versions.json)
+# Versions config (loaded lazily from scripts/infra/docs/versions.json)
 _VERSIONS_CONFIG = None  # type: Optional[list[dict]]
 
-VERSIONS_JSON_PATH = Path("scripts/versions.json")
+VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
 
 
 def load_versions_config():
     # type: () -> list[dict]
-    """Load scripts/versions.json override config (cached)."""
+    """Load scripts/infra/docs/versions.json override config (cached)."""
     global _VERSIONS_CONFIG
     if _VERSIONS_CONFIG is not None:
         return _VERSIONS_CONFIG
@@ -282,16 +282,137 @@ def _is_valid_stable_base(branch):
 
 
 def _login_from_email(email):
-    # type: (str) -> str
-    """Extract GitHub login from a commit email.
+    # type: (str) -> Optional[str]
+    """Extract a GitHub login from a commit email — ONLY when it is certain.
 
-    Handles noreply format: 12345+username@users.noreply.github.com -> username
-    Falls back to the local part of the email.
+    GitHub usernames are not stored in git history. The one exception is the
+    privacy "noreply" address, which embeds the real login:
+
+        12345+username@users.noreply.github.com  ->  username
+
+    For that format we return the login with full confidence. For every other
+    address (corporate or personal email) the part before ``@`` is NOT a GitHub
+    handle — guessing it would mis-credit the contributor or, worse, turn into an
+    ``@mention`` that pings an unrelated real user (``jon``, ``martin``, ``i`` …).
+    So we return None and let the caller resolve the true login from the GitHub
+    API instead (see resolve_pr_authors).
     """
     m = _NOREPLY_RE.match(email)
     if m:
         return m.group(1)
-    return email.split("@")[0]
+    return None
+
+
+# ── GitHub author resolution ─────────────────────────────────────────
+
+_AUTHOR_CACHE_PATH = Path("scripts/infra/docs/pr-authors.json")
+_GRAPHQL_BATCH = 50
+
+
+def load_author_cache():
+    # type: () -> dict
+    """Load the PR-number -> GitHub-login cache (scripts/infra/docs/pr-authors.json).
+
+    This cache is the durable record of every author resolved from the GitHub
+    API, so ordinary regenerations stay fully offline: a warm cache means
+    resolve_pr_authors makes zero network calls. A null value records that
+    GitHub could not map the PR to an account (e.g. a deleted user) so we do not
+    re-query a known-unresolvable PR on every run. Delete an entry to force it to
+    be looked up again (useful once a contributor registers their commit email).
+    """
+    try:
+        return json.loads(_AUTHOR_CACHE_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def save_author_cache(cache):
+    # type: (dict) -> None
+    """Persist the PR-number -> login cache, sorted by PR number for stable diffs."""
+    try:
+        ordered = {k: cache[k] for k in sorted(cache, key=lambda n: int(n))}
+    except ValueError:
+        ordered = cache
+    _AUTHOR_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _AUTHOR_CACHE_PATH.write_text(json.dumps(ordered, indent=2) + "\n")
+
+
+def _graphql_pr_authors(numbers):
+    # type: (list[int]) -> dict
+    """Resolve PR-author logins via one batched GitHub GraphQL query.
+
+    Returns ``{pr_number: login_or_None}`` for every number the API answered
+    for. PRs that error or are missing from the response are omitted, so the
+    caller never caches a transient failure and can retry later. Requires the
+    ``gh`` CLI to be installed and authenticated (the workflow already provides
+    ``GITHUB_TOKEN``); any failure yields an empty dict and callers fall back to
+    the plain author name.
+    """
+    owner, name = REPO.split("/")
+    aliases = "\n".join(
+        "p{n}: pullRequest(number: {n}) {{ author {{ login }} }}".format(n=n)
+        for n in numbers)
+    query = 'query {{ repository(owner: "{}", name: "{}") {{\n{}\n}} }}'.format(
+        owner, name, aliases)
+    try:
+        # check=False: a single missing/blocked PR makes gh exit non-zero, but
+        # it still prints valid ``data`` for every PR it *could* resolve. Read
+        # that stdout rather than discarding the whole batch on a partial error.
+        out = run(["gh", "api", "graphql", "-f", "query=" + query], check=False)
+    except FileNotFoundError:
+        return {}  # gh not installed
+    try:
+        repo = json.loads(out)["data"]["repository"]
+    except (ValueError, KeyError, TypeError):
+        return {}
+    resolved = {}  # type: dict
+    for n in numbers:
+        node = repo.get("p{}".format(n))
+        if node is None:
+            continue  # PR not found / errored — leave uncached for retry
+        author = node.get("author")
+        resolved[n] = author.get("login") if author else None
+    return resolved
+
+
+def resolve_pr_authors(prs):
+    # type: (list[dict]) -> list[dict]
+    """Fill in trustworthy GitHub logins for PRs that lack a noreply login.
+
+    Confidence order:
+      1. noreply login — already set by get_prs_from_diff, always correct.
+      2. cache (scripts/infra/docs/pr-authors.json) — previously resolved from the API.
+      3. GitHub GraphQL — the authoritative PR author, batched then cached.
+
+    PRs that still cannot be resolved keep ``login=None``; format_pr_list then
+    credits the plain commit name with no ``@mention``, so the notes never link
+    or ping the wrong person. Mutates and returns ``prs``.
+    """
+    need = [pr for pr in prs if not (pr.get("author") or {}).get("login")]
+    if not need:
+        return prs
+
+    cache = load_author_cache()
+    to_query = sorted({pr["number"] for pr in need
+                       if str(pr["number"]) not in cache})
+
+    if to_query:
+        print("  Resolving {} PR author(s) via GitHub API...".format(
+            len(to_query)), file=sys.stderr)
+        dirty = False
+        for i in range(0, len(to_query), _GRAPHQL_BATCH):
+            resolved = _graphql_pr_authors(to_query[i:i + _GRAPHQL_BATCH])
+            for num, login in resolved.items():
+                cache[str(num)] = login
+                dirty = True
+        if dirty:
+            save_author_cache(cache)
+
+    for pr in need:
+        login = cache.get(str(pr["number"]))
+        if login:
+            pr["author"]["login"] = login
+    return prs
 
 
 # ── Effort computation ───────────────────────────────────────────────
@@ -801,13 +922,17 @@ def get_prs_from_diff(from_ref, to_ref):
     """Extract merged PRs from git log between two refs.
 
     Parses PR numbers, titles, authors, and bodies from commit messages.
-    No GitHub API calls needed — everything comes from git.
+    No GitHub API calls needed — everything comes from git. This is the cheap
+    part: a single ``git log`` plus regex parsing (sub-second even for hundreds
+    of commits). The expensive per-PR effort metrics are computed separately by
+    ``add_pr_effort`` so callers can skip them for unchanged pages.
     """
-    # Use a format that gives us everything: hash, author email, subject, body
-    # Separator between commits: a line that won't appear in commit messages
+    # Use a format that gives us everything: hash, author email, author name,
+    # subject, body. The name is kept as a safe fallback credit for PRs whose
+    # GitHub login cannot be proven (see resolve_pr_authors / format_pr_list).
     SEP = "---COMMIT-END-7f3b---"
     log = run(["git", "log",
-               "--format=%H%n%ae%n%s%n%b{}".format(SEP),
+               "--format=%H%n%ae%n%an%n%s%n%b{}".format(SEP),
                "{}..{}".format(from_ref, to_ref)])
 
     prs = []
@@ -817,14 +942,15 @@ def get_prs_from_diff(from_ref, to_ref):
         block = block.strip()
         if not block:
             continue
-        lines = block.split("\n", 3)
-        if len(lines) < 3:
+        lines = block.split("\n", 4)
+        if len(lines) < 4:
             continue
 
         commit_hash = lines[0].strip()
         author_email = lines[1].strip()
-        subject = lines[2].strip()
-        body = lines[3].strip() if len(lines) > 3 else ""
+        author_name = lines[2].strip()
+        subject = lines[3].strip()
+        body = lines[4].strip() if len(lines) > 4 else ""
 
         # Extract PR number from subject: "Some title (#1234)"
         m = re.search(r"\(#(\d+)\)\s*$", subject)
@@ -838,33 +964,45 @@ def get_prs_from_diff(from_ref, to_ref):
         # Title is the subject minus the PR ref
         title = re.sub(r"\s*\(#\d+\)\s*$", "", subject)
 
-        # Author login from email
+        # A GitHub login is only certain from a noreply address; otherwise leave
+        # it None and let resolve_pr_authors look up the real handle. We never
+        # guess a handle from an email local part — that mis-credits real users.
         login = _login_from_email(author_email)
 
         prs.append({
             "title": title,
-            "author": {"login": login},
+            "author": {
+                "login": login,
+                "name": author_name,
+                "email": author_email,
+            },
             "url": "https://github.com/{}/pull/{}".format(REPO, num),
             "number": num,
             "body": body,
         })
 
-    if not prs:
-        return []
+    return prs
 
-    # Compute effort for each PR (uses git refs/pull/N/merge)
-    result = []
+
+def add_pr_effort(prs):
+    # type: (list[dict]) -> list[dict]
+    """Annotate each PR in-place with effort metrics (commit count, days).
+
+    This is the SLOW part: it fetches ``refs/pull/{N}/head`` (and any companion
+    mono/skia PR) per PR, so it costs ~1s per PR over the network. Call it ONLY
+    for pages that are actually being (re)written — never for pages that the
+    unchanged check will skip — otherwise an all-unchanged ``--all`` run pays
+    minutes of network cost for output it then discards.
+    """
     for i, pr in enumerate(prs, 1):
         try:
             pr.update(compute_pr_effort(pr))
         except subprocess.CalledProcessError:
             pass  # effort stays unset, that's fine
-        result.append(pr)
         if i % 20 == 0:
             print("  Processed {}/{} PRs...".format(i, len(prs)),
                   file=sys.stderr)
-
-    return result
+    return prs
 
 
 def format_pr_list(prs, metadata):
@@ -914,9 +1052,11 @@ def format_pr_list(prs, metadata):
     else:
         for pr in prs:
             title = pr.get("title", "")
-            author = (pr.get("author") or {}).get("login", "unknown")
+            author_info = pr.get("author") or {}
+            login = author_info.get("login")
+            name = author_info.get("name") or "unknown"
             url = pr.get("url", "")
-            is_community = author != "mattleibow"
+            is_community = login != "mattleibow"
             community_str = " [community ✨]" if is_community else ""
             commits = pr.get("commitCount", 0)
             days = pr.get("workingDays", 0)
@@ -926,8 +1066,13 @@ def format_pr_list(prs, metadata):
             skia_pr = pr.get("skiaPr")
             skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
 
-            lines.append("  - {} by @{} in {}{}{}{}".format(
-                title, author, url, community_str, effort, skia_str))
+            # Credit a linkable @handle only when the login is known; otherwise
+            # fall back to the plain commit name (no @, no link) so the notes
+            # never mention — and notify — the wrong GitHub user.
+            by = "by @{}".format(login) if login else "by {}".format(name)
+
+            lines.append("  - {} {} in {}{}{}{}".format(
+                title, by, url, community_str, effort, skia_str))
 
     lines.append("-->")
     lines.append("")
@@ -1246,8 +1391,8 @@ def _canonical_branches_by_version(all_branches):
     return canonical
 
 
-def _write_page(branch, all_branches, verbose=False):
-    # type: (str, list[str], bool) -> Optional[str]
+def _write_page(branch, all_branches, verbose=False, force=False):
+    # type: (str, list[str], bool, bool) -> Optional[str]
     """Generate one release page from a branch. Returns its path, or None.
 
     Single code path shared by ``--branch`` and ``--all``: resolves the diff
@@ -1285,10 +1430,17 @@ def _write_page(branch, all_branches, verbose=False):
     print("  Found {} PR(s), diff: {}".format(len(prs), diff_range_str))
 
     output_path = RELEASES_DIR / _page_filename(branch, version)
-    if _is_content_unchanged(output_path, len(prs), diff_range_str,
-                             status, superseded_by, supersedes):
+    if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
+                                            status, superseded_by, supersedes):
         print("  Skipping {} (unchanged)".format(output_path))
         return None
+
+    # The page is changing, so it's worth the network work now: resolving the
+    # true GitHub handles (API, cached) and the per-PR effort fetches. Doing this
+    # AFTER the unchanged check is what keeps an all-unchanged --all run cheap:
+    # skipped pages never pay the network cost.
+    resolve_pr_authors(prs)
+    add_pr_effort(prs)
 
     metadata = {
         "branch": branch,
@@ -1308,8 +1460,8 @@ def _write_page(branch, all_branches, verbose=False):
     return str(output_path)
 
 
-def cmd_branch(branch):
-    # type: (str) -> None
+def cmd_branch(branch, force=False):
+    # type: (str, bool) -> None
     """Diff a branch against its predecessor and write raw data to the version file."""
     branch = _removeprefix(branch, "origin/")
 
@@ -1346,7 +1498,7 @@ def cmd_branch(branch):
             target = canonical
 
     files_to_polish = []
-    path = _write_page(target, all_branches, verbose=True)
+    path = _write_page(target, all_branches, verbose=True, force=force)
     if path:
         files_to_polish.append(path)
 
@@ -1354,7 +1506,7 @@ def cmd_branch(branch):
     # — the diff range for main or the servicing .x branch may have changed now
     # that a new release branch exists.
     if target != "main" and not target.endswith(".x"):
-        files_to_polish.extend(_regen_unreleased(target, all_branches))
+        files_to_polish.extend(_regen_unreleased(target, all_branches, force=force))
 
     cmd_update_toc()
 
@@ -1366,8 +1518,8 @@ def cmd_branch(branch):
     print("========================================")
 
 
-def _regen_unreleased(trigger_branch, all_branches):
-    # type: (str, list[str]) -> list[str]
+def _regen_unreleased(trigger_branch, all_branches, force=False):
+    # type: (str, list[str], bool) -> list[str]
     """Regenerate unreleased pages after a versioned branch push.
 
     When a new release/X.Y.Z branch appears, the diff ranges for main and/or the
@@ -1384,7 +1536,7 @@ def _regen_unreleased(trigger_branch, all_branches):
     svc_branch = "release/{}.x".format(minor)
     if svc_branch in all_branches:
         print("\nRegenerating unreleased for {}...".format(svc_branch))
-        path = _write_page(svc_branch, all_branches)
+        path = _write_page(svc_branch, all_branches, force=force)
         if path:
             written.append(path)
 
@@ -1393,7 +1545,7 @@ def _regen_unreleased(trigger_branch, all_branches):
     main_version = get_upcoming_version()
     if main_version and minor_group(main_version) == minor:
         print("\nRegenerating unreleased for main...")
-        path = _write_page("main", all_branches)
+        path = _write_page("main", all_branches, force=force)
         if path:
             written.append(path)
 
@@ -1403,8 +1555,8 @@ def _regen_unreleased(trigger_branch, all_branches):
 # ── Main ─────────────────────────────────────────────────────────────
 
 
-def cmd_all():
-    # type: () -> None
+def cmd_all(force=False):
+    # type: (bool) -> None
     """Process all branches (main + all release/*). Skip unchanged files.
 
     This is the idempotent "regenerate everything" mode used by the automated
@@ -1461,7 +1613,7 @@ def cmd_all():
             continue
 
         print("\n--- Processing: {} ---".format(branch))
-        path = _write_page(branch, all_branches)
+        path = _write_page(branch, all_branches, force=force)
         if path:
             files_to_polish.append(path)
             processed_count += 1
@@ -1510,6 +1662,10 @@ def main():
     parser.add_argument(
         "--update-toc", action="store_true",
         help="Regenerate TOC.yml + index.md")
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Rewrite pages even when the raw data is unchanged "
+             "(use with --all or --branch to re-resolve author handles)")
 
     args = parser.parse_args()
 
@@ -1524,9 +1680,9 @@ def main():
     if args.update_toc:
         cmd_update_toc()
     elif args.all:
-        cmd_all()
+        cmd_all(force=args.force)
     elif args.branch:
-        cmd_branch(args.branch)
+        cmd_branch(args.branch, force=args.force)
 
 
 if __name__ == "__main__":

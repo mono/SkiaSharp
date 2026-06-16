@@ -159,7 +159,7 @@ git diff changelogs/
 
 `docs-api-diff-past` diffs **published** NuGet.org versions: every version is
 compared against its predecessor, with baselines and superseded-version skips
-driven by [`scripts/versions.json`](../../scripts/versions.json) (same config the
+driven by [`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json) (same config the
 release-notes script uses). Superseded versions still get their own changelog;
 they are only removed from the pool of *baselines*, so e.g. `4.148.0` walks past
 the abandoned `4.147.*` previews and lands on `3.119.4`.
@@ -197,7 +197,7 @@ inspection — it is **not** meant to be committed.
 The API changelogs (Cake) and the website release notes
 ([`generate-release-notes.py`](../../.agents/skills/release-notes/scripts/generate-release-notes.py))
 are **separate systems** that deliberately share only one thing:
-[`scripts/versions.json`](../../scripts/versions.json). That file is the single
+[`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json). That file is the single
 source of truth for two decisions, and both systems honour it identically:
 
 - **Supersession** — only a version with an explicit `status: superseded` entry
