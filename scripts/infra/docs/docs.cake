@@ -787,7 +787,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
             Verbose ($"      lib path {libPath}");
             comparer.SearchPaths.Add(libPath);
         } else if (DirectoryExists(refPath)) {
-            Verbose ($"      ref path {libPath}");
+            Verbose ($"      ref path {refPath}");
             comparer.SearchPaths.Add(refPath);
         } else {
             Verbose ($"      no lib or ref path");
