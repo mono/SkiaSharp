@@ -867,7 +867,9 @@ JArray LoadVersionsConfig ()
 // (e.g. 4.147 was abandoned in favour of 4.148). It still gets its OWN changelog
 // generated — it is only excluded from acting as a *baseline* for other
 // versions, so a later release diffs against the last real predecessor instead.
-// Matched on major.minor.patch so all previews of that line count.
+// Matched on major.minor.patch, so an entry for "4.147.0" covers every
+// 4.147.0-preview.* (all previews of that exact patch), but not a different
+// patch such as 4.147.1.
 bool IsVersionSuperseded (JArray config, string normalizedVersion)
 {
     var nv = new NuGetVersion (normalizedVersion);

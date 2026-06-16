@@ -192,3 +192,32 @@ workflow). It diffs CI packages for the ref against their NuGet.org baseline:
 The preview output lands in `output/api-diff/` (and `changelogs/`) for
 inspection — it is **not** meant to be committed.
 
+### Relationship to release notes
+
+The API changelogs (Cake) and the website release notes
+([`generate-release-notes.py`](../../.agents/skills/release-notes/scripts/generate-release-notes.py))
+are **separate systems** that deliberately share only one thing:
+[`scripts/versions.json`](../../scripts/versions.json). That file is the single
+source of truth for two decisions, and both systems honour it identically:
+
+- **Supersession** — only a version with an explicit `status: superseded` entry
+  is treated as superseded (Cake's `IsVersionSuperseded`, Python's
+  `resolve_superseded_by`). Neither side auto-detects it; to skip a version
+  everywhere, add it to `versions.json`.
+- **`compare_to` baselines** — when present, both sides diff against the same
+  baseline version (e.g. `4.148.0` → `3.119.4`).
+
+Where they intentionally differ is **granularity**, and this is by design — do
+not "fix" them into agreement:
+
+- **API changelogs** produce one diff *per published NuGet package*, including
+  preview-to-preview deltas (e.g. each `4.147.0-preview.*` against the one
+  before it). The audience is "what changed in this exact package".
+- **Release notes** produce one cumulative page *per release* (the highest
+  branch for each version), diffed against the previous stable/baseline. The
+  audience is "what's new since the last release".
+
+So a given version can show a finer-grained baseline in `changelogs/` than on
+its release-notes page, even though both agree on supersession and any explicit
+`compare_to` override.
+

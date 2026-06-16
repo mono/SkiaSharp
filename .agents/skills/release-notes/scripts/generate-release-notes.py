@@ -286,25 +286,23 @@ def detect_superseded_by(version, all_branches):
 
 def resolve_superseded_by(version, all_branches):
     # type: (str, list[str]) -> Optional[str]
-    """Whether a version was superseded. versions.json is authoritative; only
-    versions with NO config entry fall back to auto-detection.
+    """Return the version that supersedes ``version``, or None.
 
-    A config entry is the final word: if it explicitly says
-    ``status: superseded`` the version is superseded (using the configured
-    ``superseded_by``, or auto-detecting the successor when that field is
-    omitted); any other listed version — e.g. one carrying only ``compare_to``
-    / ``supersedes`` like 4.148.0 — is a real, non-skipped release and is NEVER
-    auto-detected as superseded. This matches Cake's ``IsVersionSuperseded``,
-    which also treats only an explicit ``status: superseded`` as superseded.
-    Without this guard, auto-detection would wrongly flag any version lacking a
-    stable git tag (the whole 4.x line, for now) as superseded by a later one.
+    versions.json is the SINGLE source of truth — there is no auto-detection,
+    so the superseded set is identical to Cake's ``IsVersionSuperseded`` (which
+    also treats only an explicit ``status: superseded`` as superseded). A
+    version is superseded only when its config entry says ``status:
+    superseded``; the successor is the configured ``superseded_by`` (or, if that
+    field is omitted, the nearest later version). Every other version — listed
+    with only ``compare_to`` / ``supersedes``, or not listed at all — is a real
+    release and is never reported as superseded. This keeps the API-changelog
+    and release-notes systems in lockstep: to skip a version everywhere, add it
+    to versions.json.
     """
     entry = _versions_config_lookup(version)
-    if entry:
-        if entry.get("status") == "superseded":
-            return entry.get("superseded_by") or detect_superseded_by(version, all_branches)
-        return None
-    return detect_superseded_by(version, all_branches)
+    if entry and entry.get("status") == "superseded":
+        return entry.get("superseded_by") or detect_superseded_by(version, all_branches)
+    return None
 
 
 def detect_supersedes(version, all_branches):
@@ -543,36 +541,60 @@ def list_remote_release_branches():
     return branches
 
 
+# Prerelease stage ranks. Lower sorts earlier; every prerelease ranks below a
+# stable release of the same patch (which uses STABLE_STAGE). Unknown labels
+# rank just below stable so a recognised-but-unmapped prerelease still sorts as
+# a prerelease, never as stable.
+_PRERELEASE_STAGE = {"alpha": 0, "beta": 1, "preview": 2, "rc": 3}
+_UNKNOWN_STAGE = 8
+_STABLE_STAGE = 9
+
+
 def release_branch_sort_key(branch):
     # type: (str) -> tuple
-    """Compute semver sort key for a release branch.
+    """Compute a semver-ish sort key for a release branch (ascending).
 
-    Sorting order:
-      release/X.Y.x             -> (X, Y, -1, 0, 0)  -- base, sorts first
-      release/X.Y.Z-preview.N   -> (X, Y,  Z, 0, N)
-      release/X.Y.Z             -> (X, Y,  Z, 1, 0)  -- stable after previews
+    Order within a minor:
+      release/X.Y.x                  -> base/servicing, sorts before all patches
+      release/X.Y.Z[.W]-<pre>.<n>    -> prereleases: alpha < beta < preview < rc
+      release/X.Y.Z[.W]              -> stable, sorts after every prerelease
+
+    Robust to the shapes that actually occur in this repo: dotted and undotted
+    prerelease labels (``preview.3``, ``preview28``, ``rc.1``, ``rc.147``),
+    multi-segment versions (``1.68.1.1``) and unrecognised labels. Anything
+    unparseable sorts to the very front (it can never be selected as "latest").
+
+    The tuple is (major, minor, patch, subpatch, stage, prenum); keep it the
+    same length everywhere so keys are always mutually comparable.
     """
-    m = re.match(r"release/(\d+)\.(\d+)\.(x|\d+(?:-preview\.\d+)?)$", branch)
-    if not m:
-        return (0, 0, 0, 0, 0)
+    name = _removeprefix(branch, "release/")
+    core, _, label = name.partition("-")  # label == "" when there is no '-'
+    parts = core.split(".")
+    if len(parts) < 2 or not parts[0].isdigit() or not parts[1].isdigit():
+        return (-1, 0, 0, 0, 0, 0)
 
-    major = int(m.group(1))
-    minor_num = int(m.group(2))
-    rest = m.group(3)
+    major = int(parts[0])
+    minor_num = int(parts[1])
+    third = parts[2] if len(parts) > 2 else "0"
 
-    if rest == "x":
-        return (major, minor_num, -1, 0, 0)
+    if third == "x":
+        # Servicing base sorts before every concrete patch of the same minor.
+        return (major, minor_num, -1, 0, 0, 0)
+    if not third.isdigit():
+        return (-1, 0, 0, 0, 0, 0)
 
-    m2 = re.match(r"(\d+)(?:-preview\.(\d+))?$", rest)
-    if not m2:
-        return (major, minor_num, 0, 0, 0)
+    patch = int(third)
+    subpatch = int(parts[3]) if len(parts) > 3 and parts[3].isdigit() else 0
 
-    patch = int(m2.group(1))
-    preview = m2.group(2)
+    if not label:
+        return (major, minor_num, patch, subpatch, _STABLE_STAGE, 0)
 
-    if preview is not None:
-        return (major, minor_num, patch, 0, int(preview))
-    return (major, minor_num, patch, 1, 0)
+    name_m = re.match(r"[A-Za-z]+", label)
+    stage_name = name_m.group(0).lower() if name_m else ""
+    nums = re.findall(r"\d+", label)
+    prenum = int(nums[0]) if nums else 0
+    stage = _PRERELEASE_STAGE.get(stage_name, _UNKNOWN_STAGE)
+    return (major, minor_num, patch, subpatch, stage, prenum)
 
 
 def version_from_branch(branch):
@@ -637,7 +659,7 @@ def find_previous_stable_base(all_branches, major, minor_num, patch):
     all_versioned.sort(key=release_branch_sort_key)
 
     # Find the latest branch that sorts before our minor
-    target_key = (major, minor_num, -2, 0, 0)  # before even .x
+    target_key = (major, minor_num, -2, 0, 0, 0)  # before even .x
     candidates = [b for b in all_versioned
                   if release_branch_sort_key(b) < target_key]
     if candidates:
@@ -679,8 +701,8 @@ def determine_diff_range(branch):
         if config_entry and config_entry.get("compare_to"):
             compare_to = config_entry["compare_to"]
             compare_branches = [b for b in all_branches
-                                if b.startswith("release/{}".format(compare_to))
-                                and not b.endswith(".x")]
+                                if not b.endswith(".x")
+                                and version_from_branch(b) == compare_to]
             if compare_branches:
                 compare_branches.sort(key=release_branch_sort_key)
                 return ("origin/{}".format(compare_branches[-1]),
@@ -778,10 +800,12 @@ def determine_diff_range(branch):
     config_entry = _versions_config_lookup(version)
     if config_entry and config_entry.get("compare_to"):
         compare_to = config_entry["compare_to"]
-        # Find the best matching release branch for the compare_to version
+        # Match branches whose base version equals compare_to exactly (the
+        # version plus its previews), anchored so e.g. "3.116.1" never also
+        # matches release/3.116.10.
         compare_branches = [b for b in all_branches
-                            if b.startswith("release/{}".format(compare_to))
-                            and not b.endswith(".x")]
+                            if not b.endswith(".x")
+                            and version_from_branch(b) == compare_to]
         if compare_branches:
             compare_branches.sort(key=release_branch_sort_key)
             return ("origin/{}".format(compare_branches[-1]),
@@ -1245,9 +1269,8 @@ def cmd_branch(branch):
             status = "preview"
 
     # Supersede marker: a minor that never ships stable (e.g. 4.147.0 skipped
-    # for 4.148.0). Auto-detected once a newer minor line appears. Forces
-    # "preview" status and a "superseded" label so the page makes clear it
-    # never released as stable.
+    # for 4.148.0), declared in versions.json. Forces "preview" status and a
+    # "superseded" label so the page makes clear it never released as stable.
     superseded_by = None
     if not is_main and not is_servicing:
         superseded_by = resolve_superseded_by(version, all_branches)
@@ -1362,6 +1385,7 @@ def _regen_unreleased(trigger_branch):
             to_display = _removeprefix(to_ref, "origin/")
 
             prs = get_prs_from_diff(from_ref, to_ref)
+            supersedes = detect_supersedes(svc_version, all_branches)
             metadata = {
                 "branch": svc_branch,
                 "version": svc_version,
@@ -1369,10 +1393,17 @@ def _regen_unreleased(trigger_branch):
                 "from": from_display,
                 "to": to_display,
             }
+            if supersedes:
+                metadata["supersedes"] = supersedes
             svc_path = RELEASES_DIR / "{}-unreleased.md".format(svc_version)
-            svc_path.write_text(format_pr_list(prs, metadata))
-            print("Wrote {} ({} PRs)".format(svc_path, len(prs)))
-            written_files.append(str(svc_path))
+            diff_range_str = "{}..{}".format(from_display, to_display)
+            if _is_content_unchanged(svc_path, len(prs), diff_range_str,
+                                     "unreleased", None, supersedes):
+                print("Skipping {} (unchanged)".format(svc_path))
+            else:
+                svc_path.write_text(format_pr_list(prs, metadata))
+                print("Wrote {} ({} PRs)".format(svc_path, len(prs)))
+                written_files.append(str(svc_path))
         except (RuntimeError, subprocess.CalledProcessError) as e:
             print("  WARNING: Could not regenerate {}: {}".format(
                 svc_branch, e), file=sys.stderr)
@@ -1392,6 +1423,7 @@ def _regen_unreleased(trigger_branch):
             to_display = _removeprefix(to_ref, "origin/")
 
             prs = get_prs_from_diff(from_ref, to_ref)
+            supersedes = detect_supersedes(main_version, all_branches)
             metadata = {
                 "branch": "main",
                 "version": main_version,
@@ -1399,10 +1431,17 @@ def _regen_unreleased(trigger_branch):
                 "from": from_display,
                 "to": to_display,
             }
+            if supersedes:
+                metadata["supersedes"] = supersedes
             main_path = RELEASES_DIR / "{}-unreleased.md".format(main_version)
-            main_path.write_text(format_pr_list(prs, metadata))
-            print("Wrote {} ({} PRs)".format(main_path, len(prs)))
-            written_files.append(str(main_path))
+            diff_range_str = "{}..{}".format(from_display, to_display)
+            if _is_content_unchanged(main_path, len(prs), diff_range_str,
+                                     "unreleased", None, supersedes):
+                print("Skipping {} (unchanged)".format(main_path))
+            else:
+                main_path.write_text(format_pr_list(prs, metadata))
+                print("Wrote {} ({} PRs)".format(main_path, len(prs)))
+                written_files.append(str(main_path))
         except (RuntimeError, subprocess.CalledProcessError) as e:
             print("  WARNING: Could not regenerate main: {}".format(e),
                   file=sys.stderr)
@@ -1446,9 +1485,28 @@ def cmd_all():
         print("ERROR: No release branches found after fetch.")
         sys.exit(1)
 
-    # Process main plus every release branch. Superseded versions are NOT
-    # filtered out here — they still get a page (see docstring).
-    branches_to_process = ["main"] + all_branches
+    # Build the processing list. Each output file must be produced by exactly
+    # ONE branch, otherwise branches that map to the same page overwrite each
+    # other and the last one processed wins (e.g. release/3.119.2 and its
+    # release/3.119.2-preview.* all render to 3.119.2.md). So:
+    #   - main                       -> {upcoming}-unreleased.md
+    #   - each servicing release/X.Y.x -> {X.Y.x}-unreleased.md  (distinct files)
+    #   - ONE canonical branch per versioned base version -> {version}.md
+    # The canonical branch is the highest-sorting one for that version: stable
+    # if it shipped, otherwise the latest rc/preview. Superseded versions are
+    # still included — they each keep their own page (see docstring).
+    servicing_branches = [b for b in all_branches if b.endswith(".x")]
+    canonical_by_version = {}  # type: dict[str, str]
+    for b in all_branches:
+        if b.endswith(".x"):
+            continue
+        ver = version_from_branch(b)
+        cur = canonical_by_version.get(ver)
+        if cur is None or release_branch_sort_key(b) > release_branch_sort_key(cur):
+            canonical_by_version[ver] = b
+    canonical_branches = sorted(canonical_by_version.values(),
+                                key=release_branch_sort_key)
+    branches_to_process = ["main"] + servicing_branches + canonical_branches
 
     files_to_polish = []
     skipped_count = 0

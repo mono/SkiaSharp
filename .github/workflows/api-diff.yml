@@ -166,7 +166,7 @@ jobs:
 
           git push --force origin "$PR_BRANCH"
 
-          existing=$(gh pr list --head "$PR_BRANCH" --base main --state open --json number --jq '.[0].number')
+          existing=$(gh pr list --head "$PR_BRANCH" --base main --state open --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
             echo "PR #$existing already exists, force-pushed update"
           else
