@@ -129,7 +129,7 @@ and records the outcome in the file's data-block; you only render what's there:
   script-generated *"Supersedes …"* note (kept verbatim).
 
 > You never compute supersession or base selection — just render whatever markers the file
-> contains. The mechanics (and the optional `scripts/versions.json` overrides) are script
+> contains. The mechanics (and the optional `scripts/infra/docs/versions.json` overrides) are script
 > internals.
 
 When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*

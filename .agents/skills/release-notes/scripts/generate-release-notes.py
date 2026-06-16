@@ -24,7 +24,7 @@ polished content. TOC and index are regenerated automatically.
 The --all command iterates every branch and only writes files whose PR count or
 diff range has changed (idempotent). Use this for automated workflows.
 
-Reads scripts/versions.json (if present) for comparison overrides and
+Reads scripts/infra/docs/versions.json (if present) for comparison overrides and
 supersession markers. versions.json is the single source of truth: only the
 versions listed there get a non-default baseline or a superseded marker.
 
@@ -56,15 +56,15 @@ SKIA_PR_PATTERNS = [
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 
-# Versions config (loaded lazily from scripts/versions.json)
+# Versions config (loaded lazily from scripts/infra/docs/versions.json)
 _VERSIONS_CONFIG = None  # type: Optional[list[dict]]
 
-VERSIONS_JSON_PATH = Path("scripts/versions.json")
+VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
 
 
 def load_versions_config():
     # type: () -> list[dict]
-    """Load scripts/versions.json override config (cached)."""
+    """Load scripts/infra/docs/versions.json override config (cached)."""
     global _VERSIONS_CONFIG
     if _VERSIONS_CONFIG is not None:
         return _VERSIONS_CONFIG
@@ -305,13 +305,13 @@ def _login_from_email(email):
 
 # ── GitHub author resolution ─────────────────────────────────────────
 
-_AUTHOR_CACHE_PATH = Path("scripts/pr-authors.json")
+_AUTHOR_CACHE_PATH = Path("scripts/infra/docs/pr-authors.json")
 _GRAPHQL_BATCH = 50
 
 
 def load_author_cache():
     # type: () -> dict
-    """Load the PR-number -> GitHub-login cache (scripts/pr-authors.json).
+    """Load the PR-number -> GitHub-login cache (scripts/infra/docs/pr-authors.json).
 
     This cache is the durable record of every author resolved from the GitHub
     API, so ordinary regenerations stay fully offline: a warm cache means
@@ -381,7 +381,7 @@ def resolve_pr_authors(prs):
 
     Confidence order:
       1. noreply login — already set by get_prs_from_diff, always correct.
-      2. cache (scripts/pr-authors.json) — previously resolved from the API.
+      2. cache (scripts/infra/docs/pr-authors.json) — previously resolved from the API.
       3. GitHub GraphQL — the authoritative PR author, batched then cached.
 
     PRs that still cannot be resolved keep ``login=None``; format_pr_list then

@@ -862,14 +862,14 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 // targets thin and guarantees they treat supersession the same way.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Load the shared version-comparison config (scripts/versions.json). This is the
+// Load the shared version-comparison config (scripts/infra/docs/versions.json). This is the
 // single source of truth for how versions relate to each other. It is "override
 // only": versions NOT listed fall back to the default behaviour of diffing
 // against the immediately-preceding published version. Returns the "versions"
 // array (empty when the file is absent). See versions.json for the schema.
 JArray LoadVersionsConfig ()
 {
-    var path = $"{ROOT_PATH}/scripts/versions.json";
+    var path = $"{ROOT_PATH}/scripts/infra/docs/versions.json";
     if (!FileExists (path))
         return new JArray ();
     var doc = JObject.Parse (System.IO.File.ReadAllText (path));
