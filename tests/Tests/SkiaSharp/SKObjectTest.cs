@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKObjectTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void CanInstantiateAbstractClassesWithImplementation()
 		{
 			var handle = GetNextPtr();
@@ -37,7 +37,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SameHandleReturnsSameReferenceAndReleasesObject()
 		{
 			SkipOnMono();
@@ -75,7 +75,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ObjectsWithTheSameHandleButDoNotOwnTheirHandlesAreCreatedAndCollectedCorrectly()
 		{
 			SkipOnMono();
@@ -100,7 +100,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ObjectsWithTheSameHandleButDoNotOwnTheirHandlesAreCreatedAndDisposedCorrectly()
 		{
 			var handle = GetNextPtr();
@@ -131,7 +131,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ObjectsWithTheSameHandleAndOwnTheirHandlesThrowInDebugBuildsButNotRelease()
 		{
 			var handle = GetNextPtr();
@@ -150,7 +150,7 @@ namespace SkiaSharp.Tests
 #endif
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DisposeInvalidatesObject()
 		{
 			var handle = GetNextPtr();
@@ -166,7 +166,7 @@ namespace SkiaSharp.Tests
 			Assert.True(obj.DestroyedNative);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DisposeDoesNotInvalidateObjectIfItIsNotOwned()
 		{
 			var handle = GetNextPtr();
@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 			Assert.False(obj.DestroyedNative);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ExceptionsThrownInTheConstructorFailGracefully()
 		{
 			BrokenObject broken = null;
@@ -243,7 +243,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(1)]
 		[InlineData(100)]
 		[InlineData(1000)]
@@ -253,7 +253,7 @@ namespace SkiaSharp.Tests
 			// The (100) variant still validates concurrent GC/finalizer behavior.
 			// See #3608.
 			if (IntPtr.Size == 4 && iterations >= 1000)
-				throw new SkipException("Stress test skipped on x86 due to address space limit.");
+				Assert.Skip("Stress test skipped on x86 due to address space limit.");
 
 			var imagePath = Path.Combine(PathToImages, "baboon.jpg");
 
@@ -282,7 +282,7 @@ namespace SkiaSharp.Tests
 			await Task.WhenAll(tasks);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EnsureConcurrencyResultsInCorrectDeregistration()
 		{
 			var handle = GetNextPtr();
@@ -326,7 +326,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PreventPublicDisposalOnLiveWrapperDoesNotThrow()
 		{
 			// Happy path: promoting a live (non-disposed) wrapper must never trip the
@@ -343,7 +343,7 @@ namespace SkiaSharp.Tests
 			obj.DisposeInternal();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetOrAddDisposeProtectedOnLiveExistingInstanceReturnsSameInstanceWithoutThrowing()
 		{
 			// Real promotion path (not the internal method in isolation): an already-registered,
@@ -363,7 +363,7 @@ namespace SkiaSharp.Tests
 			promoted.DisposeInternal();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PreventPublicDisposalOnDisposedWrapperThrows()
 		{
 #if THROW_OBJECT_EXCEPTIONS
@@ -387,11 +387,11 @@ namespace SkiaSharp.Tests
 			// re-check, so it cannot be forced deterministically without a test seam. It is
 			// defense-in-depth for the same footgun this test exercises from the promote side.
 #else
-			throw new SkipException("PreventPublicDisposal state guard is only active in THROW_OBJECT_EXCEPTIONS builds.");
+			Assert.Skip("PreventPublicDisposal state guard is only active in THROW_OBJECT_EXCEPTIONS builds.");
 #endif
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedObjectsAreDisposedBeforeNative()
 		{
 			var parent1 = ParentChildWorld.GetParent("Root");

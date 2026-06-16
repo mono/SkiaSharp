@@ -4,7 +4,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKDrawableTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void CanInstantiateDrawable()
 		{
 			using (var drawable = new TestDrawable())
@@ -12,7 +12,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanAccessBounds()
 		{
@@ -23,7 +23,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanAccessApproxBytes()
 		{
 			using (var drawable = new TestDrawable())
@@ -33,7 +33,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateSnapshot()
 		{
 			SkipOnPlatform(IsMac || IsIOS || IsMacCatalyst, "sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues on Apple platforms");
@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanUseAllMembers()
 		{
 			SkipOnPlatform(IsMac || IsIOS || IsMacCatalyst, "sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues on Apple platforms");
@@ -72,7 +72,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DrawableDrawDraws()
 		{
 			using (var drawable = new TestDrawable())
@@ -85,7 +85,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanvasDrawsDrawable()
 		{
 			using (var drawable = new TestDrawable())

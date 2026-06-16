@@ -2,7 +2,7 @@ using System.Diagnostics;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Mac;
 using SkiaSharp;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace SkiaSharp.Tests.Integration;
 

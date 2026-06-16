@@ -44,7 +44,7 @@ Task ("Default")
             var assName = testAssembly.Replace (".Console", "");
             EnsureDirectoryExists (results);
             try {
-                RunTests ($"{ROOT_PATH}/tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.dll", results, arch == "x86");
+                RunTests ($"{ROOT_PATH}/tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.exe", results);
             } catch {
                 failedTests++;
                 if (THROW_ON_FIRST_TEST_FAILURE)

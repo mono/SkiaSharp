@@ -10,7 +10,7 @@ namespace HarfBuzzSharp.Tests
 	{
 		// HBColor -> SKColor
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorPreservesChannels ()
 		{
 			var hb = new HBColor (0xAA, 0xBB, 0xCC, 0xFF);
@@ -22,7 +22,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal ((byte)0xFF, sk.Alpha);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorWithOpaqueBlack ()
 		{
 			var hb = new HBColor (0, 0, 0, 255);
@@ -31,7 +31,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (SkiaSharp.SKColors.Black, sk);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorWithOpaqueWhite ()
 		{
 			var hb = new HBColor (255, 255, 255, 255);
@@ -40,7 +40,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (SkiaSharp.SKColors.White, sk);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorWithTransparent ()
 		{
 			var hb = new HBColor (0, 0, 0, 0);
@@ -49,7 +49,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal ((byte)0, sk.Alpha);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorWorksWithRealPaletteColors ()
 		{
 			using var blob = Blob.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
@@ -69,7 +69,7 @@ namespace HarfBuzzSharp.Tests
 
 		// HBColor -> SKColorF
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorFNormalizesChannels ()
 		{
 			var hb = new HBColor (255, 128, 0, 204);
@@ -81,7 +81,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (204 / 255f, skF.Alpha, 0.01f);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorFOpaqueWhiteIsAllOnes ()
 		{
 			var hb = new HBColor (255, 255, 255, 255);
@@ -93,7 +93,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (1.0f, skF.Alpha, 0.001f);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorFBlackIsAllZeros ()
 		{
 			var hb = new HBColor (0, 0, 0, 0);
@@ -107,7 +107,7 @@ namespace HarfBuzzSharp.Tests
 
 		// SKColor -> HBColor
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorToHBColorRoundtrips ()
 		{
 			var original = new SkiaSharp.SKColor (0xAA, 0xBB, 0xCC, 0xFF);
@@ -117,7 +117,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (original, converted);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorToHBColorPreservesChannels ()
 		{
 			var sk = new SkiaSharp.SKColor (10, 20, 30, 40);
@@ -131,7 +131,7 @@ namespace HarfBuzzSharp.Tests
 
 		// SKColorF -> HBColor
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorFToHBColorConvertsCorrectly ()
 		{
 			var skF = new SkiaSharp.SKColorF (1.0f, 0.5f, 0.0f, 0.8f);
@@ -143,7 +143,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal ((byte)204, hb.Alpha);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorFToHBColorClampsNegativeValues ()
 		{
 			var skF = new SkiaSharp.SKColorF (-0.5f, -1.0f, 0.0f, 1.0f);
@@ -155,7 +155,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal ((byte)255, hb.Alpha);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorFToHBColorClampsOverflowValues ()
 		{
 			var skF = new SkiaSharp.SKColorF (2.0f, 1.5f, 1.0f, 0.0f);
@@ -167,7 +167,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal ((byte)0, hb.Alpha);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorFToHBColorRoundtrips ()
 		{
 			// Due to 8-bit quantization, use values that map cleanly
@@ -183,7 +183,7 @@ namespace HarfBuzzSharp.Tests
 
 		// Batch: ToSKColors
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorsConvertsArray ()
 		{
 			var hbColors = new[] {
@@ -209,7 +209,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal ((byte)128, skColors[2].Alpha);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorsWithNullReturnsNull ()
 		{
 			HBColor[] hbColors = null;
@@ -218,7 +218,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Null (result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToSKColorsWithEmptyReturnsEmpty ()
 		{
 			var hbColors = System.Array.Empty<HBColor> ();

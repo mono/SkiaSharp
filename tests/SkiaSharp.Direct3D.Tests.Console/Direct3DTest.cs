@@ -22,7 +22,8 @@ public class Direct3DTest<TContext> : Direct3DTest
 		}
 		catch (Exception ex)
 		{
-			throw new SkipException($"Unable to create Direct3D context: {ex.Message}");
+			Assert.Skip($"Unable to create Direct3D context: {ex.Message}");
+			throw;
 		}
 	}
 }

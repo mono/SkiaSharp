@@ -11,7 +11,7 @@ namespace SkiaSharp.Tests
 			SKGraphics.Init();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void GetFontCacheLimitIsNotZero()
 		{
 			var limit = SKGraphics.GetFontCacheLimit();
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(0, limit);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void GetFontCacheLimitUpdatesAndReturnsPrevious()
 		{
 			var limit = SKGraphics.GetFontCacheLimit();
@@ -32,7 +32,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(limit + 1, newLimit);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void GetMemoryDump()
 		{
 			using var dump = new TextWriterDump(true, true);
@@ -43,7 +43,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CanGetMemoryDumpOnGpuSurface()
 		{
 			using var ctx = CreateGlContext();
@@ -61,7 +61,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CanGetMemoryDumpOnGpuImages()
 		{
 			using var ctx = CreateGlContext();
@@ -74,7 +74,7 @@ namespace SkiaSharp.Tests
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
 			using var image = SKImage.FromEncodedData(data);
 
-			canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
+			canvas.DrawImage(image, 0, 0);
 
 			using var dump = new TextWriterDump(true, true);
 
@@ -84,7 +84,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CanGetMemoryDumpOnGpuImagesAfterPurge()
 		{
 			using var ctx = CreateGlContext();
@@ -97,7 +97,7 @@ namespace SkiaSharp.Tests
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
 			using var image = SKImage.FromEncodedData(data);
 
-			canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
+			canvas.DrawImage(image, 0, 0);
 
 			using var dump = new TextWriterDump(true, true);
 
@@ -108,7 +108,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CanGetMemoryDumpOnGpuImagesAfterPurgeUnlocked()
 		{
 			using var ctx = CreateGlContext();
@@ -121,7 +121,7 @@ namespace SkiaSharp.Tests
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
 			using var image = SKImage.FromEncodedData(data);
 
-			canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
+			canvas.DrawImage(image, 0, 0);
 
 			using var dump = new TextWriterDump(true, true);
 

@@ -6,7 +6,7 @@ namespace HarfBuzzSharp.Tests
 {
 	public class HBFontFuncsTest : HBTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void ImmutableFunctionsShouldNotChange()
 		{
 			using (var fontFuncs = new FontFunctions())
@@ -16,7 +16,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGlyphContourPointDelegate()
 		{
 			using (var font = new Font(Font))
@@ -42,7 +42,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalFontExtentsDelegate()
 		{
 			using (var font = new Font(Font))
@@ -67,7 +67,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGlyphExtentsDelegate()
 		{
 			using (var font = new Font(Font))
@@ -92,7 +92,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGlyphFromNameDelegate()
 		{
 			using (var font = new Font(Font))
@@ -115,7 +115,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGlyphNameDelegate()
 		{
 			using (var font = new Font(Font))
@@ -138,7 +138,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TryGetGlyphNameIsCorrectWithDelegate()
 		{
 			// get an array and fill it with things
@@ -168,7 +168,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalGlyphAdvanceDelegate()
 		{
 			using (var font = new Font(Font))
@@ -186,7 +186,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetNominalGlyphDelegate()
 		{
 			using (var font = new Font(Font))
@@ -209,7 +209,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetNominalGlyphsDelegate()
 		{
 			using (var font = new Font(Font))
@@ -232,7 +232,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalGlyphAdvancesDelegate()
 		{
 			using (var font = new Font(Font))
@@ -253,7 +253,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalGlyphOriginDelegate()
 		{
 			using (var font = new Font(Font))
@@ -277,7 +277,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetVariationGlyphDelegate()
 		{
 			using (var font = new Font(Font))
@@ -300,7 +300,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalGlyphKerningDelegate()
 		{
 			using (var font = new Font(Font))

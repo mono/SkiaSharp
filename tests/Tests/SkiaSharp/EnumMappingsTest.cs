@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class EnumMappingsTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void GRBackendMappings()
 		{
 			foreach (GRBackend value in Enum.GetValues(typeof(GRBackend)))
@@ -23,7 +23,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void SKColorTypeMappingsToNative(SKColorType value)
 		{
@@ -53,7 +53,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(value.ToString(), native.ToString(), true);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKColorTypeMappingsFromNative()
 		{
 			foreach (SKColorTypeNative value in Enum.GetValues(typeof(SKColorTypeNative)))
@@ -85,7 +85,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void GetBytesPerPixelIsCorrect(SKColorType value)
 		{
@@ -97,7 +97,7 @@ namespace SkiaSharp.Tests
 				Assert.True(byteSize > 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void GetBitShiftPerPixelIsCorrect(SKColorType value)
 		{
@@ -110,7 +110,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(byteSize, Math.Pow(2, bitShift));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void GetAlphaTypeMappings(SKColorType value)
 		{

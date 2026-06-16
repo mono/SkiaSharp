@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 			(byte)'s', (byte)'k', (byte)'i', (byte)'a', (byte)'p', (byte)'i', (byte)'c', (byte)'t'
 		};
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanSerializeToData()
 		{
@@ -24,7 +24,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(MagicBytes, span.Slice(0, 8).ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanSerializeToStream()
 		{
 			using var picture = CreateTestPicture();
@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(MagicBytes, stream.ToArray().Take(8));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDeserializeFromData()
 		{
 			using var picture = CreateTestPicture();
@@ -52,7 +52,7 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDeserializeFromStream()
 		{
 			using var picture = CreateTestPicture();
@@ -69,7 +69,7 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanPlayback()
 		{
 			using var picture = CreateTestPicture();
@@ -82,7 +82,7 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawPicture()
 		{
 			using var picture = CreateTestPicture();
@@ -95,7 +95,7 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetApproximateOperationCount()
 		{
 			using var picture = CreateTestPicture();
@@ -103,7 +103,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(5, picture.ApproximateOperationCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetApproximateBytesUsed()
 		{
 			using var picture = CreateTestPicture();
@@ -111,7 +111,7 @@ namespace SkiaSharp.Tests
 			Assert.True(picture.ApproximateBytesUsed > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodesImageIntoPicture()
 		{
 			// create an image
@@ -120,7 +120,7 @@ namespace SkiaSharp.Tests
 			// create a picture that has an image in it
 			using var picRecorder = new SKPictureRecorder();
 			using var picCanvas = picRecorder.BeginRecording(SKRect.Create(0, 0, 40, 40));
-			picCanvas.DrawBitmap(sourceBitmap, 0, 0, SKSamplingOptions.Default);
+			picCanvas.DrawBitmap(sourceBitmap, 0, 0);
 			using var picture = picRecorder.EndRecording();
 
 			// serialize and then deserialize the picture

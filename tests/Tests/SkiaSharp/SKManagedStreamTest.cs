@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKManagedStreamTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void DotNetStreamIsCollected()
 		{
 			var dotnet = CreateTestStream();
@@ -23,7 +23,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DotNetStreamIsNotCollected()
 		{
 			var dotnet = CreateTestStream();
@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, dotnet.Position);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipToCodecButIsNotForgotten()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
@@ -57,7 +57,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamThatHasLostOwnershipIsDisposed()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
@@ -75,7 +75,7 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamIsCollectedEvenWhenNotProperlyDisposed()
 		{
 			SkipOnMono();
@@ -95,7 +95,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamReadsByteCorrectly()
 		{
 			var data = new byte[1024];
@@ -126,7 +126,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(1024, 0, 0, 0)]
 		[InlineData(1024, 1, 1, 1)]
 		[InlineData(1024, 10, 10, 10)]
@@ -155,7 +155,7 @@ namespace SkiaSharp.Tests
 			Assert.All(buffer.Skip(actualReadSize), i => Assert.Equal(0, i));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(1024, 0, 0, 0)]
 		[InlineData(1024, 1, 1, 1)]
 		[InlineData(1024, 10, 10, 10)]
@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(finalPos, managedStream.Position);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(1024, 0, 0, 0)]
 		[InlineData(1024, 1, 1, 1)]
 		[InlineData(1024, 10, 10, 10)]
@@ -205,7 +205,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(finalPos, stream.Position);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SkipOffsetChunkCorrectly()
 		{
 			var data = new byte[1024];
@@ -226,7 +226,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(data.Length - offset, taken);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamReadsChunkCorrectly()
 		{
 			var data = new byte[1024];
@@ -248,7 +248,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(data.Take(buffer.Length), buffer);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamReadsOffsetChunkCorrectly()
 		{
 			var data = new byte[1024];
@@ -274,7 +274,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(resultData, buffer);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamIsNotCollectedPrematurely()
 		{
 			using (var document = CreateDocument(out var handle))
@@ -323,7 +323,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -350,7 +350,7 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void InvalidStreamIsDisposedImmediately()
 		{
 			var stream = CreateTestSKStream();
@@ -370,7 +370,7 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
 			SkipOnMono();
@@ -412,7 +412,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamCanBeDuplicatedAndBothRemainReadable()
 		{
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -435,7 +435,7 @@ namespace SkiaSharp.Tests
 			stream.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamCanBeForkedAndBothRemainReadable()
 		{
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -456,7 +456,7 @@ namespace SkiaSharp.Tests
 			stream.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamCanBeDuplicatedMultipleTimes()
 		{
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -477,7 +477,7 @@ namespace SkiaSharp.Tests
 			stream.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamCanBeDuplicatedMultipleTimesWithChildDisposed()
 		{
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -505,7 +505,7 @@ namespace SkiaSharp.Tests
 			stream.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DuplicatesAreIndependentAfterParentDisposed()
 		{
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -533,7 +533,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DuplicateStreamIsDisposed()
 		{
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -560,7 +560,7 @@ namespace SkiaSharp.Tests
 			dupe1.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DuplicateStreamIsCollected()
 		{
 			SkipOnMono();
@@ -592,7 +592,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MultipleDuplicatesAreIndependent()
 		{
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -625,7 +625,7 @@ namespace SkiaSharp.Tests
 			stream.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NonSeekableStreamDuplicateAndForkReturnNull()
 		{
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -638,7 +638,7 @@ namespace SkiaSharp.Tests
 			stream.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DotNetStreamIsClosedWhenSKManagedStreamIsDisposed()
 		{
 			var dotnet = CreateTestStream();
@@ -659,7 +659,7 @@ namespace SkiaSharp.Tests
 			dupe.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipButManagedStreamStaysOpenUntilOwnerDisposed()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -710,7 +710,7 @@ namespace SkiaSharp.Tests
 		// time. These tests lock in that guarantee and prove writes triggered AFTER Create
 		// (lazy writes) reach the underlying .NET stream without crossing a closed boundary.
 
-		[SkippableFact]
+		[Fact]
 		public void SvgCanvasWritesLazilyAndKeepsManagedStreamOpenUntilOwnerDisposed()
 		{
 			var tracking = new LifecycleTrackingStream();
@@ -748,7 +748,7 @@ namespace SkiaSharp.Tests
 			Assert.Contains("rect", xml);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PdfDocumentWritesLazilyAndKeepsManagedStreamOpenUntilOwnerDisposed()
 		{
 			var tracking = new LifecycleTrackingStream();
@@ -795,7 +795,7 @@ namespace SkiaSharp.Tests
 		// same thread; the re-entrant call re-acquires the lock fresh and no-ops on isDisposed==1.
 		// These tests pin the single-free + deregistration + fromNative-flip invariants.
 
-		[SkippableFact]
+		[Fact]
 		public void DisposingManagedStreamFiresNativeDestroyCallback()
 		{
 			var dotnet = CreateTestStream();
@@ -819,7 +819,7 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DisposingManagedWStreamFiresNativeDestroyCallback()
 		{
 			var dotnet = new MemoryStream();
@@ -843,7 +843,7 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedWStream>(handle, stream);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DisposingManagedStreamTwiceIsNoOp()
 		{
 			var stream = new SKManagedStream(CreateTestStream(), true);

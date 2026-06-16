@@ -225,7 +225,7 @@ namespace SkiaSharp.Extended
 			var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888));
 
 			using (var canvas = new SKCanvas(bitmap))
-				canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
+				canvas.DrawImage(image, 0, 0);
 
 			return bitmap;
 		}

@@ -1,6 +1,5 @@
 using SkiaSharp;
 using Xunit;
-using Xunit.Abstractions;
 using HBuffer = HarfBuzzSharp.Buffer;
 
 namespace SkiaSharp.Tests.Integration;

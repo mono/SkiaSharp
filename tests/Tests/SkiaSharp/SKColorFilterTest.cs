@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKColorFilterTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void StaticSrgbToLinearIsReturnedAsTheStaticInstance()
 		{
@@ -25,7 +25,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StaticLinearToSrgbIsReturnedAsTheStaticInstance()
 		{
 			var expected = SKColorFilter.CreateLinearToSrgbGamma();
@@ -42,7 +42,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(-1, 0)]
 		[InlineData(-0.5f, 0)]
 		[InlineData(0, 0)]
