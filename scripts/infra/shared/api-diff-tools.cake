@@ -251,18 +251,30 @@ JArray LoadVersionsConfig (string family = "skiasharp")
 }
 
 // A "superseded" version is one that was previewed but never shipped stable
-// (e.g. 4.147 was abandoned in favour of 4.148). It is excluded from acting as a
-// *baseline* for other versions, so a later release diffs against the last real
-// predecessor instead. A superseded preview-only line is also skipped from
-// emission (its changes are absorbed into the successor's cumulative diff); a
-// version that actually shipped stable still gets its own changelog regardless.
-// Matched on major.minor.patch, so an entry for "4.147.0" covers every
-// 4.147.0-preview.* (all previews of that exact patch), but not a different patch.
+// (e.g. 4.147 was abandoned in favour of 4.148). Its ONLY effect is on baseline
+// selection: it is excluded from acting as a *baseline* for other versions, so a
+// later release diffs against the last real predecessor instead. A superseded line
+// is NOT dropped from emission — it still gets its own artifact/page (spec §1.2 and
+// §1.4 rule 2); it is simply transparent as a diff baseline. Matched on
+// major.minor.patch, so an entry for "4.147.0" covers every 4.147.0-preview.* (all
+// previews of that exact patch), but not a different patch.
 bool IsVersionSuperseded (JArray config, string normalizedVersion)
 {
     var nv = new NuGetVersion (normalizedVersion);
     var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
     return config.Any (v => (string)v ["version"] == key && (string)v ["status"] == "superseded");
+}
+
+// True when a version line has ANY entry in versions.json (a compare_to override
+// and/or a status). Per spec §1.4 rule 2 a tracked line is always EMITTED — it gets
+// its own artifact even when it is a preview-only line behind the latest stable
+// (e.g. the superseded 4.147 / 3.0.0 lines, which are shipped previews that still
+// need their own changelog/page). Matched on major.minor.patch.
+bool IsVersionListed (JArray config, string normalizedVersion)
+{
+    var nv = new NuGetVersion (normalizedVersion);
+    var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+    return config.Any (v => (string)v ["version"] == key);
 }
 
 // Return the explicit "compare_to" baseline declared for a version in

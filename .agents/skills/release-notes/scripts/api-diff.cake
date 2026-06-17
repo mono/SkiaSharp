@@ -222,16 +222,20 @@ Task ("docs-api-diff-past")
             .OrderBy (l => l.rep)
             .ToList ();
 
-        // Decide which lines actually get a changelog emitted (spec §1.4):
-        //   - a line that shipped stable: always (the historical record);
-        //   - a preview-only line that was abandoned (superseded in versions.json,
-        //     e.g. 4.147): never — it is absorbed into its successor's diff;
-        //   - a preview-only line ahead of the last stable: yes (active dev line);
-        //   - any other preview-only line (old, never shipped): no.
+        // Decide which lines actually get a changelog emitted (spec §1.4). A line
+        // is emitted when ANY of these holds, and not otherwise:
+        //   1. it shipped stable (the permanent historical record); or
+        //   2. it is listed in versions.json — an intentionally tracked line, e.g. a
+        //      superseded preview-only line like 4.147 or 3.0.0 (spec §1.4 rule 2).
+        //      "superseded" only skips a line as a *baseline* (§1.3); it does NOT
+        //      drop the line's own page — a shipped preview still needs its diff; or
+        //   3. it is a preview-only line ahead of the last stable (active dev line).
+        // Any other preview-only line (old, never shipped, not listed) is dropped.
         var emit = lines
             .Where (l => !l.rep.IsPrerelease
-                || (!IsVersionSuperseded (versionsConfig, l.rep.ToNormalizedString ())
-                    && (latestStable == null || l.rep.CompareTo (latestStable) > 0)))
+                || IsVersionListed (versionsConfig, l.rep.ToNormalizedString ())
+                || latestStable == null
+                || l.rep.CompareTo (latestStable) > 0)
             .ToList ();
 
         for (var idx = 0; idx < emit.Count; idx++) {
@@ -243,11 +247,20 @@ Task ("docs-api-diff-past")
             // Pick the baseline to diff against (spec §1.3):
             //   1. An explicit compare_to override in versions.json wins
             //      (e.g. 4.148 -> 3.119.4, deliberately skipping 4.147).
-            //   2. Otherwise diff against the previous EMITTED line, so skipped
-            //      previews and pruned lines are transparent.
+            //   2. Otherwise diff against the most recent previous EMITTED line that
+            //      is NOT itself superseded — a superseded line still gets its own
+            //      page but must never serve as a baseline (spec §1.2/§1.3), so the
+            //      next line diffs past it and rolls its work up.
             var previous = FindCompareToBaseline (versionsConfig, version, allVersions);
-            if (previous == null && idx > 0)
-                previous = emit [idx - 1].rep.ToNormalizedString ();
+            if (previous == null) {
+                for (var j = idx - 1; j >= 0; j--) {
+                    var candidate = emit [j].rep.ToNormalizedString ();
+                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
+                        previous = candidate;
+                        break;
+                    }
+                }
+            }
 
             Information ($"Comparing version '{previous}' vs '{version}' of '{id}' (changelog '{changelogVersion}')...");
 
