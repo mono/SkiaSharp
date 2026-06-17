@@ -3,23 +3,35 @@ name: API Diff
 # ─────────────────────────────────────────────────────────────────────────────
 # API Diff workflow
 #
-# Keeps the committed API changelogs under changelogs/ up to date. It is a thin
-# runner around a single Cake target — there is no skill and no shell wrapper to
-# keep in sync:
+# READ FIRST: documentation/dev/release-notes-and-changelogs.md is the behavior
+# spec for the unified release-notes + API-changelog system. This workflow is the
+# automation around the API-changelog (Cake) engine only.
+#
+# Keeps the committed API changelogs up to date under the in-site releases tree
+# (spec §3.1): documentation/docfx/releases/. It is a thin runner around a single
+# Cake target — there is no shell wrapper to keep in sync:
 #
 #     dotnet cake --target=docs-api-diff-past
 #
-# That target wraps Mono.ApiTools.NuGetDiff, walks every version published to
-# NuGet.org (prereleases included) and writes a per-assembly markdown diff to
-# changelogs/{PackageId}/{version}/{Assembly}.md. Baseline selection and
-# superseded-version handling are driven by scripts/infra/docs/versions.json — see that
-# file's $comment fields and the docs-api-diff-past target in
-# scripts/infra/docs/docs.cake. To reproduce a run locally, just run that one
-# command from the repo root.
+# That target (now living in the release-notes skill at
+# .agents/skills/release-notes/scripts/api-diff.cake) wraps
+# Mono.ApiTools.NuGetDiff, walks every version published to NuGet.org
+# (prereleases included) and writes a per-assembly markdown diff into the
+# line-first, package-namespaced layout (spec §3.3):
+#   documentation/docfx/releases/<line>/<PackageId>/<Assembly>.md (+ .breaking.md)
+# HarfBuzzSharp-versioned packages go to the parallel tree (spec §3.4):
+#   documentation/docfx/releases/harfbuzzsharp/<hb-line>/...
+# and the co-release map sidecar (spec §3.6) is written to
+#   documentation/docfx/releases/co-release-map.json
+# Baseline selection and superseded-version handling are driven by
+# scripts/infra/docs/versions.json — see that file's $comment fields and the
+# docs-api-diff-past target in api-diff.cake.
 #
-# This workflow only adds the automation around that command: when to run it and
-# how to turn its output into a single rolling PR. It deliberately does NOT
-# re-document how diffs are generated.
+# OWNERSHIP (spec §3.5): the releases/ tree is SHARED. This workflow only ever
+# touches the Cake-owned entries (numeric <line>/ folders, the harfbuzzsharp/
+# tree, and co-release-map.json). It MUST NOT delete or rewrite the human pages
+# (<line>.md, <line>-unreleased.md), TOC.yml or index.md — those belong to the
+# release-notes (Python + AI) engine and its own workflow.
 #
 # Preview ("what will an unreleased branch's diff look like?") is intentionally
 # NOT automated here. It is a manual, multi-step operation — see the "Previewing
@@ -33,7 +45,7 @@ on:
       - 'release/**'
     paths-ignore:
       # Don't loop: the workflow's own changelog commits must not retrigger it.
-      - 'changelogs/**'
+      - 'documentation/docfx/releases/**'
       - '.github/workflows/api-diff.yml'
     tags:
       - 'v*'
@@ -53,6 +65,10 @@ concurrency:
   cancel-in-progress: true
 
 permissions: {}
+
+env:
+  # Single source of truth for the in-site releases tree (spec §3.1).
+  RELEASES_DIR: documentation/docfx/releases
 
 jobs:
   generate:
@@ -87,8 +103,8 @@ jobs:
           global-json-file: global.json
 
       # Single Cake target — the exact same command a human runs locally. It
-      # reads scripts/infra/docs/versions.json for compare_to / supersession overrides and
-      # writes the changelogs under changelogs/.
+      # reads scripts/infra/docs/versions.json for compare_to / supersession
+      # overrides and writes only the Cake-owned entries under releases/.
       - name: Generate changelogs
         run: |
           set -euo pipefail
@@ -98,13 +114,35 @@ jobs:
       - name: Check for changes
         id: check
         run: |
-          # Detect ACTUAL changes to the changelogs, not merely the presence of
-          # files. changelogs/README.md is committed, so a bare existence check
-          # would always be true and the publish job would run every time.
-          if [ -n "$(git status --porcelain changelogs/)" ]; then
+          # The Cake target clears and rewrites only its owned entries (numeric
+          # <line>/ dirs, harfbuzzsharp/, co-release-map.json), so any porcelain
+          # change under releases/ here is a real API-diff change — the human
+          # pages are never touched by this job.
+          if [ -n "$(git status --porcelain "$RELEASES_DIR")" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Upload ONLY the Cake-owned entries so the publish job can reapply them
+      # over a clean main checkout without clobbering the human pages.
+      - name: Stage owned changelog entries
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          set -euo pipefail
+          rm -rf _api_diff_owned
+          mkdir -p _api_diff_owned
+          cd "$RELEASES_DIR"
+          # Numeric line folders (X.Y.Z) + the harfbuzz tree + the sidecar are
+          # the only things this engine owns (spec §3.5).
+          find . -maxdepth 1 -mindepth 1 -type d -regextype posix-extended \
+            -regex '\./[0-9]+\.[0-9]+\.[0-9]+' -print0 \
+            | xargs -0 -I{} cp -R {} "$GITHUB_WORKSPACE/_api_diff_owned/"
+          if [ -d harfbuzzsharp ]; then
+            cp -R harfbuzzsharp "$GITHUB_WORKSPACE/_api_diff_owned/"
+          fi
+          if [ -f co-release-map.json ]; then
+            cp co-release-map.json "$GITHUB_WORKSPACE/_api_diff_owned/"
           fi
 
       - name: Upload changelogs
@@ -112,7 +150,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: changelogs
-          path: changelogs/
+          path: _api_diff_owned/
           if-no-files-found: warn
 
   publish:
@@ -131,24 +169,28 @@ jobs:
           ref: main
           fetch-depth: 1
 
-      - name: Clear committed changelogs
+      - name: Clear Cake-owned changelog entries
         run: |
           set -euo pipefail
-          # The artifact holds the COMPLETE desired changelogs/ tree (every
-          # generated diff plus the committed README). download-artifact only
-          # ever ADDS/overwrites files, so a file the generate job removed —
-          # e.g. a stale *.breaking.md after a baseline change — would survive
-          # here and the deletion would be silently lost. Clearing the tree
-          # first makes the artifact authoritative, so removals are staged as
-          # deletions by `git add -A` below.
-          rm -rf changelogs
-          mkdir changelogs
+          # The artifact holds the COMPLETE desired set of Cake-OWNED entries.
+          # download-artifact only ever ADDS/overwrites files, so a folder the
+          # generate job removed (e.g. a now-empty line, or a stale *.breaking.md
+          # after a baseline change) would survive here and the deletion would be
+          # silently lost. Clearing ONLY the owned entries first makes the
+          # artifact authoritative for them, while leaving the human pages
+          # (<line>.md, <line>-unreleased.md, TOC.yml, index.md) untouched
+          # (spec §3.5 ownership).
+          cd "$RELEASES_DIR"
+          find . -maxdepth 1 -mindepth 1 -type d -regextype posix-extended \
+            -regex '\./[0-9]+\.[0-9]+\.[0-9]+' -exec rm -rf {} +
+          rm -rf harfbuzzsharp
+          rm -f co-release-map.json
 
       - name: Download changelogs artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: changelogs
-          path: changelogs/
+          path: ${{ env.RELEASES_DIR }}/
 
       - name: Commit and create PR
         env:
@@ -163,7 +205,7 @@ jobs:
           # No-op guard: if regeneration produced byte-identical output, don't
           # open/refresh a PR. `-A` stages additions, modifications AND the
           # deletions exposed by the clear-before-extract step above.
-          git add -A changelogs/
+          git add -A "$RELEASES_DIR"
           if git diff --cached --quiet; then
             echo "No changelog changes detected. Skipping PR."
             exit 0
