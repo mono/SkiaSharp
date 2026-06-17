@@ -156,11 +156,11 @@ Task ("docs-download-output")
 
 Task ("docs-api-diff")
     .Description ("Generate API diffs.")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-api-diff"));
+    .Does (() => RunCake ("./.agents/skills/release-notes/scripts/api-diff.cake", "docs-api-diff"));
 
 Task ("docs-api-diff-past")
     .Description ("Generate historical API diffs.")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-api-diff-past"));
+    .Does (() => RunCake ("./.agents/skills/release-notes/scripts/api-diff.cake", "docs-api-diff-past"));
 
 Task ("docs-update-frameworks")
     .Description ("Update doc frameworks.")
