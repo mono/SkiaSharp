@@ -84,7 +84,7 @@ This release focuses on hardening the native libraries against common exploit te
 
 - [Full Changelog](https://github.com/mono/SkiaSharp/compare/v3.119.1...v3.119.2)
 - [NuGet Package](https://www.nuget.org/packages/SkiaSharp/3.119.2)
-- [API Diff](https://github.com/mono/SkiaSharp/tree/main/changelogs/SkiaSharp/3.119.2)
+- [API Diff](3.119.2/)
 
 ---
 
