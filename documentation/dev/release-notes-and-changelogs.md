@@ -495,20 +495,21 @@ page links straight to its API diffs.
 
 ### 7.3 Migration status
 
-The unified in-site layout (§3) supersedes the old repo-root `changelogs/` tree, which
-is **retired**, and the §2.1 skill-owned `api-diff.cake` does not yet exist — today the
-API-diff targets still live in `scripts/infra/docs/docs.cake`. §2/§3 describe the target
-end state (spec first, §7.1). Outstanding one-time migration steps:
+The unified in-site layout (§3) is **implemented**: the old repo-root `changelogs/`
+tree is retired and its committed diffs were relocated into the `releases/` trees,
+the API-diff targets live in the skill-owned `api-diff.cake` (§2.1), `versions.json`
+is family-bucketed (§1.2), and the CI callers/path filters point at
+`documentation/docfx/releases/`. The completed one-time steps were:
 
 - Extract the two API-diff targets (current + historical) out of `docs.cake` into the
   skill's `api-diff.cake`, factoring the shared NuGet-diff comparer into `shared/`
   (the mdoc targets stay in `docs.cake`, see §2.1 footnote).
 - Relocate the Cake output from `changelogs/<pkg>/<ver>` into the §3 `releases/` trees
   (SkiaSharp + `harfbuzzsharp/`), and add the §3.6 co-release map sidecar writer.
-- Migrate `versions.json` to the §1.2 family-bucketed shape (wrap today's flat entries
-  under a `"skiasharp"` key; add an empty `"harfbuzzsharp"` bucket).
+- Migrate `versions.json` to the §1.2 family-bucketed shape (wrap the flat entries
+  under a `"skiasharp"` key; add a `"harfbuzzsharp"` bucket).
 - Update CI path filters/artifacts and callers (`build.cake`, `api-diff.yml`, the azure
-  templates), ensure `docfx.json` globs `releases/**`, and delete the root
+  templates), confirm `docfx.json` globs `releases/**`, and delete the root
   `changelogs/` tree.
 
 Track sequencing/detail in the implementation plan, not here.
