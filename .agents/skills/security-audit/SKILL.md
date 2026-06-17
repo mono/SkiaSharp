@@ -143,8 +143,9 @@ upcoming schedule, and prints prioritized heads-up alerts:
 
 | Level | Meaning |
 |-------|---------|
-| 🔴 `critical` | `main < Beta` **and** the Beta milestone is already stable — the bump is overdue. |
+| 🔴 `critical` | `main < Beta` **and** a newer milestone already ships on a stable-class channel — the bump is overdue and reaching non-preview users. |
 | 🟠 `urgent` | `main < Beta` — the front line is behind; bump main to the Beta milestone. |
+| ❓ `unknown` | The Beta milestone couldn't be read (Chromium Dash down) — signal not evaluated. **Don't treat as OK; re-run.** |
 | 🟡 `watch` | A milestone past main branches within the window — start preparing. |
 | 🟢 `ok` | `main >= Beta` — front line current. |
 

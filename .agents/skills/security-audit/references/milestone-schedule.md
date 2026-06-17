@@ -121,7 +121,7 @@ main-vs-Beta heads-up. Progress is logged to stderr, so stdout/`--output` stay c
     "main_milestone_source": "scripts/VERSIONS.txt",
     "major": 4,
     "beta_milestone": 150,
-    "status": "current",          // "current" if main >= Beta, else "behind"
+    "status": "current",          // "current" (main >= Beta), "behind" (main < Beta), or "unknown" (Beta lookup failed)
     "platform": "Windows",
     "window_days": 14
   },
@@ -144,11 +144,15 @@ main-vs-Beta heads-up. Progress is logged to stderr, so stdout/`--output` stay c
 
 | Level | Icon | Trigger |
 |-------|------|---------|
-| `critical` | 🔴 | `main < Beta` **and** the Beta milestone is already stable — the bump is overdue and shipping to stable users. |
+| `critical` | 🔴 | `main < Beta` **and** a milestone newer than main already ships on a stable-class channel (Stable/Extended) — the bump is overdue and reaching non-preview users. |
 | `urgent` | 🟠 | `main < Beta` — the front line is behind; bump main to the Beta milestone. |
+| `unknown` | ❓ | The Beta channel milestone could not be read (Chromium Dash unavailable) — the signal could not be evaluated. **Do not treat as OK.** |
 | `watch` | 🟡 | A milestone past main **branches within the window** — start preparing. |
 | `ok` | 🟢 | `main >= Beta` — front line current. |
 | `info` | 🔵 | Other context. |
+
+> The `critical` trigger uses the **live** Stable/Extended channel milestones from `fetch_releases`
+> (authoritative), falling back to the scheduled stable date only when channel data is missing.
 
 ## How the Audit Uses This
 

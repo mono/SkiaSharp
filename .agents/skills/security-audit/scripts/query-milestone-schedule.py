@@ -45,11 +45,12 @@ RELEASES_URL = ("https://chromiumdash.appspot.com/fetch_releases"
 # Channels oldest -> newest milestone. Windows carries all of them.
 ALL_CHANNELS = ["Extended", "Stable", "Beta", "Dev", "Canary"]
 FRONT_CHANNEL = "Beta"            # the channel `main` is expected to keep up with
+STABLE_LIKE = {"Extended", "Stable"}  # channels that ship to non-preview users
 PLATFORM = "Windows"             # the only platform that carries all five channels
 
 KEY_DATES = ["branch_point", "stable_date", "late_stable_date"]
-LEVEL_ORDER = {"critical": 0, "urgent": 1, "watch": 2, "ok": 3, "info": 4}
-LEVEL_ICON = {"critical": "🔴", "urgent": "🟠", "watch": "🟡", "ok": "🟢", "info": "🔵"}
+LEVEL_ORDER = {"critical": 0, "urgent": 1, "unknown": 1, "watch": 2, "ok": 3, "info": 4}
+LEVEL_ICON = {"critical": "🔴", "urgent": "🟠", "unknown": "❓", "watch": "🟡", "ok": "🟢", "info": "🔵"}
 
 
 def log(msg):
@@ -74,13 +75,17 @@ def http_json(url, retries=3, delay=0.4):
 
 def fetch_schedule(mstone):
     data = http_json(SCHEDULE_URL.format(mstone=mstone))
-    stones = (data or {}).get("mstones") or []
-    return stones[0] if stones else None
+    if not isinstance(data, dict):
+        return None
+    stones = data.get("mstones")
+    if isinstance(stones, list) and stones and isinstance(stones[0], dict):
+        return stones[0]
+    return None
 
 
 def fetch_channel(channel, platform):
     data = http_json(RELEASES_URL.format(channel=channel, platform=platform))
-    if not isinstance(data, list) or not data:
+    if not isinstance(data, list) or not data or not isinstance(data[0], dict):
         return None
     rel = data[0]
     hashes = rel.get("hashes") or {}
@@ -139,7 +144,7 @@ def read_main_versions(repo_root):
 # --- date math ---
 
 def parse_date(value):
-    if not value:
+    if not isinstance(value, str) or not value:
         return None
     try:
         dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -163,19 +168,27 @@ def milestone_dates(raw, now):
 
 # --- core ---
 
-def build_headsup(main_ms, beta_ms, upcoming, window, beta_stable_days):
+def build_headsup(main_ms, beta_ms, stable_like_ms, upcoming, window, beta_stable_days):
     alerts = []
 
     # Primary signal: is the front line keeping up with Beta?
     if beta_ms is None:
-        pass
+        alerts.append({"level": "unknown", "milestone": main_ms,
+                       "message": ("Could not read the Beta channel milestone (Chromium Dash "
+                                   "unavailable or returned no data). The main-vs-Beta signal "
+                                   "could not be evaluated — re-run before relying on this.")})
     elif main_ms < beta_ms:
         behind = beta_ms - main_ms
-        if beta_stable_days is not None and beta_stable_days < 0:
+        # Critical when a milestone newer than main is ALREADY on a stable-class channel
+        # (live channel data is authoritative; the schedule date is a fallback hint).
+        live_stable = stable_like_ms is not None and stable_like_ms > main_ms
+        if live_stable or (beta_stable_days is not None and beta_stable_days < 0):
+            where = (f"m{stable_like_ms} already ships on a stable channel" if live_stable
+                     else f"m{beta_ms} is already stable")
             alerts.append({"level": "critical", "milestone": beta_ms,
-                           "message": (f"main is on m{main_ms} but Beta has moved to m{beta_ms} "
-                                       f"({behind} ahead) and m{beta_ms} is ALREADY stable. The "
-                                       f"Skia bump on main is overdue.")})
+                           "message": (f"main is on m{main_ms} but Beta is on m{beta_ms} "
+                                       f"({behind} ahead) and {where}. The Skia bump on main "
+                                       f"is overdue.")})
         else:
             in_days = f" (stable in {beta_stable_days}d)" if beta_stable_days is not None else ""
             alerts.append({"level": "urgent", "milestone": beta_ms,
@@ -252,8 +265,19 @@ def main():
             sd = e["dates"].get("stable_date")
             beta_stable_days = sd["days_from_now"] if sd else None
 
-    status = "behind" if (beta_ms is not None and main_ms < beta_ms) else "current"
-    headsup = build_headsup(main_ms, beta_ms, upcoming, args.window, beta_stable_days)
+    # Highest milestone already live on a non-preview (Stable/Extended) channel.
+    stable_like_ms = max(
+        (c["milestone"] for c in channels
+         if c.get("channel") in STABLE_LIKE and isinstance(c.get("milestone"), int)),
+        default=None)
+
+    if beta_ms is None:
+        status = "unknown"
+    elif main_ms < beta_ms:
+        status = "behind"
+    else:
+        status = "current"
+    headsup = build_headsup(main_ms, beta_ms, stable_like_ms, upcoming, args.window, beta_stable_days)
 
     result = {
         "meta": {
@@ -290,12 +314,12 @@ def main():
 
 def print_summary(result):
     meta = result["meta"]
-    icon = "🟢" if meta["status"] == "current" else "🟠"
+    icon = {"current": "🟢", "behind": "🟠", "unknown": "❓"}.get(meta["status"], "🟠")
     print()
     print("Chromium release heads-up (main vs Beta)")
     print(f"  Where we are: main = m{meta['main_milestone']} "
           f"(major {meta.get('major','?')}, from {meta['main_milestone_source']})")
-    print(f"  Beta channel: m{meta.get('beta_milestone','?')}   {icon} {meta['status'].upper()}")
+    print(f"  Beta channel: m{meta.get('beta_milestone') or '?'}   {icon} {meta['status'].upper()}")
     print(f"  Urgency window: {meta['window_days']}d ({meta.get('platform','?')})")
     print()
 
