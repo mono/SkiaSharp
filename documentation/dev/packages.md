@@ -27,7 +27,7 @@ These contain the managed C# assemblies. The `SkiaSharp` and `HarfBuzzSharp` cor
 
 | Package | Description |
 |---------|-------------|
-| **SkiaSharp** | Cross-platform 2D graphics API. Managed C# bindings to Google's Skia library. Core types: `SKCanvas`, `SKPaint`, `SKBitmap`, `SKImage`, `SKPath`, `SKSurface`. Includes .NET Interactive support (embedded DLL for Polyglot Notebooks). |
+| **SkiaSharp** | Cross-platform 2D graphics API. Managed C# bindings to Google's Skia library. Core types: `SKCanvas`, `SKPaint`, `SKBitmap`, `SKImage`, `SKPath`, `SKSurface`. |
 | **HarfBuzzSharp** | Managed C# bindings to the HarfBuzz text shaping engine. Provides `Buffer`, `Font`, `Face` for complex text layout. |
 | **SkiaSharp.HarfBuzz** | Integration bridge — adds HarfBuzz text shaping to SkiaSharp via `SKShaper`. Depends on both SkiaSharp and HarfBuzzSharp. |
 | **SkiaSharp.Skottie** | Lottie/Bodymovin animation playback. Renders After Effects animations. Depends on SkiaSharp, SkiaSharp.SceneGraph, and SkiaSharp.Resources. |
