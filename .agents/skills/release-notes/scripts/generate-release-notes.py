@@ -600,6 +600,171 @@ def version_from_branch(branch):
     return ver.split("-")[0]
 
 
+# ── Preview-milestone enumeration ───────────────────────────────────
+#
+# WHY THIS EXISTS (regression R3):
+# The original hand-authored pages (PR #3763) and TEMPLATE.md end with a list of
+# per-preview sections, e.g.:
+#
+#     ## Preview 3 (February 5, 2026)
+#     [Full Changelog](.../compare/v3.119.2-preview.2.3...v3.119.2-preview.3.1)
+#
+# SKILL.md rules 9/10 still mandate this ("Rollup at top … Previews are minimal:
+# one sentence + changelog link each, at the bottom"). When pages were migrated
+# to the script (#4174) these sections were lost, because the script never told
+# the AI which previews existed. We restore the feature by enumerating the
+# previews DETERMINISTICALLY here and emitting them into the raw-data block.
+#
+# SOURCE OF TRUTH: published git tags (vX.Y.Z-<stage>.N[.B]). That is literally
+# where previews, their dates, and their compare endpoints are published — and
+# exactly what TEMPLATE's compare links point at. This is NOT a heuristic and is
+# unrelated to supersession (which stays config-driven in versions.json): tags
+# answer "which previews shipped and when", versions.json answers "which version
+# supersedes which".
+
+_FRIENDLY_STAGE = {
+    "alpha": "Alpha", "beta": "Beta",
+    "preview": "Preview", "rc": "Release Candidate",
+}
+
+
+def _core_tuple(core):
+    # type: (str) -> tuple
+    """(major, minor, patch, subpatch) ints from a dotted core like ``4.147.0``."""
+    parts = (core.split(".") + ["0", "0", "0", "0"])[:4]
+    return tuple(int(p) if p.isdigit() else 0 for p in parts)
+
+
+def _parse_tag(tag):
+    # type: (str) -> Optional[dict]
+    """Parse a ``vX.Y.Z[.W][-stage.N[.B]]`` tag into its components.
+
+    Returns a dict with tag, core, core_tuple, label, stage, num and a sort key
+    (reusing ``release_branch_sort_key`` so stage ordering stays identical to
+    branches), or None when the tag is not a recognised ``vMAJOR.MINOR…`` tag.
+    """
+    if not tag.startswith("v"):
+        return None
+    name = tag[1:]
+    core, _, label = name.partition("-")
+    parts = core.split(".")
+    if len(parts) < 2 or not parts[0].isdigit() or not parts[1].isdigit():
+        return None
+    stage = num = None
+    if label:
+        m = re.match(r"([A-Za-z]+)", label)
+        stage = m.group(1).lower() if m else None
+        nums = re.findall(r"\d+", label)
+        num = int(nums[0]) if nums else 0
+    return {
+        "tag": tag,
+        "core": core,
+        "core_tuple": _core_tuple(core),
+        "label": label,
+        "stage": stage,
+        "num": num,
+        "key": release_branch_sort_key("release/" + name),
+    }
+
+
+def _tag_date(tag):
+    # type: (str) -> str
+    """ISO date (YYYY-MM-DD) of a tag's commit, or '' when unknown."""
+    return run(["git", "log", "-1", "--format=%ad", "--date=short", tag],
+               check=False).strip()
+
+
+def collect_preview_milestones(page_version, base_version):
+    # type: (str, Optional[str]) -> list[dict]
+    """Preview/rc milestones rolled up into a page, newest first (regression R3).
+
+    Enumerates every published prerelease tag whose CORE version is greater than
+    the page's diff base and not greater than the page version itself
+    (``base_core < tag_core <= page_core``). Bounding by core (not git ancestry)
+    is deliberate: it lets a page roll up the previews of a skipped predecessor
+    minor — e.g. the 4.148 page lists the 4.147 previews because 4.147 never
+    shipped stable and its work rolled into 4.148 (the same reason its PRs are in
+    the diff range). The 4.147 page lists its own previews too; the overlap is
+    intentional and the superseded/successor banners cross-link the pages.
+
+    Each milestone carries a human label ("Preview 3"), the tag's commit date and
+    a compare link — chained to the previous milestone, or to the diff base for
+    the earliest one — matching the trailing ``## Preview N (date)`` sections in
+    TEMPLATE.md. Tags are deduplicated to one entry per (core, stage, number),
+    keeping the latest build, so re-tagged builds (preview.3.1, preview.3.2)
+    collapse to a single milestone.
+
+    Returns [] when there are no in-range prereleases (e.g. a pure stable patch).
+    """
+    raw = run(["git", "tag", "-l", "v*"], check=False)
+    parsed = []
+    for t in raw.splitlines():
+        t = t.strip()
+        if not t:
+            continue
+        p = _parse_tag(t)
+        if p:
+            parsed.append(p)
+    if not parsed:
+        return []
+
+    # Global ascending order — used to find the earliest milestone's predecessor
+    # (the diff-base tag it should compare from).
+    parsed.sort(key=lambda p: p["key"])
+
+    page_core = _core_tuple(page_version)
+    base_core = _core_tuple(base_version) if base_version else (0, 0, 0, 0)
+
+    # In-range prereleases, deduped to the latest build per milestone.
+    milestones = {}  # type: dict[tuple, dict]
+    for p in parsed:
+        if not p["stage"]:
+            continue  # stable tag — not a preview milestone
+        if not (base_core < p["core_tuple"] <= page_core):
+            continue
+        ident = (p["core_tuple"], p["stage"], p["num"])
+        cur = milestones.get(ident)
+        if cur is None or p["key"] > cur["key"]:
+            milestones[ident] = p
+
+    if not milestones:
+        return []
+
+    ordered = sorted(milestones.values(), key=lambda m: m["key"])  # ascending
+
+    # Predecessor (compare-from) for the EARLIEST milestone: the highest global
+    # tag strictly below it. For a page based on a shipped stable this is that
+    # stable tag (v3.119.4); for a page based on an in-flight predecessor it is
+    # that predecessor's latest prerelease tag (v4.148.0-rc.1.N). Later
+    # milestones chain to the prior MILESTONE (not the prior build) so re-tagged
+    # builds never produce a tiny intra-milestone diff link.
+    earliest_key = ordered[0]["key"]
+    global_pred = None
+    for p in parsed:
+        if p["key"] < earliest_key:
+            global_pred = p["tag"]
+        else:
+            break
+
+    result = []
+    for idx, m in enumerate(ordered):
+        prev_tag = ordered[idx - 1]["tag"] if idx > 0 else global_pred
+        compare_url = (
+            "https://github.com/{}/compare/{}...{}".format(REPO, prev_tag, m["tag"])
+            if prev_tag else None)
+        result.append({
+            "version": m["core"],
+            "label": "{} {}".format(
+                _FRIENDLY_STAGE.get(m["stage"], (m["stage"] or "").title()),
+                m["num"]),
+            "tag": m["tag"],
+            "date": _tag_date(m["tag"]),
+            "compare_url": compare_url,
+        })
+    result.reverse()  # newest first, matching TEMPLATE ordering
+    return result
+
+
 def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0):
     # type: (list[str], int, int, int, int) -> Optional[str]
     """Find the previous stable release branch to use as the cumulative diff base.
@@ -785,10 +950,26 @@ def determine_diff_range(branch):
         minor_num = int(m_svc.group(2))
         minor = "{}.{}".format(major, minor_num)
 
-        # Read version from the remote branch
+        # Read version from the remote branch (SKIASHARP_VERSION).
         version = get_version_from_remote_branch(branch)
         if not version:
             version = "{}.0".format(minor)
+
+        # Honor an explicit versions.json compare_to first (regression R2). When
+        # the line's .0 has not shipped stable, the .x branch is the in-flight
+        # head and must produce the FULL rollup from the previous stable base —
+        # e.g. 4.148.x (4.148.0 not yet stable) compares 4.148.0 -> 3.119.4, the
+        # same baseline the rc page would use — not the tiny servicing delta
+        # against the latest in-minor preview.
+        config_entry = _versions_config_lookup(version)
+        if config_entry and config_entry.get("compare_to"):
+            resolved = _resolve_compare_to(
+                config_entry["compare_to"], "origin/{}".format(branch),
+                version, all_branches)
+            if resolved:
+                return resolved
+
+        dot0_shipped = _version_has_stable_tag("{}.0".format(minor))
 
         # All versioned branches for this minor (exclude .x)
         candidates = [b for b in all_branches
@@ -796,14 +977,17 @@ def determine_diff_range(branch):
                       and b != branch
                       and not b.endswith(".x")]
 
-        if candidates:
+        # True servicing delta — only once the .0 has shipped stable. Until then
+        # the .x is the in-flight head and must roll up cumulatively (below).
+        if dot0_shipped and candidates:
             candidates.sort(key=release_branch_sort_key)
             latest = candidates[-1]
             return ("origin/{}".format(latest),
                     "origin/{}".format(branch),
                     version)
 
-        # No versioned branches — use previous minor
+        # Cumulative rollup from the previous stable base (in-flight .0, or no
+        # in-minor candidates).
         base = find_previous_stable_base(all_branches, major, minor_num, 0)
         if base:
             return ("origin/{}".format(base),
@@ -991,6 +1175,19 @@ def format_pr_list(prs, metadata):
             lines.append("  - {} {} in {}{}{}".format(
                 title, by, url, community_str, skia_str))
 
+    # Preview milestones (regression R3): the trailing "## Preview N (date)"
+    # sections in TEMPLATE/SKILL are rendered by the AI from this list. Data is
+    # deterministic — published prerelease tags within the page's diff range.
+    milestones = metadata.get("preview_milestones") or []
+    if milestones:
+        lines.append("")
+        lines.append("  preview milestones (newest first — render as trailing "
+                     '"## <label> (<date>)" sections per TEMPLATE.md):')
+        for m in milestones:
+            lines.append("    - {label} · {version} · {date} · {url}".format(
+                label=m["label"], version=m["version"],
+                date=m.get("date") or "", url=m.get("compare_url") or ""))
+
     lines.append("-->")
     lines.append("")
 
@@ -1046,20 +1243,28 @@ def format_pr_list(prs, metadata):
             "below.".format(", ".join(sup_links)))
         lines.append("")
 
-    lines.append(
-        "<!-- AI: Use the raw PR data in the comment above to write polished")
-    lines.append(
-        "     release notes here. Follow documentation/docfx/releases/"
-        "TEMPLATE.md")
+    ai_lines = [
+        "<!-- AI: Use the raw PR data in the comment above to write polished",
+        "     release notes here. Follow documentation/docfx/releases/TEMPLATE.md",
+        "     for structure and tone.",
+    ]
+    if metadata.get("preview_milestones"):
+        ai_lines.append(
+            "     Render each PREVIEW MILESTONE listed above as a minimal trailing")
+        ai_lines.append(
+            '     "## <label> (<date>)" section — one sentence + its compare link,')
+        ai_lines.append(
+            "     newest first, after the rolled-up categories (TEMPLATE rules 9/10).")
     if supersedes:
-        lines.append("     for structure and tone.")
-        lines.append(
-            "     This release SUPERSEDES {} (preview-only, rolled up). Keep "
-            "the \"Supersedes\" note above and mention in the Highlights that "
-            "this release rolls up that skipped preview work cumulatively. -->"
+        ai_lines.append(
+            "     This release SUPERSEDES {} (preview-only, rolled up). Keep the"
             .format(", ".join(supersedes)))
-    else:
-        lines.append("     for structure and tone. -->")
+        ai_lines.append(
+            '     "Supersedes" note above and mention in the Highlights that this')
+        ai_lines.append(
+            "     release rolls up that skipped preview work cumulatively.")
+    ai_lines.append("-->")
+    lines.extend(ai_lines)
     lines.append("")
 
     return "\n".join(lines)
@@ -1277,13 +1482,30 @@ def _compute_page_status(branch, version):
 
 def _page_filename(branch, version):
     # type: (str, str) -> str
-    """Output file for a branch.
+    """Output file for a branch: ``{version}.md`` vs ``{version}-unreleased.md``.
 
-    main and servicing (.x) branches render the in-development page
-    ``{version}-unreleased.md``; a versioned branch renders the released page
-    ``{version}.md``.
+    DETERMINISTIC terminal-vs-in-flight rule (regression R1). A page is the
+    permanent ``{version}.md`` only when the version is TERMINAL:
+      * a suffix-less stable ``release/X.Y.Z`` branch — it shipped; or
+      * ``status: superseded`` in versions.json — a preview-only version that
+        keeps its page with a "superseded by" banner (e.g. 4.147.0, 3.119.3).
+    Otherwise the version is IN-FLIGHT and renders ``{version}-unreleased.md``:
+      * main and servicing (.x) branches — the in-development trackers; and
+      * a prerelease-only versioned branch with no stable branch yet
+        (e.g. release/4.148.0-rc.1, release/4.150.0-preview.1).
+
+    Note for --all: when a prerelease branch maps to an ``-unreleased`` page, its
+    line head (main or the matching ``.x``) owns the same page, so cmd_all drops
+    the prerelease branch from processing to avoid a collision. The branch's
+    previews still surface via collect_preview_milestones on the head's page.
     """
     if branch == "main" or branch.endswith(".x"):
+        return "{}-unreleased.md".format(version)
+    # Versioned branch. A '-' after the core (release/X.Y.Z-rc.1) marks a
+    # prerelease; a suffix-less name (release/X.Y.Z) is the shipped stable.
+    name = _removeprefix(branch, "release/")
+    is_prerelease = "-" in name
+    if is_prerelease and not resolve_superseded_by(version):
         return "{}-unreleased.md".format(version)
     return "{}.md".format(version)
 
@@ -1359,6 +1581,18 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     resolve_pr_authors(prs)
     resolve_skia_links(prs)
 
+    # Enumerate the preview/rc milestones this page rolls up (regression R3), so
+    # the AI can render the trailing "## Preview N (date)" sections that TEMPLATE
+    # and SKILL rules 9/10 require. The lower bound is the diff base, so a page
+    # naturally includes a skipped predecessor minor's previews (the 4.148 page
+    # lists the 4.147 previews — the same work its diff range already rolls up).
+    base_version = None
+    if from_display.startswith("release/"):
+        base_version = version_from_branch(from_display)
+    elif re.match(r"^\d+\.\d+\.\d+", from_display):
+        base_version = from_display
+    preview_milestones = collect_preview_milestones(version, base_version)
+
     metadata = {
         "branch": branch,
         "version": version,
@@ -1370,6 +1604,8 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         metadata["superseded_by"] = superseded_by
     if supersedes:
         metadata["supersedes"] = supersedes
+    if preview_milestones:
+        metadata["preview_milestones"] = preview_milestones
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
@@ -1510,7 +1746,7 @@ def cmd_all(force=False):
     # other and the last one processed wins (e.g. release/3.119.2 and its
     # release/3.119.2-preview.* all render to 3.119.2.md). So:
     #   - main                         -> {upcoming}-unreleased.md
-    #   - each servicing release/X.Y.x -> {X.Y.x}-unreleased.md  (distinct files)
+    #   - each servicing release/X.Y.x -> {X.Y.0}-unreleased.md  (distinct files)
     #   - ONE canonical branch per versioned base version -> {version}.md
     # Superseded versions are still included — they each keep their own page
     # with a "superseded by" label (see docstring).
@@ -1518,7 +1754,32 @@ def cmd_all(force=False):
     canonical_branches = sorted(
         _canonical_branches_by_version(all_branches).values(),
         key=release_branch_sort_key)
-    branches_to_process = ["main"] + servicing_branches + canonical_branches
+
+    # Ownership for in-flight pages (regression R1). A prerelease-only canonical
+    # branch (release/4.148.0-rc.1, release/4.150.0-preview.1) now renders an
+    # ``-unreleased`` page — but that same page is owned by the line head:
+    # ``main`` for the upcoming version, or the matching ``release/X.Y.x``. Drop
+    # the prerelease canonical when a head already produces its file, so the two
+    # don't fight (and cleanup_stale_unreleased doesn't then delete the head's
+    # page). The dropped branch's previews still appear on the head's page via
+    # collect_preview_milestones. Determinism: filenames only, no tags.
+    head_unreleased = set()
+    upcoming = get_upcoming_version()
+    if upcoming:
+        head_unreleased.add(_page_filename("main", upcoming))
+    for b in servicing_branches:
+        v = get_version_from_remote_branch(b) or version_from_branch(b)
+        head_unreleased.add(_page_filename(b, v))
+
+    kept_canonical = []
+    for b in canonical_branches:
+        fn = _page_filename(b, version_from_branch(b))
+        if fn in head_unreleased:
+            print("  (deferring {} — {} owned by its line head)".format(b, fn))
+            continue
+        kept_canonical.append(b)
+
+    branches_to_process = ["main"] + servicing_branches + kept_canonical
 
     files_to_polish = []
     skipped_count = 0
