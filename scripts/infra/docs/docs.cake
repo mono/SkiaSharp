@@ -1,3 +1,8 @@
+// READ FIRST: documentation/dev/release-notes-and-changelogs.md is the behavior
+// spec for the API-changelog targets here (docs-api-diff / docs-api-diff-past) and
+// the sibling release-notes script. Both share the versioning model + versions.json.
+// Change the spec first, then make this code match it.
+
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 #addin nuget:?package=Cake.Json&version=6.0.1
 #addin nuget:?package=NuGet.Packaging&version=6.9.1
@@ -896,15 +901,29 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 // Load the shared version-comparison config (scripts/infra/docs/versions.json). This is the
 // single source of truth for how versions relate to each other. It is "override
 // only": versions NOT listed fall back to the default behaviour of diffing
-// against the immediately-preceding published version. Returns the "versions"
-// array (empty when the file is absent). See versions.json for the schema.
-JArray LoadVersionsConfig ()
+// against the immediately-preceding published version.
+//
+// versions.json is family-bucketed (spec §1.2): { "skiasharp": { "<line>":
+// {...} }, "harfbuzzsharp": { ... } }. This loader flattens the requested
+// family's bucket into the legacy JArray shape — one object per line carrying an
+// injected "version" key — so IsVersionSuperseded/FindCompareToBaseline work
+// unchanged. See documentation/dev/release-notes-and-changelogs.md.
+JArray LoadVersionsConfig (string family = "skiasharp")
 {
     var path = $"{ROOT_PATH}/scripts/infra/docs/versions.json";
     if (!FileExists (path))
         return new JArray ();
     var doc = JObject.Parse (System.IO.File.ReadAllText (path));
-    return doc ["versions"] as JArray ?? new JArray ();
+    var bucket = doc [family] as JObject;
+    var result = new JArray ();
+    if (bucket != null) {
+        foreach (var prop in bucket.Properties ()) {
+            var entry = (JObject)prop.Value.DeepClone ();
+            entry ["version"] = prop.Name;
+            result.Add (entry);
+        }
+    }
+    return result;
 }
 
 // A "superseded" version is one that was previewed but never shipped stable

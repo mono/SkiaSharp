@@ -2,6 +2,11 @@
 """
 Fetch SkiaSharp release data and manage the website release notes structure.
 
+READ FIRST: documentation/dev/release-notes-and-changelogs.md is the behavior
+SPEC for this script (and the sibling API-changelog cake target). Change the spec
+first, then make this code match it — do not patch new behavior in and leave the
+spec stale.
+
 This script collects raw data and OWNS the page structure. AI only polishes the
 prose — it never creates, names, or deletes pages, and never computes diff ranges.
 See "Division of responsibility" below; the formatting itself uses TEMPLATE.md.
@@ -116,22 +121,37 @@ VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
 
 def load_versions_config():
     # type: () -> list[dict]
-    """Load scripts/infra/docs/versions.json override config (cached)."""
+    """Load the ``skiasharp`` overrides from versions.json (cached).
+
+    versions.json is family-bucketed (spec §1.2): ``{ "skiasharp": { "<line>":
+    {...} }, "harfbuzzsharp": {...} }``. The release-notes engine only writes
+    SkiaSharp human pages, so it reads the ``skiasharp`` bucket exclusively and
+    flattens it to the internal ``list[dict]`` shape (each entry carries its
+    ``version`` key) the rest of this module expects.
+    """
     global _VERSIONS_CONFIG
     if _VERSIONS_CONFIG is not None:
         return _VERSIONS_CONFIG
+    entries = []  # type: list[dict]
     if VERSIONS_JSON_PATH.exists():
         with open(VERSIONS_JSON_PATH) as f:
             data = json.load(f)
-        _VERSIONS_CONFIG = data.get("versions", [])
-    else:
-        _VERSIONS_CONFIG = []
+        bucket = data.get("skiasharp", {})
+        if not isinstance(bucket, dict):
+            raise ValueError(
+                "versions.json: 'skiasharp' must be an object keyed by line "
+                "(spec §1.2); got %s" % type(bucket).__name__)
+        for line, fields in bucket.items():
+            entry = dict(fields)
+            entry["version"] = line
+            entries.append(entry)
+    _VERSIONS_CONFIG = entries
     return _VERSIONS_CONFIG
 
 
 def _versions_config_lookup(version):
     # type: (str) -> Optional[dict]
-    """Find an entry in versions.json matching a base version (X.Y.Z)."""
+    """Find a ``skiasharp`` override entry matching a line core (X.Y.Z)."""
     config = load_versions_config()
     for entry in config:
         if entry.get("version") == version:

@@ -22,6 +22,10 @@ description: >
 
 # Release Notes Skill
 
+> **Behavior spec:** `documentation/dev/release-notes-and-changelogs.md` describes
+> how the script and this skill divide responsibility (script structures, you only
+> polish). Read it before changing anything here.
+
 Generate polished website release notes for SkiaSharp versions.
 
 This skill is used both by the `update-release-notes` agentic workflow (automatically
