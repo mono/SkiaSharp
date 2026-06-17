@@ -76,6 +76,28 @@ that version has shipped and the line has moved on to the next patch (e.g. once
 An unreleased page is still listed in its minor group even when no stable page of that exact
 version exists yet (e.g. `3.119.5-unreleased.md` before `3.119.5` ships).
 
+### Page naming & preview rollup (deterministic — script-owned)
+
+The script decides each page's filename and which previews it rolls up. You never compute
+these; this is documented so the behaviour is not lost again (it regressed once when pages were
+migrated and the per-preview sections + in-flight naming were dropped):
+
+- **Terminal → `{version}.md`** when the version shipped (a suffix-less `release/X.Y.Z`
+  branch exists) **or** is `status: superseded` in `versions.json` (keeps its page + banner,
+  e.g. `4.147.0`, `3.119.3`).
+- **In-flight → `{version}-unreleased.md`** otherwise: `main` (upcoming), each servicing
+  `release/X.Y.x`, and any prerelease-only version with no stable branch yet
+  (`4.148.0`, `4.150.0`). The line head (`main`/`.x`) owns the page; the matching
+  `rc`/`preview` branch is deferred so they don't collide.
+- **Preview rollup (rules 9/10):** the data-block's `preview milestones` list is enumerated
+  from **published prerelease git tags** within the page's diff range (deduped to the latest
+  build per milestone, with dates + chained compare links). This is the source of the trailing
+  `## Preview N (date)` sections — render them verbatim from that list. A page rolls up a
+  skipped predecessor minor's previews too (the `4.148` page lists the `4.147` previews,
+  matching its rolled-up PRs). Supersession is separate and stays config-driven in
+  `versions.json`; tags answer "which previews shipped and when", `versions.json` answers
+  "which version supersedes which".
+
 The file starts with an HTML comment block containing both metadata (version, status, branch,
 diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
 placeholder for polished content. The raw data comment must be preserved in the final file.
@@ -199,6 +221,9 @@ Follow these rules:
 9. **Rollup at top** — Aggregate ALL changes across all previews into the main sections.
 
 10. **Previews are minimal** — One sentence + changelog link each, at the bottom.
+    Render one trailing `## <label> (<date>)` section per entry in the data-block's
+    `preview milestones` list (newest first), using that entry's compare link. Do not invent
+    previews or dates — the list is authoritative (sourced from published prerelease tags).
 
 11. **Links section** — Full Changelog, NuGet Package, API Diff.
 
