@@ -182,7 +182,6 @@ Task ("docs-api-diff-past")
     // Accumulates the SkiaSharp-line → emitted-HarfBuzz-line mapping as we discover
     // it, so we can write the co-release map sidecar (spec §3.6) at the end. Keyed
     // by SkiaSharp line core; value is the HarfBuzz line core shipping with it.
-    var hbLinesEmitted = new SortedSet<string> ();
     var skiaHarfBuzzDeps = new Dictionary<string, string> ();
 
     foreach (var id in TRACKED_NUGETS.Keys) {
@@ -283,9 +282,6 @@ Task ("docs-api-diff-past")
             var diffRoot = $"{baseDir}/{id}/{changelogVersion}";
             await RunBreakingAndFullDiff (comparer, id, previous, version, lineDir, diffRoot);
 
-            if (isHarfBuzz)
-                hbLinesEmitted.Add (changelogVersion);
-
             // Record the co-release mapping (spec §1.5/§3.6): the HarfBuzz version
             // that ships with a SkiaSharp line is the HarfBuzzSharp dependency of the
             // managed SkiaSharp.HarfBuzz binding at that line. We read it straight
@@ -301,7 +297,25 @@ Task ("docs-api-diff-past")
         Information ($"Diff complete of '{id}'.");
     }
 
-    WriteCoReleaseMap (skiaHarfBuzzDeps, hbLinesEmitted);
+    // Record the in-flight SkiaSharp line's HarfBuzz co-release from the WORKING TREE
+    // (spec §3.6/§5.1): the line under active development (VERSIONS.txt) has no published
+    // package yet, so the feed loop above could not contribute it. We add it from
+    // VERSIONS.txt — SkiaSharp's line and the HarfBuzzSharp line it builds against — but
+    // ONLY when the feed did not already supply this SkiaSharp line (an on-feed line is
+    // always read from its own published package, never overridden). This is what lets an
+    // in-flight HarfBuzz line be recorded before it publishes (§4.5).
+    var inflightSkia = new NuGetVersion (GetVersion ("SkiaSharp")).ToNormalizedString ().Split ('-') [0];
+    var inflightHb = new NuGetVersion (GetVersion ("HarfBuzzSharp")).ToNormalizedString ().Split ('-') [0];
+    if (!string.IsNullOrEmpty (inflightSkia) && !string.IsNullOrEmpty (inflightHb)
+            && !skiaHarfBuzzDeps.ContainsKey (inflightSkia)) {
+        Information ($"Recording in-flight co-release from working tree: SkiaSharp {inflightSkia} → HarfBuzzSharp {inflightHb}.");
+        skiaHarfBuzzDeps [inflightSkia] = inflightHb;
+    }
+
+    // Write the per-line API-diff index.md landing pages (spec §3.3/§3.4) and the
+    // co-release map sidecar (spec §3.6) the Python release-notes engine consumes.
+    WriteApiDiffFolderIndexes ();
+    WriteCoReleaseMap (skiaHarfBuzzDeps);
 
     // clean up after working
     CleanDirectories (baseDir);
@@ -394,49 +408,111 @@ string ReadHarfBuzzDependencyLine (string packageRoot)
         return null;
 
     // The dependency range is normally a plain minimum version like "8.3.0" or a
-    // bracketed range like "[8.3.0, )"; take the first version token and reduce it
-    // to its major.minor.patch core (the §1.1 line key).
+    // bracketed range like "[8.3.0, )"; take the first version token and reduce it to
+    // its §1.1 line key. Keep the FULL line granularity (do NOT collapse to
+    // Major.Minor.Patch): the emitted HarfBuzz folder key is the package version's
+    // normalized core (`ToNormalizedString().Split('-')[0]`, e.g. a 4-part stable like
+    // 8.3.1.5 is preserved), so the dependency line must be computed the same way or it
+    // will not match its folder in the co-release map (spec §3.6).
     var range = ((string)dep.Attribute ("version") ?? "").Trim ('[', '(', ']', ')', ' ');
     var token = range.Split (',') [0].Trim ();
     if (string.IsNullOrEmpty (token))
         return null;
-    var v = new NuGetVersion (token);
-    return $"{v.Major}.{v.Minor}.{v.Patch}";
+    return new NuGetVersion (token).ToNormalizedString ().Split ('-') [0];
 }
 
-// Write the co-release map sidecar (spec §3.6): one entry per emitted SkiaSharp
-// line giving the HarfBuzz line that ships with it and the site-relative link to
-// its API-diff folder. When a SkiaSharp line ships an UNCHANGED HarfBuzz (no folder
-// of its own emitted), the link points at the most recent DISTINCT HarfBuzz folder
-// that did change (spec §3.4). This is the only thing that crosses from this engine
-// into the Python release-notes engine.
-void WriteCoReleaseMap (Dictionary<string, string> skiaHarfBuzzDeps, SortedSet<string> hbLinesEmitted)
+// Write the co-release map sidecar (spec §3.6): one entry per emitted SkiaSharp line
+// (including the in-flight line) giving the HarfBuzz line that ships with it and the
+// site-relative link to that HarfBuzz line's API-diff index. `hb_link` is a pure
+// mechanical mirror of `hb_line` — `harfbuzzsharp/<hb-line>/index.md` (§3.3/§3.4) —
+// regardless of whether that folder exists yet; Python checks the filesystem and, when
+// the folder is absent (an in-flight HarfBuzz line, §4.5), drives an in-flight page
+// instead of linking. `hb_line` is authoritative at full §1.1 granularity. This is the
+// only thing that crosses from this engine into the Python release-notes engine.
+void WriteCoReleaseMap (Dictionary<string, string> skiaHarfBuzzDeps)
 {
     EnsureDirectoryExists (RELEASES_PATH);
     var sidecar = RELEASES_PATH.CombineWithFilePath ("co-release-map.json");
 
     var entries = new JArray ();
     foreach (var kvp in skiaHarfBuzzDeps.OrderBy (k => k.Key)) {
-        var skiaLine = kvp.Key;
-        var hbLine = kvp.Value;
-
-        // If the exact HarfBuzz line wasn't emitted as its own folder (unchanged
-        // co-release), fall back to the newest emitted HarfBuzz folder at or below
-        // it, so the link still resolves to a real folder.
-        var linkLine = hbLinesEmitted.Contains (hbLine)
-            ? hbLine
-            : hbLinesEmitted.Reverse ().FirstOrDefault (h => string.Compare (h, hbLine, StringComparison.Ordinal) <= 0)
-                ?? hbLinesEmitted.LastOrDefault ();
-
         var entry = new JObject ();
-        entry ["skia_line"] = skiaLine;
-        entry ["hb_line"] = hbLine;
-        entry ["hb_link"] = linkLine != null ? $"harfbuzzsharp/{linkLine}/" : null;
+        entry ["skia_line"] = kvp.Key;
+        entry ["hb_line"] = kvp.Value;
+        entry ["hb_link"] = $"harfbuzzsharp/{kvp.Value}/index.md";
         entries.Add (entry);
     }
 
     System.IO.File.WriteAllText (sidecar.FullPath, entries.ToString (Newtonsoft.Json.Formatting.Indented));
     Information ($"Wrote co-release map sidecar with {entries.Count} entries: {sidecar.FullPath}");
+}
+
+// Write the generated index.md landing page for every emitted API-diff folder (spec
+// §3.3/§3.4): the deterministic target of each hub page's API-changes link (§4.4). For
+// each line folder (SkiaSharp `releases/<line>/` and HarfBuzz
+// `releases/harfbuzzsharp/<hb-line>/`) it lists every `<package>/<assembly>.md` diff,
+// flags any with a `<assembly>.breaking.md` sibling as breaking, and links back to the
+// `../<line>.md` hub. It carries the API_DIFF_MARKER like every other generated file, so
+// the §3.5 wipe regenerates it each run.
+void WriteApiDiffFolderIndexes ()
+{
+    if (!DirectoryExists (RELEASES_PATH))
+        return;
+
+    // SkiaSharp family: line folders directly under releases/ (name starts with a digit).
+    foreach (var dir in GetSubDirectories (RELEASES_PATH)) {
+        var name = dir.GetDirectoryName ();
+        if (name.Length > 0 && char.IsDigit (name [0]))
+            WriteApiDiffFolderIndex (dir, name);
+    }
+
+    // HarfBuzz family: line folders one level deeper, under releases/harfbuzzsharp/.
+    var hbRoot = RELEASES_PATH.Combine ("harfbuzzsharp");
+    if (DirectoryExists (hbRoot)) {
+        foreach (var dir in GetSubDirectories (hbRoot)) {
+            var name = dir.GetDirectoryName ();
+            if (name.Length > 0 && char.IsDigit (name [0]))
+                WriteApiDiffFolderIndex (dir, name);
+        }
+    }
+}
+
+// Write one line folder's index.md. `line` is the folder name (== the §1.1 line core),
+// so the hub back-link is always `../<line>.md` for both families. Skips folders that
+// hold no per-assembly diffs (nothing to land on).
+void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line)
+{
+    var body = new System.Text.StringBuilder ();
+    var hasContent = false;
+
+    foreach (var pkgDir in GetSubDirectories (lineDir).OrderBy (d => d.GetDirectoryName (), StringComparer.Ordinal)) {
+        var pkg = pkgDir.GetDirectoryName ();
+        var rows = new List<string> ();
+        foreach (var md in System.IO.Directory.EnumerateFiles (pkgDir.FullPath, "*.md").OrderBy (p => p, StringComparer.Ordinal)) {
+            var file = System.IO.Path.GetFileName (md);
+            if (file == "index.md" || file.EndsWith (".breaking.md", StringComparison.Ordinal))
+                continue;
+            var assembly = file.Substring (0, file.Length - ".md".Length);
+            var breaking = System.IO.File.Exists (System.IO.Path.Combine (pkgDir.FullPath, assembly + ".breaking.md"));
+            rows.Add ($"- [{assembly}]({pkg}/{file}){(breaking ? " — ⚠️ breaking" : "")}");
+        }
+        if (rows.Count == 0)
+            continue;
+        hasContent = true;
+        body.AppendLine ($"## {pkg}");
+        body.AppendLine ();
+        foreach (var row in rows)
+            body.AppendLine (row);
+        body.AppendLine ();
+    }
+
+    if (!hasContent)
+        return;
+
+    var n = Environment.NewLine;
+    var text = $"{API_DIFF_MARKER} {line}{n}{n}> Back to [release notes](../{line}.md).{n}{n}{body}";
+    var indexPath = lineDir.CombineWithFilePath ("index.md");
+    System.IO.File.WriteAllText (indexPath.FullPath, text);
 }
 
 // Copy the generated diff markdown into a line folder: {lineDir}/{id}/{assembly}.md
