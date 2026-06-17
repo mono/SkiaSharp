@@ -15,7 +15,7 @@ Model (see references/milestone-schedule.md for the full rationale):
 Data sources (no auth, no documented rate limit):
   1. https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone=<N|current|next|previous>
        -> branch_point / stable_date / ... for one milestone per request.
-  2. https://chromiumdash.appspot.com/fetch_releases?channel=<C>&platform=<P>&num=1
+  2. https://chromiumdash.appspot.com/fetch_releases?channel=<C>&platform=Windows&num=1
        -> the live milestone + exact Skia commit (hashes.skia) per channel.
 
 Default output is main-centric and lean. The full 5-channel list is included as context.
@@ -45,16 +45,15 @@ RELEASES_URL = ("https://chromiumdash.appspot.com/fetch_releases"
 # Channels oldest -> newest milestone. Windows carries all of them.
 ALL_CHANNELS = ["Extended", "Stable", "Beta", "Dev", "Canary"]
 FRONT_CHANNEL = "Beta"            # the channel `main` is expected to keep up with
-DEFAULT_PLATFORM = "Windows"
+PLATFORM = "Windows"             # the only platform that carries all five channels
 
 KEY_DATES = ["branch_point", "stable_date", "late_stable_date"]
 LEVEL_ORDER = {"critical": 0, "urgent": 1, "watch": 2, "ok": 3, "info": 4}
 LEVEL_ICON = {"critical": "🔴", "urgent": "🟠", "watch": "🟡", "ok": "🟢", "info": "🔵"}
 
 
-def log(msg, verbose=True):
-    if verbose:
-        print(msg, file=sys.stderr)
+def log(msg):
+    print(msg, file=sys.stderr)
 
 
 # --- HTTP ---
@@ -203,51 +202,39 @@ def build_headsup(main_ms, beta_ms, upcoming, window, beta_stable_days):
 
 def main():
     ap = argparse.ArgumentParser(description="Chromium release heads-up for SkiaSharp Skia bumps (main vs Beta).")
-    ap.add_argument("--current", type=int, default=None,
-                    help="Override main's milestone (default: read scripts/VERSIONS.txt).")
-    ap.add_argument("--platform", default=DEFAULT_PLATFORM,
-                    help="Channel platform (default: Windows — has all channels).")
     ap.add_argument("--ahead", type=int, default=4,
                     help="How many milestones past main to include in the schedule (default: 4).")
     ap.add_argument("--window", type=int, default=14,
                     help="Days-ahead threshold for schedule 'watch' alerts (default: 14).")
-    ap.add_argument("--no-channels", action="store_true",
-                    help="Skip channel lookup (schedule-only; disables the main-vs-Beta signal).")
     ap.add_argument("--json", action="store_true", help="Print the JSON result to stdout instead of a table.")
     ap.add_argument("--output", default=None, help="Write the JSON result to this path.")
-    ap.add_argument("--repo-root", default=None, help="Repo root (default: auto-detect).")
-    ap.add_argument("--verbose", action="store_true", help="Extra progress detail on stderr.")
     args = ap.parse_args()
 
     now = datetime.now(timezone.utc)
-    repo_root = args.repo_root or find_repo_root(os.getcwd()) or \
+    repo_root = find_repo_root(os.getcwd()) or \
         find_repo_root(os.path.dirname(os.path.abspath(__file__)))
 
     main_ms, major = read_main_versions(repo_root)
-    source = "scripts/VERSIONS.txt"
-    if args.current is not None:
-        main_ms, source = args.current, "--current argument"
     if main_ms is None:
-        print("ERROR: could not determine main's milestone. Pass --current N.", file=sys.stderr)
+        print("ERROR: could not determine main's milestone from scripts/VERSIONS.txt.", file=sys.stderr)
         return 2
 
     # Channels (for the main-vs-Beta signal + context).
     channels, beta_ms = [], None
-    if not args.no_channels:
-        log(f"Fetching channels ({args.platform})...", args.verbose)
-        for name in ALL_CHANNELS:
-            rel = fetch_channel(name, args.platform)
-            time.sleep(0.3)
-            if rel:
-                channels.append(rel)
-                if name == FRONT_CHANNEL:
-                    beta_ms = rel.get("milestone")
-                log(f"  {name}: m{rel.get('milestone')} {rel.get('version')} "
-                    f"skia={(rel.get('skia_hash') or '?')[:12]}", args.verbose)
+    log(f"Fetching channels ({PLATFORM})...")
+    for name in ALL_CHANNELS:
+        rel = fetch_channel(name, PLATFORM)
+        time.sleep(0.3)
+        if rel:
+            channels.append(rel)
+            if name == FRONT_CHANNEL:
+                beta_ms = rel.get("milestone")
+            log(f"  {name}: m{rel.get('milestone')} {rel.get('version')} "
+                f"skia={(rel.get('skia_hash') or '?')[:12]}")
 
     # Upcoming schedule: main .. max(main+ahead, beta).
     hi = max(main_ms + max(0, args.ahead), beta_ms or main_ms)
-    log(f"Fetching schedule m{main_ms}..m{hi}...", args.verbose)
+    log(f"Fetching schedule m{main_ms}..m{hi}...")
     upcoming = []
     for m in range(main_ms, hi + 1):
         raw = fetch_schedule(m)
@@ -272,11 +259,11 @@ def main():
         "meta": {
             "generated_at": now.isoformat(),
             "main_milestone": main_ms,
-            "main_milestone_source": source,
+            "main_milestone_source": "scripts/VERSIONS.txt",
             "major": major,
             "beta_milestone": beta_ms,
             "status": status,
-            "platform": args.platform,
+            "platform": PLATFORM,
             "window_days": args.window,
             "data_sources": [
                 "https://chromiumdash.appspot.com/fetch_milestone_schedule",
@@ -292,7 +279,7 @@ def main():
         os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
         with open(args.output, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)
-        log(f"Wrote {args.output}", True)
+        log(f"Wrote {args.output}")
 
     if args.json:
         print(json.dumps(result, indent=2))

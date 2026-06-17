@@ -99,21 +99,18 @@ python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py --json
 ```
 
 The script reads `main`'s milestone + major from `scripts/VERSIONS.txt`
-(`libSkiaSharp milestone NNN` and `SkiaSharp nuget <major>.NNN.x`), fetches the channels and the
-upcoming schedule, and emits the main-vs-Beta heads-up.
+(`libSkiaSharp milestone NNN` and `SkiaSharp nuget <major>.NNN.x`), fetches the channels
+(`platform=Windows`, which carries all five) and the upcoming schedule, and emits the
+main-vs-Beta heads-up. Progress is logged to stderr, so stdout/`--output` stay clean.
 
 ### Flags
 
 | Flag | Default | Purpose |
 |------|---------|---------|
-| `--current N` | from VERSIONS.txt | Override main's milestone |
-| `--platform` | `Windows` | Channel platform (Windows has all channels) |
 | `--ahead N` | `4` | How many milestones past main to include in the schedule |
 | `--window N` | `14` | Days-ahead threshold for schedule `watch` alerts |
-| `--no-channels` | off | Schedule-only (disables the main-vs-Beta signal) |
 | `--json` | off | Print JSON to stdout instead of a table |
-| `--output PATH` | — | Write the structured JSON |
-| `--repo-root` / `--verbose` | auto / off | Path override, progress detail |
+| `--output PATH` | — | Write the structured JSON (how the audit consumes it) |
 
 ## Output Structure
 

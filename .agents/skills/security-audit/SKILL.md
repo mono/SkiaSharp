@@ -135,7 +135,7 @@ and flags.
 
 ```bash
 python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py \
-  --verbose --output output/ai/milestone-schedule-cache.json
+  --output output/ai/milestone-schedule-cache.json
 ```
 
 This reads main's milestone + major from `scripts/VERSIONS.txt`, fetches the live channels and the
