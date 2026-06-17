@@ -14,4 +14,13 @@ public static SkiaSharp.SKColorF ToSKColorF (this Xamarin.Forms.Color color);
 ```
 
 
+#### Type Changed: SkiaSharp.Views.Forms.SKCanvasViewRenderer
+
+Added method:
+
+```csharp
+protected override SkiaSharp.Views.Android.SKCanvasView CreateNativeControl ();
+```
+
+
 
