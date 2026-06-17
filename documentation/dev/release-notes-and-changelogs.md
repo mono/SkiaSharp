@@ -171,6 +171,7 @@ self-contained and the targets reflect the docs they produce:
 .agents/skills/release-notes/
   SKILL.md                       the AI's polish-only instructions (§4.4)
   scripts/
+    generate.sh                  wrapper: runs the two generators in order (§2.2)
     generate-release-notes.py    release-notes engine (§4)
     api-diff.cake                API-changelog engine (§5)
 ```
@@ -187,30 +188,54 @@ definitions.[^mdoc]
 which is why that one helper lives in `shared/` rather than next to the API-diff
 target.
 
-### 2.2 Run order: Cake → Python → AI
+### 2.2 Two phases: Prepare → Polish
 
-A full regeneration always runs in this fixed order, and the AI step is last:
+A full regeneration always runs in **two phases** — the deterministic **Prepare** phase
+first, the AI **Polish** phase last:
 
-1. **Cake (`api-diff.cake`)** regenerates the complete API-diff tree under `releases/`
-   (§3.3/§3.4) from the published feed, and writes the §1.5 **co-release map sidecar**
-   (§3.6). Deterministic, no AI.
-2. **Python (`generate-release-notes.py`)** regenerates the human pages' **raw-data
-   blocks** (the structured in-page region the AI polishes from, §4.3) under `releases/`
-   (§3.2) from git history, reads the co-release map sidecar (§3.6) to write the
-   deterministic page→API-diff links (including the HarfBuzz link), and prints the
-   "Files to polish" list.
-3. **AI (the skill)** rewrites only the *prose* of the listed human pages (§4.4). It
-   never creates, renames, or deletes files, never writes structural content or links,
-   and never edits either script.
+**Prepare.** One wrapper script, `scripts/generate.sh`, runs the two deterministic
+generators in a fixed order (forwarding any scope arguments to the Python generator). The
+skill and the workflow call that single script rather than the two generators
+individually, so the run order lives in one place:
+
+- **Cake (`api-diff.cake`)** regenerates the complete API-diff tree under `releases/`
+  (§3.3/§3.4) from the published feed, and writes the §1.5 **co-release map sidecar**
+  (§3.6). Deterministic, no AI.
+- **Python (`generate-release-notes.py`)** regenerates the human pages' **raw-data
+  blocks** (the structured in-page region the AI polishes from, §4.3) under `releases/`
+  (§3.2) from git history, reads the co-release map sidecar (§3.6) to write the
+  deterministic page→API-diff links (including the HarfBuzz link), and prints the
+  "Files to polish" list.
+
+**Polish.** The AI (the skill) rewrites only the *prose* of the listed human pages
+(§4.4). It never creates, renames, or deletes files, never writes structural content or
+links, and never edits either script. Polish is never part of the script — it is the AI's
+job afterwards.
+
+So consumers see just two phases — **Prepare** (run the one script) then **Polish** (the
+AI) — and never juggle the individual generators by hand.
 
 ### 2.3 One workflow, one PR
 
-A single scheduled/triggered GitHub workflow runs the §2.2 sequence on pushes to
-`main` and `release/*`, then opens **one** pull request with the regenerated
-`releases/` tree. If nothing changed, no PR is opened. There is no separate
-"api-diff" vs "release-notes" workflow — they are one pipeline producing one coherent
-update. (Pushing to `release/*` is a *git source* for content, not an emission
-trigger; emission is governed solely by §1.4.)
+A single triggered/scheduled GitHub workflow
+([`update-release-notes`](../../.github/workflows/update-release-notes.md)) runs the
+§2.2 sequence on pushes to `main` and `release/*` (plus `v*` tags and a weekly
+safety-net cron), then opens **one** pull request with the regenerated `releases/`
+tree. If nothing changed, no PR is opened. There is no separate "api-diff" vs
+"release-notes" workflow — they are one pipeline producing one coherent update.
+(Pushing to `release/*` is a *git source* for content, not an emission trigger;
+emission is governed solely by §1.4.)
+
+**Deterministic steps run on the host; the AI only polishes.** The **Prepare** phase
+(the `generate.sh` script — Cake then Python, §2.2) runs as **pre-agent host
+steps**: ordinary GitHub-Actions steps with the .NET SDK and full network, executing
+*before* the AI agent starts. This keeps the long generation off the agent's clock
+and out of its (network-restricted) sandbox. The Python generator tees its "Files to
+polish" list to a file the agent reads. The agent then runs the **Polish** phase (§2.2)
+with **no network and no `python3`/`cake` access** — it can only edit prose. The
+`create-pull-request` safe-output captures the *combined* working-tree diff (host
+script output + agent prose edits) into the single PR, so both artifacts always ship
+together.
 
 ---
 
@@ -338,7 +363,7 @@ raw-data block is intra-page.
 
 - **Inputs:** `git log` over a diff range (merged-PR subjects `… (#1234)`), published
   `v*` release tags (for preview milestones + dates), `versions.json`, and the §1.5
-  co-release map sidecar (§3.6) written by the Cake step.
+  co-release map sidecar (§3.6) written by the Cake generator.
 - **Outputs:** the human pages and site index defined in §3.2/§3.5.
 - **No GitHub API for content** — PRs come from commit messages. (A cached,
   best-effort GraphQL lookup only upgrades author *handles*; it never affects which
@@ -418,7 +443,7 @@ only genuinely-changed pages, so the AI never re-polishes an up-to-date page.
   nuget.org, prereleases included, diffed with `Mono.ApiTools.NuGetDiff`, plus
   `versions.json`.
 - **Outputs:** the per-family API-diff trees defined in §3.3 / §3.4, and the §1.5
-  co-release map sidecar (§3.6) for the Python step.
+  co-release map sidecar (§3.6) for the Python generator.
 
 ### 5.2 Behavior
 
@@ -443,9 +468,10 @@ artifacts — never the committed `releases/` tree.
 
 ### 5.4 How it runs
 
-`dotnet cake … --target=…` for `api-diff.cake`, as step 1 of the §2.2 sequence inside
-the unified workflow (§2.3). There is no AI step on the diffs themselves — the
-generated diff *is* the artifact; the human pages merely link to it (§1.5/§4.4).
+`dotnet cake … --target=…` for `api-diff.cake`, as the Cake generator of the §2.2
+**Prepare** phase inside the unified workflow (§2.3). There is no AI polish on the diffs
+themselves — the generated diff *is* the artifact; the human pages merely link to it
+(§1.5/§4.4).
 
 ---
 

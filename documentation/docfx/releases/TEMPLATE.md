@@ -21,6 +21,15 @@
 > **Upcoming release** · In development · Not yet available on NuGet
 -->
 
+<!-- SCRIPT-OWNED API LINKS — do not author these yourself.
+     When an API-diff folder exists for this line, the script injects the line
+     below right here (immediately under the status banner), and adds a HarfBuzz
+     link too when the release co-ships HarfBuzzSharp. KEEP IT VERBATIM: never
+     write, edit, move, duplicate, or invent API-diff / HarfBuzz links anywhere
+     on the page. If the block is absent, there is simply no diff folder yet —
+     do NOT add one (a hand-written link would dangle). -->
+> **API changes** · [SkiaSharp API diff](3.119.2/)
+
 ## Highlights
 
 <!-- 1-3 sentences. Lead with what matters most. Mention community contributors. -->
@@ -80,11 +89,13 @@ This release focuses on hardening the native libraries against common exploit te
 
 ## Links
 
-<!-- For released versions only. Omit entirely for upcoming/unreleased. -->
+<!-- For released versions only. Omit entirely for upcoming/unreleased.
+     Author ONLY the changelog + NuGet links here from the raw data. Do NOT add
+     an API-diff link — the script already injects the "> **API changes**" line
+     near the top (see the SCRIPT-OWNED note above). -->
 
 - [Full Changelog](https://github.com/mono/SkiaSharp/compare/v3.119.1...v3.119.2)
 - [NuGet Package](https://www.nuget.org/packages/SkiaSharp/3.119.2)
-- [API Diff](3.119.2/)
 
 ---
 
@@ -111,4 +122,7 @@ Added missing tvOS `SKSurface.Create` overloads, plus build system improvements.
      - Community ❤️: always credit and link anyone not @mattleibow
      - Adapt to content: security release leads with security, feature release leads with features
      - Skia engine: if a "Bump skia" PR is in the data, list it first under Engine category
+     - API links: never hand-author API-diff or HarfBuzz links. The script injects the
+       "> **API changes**" line under the banner when a diff folder exists; keep it verbatim
+       and add nothing. No block means no folder yet — a hand-written link would dangle.
 -->

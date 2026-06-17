@@ -1,82 +1,100 @@
 ---
 name: release-notes
 description: >
-  Generate or regenerate polished website release notes for SkiaSharp versions.
-  Collects raw PR data from git history (no API calls needed), reads the template,
-  and writes formatted markdown pages to documentation/docfx/releases/.
+  Generate or regenerate SkiaSharp's website release notes AND API changelogs as one
+  coherent set under documentation/docfx/releases/. Two phases: (1) Prepare — one script
+  (scripts/generate.sh) regenerates everything deterministic (the API-diff tree +
+  co-release-map sidecar from the published NuGet feed, and each version page's raw-data
+  block + page→API-diff links from git history); (2) Polish — the AI rewrites ONLY the
+  prose of the pages the script flagged as changed.
 
   Use this skill whenever the user asks to:
-  - Generate release notes for a version ("write release notes for 3.119.2")
-  - Regenerate or refresh release notes ("regenerate 3.119.x release notes")
-  - Format raw release data into the website template
+  - Generate or regenerate release notes for a version ("write release notes for 3.119.2")
+  - Regenerate or refresh the API changelogs / API diff ("update the api diff", "regen changelogs")
+  - Refresh the whole releases/ set after publishing packages
   - Manually fix or update release notes that the automated workflow got wrong
 
-  Triggers: "release notes for X", "regenerate release notes", "format release notes",
-  "update website release notes", "write release notes", "refresh release notes".
+  Triggers: "release notes for X", "regenerate release notes", "update API changelogs",
+  "api diff", "changelog", "update website release notes", "write release notes",
+  "refresh release notes".
 
-  NOTE: Website release notes are normally updated automatically by the
-  `update-release-notes` agentic workflow when code lands on main, release branches,
-  or tags are pushed. That workflow drives this skill in `--all` mode; the same
-  skill is also used manually for regeneration or corrections.
+    NOTE: The full set is normally regenerated automatically by the `update-release-notes`
+  agentic workflow when code lands on main, release branches, or tags are pushed. That
+  workflow runs the Prepare script in a pre-agent host step and then invokes this skill
+  for the Polish phase only. The same skill is used manually for regeneration or
+  corrections, in which case you run the Prepare script yourself and then polish.
 ---
 
-# Release Notes Skill
+# Release Notes & API Changelogs Skill
 
-> **Behavior spec:** `documentation/dev/release-notes-and-changelogs.md` describes
-> how the script and this skill divide responsibility (script structures, you only
-> polish). Read it before changing anything here.
-
-Generate polished website release notes for SkiaSharp versions.
+Generate SkiaSharp's website release notes **and** API changelogs as one coherent set.
 
 This skill is used both by the `update-release-notes` agentic workflow (automatically
 on push to `main`, `release/*` branches, and tags) and manually when regenerating,
-correcting, or bulk-processing release notes.
+correcting, or bulk-processing the release pages.
+
+## How it works: prepare, then polish
+
+The skill is just **two phases**:
+
+1. **Prepare** — run one script, `scripts/generate.sh`, which regenerates everything
+   deterministic (the API-diff tree, each page's raw-data block, the page→API-diff
+   links) and prints the "Files to polish" list. No AI.
+2. **Polish** — you (the AI) rewrite only the *prose* of the pages the script flagged as
+   changed.
+
+So the whole skill is: **run the script before you do anything, then do your one job —
+polish.** `generate.sh` is the single entry point for the Prepare phase — you never need
+to know what it runs internally.
+
+> **Running unattended from the `update-release-notes` workflow?** The **Prepare** phase
+> has **already been run for you in pre-agent host steps** — the API-diff tree and the
+> raw-data pages are already on disk. **Skip Prepare entirely** and go straight to
+> [Polish the prose](#polish-the-prose), polishing exactly the files in the
+> workflow-provided "Files to polish" list.
 
 ## Process
 
-### Step 1 — Determine versions
+### Prepare — run the script first
 
-> **Running unattended (e.g. from the `update-release-notes` workflow)?** There is
-> no user to ask — skip straight to the `--all` invocation in
-> [Step 2](#step-2--run-the-script), which regenerates every branch automatically.
+> **In the automated workflow this already ran** in a pre-agent host step — **skip this
+> whole phase** and jump to [Polish the prose](#polish-the-prose). Run it yourself only
+> for **manual** regeneration.
 
-Ask the user which version(s) to generate, or infer from context:
-- A specific version: `3.119.2`
-- A branch: `release/4.147.0-preview.1` or `main`
-- Multiple versions: `3.119.0, 3.119.1, 3.119.2`
-- A range by minor: "all 3.119.x"
-
-### Step 2 — Run the script
-
-Run the script **from the repository root** to collect raw PR data and write it to
-the version file:
+**Decide scope, then run it.** Ask the user which version(s) to generate (or infer from
+context) and pick the matching invocation from the table below. From anywhere in the repo,
+with no arguments, it does a full regeneration of everything:
 
 ```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
+.agents/skills/release-notes/scripts/generate.sh
 ```
 
-To regenerate **every** branch in one idempotent pass, use `--all`:
+By default it regenerates **both** artifacts for every branch and prints the
+**"Files to polish"** list. The flags narrow what it touches:
 
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --all
-```
+| Invocation | What it regenerates |
+| --- | --- |
+| `generate.sh` (no args) | **Both** — the API changelogs **and** the release-notes pages, for every branch. *(The default, and what the workflow uses.)* |
+| `generate.sh --api-only` | Only the machine-generated **API-diff changelog** tree under `documentation/docfx/releases/`. |
+| `generate.sh --notes-only` | Only the release-notes **pages'** raw-data blocks (+ `TOC.yml`/`index.md`). |
+| `generate.sh <scope args>` | Same as default but limited to the given scope, e.g. `--branch main`, `--branch release/4.147.0-preview.1`, or a version like `3.119.2`. |
 
-`--all` loops over `main` plus every `release/*` branch and regenerates each
-version's raw data, but **only rewrites files that actually changed** (same PR
-count AND same diff range ⇒ skipped, so the AI never re-polishes an unchanged
-page). Superseded versions are still generated — they keep their own page; the
-supersede marker only excludes them from being a diff *baseline*. The "Files to
-polish" output therefore lists only genuinely-changed pages.
+How it produces those files (which engine runs, the on-disk layout, diff ranges,
+supersession, which pages are skipped because nothing changed) is **implementation detail
+owned by the script** — you don't need it to run the skill. The only output you act on is
+the printed **"Files to polish"** list: those are the pages whose raw data changed and
+that you polish next. You never create, rename, or delete pages — the script owns that.
 
-This writes raw PR data to `documentation/docfx/releases/{version}.md` or
-`documentation/docfx/releases/{version}-unreleased.md` depending on the branch type,
-and regenerates TOC/index. All data comes from git history — no API calls or tokens needed.
+**Requirements.** The script needs the .NET SDK and `python3`, plus network access to
+nuget.org and the GitHub API. In the workflow these are provisioned in the pre-agent host
+steps. For **manual** runs, if a required tool or the network is missing the script stops
+with a clear error — **ask the user to install it / restore connectivity**; never work
+around it or hand-write API-diff links to compensate.
 
-When TOC/index are regenerated, the script also prunes stale unreleased pages on its own.
-You never create, rename, or delete pages.
+### Polish the prose
 
-### Division of responsibility — the script structures, you only polish
+This is the only phase you (the AI) own. **The script structures everything; you only
+polish prose.**
 
 **The script owns everything structural and deterministic.** It decides — entirely on its
 own — every filename (`{version}.md` vs `{version}-unreleased.md`), every diff range, which
@@ -91,7 +109,7 @@ files, compute diff ranges, or reason about released-vs-unreleased or rollup-vs-
 you catch yourself doing any of that, stop: the script already did it. **Never edit the
 script.** If a page you expect is missing (or an unexpected one exists, or any data looks
 wrong), **stop and report it** — do not work around it and do not touch the script. A
-maintainer decides whether the script needs fixing; the polish step only polishes.
+maintainer decides whether the script needs fixing; the Polish phase only polishes.
 
 The one structural fact you **consume** (never compute) while polishing: when a page rolls
 up tagged previews, the script delivers the PRs already **grouped into per-preview buckets**
@@ -121,7 +139,7 @@ Files to polish:
 You MUST polish **every file** in the "Files to polish" list — not just the first one.
 Read each file to get its raw data and metadata, then rewrite it with polished content.
 
-### Step 3 — Read the template
+#### Read the template
 
 Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished
 release notes page. Match its structure, tone, and formatting exactly.
@@ -141,7 +159,7 @@ Determine the version's status from the HTML comment block in the file (`status:
   that makes the supersede relationship **two-way** (the superseded page points forward, the
   successor points back).
 
-### Skipped / superseded minors (preview-only versions)
+#### Skipped / superseded minors (preview-only versions)
 
 Occasionally a minor ships previews but is **skipped** before going stable — e.g. `4.147`
 was previewed but abandoned in favour of `4.148`. **The script handles all of this for you**
@@ -164,7 +182,7 @@ header and add a one-line note in Highlights that the work rolled up into the su
 When polishing a **successor** page, keep the script-generated *"Supersedes …"* note and add a
 one-line note in Highlights that the skipped preview work is rolled up cumulatively.
 
-### Step 4 — Write polished pages
+#### Write the polished pages
 
 For **every file** listed in the script's "Files to polish" output, write polished release
 notes **below the raw data HTML comment block**. 
@@ -230,7 +248,10 @@ Follow these rules:
     `preview milestones` list (newest first), using that entry's compare link. Do not invent
     previews or dates — the list is authoritative (sourced from published prerelease tags).
 
-11. **Links section** — Full Changelog, NuGet Package, API Diff.
+11. **Links section** — Full Changelog and NuGet Package only. **Do not add an API-diff
+    or HarfBuzz link** — the script injects a `> **API changes**` line under the banner
+    when a diff folder exists (gated on existence, so it never dangles). Keep that line
+    verbatim and author no API links yourself (see TEMPLATE.md "SCRIPT-OWNED API LINKS").
 
 ## Parallelization
 
