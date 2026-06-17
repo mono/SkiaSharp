@@ -294,6 +294,13 @@ def _version_has_stable_tag(version):
     return False
 
 
+def _version_is_superseded(version):
+    # type: (str) -> bool
+    """True if versions.json marks this line ``status: superseded`` (spec §1.2)."""
+    entry = _versions_config_lookup(version)
+    return bool(entry and entry.get("status") == "superseded")
+
+
 def resolve_superseded_by(version):
     # type: (str) -> Optional[str]
     """Return the version that supersedes ``version``, or None.
@@ -919,6 +926,12 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
     if patch > 0:
         for p in range(patch - 1, -1, -1):
             prev_version = "{}.{}".format(minor, p)
+            # Skip a line versions.json marks superseded (spec §1.2/§1.3): its
+            # work rolls up into the next emitted line, so it must never act as a
+            # baseline even if it happens to carry a stable tag (e.g. 3.119.4
+            # skips the superseded 3.119.3 and bases on 3.119.2).
+            if _version_is_superseded(prev_version):
+                continue
             # A stable release/X.Y.Z branch (exact, no -preview) or a stable
             # tag both signal that this patch shipped (or is shipping) stable.
             prev_stable = "release/{}".format(prev_version)
@@ -1031,9 +1044,13 @@ def determine_diff_range(branch):
             return ("origin/{}".format(same_minor[-1]),
                     "origin/main", version)
 
-        # No branch yet for the upcoming minor — fall back across ALL minors,
-        # preferring the latest that genuinely shipped as stable so a skipped
-        # / preview-only minor does not shrink main's rollup.
+        # No branch yet for the upcoming minor — the unreleased delta is still a
+        # SMALL "what may ship next", never a rollup (spec §4.2). Base on the
+        # latest release cut strictly BELOW main's line (the immediately previous
+        # release line's tip), regardless of stable/preview/superseded. Using the
+        # last *stable* here (the old behaviour) wrongly skipped preview-only
+        # predecessors like 4.148 and turned main's page into a multi-minor
+        # rollback to 3.119.4 — bug D.
         all_versioned = [b for b in all_branches if not b.endswith(".x")]
         all_versioned.sort(key=release_branch_sort_key)
 
@@ -1042,12 +1059,9 @@ def determine_diff_range(branch):
                 "No release branches found. Cannot determine diff range "
                 "for main. Ensure release branches are fetched.")
 
-        stable = [b for b in all_versioned
-                  if _is_valid_stable_base(b)]
-        if stable:
-            latest = stable[-1]
-        else:
-            latest = all_versioned[-1]
+        below = [b for b in all_versioned
+                 if version_key(version_from_branch(b)) < version_key(version)]
+        latest = below[-1] if below else all_versioned[-1]
         return "origin/{}".format(latest), "origin/main", version
 
     # ── servicing branch (release/X.Y.x) ────────────────────────
@@ -1418,54 +1432,47 @@ def get_version_files():
 
 def cleanup_stale_unreleased():
     # type: () -> list[str]
-    """Delete ``{version}-unreleased.md`` pages whose line has moved on.
+    """Delete ``{version}-unreleased.md`` pages whose line is no longer a head.
 
-    Released and unreleased pages of the SAME version coexist by design (Option
-    A): a version can be on NuGet as a shipped prerelease (released ``{v}.md``)
-    AND still have newer head commits (``{v}-unreleased.md`` delta). So a stale
-    unreleased page is NOT simply "``{v}.md`` exists" — that would wrongly delete
-    the in-flight delta.
+    An unreleased page models "what may ship next" for an in-flight LINE, and a
+    line is in-flight only while it is the version of an active HEAD — either
+    ``main`` (the upcoming version) or a servicing ``release/X.Y.x`` branch. Any
+    ``-unreleased`` page whose version is not one of those live heads is an
+    orphan and is removed (spec §4.2). This prunes BOTH a page left behind in the
+    same minor and one left behind across minors — e.g. once the head advances
+    4.148 → 4.150 and no ``release/4.148.x`` servicing branch exists, the stale
+    ``4.148.0-unreleased.md`` is removed; if that servicing branch DOES exist the
+    page is kept, because 4.148 is still a live (serviced) head.
 
-    Deterministic rule (filesystem only): an unreleased page is stale once its
-    line has advanced to a STRICTLY HIGHER version in the SAME minor. That is,
-    delete ``{v}-unreleased.md`` only when both:
-      * a released ``{v}.md`` exists (the version itself has a page), AND
-      * some other page (released or unreleased) in the same minor has a version
-        greater than ``v`` — the head has moved past ``v``.
-
-    Examples:
-      * 4.148.0.md + 4.148.0-unreleased.md, no higher 4.148.x page  -> KEEP both.
-      * 3.119.4.md + 3.119.4-unreleased.md, and 3.119.5-unreleased.md exists
-        -> the line advanced to 3.119.5, so 3.119.4-unreleased.md is removed.
-    Returns the removed file paths.
+    Released ``{version}.md`` pages are never touched here — only the unreleased
+    deltas. Returns the removed file paths. To avoid clobbering on a degenerate
+    checkout, nothing is deleted when no release branches can be enumerated.
     """
-    pages = [f.stem for f in RELEASES_DIR.iterdir()
-             if f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md")]
-    # Page version (strip the -unreleased suffix) for every page on disk.
-    page_versions = [
-        p[:-len("-unreleased")] if p.endswith("-unreleased") else p
-        for p in pages
-    ]
+    all_branches = list_remote_release_branches()
+    if not all_branches:
+        return []
+
+    # Live in-flight lines = main's upcoming version + every servicing .x head.
+    live = set()  # type: set[str]
+    main_version = get_upcoming_version()
+    if main_version:
+        live.add(main_version)
+    for b in all_branches:
+        if not b.endswith(".x"):
+            continue
+        m = re.match(r"release/(\d+)\.(\d+)\.x$", b)
+        if not m:
+            continue
+        svc_version = (get_version_from_remote_branch(b)
+                       or "{}.{}.0".format(m.group(1), m.group(2)))
+        live.add(svc_version)
 
     removed = []
     for f in sorted(RELEASES_DIR.iterdir()):
         if f.suffix != ".md" or not f.stem.endswith("-unreleased"):
             continue
         version = f.stem[:-len("-unreleased")]
-        # No released counterpart -> this is the only page for the version; keep.
-        if not (RELEASES_DIR / "{}.md".format(version)).exists():
-            continue
-        # Released counterpart exists. Keep the unreleased delta while this
-        # version is still the head of its minor line; remove it only once a
-        # strictly higher version in the same minor has a page.
-        mg = minor_group(version)
-        moved_on = any(
-            ov != version
-            and minor_group(ov) == mg
-            and version_key(ov) > version_key(version)
-            for ov in page_versions
-        )
-        if moved_on:
+        if version not in live:
             f.unlink()
             removed.append(str(f))
     return removed
@@ -1758,6 +1765,15 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         base_version = version_from_branch(from_display)
     elif re.match(r"^\d+\.\d+\.\d+", from_display):
         base_version = from_display
+    else:
+        # from_display is a bare commit SHA — happens when versions.json
+        # compare_to resolved to a `v<compare_to>` TAG (no release/* branch). The
+        # base core is then exactly that compare_to value; recover it so the
+        # milestone window stays bounded (bug C: a None base let the window
+        # broaden to every preview up to the page version).
+        ce = _versions_config_lookup(version)
+        if ce and ce.get("compare_to"):
+            base_version = ce["compare_to"]
     preview_milestones = collect_preview_milestones(version, base_version)
 
     metadata = {
