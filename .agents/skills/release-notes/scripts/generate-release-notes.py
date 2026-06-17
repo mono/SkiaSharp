@@ -159,6 +159,42 @@ def _versions_config_lookup(version):
     return None
 
 
+# Co-release map sidecar (spec §3.6), written by the Cake API-changelog engine and
+# read here to emit the deterministic SkiaSharp-page -> HarfBuzz-folder link. It is
+# the ONLY thing that crosses from the API-changelog engine into this engine
+# (spec §2.2). Absent sidecar (e.g. Cake not yet run) -> no HarfBuzz link, no error.
+_CO_RELEASE_MAP = None  # type: Optional[dict]
+
+CO_RELEASE_MAP_PATH = RELEASES_DIR / "co-release-map.json"
+
+
+def load_co_release_map():
+    # type: () -> dict
+    """Load the co-release map sidecar (cached) as ``{skia_line: entry}``.
+
+    Each entry carries ``hb_line`` and ``hb_link`` (spec §3.6). Returns an empty
+    map when the sidecar is missing — the HarfBuzz link is simply omitted in that
+    case (the script owns the link, never the AI; spec §4.4).
+    """
+    global _CO_RELEASE_MAP
+    if _CO_RELEASE_MAP is not None:
+        return _CO_RELEASE_MAP
+    mapping = {}  # type: dict
+    if CO_RELEASE_MAP_PATH.exists():
+        with open(CO_RELEASE_MAP_PATH) as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            raise ValueError(
+                "co-release-map.json: expected a JSON array (spec §3.6); got %s"
+                % type(data).__name__)
+        for entry in data:
+            line = entry.get("skia_line")
+            if line:
+                mapping[line] = entry
+    _CO_RELEASE_MAP = mapping
+    return _CO_RELEASE_MAP
+
+
 def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
                           new_status=None, new_superseded_by=None,
                           new_supersedes=None):
@@ -1379,6 +1415,22 @@ def format_pr_list(prs, metadata):
             "below.".format(", ".join(sup_links)))
         lines.append("")
 
+    # Deterministic, script-owned API-diff references (spec §2.2/§4.4). These are
+    # final links the AI must keep verbatim and narrate around — it never writes
+    # or edits links itself. The SkiaSharp link points at this line's API-diff
+    # folder (§3.3); the HarfBuzz link comes from the co-release map sidecar (§3.6).
+    api_diff_link = metadata.get("api_diff_link")
+    harfbuzz = metadata.get("harfbuzz")
+    if api_diff_link or harfbuzz:
+        parts = []
+        if api_diff_link:
+            parts.append("[SkiaSharp API diff]({})".format(api_diff_link))
+        if harfbuzz:
+            parts.append("HarfBuzz {hb}: [API diff]({link})".format(
+                hb=harfbuzz.get("hb_line", ""), link=harfbuzz["hb_link"]))
+        lines.append("> **API changes** · " + " · ".join(parts))
+        lines.append("")
+
     ai_lines = [
         "<!-- AI: Use the raw PR data in the comment above to write polished",
         "     release notes here. Follow documentation/docfx/releases/TEMPLATE.md",
@@ -1399,6 +1451,17 @@ def format_pr_list(prs, metadata):
             '     "Supersedes" note above and mention in the Highlights that this')
         ai_lines.append(
             "     release rolls up that skipped preview work cumulatively.")
+    if api_diff_link or harfbuzz:
+        ai_lines.append(
+            '     Keep the "API changes" links above verbatim (do NOT edit or add')
+        ai_lines.append(
+            "     links). Narrate around them in prose.")
+        if harfbuzz:
+            ai_lines.append(
+                "     Mention that HarfBuzz {} ships alongside this release and"
+                .format(harfbuzz.get("hb_line", "")))
+            ai_lines.append(
+                "     point readers at its linked API diff for the binding details.")
     ai_lines.append("-->")
     lines.extend(ai_lines)
     lines.append("")
@@ -1793,6 +1856,18 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         # it first shipped in) so the AI can summarize each milestone directly.
         metadata["pr_buckets"] = bucket_prs_by_milestone(
             prs, preview_milestones, from_ref)
+
+    # Deterministic, script-owned API-diff links (spec §2.2/§4.4). A RELEASED page
+    # is an emitted line (§1.4) and so has a sibling <line>/ API-diff folder
+    # (§3.3); link to it internally. Unreleased head deltas are NOT emitted lines,
+    # so they get no API-diff folder and no link. The HarfBuzz link comes from the
+    # co-release map sidecar (§3.6); it is omitted when the sidecar or mapping is
+    # absent. These links are structure, never written or edited by the AI.
+    if not is_head and (RELEASES_DIR / version).is_dir():
+        metadata["api_diff_link"] = "{}/".format(version)
+    hb = load_co_release_map().get(version)
+    if hb and hb.get("hb_link"):
+        metadata["harfbuzz"] = hb
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
