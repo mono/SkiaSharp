@@ -33,7 +33,7 @@ combined into a single unified report.
 ## Key References
 
 - **[references/chrome-releases.md](references/chrome-releases.md)** — Chrome Releases blog: RSS query, two-pass extraction (regex + AI review), cross-referencing with NVD
-- **[references/milestone-schedule.md](references/milestone-schedule.md)** — Chromium milestone release schedule: branch/stable dates per milestone, release heads-up for pending Skia bumps
+- **[references/milestone-schedule.md](references/milestone-schedule.md)** — Chromium milestone schedule + channel tracking: branch/stable dates per milestone, and the live milestone + Skia commit per channel (Extended/Stable/Beta/Dev/Canary) for concurrent channel support
 - **[references/skia-cve-resolution.md](references/skia-cve-resolution.md)** — Skia core CVE pipeline (NVD → Bug ID → Commit → Branch → Cherry-pick → Reachability). **The Skia process is fine-grained — read this before auditing Skia.**
 - **[references/third-party-deps.md](references/third-party-deps.md)** — Third-party CVE process (libpng, freetype, harfbuzz, etc.): version verification, fix-commit ancestry, known false positives
 - **[references/cg-alerts.md](references/cg-alerts.md)** — Component Governance alerts: ADO pipeline queries, Docker container CVEs, fix locations
@@ -118,14 +118,17 @@ Set the `source` field on each CVE object: `"both"`, `"chrome_releases"`, or `"n
 
 ---
 
-### Step 1.6: Query Chromium Milestone Schedule (Release Heads-Up)
+### Step 1.6: Query Chromium Milestone Schedule & Channels (Release Heads-Up)
 
-> 🗓️ This step is scheduling context, **not** a security check on its own. It tells us *when*
-> the next Skia milestone goes stable so pending bumps are ready before CVEs reach users.
+> 🗓️ This step is scheduling + channel context, **not** a security check on its own. It tells us
+> *when* the next Skia milestone goes stable, and *which Skia commit* each channel ships, so
+> pending bumps are ready before CVEs reach users.
 
-Skia milestones track Chrome milestones, so the Chromium release calendar tells us the deadline
-for each pending Skia bump. **See [references/milestone-schedule.md](references/milestone-schedule.md)**
-for the data source and alert levels.
+Skia milestones track Chrome milestones. SkiaSharp maintains support for **Extended stable,
+Stable, and Beta concurrently**, so we must know the milestone + Skia commit behind each tracked
+channel. **See [references/milestone-schedule.md](references/milestone-schedule.md)** for the data
+sources (`fetch_milestone_schedule` for dates, `fetch_releases` for per-channel milestone + Skia
+commit) and alert levels.
 
 #### Run the script
 
@@ -134,22 +137,26 @@ python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py \
   --verbose --output output/ai/milestone-schedule-cache.json
 ```
 
-This reads the current Skia milestone from `scripts/VERSIONS.txt`, fetches a window of milestones
-around it from chromiumdash, and prints prioritized heads-up alerts:
+This reads the current Skia milestone from `scripts/VERSIONS.txt`, fetches each channel's live
+release (Extended/Stable/Beta/Dev/Canary, with the exact `hashes.skia` commit) plus the milestone
+schedule around them, and prints prioritized heads-up alerts:
 
 | Level | Meaning |
 |-------|---------|
 | 🔴 `critical` | A milestone we have **not** bumped to is **already stable** — we are behind. |
-| 🟠 `urgent` | A pending milestone goes stable within the window (default 14 days). |
+| 🟠 `urgent` | A pending milestone goes stable within the window (default 14 days), or a tracked channel (Extended/Stable/Beta) has advanced past the pinned milestone. |
 | 🟡 `watch` | A pending milestone branches within the window — start the bump. |
-| 🔵 `info` | The current milestone's stable window is ending. |
+| 🔵 `info` | A tracked channel matches/should pin a milestone, or the current milestone's stable window is ending. |
 
 #### Use the result
 
+- **Verify tracked channels** — confirm each SkiaSharp branch (Extended/Stable/Beta) points at the
+  Skia commit (`hashes.skia`) its channel currently ships.
 - Escalate Skia bump recommendations in `nextSteps` when an `urgent`/`critical` milestone also
   carries HIGH/CRITICAL CVEs from the Chrome Releases / NVD passes.
 - Cite the target milestone's **stable date** when recommending a bump so the deadline is clear.
-- Treat a `critical` heads-up as a finding even if no GitHub issue has been filed yet.
+- Treat a `critical` heads-up (or an `urgent` tracked-channel gap) as a finding even if no GitHub
+  issue has been filed yet.
 
 ---
 

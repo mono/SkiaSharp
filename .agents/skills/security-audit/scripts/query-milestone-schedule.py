@@ -9,18 +9,28 @@ branches and goes stable. If a milestone we still need to bump to is about to go
 stable (or has already), we should make sure the Skia bump is ready so security
 fixes land in time.
 
-Data source:
-  https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone=<N|current|next|previous>
-  - Returns one milestone per request as {"mstones": [ {...} ]}.
-  - `mstone` accepts a milestone number, or the keywords 'current', 'next', 'previous'.
-  - No authentication, no documented rate limit (be polite: small delay between calls).
+Two data sources are combined:
 
-Each milestone object includes (dates are ISO-8601, midnight UTC):
+1. Milestone *schedule* (dates per milestone):
+   https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone=<N|current|next|previous>
+   - Returns one milestone per request as {"mstones": [ {...} ]}.
+   - `mstone` accepts a milestone number, or the keywords 'current', 'next', 'previous'.
+
+2. Channel *releases* (which milestone + Skia commit is live in each channel):
+   https://chromiumdash.appspot.com/fetch_releases?channel=<Channel>&platform=<Platform>&num=1
+   - Channels: Extended (extended stable), Stable, Beta, Dev, Canary.
+   - Each release carries hashes.skia (the exact upstream Skia commit), milestone, version, time.
+   - This is what lets us track Extended/Stable/Beta concurrently: each channel pins a different
+     milestone and a different Skia commit, and SkiaSharp will maintain a branch per channel.
+
+Each milestone schedule object includes (dates are ISO-8601, midnight UTC):
   - mstone           : milestone number (e.g. 150)
   - branch_point     : when the release branch is cut from trunk
   - stable_date      : when the milestone reaches the stable channel
   - late_stable_date : end of the stable window / next refresh boundary
   - feature_freeze, earliest_beta, final_beta, etc.
+
+No authentication, no documented rate limit (be polite: small delay between calls).
 
 Prerequisites:
   - Python 3.8+ (uses urllib, no external dependencies)
@@ -42,10 +52,12 @@ Usage:
 Output:
   JSON written to --output (if given) and a human-readable summary to stdout.
   The JSON has:
-    - meta: { generated_at, current_milestone, current_milestone_source, window_days }
-    - milestones[]: one entry per fetched milestone with parsed dates + day deltas
-    - headsup[]: prioritized alerts (e.g. milestone going stable within the window
-                 that we have not bumped to yet)
+    - meta: { generated_at, current_milestone, current_milestone_source, window_days,
+              platform, tracked_channels }
+    - channels[]: per-channel live release (channel, milestone, version, skia_hash, date, tracked)
+    - milestones[]: one entry per fetched milestone with parsed dates, day deltas, and the
+                    channel(s) currently sitting on that milestone
+    - headsup[]: prioritized alerts (schedule + tracked-channel coverage)
 """
 
 import argparse
@@ -59,6 +71,15 @@ import urllib.error
 from datetime import datetime, timezone
 
 SCHEDULE_URL = "https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={mstone}"
+RELEASES_URL = ("https://chromiumdash.appspot.com/fetch_releases"
+                "?channel={channel}&platform={platform}&num=1")
+
+# Chromium release channels, oldest milestone to newest.
+ALL_CHANNELS = ["Extended", "Stable", "Beta", "Dev", "Canary"]
+# Channels SkiaSharp maintains support for concurrently.
+DEFAULT_TRACKED_CHANNELS = ["Extended", "Stable", "Beta"]
+# Extended stable + Canary only exist on Windows/Mac; Windows has every channel.
+DEFAULT_PLATFORM = "Windows"
 
 # Dates we care about for a release heads-up, in chronological order.
 KEY_DATES = ["branch_point", "stable_date", "late_stable_date"]
@@ -126,6 +147,44 @@ def fetch_milestone(mstone, retries=3, delay=0.4):
     return None
 
 
+def fetch_channel_release(channel, platform, retries=3, delay=0.4):
+    """Fetch the current release for a channel/platform from fetch_releases.
+
+    Returns a dict with channel, milestone, version, skia_hash, date (ISO), and the
+    full hashes map, or None if the channel/platform has no release.
+    """
+    url = RELEASES_URL.format(channel=channel, platform=platform)
+    last_err = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "skiasharp-security-audit/1.0"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            if not isinstance(data, list) or not data:
+                return None
+            rel = data[0]
+            hashes = rel.get("hashes") or {}
+            ts = rel.get("time")
+            date = None
+            if isinstance(ts, (int, float)):
+                # `time` is epoch milliseconds.
+                date = datetime.fromtimestamp(ts / 1000.0, tz=timezone.utc).date().isoformat()
+            return {
+                "channel": channel,
+                "platform": platform,
+                "milestone": rel.get("milestone"),
+                "version": rel.get("version"),
+                "skia_hash": hashes.get("skia"),
+                "chromium_hash": hashes.get("chromium"),
+                "date": date,
+            }
+        except (urllib.error.URLError, urllib.error.HTTPError, ValueError) as e:
+            last_err = e
+            time.sleep(delay * (attempt + 1))
+    log(f"  ! failed to fetch channel={channel} platform={platform}: {last_err}")
+    return None
+
+
 def parse_date(value):
     if not value:
         return None
@@ -167,10 +226,21 @@ def main():
                     help="How many milestones after current to include (default: 4).")
     ap.add_argument("--window", type=int, default=14,
                     help="Flag milestones reaching stable within this many days as urgent (default: 14).")
+    ap.add_argument("--platform", default=DEFAULT_PLATFORM,
+                    help="Platform for channel releases (default: Windows — has all channels).")
+    ap.add_argument("--channels", default=",".join(ALL_CHANNELS),
+                    help="Comma-separated channels to fetch (default: Extended,Stable,Beta,Dev,Canary).")
+    ap.add_argument("--track", default=",".join(DEFAULT_TRACKED_CHANNELS),
+                    help="Channels SkiaSharp supports concurrently (default: Extended,Stable,Beta).")
+    ap.add_argument("--no-channels", action="store_true",
+                    help="Skip the channel-release lookup (schedule-only mode).")
     ap.add_argument("--output", default=None, help="Write the JSON result to this path.")
     ap.add_argument("--repo-root", default=None, help="Repo root (default: auto-detect from cwd).")
     ap.add_argument("--verbose", action="store_true", help="Print extra progress detail.")
     args = ap.parse_args()
+
+    channel_names = [c.strip() for c in args.channels.split(",") if c.strip()]
+    tracked = [c.strip() for c in args.track.split(",") if c.strip()]
 
     now = datetime.now(timezone.utc)
 
@@ -193,10 +263,28 @@ def main():
               file=sys.stderr)
         return 2
 
-    lo = current - max(0, args.behind)
-    hi = current + max(0, args.ahead)
     log(f"Current Skia milestone: {current} (from {source})", args.verbose)
-    log(f"Fetching milestones {lo}..{hi} from chromiumdash...", args.verbose)
+
+    # Fetch live channel releases first (Extended/Stable/Beta/Dev/Canary).
+    channels = []
+    if not args.no_channels:
+        log(f"Fetching channel releases ({args.platform}): {', '.join(channel_names)}", args.verbose)
+        for ch in channel_names:
+            rel = fetch_channel_release(ch, args.platform)
+            time.sleep(0.3)
+            if not rel:
+                continue
+            rel["tracked"] = ch in tracked
+            channels.append(rel)
+            if args.verbose:
+                log(f"  {ch}: m{rel.get('milestone')} {rel.get('version')} "
+                    f"skia={(rel.get('skia_hash') or '?')[:12]}")
+
+    # Schedule range: current ± behind/ahead, widened to cover every channel milestone.
+    channel_mstones = [c["milestone"] for c in channels if isinstance(c.get("milestone"), int)]
+    lo = min([current - max(0, args.behind)] + channel_mstones)
+    hi = max([current + max(0, args.ahead)] + channel_mstones)
+    log(f"Fetching milestone schedule {lo}..{hi} from chromiumdash...", args.verbose)
 
     milestones = []
     for m in range(lo, hi + 1):
@@ -207,12 +295,19 @@ def main():
         entry = build_milestone_entry(raw, now)
         entry["is_current"] = (m == current)
         entry["status"] = "bumped" if m <= current else "pending"
+        # Attach the channel(s) currently sitting on this milestone.
+        entry["channels"] = [c["channel"] for c in channels if c.get("milestone") == m]
+        skia = next((c["skia_hash"] for c in channels if c.get("milestone") == m and c.get("skia_hash")), None)
+        if skia:
+            entry["skia_hash"] = skia
         milestones.append(entry)
         if args.verbose:
             sd = entry["dates"].get("stable_date", {})
             log(f"  m{m}: stable {sd.get('date', '?')} ({sd.get('days_from_now', '?')}d)")
 
     headsup = build_headsup(milestones, current, args.window, now)
+    headsup += build_channel_headsup(channels, tracked, current)
+    headsup.sort(key=lambda a: (LEVEL_ORDER.get(a["level"], 9), a.get("milestone") or 0))
 
     result = {
         "meta": {
@@ -220,8 +315,14 @@ def main():
             "current_milestone": current,
             "current_milestone_source": source,
             "window_days": args.window,
-            "data_source": "https://chromiumdash.appspot.com/fetch_milestone_schedule",
+            "platform": args.platform,
+            "tracked_channels": tracked,
+            "data_sources": [
+                "https://chromiumdash.appspot.com/fetch_milestone_schedule",
+                "https://chromiumdash.appspot.com/fetch_releases",
+            ],
         },
+        "channels": channels,
         "milestones": milestones,
         "headsup": headsup,
     }
@@ -290,6 +391,50 @@ def build_headsup(milestones, current, window, now):
     return alerts
 
 
+def build_channel_headsup(channels, tracked, current):
+    """Alerts about the channels SkiaSharp tracks concurrently (Extended/Stable/Beta).
+
+    Each tracked channel pins a milestone + Skia commit. If a tracked channel has advanced
+    past the milestone SkiaSharp is pinned to, that channel's branch needs a bump.
+    """
+    alerts = []
+    for ch in channels:
+        if not ch.get("tracked"):
+            continue
+        m = ch.get("milestone")
+        if not isinstance(m, int):
+            continue
+        name = ch["channel"]
+        skia = (ch.get("skia_hash") or "?")[:12]
+        ver = ch.get("version") or "?"
+        if m > current:
+            alerts.append({
+                "level": "urgent",
+                "milestone": m,
+                "channel": name,
+                "message": (f"Tracked channel {name} is on m{m} ({ver}, skia {skia}) but SkiaSharp "
+                            f"is pinned to m{current}. The {name} branch needs a Skia bump to m{m}."),
+            })
+        elif m == current:
+            alerts.append({
+                "level": "info",
+                "milestone": m,
+                "channel": name,
+                "message": (f"Tracked channel {name} is on m{m} ({ver}, skia {skia}) — matches the "
+                            f"pinned milestone."),
+            })
+        else:
+            alerts.append({
+                "level": "info",
+                "milestone": m,
+                "channel": name,
+                "message": (f"Tracked channel {name} is on m{m} ({ver}, skia {skia}); SkiaSharp's "
+                            f"{name} branch should pin m{m}."),
+            })
+    return alerts
+
+
+LEVEL_ORDER = {"critical": 0, "urgent": 1, "watch": 2, "info": 3}
 LEVEL_ICON = {"critical": "🔴", "urgent": "🟠", "watch": "🟡", "info": "🔵"}
 
 
@@ -299,10 +444,25 @@ def print_summary(result):
     print(f"Chromium release schedule — heads-up for Skia bumps")
     print(f"  Current SkiaSharp milestone: m{meta['current_milestone']} "
           f"(from {meta['current_milestone_source']})")
-    print(f"  Urgency window: {meta['window_days']} days\n")
+    print(f"  Urgency window: {meta['window_days']} days")
+    if meta.get("tracked_channels"):
+        print(f"  Tracked channels ({meta.get('platform','?')}): "
+              f"{', '.join(meta['tracked_channels'])}")
+    print()
 
-    print("  Milestone   Branch point   Stable date    Status    In")
-    print("  " + "-" * 58)
+    channels = result.get("channels") or []
+    if channels:
+        print("  Channel     Milestone   Version             Skia commit   Track")
+        print("  " + "-" * 64)
+        for c in channels:
+            track = "✓" if c.get("tracked") else " "
+            skia = (c.get("skia_hash") or "?")[:12]
+            print(f"  {c.get('channel',''):<10}  m{str(c.get('milestone','?')):<8}  "
+                  f"{c.get('version','?'):<18}  {skia:<12}  {track}")
+        print()
+
+    print("  Milestone   Branch point   Stable date    Status    In      Channels")
+    print("  " + "-" * 72)
     for entry in result["milestones"]:
         m = entry["milestone"]
         b = entry["dates"].get("branch_point", {})
@@ -310,8 +470,9 @@ def print_summary(result):
         d = s.get("days_from_now")
         din = f"{d:+d}d" if isinstance(d, int) else "  ?"
         marker = "*" if entry.get("is_current") else " "
+        chans = ",".join(entry.get("channels") or [])
         print(f"  {marker}m{m:<8}  {b.get('date','?'):<13}  {s.get('date','?'):<13}  "
-              f"{entry['status']:<8}  {din:>5}")
+              f"{entry['status']:<8}  {din:>5}   {chans}")
 
     print()
     headsup = result["headsup"]
