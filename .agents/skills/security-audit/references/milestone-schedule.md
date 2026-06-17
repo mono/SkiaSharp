@@ -1,144 +1,152 @@
-# Chromium Milestone Schedule & Channel Tracking (Release Heads-Up)
+# Chromium Release Heads-Up (main vs Beta)
 
-The [Chromium Dash](https://chromiumdash.appspot.com/) project exposes two JSON endpoints we use
-together:
+[Chromium Dash](https://chromiumdash.appspot.com/) exposes two JSON endpoints we combine to
+answer one question: **are we keeping up with what's coming, and how much time do we have?**
 
-1. **Milestone schedule** — when each milestone branches from trunk and reaches stable.
-2. **Channel releases** — which milestone *and exact Skia commit* is live in each channel
+1. **Channel releases** — which milestone *and exact Skia commit* is live in each channel
    (Extended stable, Stable, Beta, Dev, Canary).
+2. **Milestone schedule** — when each milestone branches from trunk and reaches stable.
 
-Because **Skia milestones track Chrome milestones** (our submodule pins `chrome/mNNN`), these tell
-us *when* the next Skia milestone we need goes stable, and *which Skia commit* each channel sits
-on right now. That makes them an early-warning + tracking signal: SkiaSharp maintains support for
-**Extended stable, Stable, and Beta concurrently**, so we need to know the milestone and Skia
-commit behind each of those channels at any time.
+## The Model (why this is simple)
 
-> ℹ️ This is **not** a security check on its own. It is scheduling + channel context. Pair it with
-> the Chrome Releases blog (CVE disclosure) and the Skia CVE resolution process to decide urgency.
+- SkiaSharp's `main` is the **front line** and tracks the Chrome **Beta** milestone.
+- As a milestone graduates **Beta → Stable → Extended stable**, a `release/<major>.<M>.x` branch
+  is cut from a `main` that was *already* on milestone M. So on the **milestone axis**, the
+  stable / extended-stable release lines are inherently covered — their branch *name* states the
+  milestone (`release/4.148.x` = m148), and they inherited that Skia from main.
+- Therefore **"where we are" = main's milestone**, and the single signal that matters is:
 
-## Why This Matters for SkiaSharp
+  > **is `main_milestone >= beta_channel_milestone` ?**
 
-1. **Concurrent channel support:** We ship/maintain branches for Extended stable, Stable, and Beta
-   at the same time. Each channel pins a *different* milestone and a *different* Skia commit. We
-   must track all three so each branch carries the right Skia.
-2. **Bump timing:** A bump that lands *after* a channel advances means a window where known CVEs
-   fixed upstream are unpatched in that SkiaSharp branch. The schedule gives the deadline.
-3. **Exact commit verification:** The channel endpoint returns `hashes.skia` — the precise upstream
-   Skia commit in that channel — so we can verify a SkiaSharp branch points at the right merge base.
-4. **Planning:** Branch points and stable dates are fixed weeks ahead; we can start a bump as soon
-   as a milestone branches instead of reacting to a CVE.
+  If `main` falls behind Beta, the Skia bump to the new milestone is overdue. The schedule then
+  tells us how much lead time remains before that gap reaches the **stable** channel.
+
+This is why the default output is main-centric and does **not** walk previous release branches.
+
+> ℹ️ This is scheduling context, **not** a security check on its own. Pair it with the Chrome
+> Releases blog (CVE disclosure) and the Skia CVE resolution process to decide urgency.
+
+### Branch ↔ milestone mapping (verified)
+
+| Branch | Pinned milestone | NuGet |
+|--------|------------------|-------|
+| `main` | 150 (current Beta) | 4.150.x |
+| `release/4.148.x` | 148 (Extended) | 4.148.0 |
+| `release/3.119.x` | 119 | 3.119.5 |
+| `release/2.88.x` | 88 | 2.88.x |
+
+`<major>` is the SkiaSharp epoch (currently `4`); the **minor is the milestone**. Milestones are
+globally unique across majors, so `release/*.<M>.x` is unambiguous. A `release/<major>.<M>.x`
+branch is only cut partway through the cycle — until then, `main` is the head for that milestone.
+
+## Two Axes (only one needs tracking by default)
+
+| Axis | Question | What it needs |
+|------|----------|---------------|
+| **1. Milestone coverage** (default) | Are we keeping up with the front line? | `main` milestone + Beta channel milestone. Nothing else. |
+| **2. Within-milestone backports** (`--check-backports`) | Does a shipped `release/*.x` line carry the latest Skia *for its milestone* (e.g. a cherry-picked CVE fix in `149.0.7827.x`)? | Resolve `release/<major>.<M>.x`, read its Skia submodule SHA, compare against the channel's current `hashes.skia` via the Skia CVE process. |
+
+Axis 1 is the heads-up. Axis 2 is a deeper, opt-in audit check.
 
 ## Data Access
 
-### 1. Milestone schedule (dates)
+### Channel releases (milestone + Skia commit per channel)
 
-- **Endpoint:** `https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone=<value>`
-- **`mstone` accepts:** a milestone number (e.g. `150`), or the keywords `current`, `next`,
-  `previous`. Invalid values return a pydantic validation error.
-- **Returns:** `{"mstones": [ { ... } ]}` — **one milestone per request**. There is no working
-  bulk/range parameter (`num_milestones` and `mstone=all` do **not** return ranges), so the script
-  iterates one number at a time.
+```
+https://chromiumdash.appspot.com/fetch_releases?channel=<Channel>&platform=<Platform>&num=1
+```
 
-#### Milestone object fields (dates are ISO-8601, midnight UTC)
-
-| Field | Meaning |
-|-------|---------|
-| `mstone` | Milestone number (e.g. `150`) |
-| `branch_point` | When the release branch is cut from trunk — earliest a stable Skia `chrome/mNNN` branch exists |
-| `stable_date` | When the milestone reaches the **stable** channel (the deadline that matters most) |
-| `late_stable_date` | End of the stable window / first refresh boundary |
-| `feature_freeze`, `earliest_beta`, `final_beta` | Earlier cycle dates (context) |
-| `owners`, `ldaps` | Google release TPMs (not relevant to us) |
-
-### 2. Channel releases (milestone + Skia commit per channel)
-
-- **Endpoint:** `https://chromiumdash.appspot.com/fetch_releases?channel=<Channel>&platform=<Platform>&num=1`
-- **Channels:** `Extended` (extended stable), `Stable`, `Beta`, `Dev`, `Canary`.
-- **Platform:** use `Windows` — it carries **all** channels (Extended stable and Canary are absent
-  on Linux). `Mac` also has Extended stable.
-- **Returns:** a JSON array of releases (newest first). The first element is the current release.
-
-#### Release object fields (the ones we use)
+- **Channels:** `Extended`, `Stable`, `Beta`, `Dev`, `Canary`.
+- **Platform:** use `Windows` — it carries **all** channels (Extended stable & Canary are absent on
+  Linux). `Mac` also has Extended stable.
+- **Returns:** a JSON array (newest first); element `[0]` is the current release.
 
 | Field | Meaning |
 |-------|---------|
 | `channel` | `Extended` / `Stable` / `Beta` / `Dev` / `Canary` |
-| `milestone` | Milestone number live in that channel |
-| `version` | Full Chrome version string (e.g. `150.0.7871.24`) |
-| `hashes.skia` | **Exact upstream Skia commit** in that channel — verify the SkiaSharp branch against this |
-| `hashes.chromium` | Chromium commit (context) |
+| `milestone` | Milestone live in that channel |
+| `version` | Full Chrome version (e.g. `150.0.7871.24`) |
+| `hashes.skia` | **Exact upstream Skia commit** in that channel |
 | `time` | Release timestamp (epoch **milliseconds**) |
 
-Typical mapping (channels advance one milestone at a time): Extended < Stable < Beta < Dev ≈ Canary.
+### Milestone schedule (dates)
+
+```
+https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone=<N|current|next|previous>
+```
+
+- Returns `{"mstones": [ { ... } ]}` — **one milestone per request** (no working range param).
+- Fields: `mstone`, `branch_point`, `stable_date`, `late_stable_date`, `feature_freeze`,
+  `earliest_beta`, `final_beta` (ISO-8601, midnight UTC).
+
+No authentication, no documented rate limit (be polite: ~0.3s between calls).
 
 ## Script Usage
 
 ```bash
-# Heads-up + channel tracking relative to the milestone pinned in scripts/VERSIONS.txt
+# Lean heads-up to stdout (main vs Beta + upcoming schedule)
+python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py
+
+# + structured JSON for the audit report
 python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py \
   --output output/ai/milestone-schedule-cache.json
 
-# Track a different set of channels, widen the urgency window
-python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py \
-  --track Extended,Stable,Beta --window 21 --verbose \
-  --output output/ai/milestone-schedule-cache.json
+# Axis 2: also resolve release/<major>.<M>.x lines and their Skia SHA
+python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py --check-backports
 
-# Schedule only (skip the channel lookup)
-python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py --no-channels
-
-# Override the "current" milestone (skip reading VERSIONS.txt)
-python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py --current 150
+# Print JSON instead of a table
+python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py --json
 ```
 
-The script determines the **current** Skia milestone from `scripts/VERSIONS.txt`
-(`libSkiaSharp  milestone  NNN`, falling back to `skia  release  mNNN`), fetches each channel's live
-release **and** a window of milestones around the current/channel milestones, computes day-deltas
-against today, and emits prioritized heads-up alerts.
+The script reads `main`'s milestone + major from `scripts/VERSIONS.txt`
+(`libSkiaSharp milestone NNN` and `SkiaSharp nuget <major>.NNN.x`), fetches the channels and the
+upcoming schedule, and emits the main-vs-Beta heads-up.
 
-### Key flags
+### Flags
 
 | Flag | Default | Purpose |
 |------|---------|---------|
-| `--platform` | `Windows` | Platform for channel releases (Windows has all channels) |
-| `--channels` | `Extended,Stable,Beta,Dev,Canary` | Which channels to fetch |
-| `--track` | `Extended,Stable,Beta` | Channels SkiaSharp supports concurrently (drives alerts) |
-| `--window` | `14` | Days-ahead threshold for urgent/watch alerts |
-| `--behind` / `--ahead` | `1` / `4` | Schedule window around the current milestone |
-| `--no-channels` | off | Schedule-only mode |
+| `--current N` | from VERSIONS.txt | Override main's milestone |
+| `--platform` | `Windows` | Channel platform (Windows has all channels) |
+| `--ahead N` | `4` | How many milestones past main to include in the schedule |
+| `--window N` | `14` | Days-ahead threshold for schedule `watch` alerts |
+| `--no-channels` | off | Schedule-only (disables the main-vs-Beta signal) |
+| `--check-backports` | off | Resolve each tracked channel's `release/<major>.<M>.x` line + Skia SHA |
+| `--track` | `Extended,Stable` | Channels to resolve in `--check-backports` (Beta == main) |
+| `--json` | off | Print JSON to stdout instead of a table |
+| `--output PATH` | — | Write the structured JSON |
+| `--repo-root` / `--verbose` | auto / off | Path override, progress detail |
 
 ## Output Structure
 
 ```jsonc
 {
   "meta": {
-    "generated_at": "2026-06-17T...",
-    "current_milestone": 150,
-    "current_milestone_source": "scripts/VERSIONS.txt",
-    "window_days": 14,
+    "main_milestone": 150,
+    "main_milestone_source": "scripts/VERSIONS.txt",
+    "major": 4,
+    "beta_milestone": 150,
+    "status": "current",          // "current" if main >= Beta, else "behind"
     "platform": "Windows",
-    "tracked_channels": ["Extended", "Stable", "Beta"]
+    "window_days": 14
   },
   "channels": [
-    { "channel": "Extended", "milestone": 148, "version": "148.0.7778.271",
-      "skia_hash": "3a90f6662a2c...", "date": "2026-06-...", "tracked": true },
     { "channel": "Beta", "milestone": 150, "version": "150.0.7871.24",
-      "skia_hash": "9f330f170430...", "date": "2026-06-...", "tracked": true }
+      "skia_hash": "9f330f170430...", "date": "2026-06-..." }
   ],
-  "milestones": [
-    {
-      "milestone": 151,
-      "status": "pending",          // "bumped" (<= current) or "pending" (> current)
-      "is_current": false,
-      "channels": ["Dev", "Canary"],
-      "skia_hash": "fc2311fe7338...",
-      "dates": {
-        "branch_point": { "date": "2026-06-29", "days_from_now": 12 },
-        "stable_date":  { "date": "2026-07-28", "days_from_now": 41 }
-      }
-    }
+  "upcoming": [
+    { "milestone": 151, "is_main": false, "channels": ["Dev", "Canary"],
+      "dates": { "branch_point": { "date": "2026-06-29", "days_from_now": 12 },
+                 "stable_date":  { "date": "2026-07-28", "days_from_now": 41 } } }
   ],
   "headsup": [
-    { "level": "urgent", "milestone": 150, "channel": "Beta", "message": "..." }
+    { "level": "ok", "milestone": 150, "message": "main (m150) is at or ahead of Beta..." }
+  ],
+  // only with --check-backports:
+  "backports": [
+    { "channel": "Extended", "channel_milestone": 148, "channel_skia": "3a90f6662a2c...",
+      "branch": "origin/release/4.148.x", "branch_exists": true,
+      "branch_milestone": 148, "branch_skia_fork": "1a155bae3ac8..." }
   ]
 }
 ```
@@ -147,25 +155,26 @@ against today, and emits prioritized heads-up alerts.
 
 | Level | Icon | Trigger |
 |-------|------|---------|
-| `critical` | 🔴 | A **pending** milestone (we haven't bumped to it) is **already stable**. CVEs fixed upstream are live for users with no SkiaSharp bump. |
-| `urgent` | 🟠 | A pending milestone goes stable **within the window** (default 14 days), **or** a tracked channel (Extended/Stable/Beta) has advanced past the pinned milestone and its branch needs a bump. |
-| `watch` | 🟡 | A pending milestone **branches within the window**. Good time to start the bump. |
-| `info` | 🔵 | A tracked channel matches/should pin a milestone, or the current milestone's stable window is ending. |
+| `critical` | 🔴 | `main < Beta` **and** the Beta milestone is already stable — the bump is overdue and shipping to stable users. |
+| `urgent` | 🟠 | `main < Beta` — the front line is behind; bump main to the Beta milestone. |
+| `watch` | 🟡 | A milestone past main **branches within the window** — start preparing. |
+| `ok` | 🟢 | `main >= Beta` — front line current. |
+| `info` | 🔵 | Other context. |
+
+> ⚠️ `backports` reports the **mono/skia fork** submodule SHA, which is not directly comparable to
+> the channel's upstream `hashes.skia`. Use it to confirm a release line exists and to feed the
+> Skia CVE resolution process (merge-base check) — not as a literal SHA-equality test.
 
 ## How the Audit Uses This
 
-Run this in **Step 1.6** of the audit (right after the Chrome Releases blog query). Use it to:
+Run in **Step 1.6** (right after the Chrome Releases blog query):
 
-- **Track concurrent channels** — confirm each SkiaSharp branch (Extended/Stable/Beta) points at
-  the Skia commit (`hashes.skia`) its channel currently ships.
-- **Prioritize Skia bump recommendations** — if a milestone with HIGH/CRITICAL CVEs (from the
-  Chrome Releases / NVD passes) is also `critical`/`urgent` on the schedule, escalate it in
-  `nextSteps`.
-- **Add timing to the report** — when recommending a Skia bump, cite the target milestone's
-  stable date so the reader knows the deadline.
-- **Catch silent gaps** — a `critical` heads-up means we are already behind a stable milestone,
-  and an `urgent` channel alert means a tracked channel branch is behind, even if no GitHub issue
-  has been filed yet.
+- **Where we are vs what's coming** — `meta.status` + the `upcoming` table answer it directly.
+- **Escalate bumps** — if `status == "behind"` (or a `watch` milestone) also carries HIGH/CRITICAL
+  Skia CVEs from the Chrome Releases / NVD pass, raise it in `nextSteps` with the stable date as
+  the deadline.
+- **Deep check (optional)** — run `--check-backports` when auditing whether a shipped
+  `release/*.x` line is missing a within-milestone Skia security backport.
 
-The script output is advisory context; it does not need to be embedded in the structured report
-schema, but its `critical`/`urgent` findings should inform the prose summary and `nextSteps`.
+The output is advisory context; it need not be embedded in the structured report schema, but its
+`critical`/`urgent` findings should inform the prose summary and `nextSteps`.
