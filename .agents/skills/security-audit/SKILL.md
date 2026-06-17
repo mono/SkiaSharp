@@ -75,7 +75,7 @@ Search PRs in both `mono/SkiaSharp` and `mono/skia` for dependency updates alrea
 
 ---
 
-### Step 1.5: Query Chrome Releases Blog
+### Step 2: Query Chrome Releases Blog
 
 > 🔍 The Chrome Releases blog often discloses Skia CVEs **before NVD** processes them.
 > This step provides early detection and cross-validation.
@@ -104,9 +104,9 @@ This takes ~10-30 seconds (fetches RSS feed pages). Cache is reused if < 24 hour
    - Wild exploitation notices (highest priority!)
    - Related component CVEs (GPU, Compositing) that may involve Skia code
 
-#### Cross-reference with NVD (Step 3)
+#### Cross-reference with NVD (Step 5)
 
-After the NVD query in Step 3, compare results:
+After the NVD query in Step 5, compare results:
 
 | Chrome Releases | NVD | Interpretation |
 |-----------------|-----|----------------|
@@ -118,7 +118,7 @@ Set the `source` field on each CVE object: `"both"`, `"chrome_releases"`, or `"n
 
 ---
 
-### Step 1.6: Query Chromium Release Schedule (main vs Beta Heads-Up)
+### Step 3: Query Chromium Release Schedule (main vs Beta Heads-Up)
 
 > 🗓️ Scheduling + channel context, **not** a security check on its own. It tells us whether `main`
 > is keeping up with the Chrome Beta milestone and how much lead time remains before the next
@@ -160,13 +160,13 @@ upcoming schedule, and prints prioritized heads-up alerts:
 
 ---
 
-### Step 3: Verify Dependency Versions
+### Step 4: Verify Dependency Versions
 
 > ⚠️ **CRITICAL: Never trust `cgmanifest.json` blindly.** Always verify versions against the
 > actual submodule, DEPS file, and source headers. cgmanifest.json is manually maintained
 > and can drift. Report any mismatches as findings.
 
-#### 2.1 Verify Skia milestone and upstream commit
+#### 4.1 Verify Skia milestone and upstream commit
 
 > 🛑 **MANDATORY:** Fetching the upstream `google/skia` branch is **required**, not optional.
 > Adding a git remote and fetching is read-only — it does not modify any tracked files.
@@ -206,14 +206,14 @@ Compare against cgmanifest.json and report mismatches:
 | Fork commit | `git submodule status` | git entry `commitHash` |
 | Upstream commit | `git fetch upstream chrome/mNNN` tip | `upstream_merge_commit` |
 
-#### 2.2 Verify third-party dependency versions
+#### 4.2 Verify third-party dependency versions
 
 See **[references/third-party-deps.md](references/third-party-deps.md)** for the full table of
 header files and the googlesource mirror URL pattern. In short: read pinned commit hashes
 from `externals/skia/DEPS`, then fetch each dependency's version header at that commit and
 parse the version string.
 
-#### 2.3 Verify ANGLE and its submodules
+#### 4.3 Verify ANGLE and its submodules
 
 ANGLE is a **separate** native component (Windows-only, for WinUI). It is NOT part of the
 Skia submodule.
@@ -228,7 +228,7 @@ ANGLE has its own submodules (`third_party/zlib`, `jsoncpp`, `vulkan-deps`,
 [references/third-party-deps.md](references/third-party-deps.md#angle-and-its-submodules)
 for details. Flag any missing from cgmanifest.json as a coverage gap.
 
-#### 2.4 Build the dependency overview
+#### 4.4 Build the dependency overview
 
 The `versionVerification` array in the JSON report must include **ALL** dependencies from
 ALL sources:
@@ -246,7 +246,7 @@ Report mismatches as findings.
 
 ---
 
-### Step 4: Audit Skia Core CVEs
+### Step 5: Audit Skia Core CVEs
 
 > 🛑 Skia is the product, not just a dependency. Every Skia CVE must be resolved to a
 > specific fix commit, branch, cherry-pick test, and reachability assessment. Classification
@@ -266,7 +266,7 @@ process**, including:
 
 ---
 
-### Step 5: Audit Third-Party Dependency CVEs
+### Step 6: Audit Third-Party Dependency CVEs
 
 For libpng, freetype, harfbuzz, libexpat, brotli, zlib, libjpeg-turbo, libwebp, ANGLE
 submodules, etc.
@@ -281,7 +281,7 @@ submodules, etc.
 
 ---
 
-### Step 6: Query Component Governance Alerts
+### Step 7: Query Component Governance Alerts
 
 CG scans Docker container images and build-time deps from both ADO pipelines. CG alerts are
 invisible to GitHub Issues and NVD searches alone.
@@ -302,7 +302,7 @@ invisible to GitHub Issues and NVD searches alone.
 
 ---
 
-### Step 7: Check False Positives
+### Step 8: Check False Positives
 
 Before flagging anything, verify the CVE actually affects SkiaSharp.
 
@@ -321,7 +321,7 @@ Before flagging anything, verify the CVE actually affects SkiaSharp.
 
 ---
 
-### Step 8: Assemble Structured JSON Report
+### Step 9: Assemble Structured JSON Report
 
 > 🛑 **MANDATORY:** The audit MUST produce a JSON file conforming to
 > [references/report-schema.md](references/report-schema.md). This is the machine-readable
@@ -338,7 +338,7 @@ Build the JSON object with these top-level keys:
 7. **`nextSteps`** — Prioritized action items with severity, command, and reason
 
 > 🛑 **COMPLETENESS REQUIREMENT:** The `findings` array MUST include **every CVE returned
-> by the NVD query** (Step 3 of skia-cve-resolution.md). CVEs that are verified as already
+> by the NVD query** (Step 1 of skia-cve-resolution.md). CVEs that are verified as already
 > fixed in our tree are classified as `"already_fixed"` or `"false_positive"` — they are
 > NOT dropped from the report. An audit that finds 15 CVEs in NVD but only reports 7 in the
 > JSON is INCOMPLETE and will fail review. The total CVE count in `summary.totalCves` must
@@ -354,7 +354,7 @@ Save as `output/ai/security-audit-{date}.json`.
 
 ---
 
-### Step 9: Validate Report
+### Step 10: Validate Report
 
 > 🛑 **MANDATORY:** Always validate before rendering. Fix any errors reported.
 
@@ -368,7 +368,7 @@ Warnings are informational — errors must be fixed before proceeding.
 
 ---
 
-### Step 10: Render HTML + Markdown Reports
+### Step 11: Render HTML + Markdown Reports
 
 > 🛑 **MANDATORY:** Always generate both reports.
 
@@ -403,9 +403,9 @@ Present the output path to the user:
 
 ---
 
-### Step 11: Present Summary to User
+### Step 12: Present Summary to User
 
-The Markdown report was already generated in Step 10. Present a brief summary in the
+The Markdown report was already generated in Step 11. Present a brief summary in the
 conversation pointing to the generated files:
 
 ```
@@ -422,12 +422,12 @@ conversation pointing to the generated files:
 Then highlight the **top actionable items** from the report:
 - Any `needs_attention` or `undiscovered` findings
 - Chrome Releases CVEs above our current milestone (especially Skia/ANGLE)
-- 🔴/🟠 release heads-up (Step 1.6) — `main` behind the Beta milestone, or a milestone branching/going stable soon
+- 🔴/🟠 release heads-up (Step 3) — `main` behind the Beta milestone, or a milestone branching/going stable soon
 - Critical/High CG alerts
 
 #### Report quality rules
 
-These rules apply to the JSON assembly (Step 8) and are enforced by the renderers:
+These rules apply to the JSON assembly (Step 9) and are enforced by the renderers:
 
 1. **Skia bump recommendations must target the highest-severity CVE**, not the lowest. If
    there are HIGH CVEs at m146 and a MEDIUM at m133, recommend m146 as the target.

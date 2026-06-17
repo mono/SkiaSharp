@@ -167,7 +167,7 @@ upcoming schedule, and emits the main-vs-Beta heads-up.
 
 ## How the Audit Uses This
 
-Run in **Step 1.6** (right after the Chrome Releases blog query):
+Run in **Step 3** (right after the Chrome Releases blog query):
 
 - **Where we are vs what's coming** — `meta.status` + the `upcoming` table answer it directly.
 - **Escalate bumps** — if `status == "behind"` (or a `watch` milestone) also carries HIGH/CRITICAL
