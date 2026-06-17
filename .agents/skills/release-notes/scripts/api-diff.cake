@@ -299,11 +299,28 @@ Task ("docs-api-diff-past")
 // API-DIFF OUTPUT HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Clear only the API-diff folders this engine owns (spec §3.5): the per-line
-// <line>/ package folders under releases/ and the entire harfbuzzsharp/ tree. A
-// "<line>" folder is a directory whose name is a version core (starts with a
-// digit); the human pages are FILES (<line>.md) and the TOC.yml/index.md are left
-// untouched. This is deliberately conservative so the Python-owned pages survive.
+// Marker that prefixes the first line of every file the comparer writes (the
+// <assembly>.md / <assembly>.breaking.md diffs and the "No changes." stub in
+// CopyChangelogs). Hand-authored files nested in a line folder do not carry it.
+const string API_DIFF_MARKER = "# API diff:";
+
+// Clear only the GENERATED API-diff files this engine owns (spec §3.5), inside the
+// per-line <line>/ package folders under releases/ and the harfbuzzsharp/ tree. A
+// "<line>" folder is a directory whose name is a version core (starts with a digit).
+//
+// We delete a *.md file only when it is the engine's own generated output, identified
+// by TWO conditions that must both hold:
+//   1. its first line starts with API_DIFF_MARKER (so a hand-authored file shaped like
+//      an assembly diff, e.g. 1.68.0/SkiaSharp/gpu-migration.md, is preserved — a plain
+//      "*.md" glob could not tell it apart from SkiaSharp.md), AND
+//   2. it is NOT a "*.humanreadable.md" file — that is a retired legacy format outside
+//      the two patterns (<assembly>.md / <assembly>.breaking.md) this engine emits, so
+//      it is left untouched. (Some humanreadable files happen to carry the marker and
+//      some do not; excluding by name keeps all of them treated consistently.)
+//
+// Everything else (the human <line>.md pages and TOC.yml/index.md at the releases/
+// root, plus any hand-authored extras) is preserved. After deleting, empty directories
+// are pruned so a removed/superseded version leaves no stragglers behind.
 void ClearOwnedApiDiffFolders ()
 {
     if (!DirectoryExists (RELEASES_PATH))
@@ -311,9 +328,41 @@ void ClearOwnedApiDiffFolders ()
 
     foreach (var dir in GetSubDirectories (RELEASES_PATH)) {
         var name = dir.GetDirectoryName ();
-        if (name == "harfbuzzsharp" || (name.Length > 0 && char.IsDigit (name [0])))
-            DeleteDirectory (dir, new DeleteDirectorySettings { Recursive = true, Force = true });
+        var owned = name == "harfbuzzsharp" || (name.Length > 0 && char.IsDigit (name [0]));
+        if (!owned)
+            continue;
+
+        foreach (var md in System.IO.Directory.EnumerateFiles (dir.FullPath, "*.md", System.IO.SearchOption.AllDirectories)) {
+            if (IsGeneratedApiDiff (md))
+                System.IO.File.Delete (md);
+        }
+
+        DeleteEmptyDirectories (dir.FullPath);
     }
+}
+
+// True iff the file is one of this engine's generated diffs: it carries the
+// API_DIFF_MARKER on its first line AND is not a retired "*.humanreadable.md" legacy
+// file. An empty/unreadable file is treated as not-generated and therefore preserved.
+bool IsGeneratedApiDiff (string path)
+{
+    if (path.EndsWith (".humanreadable.md", StringComparison.OrdinalIgnoreCase))
+        return false;
+    foreach (var line in System.IO.File.ReadLines (path))
+        return line.StartsWith (API_DIFF_MARKER, StringComparison.Ordinal);
+    return false;
+}
+
+// Recursively remove directories that hold no files at all (e.g. a removed or
+// superseded version whose every file was generated). A directory that still holds a
+// preserved hand-authored file is kept.
+void DeleteEmptyDirectories (string dir)
+{
+    foreach (var sub in System.IO.Directory.EnumerateDirectories (dir))
+        DeleteEmptyDirectories (sub);
+
+    if (!System.IO.Directory.EnumerateFileSystemEntries (dir).Any ())
+        System.IO.Directory.Delete (dir);
 }
 
 // Read the HarfBuzzSharp dependency line core from an extracted SkiaSharp.HarfBuzz

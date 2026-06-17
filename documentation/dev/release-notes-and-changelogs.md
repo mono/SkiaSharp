@@ -317,13 +317,21 @@ paths and only ever clears its own:
 | `releases/<line>.md` | Python | Python (pruned only if the line stops being emitted §1.4; a shipped-stable line is permanent — see §4.2) |
 | `releases/<line>-unreleased.md` | Python | Python (stale-page pruning, §4.2) |
 | `releases/TOC.yml`, `releases/index.md` | Python | Python (regenerated each run) |
-| `releases/<line>/<package>/…` (SkiaSharp family) | Cake | Cake (full rebuild, §5.2) |
-| `releases/harfbuzzsharp/<hb-line>/…` | Cake | Cake (full rebuild, §5.2) |
+| `releases/<line>/<package>/…` (SkiaSharp family) | Cake | Cake (generated files only, §5.2) |
+| `releases/harfbuzzsharp/<hb-line>/…` | Cake | Cake (generated files only, §5.2) |
 | `releases/co-release-map.json` (§3.6) | Cake | Cake (rewritten each run) |
 
-The Cake engine must clear **only** the API-diff folders it owns, never the human
-pages. The deterministic page→folder links are written by the Python engine (§2.2),
-not the AI.
+The Cake engine clears **only the generated API-diff files** it owns. A file is treated
+as generated — and therefore deleted before the rebuild — only when **both**: (1) its
+first line starts with the `# API diff:` marker, and (2) it is not a `*.humanreadable.md`
+file. Condition (1) distinguishes a generated `<assembly>.md` from a hand-authored file
+shaped like one (e.g. `1.68.0/SkiaSharp/gpu-migration.md`), which a plain `*.md` glob
+could not. Condition (2) leaves the retired legacy `*.humanreadable.md` format untouched
+(and treats all such files consistently regardless of whether they happen to carry the
+marker). **Hand-authored files nested inside a `<line>/` folder are therefore preserved**;
+the human pages at the `releases/` root are never touched. Empty directories are pruned
+after deletion. The deterministic page→folder links are written by the Python engine
+(§2.2), not the AI.
 
 **TOC / index representation.** `TOC.yml` gains one node per emitted SkiaSharp line,
 pointing at its `<line>.md` hub. The `<line>/` and `harfbuzzsharp/<hb-line>/` API-diff
@@ -448,9 +456,10 @@ only genuinely-changed pages, so the AI never re-polishes an up-to-date page.
 ### 5.2 Behavior
 
 The historical target rebuilds the **complete** set authoritatively: it clears the
-API-diff folders it owns first (§3.5) so anything that should no longer exist (a stale
-`*.breaking.md`, a package dropped from `TRACKED_NUGETS`, a baseline changed in
-`versions.json`) is pruned rather than left to drift. It never touches the human pages.
+generated API-diff files it owns first (§3.5) so anything that should no longer exist (a
+stale `*.breaking.md`, a package dropped from `TRACKED_NUGETS`, a baseline changed in
+`versions.json`) is pruned rather than left to drift. It removes only `# API diff:`-marked
+files (preserving any hand-authored extras) and never touches the human pages.
 
 It applies the §1 model **per family** (§1.5): collapse each family's feed into lines,
 emit exactly the lines §1.4 selects, and diff each emitted line against its baseline
