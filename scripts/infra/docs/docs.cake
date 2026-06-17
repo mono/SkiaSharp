@@ -160,9 +160,10 @@ Task ("docs-api-diff-past")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
-    // Include prerelease packages when --nugetDiffPrerelease=true. The 4.x line
-    // ships only as prereleases for now, so the workflow passes true to make sure
-    // those versions get changelogs.
+    // Include prerelease packages so the active development lines (which ship
+    // only as previews/rcs until they go stable, e.g. 4.148/4.150) can be
+    // enumerated. Emission is still collapsed to one changelog per release line
+    // below — prereleases are needed as candidates, not as their own folders.
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
     };
@@ -175,30 +176,60 @@ Task ("docs-api-diff-past")
         Information ($"Comparing the assemblies in '{id}'...");
 
         var allVersions = await NuGetVersions.GetAllAsync (id, filter);
-        for (var idx = 0; idx < allVersions.Length; idx++) {
-            // get the version we are generating a changelog FOR (every version,
-            // including superseded ones, gets its own changelog)
-            var version = allVersions [idx].ToNormalizedString ();
+
+        // The newest stable release on the feed. It is the cut-off for preview
+        // emission: a preview-only line is only worth a changelog while it is
+        // still ahead of the last shipped stable (the active dev line, e.g.
+        // 4.148/4.150). Older preview-only lines that never shipped stay pruned.
+        var latestStable = allVersions
+            .Where (v => !v.IsPrerelease)
+            .OrderByDescending (v => v)
+            .FirstOrDefault ();
+
+        // Collapse the feed into one entry per release LINE, keyed by the numeric
+        // version core with the prerelease label stripped (4.148.0-rc.1.2 ->
+        // 4.148.0; the 4th digit of a real 4-part stable like 1.49.2.1 is kept).
+        // Each line's changelog is a rollup named by that core, diffed against the
+        // line's representative package: the newest stable if it shipped,
+        // otherwise the newest prerelease. This mirrors the release-notes pages,
+        // which are stable-named rollups of all the previews in between.
+        var lines = allVersions
+            .GroupBy (v => v.ToNormalizedString ().Split ('-') [0])
+            .Select (g => {
+                var stable = g.Where (v => !v.IsPrerelease).OrderByDescending (v => v).FirstOrDefault ();
+                return (key: g.Key, rep: stable ?? g.OrderByDescending (v => v).First ());
+            })
+            .OrderBy (l => l.rep)
+            .ToList ();
+
+        // Decide which lines actually get a changelog emitted:
+        //   - a line that shipped stable: always (the historical record);
+        //   - a preview-only line that was abandoned (superseded in versions.json,
+        //     e.g. 4.147): never — it is absorbed into its successor's diff;
+        //   - a preview-only line ahead of the last stable: yes (active dev line);
+        //   - any other preview-only line (old, never shipped): no.
+        var emit = lines
+            .Where (l => !l.rep.IsPrerelease
+                || (!IsVersionSuperseded (versionsConfig, l.rep.ToNormalizedString ())
+                    && (latestStable == null || l.rep.CompareTo (latestStable) > 0)))
+            .ToList ();
+
+        for (var idx = 0; idx < emit.Count; idx++) {
+            // The package we actually diff (e.g. 4.148.0-rc.1.2) and the folder we
+            // write it to (e.g. 4.148.0).
+            var version = emit [idx].rep.ToNormalizedString ();
+            var changelogVersion = emit [idx].key;
 
             // Pick the baseline to diff against:
-            //   1. An explicit compare_to override in versions.json wins.
-            //   2. Otherwise walk back to the most recent NON-superseded version.
-            // Step 2 is what makes a skipped line transparent: when generating
-            // 4.148 we walk past all of 4.147.* (superseded) and land on 3.119.4.
-            // The same walk-back is used for superseded versions themselves, so
-            // e.g. each 4.147 preview diffs cumulatively against 3.119.4.
+            //   1. An explicit compare_to override in versions.json wins
+            //      (e.g. 4.148 -> 3.119.4, deliberately skipping 4.147).
+            //   2. Otherwise diff against the previous EMITTED line, so skipped
+            //      previews and pruned lines are transparent.
             var previous = FindCompareToBaseline (versionsConfig, version, allVersions);
-            if (previous == null) {
-                for (var j = idx - 1; j >= 0; j--) {
-                    var candidate = allVersions [j].ToNormalizedString ();
-                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
-                        previous = candidate;
-                        break;
-                    }
-                }
-            }
+            if (previous == null && idx > 0)
+                previous = emit [idx - 1].rep.ToNormalizedString ();
 
-            Information ($"Comparing version '{previous}' vs '{version}' of '{id}'...");
+            Information ($"Comparing version '{previous}' vs '{version}' of '{id}' (changelog '{changelogVersion}')...");
 
             // pre-cache so we can have better logs
             Debug ($"Caching version '{version}' of '{id}'...");
@@ -210,8 +241,8 @@ Task ("docs-api-diff-past")
 
             // generate the diff and copy to the changelogs
             Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
-            var diffRoot = $"{baseDir}/{id}/{version}";
-            await RunBreakingAndFullDiff (comparer, id, previous, version, diffRoot);
+            var diffRoot = $"{baseDir}/{id}/{changelogVersion}";
+            await RunBreakingAndFullDiff (comparer, id, previous, version, changelogVersion, diffRoot);
 
             Debug ($"Diff complete of version '{version}' of '{id}'.");
         }
@@ -862,14 +893,14 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 // targets thin and guarantees they treat supersession the same way.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Load the shared version-comparison config (scripts/versions.json). This is the
+// Load the shared version-comparison config (scripts/infra/docs/versions.json). This is the
 // single source of truth for how versions relate to each other. It is "override
 // only": versions NOT listed fall back to the default behaviour of diffing
 // against the immediately-preceding published version. Returns the "versions"
 // array (empty when the file is absent). See versions.json for the schema.
 JArray LoadVersionsConfig ()
 {
-    var path = $"{ROOT_PATH}/scripts/versions.json";
+    var path = $"{ROOT_PATH}/scripts/infra/docs/versions.json";
     if (!FileExists (path))
         return new JArray ();
     var doc = JObject.Parse (System.IO.File.ReadAllText (path));
@@ -877,12 +908,14 @@ JArray LoadVersionsConfig ()
 }
 
 // A "superseded" version is one that was previewed but never shipped stable
-// (e.g. 4.147 was abandoned in favour of 4.148). It still gets its OWN changelog
-// generated — it is only excluded from acting as a *baseline* for other
-// versions, so a later release diffs against the last real predecessor instead.
-// Matched on major.minor.patch, so an entry for "4.147.0" covers every
-// 4.147.0-preview.* (all previews of that exact patch), but not a different
-// patch such as 4.147.1.
+// (e.g. 4.147 was abandoned in favour of 4.148). It is excluded from acting as a
+// *baseline* for other versions, so a later release diffs against the last real
+// predecessor instead. A superseded preview-only line is also skipped from
+// emission in docs-api-diff-past (its changes are absorbed into the successor's
+// cumulative diff); a version that actually shipped stable still gets its own
+// changelog regardless. Matched on major.minor.patch, so an entry for "4.147.0"
+// covers every 4.147.0-preview.* (all previews of that exact patch), but not a
+// different patch such as 4.147.1.
 bool IsVersionSuperseded (JArray config, string normalizedVersion)
 {
     var nv = new NuGetVersion (normalizedVersion);
@@ -929,7 +962,10 @@ async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVers
 }
 
 // Overload 2 — NEW side is a published feed version (historical regeneration).
-async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVersion, string newVersion, string diffRoot)
+// changelogVersion is the folder the changelog is written to (the release-line
+// core, e.g. 4.148.0), which differs from newVersion (the actual package that is
+// diffed, e.g. 4.148.0-rc.1.2) whenever a line is still in preview.
+async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVersion, string newVersion, string changelogVersion, string diffRoot)
 {
     comparer.MarkdownDiffFileExtension = ".breaking.md";
     comparer.IgnoreNonBreakingChanges = true;
@@ -939,7 +975,7 @@ async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVers
     comparer.IgnoreNonBreakingChanges = false;
     await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newVersion, diffRoot);
 
-    CopyChangelogs (diffRoot, id, newVersion);
+    CopyChangelogs (diffRoot, id, changelogVersion);
 }
 
 RunTarget(TARGET);

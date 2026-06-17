@@ -1,13 +1,13 @@
 ---
 title: "Overview"
-description: "SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products such as Google Chrome, ChromeOS, and Android, in Chromium-based products like Microsoft Edge, and in applications like LibreOffice. This guide explains how to use SkiaSharp for 2D graphics in your .NET MAUI applications."
+description: "SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products such as Google Chrome, ChromeOS, and Android, in Chromium-based products like Microsoft Edge, in applications like LibreOffice, and in .NET UI frameworks like Uno Platform. This guide explains how to use SkiaSharp for 2D graphics in your .NET MAUI applications."
 ---
 
 # SkiaSharp Graphics in .NET MAUI
 
 _Use SkiaSharp for 2D graphics in your .NET MAUI applications_
 
-SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products such as Google Chrome, ChromeOS, and Android, in Chromium-based products like Microsoft Edge, and in applications like LibreOffice. You can use SkiaSharp in your .NET MAUI applications to draw 2D vector graphics, bitmaps, and text.
+SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products such as Google Chrome, ChromeOS, and Android, in Chromium-based products like Microsoft Edge, in applications like LibreOffice, and in .NET UI frameworks like Uno Platform. You can use SkiaSharp in your .NET MAUI applications to draw 2D vector graphics, bitmaps, and text.
 
 > [!IMPORTANT]
 > In .NET MAUI, you must initialize SkiaSharp by calling `UseSkiaSharp()` on the `MauiAppBuilder` in your `MauiProgram.cs` file. This requires adding a `using` directive for the `SkiaSharp.Views.Maui.Controls.Hosting` namespace.

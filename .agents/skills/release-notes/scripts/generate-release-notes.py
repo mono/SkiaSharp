@@ -24,7 +24,7 @@ polished content. TOC and index are regenerated automatically.
 The --all command iterates every branch and only writes files whose PR count or
 diff range has changed (idempotent). Use this for automated workflows.
 
-Reads scripts/versions.json (if present) for comparison overrides and
+Reads scripts/infra/docs/versions.json (if present) for comparison overrides and
 supersession markers. versions.json is the single source of truth: only the
 versions listed there get a non-default baseline or a superseded marker.
 
@@ -47,24 +47,36 @@ from typing import Optional, Tuple
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
 
-SKIA_REPO = "mono/skia"
 SKIA_PR_PATTERNS = [
     re.compile(r"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+https?://github\.com/mono/skia/pull/(\d+)", re.IGNORECASE),
     re.compile(r"https?://github\.com/mono/skia/pull/(\d+)"),
+    re.compile(r"mono/skia#(\d+)"),
 ]
+
+# A skia bump commit in mono/skia names its own PR in its subject, either as a
+# squash "(#N)" suffix or a "Merge pull request #N" merge subject. Used to
+# recover the companion link locally from the submodule when the SkiaSharp PR
+# body didn't spell it out (see resolve_skia_links).
+_SKIA_SELF_PR_PATTERNS = [
+    re.compile(r"^Merge pull request #(\d+)"),
+    re.compile(r"\(#(\d+)\)\s*$"),
+]
+_SKIA_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+SKIA_SUBMODULE = Path("externals/skia")
+SKIA_REMOTE_URL = "https://github.com/mono/skia.git"
 
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 
-# Versions config (loaded lazily from scripts/versions.json)
+# Versions config (loaded lazily from scripts/infra/docs/versions.json)
 _VERSIONS_CONFIG = None  # type: Optional[list[dict]]
 
-VERSIONS_JSON_PATH = Path("scripts/versions.json")
+VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
 
 
 def load_versions_config():
     # type: () -> list[dict]
-    """Load scripts/versions.json override config (cached)."""
+    """Load scripts/infra/docs/versions.json override config (cached)."""
     global _VERSIONS_CONFIG
     if _VERSIONS_CONFIG is not None:
         return _VERSIONS_CONFIG
@@ -282,175 +294,217 @@ def _is_valid_stable_base(branch):
 
 
 def _login_from_email(email):
-    # type: (str) -> str
-    """Extract GitHub login from a commit email.
+    # type: (str) -> Optional[str]
+    """Extract a GitHub login from a commit email — ONLY when it is certain.
 
-    Handles noreply format: 12345+username@users.noreply.github.com -> username
-    Falls back to the local part of the email.
+    GitHub usernames are not stored in git history. The one exception is the
+    privacy "noreply" address, which embeds the real login:
+
+        12345+username@users.noreply.github.com  ->  username
+
+    For that format we return the login with full confidence. For every other
+    address (corporate or personal email) the part before ``@`` is NOT a GitHub
+    handle — guessing it would mis-credit the contributor or, worse, turn into an
+    ``@mention`` that pings an unrelated real user (``jon``, ``martin``, ``i`` …).
+    So we return None and let the caller resolve the true login from the GitHub
+    API instead (see resolve_pr_authors).
     """
     m = _NOREPLY_RE.match(email)
     if m:
         return m.group(1)
-    return email.split("@")[0]
+    return None
 
 
-# ── Effort computation ───────────────────────────────────────────────
+# ── GitHub author resolution ─────────────────────────────────────────
+
+_AUTHOR_CACHE_PATH = Path("scripts/infra/docs/pr-authors.json")
+_GRAPHQL_BATCH = 50
 
 
-def _get_pr_effort_from_git(pr_num, target_ref="origin/main", git_dir="."):
-    # type: (int, str, str) -> Tuple[int, set[str], set[str]]
-    """Get commit count, working days, and author names from a PR via git refs.
+def load_author_cache():
+    # type: () -> dict
+    """Load the PR-number -> GitHub-login cache (scripts/infra/docs/pr-authors.json).
 
-    Fetches refs/pull/{N}/head, then uses merge-base with the target branch
-    to determine the base commit. Works for both squash-merged and
-    regular-merged PRs.
-
-    Returns (commit_count, set_of_date_strings, set_of_author_names).
+    This cache is the durable record of every author resolved from the GitHub
+    API, so ordinary regenerations stay fully offline: a warm cache means
+    resolve_pr_authors makes zero network calls. A null value records that
+    GitHub could not map the PR to an account (e.g. a deleted user) so we do not
+    re-query a known-unresolvable PR on every run. Delete an entry to force it to
+    be looked up again (useful once a contributor registers their commit email).
     """
-    ref_head = "refs/pull/{}/head".format(pr_num)
-    local_ref = "refs/pr-tmp/{}".format(pr_num)
-
     try:
-        run(["git", "-C", git_dir, "fetch", "origin",
-             "{}:{}".format(ref_head, local_ref), "--quiet"])
-    except subprocess.CalledProcessError:
-        return 0, set(), set()
+        return json.loads(_AUTHOR_CACHE_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
 
+
+def save_author_cache(cache):
+    # type: (dict) -> None
+    """Persist the PR-number -> login cache, sorted by PR number for stable diffs."""
     try:
-        head_sha = run(["git", "-C", git_dir, "rev-parse", local_ref])
-        base_sha = run(["git", "-C", git_dir, "merge-base",
-                        local_ref, target_ref])
-    except subprocess.CalledProcessError:
-        run(["git", "-C", git_dir, "update-ref", "-d", local_ref], check=False)
-        return 0, set(), set()
-
-    log_output = run([
-        "git", "-C", git_dir, "log",
-        "--format=%ad\t%an", "--date=short",
-        "{}..{}".format(base_sha, head_sha),
-    ], check=False)
-
-    run(["git", "-C", git_dir, "update-ref", "-d", local_ref], check=False)
-
-    if not log_output:
-        return 0, set(), set()
-
-    count = 0
-    days = set()  # type: set[str]
-    authors = set()  # type: set[str]
-    for line in log_output.splitlines():
-        parts = line.split("\t", 1)
-        if len(parts) != 2:
-            continue
-        date_str, author_name = parts
-        count += 1
-        days.add(date_str)
-        authors.add(author_name)
-
-    return count, days, authors
+        ordered = {k: cache[k] for k in sorted(cache, key=lambda n: int(n))}
+    except ValueError:
+        ordered = cache
+    _AUTHOR_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _AUTHOR_CACHE_PATH.write_text(json.dumps(ordered, indent=2) + "\n")
 
 
-def compute_pr_effort(pr):
-    # type: (dict) -> dict
-    """Compute commit count and unique working days from git refs.
+def _graphql_pr_authors(numbers):
+    # type: (list[int]) -> dict
+    """Resolve PR-author logins via one batched GitHub GraphQL query.
 
-    Uses refs/pull/N/head to get the base..head range for commit counting.
-    If the PR body references a companion mono/skia PR, fetches that PR's
-    commits too (filtered to SkiaSharp contributor authors only).
+    Returns ``{pr_number: login_or_None}`` for every number the API answered
+    for. PRs that error or are missing from the response are omitted, so the
+    caller never caches a transient failure and can retry later. Requires the
+    ``gh`` CLI to be installed and authenticated (the workflow already provides
+    ``GITHUB_TOKEN``); any failure yields an empty dict and callers fall back to
+    the plain author name.
     """
-    pr_num = pr.get("number", 0)
-    commit_count, unique_days, pr_author_names = _get_pr_effort_from_git(pr_num)
+    owner, name = REPO.split("/")
+    aliases = "\n".join(
+        "p{n}: pullRequest(number: {n}) {{ author {{ login }} }}".format(n=n)
+        for n in numbers)
+    query = 'query {{ repository(owner: "{}", name: "{}") {{\n{}\n}} }}'.format(
+        owner, name, aliases)
+    try:
+        # check=False: a single missing/blocked PR makes gh exit non-zero, but
+        # it still prints valid ``data`` for every PR it *could* resolve. Read
+        # that stdout rather than discarding the whole batch on a partial error.
+        out = run(["gh", "api", "graphql", "-f", "query=" + query], check=False)
+    except FileNotFoundError:
+        return {}  # gh not installed
+    try:
+        repo = json.loads(out)["data"]["repository"]
+    except (ValueError, KeyError, TypeError):
+        return {}
+    resolved = {}  # type: dict
+    for n in numbers:
+        node = repo.get("p{}".format(n))
+        if node is None:
+            continue  # PR not found / errored — leave uncached for retry
+        author = node.get("author")
+        resolved[n] = author.get("login") if author else None
+    return resolved
 
-    skia_pr_num = None
-    body = pr.get("body") or ""
-    for pattern in SKIA_PR_PATTERNS:
-        m = pattern.search(body)
-        if m:
-            skia_pr_num = m.group(1)
-            break
 
-    skia_commits = 0
-    if skia_pr_num:
-        skia_commits, skia_days = _fetch_skia_pr_effort(
-            skia_pr_num, pr_author_names)
-        unique_days |= skia_days
+def resolve_pr_authors(prs):
+    # type: (list[dict]) -> list[dict]
+    """Fill in trustworthy GitHub logins for PRs that lack a noreply login.
 
-    return {
-        "commitCount": commit_count + skia_commits,
-        "workingDays": len(unique_days),
-        "skiaPr": int(skia_pr_num) if skia_pr_num else None,
-    }
+    Confidence order:
+      1. noreply login — already set by get_prs_from_diff, always correct.
+      2. cache (scripts/infra/docs/pr-authors.json) — previously resolved from the API.
+      3. GitHub GraphQL — the authoritative PR author, batched then cached.
 
-
-def _fetch_skia_pr_effort(pr_num, author_names):
-    # type: (str, set[str]) -> Tuple[int, set[str]]
-    """Fetch effort from a mono/skia PR using git refs on the submodule.
-
-    Fetches refs/pull/N/head and uses merge-base to find the range,
-    then filters commits to only those by SkiaSharp PR authors
-    (excluding upstream Google committers).
-
-    Returns (commit_count, set_of_date_strings).
+    PRs that still cannot be resolved keep ``login=None``; format_pr_list then
+    credits the plain commit name with no ``@mention``, so the notes never link
+    or ping the wrong person. Mutates and returns ``prs``.
     """
-    skia_dir = Path("externals/skia")
-    if not (skia_dir / ".git").exists():
-        return 0, set()
+    need = [pr for pr in prs if not (pr.get("author") or {}).get("login")]
+    if not need:
+        return prs
 
-    ref_head = "refs/pull/{}/head".format(pr_num)
-    local_ref = "refs/pr-tmp/skia-{}".format(pr_num)
+    cache = load_author_cache()
+    to_query = sorted({pr["number"] for pr in need
+                       if str(pr["number"]) not in cache})
 
-    try:
-        run(["git", "-C", str(skia_dir), "fetch", "origin",
-             "{}:{}".format(ref_head, local_ref), "--quiet"])
-    except subprocess.CalledProcessError:
-        return 0, set()
+    if to_query:
+        print("  Resolving {} PR author(s) via GitHub API...".format(
+            len(to_query)), file=sys.stderr)
+        dirty = False
+        for i in range(0, len(to_query), _GRAPHQL_BATCH):
+            resolved = _graphql_pr_authors(to_query[i:i + _GRAPHQL_BATCH])
+            for num, login in resolved.items():
+                cache[str(num)] = login
+                dirty = True
+        if dirty:
+            save_author_cache(cache)
 
-    # Use merge-base with the skiasharp branch (the usual target for mono/skia PRs)
-    base_sha = None
-    for target in ["origin/skiasharp", "origin/main"]:
-        try:
-            base_sha = run(["git", "-C", str(skia_dir), "merge-base",
-                            local_ref, target])
-            break
-        except subprocess.CalledProcessError:
+    for pr in need:
+        login = cache.get(str(pr["number"]))
+        if login:
+            pr["author"]["login"] = login
+    return prs
+
+
+def _ensure_skia_repo():
+    # type: () -> bool
+    """Make ``externals/skia`` usable as a local object store for ``git log``.
+
+    Works whether the submodule is already checked out (a ``.git`` gitlink file)
+    or absent (we ``git init`` an empty repo there and wire up the origin
+    remote). Only commit metadata is ever fetched into it; the working tree is
+    never populated, so this stays cheap.
+    """
+    gitdir = SKIA_SUBMODULE / ".git"
+    if not gitdir.exists():
+        SKIA_SUBMODULE.mkdir(parents=True, exist_ok=True)
+        run(["git", "init", "-q", str(SKIA_SUBMODULE)], check=False)
+    if not gitdir.exists():
+        return False
+    remotes = run(["git", "-C", str(SKIA_SUBMODULE), "remote"], check=False).split()
+    if "origin" not in remotes:
+        run(["git", "-C", str(SKIA_SUBMODULE), "remote", "add", "origin",
+             SKIA_REMOTE_URL], check=False)
+    return True
+
+
+def resolve_skia_links(prs):
+    # type: (list[dict]) -> list[dict]
+    """Fill in companion mono/skia PR numbers for skia-bump PRs, purely locally.
+
+    Most SkiaSharp PRs that bump the ``externals/skia`` submodule don't spell out
+    the companion PR in their body (dependency bumps, milestone merges). For
+    those we read the bumped skia commit's own subject from the submodule and
+    parse its ``(#N)`` / ``Merge pull request #N`` self-reference.
+
+    Whether a PR bumped the submodule — and to which skia SHA — is determined
+    locally from the superproject tree (``git rev-parse <commit>:externals/skia``
+    vs its parent), for free. The only network is a single batched, blobless,
+    shallow ``git fetch`` of just the bumped SHAs into the submodule (no working
+    tree, no per-PR fetch); already-present commits are skipped, so ``--all``
+    pays for each skia commit at most once. Anything unresolved keeps
+    ``skiaPr=None``. Mutates and returns ``prs``.
+    """
+    pending = []  # type: list[tuple[dict, str]]
+    for pr in prs:
+        if pr.get("skiaPr"):
             continue
-
-    if not base_sha:
-        run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
-            check=False)
-        return 0, set()
-
-    try:
-        head_sha = run(["git", "-C", str(skia_dir), "rev-parse", local_ref])
-    except subprocess.CalledProcessError:
-        run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
-            check=False)
-        return 0, set()
-
-    log_output = run([
-        "git", "-C", str(skia_dir), "log",
-        "--format=%ad\t%an", "--date=short",
-        "{}..{}".format(base_sha, head_sha),
-    ], check=False)
-
-    run(["git", "-C", str(skia_dir), "update-ref", "-d", local_ref],
-        check=False)
-
-    if not log_output:
-        return 0, set()
-
-    count = 0
-    days = set()  # type: set[str]
-    for line in log_output.splitlines():
-        parts = line.split("\t", 1)
-        if len(parts) != 2:
+        commit = pr.get("commit")
+        if not commit:
             continue
-        date_str, author_name = parts
-        if author_name in author_names:
-            count += 1
-            days.add(date_str)
+        revs = run(["git", "rev-parse",
+                    "{}:externals/skia".format(commit),
+                    "{}^:externals/skia".format(commit)], check=False).split()
+        if len(revs) != 2:
+            continue
+        new, old = revs[0], revs[1]
+        if new == old or not _SKIA_SHA_RE.match(new):
+            continue
+        pending.append((pr, new))
 
-    return count, days
+    if not pending or not _ensure_skia_repo():
+        return prs
+
+    missing = sorted({sha for _, sha in pending if subprocess.run(
+        ["git", "-C", str(SKIA_SUBMODULE), "cat-file", "-e", sha],
+        capture_output=True).returncode != 0})
+    if missing:
+        print("  Fetching {} skia commit(s) to resolve companion links...".format(
+            len(missing)), file=sys.stderr)
+        run(["git", "-C", str(SKIA_SUBMODULE), "fetch", "-q", "--depth=1",
+             "--filter=blob:none", "origin"] + missing, check=False)
+
+    for pr, sha in pending:
+        subject = run(["git", "-C", str(SKIA_SUBMODULE), "log", "-1",
+                       "--format=%s", sha], check=False)
+        for pat in _SKIA_SELF_PR_PATTERNS:
+            m = pat.search(subject)
+            if m:
+                pr["skiaPr"] = int(m.group(1))
+                break
+    return prs
+
 
 
 # ── Branch diffing ──────────────────────────────────────────────────
@@ -544,6 +598,171 @@ def version_from_branch(branch):
     if ver.endswith(".x"):
         return ver
     return ver.split("-")[0]
+
+
+# ── Preview-milestone enumeration ───────────────────────────────────
+#
+# WHY THIS EXISTS (regression R3):
+# The original hand-authored pages (PR #3763) and TEMPLATE.md end with a list of
+# per-preview sections, e.g.:
+#
+#     ## Preview 3 (February 5, 2026)
+#     [Full Changelog](.../compare/v3.119.2-preview.2.3...v3.119.2-preview.3.1)
+#
+# SKILL.md rules 9/10 still mandate this ("Rollup at top … Previews are minimal:
+# one sentence + changelog link each, at the bottom"). When pages were migrated
+# to the script (#4174) these sections were lost, because the script never told
+# the AI which previews existed. We restore the feature by enumerating the
+# previews DETERMINISTICALLY here and emitting them into the raw-data block.
+#
+# SOURCE OF TRUTH: published git tags (vX.Y.Z-<stage>.N[.B]). That is literally
+# where previews, their dates, and their compare endpoints are published — and
+# exactly what TEMPLATE's compare links point at. This is NOT a heuristic and is
+# unrelated to supersession (which stays config-driven in versions.json): tags
+# answer "which previews shipped and when", versions.json answers "which version
+# supersedes which".
+
+_FRIENDLY_STAGE = {
+    "alpha": "Alpha", "beta": "Beta",
+    "preview": "Preview", "rc": "Release Candidate",
+}
+
+
+def _core_tuple(core):
+    # type: (str) -> tuple
+    """(major, minor, patch, subpatch) ints from a dotted core like ``4.147.0``."""
+    parts = (core.split(".") + ["0", "0", "0", "0"])[:4]
+    return tuple(int(p) if p.isdigit() else 0 for p in parts)
+
+
+def _parse_tag(tag):
+    # type: (str) -> Optional[dict]
+    """Parse a ``vX.Y.Z[.W][-stage.N[.B]]`` tag into its components.
+
+    Returns a dict with tag, core, core_tuple, label, stage, num and a sort key
+    (reusing ``release_branch_sort_key`` so stage ordering stays identical to
+    branches), or None when the tag is not a recognised ``vMAJOR.MINOR…`` tag.
+    """
+    if not tag.startswith("v"):
+        return None
+    name = tag[1:]
+    core, _, label = name.partition("-")
+    parts = core.split(".")
+    if len(parts) < 2 or not parts[0].isdigit() or not parts[1].isdigit():
+        return None
+    stage = num = None
+    if label:
+        m = re.match(r"([A-Za-z]+)", label)
+        stage = m.group(1).lower() if m else None
+        nums = re.findall(r"\d+", label)
+        num = int(nums[0]) if nums else 0
+    return {
+        "tag": tag,
+        "core": core,
+        "core_tuple": _core_tuple(core),
+        "label": label,
+        "stage": stage,
+        "num": num,
+        "key": release_branch_sort_key("release/" + name),
+    }
+
+
+def _tag_date(tag):
+    # type: (str) -> str
+    """ISO date (YYYY-MM-DD) of a tag's commit, or '' when unknown."""
+    return run(["git", "log", "-1", "--format=%ad", "--date=short", tag],
+               check=False).strip()
+
+
+def collect_preview_milestones(page_version, base_version):
+    # type: (str, Optional[str]) -> list[dict]
+    """Preview/rc milestones rolled up into a page, newest first (regression R3).
+
+    Enumerates every published prerelease tag whose CORE version is greater than
+    the page's diff base and not greater than the page version itself
+    (``base_core < tag_core <= page_core``). Bounding by core (not git ancestry)
+    is deliberate: it lets a page roll up the previews of a skipped predecessor
+    minor — e.g. the 4.148 page lists the 4.147 previews because 4.147 never
+    shipped stable and its work rolled into 4.148 (the same reason its PRs are in
+    the diff range). The 4.147 page lists its own previews too; the overlap is
+    intentional and the superseded/successor banners cross-link the pages.
+
+    Each milestone carries a human label ("Preview 3"), the tag's commit date and
+    a compare link — chained to the previous milestone, or to the diff base for
+    the earliest one — matching the trailing ``## Preview N (date)`` sections in
+    TEMPLATE.md. Tags are deduplicated to one entry per (core, stage, number),
+    keeping the latest build, so re-tagged builds (preview.3.1, preview.3.2)
+    collapse to a single milestone.
+
+    Returns [] when there are no in-range prereleases (e.g. a pure stable patch).
+    """
+    raw = run(["git", "tag", "-l", "v*"], check=False)
+    parsed = []
+    for t in raw.splitlines():
+        t = t.strip()
+        if not t:
+            continue
+        p = _parse_tag(t)
+        if p:
+            parsed.append(p)
+    if not parsed:
+        return []
+
+    # Global ascending order — used to find the earliest milestone's predecessor
+    # (the diff-base tag it should compare from).
+    parsed.sort(key=lambda p: p["key"])
+
+    page_core = _core_tuple(page_version)
+    base_core = _core_tuple(base_version) if base_version else (0, 0, 0, 0)
+
+    # In-range prereleases, deduped to the latest build per milestone.
+    milestones = {}  # type: dict[tuple, dict]
+    for p in parsed:
+        if not p["stage"]:
+            continue  # stable tag — not a preview milestone
+        if not (base_core < p["core_tuple"] <= page_core):
+            continue
+        ident = (p["core_tuple"], p["stage"], p["num"])
+        cur = milestones.get(ident)
+        if cur is None or p["key"] > cur["key"]:
+            milestones[ident] = p
+
+    if not milestones:
+        return []
+
+    ordered = sorted(milestones.values(), key=lambda m: m["key"])  # ascending
+
+    # Predecessor (compare-from) for the EARLIEST milestone: the highest global
+    # tag strictly below it. For a page based on a shipped stable this is that
+    # stable tag (v3.119.4); for a page based on an in-flight predecessor it is
+    # that predecessor's latest prerelease tag (v4.148.0-rc.1.N). Later
+    # milestones chain to the prior MILESTONE (not the prior build) so re-tagged
+    # builds never produce a tiny intra-milestone diff link.
+    earliest_key = ordered[0]["key"]
+    global_pred = None
+    for p in parsed:
+        if p["key"] < earliest_key:
+            global_pred = p["tag"]
+        else:
+            break
+
+    result = []
+    for idx, m in enumerate(ordered):
+        prev_tag = ordered[idx - 1]["tag"] if idx > 0 else global_pred
+        compare_url = (
+            "https://github.com/{}/compare/{}...{}".format(REPO, prev_tag, m["tag"])
+            if prev_tag else None)
+        result.append({
+            "version": m["core"],
+            "label": "{} {}".format(
+                _FRIENDLY_STAGE.get(m["stage"], (m["stage"] or "").title()),
+                m["num"]),
+            "tag": m["tag"],
+            "date": _tag_date(m["tag"]),
+            "compare_url": compare_url,
+        })
+    result.reverse()  # newest first, matching TEMPLATE ordering
+    return result
 
 
 def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0):
@@ -731,10 +950,26 @@ def determine_diff_range(branch):
         minor_num = int(m_svc.group(2))
         minor = "{}.{}".format(major, minor_num)
 
-        # Read version from the remote branch
+        # Read version from the remote branch (SKIASHARP_VERSION).
         version = get_version_from_remote_branch(branch)
         if not version:
             version = "{}.0".format(minor)
+
+        # Honor an explicit versions.json compare_to first (regression R2). When
+        # the line's .0 has not shipped stable, the .x branch is the in-flight
+        # head and must produce the FULL rollup from the previous stable base —
+        # e.g. 4.148.x (4.148.0 not yet stable) compares 4.148.0 -> 3.119.4, the
+        # same baseline the rc page would use — not the tiny servicing delta
+        # against the latest in-minor preview.
+        config_entry = _versions_config_lookup(version)
+        if config_entry and config_entry.get("compare_to"):
+            resolved = _resolve_compare_to(
+                config_entry["compare_to"], "origin/{}".format(branch),
+                version, all_branches)
+            if resolved:
+                return resolved
+
+        dot0_shipped = _version_has_stable_tag("{}.0".format(minor))
 
         # All versioned branches for this minor (exclude .x)
         candidates = [b for b in all_branches
@@ -742,14 +977,17 @@ def determine_diff_range(branch):
                       and b != branch
                       and not b.endswith(".x")]
 
-        if candidates:
+        # True servicing delta — only once the .0 has shipped stable. Until then
+        # the .x is the in-flight head and must roll up cumulatively (below).
+        if dot0_shipped and candidates:
             candidates.sort(key=release_branch_sort_key)
             latest = candidates[-1]
             return ("origin/{}".format(latest),
                     "origin/{}".format(branch),
                     version)
 
-        # No versioned branches — use previous minor
+        # Cumulative rollup from the previous stable base (in-flight .0, or no
+        # in-minor candidates).
         base = find_previous_stable_base(all_branches, major, minor_num, 0)
         if base:
             return ("origin/{}".format(base),
@@ -801,13 +1039,15 @@ def get_prs_from_diff(from_ref, to_ref):
     """Extract merged PRs from git log between two refs.
 
     Parses PR numbers, titles, authors, and bodies from commit messages.
-    No GitHub API calls needed — everything comes from git.
+    No GitHub API calls needed — everything comes from git: a single ``git log``
+    plus regex parsing, sub-second even for hundreds of commits.
     """
-    # Use a format that gives us everything: hash, author email, subject, body
-    # Separator between commits: a line that won't appear in commit messages
+    # Use a format that gives us everything: hash, author email, author name,
+    # subject, body. The name is kept as a safe fallback credit for PRs whose
+    # GitHub login cannot be proven (see resolve_pr_authors / format_pr_list).
     SEP = "---COMMIT-END-7f3b---"
     log = run(["git", "log",
-               "--format=%H%n%ae%n%s%n%b{}".format(SEP),
+               "--format=%H%n%ae%n%an%n%s%n%b{}".format(SEP),
                "{}..{}".format(from_ref, to_ref)])
 
     prs = []
@@ -817,14 +1057,15 @@ def get_prs_from_diff(from_ref, to_ref):
         block = block.strip()
         if not block:
             continue
-        lines = block.split("\n", 3)
-        if len(lines) < 3:
+        lines = block.split("\n", 4)
+        if len(lines) < 4:
             continue
 
         commit_hash = lines[0].strip()
         author_email = lines[1].strip()
-        subject = lines[2].strip()
-        body = lines[3].strip() if len(lines) > 3 else ""
+        author_name = lines[2].strip()
+        subject = lines[3].strip()
+        body = lines[4].strip() if len(lines) > 4 else ""
 
         # Extract PR number from subject: "Some title (#1234)"
         m = re.search(r"\(#(\d+)\)\s*$", subject)
@@ -838,33 +1079,36 @@ def get_prs_from_diff(from_ref, to_ref):
         # Title is the subject minus the PR ref
         title = re.sub(r"\s*\(#\d+\)\s*$", "", subject)
 
-        # Author login from email
+        # A companion mono/skia PR link, if the body references one. Parsed
+        # locally from the body — no network — so it stays a cheap hint for the
+        # AI when writing notes about Skia bumps.
+        skia_pr = None
+        for pattern in SKIA_PR_PATTERNS:
+            sm = pattern.search(body)
+            if sm:
+                skia_pr = int(sm.group(1))
+                break
+
+        # A GitHub login is only certain from a noreply address; otherwise leave
+        # it None and let resolve_pr_authors look up the real handle. We never
+        # guess a handle from an email local part — that mis-credits real users.
         login = _login_from_email(author_email)
 
         prs.append({
             "title": title,
-            "author": {"login": login},
+            "author": {
+                "login": login,
+                "name": author_name,
+                "email": author_email,
+            },
             "url": "https://github.com/{}/pull/{}".format(REPO, num),
             "number": num,
             "body": body,
+            "commit": commit_hash,
+            "skiaPr": skia_pr,
         })
 
-    if not prs:
-        return []
-
-    # Compute effort for each PR (uses git refs/pull/N/merge)
-    result = []
-    for i, pr in enumerate(prs, 1):
-        try:
-            pr.update(compute_pr_effort(pr))
-        except subprocess.CalledProcessError:
-            pass  # effort stays unset, that's fine
-        result.append(pr)
-        if i % 20 == 0:
-            print("  Processed {}/{} PRs...".format(i, len(prs)),
-                  file=sys.stderr)
-
-    return result
+    return prs
 
 
 def format_pr_list(prs, metadata):
@@ -914,20 +1158,35 @@ def format_pr_list(prs, metadata):
     else:
         for pr in prs:
             title = pr.get("title", "")
-            author = (pr.get("author") or {}).get("login", "unknown")
+            author_info = pr.get("author") or {}
+            login = author_info.get("login")
+            name = author_info.get("name") or "unknown"
             url = pr.get("url", "")
-            is_community = author != "mattleibow"
+            is_community = login != "mattleibow"
             community_str = " [community ✨]" if is_community else ""
-            commits = pr.get("commitCount", 0)
-            days = pr.get("workingDays", 0)
-            effort = " ({} commit{}, {} day{})".format(
-                commits, "s" if commits != 1 else "",
-                days, "s" if days != 1 else "") if commits else ""
             skia_pr = pr.get("skiaPr")
             skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
 
-            lines.append("  - {} by @{} in {}{}{}{}".format(
-                title, author, url, community_str, effort, skia_str))
+            # Credit a linkable @handle only when the login is known; otherwise
+            # fall back to the plain commit name (no @, no link) so the notes
+            # never mention — and notify — the wrong GitHub user.
+            by = "by @{}".format(login) if login else "by {}".format(name)
+
+            lines.append("  - {} {} in {}{}{}".format(
+                title, by, url, community_str, skia_str))
+
+    # Preview milestones (regression R3): the trailing "## Preview N (date)"
+    # sections in TEMPLATE/SKILL are rendered by the AI from this list. Data is
+    # deterministic — published prerelease tags within the page's diff range.
+    milestones = metadata.get("preview_milestones") or []
+    if milestones:
+        lines.append("")
+        lines.append("  preview milestones (newest first — render as trailing "
+                     '"## <label> (<date>)" sections per TEMPLATE.md):')
+        for m in milestones:
+            lines.append("    - {label} · {version} · {date} · {url}".format(
+                label=m["label"], version=m["version"],
+                date=m.get("date") or "", url=m.get("compare_url") or ""))
 
     lines.append("-->")
     lines.append("")
@@ -984,20 +1243,28 @@ def format_pr_list(prs, metadata):
             "below.".format(", ".join(sup_links)))
         lines.append("")
 
-    lines.append(
-        "<!-- AI: Use the raw PR data in the comment above to write polished")
-    lines.append(
-        "     release notes here. Follow documentation/docfx/releases/"
-        "TEMPLATE.md")
+    ai_lines = [
+        "<!-- AI: Use the raw PR data in the comment above to write polished",
+        "     release notes here. Follow documentation/docfx/releases/TEMPLATE.md",
+        "     for structure and tone.",
+    ]
+    if metadata.get("preview_milestones"):
+        ai_lines.append(
+            "     Render each PREVIEW MILESTONE listed above as a minimal trailing")
+        ai_lines.append(
+            '     "## <label> (<date>)" section — one sentence + its compare link,')
+        ai_lines.append(
+            "     newest first, after the rolled-up categories (TEMPLATE rules 9/10).")
     if supersedes:
-        lines.append("     for structure and tone.")
-        lines.append(
-            "     This release SUPERSEDES {} (preview-only, rolled up). Keep "
-            "the \"Supersedes\" note above and mention in the Highlights that "
-            "this release rolls up that skipped preview work cumulatively. -->"
+        ai_lines.append(
+            "     This release SUPERSEDES {} (preview-only, rolled up). Keep the"
             .format(", ".join(supersedes)))
-    else:
-        lines.append("     for structure and tone. -->")
+        ai_lines.append(
+            '     "Supersedes" note above and mention in the Highlights that this')
+        ai_lines.append(
+            "     release rolls up that skipped preview work cumulatively.")
+    ai_lines.append("-->")
+    lines.extend(ai_lines)
     lines.append("")
 
     return "\n".join(lines)
@@ -1215,13 +1482,30 @@ def _compute_page_status(branch, version):
 
 def _page_filename(branch, version):
     # type: (str, str) -> str
-    """Output file for a branch.
+    """Output file for a branch: ``{version}.md`` vs ``{version}-unreleased.md``.
 
-    main and servicing (.x) branches render the in-development page
-    ``{version}-unreleased.md``; a versioned branch renders the released page
-    ``{version}.md``.
+    DETERMINISTIC terminal-vs-in-flight rule (regression R1). A page is the
+    permanent ``{version}.md`` only when the version is TERMINAL:
+      * a suffix-less stable ``release/X.Y.Z`` branch — it shipped; or
+      * ``status: superseded`` in versions.json — a preview-only version that
+        keeps its page with a "superseded by" banner (e.g. 4.147.0, 3.119.3).
+    Otherwise the version is IN-FLIGHT and renders ``{version}-unreleased.md``:
+      * main and servicing (.x) branches — the in-development trackers; and
+      * a prerelease-only versioned branch with no stable branch yet
+        (e.g. release/4.148.0-rc.1, release/4.150.0-preview.1).
+
+    Note for --all: when a prerelease branch maps to an ``-unreleased`` page, its
+    line head (main or the matching ``.x``) owns the same page, so cmd_all drops
+    the prerelease branch from processing to avoid a collision. The branch's
+    previews still surface via collect_preview_milestones on the head's page.
     """
     if branch == "main" or branch.endswith(".x"):
+        return "{}-unreleased.md".format(version)
+    # Versioned branch. A '-' after the core (release/X.Y.Z-rc.1) marks a
+    # prerelease; a suffix-less name (release/X.Y.Z) is the shipped stable.
+    name = _removeprefix(branch, "release/")
+    is_prerelease = "-" in name
+    if is_prerelease and not resolve_superseded_by(version):
         return "{}-unreleased.md".format(version)
     return "{}.md".format(version)
 
@@ -1246,8 +1530,8 @@ def _canonical_branches_by_version(all_branches):
     return canonical
 
 
-def _write_page(branch, all_branches, verbose=False):
-    # type: (str, list[str], bool) -> Optional[str]
+def _write_page(branch, all_branches, verbose=False, force=False):
+    # type: (str, list[str], bool, bool) -> Optional[str]
     """Generate one release page from a branch. Returns its path, or None.
 
     Single code path shared by ``--branch`` and ``--all``: resolves the diff
@@ -1285,10 +1569,29 @@ def _write_page(branch, all_branches, verbose=False):
     print("  Found {} PR(s), diff: {}".format(len(prs), diff_range_str))
 
     output_path = RELEASES_DIR / _page_filename(branch, version)
-    if _is_content_unchanged(output_path, len(prs), diff_range_str,
-                             status, superseded_by, supersedes):
+    if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
+                                            status, superseded_by, supersedes):
         print("  Skipping {} (unchanged)".format(output_path))
         return None
+
+    # The page is changing, so it's worth the one network step now: resolving
+    # the true GitHub handles (API, cached). Doing this AFTER the unchanged
+    # check keeps an all-unchanged --all run cheap: skipped pages never pay the
+    # network cost.
+    resolve_pr_authors(prs)
+    resolve_skia_links(prs)
+
+    # Enumerate the preview/rc milestones this page rolls up (regression R3), so
+    # the AI can render the trailing "## Preview N (date)" sections that TEMPLATE
+    # and SKILL rules 9/10 require. The lower bound is the diff base, so a page
+    # naturally includes a skipped predecessor minor's previews (the 4.148 page
+    # lists the 4.147 previews — the same work its diff range already rolls up).
+    base_version = None
+    if from_display.startswith("release/"):
+        base_version = version_from_branch(from_display)
+    elif re.match(r"^\d+\.\d+\.\d+", from_display):
+        base_version = from_display
+    preview_milestones = collect_preview_milestones(version, base_version)
 
     metadata = {
         "branch": branch,
@@ -1301,6 +1604,8 @@ def _write_page(branch, all_branches, verbose=False):
         metadata["superseded_by"] = superseded_by
     if supersedes:
         metadata["supersedes"] = supersedes
+    if preview_milestones:
+        metadata["preview_milestones"] = preview_milestones
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
@@ -1308,8 +1613,8 @@ def _write_page(branch, all_branches, verbose=False):
     return str(output_path)
 
 
-def cmd_branch(branch):
-    # type: (str) -> None
+def cmd_branch(branch, force=False):
+    # type: (str, bool) -> None
     """Diff a branch against its predecessor and write raw data to the version file."""
     branch = _removeprefix(branch, "origin/")
 
@@ -1346,7 +1651,7 @@ def cmd_branch(branch):
             target = canonical
 
     files_to_polish = []
-    path = _write_page(target, all_branches, verbose=True)
+    path = _write_page(target, all_branches, verbose=True, force=force)
     if path:
         files_to_polish.append(path)
 
@@ -1354,7 +1659,7 @@ def cmd_branch(branch):
     # — the diff range for main or the servicing .x branch may have changed now
     # that a new release branch exists.
     if target != "main" and not target.endswith(".x"):
-        files_to_polish.extend(_regen_unreleased(target, all_branches))
+        files_to_polish.extend(_regen_unreleased(target, all_branches, force=force))
 
     cmd_update_toc()
 
@@ -1366,8 +1671,8 @@ def cmd_branch(branch):
     print("========================================")
 
 
-def _regen_unreleased(trigger_branch, all_branches):
-    # type: (str, list[str]) -> list[str]
+def _regen_unreleased(trigger_branch, all_branches, force=False):
+    # type: (str, list[str], bool) -> list[str]
     """Regenerate unreleased pages after a versioned branch push.
 
     When a new release/X.Y.Z branch appears, the diff ranges for main and/or the
@@ -1384,7 +1689,7 @@ def _regen_unreleased(trigger_branch, all_branches):
     svc_branch = "release/{}.x".format(minor)
     if svc_branch in all_branches:
         print("\nRegenerating unreleased for {}...".format(svc_branch))
-        path = _write_page(svc_branch, all_branches)
+        path = _write_page(svc_branch, all_branches, force=force)
         if path:
             written.append(path)
 
@@ -1393,7 +1698,7 @@ def _regen_unreleased(trigger_branch, all_branches):
     main_version = get_upcoming_version()
     if main_version and minor_group(main_version) == minor:
         print("\nRegenerating unreleased for main...")
-        path = _write_page("main", all_branches)
+        path = _write_page("main", all_branches, force=force)
         if path:
             written.append(path)
 
@@ -1403,8 +1708,8 @@ def _regen_unreleased(trigger_branch, all_branches):
 # ── Main ─────────────────────────────────────────────────────────────
 
 
-def cmd_all():
-    # type: () -> None
+def cmd_all(force=False):
+    # type: (bool) -> None
     """Process all branches (main + all release/*). Skip unchanged files.
 
     This is the idempotent "regenerate everything" mode used by the automated
@@ -1441,7 +1746,7 @@ def cmd_all():
     # other and the last one processed wins (e.g. release/3.119.2 and its
     # release/3.119.2-preview.* all render to 3.119.2.md). So:
     #   - main                         -> {upcoming}-unreleased.md
-    #   - each servicing release/X.Y.x -> {X.Y.x}-unreleased.md  (distinct files)
+    #   - each servicing release/X.Y.x -> {X.Y.0}-unreleased.md  (distinct files)
     #   - ONE canonical branch per versioned base version -> {version}.md
     # Superseded versions are still included — they each keep their own page
     # with a "superseded by" label (see docstring).
@@ -1449,7 +1754,32 @@ def cmd_all():
     canonical_branches = sorted(
         _canonical_branches_by_version(all_branches).values(),
         key=release_branch_sort_key)
-    branches_to_process = ["main"] + servicing_branches + canonical_branches
+
+    # Ownership for in-flight pages (regression R1). A prerelease-only canonical
+    # branch (release/4.148.0-rc.1, release/4.150.0-preview.1) now renders an
+    # ``-unreleased`` page — but that same page is owned by the line head:
+    # ``main`` for the upcoming version, or the matching ``release/X.Y.x``. Drop
+    # the prerelease canonical when a head already produces its file, so the two
+    # don't fight (and cleanup_stale_unreleased doesn't then delete the head's
+    # page). The dropped branch's previews still appear on the head's page via
+    # collect_preview_milestones. Determinism: filenames only, no tags.
+    head_unreleased = set()
+    upcoming = get_upcoming_version()
+    if upcoming:
+        head_unreleased.add(_page_filename("main", upcoming))
+    for b in servicing_branches:
+        v = get_version_from_remote_branch(b) or version_from_branch(b)
+        head_unreleased.add(_page_filename(b, v))
+
+    kept_canonical = []
+    for b in canonical_branches:
+        fn = _page_filename(b, version_from_branch(b))
+        if fn in head_unreleased:
+            print("  (deferring {} — {} owned by its line head)".format(b, fn))
+            continue
+        kept_canonical.append(b)
+
+    branches_to_process = ["main"] + servicing_branches + kept_canonical
 
     files_to_polish = []
     skipped_count = 0
@@ -1461,7 +1791,7 @@ def cmd_all():
             continue
 
         print("\n--- Processing: {} ---".format(branch))
-        path = _write_page(branch, all_branches)
+        path = _write_page(branch, all_branches, force=force)
         if path:
             files_to_polish.append(path)
             processed_count += 1
@@ -1510,6 +1840,10 @@ def main():
     parser.add_argument(
         "--update-toc", action="store_true",
         help="Regenerate TOC.yml + index.md")
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Rewrite pages even when the raw data is unchanged "
+             "(use with --all or --branch to re-resolve author handles)")
 
     args = parser.parse_args()
 
@@ -1524,9 +1858,9 @@ def main():
     if args.update_toc:
         cmd_update_toc()
     elif args.all:
-        cmd_all()
+        cmd_all(force=args.force)
     elif args.branch:
-        cmd_branch(args.branch)
+        cmd_branch(args.branch, force=args.force)
 
 
 if __name__ == "__main__":
