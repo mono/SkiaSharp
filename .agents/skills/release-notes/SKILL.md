@@ -69,34 +69,35 @@ This writes raw PR data to `documentation/docfx/releases/{version}.md` or
 `documentation/docfx/releases/{version}-unreleased.md` depending on the branch type,
 and regenerates TOC/index. All data comes from git history — no API calls or tokens needed.
 
-When TOC/index are regenerated, the script also **prunes stale unreleased pages**: any
-`{version}-unreleased.md` whose stable `{version}.md` already exists is deleted, because
-that version has shipped and the line has moved on to the next patch (e.g. once
-`3.119.4.md` exists, `3.119.4-unreleased.md` is removed in favour of `3.119.5-unreleased.md`).
-An unreleased page is still listed in its minor group even when no stable page of that exact
-version exists yet (e.g. `3.119.5-unreleased.md` before `3.119.5` ships).
+When TOC/index are regenerated, the script also prunes stale unreleased pages on its own.
+You never create, rename, or delete pages.
 
-### Page naming & preview rollup (deterministic — script-owned)
+### Division of responsibility — the script structures, you only polish
 
-The script decides each page's filename and which previews it rolls up. You never compute
-these; this is documented so the behaviour is not lost again (it regressed once when pages were
-migrated and the per-preview sections + in-flight naming were dropped):
+**The script owns everything structural and deterministic.** It decides — entirely on its
+own — every filename (`{version}.md` vs `{version}-unreleased.md`), every diff range, which
+branch produces which page, whether a page is released or unreleased, which previews roll
+up, supersession banners, and which stale pages to delete. The exact rules live **in the
+script** (module + function docstrings in `generate-release-notes.py`) and are intentionally
+NOT restated here, so this skill can never drift from the code.
 
-- **Terminal → `{version}.md`** when the version shipped (a suffix-less `release/X.Y.Z`
-  branch exists) **or** is `status: superseded` in `versions.json` (keeps its page + banner,
-  e.g. `4.147.0`, `3.119.3`).
-- **In-flight → `{version}-unreleased.md`** otherwise: `main` (upcoming), each servicing
-  `release/X.Y.x`, and any prerelease-only version with no stable branch yet
-  (`4.148.0`, `4.150.0`). The line head (`main`/`.x`) owns the page; the matching
-  `rc`/`preview` branch is deferred so they don't collide.
-- **Preview rollup (rules 9/10):** the data-block's `preview milestones` list is enumerated
-  from **published prerelease git tags** within the page's diff range (deduped to the latest
-  build per milestone, with dates + chained compare links). This is the source of the trailing
-  `## Preview N (date)` sections — render them verbatim from that list. A page rolls up a
-  skipped predecessor minor's previews too (the `4.148` page lists the `4.147` previews,
-  matching its rolled-up PRs). Supersession is separate and stays config-driven in
-  `versions.json`; tags answer "which previews shipped and when", `versions.json` answers
-  "which version supersedes which".
+**Your job is narrow: rewrite the body of each file in the "Files to polish" list**, using
+that file's embedded raw-data block, and nothing else. Do **not** create files, rename
+files, compute diff ranges, or reason about released-vs-unreleased or rollup-vs-delta — if
+you catch yourself doing any of that, stop: the script already did it. **Never edit the
+script.** If a page you expect is missing (or an unexpected one exists, or any data looks
+wrong), **stop and report it** — do not work around it and do not touch the script. A
+maintainer decides whether the script needs fixing; the polish step only polishes.
+
+The one structural fact you **consume** (never compute) while polishing: when a page rolls
+up tagged previews, the script delivers the PRs already **grouped into per-preview buckets**
+inside the raw-data block — each PR under the `## <label> (<date>) · <compare-url>` of the
+preview it first shipped in, newest first, and the buckets together cover every PR in the
+range. Render one trailing `## Preview N (date)` section per bucket per TEMPLATE.md
+(verbatim label/date/compare-link), summarizing that bucket's PRs, and **merge all buckets**
+for the top-level Highlights. A page with no previews (an unreleased delta or a plain stable
+patch) instead carries a single flat PR list — summarize it as one set. Never re-bucket,
+reorder, or recompute any of this; it is the script's output.
 
 The file starts with an HTML comment block containing both metadata (version, status, branch,
 diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a

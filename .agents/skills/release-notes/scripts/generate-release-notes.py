@@ -2,7 +2,47 @@
 """
 Fetch SkiaSharp release data and manage the website release notes structure.
 
-This script collects raw data. AI does the formatting using TEMPLATE.md.
+This script collects raw data and OWNS the page structure. AI only polishes the
+prose — it never creates, names, or deletes pages, and never computes diff ranges.
+See "Division of responsibility" below; the formatting itself uses TEMPLATE.md.
+
+Division of responsibility
+--------------------------
+SCRIPT (here): decides every filename, diff range, released-vs-unreleased split,
+which previews roll up, supersession banners, and which stale pages to prune. All
+of this is deterministic and lives in code (see the page model below + the
+docstrings on _page_filename, determine_diff_range, cleanup_stale_unreleased).
+
+AI / SKILL.md: reads each file in the final "Files to polish:" list and rewrites
+its body from the embedded raw-data block. Nothing structural — it never edits this
+script. If the output looks wrong (a missing/unexpected page, a bad range), the
+polish step STOPS and reports; a maintainer fixes the script here.
+
+Page model (two files per in-flight version — released + unreleased coexist)
+---------------------------------------------------------------------------
+A version's "released" and "unreleased" states are orthogonal and get SEPARATE
+pages that coexist while the version is in flight:
+
+  * RELEASED  ``{version}.md``            <- a VERSIONED branch (release/X.Y.Z and
+    its -rc/-preview prereleases; highest/canonical wins under --all). Full
+    cumulative ROLLUP from the previous-stable base, honoring versions.json
+    `compare_to`, carrying preview-milestone sections + supersede banners.
+
+  * UNRELEASED ``{version}-unreleased.md`` <- a HEAD branch (main, or servicing
+    release/X.Y.x). Small DELTA from the last release to the head ("what may ship
+    next") — NOT a rollup, so it does NOT honor versions.json `compare_to` and has
+    no preview milestones. Omitted entirely when the delta is empty.
+
+So e.g. 4.150.0 has BOTH 4.150.0.md (rollup from release/4.150.0-preview.1) and
+4.150.0-unreleased.md (release/4.150.0-preview.1..main delta). They never collide;
+cleanup only prunes a `-unreleased` page once its line advances to a higher version
+in the same minor.
+
+When a released page rolls up tagged previews, its raw-data block groups the PRs into
+per-preview BUCKETS (each PR under the preview it first shipped in, via git ancestry;
+see bucket_prs_by_milestone). The buckets exhaustively partition the diff range, so the
+AI renders one "## Preview N" section per bucket and merges them for the Highlights —
+there is no separate flat list to drift. Pages with no previews stay a single flat list.
 
 Commands:
     # Diff a branch and write raw PR data to documentation/docfx/releases/{version}.md
@@ -758,10 +798,59 @@ def collect_preview_milestones(page_version, base_version):
                 _FRIENDLY_STAGE.get(m["stage"], (m["stage"] or "").title()),
                 m["num"]),
             "tag": m["tag"],
+            "from_tag": prev_tag,
             "date": _tag_date(m["tag"]),
             "compare_url": compare_url,
         })
     result.reverse()  # newest first, matching TEMPLATE ordering
+    return result
+
+
+def bucket_prs_by_milestone(prs, milestones, from_ref):
+    # type: (list[dict], list[dict], str) -> list[dict]
+    """Partition ``prs`` into per-preview buckets the AI can summarize directly.
+
+    A page's diff range can span several prerelease tags (the ``preview
+    milestones`` list). A single flat PR list makes the AI guess which work
+    landed in which preview; instead, assign every PR to the EARLIEST milestone
+    whose range contains its commit — i.e. the preview it FIRST shipped in — so
+    each trailing ``## Preview N`` section has its own concrete PRs.
+
+    The buckets EXHAUSTIVELY partition the range (every PR lands in exactly one),
+    so together they ARE the full list — there is no separate flat list to drift
+    from. The AI merges the buckets for the top-level Highlights.
+
+    Bucketing is by git ancestry, not tag metadata: for each milestone (oldest
+    first) the bucket is ``(previous boundary .. this tag]`` intersected with the
+    page's PR set. The earliest milestone's boundary is the page diff base
+    (``from_ref``) so base→first-preview work is captured. Anything left after the
+    last tag (commits not yet in any tagged preview, e.g. the final release cut)
+    falls into a trailing untagged bucket. Returns buckets NEWEST first to match
+    TEMPLATE ordering; each is ``{"milestone": <dict|None>, "prs": [...]}``.
+    """
+    if not milestones:
+        return [{"milestone": None, "prs": list(prs)}]
+
+    page_numbers = {pr["number"] for pr in prs}
+    ascending = list(reversed(milestones))  # oldest first
+    assigned = set()  # type: set[int]
+    buckets_asc = []
+    for i, m in enumerate(ascending):
+        bucket_from = from_ref if i == 0 else ascending[i - 1]["tag"]
+        in_range = {p["number"]
+                    for p in get_prs_from_diff(bucket_from, m["tag"])}
+        in_range &= page_numbers
+        bucket_prs = [pr for pr in prs
+                      if pr["number"] in in_range and pr["number"] not in assigned]
+        assigned.update(pr["number"] for pr in bucket_prs)
+        buckets_asc.append({"milestone": m, "prs": bucket_prs})
+
+    leftover = [pr for pr in prs if pr["number"] not in assigned]
+    result = list(reversed(buckets_asc))  # newest first
+    if leftover:
+        # Commits past the last tagged preview (e.g. the final release cut) —
+        # newest of all, so render first, with no milestone header.
+        result.insert(0, {"milestone": None, "prs": leftover})
     return result
 
 
@@ -903,14 +992,12 @@ def determine_diff_range(branch):
                 "scripts/azure-templates-variables.yml")
         minor = minor_group(version)
 
-        # Check versions.json for an explicit compare_to override.
-        config_entry = _versions_config_lookup(version)
-        if config_entry and config_entry.get("compare_to"):
-            resolved = _resolve_compare_to(
-                config_entry["compare_to"], "origin/main", version, all_branches)
-            if resolved:
-                return resolved
-            # Override could not be resolved — fall through to auto-detection.
+        # NOTE: main is the UNRELEASED HEAD. Its page is the SMALL DELTA from the
+        # last release to main ("what may ship next"), NOT a rollup — so it does
+        # NOT honor versions.json `compare_to` (that drives the RELEASED rollup
+        # pages produced by the versioned branches). Restored from the original
+        # pre-churn script; R2 had wrongly forced a full rollup here. The full
+        # 4.150.0 rollup lives on 4.150.0.md (from release/4.150.0-preview.1).
 
         # Find latest release branch for the same minor. These are the active
         # line for the upcoming version, so the latest one is always the base
@@ -955,39 +1042,30 @@ def determine_diff_range(branch):
         if not version:
             version = "{}.0".format(minor)
 
-        # Honor an explicit versions.json compare_to first (regression R2). When
-        # the line's .0 has not shipped stable, the .x branch is the in-flight
-        # head and must produce the FULL rollup from the previous stable base —
-        # e.g. 4.148.x (4.148.0 not yet stable) compares 4.148.0 -> 3.119.4, the
-        # same baseline the rc page would use — not the tiny servicing delta
-        # against the latest in-minor preview.
-        config_entry = _versions_config_lookup(version)
-        if config_entry and config_entry.get("compare_to"):
-            resolved = _resolve_compare_to(
-                config_entry["compare_to"], "origin/{}".format(branch),
-                version, all_branches)
-            if resolved:
-                return resolved
+        # NOTE: a servicing .x branch is the UNRELEASED HEAD of its minor line.
+        # Its page is the SMALL DELTA from the latest release branch in the minor
+        # to the .x head ("what may ship in the next patch"), NOT a rollup — so
+        # it does NOT honor versions.json `compare_to`. Restored from the
+        # original pre-churn script; R2 had wrongly forced a full rollup here.
+        # The full rollup lives on the released {version}.md (from the canonical
+        # versioned branch, e.g. release/4.148.0-rc.1 -> 4.148.0.md).
 
-        dot0_shipped = _version_has_stable_tag("{}.0".format(minor))
-
-        # All versioned branches for this minor (exclude .x)
+        # All versioned branches for this minor (exclude .x). The latest is the
+        # last release cut on the line, so the delta starts there.
         candidates = [b for b in all_branches
                       if b.startswith("release/{}.".format(minor))
                       and b != branch
                       and not b.endswith(".x")]
 
-        # True servicing delta — only once the .0 has shipped stable. Until then
-        # the .x is the in-flight head and must roll up cumulatively (below).
-        if dot0_shipped and candidates:
+        if candidates:
             candidates.sort(key=release_branch_sort_key)
             latest = candidates[-1]
             return ("origin/{}".format(latest),
                     "origin/{}".format(branch),
                     version)
 
-        # Cumulative rollup from the previous stable base (in-flight .0, or no
-        # in-minor candidates).
+        # No versioned branches on this minor yet — fall back to the previous
+        # stable base (the delta then spans from the last actual release).
         base = find_previous_stable_base(all_branches, major, minor_num, 0)
         if base:
             return ("origin/{}".format(base),
@@ -1111,6 +1189,27 @@ def get_prs_from_diff(from_ref, to_ref):
     return prs
 
 
+def _format_pr_bullet(pr):
+    # type: (dict) -> str
+    """One PR rendered as the raw-data bullet text (without the leading "- ").
+
+    Shared by the flat list and the per-preview buckets so both credit authors
+    identically: a linkable ``@handle`` only when the GitHub login is known,
+    otherwise the plain commit name (no ``@``, no link) so the notes never
+    mention — and notify — the wrong GitHub user.
+    """
+    title = pr.get("title", "")
+    author_info = pr.get("author") or {}
+    login = author_info.get("login")
+    name = author_info.get("name") or "unknown"
+    url = pr.get("url", "")
+    community_str = " [community ✨]" if login != "mattleibow" else ""
+    skia_pr = pr.get("skiaPr")
+    skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
+    by = "by @{}".format(login) if login else "by {}".format(name)
+    return "{} {} in {}{}{}".format(title, by, url, community_str, skia_str)
+
+
 def format_pr_list(prs, metadata):
     # type: (list[dict], dict) -> str
     """Format the PR list as markdown with raw data in an HTML comment.
@@ -1156,37 +1255,40 @@ def format_pr_list(prs, metadata):
     if not prs:
         lines.append("  *No changes found.*")
     else:
-        for pr in prs:
-            title = pr.get("title", "")
-            author_info = pr.get("author") or {}
-            login = author_info.get("login")
-            name = author_info.get("name") or "unknown"
-            url = pr.get("url", "")
-            is_community = login != "mattleibow"
-            community_str = " [community ✨]" if is_community else ""
-            skia_pr = pr.get("skiaPr")
-            skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
-
-            # Credit a linkable @handle only when the login is known; otherwise
-            # fall back to the plain commit name (no @, no link) so the notes
-            # never mention — and notify — the wrong GitHub user.
-            by = "by @{}".format(login) if login else "by {}".format(name)
-
-            lines.append("  - {} {} in {}{}{}".format(
-                title, by, url, community_str, skia_str))
-
-    # Preview milestones (regression R3): the trailing "## Preview N (date)"
-    # sections in TEMPLATE/SKILL are rendered by the AI from this list. Data is
-    # deterministic — published prerelease tags within the page's diff range.
-    milestones = metadata.get("preview_milestones") or []
-    if milestones:
-        lines.append("")
-        lines.append("  preview milestones (newest first — render as trailing "
-                     '"## <label> (<date>)" sections per TEMPLATE.md):')
-        for m in milestones:
-            lines.append("    - {label} · {version} · {date} · {url}".format(
-                label=m["label"], version=m["version"],
-                date=m.get("date") or "", url=m.get("compare_url") or ""))
+        # When the page rolls up tagged previews, group the PRs into per-preview
+        # buckets (each PR under the preview it first shipped in) so the AI can
+        # write a concrete "## Preview N" section per milestone AND merge the
+        # buckets for the top-level Highlights. The buckets partition the whole
+        # range, so they ARE the full list — no separate flat list is emitted.
+        # Pages with no previews (unreleased deltas, plain stable patches) keep a
+        # single flat list.
+        buckets = metadata.get("pr_buckets")
+        if buckets:
+            lines.append("  PRs grouped by the preview they first shipped in "
+                         "(newest first). Render each milestone as a trailing")
+            lines.append('  "## <label> (<date>)" section per TEMPLATE.md, and '
+                         "merge them all for the top-level Highlights:")
+            for b in buckets:
+                m = b.get("milestone")
+                lines.append("")
+                if m:
+                    lines.append(
+                        "  ## {label} · {version} · {date} · {url}  ({n} PRs)".format(
+                            label=m["label"], version=m["version"],
+                            date=m.get("date") or "", url=m.get("compare_url") or "",
+                            n=len(b["prs"])))
+                else:
+                    lines.append(
+                        "  ## Unreleased — not yet in a tagged preview  "
+                        "({n} PRs)".format(n=len(b["prs"])))
+                if b["prs"]:
+                    for pr in b["prs"]:
+                        lines.append("    - {}".format(_format_pr_bullet(pr)))
+                else:
+                    lines.append("    *(no PRs)*")
+        else:
+            for pr in prs:
+                lines.append("  - {}".format(_format_pr_bullet(pr)))
 
     lines.append("-->")
     lines.append("")
@@ -1296,19 +1398,54 @@ def get_version_files():
 
 def cleanup_stale_unreleased():
     # type: () -> list[str]
-    """Delete {version}-unreleased.md files whose stable {version}.md exists.
+    """Delete ``{version}-unreleased.md`` pages whose line has moved on.
 
-    Once a version has a published page, its in-progress "unreleased" page is
-    obsolete: the servicing line has moved on to the next patch (e.g. once
-    3.119.4.md ships, 3.119.4-unreleased.md is stale and the line tracks
-    3.119.5-unreleased.md instead). Returns the removed file paths.
+    Released and unreleased pages of the SAME version coexist by design (Option
+    A): a version can be on NuGet as a shipped prerelease (released ``{v}.md``)
+    AND still have newer head commits (``{v}-unreleased.md`` delta). So a stale
+    unreleased page is NOT simply "``{v}.md`` exists" — that would wrongly delete
+    the in-flight delta.
+
+    Deterministic rule (filesystem only): an unreleased page is stale once its
+    line has advanced to a STRICTLY HIGHER version in the SAME minor. That is,
+    delete ``{v}-unreleased.md`` only when both:
+      * a released ``{v}.md`` exists (the version itself has a page), AND
+      * some other page (released or unreleased) in the same minor has a version
+        greater than ``v`` — the head has moved past ``v``.
+
+    Examples:
+      * 4.148.0.md + 4.148.0-unreleased.md, no higher 4.148.x page  -> KEEP both.
+      * 3.119.4.md + 3.119.4-unreleased.md, and 3.119.5-unreleased.md exists
+        -> the line advanced to 3.119.5, so 3.119.4-unreleased.md is removed.
+    Returns the removed file paths.
     """
+    pages = [f.stem for f in RELEASES_DIR.iterdir()
+             if f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md")]
+    # Page version (strip the -unreleased suffix) for every page on disk.
+    page_versions = [
+        p[:-len("-unreleased")] if p.endswith("-unreleased") else p
+        for p in pages
+    ]
+
     removed = []
     for f in sorted(RELEASES_DIR.iterdir()):
         if f.suffix != ".md" or not f.stem.endswith("-unreleased"):
             continue
-        version = f.stem[:-11]  # strip "-unreleased"
-        if (RELEASES_DIR / "{}.md".format(version)).exists():
+        version = f.stem[:-len("-unreleased")]
+        # No released counterpart -> this is the only page for the version; keep.
+        if not (RELEASES_DIR / "{}.md".format(version)).exists():
+            continue
+        # Released counterpart exists. Keep the unreleased delta while this
+        # version is still the head of its minor line; remove it only once a
+        # strictly higher version in the same minor has a page.
+        mg = minor_group(version)
+        moved_on = any(
+            ov != version
+            and minor_group(ov) == mg
+            and version_key(ov) > version_key(version)
+            for ov in page_versions
+        )
+        if moved_on:
             f.unlink()
             removed.append(str(f))
     return removed
@@ -1484,28 +1621,25 @@ def _page_filename(branch, version):
     # type: (str, str) -> str
     """Output file for a branch: ``{version}.md`` vs ``{version}-unreleased.md``.
 
-    DETERMINISTIC terminal-vs-in-flight rule (regression R1). A page is the
-    permanent ``{version}.md`` only when the version is TERMINAL:
-      * a suffix-less stable ``release/X.Y.Z`` branch — it shipped; or
-      * ``status: superseded`` in versions.json — a preview-only version that
-        keeps its page with a "superseded by" banner (e.g. 4.147.0, 3.119.3).
-    Otherwise the version is IN-FLIGHT and renders ``{version}-unreleased.md``:
-      * main and servicing (.x) branches — the in-development trackers; and
-      * a prerelease-only versioned branch with no stable branch yet
-        (e.g. release/4.148.0-rc.1, release/4.150.0-preview.1).
+    ORIGINAL deterministic two-file rule (restored — see plan/SKILL). The two
+    pages model the orthogonal "released" vs "unreleased" states of a version:
 
-    Note for --all: when a prerelease branch maps to an ``-unreleased`` page, its
-    line head (main or the matching ``.x``) owns the same page, so cmd_all drops
-    the prerelease branch from processing to avoid a collision. The branch's
-    previews still surface via collect_preview_milestones on the head's page.
+      * A VERSIONED branch (``release/X.Y.Z`` and its ``-rc``/``-preview``
+        prereleases) renders the RELEASED ``{version}.md`` — the full cumulative
+        rollup of the shipped prerelease/stable, with preview-milestone sections
+        and supersede banners. One page per version (the canonical / highest
+        versioned branch wins under --all; see _canonical_branches_by_version).
+
+      * A HEAD branch (``main`` or servicing ``release/X.Y.x``) renders the
+        UNRELEASED ``{version}-unreleased.md`` — a SMALL DELTA from the last
+        release to the head (what may ship next), NOT a rollup.
+
+    The two coexist for an in-flight version (e.g. 4.150.0.md from
+    release/4.150.0-preview.1 AND 4.150.0-unreleased.md from main). They never
+    collide (distinct filenames); cleanup_stale_unreleased only prunes an
+    unreleased page once its line advances to a higher version.
     """
     if branch == "main" or branch.endswith(".x"):
-        return "{}-unreleased.md".format(version)
-    # Versioned branch. A '-' after the core (release/X.Y.Z-rc.1) marks a
-    # prerelease; a suffix-less name (release/X.Y.Z) is the shipped stable.
-    name = _removeprefix(branch, "release/")
-    is_prerelease = "-" in name
-    if is_prerelease and not resolve_superseded_by(version):
         return "{}-unreleased.md".format(version)
     return "{}.md".format(version)
 
@@ -1569,6 +1703,19 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     print("  Found {} PR(s), diff: {}".format(len(prs), diff_range_str))
 
     output_path = RELEASES_DIR / _page_filename(branch, version)
+
+    # An UNRELEASED head page (main / release/X.Y.x) with an EMPTY delta has
+    # nothing unreleased — the head is at the last release. Don't emit an empty
+    # "what may ship next" page; prune any stale one so the released {v}.md
+    # stands alone. Released pages are always written (a shipped version with no
+    # changes since its base is still a real, if empty, release record).
+    is_head = (branch == "main") or branch.endswith(".x")
+    if is_head and not prs:
+        if output_path.exists():
+            output_path.unlink()
+            print("  Removed empty {} (nothing unreleased)".format(output_path))
+        return None
+
     if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
                                             status, superseded_by, supersedes):
         print("  Skipping {} (unchanged)".format(output_path))
@@ -1606,6 +1753,10 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         metadata["supersedes"] = supersedes
     if preview_milestones:
         metadata["preview_milestones"] = preview_milestones
+        # Partition the PRs into per-preview buckets (each PR under the preview
+        # it first shipped in) so the AI can summarize each milestone directly.
+        metadata["pr_buckets"] = bucket_prs_by_milestone(
+            prs, preview_milestones, from_ref)
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
@@ -1745,41 +1896,18 @@ def cmd_all(force=False):
     # ONE branch, otherwise branches that map to the same page overwrite each
     # other and the last one processed wins (e.g. release/3.119.2 and its
     # release/3.119.2-preview.* all render to 3.119.2.md). So:
-    #   - main                         -> {upcoming}-unreleased.md
-    #   - each servicing release/X.Y.x -> {X.Y.0}-unreleased.md  (distinct files)
-    #   - ONE canonical branch per versioned base version -> {version}.md
-    # Superseded versions are still included — they each keep their own page
-    # with a "superseded by" label (see docstring).
+    #   - main                         -> {upcoming}-unreleased.md   (delta head)
+    #   - each servicing release/X.Y.x -> {X.Y.0}-unreleased.md      (delta head)
+    #   - ONE canonical branch per versioned base version -> {version}.md (released)
+    # Released and unreleased pages of the same version COEXIST (distinct
+    # filenames) and never collide, so no branch is deferred. Superseded
+    # versions still keep their own released page with a "superseded by" label.
     servicing_branches = [b for b in all_branches if b.endswith(".x")]
     canonical_branches = sorted(
         _canonical_branches_by_version(all_branches).values(),
         key=release_branch_sort_key)
 
-    # Ownership for in-flight pages (regression R1). A prerelease-only canonical
-    # branch (release/4.148.0-rc.1, release/4.150.0-preview.1) now renders an
-    # ``-unreleased`` page — but that same page is owned by the line head:
-    # ``main`` for the upcoming version, or the matching ``release/X.Y.x``. Drop
-    # the prerelease canonical when a head already produces its file, so the two
-    # don't fight (and cleanup_stale_unreleased doesn't then delete the head's
-    # page). The dropped branch's previews still appear on the head's page via
-    # collect_preview_milestones. Determinism: filenames only, no tags.
-    head_unreleased = set()
-    upcoming = get_upcoming_version()
-    if upcoming:
-        head_unreleased.add(_page_filename("main", upcoming))
-    for b in servicing_branches:
-        v = get_version_from_remote_branch(b) or version_from_branch(b)
-        head_unreleased.add(_page_filename(b, v))
-
-    kept_canonical = []
-    for b in canonical_branches:
-        fn = _page_filename(b, version_from_branch(b))
-        if fn in head_unreleased:
-            print("  (deferring {} — {} owned by its line head)".format(b, fn))
-            continue
-        kept_canonical.append(b)
-
-    branches_to_process = ["main"] + servicing_branches + kept_canonical
+    branches_to_process = ["main"] + servicing_branches + canonical_branches
 
     files_to_polish = []
     skipped_count = 0
