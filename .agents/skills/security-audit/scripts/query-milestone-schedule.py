@@ -20,25 +20,18 @@ Data sources (no auth, no documented rate limit):
 
 Default output is main-centric and lean. The full 5-channel list is included as context.
 
-Optional --check-backports (the deeper, axis-2 check): resolve each tracked channel's
-`release/<major>.<M>.x` branch and report its pinned milestone + Skia submodule commit, so
-the audit can spot a shipped release line that is missing a within-milestone Skia backport.
-
 Usage:
   python3 query-milestone-schedule.py                       # lean heads-up to stdout
   python3 query-milestone-schedule.py --output out.json     # + structured JSON
-  python3 query-milestone-schedule.py --check-backports     # also resolve release/* lines
   python3 query-milestone-schedule.py --json                # print JSON instead of a table
 
-Prerequisites: Python 3.8+ (stdlib only). --check-backports needs a git checkout with the
-release branches fetched (origin/release/*).
+Prerequisites: Python 3.8+ (stdlib only).
 """
 
 import argparse
 import json
 import os
 import re
-import subprocess
 import sys
 import time
 import urllib.error
@@ -53,8 +46,6 @@ RELEASES_URL = ("https://chromiumdash.appspot.com/fetch_releases"
 ALL_CHANNELS = ["Extended", "Stable", "Beta", "Dev", "Canary"]
 FRONT_CHANNEL = "Beta"            # the channel `main` is expected to keep up with
 DEFAULT_PLATFORM = "Windows"
-# Channels backed by a cut release/<major>.<M>.x line (Beta == main, so not listed).
-DEFAULT_BACKPORT_CHANNELS = ["Extended", "Stable"]
 
 KEY_DATES = ["branch_point", "stable_date", "late_stable_date"]
 LEVEL_ORDER = {"critical": 0, "urgent": 1, "watch": 2, "ok": 3, "info": 4}
@@ -146,41 +137,6 @@ def read_main_versions(repo_root):
         return parse_versions(f.read())
 
 
-# --- git helpers (only used by --check-backports) ---
-
-def run_git(repo_root, args):
-    try:
-        out = subprocess.run(["git", "-C", repo_root] + args,
-                             capture_output=True, text=True, timeout=30)
-        return out.stdout if out.returncode == 0 else None
-    except (subprocess.SubprocessError, FileNotFoundError):
-        return None
-
-
-def resolve_release_branch(repo_root, major, milestone):
-    """Find the release/<major>.<milestone>.x ref (remote preferred)."""
-    for ref in (f"origin/release/{major}.{milestone}.x", f"release/{major}.{milestone}.x"):
-        if run_git(repo_root, ["rev-parse", "--verify", "-q", ref]) is not None:
-            return ref
-    return None
-
-
-def branch_skia_sha(repo_root, ref):
-    out = run_git(repo_root, ["ls-tree", ref, "externals/skia"])
-    if not out:
-        return None
-    m = re.search(r"commit\s+([0-9a-f]{40})", out)
-    return m.group(1) if m else None
-
-
-def branch_milestone(repo_root, ref):
-    out = run_git(repo_root, ["show", f"{ref}:scripts/VERSIONS.txt"])
-    if not out:
-        return None
-    ms, _ = parse_versions(out)
-    return ms
-
-
 # --- date math ---
 
 def parse_date(value):
@@ -245,28 +201,6 @@ def build_headsup(main_ms, beta_ms, upcoming, window, beta_stable_days):
     return alerts
 
 
-def check_backports(repo_root, major, channels, track, now):
-    """Axis-2: resolve each tracked channel's release/<major>.<M>.x line."""
-    rows = []
-    by_channel = {c["channel"]: c for c in channels}
-    for name in track:
-        ch = by_channel.get(name)
-        if not ch or not isinstance(ch.get("milestone"), int):
-            continue
-        m = ch["milestone"]
-        ref = resolve_release_branch(repo_root, major, m)
-        rows.append({
-            "channel": name,
-            "channel_milestone": m,
-            "channel_skia": ch.get("skia_hash"),
-            "branch": ref,
-            "branch_exists": ref is not None,
-            "branch_milestone": branch_milestone(repo_root, ref) if ref else None,
-            "branch_skia_fork": branch_skia_sha(repo_root, ref) if ref else None,
-        })
-    return rows
-
-
 def main():
     ap = argparse.ArgumentParser(description="Chromium release heads-up for SkiaSharp Skia bumps (main vs Beta).")
     ap.add_argument("--current", type=int, default=None,
@@ -279,10 +213,6 @@ def main():
                     help="Days-ahead threshold for schedule 'watch' alerts (default: 14).")
     ap.add_argument("--no-channels", action="store_true",
                     help="Skip channel lookup (schedule-only; disables the main-vs-Beta signal).")
-    ap.add_argument("--check-backports", action="store_true",
-                    help="Resolve each tracked channel's release/<major>.<M>.x line and its Skia SHA.")
-    ap.add_argument("--track", default=",".join(DEFAULT_BACKPORT_CHANNELS),
-                    help="Channels to resolve in --check-backports (default: Extended,Stable).")
     ap.add_argument("--json", action="store_true", help="Print the JSON result to stdout instead of a table.")
     ap.add_argument("--output", default=None, help="Write the JSON result to this path.")
     ap.add_argument("--repo-root", default=None, help="Repo root (default: auto-detect).")
@@ -338,12 +268,6 @@ def main():
     status = "behind" if (beta_ms is not None and main_ms < beta_ms) else "current"
     headsup = build_headsup(main_ms, beta_ms, upcoming, args.window, beta_stable_days)
 
-    backports = []
-    if args.check_backports:
-        track = [c.strip() for c in args.track.split(",") if c.strip()]
-        log(f"Resolving release branches for: {', '.join(track)}", args.verbose)
-        backports = check_backports(repo_root, major, channels, track, now)
-
     result = {
         "meta": {
             "generated_at": now.isoformat(),
@@ -363,8 +287,6 @@ def main():
         "upcoming": upcoming,
         "headsup": headsup,
     }
-    if args.check_backports:
-        result["backports"] = backports
 
     if args.output:
         os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
@@ -411,20 +333,6 @@ def print_summary(result):
         print(f"  {marker}m{e['milestone']:<7}  {b.get('date','?'):<13}  {s.get('date','?'):<13}  "
               f"{din:>8}   {','.join(e.get('channels') or [])}")
     print()
-
-    bp = result.get("backports")
-    if bp:
-        print("  Backport check (release/<major>.<M>.x lines)")
-        print("  " + "-" * 58)
-        for r in bp:
-            if r["branch_exists"]:
-                ok = "✓" if r["branch_milestone"] == r["channel_milestone"] else "⚠ milestone mismatch"
-                print(f"  {r['channel']:<9} m{r['channel_milestone']}: {r['branch']} "
-                      f"(pins m{r['branch_milestone']}, skia {(r['branch_skia_fork'] or '?')[:12]}) {ok}")
-            else:
-                print(f"  {r['channel']:<9} m{r['channel_milestone']}: no release/<major>.{r['channel_milestone']}.x branch found")
-        print("  note: branch Skia is the mono/skia fork SHA; compare upstream coverage via the Skia CVE process.")
-        print()
 
     print("  Heads-up:")
     for a in result["headsup"]:

@@ -39,14 +39,17 @@ This is why the default output is main-centric and does **not** walk previous re
 globally unique across majors, so `release/*.<M>.x` is unambiguous. A `release/<major>.<M>.x`
 branch is only cut partway through the cycle — until then, `main` is the head for that milestone.
 
-## Two Axes (only one needs tracking by default)
+## What This Tool Tracks (and What It Doesn't)
 
-| Axis | Question | What it needs |
-|------|----------|---------------|
-| **1. Milestone coverage** (default) | Are we keeping up with the front line? | `main` milestone + Beta channel milestone. Nothing else. |
-| **2. Within-milestone backports** (`--check-backports`) | Does a shipped `release/*.x` line carry the latest Skia *for its milestone* (e.g. a cherry-picked CVE fix in `149.0.7827.x`)? | Resolve `release/<major>.<M>.x`, read its Skia submodule SHA, compare against the channel's current `hashes.skia` via the Skia CVE process. |
+This tool answers **milestone coverage**: is `main` keeping up with the front line? It needs
+only `main`'s milestone and the Beta channel milestone — nothing else.
 
-Axis 1 is the heads-up. Axis 2 is a deeper, opt-in audit check.
+It does **not** try to verify whether a shipped `release/*.x` line carries the latest Skia
+*within* its milestone (e.g. a cherry-picked CVE fix in `150.0.7871.x`). That within-milestone
+backport question belongs to the [Skia CVE resolution](skia-cve-resolution.md) process, which
+does proper merge-base ancestry against the upstream fix commit. A naive SHA comparison can't
+answer it anyway: our submodule pins the **mono/skia fork**, not upstream google/skia, so the
+branch SHA and the channel's `hashes.skia` are not directly comparable.
 
 ## Data Access
 
@@ -91,9 +94,6 @@ python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py
 python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py \
   --output output/ai/milestone-schedule-cache.json
 
-# Axis 2: also resolve release/<major>.<M>.x lines and their Skia SHA
-python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py --check-backports
-
 # Print JSON instead of a table
 python3 .agents/skills/security-audit/scripts/query-milestone-schedule.py --json
 ```
@@ -111,8 +111,6 @@ upcoming schedule, and emits the main-vs-Beta heads-up.
 | `--ahead N` | `4` | How many milestones past main to include in the schedule |
 | `--window N` | `14` | Days-ahead threshold for schedule `watch` alerts |
 | `--no-channels` | off | Schedule-only (disables the main-vs-Beta signal) |
-| `--check-backports` | off | Resolve each tracked channel's `release/<major>.<M>.x` line + Skia SHA |
-| `--track` | `Extended,Stable` | Channels to resolve in `--check-backports` (Beta == main) |
 | `--json` | off | Print JSON to stdout instead of a table |
 | `--output PATH` | — | Write the structured JSON |
 | `--repo-root` / `--verbose` | auto / off | Path override, progress detail |
@@ -141,12 +139,6 @@ upcoming schedule, and emits the main-vs-Beta heads-up.
   ],
   "headsup": [
     { "level": "ok", "milestone": 150, "message": "main (m150) is at or ahead of Beta..." }
-  ],
-  // only with --check-backports:
-  "backports": [
-    { "channel": "Extended", "channel_milestone": 148, "channel_skia": "3a90f6662a2c...",
-      "branch": "origin/release/4.148.x", "branch_exists": true,
-      "branch_milestone": 148, "branch_skia_fork": "1a155bae3ac8..." }
   ]
 }
 ```
@@ -161,10 +153,6 @@ upcoming schedule, and emits the main-vs-Beta heads-up.
 | `ok` | 🟢 | `main >= Beta` — front line current. |
 | `info` | 🔵 | Other context. |
 
-> ⚠️ `backports` reports the **mono/skia fork** submodule SHA, which is not directly comparable to
-> the channel's upstream `hashes.skia`. Use it to confirm a release line exists and to feed the
-> Skia CVE resolution process (merge-base check) — not as a literal SHA-equality test.
-
 ## How the Audit Uses This
 
 Run in **Step 3** (right after the Chrome Releases blog query):
@@ -173,8 +161,9 @@ Run in **Step 3** (right after the Chrome Releases blog query):
 - **Escalate bumps** — if `status == "behind"` (or a `watch` milestone) also carries HIGH/CRITICAL
   Skia CVEs from the Chrome Releases / NVD pass, raise it in `nextSteps` with the stable date as
   the deadline.
-- **Deep check (optional)** — run `--check-backports` when auditing whether a shipped
-  `release/*.x` line is missing a within-milestone Skia security backport.
+- **Within-milestone backports** — for whether a shipped `release/*.x` line is missing a
+  cherry-picked Skia security fix, use the [Skia CVE resolution](skia-cve-resolution.md) process
+  (merge-base ancestry), not this tool.
 
 The output is advisory context; it need not be embedded in the structured report schema, but its
 `critical`/`urgent` findings should inform the prose summary and `nextSteps`.

@@ -33,7 +33,7 @@ combined into a single unified report.
 ## Key References
 
 - **[references/chrome-releases.md](references/chrome-releases.md)** — Chrome Releases blog: RSS query, two-pass extraction (regex + AI review), cross-referencing with NVD
-- **[references/milestone-schedule.md](references/milestone-schedule.md)** — Chromium release heads-up: `main` vs Beta milestone coverage, channel milestones + Skia commits, and the optional `release/<major>.<M>.x` backport check
+- **[references/milestone-schedule.md](references/milestone-schedule.md)** — Chromium release heads-up: `main` vs Beta milestone coverage, channel milestones + Skia commits
 - **[references/skia-cve-resolution.md](references/skia-cve-resolution.md)** — Skia core CVE pipeline (NVD → Bug ID → Commit → Branch → Cherry-pick → Reachability). **The Skia process is fine-grained — read this before auditing Skia.**
 - **[references/third-party-deps.md](references/third-party-deps.md)** — Third-party CVE process (libpng, freetype, harfbuzz, etc.): version verification, fix-commit ancestry, known false positives
 - **[references/cg-alerts.md](references/cg-alerts.md)** — Component Governance alerts: ADO pipeline queries, Docker container CVEs, fix locations
@@ -129,7 +129,7 @@ graduate Beta → Stable → Extended stable, a `release/<major>.<M>.x` line is 
 was already on M. So "where we are" = main's milestone, and the signal that matters is
 **`main_milestone >= beta_channel_milestone`**. **See
 [references/milestone-schedule.md](references/milestone-schedule.md)** for the model, endpoints,
-flags, and the optional within-milestone backport check.
+and flags.
 
 #### Run the script
 
@@ -153,10 +153,11 @@ upcoming schedule, and prints prioritized heads-up alerts:
 - **Where we are vs what's coming** — `meta.status` + the `upcoming` table answer it directly.
 - Escalate Skia bump recommendations in `nextSteps` when `status == "behind"` (or a `watch`
   milestone) also carries HIGH/CRITICAL CVEs from the Chrome Releases / NVD passes; cite the
-  target milestone's **stable date** as the deadline.
-- **Deep check (optional):** run with `--check-backports` to resolve each shipped
-  `release/<major>.<M>.x` line and surface its pinned Skia for the within-milestone backport
-  audit (axis 2). Treat a `critical` heads-up as a finding even with no GitHub issue filed.
+  target milestone's **stable date** as the deadline. Treat a `critical` heads-up as a finding
+  even with no GitHub issue filed.
+- For whether a shipped `release/*.x` line is missing a *within-milestone* Skia backport, use the
+  [Skia CVE resolution](references/skia-cve-resolution.md) process (merge-base ancestry) — the
+  schedule tool only covers milestone alignment.
 
 ---
 
