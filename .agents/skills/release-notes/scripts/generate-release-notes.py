@@ -21,7 +21,7 @@ docstrings on _page_filename, determine_diff_range, cleanup_stale_unreleased).
 AI / SKILL.md: reads each file in the final "Files to polish:" list and rewrites
 its body from the embedded raw-data block. Nothing structural — it never edits this
 script. If the output looks wrong (a missing/unexpected page, a bad range), the
-polish step STOPS and reports; a maintainer fixes the script here.
+Polish phase STOPS and reports; a maintainer fixes the script here.
 
 Page model (two files per in-flight version — released + unreleased coexist)
 ---------------------------------------------------------------------------

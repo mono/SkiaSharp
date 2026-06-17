@@ -12,7 +12,7 @@
 //
 // Two targets, one engine:
 //   docs-api-diff-past  — historical: regenerate the COMMITTED releases/ trees from
-//                         the feed (the §2.2 step-1 the unified workflow runs).
+//                         the feed (the Cake generator the §2.2 Prepare phase runs).
 //   docs-api-diff       — current: diff the freshly built, unpublished CI packages
 //                         against the feed as a build-pipeline gate (spec §5.3);
 //                         writes only transient output/api-diff, never releases/.
