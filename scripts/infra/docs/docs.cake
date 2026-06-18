@@ -40,25 +40,29 @@ Task ("docs-update-frameworks")
     EnsureDirectoryExists (docsTempPathNuGets);
     EnsureDirectoryExists (docsTempPathFrameowrks);
 
-    // extract nugets that were built/downloaded (only supported, not obsolete)
+    // Extract every supported package from output/nugets (the local build output).
+    // Obsolete packages are not built, so they are absent here, have no version to
+    // document, and simply drop out of the docs.
     foreach (var id in SUPPORTED_NUGETS.Keys) {
         var version = GetVersion (id);
         var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
             ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
             : version;
         var name = $"{id}.{localNugetVersion}.nupkg";
+        var nupkg = $"{OUTPUT_NUGETS_PATH}/{name}";
+        if (!FileExists (nupkg))
+            throw new Exception ($"Could not find '{nupkg}'. Run the 'docs-download-output' target (or build the packages) to populate output/nugets first.");
         CleanDir ($"{docsTempPathNuGets}/{id}");
-        Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"{docsTempPathNuGets}/{id}");
+        Unzip (nupkg, $"{docsTempPathNuGets}/{id}");
     }
 
-    // get a comparer that will download the nugets
-    Information ($"Creating comparer...");
-    var comparer = await CreateNuGetDiffAsync ();
-
-    // generate the temp frameworks.xml
+    // Build the temp frameworks.xml that tells mdoc which assemblies make up each
+    // moniker. Everything is documented from the packages extracted above; the
+    // packages being documented are never queried or downloaded from NuGet, so run
+    // 'docs-download-output' first (or a local build) to populate output/nugets.
     var xFrameworks = new XElement ("Frameworks");
     var monikers = new List<string> ();
-    foreach (var id in TRACKED_NUGETS.Keys) {
+    foreach (var id in SUPPORTED_NUGETS.Keys) {
         // skip doc generation for Uno, this is the same as WinUI and it is not needed
         if (id.StartsWith ("SkiaSharp.Views.Uno"))
             continue;
@@ -66,68 +70,49 @@ Task ("docs-update-frameworks")
         if (id.Contains ("NativeAssets"))
             continue;
 
-        // get the versions
-        Information ($"Comparing the assemblies in '{id}'...");
-        var allVersions = await NuGetVersions.GetAllAsync (id, new NuGetVersions.Filter {
-            MinimumVersion = new NuGetVersion (TRACKED_NUGETS [id])
-        });
+        // Latest-only: every package is documented from its single locally-extracted
+        // version with a plain, unversioned moniker. The docs always describe just
+        // the current build, so there are no per-version monikers.
+        Information ($"Adding the assemblies in '{id}'...");
+        var packagePath = $"{docsTempPathNuGets}/{id}";
 
-        // add the current dev version to the mix (only for supported packages)
-        var isSupported = SUPPORTED_NUGETS.ContainsKey(id);
-        var dev = isSupported ? new NuGetVersion (GetVersion (id)) : null;
-        if (dev != null)
-            allVersions = allVersions.Union (new [] { dev }).ToArray ();
+        // Each platform/TFM directory in the package contributes its assemblies to a
+        // moniker. The default moniker is the package id (skiasharp, harfbuzzsharp,
+        // skiasharp-skottie, ...), but related packages are merged into one family
+        // moniker (all SkiaSharp.Views.Maui.* -> skiasharp-views-maui, the other
+        // SkiaSharp.Views.* -> skiasharp-views, ...) so the docs site groups them
+        // instead of showing one entry per NuGet package.
+        var dirs =
+            GetPlatformDirectories ($"{packagePath}/lib").Union(
+            GetPlatformDirectories ($"{packagePath}/ref"));
+        foreach (var (path, platform) in dirs) {
+            string moniker;
+            if (id.StartsWith ("SkiaSharp.Views.Maui"))
+                moniker = "skiasharp-views-maui";
+            else if (id.StartsWith ("SkiaSharp.Views"))
+                moniker = "skiasharp-views";
+            else if (id.StartsWith ("SkiaSharp.Direct3D"))
+                moniker = "skiasharp-direct3d";
+            else if (id.StartsWith ("SkiaSharp.Vulkan"))
+                moniker = "skiasharp-vulkan";
+            else if (platform == null)
+                moniker = $"{id.ToLower ().Replace (".", "-")}";
+            else
+                moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}";
 
-        // "merge" the patches so we only care about major.minor
-        var merged = new Dictionary<string, NuGetVersion> ();
-        foreach (var version in allVersions) {
-            merged [$"{version.Major}.{version.Minor}"] = version;
-        }
-
-        foreach (var version in merged) {
-            Information ($"Downloading '{id}' version '{version}'...");
-            // get the path to the nuget contents
-            var packagePath = (isSupported && version.Value == dev)
-                ? $"{docsTempPathNuGets}/{id}"
-                : await comparer.ExtractCachedPackageAsync (id, version.Value);
-
-            var dirs =
-                GetPlatformDirectories ($"{packagePath}/lib").Union(
-                GetPlatformDirectories ($"{packagePath}/ref"));
-            foreach (var (path, platform) in dirs) {
-                string moniker;
-                if (id.StartsWith ("SkiaSharp.Views.Forms"))
-                    if (id != "SkiaSharp.Views.Forms")
-                        continue;
-                    else
-                        moniker = $"skiasharp-views-forms-{version.Key}";
-                else if (id.StartsWith ("SkiaSharp.Views.Maui"))
-                    moniker = $"skiasharp-views-maui-{version.Key}";
-                else if (id.StartsWith ("SkiaSharp.Views"))
-                    moniker = $"skiasharp-views-{version.Key}";
-                else if (id.StartsWith ("SkiaSharp.Direct3D"))
-                    moniker = $"skiasharp-direct3d-{version.Key}";
-                else if (id.StartsWith ("SkiaSharp.Vulkan"))
-                    moniker = $"skiasharp-vulkan-{version.Key}";
-                else if (platform == null)
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{version.Key}";
-                else
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version.Key}";
-
-                // add the node to the frameworks.xml
-                if (!monikers.Contains (moniker)) {
-                    monikers.Add (moniker);
-                    xFrameworks.Add (
-                        new XElement ("Framework",
-                            new XAttribute ("Name", moniker),
-                            new XAttribute ("Source", moniker)));
-                }
-
-                // copy the assemblies for the tool
-                var o = $"{docsTempPathFrameowrks}/{moniker}";
-                EnsureDirectoryExists (o);
-                CopyFiles ($"{path}/*.dll", o);
+            // record the moniker in frameworks.xml (once per moniker)
+            if (!monikers.Contains (moniker)) {
+                monikers.Add (moniker);
+                xFrameworks.Add (
+                    new XElement ("Framework",
+                        new XAttribute ("Name", moniker),
+                        new XAttribute ("Source", moniker)));
             }
+
+            // stage this moniker's assemblies for mdoc to read
+            var o = $"{docsTempPathFrameowrks}/{moniker}";
+            EnsureDirectoryExists (o);
+            CopyFiles ($"{path}/*.dll", o);
         }
     }
     monikers.Sort ();
@@ -137,20 +122,41 @@ Task ("docs-update-frameworks")
     var xdoc = new XDocument (xFrameworks);
     xdoc.Save (fwxml);
 
-    // update the docs json
+    // write the generated moniker list into the docs publishing config so the docs
+    // site advertises exactly the monikers produced above
     var docsJsonPath = DOCS_ROOT_PATH.CombineWithFilePath (".openpublishing.publish.config.json");
     var docsJson = ParseJsonFromFile (docsJsonPath);
     docsJson ["docsets_to_publish"][0]["monikers"] = new JArray (monikers.ToArray ());
     SerializeJsonToPrettyFile (docsJsonPath, docsJson);
 
-    // generate doc files
-    comparer = await CreateNuGetDiffAsync ();
+    // generate doc files. The packages being documented all come from output/nugets
+    // above. The comparer is created here only to supply mdoc's --lib search paths:
+    // the third-party reference assemblies (Microsoft.iOS/macOS/MacCatalyst/tvOS
+    // refs, Maui, GTK, WindowsAppSDK, ...) that SkiaSharp.Views.* assemblies depend
+    // on. mdoc fails hard ("Failed to resolve assembly") without them, and they are
+    // restored into the package cache rather than shipped in output/nugets.
+    var comparer = await CreateNuGetDiffAsync ();
     var refArgs = string.Join (" ", comparer.SearchPaths.Select (r => $"--lib=\"{r}\""));
     var fw = MakeAbsolute ((FilePath) fwxml);
     RunProcess (Context.Tools.Resolve ("mdoc.exe"), new ProcessSettings {
         Arguments = $"update --debug --delete --out=\"{DOCS_PATH}\" --lang=DocId --frameworks={fw} {refArgs}",
         WorkingDirectory = docsTempPathFrameowrks
     });
+
+    // mdoc only ever adds FrameworksIndex/*.xml files; it never deletes the ones for
+    // monikers that are no longer generated (e.g. when a package stops being built or
+    // a moniker is renamed). Prune those orphans so the FrameworksIndex stays in
+    // lockstep with the monikers we just produced.
+    var frameworksIndexDir = $"{DOCS_PATH}/FrameworksIndex";
+    if (DirectoryExists (frameworksIndexDir)) {
+        foreach (var indexFile in GetFiles ($"{frameworksIndexDir}/*.xml")) {
+            var indexMoniker = indexFile.GetFilenameWithoutExtension ().ToString ();
+            if (!monikers.Contains (indexMoniker)) {
+                Information ("Removing orphaned framework index: {0}", indexMoniker);
+                DeleteFile (indexFile);
+            }
+        }
+    }
 
     // clean up after working
     CleanDirectories (docsTempPath);
@@ -165,10 +171,70 @@ Task ("docs-format-docs")
     float memberCount = 0;
     float totalTypes = 0;
     float totalMembers = 0;
+
+    // Load the authoritative set of monikers that docs-update-frameworks just wrote
+    // to .openpublishing.publish.config.json. mdoc only ever ADDS framework tokens to
+    // a member's FrameworkAlternate/FrameworkOnly attribute; it never removes ones
+    // for monikers that are no longer generated. Whenever a moniker disappears (a
+    // dropped or renamed package), those stale tokens are left behind and would point
+    // at monikers that no longer exist. The loop below uses this set to strip them.
+    var validMonikers = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+    var monikersConfigPath = DOCS_ROOT_PATH.CombineWithFilePath (".openpublishing.publish.config.json");
+    if (FileExists (monikersConfigPath)) {
+        var monikersJson = ParseJsonFromFile (monikersConfigPath);
+        foreach (var m in (JArray) monikersJson ["docsets_to_publish"][0]["monikers"])
+            validMonikers.Add ((string) m);
+    }
+
+    // Load the authoritative set of assemblies that were actually built and
+    // documented this run, straight from the freshly generated FrameworksIndex.
+    // mdoc accumulates an <AssemblyInfo> per assembly that has ever documented a
+    // type/member and never removes them, so when a package is dropped or renamed
+    // (e.g. the old SkiaSharp.Views.Gtk split into Gtk3/Gtk4, or the obsolete
+    // SkiaSharp.Views.Maui.Controls.Compatibility) its <AssemblyInfo> lingers on
+    // types that still exist in a current assembly. The loop below uses this set to
+    // strip those stale assembly references.
+    var validAssemblies = new HashSet<string> (StringComparer.Ordinal);
+    var frameworksIndexPath = $"{DOCS_PATH}/FrameworksIndex";
+    if (DirectoryExists (frameworksIndexPath)) {
+        foreach (var indexFile in GetFiles ($"{frameworksIndexPath}/*.xml")) {
+            foreach (var asm in XDocument.Load (indexFile.FullPath).Descendants ("Assembly"))
+                validAssemblies.Add (asm.Attribute ("Name")?.Value);
+        }
+    }
+
+    // Load the set of namespaces that still contain at least one type, straight
+    // from this run's index.xml. Like assemblies above, mdoc never removes a
+    // <Namespace> entry (nor its ns-*.xml stub file) when the last type in it goes
+    // away, so a dropped package leaves behind an empty <Namespace></Namespace> in
+    // index.xml and an orphan ns-*.xml. The Overview pass below removes the empty
+    // index.xml entries; the Namespace pass deletes any ns-*.xml not in this set.
+    var validNamespaces = new HashSet<string> (StringComparer.Ordinal);
+    var indexFilePath = $"{DOCS_PATH}/index.xml";
+    if (System.IO.File.Exists (indexFilePath)) {
+        foreach (var ns in XDocument.Load (indexFilePath).Root.Elements ("Types").Elements ("Namespace")) {
+            if (ns.Elements ("Type").Any ())
+                validNamespaces.Add (ns.Attribute ("Name")?.Value);
+        }
+    }
+
     foreach (var file in docFiles) {
         Debug("Processing {0}...", file.FullPath);
 
         var xdoc = XDocument.Load (file.FullPath);
+
+        // Delete orphan namespace stub files (ns-*.xml) whose namespace no longer
+        // has any types in index.xml (see validNamespaces above). mdoc leaves these
+        // behind when a package stops being built; this keeps the stub files in
+        // lockstep with the live namespaces in index.xml. The global namespace
+        // (Name="", file ns-.xml) is always emitted by mdoc and is kept as-is.
+        if (xdoc.Root.Name == "Namespace") {
+            var nsName = xdoc.Root.Attribute ("Name")?.Value ?? "";
+            if (nsName.Length > 0 && !validNamespaces.Contains (nsName)) {
+                DeleteFile (file);
+                continue;
+            }
+        }
 
         // remove IComponent docs as this is just designer
         if (xdoc.Root.Name == "Type") {
@@ -202,71 +268,96 @@ Task ("docs-format-docs")
                 .Remove ();
         }
 
-        // remove any duplicate AssemblyVersions
-        if (xdoc.Root.Name == "Type") {
-            foreach (var info in xdoc.Root.Descendants ("AssemblyInfo")) {
-                var versions = info.Elements ("AssemblyVersion");
-                var newVersions = new List<XElement> ();
-                foreach (var version in versions) {
-                    if (newVersions.All (nv => nv.Value != version.Value)) {
-                        newVersions.Add (version);
-                    }
-                }
-                versions.Remove ();
-                info.Add (newVersions.OrderBy (e => e.Value));
-            }
-        }
-
-        // Fix the type rename from SkPath1DPathEffectStyle to SKPath1DPathEffectStyle
-        // this breaks linux as it is just a case change and that OS is case sensitive
+        // Drop stale entries that mdoc accumulated in index.xml for packages that
+        // are no longer built: <Assembly> overview entries whose assembly is not in
+        // this run's build (see validAssemblies), and <Namespace> entries left empty
+        // because every type in them was deleted. The orphan ns-*.xml stub files for
+        // those emptied namespaces are deleted by the Namespace pass above.
         if (xdoc.Root.Name == "Overview") {
+            if (validAssemblies.Count > 0) {
+                xdoc.Root
+                    .Elements ("Assemblies")
+                    .Elements ("Assembly")
+                    .Where (e => !validAssemblies.Contains (e.Attribute ("Name")?.Value))
+                    .Remove ();
+            }
             xdoc.Root
                 .Elements ("Types")
                 .Elements ("Namespace")
-                .Elements ("Type")
-                .Where (e => e.Attribute ("Name")?.Value == "SkPath1DPathEffectStyle")
+                .Where (e => !e.Elements ("Type").Any ())
                 .Remove ();
         }
 
-        // remove the duplicate SKDynamicMemoryWStream.CopyTo method with a different return type
-        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDynamicMemoryWStream") {
-            var copyTos = xdoc.Root
-                .Elements ("Members")
-                .Elements ("Member")
-                .Where (e => e.Attribute ("MemberName")?.Value == "CopyTo")
-                .Where (e => e.Elements ("MemberSignature").Any (s => s.Attribute ("Value")?.Value == "M:SkiaSharp.SKDynamicMemoryWStream.CopyTo(SkiaSharp.SKWStream)"));
-            var voidReturn = copyTos.FirstOrDefault (e => e.Element ("ReturnValue")?.Element ("ReturnType")?.Value == "System.Void");
-            var boolReturn = copyTos.FirstOrDefault (e => e.Element ("ReturnValue")?.Element ("ReturnType")?.Value == "System.Boolean");
-            if (voidReturn != null && boolReturn != null) {
-                boolReturn
-                    .Element ("AssemblyInfo")
-                    .Elements ("AssemblyVersion")
-                    .FirstOrDefault ()
-                    .AddBeforeSelf (voidReturn.Element ("AssemblyInfo").Elements ("AssemblyVersion"));
-                voidReturn.Remove ();
+        // Collapse AssemblyVersions to latest-only. mdoc accumulates one
+        // <AssemblyVersion> per historical release inside each <AssemblyInfo> and
+        // never removes the old ones, so the list grows forever (2.80.0.0, 2.88.0.0,
+        // ... up to the current build). The authoritative current version already
+        // lives in FrameworksIndex per moniker, so keep only the highest version in
+        // each AssemblyInfo - the one from the current build - to match the
+        // latest-only docs model and stop the perpetual growth.
+        if (xdoc.Root.Name == "Type") {
+            foreach (var info in xdoc.Root.Descendants ("AssemblyInfo")) {
+                var versions = info.Elements ("AssemblyVersion").ToList ();
+                if (versions.Count <= 1)
+                    continue;
+                var latest = versions
+                    .OrderBy (e => System.Version.TryParse (e.Value, out var v) ? v : new System.Version (0, 0))
+                    .Last ();
+                foreach (var v in versions) {
+                    if (v != latest)
+                        v.Remove ();
+                }
             }
         }
 
-        // remove the no-longer-obsolete document members
-        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDocument") {
-            xdoc.Root
-                .Elements ("Members")
-                .Elements ("Member")
-                .Where (e => e.Attribute ("MemberName")?.Value == "CreatePdf")
-                .Where (e => e.Elements ("MemberSignature").All (s => s.Attribute ("Value")?.Value != "M:SkiaSharp.SKDocument.CreatePdf(SkiaSharp.SKWStream,SkiaSharp.SKDocumentPdfMetadata,System.Single)"))
-                .SelectMany (e => e.Elements ("Attributes").Elements ("Attribute").Elements ("AttributeName"))
-                .Where (e => e.Value.Contains ("System.Obsolete"))
-                .Remove ();
+        // Strip <AssemblyInfo> blocks for assemblies that no longer exist in the
+        // current build (not present in this run's FrameworksIndex). A type/member
+        // can be documented by several assemblies at once; when one is dropped or
+        // renamed, mdoc leaves its stale <AssemblyInfo> behind. Remove those, then
+        // drop any member that is left with none (it only lived in the dropped
+        // assembly) and delete the file if the type itself ends up with none. Members
+        // that never carried an <AssemblyInfo> (they inherit the type's) are untouched.
+        if (xdoc.Root.Name == "Type" && validAssemblies.Count > 0) {
+            bool IsStale (XElement info) =>
+                !validAssemblies.Contains (info.Element ("AssemblyName")?.Value);
+
+            foreach (var member in xdoc.Root.Elements ("Members").Elements ("Member").ToArray ()) {
+                var infos = member.Elements ("AssemblyInfo").ToArray ();
+                if (infos.Length == 0)
+                    continue;
+                infos.Where (IsStale).Remove ();
+                if (!member.Elements ("AssemblyInfo").Any ())
+                    member.Remove ();
+            }
+
+            xdoc.Root.Elements ("AssemblyInfo").Where (IsStale).ToArray ().Remove ();
+            if (!xdoc.Root.Elements ("AssemblyInfo").Any ()) {
+                DeleteFile (file);
+                continue;
+            }
         }
 
-        // remove the no-longer-obsolete SK3dView attributes
-        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SK3dView") {
-            xdoc.Root
-                .Element ("Attributes")?
-                .Elements ("Attribute")
-                .SelectMany (e => e.Elements ("AttributeName"))
-                .Where (e => e.Value.Contains ("System.Obsolete"))
-                .Remove ();
+        // strip orphaned framework tokens left behind by mdoc: any
+        // FrameworkAlternate/FrameworkOnly entry that references a moniker which is
+        // no longer generated (a dropped or renamed package). Tokens are kept only
+        // when they appear in the freshly generated moniker set; an attribute that
+        // ends up empty is dropped by the block that follows.
+        if (validMonikers.Count > 0) {
+            foreach (var attrName in new [] { "FrameworkAlternate", "FrameworkOnly" }) {
+                foreach (var el in xdoc.Root.DescendantsAndSelf ().ToArray ()) {
+                    var attr = el.Attribute (attrName);
+                    if (attr == null || string.IsNullOrEmpty (attr.Value))
+                        continue;
+                    var kept = attr.Value
+                        .Split (new [] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Where (t => validMonikers.Contains (t))
+                        .ToArray ();
+                    if (kept.Length == 0)
+                        attr.Remove ();
+                    else if (kept.Length != attr.Value.Split (';').Length)
+                        attr.Value = string.Join (";", kept);
+                }
+            }
         }
 
         // remove empty FrameworkAlternate elements
