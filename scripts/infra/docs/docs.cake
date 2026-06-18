@@ -223,18 +223,25 @@ Task ("docs-format-docs")
                 .Remove ();
         }
 
-        // remove any duplicate AssemblyVersions
+        // Collapse AssemblyVersions to latest-only. mdoc accumulates one
+        // <AssemblyVersion> per historical release inside each <AssemblyInfo> and
+        // never removes the old ones, so the list grows forever (2.80.0.0, 2.88.0.0,
+        // ... up to the current build). The authoritative current version already
+        // lives in FrameworksIndex per moniker, so keep only the highest version in
+        // each AssemblyInfo - the one from the current build - to match the
+        // latest-only docs model and stop the perpetual growth.
         if (xdoc.Root.Name == "Type") {
             foreach (var info in xdoc.Root.Descendants ("AssemblyInfo")) {
-                var versions = info.Elements ("AssemblyVersion");
-                var newVersions = new List<XElement> ();
-                foreach (var version in versions) {
-                    if (newVersions.All (nv => nv.Value != version.Value)) {
-                        newVersions.Add (version);
-                    }
+                var versions = info.Elements ("AssemblyVersion").ToList ();
+                if (versions.Count <= 1)
+                    continue;
+                var latest = versions
+                    .OrderBy (e => System.Version.TryParse (e.Value, out var v) ? v : new System.Version (0, 0))
+                    .Last ();
+                foreach (var v in versions) {
+                    if (v != latest)
+                        v.Remove ();
                 }
-                versions.Remove ();
-                info.Add (newVersions.OrderBy (e => e.Value));
             }
         }
 
