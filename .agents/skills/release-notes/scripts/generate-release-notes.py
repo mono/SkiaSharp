@@ -23,6 +23,16 @@ its body from the embedded raw-data block. Nothing structural — it never edits
 script. If the output looks wrong (a missing/unexpected page, a bad range), the
 Polish phase STOPS and reports; a maintainer fixes the script here.
 
+Output streams (the Prepare-phase contract)
+--------------------------------------------
+STDOUT carries ONLY the machine-readable result the Polish phase consumes: the
+delimited "Files to polish" block (see cmd_all / the `log` helper). Every piece of
+human progress and diagnostics — "Processing…", "Found N PRs", "Skipping
+(unchanged)", warnings, errors — goes to STDERR via ``log()``. So a caller can
+``generate-release-notes.py --all 2>/dev/null`` (or capture stdout in a workflow
+step) and get nothing but the list. Do NOT add bare ``print()`` for progress; use
+``log()``. The only ``print()`` to stdout is the final list block itself.
+
 Page model (two files per in-flight version — released + unreleased coexist)
 ---------------------------------------------------------------------------
 A version's "released" and "unreleased" states are orthogonal and get SEPARATE
@@ -358,6 +368,22 @@ def _removeprefix(s, prefix):
     return s
 
 
+def log(*args, **kwargs):
+    # type: (...) -> None
+    """Human-facing progress and diagnostics — always written to STDERR.
+
+    STDOUT is reserved for the single machine-readable artifact the Prepare
+    phase produces: the delimited "Files to polish" block the AI Polish phase
+    consumes (SKILL.md §Prepare). Keeping every "Processing…", "Found N PRs",
+    "Skipping (unchanged)", warning and error on stderr means a caller can do
+    ``generate-release-notes.py --all 2>/dev/null`` (or capture stdout in a
+    workflow step) and get nothing but the list — no progress noise to parse
+    around.
+    """
+    kwargs["file"] = sys.stderr
+    print(*args, **kwargs)
+
+
 def run(args, check=True):
     # type: (list[str], bool) -> str
     """Run a command and return stdout."""
@@ -613,7 +639,7 @@ def resolve_pr_authors(prs):
                        if str(pr["number"]) not in cache})
 
     if to_query:
-        print("  Resolving {} PR author(s) via GitHub API...".format(
+        log("  Resolving {} PR author(s) via GitHub API...".format(
             len(to_query)), file=sys.stderr)
         dirty = False
         for i in range(0, len(to_query), _GRAPHQL_BATCH):
@@ -694,7 +720,7 @@ def resolve_skia_links(prs):
         ["git", "-C", str(SKIA_SUBMODULE), "cat-file", "-e", sha],
         capture_output=True).returncode != 0})
     if missing:
-        print("  Fetching {} skia commit(s) to resolve companion links...".format(
+        log("  Fetching {} skia commit(s) to resolve companion links...".format(
             len(missing)), file=sys.stderr)
         run(["git", "-C", str(SKIA_SUBMODULE), "fetch", "-q", "--depth=1",
              "--filter=blob:none", "origin"] + missing, check=False)
@@ -1884,22 +1910,22 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
 def cmd_update_toc():
     """Regenerate TOC.yml and index.md (and prune stale unreleased pages)."""
     if not RELEASES_DIR.is_dir():
-        print("Error: {} does not exist".format(RELEASES_DIR), file=sys.stderr)
+        log("Error: {} does not exist".format(RELEASES_DIR), file=sys.stderr)
         sys.exit(1)
 
     for removed in cleanup_stale_unreleased():
-        print("Removed stale {}".format(removed))
+        log("Removed stale {}".format(removed))
 
     versions, next_versions = get_version_files()
     hb_versions, hb_next_versions = get_harfbuzz_version_files()
 
     (RELEASES_DIR / "TOC.yml").write_text(
         generate_toc(versions, next_versions, hb_versions, hb_next_versions))
-    print("Updated {}".format(RELEASES_DIR / "TOC.yml"))
+    log("Updated {}".format(RELEASES_DIR / "TOC.yml"))
 
     (RELEASES_DIR / "index.md").write_text(
         generate_index(versions, next_versions, hb_versions, hb_next_versions))
-    print("Updated {}".format(RELEASES_DIR / "index.md"))
+    log("Updated {}".format(RELEASES_DIR / "index.md"))
 
 
 def _compute_page_status(branch, version):
@@ -2002,7 +2028,7 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     try:
         from_ref, to_ref, version = determine_diff_range(branch)
     except (RuntimeError, subprocess.CalledProcessError) as e:
-        print("  WARNING: Could not determine diff range for {}: {}".format(
+        log("  WARNING: Could not determine diff range for {}: {}".format(
             branch, e), file=sys.stderr)
         return None
 
@@ -2015,16 +2041,16 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     status, superseded_by, supersedes = _compute_page_status(branch, version)
 
     if verbose:
-        print("Branch: {}".format(branch))
-        print("Version: {}".format(version))
-        print("Status: {}".format(status))
+        log("Branch: {}".format(branch))
+        log("Version: {}".format(version))
+        log("Status: {}".format(status))
         if superseded_by:
-            print("Superseded by: {}".format(superseded_by))
+            log("Superseded by: {}".format(superseded_by))
         if supersedes:
-            print("Supersedes: {}".format(", ".join(supersedes)))
+            log("Supersedes: {}".format(", ".join(supersedes)))
 
     prs = get_prs_from_diff(from_ref, to_ref)
-    print("  Found {} PR(s), diff: {}".format(len(prs), diff_range_str))
+    log("  Found {} PR(s), diff: {}".format(len(prs), diff_range_str))
 
     output_path = RELEASES_DIR / _page_filename(branch, version)
 
@@ -2037,7 +2063,7 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     if is_head and not prs:
         if output_path.exists():
             output_path.unlink()
-            print("  Removed empty {} (nothing unreleased)".format(output_path))
+            log("  Removed empty {} (nothing unreleased)".format(output_path))
         return None
 
     # Deterministic, script-owned API-changes facts (spec §2.2/§4.4), computed
@@ -2060,7 +2086,7 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
                                            status, superseded_by, supersedes,
                                            api_sig):
-        print("  Skipping {} (unchanged)".format(output_path))
+        log("  Skipping {} (unchanged)".format(output_path))
         return None
 
     # The page is changing, so it's worth the one network step now: resolving
@@ -2117,7 +2143,7 @@ def _write_page(branch, all_branches, verbose=False, force=False):
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
-    print("  Wrote {} ({} PRs)".format(output_path, len(prs)))
+    log("  Wrote {} ({} PRs)".format(output_path, len(prs)))
     return str(output_path)
 
 
@@ -2207,14 +2233,14 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
 
     skia_branch = _skia_branch_for_line(canonical_skia, all_branches)
     if not skia_branch:
-        print("  WARNING: no SkiaSharp branch for HarfBuzz {} (introducing line "
+        log("  WARNING: no SkiaSharp branch for HarfBuzz {} (introducing line "
               "{}); skipping".format(hb_line, canonical_skia), file=sys.stderr)
         return None, None
 
     try:
         from_ref, to_ref, _ = determine_diff_range(skia_branch)
     except (RuntimeError, subprocess.CalledProcessError) as e:
-        print("  WARNING: could not resolve range for HarfBuzz {} via {}: {}"
+        log("  WARNING: could not resolve range for HarfBuzz {} via {}: {}"
               .format(hb_line, skia_branch, e), file=sys.stderr)
         return None, None
 
@@ -2238,7 +2264,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     if not published and not prs:
         if output_path.exists():
             output_path.unlink()
-            print("  Removed empty {} (nothing unreleased)".format(output_path))
+            log("  Removed empty {} (nothing unreleased)".format(output_path))
         return None, None
 
     # Published line, no HarfBuzz-touching PRs -> deterministic *No changes* page
@@ -2246,11 +2272,11 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     if published and not prs:
         text = _render_harfbuzz_no_changes(hb_line, canonical_skia, api_diff_link)
         if not force and output_path.exists() and output_path.read_text() == text:
-            print("  Skipping {} (unchanged, no changes)".format(output_path))
+            log("  Skipping {} (unchanged, no changes)".format(output_path))
             return None, owned
         hb_dir.mkdir(parents=True, exist_ok=True)
         output_path.write_text(text)
-        print("  Wrote {} (no HarfBuzz changes)".format(output_path))
+        log("  Wrote {} (no HarfBuzz changes)".format(output_path))
         return None, owned
 
     status = "stable" if published else "unreleased"
@@ -2283,7 +2309,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
                                            status, superseded_by, supersedes,
                                            api_sig):
-        print("  Skipping {} (unchanged)".format(output_path))
+        log("  Skipping {} (unchanged)".format(output_path))
         return None, owned
 
     resolve_pr_authors(prs)
@@ -2305,7 +2331,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
 
     hb_dir.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
-    print("  Wrote {} ({} PRs)".format(output_path, len(prs)))
+    log("  Wrote {} ({} PRs)".format(output_path, len(prs)))
     return str(output_path), owned
 
 
@@ -2314,7 +2340,7 @@ def cmd_branch(branch, force=False):
     """Diff a branch against its predecessor and write raw data to the version file."""
     branch = _removeprefix(branch, "origin/")
 
-    print("Fetching remote branches...")
+    log("Fetching remote branches...")
     try:
         # Unshallow if needed (CI runners use shallow clones)
         run(["git", "fetch", "origin", "--unshallow", "--quiet"], check=False)
@@ -2324,12 +2350,12 @@ def cmd_branch(branch, force=False):
              "refs/heads/main:refs/remotes/origin/main",
              "--quiet"], check=True)
     except subprocess.CalledProcessError:
-        print("ERROR: git fetch failed. Cannot determine branch diff range.")
+        log("ERROR: git fetch failed. Cannot determine branch diff range.")
         sys.exit(1)
 
     all_branches = list_remote_release_branches()
     if not all_branches:
-        print("ERROR: No release branches found after fetch.")
+        log("ERROR: No release branches found after fetch.")
         sys.exit(1)
 
     # Resolve a versioned branch to the canonical branch for its version so a
@@ -2342,7 +2368,7 @@ def cmd_branch(branch, force=False):
         version = version_from_branch(branch)
         canonical = _canonical_branches_by_version(all_branches).get(version)
         if canonical and canonical != branch:
-            print("Note: {} is not the canonical branch for {}; "
+            log("Note: {} is not the canonical branch for {}; "
                   "processing {} instead.".format(branch, version, canonical))
             target = canonical
 
@@ -2359,7 +2385,7 @@ def cmd_branch(branch, force=False):
 
     cmd_update_toc()
 
-    print("")
+    log("")
     print("========================================")
     print("Files to polish:")
     for f in files_to_polish:
@@ -2384,7 +2410,7 @@ def _regen_unreleased(trigger_branch, all_branches, force=False):
     # Servicing (.x) line for the same minor, if it exists.
     svc_branch = "release/{}.x".format(minor)
     if svc_branch in all_branches:
-        print("\nRegenerating unreleased for {}...".format(svc_branch))
+        log("\nRegenerating unreleased for {}...".format(svc_branch))
         path = _write_page(svc_branch, all_branches, force=force)
         if path:
             written.append(path)
@@ -2393,7 +2419,7 @@ def _regen_unreleased(trigger_branch, all_branches, force=False):
     # (a push to a 3.119.x preview doesn't move main's range if main is on 4.x).
     main_version = get_upcoming_version()
     if main_version and minor_group(main_version) == minor:
-        print("\nRegenerating unreleased for main...")
+        log("\nRegenerating unreleased for main...")
         path = _write_page("main", all_branches, force=force)
         if path:
             written.append(path)
@@ -2426,7 +2452,7 @@ def _process_harfbuzz_family(all_branches, force=False):
     valid_unreleased = set()  # type: set[str]
 
     for hb in hb_groups:
-        print("\n--- Processing HarfBuzz: {} (ships with {}) ---".format(
+        log("\n--- Processing HarfBuzz: {} (ships with {}) ---".format(
             hb["hb_line"], hb["canonical_skia"]))
         path, owned = _write_harfbuzz_page(hb, all_branches, force=force)
         if owned and owned.endswith("-unreleased.md"):
@@ -2444,7 +2470,7 @@ def _process_harfbuzz_family(all_branches, force=False):
         for f in sorted(hb_dir.glob("*-unreleased.md")):
             if f.name not in valid_unreleased:
                 f.unlink()
-                print("Removed stale {}".format(f))
+                log("Removed stale {}".format(f))
 
     return files_to_polish, processed, skipped
 
@@ -2466,7 +2492,7 @@ def cmd_all(force=False):
     diffing others (handled in determine_diff_range / _is_valid_stable_base),
     never whether a page is produced.
     """
-    print("Fetching remote branches...")
+    log("Fetching remote branches...")
     try:
         run(["git", "fetch", "origin", "--unshallow", "--quiet"], check=False)
         run(["git", "fetch", "origin",
@@ -2474,12 +2500,12 @@ def cmd_all(force=False):
              "refs/heads/main:refs/remotes/origin/main",
              "--quiet"], check=True)
     except subprocess.CalledProcessError:
-        print("ERROR: git fetch failed.")
+        log("ERROR: git fetch failed.")
         sys.exit(1)
 
     all_branches = list_remote_release_branches()
     if not all_branches:
-        print("ERROR: No release branches found after fetch.")
+        log("ERROR: No release branches found after fetch.")
         sys.exit(1)
 
     # Build the processing list. Each output file must be produced by exactly
@@ -2505,10 +2531,10 @@ def cmd_all(force=False):
 
     for branch in branches_to_process:
         if branch == "main" and not get_upcoming_version():
-            print("WARNING: Cannot determine main version, skipping main.")
+            log("WARNING: Cannot determine main version, skipping main.")
             continue
 
-        print("\n--- Processing: {} ---".format(branch))
+        log("\n--- Processing: {} ---".format(branch))
         path = _write_page(branch, all_branches, force=force)
         if path:
             files_to_polish.append(path)
@@ -2529,9 +2555,9 @@ def cmd_all(force=False):
     cmd_update_toc()
 
     # Print summary for the AI agent
-    print("")
+    log("")
     print("========================================")
-    print("Processed: {}, Skipped/unchanged: {}".format(
+    log("Processed: {}, Skipped/unchanged: {}".format(
         processed_count, skipped_count))
     print("Files to polish:")
     if files_to_polish:
