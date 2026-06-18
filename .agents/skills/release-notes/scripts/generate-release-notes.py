@@ -1815,8 +1815,10 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
                     lines.append("        - name: Version {}".format(v))
                     lines.append("          href: {}.md".format(v))
 
-    # HarfBuzz peer family — sibling node, one entry per emitted HarfBuzz line
-    # (spec §3.5). Hub pages live under harfbuzzsharp/<hb>.md.
+    # HarfBuzz peer family — sibling node grouping HarfBuzz lines by minor
+    # (spec §3.5), mirroring the SkiaSharp version groups so the node is a tidy
+    # set of "HarfBuzzSharp X.Y.x" subgroups instead of one flat list. Hub pages
+    # live under harfbuzzsharp/<hb>.md.
     hb_versions = hb_versions or []
     hb_next_versions = hb_next_versions or []
     if hb_versions or hb_next_versions:
@@ -1825,16 +1827,33 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
         lines.append("- name: HarfBuzz")
         lines.append("  href: {}".format(hb_header))
         lines.append("  items:")
-        hb_entries = ([(v, True) for v in hb_next_versions]
-                      + [(v, False) for v in hb_versions])
-        hb_entries.sort(key=lambda t: version_key(t[0]), reverse=True)
-        for v, is_unrel in hb_entries:
-            if is_unrel:
-                lines.append("    - name: HarfBuzzSharp {} (Unreleased)".format(v))
-                lines.append("      href: harfbuzzsharp/{}-unreleased.md".format(v))
-            else:
-                lines.append("    - name: HarfBuzzSharp {}".format(v))
-                lines.append("      href: harfbuzzsharp/{}.md".format(v))
+
+        hb_stable_groups = defaultdict(list)
+        hb_unrel_groups = defaultdict(list)
+        for v in hb_versions:
+            hb_stable_groups[minor_group(v)].append(v)
+        for v in hb_next_versions:
+            hb_unrel_groups[minor_group(v)].append(v)
+
+        for g in sorted(set(hb_stable_groups) | set(hb_unrel_groups),
+                        key=lambda x: version_key(x), reverse=True):
+            g_stable = hb_stable_groups.get(g, [])
+            g_unrel = hb_unrel_groups.get(g, [])
+            g_header = ("harfbuzzsharp/{}.md".format(g_stable[0]) if g_stable
+                        else "harfbuzzsharp/{}-unreleased.md".format(g_unrel[0]))
+            lines.append("    - name: HarfBuzzSharp {}.x".format(g))
+            lines.append("      href: {}".format(g_header))
+            lines.append("      items:")
+            g_entries = ([(v, True) for v in g_unrel]
+                         + [(v, False) for v in g_stable])
+            g_entries.sort(key=lambda t: version_key(t[0]), reverse=True)
+            for v, is_unrel in g_entries:
+                if is_unrel:
+                    lines.append("        - name: HarfBuzzSharp {} (Unreleased)".format(v))
+                    lines.append("          href: harfbuzzsharp/{}-unreleased.md".format(v))
+                else:
+                    lines.append("        - name: HarfBuzzSharp {}".format(v))
+                    lines.append("          href: harfbuzzsharp/{}.md".format(v))
 
     return "\n".join(lines) + "\n"
 

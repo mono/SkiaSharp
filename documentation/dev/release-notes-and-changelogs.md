@@ -403,11 +403,13 @@ the human pages at the `releases/` root are never touched. Empty directories are
 after deletion. The deterministic page→folder links are written by the Python engine
 (§2.2), not the AI.
 
-**TOC / index representation.** `TOC.yml` gains one node per emitted SkiaSharp line,
-pointing at its `<line>.md` hub, plus a **HarfBuzz** section nesting one node per emitted
-HarfBuzz line pointing at its `harfbuzzsharp/<hb-line>.md` hub (an intentional navigation
+**TOC / index representation.** `TOC.yml` groups SkiaSharp lines into `Version X.Y.x`
+minor nodes (each nesting its patch releases), plus a **HarfBuzz** section that mirrors
+the same shape — `HarfBuzzSharp X.Y.x` minor subgroups, each nesting its emitted HarfBuzz
+lines pointing at their `harfbuzzsharp/<hb-line>.md` hubs (an intentional navigation
 grouping — the lone place the family subfolder surfaces in the TOC; it groups the equally
-first-class HarfBuzz hubs, it does not subordinate them). The `<line>/` and
+first-class HarfBuzz hubs, it does not subordinate them). Grouping by minor keeps the node
+from degrading into one flat list as HarfBuzz lines accumulate. The `<line>/` and
 `harfbuzzsharp/<hb-line>/` API-diff folders are **reached through the hub page's
 script-owned API-changes link** (§4.4) — which targets each folder's generated
 `index.md` (§3.3/§3.4) — not surfaced as independent top-level TOC nodes; they are
