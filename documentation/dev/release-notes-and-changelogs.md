@@ -214,7 +214,8 @@ self-contained and the targets reflect the docs they produce:
 .agents/skills/release-notes/
   SKILL.md                       the AI's polish-only instructions (§4.4)
   scripts/
-    generate.sh                  wrapper: runs the two generators in order (§2.2)
+    generate.sh                  wrapper: runs the two generators in order, verbose,
+                                 and writes the Files-to-polish list to a file (§2.2)
     generate-release-notes.py    release-notes engine (§4)
     api-diff.cake                API-changelog engine (§5)
 ```
@@ -247,8 +248,13 @@ individually, so the run order lives in one place:
 - **Python (`generate-release-notes.py`)** regenerates the human pages' **raw-data
   blocks** (the structured in-page region the AI polishes from, §4.3) under `releases/`
   (§3.2) from git history, reads the co-release map sidecar (§3.6) to write the
-  deterministic page→API-diff links (including the HarfBuzz link), and prints the
-  "Files to polish" list.
+  deterministic page→API-diff links (including the HarfBuzz link), and writes the
+  "Files to polish" list **to a file** (§2.3).
+
+Both generators run **verbose**: Cake and Python stream their progress to the job log so
+a long download or a disk/timeout failure is visible as it happens. The machine-readable
+"Files to polish" list is therefore *not* on stdout — Python writes it to a dedicated
+`files-to-polish.txt` file that the Polish phase reads (§2.3).
 
 **Polish.** The AI (the skill) rewrites only the *prose* of the listed human pages
 (§4.4). It never creates, renames, or deletes files, never writes structural content or
@@ -269,16 +275,26 @@ tree. If nothing changed, no PR is opened. There is no separate "api-diff" vs
 (Pushing to `release/*` is a *git source* for content, not an emission trigger;
 emission is governed solely by §1.4.)
 
-**Deterministic steps run on the host; the AI only polishes.** The **Prepare** phase
-(the `generate.sh` script — Cake then Python, §2.2) runs as **pre-agent host
-steps**: ordinary GitHub-Actions steps with the .NET SDK and full network, executing
-*before* the AI agent starts. This keeps the long generation off the agent's clock
-and out of its (network-restricted) sandbox. The Python generator tees its "Files to
-polish" list to a file the agent reads. The agent then runs the **Polish** phase (§2.2)
-with **no network and no `python3`/`cake` access** — it can only edit prose. The
-`create-pull-request` safe-output captures the *combined* working-tree diff (host
-script output + agent prose edits) into the single PR, so both artifacts always ship
-together.
+**Prepare runs as a standalone job; the agent only polishes.** The **Prepare** phase
+(the `generate.sh` script — Cake then Python, §2.2) runs in its **own dedicated job**
+(`prepare`), separate from the agent job. It uses an ordinary GitHub-Actions runner with
+the .NET SDK and full network, and — because the historical API diff downloads *every*
+published package of *both* families — it owns a **free-disk-space step** and its **own
+`timeout-minutes`** so the heavy generation can't exhaust the agent runner's disk or
+clock. Giving Prepare its own machine is the whole point of the split: a download, disk,
+or timeout failure fails *Prepare* loudly and in isolation, not the agent mid-polish.
+
+The two jobs hand off through a **workflow artifact**, never a shared runner. The
+`prepare` job uploads (a) all of its working-tree changes (the regenerated `releases/`
+tree — pages, API-diff folders, and the co-release-map sidecar) and (b) the
+`files-to-polish.txt` list. The agent job declares `needs: prepare`, downloads the
+artifact, and restores those changes into a clean checkout *before* the agent starts.
+The agent then runs the **Polish** phase (§2.2) with **no network and no
+`python3`/`cake` access** — it reads `files-to-polish.txt` first and edits only the
+prose of the listed pages. The `create-pull-request` safe-output captures the *combined*
+working-tree diff (restored Prepare output + agent prose edits) into the single PR, so
+both artifacts always ship together. If `files-to-polish.txt` is empty **and** the
+restored tree has no diff, no PR is opened (§4.6 idempotency).
 
 ---
 
@@ -614,8 +630,10 @@ mapping, and — for a HarfBuzz page — its canonical SkiaSharp back-link targe
 even when the PR set is identical; likewise, a page that newly gains (or loses) an
 API-diff folder is rewritten to inject (or drop) the API-changes link — which is what
 backfills the link across historical pages on first run. Then regenerate `TOC.yml` +
-`index.md`. The "Files to polish" summary lists only genuinely-changed pages, so the AI
-never re-polishes an up-to-date page.
+`index.md`. The "Files to polish" list — written to the `files-to-polish.txt` file the
+Polish phase reads (§2.3) — names only genuinely-changed pages, so the AI never
+re-polishes an up-to-date page. When it is empty and the tree is unchanged, the workflow
+opens no PR (§2.3).
 
 ---
 
@@ -657,7 +675,8 @@ artifacts — never the committed `releases/` tree.
 ### 5.4 How it runs
 
 `dotnet cake … --target=…` for `api-diff.cake`, as the Cake generator of the §2.2
-**Prepare** phase inside the unified workflow (§2.3). There is no AI polish on the diffs
+**Prepare** phase, which runs in the workflow's dedicated `prepare` job (§2.3). There is
+no AI polish on the diffs
 themselves — the generated diff *is* the artifact; the human pages merely link to it
 (§1.5/§4.4).
 
@@ -706,3 +725,7 @@ page links straight to its API diffs.
    engine edits the other's files.
 7. **Prove no regression.** Both generators are idempotent: run before/after on a
    clean tree and diff the generated outputs; intended changes only.
+8. **Prepare is isolated and verbose.** The Prepare phase runs in its own job with its
+   own disk/timeout budget and streams progress to the log; it hands off to the Polish
+   agent **only** through the uploaded artifact (working-tree changes + the
+   `files-to-polish.txt` list), never a shared runner or stdout capture (§2.3).
