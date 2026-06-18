@@ -41,7 +41,7 @@ When new APIs have been added, XML doc files must be regenerated before document
 ```bash
 dotnet tool restore
 dotnet cake --target=docs-download-output   # Download latest NuGets from CI feed
-dotnet cake --target=update-docs            # Regenerate XML docs (api-diff + mdoc update + format)
+dotnet cake --target=update-docs            # Regenerate XML docs (mdoc update + format)
 ```
 
 New members appear with "To be added." placeholders. **Skip this phase** if:
