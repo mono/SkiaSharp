@@ -25,16 +25,16 @@ Polish phase STOPS and reports; a maintainer fixes the script here.
 
 Output streams (the Prepare-phase contract)
 --------------------------------------------
-This generator runs VERBOSE: progress and diagnostics — "Processing…", "Found N
-PRs", "Skipping (unchanged)", warnings, errors — stream to STDERR via ``log()``,
-plus a human-readable summary block to STDOUT, so a CI job log shows the work (and
-any disk/timeout failure) as it happens (spec §2.2/§2.3).
+This generator runs VERBOSE: all progress and diagnostics — "Processing…", "Found N
+PRs", "Skipping (unchanged)", warnings, errors, and the final list of pages to
+polish — stream to STDERR via ``log()``, so a CI job log shows the work (and any
+disk/timeout failure) as it happens (spec §2.2/§2.3). Nothing is printed to STDOUT.
 
 The machine-readable result the Polish phase consumes — the list of pages whose raw
 data changed — is ALWAYS written to a file: ``output/files-to-polish.txt`` by
-default, or the path given to ``--polish-list``. One repo-relative path per line; an
-empty file means nothing changed. The list never rides on stdout, so verbose
-progress can flow freely (spec §2.3).
+default, or the path given to ``--polish-list``. It is a plain list, one
+repo-relative path per line; an empty file means nothing changed. Because the list
+lives in a file (not a stream), verbose progress can flow freely (spec §2.3).
 
 Page model (two files per in-flight version — released + unreleased coexist)
 ---------------------------------------------------------------------------
@@ -380,11 +380,11 @@ def log(*args, **kwargs):
     # type: (...) -> None
     """Human-facing progress and diagnostics — always written to STDERR.
 
-    This generator is verbose: ``log()`` progress appears in the CI job log
-    alongside the stdout summary so a long download or a disk/timeout failure is
-    visible as it happens (spec §2.2). The machine-readable "Files to polish"
-    list does NOT ride on a stream — it is always written to a file (spec §2.3) —
-    so callers never have to parse progress out of stdout.
+    This generator is verbose: ``log()`` is the ONLY output stream (nothing goes to
+    STDOUT), so a long download or a disk/timeout failure is visible in the CI job
+    log as it happens (spec §2.2). The machine-readable "Files to polish" list does
+    NOT ride on a stream — it is always written to a file (spec §2.3) — so callers
+    never have to parse it out of progress text.
     """
     kwargs["file"] = sys.stderr
     print(*args, **kwargs)
