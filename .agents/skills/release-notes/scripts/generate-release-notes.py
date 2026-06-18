@@ -1760,7 +1760,8 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
 
     ``hb_versions``/``hb_next_versions`` are the HarfBuzz peer-family lines
     (released and in-flight); when present they render as a sibling "HarfBuzz"
-    node grouping one entry per emitted HarfBuzz line (spec §3.5).
+    node whose emitted HarfBuzz lines are grouped into ``HarfBuzzSharp X.Y.x``
+    minor subgroups, mirroring the SkiaSharp version groups (spec §3.5).
     """
     stable_groups = defaultdict(list)
     unreleased_groups = defaultdict(list)
