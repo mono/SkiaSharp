@@ -25,13 +25,16 @@ Polish phase STOPS and reports; a maintainer fixes the script here.
 
 Output streams (the Prepare-phase contract)
 --------------------------------------------
-STDOUT carries ONLY the machine-readable result the Polish phase consumes: the
-delimited "Files to polish" block (see cmd_all / the `log` helper). Every piece of
-human progress and diagnostics — "Processing…", "Found N PRs", "Skipping
-(unchanged)", warnings, errors — goes to STDERR via ``log()``. So a caller can
-``generate-release-notes.py --all 2>/dev/null`` (or capture stdout in a workflow
-step) and get nothing but the list. Do NOT add bare ``print()`` for progress; use
-``log()``. The only ``print()`` to stdout is the final list block itself.
+This generator runs VERBOSE: all progress and diagnostics — "Processing…", "Found N
+PRs", "Skipping (unchanged)", warnings, errors, and the final list of pages to
+polish — stream to STDERR via ``log()``, so a CI job log shows the work (and any
+disk/timeout failure) as it happens (spec §2.2/§2.3). Nothing is printed to STDOUT.
+
+The machine-readable result the Polish phase consumes — the list of pages whose raw
+data changed — is ALWAYS written to a file: ``output/files-to-polish.txt`` by
+default, or the path given to ``--polish-list``. It is a plain list, one
+repo-relative path per line; an empty file means nothing changed. Because the list
+lives in a file (not a stream), verbose progress can flow freely (spec §2.3).
 
 Page model (two files per in-flight version — released + unreleased coexist)
 ---------------------------------------------------------------------------
@@ -101,6 +104,11 @@ from typing import Optional, Tuple
 
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
+
+# The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
+# file (overridable with --polish-list). output/ is gitignored, so the list stays
+# out of the working-tree patch the Prepare job hands to the Polish agent.
+DEFAULT_POLISH_LIST = Path("output/files-to-polish.txt")
 
 SKIA_PR_PATTERNS = [
     re.compile(r"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+https?://github\.com/mono/skia/pull/(\d+)", re.IGNORECASE),
@@ -372,16 +380,35 @@ def log(*args, **kwargs):
     # type: (...) -> None
     """Human-facing progress and diagnostics — always written to STDERR.
 
-    STDOUT is reserved for the single machine-readable artifact the Prepare
-    phase produces: the delimited "Files to polish" block the AI Polish phase
-    consumes (SKILL.md §Prepare). Keeping every "Processing…", "Found N PRs",
-    "Skipping (unchanged)", warning and error on stderr means a caller can do
-    ``generate-release-notes.py --all 2>/dev/null`` (or capture stdout in a
-    workflow step) and get nothing but the list — no progress noise to parse
-    around.
+    This generator is verbose: ``log()`` is the ONLY output stream (nothing goes to
+    STDOUT), so a long download or a disk/timeout failure is visible in the CI job
+    log as it happens (spec §2.2). The machine-readable "Files to polish" list does
+    NOT ride on a stream — it is always written to a file (spec §2.3) — so callers
+    never have to parse it out of progress text.
     """
     kwargs["file"] = sys.stderr
     print(*args, **kwargs)
+
+
+def write_polish_list(files, path=None):
+    # type: (list, ...) -> None
+    """Write the machine-readable "Files to polish" list to a file (spec §2.3).
+
+    Always writes a file — ``output/files-to-polish.txt`` by default, or *path* if
+    given. One repo-relative page path per line; an **empty file** means nothing
+    changed this run. This is the Prepare phase's only machine-readable output, so
+    the Polish agent reads a file instead of scraping stdout. The parent directory
+    is created if needed.
+    """
+    path = Path(path) if path else DEFAULT_POLISH_LIST
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as fh:
+        for f in files:
+            fh.write("{}\n".format(f))
+    log("Wrote files-to-polish list ({} file{}) -> {}".format(
+        len(files), "" if len(files) == 1 else "s", path))
+    for f in files:
+        log(f)
 
 
 def run(args, check=True):
@@ -2355,8 +2382,8 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     return str(output_path), owned
 
 
-def cmd_branch(branch, force=False):
-    # type: (str, bool) -> None
+def cmd_branch(branch, force=False, polish_list_path=None):
+    # type: (str, bool, str) -> None
     """Diff a branch against its predecessor and write raw data to the version file."""
     branch = _removeprefix(branch, "origin/")
 
@@ -2406,12 +2433,7 @@ def cmd_branch(branch, force=False):
     cmd_update_toc()
 
     log("")
-    print("========================================")
-    print("Files to polish:")
-    for f in files_to_polish:
-        print("  - {}".format(f))
-    print("========================================")
-
+    write_polish_list(files_to_polish, polish_list_path)
 
 def _regen_unreleased(trigger_branch, all_branches, force=False):
     # type: (str, list[str], bool) -> list[str]
@@ -2495,8 +2517,8 @@ def _process_harfbuzz_family(all_branches, force=False):
     return files_to_polish, processed, skipped
 
 
-def cmd_all(force=False):
-    # type: (bool) -> None
+def cmd_all(force=False, polish_list_path=None):
+    # type: (bool, str) -> None
     """Process all branches (main + all release/*). Skip unchanged files.
 
     This is the idempotent "regenerate everything" mode used by the automated
@@ -2576,17 +2598,9 @@ def cmd_all(force=False):
 
     # Print summary for the AI agent
     log("")
-    print("========================================")
     log("Processed: {}, Skipped/unchanged: {}".format(
         processed_count, skipped_count))
-    print("Files to polish:")
-    if files_to_polish:
-        for f in files_to_polish:
-            print("  - {}".format(f))
-    else:
-        print("  (none — all files up to date)")
-    print("========================================")
-
+    write_polish_list(files_to_polish, polish_list_path)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -2617,6 +2631,11 @@ def main():
         "--force", action="store_true",
         help="Rewrite pages even when the raw data is unchanged "
              "(use with --all or --branch to re-resolve author handles)")
+    parser.add_argument(
+        "--polish-list", metavar="FILE", default=None,
+        help="Write the 'Files to polish' list to FILE (one repo-relative path "
+             "per line; empty file = nothing changed). Defaults to "
+             "output/files-to-polish.txt.")
 
     args = parser.parse_args()
 
@@ -2631,9 +2650,10 @@ def main():
     if args.update_toc:
         cmd_update_toc()
     elif args.all:
-        cmd_all(force=args.force)
+        cmd_all(force=args.force, polish_list_path=args.polish_list)
     elif args.branch:
-        cmd_branch(args.branch, force=args.force)
+        cmd_branch(args.branch, force=args.force,
+                   polish_list_path=args.polish_list)
 
 
 if __name__ == "__main__":

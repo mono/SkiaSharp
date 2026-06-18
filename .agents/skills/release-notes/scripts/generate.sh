@@ -1,32 +1,41 @@
 #!/usr/bin/env bash
 #
 # generate.sh — the Prepare phase: run the two deterministic
-# release-notes/changelog generators in the required order, then print the
-# "Files to polish" list.
+# release-notes/changelog generators in the required order (Cake -> Python),
+# VERBOSE, and write the "Files to polish" list to a file.
 #
-# Output contract: STDOUT carries ONLY that list (forwarded verbatim from
-# generate-release-notes.py). All verbose Cake + Python progress is redirected to
-# a temp log whose path is announced on STDERR; on failure the log tail is shown
-# on STDERR. So `generate.sh | …` (or capturing its stdout) yields just the list.
+# Output contract (spec §2.2/§2.3): this script is VERBOSE. Cake and Python
+# stream their full progress straight to stdout/stderr (i.e. the CI job log), so
+# a long NuGet download or a disk/timeout failure is visible AS IT HAPPENS — it
+# is never hidden in a temp log. The machine-readable "Files to polish" list does
+# NOT ride on stdout: the Python generator ALWAYS writes it to a file
+# (output/files-to-polish.txt by default; pass --polish-list <path> to choose the
+# location). One repo-relative path per line; an empty file = nothing changed. The
+# Prepare job uploads that file as an artifact for the Polish agent to read.
 #
-# This is the single entry point for the Prepare phase (Cake -> Python; spec
-# §2.2). The release-notes skill and the update-release-notes workflow both call
-# THIS, so neither has to know the individual commands. The AI Polish phase (spec
-# §2.2) is deliberately NOT run here — that is the human/agent's job once this
-# script finishes.
+# This is the single entry point for the Prepare phase. The release-notes skill
+# and the update-release-notes workflow both call THIS, so neither has to know the
+# individual commands. The AI Polish phase (spec §2.2) is deliberately NOT run
+# here — that is the agent's job once this script finishes.
 #
 # Usage:
-#   generate.sh [--notes-only | --api-only] [extra args for the Python script...]
+#   generate.sh [--api-only | --notes-only] [--polish-list <path>] \
+#               [extra args for the Python script...]
 #
-#   (no args)            Full regeneration of everything: API changelogs (Cake)
+#   (no scope args)      Full regeneration of everything: API changelogs (Cake)
 #                        then release-notes raw data for every branch (Python --all).
 #   --api-only           Run only the Cake API-changelog generator.
 #   --notes-only         Run only the Python release-notes generator.
+#   --polish-list <path> Forwarded to the Python generator: write the "Files to
+#                        polish" list to <path> instead of the default
+#                        output/files-to-polish.txt.
 #   <extra args>         Forwarded verbatim to generate-release-notes.py, replacing
 #                        the default `--all` (e.g. `--branch main`, a version, etc.).
 #
 # Exit status is non-zero (with a clear message) if a required tool is missing —
 # the skill must then stop and ask the user to install it, never work around it.
+# Any generator failure aborts immediately (set -e); the verbose log already shows
+# why, so there is no separate failure dump.
 
 set -euo pipefail
 
@@ -35,14 +44,17 @@ REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 
 run_api=1
 run_notes=1
+polish_list=""
 notes_args=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --api-only)   run_notes=0; shift ;;
-    --notes-only) run_api=0;   shift ;;
-    --)           shift; notes_args+=("$@"); break ;;
-    *)            notes_args+=("$1"); shift ;;
+    --api-only)        run_notes=0; shift ;;
+    --notes-only)      run_api=0;   shift ;;
+    --polish-list)     polish_list="${2:?--polish-list needs a path}"; shift 2 ;;
+    --polish-list=*)   polish_list="${1#*=}"; shift ;;
+    --)                shift; notes_args+=("$@"); break ;;
+    *)                 notes_args+=("$1"); shift ;;
   esac
 done
 
@@ -53,24 +65,15 @@ fi
 
 cd "$REPO_ROOT"
 
-# Keep STDOUT clean: the only thing this script emits to stdout is the
-# machine-readable "Files to polish" list (generate-release-notes.py's stdout),
-# so the Polish phase / workflow can consume it without wading through progress.
-# All verbose Cake + Python progress is redirected to a log; its path is announced
-# on stderr, and on failure its tail is surfaced there too.
-PREPARE_LOG="$(mktemp "${TMPDIR:-/tmp}/release-notes-prepare.XXXXXX")"
-echo "==> Prepare: verbose progress -> $PREPARE_LOG" >&2
-
 if [ "$run_api" = 1 ]; then
   if ! command -v dotnet >/dev/null 2>&1; then
     echo "ERROR: the .NET SDK ('dotnet') is required for the API-changelog generator but was not found." >&2
     echo "       Install the SDK pinned in global.json and retry, or pass --notes-only to skip it." >&2
     exit 1
   fi
-  echo "==> Prepare [1/2]: API changelogs (Cake: docs-api-diff-past)" >&2
-  { dotnet tool restore && \
-    dotnet cake --target=docs-api-diff-past --nugetDiffPrerelease=true ; } >>"$PREPARE_LOG" 2>&1 \
-    || { echo "ERROR: API-changelog generation failed — last 50 log lines:" >&2; tail -50 "$PREPARE_LOG" >&2; exit 1; }
+  echo "==> Prepare [1/2]: API changelogs (Cake: docs-api-diff-past) — verbose"
+  dotnet tool restore
+  dotnet cake --target=docs-api-diff-past --nugetDiffPrerelease=true
 fi
 
 if [ "$run_notes" = 1 ]; then
@@ -79,10 +82,11 @@ if [ "$run_notes" = 1 ]; then
     echo "       Install Python 3 and retry, or pass --api-only to skip it." >&2
     exit 1
   fi
-  echo "==> Prepare [2/2]: release-notes raw data (generate-release-notes.py ${notes_args[*]})" >&2
-  # The Python generator writes the clean "Files to polish" list to stdout and all
-  # progress to stderr; send progress to the log and let the list flow through to
-  # THIS script's stdout unchanged.
-  python3 "$SCRIPT_DIR/generate-release-notes.py" "${notes_args[@]}" 2>>"$PREPARE_LOG" \
-    || { echo "ERROR: release-notes generation failed — last 50 log lines:" >&2; tail -50 "$PREPARE_LOG" >&2; exit 1; }
+  py_args=("${notes_args[@]}")
+  if [ -n "$polish_list" ]; then
+    py_args+=(--polish-list "$polish_list")
+    echo "==> Files-to-polish list -> $polish_list"
+  fi
+  echo "==> Prepare [2/2]: release-notes raw data (generate-release-notes.py ${py_args[*]}) — verbose"
+  python3 "$SCRIPT_DIR/generate-release-notes.py" "${py_args[@]}"
 fi

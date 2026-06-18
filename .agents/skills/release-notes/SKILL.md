@@ -19,10 +19,11 @@ description: >
   "refresh release notes".
 
     NOTE: The full set is normally regenerated automatically by the `update-release-notes`
-  agentic workflow when code lands on main, release branches, or tags are pushed. That
-  workflow runs the Prepare script in a pre-agent host step and then invokes this skill
-  for the Polish phase only. The same skill is used manually for regeneration or
-  corrections, in which case you run the Prepare script yourself and then polish.
+  agentic workflow when code lands on main, release branches, or tags are pushed. In that
+  automated run the Prepare script has already been run for you, so you skip it and only do
+  the Polish phase. Run manually for regeneration or corrections, in which case you run the
+  Prepare script yourself first and then polish. Either way, the pages to polish are listed
+  in `output/files-to-polish.txt`.
 ---
 
 # Release Notes & API Changelogs Skill
@@ -35,11 +36,21 @@ correcting, or bulk-processing the release pages.
 
 ## How it works: prepare, then polish
 
+The skill runs **one of two ways**, and both end at the same place — a list of pages to
+polish in `output/files-to-polish.txt`:
+
+- **Manually** (regeneration or corrections): you run the Prepare script yourself; it
+  writes `output/files-to-polish.txt`, then you read it and polish those pages.
+- **Automatically** (the `update-release-notes` workflow): Prepare has **already run** for
+  you, so you **skip it**; `output/files-to-polish.txt` is already on disk — read it and
+  polish those pages.
+
 The skill is just **two phases**:
 
 1. **Prepare** — run one script, `scripts/generate.sh`, which regenerates everything
    deterministic (the API-diff tree, each page's raw-data block, the page→API-diff
-   links) and prints the "Files to polish" list. No AI.
+   links) and writes the "Files to polish" list to a file
+   (`output/files-to-polish.txt`). No AI.
 2. **Polish** — you (the AI) rewrite only the *prose* of the pages the script flagged as
    changed.
 
@@ -48,18 +59,19 @@ polish.** `generate.sh` is the single entry point for the Prepare phase — you 
 to know what it runs internally.
 
 > **Running unattended from the `update-release-notes` workflow?** The **Prepare** phase
-> has **already been run for you in pre-agent host steps** — the API-diff tree and the
-> raw-data pages are already on disk. **Skip Prepare entirely** and go straight to
-> [Polish the prose](#polish-the-prose), polishing exactly the files in the
-> workflow-provided "Files to polish" list.
+> has **already been run for you** — the API-diff tree and the raw-data pages are already
+> on disk. **Skip Prepare entirely** and go straight to
+> [Polish the prose](#polish-the-prose), polishing exactly the files listed in
+> `output/files-to-polish.txt` (one repo-relative path per line; an empty file means
+> nothing changed — make no edits).
 
 ## Process
 
 ### Prepare — run the script first
 
-> **In the automated workflow this already ran** in a pre-agent host step — **skip this
-> whole phase** and jump to [Polish the prose](#polish-the-prose). Run it yourself only
-> for **manual** regeneration.
+> **In the automated workflow this already ran for you** — **skip this whole phase** and
+> jump to [Polish the prose](#polish-the-prose). Run it yourself only for **manual**
+> regeneration.
 
 **Decide scope, then run it.** Ask the user which version(s) to generate (or infer from
 context) and pick the matching invocation from the table below. From anywhere in the repo,
@@ -69,8 +81,9 @@ with no arguments, it does a full regeneration of everything:
 .agents/skills/release-notes/scripts/generate.sh
 ```
 
-By default it regenerates **both** artifacts for every branch and prints the
-**"Files to polish"** list. The flags narrow what it touches:
+By default it regenerates **both** artifacts for every branch and writes the
+**"Files to polish"** list to `output/files-to-polish.txt` (also echoed to the log).
+The flags narrow what it touches:
 
 | Invocation | What it regenerates |
 | --- | --- |
@@ -82,14 +95,14 @@ By default it regenerates **both** artifacts for every branch and prints the
 How it produces those files (which engine runs, the on-disk layout, diff ranges,
 supersession, which pages are skipped because nothing changed) is **implementation detail
 owned by the script** — you don't need it to run the skill. The only output you act on is
-the printed **"Files to polish"** list: those are the pages whose raw data changed and
-that you polish next. You never create, rename, or delete pages — the script owns that.
+the **"Files to polish"** list the script writes to `output/files-to-polish.txt`: those
+are the pages whose raw data changed and that you polish next. You never create, rename,
+or delete pages — the script owns that.
 
 **Requirements.** The script needs the .NET SDK and `python3`, plus network access to
-nuget.org and the GitHub API. In the workflow these are provisioned in the pre-agent host
-steps. For **manual** runs, if a required tool or the network is missing the script stops
-with a clear error — **ask the user to install it / restore connectivity**; never work
-around it or hand-write API-diff links to compensate.
+nuget.org and the GitHub API. For **manual** runs, if a required tool or the network is
+missing the script stops with a clear error — **ask the user to install it / restore
+connectivity**; never work around it or hand-write API-diff links to compensate.
 
 ### Polish the prose
 
@@ -125,15 +138,15 @@ The file starts with an HTML comment block containing both metadata (version, st
 diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
 placeholder for polished content. The raw data comment must be preserved in the final file.
 
-**IMPORTANT:** The script prints a summary at the end listing ALL files to polish:
+**IMPORTANT:** The list of files to polish is **always** at `output/files-to-polish.txt`
+(one repo-relative path per line, nothing else). For a **manual** run the Prepare script
+writes it there (and echoes the same paths to the log); for an **automated** run it has
+already been placed there for you. The file is a plain list, e.g.:
 
 ```
-========================================
-Files to polish:
-  - documentation/docfx/releases/4.147.0.md
-  - documentation/docfx/releases/3.119.5-unreleased.md
-  - documentation/docfx/releases/4.148.0-unreleased.md
-========================================
+documentation/docfx/releases/4.147.0.md
+documentation/docfx/releases/3.119.5-unreleased.md
+documentation/docfx/releases/4.148.0-unreleased.md
 ```
 
 You MUST polish **every file** in the "Files to polish" list — not just the first one.
