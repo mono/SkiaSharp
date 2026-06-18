@@ -139,17 +139,14 @@ diff range, PR count) AND the raw PR list. Below the comment is a skeleton headi
 placeholder for polished content. The raw data comment must be preserved in the final file.
 
 **IMPORTANT:** The list of files to polish is **always** at `output/files-to-polish.txt`
-(one repo-relative path per line). For a **manual** run the Prepare script writes it there
-(and echoes it to the log); for an **automated** run it has already been placed there for
-you. The echoed summary looks like:
+(one repo-relative path per line, nothing else). For a **manual** run the Prepare script
+writes it there (and echoes the same paths to the log); for an **automated** run it has
+already been placed there for you. The file is a plain list, e.g.:
 
 ```
-========================================
-Files to polish:
-  - documentation/docfx/releases/4.147.0.md
-  - documentation/docfx/releases/3.119.5-unreleased.md
-  - documentation/docfx/releases/4.148.0-unreleased.md
-========================================
+documentation/docfx/releases/4.147.0.md
+documentation/docfx/releases/3.119.5-unreleased.md
+documentation/docfx/releases/4.148.0-unreleased.md
 ```
 
 You MUST polish **every file** in the "Files to polish" list — not just the first one.

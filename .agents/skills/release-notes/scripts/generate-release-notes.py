@@ -407,6 +407,8 @@ def write_polish_list(files, path=None):
             fh.write("{}\n".format(f))
     log("Wrote files-to-polish list ({} file{}) -> {}".format(
         len(files), "" if len(files) == 1 else "s", path))
+    for f in files:
+        log(f)
 
 
 def run(args, check=True):
@@ -2431,11 +2433,6 @@ def cmd_branch(branch, force=False, polish_list_path=None):
     cmd_update_toc()
 
     log("")
-    print("========================================")
-    print("Files to polish:")
-    for f in files_to_polish:
-        print("  - {}".format(f))
-    print("========================================")
     write_polish_list(files_to_polish, polish_list_path)
 
 def _regen_unreleased(trigger_branch, all_branches, force=False):
@@ -2601,16 +2598,8 @@ def cmd_all(force=False, polish_list_path=None):
 
     # Print summary for the AI agent
     log("")
-    print("========================================")
     log("Processed: {}, Skipped/unchanged: {}".format(
         processed_count, skipped_count))
-    print("Files to polish:")
-    if files_to_polish:
-        for f in files_to_polish:
-            print("  - {}".format(f))
-    else:
-        print("  (none — all files up to date)")
-    print("========================================")
     write_polish_list(files_to_polish, polish_list_path)
 
 def main():
