@@ -40,8 +40,8 @@ The skill is just **two phases**:
 
 1. **Prepare** — run one script, `scripts/generate.sh`, which regenerates everything
    deterministic (the API-diff tree, each page's raw-data block, the page→API-diff
-   links) and reports the "Files to polish" list. No AI. (Manual runs print that list;
-   the workflow's `prepare` job has the script write it to a file — see below.)
+   links) and writes the "Files to polish" list to a file
+   (`output/files-to-polish.txt`). No AI.
 2. **Polish** — you (the AI) rewrite only the *prose* of the pages the script flagged as
    changed.
 
@@ -72,8 +72,9 @@ with no arguments, it does a full regeneration of everything:
 .agents/skills/release-notes/scripts/generate.sh
 ```
 
-By default it regenerates **both** artifacts for every branch and prints the
-**"Files to polish"** list. The flags narrow what it touches:
+By default it regenerates **both** artifacts for every branch and writes the
+**"Files to polish"** list to `output/files-to-polish.txt` (also echoed to the log).
+The flags narrow what it touches:
 
 | Invocation | What it regenerates |
 | --- | --- |
@@ -85,8 +86,9 @@ By default it regenerates **both** artifacts for every branch and prints the
 How it produces those files (which engine runs, the on-disk layout, diff ranges,
 supersession, which pages are skipped because nothing changed) is **implementation detail
 owned by the script** — you don't need it to run the skill. The only output you act on is
-the printed **"Files to polish"** list: those are the pages whose raw data changed and
-that you polish next. You never create, rename, or delete pages — the script owns that.
+the **"Files to polish"** list the script writes to `output/files-to-polish.txt`: those
+are the pages whose raw data changed and that you polish next. You never create, rename,
+or delete pages — the script owns that.
 
 **Requirements.** The script needs the .NET SDK and `python3`, plus network access to
 nuget.org and the GitHub API. In the workflow these are provisioned in the `prepare` job. For **manual** runs, if a required tool or the network is missing the script stops
@@ -127,9 +129,10 @@ The file starts with an HTML comment block containing both metadata (version, st
 diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
 placeholder for polished content. The raw data comment must be preserved in the final file.
 
-**IMPORTANT:** The Prepare phase reports ALL files to polish. Manual runs print this
-summary at the end; the workflow's `prepare` job writes the same list (one path per line)
-to `/tmp/gh-aw/files-to-polish.txt` for you to read:
+**IMPORTANT:** The Prepare script always writes the full list of files to polish to
+`output/files-to-polish.txt` (one repo-relative path per line) and echoes it to the log.
+In the `update-release-notes` workflow that file is restored for you at
+`/tmp/gh-aw/files-to-polish.txt`. The echoed summary looks like:
 
 ```
 ========================================

@@ -31,10 +31,10 @@ plus a human-readable summary block to STDOUT, so a CI job log shows the work (a
 any disk/timeout failure) as it happens (spec §2.2/§2.3).
 
 The machine-readable result the Polish phase consumes — the list of pages whose raw
-data changed — is written to the file named by ``--polish-list`` (one repo-relative
-path per line; an empty file means nothing changed). It is NOT scraped from stdout,
-so verbose progress can flow freely. Keep using ``log()`` for progress; the only
-output tied to a stable format is the ``--polish-list`` file.
+data changed — is ALWAYS written to a file: ``output/files-to-polish.txt`` by
+default, or the path given to ``--polish-list``. One repo-relative path per line; an
+empty file means nothing changed. The list never rides on stdout, so verbose
+progress can flow freely (spec §2.3).
 
 Page model (two files per in-flight version — released + unreleased coexist)
 ---------------------------------------------------------------------------
@@ -104,6 +104,11 @@ from typing import Optional, Tuple
 
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
+
+# The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
+# file (overridable with --polish-list). output/ is gitignored, so the list stays
+# out of the working-tree patch the Prepare job hands to the Polish agent.
+DEFAULT_POLISH_LIST = Path("output/files-to-polish.txt")
 
 SKIA_PR_PATTERNS = [
     re.compile(r"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+https?://github\.com/mono/skia/pull/(\d+)", re.IGNORECASE),
@@ -378,27 +383,30 @@ def log(*args, **kwargs):
     This generator is verbose: ``log()`` progress appears in the CI job log
     alongside the stdout summary so a long download or a disk/timeout failure is
     visible as it happens (spec §2.2). The machine-readable "Files to polish"
-    list does NOT ride on a stream — it is written to the ``--polish-list`` file
-    (spec §2.3) — so callers never have to parse progress out of stdout.
+    list does NOT ride on a stream — it is always written to a file (spec §2.3) —
+    so callers never have to parse progress out of stdout.
     """
     kwargs["file"] = sys.stderr
     print(*args, **kwargs)
 
 
-def write_polish_list(files, path):
-    # type: (list, str) -> None
-    """Write the machine-readable "Files to polish" list to *path* (spec §2.3).
+def write_polish_list(files, path=None):
+    # type: (list, ...) -> None
+    """Write the machine-readable "Files to polish" list to a file (spec §2.3).
 
-    One repo-relative page path per line; an **empty file** means nothing changed
-    this run. The Prepare phase passes ``--polish-list`` so the list survives the
-    job boundary as a workflow artifact instead of riding on stdout (which now
-    streams verbose progress). A no-op when *path* is falsy.
+    Always writes a file — ``output/files-to-polish.txt`` by default, or *path* if
+    given. One repo-relative page path per line; an **empty file** means nothing
+    changed this run. This is the Prepare phase's only machine-readable output, so
+    the Polish agent reads a file instead of scraping stdout. The parent directory
+    is created if needed.
     """
-    if not path:
-        return
-    with open(path, "w", encoding="utf-8") as fh:
+    path = Path(path) if path else DEFAULT_POLISH_LIST
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as fh:
         for f in files:
             fh.write("{}\n".format(f))
+    log("Wrote files-to-polish list ({} file{}) -> {}".format(
+        len(files), "" if len(files) == 1 else "s", path))
 
 
 def run(args, check=True):
@@ -2635,11 +2643,11 @@ def main():
         help="Rewrite pages even when the raw data is unchanged "
              "(use with --all or --branch to re-resolve author handles)")
     parser.add_argument(
-        "--polish-list", metavar="FILE",
-        help="Write the machine-readable 'Files to polish' list to FILE (one "
-             "repo-relative path per line; empty file = nothing changed). The "
-             "Prepare phase uses this so the list crosses the job boundary as an "
-             "artifact instead of riding on stdout (spec §2.3).")
+        "--polish-list", metavar="FILE", default=None,
+        help="Write the 'Files to polish' list to FILE (one repo-relative path "
+             "per line; empty file = nothing changed). Defaults to "
+             "output/files-to-polish.txt. The Prepare job uploads this file as an "
+             "artifact for the Polish agent (spec §2.3).")
 
     args = parser.parse_args()
 

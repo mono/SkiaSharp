@@ -8,9 +8,10 @@
 # stream their full progress straight to stdout/stderr (i.e. the CI job log), so
 # a long NuGet download or a disk/timeout failure is visible AS IT HAPPENS — it
 # is never hidden in a temp log. The machine-readable "Files to polish" list does
-# NOT ride on stdout; pass --polish-list <path> and the Python generator writes
-# the list there (one repo-relative path per line; empty file = nothing changed).
-# The Prepare job uploads that file as an artifact for the Polish agent to read.
+# NOT ride on stdout: the Python generator ALWAYS writes it to a file
+# (output/files-to-polish.txt by default; pass --polish-list <path> to choose the
+# location). One repo-relative path per line; an empty file = nothing changed. The
+# Prepare job uploads that file as an artifact for the Polish agent to read.
 #
 # This is the single entry point for the Prepare phase. The release-notes skill
 # and the update-release-notes workflow both call THIS, so neither has to know the
@@ -26,7 +27,8 @@
 #   --api-only           Run only the Cake API-changelog generator.
 #   --notes-only         Run only the Python release-notes generator.
 #   --polish-list <path> Forwarded to the Python generator: write the "Files to
-#                        polish" list to <path> instead of relying on stdout.
+#                        polish" list to <path> instead of the default
+#                        output/files-to-polish.txt.
 #   <extra args>         Forwarded verbatim to generate-release-notes.py, replacing
 #                        the default `--all` (e.g. `--branch main`, a version, etc.).
 #

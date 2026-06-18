@@ -253,8 +253,9 @@ individually, so the run order lives in one place:
 
 Both generators run **verbose**: Cake and Python stream their progress to the job log so
 a long download or a disk/timeout failure is visible as it happens. The machine-readable
-"Files to polish" list is therefore *not* on stdout — Python writes it to a dedicated
-`files-to-polish.txt` file that the Polish phase reads (§2.3).
+"Files to polish" list is therefore *not* on stdout — Python **always** writes it to a
+file (`output/files-to-polish.txt` by default, overridable via `--polish-list`) that the
+Polish phase reads (§2.3).
 
 **Polish.** The AI (the skill) rewrites only the *prose* of the listed human pages
 (§4.4). It never creates, renames, or deletes files, never writes structural content or
