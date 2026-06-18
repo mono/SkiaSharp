@@ -1,0 +1,338 @@
+# Issue Triage Report — #1064
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-06-18T05:55:00Z |
+| Type | type/bug (0.78 (78%)) |
+| Area | area/SkiaSharp.Views (0.85 (85%)) |
+| Suggested action | needs-info (0.82 (82%)) |
+
+**Issue Summary:** On Android 5.0 (API 21), GRContext becomes null after returning to a Xamarin.Forms app using SKGLView, preventing rendering on resume — not observed on Android 9.0.
+
+**Analysis:** When Android 5.0 backgrounds an app, the GLSurfaceView EGL context is destroyed. On resume, OnSurfaceCreated fires, but SKGLSurfaceViewRenderer.OnSurfaceCreated() is empty — it does not call FreeContext(). Depending on the exact lifecycle, the renderer or view may have been disposed (setting context to null) but a new context is not recreated until the next OnDrawFrame call. The asymmetry with SKGLTextureViewRenderer (which correctly calls FreeContext in OnSurfaceCreated) is suspicious. The issue lacks a repro code snippet, stack trace, and expected/actual behavior, so the precise failure mode is unknown.
+
+**Recommendations:** **needs-info** — Issue template sections for Code, Expected Behavior, and Actual Behavior are all empty. No stack trace. Version 1.68.1 is from 2019. Cannot reproduce or fix without a minimal repro and current version confirmation.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/Android |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. Use SKGLView in a Xamarin.Forms Android app
+2. Launch the app and display the GL view
+3. Switch to another app
+4. Return to the SkiaSharp app
+5. Observe GRContext is null; rendering no longer works
+
+**Environment:** Android 5.0 (API 21), Nexus 4 emulator; Android 9.0 (Pixel 2 emulator) works; Visual Studio 2019; SkiaSharp 1.68.1
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | platform-specific |
+| Error message | — |
+| Repro quality | none |
+| Target frameworks | monoandroid |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 1.68.1 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | Version 1.68.1 is very old (2019); the current SKGLSurfaceViewRenderer code still has OnSurfaceCreated empty, which may reproduce the issue. |
+
+## Analysis
+
+### Technical Summary
+
+When Android 5.0 backgrounds an app, the GLSurfaceView EGL context is destroyed. On resume, OnSurfaceCreated fires, but SKGLSurfaceViewRenderer.OnSurfaceCreated() is empty — it does not call FreeContext(). Depending on the exact lifecycle, the renderer or view may have been disposed (setting context to null) but a new context is not recreated until the next OnDrawFrame call. The asymmetry with SKGLTextureViewRenderer (which correctly calls FreeContext in OnSurfaceCreated) is suspicious. The issue lacks a repro code snippet, stack trace, and expected/actual behavior, so the precise failure mode is unknown.
+
+### Rationale
+
+Reporter describes a clear Android lifecycle bug with GRContext becoming null after app resume on a specific OS version. The code investigation reveals an asymmetry: SKGLTextureViewRenderer.OnSurfaceCreated calls FreeContext() (resetting state on EGL recreation) while SKGLSurfaceViewRenderer.OnSurfaceCreated does nothing. This mismatch can cause issues on Android API levels where EGL context is destroyed on background. However, the issue template is nearly empty — no reproduction code, no stack trace, and no expected/actual behavior — making it impossible to confirm the exact failure path or write a targeted fix.
+
+### Key Signals
+
+- "When I leave the app to another app and come back, the GRContext is null" — **issue body** (GRContext property returns null — this can only happen if the renderer was disposed or FreeContext() was called, but not yet recreated by a subsequent OnDrawFrame.)
+- "This happens on Android 5.0. On Android 9.0 I don't have this problem." — **issue body** (Android API 21 destroys the EGL context on app background by default. Android 9.0 may preserve the EGL context on pause, preventing the context loss.)
+- "Perhaps I should call something to recreate the GRContext after coming back?" — **issue body** (Reporter suspects this is an expected behavior requiring user action. The SkiaSharp view should handle this automatically, but the current SKGLSurfaceViewRenderer implementation may not.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLSurfaceViewRenderer.cs` | 97-99 | direct | OnSurfaceCreated() is empty — does not reset GRContext when the EGL context is recreated after the app resumes on Android 5.0. The old, potentially-invalid context object remains, and OnDrawFrame only creates a new context when context == null. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureViewRenderer.cs` | 107-111 | related | OnSurfaceCreated() calls FreeContext(), which disposes the old surface, renderTarget, and GRContext and sets them all to null. This ensures OnDrawFrame will recreate a fresh context on the next frame after EGL context loss. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLSurfaceViewRenderer.cs` | 37-41 | direct | OnDrawFrame only creates a new GRContext when context == null. If the old context is stale but non-null (because OnSurfaceCreated did not clear it), rendering will attempt to use the invalid GPU resources. |
+
+### Workarounds
+
+- Use SKCanvasView (CPU rasterization) instead of SKGLView to avoid EGL context lifecycle issues entirely
+- Override OnResume in the Xamarin.Forms Android renderer and call GLSurfaceView.OnResume() to resume rendering and trigger context recreation
+- In PaintSurface handler, guard against null GRContext and call InvalidateSurface() to force a repaint cycle that recreates the context
+
+### Next Questions
+
+- Does the bug reproduce with the current SkiaSharp version (2.x or 3.x)?
+- Is a minimal code snippet available to reproduce this (Activity with GLSurfaceView pause/resume)?
+- Does the reporter call GLSurfaceView.OnPause()/OnResume() in the Activity lifecycle?
+- Is the same issue present with SKGLTextureView (the other Android GL surface type)?
+
+### Resolution Proposals
+
+**Hypothesis:** On Android 5.0, EGL context is destroyed on backgrounding. SKGLSurfaceViewRenderer.OnSurfaceCreated is empty so it does not reset the stale GRContext, unlike SKGLTextureViewRenderer which calls FreeContext(). The renderer may also be disposed during surface destruction, leaving context null.
+
+1. **Request reproduction code and stack trace** — investigation, confidence 0.90 (90%), cost/xs, validated=untested
+   - Ask reporter for a minimal repro project, the exact exception or log output, whether they call GLSurfaceView lifecycle methods, and whether the issue still occurs in the current SkiaSharp version.
+2. **Workaround: use SKCanvasView** — workaround, confidence 0.95 (95%), cost/s, validated=untested
+   - Switch to SKCanvasView (CPU rasterization) to avoid EGL context lifecycle issues. Renders using software rasterization so no GPU context management is needed.
+3. **Potential fix: call FreeContext in SKGLSurfaceViewRenderer.OnSurfaceCreated** — fix, confidence 0.65 (65%), cost/xs, validated=untested
+   - Add FreeContext() call to SKGLSurfaceViewRenderer.OnSurfaceCreated to match the behavior of SKGLTextureViewRenderer. This ensures the stale context is cleared when EGL is recreated, forcing OnDrawFrame to create a fresh GRContext.
+
+**Recommended proposal:** Request reproduction code and stack trace
+
+**Why:** Issue template is empty — no code, no stack trace, no expected/actual behavior. Cannot confirm the exact failure path or whether it still exists in the current version without more information.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-info |
+| Confidence | 0.82 (82%) |
+| Reason | Issue template sections for Code, Expected Behavior, and Actual Behavior are all empty. No stack trace. Version 1.68.1 is from 2019. Cannot reproduce or fix without a minimal repro and current version confirmation. |
+| Suggested repro platform | linux |
+
+### Missing Info
+
+- Minimal reproduction code snippet
+- Stack trace or exception message when GRContext is null
+- Whether GLSurfaceView.OnPause()/OnResume() is called in the Activity
+- Confirmation of whether the issue reproduces in the current SkiaSharp version
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.85 (85%) | Apply bug, views, and android labels | labels=type/bug, area/SkiaSharp.Views, os/Android |
+| add-comment | medium | 0.82 (82%) | Request reproduction details and version confirmation | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the report!
+
+The GRContext becoming null after resume on Android 5.0 is related to EGL context lifecycle — Android API 21 destroys the EGL context when the app is backgrounded, whereas Android 9.0 tends to preserve it.
+
+To investigate further, we need:
+1. **A minimal code snippet** showing how you set up `SKGLView` and handle the `PaintSurface` event
+2. **Log output or exception details** when GRContext is null (Logcat output, exception message, or stack trace)
+3. **Xamarin.Forms Activity setup** — are you calling `GLSurfaceView.OnPause()` / `GLSurfaceView.OnResume()` from your Activity lifecycle methods?
+4. **Current version confirmation** — SkiaSharp 1.68.1 is from 2019. Could you try with the latest version?
+
+As a temporary workaround, you can switch to `SKCanvasView` (CPU rasterization) which avoids EGL context management entirely.
+
+Alternatively, ensure your Xamarin.Forms `MainActivity` propagates the lifecycle:
+```csharp
+protected override void OnPause()
+{
+    base.OnPause();
+    // Pause any active GL surfaces if accessible
+}
+```
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1064,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-06-18T05:55:00Z"
+  },
+  "summary": "On Android 5.0 (API 21), GRContext becomes null after returning to a Xamarin.Forms app using SKGLView, preventing rendering on resume — not observed on Android 9.0.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.78
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/Android"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "platform-specific",
+      "reproQuality": "none",
+      "targetFrameworks": [
+        "monoandroid"
+      ]
+    },
+    "reproEvidence": {
+      "environmentDetails": "Android 5.0 (API 21), Nexus 4 emulator; Android 9.0 (Pixel 2 emulator) works; Visual Studio 2019; SkiaSharp 1.68.1",
+      "stepsToReproduce": [
+        "Use SKGLView in a Xamarin.Forms Android app",
+        "Launch the app and display the GL view",
+        "Switch to another app",
+        "Return to the SkiaSharp app",
+        "Observe GRContext is null; rendering no longer works"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.1"
+      ],
+      "currentRelevance": "unknown",
+      "relevanceReason": "Version 1.68.1 is very old (2019); the current SKGLSurfaceViewRenderer code still has OnSurfaceCreated empty, which may reproduce the issue."
+    }
+  },
+  "analysis": {
+    "summary": "When Android 5.0 backgrounds an app, the GLSurfaceView EGL context is destroyed. On resume, OnSurfaceCreated fires, but SKGLSurfaceViewRenderer.OnSurfaceCreated() is empty — it does not call FreeContext(). Depending on the exact lifecycle, the renderer or view may have been disposed (setting context to null) but a new context is not recreated until the next OnDrawFrame call. The asymmetry with SKGLTextureViewRenderer (which correctly calls FreeContext in OnSurfaceCreated) is suspicious. The issue lacks a repro code snippet, stack trace, and expected/actual behavior, so the precise failure mode is unknown.",
+    "rationale": "Reporter describes a clear Android lifecycle bug with GRContext becoming null after app resume on a specific OS version. The code investigation reveals an asymmetry: SKGLTextureViewRenderer.OnSurfaceCreated calls FreeContext() (resetting state on EGL recreation) while SKGLSurfaceViewRenderer.OnSurfaceCreated does nothing. This mismatch can cause issues on Android API levels where EGL context is destroyed on background. However, the issue template is nearly empty — no reproduction code, no stack trace, and no expected/actual behavior — making it impossible to confirm the exact failure path or write a targeted fix.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLSurfaceViewRenderer.cs",
+        "lines": "97-99",
+        "finding": "OnSurfaceCreated() is empty — does not reset GRContext when the EGL context is recreated after the app resumes on Android 5.0. The old, potentially-invalid context object remains, and OnDrawFrame only creates a new context when context == null.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureViewRenderer.cs",
+        "lines": "107-111",
+        "finding": "OnSurfaceCreated() calls FreeContext(), which disposes the old surface, renderTarget, and GRContext and sets them all to null. This ensures OnDrawFrame will recreate a fresh context on the next frame after EGL context loss.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLSurfaceViewRenderer.cs",
+        "lines": "37-41",
+        "finding": "OnDrawFrame only creates a new GRContext when context == null. If the old context is stale but non-null (because OnSurfaceCreated did not clear it), rendering will attempt to use the invalid GPU resources.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "When I leave the app to another app and come back, the GRContext is null",
+        "source": "issue body",
+        "interpretation": "GRContext property returns null — this can only happen if the renderer was disposed or FreeContext() was called, but not yet recreated by a subsequent OnDrawFrame."
+      },
+      {
+        "text": "This happens on Android 5.0. On Android 9.0 I don't have this problem.",
+        "source": "issue body",
+        "interpretation": "Android API 21 destroys the EGL context on app background by default. Android 9.0 may preserve the EGL context on pause, preventing the context loss."
+      },
+      {
+        "text": "Perhaps I should call something to recreate the GRContext after coming back?",
+        "source": "issue body",
+        "interpretation": "Reporter suspects this is an expected behavior requiring user action. The SkiaSharp view should handle this automatically, but the current SKGLSurfaceViewRenderer implementation may not."
+      }
+    ],
+    "workarounds": [
+      "Use SKCanvasView (CPU rasterization) instead of SKGLView to avoid EGL context lifecycle issues entirely",
+      "Override OnResume in the Xamarin.Forms Android renderer and call GLSurfaceView.OnResume() to resume rendering and trigger context recreation",
+      "In PaintSurface handler, guard against null GRContext and call InvalidateSurface() to force a repaint cycle that recreates the context"
+    ],
+    "nextQuestions": [
+      "Does the bug reproduce with the current SkiaSharp version (2.x or 3.x)?",
+      "Is a minimal code snippet available to reproduce this (Activity with GLSurfaceView pause/resume)?",
+      "Does the reporter call GLSurfaceView.OnPause()/OnResume() in the Activity lifecycle?",
+      "Is the same issue present with SKGLTextureView (the other Android GL surface type)?"
+    ],
+    "resolution": {
+      "hypothesis": "On Android 5.0, EGL context is destroyed on backgrounding. SKGLSurfaceViewRenderer.OnSurfaceCreated is empty so it does not reset the stale GRContext, unlike SKGLTextureViewRenderer which calls FreeContext(). The renderer may also be disposed during surface destruction, leaving context null.",
+      "proposals": [
+        {
+          "title": "Request reproduction code and stack trace",
+          "description": "Ask reporter for a minimal repro project, the exact exception or log output, whether they call GLSurfaceView lifecycle methods, and whether the issue still occurs in the current SkiaSharp version.",
+          "category": "investigation",
+          "confidence": 0.9,
+          "effort": "cost/xs",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: use SKCanvasView",
+          "description": "Switch to SKCanvasView (CPU rasterization) to avoid EGL context lifecycle issues. Renders using software rasterization so no GPU context management is needed.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Potential fix: call FreeContext in SKGLSurfaceViewRenderer.OnSurfaceCreated",
+          "description": "Add FreeContext() call to SKGLSurfaceViewRenderer.OnSurfaceCreated to match the behavior of SKGLTextureViewRenderer. This ensures the stale context is cleared when EGL is recreated, forcing OnDrawFrame to create a fresh GRContext.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Request reproduction code and stack trace",
+      "recommendedReason": "Issue template is empty — no code, no stack trace, no expected/actual behavior. Cannot confirm the exact failure path or whether it still exists in the current version without more information."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-info",
+      "confidence": 0.82,
+      "reason": "Issue template sections for Code, Expected Behavior, and Actual Behavior are all empty. No stack trace. Version 1.68.1 is from 2019. Cannot reproduce or fix without a minimal repro and current version confirmation.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Minimal reproduction code snippet",
+      "Stack trace or exception message when GRContext is null",
+      "Whether GLSurfaceView.OnPause()/OnResume() is called in the Activity",
+      "Confirmation of whether the issue reproduces in the current SkiaSharp version"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, and android labels",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/Android"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request reproduction details and version confirmation",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "Thanks for the report!\n\nThe GRContext becoming null after resume on Android 5.0 is related to EGL context lifecycle — Android API 21 destroys the EGL context when the app is backgrounded, whereas Android 9.0 tends to preserve it.\n\nTo investigate further, we need:\n1. **A minimal code snippet** showing how you set up `SKGLView` and handle the `PaintSurface` event\n2. **Log output or exception details** when GRContext is null (Logcat output, exception message, or stack trace)\n3. **Xamarin.Forms Activity setup** — are you calling `GLSurfaceView.OnPause()` / `GLSurfaceView.OnResume()` from your Activity lifecycle methods?\n4. **Current version confirmation** — SkiaSharp 1.68.1 is from 2019. Could you try with the latest version?\n\nAs a temporary workaround, you can switch to `SKCanvasView` (CPU rasterization) which avoids EGL context management entirely.\n\nAlternatively, ensure your Xamarin.Forms `MainActivity` propagates the lifecycle:\n```csharp\nprotected override void OnPause()\n{\n    base.OnPause();\n    // Pause any active GL surfaces if accessible\n}\n```"
+      }
+    ]
+  }
+}
+```
+
+</details>
