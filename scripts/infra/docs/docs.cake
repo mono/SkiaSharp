@@ -40,7 +40,9 @@ Task ("docs-update-frameworks")
     EnsureDirectoryExists (docsTempPathNuGets);
     EnsureDirectoryExists (docsTempPathFrameowrks);
 
-    // extract nugets that were built/downloaded (only supported, not obsolete)
+    // Extract every supported package from output/nugets (the local build output).
+    // Obsolete packages are not built, so they are absent here, have no version to
+    // document, and simply drop out of the docs.
     foreach (var id in SUPPORTED_NUGETS.Keys) {
         var version = GetVersion (id);
         var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
@@ -54,10 +56,10 @@ Task ("docs-update-frameworks")
         Unzip (nupkg, $"{docsTempPathNuGets}/{id}");
     }
 
-    // generate the temp frameworks.xml straight from the locally built/downloaded
-    // packages in output/nugets. The docs gen never queries or downloads packages
-    // from NuGet - run the separate 'docs-download-output' target first to populate
-    // output/nugets, then this target documents whatever is there.
+    // Build the temp frameworks.xml that tells mdoc which assemblies make up each
+    // moniker. Everything is documented from the packages extracted above; the
+    // packages being documented are never queried or downloaded from NuGet, so run
+    // 'docs-download-output' first (or a local build) to populate output/nugets.
     var xFrameworks = new XElement ("Frameworks");
     var monikers = new List<string> ();
     foreach (var id in SUPPORTED_NUGETS.Keys) {
@@ -69,11 +71,17 @@ Task ("docs-update-frameworks")
             continue;
 
         // Latest-only: every package is documented from its single locally-extracted
-        // version with a plain, unversioned moniker (skiasharp, harfbuzzsharp,
-        // skiasharp-views, ...). No NuGet version queries and no package downloads.
+        // version with a plain, unversioned moniker. The docs always describe just
+        // the current build, so there are no per-version monikers.
         Information ($"Adding the assemblies in '{id}'...");
         var packagePath = $"{docsTempPathNuGets}/{id}";
 
+        // Each platform/TFM directory in the package contributes its assemblies to a
+        // moniker. The default moniker is the package id (skiasharp, harfbuzzsharp,
+        // skiasharp-skottie, ...), but related packages are merged into one family
+        // moniker (all SkiaSharp.Views.Maui.* -> skiasharp-views-maui, the other
+        // SkiaSharp.Views.* -> skiasharp-views, ...) so the docs site groups them
+        // instead of showing one entry per NuGet package.
         var dirs =
             GetPlatformDirectories ($"{packagePath}/lib").Union(
             GetPlatformDirectories ($"{packagePath}/ref"));
@@ -92,7 +100,7 @@ Task ("docs-update-frameworks")
             else
                 moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}";
 
-            // add the node to the frameworks.xml
+            // record the moniker in frameworks.xml (once per moniker)
             if (!monikers.Contains (moniker)) {
                 monikers.Add (moniker);
                 xFrameworks.Add (
@@ -101,7 +109,7 @@ Task ("docs-update-frameworks")
                         new XAttribute ("Source", moniker)));
             }
 
-            // copy the assemblies for the tool
+            // stage this moniker's assemblies for mdoc to read
             var o = $"{docsTempPathFrameowrks}/{moniker}";
             EnsureDirectoryExists (o);
             CopyFiles ($"{path}/*.dll", o);
@@ -114,19 +122,19 @@ Task ("docs-update-frameworks")
     var xdoc = new XDocument (xFrameworks);
     xdoc.Save (fwxml);
 
-    // update the docs json
+    // write the generated moniker list into the docs publishing config so the docs
+    // site advertises exactly the monikers produced above
     var docsJsonPath = DOCS_ROOT_PATH.CombineWithFilePath (".openpublishing.publish.config.json");
     var docsJson = ParseJsonFromFile (docsJsonPath);
     docsJson ["docsets_to_publish"][0]["monikers"] = new JArray (monikers.ToArray ());
     SerializeJsonToPrettyFile (docsJsonPath, docsJson);
 
-    // generate doc files. The SkiaSharp/HarfBuzzSharp packages being documented all
-    // come from output/nugets above (no NuGet queries or downloads). The comparer is
-    // used only to resolve the third-party reference assemblies that mdoc needs via
-    // --lib (Microsoft.iOS/macOS/MacCatalyst/tvOS refs, Maui, GTK, WindowsAppSDK,
-    // ...) - SkiaSharp.Views.* assemblies reference those external types and mdoc
-    // fails hard ("Failed to resolve assembly") without them. They are restored into
-    // the package cache and are not part of output/nugets.
+    // generate doc files. The packages being documented all come from output/nugets
+    // above. The comparer is created here only to supply mdoc's --lib search paths:
+    // the third-party reference assemblies (Microsoft.iOS/macOS/MacCatalyst/tvOS
+    // refs, Maui, GTK, WindowsAppSDK, ...) that SkiaSharp.Views.* assemblies depend
+    // on. mdoc fails hard ("Failed to resolve assembly") without them, and they are
+    // restored into the package cache rather than shipped in output/nugets.
     var comparer = await CreateNuGetDiffAsync ();
     var refArgs = string.Join (" ", comparer.SearchPaths.Select (r => $"--lib=\"{r}\""));
     var fw = MakeAbsolute ((FilePath) fwxml);
@@ -135,10 +143,10 @@ Task ("docs-update-frameworks")
         WorkingDirectory = docsTempPathFrameowrks
     });
 
-    // mdoc only ever adds framework index files; it never prunes the ones for
-    // monikers that are no longer generated. Delete those orphans so the
-    // FrameworksIndex stays in lockstep with the monikers we just produced
-    // (e.g. after collapsing versioned lines into a single latest-only moniker).
+    // mdoc only ever adds FrameworksIndex/*.xml files; it never deletes the ones for
+    // monikers that are no longer generated (e.g. when a package stops being built or
+    // a moniker is renamed). Prune those orphans so the FrameworksIndex stays in
+    // lockstep with the monikers we just produced.
     var frameworksIndexDir = $"{DOCS_PATH}/FrameworksIndex";
     if (DirectoryExists (frameworksIndexDir)) {
         foreach (var indexFile in GetFiles ($"{frameworksIndexDir}/*.xml")) {
@@ -164,15 +172,12 @@ Task ("docs-format-docs")
     float totalTypes = 0;
     float totalMembers = 0;
 
-    // Load the authoritative set of monikers that docs-update-frameworks just
-    // generated. mdoc only ever ADDS framework tokens to a member's
-    // FrameworkAlternate/FrameworkOnly attribute; it never removes references to
-    // monikers that are no longer generated. When the moniker scheme changes
-    // (e.g. collapsing versioned "skiasharp-3.119"/"skiasharp-3" lines into a
-    // single latest-only "skiasharp"), the old tokens are left behind and would
-    // point at monikers that no longer exist in .openpublishing.publish.config.json.
-    // Collect the valid set here so the loop below can strip those orphans and keep
-    // the XML in lockstep with the generated frameworks.
+    // Load the authoritative set of monikers that docs-update-frameworks just wrote
+    // to .openpublishing.publish.config.json. mdoc only ever ADDS framework tokens to
+    // a member's FrameworkAlternate/FrameworkOnly attribute; it never removes ones
+    // for monikers that are no longer generated. Whenever a moniker disappears (a
+    // dropped or renamed package), those stale tokens are left behind and would point
+    // at monikers that no longer exist. The loop below uses this set to strip them.
     var validMonikers = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
     var monikersConfigPath = DOCS_ROOT_PATH.CombineWithFilePath (".openpublishing.publish.config.json");
     if (FileExists (monikersConfigPath)) {
@@ -233,7 +238,9 @@ Task ("docs-format-docs")
             }
         }
 
-        // remove the no-longer-obsolete document members
+        // SKDocument.CreatePdf: keep [Obsolete] only on the one genuinely deprecated
+        // overload (SKWStream, SKDocumentPdfMetadata, float) and strip it from the
+        // other CreatePdf overloads, which are not actually obsolete.
         if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDocument") {
             xdoc.Root
                 .Elements ("Members")
@@ -245,7 +252,8 @@ Task ("docs-format-docs")
                 .Remove ();
         }
 
-        // remove the no-longer-obsolete SK3dView attributes
+        // SK3dView: strip the [Obsolete] attribute from the type; it is not marked
+        // obsolete in the current build.
         if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SK3dView") {
             xdoc.Root
                 .Element ("Attributes")?
@@ -256,10 +264,9 @@ Task ("docs-format-docs")
         }
 
         // strip orphaned framework tokens left behind by mdoc: any
-        // FrameworkAlternate/FrameworkOnly entry that references a moniker which
-        // is no longer generated (e.g. an old "skiasharp-3.119"/"skiasharp-3" after
-        // collapsing to a latest-only "skiasharp"). Tokens are kept only when
-        // they appear in the freshly generated moniker set; an attribute that
+        // FrameworkAlternate/FrameworkOnly entry that references a moniker which is
+        // no longer generated (a dropped or renamed package). Tokens are kept only
+        // when they appear in the freshly generated moniker set; an attribute that
         // ends up empty is dropped by the block that follows.
         if (validMonikers.Count > 0) {
             foreach (var attrName in new [] { "FrameworkAlternate", "FrameworkOnly" }) {
