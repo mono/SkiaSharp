@@ -139,11 +139,132 @@ internal partial class VersionConstants {
   -->
 	<ItemGroup Condition="'$(ProduceReferenceAssembly)' == 'true'">
 		<PackageReference Include="Mono.ApiTools.MSBuildTasks" Version="0.3.0" PrivateAssets="all" />
+		<!-- Used by the inline _RemoveObsoleteEnumTypes task below. Cecil is also ILMerged into
+		     Mono.ApiTools.MSBuildTasks.dll but those copies are internal, so we need a separate
+		     public reference. -->
+		<PackageReference Include="Mono.Cecil" Version="0.11.5" PrivateAssets="all" />
 	</ItemGroup>
 	<Target Name="_RemoveObsoleteItemsFromReferenceAssembly"
           AfterTargets="CoreCompile"
           Condition="'$(ProduceReferenceAssembly)' == 'true'">
 		<RemoveObsoleteSymbols Assembly="@(IntermediateRefAssembly)" Condition="Exists('@(IntermediateRefAssembly)')" />
+	</Target>
+
+  <!--
+    ===================================================================================================================
+    _RemoveObsoleteEnumTypes
+
+    Workaround for two Mono.ApiTools.MSBuildTasks limitations that together strand obsolete-error enum types in
+    the v4 reference assembly:
+
+      (a) RemoveObsoleteSymbols crashes with Mono.Cecil "declared in another module" ArgumentException if you mark
+          a top-level enum [Obsolete(error: true)] — the IL writer hits stale TypeRefs while emitting metadata.
+      (b) Even when the enum stays warning-only and only its consuming properties are [Obsolete(error: true)],
+          RemoveObsoleteSymbols only removes the property *metadata* and leaves the underlying get_/set_ accessor
+          methods behind, so the enum still has live references to it.
+
+    This task runs *after* RemoveObsoleteSymbols and explicitly:
+      1) sweeps any property/method/field still referencing one of the listed enum types,
+      2) removes the enum type definitions themselves,
+      3) writes the resulting module to a temp file and atomically replaces the original.
+
+    The enums named in $(SkiaSharpRemoveObsoleteEnumTypes) keep their warning-level [Obsolete] attribute in source
+    (so RemoveObsoleteSymbols doesn't trip over them) but disappear from the ref assembly here, giving downstream
+    consumers a CS0246 "type does not exist" rather than a stale-but-deprecated symbol.
+
+    Mono.Cecil is added as a direct PackageReference because the copy ILMerged into Mono.ApiTools.MSBuildTasks.dll
+    is internal-only and not accessible from inline tasks.
+
+    Property to control: SkiaSharpRemoveObsoleteEnumTypes (semicolon-separated full type names).
+    ===================================================================================================================
+  -->
+	<PropertyGroup Condition="'$(ProduceReferenceAssembly)' == 'true'">
+		<_MonoCecilTaskAssembly>$(NuGetPackageRoot)mono.cecil\0.11.5\lib\netstandard2.0\Mono.Cecil.dll</_MonoCecilTaskAssembly>
+	</PropertyGroup>
+	<UsingTask
+		TaskName="RemoveObsoleteEnumTypes"
+		TaskFactory="RoslynCodeTaskFactory"
+		AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll"
+		Condition="'$(ProduceReferenceAssembly)' == 'true'">
+		<ParameterGroup>
+			<Assembly ParameterType="System.String" Required="true" />
+			<TypeNames ParameterType="System.String" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Reference Include="$(_MonoCecilTaskAssembly)" />
+			<Using Namespace="Mono.Cecil" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.Linq" />
+			<Code Type="Fragment" Language="cs">
+				<![CDATA[
+				var names = new System.Collections.Generic.HashSet<string>(
+					TypeNames.Split(new[] { ';', ',' }, System.StringSplitOptions.RemoveEmptyEntries)
+						.Select(n => n.Trim()).Where(n => n.Length > 0));
+				var tempPath = Assembly + ".tmp";
+				int typesRemoved = 0, membersRemoved = 0;
+				using (var module = ModuleDefinition.ReadModule(Assembly)) {
+					// Pass 1: strip any property/method whose signature references a target enum.
+					// (RemoveObsoleteSymbols removes the [Obsolete(error:true)] property metadata
+					// but leaves the underlying get_/set_ accessor methods behind, so we mop them
+					// up here before we can remove the type definition itself.)
+					bool Refs(TypeReference tr) => tr != null && names.Contains(tr.FullName);
+					foreach (var t in module.Types) {
+						if (names.Contains(t.FullName)) continue;
+						// Remove orphan properties
+						for (int i = t.Properties.Count - 1; i >= 0; i--) {
+							if (Refs(t.Properties[i].PropertyType)) {
+								t.Properties.RemoveAt(i);
+								membersRemoved++;
+							}
+						}
+						// Remove methods that take or return a target enum
+						for (int i = t.Methods.Count - 1; i >= 0; i--) {
+							var m = t.Methods[i];
+							var hit = Refs(m.ReturnType) || m.Parameters.Any(p => Refs(p.ParameterType));
+							if (hit) {
+								t.Methods.RemoveAt(i);
+								membersRemoved++;
+							}
+						}
+						// Remove fields of a target enum type
+						for (int i = t.Fields.Count - 1; i >= 0; i--) {
+							if (Refs(t.Fields[i].FieldType)) {
+								t.Fields.RemoveAt(i);
+								membersRemoved++;
+							}
+						}
+					}
+					// Pass 2: remove the enum type definitions themselves.
+					for (int i = module.Types.Count - 1; i >= 0; i--) {
+						if (names.Contains(module.Types[i].FullName)) {
+							Log.LogMessage(MessageImportance.Normal, "Removed obsolete enum type: " + module.Types[i].FullName);
+							module.Types.RemoveAt(i);
+							typesRemoved++;
+						}
+					}
+					if (typesRemoved > 0) {
+						module.Write(tempPath);
+					}
+				}
+				if (typesRemoved > 0) {
+					Log.LogMessage(MessageImportance.Normal, "Also removed " + membersRemoved + " orphan members referencing the removed types");
+					File.Delete(Assembly);
+					File.Move(tempPath, Assembly);
+				}
+				]]>
+			</Code>
+		</Task>
+	</UsingTask>
+	<PropertyGroup Condition="'$(SkiaSharpRemoveObsoleteEnumTypes)' == ''">
+		<SkiaSharpRemoveObsoleteEnumTypes>SkiaSharp.SKFilterQuality;SkiaSharp.SKPaintHinting</SkiaSharpRemoveObsoleteEnumTypes>
+	</PropertyGroup>
+	<Target Name="_RemoveObsoleteEnumTypes"
+          AfterTargets="_RemoveObsoleteItemsFromReferenceAssembly"
+          Condition="'$(ProduceReferenceAssembly)' == 'true' and '$(SkiaSharpRemoveObsoleteEnumTypes)' != ''">
+		<RemoveObsoleteEnumTypes
+			Assembly="@(IntermediateRefAssembly)"
+			TypeNames="$(SkiaSharpRemoveObsoleteEnumTypes)"
+			Condition="Exists('@(IntermediateRefAssembly)')" />
 	</Target>
 
   <!--
