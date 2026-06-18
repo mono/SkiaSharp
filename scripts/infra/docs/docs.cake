@@ -47,18 +47,20 @@ Task ("docs-update-frameworks")
             ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
             : version;
         var name = $"{id}.{localNugetVersion}.nupkg";
+        var nupkg = $"{OUTPUT_NUGETS_PATH}/{name}";
+        if (!FileExists (nupkg))
+            throw new Exception ($"Could not find '{nupkg}'. Run the 'docs-download-output' target (or build the packages) to populate output/nugets first.");
         CleanDir ($"{docsTempPathNuGets}/{id}");
-        Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"{docsTempPathNuGets}/{id}");
+        Unzip (nupkg, $"{docsTempPathNuGets}/{id}");
     }
 
-    // get a comparer that will download the nugets
-    Information ($"Creating comparer...");
-    var comparer = await CreateNuGetDiffAsync ();
-
-    // generate the temp frameworks.xml
+    // generate the temp frameworks.xml straight from the locally built/downloaded
+    // packages in output/nugets. The docs gen never queries or downloads packages
+    // from NuGet - run the separate 'docs-download-output' target first to populate
+    // output/nugets, then this target documents whatever is there.
     var xFrameworks = new XElement ("Frameworks");
     var monikers = new List<string> ();
-    foreach (var id in TRACKED_NUGETS.Keys) {
+    foreach (var id in SUPPORTED_NUGETS.Keys) {
         // skip doc generation for Uno, this is the same as WinUI and it is not needed
         if (id.StartsWith ("SkiaSharp.Views.Uno"))
             continue;
@@ -66,68 +68,43 @@ Task ("docs-update-frameworks")
         if (id.Contains ("NativeAssets"))
             continue;
 
-        // get the versions
-        Information ($"Comparing the assemblies in '{id}'...");
-        var allVersions = await NuGetVersions.GetAllAsync (id, new NuGetVersions.Filter {
-            MinimumVersion = new NuGetVersion (TRACKED_NUGETS [id])
-        });
+        // Latest-only: every package is documented from its single locally-extracted
+        // version with a plain, unversioned moniker (skiasharp, harfbuzzsharp,
+        // skiasharp-views, ...). No NuGet version queries and no package downloads.
+        Information ($"Adding the assemblies in '{id}'...");
+        var packagePath = $"{docsTempPathNuGets}/{id}";
 
-        // add the current dev version to the mix (only for supported packages)
-        var isSupported = SUPPORTED_NUGETS.ContainsKey(id);
-        var dev = isSupported ? new NuGetVersion (GetVersion (id)) : null;
-        if (dev != null)
-            allVersions = allVersions.Union (new [] { dev }).ToArray ();
+        var dirs =
+            GetPlatformDirectories ($"{packagePath}/lib").Union(
+            GetPlatformDirectories ($"{packagePath}/ref"));
+        foreach (var (path, platform) in dirs) {
+            string moniker;
+            if (id.StartsWith ("SkiaSharp.Views.Maui"))
+                moniker = "skiasharp-views-maui";
+            else if (id.StartsWith ("SkiaSharp.Views"))
+                moniker = "skiasharp-views";
+            else if (id.StartsWith ("SkiaSharp.Direct3D"))
+                moniker = "skiasharp-direct3d";
+            else if (id.StartsWith ("SkiaSharp.Vulkan"))
+                moniker = "skiasharp-vulkan";
+            else if (platform == null)
+                moniker = $"{id.ToLower ().Replace (".", "-")}";
+            else
+                moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}";
 
-        // "merge" the patches so we only care about major.minor
-        var merged = new Dictionary<string, NuGetVersion> ();
-        foreach (var version in allVersions) {
-            merged [$"{version.Major}.{version.Minor}"] = version;
-        }
-
-        foreach (var version in merged) {
-            Information ($"Downloading '{id}' version '{version}'...");
-            // get the path to the nuget contents
-            var packagePath = (isSupported && version.Value == dev)
-                ? $"{docsTempPathNuGets}/{id}"
-                : await comparer.ExtractCachedPackageAsync (id, version.Value);
-
-            var dirs =
-                GetPlatformDirectories ($"{packagePath}/lib").Union(
-                GetPlatformDirectories ($"{packagePath}/ref"));
-            foreach (var (path, platform) in dirs) {
-                string moniker;
-                if (id.StartsWith ("SkiaSharp.Views.Forms"))
-                    if (id != "SkiaSharp.Views.Forms")
-                        continue;
-                    else
-                        moniker = $"skiasharp-views-forms-{version.Key}";
-                else if (id.StartsWith ("SkiaSharp.Views.Maui"))
-                    moniker = $"skiasharp-views-maui-{version.Key}";
-                else if (id.StartsWith ("SkiaSharp.Views"))
-                    moniker = $"skiasharp-views-{version.Key}";
-                else if (id.StartsWith ("SkiaSharp.Direct3D"))
-                    moniker = $"skiasharp-direct3d-{version.Key}";
-                else if (id.StartsWith ("SkiaSharp.Vulkan"))
-                    moniker = $"skiasharp-vulkan-{version.Key}";
-                else if (platform == null)
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{version.Key}";
-                else
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version.Key}";
-
-                // add the node to the frameworks.xml
-                if (!monikers.Contains (moniker)) {
-                    monikers.Add (moniker);
-                    xFrameworks.Add (
-                        new XElement ("Framework",
-                            new XAttribute ("Name", moniker),
-                            new XAttribute ("Source", moniker)));
-                }
-
-                // copy the assemblies for the tool
-                var o = $"{docsTempPathFrameowrks}/{moniker}";
-                EnsureDirectoryExists (o);
-                CopyFiles ($"{path}/*.dll", o);
+            // add the node to the frameworks.xml
+            if (!monikers.Contains (moniker)) {
+                monikers.Add (moniker);
+                xFrameworks.Add (
+                    new XElement ("Framework",
+                        new XAttribute ("Name", moniker),
+                        new XAttribute ("Source", moniker)));
             }
+
+            // copy the assemblies for the tool
+            var o = $"{docsTempPathFrameowrks}/{moniker}";
+            EnsureDirectoryExists (o);
+            CopyFiles ($"{path}/*.dll", o);
         }
     }
     monikers.Sort ();
@@ -143,14 +120,35 @@ Task ("docs-update-frameworks")
     docsJson ["docsets_to_publish"][0]["monikers"] = new JArray (monikers.ToArray ());
     SerializeJsonToPrettyFile (docsJsonPath, docsJson);
 
-    // generate doc files
-    comparer = await CreateNuGetDiffAsync ();
+    // generate doc files. The SkiaSharp/HarfBuzzSharp packages being documented all
+    // come from output/nugets above (no NuGet queries or downloads). The comparer is
+    // used only to resolve the third-party reference assemblies that mdoc needs via
+    // --lib (Microsoft.iOS/macOS/MacCatalyst/tvOS refs, Maui, GTK, WindowsAppSDK,
+    // ...) - SkiaSharp.Views.* assemblies reference those external types and mdoc
+    // fails hard ("Failed to resolve assembly") without them. They are restored into
+    // the package cache and are not part of output/nugets.
+    var comparer = await CreateNuGetDiffAsync ();
     var refArgs = string.Join (" ", comparer.SearchPaths.Select (r => $"--lib=\"{r}\""));
     var fw = MakeAbsolute ((FilePath) fwxml);
     RunProcess (Context.Tools.Resolve ("mdoc.exe"), new ProcessSettings {
         Arguments = $"update --debug --delete --out=\"{DOCS_PATH}\" --lang=DocId --frameworks={fw} {refArgs}",
         WorkingDirectory = docsTempPathFrameowrks
     });
+
+    // mdoc only ever adds framework index files; it never prunes the ones for
+    // monikers that are no longer generated. Delete those orphans so the
+    // FrameworksIndex stays in lockstep with the monikers we just produced
+    // (e.g. after collapsing versioned lines into a single latest-only moniker).
+    var frameworksIndexDir = $"{DOCS_PATH}/FrameworksIndex";
+    if (DirectoryExists (frameworksIndexDir)) {
+        foreach (var indexFile in GetFiles ($"{frameworksIndexDir}/*.xml")) {
+            var indexMoniker = indexFile.GetFilenameWithoutExtension ().ToString ();
+            if (!monikers.Contains (indexMoniker)) {
+                Information ("Removing orphaned framework index: {0}", indexMoniker);
+                DeleteFile (indexFile);
+            }
+        }
+    }
 
     // clean up after working
     CleanDirectories (docsTempPath);
@@ -165,6 +163,24 @@ Task ("docs-format-docs")
     float memberCount = 0;
     float totalTypes = 0;
     float totalMembers = 0;
+
+    // Load the authoritative set of monikers that docs-update-frameworks just
+    // generated. mdoc only ever ADDS framework tokens to a member's
+    // FrameworkAlternate/FrameworkOnly attribute; it never removes references to
+    // monikers that are no longer generated. When the moniker scheme changes
+    // (e.g. collapsing versioned "skiasharp-3.119"/"skiasharp-3" lines into a
+    // single latest-only "skiasharp"), the old tokens are left behind and would
+    // point at monikers that no longer exist in .openpublishing.publish.config.json.
+    // Collect the valid set here so the loop below can strip those orphans and keep
+    // the XML in lockstep with the generated frameworks.
+    var validMonikers = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+    var monikersConfigPath = DOCS_ROOT_PATH.CombineWithFilePath (".openpublishing.publish.config.json");
+    if (FileExists (monikersConfigPath)) {
+        var monikersJson = ParseJsonFromFile (monikersConfigPath);
+        foreach (var m in (JArray) monikersJson ["docsets_to_publish"][0]["monikers"])
+            validMonikers.Add ((string) m);
+    }
+
     foreach (var file in docFiles) {
         Debug("Processing {0}...", file.FullPath);
 
@@ -217,36 +233,6 @@ Task ("docs-format-docs")
             }
         }
 
-        // Fix the type rename from SkPath1DPathEffectStyle to SKPath1DPathEffectStyle
-        // this breaks linux as it is just a case change and that OS is case sensitive
-        if (xdoc.Root.Name == "Overview") {
-            xdoc.Root
-                .Elements ("Types")
-                .Elements ("Namespace")
-                .Elements ("Type")
-                .Where (e => e.Attribute ("Name")?.Value == "SkPath1DPathEffectStyle")
-                .Remove ();
-        }
-
-        // remove the duplicate SKDynamicMemoryWStream.CopyTo method with a different return type
-        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDynamicMemoryWStream") {
-            var copyTos = xdoc.Root
-                .Elements ("Members")
-                .Elements ("Member")
-                .Where (e => e.Attribute ("MemberName")?.Value == "CopyTo")
-                .Where (e => e.Elements ("MemberSignature").Any (s => s.Attribute ("Value")?.Value == "M:SkiaSharp.SKDynamicMemoryWStream.CopyTo(SkiaSharp.SKWStream)"));
-            var voidReturn = copyTos.FirstOrDefault (e => e.Element ("ReturnValue")?.Element ("ReturnType")?.Value == "System.Void");
-            var boolReturn = copyTos.FirstOrDefault (e => e.Element ("ReturnValue")?.Element ("ReturnType")?.Value == "System.Boolean");
-            if (voidReturn != null && boolReturn != null) {
-                boolReturn
-                    .Element ("AssemblyInfo")
-                    .Elements ("AssemblyVersion")
-                    .FirstOrDefault ()
-                    .AddBeforeSelf (voidReturn.Element ("AssemblyInfo").Elements ("AssemblyVersion"));
-                voidReturn.Remove ();
-            }
-        }
-
         // remove the no-longer-obsolete document members
         if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDocument") {
             xdoc.Root
@@ -267,6 +253,30 @@ Task ("docs-format-docs")
                 .SelectMany (e => e.Elements ("AttributeName"))
                 .Where (e => e.Value.Contains ("System.Obsolete"))
                 .Remove ();
+        }
+
+        // strip orphaned framework tokens left behind by mdoc: any
+        // FrameworkAlternate/FrameworkOnly entry that references a moniker which
+        // is no longer generated (e.g. an old "skiasharp-3.119"/"skiasharp-3" after
+        // collapsing to a latest-only "skiasharp"). Tokens are kept only when
+        // they appear in the freshly generated moniker set; an attribute that
+        // ends up empty is dropped by the block that follows.
+        if (validMonikers.Count > 0) {
+            foreach (var attrName in new [] { "FrameworkAlternate", "FrameworkOnly" }) {
+                foreach (var el in xdoc.Root.DescendantsAndSelf ().ToArray ()) {
+                    var attr = el.Attribute (attrName);
+                    if (attr == null || string.IsNullOrEmpty (attr.Value))
+                        continue;
+                    var kept = attr.Value
+                        .Split (new [] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Where (t => validMonikers.Contains (t))
+                        .ToArray ();
+                    if (kept.Length == 0)
+                        attr.Remove ();
+                    else if (kept.Length != attr.Value.Split (';').Length)
+                        attr.Value = string.Join (";", kept);
+                }
+            }
         }
 
         // remove empty FrameworkAlternate elements
