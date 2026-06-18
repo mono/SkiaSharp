@@ -186,10 +186,55 @@ Task ("docs-format-docs")
             validMonikers.Add ((string) m);
     }
 
+    // Load the authoritative set of assemblies that were actually built and
+    // documented this run, straight from the freshly generated FrameworksIndex.
+    // mdoc accumulates an <AssemblyInfo> per assembly that has ever documented a
+    // type/member and never removes them, so when a package is dropped or renamed
+    // (e.g. the old SkiaSharp.Views.Gtk split into Gtk3/Gtk4, or the obsolete
+    // SkiaSharp.Views.Maui.Controls.Compatibility) its <AssemblyInfo> lingers on
+    // types that still exist in a current assembly. The loop below uses this set to
+    // strip those stale assembly references.
+    var validAssemblies = new HashSet<string> (StringComparer.Ordinal);
+    var frameworksIndexPath = $"{DOCS_PATH}/FrameworksIndex";
+    if (DirectoryExists (frameworksIndexPath)) {
+        foreach (var indexFile in GetFiles ($"{frameworksIndexPath}/*.xml")) {
+            foreach (var asm in XDocument.Load (indexFile.FullPath).Descendants ("Assembly"))
+                validAssemblies.Add (asm.Attribute ("Name")?.Value);
+        }
+    }
+
+    // Load the set of namespaces that still contain at least one type, straight
+    // from this run's index.xml. Like assemblies above, mdoc never removes a
+    // <Namespace> entry (nor its ns-*.xml stub file) when the last type in it goes
+    // away, so a dropped package leaves behind an empty <Namespace></Namespace> in
+    // index.xml and an orphan ns-*.xml. The Overview pass below removes the empty
+    // index.xml entries; the Namespace pass deletes any ns-*.xml not in this set.
+    var validNamespaces = new HashSet<string> (StringComparer.Ordinal);
+    var indexFilePath = $"{DOCS_PATH}/index.xml";
+    if (System.IO.File.Exists (indexFilePath)) {
+        foreach (var ns in XDocument.Load (indexFilePath).Root.Elements ("Types").Elements ("Namespace")) {
+            if (ns.Elements ("Type").Any ())
+                validNamespaces.Add (ns.Attribute ("Name")?.Value);
+        }
+    }
+
     foreach (var file in docFiles) {
         Debug("Processing {0}...", file.FullPath);
 
         var xdoc = XDocument.Load (file.FullPath);
+
+        // Delete orphan namespace stub files (ns-*.xml) whose namespace no longer
+        // has any types in index.xml (see validNamespaces above). mdoc leaves these
+        // behind when a package stops being built; this keeps the stub files in
+        // lockstep with the live namespaces in index.xml. The global namespace
+        // (Name="", file ns-.xml) is always emitted by mdoc and is kept as-is.
+        if (xdoc.Root.Name == "Namespace") {
+            var nsName = xdoc.Root.Attribute ("Name")?.Value ?? "";
+            if (nsName.Length > 0 && !validNamespaces.Contains (nsName)) {
+                DeleteFile (file);
+                continue;
+            }
+        }
 
         // remove IComponent docs as this is just designer
         if (xdoc.Root.Name == "Type") {
@@ -223,6 +268,26 @@ Task ("docs-format-docs")
                 .Remove ();
         }
 
+        // Drop stale entries that mdoc accumulated in index.xml for packages that
+        // are no longer built: <Assembly> overview entries whose assembly is not in
+        // this run's build (see validAssemblies), and <Namespace> entries left empty
+        // because every type in them was deleted. The orphan ns-*.xml stub files for
+        // those emptied namespaces are deleted by the Namespace pass above.
+        if (xdoc.Root.Name == "Overview") {
+            if (validAssemblies.Count > 0) {
+                xdoc.Root
+                    .Elements ("Assemblies")
+                    .Elements ("Assembly")
+                    .Where (e => !validAssemblies.Contains (e.Attribute ("Name")?.Value))
+                    .Remove ();
+            }
+            xdoc.Root
+                .Elements ("Types")
+                .Elements ("Namespace")
+                .Where (e => !e.Elements ("Type").Any ())
+                .Remove ();
+        }
+
         // Collapse AssemblyVersions to latest-only. mdoc accumulates one
         // <AssemblyVersion> per historical release inside each <AssemblyInfo> and
         // never removes the old ones, so the list grows forever (2.80.0.0, 2.88.0.0,
@@ -245,29 +310,31 @@ Task ("docs-format-docs")
             }
         }
 
-        // SKDocument.CreatePdf: keep [Obsolete] only on the one genuinely deprecated
-        // overload (SKWStream, SKDocumentPdfMetadata, float) and strip it from the
-        // other CreatePdf overloads, which are not actually obsolete.
-        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDocument") {
-            xdoc.Root
-                .Elements ("Members")
-                .Elements ("Member")
-                .Where (e => e.Attribute ("MemberName")?.Value == "CreatePdf")
-                .Where (e => e.Elements ("MemberSignature").All (s => s.Attribute ("Value")?.Value != "M:SkiaSharp.SKDocument.CreatePdf(SkiaSharp.SKWStream,SkiaSharp.SKDocumentPdfMetadata,System.Single)"))
-                .SelectMany (e => e.Elements ("Attributes").Elements ("Attribute").Elements ("AttributeName"))
-                .Where (e => e.Value.Contains ("System.Obsolete"))
-                .Remove ();
-        }
+        // Strip <AssemblyInfo> blocks for assemblies that no longer exist in the
+        // current build (not present in this run's FrameworksIndex). A type/member
+        // can be documented by several assemblies at once; when one is dropped or
+        // renamed, mdoc leaves its stale <AssemblyInfo> behind. Remove those, then
+        // drop any member that is left with none (it only lived in the dropped
+        // assembly) and delete the file if the type itself ends up with none. Members
+        // that never carried an <AssemblyInfo> (they inherit the type's) are untouched.
+        if (xdoc.Root.Name == "Type" && validAssemblies.Count > 0) {
+            bool IsStale (XElement info) =>
+                !validAssemblies.Contains (info.Element ("AssemblyName")?.Value);
 
-        // SK3dView: strip the [Obsolete] attribute from the type; it is not marked
-        // obsolete in the current build.
-        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SK3dView") {
-            xdoc.Root
-                .Element ("Attributes")?
-                .Elements ("Attribute")
-                .SelectMany (e => e.Elements ("AttributeName"))
-                .Where (e => e.Value.Contains ("System.Obsolete"))
-                .Remove ();
+            foreach (var member in xdoc.Root.Elements ("Members").Elements ("Member").ToArray ()) {
+                var infos = member.Elements ("AssemblyInfo").ToArray ();
+                if (infos.Length == 0)
+                    continue;
+                infos.Where (IsStale).Remove ();
+                if (!member.Elements ("AssemblyInfo").Any ())
+                    member.Remove ();
+            }
+
+            xdoc.Root.Elements ("AssemblyInfo").Where (IsStale).ToArray ().Remove ();
+            if (!xdoc.Root.Elements ("AssemblyInfo").Any ()) {
+                DeleteFile (file);
+                continue;
+            }
         }
 
         // strip orphaned framework tokens left behind by mdoc: any
