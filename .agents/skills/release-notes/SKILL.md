@@ -19,11 +19,11 @@ description: >
   "refresh release notes".
 
     NOTE: The full set is normally regenerated automatically by the `update-release-notes`
-  agentic workflow when code lands on main, release branches, or tags are pushed. That
-  workflow runs the Prepare script in a dedicated `prepare` job (its own disk-managed
-  runner), restores its output into the agent's checkout, and then invokes this skill for
-  the Polish phase only. The same skill is used manually for regeneration or corrections,
-  in which case you run the Prepare script yourself and then polish.
+  agentic workflow when code lands on main, release branches, or tags are pushed. In that
+  automated run the Prepare script has already been run for you, so you skip it and only do
+  the Polish phase. Run manually for regeneration or corrections, in which case you run the
+  Prepare script yourself first and then polish. Either way, the pages to polish are listed
+  in `output/files-to-polish.txt`.
 ---
 
 # Release Notes & API Changelogs Skill
@@ -35,6 +35,15 @@ on push to `main`, `release/*` branches, and tags) and manually when regeneratin
 correcting, or bulk-processing the release pages.
 
 ## How it works: prepare, then polish
+
+The skill runs **one of two ways**, and both end at the same place — a list of pages to
+polish in `output/files-to-polish.txt`:
+
+- **Manually** (regeneration or corrections): you run the Prepare script yourself; it
+  writes `output/files-to-polish.txt`, then you read it and polish those pages.
+- **Automatically** (the `update-release-notes` workflow): Prepare has **already run** for
+  you, so you **skip it**; `output/files-to-polish.txt` is already on disk — read it and
+  polish those pages.
 
 The skill is just **two phases**:
 
@@ -50,19 +59,19 @@ polish.** `generate.sh` is the single entry point for the Prepare phase — you 
 to know what it runs internally.
 
 > **Running unattended from the `update-release-notes` workflow?** The **Prepare** phase
-> has **already been run for you in a dedicated `prepare` job** and its output restored
-> into your checkout — the API-diff tree and the raw-data pages are already on disk.
-> **Skip Prepare entirely** and go straight to [Polish the prose](#polish-the-prose),
-> polishing exactly the files listed in `/tmp/gh-aw/files-to-polish.txt` (one
-> repo-relative path per line; an empty file means nothing changed — make no edits).
+> has **already been run for you** — the API-diff tree and the raw-data pages are already
+> on disk. **Skip Prepare entirely** and go straight to
+> [Polish the prose](#polish-the-prose), polishing exactly the files listed in
+> `output/files-to-polish.txt` (one repo-relative path per line; an empty file means
+> nothing changed — make no edits).
 
 ## Process
 
 ### Prepare — run the script first
 
-> **In the automated workflow this already ran** in a dedicated `prepare` job and its
-> output was restored into your checkout — **skip this whole phase** and jump to
-> [Polish the prose](#polish-the-prose). Run it yourself only for **manual** regeneration.
+> **In the automated workflow this already ran for you** — **skip this whole phase** and
+> jump to [Polish the prose](#polish-the-prose). Run it yourself only for **manual**
+> regeneration.
 
 **Decide scope, then run it.** Ask the user which version(s) to generate (or infer from
 context) and pick the matching invocation from the table below. From anywhere in the repo,
@@ -91,9 +100,9 @@ are the pages whose raw data changed and that you polish next. You never create,
 or delete pages — the script owns that.
 
 **Requirements.** The script needs the .NET SDK and `python3`, plus network access to
-nuget.org and the GitHub API. In the workflow these are provisioned in the `prepare` job. For **manual** runs, if a required tool or the network is missing the script stops
-with a clear error — **ask the user to install it / restore connectivity**; never work
-around it or hand-write API-diff links to compensate.
+nuget.org and the GitHub API. For **manual** runs, if a required tool or the network is
+missing the script stops with a clear error — **ask the user to install it / restore
+connectivity**; never work around it or hand-write API-diff links to compensate.
 
 ### Polish the prose
 
@@ -129,10 +138,10 @@ The file starts with an HTML comment block containing both metadata (version, st
 diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
 placeholder for polished content. The raw data comment must be preserved in the final file.
 
-**IMPORTANT:** The Prepare script always writes the full list of files to polish to
-`output/files-to-polish.txt` (one repo-relative path per line) and echoes it to the log.
-In the `update-release-notes` workflow that file is restored for you at
-`/tmp/gh-aw/files-to-polish.txt`. The echoed summary looks like:
+**IMPORTANT:** The list of files to polish is **always** at `output/files-to-polish.txt`
+(one repo-relative path per line). For a **manual** run the Prepare script writes it there
+(and echoes it to the log); for an **automated** run it has already been placed there for
+you. The echoed summary looks like:
 
 ```
 ========================================

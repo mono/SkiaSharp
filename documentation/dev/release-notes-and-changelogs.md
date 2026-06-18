@@ -289,13 +289,16 @@ The two jobs hand off through a **workflow artifact**, never a shared runner. Th
 `prepare` job uploads (a) all of its working-tree changes (the regenerated `releases/`
 tree — pages, API-diff folders, and the co-release-map sidecar) and (b) the
 `files-to-polish.txt` list. The agent job declares `needs: prepare`, downloads the
-artifact, and restores those changes into a clean checkout *before* the agent starts.
-The agent then runs the **Polish** phase (§2.2) with **no network and no
-`python3`/`cake` access** — it reads `files-to-polish.txt` first and edits only the
-prose of the listed pages. The `create-pull-request` safe-output captures the *combined*
-working-tree diff (restored Prepare output + agent prose edits) into the single PR, so
-both artifacts always ship together. If `files-to-polish.txt` is empty **and** the
-restored tree has no diff, no PR is opened (§4.6 idempotency).
+artifact, and restores those changes into a clean checkout *before* the agent starts:
+the working-tree changes are re-applied and the list is placed back at
+`output/files-to-polish.txt` — the **same path a manual Prepare run writes** — so the
+Polish phase reads it from one place regardless of how it was triggered. The agent then
+runs the **Polish** phase (§2.2) with **no network and no `python3`/`cake` access** — it
+reads `output/files-to-polish.txt` first and edits only the prose of the listed pages.
+The `create-pull-request` safe-output captures the *combined* working-tree diff (restored
+Prepare output + agent prose edits) into the single PR, so both artifacts always ship
+together. If `files-to-polish.txt` is empty **and** the restored tree has no diff, no PR
+is opened (§4.6 idempotency).
 
 ---
 

@@ -76,9 +76,9 @@ jobs:
         run: |
           set -euo pipefail
           # Single entry point: Cake (API changelogs) then Python (raw data), both
-          # VERBOSE, writing the "Files to polish" list to a file. No args = --all.
-          bash .agents/skills/release-notes/scripts/generate.sh \
-            --polish-list "$RUNNER_TEMP/files-to-polish.txt"
+          # VERBOSE. No args = --all; the "Files to polish" list lands at its
+          # default location, output/files-to-polish.txt.
+          bash .agents/skills/release-notes/scripts/generate.sh
       - name: Package Prepare output
         run: |
           set -euo pipefail
@@ -89,7 +89,7 @@ jobs:
           git add -A
           git diff --cached --binary > "$RUNNER_TEMP/prepare-out/prepare.patch"
           git reset -q
-          cp "$RUNNER_TEMP/files-to-polish.txt" "$RUNNER_TEMP/prepare-out/files-to-polish.txt"
+          cp output/files-to-polish.txt "$RUNNER_TEMP/prepare-out/files-to-polish.txt"
           echo "Patch size: $(wc -c < "$RUNNER_TEMP/prepare-out/prepare.patch") bytes"
           echo "Files to polish:"; cat "$RUNNER_TEMP/prepare-out/files-to-polish.txt" || true
       - name: Upload Prepare output
@@ -118,8 +118,10 @@ pre-agent-steps:
   - name: Restore Prepare output
     run: |
       set -euo pipefail
-      # The files-to-polish list the agent reads (spec §2.3).
-      cp /tmp/gh-aw/prepare-in/files-to-polish.txt /tmp/gh-aw/files-to-polish.txt
+      # The skill always reads output/files-to-polish.txt — put it back at that same
+      # path so the agent's Polish phase is identical to a manual run.
+      mkdir -p output
+      cp /tmp/gh-aw/prepare-in/files-to-polish.txt output/files-to-polish.txt
       # Replay Prepare's working-tree changes; an empty patch = nothing changed.
       if [ -s /tmp/gh-aw/prepare-in/prepare.patch ]; then
         git apply --3way --whitespace=nowarn /tmp/gh-aw/prepare-in/prepare.patch
@@ -166,7 +168,7 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
 the regenerated files are on disk, and the list is at
-`/tmp/gh-aw/files-to-polish.txt`. **Do not run `generate.sh`, `dotnet cake`, the
+`output/files-to-polish.txt`. **Do not run `generate.sh`, `dotnet cake`, the
 Python script, or `git commit`/`git push`.** Your job is the Polish phase only.
 
 ## Your job: the Polish phase
@@ -176,7 +178,7 @@ Use the **release-notes skill**
 in its **unattended** mode: the Prepare phase already ran, so skip it and go straight
 to **Polish**.
 
-1. Read `/tmp/gh-aw/files-to-polish.txt`. It lists exactly the pages under
+1. Read `output/files-to-polish.txt`. It lists exactly the pages under
    `documentation/docfx/releases/` whose raw data changed this run (one
    repo-relative path per line).
 2. If it is **empty**, make **no edits** and exit — leave any existing PR

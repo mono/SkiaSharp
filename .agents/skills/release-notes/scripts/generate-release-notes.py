@@ -2646,8 +2646,7 @@ def main():
         "--polish-list", metavar="FILE", default=None,
         help="Write the 'Files to polish' list to FILE (one repo-relative path "
              "per line; empty file = nothing changed). Defaults to "
-             "output/files-to-polish.txt. The Prepare job uploads this file as an "
-             "artifact for the Polish agent (spec §2.3).")
+             "output/files-to-polish.txt.")
 
     args = parser.parse_args()
 
