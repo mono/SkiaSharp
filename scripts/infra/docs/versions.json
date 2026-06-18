@@ -1,54 +1,46 @@
 {
-  "$comment": "Shared version comparison config for API changelogs and release notes. Override-only: list a version only when it needs a non-default comparison baseline (compare_to) or is superseded (status + superseded_by). The default baseline is the previous version; the inverse 'supersedes' link is derived automatically from superseded_by, so it is not configured here.",
-  "versions": [
-    {
-      "version": "3.0.0",
+  "$comment": "Shared version-comparison overrides for API changelogs AND release notes. See documentation/dev/release-notes-and-changelogs.md (the behavior spec). OVERRIDE-ONLY: list a line only when it needs a non-default comparison baseline (compare_to) or is superseded (status + superseded_by), or to force emission of a never-stable line. The default baseline is the previous emitted line; the inverse 'supersedes' back-link is DERIVED from superseded_by and must not be set here. Top level is keyed by FAMILY (spec 1.5): 'skiasharp' for SkiaSharp-versioned packages and 'harfbuzzsharp' for HarfBuzzSharp-versioned packages. Each family is then keyed by line core (X.Y.Z).",
+  "skiasharp": {
+    "3.0.0": {
       "status": "superseded",
       "superseded_by": "3.116.0",
       "$comment": "3.0.x series was replaced by the 3.116 rewrite"
     },
-    {
-      "version": "3.116.0",
+    "3.116.0": {
       "compare_to": "2.88.9",
       "$comment": "First stable after the rewrite; compare against last 2.x stable"
     },
-    {
-      "version": "3.118.0",
+    "3.118.0": {
       "status": "superseded",
       "superseded_by": "3.119.0",
       "$comment": "3.118.x never went stable"
     },
-    {
-      "version": "3.119.0",
+    "3.119.0": {
       "compare_to": "3.116.1",
       "$comment": "Skips over 3.118.x which never shipped stable"
     },
-    {
-      "version": "3.119.3",
+    "3.119.3": {
       "status": "superseded",
       "superseded_by": "3.119.4",
       "$comment": "Hotfix 3.119.4 replaced 3.119.3"
     },
-    {
-      "version": "3.119.4",
+    "3.119.4": {
       "compare_to": "3.119.2",
       "$comment": "Supersedes 3.119.3; compare against last good patch before it"
     },
-    {
-      "version": "4.147.0",
+    "4.147.0": {
       "status": "superseded",
       "superseded_by": "4.148.0",
       "$comment": "4.147.x was preview-only, never went stable"
     },
-    {
-      "version": "4.148.0",
+    "4.148.0": {
       "compare_to": "3.119.4",
       "$comment": "First 4.x RC; compare against last stable (3.119.4)"
     },
-    {
-      "version": "4.150.0",
+    "4.150.0": {
       "compare_to": "4.148.0",
       "$comment": "Compares against previous 4.x release"
     }
-  ]
+  },
+  "harfbuzzsharp": {}
 }

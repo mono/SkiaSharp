@@ -2,7 +2,62 @@
 """
 Fetch SkiaSharp release data and manage the website release notes structure.
 
-This script collects raw data. AI does the formatting using TEMPLATE.md.
+READ FIRST: documentation/dev/release-notes-and-changelogs.md is the behavior
+SPEC for this script (and the sibling API-changelog cake target). Change the spec
+first, then make this code match it — do not patch new behavior in and leave the
+spec stale.
+
+This script collects raw data and OWNS the page structure. AI only polishes the
+prose — it never creates, names, or deletes pages, and never computes diff ranges.
+See "Division of responsibility" below; the formatting itself uses TEMPLATE.md.
+
+Division of responsibility
+--------------------------
+SCRIPT (here): decides every filename, diff range, released-vs-unreleased split,
+which previews roll up, supersession banners, and which stale pages to prune. All
+of this is deterministic and lives in code (see the page model below + the
+docstrings on _page_filename, determine_diff_range, cleanup_stale_unreleased).
+
+AI / SKILL.md: reads each file in the final "Files to polish:" list and rewrites
+its body from the embedded raw-data block. Nothing structural — it never edits this
+script. If the output looks wrong (a missing/unexpected page, a bad range), the
+Polish phase STOPS and reports; a maintainer fixes the script here.
+
+Output streams (the Prepare-phase contract)
+--------------------------------------------
+STDOUT carries ONLY the machine-readable result the Polish phase consumes: the
+delimited "Files to polish" block (see cmd_all / the `log` helper). Every piece of
+human progress and diagnostics — "Processing…", "Found N PRs", "Skipping
+(unchanged)", warnings, errors — goes to STDERR via ``log()``. So a caller can
+``generate-release-notes.py --all 2>/dev/null`` (or capture stdout in a workflow
+step) and get nothing but the list. Do NOT add bare ``print()`` for progress; use
+``log()``. The only ``print()`` to stdout is the final list block itself.
+
+Page model (two files per in-flight version — released + unreleased coexist)
+---------------------------------------------------------------------------
+A version's "released" and "unreleased" states are orthogonal and get SEPARATE
+pages that coexist while the version is in flight:
+
+  * RELEASED  ``{version}.md``            <- a VERSIONED branch (release/X.Y.Z and
+    its -rc/-preview prereleases; highest/canonical wins under --all). Full
+    cumulative ROLLUP from the previous-stable base, honoring versions.json
+    `compare_to`, carrying preview-milestone sections + supersede banners.
+
+  * UNRELEASED ``{version}-unreleased.md`` <- a HEAD branch (main, or servicing
+    release/X.Y.x). Small DELTA from the last release to the head ("what may ship
+    next") — NOT a rollup, so it does NOT honor versions.json `compare_to` and has
+    no preview milestones. Omitted entirely when the delta is empty.
+
+So e.g. 4.150.0 has BOTH 4.150.0.md (rollup from release/4.150.0-preview.1) and
+4.150.0-unreleased.md (release/4.150.0-preview.1..main delta). They never collide;
+cleanup only prunes a `-unreleased` page once its line advances to a higher version
+in the same minor.
+
+When a released page rolls up tagged previews, its raw-data block groups the PRs into
+per-preview BUCKETS (each PR under the preview it first shipped in, via git ancestry;
+see bucket_prs_by_milestone). The buckets exhaustively partition the diff range, so the
+AI renders one "## Preview N" section per bucket and merges them for the Highlights —
+there is no separate flat list to drift. Pages with no previews stay a single flat list.
 
 Commands:
     # Diff a branch and write raw PR data to documentation/docfx/releases/{version}.md
@@ -69,50 +124,191 @@ SKIA_REMOTE_URL = "https://github.com/mono/skia.git"
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 
 # Versions config (loaded lazily from scripts/infra/docs/versions.json)
-_VERSIONS_CONFIG = None  # type: Optional[list[dict]]
+_VERSIONS_CONFIG = {}  # type: dict[str, list[dict]]
 
 VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
 
+# HarfBuzz-owned paths (spec §1.5/§4.5). A HarfBuzz family page lists ONLY the
+# commits touching these — the HarfBuzzSharp binding + its native assets, the
+# native libHarfBuzzSharp build, and HarfBuzz tests — NEVER any SkiaSharp.* source
+# (the SkiaSharp-versioned managed shaper source/SkiaSharp.HarfBuzz stays on the
+# SkiaSharp pages). Passed to ``git log -- <pathspec>`` to filter a co-shipping
+# SkiaSharp range down to its HarfBuzz changes. ``:(glob)`` magic makes ``*``/``**``
+# behave like globs (``*`` stops at ``/``, ``**`` spans), matching the spec list.
+HARFBUZZ_PATHSPECS = [
+    ":(glob)binding/HarfBuzzSharp/**",
+    ":(glob)binding/HarfBuzzSharp.NativeAssets.*/**",
+    "binding/libHarfBuzzSharp.json",
+    "binding/IncludeNativeAssets.HarfBuzzSharp.targets",
+    ":(glob)native/*/libHarfBuzzSharp/**",
+    ":(glob)tests/Tests/HarfBuzzSharp/**",
+]
 
-def load_versions_config():
-    # type: () -> list[dict]
-    """Load scripts/infra/docs/versions.json override config (cached)."""
-    global _VERSIONS_CONFIG
-    if _VERSIONS_CONFIG is not None:
-        return _VERSIONS_CONFIG
+
+def load_versions_config(family="skiasharp"):
+    # type: (str) -> list[dict]
+    """Load a family's overrides from versions.json (cached per family).
+
+    versions.json is family-bucketed (spec §1.2): ``{ "skiasharp": { "<line>":
+    {...} }, "harfbuzzsharp": {...} }``. Both families and both engines share this
+    one file; ``family`` selects the bucket — ``skiasharp`` for the SkiaSharp
+    pages, ``harfbuzzsharp`` for the HarfBuzz peer family (spec §1.5). The bucket
+    is flattened to the internal ``list[dict]`` shape (each entry carries its
+    ``version`` key) the rest of this module expects. A missing bucket is empty.
+    """
+    cached = _VERSIONS_CONFIG.get(family)
+    if cached is not None:
+        return cached
+    entries = []  # type: list[dict]
     if VERSIONS_JSON_PATH.exists():
         with open(VERSIONS_JSON_PATH) as f:
             data = json.load(f)
-        _VERSIONS_CONFIG = data.get("versions", [])
-    else:
-        _VERSIONS_CONFIG = []
-    return _VERSIONS_CONFIG
+        bucket = data.get(family, {})
+        if not isinstance(bucket, dict):
+            raise ValueError(
+                "versions.json: '%s' must be an object keyed by line "
+                "(spec §1.2); got %s" % (family, type(bucket).__name__))
+        for line, fields in bucket.items():
+            entry = dict(fields)
+            entry["version"] = line
+            entries.append(entry)
+    _VERSIONS_CONFIG[family] = entries
+    return entries
 
 
-def _versions_config_lookup(version):
-    # type: (str) -> Optional[dict]
-    """Find an entry in versions.json matching a base version (X.Y.Z)."""
-    config = load_versions_config()
-    for entry in config:
+def _versions_config_lookup(version, family="skiasharp"):
+    # type: (str, str) -> Optional[dict]
+    """Find a family override entry matching a line core (X.Y.Z)."""
+    for entry in load_versions_config(family):
         if entry.get("version") == version:
             return entry
     return None
 
 
+# Co-release map sidecar (spec §3.6), written by the Cake API-changelog engine and
+# read here to emit the deterministic SkiaSharp-page -> HarfBuzz-folder link. It is
+# the ONLY thing that crosses from the API-changelog engine into this engine
+# (spec §2.2). Absent sidecar (e.g. Cake not yet run) -> no HarfBuzz link, no error.
+_CO_RELEASE_MAP = None  # type: Optional[dict]
+
+CO_RELEASE_MAP_PATH = RELEASES_DIR / "co-release-map.json"
+
+
+def load_co_release_map():
+    # type: () -> dict
+    """Load the co-release map sidecar (cached) as ``{skia_line: entry}``.
+
+    Each entry carries ``hb_line`` and ``hb_link`` (spec §3.6). Returns an empty
+    map when the sidecar is missing — the HarfBuzz link is simply omitted in that
+    case (the script owns the link, never the AI; spec §4.4).
+    """
+    global _CO_RELEASE_MAP
+    if _CO_RELEASE_MAP is not None:
+        return _CO_RELEASE_MAP
+    mapping = {}  # type: dict
+    if CO_RELEASE_MAP_PATH.exists():
+        with open(CO_RELEASE_MAP_PATH) as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            raise ValueError(
+                "co-release-map.json: expected a JSON array (spec §3.6); got %s"
+                % type(data).__name__)
+        for entry in data:
+            line = entry.get("skia_line")
+            if line:
+                mapping[line] = entry
+    _CO_RELEASE_MAP = mapping
+    return _CO_RELEASE_MAP
+
+
+def harfbuzz_lines_from_map():
+    # type: () -> list[dict]
+    """Invert the co-release map into the HarfBuzz family line set (spec §4.5).
+
+    The map records, per SkiaSharp line, the HarfBuzz line it co-ships (§3.6).
+    The HarfBuzz family is line-driven exactly as the SkiaSharp family is
+    branch-driven: grouping the SkiaSharp lines by their ``hb_line`` yields one
+    entry per HarfBuzz line — so the page set equals the line set, just like
+    SkiaSharp. Each entry carries:
+
+      * ``hb_line``        — the HarfBuzz line (full granularity); its page/folder key.
+      * ``skia_lines``     — every SkiaSharp line that co-ships it, ascending.
+      * ``canonical_skia`` — the EARLIEST (introducing) SkiaSharp line; the page is
+                             dated/back-linked by that release and its SkiaSharp
+                             range is the HarfBuzz git window (§1.5/§4.5).
+      * ``hb_link``        — the folder-index link recorded by the map (§3.6).
+
+    Ordered by ``hb_line`` ascending. Empty when the sidecar is absent — no map,
+    no HarfBuzz pages (the engine simply has nothing to emit for that family).
+    """
+    groups = {}  # type: dict[str, dict]
+    for skia_line, entry in load_co_release_map().items():
+        hb_line = entry.get("hb_line")
+        if not hb_line:
+            continue
+        g = groups.setdefault(hb_line, {
+            "hb_line": hb_line,
+            "skia_lines": [],
+            "hb_link": entry.get("hb_link"),
+        })
+        g["skia_lines"].append(skia_line)
+    result = []  # type: list[dict]
+    for hb_line in sorted(groups, key=version_key):
+        g = groups[hb_line]
+        g["skia_lines"].sort(key=version_key)
+        g["canonical_skia"] = g["skia_lines"][0]
+        result.append(g)
+    return result
+
+
+def _api_signature(metadata):
+    # type: (dict) -> str
+    """Compact, deterministic signature of a page's script-owned API-changes line.
+
+    The API-changes line (§4.4) is part of the content key (§4.6): a page that
+    newly gains or loses an API-diff folder, or whose HarfBuzz co-release mapping
+    or canonical SkiaSharp back-link changes, must be rewritten so the link is
+    injected/dropped. This collapses those facts into one string compared by
+    ``_is_content_unchanged``:
+
+      * ``self=<link>``  — this line's own API-diff folder index (when it exists).
+      * ``hb=<hb_line>`` — the co-shipped HarfBuzz line (SkiaSharp page only).
+      * ``ships=<skia>`` — the canonical introducing SkiaSharp release (HarfBuzz page).
+
+    Empty when the page carries no API-changes line at all. Including it is what
+    backfills the link across historical pages on the first run after a folder
+    appears (§4.6).
+    """
+    parts = []
+    if metadata.get("api_diff_link"):
+        parts.append("self={}".format(metadata["api_diff_link"]))
+    hb = metadata.get("harfbuzz")
+    if hb and hb.get("hb_line"):
+        parts.append("hb={}".format(hb["hb_line"]))
+    sw = metadata.get("ships_with")
+    if sw and sw.get("version"):
+        parts.append("ships={}".format(sw["version"]))
+    return ";".join(parts)
+
+
 def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
                           new_status=None, new_superseded_by=None,
-                          new_supersedes=None):
-    # type: (Path, int, str, Optional[str], Optional[str], Optional[list[str]]) -> bool
+                          new_supersedes=None, new_api_sig=None):
+    # type: (Path, int, str, Optional[str], Optional[str], Optional[list[str]], Optional[str]) -> bool
     """Check whether the existing file already encodes identical raw data.
 
-    Compares the fields the script controls: PR count, diff range, and the
+    Compares the fields the script controls: PR count, diff range, the
     supersession metadata (status + the ``superseded:`` / ``supersedes:``
-    markers). The supersession fields must be part of this check because
-    toggling a version's supersession in versions.json can change ONLY the page
-    banner without touching the diff range — when a preview line is newly marked
-    superseded its OWN diff/PR set is unchanged (supersession only affects it as
-    a baseline for LATER versions), but its page must still gain a "Superseded
-    by" banner. Returns True only when every tracked field matches, so those
+    markers), and the script-owned API-changes link signature (§4.6). The
+    supersession fields must be part of this check because toggling a version's
+    supersession in versions.json can change ONLY the page banner without
+    touching the diff range — when a preview line is newly marked superseded its
+    OWN diff/PR set is unchanged (supersession only affects it as a baseline for
+    LATER versions), but its page must still gain a "Superseded by" banner. The
+    API signature is included for the same reason: a page that newly gains (or
+    loses) an API-diff folder, or whose HarfBuzz mapping changes, must be
+    rewritten to inject (or drop) the API-changes line even when its PRs are
+    identical. Returns True only when every tracked field matches, so those
     metadata-only changes still force a rewrite.
 
     Reads the metadata from the HTML comment block at the top of the file.
@@ -151,6 +347,16 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
     if sorted(new_supersedes or []) != sorted(existing_supersedes):
         return False
 
+    # api: <signature> — the script-owned API-changes link (§4.4/§4.6). Compare
+    # only when the caller supplies the new signature. An existing page written
+    # before this field existed has no ``api:`` line; treat that as "" so a page
+    # that should now carry a link is rewritten to backfill it.
+    if new_api_sig is not None:
+        m_api = re.search(r"^\s*api:\s*(.*)$", content, re.MULTILINE)
+        existing_api = m_api.group(1).strip() if m_api else ""
+        if existing_api != (new_api_sig or ""):
+            return False
+
     return True
 
 
@@ -160,6 +366,22 @@ def _removeprefix(s, prefix):
     if s.startswith(prefix):
         return s[len(prefix):]
     return s
+
+
+def log(*args, **kwargs):
+    # type: (...) -> None
+    """Human-facing progress and diagnostics — always written to STDERR.
+
+    STDOUT is reserved for the single machine-readable artifact the Prepare
+    phase produces: the delimited "Files to polish" block the AI Polish phase
+    consumes (SKILL.md §Prepare). Keeping every "Processing…", "Found N PRs",
+    "Skipping (unchanged)", warning and error on stderr means a caller can do
+    ``generate-release-notes.py --all 2>/dev/null`` (or capture stdout in a
+    workflow step) and get nothing but the list — no progress noise to parse
+    around.
+    """
+    kwargs["file"] = sys.stderr
+    print(*args, **kwargs)
 
 
 def run(args, check=True):
@@ -234,8 +456,15 @@ def _version_has_stable_tag(version):
     return False
 
 
-def resolve_superseded_by(version):
-    # type: (str) -> Optional[str]
+def _version_is_superseded(version, family="skiasharp"):
+    # type: (str, str) -> bool
+    """True if versions.json marks this line ``status: superseded`` (spec §1.2)."""
+    entry = _versions_config_lookup(version, family)
+    return bool(entry and entry.get("status") == "superseded")
+
+
+def resolve_superseded_by(version, family="skiasharp"):
+    # type: (str, str) -> Optional[str]
     """Return the version that supersedes ``version``, or None.
 
     versions.json is the SINGLE source of truth: a version is superseded only
@@ -245,16 +474,17 @@ def resolve_superseded_by(version):
     only an explicit ``status: superseded`` entry as superseded). Every other
     version — listed with only ``compare_to`` or not listed at all — is a real
     release and is never reported as superseded. To skip a version everywhere,
-    add it to versions.json.
+    add it to versions.json. ``family`` selects the bucket so the rule applies
+    per family (spec §1.2/§1.5).
     """
-    entry = _versions_config_lookup(version)
+    entry = _versions_config_lookup(version, family)
     if entry and entry.get("status") == "superseded":
         return entry.get("superseded_by")
     return None
 
 
-def detect_supersedes(version):
-    # type: (str) -> list[str]
+def detect_supersedes(version, family="skiasharp"):
+    # type: (str, str) -> list[str]
     """Return the versions that ``version`` rolls up (the inverse link).
 
     Reads versions.json directly: every entry marked ``status: superseded``
@@ -263,9 +493,9 @@ def detect_supersedes(version):
     forward ("Superseded by X"), and this lets the successor page point back
     ("Supersedes Y"). Covers a skipped minor (4.148.0 supersedes 4.147.0) and an
     abandoned patch preview (3.119.4 supersedes 3.119.3). Returns [] when this
-    version supersedes nothing.
+    version supersedes nothing. ``family`` selects the bucket (spec §1.5).
     """
-    rolled = [entry["version"] for entry in load_versions_config()
+    rolled = [entry["version"] for entry in load_versions_config(family)
               if entry.get("status") == "superseded"
               and entry.get("superseded_by") == version
               and entry.get("version")]
@@ -409,7 +639,7 @@ def resolve_pr_authors(prs):
                        if str(pr["number"]) not in cache})
 
     if to_query:
-        print("  Resolving {} PR author(s) via GitHub API...".format(
+        log("  Resolving {} PR author(s) via GitHub API...".format(
             len(to_query)), file=sys.stderr)
         dirty = False
         for i in range(0, len(to_query), _GRAPHQL_BATCH):
@@ -490,7 +720,7 @@ def resolve_skia_links(prs):
         ["git", "-C", str(SKIA_SUBMODULE), "cat-file", "-e", sha],
         capture_output=True).returncode != 0})
     if missing:
-        print("  Fetching {} skia commit(s) to resolve companion links...".format(
+        log("  Fetching {} skia commit(s) to resolve companion links...".format(
             len(missing)), file=sys.stderr)
         run(["git", "-C", str(SKIA_SUBMODULE), "fetch", "-q", "--depth=1",
              "--filter=blob:none", "origin"] + missing, check=False)
@@ -758,10 +988,59 @@ def collect_preview_milestones(page_version, base_version):
                 _FRIENDLY_STAGE.get(m["stage"], (m["stage"] or "").title()),
                 m["num"]),
             "tag": m["tag"],
+            "from_tag": prev_tag,
             "date": _tag_date(m["tag"]),
             "compare_url": compare_url,
         })
     result.reverse()  # newest first, matching TEMPLATE ordering
+    return result
+
+
+def bucket_prs_by_milestone(prs, milestones, from_ref):
+    # type: (list[dict], list[dict], str) -> list[dict]
+    """Partition ``prs`` into per-preview buckets the AI can summarize directly.
+
+    A page's diff range can span several prerelease tags (the ``preview
+    milestones`` list). A single flat PR list makes the AI guess which work
+    landed in which preview; instead, assign every PR to the EARLIEST milestone
+    whose range contains its commit — i.e. the preview it FIRST shipped in — so
+    each trailing ``## Preview N`` section has its own concrete PRs.
+
+    The buckets EXHAUSTIVELY partition the range (every PR lands in exactly one),
+    so together they ARE the full list — there is no separate flat list to drift
+    from. The AI merges the buckets for the top-level Highlights.
+
+    Bucketing is by git ancestry, not tag metadata: for each milestone (oldest
+    first) the bucket is ``(previous boundary .. this tag]`` intersected with the
+    page's PR set. The earliest milestone's boundary is the page diff base
+    (``from_ref``) so base→first-preview work is captured. Anything left after the
+    last tag (commits not yet in any tagged preview, e.g. the final release cut)
+    falls into a trailing untagged bucket. Returns buckets NEWEST first to match
+    TEMPLATE ordering; each is ``{"milestone": <dict|None>, "prs": [...]}``.
+    """
+    if not milestones:
+        return [{"milestone": None, "prs": list(prs)}]
+
+    page_numbers = {pr["number"] for pr in prs}
+    ascending = list(reversed(milestones))  # oldest first
+    assigned = set()  # type: set[int]
+    buckets_asc = []
+    for i, m in enumerate(ascending):
+        bucket_from = from_ref if i == 0 else ascending[i - 1]["tag"]
+        in_range = {p["number"]
+                    for p in get_prs_from_diff(bucket_from, m["tag"])}
+        in_range &= page_numbers
+        bucket_prs = [pr for pr in prs
+                      if pr["number"] in in_range and pr["number"] not in assigned]
+        assigned.update(pr["number"] for pr in bucket_prs)
+        buckets_asc.append({"milestone": m, "prs": bucket_prs})
+
+    leftover = [pr for pr in prs if pr["number"] not in assigned]
+    result = list(reversed(buckets_asc))  # newest first
+    if leftover:
+        # Commits past the last tagged preview (e.g. the final release cut) —
+        # newest of all, so render first, with no milestone header.
+        result.insert(0, {"milestone": None, "prs": leftover})
     return result
 
 
@@ -810,6 +1089,12 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
     if patch > 0:
         for p in range(patch - 1, -1, -1):
             prev_version = "{}.{}".format(minor, p)
+            # Skip a line versions.json marks superseded (spec §1.2/§1.3): its
+            # work rolls up into the next emitted line, so it must never act as a
+            # baseline even if it happens to carry a stable tag (e.g. 3.119.4
+            # skips the superseded 3.119.3 and bases on 3.119.2).
+            if _version_is_superseded(prev_version):
+                continue
             # A stable release/X.Y.Z branch (exact, no -preview) or a stable
             # tag both signal that this patch shipped (or is shipping) stable.
             prev_stable = "release/{}".format(prev_version)
@@ -903,14 +1188,12 @@ def determine_diff_range(branch):
                 "scripts/azure-templates-variables.yml")
         minor = minor_group(version)
 
-        # Check versions.json for an explicit compare_to override.
-        config_entry = _versions_config_lookup(version)
-        if config_entry and config_entry.get("compare_to"):
-            resolved = _resolve_compare_to(
-                config_entry["compare_to"], "origin/main", version, all_branches)
-            if resolved:
-                return resolved
-            # Override could not be resolved — fall through to auto-detection.
+        # NOTE: main is the UNRELEASED HEAD. Its page is the SMALL DELTA from the
+        # last release to main ("what may ship next"), NOT a rollup — so it does
+        # NOT honor versions.json `compare_to` (that drives the RELEASED rollup
+        # pages produced by the versioned branches). Restored from the original
+        # pre-churn script; R2 had wrongly forced a full rollup here. The full
+        # 4.150.0 rollup lives on 4.150.0.md (from release/4.150.0-preview.1).
 
         # Find latest release branch for the same minor. These are the active
         # line for the upcoming version, so the latest one is always the base
@@ -924,9 +1207,13 @@ def determine_diff_range(branch):
             return ("origin/{}".format(same_minor[-1]),
                     "origin/main", version)
 
-        # No branch yet for the upcoming minor — fall back across ALL minors,
-        # preferring the latest that genuinely shipped as stable so a skipped
-        # / preview-only minor does not shrink main's rollup.
+        # No branch yet for the upcoming minor — the unreleased delta is still a
+        # SMALL "what may ship next", never a rollup (spec §4.2). Base on the
+        # latest release cut strictly BELOW main's line (the immediately previous
+        # release line's tip), regardless of stable/preview/superseded. Using the
+        # last *stable* here (the old behaviour) wrongly skipped preview-only
+        # predecessors like 4.148 and turned main's page into a multi-minor
+        # rollback to 3.119.4 — bug D.
         all_versioned = [b for b in all_branches if not b.endswith(".x")]
         all_versioned.sort(key=release_branch_sort_key)
 
@@ -935,12 +1222,9 @@ def determine_diff_range(branch):
                 "No release branches found. Cannot determine diff range "
                 "for main. Ensure release branches are fetched.")
 
-        stable = [b for b in all_versioned
-                  if _is_valid_stable_base(b)]
-        if stable:
-            latest = stable[-1]
-        else:
-            latest = all_versioned[-1]
+        below = [b for b in all_versioned
+                 if version_key(version_from_branch(b)) < version_key(version)]
+        latest = below[-1] if below else all_versioned[-1]
         return "origin/{}".format(latest), "origin/main", version
 
     # ── servicing branch (release/X.Y.x) ────────────────────────
@@ -955,39 +1239,30 @@ def determine_diff_range(branch):
         if not version:
             version = "{}.0".format(minor)
 
-        # Honor an explicit versions.json compare_to first (regression R2). When
-        # the line's .0 has not shipped stable, the .x branch is the in-flight
-        # head and must produce the FULL rollup from the previous stable base —
-        # e.g. 4.148.x (4.148.0 not yet stable) compares 4.148.0 -> 3.119.4, the
-        # same baseline the rc page would use — not the tiny servicing delta
-        # against the latest in-minor preview.
-        config_entry = _versions_config_lookup(version)
-        if config_entry and config_entry.get("compare_to"):
-            resolved = _resolve_compare_to(
-                config_entry["compare_to"], "origin/{}".format(branch),
-                version, all_branches)
-            if resolved:
-                return resolved
+        # NOTE: a servicing .x branch is the UNRELEASED HEAD of its minor line.
+        # Its page is the SMALL DELTA from the latest release branch in the minor
+        # to the .x head ("what may ship in the next patch"), NOT a rollup — so
+        # it does NOT honor versions.json `compare_to`. Restored from the
+        # original pre-churn script; R2 had wrongly forced a full rollup here.
+        # The full rollup lives on the released {version}.md (from the canonical
+        # versioned branch, e.g. release/4.148.0-rc.1 -> 4.148.0.md).
 
-        dot0_shipped = _version_has_stable_tag("{}.0".format(minor))
-
-        # All versioned branches for this minor (exclude .x)
+        # All versioned branches for this minor (exclude .x). The latest is the
+        # last release cut on the line, so the delta starts there.
         candidates = [b for b in all_branches
                       if b.startswith("release/{}.".format(minor))
                       and b != branch
                       and not b.endswith(".x")]
 
-        # True servicing delta — only once the .0 has shipped stable. Until then
-        # the .x is the in-flight head and must roll up cumulatively (below).
-        if dot0_shipped and candidates:
+        if candidates:
             candidates.sort(key=release_branch_sort_key)
             latest = candidates[-1]
             return ("origin/{}".format(latest),
                     "origin/{}".format(branch),
                     version)
 
-        # Cumulative rollup from the previous stable base (in-flight .0, or no
-        # in-minor candidates).
+        # No versioned branches on this minor yet — fall back to the previous
+        # stable base (the delta then spans from the last actual release).
         base = find_previous_stable_base(all_branches, major, minor_num, 0)
         if base:
             return ("origin/{}".format(base),
@@ -1034,21 +1309,29 @@ def determine_diff_range(branch):
     return base_sha, "origin/{}".format(branch), version
 
 
-def get_prs_from_diff(from_ref, to_ref):
-    # type: (str, str) -> list[dict]
+def get_prs_from_diff(from_ref, to_ref, paths=None):
+    # type: (str, str, Optional[list[str]]) -> list[dict]
     """Extract merged PRs from git log between two refs.
 
     Parses PR numbers, titles, authors, and bodies from commit messages.
     No GitHub API calls needed — everything comes from git: a single ``git log``
     plus regex parsing, sub-second even for hundreds of commits.
+
+    ``paths`` (optional) restricts the log to commits touching those git
+    pathspecs — used by the HarfBuzz family to filter a co-shipping SkiaSharp
+    range down to HarfBuzz-owned changes (spec §4.5).
     """
     # Use a format that gives us everything: hash, author email, author name,
     # subject, body. The name is kept as a safe fallback credit for PRs whose
     # GitHub login cannot be proven (see resolve_pr_authors / format_pr_list).
     SEP = "---COMMIT-END-7f3b---"
-    log = run(["git", "log",
-               "--format=%H%n%ae%n%an%n%s%n%b{}".format(SEP),
-               "{}..{}".format(from_ref, to_ref)])
+    cmd = ["git", "log",
+           "--format=%H%n%ae%n%an%n%s%n%b{}".format(SEP),
+           "{}..{}".format(from_ref, to_ref)]
+    if paths:
+        cmd.append("--")
+        cmd.extend(paths)
+    log = run(cmd)
 
     prs = []
     seen = set()  # type: set[int]
@@ -1111,6 +1394,27 @@ def get_prs_from_diff(from_ref, to_ref):
     return prs
 
 
+def _format_pr_bullet(pr):
+    # type: (dict) -> str
+    """One PR rendered as the raw-data bullet text (without the leading "- ").
+
+    Shared by the flat list and the per-preview buckets so both credit authors
+    identically: a linkable ``@handle`` only when the GitHub login is known,
+    otherwise the plain commit name (no ``@``, no link) so the notes never
+    mention — and notify — the wrong GitHub user.
+    """
+    title = pr.get("title", "")
+    author_info = pr.get("author") or {}
+    login = author_info.get("login")
+    name = author_info.get("name") or "unknown"
+    url = pr.get("url", "")
+    community_str = " [community ✨]" if login != "mattleibow" else ""
+    skia_pr = pr.get("skiaPr")
+    skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
+    by = "by @{}".format(login) if login else "by {}".format(name)
+    return "{} {} in {}{}{}".format(title, by, url, community_str, skia_str)
+
+
 def format_pr_list(prs, metadata):
     # type: (list[dict], dict) -> str
     """Format the PR list as markdown with raw data in an HTML comment.
@@ -1121,6 +1425,7 @@ def format_pr_list(prs, metadata):
     """
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     version = metadata["version"]
+    api_sig = _api_signature(metadata)
 
     # Build the raw data comment block
     lines = [
@@ -1135,6 +1440,7 @@ def format_pr_list(prs, metadata):
         "  branch:    {}".format(metadata["branch"]),
         "  diff:      {}..{}".format(metadata["from"], metadata["to"]),
         "  prs:       {}".format(len(prs)),
+        "  api:       {}".format(api_sig),
         "",
     ]
 
@@ -1156,51 +1462,65 @@ def format_pr_list(prs, metadata):
     if not prs:
         lines.append("  *No changes found.*")
     else:
-        for pr in prs:
-            title = pr.get("title", "")
-            author_info = pr.get("author") or {}
-            login = author_info.get("login")
-            name = author_info.get("name") or "unknown"
-            url = pr.get("url", "")
-            is_community = login != "mattleibow"
-            community_str = " [community ✨]" if is_community else ""
-            skia_pr = pr.get("skiaPr")
-            skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
-
-            # Credit a linkable @handle only when the login is known; otherwise
-            # fall back to the plain commit name (no @, no link) so the notes
-            # never mention — and notify — the wrong GitHub user.
-            by = "by @{}".format(login) if login else "by {}".format(name)
-
-            lines.append("  - {} {} in {}{}{}".format(
-                title, by, url, community_str, skia_str))
-
-    # Preview milestones (regression R3): the trailing "## Preview N (date)"
-    # sections in TEMPLATE/SKILL are rendered by the AI from this list. Data is
-    # deterministic — published prerelease tags within the page's diff range.
-    milestones = metadata.get("preview_milestones") or []
-    if milestones:
-        lines.append("")
-        lines.append("  preview milestones (newest first — render as trailing "
-                     '"## <label> (<date>)" sections per TEMPLATE.md):')
-        for m in milestones:
-            lines.append("    - {label} · {version} · {date} · {url}".format(
-                label=m["label"], version=m["version"],
-                date=m.get("date") or "", url=m.get("compare_url") or ""))
+        # When the page rolls up tagged previews, group the PRs into per-preview
+        # buckets (each PR under the preview it first shipped in) so the AI can
+        # write a concrete "## Preview N" section per milestone AND merge the
+        # buckets for the top-level Highlights. The buckets partition the whole
+        # range, so they ARE the full list — no separate flat list is emitted.
+        # Pages with no previews (unreleased deltas, plain stable patches) keep a
+        # single flat list.
+        buckets = metadata.get("pr_buckets")
+        if buckets:
+            lines.append("  PRs grouped by the preview they first shipped in "
+                         "(newest first). Render each milestone as a trailing")
+            lines.append('  "## <label> (<date>)" section per TEMPLATE.md, and '
+                         "merge them all for the top-level Highlights:")
+            for b in buckets:
+                m = b.get("milestone")
+                lines.append("")
+                if m:
+                    lines.append(
+                        "  ## {label} · {version} · {date} · {url}  ({n} PRs)".format(
+                            label=m["label"], version=m["version"],
+                            date=m.get("date") or "", url=m.get("compare_url") or "",
+                            n=len(b["prs"])))
+                else:
+                    lines.append(
+                        "  ## Unreleased — not yet in a tagged preview  "
+                        "({n} PRs)".format(n=len(b["prs"])))
+                if b["prs"]:
+                    for pr in b["prs"]:
+                        lines.append("    - {}".format(_format_pr_bullet(pr)))
+                else:
+                    lines.append("    *(no PRs)*")
+        else:
+            for pr in prs:
+                lines.append("  - {}".format(_format_pr_bullet(pr)))
 
     lines.append("-->")
     lines.append("")
 
     # Add skeleton content for AI to polish
-    lines.append("# Version {}".format(version))
+    family = metadata.get("family", "skiasharp")
+    pkg = metadata.get("package", "SkiaSharp")
+    nuget = "https://www.nuget.org/packages/{}".format(pkg)
+    # Sibling supersession links resolve within the page's own family directory:
+    # SkiaSharp pages at releases/, HarfBuzz pages at releases/harfbuzzsharp/.
+    base_dir = (RELEASES_DIR / "harfbuzzsharp"
+                if family == "harfbuzzsharp" else RELEASES_DIR)
+    if family == "harfbuzzsharp":
+        lines.append("# HarfBuzzSharp {}".format(version))
+    else:
+        lines.append("# Version {}".format(version))
     lines.append("")
 
     # Status-appropriate header
     status = metadata["status"]
+    ships_with = metadata.get("ships_with") or {}
     if superseded_by:
-        if (RELEASES_DIR / "{}.md".format(superseded_by)).exists():
+        if (base_dir / "{}.md".format(superseded_by)).exists():
             sup_link = "[{sup}]({sup}.md)".format(sup=superseded_by)
-        elif (RELEASES_DIR / "{}-unreleased.md".format(superseded_by)).exists():
+        elif (base_dir / "{}-unreleased.md".format(superseded_by)).exists():
             sup_link = "[{sup}]({sup}-unreleased.md)".format(sup=superseded_by)
         else:
             sup_link = superseded_by
@@ -1208,8 +1528,23 @@ def format_pr_list(prs, metadata):
             "> **Preview only** · Superseded by "
             "{sup_link} · Never released as stable — these changes "
             "rolled up into {sup} "
-            "· [NuGet](https://www.nuget.org/packages/SkiaSharp/"
-            "{ver}-preview)".format(sup_link=sup_link, sup=superseded_by, ver=version))
+            "· [NuGet]({nuget}/{ver}-preview)".format(
+                sup_link=sup_link, sup=superseded_by, ver=version, nuget=nuget))
+    elif family == "harfbuzzsharp":
+        # HarfBuzz never releases on its own — it ships inside a SkiaSharp
+        # release (spec §1.5). The banner is dated/anchored by the canonical
+        # (introducing) SkiaSharp line; the AI prepends a {theme} (TEMPLATE.md).
+        skia = ships_with.get("version", "")
+        skia_link = ships_with.get("link", "")
+        if status == "unreleased":
+            lines.append(
+                "> **Upcoming release** · In development · Ships with the "
+                "upcoming SkiaSharp {} · Not yet available on NuGet".format(skia))
+        else:
+            lines.append(
+                "> Ships with [SkiaSharp {s}]({sl}) · [NuGet]({nuget}/{ver}) · "
+                "[GitHub Release](https://github.com/mono/SkiaSharp/releases/"
+                "tag/v{s})".format(s=skia, sl=skia_link, nuget=nuget, ver=version))
     elif status == "unreleased":
         lines.append(
             "> **Upcoming release** · In development "
@@ -1217,12 +1552,10 @@ def format_pr_list(prs, metadata):
     elif status == "preview":
         lines.append(
             "> **Preview release** · Preview only "
-            "· [NuGet](https://www.nuget.org/packages/SkiaSharp/"
-            "{}-preview)".format(version))
+            "· [NuGet]({nuget}/{ver}-preview)".format(nuget=nuget, ver=version))
     else:
         lines.append(
-            "> [NuGet](https://www.nuget.org/packages/SkiaSharp/{})".format(
-                version))
+            "> [NuGet]({nuget}/{ver})".format(nuget=nuget, ver=version))
     lines.append("")
 
     # Back-link making the supersede relationship two-way: this release rolls up
@@ -1231,9 +1564,9 @@ def format_pr_list(prs, metadata):
     if supersedes:
         sup_links = []
         for sup in supersedes:
-            if (RELEASES_DIR / "{}.md".format(sup)).exists():
+            if (base_dir / "{}.md".format(sup)).exists():
                 sup_links.append("[{s}]({s}.md)".format(s=sup))
-            elif (RELEASES_DIR / "{}-unreleased.md".format(sup)).exists():
+            elif (base_dir / "{}-unreleased.md".format(sup)).exists():
                 sup_links.append("[{s}]({s}-unreleased.md)".format(s=sup))
             else:
                 sup_links.append(sup)
@@ -1241,6 +1574,34 @@ def format_pr_list(prs, metadata):
             "> **Supersedes {}** · Rolls up preview-only work that was never "
             "released as stable — those changes are included cumulatively "
             "below.".format(", ".join(sup_links)))
+        lines.append("")
+
+    # Deterministic, script-owned API-changes line (spec §2.2/§4.4). Final links
+    # the AI must keep verbatim and narrate around — it never writes or edits
+    # links itself. The targets differ by family: a SkiaSharp page links its own
+    # <line>/index.md (§3.3) and, when the release co-ships HarfBuzz, the HarfBuzz
+    # hub page harfbuzzsharp/<hb-line>.md (§1.5/§3.6); a HarfBuzz page links its
+    # own <hb-line>/index.md (§3.4) and back at its canonical SkiaSharp release.
+    api_diff_link = metadata.get("api_diff_link")
+    harfbuzz = metadata.get("harfbuzz")
+    if family == "harfbuzzsharp":
+        if api_diff_link:
+            line = "> **API changes** · [HarfBuzzSharp API diff]({})".format(
+                api_diff_link)
+            if ships_with.get("version"):
+                line += " · Ships with [SkiaSharp {s}]({l})".format(
+                    s=ships_with["version"], l=ships_with.get("link", ""))
+            lines.append(line)
+            lines.append("")
+    elif api_diff_link or harfbuzz:
+        parts = []
+        if api_diff_link:
+            parts.append("[SkiaSharp API diff]({})".format(api_diff_link))
+        if harfbuzz:
+            hb_line = harfbuzz.get("hb_line", "")
+            parts.append("[HarfBuzzSharp {hb}](harfbuzzsharp/{hb}.md)".format(
+                hb=hb_line))
+        lines.append("> **API changes** · " + " · ".join(parts))
         lines.append("")
 
     ai_lines = [
@@ -1263,6 +1624,27 @@ def format_pr_list(prs, metadata):
             '     "Supersedes" note above and mention in the Highlights that this')
         ai_lines.append(
             "     release rolls up that skipped preview work cumulatively.")
+    if family == "harfbuzzsharp":
+        ai_lines.append(
+            "     This is a HarfBuzzSharp page: title '# HarfBuzzSharp {}', and the"
+            .format(version))
+        ai_lines.append(
+            "     data is already filtered to HarfBuzz-touching changes — do not")
+        ai_lines.append(
+            "     add SkiaSharp content. The banner shows it ships with a SkiaSharp")
+        ai_lines.append(
+            "     release; keep that and the 'API changes' line verbatim.")
+    if api_diff_link or harfbuzz:
+        ai_lines.append(
+            '     Keep the "API changes" links above verbatim (do NOT edit or add')
+        ai_lines.append(
+            "     links). Narrate around them in prose.")
+        if harfbuzz:
+            ai_lines.append(
+                "     Mention that HarfBuzz {} ships alongside this release and"
+                .format(harfbuzz.get("hb_line", "")))
+            ai_lines.append(
+                "     point readers at its linked page for the binding details.")
     ai_lines.append("-->")
     lines.extend(ai_lines)
     lines.append("")
@@ -1294,33 +1676,92 @@ def get_version_files():
     return versions, next_versions
 
 
+def get_harfbuzz_version_files():
+    # type: () -> tuple[list[str], list[str]]
+    """List HarfBuzz hub-page lines under releases/harfbuzzsharp/ (spec §3.4).
+
+    Returns ``(versions, next_versions)``: released ``<hb>.md`` lines and
+    in-flight ``<hb>-unreleased.md`` lines, newest-first. Ignores the per-line
+    API-diff subfolders and any generated index.md, so only the human hub pages
+    feed the TOC/index HarfBuzz section.
+    """
+    hb_dir = RELEASES_DIR / "harfbuzzsharp"
+    versions = []  # type: list[str]
+    next_versions = []  # type: list[str]
+    if hb_dir.is_dir():
+        for f in hb_dir.iterdir():
+            if not f.is_file() or f.suffix != ".md" or f.name == "index.md":
+                continue
+            stem = f.stem
+            if stem.endswith("-unreleased"):
+                next_versions.append(stem[:-len("-unreleased")])
+            else:
+                versions.append(stem)
+    versions.sort(key=version_key, reverse=True)
+    next_versions.sort(key=version_key, reverse=True)
+    return versions, next_versions
+
+
 def cleanup_stale_unreleased():
     # type: () -> list[str]
-    """Delete {version}-unreleased.md files whose stable {version}.md exists.
+    """Delete ``{version}-unreleased.md`` pages whose line is no longer a head.
 
-    Once a version has a published page, its in-progress "unreleased" page is
-    obsolete: the servicing line has moved on to the next patch (e.g. once
-    3.119.4.md ships, 3.119.4-unreleased.md is stale and the line tracks
-    3.119.5-unreleased.md instead). Returns the removed file paths.
+    An unreleased page models "what may ship next" for an in-flight LINE, and a
+    line is in-flight only while it is the version of an active HEAD — either
+    ``main`` (the upcoming version) or a servicing ``release/X.Y.x`` branch. Any
+    ``-unreleased`` page whose version is not one of those live heads is an
+    orphan and is removed (spec §4.2). This prunes BOTH a page left behind in the
+    same minor and one left behind across minors — e.g. once the head advances
+    4.148 → 4.150 and no ``release/4.148.x`` servicing branch exists, the stale
+    ``4.148.0-unreleased.md`` is removed; if that servicing branch DOES exist the
+    page is kept, because 4.148 is still a live (serviced) head.
+
+    Released ``{version}.md`` pages are never touched here — only the unreleased
+    deltas. Returns the removed file paths. To avoid clobbering on a degenerate
+    checkout, nothing is deleted when no release branches can be enumerated.
     """
+    all_branches = list_remote_release_branches()
+    if not all_branches:
+        return []
+
+    # Live in-flight lines = main's upcoming version + every servicing .x head.
+    live = set()  # type: set[str]
+    main_version = get_upcoming_version()
+    if main_version:
+        live.add(main_version)
+    for b in all_branches:
+        if not b.endswith(".x"):
+            continue
+        m = re.match(r"release/(\d+)\.(\d+)\.x$", b)
+        if not m:
+            continue
+        svc_version = (get_version_from_remote_branch(b)
+                       or "{}.{}.0".format(m.group(1), m.group(2)))
+        live.add(svc_version)
+
     removed = []
     for f in sorted(RELEASES_DIR.iterdir()):
         if f.suffix != ".md" or not f.stem.endswith("-unreleased"):
             continue
-        version = f.stem[:-11]  # strip "-unreleased"
-        if (RELEASES_DIR / "{}.md".format(version)).exists():
+        version = f.stem[:-len("-unreleased")]
+        if version not in live:
             f.unlink()
             removed.append(str(f))
     return removed
 
 
-def generate_toc(versions, next_versions):
-    # type: (list[str], list[str]) -> str
+def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=None):
+    # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
     """Generate TOC.yml grouped by major.minor, obsolete under one node.
 
     Unreleased pages are listed in their minor group even when no stable page
     of that exact version exists yet (e.g. 3.119.5-unreleased before 3.119.5
     ships, or 4.148.0-unreleased before 4.148.0 ships).
+
+    ``hb_versions``/``hb_next_versions`` are the HarfBuzz peer-family lines
+    (released and in-flight); when present they render as a sibling "HarfBuzz"
+    node whose emitted HarfBuzz lines are grouped into ``HarfBuzzSharp X.Y.x``
+    minor subgroups, mirroring the SkiaSharp version groups (spec §3.5).
     """
     stable_groups = defaultdict(list)
     unreleased_groups = defaultdict(list)
@@ -1375,15 +1816,56 @@ def generate_toc(versions, next_versions):
                     lines.append("        - name: Version {}".format(v))
                     lines.append("          href: {}.md".format(v))
 
+    # HarfBuzz peer family — sibling node grouping HarfBuzz lines by minor
+    # (spec §3.5), mirroring the SkiaSharp version groups so the node is a tidy
+    # set of "HarfBuzzSharp X.Y.x" subgroups instead of one flat list. Hub pages
+    # live under harfbuzzsharp/<hb>.md.
+    hb_versions = hb_versions or []
+    hb_next_versions = hb_next_versions or []
+    if hb_versions or hb_next_versions:
+        hb_header = ("harfbuzzsharp/{}.md".format(hb_versions[0]) if hb_versions
+                     else "harfbuzzsharp/{}-unreleased.md".format(hb_next_versions[0]))
+        lines.append("- name: HarfBuzz")
+        lines.append("  href: {}".format(hb_header))
+        lines.append("  items:")
+
+        hb_stable_groups = defaultdict(list)
+        hb_unrel_groups = defaultdict(list)
+        for v in hb_versions:
+            hb_stable_groups[minor_group(v)].append(v)
+        for v in hb_next_versions:
+            hb_unrel_groups[minor_group(v)].append(v)
+
+        for g in sorted(set(hb_stable_groups) | set(hb_unrel_groups),
+                        key=lambda x: version_key(x), reverse=True):
+            g_stable = hb_stable_groups.get(g, [])
+            g_unrel = hb_unrel_groups.get(g, [])
+            g_header = ("harfbuzzsharp/{}.md".format(g_stable[0]) if g_stable
+                        else "harfbuzzsharp/{}-unreleased.md".format(g_unrel[0]))
+            lines.append("    - name: HarfBuzzSharp {}.x".format(g))
+            lines.append("      href: {}".format(g_header))
+            lines.append("      items:")
+            g_entries = ([(v, True) for v in g_unrel]
+                         + [(v, False) for v in g_stable])
+            g_entries.sort(key=lambda t: version_key(t[0]), reverse=True)
+            for v, is_unrel in g_entries:
+                if is_unrel:
+                    lines.append("        - name: HarfBuzzSharp {} (Unreleased)".format(v))
+                    lines.append("          href: harfbuzzsharp/{}-unreleased.md".format(v))
+                else:
+                    lines.append("        - name: HarfBuzzSharp {}".format(v))
+                    lines.append("          href: harfbuzzsharp/{}.md".format(v))
+
     return "\n".join(lines) + "\n"
 
 
-def generate_index(versions, next_versions):
-    # type: (list[str], list[str]) -> str
+def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=None):
+    # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
     """Generate index.md with version list grouped by major.
 
     Unreleased pages are listed even when no stable page of that exact version
-    exists yet.
+    exists yet. ``hb_versions``/``hb_next_versions`` render a trailing
+    "HarfBuzzSharp" section linking the peer-family hub pages (spec §3.5).
     """
     lines = [
         "# Release Notes",
@@ -1417,6 +1899,28 @@ def generate_index(versions, next_versions):
                     lines.append("  - [Version {}]({}.md)".format(v, v))
         lines.append("")
 
+    # HarfBuzz peer family (spec §3.5) — its own section, grouped by HB minor.
+    hb_versions = hb_versions or []
+    hb_next_versions = hb_next_versions or []
+    if hb_versions or hb_next_versions:
+        lines.extend(["### HarfBuzzSharp", ""])
+        hb_entries = ([(v, False) for v in hb_versions]
+                      + [(v, True) for v in hb_next_versions])
+        hb_minor_map = defaultdict(list)
+        for v, is_unrel in hb_entries:
+            hb_minor_map[minor_group(v)].append((v, is_unrel))
+        for g in sorted(hb_minor_map.keys(),
+                        key=lambda x: version_key(x), reverse=True):
+            members = sorted(hb_minor_map[g],
+                             key=lambda t: version_key(t[0]), reverse=True)
+            lines.append("- **HarfBuzzSharp {}.x**".format(g))
+            for v, is_unrel in members:
+                if is_unrel:
+                    lines.append("  - [HarfBuzzSharp {} (Unreleased)](harfbuzzsharp/{}-unreleased.md)".format(v, v))
+                else:
+                    lines.append("  - [HarfBuzzSharp {}](harfbuzzsharp/{}.md)".format(v, v))
+        lines.append("")
+
     return "\n".join(lines)
 
 
@@ -1426,19 +1930,22 @@ def generate_index(versions, next_versions):
 def cmd_update_toc():
     """Regenerate TOC.yml and index.md (and prune stale unreleased pages)."""
     if not RELEASES_DIR.is_dir():
-        print("Error: {} does not exist".format(RELEASES_DIR), file=sys.stderr)
+        log("Error: {} does not exist".format(RELEASES_DIR), file=sys.stderr)
         sys.exit(1)
 
     for removed in cleanup_stale_unreleased():
-        print("Removed stale {}".format(removed))
+        log("Removed stale {}".format(removed))
 
     versions, next_versions = get_version_files()
+    hb_versions, hb_next_versions = get_harfbuzz_version_files()
 
-    (RELEASES_DIR / "TOC.yml").write_text(generate_toc(versions, next_versions))
-    print("Updated {}".format(RELEASES_DIR / "TOC.yml"))
+    (RELEASES_DIR / "TOC.yml").write_text(
+        generate_toc(versions, next_versions, hb_versions, hb_next_versions))
+    log("Updated {}".format(RELEASES_DIR / "TOC.yml"))
 
-    (RELEASES_DIR / "index.md").write_text(generate_index(versions, next_versions))
-    print("Updated {}".format(RELEASES_DIR / "index.md"))
+    (RELEASES_DIR / "index.md").write_text(
+        generate_index(versions, next_versions, hb_versions, hb_next_versions))
+    log("Updated {}".format(RELEASES_DIR / "index.md"))
 
 
 def _compute_page_status(branch, version):
@@ -1484,28 +1991,25 @@ def _page_filename(branch, version):
     # type: (str, str) -> str
     """Output file for a branch: ``{version}.md`` vs ``{version}-unreleased.md``.
 
-    DETERMINISTIC terminal-vs-in-flight rule (regression R1). A page is the
-    permanent ``{version}.md`` only when the version is TERMINAL:
-      * a suffix-less stable ``release/X.Y.Z`` branch — it shipped; or
-      * ``status: superseded`` in versions.json — a preview-only version that
-        keeps its page with a "superseded by" banner (e.g. 4.147.0, 3.119.3).
-    Otherwise the version is IN-FLIGHT and renders ``{version}-unreleased.md``:
-      * main and servicing (.x) branches — the in-development trackers; and
-      * a prerelease-only versioned branch with no stable branch yet
-        (e.g. release/4.148.0-rc.1, release/4.150.0-preview.1).
+    ORIGINAL deterministic two-file rule (restored — see plan/SKILL). The two
+    pages model the orthogonal "released" vs "unreleased" states of a version:
 
-    Note for --all: when a prerelease branch maps to an ``-unreleased`` page, its
-    line head (main or the matching ``.x``) owns the same page, so cmd_all drops
-    the prerelease branch from processing to avoid a collision. The branch's
-    previews still surface via collect_preview_milestones on the head's page.
+      * A VERSIONED branch (``release/X.Y.Z`` and its ``-rc``/``-preview``
+        prereleases) renders the RELEASED ``{version}.md`` — the full cumulative
+        rollup of the shipped prerelease/stable, with preview-milestone sections
+        and supersede banners. One page per version (the canonical / highest
+        versioned branch wins under --all; see _canonical_branches_by_version).
+
+      * A HEAD branch (``main`` or servicing ``release/X.Y.x``) renders the
+        UNRELEASED ``{version}-unreleased.md`` — a SMALL DELTA from the last
+        release to the head (what may ship next), NOT a rollup.
+
+    The two coexist for an in-flight version (e.g. 4.150.0.md from
+    release/4.150.0-preview.1 AND 4.150.0-unreleased.md from main). They never
+    collide (distinct filenames); cleanup_stale_unreleased only prunes an
+    unreleased page once its line advances to a higher version.
     """
     if branch == "main" or branch.endswith(".x"):
-        return "{}-unreleased.md".format(version)
-    # Versioned branch. A '-' after the core (release/X.Y.Z-rc.1) marks a
-    # prerelease; a suffix-less name (release/X.Y.Z) is the shipped stable.
-    name = _removeprefix(branch, "release/")
-    is_prerelease = "-" in name
-    if is_prerelease and not resolve_superseded_by(version):
         return "{}-unreleased.md".format(version)
     return "{}.md".format(version)
 
@@ -1544,7 +2048,7 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     try:
         from_ref, to_ref, version = determine_diff_range(branch)
     except (RuntimeError, subprocess.CalledProcessError) as e:
-        print("  WARNING: Could not determine diff range for {}: {}".format(
+        log("  WARNING: Could not determine diff range for {}: {}".format(
             branch, e), file=sys.stderr)
         return None
 
@@ -1557,21 +2061,52 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     status, superseded_by, supersedes = _compute_page_status(branch, version)
 
     if verbose:
-        print("Branch: {}".format(branch))
-        print("Version: {}".format(version))
-        print("Status: {}".format(status))
+        log("Branch: {}".format(branch))
+        log("Version: {}".format(version))
+        log("Status: {}".format(status))
         if superseded_by:
-            print("Superseded by: {}".format(superseded_by))
+            log("Superseded by: {}".format(superseded_by))
         if supersedes:
-            print("Supersedes: {}".format(", ".join(supersedes)))
+            log("Supersedes: {}".format(", ".join(supersedes)))
 
     prs = get_prs_from_diff(from_ref, to_ref)
-    print("  Found {} PR(s), diff: {}".format(len(prs), diff_range_str))
+    log("  Found {} PR(s), diff: {}".format(len(prs), diff_range_str))
 
     output_path = RELEASES_DIR / _page_filename(branch, version)
+
+    # An UNRELEASED head page (main / release/X.Y.x) with an EMPTY delta has
+    # nothing unreleased — the head is at the last release. Don't emit an empty
+    # "what may ship next" page; prune any stale one so the released {v}.md
+    # stands alone. Released pages are always written (a shipped version with no
+    # changes since its base is still a real, if empty, release record).
+    is_head = (branch == "main") or branch.endswith(".x")
+    if is_head and not prs:
+        if output_path.exists():
+            output_path.unlink()
+            log("  Removed empty {} (nothing unreleased)".format(output_path))
+        return None
+
+    # Deterministic, script-owned API-changes facts (spec §2.2/§4.4), computed
+    # BEFORE the unchanged check so the link's presence is part of the content
+    # key (§4.6) — a page that newly gains a <line>/ folder is rewritten to inject
+    # the link. A RELEASED page is an emitted line (§1.4) with a sibling
+    # <line>/index.md API-diff index (§3.3); unreleased head deltas are not
+    # emitted lines, so they get no folder and no link. The HarfBuzz cross-link
+    # comes from the co-release map sidecar (§3.6).
+    api_diff_link = None
+    if not is_head and (RELEASES_DIR / version).is_dir():
+        api_diff_link = "{}/index.md".format(version)
+    harfbuzz = None
+    hb = load_co_release_map().get(version)
+    if hb and hb.get("hb_line"):
+        harfbuzz = hb
+    api_sig = _api_signature({"api_diff_link": api_diff_link,
+                              "harfbuzz": harfbuzz})
+
     if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
-                                            status, superseded_by, supersedes):
-        print("  Skipping {} (unchanged)".format(output_path))
+                                           status, superseded_by, supersedes,
+                                           api_sig):
+        log("  Skipping {} (unchanged)".format(output_path))
         return None
 
     # The page is changing, so it's worth the one network step now: resolving
@@ -1591,6 +2126,15 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         base_version = version_from_branch(from_display)
     elif re.match(r"^\d+\.\d+\.\d+", from_display):
         base_version = from_display
+    else:
+        # from_display is a bare commit SHA — happens when versions.json
+        # compare_to resolved to a `v<compare_to>` TAG (no release/* branch). The
+        # base core is then exactly that compare_to value; recover it so the
+        # milestone window stays bounded (bug C: a None base let the window
+        # broaden to every preview up to the page version).
+        ce = _versions_config_lookup(version)
+        if ce and ce.get("compare_to"):
+            base_version = ce["compare_to"]
     preview_milestones = collect_preview_milestones(version, base_version)
 
     metadata = {
@@ -1606,11 +2150,209 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         metadata["supersedes"] = supersedes
     if preview_milestones:
         metadata["preview_milestones"] = preview_milestones
+        # Partition the PRs into per-preview buckets (each PR under the preview
+        # it first shipped in) so the AI can summarize each milestone directly.
+        metadata["pr_buckets"] = bucket_prs_by_milestone(
+            prs, preview_milestones, from_ref)
+
+    # Inject the API-changes facts computed above (before the unchanged check).
+    if api_diff_link:
+        metadata["api_diff_link"] = api_diff_link
+    if harfbuzz:
+        metadata["harfbuzz"] = harfbuzz
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
-    print("  Wrote {} ({} PRs)".format(output_path, len(prs)))
+    log("  Wrote {} ({} PRs)".format(output_path, len(prs)))
     return str(output_path)
+
+
+def _skia_branch_for_line(skia_line, all_branches):
+    # type: (str, list[str]) -> Optional[str]
+    """Resolve a SkiaSharp line core to the branch that defines its diff range.
+
+    Prefers the canonical versioned branch (the SkiaSharp released page's
+    source). When the line is still in-flight — no versioned branch, it exists
+    only as a head — falls back to the head carrying it: ``main`` for the
+    upcoming version, else the servicing ``release/X.Y.x`` whose version matches.
+    Returns None when no branch defines the line. Used by the HarfBuzz family to
+    find the SkiaSharp range that introduced a HarfBuzz line (spec §4.5).
+    """
+    canonical = _canonical_branches_by_version(all_branches).get(skia_line)
+    if canonical:
+        return canonical
+    if skia_line == get_upcoming_version():
+        return "main"
+    for b in all_branches:
+        if not b.endswith(".x"):
+            continue
+        m = re.match(r"release/(\d+)\.(\d+)\.x$", b)
+        if not m:
+            continue
+        svc = (get_version_from_remote_branch(b)
+               or "{}.{}.0".format(m.group(1), m.group(2)))
+        if svc == skia_line:
+            return b
+    return None
+
+
+def _render_harfbuzz_no_changes(hb_line, canonical_skia, api_diff_link):
+    # type: (str, str, Optional[str]) -> str
+    """Deterministic *No changes* HarfBuzz page (no AI raw-data block; spec §4.5).
+
+    A published HarfBuzz line whose SkiaSharp window has no HarfBuzz-touching PRs
+    (a rebuild, or a bump with no notable PR) still gets a permanent, fully
+    rendered page so the line set has no gaps. It is timestamp-free so it stays
+    byte-stable across runs (idempotent by text equality) and carries no raw-data
+    block, so it is never listed under "Files to polish".
+    """
+    skia_link = "../{}.md".format(canonical_skia)
+    lines = ["# HarfBuzzSharp {}".format(hb_line), ""]
+    lines.append(
+        "> Ships with [SkiaSharp {s}]({l}) · "
+        "[NuGet](https://www.nuget.org/packages/HarfBuzzSharp/{hb}) · "
+        "[GitHub Release](https://github.com/mono/SkiaSharp/releases/tag/v{s})"
+        .format(s=canonical_skia, l=skia_link, hb=hb_line))
+    lines.append("")
+    if api_diff_link:
+        lines.append(
+            "> **API changes** · [HarfBuzzSharp API diff]({a}) · "
+            "Ships with [SkiaSharp {s}]({l})".format(
+                a=api_diff_link, s=canonical_skia, l=skia_link))
+        lines.append("")
+    lines.append(
+        "No HarfBuzzSharp binding changes shipped in this release — it rebuilds "
+        "the same HarfBuzz as the previous line.")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _write_harfbuzz_page(hb, all_branches, force=False):
+    # type: (dict, list[str], bool) -> Tuple[Optional[str], Optional[str]]
+    """Generate one HarfBuzz family page from a co-release-map line group (§4.5).
+
+    Mirrors ``_write_page`` (the SkiaSharp path) — same diff/PR/milestone/format
+    machinery — differing only in line discovery (the inverted map), range
+    resolution (the canonical SkiaSharp release's range, filtered to HarfBuzz
+    files), and family metadata. All deterministic and script-owned.
+
+    Returns ``(polish_path, owned_filename)``:
+      * ``polish_path``    — the page to hand the AI, or None when skipped,
+                             written as a deterministic *No changes* page (no AI
+                             block), or pruned.
+      * ``owned_filename`` — the file this line owns this run (``<hb>.md`` or
+                             ``<hb>-unreleased.md``), or None when it owns none
+                             (lets the caller prune orphaned ``-unreleased`` pages).
+    """
+    hb_line = hb["hb_line"]
+    canonical_skia = hb["canonical_skia"]
+    hb_dir = RELEASES_DIR / "harfbuzzsharp"
+    # A HarfBuzz line is "published" (released) exactly when the API-changelog
+    # engine emitted its diff folder; otherwise it is in-flight (spec §3.4/§4.5).
+    published = (hb_dir / hb_line).is_dir()
+
+    skia_branch = _skia_branch_for_line(canonical_skia, all_branches)
+    if not skia_branch:
+        log("  WARNING: no SkiaSharp branch for HarfBuzz {} (introducing line "
+              "{}); skipping".format(hb_line, canonical_skia), file=sys.stderr)
+        return None, None
+
+    try:
+        from_ref, to_ref, _ = determine_diff_range(skia_branch)
+    except (RuntimeError, subprocess.CalledProcessError) as e:
+        log("  WARNING: could not resolve range for HarfBuzz {} via {}: {}"
+              .format(hb_line, skia_branch, e), file=sys.stderr)
+        return None, None
+
+    from_display = _removeprefix(from_ref, "origin/")
+    to_display = _removeprefix(to_ref, "origin/")
+    if re.match(r"^[0-9a-f]{7,}$", from_display):
+        from_display = from_display[:12]
+    diff_range_str = "{}..{}".format(from_display, to_display)
+
+    # Filter the SkiaSharp range down to HarfBuzz-owned commits (spec §1.5/§4.5).
+    prs = get_prs_from_diff(from_ref, to_ref, paths=HARFBUZZ_PATHSPECS)
+
+    owned = ("{}.md".format(hb_line) if published
+             else "{}-unreleased.md".format(hb_line))
+    output_path = hb_dir / owned
+    api_diff_link = "{}/index.md".format(hb_line) if published else None
+
+    # An in-flight HarfBuzz line earns a page ONLY when its introducing SkiaSharp
+    # head actually carries HarfBuzz changes (spec §4.5). An empty delta means the
+    # head merely rebuilds an already-released HarfBuzz — no page; prune a stale one.
+    if not published and not prs:
+        if output_path.exists():
+            output_path.unlink()
+            log("  Removed empty {} (nothing unreleased)".format(output_path))
+        return None, None
+
+    # Published line, no HarfBuzz-touching PRs -> deterministic *No changes* page
+    # (no AI block, never polished; spec §4.5). Idempotent by exact text equality.
+    if published and not prs:
+        text = _render_harfbuzz_no_changes(hb_line, canonical_skia, api_diff_link)
+        if not force and output_path.exists() and output_path.read_text() == text:
+            log("  Skipping {} (unchanged, no changes)".format(output_path))
+            return None, owned
+        hb_dir.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(text)
+        log("  Wrote {} (no HarfBuzz changes)".format(output_path))
+        return None, owned
+
+    status = "stable" if published else "unreleased"
+    superseded_by = resolve_superseded_by(hb_line, "harfbuzzsharp")
+    if superseded_by:
+        status = "preview"
+    supersedes = detect_supersedes(hb_line, "harfbuzzsharp")
+
+    metadata = {
+        "branch": skia_branch,
+        "version": hb_line,
+        "status": status,
+        "from": from_display,
+        "to": to_display,
+        "family": "harfbuzzsharp",
+        "package": "HarfBuzzSharp",
+        # HarfBuzz has no release date of its own — it is anchored to the
+        # canonical (introducing) SkiaSharp release (spec §1.5).
+        "ships_with": {"version": canonical_skia,
+                       "link": "../{}.md".format(canonical_skia)},
+    }
+    if api_diff_link:
+        metadata["api_diff_link"] = api_diff_link
+    if superseded_by:
+        metadata["superseded_by"] = superseded_by
+    if supersedes:
+        metadata["supersedes"] = supersedes
+    api_sig = _api_signature(metadata)
+
+    if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
+                                           status, superseded_by, supersedes,
+                                           api_sig):
+        log("  Skipping {} (unchanged)".format(output_path))
+        return None, owned
+
+    resolve_pr_authors(prs)
+    resolve_skia_links(prs)
+
+    # Preview milestones are the SkiaSharp previews in the window where HarfBuzz
+    # work landed (spec §4.5): reuse the SkiaSharp machinery keyed on the
+    # canonical SkiaSharp line, then bucket the HarfBuzz-filtered PRs into them.
+    base_version = None
+    if from_display.startswith("release/"):
+        base_version = version_from_branch(from_display)
+    elif re.match(r"^\d+\.\d+\.\d+", from_display):
+        base_version = from_display
+    preview_milestones = collect_preview_milestones(canonical_skia, base_version)
+    if preview_milestones:
+        metadata["preview_milestones"] = preview_milestones
+        metadata["pr_buckets"] = bucket_prs_by_milestone(
+            prs, preview_milestones, from_ref)
+
+    hb_dir.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(format_pr_list(prs, metadata))
+    log("  Wrote {} ({} PRs)".format(output_path, len(prs)))
+    return str(output_path), owned
 
 
 def cmd_branch(branch, force=False):
@@ -1618,7 +2360,7 @@ def cmd_branch(branch, force=False):
     """Diff a branch against its predecessor and write raw data to the version file."""
     branch = _removeprefix(branch, "origin/")
 
-    print("Fetching remote branches...")
+    log("Fetching remote branches...")
     try:
         # Unshallow if needed (CI runners use shallow clones)
         run(["git", "fetch", "origin", "--unshallow", "--quiet"], check=False)
@@ -1628,12 +2370,12 @@ def cmd_branch(branch, force=False):
              "refs/heads/main:refs/remotes/origin/main",
              "--quiet"], check=True)
     except subprocess.CalledProcessError:
-        print("ERROR: git fetch failed. Cannot determine branch diff range.")
+        log("ERROR: git fetch failed. Cannot determine branch diff range.")
         sys.exit(1)
 
     all_branches = list_remote_release_branches()
     if not all_branches:
-        print("ERROR: No release branches found after fetch.")
+        log("ERROR: No release branches found after fetch.")
         sys.exit(1)
 
     # Resolve a versioned branch to the canonical branch for its version so a
@@ -1646,7 +2388,7 @@ def cmd_branch(branch, force=False):
         version = version_from_branch(branch)
         canonical = _canonical_branches_by_version(all_branches).get(version)
         if canonical and canonical != branch:
-            print("Note: {} is not the canonical branch for {}; "
+            log("Note: {} is not the canonical branch for {}; "
                   "processing {} instead.".format(branch, version, canonical))
             target = canonical
 
@@ -1663,7 +2405,7 @@ def cmd_branch(branch, force=False):
 
     cmd_update_toc()
 
-    print("")
+    log("")
     print("========================================")
     print("Files to polish:")
     for f in files_to_polish:
@@ -1688,7 +2430,7 @@ def _regen_unreleased(trigger_branch, all_branches, force=False):
     # Servicing (.x) line for the same minor, if it exists.
     svc_branch = "release/{}.x".format(minor)
     if svc_branch in all_branches:
-        print("\nRegenerating unreleased for {}...".format(svc_branch))
+        log("\nRegenerating unreleased for {}...".format(svc_branch))
         path = _write_page(svc_branch, all_branches, force=force)
         if path:
             written.append(path)
@@ -1697,7 +2439,7 @@ def _regen_unreleased(trigger_branch, all_branches, force=False):
     # (a push to a 3.119.x preview doesn't move main's range if main is on 4.x).
     main_version = get_upcoming_version()
     if main_version and minor_group(main_version) == minor:
-        print("\nRegenerating unreleased for main...")
+        log("\nRegenerating unreleased for main...")
         path = _write_page("main", all_branches, force=force)
         if path:
             written.append(path)
@@ -1706,6 +2448,51 @@ def _regen_unreleased(trigger_branch, all_branches, force=False):
 
 
 # ── Main ─────────────────────────────────────────────────────────────
+
+
+def _process_harfbuzz_family(all_branches, force=False):
+    # type: (list[str], bool) -> Tuple[list[str], int, int]
+    """Generate the HarfBuzz peer-family pages (spec §4.5) and prune orphans.
+
+    Drives one page per HarfBuzz line discovered from the co-release map
+    (``harfbuzz_lines_from_map``), with the same machinery as the SkiaSharp
+    family. Returns ``(files_to_polish, processed, skipped)``. Released
+    ``<hb>.md`` pages are cumulative and never pruned (like SkiaSharp); orphaned
+    in-flight ``<hb>-unreleased.md`` pages — a line that has since shipped, or
+    whose introducing head moved on — are removed.
+    """
+    hb_groups = harfbuzz_lines_from_map()
+    if not hb_groups:
+        return [], 0, 0
+
+    hb_dir = RELEASES_DIR / "harfbuzzsharp"
+    files_to_polish = []  # type: list[str]
+    processed = 0
+    skipped = 0
+    valid_unreleased = set()  # type: set[str]
+
+    for hb in hb_groups:
+        log("\n--- Processing HarfBuzz: {} (ships with {}) ---".format(
+            hb["hb_line"], hb["canonical_skia"]))
+        path, owned = _write_harfbuzz_page(hb, all_branches, force=force)
+        if owned and owned.endswith("-unreleased.md"):
+            valid_unreleased.add(owned)
+        if path:
+            files_to_polish.append(path)
+            processed += 1
+        else:
+            skipped += 1
+
+    # Prune orphaned in-flight pages: any harfbuzzsharp/<x>-unreleased.md not
+    # owned by a current in-flight line (it shipped -> now <x>.md, or its head
+    # moved on). Released pages are cumulative and kept (spec §4.5).
+    if hb_dir.is_dir():
+        for f in sorted(hb_dir.glob("*-unreleased.md")):
+            if f.name not in valid_unreleased:
+                f.unlink()
+                log("Removed stale {}".format(f))
+
+    return files_to_polish, processed, skipped
 
 
 def cmd_all(force=False):
@@ -1725,7 +2512,7 @@ def cmd_all(force=False):
     diffing others (handled in determine_diff_range / _is_valid_stable_base),
     never whether a page is produced.
     """
-    print("Fetching remote branches...")
+    log("Fetching remote branches...")
     try:
         run(["git", "fetch", "origin", "--unshallow", "--quiet"], check=False)
         run(["git", "fetch", "origin",
@@ -1733,53 +2520,30 @@ def cmd_all(force=False):
              "refs/heads/main:refs/remotes/origin/main",
              "--quiet"], check=True)
     except subprocess.CalledProcessError:
-        print("ERROR: git fetch failed.")
+        log("ERROR: git fetch failed.")
         sys.exit(1)
 
     all_branches = list_remote_release_branches()
     if not all_branches:
-        print("ERROR: No release branches found after fetch.")
+        log("ERROR: No release branches found after fetch.")
         sys.exit(1)
 
     # Build the processing list. Each output file must be produced by exactly
     # ONE branch, otherwise branches that map to the same page overwrite each
     # other and the last one processed wins (e.g. release/3.119.2 and its
     # release/3.119.2-preview.* all render to 3.119.2.md). So:
-    #   - main                         -> {upcoming}-unreleased.md
-    #   - each servicing release/X.Y.x -> {X.Y.0}-unreleased.md  (distinct files)
-    #   - ONE canonical branch per versioned base version -> {version}.md
-    # Superseded versions are still included — they each keep their own page
-    # with a "superseded by" label (see docstring).
+    #   - main                         -> {upcoming}-unreleased.md   (delta head)
+    #   - each servicing release/X.Y.x -> {X.Y.0}-unreleased.md      (delta head)
+    #   - ONE canonical branch per versioned base version -> {version}.md (released)
+    # Released and unreleased pages of the same version COEXIST (distinct
+    # filenames) and never collide, so no branch is deferred. Superseded
+    # versions still keep their own released page with a "superseded by" label.
     servicing_branches = [b for b in all_branches if b.endswith(".x")]
     canonical_branches = sorted(
         _canonical_branches_by_version(all_branches).values(),
         key=release_branch_sort_key)
 
-    # Ownership for in-flight pages (regression R1). A prerelease-only canonical
-    # branch (release/4.148.0-rc.1, release/4.150.0-preview.1) now renders an
-    # ``-unreleased`` page — but that same page is owned by the line head:
-    # ``main`` for the upcoming version, or the matching ``release/X.Y.x``. Drop
-    # the prerelease canonical when a head already produces its file, so the two
-    # don't fight (and cleanup_stale_unreleased doesn't then delete the head's
-    # page). The dropped branch's previews still appear on the head's page via
-    # collect_preview_milestones. Determinism: filenames only, no tags.
-    head_unreleased = set()
-    upcoming = get_upcoming_version()
-    if upcoming:
-        head_unreleased.add(_page_filename("main", upcoming))
-    for b in servicing_branches:
-        v = get_version_from_remote_branch(b) or version_from_branch(b)
-        head_unreleased.add(_page_filename(b, v))
-
-    kept_canonical = []
-    for b in canonical_branches:
-        fn = _page_filename(b, version_from_branch(b))
-        if fn in head_unreleased:
-            print("  (deferring {} — {} owned by its line head)".format(b, fn))
-            continue
-        kept_canonical.append(b)
-
-    branches_to_process = ["main"] + servicing_branches + kept_canonical
+    branches_to_process = ["main"] + servicing_branches + canonical_branches
 
     files_to_polish = []
     skipped_count = 0
@@ -1787,10 +2551,10 @@ def cmd_all(force=False):
 
     for branch in branches_to_process:
         if branch == "main" and not get_upcoming_version():
-            print("WARNING: Cannot determine main version, skipping main.")
+            log("WARNING: Cannot determine main version, skipping main.")
             continue
 
-        print("\n--- Processing: {} ---".format(branch))
+        log("\n--- Processing: {} ---".format(branch))
         path = _write_page(branch, all_branches, force=force)
         if path:
             files_to_polish.append(path)
@@ -1798,13 +2562,22 @@ def cmd_all(force=False):
         else:
             skipped_count += 1
 
+    # HarfBuzz peer family — same pipeline, line-driven from the co-release map
+    # (spec §4.5). Runs after the SkiaSharp pass so the canonical SkiaSharp pages
+    # its cross-links target already exist this run.
+    hb_polish, hb_processed, hb_skipped = _process_harfbuzz_family(
+        all_branches, force=force)
+    files_to_polish.extend(hb_polish)
+    processed_count += hb_processed
+    skipped_count += hb_skipped
+
     # Regenerate TOC and index
     cmd_update_toc()
 
     # Print summary for the AI agent
-    print("")
+    log("")
     print("========================================")
-    print("Processed: {}, Skipped/unchanged: {}".format(
+    log("Processed: {}, Skipped/unchanged: {}".format(
         processed_count, skipped_count))
     print("Files to polish:")
     if files_to_polish:
