@@ -14,48 +14,122 @@ on:
 concurrency:
   group: update-release-notes
   cancel-in-progress: true
-# Cake regenerates the full historical API-diff tree from the NuGet feed and
-# Python regenerates every branch's raw data, so this is much longer than a
-# pure-AI run.
-timeout-minutes: 90
+# The agent only POLISHES prose now — the heavy, deterministic Prepare phase runs
+# in its own `prepare` job (below), so the agent's own budget is modest.
+timeout-minutes: 60
 permissions:
   contents: read
-# Python --all fetches the release/* refs it needs; full history is required so
-# it can walk each branch's commits.
+# The agent replays the Prepare patch onto a clean main checkout and polishes; it
+# needs main's history for create-pull-request's branch operations.
 checkout:
   - fetch-depth: 0
-# The deterministic Prepare phase (the generate.sh script) runs on the HOST before
-# the agent so the AI never waits on — or pays for — the long script runs.
-# Everything these steps write lands in the working tree and is captured into the
-# same PR as the agent's prose (Polish) edits.
+# ---------------------------------------------------------------------------
+# PREPARE — a dedicated, disk-managed, VERBOSE job on its own runner.
+#
+# The deterministic generators (Cake API-diff over EVERY published NuGet of BOTH
+# families incl. prereleases + Python raw data over every branch) are far too
+# disk- and time-heavy to share the agent runner: that combination exhausted the
+# hosted runner's disk on the first post-merge run (issue #4191). So Prepare gets
+# its OWN job with its OWN timeout and a free-disk-space step, runs verbose (all
+# progress visible in the job log), and hands its result to the agent as an
+# artifact — a git patch of every working-tree change plus the files-to-polish
+# list. See documentation/dev/release-notes-and-changelogs.md §2.2/§2.3.
+# ---------------------------------------------------------------------------
+jobs:
+  prepare:
+    name: Prepare (changelogs + release-notes raw data)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5.0.0
+        with:
+          fetch-depth: 0
+      - name: Free up disk space
+        run: |
+          set -euo pipefail
+          echo "Disk before cleanup:"; df -h /
+          # Drop large preinstalled toolchains we never use here so the NuGet
+          # diff (every package of both families) has room. setup-dotnet below
+          # reinstalls the pinned SDK after we clear the preinstalled one.
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+                      /usr/share/swift /usr/share/dotnet/sdk 2>/dev/null || true
+          sudo docker image prune --all --force 2>/dev/null || true
+          echo "Disk after cleanup:"; df -h /
+      - name: Start from a clean main tree
+        run: |
+          set -euo pipefail
+          # Release notes/changelogs always target main; a push to release/* is a
+          # content *source*, not the PR base, so generate from origin/main.
+          git fetch origin main --quiet
+          git checkout -B main origin/main
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - name: Generate (verbose)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Single entry point: Cake (API changelogs) then Python (raw data), both
+          # VERBOSE, writing the "Files to polish" list to a file. No args = --all.
+          bash .agents/skills/release-notes/scripts/generate.sh \
+            --polish-list "$RUNNER_TEMP/files-to-polish.txt"
+      - name: Package Prepare output
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/prepare-out"
+          # Capture EVERY working-tree change (the releases tree, the co-release
+          # map sidecar, the author cache, and any deletions/pruning) as one patch
+          # so the agent can replay it onto a clean main checkout.
+          git add -A
+          git diff --cached --binary > "$RUNNER_TEMP/prepare-out/prepare.patch"
+          git reset -q
+          cp "$RUNNER_TEMP/files-to-polish.txt" "$RUNNER_TEMP/prepare-out/files-to-polish.txt"
+          echo "Patch size: $(wc -c < "$RUNNER_TEMP/prepare-out/prepare.patch") bytes"
+          echo "Files to polish:"; cat "$RUNNER_TEMP/prepare-out/files-to-polish.txt" || true
+      - name: Upload Prepare output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.4.3
+        with:
+          name: release-notes-prepare
+          path: ${{ runner.temp }}/prepare-out
+          retention-days: 1
+          if-no-files-found: error
+# ---------------------------------------------------------------------------
+# POLISH — the agent restores Prepare's output, then edits prose only.
+# These steps run in the agent job after its checkout and before the engine.
+# ---------------------------------------------------------------------------
 pre-agent-steps:
   - name: Start from a clean main tree
     run: |
       set -euo pipefail
-      # Release notes/changelogs always target main. A push to release/* is a
-      # content *source*, not the PR base, so rebase onto origin/main first to
-      # avoid leaking release-branch-only files into the main-targeted PR.
       mkdir -p /tmp/gh-aw
       git fetch origin main --quiet
       git checkout -B main origin/main
-  - name: Setup .NET
-    uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+  - name: Download Prepare output
+    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.1.8
     with:
-      global-json-file: global.json
-  - name: Generate changelogs + release-notes raw data
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GITHUB_TOKEN: ${{ github.token }}
+      name: release-notes-prepare
+      path: /tmp/gh-aw/prepare-in
+  - name: Restore Prepare output
     run: |
       set -euo pipefail
-      # Single entry point: runs Cake (API changelogs) then Python (raw data) in
-      # order and prints the "Files to polish" list. Tee it so the agent can read
-      # exactly which pages to polish. No args = full regeneration (Python --all).
-      bash .agents/skills/release-notes/scripts/generate.sh \
-        | tee /tmp/gh-aw/files-to-polish.txt
+      # The files-to-polish list the agent reads (spec §2.3).
+      cp /tmp/gh-aw/prepare-in/files-to-polish.txt /tmp/gh-aw/files-to-polish.txt
+      # Replay Prepare's working-tree changes; an empty patch = nothing changed.
+      if [ -s /tmp/gh-aw/prepare-in/prepare.patch ]; then
+        git apply --3way --whitespace=nowarn /tmp/gh-aw/prepare-in/prepare.patch
+        echo "Applied Prepare patch."
+      else
+        echo "Prepare produced no changes; nothing to apply."
+      fi
 tools:
-  # The agent only reads the generated files and rewrites prose — it must NOT run
-  # the scripts (they already ran above). No python3 here on purpose.
+  # The agent only reads the restored files and rewrites prose — it must NOT run
+  # the scripts (they already ran in the prepare job). No python3 here on purpose.
   bash: ["cat", "grep", "sort", "head", "tail", "sed", "awk", "git"]
   edit:
 # The agent has no network: it only polishes prose from already-generated files.
@@ -73,23 +147,26 @@ safe-outputs:
 # Update Release Notes & API Changelogs
 
 This is the single pipeline that keeps the website release notes **and** the API
-changelogs current — there is no separate api-diff workflow. It runs the
-deterministic generators on the host, then uses the AI to polish prose, and opens
-**one** pull request with everything.
+changelogs current — there is no separate api-diff workflow. The deterministic
+generators run in a dedicated **`prepare`** job, the agent then polishes prose,
+and **one** pull request ships everything.
 
 ## What already ran: the Prepare phase (do NOT re-run)
 
-Before you (the agent) started, a host step already ran the skill's **Prepare**
-phase — the single script `.agents/skills/release-notes/scripts/generate.sh`, which
-in turn:
+Before you (the agent) started, a **separate `prepare` job** ran the skill's
+**Prepare** phase on its own disk-managed runner — the single script
+`.agents/skills/release-notes/scripts/generate.sh`, which in turn:
 
 1. ran **Cake** (`docs-api-diff-past`) to regenerate the complete API-diff tree and
    `co-release-map.json` sidecar under `documentation/docfx/releases/`, then
 2. ran **Python** (`generate-release-notes.py --all`) to regenerate every version
-   page's raw-data block, write the deterministic page→API-diff links, and print the
-   **"Files to polish"** list (teed to `/tmp/gh-aw/files-to-polish.txt`).
+   page's raw-data block, write the deterministic page→API-diff links, and write
+   the **"Files to polish"** list.
 
-These changes are already on disk. **Do not run `generate.sh`, `dotnet cake`, the
+The `prepare` job uploaded its complete working-tree change as a patch plus that
+list as an artifact, and a host step **already restored both** into this checkout:
+the regenerated files are on disk, and the list is at
+`/tmp/gh-aw/files-to-polish.txt`. **Do not run `generate.sh`, `dotnet cake`, the
 Python script, or `git commit`/`git push`.** Your job is the Polish phase only.
 
 ## Your job: the Polish phase
@@ -100,9 +177,10 @@ in its **unattended** mode: the Prepare phase already ran, so skip it and go str
 to **Polish**.
 
 1. Read `/tmp/gh-aw/files-to-polish.txt`. It lists exactly the pages under
-   `documentation/docfx/releases/` whose raw data changed this run.
-2. If it says **"(none — all files up to date)"** or is empty, make **no edits**
-   and exit — leave any existing PR untouched. No PR will be created.
+   `documentation/docfx/releases/` whose raw data changed this run (one
+   repo-relative path per line).
+2. If it is **empty**, make **no edits** and exit — leave any existing PR
+   untouched. No PR will be created.
 3. Otherwise, for **each** listed file, follow the skill: rewrite only the human
    prose, keeping every script-owned region verbatim — the raw-data HTML comment
    block, the `> **API changes**` link line, and the `## Links` entries. Never
@@ -112,7 +190,7 @@ to **Polish**.
 ## How the PR is made
 
 The `create-pull-request` safe-output captures **all** working-tree changes —
-the Cake tree, the Python raw data, and your prose edits — into one PR targeting
-`main` on the single `bot/release-notes` branch. You do not git commit or push.
-If nothing changed (scripts produced no diff and you made no edits), no PR is
-opened or updated.
+the restored Prepare output (Cake tree + Python raw data) and your prose edits —
+into one PR targeting `main` on the single `bot/release-notes` branch. You do not
+git commit or push. If nothing changed (Prepare produced an empty patch and you
+made no edits), no PR is opened or updated.
