@@ -359,7 +359,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Test release (Step 3/4) | `/release-testing` | "test the release", "verify packages" |
 | Publish release (Step 4/4) | `/release-publish` | "push to nuget", "tag release" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
-| Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "changelog", "scout features", "diff tags" |
+| Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "api diff", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |
 | PR commit message | `/pr-commit-message` | "write commit message for PR" |
@@ -413,4 +413,4 @@ Work directly for:
 | Error Handling | `documentation/dev/error-handling.md` |
 | Debugging | `documentation/dev/debugging-methodology.md` |
 | NuGet Packages | `documentation/dev/packages.md` |
-| Release Notes & API Changelogs | `documentation/dev/release-notes-and-changelogs.md` |
+| Release Notes & API Diffs | `documentation/dev/release-notes-and-api-diffs.md` |

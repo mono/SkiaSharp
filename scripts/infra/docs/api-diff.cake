@@ -1,8 +1,8 @@
-// READ FIRST: documentation/dev/release-notes-and-changelogs.md is the behavior
+// READ FIRST: documentation/dev/release-notes-and-api-diffs.md is the behavior
 // spec for this engine. Change the spec first, then make this code match it.
 //
 // ─────────────────────────────────────────────────────────────────────────────
-// API-changelog engine (spec §5)
+// API-diff engine (spec §5)
 //
 // This is the Cake half of the release-notes skill. It regenerates the per-family
 // API-diff trees under documentation/docfx/releases/ (spec §3.3/§3.4) by diffing
@@ -41,7 +41,7 @@ bool IsHarfBuzzFamily (string id) =>
     id == "HarfBuzzSharp" || id.StartsWith ("HarfBuzzSharp.");
 
 // --nugetDiffMinVersion support (spec §5): a local-iteration floor. When set, only
-// changelog LINES whose version core is >= the floor are (re)generated and cleared;
+// api diff LINES whose version core is >= the floor are (re)generated and cleared;
 // everything below is left exactly as committed. Baselines are still chosen from the
 // full release history (the emit list below is never truncated), so each regenerated
 // line is byte-identical to what an unfloored full run would produce — this only ever
@@ -191,7 +191,7 @@ Task ("docs-api-diff-past")
 
     // Include prerelease packages so the active development lines (which ship
     // only as previews/rcs until they go stable, e.g. 4.148/4.150) can be
-    // enumerated. Emission is still collapsed to one changelog per release line
+    // enumerated. Emission is still collapsed to one api diff per release line
     // below — prereleases are needed as candidates, not as their own folders.
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
@@ -215,7 +215,7 @@ Task ("docs-api-diff-past")
         var allVersions = await NuGetVersions.GetAllAsync (id, filter);
 
         // The newest stable release on the feed. It is the cut-off for preview
-        // emission: a preview-only line is only worth a changelog while it is
+        // emission: a preview-only line is only worth an api diff while it is
         // still ahead of the last shipped stable (the active dev line, e.g.
         // 4.148/4.150). Older preview-only lines that never shipped stay pruned.
         var latestStable = allVersions
@@ -226,7 +226,7 @@ Task ("docs-api-diff-past")
         // Collapse the feed into one entry per release LINE, keyed by the numeric
         // version core with the prerelease label stripped (4.148.0-rc.1.2 ->
         // 4.148.0; the 4th digit of a real 4-part stable like 1.49.2.1 is kept).
-        // Each line's changelog is a rollup named by that core, diffed against the
+        // Each line's api diff is a rollup named by that core, diffed against the
         // line's representative package: the newest stable if it shipped,
         // otherwise the newest prerelease. This mirrors the release-notes pages,
         // which are stable-named rollups of all the previews in between.
@@ -239,7 +239,7 @@ Task ("docs-api-diff-past")
             .OrderBy (l => l.rep)
             .ToList ();
 
-        // Decide which lines actually get a changelog emitted (spec §1.4). A line
+        // Decide which lines actually get an api diff emitted (spec §1.4). A line
         // is emitted when ANY of these holds, and not otherwise:
         //   1. it shipped stable (the permanent historical record); or
         //   2. it is listed in versions.json — an intentionally tracked line, e.g. a
@@ -259,14 +259,14 @@ Task ("docs-api-diff-past")
             // The package we actually diff (e.g. 4.148.0-rc.1.2) and the folder we
             // write it to (e.g. 4.148.0).
             var version = emit [idx].rep.ToNormalizedString ();
-            var changelogVersion = emit [idx].key;
+            var apiDiffVersion = emit [idx].key;
 
             // --nugetDiffMinVersion floor: skip GENERATING this line when it is below the
             // floor, but only after it has had its chance to be a baseline for later lines
             // (the emit list is intact, so the walk-back below still sees it). Its committed
             // files were already spared by ClearOwnedApiDiffFolders, so they stay untouched.
-            if (IsLineBelowMin (changelogVersion)) {
-                Debug ($"Skipping generation of '{id}' line '{changelogVersion}' (below --nugetDiffMinVersion={NUGET_DIFF_MIN_VERSION}).");
+            if (IsLineBelowMin (apiDiffVersion)) {
+                Debug ($"Skipping generation of '{id}' line '{apiDiffVersion}' (below --nugetDiffMinVersion={NUGET_DIFF_MIN_VERSION}).");
                 continue;
             }
 
@@ -288,7 +288,7 @@ Task ("docs-api-diff-past")
                 }
             }
 
-            Information ($"Comparing version '{previous}' vs '{version}' of '{id}' (changelog '{changelogVersion}')...");
+            Information ($"Comparing version '{previous}' vs '{version}' of '{id}' (api diff '{apiDiffVersion}')...");
 
             // pre-cache so we can have better logs
             Debug ($"Caching version '{version}' of '{id}'...");
@@ -301,12 +301,12 @@ Task ("docs-api-diff-past")
             // The committed folder for this line: SkiaSharp family -> releases/<line>/<id>/…;
             // HarfBuzz family -> releases/harfbuzzsharp/<hb-line>/<id>/… (spec §3.3/§3.4).
             var lineDir = isHarfBuzz
-                ? RELEASES_PATH.Combine ("harfbuzzsharp").Combine (changelogVersion)
-                : RELEASES_PATH.Combine (changelogVersion);
+                ? RELEASES_PATH.Combine ("harfbuzzsharp").Combine (apiDiffVersion)
+                : RELEASES_PATH.Combine (apiDiffVersion);
 
             // generate the diff and copy to the committed releases/ tree
             Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
-            var diffRoot = $"{baseDir}/{id}/{changelogVersion}";
+            var diffRoot = $"{baseDir}/{id}/{apiDiffVersion}";
             await RunBreakingAndFullDiff (comparer, id, previous, version, lineDir, diffRoot);
 
             // Record the co-release mapping (spec §1.5/§3.6): the HarfBuzz version
@@ -316,7 +316,7 @@ Task ("docs-api-diff-past")
             if (id == "SkiaSharp.HarfBuzz") {
                 var hbDep = ReadHarfBuzzDependencyLine (versionRoot);
                 if (!string.IsNullOrEmpty (hbDep))
-                    skiaHarfBuzzDeps [changelogVersion] = hbDep;
+                    skiaHarfBuzzDeps [apiDiffVersion] = hbDep;
             }
 
             Debug ($"Diff complete of version '{version}' of '{id}'.");
@@ -366,7 +366,7 @@ Task ("docs-api-diff-past")
 
 // Marker that prefixes the first line of every file the comparer writes (the
 // <assembly>.md / <assembly>.breaking.md diffs and the "No changes." stub in
-// CopyChangelogs). Hand-authored files nested in a line folder do not carry it.
+// CopyApiDiffs). Hand-authored files nested in a line folder do not carry it.
 const string API_DIFF_MARKER = "# API diff:";
 
 // Clear only the GENERATED API-diff files this engine owns (spec §3.5), inside the
@@ -576,7 +576,7 @@ void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line)
 // Copy the generated diff markdown into a line folder: {lineDir}/{id}/{assembly}.md
 // (+ {assembly}.breaking.md), the package-namespaced per-assembly shape of spec
 // §3.3/§3.4. Also mirrors into output/logs/ for build-log inspection (transient).
-void CopyChangelogs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
+void CopyApiDiffs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
 {
     foreach (var (path, platform) in GetPlatformDirectories (diffRoot)) {
         // first, make sure to create markdown files for unchanged assemblies
@@ -607,12 +607,12 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
 
                 dllName += ".breaking";
             }
-            var changelogPath = lineDir.Combine (id).CombineWithFilePath ($"{dllName}.md");
-            EnsureDirectoryExists (changelogPath.GetDirectory ());
-            CopyFile (file, changelogPath);
-            var changelogOutputPath = (FilePath)$"{ROOT_PATH}/output/logs/changelogs/{id}/{lineDir.GetDirectoryName ()}/{dllName}.md";
-            EnsureDirectoryExists (changelogOutputPath.GetDirectory ());
-            CopyFile (file, changelogOutputPath);
+            var apiDiffPath = lineDir.Combine (id).CombineWithFilePath ($"{dllName}.md");
+            EnsureDirectoryExists (apiDiffPath.GetDirectory ());
+            CopyFile (file, apiDiffPath);
+            var apiDiffOutputPath = (FilePath)$"{ROOT_PATH}/output/logs/api-diffs/{id}/{lineDir.GetDirectoryName ()}/{dllName}.md";
+            EnsureDirectoryExists (apiDiffOutputPath.GetDirectory ());
+            CopyFile (file, apiDiffOutputPath);
         }
     }
 }
@@ -620,7 +620,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
 // Run the standard two-pass diff (breaking-only, then full/non-breaking) and copy
 // the resulting markdown into {lineDir}/{id}. The two passes produce the
 // {dll}.breaking.md and {dll}.md files respectively. NEW side is a published feed
-// version. changelogVersion (the line folder) differs from newVersion (the actual
+// version. apiDiffVersion (the line folder) differs from newVersion (the actual
 // package diffed, e.g. 4.148.0-rc.1.2) whenever a line is still in preview.
 async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVersion, string newVersion, DirectoryPath lineDir, string diffRoot)
 {
@@ -632,7 +632,7 @@ async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVers
     comparer.IgnoreNonBreakingChanges = false;
     await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newVersion, diffRoot);
 
-    CopyChangelogs (diffRoot, id, lineDir);
+    CopyApiDiffs (diffRoot, id, lineDir);
 }
 
 RunTarget(TARGET);

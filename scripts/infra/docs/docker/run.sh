@@ -10,7 +10,7 @@
 # from-scratch download.
 #
 # The container runs as the host user so every file it writes (regenerated
-# changelogs, docs XML, output/) is owned by you, not root.
+# API diffs, docs XML, output/) is owned by you, not root.
 #
 # GitHub auth: GITHUB_TOKEN and GH_TOKEN are forwarded from the host environment.
 # The release-notes generator REQUIRES gh for PR author resolution — it must never
@@ -23,7 +23,7 @@
 #
 #   The three documentation-generation paths, each a single canonical script under
 #   scripts/infra/docs/ that local runs, CI, and this wrapper all share:
-#   run.sh changelogs [args...]        Path 1: API changelogs (generate-changelogs.sh).
+#   run.sh api-diffs [args...]         Path 1: API diffs (generate-api-diffs.sh).
 #   run.sh notes [args...]             Path 2: release notes (needs a token).
 #   run.sh api-docs [args...]          Path 3: mdoc XML docs (generate-api-docs.sh).
 #   run.sh all                         All three paths, in order (needs a token).
@@ -128,11 +128,11 @@ case "$cmd" in
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
             bash -lc 'dotnet tool restore && dotnet cake --target="$0" "$@"' "$target" "$@"
         ;;
-    changelogs)
+    api-diffs)
         ensure_image
         docker_run_args
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
-            scripts/infra/docs/generate-changelogs.sh "$@"
+            scripts/infra/docs/generate-api-diffs.sh "$@"
         ;;
     api-docs)
         ensure_image
@@ -149,8 +149,8 @@ case "$cmd" in
         ;;
     all)
         # Full local run: all three paths in one container, in dependency order. Path 1
-        # (changelogs) must precede Path 2 (notes) because the release-notes engine
-        # consumes the changelog trees + co-release sidecar Path 1 writes; Path 3
+        # (API diffs) must precede Path 2 (notes) because the release-notes engine
+        # consumes the API diff trees + co-release sidecar Path 1 writes; Path 3
         # (api-docs) is independent. Sharing one container (and one COLD cache, when set)
         # means later paths reuse the packages the first path downloaded. Because it runs
         # the notes path, 'all' requires a token (override with ALLOW_NO_TOKEN=1).
@@ -158,7 +158,7 @@ case "$cmd" in
         ensure_image
         docker_run_args
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" bash -euo pipefail -c '
-            scripts/infra/docs/generate-changelogs.sh
+            scripts/infra/docs/generate-api-diffs.sh
             scripts/infra/docs/generate-release-notes.sh
             scripts/infra/docs/generate-api-docs.sh
         '
@@ -173,6 +173,6 @@ case "$cmd" in
         sed -n '2,34p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         ;;
     *)
-        die "unknown command '$cmd' (try: build | shell | changelogs | notes | api-docs | all | cake | exec | help)"
+        die "unknown command '$cmd' (try: build | shell | api-diffs | notes | api-docs | all | cake | exec | help)"
         ;;
 esac

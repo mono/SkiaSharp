@@ -3,12 +3,12 @@
 # generate-release-notes.sh — Path 2: regenerate the human release-notes prose.
 #
 # Runs the deterministic Python release-notes engine, which turns the committed
-# changelog trees + co-release sidecar (produced by Path 1) into the per-line human
+# api diff trees + co-release sidecar (produced by Path 1) into the per-line human
 # pages and raw data under documentation/docfx/releases/. For a full refresh, run
-# generate-changelogs.sh (Path 1) FIRST so the changelog inputs are current.
+# generate-api-diffs.sh (Path 1) FIRST so the api diff inputs are current.
 #
 # Engine: python3 scripts/infra/docs/generate-release-notes.py
-#   spec:  documentation/dev/release-notes-and-changelogs.md   (read this first)
+#   spec:  documentation/dev/release-notes-and-api-diffs.md   (read this first)
 #
 # Single source of truth for Path 2: the release-notes skill's generate.sh, CI, the
 # docs Docker wrapper (run.sh notes), and a human all call THIS.

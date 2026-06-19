@@ -1,5 +1,5 @@
 ---
-description: "Regenerate website release notes AND API changelogs when code lands on main, release branches, or tags — one pipeline, one PR."
+description: "Regenerate website release notes AND API diffs when code lands on main, release branches, or tags — one pipeline, one PR."
 on:
   push:
     branches: [main, "release/**"]
@@ -33,11 +33,11 @@ checkout:
 # its OWN job with its OWN timeout and a free-disk-space step, runs verbose (all
 # progress visible in the job log), and hands its result to the agent as an
 # artifact — a git patch of every working-tree change plus the files-to-polish
-# list. See documentation/dev/release-notes-and-changelogs.md §2.2/§2.3.
+# list. See documentation/dev/release-notes-and-api-diffs.md §2.2/§2.3.
 # ---------------------------------------------------------------------------
 jobs:
   prepare:
-    name: Prepare (changelogs + release-notes raw data)
+    name: Prepare (api diffs + release-notes raw data)
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -61,7 +61,7 @@ jobs:
       - name: Start from a clean main tree
         run: |
           set -euo pipefail
-          # Release notes/changelogs always target main; a push to release/* is a
+          # Release notes/api diffs always target main; a push to release/* is a
           # content *source*, not the PR base, so generate from origin/main.
           git fetch origin main --quiet
           git checkout -B main origin/main
@@ -75,7 +75,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # Single entry point: Cake (API changelogs) then Python (raw data), both
+          # Single entry point: Cake (API diffs) then Python (raw data), both
           # VERBOSE. No args = --all; the "Files to polish" list lands at its
           # default location, output/files-to-polish.txt.
           bash .agents/skills/release-notes/scripts/generate.sh
@@ -146,10 +146,10 @@ safe-outputs:
     recreate-ref: true
 ---
 
-# Update Release Notes & API Changelogs
+# Update Release Notes & API Diffs
 
 This is the single pipeline that keeps the website release notes **and** the API
-changelogs current — there is no separate api-diff workflow. The deterministic
+api diffs current — there is no separate api-diff workflow. The deterministic
 generators run in a dedicated **`prepare`** job, the agent then polishes prose,
 and **one** pull request ships everything.
 

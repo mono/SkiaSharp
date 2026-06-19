@@ -1,6 +1,6 @@
-// READ FIRST: documentation/dev/release-notes-and-changelogs.md is the behavior
-// spec for the API-changelog engine. This file holds the *shared* Cake machinery
-// that both the API-changelog target (scripts/infra/docs/api-diff.cake)
+// READ FIRST: documentation/dev/release-notes-and-api-diffs.md is the behavior
+// spec for the API-diff engine. This file holds the *shared* Cake machinery
+// that both the API-diff target (scripts/infra/docs/api-diff.cake)
 // and the mdoc XML generators (scripts/infra/docs/docs.cake) depend on:
 //
 //   - CreateNuGetDiffAsync : the NuGet-diff comparer factory (+ its dependency loader)
@@ -310,7 +310,7 @@ bool IsVersionSuperseded (JArray config, string normalizedVersion)
 // and/or a status). Per spec §1.4 rule 2 a tracked line is always EMITTED — it gets
 // its own artifact even when it is a preview-only line behind the latest stable
 // (e.g. the superseded 4.147 / 3.0.0 lines, which are shipped previews that still
-// need their own changelog/page). Matched on major.minor.patch.
+// need their own api diff/page). Matched on major.minor.patch.
 bool IsVersionListed (JArray config, string normalizedVersion)
 {
     var nv = new NuGetVersion (normalizedVersion);

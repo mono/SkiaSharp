@@ -6,8 +6,8 @@ Start here, then follow the links to the two deep-dive documents:
 
 - **[writing-docs.md](writing-docs.md)** — the operator how-to: prerequisites, the
   local commands, editing API docs, and the Cake target reference.
-- **[release-notes-and-changelogs.md](release-notes-and-changelogs.md)** — the
-  behavior **spec** for the release-notes and API-changelog engines (the versioning
+- **[release-notes-and-api-diffs.md](release-notes-and-api-diffs.md)** — the
+  behavior **spec** for the release-notes and API-diff engines (the versioning
   model, `versions.json`, file layout, and per-engine rules). Read it before changing
   either generator.
 
@@ -27,11 +27,11 @@ feel sprawling — this table is the whole story on one screen:
 | 1 | **Conceptual docs** | Hand-written guides & tutorials on the docs site | `documentation/conceptual/` (this repo) | docfx ([site.md](site.md)) |
 | 2 | **API reference docs** | Per-type/per-member XML reference (→ learn.microsoft.com) | `docs/SkiaSharpAPI/` (the **docs submodule**) | `docs.cake` (mdoc) |
 | 3 | **Release notes** | Human "what's new" pages, AI-polished | `documentation/docfx/releases/` (this repo) | `generate-release-notes.py` |
-| 4 | **API changelogs** | Machine-generated public-API diffs, no AI | `documentation/docfx/releases/` (this repo) | `api-diff.cake` |
+| 4 | **API diffs** | Machine-generated public-API diffs, no AI | `documentation/docfx/releases/` (this repo) | `api-diff.cake` |
 
 Artifacts **3** and **4** share one versioning model and one config file
 (`versions.json`); that shared model is the subject of the
-[behavior spec](release-notes-and-changelogs.md). Artifact **2** is a separate
+[behavior spec](release-notes-and-api-diffs.md). Artifact **2** is a separate
 concern (mdoc), but it shares the same NuGet-diff plumbing
 (`api-diff-tools.cake`) and lives next to the others.
 
@@ -43,7 +43,7 @@ concern (mdoc), but it shares the same NuGet-diff plumbing
 flowchart LR
   subgraph A["mono/SkiaSharp (this repo)"]
     conceptual["documentation/conceptual/ — concept docs"]
-    releases["documentation/docfx/releases/ — release notes + API changelogs"]
+    releases["documentation/docfx/releases/ — release notes + API diffs"]
     engines["scripts/infra/docs/ — the engines"]
     submodule["docs/ (git submodule)"]
   end
@@ -56,7 +56,7 @@ flowchart LR
 ```
 
 - **`mono/SkiaSharp`** (this repo) holds the conceptual docs, the release
-  notes/changelogs tree, and **all the generation engines**
+  notes/api diffs tree, and **all the generation engines**
   (`scripts/infra/docs/`).
 - **`mono/SkiaSharp-API-docs`** (the *docs repo*) holds the large mdoc XML
   reference docs and their images/examples. It is pulled into this repo as a git
@@ -76,12 +76,12 @@ image all share exactly one copy and nothing can drift:
 | File | Role |
 |------|------|
 | `docs.cake` | mdoc-based XML reference-doc generator (artifact **2**) |
-| `api-diff.cake` | API-changelog engine (artifact **4**) |
+| `api-diff.cake` | API-diff engine (artifact **4**) |
 | `generate-release-notes.py` | release-notes engine (artifact **3**) |
 | `api-diff-tools.cake` | shared NuGet-diff comparer + layout helpers, `#load`ed by both `api-diff.cake` and `docs.cake` |
 | `versions.json` | the **only** override surface — supersession + comparison baselines, honored identically by the Cake and Python engines |
 | `pr-authors.json` | PR-author cache for the release-notes engine |
-| `generate-changelogs.sh` | **Path 1** runner → `cake docs-api-diff-past` |
+| `generate-api-diffs.sh` | **Path 1** runner → `cake docs-api-diff-past` |
 | `generate-release-notes.sh` | **Path 2** runner → `python generate-release-notes.py` |
 | `generate-api-docs.sh` | **Path 3** runner → `cake update-docs` (mdoc under mono) |
 | `docker/` | the local reproducibility image + `run.sh` wrapper |
@@ -95,7 +95,7 @@ machinery (`shared.cake`, `download.cake`) stays under `scripts/infra/shared/`.
 
 | Path | Produces | Entry script | Needs |
 |------|----------|--------------|-------|
-| **1 — API changelogs** | artifact 4 | `generate-changelogs.sh` | dotnet (+ NuGet feed) |
+| **1 — API diffs** | artifact 4 | `generate-api-diffs.sh` | dotnet (+ NuGet feed) |
 | **2 — Release notes** | artifact 3 | `generate-release-notes.sh` | dotnet, python3, **git history**, **gh** (PR authors) |
 | **3 — API reference (mdoc)** | artifact 2 | `generate-api-docs.sh` | dotnet, **mono** (to run `mdoc.exe`) |
 
@@ -116,7 +116,7 @@ Three Copilot skills drive or assist these paths (`.agents/skills/`):
 | **`skia-analyst`** | analysis | Diffs versions / surfaces what changed and what's missing; used for release announcements and gap analysis, not for writing the committed artifacts. |
 
 The `release-notes` skill stays deliberately **thin**: its `scripts/generate.sh` owns
-no commands of its own — it just calls `generate-changelogs.sh` then
+no commands of its own — it just calls `generate-api-diffs.sh` then
 `generate-release-notes.sh` in order. All real logic lives in the engines under
 `scripts/infra/docs/`.
 
@@ -133,7 +133,7 @@ flowchart TB
   subgraph docsrepo["mono/SkiaSharp-API-docs"]
     writer["auto-api-docs-writer\n(Linux + mono)"]
   end
-  urn -->|"Prepare engines 3+4,\nthen AI Polish → one PR"| prRel["PR: release notes + changelogs\n(this repo)"]
+  urn -->|"Prepare engines 3+4,\nthen AI Polish → one PR"| prRel["PR: release notes + api diffs\n(this repo)"]
   writer -->|"mdoc stubs +\nAI placeholder fill → PR"| prDocs["PR: XML docs\n(docs repo)"]
   prDocs -->|"merged"| sync
   sync -->|"bump docs/ submodule → PR"| prBump["PR: update submodule\n(this repo)"]
@@ -141,14 +141,14 @@ flowchart TB
 
 | Workflow | Repo | Runner | Produces | Paths |
 |----------|------|--------|----------|-------|
-| [`update-release-notes`](../../.github/workflows/update-release-notes.md) | this repo | `ubuntu-latest` (native dotnet + python) | one PR with release notes **and** API changelogs | 1 + 2 |
+| [`update-release-notes`](../../.github/workflows/update-release-notes.md) | this repo | `ubuntu-latest` (native dotnet + python) | one PR with release notes **and** API diffs | 1 + 2 |
 | `auto-api-docs-writer` | [docs repo](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/auto-api-docs-writer.md) | Linux + mono | PR with regenerated + AI-filled XML docs | 3 |
 | [`auto-docs-submodule-sync`](../../.github/workflows/auto-docs-submodule-sync.yml) | this repo | `ubuntu-latest` | PR bumping the `docs/` submodule pointer | — |
 
 Key points:
 
 - **Paths 1 + 2 are one pipeline, one PR.** `update-release-notes` runs the
-  deterministic Prepare phase (Cake changelogs + Python notes) in its own job, hands
+  deterministic Prepare phase (Cake api diffs + Python notes) in its own job, hands
   off to the AI Polish phase via an artifact, and opens a **single** rolling PR with
   both. It triggers on pushes to `main` and `release/*`, on `v*` tags, and weekly. If
   nothing changed, **no PR is opened**. (Spec §2.3.)
@@ -183,7 +183,7 @@ for Path 3, and **gh** for Path 2's PR-author lookup.
 ## Where to go next
 
 - Generating or editing docs by hand → **[writing-docs.md](writing-docs.md)**
-- Changing how release notes or API changelogs behave →
-  **[release-notes-and-changelogs.md](release-notes-and-changelogs.md)** (change the
+- Changing how release notes or API diffs behave →
+  **[release-notes-and-api-diffs.md](release-notes-and-api-diffs.md)** (change the
   spec first, then the code)
 - The docs **website** (concept docs, theming, preview) → **[site.md](site.md)**

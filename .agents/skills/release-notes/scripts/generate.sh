@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # generate.sh — the Prepare phase: run the two deterministic
-# release-notes/changelog generators in the required order (Cake -> Python),
+# release-notes/api diff generators in the required order (Cake -> Python),
 # VERBOSE, and write the "Files to polish" list to a file.
 #
 # Output contract (spec §2.2/§2.3): this script is VERBOSE. Cake and Python
@@ -22,9 +22,9 @@
 #   generate.sh [--api-only | --notes-only] [--polish-list <path>] \
 #               [extra args for the Python script...]
 #
-#   (no scope args)      Full regeneration of everything: API changelogs (Cake)
+#   (no scope args)      Full regeneration of everything: API diffs (Cake)
 #                        then release-notes raw data for every branch (Python --all).
-#   --api-only           Run only the Cake API-changelog generator.
+#   --api-only           Run only the Cake API-diff generator.
 #   --notes-only         Run only the Python release-notes generator.
 #   --polish-list <path> Forwarded to the Python generator: write the "Files to
 #                        polish" list to <path> instead of the default
@@ -44,9 +44,9 @@ REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 
 # The two generation paths each have a single canonical script under
 # scripts/infra/docs/ that local runs, CI, and the docs Docker wrapper all share. This
-# orchestrator just calls them in the required order (Path 1 changelogs -> Path 2
+# orchestrator just calls them in the required order (Path 1 api diffs -> Path 2
 # notes); it owns no commands of its own so nothing can drift between here and CI.
-CHANGELOGS_SH="$REPO_ROOT/scripts/infra/docs/generate-changelogs.sh"
+API_DIFFS_SH="$REPO_ROOT/scripts/infra/docs/generate-api-diffs.sh"
 RELEASE_NOTES_SH="$REPO_ROOT/scripts/infra/docs/generate-release-notes.sh"
 
 run_api=1
@@ -73,8 +73,8 @@ fi
 cd "$REPO_ROOT"
 
 if [ "$run_api" = 1 ]; then
-  echo "==> Prepare [1/2]: API changelogs (Path 1) — verbose"
-  "$CHANGELOGS_SH"
+  echo "==> Prepare [1/2]: API diffs (Path 1) — verbose"
+  "$API_DIFFS_SH"
 fi
 
 if [ "$run_notes" = 1 ]; then

@@ -2,8 +2,8 @@
 """
 Fetch SkiaSharp release data and manage the website release notes structure.
 
-READ FIRST: documentation/dev/release-notes-and-changelogs.md is the behavior
-SPEC for this script (and the sibling API-changelog cake target). Change the spec
+READ FIRST: documentation/dev/release-notes-and-api-diffs.md is the behavior
+SPEC for this script (and the sibling API-diff cake target). Change the spec
 first, then make this code match it — do not patch new behavior in and leave the
 spec stale.
 
@@ -193,9 +193,9 @@ def _versions_config_lookup(version, family="skiasharp"):
     return None
 
 
-# Co-release map sidecar (spec §3.6), written by the Cake API-changelog engine and
+# Co-release map sidecar (spec §3.6), written by the Cake API-diff engine and
 # read here to emit the deterministic SkiaSharp-page -> HarfBuzz-folder link. It is
-# the ONLY thing that crosses from the API-changelog engine into this engine
+# the ONLY thing that crosses from the API-diff engine into this engine
 # (spec §2.2). Absent sidecar (e.g. Cake not yet run) -> no HarfBuzz link, no error.
 _CO_RELEASE_MAP = None  # type: Optional[dict]
 
@@ -867,7 +867,7 @@ def version_from_branch(branch):
 #     [Full Changelog](.../compare/v3.119.2-preview.2.3...v3.119.2-preview.3.1)
 #
 # SKILL.md rules 9/10 still mandate this ("Rollup at top … Previews are minimal:
-# one sentence + changelog link each, at the bottom"). When pages were migrated
+# one sentence + Full Changelog link each, at the bottom"). When pages were migrated
 # to the script (#4174) these sections were lost, because the script never told
 # the AI which previews existed. We restore the feature by enumerating the
 # previews DETERMINISTICALLY here and emitting them into the raw-data block.
@@ -2274,7 +2274,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     hb_line = hb["hb_line"]
     canonical_skia = hb["canonical_skia"]
     hb_dir = RELEASES_DIR / "harfbuzzsharp"
-    # A HarfBuzz line is "published" (released) exactly when the API-changelog
+    # A HarfBuzz line is "published" (released) exactly when the API-diff
     # engine emitted its diff folder; otherwise it is in-flight (spec §3.4/§4.5).
     published = (hb_dir / hb_line).is_dir()
 

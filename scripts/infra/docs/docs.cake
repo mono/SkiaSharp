@@ -1,8 +1,8 @@
 // This script holds the mdoc-based docs/ XML generators (docs-update-frameworks,
-// docs-format-docs). The API-changelog engine that used to live here
+// docs-format-docs). The API-diff engine that used to live here
 // (docs-api-diff / docs-api-diff-past) now lives alongside this file at
 // scripts/infra/docs/api-diff.cake; its behavior spec is
-// documentation/dev/release-notes-and-changelogs.md. The two only share the
+// documentation/dev/release-notes-and-api-diffs.md. The two only share the
 // NuGet-diff comparer + layout helpers, which live in
 // api-diff-tools.cake (alongside this file) and are #loaded by both.
 

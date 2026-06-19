@@ -5,7 +5,7 @@
 # per-path scripts (scripts/infra/docs/generate-*.sh), so Docker and CI run identical
 # code. This image just mirrors that dependency surface for the three paths:
 #
-#   1. API changelogs   — dotnet cake --target=docs-api-diff-past / docs-api-diff
+#   1. API diffs   — dotnet cake --target=docs-api-diff-past / docs-api-diff
 #   2. Release notes      — python3 scripts/infra/docs/generate-release-notes.py
 #   3. mdoc XML reference docs — dotnet cake --target=update-docs
 #

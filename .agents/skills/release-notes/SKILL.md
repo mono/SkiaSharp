@@ -1,7 +1,7 @@
 ---
 name: release-notes
 description: >
-  Generate or regenerate SkiaSharp's website release notes AND API changelogs as one
+  Generate or regenerate SkiaSharp's website release notes AND API diffs as one
   coherent set under documentation/docfx/releases/. Two phases: (1) Prepare — one script
   (scripts/generate.sh) regenerates everything deterministic (the API-diff tree +
   co-release-map sidecar from the published NuGet feed, and each version page's raw-data
@@ -10,13 +10,13 @@ description: >
 
   Use this skill whenever the user asks to:
   - Generate or regenerate release notes for a version ("write release notes for 3.119.2")
-  - Regenerate or refresh the API changelogs / API diff ("update the api diff", "regen changelogs")
+  - Regenerate or refresh the API diffs ("update the api diff", "regen the api diffs")
   - Refresh the whole releases/ set after publishing packages
   - Manually fix or update release notes that the automated workflow got wrong
 
-  Triggers: "release notes for X", "regenerate release notes", "update API changelogs",
-  "api diff", "changelog", "update website release notes", "write release notes",
-  "refresh release notes".
+  Triggers: "release notes for X", "regenerate release notes", "update API diffs",
+  "api diff", "update website release notes", "write release notes",
+  "refresh release notes". Also matches the legacy term "changelog" / "API changelog".
 
     NOTE: The full set is normally regenerated automatically by the `update-release-notes`
   agentic workflow when code lands on main, release branches, or tags are pushed. In that
@@ -26,9 +26,9 @@ description: >
   in `output/files-to-polish.txt`.
 ---
 
-# Release Notes & API Changelogs Skill
+# Release Notes & API Diffs Skill
 
-Generate SkiaSharp's website release notes **and** API changelogs as one coherent set.
+Generate SkiaSharp's website release notes **and** API diffs as one coherent set.
 
 This skill is used both by the `update-release-notes` agentic workflow (automatically
 on push to `main`, `release/*` branches, and tags) and manually when regenerating,
@@ -87,8 +87,8 @@ The flags narrow what it touches:
 
 | Invocation | What it regenerates |
 | --- | --- |
-| `generate.sh` (no args) | **Both** — the API changelogs **and** the release-notes pages, for every branch. *(The default, and what the workflow uses.)* |
-| `generate.sh --api-only` | Only the machine-generated **API-diff changelog** tree under `documentation/docfx/releases/`. |
+| `generate.sh` (no args) | **Both** — the API diffs **and** the release-notes pages, for every branch. *(The default, and what the workflow uses.)* |
+| `generate.sh --api-only` | Only the machine-generated **API-diff** tree under `documentation/docfx/releases/`. |
 | `generate.sh --notes-only` | Only the release-notes **pages'** raw-data blocks (+ `TOC.yml`/`index.md`). |
 | `generate.sh <scope args>` | Same as default but limited to the given scope, e.g. `--branch main`, `--branch release/4.147.0-preview.1`, or a version like `3.119.2`. |
 
@@ -256,7 +256,7 @@ Follow these rules:
 
 9. **Rollup at top** — Aggregate ALL changes across all previews into the main sections.
 
-10. **Previews are minimal** — One sentence + changelog link each, at the bottom.
+10. **Previews are minimal** — One sentence + Full Changelog link each, at the bottom.
     Render one trailing `## <label> (<date>)` section per entry in the data-block's
     `preview milestones` list (newest first), using that entry's compare link. Do not invent
     previews or dates — the list is authoritative (sourced from published prerelease tags).
