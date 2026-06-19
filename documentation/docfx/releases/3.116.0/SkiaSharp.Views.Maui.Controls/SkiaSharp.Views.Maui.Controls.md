@@ -29,12 +29,6 @@ Removed interface:
 ISKGLViewController
 ```
 
-Added interface:
-
-```csharp
-SkiaSharp.Views.Maui.ISKGLView
-```
-
 Added field:
 
 ```csharp

@@ -108,7 +108,7 @@ public class SKCanvasView : Xamarin.Forms.View, ISKCanvasViewController, System.
 #### New Type: SkiaSharp.Views.Forms.SKCanvasViewRenderer
 
 ```csharp
-public class SKCanvasViewRenderer : SkiaSharp.Views.Forms.SKCanvasViewRendererBase`2[SkiaSharp.Views.Forms.SKCanvasView,SkiaSharp.Views.Gtk.SKWidget], Xamarin.Forms.IRegisterable {
+public class SKCanvasViewRenderer : SkiaSharp.Views.Forms.SKCanvasViewRendererBase`2[SkiaSharp.Views.Forms.SKCanvasView,SkiaSharp.Views.Gtk.SKWidget], Atk.Implementor, GLib.IWrapper, System.Collections.IEnumerable, System.IDisposable, Xamarin.Forms.IEffectControlProvider, Xamarin.Forms.IRegisterable, Xamarin.Forms.Platform.GTK.IVisualElementRenderer, Xamarin.Forms.Platform.GTK.IVisualNativeElementRenderer {
 	// constructors
 	public SKCanvasViewRenderer ();
 }
@@ -117,7 +117,7 @@ public class SKCanvasViewRenderer : SkiaSharp.Views.Forms.SKCanvasViewRendererBa
 #### New Type: SkiaSharp.Views.Forms.SKCanvasViewRendererBase`2
 
 ```csharp
-public abstract class SKCanvasViewRendererBase`2 : Xamarin.Forms.Platform.GTK.ViewRenderer`2[TFormsView,TNativeView] {
+public abstract class SKCanvasViewRendererBase`2 : Xamarin.Forms.Platform.GTK.ViewRenderer`2[TFormsView,TNativeView], Atk.Implementor, GLib.IWrapper, System.Collections.IEnumerable, System.IDisposable, Xamarin.Forms.IEffectControlProvider, Xamarin.Forms.IRegisterable, Xamarin.Forms.Platform.GTK.IVisualElementRenderer, Xamarin.Forms.Platform.GTK.IVisualNativeElementRenderer {
 	// constructors
 	protected SKCanvasViewRendererBase`2 ();
 	// methods

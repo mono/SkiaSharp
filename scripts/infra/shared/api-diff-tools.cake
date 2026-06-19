@@ -41,6 +41,15 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
     var comparer = new NuGetDiff();
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+    // Output determinism requires resolving every referenced assembly: an unresolved
+    // reference makes Mono.ApiTools silently degrade type matching into spurious "New Type"
+    // dumps whose shape depends on what is installed on the build host. Every real dependency
+    // is added explicitly below, so the resolution closure is complete except for one
+    // assembly that ships in no package or reference pack: the .NET-Android resource designer
+    // (_Microsoft.Android.Resource.Designer), injected into every .NET-Android assembly by
+    // AndroidUseDesignerAssembly (default since .NET 8). It exists on no host, so it is
+    // unresolvable identically everywhere and skipping it stays host-independent; it is never
+    // part of SkiaSharp's public API, so it contributes nothing to the diff.
     comparer.IgnoreResolutionErrors = true;
     
     Verbose ($"Adding dependencies...");
@@ -54,15 +63,17 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("System.Runtime.CompilerServices.Unsafe", "netstandard2.1");
     await AddDep("Microsoft.WindowsAppSDK", "net6.0-windows10.0.18362.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
-    await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
+    await AddDep("Microsoft.Windows.SDK.NET.Ref", "net6.0");
     await AddDep("Microsoft.Windows.SDK.Contracts", "netstandard2.0");
     await AddDep("System.Runtime.WindowsRuntime", "netstandard2.0");
     await AddDep("System.Runtime.WindowsRuntime.UI.Xaml", "netstandard2.0");
     await AddDep("Microsoft.WindowsDesktop.App.Ref", "net6.0");
     await AddDep("Microsoft.AspNetCore.Components", "net6.0");
+    await AddDep("Microsoft.JSInterop", "net6.0");
     await AddDep("OpenTK.GLWpfControl", "netcoreapp3.1");
     await AddDep("Microsoft.Maui.Core", "net10.0");
     await AddDep("Microsoft.Maui.Controls.Core", "net10.0");
+    await AddDep("Microsoft.Maui.Controls.Compatibility", "net10.0");
     await AddDep("Microsoft.iOS.Ref.net10.0_26.0", "net10.0");
     await AddDep("Microsoft.MacCatalyst.Ref.net10.0_26.0", "net10.0");
     await AddDep("Microsoft.tvOS.Ref.net10.0_26.0", "net10.0");
@@ -89,8 +100,15 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v13.0");
     await AddDep("Uno.UI", "netstandard2.0");
     await AddDep("Xamarin.Forms", "netstandard2.0");
+    await AddDep("Xamarin.Forms", "MonoAndroid10.0");
+    await AddDep("Xamarin.Forms", "uap10.0.16299");
+    await AddDep("Xamarin.Forms", "tizen40");
+    // The iOS/macOS renderers (Xamarin.Forms.Platform.iOS / .macOS) ship under
+    // build/XCODE11 instead of lib/ since Forms 4.6 — add that folder directly.
+    await AddPackageDir("Xamarin.Forms", "build/XCODE11");
     await AddDep("Xamarin.Forms.Platform.WPF", "net461");
-    await AddDep("Xamarin.Forms.Platform.GTK", "net461");
+    await AddDep("Xamarin.Forms.Platform.GTK", "net45");
+    await AddDep("Mono.GtkSharp", "net45");
 
     // some parts of SkiaSharp depend on other parts
     foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
@@ -99,6 +117,19 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         comparer.SearchPaths.Add(dir.FullPath);
     foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard1.3"))
         comparer.SearchPaths.Add(dir.FullPath);
+    // SkiaSharp.Views.Maui.Controls depends on SkiaSharp.Views.Maui.Core (our own
+    // package). It ships no netstandard TFM, so add the primary managed build of every
+    // cached Maui.Core version — Mono.Cecil resolves by simple name, so one per version
+    // is enough to satisfy the reference exactly like the self-dependencies above.
+    foreach (var verDir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp.views.maui.core/*")) {
+        foreach (var tfm in new[] { "net10.0", "net9.0", "net8.0", "net7.0", "net6.0" }) {
+            var coreDir = verDir.Combine($"lib/{tfm}");
+            if (DirectoryExists(coreDir)) {
+                comparer.SearchPaths.Add(coreDir.FullPath);
+                break;
+            }
+        }
+    }
 
     Verbose("Added search paths:");
     foreach (var path in comparer.SearchPaths) {
@@ -149,6 +180,24 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
             comparer.SearchPaths.Add(refPath);
         } else {
             Verbose ($"      no lib or ref path");
+        }
+    }
+
+    // Add an arbitrary subfolder of a cached package to the search paths. Used for
+    // assemblies that ship outside lib/ or ref/ (e.g. the Xamarin.Forms iOS/macOS
+    // renderers under build/XCODE11). subPath is relative to the package root and uses
+    // '/' separators.
+    async Task AddPackageDir(string id, string subPath, string type = "release")
+    {
+        var version = GetVersion(id, type);
+        Verbose ($"    Adding dependency {id} version {version} ({subPath})...");
+        var root = await comparer.ExtractCachedPackageAsync(id, version);
+        var dir = System.IO.Path.Combine(root, System.IO.Path.Combine(subPath.Split('/')));
+        if (DirectoryExists(dir)) {
+            Verbose ($"      dir {dir}");
+            comparer.SearchPaths.Add(dir);
+        } else {
+            Verbose ($"      no dir at {subPath}");
         }
     }
 }

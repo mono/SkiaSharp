@@ -667,6 +667,23 @@ emit exactly the lines §1.4 selects, and diff each emitted line against its bas
 (§1.2/§1.3). A line's *representative* package is the newest stable if it shipped,
 otherwise the newest prerelease.
 
+**Deterministic resolution.** The comparer must resolve *every* referenced assembly: an
+unresolved reference makes `Mono.ApiTools` silently degrade type matching into spurious "New
+Type" dumps whose shape depends on what is installed on the build host, so the output stops
+being deterministic. `CreateNuGetDiffAsync` (`scripts/infra/shared/api-diff-tools.cake`)
+therefore adds every real dependency explicitly — from packages pinned in
+`scripts/VERSIONS.txt` via `AddDep`/`AddPackageDir` — covering the framework/reference packs,
+the GTK/GIR and Maui stacks, the Xamarin.Forms platform renderers (the iOS/macOS ones ship
+under `build/XCODE11`, the rest under `lib/`, all in the one pinned `Xamarin.Forms` package),
+and SkiaSharp's own inter-package references. The sole exception is
+`_Microsoft.Android.Resource.Designer`, generated into every .NET-Android assembly and shipped
+in no package; because it is absent on every host it is skipped with `IgnoreResolutionErrors =
+true` without breaking determinism, and it is never part of SkiaSharp's public API. If a
+regeneration shows unexplained "New Type" churn, a dependency is missing — add it as a real
+`AddDep`/`AddPackageDir`; never accept the churn. (Only the cross-platform netstandard
+`SkiaSharp.Views.Forms` assembly is emitted as a changelog; the obsoleted per-platform builds
+are diffed only so the run completes, and their output is discarded.)
+
 ### 5.3 The "current" CI variant
 
 Alongside the historical regeneration, a lighter **current** variant diffs the freshly
@@ -733,3 +750,11 @@ page links straight to its API diffs.
    own disk/timeout budget and streams progress to the log; it hands off to the Polish
    agent **only** through the uploaded artifact (working-tree changes + the
    `files-to-polish.txt` list), never a shared runner or stdout capture (§2.3).
+9. **API-diff output is host-independent (§5.2).** Every assembly reference is satisfied
+   by a real pinned dependency (`AddDep`/`AddPackageDir`) so resolution never depends on the
+   build host. The comparer runs with `IgnoreResolutionErrors = true` **solely** to skip the
+   single reference that ships in no package — `_Microsoft.Android.Resource.Designer`,
+   generated into every .NET-Android assembly and absent from SkiaSharp's public surface,
+   hence unresolvable identically on every host. When a regeneration produces unexpected
+   "New Type" churn, the cause is almost always a newly-missing dependency: add it as a real
+   `AddDep`/`AddPackageDir`, never treat the churn as a real API change.
