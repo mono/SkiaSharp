@@ -41,16 +41,15 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
     var comparer = new NuGetDiff();
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
-    // Every real transitive reference of every SkiaSharp package is added as an explicit
-    // dependency below, so the resolution closure is complete except for a single assembly
-    // that ships in no NuGet package or reference pack: the .NET-Android resource designer
+    // Output determinism requires resolving every referenced assembly: an unresolved
+    // reference makes Mono.ApiTools silently degrade type matching into spurious "New Type"
+    // dumps whose shape depends on what is installed on the build host. Every real dependency
+    // is added explicitly below, so the resolution closure is complete except for one
+    // assembly that ships in no package or reference pack: the .NET-Android resource designer
     // (_Microsoft.Android.Resource.Designer), injected into every .NET-Android assembly by
-    // AndroidUseDesignerAssembly (the default since .NET 8). Because it exists on no host,
-    // it is unresolvable identically on every machine, so ignoring that one resolution
-    // failure is host-independent — it can never produce the host-dependent "New Type"
-    // churn that an *incomplete* dependency list would. The designer is never part of
-    // SkiaSharp's public API, so dropping it does not affect the diff. We therefore let
-    // Mono.Cecil ignore the single unresolvable reference instead of synthesizing a stub.
+    // AndroidUseDesignerAssembly (default since .NET 8). It exists on no host, so it is
+    // unresolvable identically everywhere and skipping it stays host-independent; it is never
+    // part of SkiaSharp's public API, so it contributes nothing to the diff.
     comparer.IgnoreResolutionErrors = true;
     
     Verbose ($"Adding dependencies...");
