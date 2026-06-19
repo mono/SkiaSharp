@@ -29,6 +29,7 @@ using System.Xml.Linq;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using Mono.ApiTools;
+using Mono.Cecil;
 using NuGet.Packaging;
 using NuGet.Versioning;
 
@@ -41,7 +42,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
     var comparer = new NuGetDiff();
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
-    comparer.IgnoreResolutionErrors = true;
+    comparer.IgnoreResolutionErrors = false;
     
     Verbose ($"Adding dependencies...");
 
@@ -54,15 +55,17 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("System.Runtime.CompilerServices.Unsafe", "netstandard2.1");
     await AddDep("Microsoft.WindowsAppSDK", "net6.0-windows10.0.18362.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
-    await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
+    await AddDep("Microsoft.Windows.SDK.NET.Ref", "net6.0");
     await AddDep("Microsoft.Windows.SDK.Contracts", "netstandard2.0");
     await AddDep("System.Runtime.WindowsRuntime", "netstandard2.0");
     await AddDep("System.Runtime.WindowsRuntime.UI.Xaml", "netstandard2.0");
     await AddDep("Microsoft.WindowsDesktop.App.Ref", "net6.0");
     await AddDep("Microsoft.AspNetCore.Components", "net6.0");
+    await AddDep("Microsoft.JSInterop", "net6.0");
     await AddDep("OpenTK.GLWpfControl", "netcoreapp3.1");
     await AddDep("Microsoft.Maui.Core", "net10.0");
     await AddDep("Microsoft.Maui.Controls.Core", "net10.0");
+    await AddDep("Microsoft.Maui.Controls.Compatibility", "net10.0");
     await AddDep("Microsoft.iOS.Ref.net10.0_26.0", "net10.0");
     await AddDep("Microsoft.MacCatalyst.Ref.net10.0_26.0", "net10.0");
     await AddDep("Microsoft.tvOS.Ref.net10.0_26.0", "net10.0");
@@ -89,8 +92,15 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v13.0");
     await AddDep("Uno.UI", "netstandard2.0");
     await AddDep("Xamarin.Forms", "netstandard2.0");
+    await AddDep("Xamarin.Forms", "MonoAndroid10.0");
+    await AddDep("Xamarin.Forms", "uap10.0.16299");
+    await AddDep("Xamarin.Forms", "tizen40");
+    // The iOS/macOS renderers (Xamarin.Forms.Platform.iOS / .macOS) ship under
+    // build/XCODE11 instead of lib/ since Forms 4.6 — add that folder directly.
+    await AddPackageDir("Xamarin.Forms", "build/XCODE11");
     await AddDep("Xamarin.Forms.Platform.WPF", "net461");
-    await AddDep("Xamarin.Forms.Platform.GTK", "net461");
+    await AddDep("Xamarin.Forms.Platform.GTK", "net45");
+    await AddDep("Mono.GtkSharp", "net45");
 
     // some parts of SkiaSharp depend on other parts
     foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
@@ -99,6 +109,36 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         comparer.SearchPaths.Add(dir.FullPath);
     foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard1.3"))
         comparer.SearchPaths.Add(dir.FullPath);
+    // SkiaSharp.Views.Maui.Controls depends on SkiaSharp.Views.Maui.Core (our own
+    // package). It ships no netstandard TFM, so add the primary managed build of every
+    // cached Maui.Core version — Mono.Cecil resolves by simple name, so one per version
+    // is enough to satisfy the reference exactly like the self-dependencies above.
+    foreach (var verDir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp.views.maui.core/*")) {
+        foreach (var tfm in new[] { "net10.0", "net9.0", "net8.0", "net7.0", "net6.0" }) {
+            var coreDir = verDir.Combine($"lib/{tfm}");
+            if (DirectoryExists(coreDir)) {
+                comparer.SearchPaths.Add(coreDir.FullPath);
+                break;
+            }
+        }
+    }
+
+    // A few referenced assemblies are generated at build time and never shipped in any
+    // NuGet package or reference pack, so they cannot be added like the dependencies
+    // above. The .NET-Android resource designer (injected into every .NET-Android
+    // assembly by AndroidUseDesignerAssembly, default since .NET 8) is the canonical —
+    // and only — case. It is never part of SkiaSharp's public API surface, but with
+    // IgnoreResolutionErrors = false Mono.Cecil must still resolve it by simple name. We
+    // synthesize an empty, deterministic stub assembly so resolution succeeds identically
+    // on every OS (Cecil's file resolver matches on simple name only — version and
+    // public-key token are ignored), instead of failing on Linux or silently producing
+    // host-dependent "New Type" churn under IgnoreResolutionErrors = true.
+    //
+    // (The obsoleted SkiaSharp.Views.Forms package also ships per-platform builds whose
+    // iOS/macOS renderers reference Xamarin.Forms.Platform.iOS / .macOS. Those are NOT
+    // stubbed: they are real assemblies that simply moved from lib/ to build/XCODE11 in
+    // the pinned Xamarin.Forms package, added as a real dependency directory above.)
+    AddStub("_Microsoft.Android.Resource.Designer");
 
     Verbose("Added search paths:");
     foreach (var path in comparer.SearchPaths) {
@@ -150,6 +190,39 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         } else {
             Verbose ($"      no lib or ref path");
         }
+    }
+
+    // Add an arbitrary subfolder of a cached package to the search paths. Used for
+    // assemblies that ship outside lib/ or ref/ (e.g. the Xamarin.Forms iOS/macOS
+    // renderers under build/XCODE11). subPath is relative to the package root and uses
+    // '/' separators.
+    async Task AddPackageDir(string id, string subPath, string type = "release")
+    {
+        var version = GetVersion(id, type);
+        Verbose ($"    Adding dependency {id} version {version} ({subPath})...");
+        var root = await comparer.ExtractCachedPackageAsync(id, version);
+        var dir = System.IO.Path.Combine(root, System.IO.Path.Combine(subPath.Split('/')));
+        if (DirectoryExists(dir)) {
+            Verbose ($"      dir {dir}");
+            comparer.SearchPaths.Add(dir);
+        } else {
+            Verbose ($"      no dir at {subPath}");
+        }
+    }
+
+    void AddStub(string assemblyName)
+    {
+        var stubDir = System.IO.Path.Combine(PACKAGE_CACHE_PATH.FullPath, "_apidiff_stubs");
+        EnsureDirectoryExists(stubDir);
+        var stubPath = System.IO.Path.Combine(stubDir, assemblyName + ".dll");
+        if (!FileExists(stubPath)) {
+            Verbose ($"    Synthesizing stub assembly {assemblyName}...");
+            var name = new AssemblyNameDefinition(assemblyName, new Version(1, 0, 0, 0));
+            using (var asm = AssemblyDefinition.CreateAssembly(name, assemblyName, ModuleKind.Dll))
+                asm.Write(stubPath);
+        }
+        if (!comparer.SearchPaths.Contains(stubDir))
+            comparer.SearchPaths.Add(stubDir);
     }
 }
 

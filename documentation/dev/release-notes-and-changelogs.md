@@ -667,6 +667,46 @@ emit exactly the lines §1.4 selects, and diff each emitted line against its bas
 (§1.2/§1.3). A line's *representative* package is the newest stable if it shipped,
 otherwise the newest prerelease.
 
+### 5.2.1 Deterministic assembly resolution (host-independent output)
+
+The NuGet-diff comparer factory (`CreateNuGetDiffAsync` in
+`scripts/infra/shared/api-diff-tools.cake`) runs with **`IgnoreResolutionErrors = false`**.
+This is a correctness requirement, not a strictness preference: when a referenced
+assembly fails to resolve, `Mono.ApiTools` silently degrades type matching and emits the
+affected types as spurious "New Type" dumps. Whether a given reference resolves depends on
+what happens to be installed on the build host, so `IgnoreResolutionErrors = true` produces
+**host-dependent churn** — the same package diffs to a different result on Linux vs macOS
+(observed as a 111-file vs 93-file regeneration). Setting it to `false` turns any
+unresolved reference into a hard failure, forcing every reference to be satisfied
+explicitly and making the output a pure function of the input assemblies.
+
+Every reference is therefore resolved one of two ways:
+
+- **Real dependency** — the assembly ships in a NuGet package. The factory extracts the
+  package (pinned in `scripts/VERSIONS.txt`) and adds its `lib/<tfm>` to the comparer's
+  search paths (`AddDep`), or an arbitrary package subfolder (`AddPackageDir`) for
+  assemblies that ship outside `lib/`. This covers the framework/reference packs, the
+  GTK/GIR stacks, the Maui packages, the legacy Xamarin.Forms platform assemblies (the
+  Android/UAP/Tizen renderers ship under `lib/` and the iOS/macOS renderers under
+  `build/XCODE11`, all in the one pinned `Xamarin.Forms` package), and SkiaSharp's own
+  inter-package references (the `skiasharp`/`harfbuzzsharp`/`skiasharp.views.maui.core`
+  self-dependency globs). Adding a new dependency means pinning it in `VERSIONS.txt` and
+  adding an `AddDep`/`AddPackageDir` line — never lowering `IgnoreResolutionErrors`.
+
+- **Synthetic stub** — for the rare reference that exists in **no** package at all. An
+  empty, deterministic `Mono.Cecil` assembly is synthesized in the package cache (`AddStub`).
+  Cecil's file resolver matches on **simple name only** (version and public-key token are
+  ignored), so an empty stub satisfies even a strong-named reference, identically on every
+  OS. Stubs are valid only when the assembly is **not part of SkiaSharp's emitted public
+  API** and so contributes nothing to the diff — it just has to exist for resolution to
+  complete. The **only** current stub is `_Microsoft.Android.Resource.Designer` — generated
+  into every .NET-Android assembly by `AndroidUseDesignerAssembly` (default since .NET 8)
+  and never shipped in any package or reference pack. (The obsoleted `SkiaSharp.Views.Forms`
+  iOS/macOS renderers reference `Xamarin.Forms.Platform.iOS` / `.macOS`; those are real
+  assemblies resolved via `AddPackageDir("Xamarin.Forms", "build/XCODE11")`, not stubs. Only
+  the cross-platform netstandard `SkiaSharp.Views.Forms` assembly is emitted as a changelog;
+  the per-platform builds are diffed only so the run completes and their output is discarded.)
+
 ### 5.3 The "current" CI variant
 
 Alongside the historical regeneration, a lighter **current** variant diffs the freshly
@@ -733,3 +773,8 @@ page links straight to its API diffs.
    own disk/timeout budget and streams progress to the log; it hands off to the Polish
    agent **only** through the uploaded artifact (working-tree changes + the
    `files-to-polish.txt` list), never a shared runner or stdout capture (§2.3).
+9. **API-diff output is host-independent (§5.2.1).** The comparer runs with
+   `IgnoreResolutionErrors = false`; every assembly reference is satisfied by a real
+   pinned dependency or a simple-name stub. Never set it back to `true` or "fix" a
+   resolution failure by ignoring it — add the dependency (or, only for an assembly absent
+   from every package and absent from SkiaSharp's public surface, a stub).
