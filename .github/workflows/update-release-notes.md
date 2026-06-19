@@ -10,6 +10,12 @@ on:
     # Weekly safety net so a missed/failed push run still self-heals.
     - cron: "0 0 * * 0"
   workflow_dispatch:
+    inputs:
+      source_branch:
+        description: "Branch to generate from (its scripts + content). Defaults to main; override on a manual run to validate a feature branch's pipeline before it merges."
+        required: false
+        default: "main"
+        type: string
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
   group: update-release-notes
@@ -58,13 +64,17 @@ jobs:
                       /usr/share/swift /usr/share/dotnet/sdk 2>/dev/null || true
           sudo docker image prune --all --force 2>/dev/null || true
           echo "Disk after cleanup:"; df -h /
-      - name: Start from a clean main tree
+      - name: Start from a clean source tree
+        env:
+          SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
         run: |
           set -euo pipefail
-          # Release notes/api diffs always target main; a push to release/* is a
-          # content *source*, not the PR base, so generate from origin/main.
-          git fetch origin main --quiet
-          git checkout -B main origin/main
+          # Release notes/api diffs target main, so push/schedule runs always
+          # generate from main (a push to release/* is a content *source*, not the
+          # PR base). A manual dispatch may point SOURCE_BRANCH at a feature branch
+          # to validate its pipeline on CI before merge.
+          git fetch origin "$SOURCE_BRANCH" --quiet
+          git checkout -B "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
       - name: Setup .NET
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
@@ -104,12 +114,15 @@ jobs:
 # These steps run in the agent job after its checkout and before the engine.
 # ---------------------------------------------------------------------------
 pre-agent-steps:
-  - name: Start from a clean main tree
+  - name: Start from a clean source tree
+    env:
+      SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
     run: |
       set -euo pipefail
       mkdir -p /tmp/gh-aw
-      git fetch origin main --quiet
-      git checkout -B main origin/main
+      # Match the prepare job's source so its patch applies cleanly.
+      git fetch origin "$SOURCE_BRANCH" --quiet
+      git checkout -B "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
   - name: Download Prepare output
     uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.1.8
     with:
