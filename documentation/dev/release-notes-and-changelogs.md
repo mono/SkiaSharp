@@ -670,42 +670,46 @@ otherwise the newest prerelease.
 ### 5.2.1 Deterministic assembly resolution (host-independent output)
 
 The NuGet-diff comparer factory (`CreateNuGetDiffAsync` in
-`scripts/infra/shared/api-diff-tools.cake`) runs with **`IgnoreResolutionErrors = false`**.
-This is a correctness requirement, not a strictness preference: when a referenced
-assembly fails to resolve, `Mono.ApiTools` silently degrades type matching and emits the
-affected types as spurious "New Type" dumps. Whether a given reference resolves depends on
-what happens to be installed on the build host, so `IgnoreResolutionErrors = true` produces
-**host-dependent churn** — the same package diffs to a different result on Linux vs macOS
-(observed as a 111-file vs 93-file regeneration). Setting it to `false` turns any
-unresolved reference into a hard failure, forcing every reference to be satisfied
-explicitly and making the output a pure function of the input assemblies.
+`scripts/infra/shared/api-diff-tools.cake`) makes its output a **pure function of the input
+assemblies** by resolving every real transitive reference explicitly. This is a correctness
+requirement, not a strictness preference: when a referenced assembly fails to resolve,
+`Mono.ApiTools` silently degrades type matching and emits the affected types as spurious
+"New Type" dumps. Whether a given reference used to resolve depended on what happened to be
+installed on the build host, so an **incomplete** dependency list produces **host-dependent
+churn** — the same package diffing to a different result on Linux vs macOS (observed as a
+111-file vs 93-file regeneration). The fix is to add a real search path for every assembly
+SkiaSharp references, so resolution never depends on the host.
 
-Every reference is therefore resolved one of two ways:
+References are satisfied as **real dependencies** — the assembly ships in a NuGet package.
+The factory extracts the package (pinned in `scripts/VERSIONS.txt`) and adds its `lib/<tfm>`
+to the comparer's search paths (`AddDep`), or an arbitrary package subfolder (`AddPackageDir`)
+for assemblies that ship outside `lib/`. This covers the framework/reference packs, the
+GTK/GIR stacks, the Maui packages, the legacy Xamarin.Forms platform assemblies (the
+Android/UAP/Tizen renderers ship under `lib/` and the iOS/macOS renderers under
+`build/XCODE11`, all in the one pinned `Xamarin.Forms` package), and SkiaSharp's own
+inter-package references (the `skiasharp`/`harfbuzzsharp`/`skiasharp.views.maui.core`
+self-dependency globs). Adding a new dependency means pinning it in `VERSIONS.txt` and
+adding an `AddDep`/`AddPackageDir` line. (Only the cross-platform netstandard
+`SkiaSharp.Views.Forms` assembly is emitted as a changelog; the obsoleted per-platform
+builds are diffed only so the run completes and their output is discarded.)
 
-- **Real dependency** — the assembly ships in a NuGet package. The factory extracts the
-  package (pinned in `scripts/VERSIONS.txt`) and adds its `lib/<tfm>` to the comparer's
-  search paths (`AddDep`), or an arbitrary package subfolder (`AddPackageDir`) for
-  assemblies that ship outside `lib/`. This covers the framework/reference packs, the
-  GTK/GIR stacks, the Maui packages, the legacy Xamarin.Forms platform assemblies (the
-  Android/UAP/Tizen renderers ship under `lib/` and the iOS/macOS renderers under
-  `build/XCODE11`, all in the one pinned `Xamarin.Forms` package), and SkiaSharp's own
-  inter-package references (the `skiasharp`/`harfbuzzsharp`/`skiasharp.views.maui.core`
-  self-dependency globs). Adding a new dependency means pinning it in `VERSIONS.txt` and
-  adding an `AddDep`/`AddPackageDir` line — never lowering `IgnoreResolutionErrors`.
+Exactly **one** referenced assembly cannot be added this way:
+`_Microsoft.Android.Resource.Designer`, generated into every .NET-Android assembly by
+`AndroidUseDesignerAssembly` (default since .NET 8) and shipped in **no** package or
+reference pack. Because it exists on no machine, it is unresolvable *identically everywhere*,
+so the comparer runs with **`IgnoreResolutionErrors = true`** to skip that single
+host-independent failure. The designer is never part of SkiaSharp's emitted public API, so
+ignoring it contributes nothing to the diff — verified by a full regeneration that is
+byte-identical whether the designer is ignored or satisfied with an empty stub assembly.
 
-- **Synthetic stub** — for the rare reference that exists in **no** package at all. An
-  empty, deterministic `Mono.Cecil` assembly is synthesized in the package cache (`AddStub`).
-  Cecil's file resolver matches on **simple name only** (version and public-key token are
-  ignored), so an empty stub satisfies even a strong-named reference, identically on every
-  OS. Stubs are valid only when the assembly is **not part of SkiaSharp's emitted public
-  API** and so contributes nothing to the diff — it just has to exist for resolution to
-  complete. The **only** current stub is `_Microsoft.Android.Resource.Designer` — generated
-  into every .NET-Android assembly by `AndroidUseDesignerAssembly` (default since .NET 8)
-  and never shipped in any package or reference pack. (The obsoleted `SkiaSharp.Views.Forms`
-  iOS/macOS renderers reference `Xamarin.Forms.Platform.iOS` / `.macOS`; those are real
-  assemblies resolved via `AddPackageDir("Xamarin.Forms", "build/XCODE11")`, not stubs. Only
-  the cross-platform netstandard `SkiaSharp.Views.Forms` assembly is emitted as a changelog;
-  the per-platform builds are diffed only so the run completes and their output is discarded.)
+> **Tradeoff — `IgnoreResolutionErrors = true` is not a license for an incomplete dependency
+> list.** It is safe *only* because the resolution closure is otherwise complete: the one
+> ignored reference is absent on every host. If a future package introduces a genuinely new
+> reference, `true` will swallow it silently instead of hard-failing, which can reintroduce
+> host-dependent churn. The backstop is the regeneration PR itself — gross churn surfaces as a
+> large, reviewable diff and trips the gh-aw safe-outputs file cap (§2.3). When that happens,
+> the cause is almost always a newly-missing dependency: add it as a real
+> `AddDep`/`AddPackageDir`, and never treat the churn as a real API change.
 
 ### 5.3 The "current" CI variant
 
@@ -773,8 +777,11 @@ page links straight to its API diffs.
    own disk/timeout budget and streams progress to the log; it hands off to the Polish
    agent **only** through the uploaded artifact (working-tree changes + the
    `files-to-polish.txt` list), never a shared runner or stdout capture (§2.3).
-9. **API-diff output is host-independent (§5.2.1).** The comparer runs with
-   `IgnoreResolutionErrors = false`; every assembly reference is satisfied by a real
-   pinned dependency or a simple-name stub. Never set it back to `true` or "fix" a
-   resolution failure by ignoring it — add the dependency (or, only for an assembly absent
-   from every package and absent from SkiaSharp's public surface, a stub).
+9. **API-diff output is host-independent (§5.2.1).** Every assembly reference is satisfied
+   by a real pinned dependency (`AddDep`/`AddPackageDir`) so resolution never depends on the
+   build host. The comparer runs with `IgnoreResolutionErrors = true` **solely** to skip the
+   single reference that ships in no package — `_Microsoft.Android.Resource.Designer`,
+   generated into every .NET-Android assembly and absent from SkiaSharp's public surface,
+   hence unresolvable identically on every host. When a regeneration produces unexpected
+   "New Type" churn, the cause is almost always a newly-missing dependency: add it as a real
+   `AddDep`/`AddPackageDir`, never treat the churn as a real API change.

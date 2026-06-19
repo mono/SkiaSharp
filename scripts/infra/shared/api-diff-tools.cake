@@ -29,7 +29,6 @@ using System.Xml.Linq;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using Mono.ApiTools;
-using Mono.Cecil;
 using NuGet.Packaging;
 using NuGet.Versioning;
 
@@ -42,7 +41,17 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
     var comparer = new NuGetDiff();
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
-    comparer.IgnoreResolutionErrors = false;
+    // Every real transitive reference of every SkiaSharp package is added as an explicit
+    // dependency below, so the resolution closure is complete except for a single assembly
+    // that ships in no NuGet package or reference pack: the .NET-Android resource designer
+    // (_Microsoft.Android.Resource.Designer), injected into every .NET-Android assembly by
+    // AndroidUseDesignerAssembly (the default since .NET 8). Because it exists on no host,
+    // it is unresolvable identically on every machine, so ignoring that one resolution
+    // failure is host-independent — it can never produce the host-dependent "New Type"
+    // churn that an *incomplete* dependency list would. The designer is never part of
+    // SkiaSharp's public API, so dropping it does not affect the diff. We therefore let
+    // Mono.Cecil ignore the single unresolvable reference instead of synthesizing a stub.
+    comparer.IgnoreResolutionErrors = true;
     
     Verbose ($"Adding dependencies...");
 
@@ -123,23 +132,6 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         }
     }
 
-    // A few referenced assemblies are generated at build time and never shipped in any
-    // NuGet package or reference pack, so they cannot be added like the dependencies
-    // above. The .NET-Android resource designer (injected into every .NET-Android
-    // assembly by AndroidUseDesignerAssembly, default since .NET 8) is the canonical —
-    // and only — case. It is never part of SkiaSharp's public API surface, but with
-    // IgnoreResolutionErrors = false Mono.Cecil must still resolve it by simple name. We
-    // synthesize an empty, deterministic stub assembly so resolution succeeds identically
-    // on every OS (Cecil's file resolver matches on simple name only — version and
-    // public-key token are ignored), instead of failing on Linux or silently producing
-    // host-dependent "New Type" churn under IgnoreResolutionErrors = true.
-    //
-    // (The obsoleted SkiaSharp.Views.Forms package also ships per-platform builds whose
-    // iOS/macOS renderers reference Xamarin.Forms.Platform.iOS / .macOS. Those are NOT
-    // stubbed: they are real assemblies that simply moved from lib/ to build/XCODE11 in
-    // the pinned Xamarin.Forms package, added as a real dependency directory above.)
-    AddStub("_Microsoft.Android.Resource.Designer");
-
     Verbose("Added search paths:");
     foreach (var path in comparer.SearchPaths) {
         var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();
@@ -208,21 +200,6 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         } else {
             Verbose ($"      no dir at {subPath}");
         }
-    }
-
-    void AddStub(string assemblyName)
-    {
-        var stubDir = System.IO.Path.Combine(PACKAGE_CACHE_PATH.FullPath, "_apidiff_stubs");
-        EnsureDirectoryExists(stubDir);
-        var stubPath = System.IO.Path.Combine(stubDir, assemblyName + ".dll");
-        if (!FileExists(stubPath)) {
-            Verbose ($"    Synthesizing stub assembly {assemblyName}...");
-            var name = new AssemblyNameDefinition(assemblyName, new Version(1, 0, 0, 0));
-            using (var asm = AssemblyDefinition.CreateAssembly(name, assemblyName, ModuleKind.Dll))
-                asm.Write(stubPath);
-        }
-        if (!comparer.SearchPaths.Contains(stubDir))
-            comparer.SearchPaths.Add(stubDir);
     }
 }
 
