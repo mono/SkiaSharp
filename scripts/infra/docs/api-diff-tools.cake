@@ -1,6 +1,6 @@
 // READ FIRST: documentation/dev/release-notes-and-changelogs.md is the behavior
 // spec for the API-changelog engine. This file holds the *shared* Cake machinery
-// that both the API-changelog target (.agents/skills/release-notes/scripts/api-diff.cake)
+// that both the API-changelog target (scripts/infra/docs/api-diff.cake)
 // and the mdoc XML generators (scripts/infra/docs/docs.cake) depend on:
 //
 //   - CreateNuGetDiffAsync : the NuGet-diff comparer factory (+ its dependency loader)
@@ -8,8 +8,9 @@
 //   - versions.json loading : LoadVersionsConfig / IsVersionSuperseded / FindCompareToBaseline
 //
 // Per the spec (§2.1) these are the only pieces shared between the two engines, so
-// they live under shared/ instead of being duplicated. The heavy NuGet-diff #addins
-// live here too, so only the two consumers that #load this file pay for them.
+// they live alongside both consumers here instead of being duplicated. The heavy
+// NuGet-diff #addins live here too, so only the two consumers that #load this file
+// pay for them.
 //
 // CONSUMERS MUST #load "shared.cake" BEFORE this file: it relies on ROOT_PATH,
 // PACKAGE_CACHE_PATH, GetVersion, TRACKED_NUGETS, etc. defined there.
@@ -110,27 +111,18 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("Mono.GtkSharp", "net45");
 
-    // some parts of SkiaSharp depend on other parts
-    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
-        comparer.SearchPaths.Add(dir.FullPath);
-    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard2.0"))
-        comparer.SearchPaths.Add(dir.FullPath);
-    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard1.3"))
-        comparer.SearchPaths.Add(dir.FullPath);
-    // SkiaSharp.Views.Maui.Controls depends on SkiaSharp.Views.Maui.Core (our own
-    // package). It ships no netstandard TFM, so add the primary managed build of every
-    // cached Maui.Core version — Mono.Cecil resolves by simple name, so one per version
-    // is enough to satisfy the reference exactly like the self-dependencies above.
-    foreach (var verDir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp.views.maui.core/*")) {
-        foreach (var tfm in new[] { "net10.0", "net9.0", "net8.0", "net7.0", "net6.0" }) {
-            var coreDir = verDir.Combine($"lib/{tfm}");
-            if (DirectoryExists(coreDir)) {
-                comparer.SearchPaths.Add(coreDir.FullPath);
-                break;
-            }
-        }
-    }
-
+    // NOTE on self-dependencies (SkiaSharp parts depending on other SkiaSharp parts,
+    // e.g. SkiaSharp.Views.* → SkiaSharp, or SkiaSharp.Views.Maui.Controls →
+    // SkiaSharp.Views.Maui.Core): these are NOT added here. NuGetDiff reads each diffed
+    // package's nuspec and resolves its declared dependencies to the EXACT versions on
+    // demand from the package cache, so the closure is already complete and — crucially —
+    // host-independent. An earlier version globbed every cached version of these packages
+    // into SearchPaths; because Mono.Cecil binds by simple assembly name, the first match
+    // in filesystem-enumeration order won, so the output silently varied with cache warmth
+    // and host fs ordering (spec §5.2, invariant 9). Removing the glob is the determinism
+    // fix. The one case that genuinely needs explicit staging — diffing an UNPUBLISHED
+    // local build whose self-deps are not on the feed (the --useOutputNugets path) — adds
+    // exactly one version per package at the point of use, never an unbounded glob here.
     Verbose("Added search paths:");
     foreach (var path in comparer.SearchPaths) {
         var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();

@@ -42,6 +42,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 
+# The two generation paths each have a single canonical script under
+# scripts/infra/docs/ that local runs, CI, and the docs Docker wrapper all share. This
+# orchestrator just calls them in the required order (Path 1 changelogs -> Path 2
+# notes); it owns no commands of its own so nothing can drift between here and CI.
+CHANGELOGS_SH="$REPO_ROOT/scripts/infra/docs/generate-changelogs.sh"
+RELEASE_NOTES_SH="$REPO_ROOT/scripts/infra/docs/generate-release-notes.sh"
+
 run_api=1
 run_notes=1
 polish_list=""
@@ -66,27 +73,16 @@ fi
 cd "$REPO_ROOT"
 
 if [ "$run_api" = 1 ]; then
-  if ! command -v dotnet >/dev/null 2>&1; then
-    echo "ERROR: the .NET SDK ('dotnet') is required for the API-changelog generator but was not found." >&2
-    echo "       Install the SDK pinned in global.json and retry, or pass --notes-only to skip it." >&2
-    exit 1
-  fi
-  echo "==> Prepare [1/2]: API changelogs (Cake: docs-api-diff-past) — verbose"
-  dotnet tool restore
-  dotnet cake --target=docs-api-diff-past --nugetDiffPrerelease=true
+  echo "==> Prepare [1/2]: API changelogs (Path 1) — verbose"
+  "$CHANGELOGS_SH"
 fi
 
 if [ "$run_notes" = 1 ]; then
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "ERROR: 'python3' is required for the release-notes generator but was not found." >&2
-    echo "       Install Python 3 and retry, or pass --api-only to skip it." >&2
-    exit 1
-  fi
   py_args=("${notes_args[@]}")
   if [ -n "$polish_list" ]; then
     py_args+=(--polish-list "$polish_list")
     echo "==> Files-to-polish list -> $polish_list"
   fi
-  echo "==> Prepare [2/2]: release-notes raw data (generate-release-notes.py ${py_args[*]}) — verbose"
-  python3 "$SCRIPT_DIR/generate-release-notes.py" "${py_args[@]}"
+  echo "==> Prepare [2/2]: release-notes raw data (Path 2) — verbose"
+  "$RELEASE_NOTES_SH" "${py_args[@]}"
 fi

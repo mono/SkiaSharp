@@ -22,6 +22,11 @@ SkiaSharp generates two version-indexed artifacts from one shared versioning mod
 Both live in the docfx site under `documentation/docfx/releases/` (§3) and are
 produced by one self-contained skill (§2). A full feature comparison is in §6.
 
+> **Looking for the big picture instead of the rules?** This document is the deep
+> behavior spec. For a one-screen map of the *whole* documentation system — all four
+> artifacts, the engines, the skills, and the cross-repo CI — start at
+> [docs-overview.md](docs-overview.md).
+
 Both are **agent/CI tooling, not human-facing CLIs.** They take no "fancy" toggles.
 They always regenerate the complete set and rely on being idempotent (unchanged
 outputs are skipped or rewritten identically). If you find yourself adding a flag
@@ -205,32 +210,50 @@ than fold one into the other, each **family** keeps its own identity and applies
 
 ## 2. Skill layout & orchestration
 
-### 2.1 One self-contained skill owns both generators
+### 2.1 Engines live in `scripts/infra/docs/`; the skill just calls them
 
-Both generators live together in the release-notes skill so the skill is
-self-contained and the targets reflect the docs they produce:
+All the doc-generation engines and their per-path runner scripts live together under
+`scripts/infra/docs/`, so local runs, CI, and the docs Docker image all share one copy
+and nothing can drift:
+
+```
+scripts/infra/docs/
+  api-diff.cake                API-changelog engine (§5)
+  generate-release-notes.py    release-notes engine (§4)
+  api-diff-tools.cake          shared NuGet-diff comparer + layout helpers (§5),
+                               #loaded by api-diff.cake AND docs.cake
+  docs.cake                    mdoc-based docs/ XML generators (a different concern)
+  generate-changelogs.sh       Path 1 runner: cake docs-api-diff-past
+  generate-release-notes.sh    Path 2 runner: python generate-release-notes.py
+  generate-api-docs.sh         Path 3 runner: cake update-docs (mdoc under mono)
+  versions.json                supersession + baseline config (§1), used by both engines
+  pr-authors.json              PR-author cache for the release-notes engine (§4)
+  docker/                      reproducible image + run.sh wrapper for every path
+```
+
+The release-notes **skill** stays thin: it owns only the AI polish instructions and a
+single orchestrator that calls the runner scripts in order, so the skill never has to
+know the individual commands:
 
 ```
 .agents/skills/release-notes/
   SKILL.md                       the AI's polish-only instructions (§4.4)
   scripts/
-    generate.sh                  wrapper: runs the two generators in order, verbose,
+    generate.sh                  wrapper: runs Path 1 then Path 2 in order, verbose,
                                  and writes the Files-to-polish list to a file (§2.2)
-    generate-release-notes.py    release-notes engine (§4)
-    api-diff.cake                API-changelog engine (§5)
 ```
 
-Reusable Cake machinery (the NuGet-diff comparer factory, the breaking/full-diff
-runner, the markdown copier), the package tables (`TRACKED_NUGETS`, §5.1), and
-`versions.json` loading live under `scripts/infra/shared/` and are `#load`ed by
-`api-diff.cake`. The skill **uses** shared infra but **owns** the API-diff target
-definitions.[^mdoc]
+`generate.sh` owns no commands of its own — it delegates to
+`scripts/infra/docs/generate-changelogs.sh` then `…/generate-release-notes.sh` — so the
+skill, the update-release-notes workflow, the Docker wrapper, and a human running it by
+hand all execute the exact same code.
 
-[^mdoc]: The mdoc-based `docs/` XML generators (`docs-update-frameworks`,
-`docs-format-docs`) are a *different* concern and stay in
-`scripts/infra/docs/docs.cake`. They share only the NuGet-diff comparer factory,
-which is why that one helper lives in `shared/` rather than next to the API-diff
-target.
+The general-purpose Cake machinery (`shared.cake`, `download.cake`) stays under
+`scripts/infra/shared/` and is `#load`ed by the engines. `api-diff-tools.cake` (the
+NuGet-diff comparer factory, the breaking/full-diff runner, and `versions.json` loading)
+is used by *only* the two doc engines (`api-diff.cake` and the mdoc generators in
+`docs.cake`), so it sits next to them in `scripts/infra/docs/` rather than under
+`shared/`.
 
 ### 2.2 Two phases: Prepare → Polish
 
@@ -670,7 +693,7 @@ otherwise the newest prerelease.
 **Deterministic resolution.** The comparer must resolve *every* referenced assembly: an
 unresolved reference makes `Mono.ApiTools` silently degrade type matching into spurious "New
 Type" dumps whose shape depends on what is installed on the build host, so the output stops
-being deterministic. `CreateNuGetDiffAsync` (`scripts/infra/shared/api-diff-tools.cake`)
+being deterministic. `CreateNuGetDiffAsync` (`scripts/infra/docs/api-diff-tools.cake`)
 therefore adds every real dependency explicitly — from packages pinned in
 `scripts/VERSIONS.txt` via `AddDep`/`AddPackageDir` — covering the framework/reference packs,
 the GTK/GIR and Maui stacks, the Xamarin.Forms platform renderers (the iOS/macOS ones ship
@@ -700,6 +723,19 @@ artifacts — never the committed `releases/` tree.
 no AI polish on the diffs
 themselves — the generated diff *is* the artifact; the human pages merely link to it
 (§1.5/§4.4).
+
+**Package cache — "cache once, run many".** Every package the run needs (each
+representative + baseline body and their declared dependencies) is fetched once into
+`externals/package_cache` and reused on every subsequent run. `Mono.ApiTools.NuGetDiff`
+downloads a package's *declared nuspec dependencies* on demand during the compare, not
+during the initial extract, so there is no separate "fully offline" pre-warm step — the
+on-demand path is itself idempotent (a warm cache is a no-op; only genuinely new
+packages are downloaded). Because resolution is now deterministic (§5.2), a warm and a
+cold cache produce byte-identical output, so the cache never needs to be wiped to get a
+correct result — wiping only forces a slow re-download. The docs Docker image
+(`scripts/infra/docs/docker/`) bind-mounts the host cache for warm runs and a separate
+host-owned empty dir for an explicit `--cold` run when you want to re-prove that
+equivalence.
 
 ---
 

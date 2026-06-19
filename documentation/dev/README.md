@@ -40,6 +40,14 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | [writing-docs.md](writing-docs.md) | API documentation process |
 | [maintaining.md](maintaining.md) | Maintainer responsibilities |
 
+### Documentation system
+| Document | Description |
+|----------|-------------|
+| [docs-overview.md](docs-overview.md) | **Start here** — map of the whole docs system: the four artifacts, engines, skills, and cross-repo automation |
+| [writing-docs.md](writing-docs.md) | Operator how-to: generate & edit API docs and changelogs locally |
+| [release-notes-and-changelogs.md](release-notes-and-changelogs.md) | Behavior spec for the release-notes & API-changelog engines |
+| [site.md](site.md) | Build, preview, and theme the conceptual docs website |
+
 ### Building
 | Document | Description |
 |----------|-------------|

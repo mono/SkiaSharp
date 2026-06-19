@@ -1,5 +1,10 @@
 # Writing Documentation
 
+> **New here?** Read **[docs-overview.md](docs-overview.md)** first — it maps the whole
+> documentation system (the four artifacts, the engines, the skills, and the cross-repo
+> automation). This page is the hands-on **operator** guide for generating and editing
+> API docs and changelogs.
+
 This guide covers generating and updating SkiaSharp API documentation.
 
 SkiaSharp provides two types of documentation: concept docs and API docs.
@@ -24,22 +29,26 @@ This repository is pulled into the main SkiaSharp repo as a Git submodule at `do
 
 ## Automated Pipeline
 
-Two workflows in this repo automate the full docs lifecycle:
+Two workflows automate the full docs lifecycle. They live in **different repos** —
+the stub-generation/AI-writing workflow is in the docs repo (it writes into that
+repo), and the submodule-sync workflow is here:
 
 ### Step 1: Stub generation + AI docs (auto-api-docs-writer)
 
 A single agentic workflow handles the entire pipeline — regenerating XML stubs from CI NuGet packages AND filling "To be added." placeholders with AI-written documentation:
 
-- **Workflow**: [`auto-api-docs-writer.md`](../../.github/workflows/auto-api-docs-writer.md) (agentic, in this repo)
+- **Workflow**: [`auto-api-docs-writer.md`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/auto-api-docs-writer.md) (agentic, in the **docs repo** `mono/SkiaSharp-API-docs` — it checks SkiaSharp out to borrow the engines, then writes the XML into the docs repo)
 - **Schedule**: Daily at 8 AM UTC
 - **What it does**:
   1. **Pre-agent step**: Downloads latest NuGet packages from CI, runs `dotnet cake --target=update-docs` to regenerate XML stubs
   2. **AI agent**: Reads the `api-docs` skill, finds all "To be added." placeholders, reads C# source code, writes proper documentation
   3. **Post-step**: Pushes branch and creates PR in `mono/SkiaSharp-API-docs`
 - **Output**: PR `automation/write-api-docs` → `main` in `mono/SkiaSharp-API-docs`
-- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-api-docs-writer.lock.yml) → "Auto API Docs Writer" → "Run workflow"
+- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp-API-docs/actions/workflows/auto-api-docs-writer.lock.yml) → "Auto API Docs Writer" → "Run workflow"
 
-> **Note**: There is also a standalone [`update-docs.yml`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/update-docs.yml) workflow in the docs repo that only regenerates stubs (no AI writing). The agentic workflow above supersedes it for the full pipeline.
+> **Runner note**: `mdoc.exe` is a .NET Framework executable, but `docs.cake` runs it
+> under **mono**, so the stub-regeneration job runs on a Linux runner with
+> `mono-complete` installed (see [docs-overview.md](docs-overview.md) → Path 3).
 
 ### Step 2: Submodule sync (auto-docs-submodule-sync)
 
@@ -128,8 +137,8 @@ Once you are happy with your changes, push them to your fork of [`mono/SkiaSharp
 
 For detailed XML documentation patterns and review criteria, see:
 
-- [`.claude/skills/api-docs/references/patterns.md`](../../.claude/skills/api-docs/references/patterns.md) — XML syntax and examples
-- [`.claude/skills/api-docs/references/checklist.md`](../../.claude/skills/api-docs/references/checklist.md) — Review severity criteria
+- [`.agents/skills/api-docs/references/patterns.md`](../../.agents/skills/api-docs/references/patterns.md) — XML syntax and examples
+- [`.agents/skills/api-docs/references/checklist.md`](../../.agents/skills/api-docs/references/checklist.md) — Review severity criteria
 
 ## Cake Targets Reference
 
@@ -142,8 +151,8 @@ For detailed XML documentation patterns and review criteria, see:
 | `docs-format-docs` | Cleans XML output, removes duplicates, syncs extension method docs, reports coverage |
 | `update-docs` | Runs `docs-update-frameworks` → `docs-format-docs` in sequence (the current API diff is a standalone CI gate and is no longer bundled here) |
 
-> The two `docs-api-diff*` targets live in the release-notes skill at
-> [`.agents/skills/release-notes/scripts/api-diff.cake`](../../.agents/skills/release-notes/scripts/api-diff.cake);
+> The two `docs-api-diff*` targets live alongside the other doc engines at
+> [`scripts/infra/docs/api-diff.cake`](../../scripts/infra/docs/api-diff.cake);
 > the wrappers in `build.cake` just forward to it. The behavior is specified in
 > [`release-notes-and-changelogs.md`](release-notes-and-changelogs.md) — read it
 > before changing either engine.
@@ -210,7 +219,7 @@ meant to be committed.
 ### Relationship to release notes
 
 The API changelogs (Cake) and the website release notes
-([`generate-release-notes.py`](../../.agents/skills/release-notes/scripts/generate-release-notes.py))
+([`generate-release-notes.py`](../../scripts/infra/docs/generate-release-notes.py))
 are **separate systems** that deliberately share only one thing:
 [`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json). That file is the single
 source of truth for two decisions, and both systems honour it identically:

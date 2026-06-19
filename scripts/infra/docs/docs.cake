@@ -1,10 +1,10 @@
 // This script holds the mdoc-based docs/ XML generators (docs-update-frameworks,
 // docs-format-docs). The API-changelog engine that used to live here
-// (docs-api-diff / docs-api-diff-past) now lives in the release-notes skill at
-// .agents/skills/release-notes/scripts/api-diff.cake; its behavior spec is
+// (docs-api-diff / docs-api-diff-past) now lives alongside this file at
+// scripts/infra/docs/api-diff.cake; its behavior spec is
 // documentation/dev/release-notes-and-changelogs.md. The two only share the
 // NuGet-diff comparer + layout helpers, which live in
-// scripts/infra/shared/api-diff-tools.cake and are #loaded by both.
+// api-diff-tools.cake (alongside this file) and are #loaded by both.
 
 #tool nuget:?package=mdoc&version=5.8.9
 
@@ -15,7 +15,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/download.cake"
-#load "../shared/api-diff-tools.cake"
+#load "api-diff-tools.cake"
 
 // Count every type (including nested) in an assembly. Used to keep the richest
 // build when several TFM folders contribute an assembly with the same file name
@@ -28,6 +28,29 @@ int CountAssemblyTypes (string path)
     } catch (Exception ex) {
         Warning ("Could not read types from '{0}': {1}", path, ex.Message);
         return 0;
+    }
+}
+
+// mdoc ships as a .NET Framework executable (mdoc.exe). On Windows it runs natively;
+// on Linux/macOS (Linux CI and the local docs Docker image) the very same assembly is
+// launched through mono. Centralising the launch here keeps the docs pipeline
+// host-independent — the upstream api-docs writer no longer needs a Windows runner.
+void RunMdoc (string arguments, DirectoryPath workingDirectory)
+{
+    var mdoc = Context.Tools.Resolve ("mdoc.exe");
+    if (mdoc == null)
+        throw new Exception ("Could not resolve 'mdoc.exe' (the #tool nuget:?package=mdoc restore may have failed).");
+
+    if (IsRunningOnWindows ()) {
+        RunProcess (mdoc, new ProcessSettings {
+            Arguments = arguments,
+            WorkingDirectory = workingDirectory
+        });
+    } else {
+        RunProcess ("mono", new ProcessSettings {
+            Arguments = $"\"{mdoc.FullPath}\" {arguments}",
+            WorkingDirectory = workingDirectory
+        });
     }
 }
 
@@ -95,9 +118,23 @@ Task ("docs-update-frameworks")
         // moniker (all SkiaSharp.Views.Maui.* -> skiasharp-views-maui, the other
         // SkiaSharp.Views.* -> skiasharp-views, ...) so the docs site groups them
         // instead of showing one entry per NuGet package.
-        var dirs =
-            GetPlatformDirectories ($"{packagePath}/lib").Union(
-            GetPlatformDirectories ($"{packagePath}/ref"));
+        //
+        // Document the reference assemblies (ref/) when the package ships them: ref/ is
+        // the canonical public API surface. The implementation assemblies under lib/
+        // also carry members that are excluded from the public contract — notably
+        // [Obsolete(..., error: true)] overloads kept only for binary compatibility,
+        // e.g. the by-value SKCanvas.SetMatrix(SKMatrix) sibling of SetMatrix(in SKMatrix).
+        // mdoc cannot deterministically order such a pair (its member comparer ignores
+        // the by-ref marker, so the two compare equal and an unstable sort swaps them on
+        // every run), which made doc generation non-idempotent: a clean pass produced one
+        // ordering, the next pass the other, with no fixed point. The C# compiler strips
+        // those members from ref/, so documenting ref/ removes the unorderable pair and
+        // makes mdoc idempotent. Only SkiaSharp.dll ships ref/ today; every other package
+        // is lib-only and falls back to lib/ unchanged.
+        var refDirs = GetPlatformDirectories ($"{packagePath}/ref").ToList ();
+        var dirs = refDirs.Any ()
+            ? refDirs
+            : GetPlatformDirectories ($"{packagePath}/lib").ToList ();
         foreach (var (path, platform) in dirs) {
             string moniker;
             if (id.StartsWith ("SkiaSharp.Views.Maui"))
@@ -160,18 +197,31 @@ Task ("docs-update-frameworks")
     SerializeJsonToPrettyFile (docsJsonPath, docsJson);
 
     // generate doc files. The packages being documented all come from output/nugets
-    // above. The comparer is created here only to supply mdoc's --lib search paths:
-    // the third-party reference assemblies (Microsoft.iOS/macOS/MacCatalyst/tvOS
-    // refs, Maui, GTK, WindowsAppSDK, ...) that SkiaSharp.Views.* assemblies depend
-    // on. mdoc fails hard ("Failed to resolve assembly") without them, and they are
-    // restored into the package cache rather than shipped in output/nugets.
+    // above. The comparer supplies mdoc's --lib search paths for the THIRD-PARTY
+    // reference assemblies (Microsoft.iOS/macOS/MacCatalyst/tvOS refs, Maui, GTK,
+    // WindowsAppSDK, ...) that SkiaSharp.Views.* assemblies depend on; mdoc fails hard
+    // ("Failed to resolve assembly") without them, and they are restored into the
+    // package cache rather than shipped in output/nugets.
     var comparer = await CreateNuGetDiffAsync ();
-    var refArgs = string.Join (" ", comparer.SearchPaths.Select (r => $"--lib=\"{r}\""));
+
+    // The SkiaSharp assemblies also reference EACH OTHER (SkiaSharp.Skottie -> SkiaSharp,
+    // SkiaSharp.Views.* -> SkiaSharp, SkiaSharp.Views.Maui.Controls -> .Maui.Core,
+    // SkiaSharp.HarfBuzz -> HarfBuzzSharp, ...). These self-references must resolve to the
+    // EXACT build being documented (e.g. SkiaSharp 4.150.0.0), so add every staged moniker
+    // directory — the output assemblies laid out above — as a --lib path. This replaces the
+    // old self-dependency glob over every cached NuGet version (removed from
+    // CreateNuGetDiffAsync for determinism, since Mono.Cecil binds by simple name and the
+    // first cached version won): the staged output assemblies are the precise, single,
+    // host-independent set, so mdoc resolves inter-SkiaSharp types deterministically.
+    var selfLibs = GetSubDirectories (docsTempPathFrameowrks)
+        .Select (d => d.FullPath)
+        .OrderBy (p => p, StringComparer.Ordinal);
+    var refArgs = string.Join (" ",
+        comparer.SearchPaths.Concat (selfLibs).Select (r => $"--lib=\"{r}\""));
     var fw = MakeAbsolute ((FilePath) fwxml);
-    RunProcess (Context.Tools.Resolve ("mdoc.exe"), new ProcessSettings {
-        Arguments = $"update --debug --delete --out=\"{DOCS_PATH}\" --lang=DocId --frameworks={fw} {refArgs}",
-        WorkingDirectory = docsTempPathFrameowrks
-    });
+    RunMdoc (
+        $"update --debug --delete --out=\"{DOCS_PATH}\" --lang=DocId --frameworks={fw} {refArgs}",
+        docsTempPathFrameowrks);
 
     // mdoc only ever adds FrameworksIndex/*.xml files; it never deletes the ones for
     // monikers that are no longer generated (e.g. when a package stops being built or
