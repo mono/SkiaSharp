@@ -17,6 +17,19 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/download.cake"
 #load "../shared/api-diff-tools.cake"
 
+// Count every type (including nested) in an assembly. Used to keep the richest
+// build when several TFM folders contribute an assembly with the same file name
+// to a single docs moniker (see the staging loop in docs-update-frameworks).
+int CountAssemblyTypes (string path)
+{
+    try {
+        using (var asm = Mono.Cecil.AssemblyDefinition.ReadAssembly (path))
+            return asm.Modules.Sum (m => m.GetTypes ().Count ());
+    } catch (Exception ex) {
+        Warning ("Could not read types from '{0}': {1}", path, ex.Message);
+        return 0;
+    }
+}
 
 Task ("docs-download-output")
     .Does (async () =>
@@ -109,10 +122,27 @@ Task ("docs-update-frameworks")
                         new XAttribute ("Source", moniker)));
             }
 
-            // stage this moniker's assemblies for mdoc to read
+            // stage this moniker's assemblies for mdoc to read. Several TFM folders
+            // feed the same family moniker (e.g. every SkiaSharp.Views.* ->
+            // skiasharp-views), and different TFMs can ship an assembly with the SAME
+            // file name but a different API surface. For example SkiaSharp.Views.iOS.dll
+            // exists for both net*-ios (which includes SKGLView / SKGLLayer /
+            // SKPaintGLSurfaceEventArgs) and net*-maccatalyst (which excludes them via
+            // #if !__MACCATALYST__). A plain copy lets whichever TFM is staged last win,
+            // so the GL-less MacCatalyst build can clobber the richer iOS build and
+            // mdoc's --delete then drops those real types from the committed docs. Keep
+            // the assembly with the most types on a name collision so no platform's API
+            // surface is lost.
             var o = $"{docsTempPathFrameowrks}/{moniker}";
             EnsureDirectoryExists (o);
-            CopyFiles ($"{path}/*.dll", o);
+            foreach (var dll in GetFiles ($"{path}/*.dll")) {
+                FilePath dest = $"{o}/{dll.GetFilename ()}";
+                if (FileExists (dest) && CountAssemblyTypes (dll.FullPath) <= CountAssemblyTypes (dest.FullPath)) {
+                    Verbose ("Keeping richer staged '{0}' for moniker '{1}'; skipping copy from '{2}'.", dll.GetFilename (), moniker, path);
+                    continue;
+                }
+                CopyFile (dll, dest);
+            }
         }
     }
     monikers.Sort ();
