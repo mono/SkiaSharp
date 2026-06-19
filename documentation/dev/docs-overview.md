@@ -100,8 +100,8 @@ machinery (`shared.cake`, `download.cake`) stays under `scripts/infra/shared/`.
 | **3 — API reference (mdoc)** | artifact 2 | `generate-api-docs.sh` | dotnet, **mono** (to run `mdoc.exe`) |
 
 `mdoc.exe` is a .NET Framework executable. `docs.cake` invokes it under **mono** when
-not on Windows, so Path 3 is no longer Windows-only — it runs on any Linux host (or
-CI runner) with `mono-complete` installed.
+not on Windows, so Path 3 runs on any host with `mono-complete` installed — a Linux CI
+runner or the local Docker image, not only Windows.
 
 ---
 

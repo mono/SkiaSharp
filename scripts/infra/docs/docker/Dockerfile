@@ -10,9 +10,8 @@
 #   3. mdoc XML reference docs — dotnet cake --target=update-docs
 #
 # mdoc ships as a .NET Framework executable (scripts/infra/docs/tools/mdoc.*/mdoc.exe).
-# The upstream api-docs writer workflow runs the docs step on windows-latest today;
-# because docs.cake now invokes mdoc under mono, this image — and equally any plain
-# Linux CI runner with mono installed — can run that same step on Linux.
+# docs.cake runs it under mono on non-Windows hosts, so the mdoc step runs on Linux:
+# this image and any plain Linux CI runner with mono installed run it identically.
 FROM mcr.microsoft.com/dotnet/sdk:10.0
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -27,7 +26,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # (CreateNuGetDiffAsync adds GtkSharp/GdkSharp/GLibSharp/AtkSharp/Mono.GtkSharp and the
 # GirCore stack from NuGet). That makes resolution host-independent and means we do NOT
 # install a system gtk-sharp2 package (which is unavailable on this Ubuntu base anyway);
-# this is the Linux equivalent of the GTK# MSI the Windows workflow installs.
+# this is the Linux equivalent of installing the GTK# runtime from an MSI on Windows.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         mono-complete \

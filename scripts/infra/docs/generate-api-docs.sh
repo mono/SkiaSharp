@@ -13,10 +13,10 @@
 #   2. dotnet cake --target=docs-download-output   populate output/nugets from the CI feed
 #   3. dotnet cake --target=update-docs            mdoc regenerates the XML (+ formats it)
 #
-# The workflow runs step 3 on windows-latest because mdoc.exe is a .NET Framework
-# executable; here it runs on any host because docs.cake invokes mdoc under mono when
-# not on Windows. That makes this whole path reproducible in the docs Docker image
-# (scripts/infra/docs/docker/run.sh api-docs).
+# mdoc.exe is a .NET Framework executable; docs.cake runs it under mono on non-Windows
+# hosts, so this whole path runs on any host. The auto-api-docs-writer regenerate-stubs
+# job (Linux + mono) and the docs Docker image (scripts/infra/docs/docker/run.sh
+# api-docs) both rely on that.
 #
 # Usage:
 #   generate-api-docs.sh [--skip-download] [extra cake args for update-docs...]

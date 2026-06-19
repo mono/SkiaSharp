@@ -149,7 +149,7 @@ For detailed XML documentation patterns and review criteria, see:
 | `docs-api-diff-past` | Regenerates the committed historical API diffs under `documentation/docfx/releases/` across all published versions |
 | `docs-update-frameworks` | Extracts assemblies, builds `frameworks.xml` with monikers, runs `mdoc update` to generate XML API docs |
 | `docs-format-docs` | Cleans XML output, removes duplicates, syncs extension method docs, reports coverage |
-| `update-docs` | Runs `docs-update-frameworks` → `docs-format-docs` in sequence (the current API diff is a standalone CI gate and is no longer bundled here) |
+| `update-docs` | Runs `docs-update-frameworks` → `docs-format-docs` in sequence (the current API diff is a standalone CI gate, not bundled here) |
 
 > The two `docs-api-diff*` targets live alongside the other doc engines at
 > [`scripts/infra/docs/api-diff.cake`](../../scripts/infra/docs/api-diff.cake);

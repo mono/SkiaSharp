@@ -13,7 +13,7 @@
 #
 # This is the single source of truth for Path 1: the release-notes skill's
 # generate.sh, the update-release-notes CI workflow, the docs Docker wrapper
-# (scripts/infra/docs/docker/run.sh api diffs), and a human running it by hand all
+# (scripts/infra/docs/docker/run.sh api-diffs), and a human running it by hand all
 # call THIS so the command never drifts between local and CI.
 #
 # Usage:

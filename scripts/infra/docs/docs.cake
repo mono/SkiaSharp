@@ -1,6 +1,6 @@
 // This script holds the mdoc-based docs/ XML generators (docs-update-frameworks,
-// docs-format-docs). The API-diff engine that used to live here
-// (docs-api-diff / docs-api-diff-past) now lives alongside this file at
+// docs-format-docs). The API-diff engine (docs-api-diff / docs-api-diff-past)
+// lives alongside this file at
 // scripts/infra/docs/api-diff.cake; its behavior spec is
 // documentation/dev/release-notes-and-api-diffs.md. The two only share the
 // NuGet-diff comparer + layout helpers, which live in
@@ -34,7 +34,7 @@ int CountAssemblyTypes (string path)
 // mdoc ships as a .NET Framework executable (mdoc.exe). On Windows it runs natively;
 // on Linux/macOS (Linux CI and the local docs Docker image) the very same assembly is
 // launched through mono. Centralising the launch here keeps the docs pipeline
-// host-independent — the upstream api-docs writer no longer needs a Windows runner.
+// host-independent, so the auto-api-docs-writer workflow runs on Linux + mono.
 void RunMdoc (string arguments, DirectoryPath workingDirectory)
 {
     var mdoc = Context.Tools.Resolve ("mdoc.exe");
@@ -129,7 +129,7 @@ Task ("docs-update-frameworks")
         // every run), which made doc generation non-idempotent: a clean pass produced one
         // ordering, the next pass the other, with no fixed point. The C# compiler strips
         // those members from ref/, so documenting ref/ removes the unorderable pair and
-        // makes mdoc idempotent. Only SkiaSharp.dll ships ref/ today; every other package
+        // makes mdoc idempotent. Only SkiaSharp.dll ships ref/; every other package
         // is lib-only and falls back to lib/ unchanged.
         var refDirs = GetPlatformDirectories ($"{packagePath}/ref").ToList ();
         var dirs = refDirs.Any ()

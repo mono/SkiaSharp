@@ -170,7 +170,7 @@ case "$cmd" in
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" "$@"
         ;;
     ""|-h|--help|help)
-        sed -n '2,34p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+        sed -n '2,37p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         ;;
     *)
         die "unknown command '$cmd' (try: build | shell | api-diffs | notes | api-docs | all | cake | exec | help)"
