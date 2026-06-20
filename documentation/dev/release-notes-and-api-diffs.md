@@ -694,11 +694,18 @@ otherwise the newest prerelease.
 unresolved reference makes `Mono.ApiTools` silently degrade type matching into spurious "New
 Type" dumps whose shape depends on what is installed on the build host, so the output stops
 being deterministic. `CreateNuGetDiffAsync` (`scripts/infra/docs/api-diff-tools.cake`)
-therefore adds every real dependency explicitly — from packages pinned in
-`scripts/VERSIONS.txt` via `AddDep`/`AddPackageDir` — covering the framework/reference packs,
-the GTK/GIR and Maui stacks, the Xamarin.Forms platform renderers (the iOS/macOS ones ship
-under `build/XCODE11`, the rest under `lib/`, all in the one pinned `Xamarin.Forms` package),
-and SkiaSharp's own inter-package references. The sole exception is
+therefore adds every real dependency explicitly. Third-party references come from packages pinned
+in `scripts/VERSIONS.txt` via `AddDep`/`AddPackageDir` — covering the framework/reference packs,
+the GTK/GIR and Maui stacks, and the Xamarin.Forms platform renderers (the iOS/macOS ones ship
+under `build/XCODE11`, the rest under `lib/`, all in the one pinned `Xamarin.Forms` package).
+SkiaSharp's own inter-package references (e.g. `SkiaSharp.Views.*`/`SkiaSharp.Resources` →
+`SkiaSharp`, `SkiaSharp.Views.Maui.Controls` → `SkiaSharp.Views.Maui.Core`) are staged by
+`AddSelfDep`, which resolves the **latest stable** version published on nuget.org — the same
+answer on every host and cache state, unlike the old cache-glob that bound by enumeration order.
+Resolving these matters because the public SkiaSharp types derive from `SKObject`, which implements
+the `internal` infrastructure interfaces `ISKReferenceCounted` and `ISKSkipObjectRegistration`; if
+the referenced assembly is unresolved those internals leak into the public diff as bogus
+base-interface entries instead of collapsing to the public `System.IDisposable`. The sole exception is
 `_Microsoft.Android.Resource.Designer`, generated into every .NET-Android assembly and shipped
 in no package; because it is absent on every host it is skipped with `IgnoreResolutionErrors =
 true` without breaking determinism, and it is never part of SkiaSharp's public API. If a
@@ -786,9 +793,12 @@ page links straight to its API diffs.
    own disk/timeout budget and streams progress to the log; it hands off to the Polish
    agent **only** through the uploaded artifact (working-tree changes + the
    `files-to-polish.txt` list), never a shared runner or stdout capture (§2.3).
-9. **API-diff output is host-independent (§5.2).** Every assembly reference is satisfied
-   by a real pinned dependency (`AddDep`/`AddPackageDir`) so resolution never depends on the
-   build host. The comparer runs with `IgnoreResolutionErrors = true` **solely** to skip the
+9. **API-diff output is host-independent (§5.2).** Every assembly reference is satisfied by a
+   real, host-independent dependency — third-party references by a version pinned in
+   `scripts/VERSIONS.txt` (`AddDep`/`AddPackageDir`), and SkiaSharp's own inter-package
+   references by the latest stable on nuget.org (`AddSelfDep`) — so resolution never depends on
+   the build host or cache state. The comparer runs with `IgnoreResolutionErrors = true` **solely**
+   to skip the
    single reference that ships in no package — `_Microsoft.Android.Resource.Designer`,
    generated into every .NET-Android assembly and absent from SkiaSharp's public surface,
    hence unresolvable identically on every host. When a regeneration produces unexpected
