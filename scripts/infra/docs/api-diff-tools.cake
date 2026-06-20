@@ -218,14 +218,42 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
 {
     var platformDirs = GetDirectories($"{rootDir}/*");
 
-    // try find any cross-platform frameworks
+    // A package that ships a cross-platform (BCL) build is documented from that
+    // single assembly. Prefer the newest plain .NET build (e.g. net10.0) because
+    // that is what real apps target and it exposes the most complete API surface;
+    // fall back to netstandard, then portable, only when no plain .NET build exists.
+    DirectoryPath crossPlatformDir = null;
+    var crossPlatformRank = (tier: -1, version: new System.Version (0, 0));
     foreach (var dir in platformDirs) {
         var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("netstandard") || d.StartsWith("portable") || d.Equals("net6.0") || d.Equals("net7.0") || d.Equals("net8.0") || d.Equals("net9.0") || d.Equals("net10.0")) {
-            // we just want this single platform
-            yield return (dir, null);
-            yield break;
+        int tier;
+        System.Version version;
+        // plain .NET (net5.0+); the dot excludes net4x desktop, the anchors exclude platform heads like net10.0-ios
+        var net = System.Text.RegularExpressions.Regex.Match(d, @"^net(\d+\.\d+)$");
+        if (net.Success) {
+            tier = 2;
+            version = System.Version.Parse(net.Groups[1].Value);
+        } else if (d.StartsWith("netstandard")) {
+            tier = 1;
+            if (!System.Version.TryParse(d.Substring("netstandard".Length), out version))
+                version = new System.Version (0, 0);
+        } else if (d.StartsWith("portable")) {
+            tier = 0;
+            version = new System.Version (0, 0);
+        } else {
+            continue;
         }
+
+        if (tier > crossPlatformRank.tier || (tier == crossPlatformRank.tier && version > crossPlatformRank.version)) {
+            crossPlatformRank = (tier, version);
+            crossPlatformDir = dir;
+        }
+    }
+
+    if (crossPlatformDir != null) {
+        // we just want this single cross-platform assembly
+        yield return (crossPlatformDir, null);
+        yield break;
     }
 
     // there were no cross-platform libraries, so process each platform
