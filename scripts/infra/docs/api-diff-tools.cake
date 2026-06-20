@@ -131,18 +131,27 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("Mono.GtkSharp", "net45");
 
-    // NOTE on self-dependencies (SkiaSharp parts depending on other SkiaSharp parts,
-    // e.g. SkiaSharp.Views.* → SkiaSharp, or SkiaSharp.Views.Maui.Controls →
-    // SkiaSharp.Views.Maui.Core): these are NOT added here. NuGetDiff reads each diffed
-    // package's nuspec and resolves its declared dependencies to the EXACT versions on
-    // demand from the package cache, so the closure is already complete and — crucially —
-    // host-independent. An earlier version globbed every cached version of these packages
-    // into SearchPaths; because Mono.Cecil binds by simple assembly name, the first match
-    // in filesystem-enumeration order won, so the output silently varied with cache warmth
-    // and host fs ordering (spec §5.2, invariant 9). Removing the glob is the determinism
-    // fix. The one case that genuinely needs explicit staging — diffing an UNPUBLISHED
-    // local build whose self-deps are not on the feed (the --useOutputNugets path) — adds
-    // exactly one version per package at the point of use, never an unbounded glob here.
+    // Self-dependencies: SkiaSharp parts that reference other SkiaSharp parts
+    // (e.g. SkiaSharp.Views.* / SkiaSharp.Skottie / SkiaSharp.Resources → SkiaSharp,
+    // SkiaSharp.Views.Maui.Controls → SkiaSharp.Views.Maui.Core). ApiInfo must resolve
+    // the referenced assembly to determine the accessibility of inherited/implemented
+    // types; if it cannot, the internal infrastructure interfaces SKObject implements —
+    // ISKReferenceCounted and ISKSkipObjectRegistration — resolve to nothing and LEAK
+    // into the public diff as bogus base-interface entries (they are `internal` in
+    // SkiaSharp.dll, so a public type that derives from SKObject must never list them).
+    //
+    // An earlier version globbed EVERY cached version of these packages into SearchPaths.
+    // Mono.Cecil binds by simple assembly name, so the winning build depended on
+    // filesystem-enumeration order and cache warmth — the output silently varied between
+    // a cold and a warm machine (spec §5.2, invariant 9). Instead, stage exactly ONE
+    // build per self-dependency, resolved deterministically: the latest STABLE published
+    // version on nuget.org. That is the same answer on every host and every cache state
+    // (so cold == warm), and because these infrastructure types are long-lived and
+    // stable, a single recent build resolves them identically for every historical diff.
+    await AddSelfDep("SkiaSharp", "netstandard2.0");
+    await AddSelfDep("HarfBuzzSharp", "netstandard2.0", "netstandard1.3");
+    await AddSelfDep("SkiaSharp.Views.Maui.Core", "net10.0", "net9.0", "net8.0", "net7.0", "net6.0");
+
     Verbose("Added search paths:");
     foreach (var path in comparer.SearchPaths) {
         var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();
@@ -193,6 +202,32 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         } else {
             Verbose ($"      no lib or ref path");
         }
+    }
+
+    // Stage a single, deterministically-chosen build of one of SkiaSharp's own packages
+    // so ApiInfo can resolve the types it inherits/implements (see the self-dependency
+    // note above). The version is the latest STABLE release on nuget.org — host- and
+    // cache-independent, unlike the old cache glob. The first platform in `platforms`
+    // whose lib/ folder exists in that build wins.
+    async Task AddSelfDep(string id, params string[] platforms)
+    {
+        var stableFilter = new NuGetVersions.Filter { IncludePrerelease = false };
+        var version = await NuGetVersions.GetLatestAsync(id, stableFilter);
+        if (version == null) {
+            Verbose ($"    Self-dependency {id}: no stable version found; skipping.");
+            return;
+        }
+        Verbose ($"    Adding self-dependency {id} version {version}...");
+        var root = await comparer.ExtractCachedPackageAsync(id, version.ToNormalizedString());
+        foreach (var platform in platforms) {
+            var libPath = System.IO.Path.Combine(root, "lib", platform);
+            if (DirectoryExists(libPath)) {
+                Verbose ($"      lib path {libPath}");
+                comparer.SearchPaths.Add(libPath);
+                return;
+            }
+        }
+        Verbose ($"      no lib path for {id} among: {string.Join(", ", platforms)}");
     }
 
     // Add an arbitrary subfolder of a cached package to the search paths. Used for
