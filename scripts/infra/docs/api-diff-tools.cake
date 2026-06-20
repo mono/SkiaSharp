@@ -52,7 +52,27 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     // unresolvable identically everywhere and skipping it stays host-independent; it is never
     // part of SkiaSharp's public API, so it contributes nothing to the diff.
     comparer.IgnoreResolutionErrors = true;
-    
+
+    // Exclude auto-generated, non-API classes that the platform tooling compiles INTO the
+    // public view assemblies but that are not part of SkiaSharp's API surface:
+    //   - the Android "aapt" resource designer "<RootNamespace>.Resource" and its nested
+    //     R.* tables (Resource.Drawable, Resource.Styleable, ...), emitted into the
+    //     Android builds of SkiaSharp.Views.Android / .Forms / .Maui.*;
+    //   - the Uno/WinUI XAML "GlobalStaticResources" class emitted into the UWP/WinUI
+    //     builds of SkiaSharp.Views.UWP / .Windows / .Uno.
+    // Without this they surface as thousands of lines of "New Type" resource-id constants
+    // in the diff (e.g. 2600+ lines for a single Forms designer), pure noise that also
+    // varies with platform tooling. IgnoreMemberRegex feeds the formatted-markdown diff's
+    // IgnoreAdded/IgnoreNew/IgnoreRemoved sets, so a match drops the whole type block at
+    // generation time. The patterns are anchored under "SkiaSharp.Views." and require
+    // "Resource"/"GlobalStaticResources" to be a whole trailing name segment, so the real
+    // API lookalikes outside that namespace are untouched (SkiaSharp.Resources.*,
+    // SkiaSharp.GR*TextureResourceInfo). The mdoc engine applies the equivalent exclusion
+    // itself (scripts/infra/docs/docs.cake); this property only affects the api-diff path,
+    // since docs.cake consumes this comparer solely for its SearchPaths.
+    comparer.IgnoreMemberRegex.Add (@"^SkiaSharp\.Views\.[\w.]+\.Resource([.:+/ ]|$)");
+    comparer.IgnoreMemberRegex.Add (@"^SkiaSharp\.Views\.[\w.]+\.GlobalStaticResources([.:+/ ]|$)");
+
     Verbose ($"Adding dependencies...");
 
     await AddDep("OpenTK.GLControl", "NET20");
