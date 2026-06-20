@@ -18,7 +18,7 @@ public static AnimationBuilder CreateBuilder (AnimationBuilderFlags flags);
 #### New Type: SkiaSharp.Skottie.AnimationBuilder
 
 ```csharp
-public sealed class AnimationBuilder : SkiaSharp.SKObject, System.IDisposable {
+public sealed class AnimationBuilder : SkiaSharp.SKObject, SkiaSharp.ISKSkipObjectRegistration {
 	// properties
 	public AnimationBuilderStats Stats { get; }
 	// methods
