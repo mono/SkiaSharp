@@ -33,6 +33,53 @@ public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImag
 ```
 
 
+#### Type Changed: SkiaSharp.Views.iOS.SKGLLayer
+
+Removed property:
+
+```csharp
+[Obsolete ("Use PaintSurface instead.")]
+public ISKGLLayerDelegate SKDelegate { get; set; }
+```
+
+Removed method:
+
+```csharp
+[Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
+```
+
+
+#### Type Changed: SkiaSharp.Views.iOS.SKGLView
+
+Removed method:
+
+```csharp
+[Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
+```
+
+
+#### Type Changed: SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs
+
+Removed constructors:
+
+```csharp
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
+
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
+```
+
+Removed property:
+
+```csharp
+[Obsolete ("Use BackendRenderTarget instead.")]
+public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
+```
+
+
 #### Type Changed: SkiaSharp.Views.iOS.SKPaintMetalSurfaceEventArgs
 
 Added constructors:
@@ -51,5 +98,4 @@ public SkiaSharp.SKImageInfo RawInfo { get; }
 
 
 #### Removed Type SkiaSharp.Views.iOS.Extensions
-#### Removed Type SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs
 
