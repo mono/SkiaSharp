@@ -135,30 +135,31 @@ python3 .agents/skills/release-status/scripts/pipeline-status.py release/{versio
 
 ## Step 5: Bump the Integration Branch After Release
 
-When a version is released (stable ships) or a line otherwise moves on, bump that
-line's **integration branch** to the next version so future builds don't collide
-with the released version. Crucially this is **not** "preview-from-main only" —
-**maintenance-line stables bump too**: e.g. after `3.119.4` shipped,
-`release/3.119.x` was bumped to `3.119.5` ("Bump to the next version after
-release"). Previews/RCs of an in-progress version do **not** bump it (they all
-share the same `X.Y.Z`); the bump happens once that `X.Y.Z` is released.
+When a version is released (stable ships), advance that line's **integration
+branch** to the next version so future builds don't collide with the released
+version. Crucially this is **not** "preview-from-main only" — **maintenance-line
+stables bump too**: e.g. after `3.119.4` shipped, `release/3.119.x` was bumped to
+`3.119.5` ("Bump to the next version after release"). Previews/RCs of an
+in-progress version do **not** bump it (they all share the same `X.Y.Z`); the
+bump happens once that `X.Y.Z` is released.
 
-**Which integration branch / next version:**
+**How each line advances:**
 
-| Released line | Integration branch to bump | Next version |
-|---------------|----------------------------|--------------|
-| Newest line (cut from `main`) | `main` | next **minor** (`X.Y.0` → `X.(Y+next).0`) |
-| Maintenance line (cut from `release/X.Y.x`) | `release/X.Y.x` | next **patch** (`X.Y.Z` → `X.Y.(Z+1)`) |
+| Released line | Integration branch | How it advances |
+|---------------|--------------------|-----------------|
+| Maintenance line | `release/X.Y.x` | Next **patch** (`X.Y.Z` → `X.Y.(Z+1)`) — use the helper below. `assembly` stays pinned at `X.Y.0.0`; only `file` / `nuget` / `SKIASHARP_VERSION` move. |
+| Newest line | `main` | Next **minor** (`X.Y` → next milestone). This is a **Skia milestone update** (e.g. `[skia-sync] Update Skia to milestone mNNN`) that also rewrites the milestone/soname/increment lines, `assembly`, `cgmanifest.json` and native sources — a **separate process, not this helper.** |
 
-> This step only advances the **version numbers**. Native/milestone source changes
-> (Skia upgrades, soname, increments) are a separate activity and out of scope here.
+> The helper below covers the **maintenance-line patch bump only**. It refuses a
+> `major.minor` change (that's a milestone update — out of scope).
 
-1. Create branch `bump-version-{next}` from the integration branch
+1. Create branch `bump-version-{next}` from the maintenance branch
    (e.g. `git checkout -b bump-version-{next} origin/release/X.Y.x`)
 
-2. Apply the bump with the helper script. It edits + verifies `SKIASHARP_VERSION`
-   in `azure-templates-variables.yml` and all SkiaSharp / HarfBuzzSharp
-   `file`+`nuget` lines in `VERSIONS.txt` (assembly versions are left untouched):
+2. Apply the patch bump with the helper script. It edits + verifies
+   `SKIASHARP_VERSION` in `azure-templates-variables.yml` and all SkiaSharp /
+   HarfBuzzSharp `file`+`nuget` lines in `VERSIONS.txt` (SkiaSharp `assembly`
+   stays `X.Y.0.0`, HarfBuzzSharp `assembly` stays `1.0.0.0`):
    ```bash
    pwsh .agents/skills/release-branch/scripts/bump-version.ps1 \
      -SkiaSharpVersion {next} \

@@ -24,8 +24,14 @@
     Two independent operations, usable together or alone:
       1. Set label only (Step 3 — create release branch):
              -PreviewLabel stable
-      2. Bump versions (Step 5 — bump integration branch after a release):
+      2. Bump to the next PATCH (Step 5 — advance a maintenance line after a
+         stable ships, e.g. 4.148.0 -> 4.148.1):
              -SkiaSharpVersion 4.148.1 -HarfBuzzSharpVersion 14.2.1 -PreviewLabel preview.0
+
+    Scope: label changes and PATCH bumps only. A change to the major.minor is a
+    Skia milestone update (it also rewrites the milestone/soname/increment lines,
+    cgmanifest.json and native sources) and is intentionally out of scope — the
+    script refuses it.
 
     A bump requires BOTH -SkiaSharpVersion and -HarfBuzzSharpVersion. The caller
     decides the exact HarfBuzzSharp version (4-digit X.Y.Z.N normally; reset to
@@ -93,6 +99,20 @@ $pipelinePath = Join-Path $repoRoot 'scripts/azure-templates-variables.yml'
 foreach ($p in @($versionsPath, $pipelinePath)) {
     if (-not (Test-Path $p)) {
         Write-Error "Expected file not found: $p. If it was renamed, update this script."
+    }
+}
+
+# --- Guard: refuse major.minor changes (those are Skia milestone updates) ----
+if ($doBump) {
+    $curAssembly = Get-Content $versionsPath |
+        Where-Object { $_ -match '^SkiaSharp\s+assembly\s+(?<maj>\d+)\.(?<min>\d+)\.' } |
+        Select-Object -First 1
+    if ($curAssembly -match '^SkiaSharp\s+assembly\s+(?<maj>\d+)\.(?<min>\d+)\.') {
+        $curMajorMinor = "$($Matches['maj']).$($Matches['min'])"
+        $newMajorMinor = ($SkiaSharpVersion -split '\.')[0..1] -join '.'
+        if ($curMajorMinor -ne $newMajorMinor) {
+            Write-Error "SkiaSharp major.minor would change ($curMajorMinor -> $newMajorMinor). That is a Skia milestone update (it also rewrites the milestone/soname/increment lines, assembly, cgmanifest.json and native sources) and is out of scope for this helper, which only does label changes and patch bumps."
+        }
     }
 }
 
