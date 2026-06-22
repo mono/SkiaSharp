@@ -84,18 +84,6 @@ var SKIP_EXTERNALS = Argument ("skipexternals", "")
 var SKIP_BUILD = Argument ("skipbuild", false);
 var THROW_ON_FIRST_TEST_FAILURE = Argument ("throwOnFirstTestFailure", false);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
-// API-diff local-iteration controls (spec §5). Both default to the full,
-// authoritative behaviour used by CI; they only ever NARROW the work for fast local
-// runs, never change committed output when unset:
-//   nugetDiffMinVersion — only (re)generate api diff lines whose version core is >=
-//     this value, and leave the older committed folders untouched (so a scoped local
-//     run can do e.g. 3.119.0→4.* without walking all of history). Empty = no floor.
-//   useOutputNugets — when a freshly built package exists in output/nugets, diff the
-//     in-flight line using that LOCAL package as the new side; otherwise the run uses
-//     only what is published on NuGet.org. Lets a local build's unpublished line be
-//     diffed before it ships.
-var NUGET_DIFF_MIN_VERSION = Argument ("nugetDiffMinVersion", "");
-var NUGET_DIFF_USE_OUTPUT_NUGETS = Argument ("useOutputNugets", false);
 var COVERAGE = Argument ("coverage", false);
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 

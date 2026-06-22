@@ -19,19 +19,6 @@
 # Usage:
 #   generate-api-diffs.sh [extra cake args...]
 #
-# Useful extra args (spec §5 — these only ever NARROW the work, never change the
-# authoritative output when omitted, which is what CI runs):
-#   --nugetDiffMinVersion=3.119.0   Only (re)generate api diff lines whose version
-#                                   core is >= this value, and leave the older
-#                                   committed folders untouched. Baselines are still
-#                                   computed from full history, so the regenerated
-#                                   lines are byte-identical to a full run — this is
-#                                   purely a speed knob for local iteration.
-#   --useOutputNugets=true          Also emit the in-flight (unpublished) line by
-#                                   diffing the locally built package in output/nugets
-#                                   against its baseline. Run docs-download-output or a
-#                                   local package build first to populate output/nugets.
-#
 # Requires: dotnet (the SDK pinned in global.json).
 set -euo pipefail
 

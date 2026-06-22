@@ -40,23 +40,6 @@ DirectoryPath RELEASES_PATH = MakeAbsolute (ROOT_PATH.Combine ("documentation/do
 bool IsHarfBuzzFamily (string id) =>
     id == "HarfBuzzSharp" || id.StartsWith ("HarfBuzzSharp.");
 
-// --nugetDiffMinVersion support (spec §5): a local-iteration floor. When set, only
-// api diff LINES whose version core is >= the floor are (re)generated and cleared;
-// everything below is left exactly as committed. Baselines are still chosen from the
-// full release history (the emit list below is never truncated), so each regenerated
-// line is byte-identical to what an unfloored full run would produce — this only ever
-// narrows the work, never changes output. Empty (the CI default) = no floor.
-bool IsLineBelowMin (string lineKey)
-{
-    if (string.IsNullOrEmpty (NUGET_DIFF_MIN_VERSION))
-        return false;
-    if (!NuGetVersion.TryParse (lineKey, out var v))
-        return false;
-    if (!NuGetVersion.TryParse (NUGET_DIFF_MIN_VERSION, out var min))
-        throw new Exception ($"--nugetDiffMinVersion='{NUGET_DIFF_MIN_VERSION}' is not a valid version.");
-    return v.CompareTo (min) < 0;
-}
-
 
 Task ("docs-api-diff")
     .Does (async () =>
@@ -269,15 +252,6 @@ Task ("docs-api-diff-past")
             var version = emit [idx].rep.ToNormalizedString ();
             var apiDiffVersion = emit [idx].key;
 
-            // --nugetDiffMinVersion floor: skip GENERATING this line when it is below the
-            // floor, but only after it has had its chance to be a baseline for later lines
-            // (the emit list is intact, so the walk-back below still sees it). Its committed
-            // files were already spared by ClearOwnedApiDiffFolders, so they stay untouched.
-            if (IsLineBelowMin (apiDiffVersion)) {
-                Debug ($"Skipping generation of '{id}' line '{apiDiffVersion}' (below --nugetDiffMinVersion={NUGET_DIFF_MIN_VERSION}).");
-                continue;
-            }
-
             // Pick the baseline to diff against (spec §1.3):
             //   1. An explicit compare_to override in versions.json wins
             //      (e.g. 4.148 -> 3.119.4, deliberately skipping 4.147).
@@ -358,19 +332,8 @@ Task ("docs-api-diff-past")
 
     // Write the per-line API-diff index.md landing pages (spec §3.3/§3.4) and the
     // co-release map sidecar (spec §3.6) the Python release-notes engine consumes.
-    //
-    // A floored (--nugetDiffMinVersion) run is a partial, local-iteration regeneration:
-    // it deliberately did not visit the lines below the floor, so it has NOTHING to say
-    // about them. Rewriting the index pages or the co-release sidecar from this partial
-    // set would drop their below-floor entries, corrupting the committed tree. So in a
-    // floored run we leave BOTH untouched — only an unfloored (authoritative) run, which
-    // visits every line, is allowed to rewrite them.
-    if (string.IsNullOrEmpty (NUGET_DIFF_MIN_VERSION)) {
-        WriteApiDiffFolderIndexes ();
-        WriteCoReleaseMap (skiaHarfBuzzDeps);
-    } else {
-        Information ($"--nugetDiffMinVersion={NUGET_DIFF_MIN_VERSION}: leaving index pages and the co-release map untouched (partial run).");
-    }
+    WriteApiDiffFolderIndexes ();
+    WriteCoReleaseMap (skiaHarfBuzzDeps);
 
     // clean up after working
     CleanDirectories (baseDir);
@@ -413,10 +376,10 @@ void ClearOwnedApiDiffFolders ()
 
         if (name == "harfbuzzsharp") {
             // The HarfBuzz family keeps its line folders one level deeper; clear each
-            // line folder individually so --nugetDiffMinVersion can spare older ones.
+            // line folder individually.
             foreach (var lineDir in GetSubDirectories (dir)) {
                 var lineKey = lineDir.GetDirectoryName ();
-                if (lineKey.Length > 0 && char.IsDigit (lineKey [0]) && !IsLineBelowMin (lineKey))
+                if (lineKey.Length > 0 && char.IsDigit (lineKey [0]))
                     ClearGeneratedApiDiffsIn (lineDir.FullPath);
             }
             DeleteEmptyDirectories (dir.FullPath);
@@ -425,8 +388,6 @@ void ClearOwnedApiDiffFolders ()
 
         // SkiaSharp family: a line folder is a top-level directory named by a version core.
         if (name.Length > 0 && char.IsDigit (name [0])) {
-            if (IsLineBelowMin (name))
-                continue;
             ClearGeneratedApiDiffsIn (dir.FullPath);
             DeleteEmptyDirectories (dir.FullPath);
         }
