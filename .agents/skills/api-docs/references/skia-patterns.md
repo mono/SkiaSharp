@@ -65,6 +65,34 @@ C# structs zero-initialize. When documenting struct properties:
 - Do not assume a "typical" value is the default (e.g., 72 DPI is NOT the default for a zero-initialized struct)
 - If the library provides a constant like `SKDocument.DefaultRasterDpi`, document that separately from the struct's zero-initialized state
 
+**This is a recurring error — be deliberate about it.** Writers keep documenting `SKDocumentXpsOptions.Dpi` as "default 72" because 72 is the obvious "typical" DPI. But `SKDocumentXpsOptions` is a struct with no field initializer, so its `Dpi` defaults to **0**. The 72 comes from `SKDocument.DefaultRasterDpi`, which only applies to the scalar `CreateXps(stream, dpi)` overloads — not to the struct. The rule: a struct property's default is whatever zero-init produces (0 / null / false) **unless you can point to a field initializer in the source**. Never copy a "default" from a sibling constant.
+
+## Standard-Based Enums (CICP, Vulkan, OpenType)
+
+For enums whose members reference external standards, the **member name almost always encodes the exact standard identifier** — use it as a second source of truth alongside `MemberValue`:
+
+| Member name | Encodes | Correct description |
+|-------------|---------|---------------------|
+| `SmpteRp4312` | SMPTE RP **431-2** | DCI-P3 primaries (NOT "RP 432-2") |
+| `SmpteEg4321` | SMPTE EG **432-1** | Display P3 / P3-D65 primaries |
+| `SmpteSt4281` | SMPTE ST **428-1** | D-Cinema transfer — gamma ~2.6 (NOT "linear") |
+
+Two failure modes to check explicitly:
+- **Wrong identifier** — the summary's standard number must match the digits in the member name (`SmpteRp4312` → 431-2, not 432-2). Adjacent standards (431 vs 432) are easy to transpose.
+- **Wrong behavior** — the *described nature* must be correct, not just the number. ST 428-1 is a gamma-2.6 power transfer; calling it "linear" is wrong even though the number is right. A separate `Linear` member exists for the actual linear transfer. Verify the behavior against the standard, and never let a description match a similar-looking sibling member instead of its own value.
+
+## Caller-Owned vs Parent-Owned Objects
+
+Most SkiaSharp objects are owned by the caller and must be disposed (`using`). But some are **owned by a parent object** and must NOT be disposed by the caller — the parent manages their lifetime:
+
+| Object | Owned by | In examples |
+|--------|----------|-------------|
+| `SKDocument.BeginPage(...)` return value | the `SKDocument` | do NOT `using`/`Dispose` the canvas |
+| `SKSurface.Canvas` | the `SKSurface` | do NOT `using`/`Dispose` the canvas |
+| `SKDocument.CreateXps(...)` return value | caller | DO `using` the document |
+
+`BeginPage` wraps its canvas with `owns: false`, so disposing it is the anti-pattern called out in `AGENTS.md`. In a code example, write `var canvas = doc.BeginPage(...);` (no `using`); the parent's `using` cleans everything up. Also note that some factories (e.g. `SKDocument.CreateXps`) return `null` on unsupported platforms even though the signature is non-nullable — examples that immediately dereference the result are misleading.
+
 ## Obsolete APIs (Legacy Text Rendering)
 
 Some members are marked `[Obsolete("...", error: true)]`. Because `error: true` makes them a **compile error**, any code example using them is broken. The extract JSON surfaces these in an `obsolete` field — never use a flagged member in an example or recommend it.

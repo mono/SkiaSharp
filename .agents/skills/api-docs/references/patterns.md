@@ -427,10 +427,11 @@ For classes and structs, follow this structure inside the CDATA:
 ### What Makes Good Examples
 
 - **Show the most common use case** — not edge cases
-- **Include using/disposal** — SkiaSharp objects are IDisposable
+- **Include using/disposal** — SkiaSharp objects are IDisposable (but never `using` a parent-owned object like the canvas from `SKDocument.BeginPage`)
 - **Show the full picture** — create + configure + use, not just one call
 - **Keep it short** — 5-15 lines, enough to understand the pattern
 - **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
+- **Be self-contained** — every variable referenced must be declared in the snippet; a stray `bitmap2` that was never created won't compile
 
 Look at `samples/Gallery/Shared/Samples/` for real usage patterns. These samples show how developers actually use the APIs.
 
@@ -461,9 +462,10 @@ Types that wrap native resources (`IDisposable`) should have remarks that cover:
 
 ### Code Example Best Practices
 
-- **Show disposal** — if the type is `IDisposable`, examples must use `using` or call `Dispose()`
+- **Show disposal** — if the type is `IDisposable`, examples must use `using` or call `Dispose()` — *except* for objects owned by a parent (e.g. the canvas from `SKDocument.BeginPage` or `SKSurface.Canvas`), which the parent disposes
 - **Show the full picture** — create + configure + use, not just one call
 - **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
 - **Keep it short** — 5-15 lines, enough to understand the pattern
+- **Be self-contained and compilable** — every variable referenced must be declared in the snippet; a stray identifier (e.g. `bitmap2` when only `bitmap` was created) is a compile error
 - **Only use real APIs** — verify every method/overload exists in source before using in an example
 - **Never use obsolete APIs** — a member marked `[Obsolete("...", true)]` is a compile error, so an example using it is broken. The extract JSON flags these in an `obsolete` field; the message names the replacement. The classic SkiaSharp trap is legacy text rendering (see skia-patterns.md "Obsolete APIs").

@@ -109,6 +109,13 @@ WRITING RULES:
   to "Initializes a new <see cref> from ..." — keep "Initializes a new instance of the".
 - Use <see langword="null" /> not <see langword="default" /> for nullable params
 - Use <see langword="true" /> and <see langword="false" /> for boolean literals in prose
+- Struct property defaults are whatever zero-init produces (0/null/false) UNLESS the
+  source has a field initializer. Do NOT copy a "default" from a sibling constant
+  (e.g. SKDocumentXpsOptions.Dpi defaults to 0, NOT to SKDocument.DefaultRasterDpi = 72).
+- Code examples must be SELF-CONTAINED and compile: declare every variable you reference,
+  and never put `using`/Dispose on a parent-owned object (the canvas from
+  SKDocument.BeginPage and SKSurface.Canvas are owned by their parent). See
+  skia-patterns.md "Caller-owned vs parent-owned".
 
 OBSOLETE MEMBERS (avoid broken examples):
 - Entries with an "obsolete" field are deprecated. When the text contains "true"
@@ -125,6 +132,11 @@ STANDARD VALUES (CICP, Vulkan, OpenType, etc.):
   in externals/skia/ where the enum is defined and verify numeric values
 - Do NOT rely on your own knowledge of standards for specific numeric values
   (gamma values, bit depths, transfer function parameters, etc.)
+- The MEMBER NAME usually encodes the exact standard (SmpteRp4312 = SMPTE RP 431-2;
+  SmpteSt4281 = SMPTE ST 428-1). Match the summary's standard number AND its described
+  behavior to the name: RP 431-2 is DCI-P3 (not "432-2"), and ST 428-1 is a gamma-2.6
+  transfer (not "linear" — a separate Linear member exists). See skia-patterns.md
+  "Standard-Based Enums".
 - If you cannot find the header, state "value from standard" without inventing
   specific numbers (e.g., say "assumed display gamma" not "assumed gamma 2.2")
 
@@ -190,7 +202,10 @@ SPECIFIC CHECKS:
   actually validate/reject, or silently accept? Read the METHOD BODY, not just signature.
 - Data format claims (bit layouts, channel names, byte orders): verify against
   skia-patterns.md and the native C/C++ header if available in the repo.
-- Default value claims: find the actual default in source (e.g., struct zero-init vs constants)
+- Default value claims: find the actual default in source. A struct property with NO
+  field initializer defaults to 0/null/false — "default 72" for a struct DPI is wrong
+  (72 is SKDocument.DefaultRasterDpi, a sibling constant used by scalar overloads, not
+  the struct's default). Recurring trap: SKDocumentXpsOptions.Dpi.
 - "Gets or sets" vs "Gets": the entry's "signature" field shows the accessor verbatim
   ({ get; } vs { get; set; }) — compare the verb against it. Don't trust the prose alone.
 - Cross-library: SkiaSharp and HarfBuzzSharp are DIFFERENT libraries with different conventions.
@@ -200,6 +215,10 @@ STANDARD VALUE VERIFICATION (CRITICAL):
   you MUST locate and read the C/C++ header where the enum is defined (check
   externals/skia/include/ or binding/ generated files)
 - Cross-reference the MemberValue in JSON against the enum constant in source
+- The MEMBER NAME usually encodes the standard (SmpteRp4312 = SMPTE RP 431-2;
+  SmpteSt4281 = SMPTE ST 428-1). Verify the summary's standard number AND its described
+  behavior against the name: RP 431-2 ≠ "432-2"; ST 428-1 is gamma ~2.6, NOT "linear"
+  (a separate Linear member exists for the actual linear transfer).
 - If documentation claims a specific numeric property of a standard (e.g., "gamma 2.2",
   "10-bit precision", "64-bit packed"), verify it is consistent:
   - Does the bit math add up? (e.g., "64-bit with 10+10+10+10 packed" = only 40 bits → ERROR)
@@ -260,6 +279,13 @@ For each JSON file in output/docs-work/:
       legacy text API: SKPaint.TextSize/TextScaleX/Typeface/TextAlign and the
       SKCanvas.DrawText(string,float,float,SKPaint) overload are obsolete-error — the
       modern form uses SKFont (see skia-patterns.md "Obsolete APIs").
+   g. Check the example is SELF-CONTAINED: every variable/identifier referenced must be
+      declared within the snippet. An undefined local (e.g. using `bitmap2` when only
+      `bitmap` was created) is a compile error. This is easy to miss in multi-statement
+      examples — track each identifier back to its declaration.
+   h. Check disposal OWNERSHIP: never `using`/Dispose an object owned by a parent. The
+      canvas from SKDocument.BeginPage and SKSurface.Canvas are parent-owned (owns:false);
+      wrapping them in `using` is wrong (see skia-patterns.md "Caller-owned vs parent-owned").
 
 OUTPUT FORMAT — you MUST use this structure for each file:
   [filename.json] CHECKED N code examples
@@ -296,12 +322,17 @@ For each JSON file in output/docs-work/:
    <see cref> class" (or "struct" for value types) — not a shortened "Initializes a new <see cref>"
 7. Check property summaries match the accessor in the entry's "signature" field:
    "Gets or sets" for { get; set; }, "Gets" for { get; }
-8. Check boolean params use "true to..." and boolean returns use "true if..."
+8. Check boolean wording: parameters use "true to...", while returns AND property
+   `<value>` use "true if..." (a property value describes a state, like a return)
 9. Check nullable params use <see langword="null" /> not "default"
 10. Check remarks don't make false comparisons with other types
     (e.g., "Unlike X, which is immutable" — verify before accepting)
 11. Check enum member descriptions accurately describe the member's
-    specific value, not a similar-looking sibling enum member
+    specific value, not a similar-looking sibling enum member. For standard-based enums,
+    the member NAME encodes the standard (SmpteRp4312 = SMPTE RP 431-2; SmpteSt4281 =
+    SMPTE ST 428-1) — verify the summary's standard number AND behavior match it
+    (RP 431-2 not "432-2"; ST 428-1 is gamma 2.6, not "linear"). See skia-patterns.md
+    "Standard-Based Enums".
 12. Check domain facts against skia-patterns.md (naming conventions, byte layouts,
     type categories). If documentation matches the reference, it is correct.
 13. For native byte layout claims, compare against skia-patterns.md. If the
