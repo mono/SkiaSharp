@@ -143,22 +143,21 @@ pre-agent-steps:
         echo "Prepare produced no changes; nothing to apply."
       fi
 tools:
-  # The agent only reads the restored files and rewrites prose — it must NOT run
-  # the scripts (they already ran in the prepare job). No python3 here on purpose.
-  # Keep this an explicit read-only allowlist (cat/grep/sort/head/tail): it is the
-  # ONLY thing that stops the agent shelling out. Dropping the bash block entirely
+  # The agent reads the restored files, rewrites prose, then commits and opens the
+  # PR. It must NOT re-run the scripts (they already ran in the prepare job) — no
+  # python3 here on purpose. Keep an explicit allowlist: it is the only thing that
+  # stops the agent shelling out to anything else. Dropping the bash block entirely
   # makes gh-aw compile to `--allow-all-tools` (strictly worse). No sed/awk: they
   # rewrite files in place, bypassing the edit tool.
   #
-  # NOTE: gh-aw still force-injects the full git suite (git add/checkout/commit/...)
-  # into the agent whenever create-pull-request is configured, so we CANNOT remove
-  # git via tools. gh-aw owns every branch/commit/PR operation via the
-  # create-pull-request safe-output; the agent must never invoke git itself. That
-  # is enforced by the prompt ("How the PR is made"). The failure this guards
-  # against: the agent ran its own `git checkout -b`, left the working tree
-  # uncommitted, and gh-aw's commit-based patch generator fell back to diffing
-  # months of history (2000+ files, blowing the PR file cap).
-  bash: ["cat", "grep", "sort", "head", "tail"]
+  # git is REQUIRED, not optional: the create-pull-request safe-output is
+  # commit-based — it errors with "No changes to commit" unless the agent has run
+  # `git add` + `git commit` first (and gh-aw force-injects the git suite anyway).
+  # The agent MUST commit its work before calling create_pull_request — see the
+  # "How the PR is made" section. The earlier 2000+-file blow-up was the OPPOSITE
+  # mistake: the agent created a branch but never committed, so gh-aw's patch
+  # generator fell back to diffing months of history and exceeded the PR file cap.
+  bash: ["cat", "grep", "sort", "head", "tail", "git"]
   edit:
 # The agent has no network: it only polishes prose from already-generated files.
 network: {}
@@ -194,8 +193,9 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
 the regenerated files are on disk, and the list is at
-`output/files-to-polish.txt`. **Do not run `generate.sh`, `dotnet cake`, the
-Python script, or `git commit`/`git push`.** Your job is the Polish phase only.
+`output/files-to-polish.txt`. **Do not re-run `generate.sh`, `dotnet cake`, or the
+Python script** — they already ran. Your job is the Polish phase, then committing
+and opening the PR.
 
 ## Your job: the Polish phase
 
@@ -217,11 +217,21 @@ to **Polish**.
 
 ## How the PR is made
 
-The `create-pull-request` safe-output captures **all** working-tree changes —
-the restored Prepare output (Cake tree + Python raw data) and your prose edits —
-into one PR targeting `main` on the single `bot/release-notes` branch. **Do not run
-any `git` command yourself** — not `commit`, `push`, `add`, `checkout`, `branch`, or
-`switch`. gh-aw creates the branch, commits the entire working tree, and opens the PR
-for you; if you run git (for example creating the branch), your edits stay uncommitted
-and patch generation breaks. If nothing changed (Prepare produced an empty patch and
-you made no edits), no PR is opened or updated.
+`create-pull-request` is a **commit-based** safe-output: it turns your commit into
+the PR. It does **not** stage or commit for you. If you call it with an uncommitted
+working tree it returns *"No changes to commit"*, and gh-aw then falls back to
+diffing months of history (2000+ files, exceeding the PR file cap and failing the
+run). So once polishing is done you **must** commit everything yourself, then create
+the PR:
+
+1. `git checkout -b bot/release-notes` — create the PR branch from the current HEAD.
+2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
+   (Cake API-diff tree + Python raw data) **and** your prose edits.
+3. `git commit -m "docs: regenerate API diffs and polish release notes"`.
+4. Call the `create_pull_request` safe-output. It opens one PR targeting `main` from
+   the `bot/release-notes` branch.
+
+Commit **once**, at the very end, after every edit is done — not incrementally. The
+only time you skip the commit and the PR is when the working tree is completely
+clean (step 2 above found the polish list empty **and** `git status` shows no
+changes); in that case make no edits, run no git, and exit — no PR is created.
