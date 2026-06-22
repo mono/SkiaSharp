@@ -99,9 +99,26 @@ WRITING RULES:
 - NEVER invent API calls — verify every method/overload exists by reading C# source
 - NEVER guess numeric values — read MemberValue from JSON, cross-reference source
 - Fill ALL params in ALL overloads — each overload independently complete
-- Read-only properties use "Gets" — check source for { get; } vs { get; set; }
+- Accessor verb comes from the entry's "signature" field, not from intuition:
+  "{ get; set; }" → "Gets or sets ..."; "{ get; }" → "Gets ...". The signature is
+  already in the JSON — read it, don't guess from the member's purpose. (Many struct
+  properties look read-only but are actually settable, e.g. SKFontVariationAxis.)
+- Constructor summaries MUST use the exact .NET phrase: "Initializes a new instance of
+  the <see cref="T:..." /> class." Use "struct" instead of "class" when the type's
+  "signature" field says "struct" (e.g. "public readonly struct ..."). Do not shorten
+  to "Initializes a new <see cref> from ..." — keep "Initializes a new instance of the".
 - Use <see langword="null" /> not <see langword="default" /> for nullable params
 - Use <see langword="true" /> and <see langword="false" /> for boolean literals in prose
+
+OBSOLETE MEMBERS (avoid broken examples):
+- Entries with an "obsolete" field are deprecated. When the text contains "true"
+  (i.e. [Obsolete("...", true)]) the member is a COMPILE ERROR if used — examples that
+  call it will not build. Never use an obsolete member in a code example, and never
+  recommend it as the way to do something.
+- The obsolete message names the replacement — use it. The most common SkiaSharp trap:
+  text rendering moved from SKPaint to SKFont. See skia-patterns.md "Obsolete APIs".
+- You still must document the obsolete member's own summary/value when it is in scope —
+  just describe it factually; the [Obsolete] attribute already carries the warning.
 
 STANDARD VALUES (CICP, Vulkan, OpenType, etc.):
 - For enum members referencing external standards, you MUST read the C/C++ header
@@ -120,7 +137,11 @@ REMARKS RULES:
 
 CONTENT FORMAT:
 - XML refs: <see cref="T:..." />, <paramref name="..." />, <see langword="null" />
-- In CDATA remarks: use <xref:...> instead of <see cref>
+- In CDATA remarks: use <xref:...> instead of <see cref>. The DocId prefix (T:/M:/P:)
+  belongs ONLY to <see cref>. An xref uses the bare DocFX UID with NO prefix:
+    ✅ <xref:SkiaSharp.SKPath>   ✅ <xref:SkiaSharp.SKPathBuilder.MoveTo(System.Single,System.Single)>
+    ❌ <xref:T:SkiaSharp.SKPath> ❌ <xref:P:SkiaSharp.SKPaint.Color>
+  A T:/M:/P: prefix inside an xref produces a broken link.
 - Set remarks to "" for self-closing <remarks />
 
 TRUST HIERARCHY for native type facts (bit layouts, byte orders):
@@ -170,7 +191,8 @@ SPECIFIC CHECKS:
 - Data format claims (bit layouts, channel names, byte orders): verify against
   skia-patterns.md and the native C/C++ header if available in the repo.
 - Default value claims: find the actual default in source (e.g., struct zero-init vs constants)
-- "Gets or sets" vs "Gets": check if property has { get; set; } or only { get; }
+- "Gets or sets" vs "Gets": the entry's "signature" field shows the accessor verbatim
+  ({ get; } vs { get; set; }) — compare the verb against it. Don't trust the prose alone.
 - Cross-library: SkiaSharp and HarfBuzzSharp are DIFFERENT libraries with different conventions.
 
 STANDARD VALUE VERIFICATION (CRITICAL):
@@ -232,14 +254,20 @@ For each JSON file in output/docs-work/:
       override, base, event, class, struct, delegate, abstract, virtual, etc.
    e. Check null safety: if a method returns nullable (SKData?), does the
       example handle null before using the result?
+   f. Check for OBSOLETE APIs: grep the member's source for [Obsolete. A member marked
+      [Obsolete("...", true)] is a COMPILE ERROR and must never appear in an example.
+      The "obsolete" field in the JSON entry also flags these. Watch especially for the
+      legacy text API: SKPaint.TextSize/TextScaleX/Typeface/TextAlign and the
+      SKCanvas.DrawText(string,float,float,SKPaint) overload are obsolete-error — the
+      modern form uses SKFont (see skia-patterns.md "Obsolete APIs").
 
 OUTPUT FORMAT — you MUST use this structure for each file:
   [filename.json] CHECKED N code examples
     Example 1 (docId): "var surface = SKSurface.Create(...)"
       → grep binding/SkiaSharp/SKSurface.cs: found Create(SKImageInfo) at line 42 ✓
       → variable names OK ✓
-    Example 2 (docId): "var override = new SKFontPaletteOverride"
-      → CRITICAL: "override" is a C# reserved keyword
+    Example 2 (docId): "paint.TextSize = 24f"
+      → CRITICAL: TextSize is [Obsolete(..., true)] — won't compile; use font.Size
   ISSUES: [list] or NONE
 
 A review that checks 0 code examples is INCOMPLETE. Finding 0 issues across
@@ -262,15 +290,21 @@ For each JSON file in output/docs-work/:
    not template placeholders like [Describe...] or [Show...]
 3. Check summaries add value beyond just restating the member name
 4. Check <see cref> references use correct prefix (T: M: P: F:)
-5. Check boolean params use "true to..." and boolean returns use "true if..."
-6. Check nullable params use <see langword="null" /> not "default"
-7. Check remarks don't make false comparisons with other types
-   (e.g., "Unlike X, which is immutable" — verify before accepting)
-8. Check enum member descriptions accurately describe the member's
-   specific value, not a similar-looking sibling enum member
-9. Check domain facts against skia-patterns.md (naming conventions, byte layouts,
-   type categories). If documentation matches the reference, it is correct.
-10. For native byte layout claims, compare against skia-patterns.md. If the
+5. Check CDATA <xref:...> links use NO DocId prefix — <xref:SkiaSharp.SKPath> is correct,
+   <xref:T:SkiaSharp.SKPath> / <xref:M:...> / <xref:P:...> are broken (prefix is for <see cref> only)
+6. Check constructor summaries use the full phrase "Initializes a new instance of the
+   <see cref> class" (or "struct" for value types) — not a shortened "Initializes a new <see cref>"
+7. Check property summaries match the accessor in the entry's "signature" field:
+   "Gets or sets" for { get; set; }, "Gets" for { get; }
+8. Check boolean params use "true to..." and boolean returns use "true if..."
+9. Check nullable params use <see langword="null" /> not "default"
+10. Check remarks don't make false comparisons with other types
+    (e.g., "Unlike X, which is immutable" — verify before accepting)
+11. Check enum member descriptions accurately describe the member's
+    specific value, not a similar-looking sibling enum member
+12. Check domain facts against skia-patterns.md (naming conventions, byte layouts,
+    type categories). If documentation matches the reference, it is correct.
+13. For native byte layout claims, compare against skia-patterns.md. If the
     documentation matches the reference file, it is CORRECT — do not override.
     Never invent C macro expansions to "disprove" the reference.
 

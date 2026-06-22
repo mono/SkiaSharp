@@ -96,6 +96,8 @@ Each type has its own XML file with this structure:
 
 ### Constructors
 
+Always open with the exact .NET phrase **"Initializes a new instance of the `<see cref>` class."** — use "struct" instead of "class" for value types. The type kind (class vs struct) is in the entry's `signature` field (e.g. `public readonly struct HBColor`). A shortened form like "Initializes a new `<see cref>` from a packed value" is a guideline violation.
+
 ```xml
 <!-- Class constructor -->
 <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKPaint" /> class.</summary>
@@ -105,21 +107,28 @@ Each type has its own XML file with this structure:
 <param name="width">The width of the bitmap.</param>
 <param name="height">The height of the bitmap.</param>
 
-<!-- Struct constructor -->
+<!-- Struct constructor (note "struct", not "class") -->
 <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKPoint" /> struct.</summary>
 
 <!-- Abstract class constructor -->
 <summary>Called from constructors in derived classes to initialize the <see cref="T:SkiaSharp.SKObject" /> class.</summary>
+
+<!-- ❌ WRONG — omits "instance of the ... struct" (a real mistake from a past batch) -->
+<summary>Initializes a new <see cref="T:HarfBuzzSharp.HBColor" /> from a packed BGRA value.</summary>
+<!-- ✅ Right -->
+<summary>Initializes a new instance of the <see cref="T:HarfBuzzSharp.HBColor" /> struct from a packed BGRA value.</summary>
 ```
 
 ### Properties
 
+The opening verb is decided by the accessor, which is shown verbatim in the entry's `signature` field — read it, don't infer from the property's purpose. `{ get; set; }` → **"Gets or sets"**; `{ get; }` → **"Gets"**. Struct properties are an easy trap: many look read-only but are actually settable (e.g. every property on `SKFontVariationAxis` is `{ get; set; }`).
+
 ```xml
-<!-- Read/write -->
+<!-- Read/write — signature: public SKColor Color { get; set; } -->
 <summary>Gets or sets the color.</summary>
 <value>The color value.</value>
 
-<!-- Read-only (do NOT say "This property is read-only") -->
+<!-- Read-only — signature: public int Width { get; } (do NOT say "This property is read-only") -->
 <summary>Gets the width of the bitmap.</summary>
 <value>The width in pixels.</value>
 
@@ -130,6 +139,9 @@ Each type has its own XML file with this structure:
 <!-- Boolean read-only -->
 <summary>Gets a value indicating whether the path is empty.</summary>
 <value><see langword="true" /> if the path contains no lines or curves; otherwise, <see langword="false" />.</value>
+
+<!-- ❌ WRONG — signature is { get; set; } but summary says only "Gets" -->
+<summary>Gets the variation axis minimum value.</summary>   <!-- should be "Gets or sets" -->
 ```
 
 ### Methods
@@ -424,14 +436,18 @@ Look at `samples/Gallery/Shared/Samples/` for real usage patterns. These samples
 
 ### Cross-References in Rich Remarks
 
-Inside CDATA blocks, use `<xref:...>` (NOT `<see cref>`):
+Inside CDATA blocks, use `<xref:...>` (NOT `<see cref>`). An `xref` takes the **bare DocFX UID** — the fully-qualified name with **no `T:`/`M:`/`P:`/`F:` prefix**. Those DocId prefixes belong only to `<see cref>`; carrying them into an `xref` produces a broken link.
 
 ```
-See <xref:SkiaSharp.SKCanvas> for drawing operations.
-Use <xref:SkiaSharp.SKPathBuilder> to construct paths incrementally.
+✅ See <xref:SkiaSharp.SKCanvas> for drawing operations.
+✅ Use <xref:SkiaSharp.SKPathBuilder> to construct paths incrementally.
+✅ Call <xref:SkiaSharp.SKPathBuilder.MoveTo(System.Single,System.Single)> to start a contour.
+
+❌ See <xref:T:SkiaSharp.SKCanvas> ...      (drop the T:)
+❌ Use <xref:P:SkiaSharp.SKPaint.Color> ... (drop the P:)
 ```
 
-Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` as usual.
+Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` **with** the prefix as usual. So the same type is `<see cref="T:SkiaSharp.SKCanvas" />` in a summary but `<xref:SkiaSharp.SKCanvas>` in a remarks CDATA block.
 
 ## Type-Level Documentation
 
@@ -450,3 +466,4 @@ Types that wrap native resources (`IDisposable`) should have remarks that cover:
 - **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
 - **Keep it short** — 5-15 lines, enough to understand the pattern
 - **Only use real APIs** — verify every method/overload exists in source before using in an example
+- **Never use obsolete APIs** — a member marked `[Obsolete("...", true)]` is a compile error, so an example using it is broken. The extract JSON flags these in an `obsolete` field; the message names the replacement. The classic SkiaSharp trap is legacy text rendering (see skia-patterns.md "Obsolete APIs").

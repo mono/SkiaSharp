@@ -9,6 +9,7 @@ Classify issues by severity when reviewing documentation.
 Issues that damage credibility or break functionality:
 
 - **Fabricated APIs** — code examples that reference methods, overloads, or types that don't exist. Always verify against actual C# source before writing examples.
+- **Obsolete APIs in examples** — using a member marked `[Obsolete("...", true)]` in a code example. These are compile errors, so the example never builds. Most common: legacy text rendering (`SKPaint.TextSize`/`Typeface`/`TextAlign`, old `SKCanvas.DrawText(string,float,float,SKPaint)`) — use `SKFont` instead. The extract JSON flags these in an `obsolete` field.
 - **Wrong numeric values** — enum descriptions citing incorrect standard values (ITU-T H.273, Vulkan, etc.). Cross-reference against `MemberValue` in the XML.
 - **Spelling errors** in public-facing text (teh, recieve, seperate, occured, paramter, retreive, initalize)
 - **Repeated words** ("the the", "a a", "an an")
@@ -25,15 +26,16 @@ Issues that violate standards or leave gaps:
 - **Empty tags** - `<value />`, `<summary />`, `<returns />`, or `<summary></summary>` with only whitespace (note: `<remarks />` is acceptable for simple members)
 - **.NET guideline violations**:
   - Summaries that just repeat the member name without context
-  - Properties not starting with "Gets" or "Gets or sets" (check C# source for actual accessor)
+  - Properties not starting with "Gets" or "Gets or sets" — match the verb to the accessor in the entry's `signature` field (`{ get; }` → "Gets", `{ get; set; }` → "Gets or sets")
   - Boolean properties not using "Gets a value indicating whether..."
-  - Constructors not using "Initializes a new instance of the..."
+  - Constructors not using the full "Initializes a new instance of the `<see cref>` class" (or "struct" for value types) — a shortened "Initializes a new `<see cref>` from..." is wrong
   - Methods not starting with third-person present-tense verb
   - Boolean parameters using "true if..." instead of "true to..."
   - Boolean returns using "true to..." instead of "true if..."
   - Missing `<see langword>` for true/false/null
   - Using `<see langword="default" />` instead of `<see langword="null" />` for nullable params
 - **Invalid cref references** - wrong prefix (T:, M:, P:, F:) or nonexistent target
+- **DocId prefix inside a CDATA xref** — `<xref:T:...>`, `<xref:M:...>`, `<xref:P:...>` are broken links. Inside CDATA an xref takes the bare UID (`<xref:SkiaSharp.SKPath>`); the prefix is only for `<see cref>` outside CDATA.
 - **Missing required documentation** - public APIs without summaries
 - **Incomplete overloads** - params filled on one overload but "To be added." on another overload of the same method
 
