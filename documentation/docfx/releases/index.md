@@ -4,20 +4,14 @@ Release notes for all SkiaSharp versions.
 
 ### SkiaSharp 4.x
 
-- **Version 4.150.x**
-  - [Version 4.150.0](4.150.0.md)
-  - [Version 4.150.0 (Unreleased)](4.150.0-unreleased.md)
 - **Version 4.148.x**
   - [Version 4.148.0](4.148.0.md)
-- **Version 4.147.x**
-  - [Version 4.147.0](4.147.0.md)
 
 ### SkiaSharp 3.x
 
 - **Version 3.119.x**
   - [Version 3.119.5 (Unreleased)](3.119.5-unreleased.md)
   - [Version 3.119.4](3.119.4.md)
-  - [Version 3.119.3](3.119.3.md)
   - [Version 3.119.2](3.119.2.md)
   - [Version 3.119.1](3.119.1.md)
   - [Version 3.119.0](3.119.0.md)
@@ -103,10 +97,7 @@ Release notes for all SkiaSharp versions.
 
 ### HarfBuzzSharp
 
-- **HarfBuzzSharp 14.2.x**
-  - [HarfBuzzSharp 14.2.0](harfbuzzsharp/14.2.0.md)
 - **HarfBuzzSharp 8.3.x**
-  - [HarfBuzzSharp 8.3.1.6](harfbuzzsharp/8.3.1.6.md)
   - [HarfBuzzSharp 8.3.1.5](harfbuzzsharp/8.3.1.5.md)
   - [HarfBuzzSharp 8.3.1.3](harfbuzzsharp/8.3.1.3.md)
   - [HarfBuzzSharp 8.3.1.2](harfbuzzsharp/8.3.1.2.md)
