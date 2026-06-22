@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace SkiaSharp
 {
-	[Obsolete ($"Use {nameof (SKFontHinting)} instead.")]
+	[Obsolete ($"Use {nameof (SKFontHinting)} instead.", error: true)]
 	public enum SKPaintHinting
 	{
 		NoHinting = 0,
@@ -14,7 +14,7 @@ namespace SkiaSharp
 		Full = 3,
 	}
 
-	[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
+	[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.", error: true)]
 	public enum SKFilterQuality
 	{
 		None = 0,
