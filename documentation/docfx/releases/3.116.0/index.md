@@ -32,7 +32,7 @@
 
 ## SkiaSharp.Views.Blazor
 
-- [SkiaSharp.Views.Blazor](SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.md)
+- [SkiaSharp.Views.Blazor](SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.md) — ⚠️ breaking
 
 ## SkiaSharp.Views.Desktop.Common
 

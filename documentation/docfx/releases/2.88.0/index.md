@@ -31,7 +31,7 @@
 
 ## SkiaSharp.Views.Forms
 
-- [SkiaSharp.Views.Forms](SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.md) — ⚠️ breaking
+- [SkiaSharp.Views.Forms](SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.md)
 
 ## SkiaSharp.Views.Forms.GTK
 

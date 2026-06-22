@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.GRVorticeD3DBackendContext
 
 ```csharp
-public class GRVorticeD3DBackendContext : SkiaSharp.GRD3DBackendContext {
+public class GRVorticeD3DBackendContext : SkiaSharp.GRD3DBackendContext, System.IDisposable {
 	// constructors
 	public GRVorticeD3DBackendContext ();
 	// properties
@@ -22,7 +22,7 @@ public class GRVorticeD3DBackendContext : SkiaSharp.GRD3DBackendContext {
 #### New Type: SkiaSharp.GRVorticeD3DTextureResourceInfo
 
 ```csharp
-public class GRVorticeD3DTextureResourceInfo : SkiaSharp.GRD3DTextureResourceInfo {
+public class GRVorticeD3DTextureResourceInfo : SkiaSharp.GRD3DTextureResourceInfo, System.IDisposable {
 	// constructors
 	public GRVorticeD3DTextureResourceInfo ();
 	// properties

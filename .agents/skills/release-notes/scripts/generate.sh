@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # generate.sh — the Prepare phase: run the two deterministic
-# release-notes/changelog generators in the required order (Cake -> Python),
+# release-notes/api diff generators in the required order (Cake -> Python),
 # VERBOSE, and write the "Files to polish" list to a file.
 #
 # Output contract (spec §2.2/§2.3): this script is VERBOSE. Cake and Python
@@ -22,9 +22,9 @@
 #   generate.sh [--api-only | --notes-only] [--polish-list <path>] \
 #               [extra args for the Python script...]
 #
-#   (no scope args)      Full regeneration of everything: API changelogs (Cake)
+#   (no scope args)      Full regeneration of everything: API diffs (Cake)
 #                        then release-notes raw data for every branch (Python --all).
-#   --api-only           Run only the Cake API-changelog generator.
+#   --api-only           Run only the Cake API-diff generator.
 #   --notes-only         Run only the Python release-notes generator.
 #   --polish-list <path> Forwarded to the Python generator: write the "Files to
 #                        polish" list to <path> instead of the default
@@ -41,6 +41,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
+
+# The two generation paths each have a single canonical script under
+# scripts/infra/docs/ that local runs, CI, and the docs Docker wrapper all share. This
+# orchestrator just calls them in the required order (Path 1 api diffs -> Path 2
+# notes); it owns no commands of its own so nothing can drift between here and CI.
+API_DIFFS_SH="$REPO_ROOT/scripts/infra/docs/generate-api-diffs.sh"
+RELEASE_NOTES_SH="$REPO_ROOT/scripts/infra/docs/generate-release-notes.sh"
 
 run_api=1
 run_notes=1
@@ -66,27 +73,16 @@ fi
 cd "$REPO_ROOT"
 
 if [ "$run_api" = 1 ]; then
-  if ! command -v dotnet >/dev/null 2>&1; then
-    echo "ERROR: the .NET SDK ('dotnet') is required for the API-changelog generator but was not found." >&2
-    echo "       Install the SDK pinned in global.json and retry, or pass --notes-only to skip it." >&2
-    exit 1
-  fi
-  echo "==> Prepare [1/2]: API changelogs (Cake: docs-api-diff-past) — verbose"
-  dotnet tool restore
-  dotnet cake --target=docs-api-diff-past --nugetDiffPrerelease=true
+  echo "==> Prepare [1/2]: API diffs (Path 1) — verbose"
+  "$API_DIFFS_SH"
 fi
 
 if [ "$run_notes" = 1 ]; then
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "ERROR: 'python3' is required for the release-notes generator but was not found." >&2
-    echo "       Install Python 3 and retry, or pass --api-only to skip it." >&2
-    exit 1
-  fi
   py_args=("${notes_args[@]}")
   if [ -n "$polish_list" ]; then
     py_args+=(--polish-list "$polish_list")
     echo "==> Files-to-polish list -> $polish_list"
   fi
-  echo "==> Prepare [2/2]: release-notes raw data (generate-release-notes.py ${py_args[*]}) — verbose"
-  python3 "$SCRIPT_DIR/generate-release-notes.py" "${py_args[@]}"
+  echo "==> Prepare [2/2]: release-notes raw data (Path 2) — verbose"
+  "$RELEASE_NOTES_SH" "${py_args[@]}"
 fi
