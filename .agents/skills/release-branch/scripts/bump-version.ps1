@@ -34,8 +34,10 @@
     script refuses it.
 
     A bump requires BOTH -SkiaSharpVersion and -HarfBuzzSharpVersion. The caller
-    decides the exact HarfBuzzSharp version (4-digit X.Y.Z.N normally; reset to
-    3-digit on a native HarfBuzz upgrade), so this script never guesses it.
+    decides the exact HarfBuzzSharp version, so this script never guesses it. The
+    next version normally increments/appends the 4th digit in lockstep with the
+    SkiaSharp patch (X.Y.Z -> X.Y.Z.1, X.Y.Z.N -> X.Y.Z.(N+1)); only on an actual
+    native HarfBuzz upgrade does it reset to the 3-digit native version.
 
 .PARAMETER SkiaSharpVersion
     Target SkiaSharp nuget version, e.g. 4.148.1. Requires -HarfBuzzSharpVersion.
@@ -107,12 +109,26 @@ if ($doBump) {
     $curAssembly = Get-Content $versionsPath |
         Where-Object { $_ -match '^SkiaSharp\s+assembly\s+(?<maj>\d+)\.(?<min>\d+)\.' } |
         Select-Object -First 1
-    if ($curAssembly -match '^SkiaSharp\s+assembly\s+(?<maj>\d+)\.(?<min>\d+)\.') {
-        $curMajorMinor = "$($Matches['maj']).$($Matches['min'])"
-        $newMajorMinor = ($SkiaSharpVersion -split '\.')[0..1] -join '.'
-        if ($curMajorMinor -ne $newMajorMinor) {
-            Write-Error "SkiaSharp major.minor would change ($curMajorMinor -> $newMajorMinor). That is a Skia milestone update (it also rewrites the milestone/soname/increment lines, assembly, cgmanifest.json and native sources) and is out of scope for this helper, which only does label changes and patch bumps."
-        }
+    if (-not ($curAssembly -match '^SkiaSharp\s+assembly\s+(?<maj>\d+)\.(?<min>\d+)\.')) {
+        Write-Error "Could not find/parse the 'SkiaSharp assembly' line in $versionsPath. Refusing to proceed: this line is the guard that prevents an out-of-scope milestone change."
+    }
+    $curMajorMinor = "$($Matches['maj']).$($Matches['min'])"
+    $newMajorMinor = ($SkiaSharpVersion -split '\.')[0..1] -join '.'
+    if ($curMajorMinor -ne $newMajorMinor) {
+        Write-Error "SkiaSharp major.minor would change ($curMajorMinor -> $newMajorMinor). That is a Skia milestone update (it also rewrites the milestone/soname/increment lines, assembly, cgmanifest.json and native sources) and is out of scope for this helper, which only does label changes and patch bumps."
+    }
+
+    # Guard: require a strictly-increasing patch (no equal/lower re-runs)
+    $curNuget = Get-Content $versionsPath |
+        Where-Object { $_ -match '^SkiaSharp\s+.*\bnuget\s+(?<v>\d+\.\d+\.\d+)\s*$' } |
+        Select-Object -First 1
+    if (-not ($curNuget -match '\bnuget\s+(?<v>\d+\.\d+\.\d+)\s*$')) {
+        Write-Error "Could not find/parse the 'SkiaSharp ... nuget' line in $versionsPath. Refusing to proceed: this is the guard that prevents an equal/lower patch."
+    }
+    $curPatch = [int](($Matches['v'] -split '\.')[2])
+    $newPatch = [int](($SkiaSharpVersion -split '\.')[2])
+    if ($newPatch -le $curPatch) {
+        Write-Error "SkiaSharp patch must increase. Current nuget is $($Matches['v']); requested $SkiaSharpVersion is not greater. (Re-running the same bump, or a typo'd lower patch, would publish a duplicate/downgraded package version.)"
     }
 }
 

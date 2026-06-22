@@ -177,9 +177,10 @@ version after release".)
      -PreviewLabel preview.0
    # add -DryRun first to preview
    ```
-   - `{hb-next}`: the next HarfBuzzSharp version — normally increment the last
-     digit (`8.3.1.4` → `8.3.1.5`); on a native HarfBuzz upgrade, reset to the
-     3-digit native version (e.g. `14.2.0`).
+   - `{hb-next}`: the next HarfBuzzSharp version — normally increment/append the
+     **4th** digit in lockstep with the SkiaSharp patch (`14.2.0` → `14.2.0.1`,
+     `8.3.1.4` → `8.3.1.5`); only on an actual native HarfBuzz upgrade do you
+     reset to the 3-digit native version (e.g. `14.3.0`).
 
 3. Commit: `git commit -m "Bump to the next version ({next}) after release"`
 
