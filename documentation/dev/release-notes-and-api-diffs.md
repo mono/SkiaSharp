@@ -699,9 +699,21 @@ in `scripts/VERSIONS.txt` via `AddDep`/`AddPackageDir` — covering the framewor
 the GTK/GIR and Maui stacks, and the Xamarin.Forms platform renderers (the iOS/macOS ones ship
 under `build/XCODE11`, the rest under `lib/`, all in the one pinned `Xamarin.Forms` package).
 SkiaSharp's own inter-package references (e.g. `SkiaSharp.Views.*`/`SkiaSharp.Resources` →
-`SkiaSharp`, `SkiaSharp.Views.Maui.Controls` → `SkiaSharp.Views.Maui.Core`) are staged by
-`AddSelfDep`, which resolves the **latest stable** version published on nuget.org — the same
-answer on every host and cache state, unlike the old cache-glob that bound by enumeration order.
+`SkiaSharp`, `SkiaSharp.Views.Maui.Controls` → `SkiaSharp.Views.Maui.Core`, `SkiaSharp.HarfBuzz`
+→ `HarfBuzzSharp`) are *not* added globally. They are staged **per diff** by
+`StageSelfDepsFromNuspecAsync`, which reads the package-under-diff's own `.nuspec` and adds each
+of our managed dependencies at the **exact version that nuspec pins** — the version the package
+was actually built against — then `UnstageSearchPaths` removes them before the next line so a
+self-dependency never leaks across versions. This is *contemporaneous*: a 1.x diff resolves
+`SKObject` from the 1.x `SkiaSharp`, not from today's build, so it can never show inherited
+members the historical type never had. It must be read from the nuspec rather than reused from
+the package's own version because the self-dependency family is **not a single version line** —
+`SkiaSharp.HarfBuzz 2.88.7` was built against `HarfBuzzSharp 7.3.0.1`, not `2.88.7` — so only the
+nuspec records the correct version for every self-dependency uniformly. `NativeAssets.*`
+dependencies are excluded (they ship only native binaries, contribute no managed types, and are
+the largest packages to fetch), and a self-dependency version that cannot be fetched is logged
+and skipped rather than aborting the run. The nuspec is frozen, so this is deterministic and
+host/cache-independent, unlike the old cache-glob that bound by enumeration order.
 Resolving these matters because the public SkiaSharp types derive from `SKObject`, which implements
 the `internal` infrastructure interfaces `ISKReferenceCounted` and `ISKSkipObjectRegistration`; if
 the referenced assembly is unresolved those internals leak into the public diff as bogus
@@ -796,8 +808,10 @@ page links straight to its API diffs.
 9. **API-diff output is host-independent (§5.2).** Every assembly reference is satisfied by a
    real, host-independent dependency — third-party references by a version pinned in
    `scripts/VERSIONS.txt` (`AddDep`/`AddPackageDir`), and SkiaSharp's own inter-package
-   references by the latest stable on nuget.org (`AddSelfDep`) — so resolution never depends on
-   the build host or cache state. The comparer runs with `IgnoreResolutionErrors = true` **solely**
+   references by the exact version pinned in the package-under-diff's own `.nuspec`, staged
+   per-diff by `StageSelfDepsFromNuspecAsync` and removed afterwards — so resolution is
+   *contemporaneous* and never depends on the build host or cache state. The comparer runs with
+   `IgnoreResolutionErrors = true` **solely**
    to skip the
    single reference that ships in no package — `_Microsoft.Android.Resource.Designer`,
    generated into every .NET-Android assembly and absent from SkiaSharp's public surface,

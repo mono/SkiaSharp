@@ -131,15 +131,20 @@ Task ("docs-api-diff")
         Debug ($"Version '{latestVersion}' is the baseline for '{id}'...");
 
         // pre-cache so we can have better logs
+        string baselineRoot = null;
         if (!string.IsNullOrEmpty (latestVersion)) {
             Debug ($"Caching version '{latestVersion}' of '{id}'...");
-            await comparer.ExtractCachedPackageAsync (id, latestVersion);
+            baselineRoot = await comparer.ExtractCachedPackageAsync (id, latestVersion);
         }
 
         // generate the diff (current build is a transient CI gate — it writes only
         // output/api-diff, never the committed releases/ tree, spec §5.3)
         Debug ($"Running a diff on '{latestVersion}' vs '{localNugetVersion}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
+        // Stage the baseline's own SkiaSharp/HarfBuzz dependencies (from its nuspec) so
+        // inherited types resolve to the contemporaneous assembly; remove them after.
+        var stagedSelfDeps = await StageSelfDepsFromNuspecAsync (comparer, baselineRoot);
+        try {
         using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id}.{localNugetVersion}.nupkg")) {
             comparer.MarkdownDiffFileExtension = ".breaking.md";
             comparer.IgnoreNonBreakingChanges = true;
@@ -148,6 +153,9 @@ Task ("docs-api-diff")
             comparer.MarkdownDiffFileExtension = null;
             comparer.IgnoreNonBreakingChanges = false;
             await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
+        }
+        } finally {
+            UnstageSearchPaths (comparer, stagedSelfDeps);
         }
 
         // copy pretty version
@@ -307,7 +315,16 @@ Task ("docs-api-diff-past")
             // generate the diff and copy to the committed releases/ tree
             Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
             var diffRoot = $"{baseDir}/{id}/{apiDiffVersion}";
-            await RunBreakingAndFullDiff (comparer, id, previous, version, lineDir, diffRoot);
+            // Stage this package's own SkiaSharp/HarfBuzz dependencies at the versions it
+            // was built against (read from its nuspec) so inherited types resolve to the
+            // contemporaneous assembly, then remove them so they never leak into the next
+            // line (spec §5.2). versionRoot is the new-side extracted package.
+            var stagedSelfDeps = await StageSelfDepsFromNuspecAsync (comparer, versionRoot);
+            try {
+                await RunBreakingAndFullDiff (comparer, id, previous, version, lineDir, diffRoot);
+            } finally {
+                UnstageSearchPaths (comparer, stagedSelfDeps);
+            }
 
             // Record the co-release mapping (spec §1.5/§3.6): the HarfBuzz version
             // that ships with a SkiaSharp line is the HarfBuzzSharp dependency of the

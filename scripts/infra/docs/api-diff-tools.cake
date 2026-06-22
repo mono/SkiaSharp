@@ -131,26 +131,12 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("Mono.GtkSharp", "net45");
 
-    // Self-dependencies: SkiaSharp parts that reference other SkiaSharp parts
-    // (e.g. SkiaSharp.Views.* / SkiaSharp.Skottie / SkiaSharp.Resources → SkiaSharp,
-    // SkiaSharp.Views.Maui.Controls → SkiaSharp.Views.Maui.Core). ApiInfo must resolve
-    // the referenced assembly to determine the accessibility of inherited/implemented
-    // types; if it cannot, the internal infrastructure interfaces SKObject implements —
-    // ISKReferenceCounted and ISKSkipObjectRegistration — resolve to nothing and LEAK
-    // into the public diff as bogus base-interface entries (they are `internal` in
-    // SkiaSharp.dll, so a public type that derives from SKObject must never list them).
-    //
-    // An earlier version globbed EVERY cached version of these packages into SearchPaths.
-    // Mono.Cecil binds by simple assembly name, so the winning build depended on
-    // filesystem-enumeration order and cache warmth — the output silently varied between
-    // a cold and a warm machine (spec §5.2, invariant 9). Instead, stage exactly ONE
-    // build per self-dependency, resolved deterministically: the latest STABLE published
-    // version on nuget.org. That is the same answer on every host and every cache state
-    // (so cold == warm), and because these infrastructure types are long-lived and
-    // stable, a single recent build resolves them identically for every historical diff.
-    await AddSelfDep("SkiaSharp", "netstandard2.0");
-    await AddSelfDep("HarfBuzzSharp", "netstandard2.0", "netstandard1.3");
-    await AddSelfDep("SkiaSharp.Views.Maui.Core", "net10.0", "net9.0", "net8.0", "net7.0", "net6.0");
+    // Self-dependencies (SkiaSharp parts that reference other SkiaSharp parts — e.g.
+    // SkiaSharp.Views.* → SkiaSharp, SkiaSharp.Views.Maui.Controls → ...Maui.Core) are
+    // NOT added here. They must match the *version being diffed*, not a single global
+    // version, so they are staged per-diff from each package's own nuspec by
+    // StageSelfDepsFromNuspecAsync (see the note on that helper). Adding them globally
+    // here would resolve a 1.x package's inherited types against today's assembly.
 
     Verbose("Added search paths:");
     foreach (var path in comparer.SearchPaths) {
@@ -204,32 +190,6 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         }
     }
 
-    // Stage a single, deterministically-chosen build of one of SkiaSharp's own packages
-    // so ApiInfo can resolve the types it inherits/implements (see the self-dependency
-    // note above). The version is the latest STABLE release on nuget.org — host- and
-    // cache-independent, unlike the old cache glob. The first platform in `platforms`
-    // whose lib/ folder exists in that build wins.
-    async Task AddSelfDep(string id, params string[] platforms)
-    {
-        var stableFilter = new NuGetVersions.Filter { IncludePrerelease = false };
-        var version = await NuGetVersions.GetLatestAsync(id, stableFilter);
-        if (version == null) {
-            Verbose ($"    Self-dependency {id}: no stable version found; skipping.");
-            return;
-        }
-        Verbose ($"    Adding self-dependency {id} version {version}...");
-        var root = await comparer.ExtractCachedPackageAsync(id, version.ToNormalizedString());
-        foreach (var platform in platforms) {
-            var libPath = System.IO.Path.Combine(root, "lib", platform);
-            if (DirectoryExists(libPath)) {
-                Verbose ($"      lib path {libPath}");
-                comparer.SearchPaths.Add(libPath);
-                return;
-            }
-        }
-        Verbose ($"      no lib path for {id} among: {string.Join(", ", platforms)}");
-    }
-
     // Add an arbitrary subfolder of a cached package to the search paths. Used for
     // assemblies that ship outside lib/ or ref/ (e.g. the Xamarin.Forms iOS/macOS
     // renderers under build/XCODE11). subPath is relative to the package root and uses
@@ -247,6 +207,149 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
             Verbose ($"      no dir at {subPath}");
         }
     }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// SELF-DEPENDENCY STAGING (contemporaneous, per-diff)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// A SkiaSharp/HarfBuzz package that derives its public types from another of our packages
+// (e.g. SkiaSharp.Views.* : SKObject in SkiaSharp; SkiaSharp.Views.Maui.Controls →
+// ...Maui.Core) needs that referenced assembly on the resolver's search path. ApiInfo
+// reads a public type's base class FROM the resolved assembly (Mono.Cecil binds by simple
+// name, so whichever build is on the path wins), and uses it to decide which inherited
+// interfaces are public: with SkiaSharp resolved, SKObject's `internal`
+// ISKReferenceCounted/ISKSkipObjectRegistration are hidden and only the public
+// System.IDisposable remains; without it, those internals LEAK into the diff.
+//
+// The version on the path must be the one the package being diffed was actually built
+// against — otherwise a historical (e.g. 1.x) diff is described using today's assembly and
+// can show inherited members the old type never had. So instead of a single global
+// version, stage each self-dependency at the EXACT version pinned in the package's own
+// nuspec. That is contemporaneous, deterministic, and host/cache-independent (nuspec
+// content is frozen). Returns the paths added so the caller removes them after the diff —
+// a self-dep must never leak into the next line. `packageRoot` is the extracted root of
+// the (new-side) package being diffed; the library uses one search-path set for both
+// sides of a diff, and a line's old→new are adjacent same-era releases, so the new side's
+// pin is the correct choice.
+async Task<List<string>> StageSelfDepsFromNuspecAsync(NuGetDiff comparer, string packageRoot)
+{
+    var added = new List<string>();
+    if (string.IsNullOrEmpty(packageRoot))
+        return added;
+    var nuspec = GetFiles($"{packageRoot}/*.nuspec").FirstOrDefault();
+    if (nuspec == null)
+        return added;
+
+    var xdoc = XDocument.Load(nuspec.FullPath);
+    XNamespace ns = xdoc.Root.GetDefaultNamespace();
+
+    // Collect our own dependencies at their pinned minimum version. The same dependency
+    // repeats once per target-framework group, so de-dup by id and keep the lowest pin
+    // (deterministic, and the lowest is the version the package first shipped against).
+    var selfDeps = new Dictionary<string, NuGetVersion>(StringComparer.OrdinalIgnoreCase);
+    foreach (var dep in xdoc.Descendants(ns + "dependency")) {
+        var depId = (string)dep.Attribute("id");
+        if (string.IsNullOrEmpty(depId) || !IsSelfDependency(depId))
+            continue;
+        if (!VersionRange.TryParse((string)dep.Attribute("version") ?? "", out var range) || range.MinVersion == null)
+            continue;
+        if (!selfDeps.TryGetValue(depId, out var existing) || range.MinVersion < existing)
+            selfDeps[depId] = range.MinVersion;
+    }
+
+    foreach (var id in selfDeps.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase)) {
+        var version = selfDeps[id].ToNormalizedString();
+        Verbose($"    Staging self-dependency {id} version {version} (from nuspec)...");
+        try {
+            var root = await comparer.ExtractCachedPackageAsync(id, version);
+            var dir = GetSelfDepLibDirectory(root);
+            if (dir == null) {
+                Verbose($"      no managed build found for {id} {version}");
+                continue;
+            }
+            Verbose($"      lib path {dir}");
+            comparer.SearchPaths.Add(dir);
+            added.Add(dir);
+        } catch (Exception ex) {
+            // A single self-dep that can't be fetched/extracted (e.g. a yanked or
+            // never-published transitive version) must not abort the whole run; the worst
+            // case is that one line cannot resolve that assembly's inherited types.
+            Warning($"      could not stage self-dependency {id} {version}: {ex.Message}");
+        }
+    }
+    return added;
+}
+
+// Remove paths that StageSelfDepsFromNuspecAsync added, restoring the comparer to its
+// shared (third-party only) search-path set before the next line is diffed.
+void UnstageSearchPaths(NuGetDiff comparer, List<string> paths)
+{
+    foreach (var path in paths)
+        comparer.SearchPaths.Remove(path);
+}
+
+// Our own MANAGED packages, identified by id prefix (SkiaSharp*, HarfBuzzSharp*). A package
+// never depends on itself, so this never stages the assembly being diffed (which would
+// shadow it). NativeAssets.* packages are EXCLUDED: they ship only native binaries (no
+// managed assembly), so they contribute nothing to inherited-type resolution, they are by
+// far the largest packages to download, and a missing/preview native build would otherwise
+// abort the whole run for no benefit.
+bool IsSelfDependency(string id) =>
+    (id.StartsWith("SkiaSharp", StringComparison.OrdinalIgnoreCase) ||
+     id.StartsWith("HarfBuzzSharp", StringComparison.OrdinalIgnoreCase)) &&
+    id.IndexOf(".NativeAssets.", StringComparison.OrdinalIgnoreCase) < 0;
+
+// Pick exactly one managed build folder of a self-dependency package to resolve inherited
+// types from. Deterministic ranking: prefer netstandard (newest — the most portable,
+// era-stable surface), then the newest plain .NET, then portable, then the
+// alphabetically-first remaining build; look under lib/ before ref/. One build is enough
+// because Mono.Cecil binds by simple assembly name.
+string GetSelfDepLibDirectory(string packageRoot)
+{
+    foreach (var bucket in new[] { "lib", "ref" }) {
+        var bucketDir = System.IO.Path.Combine(packageRoot, bucket);
+        if (!DirectoryExists(bucketDir))
+            continue;
+
+        DirectoryPath best = null;
+        var bestRank = (tier: -1, version: new System.Version(0, 0), name: (string)null);
+        foreach (var dir in GetDirectories($"{bucketDir}/*")) {
+            if (!GetFiles($"{dir}/*.dll").Any() && !GetFiles($"{dir}/*.winmd").Any())
+                continue;
+
+            var d = dir.GetDirectoryName().ToLower();
+            int tier;
+            System.Version version;
+            var net = System.Text.RegularExpressions.Regex.Match(d, @"^net(\d+\.\d+)$");
+            if (d.StartsWith("netstandard")) {
+                tier = 3;
+                if (!System.Version.TryParse(d.Substring("netstandard".Length), out version))
+                    version = new System.Version(0, 0);
+            } else if (net.Success) {
+                tier = 2;
+                version = System.Version.Parse(net.Groups[1].Value);
+            } else if (d.StartsWith("portable")) {
+                tier = 1;
+                version = new System.Version(0, 0);
+            } else {
+                tier = 0;
+                version = new System.Version(0, 0);
+            }
+
+            if (tier > bestRank.tier
+                || (tier == bestRank.tier && version > bestRank.version)
+                || (tier == bestRank.tier && version == bestRank.version && (bestRank.name == null || string.CompareOrdinal(d, bestRank.name) < 0))) {
+                bestRank = (tier, version, d);
+                best = dir;
+            }
+        }
+
+        if (best != null)
+            return best.FullPath;
+    }
+    return null;
 }
 
 
