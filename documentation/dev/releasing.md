@@ -44,7 +44,8 @@ The `{build}` number is auto-assigned by CI.
 Releases are cut from the line's **integration branch**: `main` for the newest
 in-development line, or `release/X.Y.x` for an established/maintenance line. Each
 integration branch sits at the next unreleased version with `PREVIEW_LABEL:
-preview.0`, and is bumped to the next version once its current version is released.
+preview.0`, and is bumped to the next version **as soon as its stable is cut**
+(immediately at branch time, not when the release publishes).
 
 | Type | Base (integration branch) | PREVIEW_LABEL |
 |------|---------------------------|---------------|
@@ -133,17 +134,18 @@ flowchart TB
     ∙ Commit and push"]
     
     CREATE --> CI([CI Build Started])
-    
-    CI --> IS_RELEASED{Version now released?}
-    IS_RELEASED -->|No| DONE([Done - wait 2-4 hours])
-    IS_RELEASED -->|Yes| BUMP
-    
-    BUMP["Bump Integration Branch
+    CREATE --> IS_STABLE{Stable cut?}
+    IS_STABLE -->|No| DONE([Done - wait 2-4 hours])
+    IS_STABLE -->|Yes| BUMP
+
+    BUMP["Bump Integration Branch (now,
+    in parallel with CI)
     ∙ Edit SKIASHARP_VERSION
     ∙ Edit VERSIONS.txt
     ∙ Increment HarfBuzzSharp
     ∙ Create and merge PR"]
     
+    CI --> DONE
     BUMP --> DONE
 
     classDef error fill:#ffebee,stroke:#c62828

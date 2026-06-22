@@ -42,9 +42,11 @@ Each one always sits at the *next unreleased version* for its line, with
 
 - **Every** release (preview, rc, stable, patch) is cut FROM the line's
   integration branch — `release/{version}` is branched off it.
-- After a release ships, the integration branch is **bumped** to the next
-  version (see Step 5). This applies to maintenance-line stables too, not just
-  previews from `main`.
+- **As soon as a stable is cut**, the integration branch is **bumped** to the
+  next version (see Step 5) — immediately, *not* after the release publishes.
+  After branching, PRs keep merging into the integration branch, and they must
+  land on the *next* version, not the one that was just cut. Fixes for the cut
+  release go on its own `release/{version}` branch.
 - A new minor's `release/X.Y.x` is forked from `main` when stabilization begins;
   `main` is then bumped to the next minor. From that point on, all `X.Y.*`
   releases come from `release/X.Y.x`, not `main`.
@@ -133,15 +135,23 @@ python3 .agents/skills/release-status/scripts/pipeline-status.py release/{versio
 
 ---
 
-## Step 5: Bump the Integration Branch After Release
+## Step 5: Bump the Integration Branch (Immediately After Cutting a Stable)
 
-When a version is released (stable ships), advance that line's **integration
-branch** to the next version so future builds don't collide with the released
-version. Crucially this is **not** "preview-from-main only" — **maintenance-line
-stables bump too**: e.g. after `3.119.4` shipped, `release/3.119.x` was bumped to
-`3.119.5` ("Bump to the next version after release"). Previews/RCs of an
-in-progress version do **not** bump it (they all share the same `X.Y.Z`); the
-bump happens once that `X.Y.Z` is released.
+**Do this right after Step 4** — as soon as the stable release branch is cut and
+pushed, advance that line's **integration branch** to the next version. Do **not**
+wait for the release to publish.
+
+Why immediately: once `release/{version}` is branched off, PRs keep merging into
+the integration branch (`release/X.Y.x`, and `main` for its line). Those changes
+must land on the **next** version, not the one that was just cut. Any fixes for
+the cut release go onto its own `release/{version}` branch instead. If the
+integration branch isn't bumped at cut time, post-branch merges collide with the
+released version.
+
+Previews/RCs do **not** trigger this — they're iterations toward the same
+`X.Y.Z`. Cutting the **stable** does, because that finalizes `X.Y.Z`. (e.g. when
+`3.119.4` was cut, `release/3.119.x` was bumped to `3.119.5` — "Bump to the next
+version after release".)
 
 **How each line advances:**
 
