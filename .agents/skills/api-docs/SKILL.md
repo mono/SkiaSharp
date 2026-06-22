@@ -134,9 +134,10 @@ STANDARD VALUES (CICP, Vulkan, OpenType, etc.):
   (gamma values, bit depths, transfer function parameters, etc.)
 - The MEMBER NAME usually encodes the exact standard (SmpteRp4312 = SMPTE RP 431-2;
   SmpteSt4281 = SMPTE ST 428-1). Match the summary's standard number AND its described
-  behavior to the name: RP 431-2 is DCI-P3 (not "432-2"), and ST 428-1 is a gamma-2.6
-  transfer (not "linear" — a separate Linear member exists). See skia-patterns.md
-  "Standard-Based Enums".
+  behavior to the name: RP 431-2 is DCI-P3 (not "432-2"), and ST 428-1 in
+  SKColorspaceTransferFnCicp is a gamma-2.6 transfer (not "linear" — a separate Linear
+  member exists). The same name can differ across sibling enums (SmpteSt4281 is also a
+  *primaries* member, with a different meaning). See skia-patterns.md "Standard-Based Enums".
 - If you cannot find the header, state "value from standard" without inventing
   specific numbers (e.g., say "assumed display gamma" not "assumed gamma 2.2")
 
@@ -217,8 +218,10 @@ STANDARD VALUE VERIFICATION (CRITICAL):
 - Cross-reference the MemberValue in JSON against the enum constant in source
 - The MEMBER NAME usually encodes the standard (SmpteRp4312 = SMPTE RP 431-2;
   SmpteSt4281 = SMPTE ST 428-1). Verify the summary's standard number AND its described
-  behavior against the name: RP 431-2 ≠ "432-2"; ST 428-1 is gamma ~2.6, NOT "linear"
-  (a separate Linear member exists for the actual linear transfer).
+  behavior against the name: RP 431-2 ≠ "432-2"; ST 428-1 in SKColorspaceTransferFnCicp
+  is gamma ~2.6, NOT "linear" (a separate Linear member exists for the actual linear
+  transfer). The same member name can mean different things in sibling enums — SmpteSt4281
+  is also a primaries member — so check it against the enum you are documenting.
 - If documentation claims a specific numeric property of a standard (e.g., "gamma 2.2",
   "10-bit precision", "64-bit packed"), verify it is consistent:
   - Does the bit math add up? (e.g., "64-bit with 10+10+10+10 packed" = only 40 bits → ERROR)
@@ -331,7 +334,9 @@ For each JSON file in output/docs-work/:
     specific value, not a similar-looking sibling enum member. For standard-based enums,
     the member NAME encodes the standard (SmpteRp4312 = SMPTE RP 431-2; SmpteSt4281 =
     SMPTE ST 428-1) — verify the summary's standard number AND behavior match it
-    (RP 431-2 not "432-2"; ST 428-1 is gamma 2.6, not "linear"). See skia-patterns.md
+    (RP 431-2 not "432-2"; ST 428-1 in the transfer-fn enum is gamma 2.6, not "linear";
+    note SmpteSt4281 also exists as a primaries member with a different meaning).
+    See skia-patterns.md
     "Standard-Based Enums".
 12. Check domain facts against skia-patterns.md (naming conventions, byte layouts,
     type categories). If documentation matches the reference, it is correct.

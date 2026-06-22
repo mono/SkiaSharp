@@ -71,11 +71,14 @@ C# structs zero-initialize. When documenting struct properties:
 
 For enums whose members reference external standards, the **member name almost always encodes the exact standard identifier** — use it as a second source of truth alongside `MemberValue`:
 
-| Member name | Encodes | Correct description |
-|-------------|---------|---------------------|
-| `SmpteRp4312` | SMPTE RP **431-2** | DCI-P3 primaries (NOT "RP 432-2") |
-| `SmpteEg4321` | SMPTE EG **432-1** | Display P3 / P3-D65 primaries |
-| `SmpteSt4281` | SMPTE ST **428-1** | D-Cinema transfer — gamma ~2.6 (NOT "linear") |
+| Member name (enum) | Encodes | Correct description |
+|--------------------|---------|---------------------|
+| `SmpteRp4312` (`SKColorspacePrimariesCicp`) | SMPTE RP **431-2** | DCI-P3 primaries (NOT "RP 432-2") |
+| `SmpteEg4321` (`SKColorspacePrimariesCicp`) | SMPTE EG **432-1** | Display P3 / P3-D65 primaries |
+| `SmpteSt4281` (`SKColorspacePrimariesCicp`) | SMPTE ST **428-1** | CIE XYZ (D50 white point) primaries for D-Cinema |
+| `SmpteSt4281` (`SKColorspaceTransferFnCicp`) | SMPTE ST **428-1** | D-Cinema transfer function — gamma ~2.6 (NOT "linear") |
+
+**The same member name can mean different things in sibling enums.** `SmpteSt4281` appears in *both* `SKColorspacePrimariesCicp` (a set of color primaries) and `SKColorspaceTransferFnCicp` (a transfer function) — the standard (ST 428-1) defines both, but the member describes only the one relevant to *its* enum. Always confirm which enum you are documenting before copying a description; a "transfer function" gloss on a primaries member (or vice versa) is wrong even when the standard number is right.
 
 Two failure modes to check explicitly:
 - **Wrong identifier** — the summary's standard number must match the digits in the member name (`SmpteRp4312` → 431-2, not 432-2). Adjacent standards (431 vs 432) are easy to transpose.
