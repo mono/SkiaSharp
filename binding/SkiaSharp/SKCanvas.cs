@@ -770,14 +770,14 @@ namespace SkiaSharp
 		public void DrawText (string text, float x, float y, SKPaint paint) =>
 			DrawText (text, x, y, paint.TextAlign, paint.GetLegacyFont (), paint);
 
-		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
+		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: false)]
 		public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =>
 			DrawText (text, p, paint.GetLegacyTextAlign (), font, paint);
 
 		public void DrawText (string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawText (text, p.X, p.Y, textAlign, font, paint);
 
-		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
+		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: false)]
 		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
 			DrawText (text, x, y, paint.GetLegacyTextAlign (), font, paint);
 
