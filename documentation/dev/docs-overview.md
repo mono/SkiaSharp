@@ -2,17 +2,26 @@
 
 This is the **map** of SkiaSharp's documentation system: what gets generated, by
 which engine, driven by which skill, on which workflow, and in which repository.
-Start here, then follow the links to the two deep-dive documents:
+Start here for the big picture, then jump to a deep dive.
 
-- **[writing-docs.md](writing-docs.md)** — the operator how-to: prerequisites, the
-  local commands, editing API docs, and the Cake target reference.
-- **[release-notes-and-api-diffs.md](release-notes-and-api-diffs.md)** — the
-  behavior **spec** for the release-notes and API-diff engines (the versioning
-  model, `versions.json`, file layout, and per-engine rules). Read it before changing
-  either generator.
+## Start here — what are you trying to do?
 
-For the public docs **website** itself (build, preview, theming) see
-[site.md](site.md).
+| If you want to… | Go to |
+|---|---|
+| **Understand the whole system** at a glance | This page (the map) — read on |
+| **Generate or edit docs by hand** — prerequisites, local commands, editing API docs, the Cake target reference | [writing-docs.md](writing-docs.md) |
+| **Change how release notes or API diffs behave** — the versioning model, `versions.json`, file layout, per-engine rules | [release-notes-and-api-diffs.md](release-notes-and-api-diffs.md) (the behavior **spec**; read before changing either generator) |
+| **Work on the docs website** — build, preview, theming | [site.md](site.md) |
+
+## Contents
+
+- [The four kinds of documentation](#the-four-kinds-of-documentation)
+- [Two repositories](#two-repositories)
+- [The engines (`scripts/infra/docs/`)](#the-engines-scriptsinfradocs)
+- [The skills](#the-skills)
+- [CI automation (cross-repo)](#ci-automation-cross-repo)
+- [Local generation & Docker](#local-generation--docker)
+- [Where to go next](#where-to-go-next)
 
 ---
 
@@ -147,17 +156,11 @@ flowchart TB
 
 Key points:
 
-- **Paths 1 + 2 are one pipeline, one PR.** `update-release-notes` runs the
-  deterministic Prepare phase (Cake api diffs + Python notes) in its own job, hands
-  off to the AI Polish phase via an artifact, and opens a **single** rolling PR with
-  both. It triggers on pushes to `main` and `release/*`, on `v*` tags, and weekly. If
-  nothing changed, **no PR is opened**. (Spec §2.3.)
-- **Path 3 is cross-repo.** The engines live in *this* repo but the XML lives in the
-  *docs* repo, so `auto-api-docs-writer` lives in the docs repo, checks SkiaSharp out
-  to borrow the engines, regenerates the stubs, AI-fills placeholders, and opens its
-  PR there.
-- **`auto-docs-submodule-sync`** closes the loop: once the docs-repo PR merges, it
-  bumps this repo's `docs/` submodule pointer so the new XML is picked up here.
+| Point | What it means |
+|---|---|
+| **Paths 1 + 2 = one pipeline, one PR** | `update-release-notes` runs the deterministic Prepare phase (Cake API diffs + Python notes) in its own job, hands off to the AI Polish phase via an artifact, and opens a **single** rolling PR with both. Triggers: pushes to `main` and `release/*`, `v*` tags, and weekly. If nothing changed, **no PR is opened** (spec §2.3). |
+| **Path 3 is cross-repo** | The engines live in *this* repo but the XML lives in the *docs* repo, so `auto-api-docs-writer` lives in the docs repo, checks SkiaSharp out to borrow the engines, regenerates the stubs, AI-fills placeholders, and opens its PR there. |
+| **`auto-docs-submodule-sync` closes the loop** | Once the docs-repo PR merges, it bumps this repo's `docs/` submodule pointer so the new XML is picked up here. |
 
 ---
 
@@ -167,12 +170,10 @@ Everything CI does can be reproduced locally by calling the **same**
 `generate-*.sh` scripts. The only host requirement beyond the .NET SDK is **mono**
 for Path 3, and **gh** for Path 2's PR-author lookup.
 
-- **Native local run** — install the deps yourself and call the scripts (or the
-  underlying Cake targets in [writing-docs.md](writing-docs.md)).
-- **Docker** (`scripts/infra/docs/docker/run.sh`) — a **local-only** convenience
-  image that pre-installs dotnet + mono + python + gh so you don't have to. It runs
-  the same scripts against a bind-mounted checkout, so a local run reproduces what CI
-  produces.
+| Mode | What it is | When to use |
+|---|---|---|
+| **Native** | Install the deps yourself and call the `generate-*.sh` scripts (or the underlying Cake targets in [writing-docs.md](writing-docs.md)). | When you've installed the deps yourself. |
+| **Docker** (`scripts/infra/docs/docker/run.sh`) | A **local-only** convenience image that pre-installs dotnet + mono + python + gh and runs the same scripts against a bind-mounted checkout, so a local run reproduces what CI produces. | A one-command reproducible run without installing the deps yourself. |
 
 > **Docker is for local reproducibility only — CI does not use it.** The CI runners
 > install the same dependencies natively on Linux and call the same scripts. The image

@@ -35,6 +35,44 @@ thing.
 
 ---
 
+## Contents
+
+- **§1 — The shared versioning model (the rules)**
+  - §1.1 One artifact per release *line*, keyed by the version core
+  - §1.2 `versions.json` — the only override surface
+  - §1.3 Default comparison: the previous emitted line
+  - §1.4 Which lines get an artifact (emission)
+  - §1.5 Two parallel version families (SkiaSharp & HarfBuzzSharp)
+- **§2 — Skill layout & orchestration**
+  - §2.1 Engines live in `scripts/infra/docs/`; the skill just calls them
+  - §2.2 Two phases: Prepare → Polish
+  - §2.3 One workflow, one PR
+- **§3 — Filesystem layout & naming (canonical)**
+  - §3.1 The `releases/` tree at a glance
+  - §3.2 Human pages (release-notes engine owns)
+  - §3.3 API-diff folders (API-diff engine owns)
+  - §3.4 The HarfBuzz tree shape
+  - §3.5 Ownership — who writes and clears what
+  - §3.6 The co-release map sidecar (Cake → Python)
+- **§4 — Release-notes engine (`generate-release-notes.py`)**
+  - §4.1 Inputs & outputs
+  - §4.2 Released vs unreleased — two coexisting pages
+  - §4.3 Per-preview PR buckets
+  - §4.4 Division of responsibility — the script structures, the AI only polishes
+  - §4.5 The HarfBuzz family pages
+  - §4.6 How it runs
+- **§5 — API-diff engine (`api-diff.cake`)**
+  - §5.1 Inputs & outputs
+  - §5.2 Behavior
+  - §5.3 The "current" CI variant
+  - §5.4 How it runs
+- **§6 — Differences at a glance**
+- **§7 — Editing rules**
+  - §7.1 Editing this spec
+  - §7.2 Behavioral invariants the code must uphold
+
+---
+
 ## 1. The shared versioning model (the rules)
 
 This is the hard-won core. Both engines implement exactly these rules; they differ
@@ -157,54 +195,62 @@ carry **different version numbers** (SkiaSharp `3.119.0`, HarfBuzz `8.3.0`). Rat
 than fold one into the other, each **family** keeps its own identity and applies the
 §1.1–§1.4 rules independently:
 
-- **Family = the package's own version scheme.** *Every* `SkiaSharp.*` package
-  belongs to the **SkiaSharp** family — `SkiaSharp`, `SkiaSharp.Views.*`,
-  `SkiaSharp.Skottie`, …, and crucially `SkiaSharp.HarfBuzz` (the *managed shaper
-  binding*, which carries the SkiaSharp version, **not** a HarfBuzz version). The
-  **HarfBuzz** family is *only* the HarfBuzzSharp-versioned packages: `HarfBuzzSharp`
-  (the native binding) and `HarfBuzzSharp.NativeAssets.*`.
-- **Both families are first-class and identical in structure.** Each applies §1.1–§1.4
-  entirely within its own version scheme: the same emission rules (§1.4), the same
-  previous-emitted-line baselines (§1.3) and `versions.json` bucket (§1.2), the same
-  human release-notes pages (§4) **and** API diffs (§5), and the same
-  released/unreleased split, preview buckets, supersession, and AI polish. Neither is
-  folded into or subordinate to the other, and there are **no cross-family baselines**.
-  SkiaSharp lives at the `releases/` root and HarfBuzz under `releases/harfbuzzsharp/`
-  (§3) — identical shapes, one level deeper.
-- **The one difference: HarfBuzz is processed through SkiaSharp's branches and tags.**
-  HarfBuzz never releases on its own — every HarfBuzz version ships *inside* a SkiaSharp
-  release (usually via a *Bump HarfBuzz* PR), so it has no `release/*` branches or `v*`
-  tags of its own. So everything the engines otherwise read from a family's own git refs
-  — commit ranges, preview-milestone boundaries, release dates — the HarfBuzz family
-  takes from the **SkiaSharp** refs of its co-shipping release (via the co-release map
-  below), then **filters the commits to HarfBuzz-owned files** so the page shows
-  HarfBuzz's own changes instead of SkiaSharp's. That commit filter is the *only* content
-  difference; the engine mechanics are in §4.5. Specifically:
-  - **HarfBuzz-owned files** are the HarfBuzz packages, native build, and tests — **never**
-    any `SkiaSharp.*` source (`SkiaSharp.HarfBuzz` is SkiaSharp-versioned and stays on the
-    SkiaSharp page). §4.5 holds the canonical path list.
-  - A PR that touches *both* families appears on *both* pages — that duplication is
-    intended.
-  - Every HarfBuzz line gets a page (a published line beside its API-diff folder, §3.4; an
-    in-flight line without one yet, §4.5); when a line's filtered commit set is empty the
-    generator writes a deterministic **No changes** page (§4.5), so the page set still
-    equals the line set.
-- **The co-release map is the bridge** (deterministic, script-owned). The exact HarfBuzz
-  version that ships with SkiaSharp line *L* is read from `SkiaSharp.HarfBuzz@L`'s
-  `HarfBuzzSharp` package dependency (e.g. `SkiaSharp.HarfBuzz 2.88.0 → HarfBuzzSharp
-  2.8.2`) — from the published package for an emitted SkiaSharp line, or from the **working
-  tree** for an in-flight line not yet on the feed (§5.1) — kept at **full §1.1 line
-  granularity** so it names a real HarfBuzz line/folder (never truncated to
-  `Major.Minor.Patch`). The Cake engine — which already reads the packages — records this
-  `L ↔ hb` mapping in the **co-release map sidecar** (§3.6); the Python engine consumes it
-  both ways (§4.5): to give each HarfBuzz line its SkiaSharp git range, and to cross-link
-  the SkiaSharp and HarfBuzz hub pages (§4.4). When a single HarfBuzz line ships across
-  several SkiaSharp lines, the **earliest (introducing)** one — whose *Bump HarfBuzz* PR
-  created the line — is its canonical co-ship release: the one its banner and back-link
-  name (§4.4/§4.5). A HarfBuzz dependency of a *published* SkiaSharp line always resolves
-  to a released HarfBuzz folder; an in-flight line may name an as-yet-unpublished HarfBuzz
-  line, which emits an in-flight page (§4.5) rather than a folder. The mapping is **never**
-  computed by the AI.
+#### Family = the package's own version scheme
+
+*Every* `SkiaSharp.*` package belongs to the **SkiaSharp** family — `SkiaSharp`,
+`SkiaSharp.Views.*`, `SkiaSharp.Skottie`, …, and crucially `SkiaSharp.HarfBuzz` (the
+*managed shaper binding*, which carries the SkiaSharp version, **not** a HarfBuzz
+version). The **HarfBuzz** family is *only* the HarfBuzzSharp-versioned packages:
+`HarfBuzzSharp` (the native binding) and `HarfBuzzSharp.NativeAssets.*`.
+
+#### Both families are first-class and identical in structure
+
+Each applies §1.1–§1.4 entirely within its own version scheme: the same emission rules
+(§1.4), the same previous-emitted-line baselines (§1.3) and `versions.json` bucket
+(§1.2), the same human release-notes pages (§4) **and** API diffs (§5), and the same
+released/unreleased split, preview buckets, supersession, and AI polish. Neither is
+folded into or subordinate to the other, and there are **no cross-family baselines**.
+SkiaSharp lives at the `releases/` root and HarfBuzz under `releases/harfbuzzsharp/`
+(§3) — identical shapes, one level deeper.
+
+#### The one difference: HarfBuzz is processed through SkiaSharp's branches and tags
+
+HarfBuzz never releases on its own — every HarfBuzz version ships *inside* a SkiaSharp
+release (usually via a *Bump HarfBuzz* PR), so it has no `release/*` branches or `v*`
+tags of its own. So everything the engines otherwise read from a family's own git refs
+— commit ranges, preview-milestone boundaries, release dates — the HarfBuzz family
+takes from the **SkiaSharp** refs of its co-shipping release (via the co-release map
+below), then **filters the commits to HarfBuzz-owned files** so the page shows
+HarfBuzz's own changes instead of SkiaSharp's. That commit filter is the *only* content
+difference; the engine mechanics are in §4.5. Specifically:
+
+- **HarfBuzz-owned files** are the HarfBuzz packages, native build, and tests — **never**
+  any `SkiaSharp.*` source (`SkiaSharp.HarfBuzz` is SkiaSharp-versioned and stays on the
+  SkiaSharp page). §4.5 holds the canonical path list.
+- A PR that touches *both* families appears on *both* pages — that duplication is
+  intended.
+- Every HarfBuzz line gets a page (a published line beside its API-diff folder, §3.4; an
+  in-flight line without one yet, §4.5); when a line's filtered commit set is empty the
+  generator writes a deterministic **No changes** page (§4.5), so the page set still
+  equals the line set.
+
+#### The co-release map is the bridge
+
+The bridge is deterministic and script-owned. The exact HarfBuzz version that ships with
+SkiaSharp line *L* is read from `SkiaSharp.HarfBuzz@L`'s `HarfBuzzSharp` package
+dependency (e.g. `SkiaSharp.HarfBuzz 2.88.0 → HarfBuzzSharp 2.8.2`) — from the published
+package for an emitted SkiaSharp line, or from the **working tree** for an in-flight line
+not yet on the feed (§5.1) — kept at **full §1.1 line granularity** so it names a real
+HarfBuzz line/folder (never truncated to `Major.Minor.Patch`). The Cake engine — which
+already reads the packages — records this `L ↔ hb` mapping in the **co-release map
+sidecar** (§3.6); the Python engine consumes it both ways (§4.5): to give each HarfBuzz
+line its SkiaSharp git range, and to cross-link the SkiaSharp and HarfBuzz hub pages
+(§4.4). When a single HarfBuzz line ships across several SkiaSharp lines, the **earliest
+(introducing)** one — whose *Bump HarfBuzz* PR created the line — is its canonical
+co-ship release: the one its banner and back-link name (§4.4/§4.5). A HarfBuzz dependency
+of a *published* SkiaSharp line always resolves to a released HarfBuzz folder; an
+in-flight line may name an as-yet-unpublished HarfBuzz line, which emits an in-flight page
+(§4.5) rather than a folder. The mapping is **never** computed by the AI.
 
 ---
 
@@ -435,18 +481,24 @@ paths and only ever clears its own:
 | `releases/co-release-map.json` (§3.6) | Cake | Cake (rewritten each run) |
 
 The Cake engine clears **only the generated API-diff files** it owns. A file is treated
-as generated — and therefore deleted before the rebuild — only when **both**: (1) its
-first line starts with the `# API diff:` marker, and (2) it is not a `*.humanreadable.md`
-file. Condition (1) distinguishes a generated `<assembly>.md` from a hand-authored file
-shaped like one (e.g. `1.68.0/SkiaSharp/gpu-migration.md`), which a plain `*.md` glob
-could not. Condition (2) leaves the retired legacy `*.humanreadable.md` format untouched
-(and treats all such files consistently regardless of whether they happen to carry the
-marker). **Hand-authored files nested inside a `<line>/` folder are therefore preserved**;
-the human pages at the `releases/` root are never touched. Empty directories are pruned
-after deletion. The deterministic page→folder links are written by the Python engine
-(§2.2), not the AI.
+as generated — and therefore deleted before the rebuild — only when **both** of these
+hold:
 
-**TOC / index representation.** `TOC.yml` groups SkiaSharp lines into `Version X.Y.x`
+1. Its first line starts with the `# API diff:` marker. This distinguishes a generated
+   `<assembly>.md` from a hand-authored file shaped like one (e.g.
+   `1.68.0/SkiaSharp/gpu-migration.md`), which a plain `*.md` glob could not.
+2. It is **not** a `*.humanreadable.md` file. This leaves the retired legacy
+   `*.humanreadable.md` format untouched (and treats all such files consistently
+   regardless of whether they happen to carry the marker).
+
+So **hand-authored files nested inside a `<line>/` folder are preserved**, and the human
+pages at the `releases/` root are never touched. Empty directories are pruned after
+deletion. The deterministic page→folder links are written by the Python engine (§2.2),
+not the AI.
+
+#### TOC / index representation
+
+`TOC.yml` groups SkiaSharp lines into `Version X.Y.x`
 minor nodes (each nesting its patch releases), plus a **HarfBuzz** section that mirrors
 the same shape — `HarfBuzzSharp X.Y.x` minor subgroups, each nesting its emitted HarfBuzz
 lines pointing at their `harfbuzzsharp/<hb-line>.md` hubs (an intentional navigation
@@ -469,7 +521,9 @@ writes the page→folder link). It is *not* a rendered page (no `.md`), it is no
 by the AI, and it is the **only** thing that crosses from the API-diff engine into
 the release-notes engine.
 
-Shape — **one entry per emitted SkiaSharp line** (including in-flight lines), each mapping
+#### Shape
+
+**One entry per emitted SkiaSharp line** (including in-flight lines), each mapping
 that SkiaSharp line to the single HarfBuzz line it ships:
 
 ```json
@@ -478,6 +532,8 @@ that SkiaSharp line to the single HarfBuzz line it ships:
   { "skia_line": "4.148.0", "hb_line": "14.2.0", "hb_link": "harfbuzzsharp/14.2.0/index.md" }
 ]
 ```
+
+#### Field meanings
 
 - **`hb_line` is authoritative.** It is the HarfBuzz family line at **full §1.1 granularity**
   (never truncated to `Major.Minor.Patch`, so a 4-part stable like `8.3.1.5` is preserved).
@@ -489,6 +545,8 @@ that SkiaSharp line to the single HarfBuzz line it ships:
   (§5.2) HarfBuzz dependency. An intermediate HarfBuzz bump within a single SkiaSharp line's
   previews is attributed to that line's final HarfBuzz version; the map records no
   finer-grained history.
+
+#### How Python consumes it
 
 Python consumes the map **both ways** (§1.5/§4.5): it groups `skia_line`s by `hb_line` to
 give each HarfBuzz line its SkiaSharp git range and its canonical (earliest) co-ship release,
@@ -561,32 +619,40 @@ unreleased delta, a plain stable patch) carry one flat list instead.
 
 ### 4.4 Division of responsibility — the script structures, the AI only polishes
 
-**The scripts own everything structural and deterministic:** every filename, diff
-range, released-vs-unreleased split, rollup-vs-delta, supersession banner, preview
-bucketing, stale-page pruning, and **all links** (including the §1.5 HarfBuzz
-page→folder link). **The AI/skill only rewrites prose** in the files the script lists
-under "Files to polish". The AI never creates, renames, or deletes pages, never writes
-structural content or links, never edits either script, and — on any anomaly (a
-missing/unexpected page, data that looks wrong) — **stops and reports** instead of
-working around it. A maintainer then fixes the *script* (and this spec), never the
-output. See `.agents/skills/release-notes/SKILL.md`.
+**Division of responsibility:**
+
+| Owner | Responsibility |
+|---|---|
+| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, preview bucketing, stale-page pruning, and **all links** (including the §1.5 HarfBuzz page→folder link). |
+| **AI / skill** | Only rewrites **prose** in the files the script lists under "Files to polish". Never creates, renames, or deletes pages; never writes structural content or links; never edits either script. On any anomaly (a missing/unexpected page, data that looks wrong) it **stops and reports** instead of working around it. |
+
+A maintainer then fixes the *script* (and this spec), never the output. See
+`.agents/skills/release-notes/SKILL.md`.
+
+#### API-diff link rule
 
 **The API-diff links are required, fixed, and non-AI.** Every emitted page **whose line has
 an API-diff folder** carries the script-owned `> **API changes** · …` line in its
-**structural header** (above the prose region). On a **SkiaSharp** page it points at this
-line's `<line>/index.md` (§3.3) and, when HarfBuzz co-ships, at the co-shipped **HarfBuzz
-hub page** `harfbuzzsharp/<hb-line>.md` (§1.5/§3.6) — which carries HarfBuzz's own notes and
-its own API-diff link. On a **HarfBuzz** page it points at this HarfBuzz line's
-`harfbuzzsharp/<hb-line>/index.md` (§3.4) and back at its **canonical (introducing) SkiaSharp
-release** (§1.5). A page with **no** API-diff folder — typically an `-unreleased` head delta,
-whose commits are not yet in any published line's folder — carries **no** such line; the
-folder's presence drives the link, and the link's presence is part of the content key (§4.6),
-so it is backfilled the moment a folder appears. The line is **identical in presence and
-ownership** on every page (always script-owned, never AI-authored); its two *targets* differ
-by family per the rules above. The AI does **not** decide whether to include it, where to put
-it, how to word it, or what it links to, and does **not** narrate around it: it preserves any
-such line **verbatim** and writes no API-diff or cross-family links of its own. "Just link" —
-the diff itself is the artifact (§5.4); the page only points at it.
+**structural header** (above the prose region).
+
+- On a **SkiaSharp** page it points at this line's `<line>/index.md` (§3.3) and, when
+  HarfBuzz co-ships, at the co-shipped **HarfBuzz hub page** `harfbuzzsharp/<hb-line>.md`
+  (§1.5/§3.6) — which carries HarfBuzz's own notes and its own API-diff link.
+- On a **HarfBuzz** page it points at this HarfBuzz line's
+  `harfbuzzsharp/<hb-line>/index.md` (§3.4) and back at its **canonical (introducing)
+  SkiaSharp release** (§1.5).
+
+A page with **no** API-diff folder — typically an `-unreleased` head delta, whose commits
+are not yet in any published line's folder — carries **no** such line; the folder's
+presence drives the link, and the link's presence is part of the content key (§4.6), so it
+is backfilled the moment a folder appears.
+
+The line is **identical in presence and ownership** on every page (always script-owned,
+never AI-authored); its two *targets* differ by family per the rules above. The AI does
+**not** decide whether to include it, where to put it, how to word it, or what it links to,
+and does **not** narrate around it: it preserves any such line **verbatim** and writes no
+API-diff or cross-family links of its own. "Just link" — the diff itself is the artifact
+(§5.4); the page only points at it.
 
 ### 4.5 The HarfBuzz family pages
 
@@ -690,41 +756,54 @@ emit exactly the lines §1.4 selects, and diff each emitted line against its bas
 (§1.2/§1.3). A line's *representative* package is the newest stable if it shipped,
 otherwise the newest prerelease.
 
-**Deterministic resolution.** The comparer must resolve *every* referenced assembly: an
-unresolved reference makes `Mono.ApiTools` silently degrade type matching into spurious "New
-Type" dumps whose shape depends on what is installed on the build host, so the output stops
-being deterministic. `CreateNuGetDiffAsync` (`scripts/infra/docs/api-diff-tools.cake`)
-therefore adds every real dependency explicitly. Third-party references come from packages pinned
-in `scripts/VERSIONS.txt` via `AddDep`/`AddPackageDir` — covering the framework/reference packs,
-the GTK/GIR and Maui stacks, and the Xamarin.Forms platform renderers (the iOS/macOS ones ship
-under `build/XCODE11`, the rest under `lib/`, all in the one pinned `Xamarin.Forms` package).
-SkiaSharp's own inter-package references (e.g. `SkiaSharp.Views.*`/`SkiaSharp.Resources` →
-`SkiaSharp`, `SkiaSharp.Views.Maui.Controls` → `SkiaSharp.Views.Maui.Core`, `SkiaSharp.HarfBuzz`
-→ `HarfBuzzSharp`) are *not* added globally. They are staged **per diff** by
-`StageSelfDepsFromNuspecAsync`, which reads the package-under-diff's own `.nuspec` and adds each
-of our managed dependencies at the **exact version that nuspec pins** — the version the package
-was actually built against — then `UnstageSearchPaths` removes them before the next line so a
-self-dependency never leaks across versions. This is *contemporaneous*: a 1.x diff resolves
-`SKObject` from the 1.x `SkiaSharp`, not from today's build, so it can never show inherited
-members the historical type never had. It must be read from the nuspec rather than reused from
-the package's own version because the self-dependency family is **not a single version line** —
-`SkiaSharp.HarfBuzz 2.88.7` was built against `HarfBuzzSharp 7.3.0.1`, not `2.88.7` — so only the
-nuspec records the correct version for every self-dependency uniformly. `NativeAssets.*`
-dependencies are excluded (they ship only native binaries, contribute no managed types, and are
-the largest packages to fetch), and a self-dependency version that cannot be fetched is logged
-and skipped rather than aborting the run. The nuspec is frozen, so this is deterministic and
+#### Deterministic reference resolution
+
+**The problem.** The comparer must resolve *every* referenced assembly: an unresolved
+reference makes `Mono.ApiTools` silently degrade type matching into spurious "New Type"
+dumps whose shape depends on what is installed on the build host, so the output stops being
+deterministic. `CreateNuGetDiffAsync` (`scripts/infra/docs/api-diff-tools.cake`) therefore
+adds every real dependency explicitly.
+
+**Third-party references** come from packages pinned in `scripts/VERSIONS.txt` via
+`AddDep`/`AddPackageDir` — covering the framework/reference packs, the GTK/GIR and Maui
+stacks, and the Xamarin.Forms platform renderers (the iOS/macOS ones ship under
+`build/XCODE11`, the rest under `lib/`, all in the one pinned `Xamarin.Forms` package).
+
+**SkiaSharp's own inter-package references** (e.g. `SkiaSharp.Views.*`/`SkiaSharp.Resources`
+→ `SkiaSharp`, `SkiaSharp.Views.Maui.Controls` → `SkiaSharp.Views.Maui.Core`,
+`SkiaSharp.HarfBuzz` → `HarfBuzzSharp`) are *not* added globally. They are staged **per
+diff** by `StageSelfDepsFromNuspecAsync`, which reads the package-under-diff's own `.nuspec`
+and adds each of our managed dependencies at the **exact version that nuspec pins** — the
+version the package was actually built against — then `UnstageSearchPaths` removes them
+before the next line so a self-dependency never leaks across versions. This is
+*contemporaneous*: a 1.x diff resolves `SKObject` from the 1.x `SkiaSharp`, not from today's
+build, so it can never show inherited members the historical type never had.
+
+**It must be read from the nuspec** rather than reused from the package's own version
+because the self-dependency family is **not a single version line** — `SkiaSharp.HarfBuzz
+2.88.7` was built against `HarfBuzzSharp 7.3.0.1`, not `2.88.7` — so only the nuspec records
+the correct version for every self-dependency uniformly. `NativeAssets.*` dependencies are
+excluded (they ship only native binaries, contribute no managed types, and are the largest
+packages to fetch), and a self-dependency version that cannot be fetched is logged and
+skipped rather than aborting the run. The nuspec is frozen, so this is deterministic and
 host/cache-independent, unlike the old cache-glob that bound by enumeration order.
-Resolving these matters because the public SkiaSharp types derive from `SKObject`, which implements
-the `internal` infrastructure interfaces `ISKReferenceCounted` and `ISKSkipObjectRegistration`; if
-the referenced assembly is unresolved those internals leak into the public diff as bogus
-base-interface entries instead of collapsing to the public `System.IDisposable`. The sole exception is
-`_Microsoft.Android.Resource.Designer`, generated into every .NET-Android assembly and shipped
-in no package; because it is absent on every host it is skipped with `IgnoreResolutionErrors =
-true` without breaking determinism, and it is never part of SkiaSharp's public API. If a
-regeneration shows unexplained "New Type" churn, a dependency is missing — add it as a real
-`AddDep`/`AddPackageDir`; never accept the churn. (Only the cross-platform netstandard
-`SkiaSharp.Views.Forms` assembly is emitted as an api diff; the obsoleted per-platform builds
-are diffed only so the run completes, and their output is discarded.)
+
+**Why it matters.** Resolving these matters because the public SkiaSharp types derive from
+`SKObject`, which implements the `internal` infrastructure interfaces `ISKReferenceCounted`
+and `ISKSkipObjectRegistration`; if the referenced assembly is unresolved those internals
+leak into the public diff as bogus base-interface entries instead of collapsing to the
+public `System.IDisposable`.
+
+**The sole exception** is `_Microsoft.Android.Resource.Designer`, generated into every
+.NET-Android assembly and shipped in no package; because it is absent on every host it is
+skipped with `IgnoreResolutionErrors = true` without breaking determinism, and it is never
+part of SkiaSharp's public API.
+
+**Troubleshooting.** If a regeneration shows unexplained "New Type" churn, a dependency is
+missing — add it as a real `AddDep`/`AddPackageDir`; never accept the churn. (Only the
+cross-platform netstandard `SkiaSharp.Views.Forms` assembly is emitted as an api diff; the
+obsoleted per-platform builds are diffed only so the run completes, and their output is
+discarded.)
 
 ### 5.3 The "current" CI variant
 
@@ -743,7 +822,9 @@ no AI polish on the diffs
 themselves — the generated diff *is* the artifact; the human pages merely link to it
 (§1.5/§4.4).
 
-**Package cache — "cache once, run many".** Every package the run needs (each
+#### Package cache — cache once, run many
+
+Every package the run needs (each
 representative + baseline body and their declared dependencies) is fetched once into
 `externals/package_cache` and reused on every subsequent run. `Mono.ApiTools.NuGetDiff`
 downloads a package's *declared nuspec dependencies* on demand during the compare, not
@@ -806,15 +887,17 @@ page links straight to its API diffs.
    agent **only** through the uploaded artifact (working-tree changes + the
    `files-to-polish.txt` list), never a shared runner or stdout capture (§2.3).
 9. **API-diff output is host-independent (§5.2).** Every assembly reference is satisfied by a
-   real, host-independent dependency — third-party references by a version pinned in
-   `scripts/VERSIONS.txt` (`AddDep`/`AddPackageDir`), and SkiaSharp's own inter-package
-   references by the exact version pinned in the package-under-diff's own `.nuspec`, staged
-   per-diff by `StageSelfDepsFromNuspecAsync` and removed afterwards — so resolution is
-   *contemporaneous* and never depends on the build host or cache state. The comparer runs with
-   `IgnoreResolutionErrors = true` **solely**
-   to skip the
-   single reference that ships in no package — `_Microsoft.Android.Resource.Designer`,
-   generated into every .NET-Android assembly and absent from SkiaSharp's public surface,
-   hence unresolvable identically on every host. When a regeneration produces unexpected
-   "New Type" churn, the cause is almost always a newly-missing dependency: add it as a real
-   `AddDep`/`AddPackageDir`, never treat the churn as a real API change.
+   real, host-independent dependency, so resolution is *contemporaneous* and never depends on
+   the build host or cache state:
+   - third-party references by a version pinned in `scripts/VERSIONS.txt`
+     (`AddDep`/`AddPackageDir`); and
+   - SkiaSharp's own inter-package references by the exact version pinned in the
+     package-under-diff's own `.nuspec`, staged per-diff by `StageSelfDepsFromNuspecAsync` and
+     removed afterwards.
+
+   The comparer runs with `IgnoreResolutionErrors = true` **solely** to skip the single
+   reference that ships in no package — `_Microsoft.Android.Resource.Designer`, generated into
+   every .NET-Android assembly and absent from SkiaSharp's public surface, hence unresolvable
+   identically on every host. When a regeneration produces unexpected "New Type" churn, the
+   cause is almost always a newly-missing dependency: add it as a real `AddDep`/`AddPackageDir`,
+   never treat the churn as a real API change.
