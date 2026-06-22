@@ -6,15 +6,5 @@
 
 ### Namespace SkiaSharp.Views.Windows
 
-#### Type Changed: SkiaSharp.Views.Windows.GlobalStaticResources
-
-Removed method:
-
-```csharp
-[Obsolete ("This method is provided for binary backward compatibility. It will always return null.")]
-public static object FindResource (string name);
-```
-
-
 #### Removed Type SkiaSharp.Views.Windows.Extensions
 

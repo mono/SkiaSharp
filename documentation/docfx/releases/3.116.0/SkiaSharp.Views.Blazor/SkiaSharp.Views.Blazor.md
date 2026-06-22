@@ -36,3 +36,8 @@ public class _Imports : Microsoft.AspNetCore.Components.ComponentBase, Microsoft
 ```
 
 
+### Removed Namespace SkiaSharp.Views.Blazor.Internal
+
+
+#### Removed Type SkiaSharp.Views.Blazor.Internal.ActionHelper
+#### Removed Type SkiaSharp.Views.Blazor.Internal.FloatFloatActionHelper

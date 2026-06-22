@@ -26,22 +26,6 @@ public static class Extensions {
 }
 ```
 
-#### New Type: SkiaSharp.Views.Windows.GlobalStaticResources
-
-```csharp
-public sealed class GlobalStaticResources {
-	// constructors
-	public GlobalStaticResources ();
-	// methods
-
-	[Obsolete ("This method is provided for binary backward compatibility. It will always return null.")]
-public static object FindResource (string name);
-	public static void Initialize ();
-	public static void RegisterDefaultStyles ();
-	public static void RegisterResourceDictionariesBySource ();
-}
-```
-
 #### New Type: SkiaSharp.Views.Windows.SKPaintGLSurfaceEventArgs
 
 ```csharp

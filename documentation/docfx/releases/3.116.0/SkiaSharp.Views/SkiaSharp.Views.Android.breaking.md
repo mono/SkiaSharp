@@ -6,11 +6,6 @@
 
 ### Namespace SkiaSharp.Views.Android
 
-#### Type Changed: SkiaSharp.Views.Android.Resource
-
-#### Removed Type SkiaSharp.Views.Android.Resource.Attribute
-#### Removed Type SkiaSharp.Views.Android.Resource.Styleable
-
 #### Type Changed: SkiaSharp.Views.Android.SKCanvasView
 
 Removed method:

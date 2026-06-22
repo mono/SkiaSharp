@@ -13,17 +13,4 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 ```
 
 
-#### New Type: SkiaSharp.Views.Android.Resource
-
-```csharp
-public class Resource {
-	// constructors
-	public Resource ();
-
-	// inner types
-	public class Attribute {
-	}
-}
-```
-
 
