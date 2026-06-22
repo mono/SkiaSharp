@@ -145,7 +145,20 @@ pre-agent-steps:
 tools:
   # The agent only reads the restored files and rewrites prose — it must NOT run
   # the scripts (they already ran in the prepare job). No python3 here on purpose.
-  bash: ["cat", "grep", "sort", "head", "tail", "sed", "awk", "git"]
+  # Keep this an explicit read-only allowlist (cat/grep/sort/head/tail): it is the
+  # ONLY thing that stops the agent shelling out. Dropping the bash block entirely
+  # makes gh-aw compile to `--allow-all-tools` (strictly worse). No sed/awk: they
+  # rewrite files in place, bypassing the edit tool.
+  #
+  # NOTE: gh-aw still force-injects the full git suite (git add/checkout/commit/...)
+  # into the agent whenever create-pull-request is configured, so we CANNOT remove
+  # git via tools. gh-aw owns every branch/commit/PR operation via the
+  # create-pull-request safe-output; the agent must never invoke git itself. That
+  # is enforced by the prompt ("How the PR is made"). The failure this guards
+  # against: the agent ran its own `git checkout -b`, left the working tree
+  # uncommitted, and gh-aw's commit-based patch generator fell back to diffing
+  # months of history (2000+ files, blowing the PR file cap).
+  bash: ["cat", "grep", "sort", "head", "tail"]
   edit:
 # The agent has no network: it only polishes prose from already-generated files.
 network: {}
@@ -206,6 +219,9 @@ to **Polish**.
 
 The `create-pull-request` safe-output captures **all** working-tree changes —
 the restored Prepare output (Cake tree + Python raw data) and your prose edits —
-into one PR targeting `main` on the single `bot/release-notes` branch. You do not
-git commit or push. If nothing changed (Prepare produced an empty patch and you
-made no edits), no PR is opened or updated.
+into one PR targeting `main` on the single `bot/release-notes` branch. **Do not run
+any `git` command yourself** — not `commit`, `push`, `add`, `checkout`, `branch`, or
+`switch`. gh-aw creates the branch, commits the entire working tree, and opens the PR
+for you; if you run git (for example creating the branch), your edits stay uncommitted
+and patch generation breaks. If nothing changed (Prepare produced an empty patch and
+you made no edits), no PR is opened or updated.
