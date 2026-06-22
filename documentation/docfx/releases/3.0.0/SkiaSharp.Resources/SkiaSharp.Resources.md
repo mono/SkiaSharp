@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.Resources.CachingResourceProvider
 
 ```csharp
-public sealed class CachingResourceProvider : SkiaSharp.Resources.ResourceProvider, System.IDisposable {
+public sealed class CachingResourceProvider : SkiaSharp.Resources.ResourceProvider, SkiaSharp.ISKReferenceCounted, SkiaSharp.ISKSkipObjectRegistration {
 	// constructors
 	public CachingResourceProvider (ResourceProvider resourceProvider);
 }
@@ -18,7 +18,7 @@ public sealed class CachingResourceProvider : SkiaSharp.Resources.ResourceProvid
 #### New Type: SkiaSharp.Resources.DataUriResourceProvider
 
 ```csharp
-public sealed class DataUriResourceProvider : SkiaSharp.Resources.ResourceProvider, System.IDisposable {
+public sealed class DataUriResourceProvider : SkiaSharp.Resources.ResourceProvider, SkiaSharp.ISKReferenceCounted, SkiaSharp.ISKSkipObjectRegistration {
 	// constructors
 	public DataUriResourceProvider (bool preDecode);
 	public DataUriResourceProvider (ResourceProvider fallbackProvider, bool preDecode);
@@ -28,7 +28,7 @@ public sealed class DataUriResourceProvider : SkiaSharp.Resources.ResourceProvid
 #### New Type: SkiaSharp.Resources.FileResourceProvider
 
 ```csharp
-public sealed class FileResourceProvider : SkiaSharp.Resources.ResourceProvider, System.IDisposable {
+public sealed class FileResourceProvider : SkiaSharp.Resources.ResourceProvider, SkiaSharp.ISKReferenceCounted, SkiaSharp.ISKSkipObjectRegistration {
 	// constructors
 	public FileResourceProvider (string baseDirectory, bool preDecode);
 }
@@ -37,7 +37,7 @@ public sealed class FileResourceProvider : SkiaSharp.Resources.ResourceProvider,
 #### New Type: SkiaSharp.Resources.ResourceProvider
 
 ```csharp
-public abstract class ResourceProvider : SkiaSharp.SKObject, System.IDisposable {
+public abstract class ResourceProvider : SkiaSharp.SKObject, SkiaSharp.ISKReferenceCounted, SkiaSharp.ISKSkipObjectRegistration {
 	// methods
 	public SkiaSharp.SKData Load (string resourceName);
 	public SkiaSharp.SKData Load (string resourcePath, string resourceName);
