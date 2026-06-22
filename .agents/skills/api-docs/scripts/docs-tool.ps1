@@ -65,6 +65,20 @@ function Count-Signatures([xml]$doc) {
     return $ms + $ts
 }
 
+# Returns the [Obsolete(...)] attribute text for a Type or Member node, or $null.
+# Writers use this to avoid documenting/recommending obsolete members in examples
+# and to phrase the member's own summary correctly. The text includes the message
+# (which usually names the replacement API) and whether it is an error.
+function Get-ObsoleteAttribute([System.Xml.XmlNode]$node) {
+    foreach ($attr in $node.SelectNodes("Attributes/Attribute/AttributeName")) {
+        $text = $attr.InnerText
+        if ($text -match 'Obsolete') {
+            return $text.Trim()
+        }
+    }
+    return $null
+}
+
 # ---------------------------------------------------------------------------
 # Extract
 # ---------------------------------------------------------------------------
@@ -105,11 +119,16 @@ function Extract-Docs([string]$inputPath, [string]$outputDir) {
                     $fields["remarks"] = "<format type=`"text/markdown`"><![CDATA[`n## Remarks`n`n[Describe what this type does and when to use it]`n`n[If IDisposable: mention using statement / disposal]`n`n## Examples`n`n``````csharp`n[Show the most common usage pattern, 5-15 lines]`n```````n]]></format>"
                     $fields["remarksRequired"] = $true
                 }
-                $entries += @{
+                $typeSig = ($root.SelectSingleNode("TypeSignature[@Language='C#']"))?.GetAttribute("Value")
+                $entry = @{
                     docId      = $null
                     memberType = "type"
+                    signature  = $typeSig
                     fields     = $fields
                 }
+                $typeObsolete = Get-ObsoleteAttribute $root
+                if ($typeObsolete) { $entry["obsolete"] = $typeObsolete }
+                $entries += $entry
             }
         }
 
@@ -125,13 +144,16 @@ function Extract-Docs([string]$inputPath, [string]$outputDir) {
 
             $fields = Extract-DocsBlock $docs
             if ($fields.Count -gt 0) {
-                $entries += @{
+                $entry = @{
                     docId      = $docId
                     memberType = $memberType
                     memberName = $memberName
                     signature  = $csSig
                     fields     = $fields
                 }
+                $memberObsolete = Get-ObsoleteAttribute $member
+                if ($memberObsolete) { $entry["obsolete"] = $memberObsolete }
+                $entries += $entry
             }
         }
 
