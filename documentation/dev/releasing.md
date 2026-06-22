@@ -32,6 +32,7 @@ Each skill confirms with `ask_user` before executing destructive operations.
 | Release Type | Version Format | Branch | NuGet Pattern | Tag |
 |--------------|----------------|--------|---------------|-----|
 | Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
+| RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` | `X.Y.Z-rc.N.{build}` | `vX.Y.Z-rc.N.{build}` |
 | Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z-stable.{build}` | `vX.Y.Z` |
 | Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
 | Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `vX.Y.Z.F` |
@@ -40,12 +41,20 @@ The `{build}` number is auto-assigned by CI.
 
 ### Release Type → Base Branch
 
-| Type | Base | PREVIEW_LABEL |
-|------|------|---------------|
-| Preview | `main` | `preview.N` |
-| Stable | `release/X.Y.Z-preview.{latest}` | `stable` |
+Releases are cut from the line's **integration branch**: `main` for the newest
+in-development line, or `release/X.Y.x` for an established/maintenance line. Each
+integration branch sits at the next unreleased version with `PREVIEW_LABEL:
+preview.0`, and is bumped to the next version once its current version is released.
+
+| Type | Base (integration branch) | PREVIEW_LABEL |
+|------|---------------------------|---------------|
+| Preview / RC | `release/X.Y.x` (or `main` if the line isn't forked yet) | `preview.N` / `rc.N` |
+| Stable | `release/X.Y.x` | `stable` |
 | Hotfix Preview | tag `vX.Y.Z` | `preview.N` |
 | Hotfix Stable | `release/X.Y.Z.F-preview.{latest}` | `stable` |
+
+> **Stable is cut from `release/X.Y.x`** — the integration branch that already
+> produced the line's previews/rcs — not from `release/X.Y.Z-preview.{latest}`.
 
 ### HarfBuzzSharp Versioning
 
@@ -102,17 +111,19 @@ flowchart TB
     
     PARSE["Parse Version String"] --> TYPE{Release type?}
     
-    TYPE -->|Preview| BASE_MAIN["Base: main"]
-    TYPE -->|Stable| BASE_PREVIEW["Base: preview branch"]
+    TYPE -->|Preview / RC| BASE_INTEG["Base: integration branch
+    (release/X.Y.x, or main)"]
+    TYPE -->|Stable| BASE_STABLE["Base: integration branch
+    (release/X.Y.x)"]
     TYPE -->|Hotfix Preview| BASE_TAG["Base: tag"]
     TYPE -->|Hotfix Stable| BASE_HOTFIX["Base: hotfix preview"]
     
-    BASE_PREVIEW --> EXISTS{Base exists?}
+    BASE_INTEG --> EXISTS{Base exists?}
+    BASE_STABLE --> EXISTS
     BASE_TAG --> EXISTS
     BASE_HOTFIX --> EXISTS
     EXISTS -->|No| ERROR([Error])
     
-    BASE_MAIN --> CREATE
     EXISTS -->|Yes| CREATE
     
     CREATE["Create Branch
@@ -123,11 +134,11 @@ flowchart TB
     
     CREATE --> CI([CI Build Started])
     
-    CI --> IS_PREVIEW{Preview from main?}
-    IS_PREVIEW -->|No| DONE([Done - wait 2-4 hours])
-    IS_PREVIEW -->|Yes| BUMP
+    CI --> IS_RELEASED{Version now released?}
+    IS_RELEASED -->|No| DONE([Done - wait 2-4 hours])
+    IS_RELEASED -->|Yes| BUMP
     
-    BUMP["Bump Main Version
+    BUMP["Bump Integration Branch
     ∙ Edit SKIASHARP_VERSION
     ∙ Edit VERSIONS.txt
     ∙ Increment HarfBuzzSharp

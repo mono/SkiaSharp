@@ -25,7 +25,29 @@ Create release branches for SkiaSharp versions.
 | SkiaSharp (parent) | `main` | Create `release/X.Y.Z` branch, never commit to main |
 | externals/skia (submodule) | `main`, `skiasharp` | Must use feature branch if submodule changes needed |
 
-**Release branches are created FROM main, but never modify main directly.**
+**Release branches are cut FROM an integration branch (`main` or `release/X.Y.x`), but never modify those branches directly — always go through a branch + PR.**
+
+---
+
+## Concept: Integration Branches
+
+There is **not one "main"** — there is an **integration branch per release line**.
+Each one always sits at the *next unreleased version* for its line, with
+`PREVIEW_LABEL: preview.0`:
+
+| Integration branch | Line it serves | Example state |
+|--------------------|----------------|---------------|
+| `main` | Newest in-development line (not yet forked) | `4.150.0` / `preview.0` |
+| `release/X.Y.x` | An established / maintenance line | `release/3.119.x` @ `3.119.5`; `release/4.148.x` @ `4.148.0` |
+
+- **Every** release (preview, rc, stable, patch) is cut FROM the line's
+  integration branch — `release/{version}` is branched off it.
+- After a release ships, the integration branch is **bumped** to the next
+  version (see Step 5). This applies to maintenance-line stables too, not just
+  previews from `main`.
+- A new minor's `release/X.Y.x` is forked from `main` when stabilization begins;
+  `main` is then bumped to the next minor. From that point on, all `X.Y.*`
+  releases come from `release/X.Y.x`, not `main`.
 
 ---
 
@@ -33,7 +55,7 @@ Create release branches for SkiaSharp versions.
 
 ### Auto-detect (user says "release now")
 
-1. Fetch main and read `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`
+1. Fetch the integration branch (`main` for the newest line, or `release/X.Y.x` for a maintenance line) and read `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`
 2. List existing branches: `git branch -r | grep "release/{version}-preview"`
 3. Next preview = highest + 1 (or 1 if none)
 4. **⚠️ Semver check:** Also verify no bare `release/{version}` branch exists — if it does, the stable release is already cut and you should NOT create another preview. Ask the user to confirm.
@@ -51,14 +73,22 @@ Use the provided version directly.
 branches to find the latest, remember that `release/3.119.2` > `release/3.119.2-preview.3`.
 Do NOT use alphabetical sorting — it gives wrong results for semver.
 
-| Version Format | Type | Base | PREVIEW_LABEL |
-|----------------|------|------|---------------|
-| `X.Y.Z-preview.N` | Preview | `main` | `preview.N` |
-| `X.Y.Z` | Stable | `release/X.Y.Z-preview.{latest}` | `stable` |
+| Version Format | Type | Base (integration branch) | PREVIEW_LABEL |
+|----------------|------|---------------------------|---------------|
+| `X.Y.Z-preview.N` / `X.Y.Z-rc.N` | Preview / RC | `release/X.Y.x` (or `main` if the line isn't forked yet) | `preview.N` / `rc.N` |
+| `X.Y.Z` | Stable | `release/X.Y.x` | `stable` |
 | `X.Y.Z.F-preview.N` | Hotfix Preview | tag `vX.Y.Z` | `preview.N` |
 | `X.Y.Z.F` | Hotfix Stable | `release/X.Y.Z.F-preview.{latest}` | `stable` |
 
-For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-preview" | sort -V | tail -1`
+> **Base = the line's integration branch**, NOT a previous preview/rc branch.
+> A stable `X.Y.Z` is cut from `release/X.Y.x` (which already produced its
+> previews/rcs), not from `release/X.Y.Z-preview.{latest}`.
+>
+> Find the integration branch:
+> ```bash
+> git branch -r | grep -E "release/X\.Y\.x$"   # established line (substitute real X.Y)
+> # newest line not yet forked → use main
+> ```
 
 **NuGet version format by release type:**
 - **Preview:** `{base}-{PREVIEW_LABEL}.{build}` (e.g., `3.119.2-preview.2.3`) — build number is part of the prerelease tag
@@ -68,11 +98,17 @@ For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-p
 
 ## Step 3: Create Branch and Update PREVIEW_LABEL
 
-1. Checkout the base (main, preview branch, or tag)
+1. Checkout the base — the line's **integration branch** (`release/X.Y.x`, or
+   `main` / a tag for the special cases above)
 2. Create branch `release/{version}`
-3. Edit `scripts/azure-templates-variables.yml`: set `PREVIEW_LABEL`
+3. Set `PREVIEW_LABEL` with the helper script (edits + verifies
+   `scripts/azure-templates-variables.yml`):
+   ```bash
+   pwsh .agents/skills/release-branch/scripts/bump-version.ps1 -PreviewLabel {label}
+   # {label} = stable | preview.N | rc.N   (add -DryRun to preview)
+   ```
 4. Commit: `git commit -m "Bump the version to {version}"`
-5. Show diff summary to user and **confirm with `ask_user`** before pushing
+5. Show diff summary to user and **confirm with the user** before pushing
 
 ---
 
@@ -97,25 +133,46 @@ python3 .agents/skills/release-status/scripts/pipeline-status.py release/{versio
 
 ---
 
-## Step 5: Bump Version on Main (Preview from main only)
+## Step 5: Bump the Integration Branch After Release
 
-**Skip for stable and hotfix releases.**
+When a version is released (stable ships) or a line otherwise moves on, bump that
+line's **integration branch** to the next version so future builds don't collide
+with the released version. Crucially this is **not** "preview-from-main only" —
+**maintenance-line stables bump too**: e.g. after `3.119.4` shipped,
+`release/3.119.x` was bumped to `3.119.5` ("Bump to the next version after
+release"). Previews/RCs of an in-progress version do **not** bump it (they all
+share the same `X.Y.Z`); the bump happens once that `X.Y.Z` is released.
 
-1. Create branch `bump-version-{next}` from main
+**Which integration branch / next version:**
 
-2. Edit `scripts/azure-templates-variables.yml`:
-   - Update `SKIASHARP_VERSION` to next version
-   - Reset `PREVIEW_LABEL` to `preview.0`
+| Released line | Integration branch to bump | Next version |
+|---------------|----------------------------|--------------|
+| Newest line (cut from `main`) | `main` | next **minor** (`X.Y.0` → `X.(Y+next).0`) |
+| Maintenance line (cut from `release/X.Y.x`) | `release/X.Y.x` | next **patch** (`X.Y.Z` → `X.Y.(Z+1)`) |
 
-3. Edit `scripts/VERSIONS.txt`:
-   - `SkiaSharp file` → `{next}.0`
-   - All `SkiaSharp ... nuget` lines → `{next}`
-   - `HarfBuzzSharp file` → increment 4th digit (e.g., `8.3.1.4` → `8.3.1.5`)
-   - All `HarfBuzzSharp ... nuget` lines → same as file version
+> This step only advances the **version numbers**. Native/milestone source changes
+> (Skia upgrades, soname, increments) are a separate activity and out of scope here.
 
-4. Commit: `git commit -m "Bump to the next version ({next}) after release"`
+1. Create branch `bump-version-{next}` from the integration branch
+   (e.g. `git checkout -b bump-version-{next} origin/release/X.Y.x`)
 
-5. Show diff to user, then:
+2. Apply the bump with the helper script. It edits + verifies `SKIASHARP_VERSION`
+   in `azure-templates-variables.yml` and all SkiaSharp / HarfBuzzSharp
+   `file`+`nuget` lines in `VERSIONS.txt` (assembly versions are left untouched):
+   ```bash
+   pwsh .agents/skills/release-branch/scripts/bump-version.ps1 \
+     -SkiaSharpVersion {next} \
+     -HarfBuzzSharpVersion {hb-next} \
+     -PreviewLabel preview.0
+   # add -DryRun first to preview
+   ```
+   - `{hb-next}`: the next HarfBuzzSharp version — normally increment the last
+     digit (`8.3.1.4` → `8.3.1.5`); on a native HarfBuzz upgrade, reset to the
+     3-digit native version (e.g. `14.2.0`).
+
+3. Commit: `git commit -m "Bump to the next version ({next}) after release"`
+
+4. Show diff to user, then:
    ```bash
    git push -u origin bump-version-{next}
    gh pr create --title "Bump to the next version ({next}) after release" --body ""
@@ -126,4 +183,5 @@ python3 .agents/skills/release-status/scripts/pipeline-status.py release/{versio
 
 ## Resources
 
+- [scripts/bump-version.ps1](scripts/bump-version.ps1) — Sets `PREVIEW_LABEL` and/or bumps SkiaSharp + HarfBuzzSharp versions in `VERSIONS.txt` and `azure-templates-variables.yml`, with a verification gate (`-DryRun` to preview)
 - [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, HarfBuzz versioning, workflow diagrams
