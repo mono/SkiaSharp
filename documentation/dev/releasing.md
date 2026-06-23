@@ -57,6 +57,20 @@ preview.0`, and is bumped to the next version **as soon as its stable is cut**
 > **Stable is cut from `release/X.Y.x`** — the integration branch that already
 > produced the line's previews/rcs — not from `release/X.Y.Z-preview.{latest}`.
 
+### mono/skia Counterpart Branches
+
+Every SkiaSharp `release/{version}` branch has an **identically-named**
+`release/{version}` branch in the [mono/skia](https://github.com/mono/skia) fork,
+created at the exact `externals/skia` submodule commit the SkiaSharp branch
+references (skia branch HEAD **==** submodule SHA). This locks the Skia source for
+the release so it stays auditable, reproducible, and safe from garbage collection.
+
+- Created by the [release-branch](../../.agents/skills/release-branch/SKILL.md) skill
+  right after the SkiaSharp branch is pushed (its Step 5) — for **every** cut
+  (preview, rc, stable, and `release/X.Y.x` integration forks).
+- `main` is the exception: it tracks the `skiasharp` integration branch, not a
+  `release/*` counterpart.
+
 ### HarfBuzzSharp Versioning
 
 HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
@@ -133,8 +147,15 @@ flowchart TB
     ∙ Set PREVIEW_LABEL
     ∙ Commit and push"]
     
-    CREATE --> CI([CI Build Started])
-    CREATE --> IS_STABLE{Stable cut?}
+    CREATE --> SKIA
+    SKIA["Create mono/skia
+    counterpart branch
+    ∙ Read externals/skia SHA
+    ∙ gh api git/refs at that SHA
+    ∙ Same release/{version} name"]
+
+    SKIA --> CI([CI Build Started])
+    SKIA --> IS_STABLE{Stable cut?}
     IS_STABLE -->|No| DONE([Done - wait 2-4 hours])
     IS_STABLE -->|Yes| BUMP
 

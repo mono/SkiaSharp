@@ -24,7 +24,7 @@
     Two independent operations, usable together or alone:
       1. Set label only (Step 3 — create release branch):
              -PreviewLabel stable
-      2. Bump to the next PATCH (Step 5 — advance a maintenance line after a
+      2. Bump to the next PATCH (Step 6 — advance a maintenance line after a
          stable ships, e.g. 4.148.0 -> 4.148.1):
              -SkiaSharpVersion 4.148.1 -HarfBuzzSharpVersion 14.2.1 -PreviewLabel preview.0
 
@@ -58,7 +58,7 @@
     pwsh .agents/skills/release-branch/scripts/bump-version.ps1 -PreviewLabel stable
 
 .EXAMPLE
-    # Step 5 — bump the integration branch to the next patch after a release
+    # Step 6 — bump the integration branch to the next patch after a release
     pwsh .agents/skills/release-branch/scripts/bump-version.ps1 `
         -SkiaSharpVersion 4.148.1 -HarfBuzzSharpVersion 14.2.1 -PreviewLabel preview.0
 #>
