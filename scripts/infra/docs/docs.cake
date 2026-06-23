@@ -482,6 +482,37 @@ Task ("docs-format-docs")
             }
         }
 
+        // Drop the obsolete SkiaSharp.GrVkYcbcrConversionInfo doc page. It is a soft
+        // [Obsolete] forwarder that differs from its replacement,
+        // SkiaSharp.GRVkYcbcrConversionInfo, only by the case of a single letter
+        // ('r' vs 'R'). mdoc documents both (soft-obsolete types are kept), producing two
+        // ECMA-XML files whose names differ only by case. Those cannot coexist on the
+        // case-insensitive filesystem the Learn/OpenPublishing build runs on - one shadows
+        // the other, so crefs to the shadowed type fail with 'Cross reference not found'.
+        // This is the only such case-colliding pair in the API, and the legacy type merely
+        // forwards to the modern one (its only members are the two implicit conversion
+        // operators), so drop its page so only the modern type is published and its xref
+        // always resolves. Mirrors the SkiaSharp.Views.Android.Resource handling above.
+        if (xdoc.Root.Name == "Type") {
+            var ycbcrName = xdoc.Root.Attribute ("FullName")?.Value;
+            if (ycbcrName == "SkiaSharp.GrVkYcbcrConversionInfo") {
+                DeleteFile (file);
+                continue;
+            }
+        }
+        if (xdoc.Root.Name == "Overview") {
+            xdoc.Root.Descendants ("Type")
+                .Where (t => t.Attribute ("Name")?.Value == "GrVkYcbcrConversionInfo")
+                .ToArray ()
+                .Remove ();
+        }
+        if (xdoc.Root.Name == "Framework") {
+            xdoc.Root.Descendants ("Type")
+                .Where (t => t.Attribute ("Name")?.Value == "SkiaSharp.GrVkYcbcrConversionInfo")
+                .ToArray ()
+                .Remove ();
+        }
+
         // count the types without docs
         var typesWithDocs = xdoc.Root
             .Elements ("Docs");
