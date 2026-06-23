@@ -39,18 +39,7 @@ Each skill confirms with `ask_user` before executing destructive operations.
 
 The `{build}` number is auto-assigned by CI.
 
-### mono/skia Counterpart Branches
-
-Every SkiaSharp `release/{version}` branch has an **identically-named**
-`release/{version}` branch in the [mono/skia](https://github.com/mono/skia) fork,
-created at the exact `externals/skia` submodule commit that the SkiaSharp branch
-references (skia branch HEAD **==** submodule SHA). This locks the Skia source for
-the release so it stays auditable, reproducible, and safe from garbage collection.
-The [release-branch](../../.agents/skills/release-branch/SKILL.md) skill creates it
-right after pushing the SkiaSharp branch (Step 5). `main` is the exception — it
-tracks the `skiasharp` integration branch, not a `release/*` counterpart.
-
-
+### Release Type → Base Branch
 
 Releases are cut from the line's **integration branch**: `main` for the newest
 in-development line, or `release/X.Y.x` for an established/maintenance line. Each
@@ -67,6 +56,20 @@ preview.0`, and is bumped to the next version **as soon as its stable is cut**
 
 > **Stable is cut from `release/X.Y.x`** — the integration branch that already
 > produced the line's previews/rcs — not from `release/X.Y.Z-preview.{latest}`.
+
+### mono/skia Counterpart Branches
+
+Every SkiaSharp `release/{version}` branch has an **identically-named**
+`release/{version}` branch in the [mono/skia](https://github.com/mono/skia) fork,
+created at the exact `externals/skia` submodule commit the SkiaSharp branch
+references (skia branch HEAD **==** submodule SHA). This locks the Skia source for
+the release so it stays auditable, reproducible, and safe from garbage collection.
+
+- Created by the [release-branch](../../.agents/skills/release-branch/SKILL.md) skill
+  right after the SkiaSharp branch is pushed (its Step 5) — for **every** cut
+  (preview, rc, stable, and `release/X.Y.x` integration forks).
+- `main` is the exception: it tracks the `skiasharp` integration branch, not a
+  `release/*` counterpart.
 
 ### HarfBuzzSharp Versioning
 

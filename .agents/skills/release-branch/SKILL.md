@@ -132,11 +132,9 @@ SkiaSharp-Native → SkiaSharp → SkiaSharp-Tests
    (~60-90 min)    (~30-60 min)   (~15-30 min)
 ```
 
-Use the **release-status** skill to track build progress. Quick check:
-
-```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
-```
+> CI builds Skia from the **pinned submodule commit**, so it runs regardless of the
+> counterpart branch in Step 5 — that branch exists to *preserve* the source, not to
+> feed the build.
 
 ---
 
@@ -157,7 +155,7 @@ and safe from garbage collection.
    ```
 2. Create the matching branch in mono/skia at that commit:
    ```bash
-   unset GH_TOKEN && gh api repos/mono/skia/git/refs \
+   gh api repos/mono/skia/git/refs \
      -f ref="refs/heads/release/{version}" \
      -f sha="$SKIA_SHA"
    ```
@@ -172,7 +170,7 @@ and safe from garbage collection.
 
 ---
 
-## Step 6: Bump the Integration Branch
+## Step 6: Bump the Integration Branch (Stable Only)
 
 **Do this right after cutting & pushing the branch (Steps 3–5)** — as soon as the stable release branch is cut and
 pushed, advance that line's **integration branch** to the next version. Do **not**
@@ -227,6 +225,20 @@ version after release".)
    gh pr create --title "Bump to the next version ({next}) after release" --body ""
    gh pr merge --merge --delete-branch
    ```
+
+---
+
+## Next: Track the Build
+
+Once the branch is cut and pushed (Steps 3–4), its skia counterpart created
+(Step 5), and — for a stable — the integration branch bumped (Step 6), hand off to
+**Step 2 of the release pipeline**, the [release-status](../release-status/SKILL.md)
+skill, to follow the CI chain (`SkiaSharp-Native → SkiaSharp → SkiaSharp-Tests`).
+Quick check:
+
+```bash
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+```
 
 ---
 
