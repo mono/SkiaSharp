@@ -1,4 +1,8 @@
-# Customer-Facing Release Teaser
+# GitHub Release Teaser
+
+> **Scope:** this file is **only** for cleaning up the **GitHub Release** body. It is
+> unrelated to the website release notes (the separate `release-notes` skill, which owns
+> `documentation/docfx/releases/` + `TEMPLATE.md`). This teaser never reads those pages.
 
 Build a short, scannable **teaser** for the GitHub Release that surfaces only what a
 package consumer cares about, then fold GitHub's full auto-generated PR list beneath it.

@@ -297,7 +297,7 @@ short **customer teaser** on top with only the bits a package consumer cares abo
 The teaser is generated **only from the release log we just created** — no website
 release-notes, no `documentation/docfx/` files, no git operations, no waiting.
 
-👉 **See [references/release-notes.md](references/release-notes.md)** for the canonical
+👉 **See [references/github-release-teaser.md](references/github-release-teaser.md)** for the canonical
 **teaser template** and **extraction prompt**. Process:
 
 1. **Capture** the generated log:
@@ -305,7 +305,7 @@ release-notes, no `documentation/docfx/` files, no git operations, no waiting.
    gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/generated-log.md
    ```
 2. **Extract** the teaser: feed `generated-log.md` to the extraction prompt in
-   `references/release-notes.md`. It classifies the PRs into **✨ What's New /
+   `references/github-release-teaser.md`. It classifies the PRs into **✨ What's New /
    ⚠️ Breaking Changes / 🛡️ Security** (ignoring CI/build/test/dependency-bump/docs
    automation/backport plumbing/internal refactors) and lists the unique contributor
    handles — emitting only the teaser via the template.
@@ -373,4 +373,4 @@ If you've partially completed and need to resume:
 ## Resources
 
 - [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
-- [references/release-notes.md](references/release-notes.md) — Customer teaser template + extraction prompt
+- [references/github-release-teaser.md](references/github-release-teaser.md) — Customer teaser template + extraction prompt
