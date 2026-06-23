@@ -200,16 +200,15 @@ tags** — so after pushing the tag in Step 4, **dispatch it manually** to refre
 site immediately instead of waiting up to ~24h for the next daily run.
 
 This matters most for **stable** releases: a clean `vX.Y.Z` tag is what flips that
-version's page from "preview / unreleased" to **stable**. The generator detects this
-via `_version_has_stable_tag`, which reads `git tag` — so the page cannot flip until
-the workflow runs again with the tag visible. For previews it is usually a no-op (the
-release-branch push already refreshed the pages), and the workflow's no-op gate opens
-no PR when nothing changed, so this step is always safe to run.
+version's page from "preview / unreleased" to **stable**, and the page cannot flip
+until the workflow runs again with that tag in place — so dispatch it after tagging.
+For previews it is usually a no-op (the release-branch push already refreshed the
+pages), and the workflow opens no PR when nothing changed, so this step is always
+safe to run.
 
 ```bash
-# Always dispatch from main: it owns the unified generation (latest scripts +
-# versions.json) and walks every release/* ref and all v* tags itself — including
-# the tag you just pushed. Do NOT dispatch from the release branch.
+# Always dispatch from main (it regenerates every release's pages, including the
+# tag you just pushed). Do NOT dispatch from the release branch.
 gh workflow run "Update Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
 
 # Optional: follow the run to completion.
