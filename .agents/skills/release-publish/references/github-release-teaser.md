@@ -63,7 +63,7 @@ are **omitted entirely** (no "*None.*" placeholders). The release **title** is a
 by `gh release create --title`, so the body has no top-level `#` heading.
 
 ```markdown
-{one-line, plain-language subtitle of the release} · 📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/{version}) · 📖 [Full release notes](https://mono.github.io/SkiaSharp/docs/releases/{version}.html)
+{one-line, plain-language subtitle of the release} · 📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/{nuget-version}) · 📖 [Full release notes](https://mono.github.io/SkiaSharp/docs/releases/{notes-version}.html)
 
 ## ✨ What's New
 - {customer-facing improvement, ≤ ~15 words} by @{author} (#{pr})
@@ -91,9 +91,17 @@ with the `## What's Changed` heading and the duplicate `**Full Changelog**:` lin
 
 Notes on the placeholders:
 
-- `{version}` — the release version **without** the leading `v` (e.g. tag `v3.119.2` →
-  `3.119.2`). For previews use the full preview version if its page exists; otherwise the
-  link still resolves once that page publishes.
+- `{nuget-version}` — the **NuGet package version**: the tag without the leading `v`,
+  keeping the full pre-release suffix (tag `v4.147.0-preview.1.1` → `4.147.0-preview.1.1`;
+  tag `v3.119.2` → `3.119.2`). This must exactly match the version published to nuget.org.
+- `{notes-version}` — the **website release-notes page**, which is keyed by the **base
+  release line**, not the package version. Take the tag, drop the leading `v`, and **strip
+  any `-preview.N.M` / `-rc.N.M` pre-release suffix** (tag `v4.147.0-preview.1.1` →
+  `4.147.0`; `v4.148.0-rc.1.2` → `4.148.0`; `v3.119.4` → `3.119.4`). There are **no
+  preview/rc-specific pages** — `documentation/docfx/releases/` and `scripts/infra/docs/
+  versions.json` only ever key pages by the `X.Y.Z` line, so a preview-named link is a dead
+  404. The page may not exist yet at publish time; the base-line link still resolves once it
+  publishes.
 - `{N}` — count of `* … by @… in …` lines in the generated log.
 - `{compare-url}` — copy the `**Full Changelog**: …/compare/…` URL from the generated log,
   then **remove that line from inside the fold** so it appears only once, at the bottom.
