@@ -11,12 +11,14 @@
 ```csharp
 public static class Extensions {
 	// methods
+	public static System.Drawing.Color ToDrawingColor (this SkiaSharp.SKColor color);
 	public static System.Drawing.PointF ToDrawingPoint (this SkiaSharp.SKPoint point);
 	public static System.Drawing.Point ToDrawingPoint (this SkiaSharp.SKPointI point);
 	public static System.Drawing.RectangleF ToDrawingRect (this SkiaSharp.SKRect rect);
 	public static System.Drawing.Rectangle ToDrawingRect (this SkiaSharp.SKRectI rect);
 	public static System.Drawing.SizeF ToDrawingSize (this SkiaSharp.SKSize size);
 	public static System.Drawing.Size ToDrawingSize (this SkiaSharp.SKSizeI size);
+	public static SkiaSharp.SKColor ToSKColor (this System.Drawing.Color color);
 	public static SkiaSharp.SKPointI ToSKPoint (this System.Drawing.Point point);
 	public static SkiaSharp.SKPoint ToSKPoint (this System.Drawing.PointF point);
 	public static SkiaSharp.SKRectI ToSKRect (this System.Drawing.Rectangle rect);
@@ -66,7 +68,7 @@ public class SKPaintSurfaceEventArgs : System.EventArgs {
 public class SKXamlCanvas : Windows.UI.Xaml.FrameworkElement, System.Collections.IEnumerable, Uno.UI.DataBinding.IWeakReferenceProvider, Windows.UI.Composition.IAnimationObject, Windows.UI.Composition.IVisualElement, Windows.UI.Xaml.DependencyObject, Windows.UI.Xaml.IDataContextProvider, Windows.UI.Xaml.IDependencyObjectParse, Windows.UI.Xaml.IDependencyObjectStoreProvider, Windows.UI.Xaml.ILayoutConstraints {
 	// constructors
 	public SKXamlCanvas ();
-	public SKXamlCanvas (IntPtr handle);
+	public SKXamlCanvas (IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer);
 	// properties
 	public SkiaSharp.SKSize CanvasSize { get; }
 	public double Dpi { get; }
@@ -74,8 +76,8 @@ public class SKXamlCanvas : Windows.UI.Xaml.FrameworkElement, System.Collections
 	// events
 	public event System.EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 	// methods
-	public override void Draw (CoreGraphics.CGRect dirtyRect);
 	public void Invalidate ();
+	protected override void OnDraw (Android.Graphics.Canvas canvas);
 	protected virtual void OnPaintSurface (SKPaintSurfaceEventArgs e);
 }
 ```
