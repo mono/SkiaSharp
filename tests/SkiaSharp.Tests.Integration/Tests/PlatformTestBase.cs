@@ -9,6 +9,14 @@ namespace SkiaSharp.Tests.Integration;
 /// </summary>
 public abstract class PlatformTestBase : IDisposable
 {
+    /// <summary>
+    /// Base target framework the generated temp projects build against. Passed to
+    /// <c>dotnet new … -f</c> so the template-generated TFMs stay pinned to the .NET 10 band even
+    /// when a newer SDK (e.g. a net11.0 preview) is installed on the machine. Platform-suffixed
+    /// MAUI TFMs (e.g. net10.0-android) derive from this.
+    /// </summary>
+    protected const string BaseFramework = "net10.0";
+
     protected readonly ITestOutputHelper Output;
     protected readonly string TestDir;
     protected readonly string SkiaVersion;
