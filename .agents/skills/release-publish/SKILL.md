@@ -57,7 +57,7 @@ Publish packages to NuGet.org and finalize releases.
 | 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
 | 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
 | 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
-| 7. Customer teaser | What's New + Breaking (usually short) | + Security + contributors |
+| 7. Customer teaser | Breaking + What's New + Fixes (usually short) | + Dependency Updates + contributors |
 | 8. Milestone | Skip | Close milestone |
 
 ---
@@ -297,18 +297,30 @@ short **customer teaser** on top with only the bits a package consumer cares abo
 The teaser is generated **only from the release log we just created** — no website
 release-notes, no `documentation/docfx/` files, no git operations, no waiting.
 
-👉 **See [references/github-release-teaser.md](references/github-release-teaser.md)** for the canonical
-**teaser template** and **extraction prompt**. Process:
+👉 **See [references/github-release-teaser.md](references/github-release-teaser.md)** — the
+canonical playbook with the full classification rules, teaser template, and a worked
+example. Process:
 
 1. **Capture** the generated log:
    ```bash
    gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/generated-log.md
    ```
-2. **Extract** the teaser: feed `generated-log.md` to the extraction prompt in
-   `references/github-release-teaser.md`. It classifies the PRs into **✨ What's New /
-   ⚠️ Breaking Changes / 🛡️ Security** (ignoring CI/build/test/dependency-bump/docs
-   automation/backport plumbing/internal refactors) and lists the unique contributor
-   handles — emitting only the teaser via the template.
+2. **Build the teaser** from `generated-log.md` following the doc's *Classifying the PRs*
+   section. In short: drop the plumbing (CI/build/test, build-tooling and version bumps,
+   docs/notes automation, backport, internal refactors), then classify the rest into these
+   sections **in this order** and omit any that are empty:
+   - **⚠️ Breaking Changes** — removed/renamed/retyped public APIs, newly `[Obsolete]`/
+     deprecated APIs (incl. promoted to warning/error), changed defaults, min-version or TFM
+     drops.
+   - **✨ What's New** — new features/APIs, perf wins, new platform support, and the **Skia
+     engine milestone bump** (a headline, not a dependency).
+   - **🐛 Fixes** — consumer-visible bug fixes on public types/scenarios (fold CI/docs/sample
+     fixes and vague `[skia-sync]` engine-sync fixes).
+   - **📦 Dependency Updates** — bundled **native** library bumps (libpng, freetype, …) as
+     `Updated <dep> to <version>`. **Never** write "security" or name a CVE.
+
+   End each bullet with `by @author (#NNNN)`, then add a `Thanks to our contributors:` line
+   of the unique community handles. Open with one neutral subtitle line.
 3. **Assemble** the final body — teaser on top, then the captured log folded below —
    per the template, and write it to `/tmp/skiasharp/release/release-body.md`.
 4. **Update** the release:
@@ -373,4 +385,4 @@ If you've partially completed and need to resume:
 ## Resources
 
 - [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
-- [references/github-release-teaser.md](references/github-release-teaser.md) — Customer teaser template + extraction prompt
+- [references/github-release-teaser.md](references/github-release-teaser.md) — Customer teaser playbook: classification rules + template
