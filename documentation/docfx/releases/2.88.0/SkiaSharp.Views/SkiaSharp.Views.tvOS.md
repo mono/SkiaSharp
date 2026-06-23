@@ -6,6 +6,24 @@
 
 ### Namespace SkiaSharp.Views.tvOS
 
+#### Type Changed: SkiaSharp.Views.tvOS.SKCanvasView
+
+Added interface:
+
+```csharp
+UIKit.IUITraitChangeObservable
+```
+
+
+#### Type Changed: SkiaSharp.Views.tvOS.SKGLView
+
+Added interface:
+
+```csharp
+UIKit.IUITraitChangeObservable
+```
+
+
 #### Type Changed: SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs
 
 Obsoleted constructors:
@@ -42,6 +60,25 @@ Added property:
 
 ```csharp
 public SkiaSharp.SKImageInfo RawInfo { get; }
+```
+
+
+#### Type Changed: SkiaSharp.Views.tvOS.iOSExtensions
+
+Removed methods:
+
+```csharp
+public static UIKit.UIImage ToUIImage (this SkiaSharp.SKBitmap skiaBitmap, nfloat scale, UIKit.UIImageOrientation orientation);
+public static UIKit.UIImage ToUIImage (this SkiaSharp.SKPixmap skiaPixmap, nfloat scale, UIKit.UIImageOrientation orientation);
+public static UIKit.UIImage ToUIImage (this SkiaSharp.SKPicture skiaPicture, SkiaSharp.SKSizeI dimensions, nfloat scale, UIKit.UIImageOrientation orientation);
+```
+
+Added methods:
+
+```csharp
+public static UIKit.UIImage ToUIImage (this SkiaSharp.SKBitmap skiaBitmap, System.Runtime.InteropServices.NFloat scale, UIKit.UIImageOrientation orientation);
+public static UIKit.UIImage ToUIImage (this SkiaSharp.SKPixmap skiaPixmap, System.Runtime.InteropServices.NFloat scale, UIKit.UIImageOrientation orientation);
+public static UIKit.UIImage ToUIImage (this SkiaSharp.SKPicture skiaPicture, SkiaSharp.SKSizeI dimensions, System.Runtime.InteropServices.NFloat scale, UIKit.UIImageOrientation orientation);
 ```
 
 

@@ -26,6 +26,25 @@ public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImag
 ```
 
 
+#### Type Changed: SkiaSharp.Views.iOS.SKGLLayer
+
+Removed method:
+
+```csharp
+[Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
+```
+
+
+#### Type Changed: SkiaSharp.Views.iOS.SKGLView
+
+Removed method:
+
+```csharp
+[Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
+```
+
+
 #### Removed Type SkiaSharp.Views.iOS.Extensions
-#### Removed Type SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs
 
