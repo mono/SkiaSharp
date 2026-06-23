@@ -147,7 +147,7 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
         // Build and run in Docker using dotnet publish (resolves RID-specific native assets)
         var dockerfile = Path.Combine(projectDir, "Dockerfile");
         File.WriteAllText(dockerfile, $"""
-            FROM mcr.microsoft.com/dotnet/sdk:8.0
+            FROM mcr.microsoft.com/dotnet/sdk:10.0
             WORKDIR /src
             COPY {projectName}.csproj nuget.config ./
             RUN dotnet restore

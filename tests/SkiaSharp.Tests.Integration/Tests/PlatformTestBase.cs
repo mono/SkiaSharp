@@ -45,12 +45,18 @@ public abstract class PlatformTestBase : IDisposable
             </configuration>
             """);
         
-        // Write global.json to allow latest SDK (prevents inheriting repo's .NET 8 restriction)
+        // Write global.json to pin the temp projects to the .NET 10 SDK band. The MAUI/console
+        // temp projects are generated outside the repo (in TempPath), so without this they would
+        // resolve to the highest installed SDK — including .NET 11 previews — which makes
+        // `dotnet new maui` emit net11.0-* TFMs that don't match the net10.0-* frameworks the
+        // harness builds (causing NETSDK1005 "doesn't have a target for net10.0-*"). Stay within
+        // 10.0.x and never roll forward to a prerelease major.
         File.WriteAllText(Path.Combine(TestDir, "global.json"), """
             {
               "sdk": {
-                "version": "8.0.0",
-                "rollForward": "latestMajor"
+                "version": "10.0.100",
+                "rollForward": "latestFeature",
+                "allowPrerelease": false
               }
             }
             """);

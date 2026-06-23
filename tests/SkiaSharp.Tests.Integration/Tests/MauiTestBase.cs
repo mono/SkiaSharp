@@ -170,8 +170,12 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         var projectDir = Path.Combine(TestDir, projectName);
         var relativeProjectDir = projectName;  // Relative to TestDir
         
-        // Create project (run from TestDir to pick up global.json)
-        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir}");
+        // Create project (run from TestDir to pick up global.json). Pin the template to the base
+        // framework derived from TargetFramework (e.g. "net10.0" from "net10.0-maccatalyst") so the
+        // generated TFMs always match the framework the harness builds below — the installed MAUI
+        // template can otherwise default to a newer (e.g. net11.0) framework.
+        var baseFramework = TargetFramework.Split('-')[0];
+        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir} -f {baseFramework}");
 
         // Add SkiaSharp package (run from TestDir)
         await Run("dotnet", $"add {relativeProjectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion}");
