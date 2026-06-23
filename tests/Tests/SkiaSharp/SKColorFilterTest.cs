@@ -114,7 +114,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(filter2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OverdrawFilterRendersCorrectly()
 		{
 			var overdrawColors = new SKColor[]
@@ -130,31 +130,55 @@ namespace SkiaSharp.Tests
 			using var filter = SKColorFilter.CreateOverdraw(overdrawColors);
 			Assert.NotNull(filter);
 
-			// Create a surface with overdraw canvas to test rendering
+			// Create a surface to capture overdraw counts
 			var info = new SKImageInfo(100, 100);
 			using var surface = SKSurface.Create(info);
 			using var canvas = surface.Canvas;
-			
-			canvas.Clear(SKColors.White);
+			canvas.Clear(SKColors.Transparent);
 
-			// Draw overlapping rectangles - center area will have most overdraw
+			// Wrap in overdraw canvas - this tracks draw counts per pixel
+			using var overdrawCanvas = new SKOverdrawCanvas(canvas);
 			using var paint = new SKPaint();
-			for (int i = 0; i < 10; i++)
-			{
-				canvas.DrawRect(new SKRect(i * 5, i * 5, 80 - i * 5, 80 - i * 5), paint);
-			}
 
-			// Apply overdraw filter to visualize
-			paint.ColorFilter = filter;
-			using var snapshot = surface.Snapshot();
-			using var overdrawImage = snapshot.ApplyImageFilter(
-				SKImageFilter.CreateColorFilter(filter, null),
-				new SKRectI(0, 0, 100, 100),
-				new SKRectI(0, 0, 100, 100),
-				out var outSubset,
-				out var outOffset);
+			// Draw at different locations with known overdraw counts
+			// Area at (10, 10) - drawn once
+			overdrawCanvas.DrawRect(new SKRect(10, 10, 30, 30), paint);
 
-			Assert.NotNull(overdrawImage);
+			// Area at (50, 10) - drawn twice (overlapping)
+			overdrawCanvas.DrawRect(new SKRect(50, 10, 70, 30), paint);
+			overdrawCanvas.DrawRect(new SKRect(50, 10, 70, 30), paint);
+
+			// Area at (10, 50) - drawn three times
+			for (int i = 0; i < 3; i++)
+				overdrawCanvas.DrawRect(new SKRect(10, 50, 30, 70), paint);
+
+			// Area at (50, 50) - drawn four times
+			for (int i = 0; i < 4; i++)
+				overdrawCanvas.DrawRect(new SKRect(50, 50, 70, 70), paint);
+
+			// Now the surface alpha channel has overdraw counts
+			// Apply the overdraw color filter to visualize
+			using var resultSurface = SKSurface.Create(info);
+			using var resultCanvas = resultSurface.Canvas;
+			using var filterPaint = new SKPaint { ColorFilter = filter };
+			resultCanvas.DrawImage(surface.Snapshot(), 0, 0, filterPaint);
+
+			// Read pixels and verify colors match overdraw counts
+			using var pixmap = resultSurface.PeekPixels();
+			Assert.NotNull(pixmap);
+
+			// Verify overdraw colors at each test location
+			var pixel0 = pixmap.GetPixelColor(5, 5);   // 0 draws - transparent
+			var pixel1 = pixmap.GetPixelColor(20, 20); // 1 draw - blue
+			var pixel2 = pixmap.GetPixelColor(60, 20); // 2 draws - green
+			var pixel3 = pixmap.GetPixelColor(20, 60); // 3 draws - yellow
+			var pixel4 = pixmap.GetPixelColor(60, 60); // 4 draws - orange
+
+			Assert.Equal(overdrawColors[0], pixel0);
+			Assert.Equal(overdrawColors[1], pixel1);
+			Assert.Equal(overdrawColors[2], pixel2);
+			Assert.Equal(overdrawColors[3], pixel3);
+			Assert.Equal(overdrawColors[4], pixel4);
 		}
 	}
 }
