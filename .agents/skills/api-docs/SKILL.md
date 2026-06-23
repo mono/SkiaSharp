@@ -99,15 +99,45 @@ WRITING RULES:
 - NEVER invent API calls — verify every method/overload exists by reading C# source
 - NEVER guess numeric values — read MemberValue from JSON, cross-reference source
 - Fill ALL params in ALL overloads — each overload independently complete
-- Read-only properties use "Gets" — check source for { get; } vs { get; set; }
+- Accessor verb comes from the entry's "signature" field, not from intuition:
+  "{ get; set; }" → "Gets or sets ..."; "{ get; }" → "Gets ...". The signature is
+  already in the JSON — read it, don't guess from the member's purpose. (Many struct
+  properties look read-only but are actually settable, e.g. SKFontVariationAxis.)
+- Constructor summaries MUST use the exact .NET phrase: "Initializes a new instance of
+  the <see cref="T:..." /> class." Use "struct" instead of "class" when the type's
+  "signature" field says "struct" (e.g. "public readonly struct ..."). Do not shorten
+  to "Initializes a new <see cref> from ..." — keep "Initializes a new instance of the".
 - Use <see langword="null" /> not <see langword="default" /> for nullable params
 - Use <see langword="true" /> and <see langword="false" /> for boolean literals in prose
+- Struct property defaults are whatever zero-init produces (0/null/false) UNLESS the
+  source has a field initializer. Do NOT copy a "default" from a sibling constant
+  (e.g. SKDocumentXpsOptions.Dpi defaults to 0, NOT to SKDocument.DefaultRasterDpi = 72).
+- Code examples must be SELF-CONTAINED and compile: declare every variable you reference,
+  and never put `using`/Dispose on a parent-owned object (the canvas from
+  SKDocument.BeginPage and SKSurface.Canvas are owned by their parent). See
+  skia-patterns.md "Caller-owned vs parent-owned".
+
+OBSOLETE MEMBERS (avoid broken examples):
+- Entries with an "obsolete" field are deprecated. When the text contains "true"
+  (i.e. [Obsolete("...", true)]) the member is a COMPILE ERROR if used — examples that
+  call it will not build. Never use an obsolete member in a code example, and never
+  recommend it as the way to do something.
+- The obsolete message names the replacement — use it. The most common SkiaSharp trap:
+  text rendering moved from SKPaint to SKFont. See skia-patterns.md "Obsolete APIs".
+- You still must document the obsolete member's own summary/value when it is in scope —
+  just describe it factually; the [Obsolete] attribute already carries the warning.
 
 STANDARD VALUES (CICP, Vulkan, OpenType, etc.):
 - For enum members referencing external standards, you MUST read the C/C++ header
   in externals/skia/ where the enum is defined and verify numeric values
 - Do NOT rely on your own knowledge of standards for specific numeric values
   (gamma values, bit depths, transfer function parameters, etc.)
+- The MEMBER NAME usually encodes the exact standard (SmpteRp4312 = SMPTE RP 431-2;
+  SmpteSt4281 = SMPTE ST 428-1). Match the summary's standard number AND its described
+  behavior to the name: RP 431-2 is DCI-P3 (not "432-2"), and ST 428-1 in
+  SKColorspaceTransferFnCicp is a gamma-2.6 transfer (not "linear" — a separate Linear
+  member exists). The same name can differ across sibling enums (SmpteSt4281 is also a
+  *primaries* member, with a different meaning). See skia-patterns.md "Standard-Based Enums".
 - If you cannot find the header, state "value from standard" without inventing
   specific numbers (e.g., say "assumed display gamma" not "assumed gamma 2.2")
 
@@ -120,7 +150,11 @@ REMARKS RULES:
 
 CONTENT FORMAT:
 - XML refs: <see cref="T:..." />, <paramref name="..." />, <see langword="null" />
-- In CDATA remarks: use <xref:...> instead of <see cref>
+- In CDATA remarks: use <xref:...> instead of <see cref>. The DocId prefix (T:/M:/P:)
+  belongs ONLY to <see cref>. An xref uses the bare DocFX UID with NO prefix:
+    ✅ <xref:SkiaSharp.SKPath>   ✅ <xref:SkiaSharp.SKPathBuilder.MoveTo(System.Single,System.Single)>
+    ❌ <xref:T:SkiaSharp.SKPath> ❌ <xref:P:SkiaSharp.SKPaint.Color>
+  A T:/M:/P: prefix inside an xref produces a broken link.
 - Set remarks to "" for self-closing <remarks />
 
 TRUST HIERARCHY for native type facts (bit layouts, byte orders):
@@ -169,8 +203,12 @@ SPECIFIC CHECKS:
   actually validate/reject, or silently accept? Read the METHOD BODY, not just signature.
 - Data format claims (bit layouts, channel names, byte orders): verify against
   skia-patterns.md and the native C/C++ header if available in the repo.
-- Default value claims: find the actual default in source (e.g., struct zero-init vs constants)
-- "Gets or sets" vs "Gets": check if property has { get; set; } or only { get; }
+- Default value claims: find the actual default in source. A struct property with NO
+  field initializer defaults to 0/null/false — "default 72" for a struct DPI is wrong
+  (72 is SKDocument.DefaultRasterDpi, a sibling constant used by scalar overloads, not
+  the struct's default). Recurring trap: SKDocumentXpsOptions.Dpi.
+- "Gets or sets" vs "Gets": the entry's "signature" field shows the accessor verbatim
+  ({ get; } vs { get; set; }) — compare the verb against it. Don't trust the prose alone.
 - Cross-library: SkiaSharp and HarfBuzzSharp are DIFFERENT libraries with different conventions.
 
 STANDARD VALUE VERIFICATION (CRITICAL):
@@ -178,6 +216,12 @@ STANDARD VALUE VERIFICATION (CRITICAL):
   you MUST locate and read the C/C++ header where the enum is defined (check
   externals/skia/include/ or binding/ generated files)
 - Cross-reference the MemberValue in JSON against the enum constant in source
+- The MEMBER NAME usually encodes the standard (SmpteRp4312 = SMPTE RP 431-2;
+  SmpteSt4281 = SMPTE ST 428-1). Verify the summary's standard number AND its described
+  behavior against the name: RP 431-2 ≠ "432-2"; ST 428-1 in SKColorspaceTransferFnCicp
+  is gamma ~2.6, NOT "linear" (a separate Linear member exists for the actual linear
+  transfer). The same member name can mean different things in sibling enums — SmpteSt4281
+  is also a primaries member — so check it against the enum you are documenting.
 - If documentation claims a specific numeric property of a standard (e.g., "gamma 2.2",
   "10-bit precision", "64-bit packed"), verify it is consistent:
   - Does the bit math add up? (e.g., "64-bit with 10+10+10+10 packed" = only 40 bits → ERROR)
@@ -232,14 +276,27 @@ For each JSON file in output/docs-work/:
       override, base, event, class, struct, delegate, abstract, virtual, etc.
    e. Check null safety: if a method returns nullable (SKData?), does the
       example handle null before using the result?
+   f. Check for OBSOLETE APIs: grep the member's source for [Obsolete. A member marked
+      [Obsolete("...", true)] is a COMPILE ERROR and must never appear in an example.
+      The "obsolete" field in the JSON entry also flags these. Watch especially for the
+      legacy text API: SKPaint.TextSize/TextScaleX/Typeface/TextAlign and the
+      SKCanvas.DrawText(string,float,float,SKPaint) overload are obsolete-error — the
+      modern form uses SKFont (see skia-patterns.md "Obsolete APIs").
+   g. Check the example is SELF-CONTAINED: every variable/identifier referenced must be
+      declared within the snippet. An undefined local (e.g. using `bitmap2` when only
+      `bitmap` was created) is a compile error. This is easy to miss in multi-statement
+      examples — track each identifier back to its declaration.
+   h. Check disposal OWNERSHIP: never `using`/Dispose an object owned by a parent. The
+      canvas from SKDocument.BeginPage and SKSurface.Canvas are parent-owned (owns:false);
+      wrapping them in `using` is wrong (see skia-patterns.md "Caller-owned vs parent-owned").
 
 OUTPUT FORMAT — you MUST use this structure for each file:
   [filename.json] CHECKED N code examples
     Example 1 (docId): "var surface = SKSurface.Create(...)"
       → grep binding/SkiaSharp/SKSurface.cs: found Create(SKImageInfo) at line 42 ✓
       → variable names OK ✓
-    Example 2 (docId): "var override = new SKFontPaletteOverride"
-      → CRITICAL: "override" is a C# reserved keyword
+    Example 2 (docId): "paint.TextSize = 24f"
+      → CRITICAL: TextSize is [Obsolete(..., true)] — won't compile; use font.Size
   ISSUES: [list] or NONE
 
 A review that checks 0 code examples is INCOMPLETE. Finding 0 issues across
@@ -262,15 +319,28 @@ For each JSON file in output/docs-work/:
    not template placeholders like [Describe...] or [Show...]
 3. Check summaries add value beyond just restating the member name
 4. Check <see cref> references use correct prefix (T: M: P: F:)
-5. Check boolean params use "true to..." and boolean returns use "true if..."
-6. Check nullable params use <see langword="null" /> not "default"
-7. Check remarks don't make false comparisons with other types
-   (e.g., "Unlike X, which is immutable" — verify before accepting)
-8. Check enum member descriptions accurately describe the member's
-   specific value, not a similar-looking sibling enum member
-9. Check domain facts against skia-patterns.md (naming conventions, byte layouts,
-   type categories). If documentation matches the reference, it is correct.
-10. For native byte layout claims, compare against skia-patterns.md. If the
+5. Check CDATA <xref:...> links use NO DocId prefix — <xref:SkiaSharp.SKPath> is correct,
+   <xref:T:SkiaSharp.SKPath> / <xref:M:...> / <xref:P:...> are broken (prefix is for <see cref> only)
+6. Check constructor summaries use the full phrase "Initializes a new instance of the
+   <see cref> class" (or "struct" for value types) — not a shortened "Initializes a new <see cref>"
+7. Check property summaries match the accessor in the entry's "signature" field:
+   "Gets or sets" for { get; set; }, "Gets" for { get; }
+8. Check boolean wording: parameters use "true to...", while returns AND property
+   `<value>` use "true if..." (a property value describes a state, like a return)
+9. Check nullable params use <see langword="null" /> not "default"
+10. Check remarks don't make false comparisons with other types
+    (e.g., "Unlike X, which is immutable" — verify before accepting)
+11. Check enum member descriptions accurately describe the member's
+    specific value, not a similar-looking sibling enum member. For standard-based enums,
+    the member NAME encodes the standard (SmpteRp4312 = SMPTE RP 431-2; SmpteSt4281 =
+    SMPTE ST 428-1) — verify the summary's standard number AND behavior match it
+    (RP 431-2 not "432-2"; ST 428-1 in the transfer-fn enum is gamma 2.6, not "linear";
+    note SmpteSt4281 also exists as a primaries member with a different meaning).
+    See skia-patterns.md
+    "Standard-Based Enums".
+12. Check domain facts against skia-patterns.md (naming conventions, byte layouts,
+    type categories). If documentation matches the reference, it is correct.
+13. For native byte layout claims, compare against skia-patterns.md. If the
     documentation matches the reference file, it is CORRECT — do not override.
     Never invent C macro expansions to "disprove" the reference.
 
