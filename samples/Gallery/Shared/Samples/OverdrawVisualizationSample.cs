@@ -28,17 +28,16 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new SwitchControl("visualize", "Show Overdraw", visualizeOverdraw,
+		new ToggleControl("visualize", "Show Overdraw", visualizeOverdraw,
 			Description: "Toggle between normal rendering and overdraw visualization."),
 	];
 
-	public override void HandleControlValueChanged(string id, object value)
+	protected override void OnControlChanged(string id, object value)
 	{
 		switch (id)
 		{
 			case "visualize":
 				visualizeOverdraw = (bool)value;
-				Refresh();
 				break;
 		}
 	}
@@ -124,11 +123,11 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 		var x = padding;
 		var y = height - padding - boxSize;
 
+		using var font = new SKFont(SampleMedia.Fonts.Default, 14);
 		using var textPaint = new SKPaint
 		{
 			IsAntialias = true,
-			Color = SKColors.Black,
-			TextSize = 14
+			Color = SKColors.Black
 		};
 
 		using var boxPaint = new SKPaint
@@ -142,7 +141,7 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 		{
 			boxPaint.Color = colors[i];
 			canvas.DrawRect(x, y, boxSize, boxSize, boxPaint);
-			canvas.DrawText(labels[i], x + boxSize + spacing, y + boxSize - 5, textPaint);
+			canvas.DrawText(labels[i], x + boxSize + spacing, y + boxSize - 5, SKTextAlign.Left, font, textPaint);
 			x += boxSize + spacing + 30;
 		}
 	}
