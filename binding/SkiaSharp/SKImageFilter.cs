@@ -152,6 +152,11 @@ namespace SkiaSharp
 			return filter;
 		}
 
+		// CreateEmpty
+
+		public static SKImageFilter CreateEmpty () =>
+			GetObject (SkiaApi.sk_imagefilter_new_empty ());
+
 		// CreateDistantLitDiffuse
 
 		public static SKImageFilter CreateDistantLitDiffuse (SKPoint3 direction, SKColor lightColor, float surfaceScale, float kd) =>
