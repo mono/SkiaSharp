@@ -39,7 +39,18 @@ Each skill confirms with `ask_user` before executing destructive operations.
 
 The `{build}` number is auto-assigned by CI.
 
-### Release Type → Base Branch
+### mono/skia Counterpart Branches
+
+Every SkiaSharp `release/{version}` branch has an **identically-named**
+`release/{version}` branch in the [mono/skia](https://github.com/mono/skia) fork,
+created at the exact `externals/skia` submodule commit that the SkiaSharp branch
+references (skia branch HEAD **==** submodule SHA). This locks the Skia source for
+the release so it stays auditable, reproducible, and safe from garbage collection.
+The [release-branch](../../.agents/skills/release-branch/SKILL.md) skill creates it
+right after pushing the SkiaSharp branch (Step 5). `main` is the exception — it
+tracks the `skiasharp` integration branch, not a `release/*` counterpart.
+
+
 
 Releases are cut from the line's **integration branch**: `main` for the newest
 in-development line, or `release/X.Y.x` for an established/maintenance line. Each
@@ -133,8 +144,15 @@ flowchart TB
     ∙ Set PREVIEW_LABEL
     ∙ Commit and push"]
     
-    CREATE --> CI([CI Build Started])
-    CREATE --> IS_STABLE{Stable cut?}
+    CREATE --> SKIA
+    SKIA["Create mono/skia
+    counterpart branch
+    ∙ Read externals/skia SHA
+    ∙ gh api git/refs at that SHA
+    ∙ Same release/{version} name"]
+
+    SKIA --> CI([CI Build Started])
+    SKIA --> IS_STABLE{Stable cut?}
     IS_STABLE -->|No| DONE([Done - wait 2-4 hours])
     IS_STABLE -->|Yes| BUMP
 
