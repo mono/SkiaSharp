@@ -158,7 +158,7 @@ Key points:
 
 | Point | What it means |
 |---|---|
-| **Paths 1 + 2 = one pipeline, one PR** | `update-release-notes` runs the deterministic Prepare phase (Cake API diffs + Python notes) in its own job, hands off to the AI Polish phase via an artifact, and opens a **single** rolling PR with both. Triggers: pushes to `main` and `release/*`, `v*` tags, and weekly. If nothing changed, **no PR is opened** (spec §2.3). |
+| **Paths 1 + 2 = one pipeline, one PR** | `update-release-notes` runs the deterministic Prepare phase (Cake API diffs + Python notes) in its own job, hands off to the AI Polish phase via an artifact, and opens a **single** rolling PR with both. Triggers: pushes to `main` and a daily cron — `main` walks every `release/*` ref and reads `v*` tags itself, so release branches/tags need no trigger of their own. If nothing changed, **no PR is opened** (spec §2.3). |
 | **Path 3 is cross-repo** | The engines live in *this* repo but the XML lives in the *docs* repo, so `auto-api-docs-writer` lives in the docs repo, checks SkiaSharp out to borrow the engines, regenerates the stubs, AI-fills placeholders, and opens its PR there. |
 | **`auto-docs-submodule-sync` closes the loop** | Once the docs-repo PR merges, it bumps this repo's `docs/` submodule pointer so the new XML is picked up here. |
 
