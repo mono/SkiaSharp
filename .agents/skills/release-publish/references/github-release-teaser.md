@@ -23,9 +23,14 @@ package consumer cares about, then fold GitHub's full auto-generated PR list ben
   maintainers — inline credit is factual attribution. The `Thanks to our contributors`
   line is a separate community-only roll-up and stays.
 - **Essential-only, customer-first.** The teaser highlights features, breaking changes,
-  and security fixes. Plumbing (CI, build, tests, dependency bumps, docs automation,
-  backport bookkeeping, internal refactors) stays in the folded log, not the teaser.
-- **Section emojis only.** Use ✨ / ⚠️ / 🛡️ on the section headers. There is **no**
+  and notable native-dependency updates. Plumbing (CI, build, tests, build-tooling bumps,
+  docs automation, backport bookkeeping, internal refactors) stays in the folded log.
+- **Never advertise security.** Do **not** call anything a "security fix", title a section
+  "Security", or name a CVE in the teaser — we deliberately avoid signaling which bundled
+  component was vulnerable so attackers get no roadmap. Surface bundled-dependency bumps
+  neutrally as `Updated <dep> to <version>`; the upstream PR title stays verbatim only
+  inside the folded log.
+- **Section emojis only.** Use ✨ / ⚠️ / 📦 on the section headers. There is **no**
   per-PR platform-emoji decoration (that older scheme is retired).
 - **Link out for the full story.** The teaser links to the categorized website release
   notes; that page is produced separately (Step 5) and the link is a stable permalink
@@ -45,9 +50,10 @@ gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/generated-
    `generated-log.md`. It returns just the teaser markdown (the part above the folded log).
 3. **Assemble** the final body using the [teaser template](#teaser-template): the extracted
    teaser on top, then the captured log folded into `<details>` — **stripped** of its
-   `## What's Changed` heading and its trailing `**Full Changelog**:` line (keep the raw PR
-   bullets and the `## New Contributors` block) — then a single `**Full Changelog**:` line.
-   Write it to `/tmp/skiasharp/release/release-body.md`.
+   `## What's Changed` heading and its `**Full Changelog**:` line (keep the raw PR bullets
+   and the `## New Contributors` block). The compare URL from that stripped line moves up
+   into the header links row (🔀 Full changelog), so it appears exactly once. Write it to
+   `/tmp/skiasharp/release/release-body.md`.
 
 ```bash
 # 4. Update the release in place.
@@ -63,7 +69,9 @@ are **omitted entirely** (no "*None.*" placeholders). The release **title** is a
 by `gh release create --title`, so the body has no top-level `#` heading.
 
 ```markdown
-{one-line, plain-language subtitle of the release} · 📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/{nuget-version}) · 📖 [Full release notes](https://mono.github.io/SkiaSharp/docs/releases/{notes-version}.html)
+{one-line, plain-language subtitle of the release}
+
+📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/{nuget-version}) · 📖 [Release notes](https://mono.github.io/SkiaSharp/docs/releases/{notes-version}.html) · 🔀 [Full changelog]({compare-url})
 
 ## ✨ What's New
 - {customer-facing improvement, ≤ ~15 words} by @{author} (#{pr})
@@ -72,8 +80,8 @@ by `gh release create --title`, so the body has no top-level `#` heading.
 ## ⚠️ Breaking Changes
 - {what changed and what a consumer must do} by @{author} (#{pr})
 
-## 🛡️ Security
-- {vulnerability fixed; name the CVE if known} by @{author} (#{pr})
+## 📦 Dependency Updates
+- Updated {dependency} to {version} by @{author} (#{pr})
 
 Thanks to our contributors: @{handle}, @{handle}
 
@@ -85,10 +93,7 @@ Thanks to our contributors: @{handle}, @{handle}
 with the `## What's Changed` heading and the duplicate `**Full Changelog**:` line removed}
 
 </details>
-
-**Full Changelog**: {compare-url}
 ```
-
 Notes on the placeholders:
 
 - `{nuget-version}` — the **NuGet package version**: the tag without the leading `v`,
@@ -103,9 +108,10 @@ Notes on the placeholders:
   404. The page may not exist yet at publish time; the base-line link still resolves once it
   publishes.
 - `{N}` — count of `* … by @… in …` lines in the generated log.
-- `{compare-url}` — copy the `**Full Changelog**: …/compare/…` URL from the generated log,
-  then **remove that line from inside the fold** so it appears only once, at the bottom.
-  Omit the bottom line only if the generated log has none.
+- `{compare-url}` — the `…/compare/…` URL from the generated log's `**Full Changelog**:`
+  line. It goes in the header links row as 🔀 [Full changelog]; **remove the
+  `**Full Changelog**:` line from inside the fold** so the compare URL appears exactly once.
+  Drop the 🔀 link only if the generated log has none.
 - Every teaser bullet ends with `by @{author} (#{pr})`. One PR per bullet so each author is
   credited; combine only closely-related PRs and credit every author as
   `by @a, @b (#{pr1}, #{pr2})`.
@@ -124,9 +130,11 @@ everything above the `---` / `<details>` in the template):
 > merged pull request, each with a title, `#PR`, and `@author`.
 >
 > **Goal:** surface only what a consumer of the SkiaSharp / HarfBuzzSharp NuGet packages
-> would care about. **Ignore** CI/build/test changes, dependency-bump bookkeeping, version
-> bumps, release-notes/docs automation, backport plumbing, and internal refactors — unless
-> they visibly affect package consumers.
+> would care about. **Ignore** CI/build/test changes, build-tooling dependency bumps
+> (GitHub Actions, internal package references), the SkiaSharp version-number bump,
+> release-notes/docs automation, backport plumbing, and internal refactors — unless they
+> visibly affect package consumers. Bundled **native** dependency bumps are **not** ignored
+> — see 📦 Dependency Updates below.
 >
 > **Classify** the remaining PRs into:
 > - **✨ What's New** — features, new APIs, performance, behavior improvements, new
@@ -134,7 +142,10 @@ everything above the `---` / `<details>` in the template):
 > - **⚠️ Breaking Changes** — anything that could require consumer code or config changes:
 >   removed/renamed/retyped public APIs, changed defaults, minimum-version bumps, dropped
 >   target frameworks or runtimes.
-> - **🛡️ Security** — CVEs and vulnerability fixes. Name the CVE if it appears in the title.
+> - **📦 Dependency Updates** — bumps of bundled native graphics-stack dependencies
+>   (libpng, libexpat, freetype, harfbuzz, zlib, libjpeg-turbo, brotli, …), written as
+>   `Updated <dep> to <version>`. **Never** write "security"/"vulnerability" or name a CVE,
+>   even when the PR title does — we do not advertise which components were vulnerable.
 >
 > Write **2–5 short bullets** per non-empty section, each **≤ ~15 words**, plain language,
 > no internal jargon. End each bullet with **`by @author (#NNNN)`** to credit the PR author
@@ -148,6 +159,7 @@ everything above the `---` / `<details>` in the template):
 > `@github-actions[bot]`). Omit the line if no community authors remain.
 >
 > Begin with a single plain-language subtitle line summarizing the release in one phrase.
+> Keep it neutral — never frame the release as a "security" release or mention a CVE.
 >
 > Output **only** the teaser markdown (subtitle line + the sections above). Do **not**
 > invent changes that aren't in the log. Do **not** emit the `<details>` block, the
@@ -164,7 +176,7 @@ everything above the `---` / `<details>` in the template):
 |--------|--------------------------------|----------------------------|
 | ✨ What's New | adds an API/feature, new platform/runtime, perf or behavior improvement | refactors, test-only, sample tweaks |
 | ⚠️ Breaking Changes | removes/renames/retypes public API, changes a default, bumps a min version, drops a TFM/runtime | internal API changes, private helpers |
-| 🛡️ Security | fixes a CVE or vulnerability (often a native-dep bump with a CVE) | routine dependency refreshes with no CVE |
+| 📦 Dependency Updates | bumps a bundled native dependency (libpng, libexpat, freetype, harfbuzz, zlib, libjpeg-turbo, brotli, …), stated neutrally as a version update — never as a CVE/security fix | CI/build-tooling bumps, GitHub Action bumps, internal package refs |
 | (folded only) | CI, build, pipeline, version bump, docs/notes automation, backport plumbing | — |
 
 ---
@@ -190,14 +202,16 @@ everything above the `---` / `<details>` in the template):
 **Assembled release body (output):**
 
 ```markdown
-Adds tvOS Metal support and a new RISC-V build, plus a security fix. · 📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/3.119.2) · 📖 [Full release notes](https://mono.github.io/SkiaSharp/docs/releases/3.119.2.html)
+Adds tvOS Metal support and a new RISC-V build, plus a dependency refresh.
+
+📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/3.119.2) · 📖 [Release notes](https://mono.github.io/SkiaSharp/docs/releases/3.119.2.html) · 🔀 [Full changelog](https://github.com/mono/SkiaSharp/compare/v3.119.1...v3.119.2)
 
 ## ✨ What's New
 - Support `SKMetalView` on tvOS by @MartinZikmund (#3114)
 - Add riscv64 build support by @kasperk81 (#3201)
 
-## 🛡️ Security
-- Bump libpng to 1.6.44, fixing CVE-2024-XXACK by @mattleibow (#3402)
+## 📦 Dependency Updates
+- Updated libpng to 1.6.44 by @mattleibow (#3402)
 
 Thanks to our contributors: @MartinZikmund, @kasperk81
 
@@ -215,9 +229,10 @@ Thanks to our contributors: @MartinZikmund, @kasperk81
 * @kasperk81 made their first contribution in https://github.com/mono/SkiaSharp/pull/3201
 
 </details>
-
-**Full Changelog**: https://github.com/mono/SkiaSharp/compare/v3.119.1...v3.119.2
 ```
 
 Note what dropped out of the teaser: the AI-docs PR and the version bump are plumbing, so
 they live only in the folded log. There was no breaking change, so that section is omitted.
+The folded log keeps each upstream PR title verbatim — including the `(CVE-2024-XXACK)` text
+— but the 📦 Dependency Updates bullet stays neutral (`Updated libpng to 1.6.44`); we never
+re-advertise a vulnerability in the teaser.
