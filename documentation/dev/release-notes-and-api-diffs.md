@@ -336,14 +336,23 @@ AI) — and never juggle the individual generators by hand.
 
 ### 2.3 One workflow, one PR
 
-A single triggered/scheduled GitHub workflow
+A single GitHub workflow
 ([`update-release-notes`](../../.github/workflows/update-release-notes.md)) runs the
-§2.2 sequence on pushes to `main` and `release/*` (plus `v*` tags and a weekly
-safety-net cron), then opens **one** pull request with the regenerated `releases/`
-tree. If nothing changed, no PR is opened. There is no separate "api-diff" vs
-"release-notes" workflow — they are one pipeline producing one coherent update.
-(Pushing to `release/*` is a *git source* for content, not an emission trigger;
-emission is governed solely by §1.4.)
+§2.2 sequence and opens **one** pull request with the regenerated `releases/` tree.
+There is no separate "api-diff" vs "release-notes" workflow — they are one pipeline
+producing one coherent update.
+
+**`main` is the only source of truth, on a daily schedule.** The workflow runs on
+pushes to `main` and on a **daily cron**, and is deliberately *not* triggered by
+`release/*` pushes or `v*` tags. A `push`/`tag` event runs the workflow copy that lives
+on *that* ref, so triggering from a release branch or tag could only ever run a stale
+per-branch copy (the duplicate-PR trap). Instead the `main` run discovers everything
+itself — it walks every `release/*` ref and reads `v*` tags during generation
+(§1.4, §3) — so a new release-branch commit or a freshly-pushed stable tag is picked up
+by the next daily run (within ~24h) with no per-branch/tag workflow. A manual
+`workflow_dispatch` refreshes immediately when waiting for the daily run is undesirable
+(e.g. right after tagging). (Walking a `release/*` ref is a *git source* for content,
+not an emission trigger; emission is governed solely by §1.4.)
 
 **Prepare runs as a standalone job; the agent only polishes.** The **Prepare** phase
 (the `generate.sh` script — Cake then Python, §2.2) runs in its **own dedicated job**
@@ -366,8 +375,10 @@ runs the **Polish** phase (§2.2) with **no network and no `python3`/`cake` acce
 reads `output/files-to-polish.txt` first and edits only the prose of the listed pages.
 The `create-pull-request` safe-output captures the *combined* working-tree diff (restored
 Prepare output + agent prose edits) into the single PR, so both artifacts always ship
-together. If `files-to-polish.txt` is empty **and** the restored tree has no diff, no PR
-is opened (§4.6 idempotency).
+together. The agent job is **gated on Prepare having produced changes**
+(`prepare.outputs.has_changes`): on a no-op run the deterministic generators reproduce
+the existing tree byte-for-byte, Prepare's patch is empty, and the agent **and** the PR
+are skipped — so an unchanged daily run opens no PR (§4.6 idempotency).
 
 ---
 
