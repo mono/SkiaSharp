@@ -526,5 +526,56 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 			Assert.NotEmpty(pixels);
 		}
+
+		[Fact]
+		public void AnimatedGifReturnsYes()
+		{
+			var path = Path.Combine(PathToImages, "animated-heart.gif");
+			using var codec = SKCodec.Create(path);
+		
+			Assert.NotNull(codec);
+			Assert.Equal(SKCodecAnimationStatus.Yes, codec.AnimationStatus);
+		}
+
+		[Theory]
+		[InlineData("baboon.png")]
+		[InlineData("color-wheel.png")]
+		[InlineData("CMYK.jpg")]
+		public void StaticImageReturnsNo(string image)
+		{
+			var path = Path.Combine(PathToImages, image);
+			using var codec = SKCodec.Create(path);
+		
+			Assert.NotNull(codec);
+			Assert.Equal(SKCodecAnimationStatus.No, codec.AnimationStatus);
+		}
+
+		[Fact]
+		public void AnimationStatusYesHasMultipleFrames()
+		{
+			var path = Path.Combine(PathToImages, "animated-heart.gif");
+			using var codec = SKCodec.Create(path);
+		
+			Assert.NotNull(codec);
+			if (codec.AnimationStatus == SKCodecAnimationStatus.Yes)
+			{
+				Assert.True(codec.FrameCount > 1);
+			}
+		}
+
+		[Theory]
+		[InlineData("baboon.png")]
+		[InlineData("color-wheel.png")]
+		public void AnimationStatusNoHasSingleFrame(string image)
+		{
+			var path = Path.Combine(PathToImages, image);
+			using var codec = SKCodec.Create(path);
+		
+			Assert.NotNull(codec);
+			if (codec.AnimationStatus == SKCodecAnimationStatus.No)
+			{
+				Assert.Equal(1, codec.FrameCount);
+			}
+		}
 	}
 }

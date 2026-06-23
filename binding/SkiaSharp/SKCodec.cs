@@ -87,6 +87,14 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKCodecAnimationStatus AnimationStatus {
+			get {
+				var result = SkiaApi.sk_codec_is_animated (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
+
 		public int FrameCount {
 			get {
 				var result = SkiaApi.sk_codec_get_frame_count (Handle);

@@ -3751,6 +3751,25 @@ namespace SkiaSharp
 			(sk_codec_incremental_decode_delegate ??= GetSymbol<Delegates.sk_codec_incremental_decode> ("sk_codec_incremental_decode")).Invoke (codec, rowsDecoded);
 		#endif
 
+		// sk_codec_animation_status_t sk_codec_is_animated(sk_codec_t* codec)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKCodecAnimationStatus sk_codec_is_animated (sk_codec_t codec);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKCodecAnimationStatus sk_codec_is_animated (sk_codec_t codec);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate SKCodecAnimationStatus sk_codec_is_animated (sk_codec_t codec);
+		}
+		private static Delegates.sk_codec_is_animated sk_codec_is_animated_delegate;
+		internal static SKCodecAnimationStatus sk_codec_is_animated (sk_codec_t codec) =>
+			(sk_codec_is_animated_delegate ??= GetSymbol<Delegates.sk_codec_is_animated> ("sk_codec_is_animated")).Invoke (codec);
+		#endif
+
 		// size_t sk_codec_min_buffered_bytes_needed()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -20964,6 +20983,16 @@ namespace SkiaSharp {
 		Difference = 0,
 		// INTERSECT_SK_CLIPOP = 1
 		Intersect = 1,
+	}
+
+	// sk_codec_animation_status_t
+	public enum SKCodecAnimationStatus {
+		// SK_CODEC_ANIMATION_STATUS_YES = 0
+		Yes = 0,
+		// SK_CODEC_ANIMATION_STATUS_NO = 1
+		No = 1,
+		// SK_CODEC_ANIMATION_STATUS_UNKNOWN = 2
+		Unknown = 2,
 	}
 
 	// sk_codec_result_t
