@@ -360,6 +360,7 @@ pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 merge output/docs-work/
 The merge tool has built-in safety checks:
 - **Signature preservation** — counts `MemberSignature` and `TypeSignature` elements before and after merging each file and aborts with a fatal error if any were lost
 - **Extract guard** — rejects any field not listed in `_extractedKeys` (prevents agents from overwriting existing documentation with "improved" versions). Rejected fields emit a warning.
+- **Placeholder guard** — never writes a field whose content is still unfinished, i.e. a literal `To be added.` stub or an unfilled remarks scaffold (the `[Describe what this type does ...]` blanks). If a large type runs out of time mid-write, its placeholder is left intact so the XML stays clean and the next run can re-detect and re-fill it.
 - **XML validation** — validates the output XML is well-formed after save
 
 Then run formatting to clean up:
