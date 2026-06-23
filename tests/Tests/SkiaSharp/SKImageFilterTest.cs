@@ -60,5 +60,25 @@ namespace SkiaSharp.Tests
 			using var composed = SKImageFilter.CreateCompose(empty1, empty2);
 			Assert.NotNull(composed);
 		}
+
+		[Fact]
+		public void CreateEmptyCanBeUsedInRendering()
+		{
+			const int size = 64;
+			var info = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+			using var surface = SKSurface.Create(info);
+			using var emptyFilter = SKImageFilter.CreateEmpty();
+			using var paint = new SKPaint
+			{
+				Color = SKColors.Red,
+				ImageFilter = emptyFilter
+			};
+
+			surface.Canvas.DrawRect(new SKRect(10, 10, 50, 50), paint);
+
+			using var image = surface.Snapshot();
+			Assert.NotNull(image);
+		}
 	}
 }
