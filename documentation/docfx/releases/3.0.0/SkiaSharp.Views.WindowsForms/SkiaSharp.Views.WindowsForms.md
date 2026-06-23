@@ -6,41 +6,6 @@
 
 ### Namespace SkiaSharp.Views.Desktop
 
-#### Type Changed: SkiaSharp.Views.Desktop.SKGLControl
-
-Modified base type:
-
-```diff
--OpenTK.GLControl
-+OpenTK.GLControl.GLControl
-```
-
-Removed constructors:
-
-```csharp
-public SKGLControl (OpenTK.Graphics.GraphicsMode mode);
-public SKGLControl (OpenTK.Graphics.GraphicsMode mode, int major, int minor, OpenTK.Graphics.GraphicsContextFlags flags);
-```
-
-Added constructor:
-
-```csharp
-public SKGLControl (OpenTK.GLControl.GLControlSettings settings);
-```
-
-Removed interfaces:
-
-```csharp
-System.ComponentModel.IComponent
-System.ComponentModel.ISynchronizeInvoke
-System.IDisposable
-System.Windows.Forms.IBindableComponent
-System.Windows.Forms.IContainerControl
-System.Windows.Forms.IDropTarget
-System.Windows.Forms.IWin32Window
-```
-
-
 #### New Type: SkiaSharp.Views.Desktop.Extensions
 
 ```csharp
