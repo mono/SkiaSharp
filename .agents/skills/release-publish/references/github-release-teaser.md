@@ -16,6 +16,12 @@ package consumer cares about, then fold GitHub's full auto-generated PR list ben
 - **Keep the auto-gen list.** It already carries every PR number and author handle for
   free. We never hand-rebuild it — we just **fold it into a `<details>` block** under the
   teaser.
+- **Credit every promoted change inline.** Each teaser bullet keeps its PR author as
+  `by @author (#NNNN)`. Use **one PR per bullet** so every contributor is named; you may
+  combine PRs into a single bullet **only for one closely-related change**, and then
+  **credit every author** (`by @a, @b (#NNNN, #MMMM)`). Include the handle even for
+  maintainers — inline credit is factual attribution. The `Thanks to our contributors`
+  line is a separate community-only roll-up and stays.
 - **Essential-only, customer-first.** The teaser highlights features, breaking changes,
   and security fixes. Plumbing (CI, build, tests, dependency bumps, docs automation,
   backport bookkeeping, internal refactors) stays in the folded log, not the teaser.
@@ -38,8 +44,10 @@ gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/generated-
 2. **Extract** the teaser by running the [extraction prompt](#extraction-prompt) over
    `generated-log.md`. It returns just the teaser markdown (the part above the folded log).
 3. **Assemble** the final body using the [teaser template](#teaser-template): the extracted
-   teaser on top, then the captured log folded into `<details>`, then the `**Full
-   Changelog**` line. Write it to `/tmp/skiasharp/release/release-body.md`.
+   teaser on top, then the captured log folded into `<details>` — **stripped** of its
+   `## What's Changed` heading and its trailing `**Full Changelog**:` line (keep the raw PR
+   bullets and the `## New Contributors` block) — then a single `**Full Changelog**:` line.
+   Write it to `/tmp/skiasharp/release/release-body.md`.
 
 ```bash
 # 4. Update the release in place.
@@ -58,14 +66,14 @@ by `gh release create --title`, so the body has no top-level `#` heading.
 {one-line, plain-language subtitle of the release} · 📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/{version}) · 📖 [Full release notes](https://mono.github.io/SkiaSharp/docs/releases/{version}.html)
 
 ## ✨ What's New
-- {customer-facing improvement, ≤ ~15 words} (#{pr})
+- {customer-facing improvement, ≤ ~15 words} by @{author} (#{pr})
 - {…}
 
 ## ⚠️ Breaking Changes
-- {what changed and what a consumer must do} (#{pr})
+- {what changed and what a consumer must do} by @{author} (#{pr})
 
 ## 🛡️ Security
-- {vulnerability fixed; name the CVE if known} (#{pr})
+- {vulnerability fixed; name the CVE if known} by @{author} (#{pr})
 
 Thanks to our contributors: @{handle}, @{handle}
 
@@ -73,7 +81,8 @@ Thanks to our contributors: @{handle}, @{handle}
 
 <details><summary>All changes ({N} pull requests)</summary>
 
-{the verbatim generated-log.md — What's Changed, New Contributors, Full Changelog}
+{the generated log's raw PR bullets — plus the `## New Contributors` block if present —
+with the `## What's Changed` heading and the duplicate `**Full Changelog**:` line removed}
 
 </details>
 
@@ -86,9 +95,12 @@ Notes on the placeholders:
   `3.119.2`). For previews use the full preview version if its page exists; otherwise the
   link still resolves once that page publishes.
 - `{N}` — count of `* … by @… in …` lines in the generated log.
-- `{compare-url}` — copy the `**Full Changelog**: …/compare/…` URL from the generated log.
-  It also remains inside the folded `<details>`; surfacing it once at the bottom is the
-  quick link. Omit the outer line only if the generated log has none.
+- `{compare-url}` — copy the `**Full Changelog**: …/compare/…` URL from the generated log,
+  then **remove that line from inside the fold** so it appears only once, at the bottom.
+  Omit the bottom line only if the generated log has none.
+- Every teaser bullet ends with `by @{author} (#{pr})`. One PR per bullet so each author is
+  credited; combine only closely-related PRs and credit every author as
+  `by @a, @b (#{pr1}, #{pr2})`.
 - Drop any section header whose list is empty. `Thanks to our contributors` may be omitted
   if the only authors are maintainers/bots.
 
@@ -117,8 +129,11 @@ everything above the `---` / `<details>` in the template):
 > - **🛡️ Security** — CVEs and vulnerability fixes. Name the CVE if it appears in the title.
 >
 > Write **2–5 short bullets** per non-empty section, each **≤ ~15 words**, plain language,
-> no internal jargon. Keep the `(#NNNN)` reference on each bullet. **Omit any section that
-> has no qualifying PRs** — do not emit empty headers or "None".
+> no internal jargon. End each bullet with **`by @author (#NNNN)`** to credit the PR author
+> (include the handle even for maintainers). Use **one PR per bullet**; combine PRs into a
+> single bullet only for one closely-related change, crediting every author
+> (`by @a, @b (#NNNN, #MMMM)`). **Omit any section that has no qualifying PRs** — do not
+> emit empty headers or "None".
 >
 > Then add one line: `Thanks to our contributors: ` followed by the **unique** `@author`
 > handles from the log, excluding maintainers and bots (`@github-actions`, `@dependabot`,
@@ -170,11 +185,11 @@ everything above the `---` / `<details>` in the template):
 Adds tvOS Metal support and a new RISC-V build, plus a security fix. · 📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/3.119.2) · 📖 [Full release notes](https://mono.github.io/SkiaSharp/docs/releases/3.119.2.html)
 
 ## ✨ What's New
-- Support `SKMetalView` on tvOS (#3114)
-- Add riscv64 build support (#3201)
+- Support `SKMetalView` on tvOS by @MartinZikmund (#3114)
+- Add riscv64 build support by @kasperk81 (#3201)
 
 ## 🛡️ Security
-- Bump libpng to 1.6.44, fixing CVE-2024-XXACK (#3402)
+- Bump libpng to 1.6.44, fixing CVE-2024-XXACK by @mattleibow (#3402)
 
 Thanks to our contributors: @MartinZikmund, @kasperk81
 
@@ -182,7 +197,6 @@ Thanks to our contributors: @MartinZikmund, @kasperk81
 
 <details><summary>All changes (5 pull requests)</summary>
 
-## What's Changed
 * Support SKMetalView on tvOS by @MartinZikmund in https://github.com/mono/SkiaSharp/pull/3114
 * Add riscv64 build support by @kasperk81 in https://github.com/mono/SkiaSharp/pull/3201
 * Bump libpng to 1.6.44 (CVE-2024-XXACK) by @mattleibow in https://github.com/mono/SkiaSharp/pull/3402
@@ -191,8 +205,6 @@ Thanks to our contributors: @MartinZikmund, @kasperk81
 
 ## New Contributors
 * @kasperk81 made their first contribution in https://github.com/mono/SkiaSharp/pull/3201
-
-**Full Changelog**: https://github.com/mono/SkiaSharp/compare/v3.119.1...v3.119.2
 
 </details>
 
