@@ -42,9 +42,10 @@ Publish packages to NuGet.org and finalize releases.
 │  2. Publish to NuGet.org → Trigger Azure pipeline (manual)         │
 │  3. Verify Published     → Poll NuGet.org until indexed            │
 │  4. Tag Release          → Push git tag (ask_user first!)          │
-│  5. Create GitHub Release→ Generate notes, set prerelease flag     │
-│  6. Annotate Notes       → Add platform/contributor emojis         │
-│  7. Close Milestone      → Stable releases only                    │
+│  5. Refresh Web Notes    → Dispatch docs workflow (tag→stable flip)│
+│  6. Create GitHub Release→ Generate notes, set prerelease flag     │
+│  7. Annotate Notes       → Add platform/contributor emojis         │
+│  8. Close Milestone      → Stable releases only                    │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -54,8 +55,9 @@ Publish packages to NuGet.org and finalize releases.
 | 1. NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
 | 2. Pipeline checkbox | "Push Preview" | "Push Stable" |
 | 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
-| 5. GitHub Release | `--prerelease` flag | No flag, attach samples |
-| 7. Milestone | Skip | Close milestone |
+| 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
+| 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
+| 8. Milestone | Skip | Close milestone |
 
 ---
 
@@ -188,7 +190,42 @@ git push origin {tag}
 
 ---
 
-## Step 5: Create GitHub Release
+## Step 5: Refresh Website Release Notes & API Diffs
+
+The website release-notes and API-diff pages (`documentation/docfx/releases/`) are
+produced by the **Update Release Notes & API Diffs** workflow. That workflow runs
+**daily and on pushes to `main`** — it deliberately **no longer triggers on `v*`
+tags** — so after pushing the tag in Step 4, **dispatch it manually** to refresh the
+site immediately instead of waiting up to ~24h for the next daily run.
+
+This matters most for **stable** releases: a clean `vX.Y.Z` tag is what flips that
+version's page from "preview / unreleased" to **stable**. The generator detects this
+via `_version_has_stable_tag`, which reads `git tag` — so the page cannot flip until
+the workflow runs again with the tag visible. For previews it is usually a no-op (the
+release-branch push already refreshed the pages), and the workflow's no-op gate opens
+no PR when nothing changed, so this step is always safe to run.
+
+```bash
+# Always dispatch from main: it owns the unified generation (latest scripts +
+# versions.json) and walks every release/* ref and all v* tags itself — including
+# the tag you just pushed. Do NOT dispatch from the release branch.
+gh workflow run "Update Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
+
+# Optional: follow the run to completion.
+gh run watch "$(gh run list --workflow 'Update Release Notes & API Diffs' --repo mono/SkiaSharp --branch main --limit 1 --json databaseId --jq '.[0].databaseId')" --repo mono/SkiaSharp
+```
+
+If anything changed, the workflow opens (or updates) the rolling `[docs]`
+**`bot/release-notes`** PR with the refreshed pages — review and merge it like any
+docs PR. If nothing changed, no PR is opened.
+
+> ⚠️ These **website** release notes are separate from the **GitHub Release** notes
+> created in Step 6. This step updates the docfx site; Step 6 publishes the GitHub
+> Release. Do both.
+
+---
+
+## Step 6: Create GitHub Release
 
 ### Title Format
 
@@ -245,7 +282,7 @@ gh release upload {tag} samples.zip
 
 ---
 
-## Step 6: Annotate Release Notes with Emojis
+## Step 7: Annotate Release Notes with Emojis
 
 After creating the release, annotate each PR line with **platform** and **community** emojis.
 
@@ -263,7 +300,7 @@ After creating the release, annotate each PR line with **platform** and **commun
 
 ---
 
-## Step 7: Close Milestone (Stable only)
+## Step 8: Close Milestone (Stable only)
 
 **Skip for preview releases.**
 
