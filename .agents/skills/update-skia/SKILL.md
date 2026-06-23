@@ -131,7 +131,37 @@ E. Ship (Phase 11)
    > **Note:** When this phase is pre-computed by the automated workflow, you still need to
    > add the `upstream` remote and fetch `chrome/m{TARGET}` — Phase 5 depends on it.
 
-> 🛑 **GATE**: Confirm current milestone, target milestone, and that upstream branch exists.
+5. **Determine the base branch (`main` vs a release line).** Most updates target `main`
+   (newest, in-development line) with `skiasharp` as the mono/skia base. But when the target
+   milestone is **older** than `main`'s milestone AND a matching release branch exists, the
+   update targets that release line instead:
+
+   ```bash
+   # SkiaSharp uses release/<major>.<milestone>.x (e.g. release/4.148.x for m148)
+   git ls-remote --heads origin "refs/heads/release/*.{TARGET}.x"
+   # mono/skia mirrors the SAME branch name
+   git -C externals/skia ls-remote --heads origin "refs/heads/release/*.{TARGET}.x"
+   ```
+
+   | Variable | `main` target | release-line target |
+   |----------|---------------|---------------------|
+   | `{BASE_BRANCH}` (SkiaSharp) | `main` | `release/<major>.{TARGET}.x` |
+   | `{SKIA_BASE_BRANCH}` (mono/skia) | `skiasharp` | `release/<major>.{TARGET}.x` |
+   | `{HEAD_BRANCH}` (both repos) | `skia-sync/m{TARGET}` | `skia-sync/release-<major>.{TARGET}.x` |
+
+   A release-line update is always a **bug-fix-only sync** (`CURRENT == TARGET`): do NOT bump
+   the milestone/soname/nuget version in Phase 6 — only `cgmanifest.json`'s commit hash changes.
+
+   > 🛑 **The release branch must already exist in BOTH repos.** Branch *creation* is owned by
+   > the release process (`release-branch` skill), not this skill. If the SkiaSharp
+   > `release/<major>.{TARGET}.x` branch exists but the mono/skia one does NOT, **STOP and fail** —
+   > do not create it here. Ask a human to cut the mono/skia release branch first.
+
+   Use these `{BASE_BRANCH}` / `{SKIA_BASE_BRANCH}` / `{HEAD_BRANCH}` values everywhere below in
+   place of the hardcoded `main` / `skiasharp` / `skia-sync/m{TARGET}` defaults.
+
+> 🛑 **GATE**: Confirm current milestone, target milestone, the base branch (main vs release line,
+> with the mono/skia base branch confirmed to exist), and that the upstream branch exists.
 
 ### Phase 2: Breaking Change Analysis
 
@@ -197,27 +227,30 @@ milestone numbers and paste your breaking change analysis table. The default exp
 
 > ⚠️ **This phase creates BOTH branches before making ANY changes.** You may be on a
 > workflow branch, a feature branch, or a detached HEAD — none of which is the right base.
-> You MUST branch from `origin/main` (parent) and `origin/skiasharp` (submodule).
+> You MUST branch from `origin/{BASE_BRANCH}` (parent) and `origin/{SKIA_BASE_BRANCH}`
+> (submodule). For a `main` update those are `origin/main` and `origin/skiasharp`; for a
+> release-line update they are `origin/release/<major>.{TARGET}.x` in both repos
+> (see Phase 1 step 5).
 
 **Parent repo (SkiaSharp):**
 
-1. **Fetch the latest `main`:**
+1. **Fetch the latest base branch:**
    ```bash
-   git fetch origin main
+   git fetch origin {BASE_BRANCH}
    ```
 
-2. **Create the feature branch from `origin/main`:**
+2. **Create the feature branch from `origin/{BASE_BRANCH}`:**
    ```bash
-   git checkout -b skia-sync/m{TARGET} origin/main
+   git checkout -b {HEAD_BRANCH} origin/{BASE_BRANCH}
    ```
    If the branch already exists on the remote, check it out instead:
    ```bash
-   git fetch origin skia-sync/m{TARGET} && git checkout skia-sync/m{TARGET}
+   git fetch origin {HEAD_BRANCH} && git checkout {HEAD_BRANCH}
    ```
 
-3. **Verify you are on the correct branch and it is based on `origin/main`:**
+3. **Verify you are on the correct branch and it is based on `origin/{BASE_BRANCH}`:**
    ```bash
-   git log --oneline -1 origin/main
+   git log --oneline -1 origin/{BASE_BRANCH}
    git log --oneline -1 HEAD
    ```
    These should show the same commit (or HEAD should be ahead by only your own commits).
@@ -229,34 +262,35 @@ milestone numbers and paste your breaking change analysis table. The default exp
    cd externals/skia
    ```
 
-5. **Align to the SHA that `origin/main` expects** (the submodule tracks the `skiasharp`
-   branch in mono/skia, NOT `main`):
+5. **Align to the SHA that `origin/{BASE_BRANCH}` expects** (the submodule tracks
+   `{SKIA_BASE_BRANCH}` in mono/skia — `skiasharp` for a `main` update, or the matching
+   `release/<major>.{TARGET}.x` for a release-line update — NOT `main`):
    ```bash
-   MAIN_SUB_SHA=$(git -C ../.. ls-tree origin/main -- externals/skia | awk '{print $3}')
-   git fetch origin skiasharp
-   git checkout "$MAIN_SUB_SHA"
+   BASE_SUB_SHA=$(git -C ../.. ls-tree origin/{BASE_BRANCH} -- externals/skia | awk '{print $3}')
+   git fetch origin {SKIA_BASE_BRANCH}
+   git checkout "$BASE_SUB_SHA"
    ```
-   Verify this SHA is on `origin/skiasharp`:
+   Verify this SHA is on `origin/{SKIA_BASE_BRANCH}`:
    ```bash
-   git branch -r --contains "$MAIN_SUB_SHA" | grep 'origin/skiasharp'
+   git branch -r --contains "$BASE_SUB_SHA" | grep 'origin/{SKIA_BASE_BRANCH}'
    ```
 
 6. **Create the submodule feature branch:**
    ```bash
-   git checkout -b skia-sync/m{TARGET}
+   git checkout -b {HEAD_BRANCH}
    ```
 
 > ⚠️ **Do NOT skip the SHA alignment step (step 5).** If the submodule is at a different
-> SHA than `origin/main` expects, the merge will produce phantom diffs — functions that
-> already exist on `main` will appear as new or removed.
+> SHA than `origin/{BASE_BRANCH}` expects, the merge will produce phantom diffs — functions that
+> already exist on the base branch will appear as new or removed.
 
 > 🛑 **GATE**: Both branches created. Verify:
 > ```bash
 > # In parent repo:
-> git rev-parse --abbrev-ref HEAD          # → skia-sync/m{TARGET}
-> git merge-base HEAD origin/main          # → should match origin/main tip
+> git rev-parse --abbrev-ref HEAD          # → {HEAD_BRANCH}
+> git merge-base HEAD origin/{BASE_BRANCH}  # → should match origin/{BASE_BRANCH} tip
 > # In submodule:
-> git -C externals/skia rev-parse --abbrev-ref HEAD  # → skia-sync/m{TARGET}
+> git -C externals/skia rev-parse --abbrev-ref HEAD  # → {HEAD_BRANCH}
 > ```
 
 ### Phase 5: Upstream Merge (mono/skia)
@@ -520,22 +554,28 @@ before the update can be considered complete. Do not create PRs with only smoke 
 > **Same-milestone bug-fix syncs:** When `CURRENT == TARGET`, only `cgmanifest.json`'s
 > `commitHash`/`upstream_merge_commit` change. Use PR titles like
 > `[skia-sync] Merge upstream chrome/m{TARGET} bug fixes` instead of milestone-bump titles.
+> A release-line update is always such a sync.
+
+> **Release-line targets:** Use the `{BASE_BRANCH}` / `{SKIA_BASE_BRANCH}` / `{HEAD_BRANCH}`
+> values resolved in Phase 1 step 5. For a `main` update they are `main` / `skiasharp` /
+> `skia-sync/m{TARGET}`; for a release-line update they are `release/<major>.{TARGET}.x` (both
+> repos) / `skia-sync/release-<major>.{TARGET}.x`.
 
 #### PR 1: mono/skia (submodule)
 
 | Field | Value |
 |-------|-------|
-| Branch | `skia-sync/m{TARGET}` |
-| Target | `skiasharp` |
+| Branch | `{HEAD_BRANCH}` |
+| Target | `{SKIA_BASE_BRANCH}` |
 | Title | `[skia-sync] Merge upstream chrome/m{TARGET}` |
 
 #### PR 2: mono/SkiaSharp (parent)
 
 | Field | Value |
 |-------|-------|
-| Branch | `skia-sync/m{TARGET}` |
-| Target | `main` |
-| Title | `[skia-sync] Update skia to milestone {TARGET}` |
+| Branch | `{HEAD_BRANCH}` |
+| Target | `{BASE_BRANCH}` |
+| Title | `[skia-sync] Update skia to milestone {TARGET}` (or `Merge upstream chrome/m{TARGET} bug fixes` when `CURRENT == TARGET`) |
 
 **Submodule must point to the mono/skia PR branch.**
 
@@ -548,9 +588,9 @@ Both PRs must reference each other.
 
 Before proceeding to merge, verify ALL of these:
 
-- [ ] Branch names follow `skia-sync/m{TARGET}` convention in BOTH repos
-- [ ] mono/skia PR targets `skiasharp` branch
-- [ ] mono/SkiaSharp PR targets `main` branch
+- [ ] Branch names follow `{HEAD_BRANCH}` convention in BOTH repos
+- [ ] mono/skia PR targets `{SKIA_BASE_BRANCH}` branch
+- [ ] mono/SkiaSharp PR targets `{BASE_BRANCH}` branch
 - [ ] **SkiaSharp's `externals/skia` submodule points to the mono/skia PR branch** (`git submodule status`)
 - [ ] `cgmanifest.json` updated with new commit hash, version, and chrome_milestone
 - [ ] `scripts/VERSIONS.txt` updated (ALL version lines, not just milestone)
@@ -562,7 +602,7 @@ Before proceeding to merge, verify ALL of these:
 
 #### Merge Sequence (CRITICAL)
 
-1. Merge mono/skia PR first → creates new squashed SHA on `skiasharp`
+1. Merge mono/skia PR first → creates new squashed SHA on `{SKIA_BASE_BRANCH}`
 2. Fetch new SHA in SkiaSharp's submodule
 3. Update submodule pointer, push to SkiaSharp PR branch
 4. **Only then** merge SkiaSharp PR
@@ -572,12 +612,12 @@ Before proceeding to merge, verify ALL of these:
 Before proceeding past each step, verify:
 
 - [ ] mono/skia PR merged
-- [ ] Fetched `skiasharp` branch to get new squashed SHA
+- [ ] Fetched `{SKIA_BASE_BRANCH}` branch to get new squashed SHA
 - [ ] Updated SkiaSharp submodule to new SHA (`cd externals/skia && git fetch origin && git checkout {new-sha}`)
 - [ ] Pushed submodule update to SkiaSharp PR branch
 - [ ] CI passes on updated SkiaSharp PR
 - [ ] SkiaSharp PR merged
-- [ ] **Submodule points to a commit on `skiasharp` branch** (not an orphaned branch commit)
+- [ ] **Submodule points to a commit on `{SKIA_BASE_BRANCH}` branch** (not an orphaned branch commit)
 
 > ❌ **NEVER** merge both PRs without updating the submodule in between.
 > ❌ **NEVER** assume the submodule reference is correct after squash-merging mono/skia.
