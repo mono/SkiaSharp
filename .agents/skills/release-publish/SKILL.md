@@ -44,7 +44,7 @@ Publish packages to NuGet.org and finalize releases.
 │  4. Tag Release          → Push git tag (ask_user first!)          │
 │  5. Refresh Web Notes    → Dispatch docs workflow (tag→stable flip)│
 │  6. Create GitHub Release→ Generate notes, set prerelease flag     │
-│  7. Annotate Notes       → Add platform/contributor emojis         │
+│  7. Customer Teaser      → Extract key bits from the generated log │
 │  8. Close Milestone      → Stable releases only                    │
 └────────────────────────────────────────────────────────────────────┘
 ```
@@ -57,6 +57,7 @@ Publish packages to NuGet.org and finalize releases.
 | 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
 | 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
 | 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
+| 7. Customer teaser | What's New + Breaking (usually short) | + Security + contributors |
 | 8. Milestone | Skip | Close milestone |
 
 ---
@@ -280,23 +281,44 @@ gh release upload {tag} samples.zip
 - `--prerelease` marks as prerelease (preview only)
 - `--verify-tag` ensures the tag exists before creating the release
 
+> The generated notes are the **raw input** for Step 7, which extracts a short,
+> customer-facing teaser from them and keeps this full list folded below it.
+
 ---
 
-## Step 7: Annotate Release Notes with Emojis
+## Step 7: Add a Customer-Facing Teaser
 
-After creating the release, annotate each PR line with **platform** and **community** emojis.
+The auto-generated notes from Step 6 are a flat wall of **every** merged PR (CI,
+version bumps, dependency refreshes, backports — 100+ lines). Maintainers told us this
+is "too heavy and hard to find things." So we keep that full list (it carries the PR
+numbers + author handles for free) but **fold it into a `<details>` block** and add a
+short **customer teaser** on top with only the bits a package consumer cares about.
 
-👉 **See [references/release-notes.md](references/release-notes.md)** for:
-- Complete emoji reference (platform + contributor)
-- Label-to-platform mapping
-- Title keyword detection
-- Full annotation process and examples
+The teaser is generated **only from the release log we just created** — no website
+release-notes, no `documentation/docfx/` files, no git operations, no waiting.
 
-**Quick summary:**
-1. Get release body: `gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/release-body.md`
-2. For each PR: determine platform emoji, add ❤️ for non-mattleibow contributors
-3. Build sections: Breaking Changes (if any), New Features (if any), What's Changed (all)
-4. Update release: `gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md`
+👉 **See [references/release-notes.md](references/release-notes.md)** for the canonical
+**teaser template** and **extraction prompt**. Process:
+
+1. **Capture** the generated log:
+   ```bash
+   gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/generated-log.md
+   ```
+2. **Extract** the teaser: feed `generated-log.md` to the extraction prompt in
+   `references/release-notes.md`. It classifies the PRs into **✨ What's New /
+   ⚠️ Breaking Changes / 🛡️ Security** (ignoring CI/build/test/dependency-bump/docs
+   automation/backport plumbing/internal refactors) and lists the unique contributor
+   handles — emitting only the teaser via the template.
+3. **Assemble** the final body — teaser on top, then the captured log folded below —
+   per the template, and write it to `/tmp/skiasharp/release/release-body.md`.
+4. **Update** the release:
+   ```bash
+   gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md
+   ```
+
+> This is the **only** content step for the GitHub Release. The richer, categorized
+> website release notes are produced separately by the workflow dispatched in Step 5;
+> the teaser links out to them but never reads or waits on them.
 
 ---
 
@@ -351,4 +373,4 @@ If you've partially completed and need to resume:
 ## Resources
 
 - [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
-- [references/release-notes.md](references/release-notes.md) — Emoji annotation details
+- [references/release-notes.md](references/release-notes.md) — Customer teaser template + extraction prompt
