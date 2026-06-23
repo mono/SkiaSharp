@@ -23,11 +23,18 @@ on:
         type: string
 
   # -- Pre-activation step -------------------------------------------
-  # Runs BEFORE the agent job. Detects the target milestone.
-  # Exit 1 = hard failure (explicit milestone input doesn't exist).
+  # Runs BEFORE the agent job. Detects the target milestone + branch line.
+  # All resolution logic lives in the committed .github/scripts/skia-sync-detect.sh
+  # (the single source of truth, sparse-checked-out below); --gate adds the
+  # "is there anything to sync?" check.
+  # Exit 1 = hard failure (explicit milestone input doesn't exist / branch missing).
   # skip=true output = nothing to sync (graceful skip, workflow shows green).
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
+    - name: Check out detection scripts
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: .github/scripts
     - name: Detect milestone
       id: detect
       env:
@@ -35,121 +42,7 @@ on:
         INPUT_MILESTONE: ${{ github.event.inputs.milestone }}
         SCHEDULE: ${{ github.event.schedule }}
         GH_TOKEN: ${{ github.token }}
-      run: |
-        if [ -n "$INPUT_MODE" ]; then
-          MODE="$INPUT_MODE"
-        elif [ "$SCHEDULE" = "0 7 * * *" ]; then
-          MODE=current
-        elif [ "$SCHEDULE" = "0 17 * * *" ]; then
-          MODE=latest
-        else
-          MODE=next
-        fi
-        echo "mode=$MODE" >> "$GITHUB_OUTPUT"
-
-        # main's milestone — the basis for `current`/`next` mode math.
-        MAIN_MS=$(gh api "repos/$GITHUB_REPOSITORY/contents/scripts/VERSIONS.txt?ref=$GITHUB_REF" \
-          --jq '.content' | base64 -d | grep '^libSkiaSharp.*milestone' | awk '{print $NF}')
-
-        NEXT=$((MAIN_MS + 1))
-        echo "next=$NEXT" >> "$GITHUB_OUTPUT"
-
-        LATEST=$(git ls-remote --heads https://github.com/google/skia.git 'refs/heads/chrome/m*' \
-          | sed -n 's|.*refs/heads/chrome/m\([0-9]*\)$|\1|p' \
-          | sort -n | tail -1)
-        echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
-
-        # Explicit milestone input overrides mode
-        if [ -n "$INPUT_MILESTONE" ]; then
-          TARGET="$INPUT_MILESTONE"
-          MODE="explicit"
-        elif [ "$MODE" = "latest" ]; then
-          TARGET="$LATEST"
-        elif [ "$MODE" = "current" ]; then
-          TARGET="$MAIN_MS"
-        else
-          TARGET="$NEXT"
-        fi
-        echo "target=$TARGET" >> "$GITHUB_OUTPUT"
-
-        # -- Resolve the target line: `main` (newest, in-development) or a release line.
-        # A maintenance line lives as `release/<major>.<TARGET>.x` in BOTH mono/SkiaSharp
-        # and mono/skia. We only look for one when TARGET is older than main's milestone —
-        # the newest line is always served by `main`. The release branch itself is created
-        # by the release process (release-branch skill), NOT this sync; if the mono/skia
-        # side is missing we fail so branch ownership stays with the release process.
-        IS_RELEASE=false
-        BASE_BRANCH=main
-        SKIA_BASE_BRANCH=skiasharp
-        HEAD_BRANCH="skia-sync/m${TARGET}"
-        RELEASE_BRANCH=""
-        if [ "$TARGET" != "$MAIN_MS" ]; then
-          RELEASE_BRANCH=$(git ls-remote --heads "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/release/*.${TARGET}.x" \
-            | sed -n 's|.*refs/heads/\(release/[0-9][0-9.]*\.x\)$|\1|p' | head -1)
-        fi
-        if [ -n "$RELEASE_BRANCH" ]; then
-          IS_RELEASE=true
-          BASE_BRANCH="$RELEASE_BRANCH"
-          SKIA_BASE_BRANCH="$RELEASE_BRANCH"
-          HEAD_BRANCH="skia-sync/${RELEASE_BRANCH//\//-}"
-
-          # The matching mono/skia release branch MUST already exist.
-          SKIA_BASE_SHA=$(git ls-remote --heads https://github.com/mono/skia.git "refs/heads/${SKIA_BASE_BRANCH}" | awk '{print $1}')
-          if [ -z "$SKIA_BASE_SHA" ]; then
-            echo "::error::mono/skia branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the release process (release-branch skill) — create it before running a release sync for m${TARGET}."
-            exit 1
-          fi
-        fi
-        echo "is_release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
-        echo "base_branch=$BASE_BRANCH" >> "$GITHUB_OUTPUT"
-        echo "skia_base_branch=$SKIA_BASE_BRANCH" >> "$GITHUB_OUTPUT"
-        echo "head_branch=$HEAD_BRANCH" >> "$GITHUB_OUTPUT"
-
-        # `current` is the milestone of the BASE branch we're syncing INTO:
-        #  - main line → main's milestone
-        #  - release   → that line's milestone (== TARGET ⇒ a bug-fix-only sync)
-        if [ "$IS_RELEASE" = true ]; then
-          CURRENT=$(gh api "repos/$GITHUB_REPOSITORY/contents/scripts/VERSIONS.txt?ref=${BASE_BRANCH}" \
-            --jq '.content' | base64 -d | grep '^libSkiaSharp.*milestone' | awk '{print $NF}')
-        else
-          CURRENT="$MAIN_MS"
-        fi
-        echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
-
-        UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
-        if [ -z "$UPSTREAM_SHA" ]; then
-          echo "::notice::upstream/chrome/m${TARGET} does not exist yet"
-          if [ "$MODE" = "explicit" ]; then
-            exit 1
-          fi
-          echo "skip=true" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-
-        # Check whether there is anything new to merge from upstream. Compare upstream
-        # HEAD against the existing sync branch if present; otherwise, for release lines,
-        # against the release base branch. This avoids spinning up the expensive agent
-        # job when there's nothing new. (For a main milestone bump the sync branch won't
-        # exist yet and there is always new work, so we proceed.)
-        SYNC_SHA=$(git ls-remote https://github.com/mono/skia.git "refs/heads/${HEAD_BRANCH}" | awk '{print $1}')
-        COMPARE_REF=""
-        if [ -n "$SYNC_SHA" ]; then
-          COMPARE_REF="$HEAD_BRANCH"
-        elif [ "$IS_RELEASE" = true ]; then
-          COMPARE_REF="$SKIA_BASE_BRANCH"
-        fi
-        if [ -n "$COMPARE_REF" ]; then
-          BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...${COMPARE_REF}" \
-            --jq '.behind_by' 2>/dev/null || echo "unknown")
-          if [ "$BEHIND" = "0" ]; then
-            echo "::notice::chrome/m${TARGET} already fully merged into ${COMPARE_REF} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "${COMPARE_REF} exists but is ${BEHIND} commits behind upstream"
-        fi
-
-        echo "Will process: m${TARGET} → ${BASE_BRANCH} (mode=${MODE}, base milestone=m${CURRENT}, latest=m${LATEST}, head=${HEAD_BRANCH})"
+      run: bash .github/scripts/skia-sync-detect.sh --gate
 
 # -- Pre-activation outputs ------------------------------------------
 # Expose detect step outputs for use in the prompt and other jobs.
@@ -245,51 +138,14 @@ steps:
       SCHEDULE: ${{ github.event.schedule }}
       GH_TOKEN: ${{ github.token }}
     run: |
-      # Re-derive the sync base branch here (same rules as the pre-activation
-      # `Detect milestone` step, which stays the source of truth). We can't read
-      # its outputs: this step runs in the agent job, which only `needs:`
-      # activation, and the cheap pre-activation job has no checkout to share a
-      # script from. github.event inputs ARE available in any job, so we redo the
-      # small base-branch resolution from them.
-      if [ -n "$INPUT_MODE" ]; then MODE="$INPUT_MODE";
-      elif [ "$SCHEDULE" = "0 7 * * *" ]; then MODE=current;
-      elif [ "$SCHEDULE" = "0 17 * * *" ]; then MODE=latest;
-      else MODE=next; fi
-      MAIN_MS=$(gh api "repos/$GITHUB_REPOSITORY/contents/scripts/VERSIONS.txt?ref=$GITHUB_REF" \
-        --jq '.content' | base64 -d | grep '^libSkiaSharp.*milestone' | awk '{print $NF}')
-      if [ -n "$INPUT_MILESTONE" ]; then TARGET="$INPUT_MILESTONE";
-      elif [ "$MODE" = "latest" ]; then
-        TARGET=$(git ls-remote --heads https://github.com/google/skia.git 'refs/heads/chrome/m*' \
-          | sed -n 's|.*refs/heads/chrome/m\([0-9]*\)$|\1|p' | sort -n | tail -1);
-      elif [ "$MODE" = "current" ]; then TARGET="$MAIN_MS";
-      else TARGET="$((MAIN_MS + 1))"; fi
-
-      BASE_BRANCH=main
-      SKIA_BASE_BRANCH=skiasharp
-      if [ "$TARGET" != "$MAIN_MS" ]; then
-        RELEASE_BRANCH=$(git ls-remote --heads "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/release/*.${TARGET}.x" \
-          | sed -n 's|.*refs/heads/\(release/[0-9][0-9.]*\.x\)$|\1|p' | head -1)
-        if [ -n "$RELEASE_BRANCH" ]; then
-          BASE_BRANCH="$RELEASE_BRANCH"
-          SKIA_BASE_BRANCH="$RELEASE_BRANCH"
-        fi
-      fi
-
-      # The checkout uses the workflow branch (main), so the submodule may be at a
-      # different SHA than the base branch expects. Fix it before the agent runs.
-      # The submodule tracks `${SKIA_BASE_BRANCH}` in mono/skia (skiasharp for a
-      # main sync, release/<major>.<milestone>.x for a release sync), so the
-      # base-branch submodule SHA should be a commit on that branch.
-      echo "Aligning submodule to origin/${BASE_BRANCH} (mono/skia ${SKIA_BASE_BRANCH})"
-      git fetch origin "$BASE_BRANCH" 2>&1 || true
-      BASE_SUB_SHA=$(git ls-tree "origin/${BASE_BRANCH}" -- externals/skia | awk '{print $3}')
-      echo "origin/${BASE_BRANCH} submodule SHA: $BASE_SUB_SHA"
-      git -C externals/skia fetch origin "$SKIA_BASE_BRANCH" 2>&1
-      git -C externals/skia checkout "$BASE_SUB_SHA" 2>&1
-      echo "Verifying SHA is on ${SKIA_BASE_BRANCH} branch:"
-      git -C externals/skia branch -r --contains "$BASE_SUB_SHA" | grep -q "origin/${SKIA_BASE_BRANCH}" \
-        && echo "  ✅ SHA is on origin/${SKIA_BASE_BRANCH}" \
-        || echo "  ⚠️ SHA is NOT on origin/${SKIA_BASE_BRANCH} — submodule pointer may be stale"
+      # The agent job can't read pre_activation's outputs (it only `needs:`
+      # activation), so re-run the same committed detector to recover base_branch /
+      # skia_base_branch, then align the submodule. skia-sync-detect.sh is the single
+      # source of truth — no branch logic is duplicated here.
+      OUT=$(mktemp)
+      SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh
+      set -a; . "$OUT"; set +a
+      bash .github/scripts/skia-sync-align-submodule.sh
   - name: Copy push script for post-step
     run: |
       cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
