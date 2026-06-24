@@ -24,10 +24,17 @@ namespace SkiaSharp.Tests.Visual.Tests
 	/// genuinely absent on this host — the renderer reports
 	/// <see cref="IRenderer.IsAvailable"/> = <see langword="false"/>, or
 	/// <see cref="IRenderer.RenderAsync"/> throws
-	/// <see cref="RendererUnavailableException"/>. Every other outcome —
-	/// a render that throws, pixels out of tolerance, or a missing golden — is a
-	/// hard <b>failure</b>. There is no path that downgrades a real regression to a
-	/// skip or a warning.</para>
+	/// <see cref="RendererUnavailableException"/> — or when no golden has been
+	/// recorded yet for this (renderer, scene) on this platform (an <i>unseeded</i>
+	/// cell: there is no oracle to compare against, so it is loudly skipped rather
+	/// than failed, which keeps CI green until per-platform goldens are seeded).
+	/// Every other outcome — a render that throws, or pixels that differ from a
+	/// golden that <i>does</i> exist — is a hard <b>failure</b>. There is no path
+	/// that downgrades a real regression to a skip or a warning, and a golden that
+	/// exists is always compared strictly. Set
+	/// <c>SKIASHARP_VISUAL_REQUIRE_GOLDENS=1</c> (CI does this per platform once it
+	/// is seeded) to turn an unseeded cell into a failure and lock the coverage
+	/// in.</para>
 	///
 	/// <para><b>Recording goldens.</b> Run with <c>SKIASHARP_UPDATE_GOLDENS=1</c>
 	/// to write goldens instead of comparing. The destination directory follows
@@ -81,14 +88,14 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			if (GoldenStore.UpdateRequested)
 			{
-				RecordGolden(renderer.Name, scene.Name, info, actual);
+				RecordGolden(renderer.Name, scene, info, actual);
 				return;
 			}
 
-			var golden = GoldenStore.TryLoad(renderer.Name, scene.Name, info);
+			var golden = GoldenStore.TryLoad(renderer.Name, scene.Name, info, scene.IsPlatformDependent);
 			if (golden is null)
 			{
-				FailMissingGolden(renderer.Name, scene.Name, info, actual);
+				HandleMissingGolden(renderer.Name, scene, info, actual);
 				return;
 			}
 
@@ -102,12 +109,12 @@ namespace SkiaSharp.Tests.Visual.Tests
 					yield return new object[] { rendererName, sceneName };
 		}
 
-		private void RecordGolden(string rendererName, string sceneName, SKImageInfo info, byte[] actual)
+		private void RecordGolden(string rendererName, ISkiaScene scene, SKImageInfo info, byte[] actual)
 		{
 			try
 			{
-				var path = GoldenStore.Record(rendererName, sceneName, actual, info);
-				WriteOutput($"Recorded golden for '{rendererName}/{sceneName}' at '{path}'.");
+				var path = GoldenStore.Record(rendererName, scene.Name, actual, info, scene.IsPlatformDependent);
+				WriteOutput($"Recorded golden for '{rendererName}/{scene.Name}' at '{path}'.");
 			}
 			catch (Exception ex)
 			{
@@ -116,8 +123,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 				// be retrieved from the log, then make the inability to record an
 				// explicit failure rather than a silent no-op.
 				using var actualImage = ToImage(actual, info);
-				WriteOutput(actualImage, $"ACTUAL {rendererName}/{sceneName}");
-				Assert.Fail($"Could not record golden for '{rendererName}/{sceneName}': {ex.Message}. " +
+				WriteOutput(actualImage, $"ACTUAL {rendererName}/{scene.Name}");
+				Assert.Fail($"Could not record golden for '{rendererName}/{scene.Name}': {ex.Message}. " +
 					"Recording is only supported where the source tree is writable (desktop Console runs). " +
 					"The captured output is logged above as base64.");
 			}
@@ -155,16 +162,36 @@ namespace SkiaSharp.Tests.Visual.Tests
 				$"(use {GoldenStore.ScopeEnvVar}=renderer or =platform for an override); otherwise fix the regression.");
 		}
 
-		private void FailMissingGolden(string rendererName, string sceneName, SKImageInfo info, byte[] actual)
+		private void HandleMissingGolden(string rendererName, ISkiaScene scene, SKImageInfo info, byte[] actual)
 		{
 			using var actualImage = ToImage(actual, info);
-			WriteOutput(actualImage, $"ACTUAL {rendererName}/{sceneName} (no golden on record)");
+			WriteOutput(actualImage, $"ACTUAL {rendererName}/{scene.Name} (no golden on record)");
 
-			var actualPath = TrySave(() => GoldenStore.SaveFailureArtifact(rendererName, sceneName, ".actual.png", actual, info));
-			var looked = string.Join(", ", GoldenStore.ReadLocations(rendererName, sceneName));
+			var actualPath = TrySave(() => GoldenStore.SaveFailureArtifact(rendererName, scene.Name, ".actual.png", actual, info));
+			var looked = string.Join(", ", GoldenStore.ReadLocations(rendererName, scene.Name, scene.IsPlatformDependent));
+
+			// "No reference recorded yet" is neither a regression nor a wrong
+			// result — there is no oracle to compare against. By default that is an
+			// explicit, loud skip so a platform we cannot record locally (Linux /
+			// Windows / device / browser GPU output) does not turn CI red before
+			// its goldens are seeded. CI lanes set SKIASHARP_VISUAL_REQUIRE_GOLDENS
+			// once a platform is seeded, which turns this into a hard failure and
+			// locks the coverage in. A golden that *exists* but mismatches is always
+			// a failure; only a genuinely-absent reference reaches here.
+			if (!GoldenStore.RequireGoldens)
+			{
+				Assert.Skip(
+					$"No golden recorded yet for '{rendererName}/{scene.Name}' on '{VisualPlatform.Tag}'. " +
+					$"Looked in: {looked}. Seed it by running with {GoldenStore.UpdateEnvVar}=1 on this platform " +
+					$"and committing the result; set {GoldenStore.RequireGoldensEnvVar}=1 to make missing goldens fail instead. " +
+					(actualPath is not null ? $"Captured output saved to '{actualPath}' and " : "The captured output is ") +
+					"logged above as base64.");
+				return;
+			}
 
 			Assert.Fail(
-				$"No golden image found for '{rendererName}/{sceneName}'. Looked in: {looked}. " +
+				$"No golden image found for '{rendererName}/{scene.Name}' and {GoldenStore.RequireGoldensEnvVar} is set. " +
+				$"Looked in: {looked}. " +
 				ArtifactSuffix(actualPath, null) +
 				$"Re-run with {GoldenStore.UpdateEnvVar}=1 to record it (the captured output is logged above as base64).");
 		}
