@@ -29,15 +29,15 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void CreateEmptyReturnsNonNull()
 		{
-			var filter = SKImageFilter.CreateEmpty();
+			using var filter = SKImageFilter.CreateEmpty();
 			Assert.NotNull(filter);
 		}
 
 		[Fact]
 		public void CreateEmptyReturnsNewInstanceEachTime()
 		{
-			var filter1 = SKImageFilter.CreateEmpty();
-			var filter2 = SKImageFilter.CreateEmpty();
+			using var filter1 = SKImageFilter.CreateEmpty();
+			using var filter2 = SKImageFilter.CreateEmpty();
 			Assert.NotNull(filter1);
 			Assert.NotNull(filter2);
 			Assert.NotEqual(filter1.Handle, filter2.Handle);
@@ -78,7 +78,9 @@ namespace SkiaSharp.Tests
 			surface.Canvas.DrawRect(new SKRect(10, 10, 50, 50), paint);
 
 			using var image = surface.Snapshot();
-			Assert.NotNull(image);
+			using var pixmap = image.PeekPixels();
+			var pixel = pixmap.GetPixelColor(32, 32);
+			Assert.Equal(new SKColor(0, 0, 0, 0), pixel);
 		}
 	}
 }
