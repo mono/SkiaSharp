@@ -70,7 +70,6 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "build-site-go-live.yml", "name": "Docs - Go Live!", "scope": "global", "trigger": "dispatch"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup.yml", "name": "Docs - PR Staging - Cleanup", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup-stale.yml", "name": "Docs - PR Staging - Sweep Stale", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "api-diff.yml", "name": "API Diff", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-docs-submodule-sync.yml", "name": "Auto Docs Submodule Sync", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Skia Upstream Sync", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "nightly-fix-finder.lock.yml", "name": "Nightly Fix Finder", "scope": "global", "trigger": "schedule"},
