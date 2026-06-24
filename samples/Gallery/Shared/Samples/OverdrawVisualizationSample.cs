@@ -59,21 +59,48 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 
 		using var paint = new SKPaint
 		{
-			IsAntialias = true
+			IsAntialias = true,
+			Color = SKColors.White
 		};
 
 		if (visualizeOverdraw)
 		{
-			// Apply overdraw visualization filter
-			using var overdrawFilter = SKColorFilter.CreateOverdraw(overdrawColors);
-			paint.ColorFilter = overdrawFilter;
+			// Create an offscreen surface to capture overdraw information
+			var info = new SKImageInfo(width, height);
+			using var overdrawSurface = SKSurface.Create(info);
+			using var overdrawCanvasWrapper = overdrawSurface.Canvas;
+			overdrawCanvasWrapper.Clear(SKColors.Transparent);
+
+			// Wrap in SKOverdrawCanvas - this tracks draw counts in alpha channel
+			using var overdrawCanvas = new SKOverdrawCanvas(overdrawCanvasWrapper);
+
+			// Draw overlapping shapes to the overdraw canvas
+			DrawShapes(overdrawCanvas, width, height, paint);
+
+			// Now apply the overdraw color filter to visualize
+			using var overdrawImage = overdrawSurface.Snapshot();
+			using var filterPaint = new SKPaint
+			{
+				ColorFilter = SKColorFilter.CreateOverdraw(overdrawColors)
+			};
+			canvas.DrawImage(overdrawImage, 0, 0, filterPaint);
 		}
 		else
 		{
 			// Normal rendering - use a visible color
 			paint.Color = new SKColor(0xFF4285F4);
+			DrawShapes(canvas, width, height, paint);
 		}
 
+		// Draw legend if visualizing overdraw
+		if (visualizeOverdraw)
+		{
+			DrawLegend(canvas, width, height, overdrawColors);
+		}
+	}
+
+	private void DrawShapes(SKCanvas canvas, int width, int height, SKPaint paint)
+	{
 		// Draw overlapping shapes to demonstrate overdraw
 		var centerX = width / 2f;
 		var centerY = height / 2f;
@@ -106,12 +133,6 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 		foreach (var (x, y) in positions)
 		{
 			canvas.DrawCircle(x, y, circleRadius, paint);
-		}
-
-		// Draw legend if visualizing overdraw
-		if (visualizeOverdraw)
-		{
-			DrawLegend(canvas, width, height, overdrawColors);
 		}
 	}
 
