@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SkiaSharp.Tests.Visual
 {
@@ -28,6 +29,19 @@ namespace SkiaSharp.Tests.Visual
 		public static IEnumerable<IRenderer> All => byName.Value.Values;
 
 		public static IEnumerable<string> AllNames => byName.Value.Keys;
+
+		/// <summary>
+		/// Names of the renderers whose implementing type is declared in
+		/// <paramref name="assembly"/>. A satellite host project (Vulkan,
+		/// Direct3D) drives its visual cells with
+		/// <c>NamesIn(Assembly.GetExecutingAssembly())</c> so it runs only the
+		/// renderers it contributes — never the shared raster/GL/Metal cells,
+		/// which the base <see cref="Tests.VisualMatrixTests"/> already covers.
+		/// This is what makes a new backend "one renderer file": drop a renderer
+		/// into the satellite and it joins that satellite's matrix automatically.
+		/// </summary>
+		public static IEnumerable<string> NamesIn(Assembly assembly) =>
+			All.Where(r => r.GetType().Assembly == assembly).Select(r => r.Name);
 
 		public static IRenderer Get(string name)
 		{

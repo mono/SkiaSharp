@@ -7,8 +7,13 @@ namespace SkiaSharp.Tests.Visual
 	/// creation/use. Each GPU renderer holds this lock for the duration of a
 	/// single <c>RenderAsync</c>. The scenes are tiny, so the throughput cost is
 	/// negligible and the determinism win is large.
+	///
+	/// <para>
+	/// Public because renderers in the satellite host projects (Vulkan, Direct3D)
+	/// need to hold the same lock as the shared renderers.
+	/// </para>
 	/// </summary>
-	internal static class GpuRenderGate
+	public static class GpuRenderGate
 	{
 		public static readonly object Sync = new();
 	}

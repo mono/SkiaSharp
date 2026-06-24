@@ -278,6 +278,19 @@ The matrix is ordinary shared test code, so it also runs as part of an unfiltere
 test run and inside the existing CI stages — there is no dedicated visual build
 target.
 
+The base Console host runs the `raster`, `ganesh-gl`, and `ganesh-metal` cells.
+`ganesh-vulkan` lives in the Vulkan satellite, so run it from there:
+
+```bash
+dotnet build tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj -c Release
+cd tests/SkiaSharp.Vulkan.Tests.Console/bin/Release/net*/
+./SkiaSharp.Vulkan.Tests --filter-trait "Category=Visual"
+```
+
+(On a box with no Vulkan ICD — e.g. a stock macOS agent — those cells skip with a
+reason; on a Linux/Windows agent with a driver or software ICD they render and, on
+the first run, fail as unseeded until their goldens are harvested.)
+
 On a failure the runner logs the GOLDEN, ACTUAL, and DIFF images as base64 (decode
 with any base64-to-image tool) and, on desktop, writes
 `_visualfailures/{renderer}/{scene}.actual.png` and `.diff.png` next to the binary.
@@ -313,17 +326,20 @@ committing.
 
 ## Hosting and project wiring
 
-- **Portable files** (interfaces, catalogs, `VisualMatrixTests`, scenes,
-  `RasterRenderer`, `GaneshMetalRenderer`, `GoldenStore`, `GoldenTolerance`,
-  `VisualPlatform`, `RendererPixels`, `GpuRenderGate`) live where the shared
-  `SkiaSharp.Tests` project compiles them, so they run in Console, Devices, and
-  Wasm. `GaneshMetalRenderer` is portable-but-Apple-gated (`IsAvailable` is true
-  only on Apple OSes), so the same file gives macOS Console *and* the iOS / Mac
-  Catalyst device hosts their Metal cell with no per-host code.
-- **Desktop-only renderers** (`Renderers/Desktop/GaneshGlRenderer.cs`,
-  `Renderers/Desktop/GaneshVulkanRenderer.cs`) depend on the desktop
-  `GlContexts/` implementations / desktop-only native loaders, so they are
-  **excluded from the shared project** the same way `GlContexts/*` already is:
+- **Portable files** (interfaces, catalogs, `VisualMatrixTestsBase`,
+  `VisualMatrixTests`, scenes, `RasterRenderer`, `GaneshMetalRenderer`,
+  `GoldenStore`, `GoldenTolerance`, `VisualPlatform`, `RendererPixels`,
+  `GpuRenderGate`) live where the shared `SkiaSharp.Tests` project compiles them,
+  so they run in Console, Devices, and Wasm. `GaneshMetalRenderer` is
+  portable-but-Apple-gated (`IsAvailable` is true only on Apple OSes), so the same
+  file gives macOS Console *and* the iOS / Mac Catalyst device hosts their Metal
+  cell with no per-host code. `VisualMatrixTestsBase` carries the whole per-cell
+  pipeline (render → emit `##SKIA-GOLDEN-IMAGE##` → compare-or-fail) so every host
+  shares one engine; `VisualMatrixTests` is the thin `[Theory]` over every renderer
+  auto-discovered in the base assembly.
+- **Desktop-only renderers** (`Renderers/Desktop/GaneshGlRenderer.cs`) depend on
+  the desktop `GlContexts/` implementations, so they are **excluded from the shared
+  project** the same way `GlContexts/*` already is:
 
   ```xml
   <!-- tests/SkiaSharp.Tests/SkiaSharp.Tests.csproj -->
@@ -331,16 +347,49 @@ committing.
            Exclude="..\Tests\SkiaSharp\GlContexts\*\**;..\Tests\SkiaSharp\Visual\Renderers\Desktop\**" ... />
   ```
 
-  `SkiaSharp.Tests.Console` includes everything (no exclusion), so the desktop
-  GL/Vulkan renderers compile and run there.
-- Host-specific test projects (e.g. the separate Direct3D console project) can
-  contribute their own renderer in the **entry** assembly: `CatalogReflection`
-  scans the defining assembly ∪ the entry assembly, so those renderers are
-  discovered without the shared catalog referencing them.
+  `SkiaSharp.Tests.Console` includes everything (no exclusion), so the desktop GL
+  renderer compiles and runs there. GL needs no extra NuGet package (it reuses the
+  in-repo `GlContexts/` abstraction), so it stays in the base Console host.
+- **Package-dependent GPU renderers live in their satellite host project, not the
+  base host.** A backend that needs an extra NuGet — Vulkan (`SharpVk`), Direct3D
+  (Vortice) — would otherwise drag that dependency into the base test assembly that
+  the MAUI device and WASM builds consume. SkiaSharp already ships dedicated
+  satellites for exactly these (`SkiaSharp.Vulkan.Tests.Console`,
+  `SkiaSharp.Direct3D.Tests.Console`); each references the base Console project,
+  adds only its own GPU package, and is already built and run by CI
+  (`tests-netcore`). So `GaneshVulkanRenderer.cs` lives in the Vulkan satellite
+  (`tests/VulkanTests/Visual/`), beside a **thin** test class:
+
+  ```csharp
+  // tests/VulkanTests/Visual/VulkanVisualTests.cs
+  public class VulkanVisualTests : VisualMatrixTestsBase
+  {
+      [Theory, MemberData(nameof(Matrix))]
+      public Task RenderMatchesGolden(string r, string s) =>
+          RunCellAsync(RendererCatalog.Get(r), SceneCatalog.Get(s));
+
+      public static IEnumerable<object[]> Matrix() // renderers declared in THIS assembly × scenes
+      {
+          foreach (var r in RendererCatalog.NamesIn(Assembly.GetExecutingAssembly()))
+              foreach (var s in SceneCatalog.AllNames)
+                  yield return new object[] { r, s };
+      }
+  }
+  ```
+
+  xUnit only discovers tests compiled into the assembly it runs, so the base
+  `VisualMatrixTests` does **not** re-run in the satellite (it is only referenced).
+  `RendererCatalog.NamesIn(thisAssembly)` filters the catalog to the renderers the
+  satellite compiles in (today just `ganesh-vulkan`), so the shared raster / GL /
+  Metal cells are never double-run. Dropping another Vulkan-family renderer into the
+  satellite (e.g. Graphite's) makes it join automatically — no edit to the test
+  class.
 
 Because the matrix is ordinary shared test code, it runs inside the **existing**
 CI stages (`tests-netcore`, `tests-android`, `tests-ios`, `tests-maccatalyst`,
-`tests-wasm`) — there is no dedicated visual stage.
+`tests-wasm`) — there is no dedicated visual stage. The Vulkan and Direct3D
+satellites are part of the `tests-netcore` project list, so their visual cells run
+on the same Win/macOS/Linux agents.
 
 ### Continuous integration
 
@@ -404,19 +453,27 @@ then stops re-creating the per-platform copies.
 | Host | Platform | raster | GPU |
 |---|---|---|---|
 | Console | macOS | ✓ | `ganesh-gl` (CGL), `ganesh-metal` (in-process) |
-| Console | Linux | ✓ | `ganesh-gl` (GLX/EGL, Mesa sw), `ganesh-vulkan` (Lavapipe sw) |
-| Console | Windows | ✓ | `ganesh-gl` (WGL), `ganesh-vulkan` (ICD if present) |
+| Console | Linux | ✓ | `ganesh-gl` (GLX/EGL, Mesa sw) |
+| Console | Windows | ✓ | `ganesh-gl` (WGL) |
+| Vulkan satellite | Linux | — | `ganesh-vulkan` (Lavapipe sw) |
+| Vulkan satellite | Windows | — | `ganesh-vulkan` (ICD if present) |
 | Devices | iOS / Mac Catalyst | ✓ | `ganesh-metal` (shared Apple-gated renderer) |
 | Devices | Android | ✓ | per-host GLES / Vulkan — follow-up |
 | Wasm | browser | ✓ | WebGL2 — follow-up |
 
+> The "Vulkan satellite" is `SkiaSharp.Vulkan.Tests.Console`; it runs on the same
+> `tests-netcore` Linux/Windows agents as the base Console, just from its own
+> assembly so the `SharpVk` dependency stays out of the shared test code. Direct3D
+> (`SkiaSharp.Direct3D.Tests.Console`) is the same pattern, added later.
+
 `raster` and `ganesh-metal` run from shared code (Metal is gated to Apple OSes, so
 it lights up on macOS Console and the iOS / Mac Catalyst device hosts alike). The
-desktop GL/Vulkan renderers are Console-only. `direct3d` is a later addition in the
-Direct3D console project. Each cell's golden is **seeded per platform from its own
-CI run** (harvest the TRX); until a cell is seeded it **fails** as unseeded — the
-captured PNG is in the TRX, so harvesting and committing it closes the gap (see
-*Failure discipline* and *Seeding goldens*).
+desktop GL renderer is Console-only; `ganesh-vulkan` lives in the
+`SkiaSharp.Vulkan.Tests.Console` satellite and `direct3d` is a later addition in
+the `SkiaSharp.Direct3D.Tests.Console` satellite. Each cell's golden is **seeded
+per platform from its own CI run** (harvest the TRX); until a cell is seeded it
+**fails** as unseeded — the captured PNG is in the TRX, so harvesting and
+committing it closes the gap (see *Failure discipline* and *Seeding goldens*).
 
 ---
 
@@ -429,13 +486,25 @@ no randomness. On its first run each new cell fails as unseeded; harvest the
 captured PNGs from the TRX and commit them (see *Seeding goldens*).
 
 **Add a portable renderer:** drop a public, parameterless `IRenderer` under
-`Visual/Renderers/`. It appears in every scene's row automatically.
+`Visual/Renderers/`. It appears in every scene's row of the shared matrix
+automatically. Use this only for backends that need no extra NuGet package and are
+safe in the MAUI/WASM builds (e.g. an Apple-gated Metal renderer).
 
-**Add a desktop / host-specific renderer:** put it under
-`Visual/Renderers/Desktop/` (excluded from the shared project) or in the
-host-specific console project (discovered via the entry assembly). Acquire the
-GPU context through `TestConfig` / `GlContexts` rather than a bespoke loader, and
-hold `GpuRenderGate.Sync` while touching the GPU so cells don't race the driver.
+**Add a desktop GL/Metal renderer:** put it under `Visual/Renderers/Desktop/`
+(excluded from the shared project) so it compiles only into `SkiaSharp.Tests.Console`.
+Acquire the GPU context through `TestConfig` / `GlContexts` rather than a bespoke
+loader, and hold `GpuRenderGate.Sync` while touching the GPU so cells don't race
+the driver.
+
+**Add a package-dependent renderer (Vulkan / Direct3D / Graphite):** put the
+renderer in the matching satellite host project (`SkiaSharp.Vulkan.Tests.Console`
+→ `tests/VulkanTests/`, `SkiaSharp.Direct3D.Tests.Console`) so its NuGet dependency
+never reaches the base test assembly. If that satellite already has a
+`*VisualTests : VisualMatrixTestsBase` driver (Vulkan does), the renderer is
+discovered by `RendererCatalog.NamesIn(thisAssembly)` and joins automatically —
+nothing else to write. For a satellite that has none yet (Direct3D), add a ~15-line
+driver mirroring `VulkanVisualTests`. Acquire the GPU context from the satellite's
+existing helper (`VkContext` / Vortice device) and hold `GpuRenderGate.Sync`.
 
 ---
 
@@ -445,23 +514,26 @@ This harness is designed so the in-flight Graphite backend PR (#3968) rebases
 onto it by **adding renderer classes and golden PNGs only** — no test, csproj, or
 CI changes. Concretely, that PR adds:
 
-- `Visual/Renderers/Desktop/GraphiteVulkanRenderer.cs` (Console desktop, beside
-  `GaneshVulkanRenderer`),
+- `tests/VulkanTests/Visual/GraphiteVulkanRenderer.cs` in the
+  `SkiaSharp.Vulkan.Tests.Console` satellite, beside `GaneshVulkanRenderer`. The
+  satellite's `VulkanVisualTests` discovers it via
+  `RendererCatalog.NamesIn(thisAssembly)`, so it joins that satellite's matrix with
+  no test-class edit,
 - `Visual/Renderers/GraphiteMetalRenderer.cs` (shared + Apple-gated, beside
   `GaneshMetalRenderer`, so it runs on macOS Console *and* the iOS / Mac Catalyst
-  device hosts),
+  device hosts and is auto-discovered by the base `VisualMatrixTests`),
 - `Content/Goldens/graphite-*.{platform}/*.png` (seeded per platform by harvesting its CI TRX).
 
-`RendererCatalog` auto-discovers them. Because the seam uses clean names on main
-rather than mirroring the prototype, the Graphite renderer files take a small
-(~5-line) rebase edit:
+The catalogs auto-discover both. Because the seam uses clean names on main rather
+than mirroring the prototype, the Graphite renderer files take a small (~5-line)
+rebase edit:
 
 - implement **`SkiaSharp.Tests.Visual.IRenderer`** (`Name`, `IsAvailable`,
   `UnavailableReason`, `RenderAsync(scene, info, ct)` returning RGBA8888/Premul
   via `RendererPixels.ReadRgba`),
 - acquire the GPU device/context from the shared **`TestConfig` / `GlContexts`**
-  providers (or the existing `VkContext`) instead of the prototype's
-  `VulkanLoader` / `WglLoader` / `EglLoader`,
+  providers (or the satellite's existing `VkContext` / `GRSharpVkBackendContext`)
+  instead of the prototype's `VulkanLoader` / `WglLoader` / `EglLoader`,
 - compare via the committed goldens (handled by the harness) instead of an inline
   `ComputeDiff`,
 - drop the prototype's out-of-process host sessions and `VisualFactAttribute`
