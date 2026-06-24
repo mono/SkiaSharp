@@ -35,9 +35,22 @@ namespace SkiaSharp.Tests.Visual.Tests
 	/// the default records portable CPU output to <c>_shared/</c> and GPU output to
 	/// a per-platform folder. Recording only works where the source tree is
 	/// reachable (desktop Console runs).</para>
+	///
+	/// <para><b>Selecting the suite.</b> Every cell is tagged
+	/// <c>[Trait("Category", "Visual")]</c>. Run only the visual matrix with
+	/// <c>--filter-trait "Category=Visual"</c> (Microsoft.Testing.Platform) or
+	/// <c>--filter "Category=Visual"</c> (VSTest); skip it everywhere else with
+	/// <c>--filter-not-trait "Category=Visual"</c>. The cells still run by default
+	/// when no filter is supplied.</para>
 	/// </summary>
+	[Trait("Category", VisualCategory)]
 	public class VisualMatrixTests : SKTest
 	{
+		/// <summary>
+		/// Trait value tagging every visual-matrix cell. Lets CI and developers
+		/// run or skip just the visual suite without naming individual classes.
+		/// </summary>
+		public const string VisualCategory = "Visual";
 		public VisualMatrixTests(ITestOutputHelper output)
 			: base(output)
 		{

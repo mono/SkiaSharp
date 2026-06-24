@@ -6,17 +6,20 @@ using System.Threading.Tasks;
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
-	/// Ganesh GPU backend over Apple Metal (macOS desktop host). Builds a
+	/// Ganesh GPU backend over Apple Metal. Builds a
 	/// <see cref="GRMtlBackendContext"/> from the system default
 	/// <c>MTLDevice</c> and a fresh <c>MTLCommandQueue</c> via direct P/Invoke
 	/// into Metal.framework and libobjc — the same vehicle the Graphite PR's
 	/// Metal renderers use, so the bring-up pattern is shared.
 	///
 	/// <para>
-	/// This file lives under <c>Renderers/Desktop/</c> and is compiled only into
-	/// the desktop host (Console). On iOS / Mac Catalyst the MAUI device host
-	/// supplies a Metal device through <see cref="TestConfig"/> instead (a P2
-	/// follow-up); this desktop renderer is intentionally macOS-only.
+	/// This renderer lives in the shared harness (not under
+	/// <c>Renderers/Desktop/</c>), so it compiles into every host. Because Metal
+	/// is reached purely through runtime P/Invoke — not a platform-TFM API — the
+	/// same file runs in-process on the macOS Console host <i>and</i> on the
+	/// iOS / Mac Catalyst / tvOS MAUI device hosts. It reports unavailable (and so
+	/// skips) on any non-Apple platform, where the Metal/libobjc entry points are
+	/// never touched.
 	/// </para>
 	/// </summary>
 	public sealed class GaneshMetalRenderer : IRenderer
@@ -26,9 +29,16 @@ namespace SkiaSharp.Tests.Visual
 		public bool IsAvailable => UnavailableReason is null;
 
 		public string UnavailableReason =>
-			TestConfig.Current.IsMac
+			IsApplePlatform
 				? null
-				: "Metal is only available on Apple platforms.";
+				: "Metal is only available on Apple platforms (macOS, iOS, Mac Catalyst, tvOS).";
+
+		private static bool IsApplePlatform =>
+			OperatingSystem.IsMacOS()
+			|| OperatingSystem.IsIOS()
+			|| OperatingSystem.IsMacCatalyst()
+			|| OperatingSystem.IsTvOS();
+
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
