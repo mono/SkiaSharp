@@ -17,9 +17,12 @@ namespace SkiaSharp.Tests.Visual
 	/// <c>Instance</c> → <c>PhysicalDevice</c> → graphics <c>Queue</c> → <c>Device</c>,
 	/// with no <c>VK_KHR_surface</c>/swapchain and no window — exactly the inputs
 	/// <see cref="GRContext.CreateVulkan"/> needs to render to an offscreen
-	/// <see cref="SKSurface"/>. This file lives under <c>Renderers/Desktop/</c> and
-	/// is compiled only into the desktop host (Console), so the SharpVk dependency
-	/// never reaches the MAUI device or WASM builds. Android Vulkan is a separate
+	/// <see cref="SKSurface"/>. This file is compiled into the
+	/// <c>SkiaSharp.Vulkan.Tests</c> satellite host (which already references
+	/// SharpVk), <b>not</b> the base test assembly, so the Vulkan dependency never
+	/// reaches the Console / MAUI device / WASM builds. The satellite's
+	/// <c>VulkanVisualTests</c> drives this renderer through the shared
+	/// <c>VisualMatrixTestsBase</c> engine. Android Vulkan is a separate
 	/// device-host renderer.
 	/// </para>
 	///
