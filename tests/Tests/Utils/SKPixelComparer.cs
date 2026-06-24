@@ -136,6 +136,115 @@ namespace SkiaSharp.Extended
 			return new SKPixelComparisonResult(totalPixels, errorPixels, absoluteError);
 		}
 
+		public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second, int channelTolerance)
+		{
+			using var firstPixmap = first.PeekPixels();
+			using var secondPixmap = second.PeekPixels();
+			return Compare(firstPixmap, secondPixmap, channelTolerance);
+		}
+
+		public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second, int channelTolerance)
+		{
+			using var firstWrapper = SKImage.FromPixels(first);
+			using var secondWrapper = SKImage.FromPixels(second);
+			return Compare(firstWrapper, secondWrapper, channelTolerance);
+		}
+
+		// Tolerance-aware comparison used by the visual-regression harness. Unlike
+		// the parameterless overload (which ignores alpha and treats any nonzero
+		// difference as an error), this counts a pixel as mismatched only when the
+		// largest per-channel delta (including alpha) exceeds channelTolerance, and
+		// reports the maximum observed channel delta so callers can tune
+		// per-renderer tolerances.
+		public static SKPixelComparisonResult Compare(SKImage first, SKImage second, int channelTolerance)
+		{
+			Validate(first, second);
+
+			var width = first.Width;
+			var height = first.Height;
+
+			var totalPixels = width * height;
+			var errorPixels = 0;
+			var absoluteError = 0;
+			var maxChannelDelta = 0;
+
+			using var firstBitmap = GetNormalizedBitmap(first);
+			using var firstPixmap = firstBitmap.PeekPixels();
+			var firstPixels = firstPixmap.GetPixelSpan<SKColor>();
+
+			using var secondBitmap = GetNormalizedBitmap(second);
+			using var secondPixmap = secondBitmap.PeekPixels();
+			var secondPixels = secondPixmap.GetPixelSpan<SKColor>();
+
+			for (var idx = 0; idx < totalPixels; idx++)
+			{
+				var firstPixel = firstPixels[idx];
+				var secondPixel = secondPixels[idx];
+
+				var r = Math.Abs(secondPixel.Red - firstPixel.Red);
+				var g = Math.Abs(secondPixel.Green - firstPixel.Green);
+				var b = Math.Abs(secondPixel.Blue - firstPixel.Blue);
+				var a = Math.Abs(secondPixel.Alpha - firstPixel.Alpha);
+
+				absoluteError += r + g + b + a;
+
+				var maxDelta = Math.Max(Math.Max(r, g), Math.Max(b, a));
+				if (maxDelta > maxChannelDelta)
+					maxChannelDelta = maxDelta;
+
+				if (maxDelta > channelTolerance)
+					errorPixels++;
+			}
+
+			return new SKPixelComparisonResult(totalPixels, errorPixels, absoluteError, maxChannelDelta);
+		}
+
+		// Produces a colored diff to make a failure self-explanatory: pixels that
+		// exceed the tolerance are painted red, pixels that differ but are within
+		// tolerance are amber, and matching pixels are a dimmed version of the
+		// actual image so the shape stays recognizable.
+		public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, int channelTolerance)
+		{
+			Validate(first, second);
+
+			var width = first.Width;
+			var height = first.Height;
+			var totalPixels = width * height;
+
+			using var firstBitmap = GetNormalizedBitmap(first);
+			using var firstPixmap = firstBitmap.PeekPixels();
+			var firstPixels = firstPixmap.GetPixelSpan<SKColor>();
+
+			using var secondBitmap = GetNormalizedBitmap(second);
+			using var secondPixmap = secondBitmap.PeekPixels();
+			var secondPixels = secondPixmap.GetPixelSpan<SKColor>();
+
+			var diffBitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888));
+			using var diffPixmap = diffBitmap.PeekPixels();
+			var diffPixels = diffPixmap.GetPixelSpan<SKColor>();
+
+			for (var idx = 0; idx < totalPixels; idx++)
+			{
+				var firstPixel = firstPixels[idx];
+				var secondPixel = secondPixels[idx];
+
+				var r = Math.Abs(secondPixel.Red - firstPixel.Red);
+				var g = Math.Abs(secondPixel.Green - firstPixel.Green);
+				var b = Math.Abs(secondPixel.Blue - firstPixel.Blue);
+				var a = Math.Abs(secondPixel.Alpha - firstPixel.Alpha);
+				var maxDelta = Math.Max(Math.Max(r, g), Math.Max(b, a));
+
+				if (maxDelta > channelTolerance)
+					diffPixels[idx] = new SKColor(255, 0, 0);
+				else if (maxDelta > 0)
+					diffPixels[idx] = new SKColor(255, 200, 0);
+				else
+					diffPixels[idx] = new SKColor((byte)(secondPixel.Red / 4), (byte)(secondPixel.Green / 4), (byte)(secondPixel.Blue / 4));
+			}
+
+			return SKImage.FromBitmap(diffBitmap);
+		}
+
 		public static SKImage GenerateDifferenceMask(string firstFilename, string secondFilename)
 		{
 			using var first = SKImage.FromEncodedData(firstFilename);
@@ -234,10 +343,16 @@ namespace SkiaSharp.Extended
 	public class SKPixelComparisonResult
 	{
 		public SKPixelComparisonResult(int totalPixels, int errorPixelCount, int absoluteError)
+			: this(totalPixels, errorPixelCount, absoluteError, 0)
+		{
+		}
+
+		public SKPixelComparisonResult(int totalPixels, int errorPixelCount, int absoluteError, int maxChannelDelta)
 		{
 			TotalPixels = totalPixels;
 			ErrorPixelCount = errorPixelCount;
 			AbsoluteError = absoluteError;
+			MaxChannelDelta = maxChannelDelta;
 		}
 
 		public int TotalPixels { get; }
@@ -248,5 +363,9 @@ namespace SkiaSharp.Extended
 			(double)ErrorPixelCount / TotalPixels;
 
 		public int AbsoluteError { get; }
+
+		// The largest per-channel delta observed across all pixels. Only populated
+		// by the tolerance-aware Compare overload; 0 otherwise.
+		public int MaxChannelDelta { get; }
 	}
 }
