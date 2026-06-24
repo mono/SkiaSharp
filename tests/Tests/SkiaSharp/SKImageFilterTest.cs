@@ -62,33 +62,46 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void CreateEmptyCanBeUsedInRendering()
+		public void CreateEmptyDiscardsDrawnContent()
 		{
 			const int size = 64;
 			var info = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul);
+			var rect = new SKRect(10, 10, 50, 50);
 
-			using var surface = SKSurface.Create(info);
-			Assert.NotNull(surface);
-
-			using var emptyFilter = SKImageFilter.CreateEmpty();
-			using var paint = new SKPaint
+			// Draws a red rectangle on a blue background using the given image
+			// filter and returns the resulting pixel at the rectangle's center.
+			// The surface is explicitly cleared to blue so the result never relies
+			// on the surface being zero-initialized.
+			SKColor RenderCenterPixel(SKImageFilter filter)
 			{
-				ImageFilter = emptyFilter
-			};
+				using var surface = SKSurface.Create(info);
+				Assert.NotNull(surface);
 
-			// Use SaveLayer - image filters are applied to layer content
-			surface.Canvas.SaveLayer(paint);
-			surface.Canvas.Clear(SKColors.Red); // Fill layer with red
-			surface.Canvas.Restore();
+				surface.Canvas.Clear(SKColors.Blue);
 
-			using var image = surface.Snapshot();
-			Assert.NotNull(image);
-			using var pixmap = image.PeekPixels();
-			Assert.NotNull(pixmap);
-		
-			// Empty filter should make the entire layer transparent black
-			var pixel = pixmap.GetPixelColor(32, 32);
-			Assert.Equal(new SKColor(0, 0, 0, 0), pixel);
+				using var paint = new SKPaint
+				{
+					Color = SKColors.Red,
+					ImageFilter = filter
+				};
+				surface.Canvas.DrawRect(rect, paint);
+
+				using var image = surface.Snapshot();
+				Assert.NotNull(image);
+				using var pixmap = image.PeekPixels();
+				Assert.NotNull(pixmap);
+
+				return pixmap.GetPixelColor(32, 32);
+			}
+
+			// Without a filter the red rectangle is drawn normally, proving the
+			// draw itself produces visible content.
+			Assert.Equal(SKColors.Red, RenderCenterPixel(null));
+
+			// With the empty filter the red rectangle is replaced by transparent
+			// black, so the blue background shows through unchanged.
+			using var emptyFilter = SKImageFilter.CreateEmpty();
+			Assert.Equal(SKColors.Blue, RenderCenterPixel(emptyFilter));
 		}
 	}
 }
