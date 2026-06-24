@@ -51,11 +51,11 @@ namespace SkiaSharp.Tests
 		[InlineData(1.5f, 1)]
 		public void LerpReturnsCorrectFilter(float weight, int returned)
 		{
-			var first = SKColorFilter.CreateBlendMode(SKColors.Red, SKBlendMode.SrcOver);
-			var second = SKColorFilter.CreateBlendMode(SKColors.Blue, SKBlendMode.SrcOver);
+			using var first = SKColorFilter.CreateBlendMode(SKColors.Red, SKBlendMode.SrcOver);
+			using var second = SKColorFilter.CreateBlendMode(SKColors.Blue, SKBlendMode.SrcOver);
 			var filters = new[] { first, second };
 
-			var lerp = SKColorFilter.CreateLerp(weight, first, second);
+			using var lerp = SKColorFilter.CreateLerp(weight, first, second);
 
 			Assert.Equal(returned, Array.IndexOf(filters, lerp));
 		}

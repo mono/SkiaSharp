@@ -95,9 +95,10 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 
 			// Step 4: Apply color filter to convert alpha to colors
 			using var overdrawImage = overdrawSurface.Snapshot();
+			using var overdrawFilter = SKColorFilter.CreateOverdraw(overdrawColors);
 			using var filterPaint = new SKPaint
 			{
-				ColorFilter = SKColorFilter.CreateOverdraw(overdrawColors)
+				ColorFilter = overdrawFilter
 			};
 			canvas.DrawImage(overdrawImage, 0, 0, filterPaint);
 			canvas.Restore();
