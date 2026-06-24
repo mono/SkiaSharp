@@ -134,9 +134,12 @@ namespace SkiaSharp.Tests.Visual
 			yield return rendererName + "." + VisualPlatform.Tag;
 			yield return rendererName;
 			// The shared CPU baseline is only valid for the portable raster backend
-			// drawing a portable scene. GPU backends and platform-dependent scenes
-			// must resolve a renderer/platform golden or be treated as unseeded.
-			if (rendererName == PortableRenderer && !platformDependent)
+			// drawing a portable scene on a desktop host. GPU backends, platform-
+			// dependent scenes (text), and device/browser hosts (whose architecture
+			// rounds antialiasing differently) must resolve a renderer/platform
+			// golden or be treated as unseeded — a GPU cell never falls back to the
+			// CPU baseline, and one platform's pixels never stand in for another's.
+			if (UsesSharedBaseline(rendererName, platformDependent))
 				yield return SharedDir;
 		}
 
@@ -149,9 +152,12 @@ namespace SkiaSharp.Tests.Visual
 				"shared" => SharedDir,
 				"renderer" => rendererName,
 				"platform" => perPlatform,
-				_ => rendererName == PortableRenderer && !platformDependent ? SharedDir : perPlatform,
+				_ => UsesSharedBaseline(rendererName, platformDependent) ? SharedDir : perPlatform,
 			};
 		}
+
+		private static bool UsesSharedBaseline(string rendererName, bool platformDependent) =>
+			rendererName == PortableRenderer && !platformDependent && VisualPlatform.IsDesktop;
 
 		private static string RelativePath(string dir, string sceneName) =>
 			$"{GoldensFolder}/{dir}/{sceneName}.png";
