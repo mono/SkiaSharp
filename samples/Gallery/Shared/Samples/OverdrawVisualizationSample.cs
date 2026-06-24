@@ -160,12 +160,11 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 
 	private void DrawLabel(SKCanvas canvas, string text, float x, float y)
 	{
-		using var font = new SKFont(SampleMedia.Fonts.Default, 16);
+		using var font = new SKFont(SampleMedia.Fonts.Default, 16) { Embolden = true };
 		using var textPaint = new SKPaint
 		{
 			IsAntialias = true,
-			Color = SKColors.Black,
-			FakeBoldText = true
+			Color = SKColors.Black
 		};
 		canvas.DrawText(text, x, y, SKTextAlign.Center, font, textPaint);
 	}
