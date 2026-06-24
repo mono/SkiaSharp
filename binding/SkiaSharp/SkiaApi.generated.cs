@@ -20988,9 +20988,9 @@ namespace SkiaSharp {
 	// sk_codec_animation_status_t
 	public enum SKCodecAnimationStatus {
 		// SK_CODEC_ANIMATION_STATUS_YES = 0
-		Yes = 0,
+		Animated = 0,
 		// SK_CODEC_ANIMATION_STATUS_NO = 1
-		No = 1,
+		NotAnimated = 1,
 		// SK_CODEC_ANIMATION_STATUS_UNKNOWN = 2
 		Unknown = 2,
 	}
