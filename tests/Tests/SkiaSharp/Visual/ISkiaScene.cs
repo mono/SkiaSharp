@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests.Visual
 	{
 		/// <summary>
 		/// Stable identifier, used as the golden-file basename
-		/// (<c>Content/Goldens/{renderer-or-_shared}/{Name}.png</c>).
+		/// (<c>Content/Goldens/{renderer}.{platform}/{Name}.png</c>).
 		/// </summary>
 		string Name { get; }
 
@@ -28,18 +28,6 @@ namespace SkiaSharp.Tests.Visual
 		/// a surface of exactly this shape and pass <see cref="Draw"/> its canvas.
 		/// </summary>
 		SKImageInfo Info { get; }
-
-		/// <summary>
-		/// <see langword="true"/> when the scene's output legitimately differs
-		/// across platforms even on the deterministic CPU raster backend — text is
-		/// the canonical case, because the font scaler (CoreText / FreeType /
-		/// DirectWrite) is platform-specific. Such scenes never share the portable
-		/// <c>_shared</c> baseline; their goldens are recorded per platform so a
-		/// genuine regression on one platform cannot be masked by another
-		/// platform's reference. Geometry, gradients, and blends are portable and
-		/// return <see langword="false"/>.
-		/// </summary>
-		bool IsPlatformDependent { get; }
 
 		/// <summary>Draws the scene onto the supplied canvas.</summary>
 		void Draw(SKCanvas canvas);

@@ -27,24 +27,26 @@ embed/copy pipeline — rather than reinventing them.
 
 | Piece | Type | Where | Role |
 |---|---|---|---|
-| Scene | `ISkiaScene` | `Visual/Scenes/` | Deterministic draw op; same bytes every run on a backend. `IsPlatformDependent` marks scenes whose CPU output isn't portable (e.g. `Text`) |
+| Scene | `ISkiaScene` | `Visual/Scenes/` | Deterministic draw op; same bytes every run on a backend |
 | Renderer | `IRenderer` | `Visual/Renderers/` (+ `Renderers/Desktop/`) | Renders a scene through one backend, returns RGBA8888 / premultiplied pixels |
 | Scene catalog | `SceneCatalog` | `Visual/` | Reflection-discovers every public parameterless `ISkiaScene` |
 | Renderer catalog | `RendererCatalog` | `Visual/` | Reflection-discovers every public parameterless `IRenderer` |
-| Matrix test | `VisualMatrixTests` | `Visual/Tests/` | `[Theory]` over the full catalog product; compares to golden |
+| Matrix test | `VisualMatrixTests` | `Visual/Tests/` | `[Theory]` over the full catalog product; emits the capture + compares to golden |
 | Comparison | `SKPixelComparer` (extended) | `tests/Tests/Utils/` | Tolerance-aware per-channel diff + colored diff image |
 | Tolerance policy | `GoldenTolerance` | `Visual/` | Per-renderer + per-(renderer, scene) tolerance |
-| Golden I/O | `GoldenStore` | `Visual/` | Resolves, loads, records, and saves goldens / failure artifacts |
-| Goldens | PNG files | `tests/Content/Goldens/` | `{renderer}.{platform}/` and `{renderer}/` overrides, `_shared/` fallback |
+| Golden I/O | `GoldenStore` | `Visual/` | Resolves and loads goldens (read-only); encodes captured pixels to PNG |
+| Goldens | PNG files | `tests/Content/Goldens/` | `{renderer}.{platform}/` per-platform override, `{renderer}/` shared-across-platforms golden |
 
 ```
 ISkiaScene.Draw(canvas) ─▶ IRenderer.RenderAsync ─▶ byte[] RGBA8888/Premul
                                                         │
-   GoldenStore.TryLoad: {renderer}.{platform} ▸ {renderer} ▸ _shared
+              emit ##SKIA-GOLDEN-IMAGE## marker (PNG) into the test results (TRX)
                                                         │
-                              SKPixelComparer.Compare(golden, actual, tolerance)
+   GoldenStore.TryLoad: {renderer}.{platform} ▸ {renderer}
                                                         │
-                  pass  │  FAIL (golden exists, out of tolerance; writes .actual/.diff PNG + base64)  │  Skip (absent backend OR unseeded cell)
+                             SKPixelComparer.Compare(golden, actual, tolerance)
+                                                       │
+   pass  │  FAIL (out of tolerance, OR unseeded — captured PNG is in the TRX)  │  Skip (backend genuinely absent)
 ```
 
 ---
@@ -58,7 +60,6 @@ public interface ISkiaScene
 {
     string Name { get; }              // golden file basename
     SKImageInfo Info { get; }         // surface size + pixel format
-    bool IsPlatformDependent { get; } // true → never use the shared CPU baseline (e.g. Text)
     void Draw(SKCanvas canvas);
 }
 
@@ -84,24 +85,31 @@ metadata-only probe.
 ## Failure discipline
 
 This is the property the harness exists to guarantee, and the thing the prior
-prototype got wrong. A cell may **skip** *only* when there is genuinely nothing
-to assert:
+prototype got wrong. A cell may **skip** *only* when the backend is genuinely
+absent on this host — there is nothing to render, so nothing to assert:
 
 - `IRenderer.IsAvailable` is `false` (wrong OS, no GPU wiring for this host), or
 - `IRenderer.RenderAsync` throws `RendererUnavailableException` (a runtime probe
-  found no device / no driver feature / no context), or
-- the renderer ran but **no golden has been recorded yet** for this
-  `(renderer, scene)` on this platform — an *unseeded* cell. There is no oracle
-  to compare against, so it is loudly skipped (with the path it looked in and how
-  to seed it) rather than failed. This is what keeps CI green on platforms that
-  can only be seeded on the agent (Linux/Windows/device/browser GPU output) until
-  their goldens are recorded.
+  found no device / no driver feature / no context).
 
 **Every other outcome is a hard failure:**
 
 - `RenderAsync` throws anything else (including `EntryPointNotFoundException` /
   `MissingMethodException` from a broken binding),
-- a golden that **does exist** is out of tolerance.
+- a golden that **does exist** is out of tolerance,
+- the renderer ran but **no golden has been recorded yet** for this
+  `(renderer, scene)` on this platform — an *unseeded* cell.
+
+The last point is the deliberate difference from the prototype: an unseeded cell
+is a **failure, not a skip**. The backend was available and produced pixels, so a
+green result would be a coverage hole. There is no silent "skip until someone
+records a golden" state to hide a regression in.
+
+This is safe to enforce because **every cell publishes its rendered PNG into the
+test results on pass *and* fail** (the `##SKIA-GOLDEN-IMAGE##` marker, see below).
+So an unseeded cell fails loudly *and* hands you exactly the bytes to commit:
+harvest the marker from the TRX, commit it, re-run, and the cell goes green. No
+second "record" run is needed.
 
 There is no path that downgrades a real regression to a skip or a warning, and a
 golden that exists is *always* compared strictly. In particular, the desktop GL
@@ -109,13 +117,51 @@ renderer rethrows `EntryPointNotFoundException` / `MissingMethodException` from
 context creation (those mean a broken binding) and only converts a genuine "no
 GL context could be created" into a skip.
 
-**Locking coverage in.** An unseeded skip is a transition state, not a hiding
-place. Set `SKIASHARP_VISUAL_REQUIRE_GOLDENS=1` to turn every unseeded cell into
-a hard failure. CI lanes flip this on **per platform once that platform is
-seeded**, so from then on a missing golden means a deleted reference, not an
-un-recorded one. The recommended lifecycle is: land the infra (cells skip where
-unseeded) → seed a platform's goldens on its agent (see *Recording*) → enable
-`SKIASHARP_VISUAL_REQUIRE_GOLDENS` for that platform.
+---
+
+## Seeding goldens (harvest from the test results)
+
+There is **no in-process record mode and no environment variable**. Goldens are
+seeded from the **captured PNGs the matrix already emits into the test results**:
+
+1. Every cell writes a single-line marker into the test log on pass *and* fail:
+
+   ```
+   ##SKIA-GOLDEN-IMAGE## path={renderer}.{platform}/{scene}.png size=WxH base64=<png bytes>
+   ```
+
+   The bytes are base64 (no whitespace, XML-safe) so the marker survives intact on
+   one line inside a `.trx`.
+
+2. Run the matrix with a TRX report, then harvest the markers into the goldens
+   tree and commit:
+
+   ```bash
+   # from the build output directory:
+   ./SkiaSharp.Tests --filter-trait "Category=Visual" --report-trx --report-trx-filename visual.trx
+
+   # from the repo root, harvest every marker in the TRX into tests/Content/Goldens:
+   python3 scripts/infra/tests/extract-visual-goldens.py path/to/visual.trx
+   git add tests/Content/Goldens && git commit
+   ```
+
+The first run of a new cell **fails** (unseeded); after the harvest+commit it
+compares strictly and goes green. The same flow works on **every host**: the TRX
+is the one output channel that exists uniformly on desktop, MAUI device, and WASM
+hosts — including the device/browser hosts where the filesystem is
+sandboxed/embedded and an in-process write-to-source-tree is impossible. That is
+why a captured-image marker, not a disk write, is the seed channel.
+
+The harvest writes the per-platform path (`{renderer}.{platform}/`) by default. To
+**share one golden across platforms**, move byte-identical per-platform PNGs up to
+the platform-portable `{renderer}/` folder and delete the per-platform copies; the
+harvest then *skips* re-creating a per-platform file whenever the captured bytes
+are byte-identical to an existing `{renderer}/` golden, so the promotion sticks
+across future harvests. A genuine per-platform divergence has different bytes and
+is still written as a `{renderer}.{platform}/` override.
+
+Always review harvested PNGs before committing — the harvest trusts whatever the
+renderer produced.
 
 ---
 
@@ -130,45 +176,35 @@ Layout:
 
 ```
 tests/Content/Goldens/
-  _shared/<scene>.png              ← portable CPU baseline (desktop raster, portable scenes only)
-  <renderer>/<scene>.png           ← per-renderer override (platform-independent)
-  <renderer>.<platform>/<scene>.png ← per-renderer, per-platform override
+  <renderer>.<platform>/<scene>.png  ← per-platform override (this OS/driver diverges)
+  <renderer>/<scene>.png             ← the renderer's golden, shared across platforms
 ```
 
 `<platform>` is a short tag from `VisualPlatform.Tag`: `macos`, `windows`,
 `linux`, `android`, `ios`, `maccatalyst`, `tvos`, `browser`.
 
-**Read lookup order** (`GoldenStore.TryLoad`), first hit wins:
+**Read lookup order** (`GoldenStore.Candidates` / `TryLoad`), first hit wins:
 
-1. `Goldens/{renderer}.{platform}/{scene}.png`
-2. `Goldens/{renderer}/{scene}.png`
-3. `Goldens/_shared/{scene}.png` — **only** when the cell is eligible for the
-   shared baseline (see below)
+1. `Goldens/{renderer}.{platform}/{scene}.png` — the per-platform override.
+2. `Goldens/{renderer}/{scene}.png` — the renderer's platform-portable golden.
 
-**The `_shared` baseline is deliberately narrow.** A single committed PNG is only
-reused across platforms when its bytes are genuinely identical everywhere, which
-is true for exactly one combination:
+**The fallback generalizes over *platform* only, never over *renderer*.** That is
+the one safe generalization: the same backend rendering the same scene produces
+the same bytes on every OS *for the common cases* — CPU raster and software GL are
+deterministic across OSes and architectures — so one committed `{renderer}/` PNG
+can serve every platform. When a particular OS/driver genuinely diverges (a
+hardware GPU's antialiasing, a platform font scaler for the `Text` scene), that
+platform gets a `{renderer}.{platform}/` override that wins over the shared golden.
 
-```
-renderer == "raster"  &&  !scene.IsPlatformDependent  &&  VisualPlatform.IsDesktop
-```
+The harness **never** falls back from one renderer to another. Different backends
+legitimately differ (GPU AA vs. CPU AA), so a missing GPU golden must never be
+satisfied by the CPU baseline — that would compare apples to oranges and hide a
+real regression. (This is why there is no cross-renderer `_shared` folder: the
+shared layer is *per renderer*, at `{renderer}/`.)
 
-- **GPU renderers never use `_shared`.** GPU output legitimately varies by driver
-  and antialiasing, so each GPU cell records a platform-tagged golden. Falling a
-  GPU cell back to a CPU baseline would compare apples to oranges and fail every
-  non-recording platform.
-- **Platform-dependent scenes never use `_shared`.** `ISkiaScene.IsPlatformDependent`
-  marks scenes whose CPU output is *not* portable — the `Text` scene is `true`
-  because the font scaler/hinting differs by OS, so it records a per-platform
-  `raster.{platform}` golden. The geometric scenes are `false`.
-- **Device/browser raster never uses `_shared`.** `VisualPlatform.IsDesktop` is
-  only `macos`/`windows`/`linux`, so Android/iOS/Mac Catalyst/WASM raster each get
-  their own `raster.{platform}` folder (their AA/scaler differs from desktop) —
-  matching the prototype's `android-raster` / `ios-raster` / `wasm-raster` split.
-
-So on desktop, the portable geometric scenes share one tolerance-checked CPU
-golden across arm64/x64, while `Text`, every GPU cell, and every device/browser
-cell carry their own platform-tagged reference.
+So in practice the portable geometric scenes keep a single `raster/` golden shared
+across `macos`/`linux`/`windows`, while a hardware GPU cell, or a font-sensitive
+scene, carries its own `{renderer}.{platform}/` reference.
 
 Each candidate directory is probed **on disk first** — the build-copied runtime
 folder, then `TestConfig.PathRoot/Content`, then a walk up the source tree so the
@@ -196,12 +232,13 @@ Defaults (`GoldenTolerance.For`):
 | `ganesh-gl`, `ganesh-metal`, `ganesh-vulkan`, `direct3d` | 12 | 0.02 |
 
 The `raster` tolerance is intentionally just above bit-exact (rather than `0`):
-the desktop `_shared` baseline is recorded on one architecture (e.g. macOS arm64)
-but compared on others (Linux/Windows x64), and the CPU antialiaser's rounding can
-differ by a single level on a few edge pixels across architectures. `(2, 0.002)`
-absorbs that without admitting a real geometric regression. If a specific portable
-scene proves to diverge by more than this across architectures, give it a
-per-platform `raster.{platform}` golden instead of widening the renderer tolerance.
+the platform-portable `raster/` golden is captured on one architecture (e.g. macOS
+arm64) but compared on others (Linux/Windows x64), and the CPU antialiaser's
+rounding can differ by a single level on a few edge pixels across architectures.
+`(2, 0.002)` absorbs that without admitting a real geometric regression. If a
+specific portable scene proves to diverge by more than this across architectures,
+give it a per-platform `raster.{platform}` golden instead of widening the renderer
+tolerance.
 
 Software-driver GPU cells (CI Mesa GL / Lavapipe Vulkan) can be tightened toward
 the deterministic end. Add a per-(renderer, scene) override in
@@ -237,43 +274,40 @@ be steered from one switch:
 | Run everything **except** the visual matrix | `--filter-not-trait "Category=Visual"` |
 | Run one renderer/scene cell | `--filter-class "SkiaSharp.Tests.Visual.Tests.VisualMatrixTests"` then inspect `--list-tests` |
 
-There is also a focused Cake target that builds the Console host and runs just the
-`Category=Visual` cells (strict — a non-zero exit fails the build), which is what
-CI and the seeding workflow drive:
-
-```bash
-dotnet cake --target=tests-visual
-```
+The matrix is ordinary shared test code, so it also runs as part of an unfiltered
+test run and inside the existing CI stages — there is no dedicated visual build
+target.
 
 On a failure the runner logs the GOLDEN, ACTUAL, and DIFF images as base64 (decode
-with any base64-to-image tool) and writes `_visualfailures/{renderer}/{scene}.actual.png`
-and `.diff.png` next to the binary. In the colored diff, **red** = over tolerance,
-**amber** = a sub-tolerance difference, dimmed = matching.
+with any base64-to-image tool) and, on desktop, writes
+`_visualfailures/{renderer}/{scene}.actual.png` and `.diff.png` next to the binary.
+In the colored diff, **red** = over tolerance, **amber** = a sub-tolerance
+difference, dimmed = matching. (Every cell *also* logs its rendered PNG as a
+`##SKIA-GOLDEN-IMAGE##` marker regardless of pass/fail — that is the seed channel,
+see below.)
 
-### Recording / updating goldens
+### Seeding / updating goldens
+
+Goldens are seeded by harvesting the captured PNGs from the test results, not by a
+record mode — see [*Seeding goldens*](#seeding-goldens-harvest-from-the-test-results)
+above. The short version:
 
 ```bash
-# record every cell this host can run, into the source tree:
-SKIASHARP_UPDATE_GOLDENS=1 ./SkiaSharp.Tests --filter-trait "Category=Visual"
+# 1. run with a TRX report (from the build output directory):
+./SkiaSharp.Tests --filter-trait "Category=Visual" --report-trx --report-trx-filename visual.trx
 
-# or via the focused target (forwards to --updateGoldens):
-dotnet cake --target=tests-visual --updateGoldens=true
+# 2. harvest the markers into tests/Content/Goldens and commit (from the repo root):
+python3 scripts/infra/tests/extract-visual-goldens.py path/to/visual.trx --dry-run   # preview
+python3 scripts/infra/tests/extract-visual-goldens.py path/to/visual.trx             # write
+git add tests/Content/Goldens && git commit
 ```
 
-The destination directory follows `SKIASHARP_GOLDEN_SCOPE` (the Cake target
-exposes it as `--goldenScope`):
-
-| `SKIASHARP_GOLDEN_SCOPE` | Records into |
-|---|---|
-| *(unset)* | `_shared/` only for a desktop portable **raster** cell; `{renderer}.{platform}/` for everything else (GPU, `Text`, device/browser) |
-| `shared` | `_shared/` |
-| `renderer` | `{renderer}/` |
-| `platform` | `{renderer}.{platform}/` |
-
-Recording requires a writable source tree, so it is a desktop-Console operation.
-Recording on a device / browser host fails loudly rather than silently no-op'ing.
-Always review recorded PNGs before committing — recording trusts whatever the
-renderer produced.
+A new cell **fails** as unseeded on its first run; after the harvest+commit it
+compares strictly. This is the *only* seeding path — there is no
+`SKIASHARP_UPDATE_GOLDENS` env var and no `tests-visual` record target. It works
+identically on desktop, device, and browser hosts because the TRX, not the
+filesystem, carries the captured image. Always review harvested PNGs before
+committing.
 
 ---
 
@@ -322,38 +356,46 @@ The matrix ships wired into CI as part of `scripts/azure-templates-stages-test.y
   GPU cell skips — it never turns a provisioning gap into a red build. (A useful
   side effect: the existing `GRContextTest` / `GRGlInterfaceTest` GL tests, which
   otherwise skip for lack of a display, now also exercise llvmpipe.)
-- **Failure artifacts.** Every .NET Core agent (Windows / macOS / Linux) runs
-  `scripts/infra/tests/collect-visual-failures.ps1` after the test step, which
-  copies any `_visualfailures/{renderer}/{scene}.actual.png|.diff.png` the matrix
-  emitted into the published `testlogs` artifact tree, so a red visual cell is
-  triageable straight from the build artifacts (in addition to the base64 PNGs in
-  the TRX, which is the only retrieval path on device / browser hosts).
 
-Windows software-Vulkan and the device/browser GPU lanes are seeded/enforced as
-those renderers land (see below); until then their cells skip as unseeded.
+  This provisioning is also what lets a GPU cell be *seeded* on CI: with the
+  software ICDs present the cell actually renders and emits its
+  `##SKIA-GOLDEN-IMAGE##` marker, which the published TRX carries back for
+  harvesting. Without them the cell would skip and emit nothing.
+- **Failure / capture artifacts.** Every cell's rendered PNG is in the published
+  TRX as a `##SKIA-GOLDEN-IMAGE##` marker (on pass and fail), and a failing
+  desktop cell additionally logs base64 GOLDEN/ACTUAL/DIFF images. So a red visual
+  cell is triageable straight from the test results, and a new platform's goldens
+  are seeded by downloading its TRX and running the harvest script — no extra
+  collection step in the pipeline.
 
-### Seeding a platform and enforcing it
+The device/browser GPU lanes are seeded as those renderers land (see below); until
+a cell is seeded it **fails** as unseeded, which is the intended signal to harvest
+and commit its golden.
 
-Goldens for non-recording platforms (Linux/Windows GL+Vulkan, Android, iOS, Mac
-Catalyst, WASM) must be recorded **on that platform's agent**, because their bytes
-can't be reproduced on a dev macOS box. The per-platform lifecycle is:
+### Seeding a platform from CI
 
-1. Land the renderer + CI provisioning. Its cells **skip** as unseeded — CI stays
-   green.
-2. On that platform's agent, run the matrix once with `SKIASHARP_UPDATE_GOLDENS=1`
-   (a temporary record build), download the recorded PNGs from the artifacts, and
-   commit them under `tests/Content/Goldens/{renderer}.{platform}/`.
-3. Turn on `SKIASHARP_VISUAL_REQUIRE_GOLDENS=1` for that platform's lane. From then
-   on the now-committed goldens are strictly compared, and a *missing* one is a
-   failure (it means a deleted reference, not an un-recorded one).
+Goldens for platforms you can't run on a dev box (Linux/Windows GL+Vulkan,
+Android, iOS, Mac Catalyst, WASM) are seeded from that platform's CI run, because
+their bytes can't be reproduced locally. The per-platform lifecycle is:
 
-### Environment variables
+1. Land the renderer + (for desktop GPU) the software-ICD provisioning. On the
+   first run the platform's cells **fail** as unseeded — that is the signal, and
+   the failing run's TRX already contains the captured PNGs.
+2. Download that lane's published TRX and harvest it into the goldens tree:
 
-| Variable | Effect |
-|---|---|
-| `SKIASHARP_UPDATE_GOLDENS=1` | Record mode — write the rendered pixels as the golden instead of comparing |
-| `SKIASHARP_GOLDEN_SCOPE` | `shared` / `renderer` / `platform` — where record mode writes (default: auto, per the table above) |
-| `SKIASHARP_VISUAL_REQUIRE_GOLDENS=1` | Turn an *unseeded* cell from a skip into a hard failure (per-platform CI enforcement) |
+   ```bash
+   python3 scripts/infra/tests/extract-visual-goldens.py path/to/downloaded.trx
+   ```
+
+   Review the new `tests/Content/Goldens/{renderer}.{platform}/*.png` and commit.
+3. Re-run. The now-committed goldens are strictly compared; a *missing* golden for
+   an available backend is a failure (a deleted reference), and a changed pixel is
+   a regression. No flag flip is needed — strict comparison is always on.
+
+To share one golden across platforms once they agree, promote byte-identical
+per-platform PNGs up to `{renderer}/` (see
+[*Seeding goldens*](#seeding-goldens-harvest-from-the-test-results)); the harvest
+then stops re-creating the per-platform copies.
 
 ---
 
@@ -371,9 +413,10 @@ can't be reproduced on a dev macOS box. The per-platform lifecycle is:
 `raster` and `ganesh-metal` run from shared code (Metal is gated to Apple OSes, so
 it lights up on macOS Console and the iOS / Mac Catalyst device hosts alike). The
 desktop GL/Vulkan renderers are Console-only. `direct3d` is a later addition in the
-Direct3D console project. Each cell's golden is **seeded per platform on its own
-agent**; until a platform is seeded its GPU cells skip as unseeded rather than
-fail (see *Failure discipline*).
+Direct3D console project. Each cell's golden is **seeded per platform from its own
+CI run** (harvest the TRX); until a cell is seeded it **fails** as unseeded — the
+captured PNG is in the TRX, so harvesting and committing it closes the gap (see
+*Failure discipline* and *Seeding goldens*).
 
 ---
 
@@ -382,7 +425,8 @@ fail (see *Failure discipline*).
 **Add a scene:** drop a public, parameterless `ISkiaScene` under
 `Visual/Scenes/`. It appears in every renderer's column automatically. Keep it
 deterministic — no system fonts (load one from `tests/Content/fonts`), no clock,
-no randomness. Record its goldens and commit them.
+no randomness. On its first run each new cell fails as unseeded; harvest the
+captured PNGs from the TRX and commit them (see *Seeding goldens*).
 
 **Add a portable renderer:** drop a public, parameterless `IRenderer` under
 `Visual/Renderers/`. It appears in every scene's row automatically.
@@ -406,7 +450,7 @@ CI changes. Concretely, that PR adds:
 - `Visual/Renderers/GraphiteMetalRenderer.cs` (shared + Apple-gated, beside
   `GaneshMetalRenderer`, so it runs on macOS Console *and* the iOS / Mac Catalyst
   device hosts),
-- `Content/Goldens/graphite-*.{platform}/*.png` (seeded per platform on its agent).
+- `Content/Goldens/graphite-*.{platform}/*.png` (seeded per platform by harvesting its CI TRX).
 
 `RendererCatalog` auto-discovers them. Because the seam uses clean names on main
 rather than mirroring the prototype, the Graphite renderer files take a small

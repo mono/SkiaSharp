@@ -147,9 +147,6 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - pwsh: ./scripts/infra/tests/collect-visual-failures.ps1
-                displayName: Collect visual-regression failure images
-                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()
@@ -175,9 +172,6 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - pwsh: ./scripts/infra/tests/collect-visual-failures.ps1
-                displayName: Collect visual-regression failure images
-                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()
@@ -226,9 +220,6 @@ stages:
                   echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                 displayName: Start Xvfb and select software GPU (visual tests)
             postBuildSteps:
-              - pwsh: ./scripts/infra/tests/collect-visual-failures.ps1
-                displayName: Collect visual-regression failure images
-                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()

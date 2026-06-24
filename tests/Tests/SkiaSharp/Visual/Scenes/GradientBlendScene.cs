@@ -11,8 +11,6 @@ namespace SkiaSharp.Tests.Visual
 
 		public SKImageInfo Info => new(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-		public bool IsPlatformDependent => false;
-
 		public void Draw(SKCanvas canvas)
 		{
 			canvas.Clear(SKColors.White);
