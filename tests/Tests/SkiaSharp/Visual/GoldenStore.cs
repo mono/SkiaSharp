@@ -13,9 +13,14 @@ namespace SkiaSharp.Tests.Visual
 	///
 	/// <para><b>Lookup order</b> for a (renderer, scene) cell — first hit wins:</para>
 	/// <list type="number">
-	///   <item><c>Content/Goldens/{renderer}.{platform}/{scene}.png</c> — per-platform GPU override</item>
+	///   <item><c>Content/Goldens/{renderer}.{platform}/{scene}.png</c> — per-platform override</item>
 	///   <item><c>Content/Goldens/{renderer}/{scene}.png</c> — per-renderer override</item>
-	///   <item><c>Content/Goldens/_shared/{scene}.png</c> — portable CPU baseline</item>
+	///   <item><c>Content/Goldens/_shared/{scene}.png</c> — portable CPU baseline, used
+	///         <b>only</b> for the deterministic raster backend rendering a portable
+	///         (non-platform-dependent) scene. GPU backends and platform-dependent
+	///         scenes never fall back to it, so a GPU cell can never be compared
+	///         against the CPU baseline and a per-platform text golden can never be
+	///         masked by another platform's reference.</item>
 	/// </list>
 	///
 	/// <para>
@@ -31,11 +36,28 @@ namespace SkiaSharp.Tests.Visual
 		public const string UpdateEnvVar = "SKIASHARP_UPDATE_GOLDENS";
 		public const string ScopeEnvVar = "SKIASHARP_GOLDEN_SCOPE";
 
+		/// <summary>
+		/// When truthy, a cell whose renderer is available but has no golden on
+		/// record is a hard <b>failure</b> instead of an "unseeded" skip. CI lanes
+		/// flip this on per platform once that platform's goldens are seeded, which
+		/// locks the coverage in: from then on a missing golden means someone
+		/// deleted a reference, not that the platform was never recorded.
+		/// </summary>
+		public const string RequireGoldensEnvVar = "SKIASHARP_VISUAL_REQUIRE_GOLDENS";
+
 		private const string GoldensFolder = "Goldens";
 		private const string SharedDir = "_shared";
 
+		// The one portable, bit-deterministic backend. Only its goldens (for
+		// portable scenes) live in the shared baseline; every GPU backend is
+		// recorded per platform and never falls back to the CPU baseline.
+		private const string PortableRenderer = "raster";
+
 		public static bool UpdateRequested =>
 			IsTrue(Environment.GetEnvironmentVariable(UpdateEnvVar));
+
+		public static bool RequireGoldens =>
+			IsTrue(Environment.GetEnvironmentVariable(RequireGoldensEnvVar));
 
 		public readonly struct ResolvedGolden
 		{
@@ -52,9 +74,9 @@ namespace SkiaSharp.Tests.Visual
 
 		// Returns the decoded golden (RGBA8888/Premul, sized to info) or null when
 		// no golden exists for any candidate directory.
-		public static ResolvedGolden? TryLoad(string rendererName, string sceneName, SKImageInfo info)
+		public static ResolvedGolden? TryLoad(string rendererName, string sceneName, SKImageInfo info, bool platformDependent)
 		{
-			foreach (var dir in ReadCandidates(rendererName))
+			foreach (var dir in ReadCandidates(rendererName, platformDependent))
 			{
 				var relative = RelativePath(dir, sceneName);
 
@@ -71,16 +93,17 @@ namespace SkiaSharp.Tests.Visual
 		}
 
 		// The list of "looked in" locations, for a helpful missing-golden message.
-		public static IEnumerable<string> ReadLocations(string rendererName, string sceneName) =>
-			ReadCandidates(rendererName).Select(dir => RelativePath(dir, sceneName));
+		public static IEnumerable<string> ReadLocations(string rendererName, string sceneName, bool platformDependent) =>
+			ReadCandidates(rendererName, platformDependent).Select(dir => RelativePath(dir, sceneName));
 
 		// Records a golden in the source tree so it can be committed. The target
-		// directory follows the scope: raster defaults to the shared baseline,
-		// other renderers default to a per-platform override; SKIASHARP_GOLDEN_SCOPE
+		// directory follows the scope: the portable raster backend records portable
+		// scenes to the shared baseline and platform-dependent scenes per platform;
+		// every GPU backend records per platform. SKIASHARP_GOLDEN_SCOPE
 		// (shared|renderer|platform) overrides this.
-		public static string Record(string rendererName, string sceneName, byte[] rgba, SKImageInfo info)
+		public static string Record(string rendererName, string sceneName, byte[] rgba, SKImageInfo info, bool platformDependent)
 		{
-			var dir = WriteDirectory(rendererName);
+			var dir = WriteDirectory(rendererName, platformDependent);
 			var path = Path.Combine(SourceGoldensRoot, dir, sceneName + ".png");
 			Directory.CreateDirectory(Path.GetDirectoryName(path));
 			File.WriteAllBytes(path, Encode(rgba, info));
@@ -106,22 +129,27 @@ namespace SkiaSharp.Tests.Visual
 
 		// ---- candidate directories ----
 
-		private static IEnumerable<string> ReadCandidates(string rendererName)
+		private static IEnumerable<string> ReadCandidates(string rendererName, bool platformDependent)
 		{
 			yield return rendererName + "." + VisualPlatform.Tag;
 			yield return rendererName;
-			yield return SharedDir;
+			// The shared CPU baseline is only valid for the portable raster backend
+			// drawing a portable scene. GPU backends and platform-dependent scenes
+			// must resolve a renderer/platform golden or be treated as unseeded.
+			if (rendererName == PortableRenderer && !platformDependent)
+				yield return SharedDir;
 		}
 
-		private static string WriteDirectory(string rendererName)
+		private static string WriteDirectory(string rendererName, bool platformDependent)
 		{
 			var scope = (Environment.GetEnvironmentVariable(ScopeEnvVar) ?? "").Trim().ToLowerInvariant();
+			var perPlatform = rendererName + "." + VisualPlatform.Tag;
 			return scope switch
 			{
 				"shared" => SharedDir,
 				"renderer" => rendererName,
-				"platform" => rendererName + "." + VisualPlatform.Tag,
-				_ => rendererName == "raster" ? SharedDir : rendererName + "." + VisualPlatform.Tag,
+				"platform" => perPlatform,
+				_ => rendererName == PortableRenderer && !platformDependent ? SharedDir : perPlatform,
 			};
 		}
 
