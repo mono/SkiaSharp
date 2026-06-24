@@ -100,7 +100,7 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 			{
 				ColorFilter = overdrawFilter
 			};
-			canvas.DrawImage(overdrawImage, 0, 0, filterPaint);
+			canvas.DrawImage(overdrawImage, 0, 0, SKSamplingOptions.Default, filterPaint);
 			canvas.Restore();
 
 			// Draw divider
@@ -160,11 +160,12 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 
 	private void DrawLabel(SKCanvas canvas, string text, float x, float y)
 	{
-		using var font = new SKFont(SampleMedia.Fonts.Default, 16) { Typeface = SampleMedia.Fonts.DefaultBold };
+		using var font = new SKFont(SampleMedia.Fonts.Default, 16);
 		using var textPaint = new SKPaint
 		{
 			IsAntialias = true,
-			Color = SKColors.Black
+			Color = SKColors.Black,
+			FakeBoldText = true
 		};
 		canvas.DrawText(text, x, y, SKTextAlign.Center, font, textPaint);
 	}
