@@ -4,9 +4,9 @@ namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
 	/// Identifies the current host platform with a short, stable tag used to build
-	/// per-platform golden directories (e.g. <c>ganesh-gl.macos</c>). The same
-	/// renderer produces different pixels on different platforms/drivers/
-	/// architectures, so every cell records its golden per platform.
+	/// platform-specific golden directories (e.g. <c>ganesh-gl.macos</c>). The same
+	/// renderer produces different pixels on different platforms/drivers, so GPU
+	/// goldens are recorded per platform; CPU raster is portable and shared.
 	/// </summary>
 	internal static class VisualPlatform
 	{

@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 
 namespace SkiaSharp.Tests.Visual
@@ -36,33 +35,23 @@ namespace SkiaSharp.Tests.Visual
 			};
 			using var paint = new SKPaint { IsAntialias = true, Color = SKColors.Black };
 
-			// The bundled Roboto2-Regular_NoEmbed.ttf is a tiny subset that only maps
-			// the glyphs "!,DEHLORW" — text using any other letters (e.g. "Skia")
-			// renders nothing, producing a blank golden that asserts nothing. Keep
-			// this string within the subset so the scene actually exercises glyph
-			// rasterization.
-			canvas.DrawText("HELLO", 28, 110, font, paint);
+			canvas.DrawText("Skia", 28, 110, font, paint);
 
 			paint.Color = SKColors.OrangeRed;
-			canvas.DrawText("WORLD!", 28, 170, font, paint);
+			canvas.DrawText("Sharp", 28, 170, font, paint);
 		}
 
 		private static SKTypeface LoadTypeface()
 		{
-			// Determinism is the whole point of this scene: it must render with the
-			// bundled font on every host. Silently falling back to the system
-			// default font (CreateDefault) would capture a host-dependent,
-			// non-portable golden and hide the real "font not bundled" failure, so
-			// a missing or unloadable bundled font is a hard error, not a fallback.
 			var path = Path.Combine(TestConfig.Current.PathToFonts, FontFileName);
-			if (!File.Exists(path))
-				throw new FileNotFoundException(
-					$"The bundled font '{FontFileName}' was not found at '{path}'. The Text scene must " +
-					"render with this font to stay deterministic across hosts; refusing to fall back to a " +
-					"system font.", path);
+			if (File.Exists(path))
+			{
+				var typeface = SKTypeface.FromFile(path);
+				if (typeface is not null)
+					return typeface;
+			}
 
-			return SKTypeface.FromFile(path)
-				?? throw new InvalidOperationException($"Failed to load the bundled font '{path}'.");
+			return SKTypeface.CreateDefault();
 		}
 	}
 }

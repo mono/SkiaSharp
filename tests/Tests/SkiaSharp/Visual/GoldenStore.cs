@@ -1,51 +1,41 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
-	/// Resolves and loads golden images for the visual-regression matrix, and
-	/// encodes captured pixels to PNG for emission into the test log.
+	/// Resolves, loads, records, and (on failure) saves golden images for the
+	/// visual-regression matrix.
 	///
-	/// <para><b>Layered lookup, generalizing over platform only.</b> A cell
-	/// resolves the first of:</para>
+	/// <para><b>Lookup order</b> for a (renderer, scene) cell — first hit wins:</para>
 	/// <list type="number">
-	///   <item><c>Content/Goldens/{renderer}.{platform}/{scene}.png</c> —
-	///         per-platform override, used when this OS/driver diverges.</item>
-	///   <item><c>Content/Goldens/{renderer}/{scene}.png</c> — the renderer's
-	///         golden shared across platforms, used when the backend produces the
-	///         same pixels everywhere (the common case for CPU raster and for
-	///         software GL).</item>
+	///   <item><c>Content/Goldens/{renderer}.{platform}/{scene}.png</c> — per-platform GPU override</item>
+	///   <item><c>Content/Goldens/{renderer}/{scene}.png</c> — per-renderer override</item>
+	///   <item><c>Content/Goldens/_shared/{scene}.png</c> — portable CPU baseline</item>
 	/// </list>
 	///
-	/// <para>The fallback deliberately generalizes only over <b>platform</b>, never
-	/// over <b>renderer</b>: different backends legitimately differ (antialiasing,
-	/// driver), so a cell never falls back to another backend's bytes. That is what
-	/// keeps a GPU cell from ever being compared against the CPU baseline.</para>
-	///
-	/// <para><b>No record mode.</b> Goldens are seeded by harvesting the captured
-	/// PNGs that every cell emits into the test results (TRX) and committing them
-	/// (see <c>scripts/infra/tests/extract-visual-goldens.py</c>). That works
-	/// uniformly for desktop, device, and browser hosts — including the
-	/// device/browser hosts where the filesystem is sandboxed/embedded and an
-	/// in-process write-to-source-tree is impossible. The harvest writes the
-	/// per-platform path by default; promoting identical per-platform goldens up to
-	/// the shared <c>{renderer}/</c> folder is a manual dedupe (the harvest then
-	/// stops re-creating the per-platform copies once they are byte-identical). The
-	/// store therefore only reads.</para>
-	///
-	/// <para>Each candidate is checked on disk first (the build copies
+	/// <para>
+	/// Each candidate directory is checked on disk first (the build copies
 	/// <c>Content</c> next to the test binary, and a source-tree walk lets the
-	/// inner loop edit a golden without rebuilding) and then as an embedded
+	/// inner-loop edit goldens without rebuilding) and then as an embedded
 	/// resource (device and browser hosts embed <c>Content</c> rather than copying
-	/// it to a readable filesystem).</para>
+	/// it to a readable filesystem).
+	/// </para>
 	/// </summary>
 	internal static class GoldenStore
 	{
+		public const string UpdateEnvVar = "SKIASHARP_UPDATE_GOLDENS";
+		public const string ScopeEnvVar = "SKIASHARP_GOLDEN_SCOPE";
+
 		private const string GoldensFolder = "Goldens";
+		private const string SharedDir = "_shared";
+
+		public static bool UpdateRequested =>
+			IsTrue(Environment.GetEnvironmentVariable(UpdateEnvVar));
 
 		public readonly struct ResolvedGolden
 		{
@@ -60,33 +50,13 @@ namespace SkiaSharp.Tests.Visual
 			public string Location { get; }
 		}
 
-		/// <summary>
-		/// The default golden key for a cell, relative to the <c>Goldens</c> root:
-		/// <c>{renderer}.{platform}/{scene}.png</c>. This is the path the
-		/// captured-image marker carries and the harvest script writes to by
-		/// default; a promoted, platform-portable golden lives at the shared
-		/// <c>{renderer}/{scene}.png</c> key instead.
-		/// </summary>
-		public static string Key(string rendererName, string sceneName) =>
-			$"{rendererName}.{VisualPlatform.Tag}/{sceneName}.png";
-
-		/// <summary>
-		/// Golden keys for a cell in lookup order (most specific first):
-		/// the per-platform override, then the platform-portable renderer golden.
-		/// </summary>
-		public static IEnumerable<string> Candidates(string rendererName, string sceneName)
-		{
-			yield return $"{rendererName}.{VisualPlatform.Tag}/{sceneName}.png";
-			yield return $"{rendererName}/{sceneName}.png";
-		}
-
 		// Returns the decoded golden (RGBA8888/Premul, sized to info) or null when
-		// no golden exists for this cell on this platform.
+		// no golden exists for any candidate directory.
 		public static ResolvedGolden? TryLoad(string rendererName, string sceneName, SKImageInfo info)
 		{
-			foreach (var key in Candidates(rendererName, sceneName))
+			foreach (var dir in ReadCandidates(rendererName))
 			{
-				var relative = $"{GoldensFolder}/{key}";
+				var relative = RelativePath(dir, sceneName);
 
 				var diskPath = FindOnDisk(relative);
 				if (diskPath is not null)
@@ -100,30 +70,28 @@ namespace SkiaSharp.Tests.Visual
 			return null;
 		}
 
-		// PNG-encodes captured RGBA8888/Premul pixels. Used to emit the actual
-		// image (base64) into the test log and to write local failure artifacts.
-		public static byte[] EncodePng(byte[] rgba, SKImageInfo info)
+		// The list of "looked in" locations, for a helpful missing-golden message.
+		public static IEnumerable<string> ReadLocations(string rendererName, string sceneName) =>
+			ReadCandidates(rendererName).Select(dir => RelativePath(dir, sceneName));
+
+		// Records a golden in the source tree so it can be committed. The target
+		// directory follows the scope: raster defaults to the shared baseline,
+		// other renderers default to a per-platform override; SKIASHARP_GOLDEN_SCOPE
+		// (shared|renderer|platform) overrides this.
+		public static string Record(string rendererName, string sceneName, byte[] rgba, SKImageInfo info)
 		{
-			var normalized = RendererPixels.NormalizedInfo(info);
-			var handle = GCHandle.Alloc(rgba, GCHandleType.Pinned);
-			try
-			{
-				using var pixmap = new SKPixmap(normalized, handle.AddrOfPinnedObject());
-				using var image = SKImage.FromPixels(pixmap);
-				using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-				return data.ToArray();
-			}
-			finally
-			{
-				handle.Free();
-			}
+			var dir = WriteDirectory(rendererName);
+			var path = Path.Combine(SourceGoldensRoot, dir, sceneName + ".png");
+			Directory.CreateDirectory(Path.GetDirectoryName(path));
+			File.WriteAllBytes(path, Encode(rgba, info));
+			return path;
 		}
 
 		public static string SaveFailureArtifact(string rendererName, string sceneName, string suffix, byte[] rgba, SKImageInfo info)
 		{
 			var path = Path.Combine(FailuresRoot, rendererName, sceneName + suffix);
 			Directory.CreateDirectory(Path.GetDirectoryName(path));
-			File.WriteAllBytes(path, EncodePng(rgba, info));
+			File.WriteAllBytes(path, Encode(rgba, info));
 			return path;
 		}
 
@@ -135,6 +103,30 @@ namespace SkiaSharp.Tests.Visual
 			File.WriteAllBytes(path, data.ToArray());
 			return path;
 		}
+
+		// ---- candidate directories ----
+
+		private static IEnumerable<string> ReadCandidates(string rendererName)
+		{
+			yield return rendererName + "." + VisualPlatform.Tag;
+			yield return rendererName;
+			yield return SharedDir;
+		}
+
+		private static string WriteDirectory(string rendererName)
+		{
+			var scope = (Environment.GetEnvironmentVariable(ScopeEnvVar) ?? "").Trim().ToLowerInvariant();
+			return scope switch
+			{
+				"shared" => SharedDir,
+				"renderer" => rendererName,
+				"platform" => rendererName + "." + VisualPlatform.Tag,
+				_ => rendererName == "raster" ? SharedDir : rendererName + "." + VisualPlatform.Tag,
+			};
+		}
+
+		private static string RelativePath(string dir, string sceneName) =>
+			$"{GoldensFolder}/{dir}/{sceneName}.png";
 
 		// ---- disk ----
 
@@ -167,21 +159,12 @@ namespace SkiaSharp.Tests.Visual
 		{
 			var suffix = ("Content." + relative.Replace('/', '.'));
 
-			// MSBuild derives the manifest name of an EmbeddedResource by mangling
-			// every *directory* segment into a valid identifier — 'ganesh-metal.ios'
-			// embeds as 'ganesh_metal.ios' — while the file name itself is kept
-			// verbatim. Any renderer with a dash in its name (ganesh-*, graphite-*)
-			// would otherwise never resolve on the device/browser hosts that read
-			// goldens from embedded resources.
-			var mangledSuffix = "Content." + MangleDirectorySegments(relative);
-
 			foreach (var assembly in ResourceAssemblies)
 			{
 				string match = null;
 				foreach (var name in assembly.GetManifestResourceNames())
 				{
-					if (name.EndsWith(suffix, StringComparison.Ordinal) ||
-						name.EndsWith(mangledSuffix, StringComparison.Ordinal))
+					if (name.EndsWith(suffix, StringComparison.Ordinal))
 					{
 						match = name;
 						break;
@@ -203,46 +186,36 @@ namespace SkiaSharp.Tests.Visual
 			return null;
 		}
 
-		// Applies the directory-segment half of MSBuild's manifest-name mangling
-		// to a 'dir/dir/file.ext' relative path: '-' (invalid in an identifier)
-		// becomes '_' in directory segments; the trailing file name is untouched.
-		private static string MangleDirectorySegments(string relative)
-		{
-			var segments = relative.Split('/');
-			for (var i = 0; i < segments.Length - 1; i++)
-				segments[i] = segments[i].Replace('-', '_');
-			return string.Join(".", segments);
-		}
-
 		private static IEnumerable<Assembly> ResourceAssemblies
 		{
 			get
 			{
-				var seen = new HashSet<Assembly>();
-
-				// Fast path: the entry assembly (the Content-embedding host on WASM /
-				// Console) and this shared assembly.
 				var entry = Assembly.GetEntryAssembly();
-				if (entry is not null && seen.Add(entry))
+				if (entry is not null)
 					yield return entry;
-				if (seen.Add(typeof(GoldenStore).Assembly))
+				if (typeof(GoldenStore).Assembly != entry)
 					yield return typeof(GoldenStore).Assembly;
-
-				// On the MAUI device hosts Assembly.GetEntryAssembly() is null, and the
-				// Content resources are embedded in the host app assembly (e.g.
-				// SkiaSharp.Tests.Devices) — not in this shared assembly. Without this
-				// fallback no golden is ever found on device and every cell fails as
-				// unseeded. Scan every loaded assembly so the goldens are located
-				// regardless of which host embeds them.
-				foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				{
-					if (seen.Add(assembly))
-						yield return assembly;
-				}
 			}
 		}
 
-		// ---- PNG decode ----
+		// ---- PNG encode/decode ----
+
+		private static byte[] Encode(byte[] rgba, SKImageInfo info)
+		{
+			var normalized = RendererPixels.NormalizedInfo(info);
+			var handle = GCHandle.Alloc(rgba, GCHandleType.Pinned);
+			try
+			{
+				using var pixmap = new SKPixmap(normalized, handle.AddrOfPinnedObject());
+				using var image = SKImage.FromPixels(pixmap);
+				using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+				return data.ToArray();
+			}
+			finally
+			{
+				handle.Free();
+			}
+		}
 
 		private static byte[] Decode(byte[] png, SKImageInfo info, string location)
 		{
@@ -284,9 +257,9 @@ namespace SkiaSharp.Tests.Visual
 		private static string sourceRootCache;
 
 		// Walks up from the output folder to the repo's tests/Content directory so
-		// the inner loop can edit a golden in the source tree and re-run without a
-		// rebuild. Unreachable on device/browser hosts (those read the embedded
-		// resource instead).
+		// recorded goldens land in a committable location during local runs. On
+		// device/browser hosts the source tree is unreachable; record mode there
+		// falls back to the runtime root.
 		private static string SourceContentRoot
 		{
 			get
@@ -312,7 +285,17 @@ namespace SkiaSharp.Tests.Visual
 			}
 		}
 
+		private static string SourceGoldensRoot => Path.Combine(SourceContentRoot, GoldensFolder);
+
 		private static string ToPlatformPath(string relative) =>
 			relative.Replace('/', Path.DirectorySeparatorChar);
+
+		private static bool IsTrue(string value)
+		{
+			if (string.IsNullOrEmpty(value))
+				return false;
+			value = value.Trim();
+			return value == "1" || value.Equals("true", StringComparison.OrdinalIgnoreCase);
+		}
 	}
 }

@@ -7,13 +7,8 @@ namespace SkiaSharp.Tests.Visual
 	/// Helpers for reading rendered pixels back into a normalized RGBA8888 /
 	/// premultiplied byte buffer — the canonical format every renderer returns and
 	/// every golden image is compared in.
-	///
-	/// <para>
-	/// Public because renderers in the satellite host projects (Vulkan, Direct3D)
-	/// read their pixels back through the same helper as the shared renderers.
-	/// </para>
 	/// </summary>
-	public static class RendererPixels
+	internal static class RendererPixels
 	{
 		public static readonly SKColorType ColorType = SKColorType.Rgba8888;
 		public static readonly SKAlphaType AlphaType = SKAlphaType.Premul;
