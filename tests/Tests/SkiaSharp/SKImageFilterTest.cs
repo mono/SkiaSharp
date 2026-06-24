@@ -68,17 +68,25 @@ namespace SkiaSharp.Tests
 			var info = new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul);
 
 			using var surface = SKSurface.Create(info);
+			Assert.NotNull(surface);
+
 			using var emptyFilter = SKImageFilter.CreateEmpty();
 			using var paint = new SKPaint
 			{
-				Color = SKColors.Red,
 				ImageFilter = emptyFilter
 			};
 
-			surface.Canvas.DrawRect(new SKRect(10, 10, 50, 50), paint);
+			// Use SaveLayer - image filters are applied to layer content
+			surface.Canvas.SaveLayer(paint);
+			surface.Canvas.Clear(SKColors.Red); // Fill layer with red
+			surface.Canvas.Restore();
 
 			using var image = surface.Snapshot();
+			Assert.NotNull(image);
 			using var pixmap = image.PeekPixels();
+			Assert.NotNull(pixmap);
+		
+			// Empty filter should make the entire layer transparent black
 			var pixel = pixmap.GetPixelColor(32, 32);
 			Assert.Equal(new SKColor(0, 0, 0, 0), pixel);
 		}
