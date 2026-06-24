@@ -184,7 +184,6 @@ Task ("clean-externals")
     .Does (() =>
 {
     CleanDirectories("externals/skia/out");
-    CleanDirectories("externals/skia/xcodebuild");
     CleanDirectories("externals/angle");
     CleanDirectories("output/native");
     CleanDirectories("native/*/*/bin");
