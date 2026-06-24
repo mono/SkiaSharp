@@ -18,6 +18,34 @@ parameters:
 
 stages:
 
+    - stage: api_diff
+      displayName: API Diff
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: package
+      jobs:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # API Diff
+          parameters:
+            name: api_diff_windows
+            displayName: API Diff
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: docs-api-diff
+            cacheJob: managed/package/api_diff
+            enableCaching: ${{ parameters.enableCaching }}
+            additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
+            shouldPublish: false
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
+            preBuildSteps:
+              - pwsh: .\scripts\infra\managed\install-gtk.ps1
+                displayName: Install GTK# 2.12
+            publishArtifacts:
+              - name: api-diff
+                always: true
+                path: '$(Build.SourcesDirectory)\output\api-diff'
+
     - stage: managed
       displayName: Build Managed
       ${{ if eq(parameters.isSplitPipeline, 'true') }}:
@@ -96,9 +124,6 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
-                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Framework test results
                 condition: always()
@@ -122,8 +147,8 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: ./scripts/infra/tests/collect-visual-failures.ps1
+                displayName: Collect visual-regression failure images
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -150,8 +175,8 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: ./scripts/infra/tests/collect-visual-failures.ps1
+                displayName: Collect visual-regression failure images
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -201,8 +226,8 @@ stages:
                   echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                 displayName: Start Xvfb and select software GPU (visual tests)
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: ./scripts/infra/tests/collect-visual-failures.ps1
+                displayName: Collect visual-regression failure images
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -245,9 +270,6 @@ stages:
               - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
                 displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
-                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the Android test results
                 condition: always()
@@ -269,10 +291,9 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
-                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the iOS test results
                 condition: always()
@@ -296,10 +317,9 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
-                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the Mac Catalyst test results
                 condition: always()
@@ -326,9 +346,6 @@ stages:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
-                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the WASM test results
                 condition: always()
@@ -338,36 +355,6 @@ stages:
                   testRunTitle: 'Linux WASM Tests'
             publishArtifacts:
               - name: testlogs_wasm
-                always: true
-                path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests [WASM Preview] (Linux)
-          parameters:
-            # Runs the SkiaSharp.Tests.Wasm suite as the preview .NET (tests only — the rest of CI
-            # stays on net10) so WASM regressions on the newer runtime, such as an exception-handling
-            # mismatch in the native lib, fail CI. installPreviewSdk provisions the preview SDK +
-            # wasm-tools workload (which bundles the matching emscripten) and pins global.json to it.
-            name: tests_wasm_preview_linux
-            displayName: WASM Preview (Linux)
-            buildAgent: ${{ parameters.buildAgentLinux }}
-            packages: $(MANAGED_LINUX_PACKAGES) ninja-build
-            target: tests-wasm
-            additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
-            installAndroidSdk: false
-            shouldPublish: false
-            installPreviewSdk: true
-            previewWorkloads: wasm-tools,android
-            requiredArtifacts:
-              - name: native
-            postBuildSteps:
-              - task: PublishTestResults@2
-                displayName: Publish the WASM preview test results
-                condition: always()
-                inputs:
-                  testResultsFormat: VSTest
-                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
-                  testRunTitle: 'Linux WASM Preview Tests'
-            publishArtifacts:
-              - name: testlogs_wasm_preview
                 always: true
                 path: 'output/logs/testlogs'
         # TODO: add tests for linux alpine
@@ -435,6 +422,8 @@ stages:
             requiredArtifacts:
               - name: nuget
                 dir: nugets
+            preBuildSteps:
+              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
           parameters:
             name: samples_linux
