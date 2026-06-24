@@ -28,8 +28,12 @@ namespace SkiaSharp.Tests.Visual
 			MaxOutlierFraction = maxOutlierFraction;
 		}
 
-		// Deterministic CPU raster: rides out at most 1-bit rounding, no outliers.
-		public static readonly GoldenTolerance Deterministic = new(1, 0.0);
+		// CPU raster is bit-deterministic on a single platform, but the portable
+		// _shared baseline is compared across desktop architectures (recorded on
+		// one, replayed on x64/arm64). Allow a 2-LSB per-channel wobble on a tiny
+		// fraction of pixels to absorb cross-architecture antialiasing rounding;
+		// a real regression moves far more than that.
+		public static readonly GoldenTolerance Deterministic = new(2, 0.002);
 
 		// Hardware/driver GPU output: absorbs antialiasing and rounding variance.
 		public static readonly GoldenTolerance Gpu = new(12, 0.02);
