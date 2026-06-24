@@ -123,6 +123,11 @@ Task ("tests-wasm")
     .IsDependentOn ("externals-wasm")
     .Does (() => RunCake ("./scripts/infra/tests/tests-wasm.cake", "Default"));
 
+Task ("tests-visual")
+    .Description ("Run the cross-backend visual-regression matrix (desktop Console host).")
+    .IsDependentOn ("externals")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-visual.cake", "Default"));
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - pack NuGet packages (isolated via RunCake)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
