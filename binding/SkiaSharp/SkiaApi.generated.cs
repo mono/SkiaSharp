@@ -7735,6 +7735,25 @@ namespace SkiaSharp
 			(sk_imagefilter_new_drop_shadow_only_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow_only> ("sk_imagefilter_new_drop_shadow_only")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
 		#endif
 
+		// sk_imagefilter_t* sk_imagefilter_new_empty()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_empty ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_empty ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_empty ();
+		}
+		private static Delegates.sk_imagefilter_new_empty sk_imagefilter_new_empty_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_empty () =>
+			(sk_imagefilter_new_empty_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_empty> ("sk_imagefilter_new_empty")).Invoke ();
+		#endif
+
 		// sk_imagefilter_t* sk_imagefilter_new_erode(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
