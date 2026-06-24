@@ -14,12 +14,13 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 	public override DateOnly? DateAdded => new DateOnly(2026, 6, 23);
 
 	public override string Description =>
-		"Visualize overdraw (how many times each pixel is drawn) using a color-coded heat map. " +
-		"Useful for identifying rendering performance bottlenecks.";
+		"Demonstrates overdraw visualization using SKOverdrawCanvas (tracks draw counts in alpha) " +
+		"and SKColorFilter.CreateOverdraw() (converts alpha to color heat map).";
 
 	public override IReadOnlyList<string> ApiTags =>
 	[
 		"SKColorFilter", "SKColorFilter.CreateOverdraw",
+		"SKOverdrawCanvas",
 		"SKCanvas", "SKCanvas.DrawRect", "SKCanvas.DrawCircle",
 		"SKPaint", "SKColor",
 	];
@@ -28,8 +29,8 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new ToggleControl("visualize", "Show Overdraw", visualizeOverdraw,
-			Description: "Toggle between normal rendering and overdraw visualization."),
+		new ToggleControl("visualize", "Side-by-Side", visualizeOverdraw,
+			Description: "Show normal rendering vs overdraw visualization side-by-side."),
 	];
 
 	protected override void OnControlChanged(string id, object value)
@@ -60,42 +61,62 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 		using var paint = new SKPaint
 		{
 			IsAntialias = true,
-			Color = SKColors.White
+			Color = new SKColor(0xFF4285F4) // Blue for normal rendering
 		};
 
 		if (visualizeOverdraw)
 		{
-			// Create an offscreen surface to capture overdraw information
-			var info = new SKImageInfo(width, height);
+			// Side-by-side comparison
+			var halfWidth = width / 2;
+
+			// Left side: Normal rendering
+			canvas.Save();
+			canvas.ClipRect(new SKRect(0, 0, halfWidth, height));
+			DrawShapes(canvas, halfWidth, height, paint);
+			canvas.Restore();
+
+			// Right side: Overdraw visualization
+			canvas.Save();
+			canvas.Translate(halfWidth, 0);
+			canvas.ClipRect(new SKRect(0, 0, halfWidth, height));
+			
+			// Step 1: Create offscreen surface
+			var info = new SKImageInfo(halfWidth, height);
 			using var overdrawSurface = SKSurface.Create(info);
 			using var overdrawCanvasWrapper = overdrawSurface.Canvas;
 			overdrawCanvasWrapper.Clear(SKColors.Transparent);
 
-			// Wrap in SKOverdrawCanvas - this tracks draw counts in alpha channel
+			// Step 2: Wrap in SKOverdrawCanvas - tracks draw counts in alpha
 			using var overdrawCanvas = new SKOverdrawCanvas(overdrawCanvasWrapper);
 
-			// Draw overlapping shapes to the overdraw canvas
-			DrawShapes(overdrawCanvas, width, height, paint);
+			// Step 3: Draw shapes (writes counts to alpha channel)
+			paint.Color = SKColors.White; // Alpha tracking doesn't use color
+			DrawShapes(overdrawCanvas, halfWidth, height, paint);
 
-			// Now apply the overdraw color filter to visualize
+			// Step 4: Apply color filter to convert alpha to colors
 			using var overdrawImage = overdrawSurface.Snapshot();
 			using var filterPaint = new SKPaint
 			{
 				ColorFilter = SKColorFilter.CreateOverdraw(overdrawColors)
 			};
 			canvas.DrawImage(overdrawImage, 0, 0, filterPaint);
+			canvas.Restore();
+
+			// Draw divider
+			using var dividerPaint = new SKPaint { Color = SKColors.Gray, StrokeWidth = 2 };
+			canvas.DrawLine(halfWidth, 0, halfWidth, height, dividerPaint);
+
+			// Draw labels
+			DrawLabel(canvas, "Normal", halfWidth / 2, 20);
+			DrawLabel(canvas, "Overdraw", halfWidth + halfWidth / 2, 20);
+
+			// Draw legend at bottom
+			DrawLegend(canvas, width, height, overdrawColors);
 		}
 		else
 		{
-			// Normal rendering - use a visible color
-			paint.Color = new SKColor(0xFF4285F4);
+			// Single view: just show normal rendering
 			DrawShapes(canvas, width, height, paint);
-		}
-
-		// Draw legend if visualizing overdraw
-		if (visualizeOverdraw)
-		{
-			DrawLegend(canvas, width, height, overdrawColors);
 		}
 	}
 
@@ -134,6 +155,17 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 		{
 			canvas.DrawCircle(x, y, circleRadius, paint);
 		}
+	}
+
+	private void DrawLabel(SKCanvas canvas, string text, float x, float y)
+	{
+		using var font = new SKFont(SampleMedia.Fonts.Default, 16) { Typeface = SampleMedia.Fonts.DefaultBold };
+		using var textPaint = new SKPaint
+		{
+			IsAntialias = true,
+			Color = SKColors.Black
+		};
+		canvas.DrawText(text, x, y, SKTextAlign.Center, font, textPaint);
 	}
 
 	private void DrawLegend(SKCanvas canvas, int width, int height, SKColor[] colors)
