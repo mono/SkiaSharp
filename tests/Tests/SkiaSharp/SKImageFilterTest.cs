@@ -103,5 +103,104 @@ namespace SkiaSharp.Tests
 			using var emptyFilter = SKImageFilter.CreateEmpty();
 			Assert.Equal(SKColors.Blue, RenderCenterPixel(emptyFilter));
 		}
+
+		[Fact]
+		public void CropFilterReturnsNonNull()
+		{
+			var rect = new SKRect(10, 10, 100, 100);
+			using var filter = SKImageFilter.CreateCrop(rect);
+			Assert.NotNull(filter);
+		}
+
+		[Fact]
+		public void CropFilterWithTileModeReturnsNonNull()
+		{
+			var rect = new SKRect(10, 10, 100, 100);
+			using var filter = SKImageFilter.CreateCrop(rect, SKShaderTileMode.Clamp);
+			Assert.NotNull(filter);
+		}
+
+		[Fact]
+		public void CropFilterAcceptsNullInput()
+		{
+			var rect = new SKRect(10, 10, 100, 100);
+			using var filter = SKImageFilter.CreateCrop(rect, SKShaderTileMode.Decal, null);
+			Assert.NotNull(filter);
+		}
+
+		[Fact]
+		public void CropFilterComposesWithBlur()
+		{
+			using var blur = SKImageFilter.CreateBlur(5, 5);
+			var rect = new SKRect(10, 10, 100, 100);
+			using var crop = SKImageFilter.CreateCrop(rect, SKShaderTileMode.Decal, blur);
+			Assert.NotNull(crop);
+		}
+
+		[Fact]
+		public void CropFilterWithDifferentTileModes()
+		{
+			using var bitmap = new SKBitmap(200, 200);
+			using var canvas = new SKCanvas(bitmap);
+			using var paint = new SKPaint();
+	
+			var cropRect = new SKRect(50, 50, 150, 150);
+	
+			// Test Decal mode - outside crop rect should be transparent (background color preserved)
+			canvas.Clear(SKColors.Blue);
+			using (var decal = SKImageFilter.CreateCrop(cropRect, SKShaderTileMode.Decal, null))
+			{
+				paint.ImageFilter = decal;
+				paint.Color = SKColors.Red;
+				canvas.DrawRect(new SKRect(0, 0, 200, 200), paint);
+			}
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(10, 10)); // Outside = blue (Decal transparency)
+			Assert.Equal(SKColors.Red, bitmap.GetPixel(100, 100)); // Inside = red
+	
+			// Test Clamp mode - edges should extend beyond crop rect
+			canvas.Clear(SKColors.Blue);
+			using (var clamp = SKImageFilter.CreateCrop(cropRect, SKShaderTileMode.Clamp, null))
+			{
+				paint.ImageFilter = clamp;
+				paint.Color = SKColors.Green;
+				canvas.DrawRect(new SKRect(0, 0, 200, 200), paint);
+			}
+			Assert.Equal(SKColors.Green, bitmap.GetPixel(10, 10)); // Outside = green (Clamp extends)
+			Assert.Equal(SKColors.Green, bitmap.GetPixel(100, 100)); // Inside = green
+	
+			// Test Repeat mode - creates non-null filter
+			using var repeat = SKImageFilter.CreateCrop(cropRect, SKShaderTileMode.Repeat, null);
+			Assert.NotNull(repeat);
+	
+			// Test Mirror mode - creates non-null filter
+			using var mirror = SKImageFilter.CreateCrop(cropRect, SKShaderTileMode.Mirror, null);
+			Assert.NotNull(mirror);
+		}
+
+		[Fact]
+		public void CropFilterRendersCorrectly()
+		{
+			using var bitmap = new SKBitmap(200, 200);
+			using var canvas = new SKCanvas(bitmap);
+			using var paint = new SKPaint();
+	
+			canvas.Clear(SKColors.White);
+	
+			// Create a crop rect that only includes the center 100x100 area
+			var cropRect = new SKRect(50, 50, 150, 150);
+			using var crop = SKImageFilter.CreateCrop(cropRect, SKShaderTileMode.Decal, null);
+			paint.ImageFilter = crop;
+			paint.Color = SKColors.Red;
+	
+			// Draw a large rect, but it should be cropped
+			canvas.DrawRect(new SKRect(0, 0, 200, 200), paint);
+	
+			// Check that pixels outside the crop rect are white (transparent/not drawn)
+			Assert.Equal(SKColors.White, bitmap.GetPixel(25, 25));  // Top-left, outside crop
+			Assert.Equal(SKColors.White, bitmap.GetPixel(175, 175));  // Bottom-right, outside crop
+	
+			// Pixels inside the crop rect should be red
+			Assert.Equal(SKColors.Red, bitmap.GetPixel(100, 100));  // Center, inside crop
+		}
 	}
 }
