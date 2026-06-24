@@ -29,10 +29,11 @@ namespace SkiaSharp.Tests.Visual
 		}
 
 		// CPU raster is bit-deterministic on a single platform, but the portable
-		// _shared baseline is compared across desktop architectures (recorded on
-		// one, replayed on x64/arm64). Allow a 2-LSB per-channel wobble on a tiny
-		// fraction of pixels to absorb cross-architecture antialiasing rounding;
-		// a real regression moves far more than that.
+		// shared raster golden (the {renderer}/ layer) is compared across desktop
+		// architectures (captured on one, replayed on x64/arm64). Allow a 2-LSB
+		// per-channel wobble on a tiny fraction of pixels to absorb
+		// cross-architecture antialiasing rounding; a real regression moves far
+		// more than that.
 		public static readonly GoldenTolerance Deterministic = new(2, 0.002);
 
 		// Hardware/driver GPU output: absorbs antialiasing and rounding variance.
