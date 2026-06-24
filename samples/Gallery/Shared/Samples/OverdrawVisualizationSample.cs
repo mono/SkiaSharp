@@ -79,27 +79,23 @@ public class OverdrawVisualizationSample : CanvasSampleBase
 			canvas.Save();
 			canvas.Translate(halfWidth, 0);
 			canvas.ClipRect(new SKRect(0, 0, halfWidth, height));
-			
-			// Step 1: Create offscreen surface
+		
+			// Create offscreen surface to capture overdraw counts in alpha channel
+			// (Required: SKOverdrawCanvas writes to alpha, then we apply the color filter)
 			var info = new SKImageInfo(halfWidth, height);
 			using var overdrawSurface = SKSurface.Create(info);
-			using var overdrawCanvasWrapper = overdrawSurface.Canvas;
-			overdrawCanvasWrapper.Clear(SKColors.Transparent);
+			var offscreenCanvas = overdrawSurface.Canvas;
+			offscreenCanvas.Clear(SKColors.Transparent);
 
-			// Step 2: Wrap in SKOverdrawCanvas - tracks draw counts in alpha
-			using var overdrawCanvas = new SKOverdrawCanvas(overdrawCanvasWrapper);
-
-			// Step 3: Draw shapes (writes counts to alpha channel)
-			paint.Color = SKColors.White; // Alpha tracking doesn't use color
+			// Wrap in SKOverdrawCanvas to track draw counts
+			using var overdrawCanvas = new SKOverdrawCanvas(offscreenCanvas);
+			paint.Color = SKColors.White;
 			DrawShapes(overdrawCanvas, halfWidth, height, paint);
 
-			// Step 4: Apply color filter to convert alpha to colors
+			// Apply color filter to convert alpha counts to colors
 			using var overdrawImage = overdrawSurface.Snapshot();
 			using var overdrawFilter = SKColorFilter.CreateOverdraw(overdrawColors);
-			using var filterPaint = new SKPaint
-			{
-				ColorFilter = overdrawFilter
-			};
+			using var filterPaint = new SKPaint { ColorFilter = overdrawFilter };
 			canvas.DrawImage(overdrawImage, 0, 0, SKSamplingOptions.Default, filterPaint);
 			canvas.Restore();
 
