@@ -760,21 +760,30 @@ namespace SkiaSharp
 			var count = src.Length;
 			float tx = transX, ty = transY;
 			var trans = new Vector4 (tx, ty, tx, ty);
-			var pairs = count >> 1;
 
+			// Mirrors Skia's Trans_pts: a scalar lead-in for the odd point, then
+			// one pair, then the main loop of two float4 (four points) per iteration.
 			fixed (SKPoint* sp = src)
 			fixed (SKPoint* dp = dst) {
 				var s = (float*)sp;
 				var d = (float*)dp;
-				for (var i = 0; i < pairs; i++) {
-					var o = i << 2;
-					*(Vector4*)(d + o) = *(Vector4*)(s + o) + trans;
+				var n = count;
+				if ((n & 1) != 0) {
+					d[0] = s[0] + tx;
+					d[1] = s[1] + ty;
+					s += 2; d += 2;
 				}
-			}
-
-			if ((count & 1) != 0) {
-				var p = src[count - 1];
-				dst[count - 1] = new SKPoint (p.X + tx, p.Y + ty);
+				n >>= 1;
+				if ((n & 1) != 0) {
+					*(Vector4*)d = *(Vector4*)s + trans;
+					s += 4; d += 4;
+				}
+				n >>= 1;
+				for (var i = 0; i < n; i++) {
+					*(Vector4*)(d + 0) = *(Vector4*)(s + 0) + trans;
+					*(Vector4*)(d + 4) = *(Vector4*)(s + 4) + trans;
+					s += 8; d += 8;
+				}
 			}
 		}
 
@@ -784,21 +793,30 @@ namespace SkiaSharp
 			float sx = scaleX, sy = scaleY, tx = transX, ty = transY;
 			var scale = new Vector4 (sx, sy, sx, sy);
 			var trans = new Vector4 (tx, ty, tx, ty);
-			var pairs = count >> 1;
 
+			// Mirrors Skia's Scale_pts: scalar lead-in, then one pair, then four
+			// points (two float4) per iteration so the multiplies pipeline.
 			fixed (SKPoint* sp = src)
 			fixed (SKPoint* dp = dst) {
 				var s = (float*)sp;
 				var d = (float*)dp;
-				for (var i = 0; i < pairs; i++) {
-					var o = i << 2;
-					*(Vector4*)(d + o) = *(Vector4*)(s + o) * scale + trans;
+				var n = count;
+				if ((n & 1) != 0) {
+					d[0] = s[0] * sx + tx;
+					d[1] = s[1] * sy + ty;
+					s += 2; d += 2;
 				}
-			}
-
-			if ((count & 1) != 0) {
-				var p = src[count - 1];
-				dst[count - 1] = new SKPoint (p.X * sx + tx, p.Y * sy + ty);
+				n >>= 1;
+				if ((n & 1) != 0) {
+					*(Vector4*)d = *(Vector4*)s * scale + trans;
+					s += 4; d += 4;
+				}
+				n >>= 1;
+				for (var i = 0; i < n; i++) {
+					*(Vector4*)(d + 0) = *(Vector4*)(s + 0) * scale + trans;
+					*(Vector4*)(d + 4) = *(Vector4*)(s + 4) * scale + trans;
+					s += 8; d += 8;
+				}
 			}
 		}
 
