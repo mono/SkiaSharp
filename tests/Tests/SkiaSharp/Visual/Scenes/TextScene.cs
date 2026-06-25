@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace SkiaSharp.Tests.Visual
@@ -43,15 +44,20 @@ namespace SkiaSharp.Tests.Visual
 
 		private static SKTypeface LoadTypeface()
 		{
+			// Determinism is the whole point of this scene: it must render with the
+			// bundled font on every host. Silently falling back to the system
+			// default font (CreateDefault) would capture a host-dependent,
+			// non-portable golden and hide the real "font not bundled" failure, so
+			// a missing or unloadable bundled font is a hard error, not a fallback.
 			var path = Path.Combine(TestConfig.Current.PathToFonts, FontFileName);
-			if (File.Exists(path))
-			{
-				var typeface = SKTypeface.FromFile(path);
-				if (typeface is not null)
-					return typeface;
-			}
+			if (!File.Exists(path))
+				throw new FileNotFoundException(
+					$"The bundled font '{FontFileName}' was not found at '{path}'. The Text scene must " +
+					"render with this font to stay deterministic across hosts; refusing to fall back to a " +
+					"system font.", path);
 
-			return SKTypeface.CreateDefault();
+			return SKTypeface.FromFile(path)
+				?? throw new InvalidOperationException($"Failed to load the bundled font '{path}'.");
 		}
 	}
 }

@@ -219,7 +219,10 @@ namespace SkiaSharp.Extended
 			using var secondPixmap = secondBitmap.PeekPixels();
 			var secondPixels = secondPixmap.GetPixelSpan<SKColor>();
 
-			var diffBitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888));
+			// SKImage.FromBitmap snapshots (copies) a mutable bitmap's pixels, so the
+			// bitmap can be disposed once the image is created — dispose it here to
+			// avoid leaking the native SKBitmap on every failed comparison.
+			using var diffBitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888));
 			using var diffPixmap = diffBitmap.PeekPixels();
 			var diffPixels = diffPixmap.GetPixelSpan<SKColor>();
 
