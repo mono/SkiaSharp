@@ -38,8 +38,15 @@ $ErrorActionPreference = "Stop"
 # ---------------------------------------------------------------------------
 $SkillRoot = Split-Path $PSScriptRoot -Parent
 $RepoRoot  = (Resolve-Path (Join-Path $PSScriptRoot "../../../..")).Path
-$DocsRoot  = Join-Path $RepoRoot "docs/SkiaSharpAPI"
 $DocsSub   = Join-Path $RepoRoot "docs"
+# $DocsGit is the git repo used for baselines/diffs; $DocsRoot is where the .xml
+# files live. Both default to the in-repo submodule layout, but can be overridden
+# so the tool works when the docs repo is the *primary* checkout (e.g. the gh-aw
+# auto-api-docs-writer sandbox clones SkiaSharp as a secondary repo and downloads
+# the docs separately). Keeping $RepoRoot pointed at the SkiaSharp clone is what
+# lets source lookups (binding/) keep working while docs come from elsewhere.
+$DocsGit   = if ($env:DOCS_GIT_ROOT) { (Resolve-Path $env:DOCS_GIT_ROOT).Path } else { $DocsSub }
+$DocsRoot  = if ($env:DOCS_DIR) { (Resolve-Path $env:DOCS_DIR).Path } else { Join-Path $DocsSub "SkiaSharpAPI" }
 $AliasFile = Join-Path $SkillRoot "assets/scope-aliases.yml"
 $ObsFile   = Join-Path $SkillRoot "references/obsolete-api-map.md"
 
@@ -79,7 +86,7 @@ function Get-RelToRepo([string]$absPath) {
 
 function Get-RelToDocs([string]$absPath) {
     $full = (Resolve-Path $absPath).Path
-    return $full.Substring($DocsSub.Length).TrimStart('/', '\') -replace '\\', '/'
+    return $full.Substring($DocsGit.Length).TrimStart('/', '\') -replace '\\', '/'
 }
 
 # Best-effort C# source path for a docs xml file.
@@ -170,10 +177,10 @@ function Get-ScopeFiles([string]$sel) {
         '^(new|changed)$' {
             $base = $env:DOCS_REVIEW_BASE
             if (-not $base) { $base = "origin/main" }
-            $diff = & git -C $DocsSub diff --name-only --diff-filter=ACM "$base...HEAD" 2>$null
-            if (-not $diff) { $diff = & git -C $DocsSub diff --name-only --diff-filter=ACM 2>$null }
+            $diff = & git -C $DocsGit diff --name-only --diff-filter=ACM "$base...HEAD" 2>$null
+            if (-not $diff) { $diff = & git -C $DocsGit diff --name-only --diff-filter=ACM 2>$null }
             $files = foreach ($d in $diff) {
-                $abs = Join-Path $DocsSub $d
+                $abs = Join-Path $DocsGit $d
                 if ($d -match '\.xml$' -and (Test-Path $abs) -and -not (Test-IsGenerated $abs)) { Get-Item $abs }
             }
             break
@@ -412,7 +419,7 @@ function Validate-File([string]$xmlPath) {
     catch { Write-Host "VALIDATE | FAIL | $rel | not well-formed: $($_.Exception.Message)"; return $false }
 
     $docsRel = Get-RelToDocs $xmlPath
-    $baseRaw = & git -C $DocsSub show "HEAD:$docsRel" 2>$null
+    $baseRaw = & git -C $DocsGit show "HEAD:$docsRel" 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $baseRaw) {
         Write-Host "VALIDATE | OK | $rel | new file (well-formed; no baseline)"
         return $true
