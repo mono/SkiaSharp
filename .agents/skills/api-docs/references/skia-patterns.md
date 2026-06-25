@@ -98,33 +98,18 @@ Most SkiaSharp objects are owned by the caller and must be disposed (`using`). B
 
 ## Obsolete APIs (Legacy Text Rendering)
 
-Some members are marked `[Obsolete("...", error: true)]`. Because `error: true` makes them a **compile error**, any code example using them is broken. The extract JSON surfaces these in an `obsolete` field — never use a flagged member in an example or recommend it.
+Some members are marked `[Obsolete("...", error: true)]`. Because `error: true` makes them a **compile
+error**, any code example using them is broken — never use a flagged member in an example or recommend it.
 
-The most common trap is text rendering, which moved off `SKPaint` onto `SKFont`. These `SKPaint` properties are obsolete:
+The full obsolete→replacement table is the canonical, machine-parseable list in
+[`obsolete-api-map.md`](obsolete-api-map.md) (the deterministic linter and the writer/example agents both
+read it). The dominant trap is **text rendering, which moved off `SKPaint` onto `SKFont`** (e.g.
+`SKPaint.TextSize` → `SKFont.Size`, and `SKCanvas.DrawText(string,float,float,SKPaint)` → the `SKFont`
+overload). See that file for the modern example and the complete row set.
 
-| Obsolete `SKPaint` member | Modern replacement |
-|---------------------------|--------------------|
-| `TextSize` | `SKFont.Size` |
-| `TextScaleX` | `SKFont.ScaleX` |
-| `TextSkewX` | `SKFont.SkewX` |
-| `Typeface` | `SKFont.Typeface` |
-| `SubpixelText` | `SKFont.Subpixel` |
-| `LcdRenderText` | `SKFont.Edging` |
-| `HintingLevel` | `SKFont.Hinting` |
-| `FakeBoldText` | `SKFont.Embolden` |
-| `TextAlign` | pass `SKTextAlign` to the draw overload |
-| `TextEncoding` | use the `SKTextEncoding` draw overloads |
-
-The old `SKCanvas.DrawText(string, float, float, SKPaint)` (and its `SKPoint` form) are also obsolete. Use an overload that takes an `SKFont`:
-
-```csharp
-using var typeface = SKTypeface.FromFamilyName("Arial");
-using var font = new SKFont(typeface, 24);
-using var paint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
-canvas.DrawText("Hello", 10, 40, SKTextAlign.Left, font, paint);
-```
-
-When documenting one of these obsolete members itself, still write a factual summary — the `[Obsolete]` attribute already carries the deprecation warning; the doc should not invent compile-failing examples around it.
+When documenting one of these obsolete members itself, still write a factual summary — the `[Obsolete]`
+attribute already carries the deprecation warning; the doc should not invent compile-failing examples
+around it.
 
 ## API Surface Verification
 

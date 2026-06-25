@@ -1,0 +1,122 @@
+# Curated semantic scope groups for `group:<name>` selectors.
+#
+# Consumed by `docs-tool.ps1 resolve-scope group:<name>`. Each entry is a list of TYPE names
+# (without the `.xml` extension). The resolver expands these against the real files under
+# `docs/SkiaSharpAPI/` — names with no matching file are skipped with a warning (so an
+# aspirational entry never breaks a run). Groups are intentionally broad and may overlap;
+# `group:` is a fuzzy selector, so the resolver prints the resolved set and asks for
+# confirmation before any agent runs (`-Confirm:$false` to skip in CI).
+#
+# Keep groups task-shaped ("everything you'd review when working on text"), not strictly
+# namespace-shaped — that is what makes "do the font things" work as a single scope.
+
+text: &text
+  # Text + font rendering. The highest-value review slice (legacy text API moved to SKFont).
+  - SKFont
+  - SKFontManager
+  - SKFontMetrics
+  - SKFontStyle
+  - SKFontStyleSet
+  - SKFontStyleWeight
+  - SKFontStyleWidth
+  - SKFontStyleSlant
+  - SKFontScanner
+  - SKFontArguments
+  - SKTypeface
+  - SKTypefaceFontProvider
+  - SKTextBlob
+  - SKTextBlobBuilder
+  - SKTextAlign
+  - SKTextEncoding
+  - SKPaint        # carries the obsolete legacy-text surface
+  - SKCanvas       # DrawText overloads
+
+font: *text         # alias
+
+color:
+  - SKColor
+  - SKColorF
+  - SKColors
+  - SKColorFilter
+  - SKColorSpace
+  - SKColorSpaceXyz
+  - SKColorSpaceTransferFn
+  - SKColorSpacePrimaries
+  - SKColorType
+  - SKColorChannel
+  - SKPMColor
+  - SKAlphaType
+
+geometry:
+  - SKPath
+  - SKPathEffect
+  - SKPathMeasure
+  - SKRect
+  - SKRectI
+  - SKPoint
+  - SKPointI
+  - SKPoint3
+  - SKSize
+  - SKSizeI
+  - SKMatrix
+  - SKMatrix44
+  - SKRoundRect
+  - SKRegion
+
+image:
+  - SKImage
+  - SKBitmap
+  - SKPixmap
+  - SKImageInfo
+  - SKImageFilter
+  - SKCodec
+  - SKEncodedImageFormat
+  - SKEncodedOrigin
+  - SKPngEncoderOptions
+  - SKJpegEncoderOptions
+  - SKWebpEncoderOptions
+
+shading:
+  - SKShader
+  - SKColorFilter
+  - SKImageFilter
+  - SKMaskFilter
+  - SKBlendMode
+  - SKPaint
+  - SKRuntimeEffect
+  - SKRuntimeEffectUniforms
+
+surface:
+  - SKSurface
+  - SKCanvas
+  - SKPicture
+  - SKPictureRecorder
+  - SKNWayCanvas
+  - SKOverdrawCanvas
+  - SKSurfaceProperties
+
+gpu:
+  # GR* GPU backend types (names vary by milestone; resolver skips missing).
+  - GRContext
+  - GRBackendTexture
+  - GRBackendRenderTarget
+  - GRGlInterface
+  - GRGlFramebufferInfo
+  - GRGlTextureInfo
+  - GRVkBackendContext
+  - GRVkImageInfo
+  - GRRecordingContext
+  - GRBackendContext
+
+harfbuzz:
+  # Whole HarfBuzzSharp namespace — the resolver also accepts `ns:HarfBuzzSharp`.
+  - Blob
+  - Buffer
+  - Face
+  - Font
+  - Language
+  - Script
+  - Feature
+  - GlyphInfo
+  - GlyphPosition
+  - UnicodeFunctions

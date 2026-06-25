@@ -1,0 +1,118 @@
+<Type Name="SampleWidget" FullName="Sample.SampleWidget">
+  <TypeSignature Language="C#" Value="public class SampleWidget" />
+  <TypeSignature Language="DocId" Value="T:Sample.SampleWidget" />
+  <AssemblyInfo>
+    <AssemblyName>Sample</AssemblyName>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Object</BaseTypeName>
+  </Base>
+  <Docs>
+    <summary>Represents a sample widget used only by the documentation eval harness.</summary>
+    <remarks>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+A widget combines a font and a size to render text. The default rendering uses
+the value provided to <xref:Sample.SampleWidget.Width>.
+
+## Examples
+
+The following example creates a widget and configures the font size:
+
+```csharp
+using var font = new SKFont();
+font.Size = 24;
+
+var widget = new SampleWidget();
+widget.Render(font);
+```
+]]></format>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="Width">
+      <MemberSignature Language="C#" Value="public float Width { get; set; }" />
+      <MemberSignature Language="DocId" Value="P:Sample.SampleWidget.Width" />
+      <MemberType>Property</MemberType>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets or sets the width of the widget.</summary>
+        <value>The width, in pixels. The default value is 1.</value>
+        <remarks>Set this before calling <see cref="M:Sample.SampleWidget.Render(Sample.SampleFont)" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsReady">
+      <MemberSignature Language="C#" Value="public bool IsReady { get; }" />
+      <MemberSignature Language="DocId" Value="P:Sample.SampleWidget.IsReady" />
+      <MemberType>Property</MemberType>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether the widget is ready to render.</summary>
+        <value>
+          <see langword="true" /> if the widget is ready; otherwise, <see langword="false" />.</value>
+        <remarks>This value becomes <see langword="true" /> after the first render.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Measure">
+      <MemberSignature Language="C#" Value="public float Measure (string text);" />
+      <MemberSignature Language="DocId" Value="M:Sample.SampleWidget.Measure(System.String)" />
+      <MemberType>Method</MemberType>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to measure.</param>
+        <summary>Measures the width of the specified text.</summary>
+        <returns>The width of the text, in pixels.</returns>
+        <remarks>The widget reports the value in device-independent units.</remarks>
+      </Docs>
+    </Member>
+    <MemberGroup MemberName="Render">
+      <AssemblyInfo>
+        <AssemblyName>Sample</AssemblyName>
+      </AssemblyInfo>
+      <Docs>
+        <summary>Renders the widget using the supplied font.</summary>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Examples
+
+```csharp
+using var font = new SKFont();
+font.Size = 32;
+font.Embolden = true;
+
+var widget = new SampleWidget();
+widget.Render(font);
+```
+]]></format>
+        </remarks>
+      </Docs>
+    </MemberGroup>
+    <Member MemberName="Render">
+      <MemberSignature Language="C#" Value="public void Render (Sample.SampleFont font);" />
+      <MemberSignature Language="DocId" Value="M:Sample.SampleWidget.Render(Sample.SampleFont)" />
+      <MemberType>Method</MemberType>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="font" Type="Sample.SampleFont" />
+      </Parameters>
+      <Docs>
+        <param name="font">The font to render with.</param>
+        <summary>Draws the widget onto the current surface using the supplied font.</summary>
+        <remarks>To be documented.</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

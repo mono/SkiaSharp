@@ -1,62 +1,65 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Extract and merge ECMA XML API documentation via JSON.
+    Deterministic tooling for the SkiaSharp api-docs skill (no LLM).
 
 .DESCRIPTION
-    Uses .NET XmlDocument which natively preserves CDATA sections.
-    No external dependencies required (pwsh is pre-installed on all GHA runners).
+    Agents edit the ECMA/mdoc XML directly, so this tool provides the three
+    non-LLM gates the skill relies on:
+
+      resolve-scope <selector>   Turn a human selector into an explicit file list
+                                 (+ candidate C# source path) for sharding.
+      lint <path|selector>       Objective defect scan -> machine findings.
+      validate <path|selector>   Post-edit structural safety vs the git baseline.
+
+    Uses .NET XmlDocument (CDATA-preserving). pwsh is pre-installed on CI runners.
 
 .EXAMPLE
-    pwsh docs-tool.ps1 extract docs/SkiaSharpAPI/ -Output output/docs-work/
-    pwsh docs-tool.ps1 merge output/docs-work/
+    pwsh docs-tool.ps1 resolve-scope group:text
+    pwsh docs-tool.ps1 lint type:SKPaint
+    pwsh docs-tool.ps1 validate docs/SkiaSharpAPI/SkiaSharp/SKFont.xml
 #>
 
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("extract", "merge")]
+    [ValidateSet("resolve-scope", "lint", "validate")]
     [string]$Command,
 
     [Parameter(Position = 1)]
-    [string]$Path,
+    [string]$Selector,
 
-    [string]$Output,
-    [switch]$DryRun
+    [bool]$Confirm = $true
 )
+
+$ErrorActionPreference = "Stop"
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+$SkillRoot = Split-Path $PSScriptRoot -Parent
+$RepoRoot  = (Resolve-Path (Join-Path $PSScriptRoot "../../../..")).Path
+$DocsRoot  = Join-Path $RepoRoot "docs/SkiaSharpAPI"
+$DocsSub   = Join-Path $RepoRoot "docs"
+$AliasFile = Join-Path $SkillRoot "assets/scope-aliases.yml"
+$ObsFile   = Join-Path $SkillRoot "references/obsolete-api-map.md"
+
+$GeneratedNames = @("index.xml", "_filter.xml")
+function Test-IsGenerated([string]$path) {
+    $name = Split-Path $path -Leaf
+    if ($GeneratedNames -contains $name) { return $true }
+    if ($name -like "ns-*.xml") { return $true }
+    if ($path -match "[\\/]FrameworksIndex[\\/]") { return $true }
+    return $false
+}
 
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
-
 function Load-XmlPreserving([string]$filePath) {
     $doc = [xml]::new()
     $doc.PreserveWhitespace = $true
     $doc.Load($filePath)
     return $doc
-}
-
-function Find-DocsByDocId([xml]$doc, [string]$docId) {
-    $xpath = "//Member[MemberSignature[@Language='DocId' and @Value='$docId']]/Docs"
-    return $doc.SelectSingleNode($xpath)
-}
-
-function Get-ElementText([System.Xml.XmlElement]$elem) {
-    return $elem.InnerXml
-}
-
-function Set-ElementContent([System.Xml.XmlElement]$elem, [string]$content) {
-    if ([string]::IsNullOrWhiteSpace($content)) {
-        $elem.InnerXml = ""
-        return
-    }
-    # InnerXml handles mixed content: plain text + <see cref/> + <paramref/> + CDATA
-    try {
-        $elem.InnerXml = $content
-    }
-    catch {
-        # If XML parsing fails, set as plain text
-        $elem.InnerText = $content
-    }
 }
 
 function Count-Signatures([xml]$doc) {
@@ -65,388 +68,415 @@ function Count-Signatures([xml]$doc) {
     return $ms + $ts
 }
 
-# Returns the [Obsolete(...)] attribute text for a Type or Member node, or $null.
-# Writers use this to avoid documenting/recommending obsolete members in examples
-# and to phrase the member's own summary correctly. The text includes the message
-# (which usually names the replacement API) and whether it is an error.
-function Get-ObsoleteAttribute([System.Xml.XmlNode]$node) {
-    foreach ($attr in $node.SelectNodes("Attributes/Attribute/AttributeName")) {
-        $text = $attr.InnerText
-        if ($text -match 'Obsolete') {
-            return $text.Trim()
+function Get-RelToRepo([string]$absPath) {
+    $full = (Resolve-Path $absPath -ErrorAction SilentlyContinue)?.Path
+    if (-not $full) { $full = $absPath }
+    if ($full.StartsWith($RepoRoot)) {
+        return $full.Substring($RepoRoot.Length).TrimStart('/', '\') -replace '\\', '/'
+    }
+    return $full -replace '\\', '/'
+}
+
+function Get-RelToDocs([string]$absPath) {
+    $full = (Resolve-Path $absPath).Path
+    return $full.Substring($DocsSub.Length).TrimStart('/', '\') -replace '\\', '/'
+}
+
+# Best-effort C# source path for a docs xml file.
+function Get-SourcePath([string]$xmlPath) {
+    $type = [IO.Path]::GetFileNameWithoutExtension($xmlPath)
+    $ns   = Split-Path (Split-Path $xmlPath -Parent) -Leaf
+    $candidates = @(
+        (Join-Path $RepoRoot "binding/$ns/$type.cs"),
+        (Join-Path $RepoRoot "binding/SkiaSharp/$type.cs"),
+        (Join-Path $RepoRoot "binding/HarfBuzzSharp/$type.cs")
+    )
+    foreach ($c in $candidates) { if (Test-Path $c) { return (Get-RelToRepo $c) } }
+    $hit = Get-ChildItem -Path (Join-Path $RepoRoot "binding") -Filter "$type.cs" -Recurse -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($hit) { return (Get-RelToRepo $hit.FullName) }
+    return "NONE"
+}
+
+# ---------------------------------------------------------------------------
+# Scope aliases (tiny YAML reader — list-of-scalars per top-level key, supports
+# a single anchor/alias pair like `font: *text`). Avoids a YAML dependency.
+# ---------------------------------------------------------------------------
+function Read-ScopeAliases {
+    $groups = @{}
+    $anchors = @{}
+    if (-not (Test-Path $AliasFile)) { return $groups }
+    $current = $null
+    foreach ($raw in Get-Content $AliasFile) {
+        $line = $raw -replace '#.*$', ''
+        if ($line -match '^\s*$') { continue }
+        if ($line -match '^([A-Za-z0-9_]+):\s*\*([A-Za-z0-9_]+)\s*$') {
+            # alias: copy a previously-defined anchor
+            $groups[$Matches[1]] = $anchors[$Matches[2]]
+            $current = $null
+            continue
+        }
+        if ($line -match '^([A-Za-z0-9_]+):\s*(?:&([A-Za-z0-9_]+))?\s*$') {
+            $current = $Matches[1]
+            $groups[$current] = @()
+            if ($Matches[2]) { $anchors[$Matches[2]] = $groups[$current] }
+            continue
+        }
+        if ($line -match '^\s*-\s*(\S+)\s*$' -and $current) {
+            $groups[$current] += $Matches[1]
+            if ($anchors.Values -contains $groups[$current]) { } # keep ref
         }
     }
+    return $groups
+}
+
+function Get-AllDocFiles {
+    Get-ChildItem -Path $DocsRoot -Filter "*.xml" -Recurse -ErrorAction Stop |
+        Where-Object { -not (Test-IsGenerated $_.FullName) } |
+        Sort-Object FullName
+}
+
+# ---------------------------------------------------------------------------
+# Scope core (shared by resolve-scope, lint, validate)
+# ---------------------------------------------------------------------------
+$script:LastScopeFuzzy = $false
+
+function Get-ScopeFiles([string]$sel) {
+    if (-not $sel) { Write-Error "a selector is required"; exit 1 }
+    $script:LastScopeFuzzy = $false
+    $files = @()
+
+    switch -regex ($sel) {
+        '^file:(.+)$' {
+            $p = $Matches[1]
+            if (-not [IO.Path]::IsPathRooted($p)) { $p = Join-Path $RepoRoot $p }
+            if (Test-Path $p) { $files = @((Get-Item $p)) }
+            break
+        }
+        '^type:(.+)$' {
+            $t = $Matches[1]
+            $files = Get-AllDocFiles | Where-Object { $_.BaseName -eq $t }
+            break
+        }
+        '^ns:(.+)$' {
+            $n = $Matches[1]
+            $files = Get-AllDocFiles | Where-Object { (Split-Path $_.Directory -Leaf) -eq $n }
+            break
+        }
+        '^all$' {
+            $files = Get-AllDocFiles
+            break
+        }
+        '^(new|changed)$' {
+            $base = $env:DOCS_REVIEW_BASE
+            if (-not $base) { $base = "origin/main" }
+            $diff = & git -C $DocsSub diff --name-only --diff-filter=ACM "$base...HEAD" 2>$null
+            if (-not $diff) { $diff = & git -C $DocsSub diff --name-only --diff-filter=ACM 2>$null }
+            $files = foreach ($d in $diff) {
+                $abs = Join-Path $DocsSub $d
+                if ($d -match '\.xml$' -and (Test-Path $abs) -and -not (Test-IsGenerated $abs)) { Get-Item $abs }
+            }
+            break
+        }
+        '^match:(.+)$' {
+            $m = $Matches[1]; $script:LastScopeFuzzy = $true
+            $files = Get-AllDocFiles | Where-Object { $_.BaseName -like "*$m*" }
+            break
+        }
+        '^group:(.+)$' {
+            $g = $Matches[1]; $script:LastScopeFuzzy = $true
+            $groups = Read-ScopeAliases
+            if (-not $groups.ContainsKey($g)) { Write-Error "Unknown group '$g'. Known: $($groups.Keys -join ', ')"; exit 1 }
+            $all = Get-AllDocFiles
+            $files = foreach ($name in $groups[$g]) {
+                $hit = $all | Where-Object { $_.BaseName -eq $name }
+                if ($hit) { $hit } else { Write-Warning "group:$g — no file for '$name' (skipped)" }
+            }
+            break
+        }
+        default { Write-Error "Unrecognized selector '$sel'"; exit 1 }
+    }
+
+    return @($files | Sort-Object FullName -Unique)
+}
+
+function Resolve-Scope([string]$sel) {
+    $files = Get-ScopeFiles $sel
+    if ($script:LastScopeFuzzy -and $Confirm) {
+        Write-Host "CONFIRM-REQUIRED | $($files.Count) files for '$sel' (re-run with -Confirm:`$false in CI)"
+    }
+    foreach ($f in $files) {
+        $rel = Get-RelToRepo $f.FullName
+        $src = Get-SourcePath $f.FullName
+        Write-Host "FILE | $rel | source:$src"
+    }
+    Write-Host "COUNT | $($files.Count)"
+}
+
+# ---------------------------------------------------------------------------
+# Obsolete map (parse the fenced ```obsolete-map table)
+# ---------------------------------------------------------------------------
+function Read-ObsoleteErrorMembers {
+    $members = @()
+    if (-not (Test-Path $ObsFile)) { return $members }
+    $inBlock = $false
+    foreach ($line in Get-Content $ObsFile) {
+        if ($line -match '^```obsolete-map') { $inBlock = $true; continue }
+        if ($inBlock -and $line -match '^```') { break }
+        if (-not $inBlock) { continue }
+        $cols = $line.Split('|') | ForEach-Object { $_.Trim() }
+        if ($cols.Count -lt 4) { continue }
+        if ($cols[0] -eq 'Type' -or $cols[0] -eq '') { continue }
+        if ($cols[3] -ne 'error') { continue }
+        # member token without any (...) signature suffix
+        $member = ($cols[1] -replace '\(.*$', '').Trim()
+        if ($member) { $members += $member }
+    }
+    return $members | Sort-Object -Unique
+}
+
+# ---------------------------------------------------------------------------
+# lint
+# ---------------------------------------------------------------------------
+$MisspellMap = @{
+    'teh' = 'the'; 'recieve' = 'receive'; 'seperate' = 'separate'; 'occured' = 'occurred';
+    'paramter' = 'parameter'; 'retreive' = 'retrieve'; 'initalize' = 'initialize';
+    'lenght' = 'length'; 'widht' = 'width'; 'colour' = 'color'; 'visable' = 'visible';
+    'arguement' = 'argument'; 'depricated' = 'deprecated'; 'existant' = 'existent'
+}
+$CrefPrefixes = @('T:', 'M:', 'P:', 'F:', 'E:', 'N:', 'Overload:')
+
+function Get-MemberDocId([System.Xml.XmlNode]$member) {
+    $n = $member.SelectSingleNode("MemberSignature[@Language='DocId']")
+    if ($n) { return $n.GetAttribute("Value") }
     return $null
 }
 
-# Scaffold injected into each type's <remarks> at extract time so the writer has
-# a structure to complete. Defined once here so Extract (which injects it) and
-# Test-IsUnfilled (which recognises it when left unfinished) cannot drift apart.
-$script:TypeRemarksTemplate = "<format type=`"text/markdown`"><![CDATA[`n## Remarks`n`n[Describe what this type does and when to use it]`n`n[If IDisposable: mention using statement / disposal]`n`n## Examples`n`n``````csharp`n[Show the most common usage pattern, 5-15 lines]`n```````n]]></format>"
+function Emit-Finding([string]$sev, [string]$class, [string]$file, [string]$docId, [string]$msg) {
+    if (-not $docId) { $docId = "-" }
+    Write-Host "$sev | $class | $file | $docId | $msg"
+}
 
-# Bracketed instruction fragments that exist only in the *unfilled* scaffold
-# above. Their presence in a field means the writer never replaced them.
-$script:ScaffoldSentinels = @(
-    '[Describe what this type does and when to use it]',
-    '[If IDisposable: mention using statement / disposal]',
-    '[Show the most common usage pattern, 5-15 lines]'
-)
-
-# True when a docs field still holds content nobody has written: either mdoc's
-# "To be added." stub or a leftover scaffold fragment. Extract uses this to
-# (re)collect such fields for the writer; Merge uses it to refuse writing them
-# back. That keeps raw template text like "[Describe what this type does ...]"
-# out of the published XML when a large type runs out of time mid-write, and
-# leaves a "To be added." placeholder the next run can still detect and re-fill.
-function Test-IsUnfilled([string]$content) {
-    if ($null -eq $content) { return $true }
-    if ($content -match '^\s*To be added\.?\s*$') { return $true }
-    foreach ($sentinel in $script:ScaffoldSentinels) {
-        if ($content.Contains($sentinel)) { return $true }
+function Get-ProseSegments([System.Xml.XmlNode]$node) {
+    # Prose text for natural-language checks (repeated word, spelling).
+    # Returns one string per descendant text/CDATA node, with fenced code
+    # blocks stripped out of CDATA. Splitting per text node means empty inline
+    # elements (e.g. <see cref=".." />) act as boundaries, so the words on
+    # either side are never treated as adjacent.
+    $segments = @()
+    foreach ($t in $node.SelectNodes(".//text()")) {
+        $val = $t.Value
+        if ([string]::IsNullOrWhiteSpace($val)) { continue }
+        if ($t.NodeType -eq 'CDATA') {
+            $val = [regex]::Replace($val, '(?s)```.*?```', ' ')
+        }
+        $segments += $val
     }
-    return $false
+    return $segments
+}
+
+function Lint-File([string]$xmlPath, [string[]]$obsoleteMembers) {
+    $rel = Get-RelToRepo $xmlPath
+    $count = 0
+    $doc = $null
+    try { $doc = Load-XmlPreserving $xmlPath }
+    catch { Emit-Finding "CRITICAL" "malformed-xml" $rel "-" "XML will not parse: $($_.Exception.Message)"; return 1 }
+
+    $root = $doc.DocumentElement
+
+    # Walk type-level Docs + each Member's Docs
+    $units = @()
+    $typeDocs = $root.SelectSingleNode("Docs")
+    if ($typeDocs) {
+        $tn = if ($root.GetAttribute("FullName")) { "T:" + $root.GetAttribute("FullName") } else { "T:" + $root.GetAttribute("Name") }
+        $units += [pscustomobject]@{ docId = $tn; docs = $typeDocs; member = $root; isProp = $false; hasSet = $false }
+    }
+    foreach ($m in $root.SelectNodes("Members/Member")) {
+        $d = $m.SelectSingleNode("Docs")
+        if (-not $d) { continue }
+        $sig = ($m.SelectSingleNode("MemberSignature[@Language='C#']"))?.GetAttribute("Value")
+        $mt  = ($m.SelectSingleNode("MemberType"))?.InnerText
+        $isProp = ($mt -eq "Property")
+        $hasSet = $isProp -and $sig -match 'set\s*;'
+        $units += [pscustomobject]@{ docId = (Get-MemberDocId $m); docs = $d; member = $m; isProp = $isProp; hasSet = $hasSet }
+    }
+    # MemberGroup carries shared remarks/examples for overload sets (e.g. DrawText)
+    foreach ($g in $root.SelectNodes("Members/MemberGroup")) {
+        $d = $g.SelectSingleNode("Docs")
+        if (-not $d) { continue }
+        $gname = $g.GetAttribute("MemberName")
+        $tn = if ($root.GetAttribute("FullName")) { $root.GetAttribute("FullName") } else { $root.GetAttribute("Name") }
+        $units += [pscustomobject]@{ docId = "G:$tn.$gname"; docs = $d; member = $g; isProp = $false; hasSet = $false }
+    }
+
+    foreach ($u in $units) {
+        $docs = $u.docs
+        $docId = $u.docId
+
+        # Empty summary/value/returns (remarks may be self-closing)
+        foreach ($tag in @("summary", "value", "returns")) {
+            $node = $docs.SelectSingleNode($tag)
+            if ($node -and [string]::IsNullOrWhiteSpace($node.InnerXml)) {
+                Emit-Finding "IMPORTANT" "empty-tag" $rel $docId "<$tag> is empty"; $count++
+            }
+        }
+
+        # Per-field text checks
+        foreach ($node in $docs.ChildNodes) {
+            if ($node.NodeType -ne 'Element') { continue }
+            $inner = $node.InnerXml
+            $text  = $node.InnerText
+            if ([string]::IsNullOrWhiteSpace($inner)) { continue }
+
+            # Placeholder
+            if ($text -match 'To be added\.?' ) { Emit-Finding "IMPORTANT" "placeholder" $rel $docId "<$($node.Name)> still 'To be added.'"; $count++ }
+            if ($inner -match '\[Describe ' -or $inner -match '\[Show ') { Emit-Finding "IMPORTANT" "placeholder" $rel $docId "<$($node.Name)> has an unfilled remarks scaffold"; $count++ }
+
+            # Repeated words + spelling run on prose only (code fences stripped;
+            # per text node so empty inline elements don't fuse adjacent words)
+            $reportedRepeat = $false
+            foreach ($seg in (Get-ProseSegments $node)) {
+                if (-not $reportedRepeat -and $seg -match '(?i)(?<![-\w])([A-Za-z]{2,})\s+\1\b') {
+                    if ($Matches[1].ToLowerInvariant() -notin @('that', 'had')) {
+                        Emit-Finding "CRITICAL" "repeated-word" $rel $docId "repeated word '$($Matches[1])' in <$($node.Name)>"; $count++; $reportedRepeat = $true
+                    }
+                }
+                foreach ($bad in $MisspellMap.Keys) {
+                    if ($seg -match "(?i)\b$bad\b") { Emit-Finding "CRITICAL" "spelling" $rel $docId "'$bad' -> '$($MisspellMap[$bad])' in <$($node.Name)>"; $count++ }
+                }
+            }
+
+            # see cref prefix
+            foreach ($mm in [regex]::Matches($inner, '<see\s+cref="([^"]+)"')) {
+                $target = $mm.Groups[1].Value
+                $ok = $false
+                foreach ($p in $CrefPrefixes) { if ($target.StartsWith($p)) { $ok = $true; break } }
+                if (-not $ok) { Emit-Finding "IMPORTANT" "invalid-cref" $rel $docId "<see cref='$target'> missing DocId prefix (T:/M:/P:/F:)"; $count++ }
+            }
+
+            # xref prefix inside CDATA remarks
+            foreach ($mm in [regex]::Matches($inner, '<xref:(T:|M:|P:|F:)')) {
+                Emit-Finding "IMPORTANT" "bad-xref" $rel $docId "<xref:$($mm.Groups[1].Value)...> uses a DocId prefix; xref takes the bare UID"; $count++
+            }
+            # destroyed CDATA (escaped xref)
+            if ($inner -match '&lt;xref:') { Emit-Finding "CRITICAL" "broken-cdata" $rel $docId "escaped '&lt;xref:' — CDATA was destroyed"; $count++ }
+
+            # Obsolete members in csharp fences
+            foreach ($fence in [regex]::Matches($inner, '(?s)```csharp(.*?)```')) {
+                $code = $fence.Groups[1].Value
+                foreach ($om in $obsoleteMembers) {
+                    if ($code -match "\.$([regex]::Escape($om))\b") {
+                        Emit-Finding "CRITICAL" "obsolete-in-example" $rel $docId "example uses obsolete member '.$om' (see obsolete-api-map.md)"; $count++
+                    }
+                }
+            }
+        }
+
+        # Accessor verb mismatch (properties)
+        if ($u.isProp) {
+            $summary = $docs.SelectSingleNode("summary")
+            if ($summary -and -not [string]::IsNullOrWhiteSpace($summary.InnerText)) {
+                $s = $summary.InnerText.TrimStart()
+                if ($u.hasSet) {
+                    if ($s -match '^(?i)Gets\b' -and $s -notmatch '^(?i)Gets or sets\b') {
+                        Emit-Finding "IMPORTANT" "accessor-verb" $rel $docId "settable property summary should be 'Gets or sets'"; $count++
+                    }
+                }
+                else {
+                    if ($s -match '^(?i)Gets or sets\b') {
+                        Emit-Finding "IMPORTANT" "accessor-verb" $rel $docId "read-only property summary should be 'Gets' (not 'Gets or sets')"; $count++
+                    }
+                }
+            }
+        }
+    }
+    return $count
 }
 
 # ---------------------------------------------------------------------------
-# Extract
+# validate (structural, vs git baseline)
 # ---------------------------------------------------------------------------
-
-function Extract-Docs([string]$inputPath, [string]$outputDir) {
-    New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-
-    $xmlFiles = if (Test-Path $inputPath -PathType Leaf) {
-        @(Get-Item $inputPath)
-    }
-    else {
-        Get-ChildItem -Path $inputPath -Filter "*.xml" -Recurse | Sort-Object FullName
-    }
-
-    $totalEntries = 0
-    $totalFiles = 0
-
-    foreach ($xmlFile in $xmlFiles) {
-        try {
-            $doc = Load-XmlPreserving $xmlFile.FullName
-        }
-        catch {
-            Write-Warning "Skipping $($xmlFile.Name): $_"
-            continue
-        }
-
-        $root = $doc.DocumentElement
-        $typeName = if ($root.GetAttribute("FullName")) { $root.GetAttribute("FullName") } else { $root.GetAttribute("Name") }
-        $entries = @()
-
-        # Type-level docs
-        $typeDocs = $root.SelectSingleNode("Docs")
-        if ($typeDocs) {
-            $fields = Extract-DocsBlock $typeDocs
-            if ($fields.Count -gt 0) {
-                # Pre-fill remarks template for types — agent completes the blanks
-                if ($fields.ContainsKey("remarks")) {
-                    $fields["remarks"] = $script:TypeRemarksTemplate
-                    $fields["remarksRequired"] = $true
-                }
-                $typeSig = ($root.SelectSingleNode("TypeSignature[@Language='C#']"))?.GetAttribute("Value")
-                $entry = @{
-                    docId      = $null
-                    memberType = "type"
-                    signature  = $typeSig
-                    fields     = $fields
-                }
-                $typeObsolete = Get-ObsoleteAttribute $root
-                if ($typeObsolete) { $entry["obsolete"] = $typeObsolete }
-                $entries += $entry
-            }
-        }
-
-        # Member-level docs
-        foreach ($member in $root.SelectNodes("Members/Member")) {
-            $docId = ($member.SelectSingleNode("MemberSignature[@Language='DocId']"))?.GetAttribute("Value")
-            $csSig = ($member.SelectSingleNode("MemberSignature[@Language='C#']"))?.GetAttribute("Value")
-            $memberType = $member.SelectSingleNode("MemberType")?.InnerText
-            $memberName = $member.GetAttribute("MemberName")
-            $docs = $member.SelectSingleNode("Docs")
-
-            if (-not $docs) { continue }
-
-            $fields = Extract-DocsBlock $docs
-            if ($fields.Count -gt 0) {
-                $entry = @{
-                    docId      = $docId
-                    memberType = $memberType
-                    memberName = $memberName
-                    signature  = $csSig
-                    fields     = $fields
-                }
-                $memberObsolete = Get-ObsoleteAttribute $member
-                if ($memberObsolete) { $entry["obsolete"] = $memberObsolete }
-                $entries += $entry
-            }
-        }
-
-        if ($entries.Count -eq 0) { continue }
-
-        $basePath = if (Test-Path $inputPath -PathType Container) {
-            $resolvedInput = (Resolve-Path $inputPath).Path.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
-            $xmlFile.FullName.Substring($resolvedInput.Length + 1)
-        }
-        else { $xmlFile.Name }
-        $jsonName = $basePath -replace '[/\\]', '__' -replace '\.xml$', '.json'
-        $jsonPath = Join-Path $outputDir $jsonName
-
-        $result = @{
-            file     = $xmlFile.FullName
-            typeName = $typeName
-            entries  = $entries
-        }
-
-        $result | ConvertTo-Json -Depth 10 | Set-Content -Path $jsonPath -Encoding UTF8
-        $totalEntries += $entries.Count
-        $totalFiles++
-        Write-Host "  $($xmlFile.Name): $($entries.Count) entries"
-    }
-
-    # Generate manifest.json
-    $jsonFiles = Get-ChildItem -Path $outputDir -Filter "*.json" | Sort-Object Name
-    $manifest = @()
-    $totalFields = 0
-    foreach ($jf in $jsonFiles) {
-        $data = Get-Content $jf.FullName -Raw | ConvertFrom-Json
-        $entryCount = if ($data.entries) { $data.entries.Count } else { 0 }
-        $fieldCount = 0
-        if ($data.entries) {
-            foreach ($entry in $data.entries) {
-                if ($entry.fields) {
-                    $fieldCount += ($entry.fields.PSObject.Properties | Measure-Object).Count
-                }
-            }
-        }
-        $manifest += @{
-            file       = $jf.Name
-            typeName   = if ($data.typeName) { $data.typeName } else { "" }
-            entryCount = $entryCount
-            fieldCount = $fieldCount
-        }
-        $totalFields += $fieldCount
-    }
-    $manifest | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $outputDir "manifest.json") -Encoding UTF8
-
-    Write-Host "`nExtracted $totalEntries entries from $totalFiles files to $outputDir/"
-    Write-Host "Manifest: $($manifest.Count) files, $totalFields total fields"
+function Get-StrippedShape([xml]$doc) {
+    # Clone, blank every <Docs> body, return OuterXml of everything-but-Docs.
+    $clone = [xml]::new()
+    $clone.PreserveWhitespace = $true
+    $clone.LoadXml($doc.OuterXml)
+    foreach ($d in $clone.SelectNodes("//Docs")) { $d.InnerXml = "" }
+    return (($clone.OuterXml -replace "`r`n", "`n").Trim())
 }
 
-function Extract-DocsBlock([System.Xml.XmlElement]$docs) {
-    $fields = @{}
+function Validate-File([string]$xmlPath) {
+    $rel = Get-RelToRepo $xmlPath
+    $cur = $null
+    try { $cur = Load-XmlPreserving $xmlPath }
+    catch { Write-Host "VALIDATE | FAIL | $rel | not well-formed: $($_.Exception.Message)"; return $false }
 
-    foreach ($child in $docs.ChildNodes) {
-        if ($child.NodeType -ne "Element") { continue }
-        $text = Get-ElementText $child
-
-        switch ($child.LocalName) {
-            "param" {
-                if (Test-IsUnfilled $text) {
-                    if (-not $fields.ContainsKey("params")) { $fields["params"] = @{} }
-                    $fields["params"][$child.GetAttribute("name")] = $text
-                }
-            }
-            "typeparam" {
-                if (Test-IsUnfilled $text) {
-                    if (-not $fields.ContainsKey("typeparams")) { $fields["typeparams"] = @{} }
-                    $fields["typeparams"][$child.GetAttribute("name")] = $text
-                }
-            }
-            { $_ -in "summary", "returns", "value", "remarks" } {
-                if (Test-IsUnfilled $text) {
-                    $fields[$child.LocalName] = $text
-                }
-            }
-        }
+    $docsRel = Get-RelToDocs $xmlPath
+    $baseRaw = & git -C $DocsSub show "HEAD:$docsRel" 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $baseRaw) {
+        Write-Host "VALIDATE | OK | $rel | new file (well-formed; no baseline)"
+        return $true
     }
 
-    # Record which fields were extracted so the merge can reject agent-added fields
-    if ($fields.Count -gt 0) {
-        $allowedKeys = @($fields.Keys | Where-Object { $_ -ne "params" -and $_ -ne "typeparams" })
-        if ($fields.ContainsKey("params")) {
-            $allowedKeys += ($fields["params"].Keys | ForEach-Object { "params.$_" })
-        }
-        if ($fields.ContainsKey("typeparams")) {
-            $allowedKeys += ($fields["typeparams"].Keys | ForEach-Object { "typeparams.$_" })
-        }
-        $fields["_extractedKeys"] = $allowedKeys
-    }
+    $base = [xml]::new(); $base.PreserveWhitespace = $true
+    $base.LoadXml(($baseRaw -join "`n"))
 
-    return $fields
+    $cb = Count-Signatures $base
+    $cc = Count-Signatures $cur
+    if ($cb -ne $cc) {
+        Write-Host "VALIDATE | FAIL | $rel | signature count changed ($cb -> $cc)"; return $false
+    }
+    if ((Get-StrippedShape $base) -ne (Get-StrippedShape $cur)) {
+        Write-Host "VALIDATE | FAIL | $rel | content changed outside <Docs>"; return $false
+    }
+    Write-Host "VALIDATE | OK | $rel | docs-only, signatures preserved"
+    return $true
 }
 
 # ---------------------------------------------------------------------------
-# Merge
+# Resolve a path-or-selector argument to a concrete file list (for lint/validate)
 # ---------------------------------------------------------------------------
-
-function Merge-Docs([string]$inputPath) {
-    $jsonFiles = if (Test-Path $inputPath -PathType Leaf) {
-        @(Get-Item $inputPath)
+function Expand-Target([string]$arg) {
+    if (-not $arg) { Write-Error "a path or selector is required"; exit 1 }
+    # Selector form -> use the shared scope core
+    if ($arg -match '^(file:|type:|ns:|match:|group:)' -or $arg -in @('all', 'new', 'changed')) {
+        return @(Get-ScopeFiles $arg | ForEach-Object { $_.FullName })
     }
-    else {
-        Get-ChildItem -Path $inputPath -Filter "*.json" | Where-Object { $_.Name -ne "manifest.json" } | Sort-Object Name
+    # Plain path (file or directory)
+    $p = $arg
+    if (-not [IO.Path]::IsPathRooted($p)) { $p = Join-Path $RepoRoot $p }
+    if (Test-Path $p -PathType Leaf) { return @($p) }
+    if (Test-Path $p -PathType Container) {
+        return @(Get-ChildItem $p -Filter "*.xml" -Recurse |
+            Where-Object { -not (Test-IsGenerated $_.FullName) } | ForEach-Object FullName)
     }
-
-    $totalUpdates = 0
-    $totalFiles = 0
-
-    foreach ($jsonFile in $jsonFiles) {
-        $data = Get-Content -Raw $jsonFile.FullName | ConvertFrom-Json
-        $xmlPath = $data.file
-
-        if (-not (Test-Path $xmlPath)) {
-            Write-Warning "XML file not found: $xmlPath"
-            continue
-        }
-
-        $doc = Load-XmlPreserving $xmlPath
-        $sigsBefore = Count-Signatures $doc
-        $updates = 0
-
-        foreach ($entry in $data.entries) {
-            $docId = $entry.docId
-            $memberType = $entry.memberType
-
-            # Find target Docs block
-            $docs = if ($memberType -eq "type" -or -not $docId) {
-                $doc.DocumentElement.SelectSingleNode("Docs")
-            }
-            else {
-                Find-DocsByDocId $doc $docId
-            }
-
-            if (-not $docs) {
-                if ($docId) { Write-Warning "DocId not found: $docId" }
-                continue
-            }
-
-            $fields = $entry.fields
-
-            # Build allowed-keys set from extract metadata (guards against agent-added fields)
-            $allowedKeys = $null
-            $hasExtractMeta = $null -ne $fields.PSObject -and $null -ne $fields.PSObject.Properties['_extractedKeys']
-            if ($hasExtractMeta) {
-                $keyArray = @($fields._extractedKeys)
-                $allowedKeys = [System.Collections.Generic.HashSet[string]]::new(
-                    [string[]]$keyArray,
-                    [System.StringComparer]::OrdinalIgnoreCase
-                )
-            }
-
-            # Update scalar fields
-            foreach ($fieldName in @("summary", "returns", "value", "remarks")) {
-                $content = $fields.$fieldName
-                if (-not (Test-IsUnfilled $content)) {
-                    # Reject fields not in original extract
-                    if ($allowedKeys -and -not $allowedKeys.Contains($fieldName)) {
-                        Write-Warning "Skipping $($docId ?? 'type').$fieldName — not in original extract (agent-added)"
-                        continue
-                    }
-                    $elem = $docs.SelectSingleNode($fieldName)
-                    if ($elem) {
-                        if ($DryRun) {
-                            Write-Host "  Would update $($docId ?? 'type').$fieldName"
-                        }
-                        else {
-                            Set-ElementContent $elem $content
-                        }
-                        $updates++
-                    }
-                }
-            }
-
-            # Update params
-            if ($fields.params) {
-                $paramMap = if ($fields.params -is [hashtable]) { $fields.params } else {
-                    $h = @{}; $fields.params.PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }; $h
-                }
-                foreach ($kv in $paramMap.GetEnumerator()) {
-                    if (-not (Test-IsUnfilled $kv.Value)) {
-                        # Reject params not in original extract
-                        if ($allowedKeys -and -not $allowedKeys.Contains("params.$($kv.Key)")) {
-                            Write-Warning "Skipping $($docId ?? 'type').params.$($kv.Key) — not in original extract (agent-added)"
-                            continue
-                        }
-                        $elem = $docs.SelectSingleNode("param[@name='$($kv.Key)']")
-                        if ($elem) {
-                            if (-not $DryRun) { Set-ElementContent $elem $kv.Value }
-                            $updates++
-                        }
-                    }
-                }
-            }
-
-            # Update typeparams
-            if ($fields.typeparams) {
-                $tpMap = if ($fields.typeparams -is [hashtable]) { $fields.typeparams } else {
-                    $h = @{}; $fields.typeparams.PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }; $h
-                }
-                foreach ($kv in $tpMap.GetEnumerator()) {
-                    if (-not (Test-IsUnfilled $kv.Value)) {
-                        # Reject typeparams not in original extract
-                        if ($allowedKeys -and -not $allowedKeys.Contains("typeparams.$($kv.Key)")) {
-                            Write-Warning "Skipping $($docId ?? 'type').typeparams.$($kv.Key) — not in original extract (agent-added)"
-                            continue
-                        }
-                        $elem = $docs.SelectSingleNode("typeparam[@name='$($kv.Key)']")
-                        if ($elem) {
-                            if (-not $DryRun) { Set-ElementContent $elem $kv.Value }
-                            $updates++
-                        }
-                    }
-                }
-            }
-        }
-
-        if ($updates -eq 0) { continue }
-
-        # Safety assertion
-        $sigsAfter = Count-Signatures $doc
-        if ($sigsAfter -ne $sigsBefore) {
-            Write-Error "FATAL: Signature count changed in $xmlPath ($sigsBefore -> $sigsAfter)"
-            exit 2
-        }
-
-        if (-not $DryRun) {
-            $doc.Save($xmlPath)
-            # Validate
-            try {
-                $validate = [xml]::new()
-                $validate.Load($xmlPath)
-            }
-            catch {
-                Write-Error "Malformed output: $xmlPath : $_"
-            }
-        }
-
-        $totalFiles++
-        $totalUpdates += $updates
-        $action = if ($DryRun) { "Would update" } else { "Updated" }
-        Write-Host "  $($jsonFile.Name): $updates fields"
-    }
-
-    $action = if ($DryRun) { "Would update" } else { "Merged" }
-    Write-Host "`n$action $totalUpdates fields across $totalFiles files"
+    Write-Error "Target not found: $arg"; exit 1
 }
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-
 switch ($Command) {
-    "extract" {
-        if (-not $Output) { Write-Error "-Output is required for extract"; exit 1 }
-        Extract-Docs $Path $Output
+    "resolve-scope" {
+        Resolve-Scope $Selector
     }
-    "merge" {
-        Merge-Docs $Path
+    "lint" {
+        $targets = Expand-Target $Selector
+        $obs = Read-ObsoleteErrorMembers
+        $total = 0; $n = 0
+        foreach ($t in $targets) { $total += (Lint-File $t $obs); $n++ }
+        Write-Host "LINT-SUMMARY | files:$n | findings:$total"
+    }
+    "validate" {
+        $targets = Expand-Target $Selector
+        $fail = 0; $n = 0
+        foreach ($t in $targets) { if (-not (Validate-File $t)) { $fail++ }; $n++ }
+        Write-Host "VALIDATE-SUMMARY | files:$n | failures:$fail"
+        if ($fail -gt 0) { exit 2 }
     }
     default {
-        Write-Host "Usage: docs-tool.ps1 <extract|merge> <path> [-Output dir] [-DryRun]"
+        Write-Host "Usage: docs-tool.ps1 <resolve-scope|lint|validate> <path|selector> [-Confirm:`$false]"
+        Write-Host "  selectors: file:<p>  type:<T>  ns:<N>  all  new  changed  match:<text>  group:<name>"
         exit 1
     }
 }

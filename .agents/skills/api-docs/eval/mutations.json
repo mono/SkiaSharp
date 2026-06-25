@@ -1,0 +1,138 @@
+{
+  "$comment": "Ground-truth seeded defects for the api-docs eval. inject.ps1 applies every mutation's find->replace into a corrupted COPY of the fixture (never the original, never under docs/). score.ps1 matches reviewer/linter findings against the expected (file, docId, class) tuples. 'detector':'lint' classes are caught by the deterministic linter; 'detector':'llm' classes require an LLM reviewer. Each mutation's 'find' must occur exactly once in its fixture so injection is unambiguous.",
+  "seed": 42,
+  "fixturesRoot": "fixtures",
+  "fixtures": [
+    "Sample/SampleWidget.xml",
+    "Sample/SampleColor.xml"
+  ],
+  "controls": [
+    "Sample/SampleWidget.xml",
+    "Sample/SampleColor.xml"
+  ],
+  "mutations": [
+    {
+      "id": "m01-spelling",
+      "file": "Sample/SampleColor.xml",
+      "docId": "P:Sample.SampleColor.Alpha",
+      "field": "remarks",
+      "class": "spelling",
+      "detector": "lint",
+      "find": "255 is fully opaque.",
+      "replace": "255 is fully opaque and visable."
+    },
+    {
+      "id": "m02-repeated-word",
+      "file": "Sample/SampleWidget.xml",
+      "docId": "M:Sample.SampleWidget.Measure(System.String)",
+      "field": "returns",
+      "class": "repeated-word",
+      "detector": "lint",
+      "find": "<returns>The width of the text, in pixels.</returns>",
+      "replace": "<returns>The the width of the text, in pixels.</returns>"
+    },
+    {
+      "id": "m03-obsolete-in-example",
+      "file": "Sample/SampleWidget.xml",
+      "docId": "G:Sample.SampleWidget.Render",
+      "field": "remarks",
+      "class": "obsolete-in-example",
+      "detector": "lint",
+      "find": "font.Size = 32;",
+      "replace": "paint.TextSize = 32;"
+    },
+    {
+      "id": "m04-invalid-cref",
+      "file": "Sample/SampleColor.xml",
+      "docId": "M:Sample.SampleColor.WithAlpha(System.Byte)",
+      "field": "returns",
+      "class": "invalid-cref",
+      "detector": "lint",
+      "find": "A new <see cref=\"T:Sample.SampleColor\" /> with the supplied alpha.",
+      "replace": "A new <see cref=\"Sample.SampleColor\" /> with the supplied alpha."
+    },
+    {
+      "id": "m05-bad-xref",
+      "file": "Sample/SampleWidget.xml",
+      "docId": "T:Sample.SampleWidget",
+      "field": "remarks",
+      "class": "bad-xref",
+      "detector": "lint",
+      "find": "<xref:Sample.SampleWidget.Width>",
+      "replace": "<xref:P:Sample.SampleWidget.Width>"
+    },
+    {
+      "id": "m06-empty-tag",
+      "file": "Sample/SampleWidget.xml",
+      "docId": "M:Sample.SampleWidget.Render(Sample.SampleFont)",
+      "field": "summary",
+      "class": "empty-tag",
+      "detector": "lint",
+      "find": "<summary>Draws the widget onto the current surface using the supplied font.</summary>",
+      "replace": "<summary></summary>"
+    },
+    {
+      "id": "m07-accessor-verb",
+      "file": "Sample/SampleWidget.xml",
+      "docId": "P:Sample.SampleWidget.Width",
+      "field": "summary",
+      "class": "accessor-verb",
+      "detector": "lint",
+      "find": "<summary>Gets or sets the width of the widget.</summary>",
+      "replace": "<summary>Gets the width of the widget.</summary>"
+    },
+    {
+      "id": "m08-placeholder",
+      "file": "Sample/SampleWidget.xml",
+      "docId": "M:Sample.SampleWidget.Render(Sample.SampleFont)",
+      "field": "remarks",
+      "class": "placeholder",
+      "detector": "lint",
+      "find": "<remarks>To be documented.</remarks>",
+      "replace": "<remarks>To be added.</remarks>"
+    },
+    {
+      "id": "m14-broken-cdata",
+      "file": "Sample/SampleWidget.xml",
+      "docId": "M:Sample.SampleWidget.Measure(System.String)",
+      "field": "param",
+      "class": "broken-cdata",
+      "detector": "lint",
+      "find": "<param name=\"text\">The text to measure.</param>",
+      "replace": "<param name=\"text\">The text to measure. See &lt;xref:Sample.SampleWidget.Width&gt; for details.</param>"
+    },
+    {
+      "id": "m10-factual-default",
+      "file": "Sample/SampleWidget.xml",
+      "docId": "P:Sample.SampleWidget.Width",
+      "field": "value",
+      "class": "factual",
+      "detector": "llm",
+      "find": "The width, in pixels. The default value is 1.",
+      "replace": "The width, in pixels. The default value is 100.",
+      "truth": "The C# signature default and source initialize Width to 1; 100 is wrong."
+    },
+    {
+      "id": "m11-factual-color-order",
+      "file": "Sample/SampleColor.xml",
+      "docId": "T:Sample.SampleColor",
+      "field": "remarks",
+      "class": "factual",
+      "detector": "llm",
+      "find": "packed in ARGB order",
+      "replace": "packed in RGBA order",
+      "truth": "The struct documents ARGB byte order; RGBA contradicts the example bytes 0xFF,0x80,0x40,0x20 -> A,R,G,B."
+    },
+    {
+      "id": "m13-fabricated-member",
+      "file": "Sample/SampleColor.xml",
+      "docId": "M:Sample.SampleColor.WithAlpha(System.Byte)",
+      "field": "remarks",
+      "class": "fabricated-member",
+      "detector": "llm",
+      "find": "The original color is not modified because the value is a structure.",
+      "replace": "The original color is not modified because the value is a structure. For an in-place update call <see cref=\"M:Sample.SampleColor.SetAlpha(System.Byte)\" />.",
+      "truth": "SampleColor exposes no SetAlpha member; the cross-reference is fabricated."
+    }
+  ]
+}

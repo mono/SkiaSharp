@@ -468,4 +468,4 @@ Types that wrap native resources (`IDisposable`) should have remarks that cover:
 - **Keep it short** — 5-15 lines, enough to understand the pattern
 - **Be self-contained and compilable** — every variable referenced must be declared in the snippet; a stray identifier (e.g. `bitmap2` when only `bitmap` was created) is a compile error
 - **Only use real APIs** — verify every method/overload exists in source before using in an example
-- **Never use obsolete APIs** — a member marked `[Obsolete("...", true)]` is a compile error, so an example using it is broken. The extract JSON flags these in an `obsolete` field; the message names the replacement. The classic SkiaSharp trap is legacy text rendering (see skia-patterns.md "Obsolete APIs").
+- **Never use obsolete APIs** — a member marked `[Obsolete("...", true)]` is a compile error, so an example using it is broken. The deterministic linter flags these from the table in `references/obsolete-api-map.md`, which names the replacement. The classic SkiaSharp trap is legacy text rendering (see skia-patterns.md "Obsolete APIs").
