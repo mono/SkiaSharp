@@ -164,9 +164,19 @@ steps:
 # carry into the chroot — the agent must run it itself.
 pre-agent-steps:
   - name: Install native build dependencies
+    # These run on the HOST and are visible to the agent's AWF chroot via the shared
+    # filesystem. The agent itself CANNOT apt-install anything (no apt inside the chroot,
+    # and the firewall blocks the Ubuntu archives), so every native build dependency must
+    # be installed here.
+    #
+    # libc++: native/linux/build.cake builds libSkiaSharp/libHarfBuzzSharp with
+    # `-stdlib=libc++` (clang's LLVM C++ runtime). On the real CI this comes from the
+    # .NET cross-compilation image; for this host build we must install libc++-dev +
+    # libc++abi-dev or the compile fails with "cannot find <libc++ headers>". Keep this in
+    # sync with native/linux/build.cake's extra_cflags/extra_ldflags.
     run: |
       sudo apt-get update -qq
-      sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
+      sudo apt-get install -y clang libc++-dev libc++abi-dev fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
       fc-cache -f
       dotnet workload install android --skip-sign-check
     env:
@@ -219,6 +229,13 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   parent-repo change is `cgmanifest.json`'s commit hash. Do NOT advance the milestone.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
   This also applies to Phase 10 if a native rebuild is needed.
+- **Native build environment is fully provisioned by the workflow** (clang, `libc++-dev`/`libc++abi-dev`,
+  fontconfig, ninja). Do NOT modify any native build files (`native/**/build.cake`, `scripts/infra/native/**`)
+  and do NOT change compiler/linker flags (e.g. `-stdlib=libc++`) to work around a build error. You also CANNOT
+  install packages (no apt/sudo inside the sandbox, and the firewall blocks OS package mirrors). If a native
+  build genuinely fails because a dependency is missing from the host, that is a workflow bug: STOP, do not hack
+  the build, and record it in the mono/SkiaSharp summary under "items needing human attention" so the
+  `Install native build dependencies` step can be fixed.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
 - **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
