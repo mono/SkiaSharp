@@ -411,11 +411,22 @@ The matrix ships wired into CI as part of `scripts/azure-templates-stages-test.y
   `##SKIA-GOLDEN-IMAGE##` marker, which the published TRX carries back for
   harvesting. Without them the cell would skip and emit nothing.
 - **Failure / capture artifacts.** Every cell's rendered PNG is in the published
-  TRX as a `##SKIA-GOLDEN-IMAGE##` marker (on pass and fail), and a failing
-  desktop cell additionally logs base64 GOLDEN/ACTUAL/DIFF images. So a red visual
-  cell is triageable straight from the test results, and a new platform's goldens
-  are seeded by downloading its TRX and running the harvest script — no extra
-  collection step in the pipeline.
+  TRX as a `##SKIA-GOLDEN-IMAGE##` marker (on pass and fail). A failing cell
+  additionally emits its golden and colored diff as `##SKIA-VISUAL-IMAGE##`
+  markers, and every cell emits a `##SKIA-VISUAL-CELL## … outcome={pass|mismatch|unseeded}`
+  marker recording its verdict. So a new platform's goldens are seeded by
+  downloading its TRX and running the harvest script — no extra collection step.
+- **Browsable failure images.** An `always()` post-test step in
+  `azure-templates-stages-test.yml` runs
+  `extract-visual-goldens.py … --failures-out output/logs/testlogs/visual-failures`,
+  which decodes the markers from the just-produced TRX into the published
+  `testlogs_*` artifact as ordinary PNGs, grouped by outcome:
+  `visual-failures/unseeded/{renderer}.{platform}/{scene}.actual.png` (harvest it)
+  and `visual-failures/mismatch/{renderer}.{platform}/{scene}.{actual,golden,diff}.png`
+  (investigate it). It reads the TRX — the one channel present on every host — so it
+  works uniformly on desktop, device, and WASM, and the `outcome` tag keeps an
+  unseeded cell (seed its golden) from being confused with a regression (which must
+  never be blindly harvested, or it would bless the bad pixels as the new golden).
 
 The device/browser GPU lanes are seeded as those renderers land (see below); until
 a cell is seeded it **fails** as unseeded, which is the intended signal to harvest
