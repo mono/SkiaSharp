@@ -701,6 +701,10 @@ namespace SkiaSharp
 
 		// Single-point map that mirrors getMapPtsProc()/the proc table (used by
 		// mapVectors). Unlike mapPoint, a pure scale/translate avoids the y*kx term.
+		// The affine term order matches Skia's Affine_vpts proc (the y lane is
+		// y*scaleY + x*skewY), which differs from mapPointAffine's ordering; the
+		// distinction only affects NaN-payload propagation but keeps us bit-exact
+		// with the native mapVectors path.
 		private readonly SKPoint MapPointByType (float x, float y)
 		{
 			var type = GetMatrixType ();
@@ -708,7 +712,7 @@ namespace SkiaSharp
 			if ((type & TypeMaskPerspective) != 0)
 				return MapPerspective (x, y);
 			if ((type & TypeMaskAffine) != 0)
-				return new SKPoint ((x * scaleX + y * skewX) + transX, (x * skewY + y * scaleY) + transY);
+				return new SKPoint ((x * scaleX + y * skewX) + transX, (y * scaleY + x * skewY) + transY);
 			if ((type & TypeMaskScale) != 0)
 				return new SKPoint (x * scaleX + transX, y * scaleY + transY);
 			if ((type & TypeMaskTranslate) != 0)
@@ -841,16 +845,21 @@ namespace SkiaSharp
 			}
 
 			if ((count & 1) != 0) {
+				// Term order matches Affine_vpts' trailing-element lane: x*sx + y*kx
+				// for the x lane and y*sy + x*ky for the y lane.
 				var p = src[count - 1];
-				dst[count - 1] = new SKPoint ((p.X * sx + p.Y * kx) + tx, (p.X * ky + p.Y * sy) + ty);
+				dst[count - 1] = new SKPoint ((p.X * sx + p.Y * kx) + tx, (p.Y * sy + p.X * ky) + ty);
 			}
 		}
 
 		private readonly void MapVectorsInternal (Span<SKPoint> dst, ReadOnlySpan<SKPoint> src)
 		{
 			if (HasPerspective) {
+				// Iterate back-to-front to match SkMatrix::mapVectors, which walks
+				// the perspective case in reverse so overlapping dst/src spans
+				// (dst ahead of src) produce the same result as the native path.
 				var origin = MapPerspective (0, 0);
-				for (var i = 0; i < src.Length; i++) {
+				for (var i = src.Length - 1; i >= 0; i--) {
 					var v = MapPerspective (src[i].X, src[i].Y);
 					dst[i] = new SKPoint (v.X - origin.X, v.Y - origin.Y);
 				}
