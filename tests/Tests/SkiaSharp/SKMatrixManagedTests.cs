@@ -302,8 +302,10 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MapPointsBatchMatchesNative ()
 		{
-			// vary the count so the SIMD pair loop and the odd-element scalar tail are both hit
-			foreach (var count in new[] { 0, 1, 2, 3, 5, 8, TestPoints.Length }) {
+			// vary the count so the SIMD pair loop and the odd-element scalar tail are both hit;
+			// 6 and 10 additionally exercise the single-pair lead-in together with the unrolled
+			// 4-point loop in the same call, and 11 adds an odd tail on top of the unrolled loop
+			foreach (var count in new[] { 0, 1, 2, 3, 5, 6, 8, 10, 11, TestPoints.Length }) {
 				var pts = TestPoints.Take (count).ToArray ();
 				foreach (var m in GetTestMatrices ()) {
 					var native = NativeMapPoints (m, pts);
@@ -318,7 +320,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MapVectorsBatchMatchesNative ()
 		{
-			foreach (var count in new[] { 0, 1, 2, 3, 5, 8, TestPoints.Length }) {
+			foreach (var count in new[] { 0, 1, 2, 3, 5, 6, 8, 10, 11, TestPoints.Length }) {
 				var pts = TestPoints.Take (count).ToArray ();
 				foreach (var m in GetTestMatrices ()) {
 					if (count == 0) {
@@ -339,7 +341,7 @@ namespace SkiaSharp.Tests
 		public void MapPointsInPlaceMatchesNative ()
 		{
 			// dst == src: exercises the in-place aliasing path of the SIMD batch loops
-			foreach (var count in new[] { 1, 2, 3, 5, 8, TestPoints.Length }) {
+			foreach (var count in new[] { 1, 2, 3, 5, 6, 8, 10, 11, TestPoints.Length }) {
 				var pts = TestPoints.Take (count).ToArray ();
 				foreach (var m in GetTestMatrices ()) {
 					var native = NativeMapPointsInPlace (m, pts);
@@ -354,7 +356,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MapVectorsInPlaceMatchesNative ()
 		{
-			foreach (var count in new[] { 1, 2, 3, 5, 8, TestPoints.Length }) {
+			foreach (var count in new[] { 1, 2, 3, 5, 6, 8, 10, 11, TestPoints.Length }) {
 				var pts = TestPoints.Take (count).ToArray ();
 				foreach (var m in GetTestMatrices ()) {
 					var native = NativeMapVectorsInPlace (m, pts);
@@ -362,6 +364,31 @@ namespace SkiaSharp.Tests
 					m.MapVectors (managed, managed);
 					for (var i = 0; i < native.Length; i++)
 						AssertPoint (native[i], managed[i], $"MapVectorsInPlace(n={count})[{i}]");
+				}
+			}
+		}
+
+		[Fact]
+		public void MapVectorsOverlappingSpansMatchNative ()
+		{
+			// dst overlaps src and is shifted one element ahead in a shared buffer.
+			// SkMatrix::mapVectors walks the perspective case back-to-front so this
+			// aliased-but-shifted layout stays correct; the managed path must mirror
+			// that direction to produce the same result as native for every matrix.
+			foreach (var count in new[] { 2, 3, 5, 8, 11 }) {
+				var seed = TestPoints.Take (count).ToArray ();
+				foreach (var m in GetTestMatrices ()) {
+					var nativeBuf = new SKPoint[count + 1];
+					Array.Copy (seed, 0, nativeBuf, 0, count);
+					fixed (SKPoint* p = nativeBuf)
+						SkiaApi.sk_matrix_map_vectors (&m, p + 1, p, count);
+
+					var managedBuf = new SKPoint[count + 1];
+					Array.Copy (seed, 0, managedBuf, 0, count);
+					m.MapVectors (managedBuf.AsSpan (1, count), managedBuf.AsSpan (0, count));
+
+					for (var i = 0; i < count + 1; i++)
+						AssertPoint (nativeBuf[i], managedBuf[i], $"MapVectorsOverlap(n={count})[{i}]");
 				}
 			}
 		}
