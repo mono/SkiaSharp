@@ -45,12 +45,20 @@ on:
         sparse-checkout: .github/scripts
     - name: Detect milestone
       id: detect
+      # The cron→mode mapping lives HERE, next to the cron declarations:
+      # 7 AM → current, 5 PM → latest, everything else (12 PM cron + the
+      # workflow_dispatch default) → next. Staged into env vars rather than
+      # interpolated straight into `run:`, so the free-form `milestone` input
+      # can't inject shell — the script consumes them as real --mode/--milestone args.
       env:
-        INPUT_MODE: ${{ github.event.inputs.mode }}
-        INPUT_MILESTONE: ${{ github.event.inputs.milestone }}
-        SCHEDULE: ${{ github.event.schedule }}
+        MODE: >-
+          ${{ github.event.inputs.mode
+              || (github.event.schedule == '0 7 * * *' && 'current')
+              || (github.event.schedule == '0 17 * * *' && 'latest')
+              || 'next' }}
+        MILESTONE: ${{ github.event.inputs.milestone }}
         GH_TOKEN: ${{ github.token }}
-      run: bash .github/scripts/skia-sync-detect.sh --gate
+      run: bash .github/scripts/skia-sync-detect.sh --gate --mode "$MODE" --milestone "$MILESTONE"
 
 # -- Pre-activation outputs ------------------------------------------
 # Expose detect step outputs for use in the prompt and other jobs.
@@ -140,18 +148,21 @@ steps:
     run: |
       mkdir -p /tmp/gh-aw/agent
   - name: Align submodule to the base branch
+    # Same cron→mode resolution as the pre_activation detect step (see there). The
+    # agent job can't read pre_activation's outputs (it only `needs:` activation), so
+    # re-run the same committed detector to recover base_branch / skia_base_branch,
+    # then align the submodule. skia-sync-detect.sh is the single source of truth.
     env:
-      INPUT_MODE: ${{ github.event.inputs.mode }}
-      INPUT_MILESTONE: ${{ github.event.inputs.milestone }}
-      SCHEDULE: ${{ github.event.schedule }}
+      MODE: >-
+        ${{ github.event.inputs.mode
+            || (github.event.schedule == '0 7 * * *' && 'current')
+            || (github.event.schedule == '0 17 * * *' && 'latest')
+            || 'next' }}
+      MILESTONE: ${{ github.event.inputs.milestone }}
       GH_TOKEN: ${{ github.token }}
-    # The agent job can't read pre_activation's outputs (it only `needs:`
-    # activation), so re-run the same committed detector to recover base_branch /
-    # skia_base_branch, then align the submodule. skia-sync-detect.sh is the single
-    # source of truth — no branch logic is duplicated here.
     run: |
       OUT=$(mktemp)
-      SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh
+      SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --mode "$MODE" --milestone "$MILESTONE"
       set -a; . "$OUT"; set +a
       bash .github/scripts/skia-sync-align-submodule.sh
   - name: Copy push script for post-step

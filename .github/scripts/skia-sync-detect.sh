@@ -14,22 +14,37 @@
 #   - All human-readable logs and ::error::/::notice:: workflow commands go to stdout
 #     (so GitHub renders annotations and the machine output stays clean for sourcing).
 #
+# Args:
+#   --mode <current|next|latest>   Which milestone line to track. The workflow resolves
+#                                  this from the dispatch input or the triggering cron
+#                                  (the cron→mode mapping lives in the workflow, next to
+#                                  where the crons are declared). Defaults to `next`.
+#   --milestone <number>           Exact milestone override; when set, mode becomes
+#                                  `explicit` and the target is this number.
+#   --gate                         Also run the gating checks (does upstream exist? is it
+#                                  already merged?) and emit `skip=true` / exit
+#                                  accordingly. Only pre_activation needs this.
+#
 # Inputs (env):
-#   INPUT_MODE        github.event.inputs.mode      (current|next|latest, optional)
-#   INPUT_MILESTONE   github.event.inputs.milestone (exact number, optional override)
-#   SCHEDULE          github.event.schedule         (cron string, optional)
 #   GITHUB_REPOSITORY owner/repo of this SkiaSharp checkout (default GitHub env)
 #   GITHUB_REF        ref whose scripts/VERSIONS.txt gives main's milestone
 #   GH_TOKEN          token for `gh api`
-#
-# Flags:
-#   --gate   Also run the gating checks (does upstream exist? is it already merged?)
-#            and emit `skip=true` / exit accordingly. Only pre_activation needs this.
 
 set -euo pipefail
 
 GATE=false
-[ "${1:-}" = "--gate" ] && GATE=true
+MODE=""
+MILESTONE=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --gate)      GATE=true ;;
+    --mode)      MODE="${2:-}"; shift ;;
+    --milestone) MILESTONE="${2:-}"; shift ;;
+    *) echo "::error::skia-sync-detect.sh: unknown argument '$1'"; exit 2 ;;
+  esac
+  shift
+done
+MODE="${MODE:-next}"
 
 OUT="${SKIA_SYNC_OUT:-${GITHUB_OUTPUT:?SKIA_SYNC_OUT or GITHUB_OUTPUT must be set}}"
 emit() { printf '%s=%s\n' "$1" "$2" >>"$OUT"; }
@@ -41,24 +56,16 @@ milestone_of() {
 }
 
 # -- Mode -------------------------------------------------------------
-if [ -n "${INPUT_MODE:-}" ]; then
-  MODE="$INPUT_MODE"
-elif [ "${SCHEDULE:-}" = "0 7 * * *" ]; then
-  MODE=current
-elif [ "${SCHEDULE:-}" = "0 17 * * *" ]; then
-  MODE=latest
-else
-  MODE=next
-fi
-
+# Resolved by the caller (workflow): the cron→mode mapping lives in the workflow,
+# next to where the crons are declared. Here it is simply a value in {current,next,latest}.
 MAIN_MS=$(milestone_of "$GITHUB_REF")
 NEXT=$((MAIN_MS + 1))
 LATEST=$(git ls-remote --heads https://github.com/google/skia.git 'refs/heads/chrome/m*' \
   | sed -n 's|.*refs/heads/chrome/m\([0-9]*\)$|\1|p' | sort -n | tail -1)
 
 # -- Target -----------------------------------------------------------
-if [ -n "${INPUT_MILESTONE:-}" ]; then
-  TARGET="$INPUT_MILESTONE"; MODE="explicit"
+if [ -n "$MILESTONE" ]; then
+  TARGET="$MILESTONE"; MODE="explicit"
 elif [ "$MODE" = latest ]; then
   TARGET="$LATEST"
 elif [ "$MODE" = current ]; then
