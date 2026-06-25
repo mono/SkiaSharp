@@ -230,7 +230,10 @@ function Extract-Docs([string]$inputPath, [string]$outputDir) {
         }
         $totalFields += $fieldCount
     }
-    $manifest | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $outputDir "manifest.json") -Encoding UTF8
+    # Always write a manifest (even when zero placeholders) so the docs-extracted
+    # artifact is always produced and downstream jobs don't fail on a missing artifact.
+    $manifestJson = if ($manifest.Count -eq 0) { '[]' } else { $manifest | ConvertTo-Json -Depth 3 }
+    Set-Content -Path (Join-Path $outputDir "manifest.json") -Value $manifestJson -Encoding UTF8
 
     Write-Host "`nExtracted $totalEntries entries from $totalFiles files to $outputDir/"
     Write-Host "Manifest: $($manifest.Count) files, $totalFields total fields"
