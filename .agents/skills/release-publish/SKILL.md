@@ -42,9 +42,10 @@ Publish packages to NuGet.org and finalize releases.
 │  2. Publish to NuGet.org → Trigger Azure pipeline (manual)         │
 │  3. Verify Published     → Poll NuGet.org until indexed            │
 │  4. Tag Release          → Push git tag (ask_user first!)          │
-│  5. Create GitHub Release→ Generate notes, set prerelease flag     │
-│  6. Annotate Notes       → Add platform/contributor emojis         │
-│  7. Close Milestone      → Stable releases only                    │
+│  5. Refresh Web Notes    → Dispatch docs workflow (tag→stable flip)│
+│  6. Create GitHub Release→ Generate notes, set prerelease flag     │
+│  7. Customer Teaser      → Extract key bits from the generated log │
+│  8. Close Milestone      → Stable releases only                    │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -54,8 +55,10 @@ Publish packages to NuGet.org and finalize releases.
 | 1. NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
 | 2. Pipeline checkbox | "Push Preview" | "Push Stable" |
 | 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
-| 5. GitHub Release | `--prerelease` flag | No flag, attach samples |
-| 7. Milestone | Skip | Close milestone |
+| 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
+| 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
+| 7. Customer teaser | Breaking + What's New + Fixes (usually short) | + Dependency Updates + contributors |
+| 8. Milestone | Skip | Close milestone |
 
 ---
 
@@ -188,7 +191,41 @@ git push origin {tag}
 
 ---
 
-## Step 5: Create GitHub Release
+## Step 5: Refresh Website Release Notes & API Diffs
+
+The website release-notes and API-diff pages (`documentation/docfx/releases/`) are
+produced by the **Update Release Notes & API Diffs** workflow. That workflow runs
+**daily and on pushes to `main`** — it deliberately **no longer triggers on `v*`
+tags** — so after pushing the tag in Step 4, **dispatch it manually** to refresh the
+site immediately instead of waiting up to ~24h for the next daily run.
+
+This matters most for **stable** releases: a clean `vX.Y.Z` tag is what flips that
+version's page from "preview / unreleased" to **stable**, and the page cannot flip
+until the workflow runs again with that tag in place — so dispatch it after tagging.
+For previews it is usually a no-op (the release-branch push already refreshed the
+pages), and the workflow opens no PR when nothing changed, so this step is always
+safe to run.
+
+```bash
+# Always dispatch from main (it regenerates every release's pages, including the
+# tag you just pushed). Do NOT dispatch from the release branch.
+gh workflow run "Update Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
+
+# Optional: follow the run to completion.
+gh run watch "$(gh run list --workflow 'Update Release Notes & API Diffs' --repo mono/SkiaSharp --branch main --limit 1 --json databaseId --jq '.[0].databaseId')" --repo mono/SkiaSharp
+```
+
+If anything changed, the workflow opens (or updates) the rolling `[docs]`
+**`bot/release-notes`** PR with the refreshed pages — review and merge it like any
+docs PR. If nothing changed, no PR is opened.
+
+> ⚠️ These **website** release notes are separate from the **GitHub Release** notes
+> created in Step 6. This step updates the docfx site; Step 6 publishes the GitHub
+> Release. Do both.
+
+---
+
+## Step 6: Create GitHub Release
 
 ### Title Format
 
@@ -243,27 +280,60 @@ gh release upload {tag} samples.zip
 - `--prerelease` marks as prerelease (preview only)
 - `--verify-tag` ensures the tag exists before creating the release
 
----
-
-## Step 6: Annotate Release Notes with Emojis
-
-After creating the release, annotate each PR line with **platform** and **community** emojis.
-
-👉 **See [references/release-notes.md](references/release-notes.md)** for:
-- Complete emoji reference (platform + contributor)
-- Label-to-platform mapping
-- Title keyword detection
-- Full annotation process and examples
-
-**Quick summary:**
-1. Get release body: `gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/release-body.md`
-2. For each PR: determine platform emoji, add ❤️ for non-mattleibow contributors
-3. Build sections: Breaking Changes (if any), New Features (if any), What's Changed (all)
-4. Update release: `gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md`
+> The generated notes are the **raw input** for Step 7, which extracts a short,
+> customer-facing teaser from them and keeps this full list folded below it.
 
 ---
 
-## Step 7: Close Milestone (Stable only)
+## Step 7: Add a Customer-Facing Teaser
+
+The auto-generated notes from Step 6 are a flat wall of **every** merged PR (CI,
+version bumps, dependency refreshes, backports — 100+ lines). Maintainers told us this
+is "too heavy and hard to find things." So we keep that full list (it carries the PR
+numbers + author handles for free) but **fold it into a `<details>` block** and add a
+short **customer teaser** on top with only the bits a package consumer cares about.
+
+The teaser is generated **only from the release log we just created** — no website
+release-notes, no `documentation/docfx/` files, no git operations, no waiting.
+
+👉 **See [references/github-release-teaser.md](references/github-release-teaser.md)** — the
+canonical playbook with the full classification rules, teaser template, and a worked
+example. Process:
+
+1. **Capture** the generated log:
+   ```bash
+   gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/generated-log.md
+   ```
+2. **Build the teaser** from `generated-log.md` following the doc's *Classifying the PRs*
+   section. In short: drop the plumbing (CI/build/test, build-tooling and version bumps,
+   docs/notes automation, backport, internal refactors), then classify the rest into these
+   sections **in this order** and omit any that are empty:
+   - **⚠️ Breaking Changes** — removed/renamed/retyped public APIs, newly `[Obsolete]`/
+     deprecated APIs (incl. promoted to warning/error), changed defaults, min-version or TFM
+     drops.
+   - **✨ What's New** — new features/APIs, perf wins, new platform support, and the **Skia
+     engine milestone bump** (a headline, not a dependency).
+   - **🐛 Fixes** — consumer-visible bug fixes on public types/scenarios (fold CI/docs/sample
+     fixes and vague `[skia-sync]` engine-sync fixes).
+   - **📦 Dependency Updates** — bundled **native** library bumps (libpng, freetype, …) as
+     `Updated <dep> to <version>`. **Never** write "security" or name a CVE.
+
+   End each bullet with `by @author (#NNNN)`, then add a `Thanks to our contributors:` line
+   of the unique community handles. Open with one neutral subtitle line.
+3. **Assemble** the final body — teaser on top, then the captured log folded below —
+   per the template, and write it to `/tmp/skiasharp/release/release-body.md`.
+4. **Update** the release:
+   ```bash
+   gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md
+   ```
+
+> This is the **only** content step for the GitHub Release. The richer, categorized
+> website release notes are produced separately by the workflow dispatched in Step 5;
+> the teaser links out to them but never reads or waits on them.
+
+---
+
+## Step 8: Close Milestone (Stable only)
 
 **Skip for preview releases.**
 
@@ -314,4 +384,4 @@ If you've partially completed and need to resume:
 ## Resources
 
 - [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
-- [references/release-notes.md](references/release-notes.md) — Emoji annotation details
+- [references/github-release-teaser.md](references/github-release-teaser.md) — Customer teaser playbook: classification rules + template

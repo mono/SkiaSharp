@@ -65,6 +65,48 @@ function Count-Signatures([xml]$doc) {
     return $ms + $ts
 }
 
+# Returns the [Obsolete(...)] attribute text for a Type or Member node, or $null.
+# Writers use this to avoid documenting/recommending obsolete members in examples
+# and to phrase the member's own summary correctly. The text includes the message
+# (which usually names the replacement API) and whether it is an error.
+function Get-ObsoleteAttribute([System.Xml.XmlNode]$node) {
+    foreach ($attr in $node.SelectNodes("Attributes/Attribute/AttributeName")) {
+        $text = $attr.InnerText
+        if ($text -match 'Obsolete') {
+            return $text.Trim()
+        }
+    }
+    return $null
+}
+
+# Scaffold injected into each type's <remarks> at extract time so the writer has
+# a structure to complete. Defined once here so Extract (which injects it) and
+# Test-IsUnfilled (which recognises it when left unfinished) cannot drift apart.
+$script:TypeRemarksTemplate = "<format type=`"text/markdown`"><![CDATA[`n## Remarks`n`n[Describe what this type does and when to use it]`n`n[If IDisposable: mention using statement / disposal]`n`n## Examples`n`n``````csharp`n[Show the most common usage pattern, 5-15 lines]`n```````n]]></format>"
+
+# Bracketed instruction fragments that exist only in the *unfilled* scaffold
+# above. Their presence in a field means the writer never replaced them.
+$script:ScaffoldSentinels = @(
+    '[Describe what this type does and when to use it]',
+    '[If IDisposable: mention using statement / disposal]',
+    '[Show the most common usage pattern, 5-15 lines]'
+)
+
+# True when a docs field still holds content nobody has written: either mdoc's
+# "To be added." stub or a leftover scaffold fragment. Extract uses this to
+# (re)collect such fields for the writer; Merge uses it to refuse writing them
+# back. That keeps raw template text like "[Describe what this type does ...]"
+# out of the published XML when a large type runs out of time mid-write, and
+# leaves a "To be added." placeholder the next run can still detect and re-fill.
+function Test-IsUnfilled([string]$content) {
+    if ($null -eq $content) { return $true }
+    if ($content -match '^\s*To be added\.?\s*$') { return $true }
+    foreach ($sentinel in $script:ScaffoldSentinels) {
+        if ($content.Contains($sentinel)) { return $true }
+    }
+    return $false
+}
+
 # ---------------------------------------------------------------------------
 # Extract
 # ---------------------------------------------------------------------------
@@ -102,14 +144,19 @@ function Extract-Docs([string]$inputPath, [string]$outputDir) {
             if ($fields.Count -gt 0) {
                 # Pre-fill remarks template for types — agent completes the blanks
                 if ($fields.ContainsKey("remarks")) {
-                    $fields["remarks"] = "<format type=`"text/markdown`"><![CDATA[`n## Remarks`n`n[Describe what this type does and when to use it]`n`n[If IDisposable: mention using statement / disposal]`n`n## Examples`n`n``````csharp`n[Show the most common usage pattern, 5-15 lines]`n```````n]]></format>"
+                    $fields["remarks"] = $script:TypeRemarksTemplate
                     $fields["remarksRequired"] = $true
                 }
-                $entries += @{
+                $typeSig = ($root.SelectSingleNode("TypeSignature[@Language='C#']"))?.GetAttribute("Value")
+                $entry = @{
                     docId      = $null
                     memberType = "type"
+                    signature  = $typeSig
                     fields     = $fields
                 }
+                $typeObsolete = Get-ObsoleteAttribute $root
+                if ($typeObsolete) { $entry["obsolete"] = $typeObsolete }
+                $entries += $entry
             }
         }
 
@@ -125,13 +172,16 @@ function Extract-Docs([string]$inputPath, [string]$outputDir) {
 
             $fields = Extract-DocsBlock $docs
             if ($fields.Count -gt 0) {
-                $entries += @{
+                $entry = @{
                     docId      = $docId
                     memberType = $memberType
                     memberName = $memberName
                     signature  = $csSig
                     fields     = $fields
                 }
+                $memberObsolete = Get-ObsoleteAttribute $member
+                if ($memberObsolete) { $entry["obsolete"] = $memberObsolete }
+                $entries += $entry
             }
         }
 
@@ -195,19 +245,19 @@ function Extract-DocsBlock([System.Xml.XmlElement]$docs) {
 
         switch ($child.LocalName) {
             "param" {
-                if ($text -match "^\s*To be added\.?\s*$") {
+                if (Test-IsUnfilled $text) {
                     if (-not $fields.ContainsKey("params")) { $fields["params"] = @{} }
                     $fields["params"][$child.GetAttribute("name")] = $text
                 }
             }
             "typeparam" {
-                if ($text -match "^\s*To be added\.?\s*$") {
+                if (Test-IsUnfilled $text) {
                     if (-not $fields.ContainsKey("typeparams")) { $fields["typeparams"] = @{} }
                     $fields["typeparams"][$child.GetAttribute("name")] = $text
                 }
             }
             { $_ -in "summary", "returns", "value", "remarks" } {
-                if ($text -match "^\s*To be added\.?\s*$") {
+                if (Test-IsUnfilled $text) {
                     $fields[$child.LocalName] = $text
                 }
             }
@@ -290,7 +340,7 @@ function Merge-Docs([string]$inputPath) {
             # Update scalar fields
             foreach ($fieldName in @("summary", "returns", "value", "remarks")) {
                 $content = $fields.$fieldName
-                if ($null -ne $content -and $content -notmatch "^\s*To be added\.?\s*$") {
+                if (-not (Test-IsUnfilled $content)) {
                     # Reject fields not in original extract
                     if ($allowedKeys -and -not $allowedKeys.Contains($fieldName)) {
                         Write-Warning "Skipping $($docId ?? 'type').$fieldName — not in original extract (agent-added)"
@@ -315,7 +365,7 @@ function Merge-Docs([string]$inputPath) {
                     $h = @{}; $fields.params.PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }; $h
                 }
                 foreach ($kv in $paramMap.GetEnumerator()) {
-                    if ($null -ne $kv.Value -and $kv.Value -notmatch "^\s*To be added\.?\s*$") {
+                    if (-not (Test-IsUnfilled $kv.Value)) {
                         # Reject params not in original extract
                         if ($allowedKeys -and -not $allowedKeys.Contains("params.$($kv.Key)")) {
                             Write-Warning "Skipping $($docId ?? 'type').params.$($kv.Key) — not in original extract (agent-added)"
@@ -336,7 +386,7 @@ function Merge-Docs([string]$inputPath) {
                     $h = @{}; $fields.typeparams.PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }; $h
                 }
                 foreach ($kv in $tpMap.GetEnumerator()) {
-                    if ($null -ne $kv.Value -and $kv.Value -notmatch "^\s*To be added\.?\s*$") {
+                    if (-not (Test-IsUnfilled $kv.Value)) {
                         # Reject typeparams not in original extract
                         if ($allowedKeys -and -not $allowedKeys.Contains("typeparams.$($kv.Key)")) {
                             Write-Warning "Skipping $($docId ?? 'type').typeparams.$($kv.Key) — not in original extract (agent-added)"

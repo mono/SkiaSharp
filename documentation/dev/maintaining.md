@@ -98,7 +98,7 @@ Updating native Skia is usually manageable, though it can become tricky when the
 
 ### General Update Steps
 
-1. Review the upstream changelog for breaking changes.
+1. Review the upstream api diff for breaking changes.
 2. Merge the target Skia version into a new branch from our current version.
 3. Resolve any merge conflicts and get it compiling.
 4. Identify and adapt to any changed or removed features.
@@ -122,7 +122,7 @@ Once native Skia is updated, updating SkiaSharp is typically more straightforwar
 1. Finish updating native Skia.
 2. Update or rewrite .NET methods to match the new native APIs.
 3. Add tests for everything.
-4. Add more tests based on things in the changelog or new features.
+4. Add more tests based on things in the api diff or new features.
 
 We’re selective about which new native APIs to expose right away. Google iterates quickly, and early-stage APIs may be short-lived or evolve significantly. Lagging slightly behind can actually help — by the time we adopt a new feature, it’s often more stable.
 

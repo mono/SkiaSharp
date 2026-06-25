@@ -4,6 +4,12 @@ Release notes for all SkiaSharp versions.
 
 ### SkiaSharp 4.x
 
+- **Version 4.150.x**
+  - [Version 4.150.0](4.150.0.md)
+  - [Version 4.150.0 (Unreleased)](4.150.0-unreleased.md)
+- **Version 4.148.x**
+  - [Version 4.148.1 (Unreleased)](4.148.1-unreleased.md)
+  - [Version 4.148.0](4.148.0.md)
 - **Version 4.147.x**
   - [Version 4.147.0](4.147.0.md)
 
@@ -95,3 +101,45 @@ Release notes for all SkiaSharp versions.
   - [Version 1.49.2](1.49.2.md)
   - [Version 1.49.1](1.49.1.md)
   - [Version 1.49.0](1.49.0.md)
+
+### HarfBuzzSharp
+
+- **HarfBuzzSharp 14.2.x**
+  - [HarfBuzzSharp 14.2.0](harfbuzzsharp/14.2.0.md)
+- **HarfBuzzSharp 8.3.x**
+  - [HarfBuzzSharp 8.3.1.6 (Unreleased)](harfbuzzsharp/8.3.1.6-unreleased.md)
+  - [HarfBuzzSharp 8.3.1.5](harfbuzzsharp/8.3.1.5.md)
+  - [HarfBuzzSharp 8.3.1.3](harfbuzzsharp/8.3.1.3.md)
+  - [HarfBuzzSharp 8.3.1.2](harfbuzzsharp/8.3.1.2.md)
+  - [HarfBuzzSharp 8.3.1.1](harfbuzzsharp/8.3.1.1.md)
+  - [HarfBuzzSharp 8.3.1 (Unreleased)](harfbuzzsharp/8.3.1-unreleased.md)
+  - [HarfBuzzSharp 8.3.0.1](harfbuzzsharp/8.3.0.1.md)
+  - [HarfBuzzSharp 8.3.0](harfbuzzsharp/8.3.0.md)
+- **HarfBuzzSharp 7.3.x**
+  - [HarfBuzzSharp 7.3.0.3](harfbuzzsharp/7.3.0.3.md)
+  - [HarfBuzzSharp 7.3.0.2](harfbuzzsharp/7.3.0.2.md)
+  - [HarfBuzzSharp 7.3.0.1](harfbuzzsharp/7.3.0.1.md)
+  - [HarfBuzzSharp 7.3.0](harfbuzzsharp/7.3.0.md)
+- **HarfBuzzSharp 2.8.x**
+  - [HarfBuzzSharp 2.8.2.5](harfbuzzsharp/2.8.2.5.md)
+  - [HarfBuzzSharp 2.8.2.4](harfbuzzsharp/2.8.2.4.md)
+  - [HarfBuzzSharp 2.8.2.3](harfbuzzsharp/2.8.2.3.md)
+  - [HarfBuzzSharp 2.8.2.2](harfbuzzsharp/2.8.2.2.md)
+  - [HarfBuzzSharp 2.8.2.1](harfbuzzsharp/2.8.2.1.md)
+  - [HarfBuzzSharp 2.8.2](harfbuzzsharp/2.8.2.md)
+- **HarfBuzzSharp 2.6.x**
+  - [HarfBuzzSharp 2.6.1.9](harfbuzzsharp/2.6.1.9.md)
+  - [HarfBuzzSharp 2.6.1.8](harfbuzzsharp/2.6.1.8.md)
+  - [HarfBuzzSharp 2.6.1.7](harfbuzzsharp/2.6.1.7.md)
+  - [HarfBuzzSharp 2.6.1.6](harfbuzzsharp/2.6.1.6.md)
+  - [HarfBuzzSharp 2.6.1.5](harfbuzzsharp/2.6.1.5.md)
+  - [HarfBuzzSharp 2.6.1.4](harfbuzzsharp/2.6.1.4.md)
+  - [HarfBuzzSharp 2.6.1.3](harfbuzzsharp/2.6.1.3.md)
+  - [HarfBuzzSharp 2.6.1.2](harfbuzzsharp/2.6.1.2.md)
+  - [HarfBuzzSharp 2.6.1.1](harfbuzzsharp/2.6.1.1.md)
+  - [HarfBuzzSharp 2.6.1](harfbuzzsharp/2.6.1.md)
+- **HarfBuzzSharp 1.4.x**
+  - [HarfBuzzSharp 1.4.6.2](harfbuzzsharp/1.4.6.2.md)
+  - [HarfBuzzSharp 1.4.6.1](harfbuzzsharp/1.4.6.1.md)
+  - [HarfBuzzSharp 1.4.6](harfbuzzsharp/1.4.6.md)
+  - [HarfBuzzSharp 1.4.5](harfbuzzsharp/1.4.5.md)
