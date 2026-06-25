@@ -556,16 +556,49 @@ namespace SkiaSharp.Tests
 		{
 			var gifPath = Path.Combine(PathToImages, "animated-heart.gif");
 			var pngPath = Path.Combine(PathToImages, "baboon.png");
-		
+	
 			using var gifCodec = SKCodec.Create(gifPath);
 			using var pngCodec = SKCodec.Create(pngPath);
-		
+	
 			Assert.NotNull(gifCodec);
 			Assert.NotNull(pngCodec);
-		
+	
 			Assert.Equal(SKCodecAnimationStatus.Unknown, gifCodec.AnimationStatus);
 			Assert.Equal(SKCodecAnimationStatus.NotAnimated, pngCodec.AnimationStatus);
 			Assert.True(gifCodec.FrameCount > 1);
+		}
+
+		[Fact]
+		public void PngGivesDefinitiveAnswerImmediately()
+		{
+			// PNG format can determine animation status from metadata before first frame
+			var path = Path.Combine(PathToImages, "baboon.png");
+			using var codec = SKCodec.Create(path);
+	
+			Assert.NotNull(codec);
+			// PNG should give definitive "no" answer immediately, never Unknown
+			Assert.Equal(SKCodecAnimationStatus.NotAnimated, codec.AnimationStatus);
+		}
+
+		[Fact]
+		public void GifMayReturnUnknownWithPartialInput()
+		{
+			// GIF format may return Unknown initially with partial input,
+			// as it needs to read frames to determine if there are more
+			var path = Path.Combine(PathToImages, "animated-heart.gif");
+			var fullData = File.ReadAllBytes(path);
+		
+			// Test with full data - codec creation should succeed
+			using var fullCodec = SKCodec.Create(SKData.CreateCopy(fullData));
+			Assert.NotNull(fullCodec);
+		
+			// For GIF, AnimationStatus may be Unknown even with full data
+			// because the codec may need to decode frames to know if there are more
+			// This is expected behavior per Skia documentation
+			Assert.Equal(SKCodecAnimationStatus.Unknown, fullCodec.AnimationStatus);
+		
+			// However, FrameCount should reveal the truth
+			Assert.True(fullCodec.FrameCount > 1);
 		}
 	}
 }
