@@ -402,6 +402,39 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void MapPointsOverlappingSpansMatchNative ()
+		{
+			// Same shifted-overlap topology as the MapVectors test, applied to
+			// MapPoints. Every native mapPoints proc iterates front-to-back (only
+			// mapVectors special-cases perspective with a backward walk), so the
+			// managed batch path must stay forward for all matrix types. Disjoint
+			// and same-offset in-place buffers cannot observe this; the shifted
+			// overlap can. This guards against a future "optimize to backward"
+			// regression that would silently diverge from native on aliased spans.
+			foreach (var count in new[] { 2, 3, 5, 8, 11 }) {
+				var seed = TestPoints.Take (count).ToArray ();
+				foreach (var dstAhead in new[] { true, false }) {
+					foreach (var m in GetTestMatrices ()) {
+						var nativeBuf = new SKPoint[count + 1];
+						var managedBuf = new SKPoint[count + 1];
+						var srcOff = dstAhead ? 0 : 1;
+						var dstOff = dstAhead ? 1 : 0;
+						Array.Copy (seed, 0, nativeBuf, srcOff, count);
+						Array.Copy (seed, 0, managedBuf, srcOff, count);
+
+						fixed (SKPoint* p = nativeBuf)
+							SkiaApi.sk_matrix_map_points (&m, p + dstOff, p + srcOff, count);
+
+						m.MapPoints (managedBuf.AsSpan (dstOff, count), managedBuf.AsSpan (srcOff, count));
+
+						for (var i = 0; i < count + 1; i++)
+							AssertPoint (nativeBuf[i], managedBuf[i], $"MapPointsOverlap(n={count}, dstAhead={dstAhead})[{i}]");
+					}
+				}
+			}
+		}
+
+		[Fact]
 		public void MapRectMatchesNative ()
 		{
 			foreach (var m in GetTestMatrices ()) {
