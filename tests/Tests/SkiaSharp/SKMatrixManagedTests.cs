@@ -190,6 +190,20 @@ namespace SkiaSharp.Tests
 			// affine with an infinite skew lane
 			yield return new SKMatrix (1, float.PositiveInfinity, 0, 0.5f, 2, 0, 0, 0, 1);
 
+			// extreme-magnitude / precision-boundary matrices. These stress the
+			// float-vs-double intermediate widths in Determinant/Invert/Concat:
+			// native computes some cross-products in float (scross, rowcol3) and
+			// others in double (dcross, muladdmul). A cofactor that overflows in
+			// float but not double (or vice versa) only diverges near float.MaxValue,
+			// which the random matrices above never reach. They also straddle the
+			// cubed nearly-zero determinant threshold. The managed port must pick the
+			// same width per path; these lock that contract.
+			yield return new SKMatrix (3.8124249e-06f, 1, 0, 0, 3.8169710e-06f, 0, 0, 0, 1); // det ~= nearly-zero^3
+			yield return new SKMatrix (1, float.MaxValue, float.MaxValue, 0, 1, 2, 0, 0, 1); // affine cofactor: double cross avoids overflow
+			yield return new SKMatrix (1, 0, 0, 0, float.MaxValue, float.MaxValue, 0, 1, 2); // perspective cofactor: float cross overflows
+			yield return new SKMatrix (float.MaxValue, -float.MaxValue, 0, 0, 1, 0, 0, 0, 1); // affine concat: muladdmul (double)
+			yield return new SKMatrix (float.MaxValue, -float.MaxValue, 0, 0, 1, 0, 1, 0, 1); // perspective concat: rowcol3 (float)
+
 			// deterministic random matrices
 			var rnd = new Random (12345);
 			for (var i = 0; i < 200; i++)

@@ -908,10 +908,16 @@ namespace SkiaSharp
 			return new SKRect (float.NaN, float.NaN, float.NaN, float.NaN);
 		}
 
-		// Mirrors the skvx sort_as_rect helper. skvx::min/max use a specific
-		// comparison form (NaN keeps the first operand) that differs from
-		// Vector4.Min/Max, so the scalar form below is used to stay bit-exact.
-		// ltrb = (l, t, r, b), rblt = (r, b, l, t); result is
+		// Mirrors the skvx sort_as_rect helper used by SkMatrix::mapRect for the
+		// translate and scale/translate fast paths. skvx::min/max keep the FIRST
+		// operand when either side is NaN, which differs from both Vector4.Min/Max
+		// and MathF.Min/Max (IEEE NaN-propagating) and from SKRect.Standardized
+		// (which compares with '>' and so keeps a different operand on NaN). Those
+		// paths have no finiteness probe, so a non-finite lane (e.g. Inf*0 = NaN
+		// from an infinite scale) flows straight into the result and the choice is
+		// value-visible; hence the hand-rolled scalar form below, which is also the
+		// only one available on every target (MathF is absent on net462/net48/
+		// netstandard2.0). ltrb = (l, t, r, b), rblt = (r, b, l, t); result is
 		// (min[2], min[3], max[0], max[1]).
 		private static SKRect SortAsRect (float l, float t, float r, float b) =>
 			new SKRect (SkvxMin (r, l), SkvxMin (b, t), SkvxMax (l, r), SkvxMax (t, b));
