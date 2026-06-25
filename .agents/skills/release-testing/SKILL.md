@@ -233,19 +233,27 @@ dotnet test -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
 
 ### Test Commands
 
+> **Note:** This project uses **Microsoft.Testing.Platform (MTP)** with xUnit v3 (since #4143).
+> The legacy VSTest `--filter "FullyQualifiedName~..."` syntax is **silently ignored** under MTP
+> and runs ALL tests. Use the MTP filter args after the `--` separator instead:
+> `--filter-class`, `--filter-method`, `--filter-namespace` (and `--filter-not-class`, etc.),
+> with `*` wildcards. MSBuild `-p:` properties (e.g. `-p:SkiaSharpVersion=`, `-p:iOSDevice=`)
+> must stay BEFORE the `--`; only the test-platform filter args go AFTER it.
+
 ```bash
 # Run by category
-dotnet test --filter "FullyQualifiedName~SmokeTests" ...
-dotnet test --filter "FullyQualifiedName~ConsoleTests" ...
-dotnet test --filter "FullyQualifiedName~LinuxConsoleTests" ...
-dotnet test --filter "FullyQualifiedName~BlazorTests" ...
-dotnet test --filter "FullyQualifiedName~MauiiOSTests" ... -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2"
-dotnet test --filter "FullyQualifiedName~MauiMacCatalystTests" ...
+dotnet test ... -- --filter-class "*SmokeTests"
+dotnet test ... -- --filter-class "*ConsoleTests"
+dotnet test ... -- --filter-class "*LinuxConsoleTests"
+dotnet test ... -- --filter-class "*BlazorTests"
+dotnet test -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2" ... -- --filter-class "*MauiiOSTests"
+dotnet test ... -- --filter-class "*MauiMacCatalystTests"
 
 # Android: specify device ID and expected API level for validation
-dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ... \
+dotnet test ... \
   -p:AndroidDeviceId="emulator-5554" \
-  -p:AndroidApiLevel="23"
+  -p:AndroidApiLevel="23" \
+  -- --filter-class "*MauiAndroidTests"
 ```
 
 ### Android Emulator Workflow
@@ -278,11 +286,12 @@ dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ... \
    DEVICE_ID=$(adb devices | grep emulator | awk '{print $1}')
    API_LEVEL=$(adb -s $DEVICE_ID shell getprop ro.build.version.sdk | tr -d '\r')
    
-   dotnet test --filter "FullyQualifiedName~MauiAndroidTests" \
+   dotnet test \
      -p:AndroidDeviceId="$DEVICE_ID" \
      -p:AndroidApiLevel="$API_LEVEL" \
      -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version}
+     -p:HarfBuzzSharpVersion={hb-version} \
+     -- --filter-class "*MauiAndroidTests"
    ```
 
 4. **Shut down emulator before next test:**
