@@ -528,39 +528,39 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void AnimatedGifStatusCheck()
+		public void AnimatedGifReturnsAnimated()
 		{
+			// Per Skia's own tests: FrameCount > 1 should return IsAnimated::kYes (Animated)
+			// See externals/skia/tests/CodecAnimTest.cpp line 350-351
 			var path = Path.Combine(PathToImages, "animated-heart.gif");
 			using var codec = SKCodec.Create(path);
 
 			Assert.NotNull(codec);
-	
-			// Capture actual value to report in assertion failure
-			var actual = codec.AnimationStatus;
-			var frameCount = codec.FrameCount;
-	
-			// Animated GIF should either return Animated or Unknown
-			// It should NOT return NotAnimated for a multi-frame GIF
-			Assert.True(actual == SKCodecAnimationStatus.Animated || actual == SKCodecAnimationStatus.Unknown,
-				$"animated-heart.gif returned {actual} with {frameCount} frames - expected Animated or Unknown");
-	
-			Assert.True(frameCount > 1, $"animated-heart.gif has {frameCount} frames - expected > 1");
+			Assert.True(codec.FrameCount > 1, $"animated-heart.gif has {codec.FrameCount} frames - expected > 1");
+
+			var status = codec.AnimationStatus;
+		
+			// Animated GIF with multiple frames MUST return Animated, not Unknown or NotAnimated
+			Assert.Equal(SKCodecAnimationStatus.Animated, status);
 		}
 
 		[Theory]
-		[InlineData("baboon.png", SKCodecAnimationStatus.NotAnimated)]
-		[InlineData("color-wheel.png", SKCodecAnimationStatus.NotAnimated)]
-		[InlineData("CMYK.jpg", SKCodecAnimationStatus.NotAnimated)]
-		public void StaticImageReturnsNotAnimated(string image, SKCodecAnimationStatus expected)
+		[InlineData("baboon.png")]
+		[InlineData("color-wheel.png")]
+		[InlineData("CMYK.jpg")]
+		public void StaticImageReturnsNotAnimated(string imageName)
 		{
-			var path = Path.Combine(PathToImages, image);
+			var path = Path.Combine(PathToImages, imageName);
 			using var codec = SKCodec.Create(path);
-	
+
 			Assert.NotNull(codec);
+			Assert.Equal(0, codec.FrameCount);
+
+			var status = codec.AnimationStatus;
 		
-			var actual = codec.AnimationStatus;
-			Assert.True(actual == expected || actual == SKCodecAnimationStatus.Unknown,
-				$"{image} returned {actual} - expected {expected} or Unknown");
+			// Static images should return NotAnimated (or possibly Unknown for formats that don't support animation)
+			// But they should NEVER return Animated
+			Assert.NotEqual(SKCodecAnimationStatus.Animated, status);
 		}
 
 		[Fact]
