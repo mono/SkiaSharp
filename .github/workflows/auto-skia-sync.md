@@ -1,6 +1,14 @@
 ---
 description: "Daily upstream Skia milestone sync - merges new commits, resolves conflicts, builds, tests, and creates PRs."
 
+# -- Engine ------------------------------------------------------------
+# Use Claude Opus (instead of the default Sonnet) for this workflow: the
+# upstream merge/conflict-resolution and build-fix reasoning is hard and
+# benefits from the stronger model, despite the higher AI-credit cost.
+engine:
+  id: copilot
+  model: claude-opus-4.6
+
 # -- Triggers ----------------------------------------------------------
 # Three daily crons: current (7 AM), next (12 PM), latest (5 PM UTC).
 # Manual dispatch with mode selector.
@@ -137,11 +145,11 @@ steps:
       INPUT_MILESTONE: ${{ github.event.inputs.milestone }}
       SCHEDULE: ${{ github.event.schedule }}
       GH_TOKEN: ${{ github.token }}
+    # The agent job can't read pre_activation's outputs (it only `needs:`
+    # activation), so re-run the same committed detector to recover base_branch /
+    # skia_base_branch, then align the submodule. skia-sync-detect.sh is the single
+    # source of truth — no branch logic is duplicated here.
     run: |
-      # The agent job can't read pre_activation's outputs (it only `needs:`
-      # activation), so re-run the same committed detector to recover base_branch /
-      # skia_base_branch, then align the submodule. skia-sync-detect.sh is the single
-      # source of truth — no branch logic is duplicated here.
       OUT=$(mktemp)
       SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh
       set -a; . "$OUT"; set +a
