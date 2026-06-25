@@ -7,7 +7,7 @@ description: "Daily upstream Skia milestone sync - merges new commits, resolves 
 # benefits from the stronger model, despite the higher AI-credit cost.
 engine:
   id: copilot
-  model: claude-opus-4.6
+  model: claude-opus-4.7
 
 # -- Triggers ----------------------------------------------------------
 # Three daily crons: current (7 AM), next (12 PM), latest (5 PM UTC).
