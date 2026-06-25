@@ -36,10 +36,15 @@ namespace SkiaSharp.Tests.Visual
 			};
 			using var paint = new SKPaint { IsAntialias = true, Color = SKColors.Black };
 
-			canvas.DrawText("Skia", 28, 110, font, paint);
+			// The bundled Roboto2-Regular_NoEmbed.ttf is a tiny subset that only maps
+			// the glyphs "!,DEHLORW" — text using any other letters (e.g. "Skia")
+			// renders nothing, producing a blank golden that asserts nothing. Keep
+			// this string within the subset so the scene actually exercises glyph
+			// rasterization.
+			canvas.DrawText("HELLO", 28, 110, font, paint);
 
 			paint.Color = SKColors.OrangeRed;
-			canvas.DrawText("Sharp", 28, 170, font, paint);
+			canvas.DrawText("WORLD!", 28, 170, font, paint);
 		}
 
 		private static SKTypeface LoadTypeface()
