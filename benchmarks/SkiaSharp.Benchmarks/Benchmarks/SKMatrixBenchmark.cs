@@ -31,6 +31,9 @@ public unsafe class SKMatrixBenchmark
 	private static extern void sk_matrix_map_points(SKMatrix* matrix, SKPoint* dst, SKPoint* src, int count);
 
 	[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+	private static extern void sk_matrix_map_vectors(SKMatrix* matrix, SKPoint* dst, SKPoint* src, int count);
+
+	[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 	private static extern void sk_matrix_map_rect(SKMatrix* matrix, SKRect* dest, SKRect* source);
 
 	[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -38,9 +41,12 @@ public unsafe class SKMatrixBenchmark
 
 	private SKMatrix affine;
 	private SKMatrix affine2;
+	private SKMatrix translate;
 	private SKMatrix perspective;
 	private SKPoint[] src;
 	private SKPoint[] dst;
+	private SKPoint[] srcSmall;
+	private SKPoint[] dstSmall;
 	private readonly SKRect rect = new SKRect(1, 2, 300, 400);
 
 	[GlobalSetup]
@@ -52,12 +58,19 @@ public unsafe class SKMatrixBenchmark
 		affine.TransY = -7;
 
 		affine2 = SKMatrix.CreateScaleTranslation(0.75f, 1.25f, 5, 9);
+		translate = SKMatrix.CreateTranslation(12, -7);
 		perspective = new SKMatrix(1.2f, 0.1f, 10, -0.2f, 0.9f, 20, 0.001f, 0.002f, 1);
 
 		src = new SKPoint[1024];
 		dst = new SKPoint[1024];
 		for (var i = 0; i < src.Length; i++)
 			src[i] = new SKPoint(i * 0.5f, i * -0.25f);
+
+		// small batch: shows the win when the per-call P/Invoke transition is not amortized
+		srcSmall = new SKPoint[16];
+		dstSmall = new SKPoint[16];
+		for (var i = 0; i < srcSmall.Length; i++)
+			srcSmall[i] = new SKPoint(i * 0.5f, i * -0.25f);
 	}
 
 	// ===== Invert =====
@@ -178,4 +191,103 @@ public unsafe class SKMatrixBenchmark
 	[BenchmarkCategory("MapPointPersp"), Benchmark]
 	public SKPoint MapPointPersp_Managed() =>
 		perspective.MapPoint(12.5f, -7.5f);
+
+	// ===== MapPoints batch: scale and translate procs (no swizzle) =====
+
+	[BenchmarkCategory("MapPointsScale1024"), Benchmark(Baseline = true)]
+	public void MapPointsScale_Native()
+	{
+		SKMatrix m = affine2;
+		fixed (SKPoint* s = src)
+		fixed (SKPoint* d = dst)
+			sk_matrix_map_points(&m, d, s, src.Length);
+	}
+
+	[BenchmarkCategory("MapPointsScale1024"), Benchmark]
+	public void MapPointsScale_Managed() =>
+		affine2.MapPoints(dst, src);
+
+	[BenchmarkCategory("MapPointsTranslate1024"), Benchmark(Baseline = true)]
+	public void MapPointsTranslate_Native()
+	{
+		SKMatrix m = translate;
+		fixed (SKPoint* s = src)
+		fixed (SKPoint* d = dst)
+			sk_matrix_map_points(&m, d, s, src.Length);
+	}
+
+	[BenchmarkCategory("MapPointsTranslate1024"), Benchmark]
+	public void MapPointsTranslate_Managed() =>
+		translate.MapPoints(dst, src);
+
+	// ===== MapPoints batch: small count (P/Invoke transition not amortized) =====
+
+	[BenchmarkCategory("MapPoints16"), Benchmark(Baseline = true)]
+	public void MapPointsSmall_Native()
+	{
+		SKMatrix m = affine;
+		fixed (SKPoint* s = srcSmall)
+		fixed (SKPoint* d = dstSmall)
+			sk_matrix_map_points(&m, d, s, srcSmall.Length);
+	}
+
+	[BenchmarkCategory("MapPoints16"), Benchmark]
+	public void MapPointsSmall_Managed() =>
+		affine.MapPoints(dstSmall, srcSmall);
+
+	// ===== MapVectors batch (1024 and small count) =====
+
+	[BenchmarkCategory("MapVectors1024"), Benchmark(Baseline = true)]
+	public void MapVectors_Native()
+	{
+		SKMatrix m = affine;
+		fixed (SKPoint* s = src)
+		fixed (SKPoint* d = dst)
+			sk_matrix_map_vectors(&m, d, s, src.Length);
+	}
+
+	[BenchmarkCategory("MapVectors1024"), Benchmark]
+	public void MapVectors_Managed() =>
+		affine.MapVectors(dst, src);
+
+	[BenchmarkCategory("MapVectors16"), Benchmark(Baseline = true)]
+	public void MapVectorsSmall_Native()
+	{
+		SKMatrix m = affine;
+		fixed (SKPoint* s = srcSmall)
+		fixed (SKPoint* d = dstSmall)
+			sk_matrix_map_vectors(&m, d, s, srcSmall.Length);
+	}
+
+	[BenchmarkCategory("MapVectors16"), Benchmark]
+	public void MapVectorsSmall_Managed() =>
+		affine.MapVectors(dstSmall, srcSmall);
+
+	// ===== MapRect: scale and translate fast paths (managed SortAsRect) =====
+
+	[BenchmarkCategory("MapRectScale"), Benchmark(Baseline = true)]
+	public SKRect MapRectScale_Native()
+	{
+		SKMatrix m = affine2;
+		SKRect src = rect, result;
+		sk_matrix_map_rect(&m, &result, &src);
+		return result;
+	}
+
+	[BenchmarkCategory("MapRectScale"), Benchmark]
+	public SKRect MapRectScale_Managed() =>
+		affine2.MapRect(rect);
+
+	[BenchmarkCategory("MapRectTranslate"), Benchmark(Baseline = true)]
+	public SKRect MapRectTranslate_Native()
+	{
+		SKMatrix m = translate;
+		SKRect src = rect, result;
+		sk_matrix_map_rect(&m, &result, &src);
+		return result;
+	}
+
+	[BenchmarkCategory("MapRectTranslate"), Benchmark]
+	public SKRect MapRectTranslate_Managed() =>
+		translate.MapRect(rect);
 }
