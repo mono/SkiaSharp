@@ -371,24 +371,32 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MapVectorsOverlappingSpansMatchNative ()
 		{
-			// dst overlaps src and is shifted one element ahead in a shared buffer.
-			// SkMatrix::mapVectors walks the perspective case back-to-front so this
-			// aliased-but-shifted layout stays correct; the managed path must mirror
-			// that direction to produce the same result as native for every matrix.
+			// Overlapping, shifted spans in a shared buffer. This is the only aliasing
+			// topology that makes iteration direction observable: disjoint buffers and
+			// same-offset in-place (dst == src) give identical results regardless of
+			// direction, so they cannot catch a wrong loop order. SkMatrix::mapVectors
+			// walks the perspective case back-to-front; the managed path must mirror
+			// that to match native for every matrix and both shift directions.
 			foreach (var count in new[] { 2, 3, 5, 8, 11 }) {
 				var seed = TestPoints.Take (count).ToArray ();
-				foreach (var m in GetTestMatrices ()) {
-					var nativeBuf = new SKPoint[count + 1];
-					Array.Copy (seed, 0, nativeBuf, 0, count);
-					fixed (SKPoint* p = nativeBuf)
-						SkiaApi.sk_matrix_map_vectors (&m, p + 1, p, count);
+				// shift = +1: dst one element ahead of src; shift = -1: dst one behind
+				foreach (var dstAhead in new[] { true, false }) {
+					foreach (var m in GetTestMatrices ()) {
+						var nativeBuf = new SKPoint[count + 1];
+						var managedBuf = new SKPoint[count + 1];
+						var srcOff = dstAhead ? 0 : 1;
+						var dstOff = dstAhead ? 1 : 0;
+						Array.Copy (seed, 0, nativeBuf, srcOff, count);
+						Array.Copy (seed, 0, managedBuf, srcOff, count);
 
-					var managedBuf = new SKPoint[count + 1];
-					Array.Copy (seed, 0, managedBuf, 0, count);
-					m.MapVectors (managedBuf.AsSpan (1, count), managedBuf.AsSpan (0, count));
+						fixed (SKPoint* p = nativeBuf)
+							SkiaApi.sk_matrix_map_vectors (&m, p + dstOff, p + srcOff, count);
 
-					for (var i = 0; i < count + 1; i++)
-						AssertPoint (nativeBuf[i], managedBuf[i], $"MapVectorsOverlap(n={count})[{i}]");
+						m.MapVectors (managedBuf.AsSpan (dstOff, count), managedBuf.AsSpan (srcOff, count));
+
+						for (var i = 0; i < count + 1; i++)
+							AssertPoint (nativeBuf[i], managedBuf[i], $"MapVectorsOverlap(n={count}, dstAhead={dstAhead})[{i}]");
+					}
 				}
 			}
 		}
