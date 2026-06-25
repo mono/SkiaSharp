@@ -1,4 +1,7 @@
-Model: claude-opus-4.6
+Model: gpt-5.5
+<!-- Chosen by the eval bake-off (eval/bakeoff-results.md): the only candidate that
+     substantively caught the seeded byte-order contradiction, with the best mean
+     recall (0.89) and precision (0.75). Re-run the bake-off if the candidate set changes. -->
 
 # Agent: Factual Claim Verifier
 
@@ -31,8 +34,12 @@ write these docs and have no stake in them being right — read the source fresh
 - **Parameter constraints** ("exactly N", "must be", "cannot be"): does the method body actually
   validate/reject, or silently accept/pad/truncate? Read the body, not just the signature.
 - **Accessor verb** vs the `MemberSignature` (`{ get; }` → "Gets", `{ get; set; }` → "Gets or sets").
-- **Defaults:** verify against a field initializer in source; a struct with none defaults to
-  `0`/`null`/`false` (recurring trap: `SKDocumentXpsOptions.Dpi` is 0, not 72).
+- **Defaults:** only assert a documented default is *wrong* when you have **read the source** and
+  seen the field initializer — or confirmed there is none (a struct/auto-property field with no
+  initializer is `0`/`null`/`false`; recurring trap: `SKDocumentXpsOptions.Dpi` is 0, not 72). **If you
+  cannot read the source, do not assume `0`** — a stated default you can't verify is `UNVERIFIED`, not a
+  finding. Inventing "should be 0" for a default you never checked in source is a false positive (the
+  eval bake-off caught models doing exactly this).
 - **Data-format claims** (bit layouts, channel order, byte order): verify against skia-patterns.md and
   the native header if present. Check the bit math adds up.
 - **Standard-citing enums:** the member name encodes the standard — verify the number and the behavior

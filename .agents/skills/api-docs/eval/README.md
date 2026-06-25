@@ -57,6 +57,8 @@ control — drops recall or precision below 1.0 and fails the run. Wire this int
 
 ## 2. Model bake-off (per role)
 
+> **Latest results:** [`bakeoff-results.md`](bakeoff-results.md) — `reviewer-factual` → `gpt-5.5`.
+
 The `llm`-detector defects (`factual`, `fabricated-member`) can't be caught mechanically —
 they need a reviewer agent reading the source. Use the bake-off to choose each role's model.
 

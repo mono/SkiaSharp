@@ -43,16 +43,30 @@ below (and each agent file's `Model:` header) and passes the right model per cal
 | Sub-agent | Model | Why |
 |---|---|---|
 | writer | `claude-opus-4.6` | XML editing + accuracy is the hardest job |
-| reviewer-factual | `claude-opus-4.6` | source-grounded correctness |
+| reviewer-factual | `gpt-5.5` | **bake-off winner** (eval/) — only model that caught the subtle byte-order contradiction; best mean recall + precision |
 | reviewer-examples | `claude-opus-4.6` | compile/obsolete reasoning |
 | reviewer-quality | `claude-sonnet-4.6` | style/completeness — lighter |
 | review-synthesizer | `claude-sonnet-4.6` | dedupe/normalize — lighter |
 | (mechanical checks) | — (deterministic linter) | no model needed |
 
-These are **starting points**; tune them from the eval per-role bake-off (`eval/`). The only real
-primitives are `engine.model` (orchestrator) and the `task` tool's `model` parameter (sub-agents); this
-table is skill prose the orchestrator obeys. If the gh-aw CI sandbox does not honor per-sub-agent models
-(verify with the routing probe in `eval/`), fall back to a single best `engine.model` for the whole run.
+These are **starting points**; tune them from the eval per-role bake-off (`eval/`, results in
+`eval/bakeoff-results.md`). Only **reviewer-factual** has been empirically baked off so far — the others
+are reasoned defaults pending their own runs. The only real primitives are `engine.model` (orchestrator)
+and the `task` tool's `model` parameter (sub-agents); this table is skill prose the orchestrator obeys.
+If the gh-aw CI sandbox does not honor per-sub-agent models (verify with the routing probe in `eval/`),
+fall back to a single best `engine.model` for the whole run.
+
+### Bake-off snapshot (reviewer-factual, k=3, see `eval/bakeoff-results.md`)
+
+| model | mean recall | mean precision | caught byte-order defect |
+|---|---|---|---|
+| **gpt-5.5** | **0.89** | **0.75** | **yes (3/3, substantive)** |
+| claude-opus-4.5 | 0.67 | 0.41 | no |
+| claude-sonnet-4.6 | 0.67 | 0.34 | no |
+| claude-opus-4.6 | 0.67 | 0.32 | no |
+
+The Claude candidates lost precision by over-applying a "no initializer ⇒ default 0" heuristic to
+*documented* defaults (a false-positive pattern now guarded against in `agents/reviewer-factual.md`).
 
 ## Output
 
