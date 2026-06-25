@@ -105,6 +105,7 @@ Release notes for all SkiaSharp versions.
 ### HarfBuzzSharp
 
 - **HarfBuzzSharp 14.2.x**
+  - [HarfBuzzSharp 14.2.1](harfbuzzsharp/14.2.1.md)
   - [HarfBuzzSharp 14.2.0](harfbuzzsharp/14.2.0.md)
 - **HarfBuzzSharp 8.3.x**
   - [HarfBuzzSharp 8.3.1.6 (Unreleased)](harfbuzzsharp/8.3.1.6-unreleased.md)
