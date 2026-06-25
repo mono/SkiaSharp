@@ -124,6 +124,9 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Framework test results
                 condition: always()
@@ -147,6 +150,9 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()
@@ -172,6 +178,9 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()
@@ -220,6 +229,9 @@ stages:
                   echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                 displayName: Start Xvfb and select software GPU (visual tests)
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()
@@ -261,6 +273,9 @@ stages:
               - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
                 displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the Android test results
                 condition: always()
@@ -285,6 +300,9 @@ stages:
             preBuildSteps:
               - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the iOS test results
                 condition: always()
@@ -311,6 +329,9 @@ stages:
             preBuildSteps:
               - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the Mac Catalyst test results
                 condition: always()
@@ -337,6 +358,9 @@ stages:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the WASM test results
                 condition: always()

@@ -69,6 +69,25 @@ namespace SkiaSharp.Tests.Visual.Tests
 		/// </summary>
 		public const string GoldenImageMarker = "##SKIA-GOLDEN-IMAGE##";
 
+		/// <summary>
+		/// Line prefix for a per-cell outcome marker emitted into the test log after
+		/// the comparison decision. The full line is
+		/// <c>##SKIA-VISUAL-CELL## path={renderer}.{platform}/{scene}.png outcome={pass|mismatch|unseeded}</c>.
+		/// It lets the triage extractor (<c>extract-visual-goldens.py --failures-out</c>)
+		/// tell an <i>unseeded</i> cell (harvest its golden) apart from a <i>mismatch</i>
+		/// (a regression to investigate) — both otherwise emit the same captured PNG.
+		/// </summary>
+		public const string VisualCellMarker = "##SKIA-VISUAL-CELL##";
+
+		/// <summary>
+		/// Line prefix for the golden/diff images emitted alongside a failing cell,
+		/// so a red cell is triageable as browsable PNGs straight from the published
+		/// TRX. The full line is
+		/// <c>##SKIA-VISUAL-IMAGE## path={renderer}.{platform}/{scene}.{golden|diff}.png size=WxH base64=...</c>.
+		/// The captured (actual) image is the existing <see cref="GoldenImageMarker"/>.
+		/// </summary>
+		public const string VisualImageMarker = "##SKIA-VISUAL-IMAGE##";
+
 		protected VisualMatrixTestsBase(ITestOutputHelper output)
 			: base(output)
 		{
@@ -126,6 +145,25 @@ namespace SkiaSharp.Tests.Visual.Tests
 				$"size={normalized.Width}x{normalized.Height} base64={base64}");
 		}
 
+		// Records this cell's verdict so the triage extractor can separate an
+		// unseeded cell (harvest the captured PNG into a golden) from a real
+		// mismatch (investigate the regression) — both otherwise look identical.
+		private void EmitOutcome(string rendererName, string sceneName, string outcome) =>
+			WriteOutput($"{VisualCellMarker} path={GoldenStore.Key(rendererName, sceneName)} outcome={outcome}");
+
+		// Emits a failing cell's golden or diff image (kind = "golden" | "diff") as
+		// a single-line marker so the published TRX carries everything needed to
+		// triage the failure as browsable PNGs, on every host.
+		private void EmitVisualImage(string rendererName, string sceneName, string kind, SKImageInfo info, SKImage image)
+		{
+			var normalized = RendererPixels.NormalizedInfo(info);
+			using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+			var key = $"{rendererName}.{VisualPlatform.Tag}/{sceneName}.{kind}.png";
+			WriteOutput(
+				$"{VisualImageMarker} path={key} " +
+				$"size={normalized.Width}x{normalized.Height} base64={Convert.ToBase64String(data.ToArray())}");
+		}
+
 		private void CompareOrFail(string rendererName, string sceneName, SKImageInfo info, byte[] actual, GoldenStore.ResolvedGolden golden)
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
@@ -138,12 +176,19 @@ namespace SkiaSharp.Tests.Visual.Tests
 			var allowedOutliers = (long)Math.Floor(result.TotalPixels * tolerance.MaxOutlierFraction);
 
 			if (result.ErrorPixelCount <= allowedOutliers)
+			{
+				EmitOutcome(rendererName, sceneName, "pass");
 				return;
+			}
 
 			using var diffImage = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(goldenImage, actualImage, tolerance.ChannelTolerance);
 
-			WriteOutput(goldenImage, $"GOLDEN {rendererName}/{sceneName} ({golden.Location})");
-			WriteOutput(diffImage, $"DIFF {rendererName}/{sceneName} (red = over tolerance, amber = minor)");
+			// Emit the golden and diff as structured markers (red = over tolerance,
+			// amber = minor) so the published TRX carries actual+golden+diff for
+			// browsable triage, then tag the cell as a mismatch.
+			EmitVisualImage(rendererName, sceneName, "golden", info, goldenImage);
+			EmitVisualImage(rendererName, sceneName, "diff", info, diffImage);
+			EmitOutcome(rendererName, sceneName, "mismatch");
 
 			var actualPath = TrySave(() => GoldenStore.SaveFailureArtifact(rendererName, sceneName, ".actual.png", actual, info));
 			var diffPath = TrySave(() => GoldenStore.SaveFailureImage(rendererName, sceneName, ".diff.png", diffImage));
@@ -160,6 +205,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 		private void FailUnseeded(string rendererName, string sceneName, SKImageInfo info, byte[] actual)
 		{
+			EmitOutcome(rendererName, sceneName, "unseeded");
+
 			var actualPath = TrySave(() => GoldenStore.SaveFailureArtifact(rendererName, sceneName, ".actual.png", actual, info));
 			var looked = string.Join(" or ", GoldenStore.Candidates(rendererName, sceneName).Select(k => "Goldens/" + k));
 
