@@ -37,12 +37,15 @@ MODE=""
 MILESTONE=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --gate)      GATE=true ;;
-    --mode)      MODE="${2:-}"; shift ;;
-    --milestone) MILESTONE="${2:-}"; shift ;;
+    --gate) GATE=true; shift ;;
+    --mode)
+      [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --mode requires a value"; exit 2; }
+      MODE="$2"; shift 2 ;;
+    --milestone)
+      [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --milestone requires a value"; exit 2; }
+      MILESTONE="$2"; shift 2 ;;
     *) echo "::error::skia-sync-detect.sh: unknown argument '$1'"; exit 2 ;;
   esac
-  shift
 done
 MODE="${MODE:-next}"
 
@@ -93,7 +96,8 @@ if [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
   # The glob can match more than one major (e.g. release/4.148.x and a stray
   # release/14.148.x). Refuse to guess — fail so a human disambiguates.
   if [ "$(printf '%s' "$RELEASE_BRANCH" | grep -c . || true)" -gt 1 ]; then
-    echo "::error::Multiple release branches match milestone ${TARGET}: $(echo $RELEASE_BRANCH) — cannot disambiguate."
+    matches=$(echo "$RELEASE_BRANCH" | paste -sd' ' -)
+    echo "::error::Multiple release branches match milestone ${TARGET}: ${matches} — cannot disambiguate."
     exit 1
   fi
 fi

@@ -18,6 +18,8 @@ if [ ! -f /tmp/gh-aw/agent/skia-sync-env.sh ]; then
     echo "No skia-sync-env.sh — agent determined no work needed"
     exit 0
 fi
+# Written by the agent at runtime; not resolvable at lint time.
+# shellcheck source=/dev/null
 source /tmp/gh-aw/agent/skia-sync-env.sh
 
 if [ -z "${TARGET:-}" ]; then
