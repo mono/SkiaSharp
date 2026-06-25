@@ -6,7 +6,8 @@
 #   GH_TOKEN — PAT with write access to mono/skia and mono/SkiaSharp
 #
 # Expected files (written by the agent):
-#   /tmp/gh-aw/agent/skia-sync-env.sh — TARGET and CURRENT vars
+#   /tmp/gh-aw/agent/skia-sync-env.sh — TARGET, CURRENT, and (optionally) IS_RELEASE,
+#       BASE_BRANCH, SKIA_BASE_BRANCH, HEAD_BRANCH vars
 #   /tmp/gh-aw/agent/skia-sync-skia-summary.md — mono/skia PR body
 #   /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md — mono/SkiaSharp PR body
 #
@@ -17,6 +18,8 @@ if [ ! -f /tmp/gh-aw/agent/skia-sync-env.sh ]; then
     echo "No skia-sync-env.sh — agent determined no work needed"
     exit 0
 fi
+# Written by the agent at runtime; not resolvable at lint time.
+# shellcheck source=/dev/null
 source /tmp/gh-aw/agent/skia-sync-env.sh
 
 if [ -z "${TARGET:-}" ]; then
@@ -24,7 +27,15 @@ if [ -z "${TARGET:-}" ]; then
     exit 0
 fi
 
-BRANCH="skia-sync/m${TARGET}"
+# Branch targets. For a main sync these default to the historical values; for a
+# release-line sync the agent provides explicit HEAD_BRANCH / BASE_BRANCH /
+# SKIA_BASE_BRANCH that point at the matching release/<major>.<milestone>.x line.
+BRANCH="${HEAD_BRANCH:-skia-sync/m${TARGET}}"
+SS_BASE="${BASE_BRANCH:-main}"
+SKIA_BASE="${SKIA_BASE_BRANCH:-skiasharp}"
+IS_RELEASE="${IS_RELEASE:-false}"
+echo "Sync branch: $BRANCH | SkiaSharp base: $SS_BASE | mono/skia base: $SKIA_BASE | release: $IS_RELEASE"
+
 SKIA_SUMMARY=""
 SS_SUMMARY=""
 [ -f /tmp/gh-aw/agent/skia-sync-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skia-summary.md)
@@ -37,6 +48,9 @@ if [ "$CURRENT" = "$TARGET" ]; then
 else
     SS_TITLE="[skia-sync] Update skia to milestone ${TARGET}"
     SS_BODY_INTRO="Automated Skia milestone bump from m${CURRENT} to m${TARGET}."
+fi
+if [ "$IS_RELEASE" = "true" ]; then
+    SS_BODY_INTRO="${SS_BODY_INTRO} Targeting release branch \`${SS_BASE}\` (mono/skia \`${SKIA_BASE}\`)."
 fi
 
 WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
@@ -58,7 +72,7 @@ push_skia() {
     if [ -z "$pr" ]; then
         echo "Creating mono/skia PR..."
         gh pr create --repo mono/skia \
-            --head "$BRANCH" --base skiasharp \
+            --head "$BRANCH" --base "$SKIA_BASE" \
             --title "[skia-sync] Merge upstream chrome/m${TARGET}" \
             --draft \
             --body "Automated upstream merge of \`chrome/m${TARGET}\`.
@@ -98,7 +112,7 @@ push_skiasharp() {
     if [ -z "$ss_pr" ]; then
         echo "Creating mono/SkiaSharp PR..."
         gh pr create --repo mono/SkiaSharp \
-            --head "$BRANCH" --base main \
+            --head "$BRANCH" --base "$SS_BASE" \
             --title "$SS_TITLE" \
             --draft \
             --body "${SS_BODY_INTRO}
