@@ -34,10 +34,16 @@ namespace SkiaSharp.Tests.Visual
 				: "Metal is only available on Apple platforms (macOS, iOS, Mac Catalyst, tvOS).";
 
 		private static bool IsApplePlatform =>
+#if NET5_0_OR_GREATER
 			OperatingSystem.IsMacOS()
 			|| OperatingSystem.IsIOS()
 			|| OperatingSystem.IsMacCatalyst()
 			|| OperatingSystem.IsTvOS();
+#else
+			// net48 (Windows-only TFM) predates the OperatingSystem.Is* probes and
+			// can never be an Apple platform, so fall back to the TestConfig flag.
+			TestConfig.Current.IsMac;
+#endif
 
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
