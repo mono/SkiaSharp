@@ -52,9 +52,6 @@ jobs:
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
     templateContext:
-      ${{ if and(ne(parameters.docker, ''), eq(parameters.use1ESPipelineTemplates, 'true')) }}:
-        authenticatedContainerRegistries:
-          - serviceConnection: skiasharp-docker
       outputParentDirectory: 'output'
       outputs:
         - ${{ if eq(parameters.shouldPublish, 'true') }}:
