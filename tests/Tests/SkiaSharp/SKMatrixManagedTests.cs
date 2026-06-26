@@ -6,15 +6,20 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	// Verifies that the managed SKMatrix math (which replaced the native interop
-	// calls) is bit-for-bit identical to the native Skia C API across a wide
-	// range of matrices, points, rectangles and edge cases.
+	// calls) matches the native Skia C API across a wide range of matrices, points,
+	// rectangles and edge cases: bit-for-bit on finite results, and a NaN wherever
+	// the native path yields a NaN (see BitEqual for the NaN-payload caveat).
 	public unsafe class SKMatrixManagedTest : SKTest
 	{
 		// ===== native helpers (call the C API directly) =====
 
 		private static bool NativeTryInvert (SKMatrix m, out SKMatrix inverse)
 		{
-			SKMatrix result;
+			// The native shim default-constructs its out SkMatrix (which is identity
+			// in C++) and leaves it untouched when the matrix is non-invertible, so it
+			// always writes a value. Initialise to Identity anyway so the test never
+			// depends on the shim writing on the failure path.
+			var result = SKMatrix.Identity;
 			var ok = SkiaApi.sk_matrix_try_invert (&m, &result);
 			inverse = result;
 			return ok;
@@ -105,6 +110,13 @@ namespace SkiaSharp.Tests
 		private static int FloatBits (float f) =>
 			*(int*)&f;
 
+		// Finite results must be bit-identical. For non-finite results we require a
+		// NaN wherever the native path produces a NaN (a NaN-vs-finite mismatch is a
+		// real divergence and still fails below), but we do NOT compare NaN payloads:
+		// the two paths legitimately reach NaN by different routes and can disagree on
+		// the sign/payload bits (e.g. MapRect of a rotation over an infinite rect gives
+		// native 0x7FC00000 vs managed 0xFFC00000 — same quiet NaN, opposite sign). Skia
+		// never inspects NaN payloads, so that difference is not significant.
 		private static bool BitEqual (float a, float b) =>
 			(float.IsNaN (a) && float.IsNaN (b)) ||
 			FloatBits (a) == FloatBits (b);
