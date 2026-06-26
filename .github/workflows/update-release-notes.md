@@ -209,7 +209,7 @@ safe-outputs:
     recreate-ref: true
 ---
 
-# Update Release Notes & API Diffs
+# Sync - Release Notes & API Diffs
 
 This is the single pipeline that keeps the website release notes **and** the API
 api diffs current — there is no separate api-diff workflow. The deterministic
