@@ -305,9 +305,18 @@ You should still be inside `externals/skia` from Phase 4.
 2. **Resolve conflicts** — each conflict must be resolved individually.
    Never use `git merge -s ours` or `git read-tree --reset` — this destroys `git blame` attribution.
 
-   **⚠️ MANDATORY: Before resolving ANY conflict, check file history for fork-specific patches.**
-   Run `git log --oneline skiasharp -- <conflicted-file>` — if the log shows intentional
-   fork patches, keep our version. See [gotcha #15](references/known-gotchas.md) for details.
+   **⚠️ MANDATORY: classify every fork patch as *upstreamed* or *not* before resolving.**
+   For each conflicted file, list the fork patches touching it and check whether upstream already
+   carries each one (see [gotcha #15](references/known-gotchas.md) for the exact commands):
+
+   ```bash
+   git log --oneline {SKIA_BASE_BRANCH} -- <conflicted-file>           # our fork patches on this file
+   git log -S "<distinctive code>" --oneline upstream/{UPSTREAM_REF}   # did upstream adopt it?
+   ```
+
+   - **Upstreamed** → take upstream's (possibly refined) form; record `"<subject>" upstreamed as <sha>`.
+   - **Not upstreamed** → re-apply our patch on top of upstream's edits; **never drop it**; record `re-applied`.
+   - **Never** blanket `git checkout --theirs`/`--ours` on a file you have not classified.
 
    | File Category | Strategy |
    |--------------|----------|
@@ -315,7 +324,16 @@ You should still be inside `externals/skia` from Phase 4.
    | `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
    | `RELEASE_NOTES.md`, `infra/` | **Take upstream** |
    | C API (`include/c/`, `src/c/`) | **Keep SkiaSharp** — adapt includes/API calls in post-merge commits |
-   | Other upstream source (`src/`, `include/`) | **Check history first** — see [gotcha #15](references/known-gotchas.md) |
+   | Other upstream source (`src/`, `include/`) | **Verify-upstream-or-reapply** — see [gotcha #15](references/known-gotchas.md) |
+
+   **Audit (mandatory).** Snapshot fork patches before merging, then cross-reference every conflict:
+   ```bash
+   MB=$(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})
+   git log --oneline "$MB..{SKIA_BASE_BRANCH}" > /tmp/fork-patches-before.txt
+   ```
+   For every conflicted file, the fork patch(es) touching it must appear in the mono/skia PR's "Conflicts
+   resolved" table as *upstreamed* or *re-applied*. A fork patch on a conflicted file that is neither is a
+   lost patch — STOP and fix it. (Patches whose files did not conflict merge cleanly and need no listing.)
 
 3. **Commit the merge**:
    ```bash

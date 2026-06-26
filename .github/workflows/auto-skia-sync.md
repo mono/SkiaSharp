@@ -226,9 +226,15 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 > **bleeding-edge sync from the very tip of upstream Skia** (google/skia `main` HEAD), not a `chrome/m<N>`
 > milestone branch. It targets the newest line (`main`/`skiasharp`) and `current == target`, so it is
 > **NOT a version bump** — keep the milestone, soname, and nuget versions unchanged. It may still include
-> new APIs / binding changes (regenerate + build + test as normal), and a tip merge can be large and
-> conflict-heavy because the submodule base is well behind google/skia main; resolve what you reasonably
-> can and record anything unresolved under "items needing human attention".
+> new APIs / binding changes (regenerate + build + test as normal). A tip merge is large and conflict-heavy
+> because the submodule base is well behind google/skia main, so the **verify-upstream-or-reapply** policy
+> (Phase 5 / [gotcha #15](.agents/skills/update-skia/references/known-gotchas.md)) is mandatory: for every
+> conflicted file, classify each fork patch as *upstreamed* (take upstream's refined form) or *not
+> upstreamed* (re-apply our patch on top of upstream) — **never blanket `--theirs`/`--ours`, and never
+> silently drop a fork patch**. Snapshot the fork patches before merging
+> (`git log --oneline $(git merge-base skiasharp upstream/main)..skiasharp`) and account for **every one**
+> in the mono/skia PR's "Conflicts resolved" table as upstreamed (`<sha>`) or re-applied. A patch that is
+> neither is a lost patch — STOP rather than ship it.
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-10.** Notes specific to this automated workflow:
 
@@ -254,12 +260,23 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
   This also applies to Phase 10 if a native rebuild is needed.
 - **Native build environment is fully provisioned by the workflow** (clang, `libc++-dev`/`libc++abi-dev`,
-  fontconfig, ninja). Do NOT modify any native build files (`native/**/build.cake`, `scripts/infra/native/**`)
-  and do NOT change compiler/linker flags (e.g. `-stdlib=libc++`) to work around a build error. You also CANNOT
-  install packages (no apt/sudo inside the sandbox, and the firewall blocks OS package mirrors). If a native
-  build genuinely fails because a dependency is missing from the host, that is a workflow bug: STOP, do not hack
-  the build, and record it in the mono/SkiaSharp summary under "items needing human attention" so the
-  `Install native build dependencies` step can be fixed.
+  fontconfig, ninja). You CANNOT install packages (no apt/sudo inside the sandbox, and the firewall blocks
+  OS package mirrors). Two distinct cases — do not conflate them:
+  - **Host/flag hacks to silence an error — FORBIDDEN.** Do NOT change compiler/linker flags (e.g.
+    `-stdlib=libc++`) or touch `scripts/infra/native/**` to work around a build error on this Linux host.
+    Those files are shared across every platform you do NOT build here (Windows/macOS/iOS/Android/WASM), so a
+    host-specific tweak silently breaks real CI. If a build fails because a host dependency is missing, that
+    is a workflow bug: STOP, do not hack the build, and record it under "items needing human attention" so the
+    `Install native build dependencies` step can be fixed.
+  - **A new *required* upstream gn arg — ALLOWED, via `build.cake`.** If the upstream merge introduces a new
+    gn argument that the build genuinely cannot succeed without (e.g. a new dependency our fork does not vendor,
+    such as `skia_use_partition_alloc=false` when `third_party/externals/partition_alloc` is disabled in our
+    `DEPS`), add that gn arg to the affected platforms' `native/**/build.cake` gn-args lists — that file is the
+    single source of truth and belongs next to the existing `skia_use_*` toggles. Do NOT rely on a one-off
+    `--gnArgs` CLI flag for durable config. Because you only build Linux x64 here, apply the same arg to every
+    clang platform's `build.cake` that needs it and call the change out prominently in BOTH PR summaries under
+    "items needing human attention" for cross-platform human review. This is only for a genuinely required
+    arg — never to silence a host-specific error (see the FORBIDDEN case above).
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
 - **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.

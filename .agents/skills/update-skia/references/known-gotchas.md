@@ -118,25 +118,52 @@ Never use a tree-override merge (`git merge -s ours`, `git read-tree --reset`). 
 | C API source (`src/c/`) | **Keep SkiaSharp + adapt** — fix includes and API calls in post-merge commits |
 | Other upstream source (`src/`, `include/`) | **Check history first** — see gotcha #15 |
 
-### 15. Never `--theirs` Without Checking File History
+### 15. Verify-Upstream-or-Reapply — Never Blanket `--theirs`/`--ours`
 
-**Failure mode**: A merge conflict in an upstream file (outside `src/c/` / `include/c/`) is resolved
-with `git checkout --theirs`, silently overwriting an intentional SkiaSharp fork patch.
+**Failure mode (two directions):**
+- A conflict in an upstream file (outside `src/c/` / `include/c/`) is resolved with
+  `git checkout --theirs`, silently **dropping** an intentional SkiaSharp fork patch.
+- Or our side is blindly kept with `--ours`, **freezing a stale form** of a patch that upstream
+  has since adopted and *refined* (e.g. our `[M150] Turn off LCD in SDF slugs` used `getMaxScale()`;
+  upstream relanded it as `sk_ieee_float_divide(1.f, getMinScale())` — keeping ours would have
+  shipped the worse formulation).
 
-**Mandatory process for EVERY conflicted file:**
+A fork patch in a conflicted file is in exactly **one of two states**. You MUST determine which
+*before* resolving, and resolve accordingly. A blanket `--theirs`/`--ours` is never acceptable.
 
 ```bash
-# BEFORE resolving, check if the fork has intentional patches
-git log --oneline skiasharp -- <conflicted-file>
+# 1. Identify the fork patch(es) touching this file
+git log --oneline {SKIA_BASE_BRANCH} -- <conflicted-file>      # e.g. skiasharp
+# 2. For EACH fork patch, check whether upstream already contains the same change
+git log --oneline upstream/{UPSTREAM_REF} --grep "<key phrase from the patch subject>"
+git log -S "<distinctive line of code from the patch>" --oneline upstream/{UPSTREAM_REF} -- <conflicted-file>
 ```
 
-- If the log shows fork-specific commits (look for "Restore", "patch", "fix", or any non-merge
-  commit), **keep our version** and only absorb upstream's harmless additive changes (new includes).
-- If the log shows only merge commits from prior upstream merges, taking `--theirs` is likely safe.
-- **Never use `git checkout --theirs` as a shortcut** for files you haven't investigated.
+| Patch state | Resolution |
+|---|---|
+| **Upstreamed** — upstream now contains an equivalent (or refined) form | **Take upstream's form.** Our patch is redundant; convergence is correct (upstream may have improved it). Record `"<subject>" upstreamed as <sha>`. |
+| **Not upstreamed** — only our fork carries it | **Re-apply our change on top of upstream's edits** (absorb upstream's harmless additions AND keep our patch). **Never drop it.** Record `"<subject>" re-applied`. |
+
+- **Never** `git checkout --theirs`/`--ours` as a shortcut for a file you have not classified.
+- **Never** "resolve what you reasonably can and move on" — that is how a fork patch gets lost.
+
+**Mandatory audit — no fork patch silently dropped.** Snapshot the fork patches *before* merging so
+you can cross-reference every conflict against them:
+
+```bash
+# before the merge — list our fork's commits on top of the merge base (the patches at risk)
+MB=$(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})
+git log --oneline "$MB..{SKIA_BASE_BRANCH}" > /tmp/fork-patches-before.txt
+```
+
+For **every conflicted file**, find which fork patch(es) from that list touch it and classify each as
+*upstreamed* or *re-applied* (above). Every such patch must appear in the mono/skia PR's "Conflicts
+resolved" table with its disposition. A fork patch on a conflicted file that is **neither** upstreamed
+nor re-applied is a lost patch — STOP and fix it before committing the merge. (Fork patches whose files
+did not conflict merge cleanly and need no listing.)
 
 **Key signal words** in commit messages that indicate intentional fork patches:
-`Restore`, `patch`, `fix for`, `platform`, `workaround`, `SkiaSharp`, `iOS`, `Tizen`
+`Restore`, `patch`, `fix for`, `platform`, `workaround`, `SkiaSharp`, `iOS`, `Tizen`, `[M1xx]`
 
 ## Testing
 
