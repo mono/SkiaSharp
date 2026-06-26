@@ -64,7 +64,7 @@ The collector script requires:
 | Pages - Go Live! | mono/SkiaSharp | Workflow dispatch | Docs don't publish if failing |
 | Pages - PR Staging - Cleanup | mono/SkiaSharp | PR close events | Stale staging deploys accumulate |
 | Pages - PR Staging - Sweep Stale | mono/SkiaSharp | Daily (06:00 UTC) | Stale staging deploys accumulate |
-| Publish Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
+| Sync - Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
 | API Diff | mono/SkiaSharp | Weekly (Sun 00:00 UTC) | API regression detection |
 | Sync - Docs Submodule | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
 | Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main/release/tags | Release notes stop auto-updating |
@@ -218,7 +218,7 @@ For each tracked GitHub Actions workflow:
 - Any failures or patterns (recurring failures, recent regressions)
 - Whether failures are related to AzDO failures (same commit?) or independent
 - Categorize by severity:
-  - **High**: Pages - Deploy, Publish Samples, Sync - Release Notes & API Diffs, Sync - Skia Upstream,
+  - **High**: Pages - Deploy, Sync - Samples, Sync - Release Notes & API Diffs, Sync - Skia Upstream,
     Auto API Docs Writer (broken = user-facing impact or release process blocked)
   - **Medium**: Sync - Docs Submodule, Nightly Fix Finder, Sync - Issue Triage,
     PR - Backport, Pages - Go Live! (broken = automation degraded, manual workaround exists)
@@ -340,7 +340,7 @@ After rendering, present a brief summary in chat and point to the files:
   release/4.147.0-preview.3: Public CI red (CS0016 errors); internal chain unaffected.
 
 🐙 GitHub Actions:
-  🟠 High:    Pages - Deploy ✅ | Publish Samples ✅ | Auto API Docs Writer ❌
+  🟠 High:    Pages - Deploy ✅ | Sync - Samples ✅ | Auto API Docs Writer ❌
   🟡 Medium:  PR - Backport ✅ | Pages - Go Live! ✅ | Sync - Issue Triage ✅
   ⚪ Low:     All passing
 
