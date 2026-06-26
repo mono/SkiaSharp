@@ -20,11 +20,11 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Which milestone to track"
+        description: "Which milestone to track. `main` syncs the very tip of upstream Skia (google/skia main HEAD) — dispatch-only, bleeding edge, NOT a version bump."
         required: false
         type: choice
         default: next
-        options: [current, next, latest]
+        options: [current, next, latest, main]
       milestone:
         description: "Exact milestone number (e.g. 148) — overrides mode if set"
         required: false
@@ -70,6 +70,7 @@ jobs:
       next: ${{ steps.detect.outputs.next }}
       latest: ${{ steps.detect.outputs.latest }}
       target: ${{ steps.detect.outputs.target }}
+      upstream_ref: ${{ steps.detect.outputs.upstream_ref }}
       mode: ${{ steps.detect.outputs.mode }}
       skip: ${{ steps.detect.outputs.skip }}
       is_release: ${{ steps.detect.outputs.is_release }}
@@ -207,6 +208,7 @@ post-steps:
 
 Base milestone (current): `m${{ needs.pre_activation.outputs.current }}`.  
 Target milestone: `m${{ needs.pre_activation.outputs.target }}`.  
+Upstream ref (merge from): `${{ needs.pre_activation.outputs.upstream_ref }}` (google/skia) — `main` means the bleeding-edge tip.  
 Base branch (SkiaSharp): `${{ needs.pre_activation.outputs.base_branch }}` — mono/skia base: `${{ needs.pre_activation.outputs.skia_base_branch }}`.  
 Sync (head) branch: `${{ needs.pre_activation.outputs.head_branch }}` (same name in both repos).  
 Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
@@ -219,11 +221,22 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 > **bug-fix-only sync** — do NOT bump the milestone, soname, or nuget versions; only the upstream
 > merge + `cgmanifest.json` commit hash change. Use the base/head branch values above everywhere
 > instead of hardcoding `main`/`skiasharp`/`skia-sync/m{target}`.
+>
+> **`main` (tip) mode.** When the upstream ref above is `main` (head branch `skia-sync/main`), this is a
+> **bleeding-edge sync from the very tip of upstream Skia** (google/skia `main` HEAD), not a `chrome/m<N>`
+> milestone branch. It targets the newest line (`main`/`skiasharp`) and `current == target`, so it is
+> **NOT a version bump** — keep the milestone, soname, and nuget versions unchanged. It may still include
+> new APIs / binding changes (regenerate + build + test as normal), and a tip merge can be large and
+> conflict-heavy because the submodule base is well behind google/skia main; resolve what you reasonably
+> can and record anything unresolved under "items needing human attention".
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-10.** Notes specific to this automated workflow:
 
 - **Phase 1 is pre-computed** (above). Skip it — but you still need to add the `upstream` remote
-  and fetch `chrome/m${{ needs.pre_activation.outputs.target }}` (Phase 1 step 4) since Phase 5 depends on it.
+  and fetch the upstream ref `${{ needs.pre_activation.outputs.upstream_ref }}` (Phase 1 step 4) since Phase 5 depends on it.
+  For every mode except `main` this is a `chrome/m${{ needs.pre_activation.outputs.target }}` milestone branch;
+  for `main` (tip) mode it is google/skia's `main` HEAD (bleeding edge — may include new APIs/binding changes,
+  but it is NOT a version bump, and the head branch is `skia-sync/main`).
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't do this for the chroot).
 - **Phase 4**: The parent base branch is `origin/${{ needs.pre_activation.outputs.base_branch }}` and the
   submodule base branch is mono/skia `${{ needs.pre_activation.outputs.skia_base_branch }}` — use these in
@@ -263,6 +276,7 @@ After Phase 10, write these files:
    cat > /tmp/gh-aw/agent/skia-sync-env.sh << EOF
    TARGET=${{ needs.pre_activation.outputs.target }}
    CURRENT=${{ needs.pre_activation.outputs.current }}
+   UPSTREAM_REF=${{ needs.pre_activation.outputs.upstream_ref }}
    IS_RELEASE=${{ needs.pre_activation.outputs.is_release }}
    BASE_BRANCH=${{ needs.pre_activation.outputs.base_branch }}
    SKIA_BASE_BRANCH=${{ needs.pre_activation.outputs.skia_base_branch }}

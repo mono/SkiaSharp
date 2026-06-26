@@ -15,10 +15,14 @@
 #     (so GitHub renders annotations and the machine output stays clean for sourcing).
 #
 # Args:
-#   --mode <current|next|latest>   Which milestone line to track. The workflow resolves
+#   --mode <current|next|latest|main>  Which milestone line to track. The workflow resolves
 #                                  this from the dispatch input or the triggering cron
 #                                  (the cron→mode mapping lives in the workflow, next to
 #                                  where the crons are declared). Defaults to `next`.
+#                                  `main` is the bleeding-edge tip: it merges google/skia's
+#                                  `main` HEAD (not a chrome/m<N> branch) into the newest
+#                                  line. It is NOT a version bump — the target milestone
+#                                  stays equal to main's current milestone.
 #   --milestone <number>           Exact milestone override; when set, mode becomes
 #                                  `explicit` and the target is this number.
 #   --gate                         Also run the gating checks (does upstream exist? is it
@@ -60,21 +64,26 @@ milestone_of() {
 
 # -- Mode -------------------------------------------------------------
 # Resolved by the caller (workflow): the cron→mode mapping lives in the workflow,
-# next to where the crons are declared. Here it is simply a value in {current,next,latest}.
+# next to where the crons are declared. Here it is simply a value in
+# {current,next,latest,main}.
 MAIN_MS=$(milestone_of "$GITHUB_REF")
 NEXT=$((MAIN_MS + 1))
 LATEST=$(git ls-remote --heads https://github.com/google/skia.git 'refs/heads/chrome/m*' \
   | sed -n 's|.*refs/heads/chrome/m\([0-9]*\)$|\1|p' | sort -n | tail -1)
 
 # -- Target -----------------------------------------------------------
+# UPSTREAM_REF is the google/skia ref we merge FROM: a `chrome/m<N>` milestone branch
+# for every mode except `main`, which merges the very tip (`refs/heads/main` HEAD).
 if [ -n "$MILESTONE" ]; then
-  TARGET="$MILESTONE"; MODE="explicit"
+  TARGET="$MILESTONE"; MODE="explicit"; UPSTREAM_REF="chrome/m${TARGET}"
+elif [ "$MODE" = main ]; then
+  TARGET="$MAIN_MS"; UPSTREAM_REF="main"
 elif [ "$MODE" = latest ]; then
-  TARGET="$LATEST"
+  TARGET="$LATEST"; UPSTREAM_REF="chrome/m${TARGET}"
 elif [ "$MODE" = current ]; then
-  TARGET="$MAIN_MS"
+  TARGET="$MAIN_MS"; UPSTREAM_REF="chrome/m${TARGET}"
 else
-  TARGET="$NEXT"
+  TARGET="$NEXT"; UPSTREAM_REF="chrome/m${TARGET}"
 fi
 
 # -- Target line: `main` (newest) vs a release/<major>.<TARGET>.x maintenance line.
@@ -82,10 +91,19 @@ fi
 # mono/skia. We only look for one when TARGET is strictly OLDER than main's milestone;
 # the newest line is always served by `main`. The release branch itself is owned by
 # the release process (release-branch skill), NOT this sync.
+#
+# The `main` (tip) mode targets the newest line too (TARGET == MAIN_MS, so the
+# release-detection block below stays skipped), but uses a DISTINCT head branch
+# (`skia-sync/main`) so a bleeding-edge tip sync never collides with the `current`
+# milestone sync branch (`skia-sync/m${TARGET}`).
 IS_RELEASE=false
 BASE_BRANCH=main
 SKIA_BASE_BRANCH=skiasharp
-HEAD_BRANCH="skia-sync/m${TARGET}"
+if [ "$MODE" = main ]; then
+  HEAD_BRANCH="skia-sync/main"
+else
+  HEAD_BRANCH="skia-sync/m${TARGET}"
+fi
 RELEASE_BRANCH=""
 # `2>/dev/null` swallows the "integer expression expected" noise for a non-numeric
 # TARGET, which then falls through to the main line.
@@ -126,21 +144,22 @@ emit mode "$MODE"
 emit next "$NEXT"
 emit latest "$LATEST"
 emit target "$TARGET"
+emit upstream_ref "$UPSTREAM_REF"
 emit is_release "$IS_RELEASE"
 emit base_branch "$BASE_BRANCH"
 emit skia_base_branch "$SKIA_BASE_BRANCH"
 emit head_branch "$HEAD_BRANCH"
 emit current "$CURRENT"
 
-echo "Resolved: m${TARGET} → ${BASE_BRANCH} (mode=${MODE}, base milestone=m${CURRENT}, latest=m${LATEST}, head=${HEAD_BRANCH}, release=${IS_RELEASE})"
+echo "Resolved: m${TARGET} → ${BASE_BRANCH} (mode=${MODE}, upstream=${UPSTREAM_REF}, base milestone=m${CURRENT}, latest=m${LATEST}, head=${HEAD_BRANCH}, release=${IS_RELEASE})"
 
 # Branch derivation is all the agent job needs; gating is pre_activation-only.
 $GATE || exit 0
 
 # -- Gate: only spin up the (expensive) agent when there is new upstream work ----
-UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
+UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/${UPSTREAM_REF}" | awk '{print $1}')
 if [ -z "$UPSTREAM_SHA" ]; then
-  echo "::notice::upstream/chrome/m${TARGET} does not exist yet"
+  echo "::notice::upstream/${UPSTREAM_REF} does not exist yet"
   [ "$MODE" = explicit ] && exit 1
   emit skip true
   exit 0
@@ -159,7 +178,7 @@ fi
 if [ -n "$COMPARE_REF" ]; then
   BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...${COMPARE_REF}" --jq '.behind_by' 2>/dev/null || echo unknown)
   if [ "$BEHIND" = 0 ]; then
-    echo "::notice::chrome/m${TARGET} already fully merged into ${COMPARE_REF} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
+    echo "::notice::${UPSTREAM_REF} already fully merged into ${COMPARE_REF} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
     emit skip true
     exit 0
   fi
