@@ -19,7 +19,16 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
                 UseShellExecute = false
             };
             using var process = System.Diagnostics.Process.Start(psi)!;
-            process.WaitForExit(10000);
+            // Drain both pipes concurrently so a large `docker info` payload can't
+            // fill the OS buffer and deadlock the child against WaitForExit.
+            var stdout = process.StandardOutput.ReadToEndAsync();
+            var stderr = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(10000))
+            {
+                try { process.Kill(true); } catch { }
+                return false;
+            }
+            System.Threading.Tasks.Task.WaitAll(stdout, stderr);
             return process.ExitCode == 0;
         }
         catch

@@ -4081,6 +4081,25 @@ namespace SkiaSharp
 			(sk_colorfilter_new_mode_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_mode> ("sk_colorfilter_new_mode")).Invoke (c, mode);
 		#endif
 
+		// sk_colorfilter_t* sk_colorfilter_new_overdraw(const sk_color_t[6] colors = 6)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		}
+		private static Delegates.sk_colorfilter_new_overdraw sk_colorfilter_new_overdraw_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors) =>
+			(sk_colorfilter_new_overdraw_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_overdraw> ("sk_colorfilter_new_overdraw")).Invoke (colors);
+		#endif
+
 		// sk_colorfilter_t* sk_colorfilter_new_srgb_to_linear_gamma()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -7619,6 +7638,25 @@ namespace SkiaSharp
 		private static Delegates.sk_imagefilter_new_compose sk_imagefilter_new_compose_delegate;
 		internal static sk_imagefilter_t sk_imagefilter_new_compose (sk_imagefilter_t outer, sk_imagefilter_t inner) =>
 			(sk_imagefilter_new_compose_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_compose> ("sk_imagefilter_new_compose")).Invoke (outer, inner);
+		#endif
+
+		// sk_imagefilter_t* sk_imagefilter_new_crop(const sk_rect_t* rect, sk_shader_tilemode_t tileMode, const sk_imagefilter_t* input)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		}
+		private static Delegates.sk_imagefilter_new_crop sk_imagefilter_new_crop_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input) =>
+			(sk_imagefilter_new_crop_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_crop> ("sk_imagefilter_new_crop")).Invoke (rect, tileMode, input);
 		#endif
 
 		// sk_imagefilter_t* sk_imagefilter_new_dilate(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
