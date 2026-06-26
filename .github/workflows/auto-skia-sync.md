@@ -291,7 +291,8 @@ After Phase 10, write these files:
    - Breaking change analysis, version/binding updates, C# changes, build/test results, items needing human attention
 
 All files written to `/tmp/gh-aw/agent/` are automatically uploaded as workflow artifacts.
-Write test output there too (`/tmp/gh-aw/agent/test-output.txt`) so failures can be inspected after the run.
+For Phase 10, write the test-output log to `/tmp/gh-aw/agent/test-output.txt` (in place of the
+skill's default path) so it's uploaded as an artifact and failures can be inspected after the run.
 
 Commit submodule changes inside `externals/skia` on `${{ needs.pre_activation.outputs.head_branch }}`.
 Commit parent repo changes on `${{ needs.pre_activation.outputs.head_branch }}` in the parent.
