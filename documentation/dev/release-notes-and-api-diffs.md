@@ -537,7 +537,11 @@ paths (it is *not* a multi-tier channel product), so the tiers are:
 
 - **Supported** — the `stable` line(s) and the `preview` line(s). These render as the
   top-level `Version X.Y.x` nodes in the TOC and under the **Supported versions** heading
-  in `index.md` (each tagged `Stable` or `Preview`).
+  in `index.md` (each tagged `Stable` or `Preview`). In `index.md` they are *also*
+  summarised at the very top by a **Support overview** block — a short lifecycle legend
+  (stable / preview / out of support / obsolete) plus a "currently supported" table listing
+  each supported line and a link to its latest release — so the page opens with what to use
+  at a glance. The overview is emitted only when a `support` block is configured.
 - **Out of support** — every other 3.x+ line. These fold under a single
   **Out of Support Versions** TOC node and a collapsed `<details>` block in `index.md`.
 - **Obsolete** — the 1.x and 2.x lines, folded under the **Obsolete Versions** TOC node

@@ -2027,11 +2027,14 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
     # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
     """Generate index.md grouped by support tier (spec §3.5).
 
-    SkiaSharp lines are split by their support status
-    (``classify_support_tier``): the supported lines (stable / preview) are listed
-    prominently at the top, each tagged with its path, while the remaining 3.x+
-    lines and the obsolete 1.x/2.x lines fold into collapsed ``<details>`` blocks
-    so the page leads with what is actually supported.
+    When a ``support`` block is configured the page opens with a "Support
+    overview" — a short lifecycle legend (stable / preview / out of support /
+    obsolete) and a table of the currently-supported lines and their latest
+    release — so a reader sees what to use at a glance. SkiaSharp lines are then
+    split by their support status (``classify_support_tier``): the supported
+    lines (stable / preview) are listed prominently, each tagged with its path,
+    while the remaining 3.x+ lines and the obsolete 1.x/2.x lines fold into
+    collapsed ``<details>`` blocks so the page leads with what is supported.
 
     Unreleased pages are listed even when no stable page of that exact version
     exists yet. ``hb_versions``/``hb_next_versions`` render a trailing
@@ -2077,19 +2080,65 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
         return ["<details>", "<summary>{}</summary>".format(summary), ""] \
             + body + ["", "</details>", ""]
 
-    lines = [
-        "# Release Notes",
-        "",
-        "Release notes for SkiaSharp, grouped by support status. SkiaSharp ships "
-        "as NuGet packages on two supported paths (the SkiaSharp minor version is "
-        "the Chrome/Skia milestone): the **stable** release line and the "
-        "**preview** line for the milestone currently being stabilized — which "
-        "track "
-        "[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) "
-        "(stable/extended-stable and beta). Older releases stay available for "
-        "reference but are no longer supported.",
-        "",
-    ]
+    def latest_link(g):
+        # type: (str) -> str
+        """Markdown link to the newest page in line ``g`` for the overview table.
+
+        Prefers the newest *released* page; falls back to the newest unreleased
+        page when a line has shipped no stable page yet (spec §3.5).
+        """
+        members = sorted(minor_map[g], key=lambda t: version_key(t[0]), reverse=True)
+        released = [(v, u) for v, u in members if not u]
+        v, is_unrel = released[0] if released else members[0]
+        if is_unrel:
+            return "[{} (Unreleased)]({}-unreleased.md)".format(v, v)
+        return "[{}]({}.md)".format(v, v)
+
+    # The support block drives the top "what is supported right now" overview.
+    # Without it (legacy/empty config) the page keeps the plain flat layout.
+    configured = bool(support.get("supported"))
+
+    if configured:
+        intro = (
+            "Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose "
+            "minor version is the Chrome/Skia milestone it builds on. Two release "
+            "lines are supported at a time — a **stable** line for production and a "
+            "**preview** line for the milestone currently being stabilized — "
+            "mirroring "
+            "[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) "
+            "(stable / extended-stable and beta). Everything else stays published "
+            "for reference but is no longer serviced.")
+    else:
+        intro = "Release notes for all SkiaSharp versions."
+
+    lines = ["# Release Notes", "", intro, ""]
+
+    if configured:
+        lines.extend([
+            "## Support overview",
+            "",
+            "- **Stable** — the line we recommend for production apps. Tracks "
+            "Chrome's Stable / Extended Stable channel.",
+            "- **Preview** — prerelease NuGets for the next milestone, so you can "
+            "test ahead of its stable release. Tracks Chrome's Beta channel.",
+            "- **Out of support** — older 3.x / 4.x lines, still listed below for "
+            "reference but no longer serviced.",
+            "- **Obsolete** — SkiaSharp 1.x and 2.x, no longer maintained.",
+            "",
+        ])
+        # Currently-supported table: Stable rows first, then Preview; newest line
+        # first within each (supported_groups is already version-descending and the
+        # sort below is stable).
+        channel_order = {"Stable": 0, "Preview": 1}
+        table_groups = sorted(
+            supported_groups,
+            key=lambda g: channel_order.get(channels.get(g), 9))
+        lines.append("| Path | Version line | Latest release |")
+        lines.append("|------|--------------|----------------|")
+        for g in table_groups:
+            lines.append("| {} | {}.x | {} |".format(
+                channels.get(g, "Supported"), g, latest_link(g)))
+        lines.append("")
 
     if supported_groups:
         lines.extend(["## Supported versions", ""])
