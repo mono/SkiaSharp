@@ -41,17 +41,10 @@ The process of triage is mostly a quick read and apply some labels. There is an 
 
 
 > [!NOTE]
-> We are in the process of testing out an AI agent to help with triage, labeling and scoring. 
-
-#### Labels
-
-There is a workflow that is not actually applying labels yet as we experiment, but can be used to see what labels the AI thinks we need: https://github.com/mono/SkiaSharp/actions/workflows/label-with-ai.yml
-
-#### Scoring
-
-There is also another AI workflow to try and calculate an "engagement score" based on comments, reactions and general interactions. This workflow is running now: https://github.com/mono/SkiaSharp/actions/workflows/engagement-scores.yml 
-
-The project it writes to is still being evaluated to make sure our weights are good/useful: https://github.com/orgs/mono/projects/1/views/14
+> An AI agent now assists with triage. The **Sync - Issue Triage** workflow
+> (source: `.github/workflows/auto-triage.md`) classifies new issues, applies
+> labels, and updates the backlog project board. It runs daily and on issue
+> events: https://github.com/mono/SkiaSharp/actions/workflows/auto-triage.lock.yml
 
 
 ### PR Reviews

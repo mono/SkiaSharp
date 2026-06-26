@@ -69,7 +69,7 @@ safe-outputs:
     github-token: ${{ secrets.GH_AW_WRITE_PROJECT_TOKEN }}
 ---
 
-# Auto-Triage SkiaSharp Issue
+# Sync - Issue Triage
 
 Triage issue **#${{ needs.pre_activation.outputs.issue_number }}** using the issue-triage skill, then apply labels and update the SkiaSharp Backlog project board.
 
