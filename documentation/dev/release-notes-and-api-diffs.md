@@ -532,14 +532,12 @@ is one click to the line's diff index and one more to a specific assembly. `inde
 ##### Support tiers (the `support` block)
 
 Both `TOC.yml` and `index.md` are organised by a **support tier** so the navigation
-leads with what is actually supported. The tiers mirror
-[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels)
-(the SkiaSharp **minor** number *is* the Chrome/Skia milestone):
+leads with what is actually supported. SkiaSharp ships NuGet packages on two supported
+paths (it is *not* a multi-tier channel product), so the tiers are:
 
-- **Supported** — the `stable` milestone, the `extended_stable` milestone before it,
-  and the `beta` previews of upcoming milestones. These render as the top-level
-  `Version X.Y.x` nodes in the TOC and under the **Supported versions** heading in
-  `index.md` (each tagged `Stable` / `Extended stable` / `Beta`).
+- **Supported** — the `stable` line(s) and the `preview` line(s). These render as the
+  top-level `Version X.Y.x` nodes in the TOC and under the **Supported versions** heading
+  in `index.md` (each tagged `Stable` or `Preview`).
 - **Out of support** — every other 3.x+ line. These fold under a single
   **Out of Support Versions** TOC node and a collapsed `<details>` block in `index.md`.
 - **Obsolete** — the 1.x and 2.x lines, folded under the **Obsolete Versions** TOC node
@@ -548,21 +546,57 @@ leads with what is actually supported. The tiers mirror
 The tier of a line is **not** inferred from git or NuGet — it is read from the
 top-level **`support`** block in `versions.json` (a sibling of the `skiasharp` /
 `harfbuzzsharp` family buckets, consumed only by the release-notes engine; the API-diff
-engine ignores it):
+engine ignores it). It is **two lists** of `major.minor` line cores (the SkiaSharp minor
+*is* the Chrome/Skia milestone):
 
 ```json
 "support": {
-  "stable": "3.119",
-  "extended_stable": "3.116",
-  "beta": ["4.150", "4.148"]
+  "stable": ["4.148"],
+  "preview": ["4.150"]
 }
 ```
 
-`stable`/`extended_stable` are single `major.minor` lines; `beta` is a list. Maintainers
-update this block on each release (promote a new stable, retire the old extended-stable,
-adjust the in-flight betas) so each field names the milestone currently in the matching
-Chrome channel. An absent or empty block makes every 3.x+ line render as
-top-level/supported (the legacy flat layout), so the feature is purely additive.
+- **`stable`** — the supported stable line(s): normally the current **Chrome Stable**
+  milestone, or the **Chrome Extended-stable** milestone during the *promotion gap* (when
+  a `preview` line is about to go stable).
+- **`preview`** — the in-flight preview/RC line(s): normally the **Chrome Beta** milestone,
+  or newer when previewing ahead in Dev/Canary.
+
+Either field may be a single string or a list. An absent or empty block makes every 3.x+
+line render as top-level/supported (the legacy flat layout), so the feature is purely
+additive.
+
+**Maintained by hand, on purpose (do not auto-sync).** The values *correspond to* Chrome's
+channels, but the block is a **human-curated grouping for the docs site**, not a mirror of
+the live channels — so it is edited by hand and must not be auto-derived from Chromium Dash.
+The reason is that SkiaSharp does not ship every Chrome milestone: if we **skip a bump**,
+blindly copying the live Chrome milestones in would point a tier at a milestone that has
+**no SkiaSharp release line**, and the page would then show the actually-released lines as
+out of support (worst case: "everything is unsupported"). A maintainer therefore sets each
+list to milestones we actually released. Automating this is only safe once the Skia-update
+pipeline is **fully automated and auto-merging every milestone** (so "skipped bump" can't
+happen); until then, treat these two lists as a manual editorial decision.
+
+**Drift is detected, not auto-fixed.** The security audit's milestone heads-up
+(`.agents/skills/security-audit/scripts/query-milestone-schedule.py`, Step 3) already
+fetches the live Chrome channels, so it also compares this block to them and emits an
+`ok` / `warn` / `drift` verdict in its `support` output section. With `E ≤ S ≤ B` = Chrome
+Extended/Stable/Beta and `stable*`/`preview*` = our newest stable/preview milestone:
+
+| Condition | Verdict |
+|-----------|---------|
+| `stable* = S` | 🟢 ok — current stable |
+| `stable* = E` (E<S) **and** `preview* ≥ S` | 🟢 ok — promotion gap |
+| `stable* = E` (E<S) **and** `preview* < S` | 🔴 drift — stuck on extended, nothing promoting |
+| `stable* < E`, between `E` and `S`, or any stable entry off `{E,S}` | 🔴 drift — out of date / off-channel |
+| `stable* > S` | 🟡 warn — ahead of Chrome stable, verify |
+| `preview* = B` or `preview* > B` | 🟢 ok — tracks beta / ahead in Dev/Canary |
+| `S < preview* < B` | 🟡 warn — trails beta, update soon |
+| `preview* ≤ S` | 🔴 drift — not a real preview |
+| `preview` empty | 🟡 warn — no preview documented |
+
+A `drift` verdict is an audit **finding**; the fix is always a manual edit of this block
+(never auto-written — see the manual-by-design note above).
 
 ### 3.6 The co-release map sidecar (Cake → Python)
 
@@ -956,7 +990,9 @@ page links straight to its API diffs.
 
 10. **Support tiers are config-driven (§3.5).** The TOC/index support grouping comes
     only from the `support` block in `versions.json` — never inferred from git tags or
-    NuGet. Its three fields are a snapshot of the current Chrome Stable / Extended-stable /
-    Beta milestones (which move on Google's schedule), maintained by hand on each release.
-    An absent/empty block degrades to the legacy "every 3.x+ line is top-level" layout, so
-    the grouping stays purely additive.
+    NuGet. It is two hand-maintained lists (`stable` + `preview`) of milestone lines
+    SkiaSharp actually ships, edited on each release. The security audit's milestone
+    heads-up (Step 3) drift-checks them against the live Chrome channels and reports
+    `ok`/`warn`/`drift` — detection only; the fix is a manual edit, never auto-written.
+    An absent/empty block degrades to the legacy "every 3.x+ line is top-level" layout,
+    so the grouping stays purely additive.

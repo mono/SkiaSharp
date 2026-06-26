@@ -201,25 +201,42 @@ _SUPPORT_CONFIG = None  # type: Optional[dict]
 
 def load_support_config():
     # type: () -> dict
-    """Load the SkiaSharp support-channel config from versions.json (spec §3.5).
+    """Load the SkiaSharp support config from versions.json (spec §3.5).
 
-    The top-level ``support`` block declares which milestone lines are supported,
-    mirroring Chrome's release channels: ``stable`` and ``extended_stable`` are
-    the two supported stable milestone lines, and ``beta`` is the list of in-flight
-    preview/RC milestone lines. Every value is a ``major.minor`` line core (the
-    SkiaSharp minor IS the Chrome/Skia milestone).
+    SkiaSharp ships NuGet packages on two release paths (not a multi-tier channel
+    product), so the top-level ``support`` block is two lists of ``major.minor``
+    line cores (the SkiaSharp minor IS the Chrome/Skia milestone):
 
-    Returns a normalized dict carrying the raw fields plus a derived ``supported``
-    set (all supported groups) and a ``channels`` map (group -> human label). A
-    missing/empty block yields an empty ``supported`` set, so callers fall back to
-    the legacy "every 3.x+ line is top-level/supported" behavior.
+      * ``stable``  — the supported stable line(s): the current Chrome Stable
+        milestone, or the Chrome Extended-stable milestone during the promotion
+        gap (a preview about to go stable).
+      * ``preview`` — the in-flight preview/RC line(s): the Chrome Beta milestone,
+        or newer when previewing ahead in Dev/Canary.
+
+    Either field may be given as a single string or a list. Returns a normalized
+    dict carrying the raw lists plus a derived ``supported`` set (their union) and
+    a ``channels`` map (line -> "Stable"/"Preview" label). A missing/empty block
+    yields an empty ``supported`` set, so callers fall back to the legacy "every
+    3.x+ line is top-level/supported" behavior.
     """
     global _SUPPORT_CONFIG
     if _SUPPORT_CONFIG is not None:
         return _SUPPORT_CONFIG
-    stable = None  # type: Optional[str]
-    extended_stable = None  # type: Optional[str]
-    beta = []  # type: list[str]
+
+    def _as_lines(value):
+        # type: (object) -> list[str]
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, list):
+            return [str(v) for v in value]
+        raise ValueError(
+            "versions.json: 'support' list fields must be a string or array "
+            "(spec §3.5); got %s" % type(value).__name__)
+
+    stable = []  # type: list[str]
+    preview = []  # type: list[str]
     if VERSIONS_JSON_PATH.exists():
         with open(VERSIONS_JSON_PATH) as f:
             data = json.load(f)
@@ -228,22 +245,19 @@ def load_support_config():
             raise ValueError(
                 "versions.json: 'support' must be an object (spec §3.5); got %s"
                 % type(block).__name__)
-        stable = block.get("stable")
-        extended_stable = block.get("extended_stable")
-        beta = list(block.get("beta", []) or [])
+        stable = _as_lines(block.get("stable"))
+        preview = _as_lines(block.get("preview"))
     supported = set()  # type: set[str]
     channels = {}  # type: dict[str, str]
-    for line, label in ((stable, "Stable"), (extended_stable, "Extended stable")):
-        if line:
-            supported.add(line)
-            channels[line] = label
-    for line in beta:
+    for line in stable:
         supported.add(line)
-        channels.setdefault(line, "Beta")
+        channels.setdefault(line, "Stable")
+    for line in preview:
+        supported.add(line)
+        channels.setdefault(line, "Preview")
     _SUPPORT_CONFIG = {
         "stable": stable,
-        "extended_stable": extended_stable,
-        "beta": beta,
+        "preview": preview,
         "supported": supported,
         "channels": channels,
     }
@@ -256,8 +270,8 @@ def classify_support_tier(group, support=None):
 
     Returns one of:
 
-      * ``"supported"`` — a Chrome stable / extended-stable / beta channel line,
-        rendered prominently at the top level.
+      * ``"supported"`` — a stable or preview line (spec §3.5), rendered
+        prominently at the top level.
       * ``"obsolete"`` — a 1.x or 2.x line, folded into "Obsolete Versions".
       * ``"unsupported"`` — every other 3.x+ line, folded into "Out of Support
         Versions".
@@ -1906,11 +1920,10 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
     # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
     """Generate TOC.yml grouped by major.minor and support tier (spec §3.5).
 
-    SkiaSharp minor groups are split into three tiers by their Chrome-style
-    support channel (``classify_support_tier``): supported lines (stable /
-    extended-stable / beta) render at the top level, while the remaining 3.x+
-    lines fold under "Out of Support Versions" and 1.x/2.x lines fold under
-    "Obsolete Versions".
+    SkiaSharp minor groups are split into three tiers by their support status
+    (``classify_support_tier``): supported lines (stable / preview) render at the
+    top level, while the remaining 3.x+ lines fold under "Out of Support Versions"
+    and 1.x/2.x lines fold under "Obsolete Versions".
 
     Unreleased pages are listed in their minor group even when no stable page
     of that exact version exists yet (e.g. 3.119.5-unreleased before 3.119.5
@@ -2014,11 +2027,11 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
     # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
     """Generate index.md grouped by support tier (spec §3.5).
 
-    SkiaSharp lines are split by their Chrome-style support channel
-    (``classify_support_tier``): the supported lines (stable / extended-stable /
-    beta) are listed prominently at the top, each tagged with its channel, while
-    the remaining 3.x+ lines and the obsolete 1.x/2.x lines fold into collapsed
-    ``<details>`` blocks so the page leads with what is actually supported.
+    SkiaSharp lines are split by their support status
+    (``classify_support_tier``): the supported lines (stable / preview) are listed
+    prominently at the top, each tagged with its path, while the remaining 3.x+
+    lines and the obsolete 1.x/2.x lines fold into collapsed ``<details>`` blocks
+    so the page leads with what is actually supported.
 
     Unreleased pages are listed even when no stable page of that exact version
     exists yet. ``hb_versions``/``hb_next_versions`` render a trailing
@@ -2067,13 +2080,14 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
     lines = [
         "# Release Notes",
         "",
-        "Release notes for SkiaSharp, grouped by support status. SkiaSharp's "
-        "support channels mirror "
-        "[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels): "
-        "the current **stable** milestone and the **extended stable** milestone "
-        "before it are supported, along with the **beta** previews of upcoming "
-        "milestones (the SkiaSharp minor version is the Chrome/Skia milestone). "
-        "Older releases stay available for reference but are no longer supported.",
+        "Release notes for SkiaSharp, grouped by support status. SkiaSharp ships "
+        "as NuGet packages on two supported paths (the SkiaSharp minor version is "
+        "the Chrome/Skia milestone): the **stable** release line and the "
+        "**preview** line for the milestone currently being stabilized — which "
+        "track "
+        "[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) "
+        "(stable/extended-stable and beta). Older releases stay available for "
+        "reference but are no longer supported.",
         "",
     ]
 
