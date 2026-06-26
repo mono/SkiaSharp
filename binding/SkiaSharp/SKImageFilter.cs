@@ -96,6 +96,21 @@ namespace SkiaSharp
 			return filter;
 		}
 
+		// CreateCrop
+
+		public static SKImageFilter CreateCrop (SKRect rect) =>
+			CreateCrop (rect, SKShaderTileMode.Decal, null);
+
+		public static SKImageFilter CreateCrop (SKRect rect, SKShaderTileMode tileMode) =>
+			CreateCrop (rect, tileMode, null);
+
+		public static SKImageFilter CreateCrop (SKRect rect, SKShaderTileMode tileMode, SKImageFilter? input)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_crop (&rect, tileMode, input?.Handle ?? IntPtr.Zero));
+			GC.KeepAlive (input);
+			return filter;
+		}
+
 		// CreateDisplacementMapEffect
 
 		public static SKImageFilter CreateDisplacementMapEffect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, float scale, SKImageFilter displacement) =>
@@ -151,6 +166,11 @@ namespace SkiaSharp
 			GC.KeepAlive (input);
 			return filter;
 		}
+
+		// CreateEmpty
+
+		public static SKImageFilter CreateEmpty () =>
+			GetObject (SkiaApi.sk_imagefilter_new_empty ());
 
 		// CreateDistantLitDiffuse
 

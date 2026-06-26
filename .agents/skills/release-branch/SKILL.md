@@ -27,6 +27,11 @@ Create release branches for SkiaSharp versions.
 
 **Release branches are cut FROM an integration branch (`main` or `release/X.Y.x`), but never modify those branches directly — always go through a branch + PR.**
 
+> **mono/skia counterpart:** every SkiaSharp `release/{version}` branch needs an
+> identically-named `release/{version}` branch in **mono/skia** at the
+> `externals/skia` submodule commit (see [Step 5](#step-5-create-the-monoskia-counterpart-branch)).
+> `release/*` is not protected in mono/skia, so this is a plain ref creation — not a PR.
+
 ---
 
 ## Concept: Integration Branches
@@ -43,7 +48,7 @@ Each one always sits at the *next unreleased version* for its line, with
 - **Every** release (preview, rc, stable, patch) is cut FROM the line's
   integration branch — `release/{version}` is branched off it.
 - **As soon as a stable is cut**, the integration branch is **bumped** to the
-  next version (see Step 5) — immediately, *not* after the release publishes.
+  next version (see Step 6) — immediately, *not* after the release publishes.
   After branching, PRs keep merging into the integration branch, and they must
   land on the *next* version, not the one that was just cut. Fixes for the cut
   release go on its own `release/{version}` branch.
@@ -127,17 +132,47 @@ SkiaSharp-Native → SkiaSharp → SkiaSharp-Tests
    (~60-90 min)    (~30-60 min)   (~15-30 min)
 ```
 
-Use the **release-status** skill to track build progress. Quick check:
-
-```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
-```
+> CI builds Skia from the **pinned submodule commit**, so it runs regardless of the
+> counterpart branch in Step 5 — that branch exists to *preserve* the source, not to
+> feed the build.
 
 ---
 
-## Step 5: Bump the Integration Branch (Immediately After Cutting a Stable)
+## Step 5: Create the mono/skia Counterpart Branch
 
-**Do this right after Step 4** — as soon as the stable release branch is cut and
+Every SkiaSharp `release/{version}` branch **must** have an identically-named
+`release/{version}` branch in the **mono/skia** fork, pointing at the exact
+`externals/skia` submodule commit that the SkiaSharp branch references. This
+locks/preserves the Skia source for the release so it stays auditable, reproducible,
+and safe from garbage collection.
+
+> This applies to **every** release branch cut — preview, rc, stable, and the
+> `release/X.Y.x` integration forks — not just stables.
+
+1. Read the submodule SHA the release branch points at (no submodule init needed):
+   ```bash
+   SKIA_SHA=$(git rev-parse HEAD:externals/skia)
+   ```
+2. Create the matching branch in mono/skia at that commit:
+   ```bash
+   gh api repos/mono/skia/git/refs \
+     -f ref="refs/heads/release/{version}" \
+     -f sha="$SKIA_SHA"
+   ```
+   - The branch name **must** match the SkiaSharp branch name exactly.
+   - `release/*` is not a protected branch in mono/skia, so this ref creation is allowed.
+   - If it already exists (HTTP 422 "Reference already exists"), verify it points at
+     `$SKIA_SHA` and move on — do **not** force-update.
+3. Verify the counterpart matches:
+   ```bash
+   gh api repos/mono/skia/branches/release/{version} --jq '.commit.sha'   # == $SKIA_SHA
+   ```
+
+---
+
+## Step 6: Bump the Integration Branch (Stable Only)
+
+**Do this right after cutting & pushing the branch (Steps 3–5)** — as soon as the stable release branch is cut and
 pushed, advance that line's **integration branch** to the next version. Do **not**
 wait for the release to publish.
 
@@ -190,6 +225,20 @@ version after release".)
    gh pr create --title "Bump to the next version ({next}) after release" --body ""
    gh pr merge --merge --delete-branch
    ```
+
+---
+
+## Next: Track the Build
+
+Once the branch is cut and pushed (Steps 3–4), its skia counterpart created
+(Step 5), and — for a stable — the integration branch bumped (Step 6), hand off to
+**Step 2 of the release pipeline**, the [release-status](../release-status/SKILL.md)
+skill, to follow the CI chain (`SkiaSharp-Native → SkiaSharp → SkiaSharp-Tests`).
+Quick check:
+
+```bash
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+```
 
 ---
 

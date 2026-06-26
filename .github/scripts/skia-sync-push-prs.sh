@@ -34,15 +34,22 @@ BRANCH="${HEAD_BRANCH:-skia-sync/m${TARGET}}"
 SS_BASE="${BASE_BRANCH:-main}"
 SKIA_BASE="${SKIA_BASE_BRANCH:-skiasharp}"
 IS_RELEASE="${IS_RELEASE:-false}"
-echo "Sync branch: $BRANCH | SkiaSharp base: $SS_BASE | mono/skia base: $SKIA_BASE | release: $IS_RELEASE"
+# UPSTREAM_REF is the google/skia ref the sync merged FROM. For a `chrome/m<N>`
+# milestone sync it defaults to that branch (backward compat with older env files);
+# `main` denotes a bleeding-edge tip sync.
+UPSTREAM_REF="${UPSTREAM_REF:-chrome/m${TARGET}}"
+echo "Sync branch: $BRANCH | SkiaSharp base: $SS_BASE | mono/skia base: $SKIA_BASE | release: $IS_RELEASE | upstream: $UPSTREAM_REF"
 
 SKIA_SUMMARY=""
 SS_SUMMARY=""
 [ -f /tmp/gh-aw/agent/skia-sync-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skia-summary.md)
 [ -f /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md)
 
-# --- Determine PR titles based on same-milestone or milestone bump ---
-if [ "$CURRENT" = "$TARGET" ]; then
+# --- Determine PR titles based on sync kind (tip / same-milestone / milestone bump) ---
+if [ "$UPSTREAM_REF" = "main" ]; then
+    SS_TITLE="[skia-sync] Merge upstream Skia main (tip)"
+    SS_BODY_INTRO="Automated bleeding-edge sync from the tip of upstream Skia (google/skia main)."
+elif [ "$CURRENT" = "$TARGET" ]; then
     SS_TITLE="[skia-sync] Merge upstream chrome/m${TARGET} bug fixes"
     SS_BODY_INTRO="Automated upstream bug-fix sync for m${TARGET}."
 else
@@ -51,6 +58,15 @@ else
 fi
 if [ "$IS_RELEASE" = "true" ]; then
     SS_BODY_INTRO="${SS_BODY_INTRO} Targeting release branch \`${SS_BASE}\` (mono/skia \`${SKIA_BASE}\`)."
+fi
+
+# --- mono/skia PR title + body intro (UPSTREAM_REF-aware) ---
+if [ "$UPSTREAM_REF" = "main" ]; then
+    SKIA_TITLE="[skia-sync] Merge upstream Skia main (tip)"
+    SKIA_BODY_INTRO="Automated upstream merge of google/skia main (tip)."
+else
+    SKIA_TITLE="[skia-sync] Merge upstream chrome/m${TARGET}"
+    SKIA_BODY_INTRO="Automated upstream merge of \`chrome/m${TARGET}\`."
 fi
 
 WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
@@ -73,9 +89,9 @@ push_skia() {
         echo "Creating mono/skia PR..."
         gh pr create --repo mono/skia \
             --head "$BRANCH" --base "$SKIA_BASE" \
-            --title "[skia-sync] Merge upstream chrome/m${TARGET}" \
+            --title "$SKIA_TITLE" \
             --draft \
-            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
+            --body "${SKIA_BODY_INTRO}
 
 ${SKIA_SUMMARY}
 
@@ -83,7 +99,7 @@ Created by ${WORKFLOW_LINK}." || echo "::warning::Failed to create mono/skia PR"
     else
         echo "Updating mono/skia PR #${pr}..."
         gh pr edit "$pr" --repo mono/skia \
-            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
+            --body "${SKIA_BODY_INTRO}
 
 ${SKIA_SUMMARY}
 

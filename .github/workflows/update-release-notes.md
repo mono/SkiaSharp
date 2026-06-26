@@ -1,18 +1,28 @@
 ---
-description: "Regenerate website release notes AND API diffs when code lands on main, release branches, or tags — one pipeline, one PR."
+description: "Regenerate website release notes AND API diffs daily (and on every main push) — new tags, releases, and release-branch commits are discovered automatically. One pipeline, one PR."
+# TRIGGERS — main is the single source of truth for EVERY version/branch.
+# Deliberately NOT triggered by `release/**` pushes or `v*` tags: a push/tag event
+# runs the workflow copy that lives on THAT ref, not main's, so those triggers can
+# only ever run a stale per-branch copy (exactly the duplicate-PR problem we removed).
+# Instead, main's run walks every release/* ref and reads git tags itself, so a new
+# stable tag or release-branch commit is picked up by the next daily run with no
+# per-branch/tag workflow needed. Want it instant after tagging? Dispatch manually.
 on:
   push:
-    branches: [main, "release/**"]
-    tags: ["v*"]
+    branches: [main]
     paths-ignore:
       - "documentation/docfx/releases/**"
   schedule:
-    # Weekly safety net so a missed/failed push run still self-heals.
-    - cron: "0 0 * * 0"
+    # Daily. Catches new stable tags (vX.Y.Z → page flips to "stable"), new
+    # release-branch commits (unreleased deltas), and newly published NuGets
+    # within ~24h. Quiet days are cheap: the generators are deterministic, so an
+    # unchanged run yields an empty Prepare patch and the agent + PR are skipped
+    # (see the `prepare` job's `has_changes` output and the top-level `if:`).
+    - cron: "0 0 * * *"
   workflow_dispatch:
     inputs:
       source_branch:
-        description: "Branch to generate from (its scripts + content). Defaults to main; override on a manual run to validate a feature branch's pipeline before it merges."
+        description: "Branch to generate from (its scripts + content). Defaults to main; override to validate a feature branch's pipeline before merge, or to refresh immediately after tagging instead of waiting for the daily run."
         required: false
         default: "main"
         type: string
@@ -29,6 +39,13 @@ permissions:
 # needs main's history for create-pull-request's branch operations.
 checkout:
   - fetch-depth: 0
+# AGENT GATE — only polish + open a PR when Prepare actually changed something.
+# The `prepare` job emits `has_changes` (its patch is non-empty); on a no-op run
+# it is 'false', this `if:` is false, and the agent job is skipped — which also
+# skips `safe_outputs`, so no spurious PR is opened and no agent runtime is spent.
+# The agent still `needs:` activation + prepare, so a skipped need (e.g. activation
+# gated off) also skips the agent the usual way.
+if: needs.prepare.outputs.has_changes == 'true'
 # ---------------------------------------------------------------------------
 # PREPARE — a dedicated, disk-managed, VERBOSE job on its own runner.
 #
@@ -48,6 +65,10 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
+    outputs:
+      # true iff Prepare's patch is non-empty (something actually changed). The
+      # top-level `if:` uses this to skip the agent + PR on no-op runs.
+      has_changes: ${{ steps.package.outputs.has_changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5.0.0
@@ -69,6 +90,13 @@ jobs:
           SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
         run: |
           set -euo pipefail
+          # Make EVERY release/* branch and tag available locally. The generators
+          # walk all release/* refs (release-notes deltas, cross-minor rollups) and
+          # read git tags to decide stable-vs-prerelease (_version_has_stable_tag):
+          # a daily run is the moment a freshly-pushed vX.Y.Z tag flips its page to
+          # "stable", so fetch tags explicitly (belt-and-suspenders over checkout's
+          # fetch-depth:0) and force-update any moved refs.
+          git fetch origin --tags --force --quiet
           # Release notes/api diffs target main, so push/schedule runs always
           # generate from main (a push to release/* is a content *source*, not the
           # PR base). A manual dispatch may point SOURCE_BRANCH at a feature branch
@@ -90,6 +118,7 @@ jobs:
           # default location, output/files-to-polish.txt.
           bash .agents/skills/release-notes/scripts/generate.sh
       - name: Package Prepare output
+        id: package
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/prepare-out"
@@ -102,6 +131,15 @@ jobs:
           cp output/files-to-polish.txt "$RUNNER_TEMP/prepare-out/files-to-polish.txt"
           echo "Patch size: $(wc -c < "$RUNNER_TEMP/prepare-out/prepare.patch") bytes"
           echo "Files to polish:"; cat "$RUNNER_TEMP/prepare-out/files-to-polish.txt" || true
+          # Drive the top-level agent `if:`: a non-empty patch means something
+          # changed and the agent should polish + open the PR; an empty patch is a
+          # no-op run, so skip the agent and the PR entirely.
+          if [ -s "$RUNNER_TEMP/prepare-out/prepare.patch" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "Prepare produced an empty patch — agent and PR will be skipped."
+          fi
       - name: Upload Prepare output
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.4.3
         with:
@@ -143,9 +181,21 @@ pre-agent-steps:
         echo "Prepare produced no changes; nothing to apply."
       fi
 tools:
-  # The agent only reads the restored files and rewrites prose — it must NOT run
-  # the scripts (they already ran in the prepare job). No python3 here on purpose.
-  bash: ["cat", "grep", "sort", "head", "tail", "sed", "awk", "git"]
+  # The agent reads the restored files, rewrites prose, then commits and opens the
+  # PR. It must NOT re-run the scripts (they already ran in the prepare job) — no
+  # python3 here on purpose. Keep an explicit allowlist: it is the only thing that
+  # stops the agent shelling out to anything else. Dropping the bash block entirely
+  # makes gh-aw compile to `--allow-all-tools` (strictly worse). No sed/awk: they
+  # rewrite files in place, bypassing the edit tool.
+  #
+  # git is REQUIRED, not optional: the create-pull-request safe-output is
+  # commit-based — it errors with "No changes to commit" unless the agent has run
+  # `git add` + `git commit` first (and gh-aw force-injects the git suite anyway).
+  # The agent MUST commit its work before calling create_pull_request — see the
+  # "How the PR is made" section. The earlier 2000+-file blow-up was the OPPOSITE
+  # mistake: the agent created a branch but never committed, so gh-aw's patch
+  # generator fell back to diffing months of history and exceeded the PR file cap.
+  bash: ["cat", "grep", "sort", "head", "tail", "git"]
   edit:
 # The agent has no network: it only polishes prose from already-generated files.
 network: {}
@@ -181,8 +231,15 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
 the regenerated files are on disk, and the list is at
-`output/files-to-polish.txt`. **Do not run `generate.sh`, `dotnet cake`, the
-Python script, or `git commit`/`git push`.** Your job is the Polish phase only.
+`output/files-to-polish.txt`. **Do not re-run `generate.sh`, `dotnet cake`, or the
+Python script** — they already ran. Your job is the Polish phase, then committing
+and opening the PR.
+
+> This agent job is gated on Prepare having actually changed something
+> (`prepare.outputs.has_changes`). A no-op run — where the deterministic
+> generators reproduced the existing tree byte-for-byte — is skipped *before* you
+> start, so when you are running there is always at least the regenerated Prepare
+> output on disk to commit.
 
 ## Your job: the Polish phase
 
@@ -204,8 +261,22 @@ to **Polish**.
 
 ## How the PR is made
 
-The `create-pull-request` safe-output captures **all** working-tree changes —
-the restored Prepare output (Cake tree + Python raw data) and your prose edits —
-into one PR targeting `main` on the single `bot/release-notes` branch. You do not
-git commit or push. If nothing changed (Prepare produced an empty patch and you
-made no edits), no PR is opened or updated.
+`create-pull-request` is a **commit-based** safe-output: it turns your commit into
+the PR. It does **not** stage or commit for you. If you call it with an uncommitted
+working tree it returns *"No changes to commit"*, and gh-aw then falls back to
+diffing months of history (2000+ files, exceeding the PR file cap and failing the
+run). So once polishing is done you **must** commit everything yourself, then create
+the PR:
+
+1. `git checkout -b bot/release-notes` — create the PR branch from the current HEAD.
+2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
+   (Cake API-diff tree + Python raw data) **and** your prose edits.
+3. `git commit -m "docs: regenerate API diffs and polish release notes"`.
+4. Call the `create_pull_request` safe-output. It opens one PR targeting `main` from
+   the `bot/release-notes` branch.
+
+Commit **once**, at the very end, after every edit is done — not incrementally.
+Because the job only starts when Prepare produced changes, the working tree is
+never completely clean here, so you will always commit and open exactly one PR.
+(As a defensive fallback only: if `git status` somehow shows no changes at all,
+make no edits, run no git, and exit — no PR is created.)
