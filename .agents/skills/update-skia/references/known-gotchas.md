@@ -61,6 +61,17 @@ The C API shims (`src/c/gr_context.cpp` etc.) compile as part of `:core`, but ba
 
 Upstream may move previously-core modules into separate optional targets. If the C API exposes functions from that module, add it as an explicit dependency of the `SkiaSharp` target in `BUILD.gn` rather than merging sources into core.
 
+### 23. Required New Upstream GN Arg → `build.cake` (not a one-off flag)
+
+Upstream sometimes introduces a build dependency our fork deliberately does **not** vendor. The fix is a durable gn arg in `build.cake` — not a CLI flag, and not a hack to silence the error.
+
+**Worked example — `skia_use_partition_alloc`.** Upstream's `gn/skia.gni` defaults `skia_use_partition_alloc = is_clang` (true on clang). When true, `BUILD.gn` imports `third_party/externals/partition_alloc/partition_alloc.gni` — but our fork's `DEPS` keeps that entry commented out, so the folder is never fetched and the build aborts. Skia ships an official zero-overhead **noop `raw_ptr`** for exactly this case ("because the partition_alloc dependency is missing"), gated on `SK_USE_PARTITION_ALLOC`, so building with `skia_use_partition_alloc=false` is the *supported embedder path*, not a workaround — it disables Chromium's MiraclePtr/BackupRefPtr hardening (irrelevant to SkiaSharp's trusted-app threat model) with no runtime regression. Vendoring the allocator instead would add a large Chromium dependency across the whole platform matrix for marginal benefit.
+
+**Resolution:**
+- Add the gn arg to **every affected clang platform's** `native/**/build.cake` gn-args list, next to the existing `skia_use_*` toggles — that file is the single source of truth. Do **not** rely on a one-off `dotnet cake … --gnArgs` flag (non-durable, and easily lost).
+- **Sequencing:** a gn arg added upstream *after* a milestone's branch point does not exist in that milestone. Adding it to `build.cake` before the submodule actually carries it fails the build with `Unknown build argument`. Only add it in the same change that advances the submodule to a tree that has the arg (e.g. a tip/`main` sync, or the milestone bump that introduces it).
+- This is **only** for a genuinely required arg. Never add a gn arg — or change compiler/linker flags — merely to silence a build error on one host; that is a missing-dependency problem (the host toolchain/packages), not a build-config one.
+
 ## Dependencies & Bindings
 
 ### 8. DEPS: Fork-Customized Dependencies
