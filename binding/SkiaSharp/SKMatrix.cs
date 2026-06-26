@@ -2,6 +2,7 @@
 
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 #if NET8_0_OR_GREATER
 using System.Runtime.Intrinsics;
@@ -280,8 +281,9 @@ namespace SkiaSharp
 			if (TryInvertInternal (out inverse))
 				return true;
 
-			// Match the native shim: on failure the result is left as the
-			// default-constructed (identity) matrix.
+			// Match the native shim, which leaves its out matrix as the identity it
+			// was default-constructed with when the matrix is non-invertible. (A
+			// default-constructed SKMatrix in C# is all-zero, so set it explicitly.)
 			inverse = Identity;
 			return false;
 		}
@@ -843,6 +845,9 @@ namespace SkiaSharp
 		// exactly, so the result is bit-for-bit identical to the native path. We
 		// process two points per iteration and handle a trailing odd point with
 		// the scalar formula (IEEE addition is commutative, so it is bit-identical).
+		// The SKPoint buffers carry no 16-byte alignment guarantee, so the vector
+		// reads/writes go through Unsafe.ReadUnaligned/WriteUnaligned (which lower to
+		// the same unaligned moves the JIT already emits, so there is no perf cost).
 
 		// Swaps the X/Y lanes of each point pair: (x0,y0,x1,y1) -> (y0,x0,y1,x1).
 #if NET8_0_OR_GREATER
@@ -874,13 +879,13 @@ namespace SkiaSharp
 				}
 				n >>= 1;
 				if ((n & 1) != 0) {
-					*(Vector4*)d = *(Vector4*)s + trans;
+					Unsafe.WriteUnaligned (d, Unsafe.ReadUnaligned<Vector4> (s) + trans);
 					s += 4; d += 4;
 				}
 				n >>= 1;
 				for (var i = 0; i < n; i++) {
-					*(Vector4*)(d + 0) = *(Vector4*)(s + 0) + trans;
-					*(Vector4*)(d + 4) = *(Vector4*)(s + 4) + trans;
+					Unsafe.WriteUnaligned (d + 0, Unsafe.ReadUnaligned<Vector4> (s + 0) + trans);
+					Unsafe.WriteUnaligned (d + 4, Unsafe.ReadUnaligned<Vector4> (s + 4) + trans);
 					s += 8; d += 8;
 				}
 			}
@@ -907,13 +912,13 @@ namespace SkiaSharp
 				}
 				n >>= 1;
 				if ((n & 1) != 0) {
-					*(Vector4*)d = *(Vector4*)s * scale + trans;
+					Unsafe.WriteUnaligned (d, Unsafe.ReadUnaligned<Vector4> (s) * scale + trans);
 					s += 4; d += 4;
 				}
 				n >>= 1;
 				for (var i = 0; i < n; i++) {
-					*(Vector4*)(d + 0) = *(Vector4*)(s + 0) * scale + trans;
-					*(Vector4*)(d + 4) = *(Vector4*)(s + 4) * scale + trans;
+					Unsafe.WriteUnaligned (d + 0, Unsafe.ReadUnaligned<Vector4> (s + 0) * scale + trans);
+					Unsafe.WriteUnaligned (d + 4, Unsafe.ReadUnaligned<Vector4> (s + 4) * scale + trans);
 					s += 8; d += 8;
 				}
 			}
@@ -934,8 +939,8 @@ namespace SkiaSharp
 				var d = (float*)dp;
 				for (var i = 0; i < pairs; i++) {
 					var o = i << 2;
-					var v = *(Vector4*)(s + o);
-					*(Vector4*)(d + o) = v * scale + SwapXY (v) * skew + trans;
+					var v = Unsafe.ReadUnaligned<Vector4> (s + o);
+					Unsafe.WriteUnaligned (d + o, v * scale + SwapXY (v) * skew + trans);
 				}
 			}
 
