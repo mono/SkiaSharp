@@ -114,6 +114,12 @@ Each engine looks up overrides only inside its own family's bucket; an absent or
 bucket means "no overrides — pure defaults" for that family. (HarfBuzz has no entries
 today; the empty bucket is its override surface for the day it needs one.)
 
+Alongside the family buckets the file carries one **non-family** top-level key,
+**`support`**, which declares the navigation support tiers consumed only by the
+release-notes TOC/index (§3.5 "Support tiers"). It is read solely by the release-notes
+engine — the API-diff engine ignores everything outside its own family bucket — so it
+never affects comparison or emission.
+
 The recognised fields:
 
 - **`compare_to: "X.Y.Z"`** — diff this line against an explicit baseline instead of
@@ -523,6 +529,41 @@ reference material for a release, not separate browsing destinations. From a hub
 is one click to the line's diff index and one more to a specific assembly. `index.md`
 (at the `releases/` root) is the top-level list of release lines.
 
+##### Support tiers (the `support` block)
+
+Both `TOC.yml` and `index.md` are organised by a **support tier** so the navigation
+leads with what is actually supported. The tiers mirror
+[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels)
+(the SkiaSharp **minor** number *is* the Chrome/Skia milestone):
+
+- **Supported** — the `stable` milestone, the `extended_stable` milestone before it,
+  and the `beta` previews of upcoming milestones. These render as the top-level
+  `Version X.Y.x` nodes in the TOC and under the **Supported versions** heading in
+  `index.md` (each tagged `Stable` / `Extended stable` / `Beta`).
+- **Out of support** — every other 3.x+ line. These fold under a single
+  **Out of Support Versions** TOC node and a collapsed `<details>` block in `index.md`.
+- **Obsolete** — the 1.x and 2.x lines, folded under the **Obsolete Versions** TOC node
+  and a collapsed `<details>` block in `index.md`.
+
+The tier of a line is **not** inferred from git or NuGet — it is read from the
+top-level **`support`** block in `versions.json` (a sibling of the `skiasharp` /
+`harfbuzzsharp` family buckets, consumed only by the release-notes engine; the API-diff
+engine ignores it):
+
+```json
+"support": {
+  "stable": "3.119",
+  "extended_stable": "3.116",
+  "beta": ["4.150", "4.148"]
+}
+```
+
+`stable`/`extended_stable` are single `major.minor` lines; `beta` is a list. Maintainers
+update this block on each release (promote a new stable, retire the old extended-stable,
+adjust the in-flight betas) so each field names the milestone currently in the matching
+Chrome channel. An absent or empty block makes every 3.x+ line render as
+top-level/supported (the legacy flat layout), so the feature is purely additive.
+
 ### 3.6 The co-release map sidecar (Cake → Python)
 
 `releases/co-release-map.json` is the **inter-engine contract** that carries the §1.5
@@ -912,3 +953,10 @@ page links straight to its API diffs.
    identically on every host. When a regeneration produces unexpected "New Type" churn, the
    cause is almost always a newly-missing dependency: add it as a real `AddDep`/`AddPackageDir`,
    never treat the churn as a real API change.
+
+10. **Support tiers are config-driven (§3.5).** The TOC/index support grouping comes
+    only from the `support` block in `versions.json` — never inferred from git tags or
+    NuGet. Its three fields are a snapshot of the current Chrome Stable / Extended-stable /
+    Beta milestones (which move on Google's schedule), maintained by hand on each release.
+    An absent/empty block degrades to the legacy "every 3.x+ line is top-level" layout, so
+    the grouping stays purely additive.

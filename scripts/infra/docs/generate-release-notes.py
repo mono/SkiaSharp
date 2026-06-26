@@ -193,6 +193,88 @@ def _versions_config_lookup(version, family="skiasharp"):
     return None
 
 
+# Support-channel config — the top-level "support" block in versions.json, read
+# ONLY by the release-notes TOC/index (the API-diff engine ignores it). Cached
+# after first load.
+_SUPPORT_CONFIG = None  # type: Optional[dict]
+
+
+def load_support_config():
+    # type: () -> dict
+    """Load the SkiaSharp support-channel config from versions.json (spec §3.5).
+
+    The top-level ``support`` block declares which milestone lines are supported,
+    mirroring Chrome's release channels: ``stable`` and ``extended_stable`` are
+    the two supported stable milestone lines, and ``beta`` is the list of in-flight
+    preview/RC milestone lines. Every value is a ``major.minor`` line core (the
+    SkiaSharp minor IS the Chrome/Skia milestone).
+
+    Returns a normalized dict carrying the raw fields plus a derived ``supported``
+    set (all supported groups) and a ``channels`` map (group -> human label). A
+    missing/empty block yields an empty ``supported`` set, so callers fall back to
+    the legacy "every 3.x+ line is top-level/supported" behavior.
+    """
+    global _SUPPORT_CONFIG
+    if _SUPPORT_CONFIG is not None:
+        return _SUPPORT_CONFIG
+    stable = None  # type: Optional[str]
+    extended_stable = None  # type: Optional[str]
+    beta = []  # type: list[str]
+    if VERSIONS_JSON_PATH.exists():
+        with open(VERSIONS_JSON_PATH) as f:
+            data = json.load(f)
+        block = data.get("support", {}) or {}
+        if not isinstance(block, dict):
+            raise ValueError(
+                "versions.json: 'support' must be an object (spec §3.5); got %s"
+                % type(block).__name__)
+        stable = block.get("stable")
+        extended_stable = block.get("extended_stable")
+        beta = list(block.get("beta", []) or [])
+    supported = set()  # type: set[str]
+    channels = {}  # type: dict[str, str]
+    for line, label in ((stable, "Stable"), (extended_stable, "Extended stable")):
+        if line:
+            supported.add(line)
+            channels[line] = label
+    for line in beta:
+        supported.add(line)
+        channels.setdefault(line, "Beta")
+    _SUPPORT_CONFIG = {
+        "stable": stable,
+        "extended_stable": extended_stable,
+        "beta": beta,
+        "supported": supported,
+        "channels": channels,
+    }
+    return _SUPPORT_CONFIG
+
+
+def classify_support_tier(group, support=None):
+    # type: (str, Optional[dict]) -> str
+    """Classify a minor group ("3.119") into a TOC/index support tier (spec §3.5).
+
+    Returns one of:
+
+      * ``"supported"`` — a Chrome stable / extended-stable / beta channel line,
+        rendered prominently at the top level.
+      * ``"obsolete"`` — a 1.x or 2.x line, folded into "Obsolete Versions".
+      * ``"unsupported"`` — every other 3.x+ line, folded into "Out of Support
+        Versions".
+
+    With no ``support`` block configured (empty ``supported`` set) every 3.x+ line
+    is treated as supported, preserving the legacy flat layout.
+    """
+    if support is None:
+        support = load_support_config()
+    if int(group.split(".")[0]) < 3:
+        return "obsolete"
+    supported = support.get("supported") or set()
+    if not supported:
+        return "supported"
+    return "supported" if group in supported else "unsupported"
+
+
 # Co-release map sidecar (spec §3.6), written by the Cake API-diff engine and
 # read here to emit the deterministic SkiaSharp-page -> HarfBuzz-folder link. It is
 # the ONLY thing that crosses from the API-diff engine into this engine
@@ -1777,9 +1859,58 @@ def cleanup_stale_unreleased():
     return removed
 
 
+def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
+    # type: (str, list[str], dict, dict) -> list[str]
+    """Render a collapsed parent TOC node nesting its minor groups (spec §3.5).
+
+    Used for the "Out of Support Versions" and "Obsolete Versions" folds: each
+    minor group becomes a child node, a single-release minor collapsing to one
+    node while a multi-release minor nests its individual patch releases. This
+    mirrors the supported top-level layout one level deeper so the sidebar fold
+    stays tidy instead of degrading into a flat wall of patch links. Returns the
+    YAML lines (empty when ``groups`` is empty).
+    """
+    out = []  # type: list[str]
+    if not groups:
+        return out
+    head_members = stable_groups.get(groups[0]) or unreleased_groups.get(groups[0])
+    head = ("{}.md".format(head_members[0]) if groups[0] in stable_groups
+            else "{}-unreleased.md".format(head_members[0]))
+    out.append("- name: {}".format(title))
+    out.append("  href: {}".format(head))
+    out.append("  items:")
+    for g in groups:
+        stable = stable_groups.get(g, [])
+        unreleased = unreleased_groups.get(g, [])
+        entries = [(v, True) for v in unreleased] + [(v, False) for v in stable]
+        if not entries:
+            continue
+        entries.sort(key=lambda t: version_key(t[0]), reverse=True)
+        g_header = ("{}.md".format(stable[0]) if stable
+                    else "{}-unreleased.md".format(unreleased[0]))
+        out.append("    - name: Version {}.x".format(g))
+        out.append("      href: {}".format(g_header))
+        if len(entries) > 1:
+            out.append("      items:")
+            for v, is_unrel in entries:
+                if is_unrel:
+                    out.append("        - name: Version {} (Unreleased)".format(v))
+                    out.append("          href: {}-unreleased.md".format(v))
+                else:
+                    out.append("        - name: Version {}".format(v))
+                    out.append("          href: {}.md".format(v))
+    return out
+
+
 def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=None):
     # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
-    """Generate TOC.yml grouped by major.minor, obsolete under one node.
+    """Generate TOC.yml grouped by major.minor and support tier (spec §3.5).
+
+    SkiaSharp minor groups are split into three tiers by their Chrome-style
+    support channel (``classify_support_tier``): supported lines (stable /
+    extended-stable / beta) render at the top level, while the remaining 3.x+
+    lines fold under "Out of Support Versions" and 1.x/2.x lines fold under
+    "Obsolete Versions".
 
     Unreleased pages are listed in their minor group even when no stable page
     of that exact version exists yet (e.g. 3.119.5-unreleased before 3.119.5
@@ -1797,18 +1928,23 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
     for v in next_versions:
         unreleased_groups[minor_group(v)].append(v)
 
-    current = []
+    support = load_support_config()
+    supported = []
+    unsupported = []
     obsolete = []
     for g in sorted(set(stable_groups) | set(unreleased_groups),
                     key=lambda x: version_key(x), reverse=True):
-        if int(g.split(".")[0]) < 3:
+        tier = classify_support_tier(g, support)
+        if tier == "obsolete":
             obsolete.append(g)
+        elif tier == "unsupported":
+            unsupported.append(g)
         else:
-            current.append(g)
+            supported.append(g)
 
     lines = ["- name: Overview", "  href: index.md"]
 
-    for g in current:
+    for g in supported:
         stable = stable_groups.get(g, [])
         unreleased = unreleased_groups.get(g, [])
         header = "{}.md".format(stable[0]) if stable \
@@ -1826,22 +1962,10 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
                 lines.append("    - name: Version {}".format(v))
                 lines.append("      href: {}.md".format(v))
 
-    if obsolete:
-        first = stable_groups.get(obsolete[0]) or unreleased_groups.get(obsolete[0])
-        lines.append("- name: Obsolete Versions")
-        lines.append("  href: {}.md".format(first[0]))
-        lines.append("  items:")
-        for g in obsolete:
-            members = stable_groups.get(g, [])
-            if not members:
-                continue
-            lines.append("    - name: Version {}.x".format(g))
-            lines.append("      href: {}.md".format(members[0]))
-            if len(members) > 1:
-                lines.append("      items:")
-                for v in members:
-                    lines.append("        - name: Version {}".format(v))
-                    lines.append("          href: {}.md".format(v))
+    lines.extend(_toc_folded_section(
+        "Out of Support Versions", unsupported, stable_groups, unreleased_groups))
+    lines.extend(_toc_folded_section(
+        "Obsolete Versions", obsolete, stable_groups, unreleased_groups))
 
     # HarfBuzz peer family — sibling node grouping HarfBuzz lines by minor
     # (spec §3.5), mirroring the SkiaSharp version groups so the node is a tidy
@@ -1888,49 +2012,102 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
 
 def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=None):
     # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
-    """Generate index.md with version list grouped by major.
+    """Generate index.md grouped by support tier (spec §3.5).
+
+    SkiaSharp lines are split by their Chrome-style support channel
+    (``classify_support_tier``): the supported lines (stable / extended-stable /
+    beta) are listed prominently at the top, each tagged with its channel, while
+    the remaining 3.x+ lines and the obsolete 1.x/2.x lines fold into collapsed
+    ``<details>`` blocks so the page leads with what is actually supported.
 
     Unreleased pages are listed even when no stable page of that exact version
     exists yet. ``hb_versions``/``hb_next_versions`` render a trailing
     "HarfBuzzSharp" section linking the peer-family hub pages (spec §3.5).
     """
+    support = load_support_config()
+    channels = support.get("channels", {})
+
+    entries = [(v, False) for v in versions] + [(v, True) for v in next_versions]
+    minor_map = defaultdict(list)
+    for v, is_unrel in entries:
+        minor_map[minor_group(v)].append((v, is_unrel))
+
+    supported_groups = []
+    unsupported_groups = []
+    obsolete_groups = []
+    for g in sorted(minor_map.keys(), key=lambda x: version_key(x), reverse=True):
+        tier = classify_support_tier(g, support)
+        if tier == "obsolete":
+            obsolete_groups.append(g)
+        elif tier == "unsupported":
+            unsupported_groups.append(g)
+        else:
+            supported_groups.append(g)
+
+    def render_group(g, with_label):
+        # type: (str, bool) -> list[str]
+        members = sorted(minor_map[g], key=lambda t: version_key(t[0]), reverse=True)
+        label = channels.get(g)
+        if with_label and label:
+            out = ["- **Version {}.x** — {}".format(g, label)]
+        else:
+            out = ["- **Version {}.x**".format(g)]
+        for v, is_unrel in members:
+            if is_unrel:
+                out.append("  - [Version {} (Unreleased)]({}-unreleased.md)".format(v, v))
+            else:
+                out.append("  - [Version {}]({}.md)".format(v, v))
+        return out
+
+    def details(summary, body):
+        # type: (str, list[str]) -> list[str]
+        return ["<details>", "<summary>{}</summary>".format(summary), ""] \
+            + body + ["", "</details>", ""]
+
     lines = [
         "# Release Notes",
         "",
-        "Release notes for all SkiaSharp versions.",
+        "Release notes for SkiaSharp, grouped by support status. SkiaSharp's "
+        "support channels mirror "
+        "[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels): "
+        "the current **stable** milestone and the **extended stable** milestone "
+        "before it are supported, along with the **beta** previews of upcoming "
+        "milestones (the SkiaSharp minor version is the Chrome/Skia milestone). "
+        "Older releases stay available for reference but are no longer supported.",
         "",
     ]
 
-    entries = [(v, False) for v in versions] + [(v, True) for v in next_versions]
-
-    major_groups = defaultdict(list)
-    for v, is_unrel in entries:
-        major_groups[v.split(".")[0]].append((v, is_unrel))
-
-    for major in sorted(major_groups.keys(), key=int, reverse=True):
-        lines.extend(["### SkiaSharp {}.x".format(major), ""])
-
-        minor_groups_map = defaultdict(list)
-        for v, is_unrel in major_groups[major]:
-            minor_groups_map[minor_group(v)].append((v, is_unrel))
-
-        for g in sorted(minor_groups_map.keys(),
-                        key=lambda x: version_key(x), reverse=True):
-            members = sorted(minor_groups_map[g],
-                             key=lambda t: version_key(t[0]), reverse=True)
-            lines.append("- **Version {}.x**".format(g))
-            for v, is_unrel in members:
-                if is_unrel:
-                    lines.append("  - [Version {} (Unreleased)]({}-unreleased.md)".format(v, v))
-                else:
-                    lines.append("  - [Version {}]({}.md)".format(v, v))
+    if supported_groups:
+        lines.extend(["## Supported versions", ""])
+        for g in supported_groups:
+            lines.extend(render_group(g, with_label=True))
         lines.append("")
+
+    if unsupported_groups:
+        lines.extend(["## Out of support", ""])
+        lines.append(
+            "These SkiaSharp 3.x and 4.x lines are no longer supported. They "
+            "remain available for reference.")
+        lines.append("")
+        body = []  # type: list[str]
+        for g in unsupported_groups:
+            body.extend(render_group(g, with_label=False))
+        lines.extend(details("Show out-of-support releases", body))
+
+    if obsolete_groups:
+        lines.extend(["## Obsolete versions", ""])
+        lines.append("SkiaSharp 1.x and 2.x are obsolete and no longer maintained.")
+        lines.append("")
+        body = []
+        for g in obsolete_groups:
+            body.extend(render_group(g, with_label=False))
+        lines.extend(details("Show obsolete releases", body))
 
     # HarfBuzz peer family (spec §3.5) — its own section, grouped by HB minor.
     hb_versions = hb_versions or []
     hb_next_versions = hb_next_versions or []
     if hb_versions or hb_next_versions:
-        lines.extend(["### HarfBuzzSharp", ""])
+        lines.extend(["## HarfBuzzSharp", ""])
         hb_entries = ([(v, False) for v in hb_versions]
                       + [(v, True) for v in hb_next_versions])
         hb_minor_map = defaultdict(list)
