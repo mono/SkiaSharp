@@ -126,10 +126,25 @@ permissions:
   pull-requests: read
 
 # -- Safe outputs ------------------------------------------------------
-# All GitHub writes (push, PR) are done in post-steps via bash.
-# Stage all safe outputs so the agent can't create issues/PRs directly.
+# All real GitHub writes (push, both PRs) are done in the post-step via bash with
+# SKIASHARP_AUTOBUMP_TOKEN — gh-aw can't create the mono/skia PR (the submodule's merge
+# commits live in a nested repo gh-aw sees only as a gitlink) and `staged: true` keeps the
+# agent from creating anything directly.
+#
+# `create-pull-request` is declared ONLY as an honest completion signal: it is kept STAGED
+# (preview-only — NO real PR is created), so a successful sync registers as a pull-request
+# output instead of being mislabeled a "no-op". The agent calls it when work was done and
+# `noop` only when there genuinely was none.
 safe-outputs:
   staged: true
+  create-pull-request:
+    staged: true
+    if-no-changes: ignore
+  # report-as-issue defaults to true, but this workflow has no `issues: write` and a real sync
+  # is NOT a no-op — disable the no-op→issue posting so genuine no-work runs don't try (and fail)
+  # to file a "no-op runs" issue.
+  noop:
+    report-as-issue: false
 
 # -- Sandbox -----------------------------------------------------------
 # Mount host fontconfig config AND font files into the AWF chroot.
@@ -263,10 +278,13 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
 - **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
-  Do NOT push branches, create PRs, or create issues — all GitHub artifacts are handled by the post-step.
-  Just commit locally. Do NOT call `create_issue` or `create_pull_request`.
-- **"No work" signal**: the pre-activation step skips the workflow when there are no new upstream commits,
-  so this should not happen. If somehow it does, do NOT write `skia-sync-env.sh` and stop.
+  Do NOT push branches or create *real* PRs/issues — every GitHub artifact is created by the
+  post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.
+  Do NOT call `create_issue`. Your completion signal is `create_pull_request` (staged) when you did
+  work, or `noop` when you did not — see "Completion signal" at the end of this prompt.
+- **"No work" signal**: the pre-activation step skips the workflow when there are no new upstream
+  commits, so this should rarely happen. If it does, do NOT write `skia-sync-env.sh`, call `noop`
+  with a one-line reason, and stop.
 
 After Phase 10, write these files:
 
@@ -296,3 +314,15 @@ skill's default path) so it's uploaded as an artifact and failures can be inspec
 
 Commit submodule changes inside `externals/skia` on `${{ needs.pre_activation.outputs.head_branch }}`.
 Commit parent repo changes on `${{ needs.pre_activation.outputs.head_branch }}` in the parent.
+
+## Completion signal
+
+When the sync is done — you have committed locally and written `skia-sync-env.sh` plus both
+summaries — call the `create_pull_request` safe-output tool **once** as your completion signal.
+It is **staged** (preview-only: it creates NO real PR and pushes nothing — the post-step opens both
+real PRs with the autobump token), but it records this run as a real upstream sync instead of a
+no-op. Pass a short title (the `[skia-sync] …` title for this mode) and a one-line body pointing at
+the two summary files. Do this **instead of** `noop`.
+
+Call `noop` (and never `create_pull_request`) **only** when there was genuinely no work to do
+— i.e. you did not write `skia-sync-env.sh`.
