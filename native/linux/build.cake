@@ -106,6 +106,7 @@ Task("libSkiaSharp")
             $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
@@ -152,6 +153,7 @@ Task("libHarfBuzzSharp")
         GnNinja($"{VARIANT}/{arch}", "HarfBuzzSharp",
             $"target_os='linux' " +
             $"target_cpu='{skiaArch}' " +
+            $"skia_use_partition_alloc=false " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
