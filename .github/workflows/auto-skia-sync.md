@@ -204,7 +204,7 @@ post-steps:
     run: bash /tmp/gh-aw/skia-sync-push-prs.sh
 ---
 
-# Skia Upstream Sync
+# Sync - Skia Upstream
 
 Base milestone (current): `m${{ needs.pre_activation.outputs.current }}`.  
 Target milestone: `m${{ needs.pre_activation.outputs.target }}`.  

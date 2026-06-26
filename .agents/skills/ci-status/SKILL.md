@@ -60,21 +60,21 @@ The collector script requires:
 
 | Workflow | Repository | Trigger | Why Track |
 |----------|------------|---------|-----------|
-| Docs - Deploy | mono/SkiaSharp | Push/PR to main | Docs site broken if failing |
-| Docs - Go Live! | mono/SkiaSharp | Workflow dispatch | Docs don't publish if failing |
-| Docs - PR Staging - Cleanup | mono/SkiaSharp | PR close events | Stale staging deploys accumulate |
-| Docs - PR Staging - Sweep Stale | mono/SkiaSharp | Daily (06:00 UTC) | Stale staging deploys accumulate |
+| Pages - Deploy | mono/SkiaSharp | Push/PR to main | Docs site broken if failing |
+| Pages - Go Live! | mono/SkiaSharp | Workflow dispatch | Docs don't publish if failing |
+| Pages - PR Staging - Cleanup | mono/SkiaSharp | PR close events | Stale staging deploys accumulate |
+| Pages - PR Staging - Sweep Stale | mono/SkiaSharp | Daily (06:00 UTC) | Stale staging deploys accumulate |
 | Publish Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
 | API Diff | mono/SkiaSharp | Weekly (Sun 00:00 UTC) | API regression detection |
-| Auto Docs Submodule Sync | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
-| Update Release Notes | mono/SkiaSharp | Push to main/release/tags | Release notes stop auto-updating |
-| Skia Upstream Sync | mono/SkiaSharp | Daily (07:00 UTC) | Upstream tracking breaks |
+| Sync - Docs Submodule | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
+| Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main/release/tags | Release notes stop auto-updating |
+| Sync - Skia Upstream | mono/SkiaSharp | Daily (07:00 UTC) | Upstream tracking breaks |
 | Nightly Fix Finder | mono/SkiaSharp | Nightly | Nightly automation health |
-| Auto-Triage SkiaSharp Issue | mono/SkiaSharp | Daily (04:05 UTC) + issue events | Triage automation stops |
-| Persist Agentic Workflow Data | mono/SkiaSharp | Push to main | AI workflow data lost |
-| Backport | mono/SkiaSharp | PR label/comment | Cherry-picks to release branches fail |
-| Automatic Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
-| Add PR Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
+| Sync - Issue Triage | mono/SkiaSharp | Daily (04:05 UTC) + issue events | Triage automation stops |
+| Sync - Agentic Data | mono/SkiaSharp | Push to main | AI workflow data lost |
+| PR - Backport | mono/SkiaSharp | PR label/comment | Cherry-picks to release branches fail |
+| PR - Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
+| PR - Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
 | Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch | XML docs stop being written |
 | Automerge Docs | mono/SkiaSharp-API-docs | PR events | Doc PRs won't auto-merge |
 | Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | Docs don't publish to live |
@@ -218,12 +218,12 @@ For each tracked GitHub Actions workflow:
 - Any failures or patterns (recurring failures, recent regressions)
 - Whether failures are related to AzDO failures (same commit?) or independent
 - Categorize by severity:
-  - **High**: Docs - Deploy, Publish Samples, Update Release Notes, Skia Upstream Sync,
+  - **High**: Pages - Deploy, Publish Samples, Sync - Release Notes & API Diffs, Sync - Skia Upstream,
     Auto API Docs Writer (broken = user-facing impact or release process blocked)
-  - **Medium**: Auto Docs Submodule Sync, Nightly Fix Finder, Auto-Triage,
-    Backport, Go Live (broken = automation degraded, manual workaround exists)
-  - **Low**: PR Staging Cleanup, Sweep Stale, Rebase, PR Artifacts Comment,
-    Persist Agentic Workflow Data (broken = cosmetic/housekeeping)
+  - **Medium**: Sync - Docs Submodule, Nightly Fix Finder, Sync - Issue Triage,
+    PR - Backport, Pages - Go Live! (broken = automation degraded, manual workaround exists)
+  - **Low**: Pages - PR Staging - Cleanup, Pages - PR Staging - Sweep Stale, PR - Rebase, PR - Artifacts Comment,
+    Sync - Agentic Data (broken = cosmetic/housekeeping)
 
 GitHub Actions failures don't block releases directly (AzDO owns that), but they
 indicate broken automation that accumulates tech debt if ignored. Flag all failures
@@ -340,8 +340,8 @@ After rendering, present a brief summary in chat and point to the files:
   release/4.147.0-preview.3: Public CI red (CS0016 errors); internal chain unaffected.
 
 🐙 GitHub Actions:
-  🟠 High:    Docs - Deploy ✅ | Publish Samples ✅ | Auto API Docs Writer ❌
-  🟡 Medium:  Backport ✅ | Go Live ✅ | Auto-Triage ✅
+  🟠 High:    Pages - Deploy ✅ | Publish Samples ✅ | Auto API Docs Writer ❌
+  🟡 Medium:  PR - Backport ✅ | Pages - Go Live! ✅ | Sync - Issue Triage ✅
   ⚪ Low:     All passing
 
 Top actions:
