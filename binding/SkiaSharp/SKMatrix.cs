@@ -2,6 +2,7 @@
 
 using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 #if NET8_0_OR_GREATER
 using System.Runtime.Intrinsics;
 #endif
@@ -15,6 +16,19 @@ namespace SkiaSharp
 		public readonly static SKMatrix Empty;
 
 		public readonly static SKMatrix Identity = new SKMatrix { scaleX = 1, scaleY = 1, persp2 = 1 };
+
+		// On x86 .NET Framework the runtime JIT targets the legacy x87 FPU, which
+		// evaluates intermediate float expressions with 80-bit extended precision
+		// (permitted by ECMA-334 §8.3.7). That makes the managed math below diverge
+		// from native Skia's per-operation SSE rounding by thousands of ULP in
+		// cancellation-prone paths, which would change rendering output. On that one
+		// legacy runtime we keep routing the math through the native C API to stay
+		// byte-for-byte identical with previous releases. Every other runtime (x64
+		// .NET Framework and all .NET Core / .NET 5+ on any architecture) rounds each
+		// operation to float like native, so it takes the fast managed path.
+		private static readonly bool UseNativeMath =
+			RuntimeInformation.ProcessArchitecture == Architecture.X86 &&
+			RuntimeInformation.FrameworkDescription.StartsWith (".NET Framework", StringComparison.Ordinal);
 
 		private class Indices
 		{
@@ -244,11 +258,25 @@ namespace SkiaSharp
 
 		// Invert
 
-		public readonly bool IsInvertible =>
-			TryInvertInternal (out _);
+		public readonly bool IsInvertible {
+			get {
+				if (UseNativeMath) {
+					fixed (SKMatrix* t = &this)
+						return SkiaApi.sk_matrix_try_invert (t, null);
+				}
+
+				return TryInvertInternal (out _);
+			}
+		}
 
 		public readonly bool TryInvert (out SKMatrix inverse)
 		{
+			if (UseNativeMath) {
+				fixed (SKMatrix* i = &inverse)
+				fixed (SKMatrix* t = &this)
+					return SkiaApi.sk_matrix_try_invert (t, i);
+			}
+
 			if (TryInvertInternal (out inverse))
 				return true;
 
@@ -268,22 +296,61 @@ namespace SkiaSharp
 
 		// *Concat
 
-		public static SKMatrix Concat (SKMatrix first, SKMatrix second) =>
-			SetConcat (first, second);
+		public static SKMatrix Concat (SKMatrix first, SKMatrix second)
+		{
+			if (UseNativeMath) {
+				SKMatrix target;
+				SkiaApi.sk_matrix_concat (&target, &first, &second);
+				return target;
+			}
 
-		public readonly SKMatrix PreConcat (SKMatrix matrix) =>
-			matrix.GetMatrixType () == TypeMaskIdentity ? this : SetConcat (this, matrix);
+			return SetConcat (first, second);
+		}
 
-		public readonly SKMatrix PostConcat (SKMatrix matrix) =>
-			matrix.GetMatrixType () == TypeMaskIdentity ? this : SetConcat (matrix, this);
+		public readonly SKMatrix PreConcat (SKMatrix matrix)
+		{
+			if (UseNativeMath) {
+				var target = this;
+				SkiaApi.sk_matrix_pre_concat (&target, &matrix);
+				return target;
+			}
 
-		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second) =>
+			return matrix.GetMatrixType () == TypeMaskIdentity ? this : SetConcat (this, matrix);
+		}
+
+		public readonly SKMatrix PostConcat (SKMatrix matrix)
+		{
+			if (UseNativeMath) {
+				var target = this;
+				SkiaApi.sk_matrix_post_concat (&target, &matrix);
+				return target;
+			}
+
+			return matrix.GetMatrixType () == TypeMaskIdentity ? this : SetConcat (matrix, this);
+		}
+
+		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
+		{
+			if (UseNativeMath) {
+				fixed (SKMatrix* t = &target)
+					SkiaApi.sk_matrix_concat (t, &first, &second);
+				return;
+			}
+
 			target = SetConcat (first, second);
+		}
 
 		// MapRect
 
 		public readonly SKRect MapRect (SKRect source)
 		{
+			if (UseNativeMath) {
+				SKRect dest;
+				fixed (SKMatrix* m = &this)
+					SkiaApi.sk_matrix_map_rect (m, &dest, &source);
+				return dest;
+			}
+
 			var type = GetMatrixType ();
 
 			// identity or translate
@@ -320,6 +387,13 @@ namespace SkiaSharp
 
 		public readonly SKPoint MapPoint (float x, float y)
 		{
+			if (UseNativeMath) {
+				SKPoint result;
+				fixed (SKMatrix* t = &this)
+					SkiaApi.sk_matrix_map_xy (t, x, y, &result);
+				return result;
+			}
+
 			// Mirrors SkMatrix::mapPoint: perspective uses the perspective proc,
 			// everything else uses the inlined affine math (mapPointAffine) so a
 			// pure scale/translate still maps through the same expression.
@@ -366,6 +440,13 @@ namespace SkiaSharp
 
 		public readonly SKPoint MapVector (float x, float y)
 		{
+			if (UseNativeMath) {
+				SKPoint result;
+				fixed (SKMatrix* t = &this)
+					SkiaApi.sk_matrix_map_vector (t, x, y, &result);
+				return result;
+			}
+
 			if (HasPerspective) {
 				var v = MapPerspective (x, y);
 				var o = MapPerspective (0, 0);
@@ -414,6 +495,11 @@ namespace SkiaSharp
 
 		public readonly float MapRadius (float radius)
 		{
+			if (UseNativeMath) {
+				fixed (SKMatrix* t = &this)
+					return SkiaApi.sk_matrix_map_radius (t, radius);
+			}
+
 			var v0 = MapVector (radius, 0);
 			var v1 = MapVector (0, radius);
 
@@ -722,10 +808,19 @@ namespace SkiaSharp
 
 		private readonly void MapPointsInternal (Span<SKPoint> dst, ReadOnlySpan<SKPoint> src)
 		{
-			var type = GetMatrixType ();
 			var count = src.Length;
 			if (count == 0)
 				return;
+
+			if (UseNativeMath) {
+				fixed (SKMatrix* m = &this)
+				fixed (SKPoint* d = dst)
+				fixed (SKPoint* s = src)
+					SkiaApi.sk_matrix_map_points (m, d, s, count);
+				return;
+			}
+
+			var type = GetMatrixType ();
 
 			if ((type & TypeMaskPerspective) != 0) {
 				for (var i = 0; i < count; i++) {
@@ -854,6 +949,17 @@ namespace SkiaSharp
 
 		private readonly void MapVectorsInternal (Span<SKPoint> dst, ReadOnlySpan<SKPoint> src)
 		{
+			if (UseNativeMath) {
+				var count = src.Length;
+				if (count == 0)
+					return;
+				fixed (SKMatrix* m = &this)
+				fixed (SKPoint* d = dst)
+				fixed (SKPoint* s = src)
+					SkiaApi.sk_matrix_map_vectors (m, d, s, count);
+				return;
+			}
+
 			if (HasPerspective) {
 				// Iterate back-to-front to match SkMatrix::mapVectors, which walks
 				// the perspective case in reverse so overlapping dst/src spans
