@@ -2,7 +2,6 @@ trigger:
   branches:
     include:
       - main
-      - develop
       - release/*
   paths:
     exclude:
@@ -28,16 +27,18 @@ parameters:
     type: object
     default:
       pool:
-        name: Maui-1ESPT
-        image: 1ESPT-Windows2022
+        name: NetCore1ESPool-Internal
+        demands:
+          - ImageOverride -equals 1es-windows-2022
         os: windows
   - name: buildAgentWindowsNative
     displayName: 'The Windows build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Maui-1ESPT
-        image: 1ESPT-Windows2022
+        name: NetCore1ESPool-Internal
+        demands:
+          - ImageOverride -equals 1es-windows-2022
         os: windows
   - name: buildAgentMacNative
     displayName: 'The macOS build agent configuration for building the native assets:'
@@ -52,8 +53,9 @@ parameters:
     type: object
     default:
       pool:
-        name: Maui-1ESPT
-        image: 1ESPT-Ubuntu22.04
+        name: NetCore1ESPool-Internal
+        demands:
+          - ImageOverride -equals 1es-ubuntu-2204
         os: linux
 
 variables:
@@ -61,10 +63,6 @@ variables:
 
 resources:
   repositories:
-    - repository: yaml-templates
-      type: git
-      name: DevDiv/Xamarin.yaml-templates
-      ref: refs/heads/main
     - repository: 1ESTemplates
       type: git
       name: 1ESPipelineTemplates/MicroBuildTemplate
@@ -73,12 +71,13 @@ extends:
   template: azure-pipelines/MicroBuild.1ES.Official.yml@1ESTemplates
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
+    # dnceng 1ES internal pools are network-isolated; SkiaSharp's native build
+    # clones external submodules (chromium depot_tools + skia), so allow egress.
+    settings:
+      networkIsolationPolicy: Permissive
     customBuildTags:
       - ES365AIMigrationTooling
     sdl:
-      sourceRepositoriesToScan:
-        exclude:
-        - repository: yaml-templates
       binskim:
         enabled: true
         break: false
@@ -86,7 +85,6 @@ extends:
         enabled: true
       credscan:
         enabled: true
-        # suppressionsFile: $(Build.SourcesDirectory)/scripts/infra/security/CredScanSuppressions.json
       policheck:
         enabled: true
         exclusionsFile: $(Build.SourcesDirectory)/scripts/infra/security/PoliCheckExclusions.xml
