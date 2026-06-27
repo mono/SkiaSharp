@@ -76,9 +76,11 @@ jobs:
           if [ -n "$existing" ]; then
             echo "PR #$existing already exists, force-pushed update"
           else
-            gh pr create --base main --head "$BRANCH" \
+            if ! gh pr create --base main --head "$BRANCH" \
               --title "Update docs submodule to latest main" \
               --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
 
-          Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
+          Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."; then
+              echo "::warning::Could not create PR automatically. The repository may not allow GitHub Actions to create pull requests. Branch '$BRANCH' has been pushed with the update — please open a PR manually."
+            fi
           fi
