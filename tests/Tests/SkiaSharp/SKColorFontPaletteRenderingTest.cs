@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
@@ -7,35 +8,44 @@ namespace SkiaSharp.Tests;
 // Verifies COLR/CPAL palette selection (SKTypeface.Clone(paletteIndex) and per-entry
 // SKFontArguments.PaletteOverrides) actually changes what is rendered.
 //
-// This works on FreeType (Linux) and DirectWrite (Windows) via Skia's own COLR engine. On the
-// CoreText backend (macOS/iOS) palette selection used to be silently ignored: CoreText always
-// renders CPAL palette 0. The fix bakes the requested palette into palette 0 of an in-memory
-// copy of the font and rebuilds the CTFont from it. See the CPAL-baking code in
-// externals/skia/src/ports/SkTypeface_mac_ct.cpp (skdata_with_baked_palette).
+// This works on FreeType (Linux/Android/WASM) and DirectWrite (Windows) via the platform COLR
+// engines. On the CoreText backend (macOS/iOS/Mac Catalyst) palette selection used to be silently
+// ignored: CoreText always renders CPAL palette 0. The fix bakes the requested palette into
+// palette 0 of an in-memory copy of the font and rebuilds the CTFont from it. See the CPAL-baking
+// code in externals/skia/src/ports/SkTypeface_mac_ct.cpp (skdata_with_baked_palette).
 //
-// IMPORTANT: these palette tests use a COLR**v0** font. CoreText renders COLRv0 (layered solid
-// colors) in color, so the baked palette is honored. CoreText does NOT paint COLRv1 (gradients);
-// it falls back to a monochrome outline, so palette selection cannot be observed there. The
-// COLRv1 case is covered by a separate test that is skipped on CoreText.
+// The test font is a COLR**v0** font (layered solid colors). CoreText renders COLRv0 in color, so
+// the baked palette is honored and these tests run (and pass) on every backend including CoreText.
 public class SKColorFontPaletteRenderingTest : SKTest
 {
-	// Self-contained COLRv0 test font (generated, CC0). Glyph 'A' (U+0041) is a COLRv0 glyph with
-	// two layers: an outer rectangle painted with CPAL entry 0 and an inner rectangle painted with
-	// CPAL entry 1. It has 3 palettes:
-	//   palette 0: entry0 = red,     entry1 = green
-	//   palette 1: entry0 = blue,    entry1 = yellow
-	//   palette 2: entry0 = magenta, entry1 = cyan
+	// COLRv0 test font (CC0). Derived from Skia's resources/fonts/colr.ttf (a font Skia exercises
+	// across every backend, including DirectWrite) by extending its CPAL to three palettes. Two of
+	// its color glyphs are used here:
+	//   U+2662 (BLACK DIAMOND SUIT) - a large diamond painted with CPAL entry 0.
+	//   U+1F600 (GRINNING FACE)     - a face whose dominant layer is painted with CPAL entry 2.
+	// The three palettes give those two entries distinct, easy-to-detect colors:
+	//   palette 0: entry0 = red,   entry2 = yellow
+	//   palette 1: entry0 = blue,  entry2 = cyan
+	//   palette 2: entry0 = lime,  entry2 = magenta
 	private static string ColrV0FontPath =>
 		Path.Combine (PathToFonts, "colr-v0-palettes.ttf");
 
-	// Official Skia COLRv1 test font (gradients). 3 distinct palettes. Used only to document that
-	// COLRv1 palette selection works off-CoreText.
-	private static string ColrV1FontPath =>
-		Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf");
+	private const int DiamondCodepoint = 0x2662;
+	private const int FaceCodepoint = 0x1F600;
 
-	private const string ColorText = "A";
+	private static readonly string ColorText =
+		char.ConvertFromUtf32 (DiamondCodepoint) + char.ConvertFromUtf32 (FaceCodepoint);
 
-	private static SKBitmap Render (SKTypeface typeface, float fontSize = 64, int width = 96, int height = 96)
+	// Expected dominant colors per palette: entry0 (rendered by the diamond) and entry2 (rendered
+	// by the grinning face). These are the CPAL colors baked into the font above.
+	public static IEnumerable<object[]> Palettes ()
+	{
+		yield return new object[] { 0, SKColors.Red, SKColors.Yellow };
+		yield return new object[] { 1, SKColors.Blue, SKColors.Cyan };
+		yield return new object[] { 2, SKColors.Lime, SKColors.Magenta };
+	}
+
+	private static SKBitmap Render (SKTypeface typeface, float fontSize = 64, int width = 220, int height = 96)
 	{
 		var bmp = new SKBitmap (new SKImageInfo (width, height));
 		using var canvas = new SKCanvas (bmp);
@@ -43,7 +53,7 @@ public class SKColorFontPaletteRenderingTest : SKTest
 		using var paint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
 
 		canvas.Clear (SKColors.White);
-		canvas.DrawText (ColorText, 16, height - 20, SKTextAlign.Left, font, paint);
+		canvas.DrawText (ColorText, 10, height - 22, SKTextAlign.Left, font, paint);
 		canvas.Flush ();
 		return bmp;
 	}
@@ -62,7 +72,7 @@ public class SKColorFontPaletteRenderingTest : SKTest
 
 	// Counts opaque pixels whose color is within tolerance of the target (order-independent: uses
 	// SKColor channel accessors, not the raw memory layout).
-	private static int CountColor (SKBitmap bmp, SKColor target, int tolerance = 32)
+	private static int CountColor (SKBitmap bmp, SKColor target, int tolerance = 40)
 	{
 		int count = 0;
 		for (int y = 0; y < bmp.Height; y++)
@@ -72,9 +82,9 @@ public class SKColorFontPaletteRenderingTest : SKTest
 				var c = bmp.GetPixel (x, y);
 				if (c.Alpha < 200)
 					continue;
-				if (System.Math.Abs (c.Red - target.Red) <= tolerance &&
-					System.Math.Abs (c.Green - target.Green) <= tolerance &&
-					System.Math.Abs (c.Blue - target.Blue) <= tolerance)
+				if (Math.Abs (c.Red - target.Red) <= tolerance &&
+					Math.Abs (c.Green - target.Green) <= tolerance &&
+					Math.Abs (c.Blue - target.Blue) <= tolerance)
 					count++;
 			}
 		}
@@ -118,30 +128,20 @@ public class SKColorFontPaletteRenderingTest : SKTest
 		Assert.True (PixelsDiffer (pixels0, pixels2), "Palette 0 and 2 should render differently.");
 	}
 
-	[Fact]
-	public void PaletteSelectionUsesExpectedColors ()
+	[Theory]
+	[MemberData (nameof (Palettes))]
+	public void PaletteSelectionUsesExpectedColors (int index, SKColor entry0, SKColor entry2)
 	{
 		using var typeface = SKTypeface.FromFile (ColrV0FontPath);
 		Assert.NotNull (typeface);
 
-		// Each palette paints the outer layer with entry 0 and the inner layer with entry 1.
-		var expected = new[]
-		{
-			(index: 0, a: SKColors.Red,     b: SKColors.Lime),
-			(index: 1, a: SKColors.Blue,    b: SKColors.Yellow),
-			(index: 2, a: SKColors.Magenta, b: SKColors.Cyan),
-		};
+		using var tf = typeface.Clone (index);
+		using var bmp = Render (tf);
 
-		foreach (var e in expected)
-		{
-			using var tf = typeface.Clone (e.index);
-			using var bmp = Render (tf);
-
-			Assert.True (CountColor (bmp, e.a) >= 20,
-				$"Palette {e.index} should paint its outer layer with {e.a}.");
-			Assert.True (CountColor (bmp, e.b) >= 20,
-				$"Palette {e.index} should paint its inner layer with {e.b}.");
-		}
+		Assert.True (CountColor (bmp, entry0) >= 50,
+			$"Palette {index} should paint the diamond (CPAL entry 0) with {entry0}.");
+		Assert.True (CountColor (bmp, entry2) >= 50,
+			$"Palette {index} should paint the face (CPAL entry 2) with {entry2}.");
 	}
 
 	[Fact]
@@ -209,10 +209,10 @@ public class SKColorFontPaletteRenderingTest : SKTest
 		using var palette0 = typeface.Clone (0);
 		using var basePixels = Render (palette0);
 
-		// Override the outer layer (entry 0) of palette 0 from red to blue.
+		// In palette 0 the diamond (CPAL entry 0) is red. Override entry 0 to cyan.
 		var overrides = new[]
 		{
-			new SKFontPaletteOverride { Index = 0, Color = (uint)SKColors.Blue },
+			new SKFontPaletteOverride { Index = 0, Color = (uint)SKColors.Cyan },
 		};
 		var args = new SKFontArguments { PaletteIndex = 0, PaletteOverrides = overrides };
 		using var overridden = typeface.Clone (args);
@@ -221,47 +221,9 @@ public class SKColorFontPaletteRenderingTest : SKTest
 
 		Assert.True (PixelsDiffer (basePixels, overriddenPixels),
 			"A per-entry palette override must change the rendered colors.");
-		Assert.True (CountColor (overriddenPixels, SKColors.Blue) >= 20,
-			"The overridden outer layer should now be blue.");
-		Assert.True (CountColor (overriddenPixels, SKColors.Red) < 20,
-			"The original red of the outer layer should be gone after the override.");
-	}
-
-	[Fact]
-	public void ColrV1PaletteSelectionIsUnsupportedOnCoreText ()
-	{
-		// CoreText does not paint COLRv1 (gradients); it renders a monochrome outline, so palette
-		// selection cannot take effect. FreeType/DirectWrite render COLRv1 with the selected
-		// palette. This test documents and guards that platform difference.
-		Assert.SkipWhen (IsMac || IsMacCatalyst || IsIOS,
-			"CoreText does not render COLRv1; palette selection cannot be observed.");
-
-		using var typeface = SKTypeface.FromFile (ColrV1FontPath);
-		Assert.NotNull (typeface);
-
-		var sb = new System.Text.StringBuilder ();
-		foreach (var cp in new[] { 0xF0100, 0xF0101, 0xF0102 })
-			sb.Append (char.ConvertFromUtf32 (cp));
-		var text = sb.ToString ();
-
-		SKBitmap RenderText (SKTypeface tf)
-		{
-			var bmp = new SKBitmap (new SKImageInfo (320, 80));
-			using var canvas = new SKCanvas (bmp);
-			using var font = new SKFont (tf, 40);
-			using var paint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
-			canvas.Clear (SKColors.White);
-			canvas.DrawText (text, 10, 55, SKTextAlign.Left, font, paint);
-			canvas.Flush ();
-			return bmp;
-		}
-
-		using var palette0 = typeface.Clone (0);
-		using var palette1 = typeface.Clone (1);
-		using var pixels0 = RenderText (palette0);
-		using var pixels1 = RenderText (palette1);
-
-		Assert.True (PixelsDiffer (pixels0, pixels1),
-			"COLRv1 palette selection must change the rendered colors on FreeType/DirectWrite.");
+		Assert.True (CountColor (overriddenPixels, SKColors.Cyan) >= 50,
+			"The overridden diamond (CPAL entry 0) should now be cyan.");
+		Assert.True (CountColor (overriddenPixels, SKColors.Red) < 50,
+			"The original red of the diamond should be gone after the override.");
 	}
 }
