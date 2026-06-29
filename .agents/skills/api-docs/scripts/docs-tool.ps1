@@ -7,16 +7,21 @@
     Agents edit the ECMA/mdoc XML directly, so this tool provides the three
     non-LLM gates the skill relies on:
 
-      resolve-scope <selector>   Turn a human selector into an explicit file list
-                                 (+ candidate C# source path) for sharding.
-      lint <path|selector>       Objective defect scan -> machine findings.
-      validate <path|selector>   Post-edit structural safety vs the git baseline.
+      resolve-scope <all|new|changed|file:PATH>
+                                 List the docs to work on (+ candidate C# source
+                                 path) for sharding. There is no selector grammar:
+                                 `all` lists every type doc (the model picks the
+                                 ones matching a natural-language request itself),
+                                 `new` lists docs with `To be added.` placeholders,
+                                 `changed` lists docs changed vs the git baseline.
+      lint <path|all|new|changed|file:PATH>      Objective defect scan -> machine findings.
+      validate <path|all|new|changed|file:PATH>  Post-edit structural safety vs the git baseline.
 
     Uses .NET XmlDocument (CDATA-preserving). pwsh is pre-installed on CI runners.
 
 .EXAMPLE
-    pwsh docs-tool.ps1 resolve-scope match:Font
-    pwsh docs-tool.ps1 lint type:SKPaint
+    pwsh docs-tool.ps1 resolve-scope all
+    pwsh docs-tool.ps1 lint file:docs/SkiaSharpAPI/SkiaSharp/SKPaint.xml
     pwsh docs-tool.ps1 validate docs/SkiaSharpAPI/SkiaSharp/SKFont.xml
 #>
 
@@ -26,9 +31,7 @@ param(
     [string]$Command,
 
     [Parameter(Position = 1)]
-    [string]$Selector,
-
-    [bool]$Confirm = $true
+    [string]$Selector
 )
 
 $ErrorActionPreference = "Stop"
@@ -113,11 +116,8 @@ function Get-AllDocFiles {
 # ---------------------------------------------------------------------------
 # Scope core (shared by resolve-scope, lint, validate)
 # ---------------------------------------------------------------------------
-$script:LastScopeFuzzy = $false
-
 function Get-ScopeFiles([string]$sel) {
-    if (-not $sel) { Write-Error "a selector is required"; exit 1 }
-    $script:LastScopeFuzzy = $false
+    if (-not $sel) { Write-Error "a mode is required (all|new|changed|file:PATH)"; exit 1 }
     $files = @()
 
     switch -regex ($sel) {
@@ -125,16 +125,6 @@ function Get-ScopeFiles([string]$sel) {
             $p = $Matches[1]
             if (-not [IO.Path]::IsPathRooted($p)) { $p = Join-Path $RepoRoot $p }
             if (Test-Path $p) { $files = @((Get-Item $p)) }
-            break
-        }
-        '^type:(.+)$' {
-            $t = $Matches[1]
-            $files = Get-AllDocFiles | Where-Object { $_.BaseName -eq $t }
-            break
-        }
-        '^ns:(.+)$' {
-            $n = $Matches[1]
-            $files = Get-AllDocFiles | Where-Object { (Split-Path $_.Directory -Leaf) -eq $n }
             break
         }
         '^all$' {
@@ -152,12 +142,7 @@ function Get-ScopeFiles([string]$sel) {
             }
             break
         }
-        '^match:(.+)$' {
-            $m = $Matches[1]; $script:LastScopeFuzzy = $true
-            $files = Get-AllDocFiles | Where-Object { $_.BaseName -like "*$m*" }
-            break
-        }
-        default { Write-Error "Unrecognized selector '$sel'"; exit 1 }
+        default { Write-Error "Unrecognized mode '$sel' (use all|new|changed|file:PATH)"; exit 1 }
     }
 
     return @($files | Sort-Object FullName -Unique)
@@ -165,9 +150,6 @@ function Get-ScopeFiles([string]$sel) {
 
 function Resolve-Scope([string]$sel) {
     $files = Get-ScopeFiles $sel
-    if ($script:LastScopeFuzzy -and $Confirm) {
-        Write-Host "CONFIRM-REQUIRED | $($files.Count) files for '$sel' (re-run with -Confirm:`$false in CI)"
-    }
     foreach ($f in $files) {
         $rel = Get-RelToRepo $f.FullName
         $src = Get-SourcePath $f.FullName
@@ -397,12 +379,12 @@ function Validate-File([string]$xmlPath) {
 }
 
 # ---------------------------------------------------------------------------
-# Resolve a path-or-selector argument to a concrete file list (for lint/validate)
+# Resolve a path-or-mode argument to a concrete file list (for lint/validate)
 # ---------------------------------------------------------------------------
 function Expand-Target([string]$arg) {
-    if (-not $arg) { Write-Error "a path or selector is required"; exit 1 }
-    # Selector form -> use the shared scope core
-    if ($arg -match '^(file:|type:|ns:|match:)' -or $arg -in @('all', 'new', 'changed')) {
+    if (-not $arg) { Write-Error "a path or mode is required (all|new|changed|file:PATH)"; exit 1 }
+    # Inventory mode -> use the shared scope core
+    if ($arg -match '^file:' -or $arg -in @('all', 'new', 'changed')) {
         return @(Get-ScopeFiles $arg | ForEach-Object { $_.FullName })
     }
     # Plain path (file or directory)
@@ -438,8 +420,8 @@ switch ($Command) {
         if ($fail -gt 0) { exit 2 }
     }
     default {
-        Write-Host "Usage: docs-tool.ps1 <resolve-scope|lint|validate> <path|selector> [-Confirm:`$false]"
-        Write-Host "  selectors: file:<p>  type:<T>  ns:<N>  all  new  changed  match:<text>"
+        Write-Host "Usage: docs-tool.ps1 <resolve-scope|lint|validate> <path|all|new|changed|file:PATH>"
+        Write-Host "  resolve-scope lists docs to work on; the model picks theme matches from 'all' itself."
         exit 1
     }
 }

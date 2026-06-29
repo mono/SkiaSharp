@@ -29,8 +29,8 @@ own recollection.
    dotnet cake --target=update-docs            # mdoc update + format → "To be added." placeholders
    ```
 
-2. **Resolve scope** (see [`scope-resolution.md`](scope-resolution.md)). New members are easiest to target
-   with the `new` selector:
+2. **List the docs to fill** (see [`scope-resolution.md`](scope-resolution.md)). Placeholders are easiest to
+   target with the `new` mode:
    ```bash
    pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 resolve-scope new
    ```

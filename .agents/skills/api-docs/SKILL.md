@@ -38,12 +38,13 @@ pass stays auditable and resumable.
 | If the task is… | Read |
 |---|---|
 | Documenting **new** APIs / filling `To be added.` placeholders | [`references/adding.md`](references/adding.md) |
-| **Reviewing/correcting/expanding** existing docs (by API, file, namespace, theme, or all) | [`references/reviewing.md`](references/reviewing.md) |
+| **Reviewing/correcting/expanding** existing docs (one type, a theme, what changed, or all) | [`references/reviewing.md`](references/reviewing.md) |
 
-Both begin by turning a human selector (`type:SKFont`, `match:Font`, `ns:HarfBuzzSharp`, `changed`,
-`all`, …) into an explicit, shardable file list — see
-[`references/scope-resolution.md`](references/scope-resolution.md). For a semantic theme (e.g. "the text
-docs") there is no curated group: resolve `all` and select the matching files yourself.
+There is **no selector to craft.** The user asks in plain language ("review the font docs", "fill in
+what's missing"); `scripts/docs-tool.ps1 resolve-scope` only lists the inventory — `all`, `new`
+(placeholders), `changed`, or `file:PATH` — and **you** pick the files a request covers. For a theme,
+resolve `all` and select the matching files yourself. See
+[`references/scope-resolution.md`](references/scope-resolution.md).
 
 All findings use one machine-parseable contract: `SEVERITY | class | file | docId | message`.
 
@@ -61,8 +62,8 @@ All findings use one machine-parseable contract: `SEVERITY | class | file | docI
 
 ## Tooling & validation
 
-- Scope + checks: `scripts/docs-tool.ps1` — `resolve-scope`, `lint` (deterministic), `validate`
-  (structural). See [`references/validation.md`](references/validation.md).
+- Inventory + checks: `scripts/docs-tool.ps1` — `resolve-scope` (lists `all`/`new`/`changed`/`file:`),
+  `lint` (deterministic), `validate` (structural). See [`references/validation.md`](references/validation.md).
 - Snippet build (C#-only, download is fine): `dotnet cake --target=externals-download` then
   `dotnet build binding/SkiaSharp/SkiaSharp.csproj`.
 - Format: `dotnet cake --target=docs-format-docs`.
