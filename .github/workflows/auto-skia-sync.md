@@ -126,10 +126,25 @@ permissions:
   pull-requests: read
 
 # -- Safe outputs ------------------------------------------------------
-# All GitHub writes (push, PR) are done in post-steps via bash.
-# Stage all safe outputs so the agent can't create issues/PRs directly.
+# All real GitHub writes (push, both PRs) are done in the post-step via bash with
+# SKIASHARP_AUTOBUMP_TOKEN — gh-aw can't create the mono/skia PR (the submodule's merge
+# commits live in a nested repo gh-aw sees only as a gitlink) and `staged: true` keeps the
+# agent from creating anything directly.
+#
+# `create-pull-request` is declared ONLY as an honest completion signal: it is kept STAGED
+# (preview-only — NO real PR is created), so a successful sync registers as a pull-request
+# output instead of being mislabeled a "no-op". The agent calls it when work was done and
+# `noop` only when there genuinely was none.
 safe-outputs:
   staged: true
+  create-pull-request:
+    staged: true
+    if-no-changes: ignore
+  # report-as-issue defaults to true, but this workflow has no `issues: write` and a real sync
+  # is NOT a no-op — disable the no-op→issue posting so genuine no-work runs don't try (and fail)
+  # to file a "no-op runs" issue.
+  noop:
+    report-as-issue: false
 
 # -- Sandbox -----------------------------------------------------------
 # Mount host fontconfig config AND font files into the AWF chroot.
@@ -213,22 +228,18 @@ Base branch (SkiaSharp): `${{ needs.pre_activation.outputs.base_branch }}` — m
 Sync (head) branch: `${{ needs.pre_activation.outputs.head_branch }}` (same name in both repos).  
 Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 
-> **About the base branch.** Most syncs target `main` (the newest, in-development line) with
-> `skiasharp` as the mono/skia base. When an older milestone is requested AND a matching
-> `release/<major>.<milestone>.x` branch exists, this is a **release-line sync**: both PRs target
-> that release branch instead (mono/skia base = the same `release/<major>.<milestone>.x` branch,
-> which the release process guarantees exists). In that case `current == target`, so it is always a
-> **bug-fix-only sync** — do NOT bump the milestone, soname, or nuget versions; only the upstream
-> merge + `cgmanifest.json` commit hash change. Use the base/head branch values above everywhere
-> instead of hardcoding `main`/`skiasharp`/`skia-sync/m{target}`.
+> **Mode (resolved above — don't re-derive).** `is_release == true` ⇒ a **release-line bug-fix
+> sync** (`current == target`): do NOT bump milestone/soname/nuget versions; only `cgmanifest.json`'s
+> hash changes. `upstream_ref == main` ⇒ **`main`/tip mode** (head `skia-sync/main`): also not a
+> version bump, but it MAY carry new APIs (regenerate + build + test as normal). Everything else is a
+> normal milestone bump. See **[skill Phase 1](.agents/skills/update-skia/SKILL.md)** for what each
+> mode means; always use the base/head values above, never hardcode `main`/`skiasharp`/`skia-sync/m{target}`.
 >
-> **`main` (tip) mode.** When the upstream ref above is `main` (head branch `skia-sync/main`), this is a
-> **bleeding-edge sync from the very tip of upstream Skia** (google/skia `main` HEAD), not a `chrome/m<N>`
-> milestone branch. It targets the newest line (`main`/`skiasharp`) and `current == target`, so it is
-> **NOT a version bump** — keep the milestone, soname, and nuget versions unchanged. It may still include
-> new APIs / binding changes (regenerate + build + test as normal), and a tip merge can be large and
-> conflict-heavy because the submodule base is well behind google/skia main; resolve what you reasonably
-> can and record anything unresolved under "items needing human attention".
+> **Tip merges are large and conflict-heavy** (the submodule base is well behind `main`), so the
+> **verify-upstream-or-reapply** policy is mandatory — for every conflicted file, classify each fork
+> patch as *upstreamed* (take upstream's refined form) or *not upstreamed* (re-apply on top), never a
+> blanket `--theirs`/`--ours`, never a silent drop. Full procedure + the mandatory before-merge
+> snapshot/audit: **skill Phase 5** and [gotcha #15](.agents/skills/update-skia/references/known-gotchas.md).
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-10.** Notes specific to this automated workflow:
 
@@ -253,20 +264,27 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   parent-repo change is `cgmanifest.json`'s commit hash. Do NOT advance the milestone.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
   This also applies to Phase 10 if a native rebuild is needed.
-- **Native build environment is fully provisioned by the workflow** (clang, `libc++-dev`/`libc++abi-dev`,
-  fontconfig, ninja). Do NOT modify any native build files (`native/**/build.cake`, `scripts/infra/native/**`)
-  and do NOT change compiler/linker flags (e.g. `-stdlib=libc++`) to work around a build error. You also CANNOT
-  install packages (no apt/sudo inside the sandbox, and the firewall blocks OS package mirrors). If a native
-  build genuinely fails because a dependency is missing from the host, that is a workflow bug: STOP, do not hack
-  the build, and record it in the mono/SkiaSharp summary under "items needing human attention" so the
-  `Install native build dependencies` step can be fixed.
+- **Native build environment is provisioned by the host workflow** (clang, `libc++-dev`/`libc++abi-dev`,
+  fontconfig, ninja). You CANNOT install packages (no apt/sudo in the sandbox; the firewall blocks OS
+  mirrors). If a build fails because a **host dependency is missing**, that's a workflow bug: STOP, do
+  NOT hack compiler/linker flags (e.g. `-stdlib=libc++`) or `scripts/infra/native/**` to silence it
+  (those are shared with the Windows/macOS/iOS/Android/WASM builds you never run here), and record it
+  under "items needing human attention" so the `Install native build dependencies` step can be fixed.
+- **A genuinely required new upstream gn arg** (e.g. `skia_use_partition_alloc=false`, when a new
+  dependency our `DEPS` doesn't vendor forces it) goes in `native/**/build.cake`, NOT a one-off
+  `--gnArgs` flag — see **[skill Phase 7](.agents/skills/update-skia/SKILL.md) / [gotcha #23](.agents/skills/update-skia/references/known-gotchas.md)**.
+  Since you only build Linux x64 here, apply it to every clang platform's `build.cake` that needs it and
+  flag the change in BOTH PR summaries for cross-platform human review.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
 - **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
-  Do NOT push branches, create PRs, or create issues — all GitHub artifacts are handled by the post-step.
-  Just commit locally. Do NOT call `create_issue` or `create_pull_request`.
-- **"No work" signal**: the pre-activation step skips the workflow when there are no new upstream commits,
-  so this should not happen. If somehow it does, do NOT write `skia-sync-env.sh` and stop.
+  Do NOT push branches or create *real* PRs/issues — every GitHub artifact is created by the
+  post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.
+  Do NOT call `create_issue`. Your completion signal is `create_pull_request` (staged) when you did
+  work, or `noop` when you did not — see "Completion signal" at the end of this prompt.
+- **"No work" signal**: the pre-activation step skips the workflow when there are no new upstream
+  commits, so this should rarely happen. If it does, do NOT write `skia-sync-env.sh`, call `noop`
+  with a one-line reason, and stop.
 
 After Phase 10, write these files:
 
@@ -291,7 +309,20 @@ After Phase 10, write these files:
    - Breaking change analysis, version/binding updates, C# changes, build/test results, items needing human attention
 
 All files written to `/tmp/gh-aw/agent/` are automatically uploaded as workflow artifacts.
-Write test output there too (`/tmp/gh-aw/agent/test-output.txt`) so failures can be inspected after the run.
+For Phase 10, write the test-output log to `/tmp/gh-aw/agent/test-output.txt` (in place of the
+skill's default path) so it's uploaded as an artifact and failures can be inspected after the run.
 
 Commit submodule changes inside `externals/skia` on `${{ needs.pre_activation.outputs.head_branch }}`.
 Commit parent repo changes on `${{ needs.pre_activation.outputs.head_branch }}` in the parent.
+
+## Completion signal
+
+When the sync is done — you have committed locally and written `skia-sync-env.sh` plus both
+summaries — call the `create_pull_request` safe-output tool **once** as your completion signal.
+It is **staged** (preview-only: it creates NO real PR and pushes nothing — the post-step opens both
+real PRs with the autobump token), but it records this run as a real upstream sync instead of a
+no-op. Pass a short title (the `[skia-sync] …` title for this mode) and a one-line body pointing at
+the two summary files. Do this **instead of** `noop`.
+
+Call `noop` (and never `create_pull_request`) **only** when there was genuinely no work to do
+— i.e. you did not write `skia-sync-env.sh`.
