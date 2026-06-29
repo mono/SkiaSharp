@@ -14,6 +14,11 @@ bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLo
 
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
 
+string USE_FREETYPE_VAR = Argument ("useFreeType", EnvironmentVariable ("USE_FREETYPE") ?? "false");
+bool USE_FREETYPE = USE_FREETYPE_VAR == "1" || USE_FREETYPE_VAR.ToLower () == "true";
+bool USE_FONTMGR_WIN = !USE_FREETYPE;
+bool SYSTEM_FREETYPE = !USE_FREETYPE;
+
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
@@ -59,6 +64,10 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
+            $"skia_use_freetype={USE_FREETYPE} ".ToLower () +
+            $"skia_enable_fontmgr_custom_empty={USE_FREETYPE} ".ToLower () +
+            $"skia_enable_fontmgr_win={USE_FONTMGR_WIN} ".ToLower () +
+            $"skia_use_system_freetype2={SYSTEM_FREETYPE} ".ToLower () +			
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
