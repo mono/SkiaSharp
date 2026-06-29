@@ -169,11 +169,12 @@ jobs:
           echo "oslabel=$OSLABEL" >> "$GITHUB_OUTPUT"
 
           OUT="$GITHUB_WORKSPACE/bench-out"
-          ART="$OUT/results"
-          mkdir -p "$ART"
+          mkdir -p "$OUT"
 
-          FILTER_ARGS=()
-          for f in $FILTER; do FILTER_ARGS+=(--filter "$f"); done
+          # BenchmarkDotNet takes multiple filter globs as values of a single --filter
+          # option; repeating the option is rejected as "defined multiple times".
+          FILTER_ARGS=(--filter)
+          for f in $FILTER; do FILTER_ARGS+=("$f"); done
 
           FEED_ARGS=()
           if [ -n "$EXTRA_FEED" ]; then
@@ -184,7 +185,7 @@ jobs:
             --project benchmarks/SkiaSharp.Benchmarks.Compare \
             -p:SkiaSharpBenchmarkVersion="$VERSION" \
             "${FEED_ARGS[@]}" \
-            -- "${FILTER_ARGS[@]}" --job "$JOB" --artifacts "$ART"
+            -- "${FILTER_ARGS[@]}" --job "$JOB" --artifacts "$OUT"
 
           printf '{"os":"%s","version":"%s"}\n' "$OSLABEL" "$VERSION" > "$OUT/meta.json"
 
@@ -262,15 +263,16 @@ jobs:
           echo "oslabel=$OSLABEL" >> "$GITHUB_OUTPUT"
 
           OUT="$GITHUB_WORKSPACE/bench-out"
-          ART="$OUT/results"
-          mkdir -p "$ART"
+          mkdir -p "$OUT"
 
-          FILTER_ARGS=()
-          for f in $FILTER; do FILTER_ARGS+=(--filter "$f"); done
+          # BenchmarkDotNet takes multiple filter globs as values of a single --filter
+          # option; repeating the option is rejected as "defined multiple times".
+          FILTER_ARGS=(--filter)
+          for f in $FILTER; do FILTER_ARGS+=("$f"); done
 
           dotnet run -c Release \
             --project benchmarks/SkiaSharp.Benchmarks \
-            -- "${FILTER_ARGS[@]}" --job "$JOB" --artifacts "$ART"
+            -- "${FILTER_ARGS[@]}" --job "$JOB" --artifacts "$OUT"
 
           printf '{"os":"%s","version":"current"}\n' "$OSLABEL" > "$OUT/meta.json"
 
