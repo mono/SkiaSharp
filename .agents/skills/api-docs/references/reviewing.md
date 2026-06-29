@@ -33,8 +33,9 @@ across many files almost certainly skimmed. Every factual finding must cite sour
    ```bash
    pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 resolve-scope <selector>
    ```
-   Examples: `group:text`, `type:SKImageFilter`, `ns:HarfBuzzSharp`, `changed`, `all`. Shard into
-   ~25–40-file batches; review is incremental against the `last-reviewed` marker.
+   Examples: `match:Font`, `type:SKImageFilter`, `ns:HarfBuzzSharp`, `changed`, `all`; for a theme that
+   spans unrelated names, resolve `all` and select the matching files yourself. Shard into ~25–40-file
+   batches; review is incremental against the `last-reviewed` marker.
 
 2. **Run the deterministic linter** on the batch ([`validation.md`](validation.md) §1). It finds objective
    defects with no model cost and emits findings in the shared contract.

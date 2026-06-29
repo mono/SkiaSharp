@@ -40,9 +40,10 @@ pass stays auditable and resumable.
 | Documenting **new** APIs / filling `To be added.` placeholders | [`references/adding.md`](references/adding.md) |
 | **Reviewing/correcting/expanding** existing docs (by API, file, namespace, theme, or all) | [`references/reviewing.md`](references/reviewing.md) |
 
-Both begin by turning a human selector (`type:SKFont`, `group:text`, `ns:HarfBuzzSharp`, `changed`,
+Both begin by turning a human selector (`type:SKFont`, `match:Font`, `ns:HarfBuzzSharp`, `changed`,
 `all`, …) into an explicit, shardable file list — see
-[`references/scope-resolution.md`](references/scope-resolution.md).
+[`references/scope-resolution.md`](references/scope-resolution.md). For a semantic theme (e.g. "the text
+docs") there is no curated group: resolve `all` and select the matching files yourself.
 
 All findings use one machine-parseable contract: `SEVERITY | class | file | docId | message`.
 
@@ -62,7 +63,6 @@ All findings use one machine-parseable contract: `SEVERITY | class | file | docI
 
 - Scope + checks: `scripts/docs-tool.ps1` — `resolve-scope`, `lint` (deterministic), `validate`
   (structural). See [`references/validation.md`](references/validation.md).
-- Curated theme groups: [`assets/scope-aliases.yml`](assets/scope-aliases.yml).
 - Snippet build (C#-only, download is fine): `dotnet cake --target=externals-download` then
   `dotnet build binding/SkiaSharp/SkiaSharp.csproj`.
 - Format: `dotnet cake --target=docs-format-docs`.

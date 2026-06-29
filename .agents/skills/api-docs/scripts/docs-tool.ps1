@@ -15,7 +15,7 @@
     Uses .NET XmlDocument (CDATA-preserving). pwsh is pre-installed on CI runners.
 
 .EXAMPLE
-    pwsh docs-tool.ps1 resolve-scope group:text
+    pwsh docs-tool.ps1 resolve-scope match:Font
     pwsh docs-tool.ps1 lint type:SKPaint
     pwsh docs-tool.ps1 validate docs/SkiaSharpAPI/SkiaSharp/SKFont.xml
 #>
@@ -47,7 +47,6 @@ $DocsSub   = Join-Path $RepoRoot "docs"
 # lets source lookups (binding/) keep working while docs come from elsewhere.
 $DocsGit   = if ($env:DOCS_GIT_ROOT) { (Resolve-Path $env:DOCS_GIT_ROOT).Path } else { $DocsSub }
 $DocsRoot  = if ($env:DOCS_DIR) { (Resolve-Path $env:DOCS_DIR).Path } else { Join-Path $DocsSub "SkiaSharpAPI" }
-$AliasFile = Join-Path $SkillRoot "assets/scope-aliases.yml"
 $ObsFile   = Join-Path $SkillRoot "references/obsolete-api-map.md"
 
 $GeneratedNames = @("index.xml", "_filter.xml")
@@ -105,38 +104,6 @@ function Get-SourcePath([string]$xmlPath) {
     return "NONE"
 }
 
-# ---------------------------------------------------------------------------
-# Scope aliases (tiny YAML reader — list-of-scalars per top-level key, supports
-# a single anchor/alias pair like `font: *text`). Avoids a YAML dependency.
-# ---------------------------------------------------------------------------
-function Read-ScopeAliases {
-    $groups = @{}
-    $anchors = @{}
-    if (-not (Test-Path $AliasFile)) { return $groups }
-    $current = $null
-    foreach ($raw in Get-Content $AliasFile) {
-        $line = $raw -replace '#.*$', ''
-        if ($line -match '^\s*$') { continue }
-        if ($line -match '^([A-Za-z0-9_]+):\s*\*([A-Za-z0-9_]+)\s*$') {
-            # alias: copy a previously-defined anchor
-            $groups[$Matches[1]] = $anchors[$Matches[2]]
-            $current = $null
-            continue
-        }
-        if ($line -match '^([A-Za-z0-9_]+):\s*(?:&([A-Za-z0-9_]+))?\s*$') {
-            $current = $Matches[1]
-            $groups[$current] = @()
-            if ($Matches[2]) { $anchors[$Matches[2]] = $groups[$current] }
-            continue
-        }
-        if ($line -match '^\s*-\s*(\S+)\s*$' -and $current) {
-            $groups[$current] += $Matches[1]
-            if ($anchors.Values -contains $groups[$current]) { } # keep ref
-        }
-    }
-    return $groups
-}
-
 function Get-AllDocFiles {
     Get-ChildItem -Path $DocsRoot -Filter "*.xml" -Recurse -ErrorAction Stop |
         Where-Object { -not (Test-IsGenerated $_.FullName) } |
@@ -188,17 +155,6 @@ function Get-ScopeFiles([string]$sel) {
         '^match:(.+)$' {
             $m = $Matches[1]; $script:LastScopeFuzzy = $true
             $files = Get-AllDocFiles | Where-Object { $_.BaseName -like "*$m*" }
-            break
-        }
-        '^group:(.+)$' {
-            $g = $Matches[1]; $script:LastScopeFuzzy = $true
-            $groups = Read-ScopeAliases
-            if (-not $groups.ContainsKey($g)) { Write-Error "Unknown group '$g'. Known: $($groups.Keys -join ', ')"; exit 1 }
-            $all = Get-AllDocFiles
-            $files = foreach ($name in $groups[$g]) {
-                $hit = $all | Where-Object { $_.BaseName -eq $name }
-                if ($hit) { $hit } else { Write-Warning "group:$g — no file for '$name' (skipped)" }
-            }
             break
         }
         default { Write-Error "Unrecognized selector '$sel'"; exit 1 }
@@ -446,7 +402,7 @@ function Validate-File([string]$xmlPath) {
 function Expand-Target([string]$arg) {
     if (-not $arg) { Write-Error "a path or selector is required"; exit 1 }
     # Selector form -> use the shared scope core
-    if ($arg -match '^(file:|type:|ns:|match:|group:)' -or $arg -in @('all', 'new', 'changed')) {
+    if ($arg -match '^(file:|type:|ns:|match:)' -or $arg -in @('all', 'new', 'changed')) {
         return @(Get-ScopeFiles $arg | ForEach-Object { $_.FullName })
     }
     # Plain path (file or directory)
@@ -483,7 +439,7 @@ switch ($Command) {
     }
     default {
         Write-Host "Usage: docs-tool.ps1 <resolve-scope|lint|validate> <path|selector> [-Confirm:`$false]"
-        Write-Host "  selectors: file:<p>  type:<T>  ns:<N>  all  new  changed  match:<text>  group:<name>"
+        Write-Host "  selectors: file:<p>  type:<T>  ns:<N>  all  new  changed  match:<text>"
         exit 1
     }
 }
