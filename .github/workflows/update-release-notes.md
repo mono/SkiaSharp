@@ -12,6 +12,13 @@ on:
     branches: [main]
     paths-ignore:
       - "documentation/docfx/releases/**"
+      # The pipeline rewrites this PR-author cache and commits it inside its own
+      # docs PR. It lives outside the releases tree, so without this entry merging
+      # that PR re-triggers the whole pipeline on its own commit (a wasted heavy
+      # prepare run). Ignore it: a change to ONLY the cache never needs a docs run,
+      # and the daily cron still picks the cache up. A push that also touches real
+      # sources still triggers (paths-ignore skips only when ALL files match).
+      - "scripts/infra/docs/pr-authors.json"
   schedule:
     # Daily. Catches new stable tags (vX.Y.Z → page flips to "stable"), new
     # release-branch commits (unreleased deltas), and newly published NuGets
