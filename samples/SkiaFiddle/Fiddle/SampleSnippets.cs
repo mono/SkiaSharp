@@ -16,8 +16,10 @@ public static class SampleSnippets
 {
     public const string DefaultDraw =
         """
+        // Dark background.
         canvas.Clear(new SKColor(0x10, 0x14, 0x1E));
 
+        // A glowing disc, filled with a radial gradient (light blue -> deep blue).
         using var paint = new SKPaint { IsAntialias = true };
         var cx = width / 2f;
         var cy = height / 2f;
@@ -29,6 +31,7 @@ public static class SampleSnippets
             null, SKShaderTileMode.Clamp);
         canvas.DrawCircle(cx, cy, r, paint);
 
+        // A centered, bold label sitting just above the disc.
         paint.Shader = null;
         paint.Color = new SKColor(0xE6, 0xF4, 0xFF);
 
@@ -59,11 +62,13 @@ public static class SampleSnippets
 
     public const string OrbitsDraw =
         """
+        // Deep-space background.
         canvas.Clear(new SKColor(0x05, 0x07, 0x12));
 
         var cx = width / 2f;
         var cy = height / 2f;
 
+        // The sun: a soft radial glow that fades to transparent at the rim.
         using var sun = new SKPaint { IsAntialias = true };
         sun.Shader = SKShader.CreateRadialGradient(
             new SKPoint(cx, cy), 60,
@@ -72,6 +77,7 @@ public static class SampleSnippets
             SKShaderTileMode.Clamp);
         canvas.DrawCircle(cx, cy, 60, sun);
 
+        // Faint guide rings, one per planet orbit.
         using var orbitPaint = new SKPaint
         {
             IsAntialias = true,
@@ -82,15 +88,18 @@ public static class SampleSnippets
         foreach (var p in Planets)
             canvas.DrawCircle(cx, cy, p.Radius, orbitPaint);
 
+        // Each planet, with a fading trail behind it to suggest motion.
         using var planet = new SKPaint { IsAntialias = true };
         foreach (var p in Planets)
         {
+            // Current position on the orbit (t drives the animation).
             var angle = t * p.Speed;
             var x = cx + p.Radius * (float)Math.Cos(angle);
             var y = cy + p.Radius * (float)Math.Sin(angle);
             planet.Color = p.Color;
             canvas.DrawCircle(x, y, p.Size, planet);
 
+            // Trail: smaller, ever more transparent dots lagging behind the planet.
             for (int i = 1; i <= 12; i++)
             {
                 var a = angle - i * 0.06f;
@@ -136,12 +145,15 @@ public static class SampleSnippets
 
     public const string PlasmaDraw =
         """
+        // Bail out if the shader failed to compile (see Setup).
         if (Effect is null) { canvas.Clear(SKColors.Red); return; }
 
+        // Feed the canvas size and time into the shader's uniforms.
         using var u = new SKRuntimeEffectUniforms(Effect);
         u["iResolution"] = new[] { (float)width, (float)height };
         u["iTime"] = (float)t;
 
+        // Paint the shader across the whole canvas.
         using var shader = Effect.ToShader(u);
         using var paint = new SKPaint { Shader = shader };
         canvas.DrawRect(0, 0, width, height, paint);
@@ -149,6 +161,7 @@ public static class SampleSnippets
 
     public const string RippleSetup =
         """
+        // SkSL fragment shader — compiled once on the GPU.
         const string Sksl = @"
         uniform float2 iResolution;
         uniform float  iTime;
@@ -175,12 +188,15 @@ public static class SampleSnippets
 
     public const string RippleDraw =
         """
+        // Bail out if the shader failed to compile (see Setup).
         if (Effect is null) { canvas.Clear(SKColors.Red); return; }
 
+        // Feed the canvas size and time into the shader's uniforms.
         using var u = new SKRuntimeEffectUniforms(Effect);
         u["iResolution"] = new[] { (float)width, (float)height };
         u["iTime"] = (float)t;
 
+        // Paint the shader across the whole canvas.
         using var shader = Effect.ToShader(u);
         using var paint = new SKPaint { Shader = shader };
         canvas.DrawRect(0, 0, width, height, paint);
@@ -190,6 +206,9 @@ public static class SampleSnippets
         """
         canvas.Clear(SKColors.White);
         using var paint = new SKPaint { IsAntialias = true };
+
+        // A grid of cells; each cell's hue depends on its position and the time t,
+        // so the whole grid scrolls through the colour wheel.
         const int cols = 12, rows = 8;
         float cellW = width / (float)cols;
         float cellH = height / (float)rows;
@@ -205,6 +224,8 @@ public static class SampleSnippets
     public const string SineWaveDraw =
         """
         canvas.Clear(new SKColor(0xF7, 0xF8, 0xFA));
+
+        // A thick, smooth blue line.
         using var paint = new SKPaint
         {
             IsAntialias = true,
@@ -212,6 +233,8 @@ public static class SampleSnippets
             StrokeWidth = 3,
             Color = new SKColor(0x16, 0x82, 0xFF),
         };
+
+        // Trace a sine wave one pixel-column at a time into a path; t scrolls it.
         using var builder = new SKPathBuilder();
         float midY = height / 2f;
         float amp = height * 0.3f;
@@ -221,6 +244,8 @@ public static class SampleSnippets
             float y = midY + amp * (float)Math.Sin(u * Math.PI * 4 + t * 2);
             if (x == 0) builder.MoveTo(x, y); else builder.LineTo(x, y);
         }
+
+        // Stroke the finished path.
         using var path = builder.Detach();
         canvas.DrawPath(path, paint);
         """;
@@ -230,17 +255,20 @@ public static class SampleSnippets
         canvas.Clear(new SKColor(0x0B, 0x0F, 0x14));
 
         // `image` is the picture chosen in the image strip above the editor.
+        // Scale it to fit the canvas, with a gentle "breathing" pulse driven by t.
         var cx = width / 2f;
         var cy = height / 2f;
         var scale = Math.Min(width, height) / (float)Math.Max(image.Width, image.Height) * 0.72f;
         scale *= 0.95f + 0.05f * (float)Math.Sin(t * 1.5);
 
+        // Build the transform: centre, rock back and forth, then scale about the middle.
         canvas.Save();
         canvas.Translate(cx, cy);
         canvas.RotateDegrees((float)Math.Sin(t * 0.6) * 8);
         canvas.Scale(scale);
         canvas.Translate(-image.Width / 2f, -image.Height / 2f);
 
+        // Draw the image, then a thin border framing it.
         var dst = new SKRect(0, 0, image.Width, image.Height);
         canvas.DrawImage(image, dst, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
 
@@ -254,6 +282,7 @@ public static class SampleSnippets
         canvas.DrawRect(dst, border);
         canvas.Restore();
 
+        // Caption, drawn with the picked `typeface`.
         using var font = new SKFont(typeface, 18);
         using var paint = new SKPaint { Color = new SKColor(0xE6, 0xED, 0xF3), IsAntialias = true };
         const string label = "Pick a source image above";
@@ -274,6 +303,7 @@ public static class SampleSnippets
         };
         using var morphed = typeface.Clone(coords);
 
+        // Draw the big, centred word at the current weight.
         using var font = new SKFont(morphed ?? typeface, 96) { Edging = SKFontEdging.SubpixelAntialias };
         using var paint = new SKPaint { Color = new SKColor(0x10, 0x14, 0x1E), IsAntialias = true };
 
@@ -281,6 +311,7 @@ public static class SampleSnippets
         font.MeasureText(text, out var bounds, paint);
         canvas.DrawText(text, width / 2f - bounds.MidX, height / 2f, SKTextAlign.Left, font, paint);
 
+        // A small read-out of the live weight value.
         using var infoFont = new SKFont(typeface, 22);
         using var infoPaint = new SKPaint { Color = new SKColor(0x88, 0x88, 0x88), IsAntialias = true };
         var info = $"wght {wght:0}";
@@ -298,6 +329,7 @@ public static class SampleSnippets
         if (palette < 0) palette = 0;
         using var colored = typeface.Clone(palette);
 
+        // Draw the big, centred word using the selected palette.
         using var font = new SKFont(colored ?? typeface, 110);
         using var paint = new SKPaint { IsAntialias = true };
 
@@ -305,6 +337,7 @@ public static class SampleSnippets
         font.MeasureText(text, out var bounds, paint);
         canvas.DrawText(text, width / 2f - bounds.MidX, height / 2f + bounds.Height / 2, SKTextAlign.Left, font, paint);
 
+        // A small read-out of the live palette index.
         using var infoFont = new SKFont(SKTypeface.Default, 20);
         using var infoPaint = new SKPaint { Color = new SKColor(0x88, 0x88, 0x88), IsAntialias = true };
         var info = $"palette {palette + 1} / 7";
