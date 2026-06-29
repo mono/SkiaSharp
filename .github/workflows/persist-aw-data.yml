@@ -1,4 +1,4 @@
-name: Persist Agentic Workflow Data
+name: Sync - Agentic Data
 
 # Downloads the agent artifact from a completed agentic workflow run and commits
 # files to the aw-data branch. The data-key (subfolder) is resolved from a
@@ -7,7 +7,7 @@ name: Persist Agentic Workflow Data
 on:
   workflow_run:
     workflows:
-      - "Auto-Triage SkiaSharp Issue"
+      - "Sync - Issue Triage"
     types: [completed]
 
   workflow_dispatch:
@@ -49,7 +49,7 @@ jobs:
           # --- Workflow name → data-key mapping ---
           resolve_key() {
             case "$1" in
-              "Auto-Triage SkiaSharp Issue") echo "ai-triage" ;;
+              "Sync - Issue Triage") echo "ai-triage" ;;
               # Add future mappings here:
               # "Auto-Repro SkiaSharp Issue") echo "ai-repro" ;;
               *) echo "" ;;

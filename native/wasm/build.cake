@@ -59,7 +59,7 @@ Task("libSkiaSharp")
         $"skia_use_wuffs=true " +
         $"skia_enable_skottie=true " +
         $"extra_cflags=[ " +
-        $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
+        $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DXML_POOR_ENTROPY', " +
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
         $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +

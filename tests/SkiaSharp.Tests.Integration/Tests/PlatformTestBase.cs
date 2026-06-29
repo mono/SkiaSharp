@@ -216,14 +216,19 @@ public abstract class PlatformTestBase : IDisposable
         
         using var process = Process.Start(psi)!;
         
-        var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
+        // Start draining both pipes immediately so neither can fill and deadlock,
+        // then enforce the timeout via WaitForExit while the reads are in flight.
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
         
         if (!process.WaitForExit(timeoutSeconds * 1000))
         {
-            process.Kill();
+            try { process.Kill(true); } catch { }
             throw new TimeoutException($"Command timed out after {timeoutSeconds}s");
         }
+        
+        var output = await outputTask;
+        var error = await errorTask;
         
         Output.WriteLine($"Process exited with code {process.ExitCode}");
 

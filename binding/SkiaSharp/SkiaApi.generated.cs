@@ -4081,6 +4081,25 @@ namespace SkiaSharp
 			(sk_colorfilter_new_mode_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_mode> ("sk_colorfilter_new_mode")).Invoke (c, mode);
 		#endif
 
+		// sk_colorfilter_t* sk_colorfilter_new_overdraw(const sk_color_t[6] colors = 6)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		}
+		private static Delegates.sk_colorfilter_new_overdraw sk_colorfilter_new_overdraw_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors) =>
+			(sk_colorfilter_new_overdraw_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_overdraw> ("sk_colorfilter_new_overdraw")).Invoke (colors);
+		#endif
+
 		// sk_colorfilter_t* sk_colorfilter_new_srgb_to_linear_gamma()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -7621,6 +7640,25 @@ namespace SkiaSharp
 			(sk_imagefilter_new_compose_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_compose> ("sk_imagefilter_new_compose")).Invoke (outer, inner);
 		#endif
 
+		// sk_imagefilter_t* sk_imagefilter_new_crop(const sk_rect_t* rect, sk_shader_tilemode_t tileMode, const sk_imagefilter_t* input)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		}
+		private static Delegates.sk_imagefilter_new_crop sk_imagefilter_new_crop_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input) =>
+			(sk_imagefilter_new_crop_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_crop> ("sk_imagefilter_new_crop")).Invoke (rect, tileMode, input);
+		#endif
+
 		// sk_imagefilter_t* sk_imagefilter_new_dilate(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -8476,6 +8514,28 @@ namespace SkiaSharp
 
 		#region sk_paint.h
 
+		// bool sk_paint_can_compute_fast_bounds(const sk_paint_t* cpaint)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		}
+		private static Delegates.sk_paint_can_compute_fast_bounds sk_paint_can_compute_fast_bounds_delegate;
+		internal static bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint) =>
+			(sk_paint_can_compute_fast_bounds_delegate ??= GetSymbol<Delegates.sk_paint_can_compute_fast_bounds> ("sk_paint_can_compute_fast_bounds")).Invoke (cpaint);
+		#endif
+
 		// sk_paint_t* sk_paint_clone(sk_paint_t*)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -8493,6 +8553,25 @@ namespace SkiaSharp
 		private static Delegates.sk_paint_clone sk_paint_clone_delegate;
 		internal static sk_paint_t sk_paint_clone (sk_paint_t param0) =>
 			(sk_paint_clone_delegate ??= GetSymbol<Delegates.sk_paint_clone> ("sk_paint_clone")).Invoke (param0);
+		#endif
+
+		// void sk_paint_compute_fast_bounds(const sk_paint_t* cpaint, const sk_rect_t* orig, sk_rect_t* storage)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		}
+		private static Delegates.sk_paint_compute_fast_bounds sk_paint_compute_fast_bounds_delegate;
+		internal static void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage) =>
+			(sk_paint_compute_fast_bounds_delegate ??= GetSymbol<Delegates.sk_paint_compute_fast_bounds> ("sk_paint_compute_fast_bounds")).Invoke (cpaint, orig, storage);
 		#endif
 
 		// void sk_paint_delete(sk_paint_t*)

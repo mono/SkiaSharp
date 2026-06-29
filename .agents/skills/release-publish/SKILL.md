@@ -194,7 +194,7 @@ git push origin {tag}
 ## Step 5: Refresh Website Release Notes & API Diffs
 
 The website release-notes and API-diff pages (`documentation/docfx/releases/`) are
-produced by the **Update Release Notes & API Diffs** workflow. That workflow runs
+produced by the **Sync - Release Notes & API Diffs** workflow. That workflow runs
 **daily and on pushes to `main`** — it deliberately **no longer triggers on `v*`
 tags** — so after pushing the tag in Step 4, **dispatch it manually** to refresh the
 site immediately instead of waiting up to ~24h for the next daily run.
@@ -209,10 +209,10 @@ safe to run.
 ```bash
 # Always dispatch from main (it regenerates every release's pages, including the
 # tag you just pushed). Do NOT dispatch from the release branch.
-gh workflow run "Update Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
+gh workflow run "Sync - Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
 
 # Optional: follow the run to completion.
-gh run watch "$(gh run list --workflow 'Update Release Notes & API Diffs' --repo mono/SkiaSharp --branch main --limit 1 --json databaseId --jq '.[0].databaseId')" --repo mono/SkiaSharp
+gh run watch "$(gh run list --workflow 'Sync - Release Notes & API Diffs' --repo mono/SkiaSharp --branch main --limit 1 --json databaseId --jq '.[0].databaseId')" --repo mono/SkiaSharp
 ```
 
 If anything changed, the workflow opens (or updates) the rolling `[docs]`

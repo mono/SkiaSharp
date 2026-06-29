@@ -58,7 +58,7 @@ After docs changes are merged to `mono/SkiaSharp-API-docs` `main` (whether from 
 - **Schedule**: Daily at 10 AM UTC
 - **What it does**: Compares the `docs/` submodule SHA with the latest `mono/SkiaSharp-API-docs` `main` SHA. If behind, creates a PR to bump the submodule.
 - **Output**: PR `automation/update-docs-submodule` → `main` in `mono/SkiaSharp`
-- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-docs-submodule-sync.yml) → "Auto Docs Submodule Sync" → "Run workflow"
+- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-docs-submodule-sync.yml) → "Sync - Docs Submodule" → "Run workflow"
 
 ### Pipeline timeline
 

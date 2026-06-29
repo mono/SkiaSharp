@@ -61,6 +61,17 @@ The C API shims (`src/c/gr_context.cpp` etc.) compile as part of `:core`, but ba
 
 Upstream may move previously-core modules into separate optional targets. If the C API exposes functions from that module, add it as an explicit dependency of the `SkiaSharp` target in `BUILD.gn` rather than merging sources into core.
 
+### 23. Required New Upstream GN Arg → `build.cake` (not a one-off flag)
+
+Upstream sometimes introduces a build dependency our fork deliberately does **not** vendor. The fix is a durable gn arg in `build.cake` — not a CLI flag, and not a hack to silence the error.
+
+**Worked example — `skia_use_partition_alloc`.** Upstream's `gn/skia.gni` defaults `skia_use_partition_alloc = is_clang` (true on clang). When true, `BUILD.gn` imports `third_party/externals/partition_alloc/partition_alloc.gni` — but our fork's `DEPS` keeps that entry commented out, so the folder is never fetched and the build aborts. Skia ships an official zero-overhead **noop `raw_ptr`** for exactly this case ("because the partition_alloc dependency is missing"), gated on `SK_USE_PARTITION_ALLOC`, so building with `skia_use_partition_alloc=false` is the *supported embedder path*, not a workaround — it disables Chromium's MiraclePtr/BackupRefPtr hardening (irrelevant to SkiaSharp's trusted-app threat model) with no runtime regression. Vendoring the allocator instead would add a large Chromium dependency across the whole platform matrix for marginal benefit.
+
+**Resolution:**
+- Add the gn arg to **every affected clang platform's** `native/**/build.cake` gn-args list, next to the existing `skia_use_*` toggles — that file is the single source of truth. Do **not** rely on a one-off `dotnet cake … --gnArgs` flag (non-durable, and easily lost).
+- **Sequencing:** a gn arg added upstream *after* a milestone's branch point does not exist in that milestone. Adding it to `build.cake` before the submodule actually carries it fails the build with `Unknown build argument`. Only add it in the same change that advances the submodule to a tree that has the arg (e.g. a tip/`main` sync, or the milestone bump that introduces it).
+- This is **only** for a genuinely required arg. Never add a gn arg — or change compiler/linker flags — merely to silence a build error on one host; that is a missing-dependency problem (the host toolchain/packages), not a build-config one.
+
 ## Dependencies & Bindings
 
 ### 8. DEPS: Fork-Customized Dependencies
@@ -118,25 +129,52 @@ Never use a tree-override merge (`git merge -s ours`, `git read-tree --reset`). 
 | C API source (`src/c/`) | **Keep SkiaSharp + adapt** — fix includes and API calls in post-merge commits |
 | Other upstream source (`src/`, `include/`) | **Check history first** — see gotcha #15 |
 
-### 15. Never `--theirs` Without Checking File History
+### 15. Verify-Upstream-or-Reapply — Never Blanket `--theirs`/`--ours`
 
-**Failure mode**: A merge conflict in an upstream file (outside `src/c/` / `include/c/`) is resolved
-with `git checkout --theirs`, silently overwriting an intentional SkiaSharp fork patch.
+**Failure mode (two directions):**
+- A conflict in an upstream file (outside `src/c/` / `include/c/`) is resolved with
+  `git checkout --theirs`, silently **dropping** an intentional SkiaSharp fork patch.
+- Or our side is blindly kept with `--ours`, **freezing a stale form** of a patch that upstream
+  has since adopted and *refined* (e.g. our `[M150] Turn off LCD in SDF slugs` used `getMaxScale()`;
+  upstream relanded it as `sk_ieee_float_divide(1.f, getMinScale())` — keeping ours would have
+  shipped the worse formulation).
 
-**Mandatory process for EVERY conflicted file:**
+A fork patch in a conflicted file is in exactly **one of two states**. You MUST determine which
+*before* resolving, and resolve accordingly. A blanket `--theirs`/`--ours` is never acceptable.
 
 ```bash
-# BEFORE resolving, check if the fork has intentional patches
-git log --oneline skiasharp -- <conflicted-file>
+# 1. Identify the fork patch(es) touching this file
+git log --oneline {SKIA_BASE_BRANCH} -- <conflicted-file>      # e.g. skiasharp
+# 2. For EACH fork patch, check whether upstream already contains the same change
+git log --oneline upstream/{UPSTREAM_REF} --grep "<key phrase from the patch subject>"
+git log -S "<distinctive line of code from the patch>" --oneline upstream/{UPSTREAM_REF} -- <conflicted-file>
 ```
 
-- If the log shows fork-specific commits (look for "Restore", "patch", "fix", or any non-merge
-  commit), **keep our version** and only absorb upstream's harmless additive changes (new includes).
-- If the log shows only merge commits from prior upstream merges, taking `--theirs` is likely safe.
-- **Never use `git checkout --theirs` as a shortcut** for files you haven't investigated.
+| Patch state | Resolution |
+|---|---|
+| **Upstreamed** — upstream now contains an equivalent (or refined) form | **Take upstream's form.** Our patch is redundant; convergence is correct (upstream may have improved it). Record `"<subject>" upstreamed as <sha>`. |
+| **Not upstreamed** — only our fork carries it | **Re-apply our change on top of upstream's edits** (absorb upstream's harmless additions AND keep our patch). **Never drop it.** Record `"<subject>" re-applied`. |
+
+- **Never** `git checkout --theirs`/`--ours` as a shortcut for a file you have not classified.
+- **Never** "resolve what you reasonably can and move on" — that is how a fork patch gets lost.
+
+**Mandatory audit — no fork patch silently dropped.** Snapshot the fork patches *before* merging so
+you can cross-reference every conflict against them:
+
+```bash
+# before the merge — list our fork's commits on top of the merge base (the patches at risk)
+MB=$(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})
+git log --oneline "$MB..{SKIA_BASE_BRANCH}" > /tmp/fork-patches-before.txt
+```
+
+For **every conflicted file**, find which fork patch(es) from that list touch it and classify each as
+*upstreamed* or *re-applied* (above). Every such patch must appear in the mono/skia PR's "Conflicts
+resolved" table with its disposition. A fork patch on a conflicted file that is **neither** upstreamed
+nor re-applied is a lost patch — STOP and fix it before committing the merge. (Fork patches whose files
+did not conflict merge cleanly and need no listing.)
 
 **Key signal words** in commit messages that indicate intentional fork patches:
-`Restore`, `patch`, `fix for`, `platform`, `workaround`, `SkiaSharp`, `iOS`, `Tizen`
+`Restore`, `patch`, `fix for`, `platform`, `workaround`, `SkiaSharp`, `iOS`, `Tizen`, `[M1xx]`
 
 ## Testing
 
