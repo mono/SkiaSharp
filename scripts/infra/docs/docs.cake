@@ -55,6 +55,201 @@ void RunMdoc (string arguments, DirectoryPath workingDirectory)
     }
 }
 
+// ===========================================================================
+// Docs lint (no LLM): deterministic content checks that docs-format-docs runs
+// over every type file in the same pass that formats it, working on the
+// XDocument it already loaded (see CheckDocs). Each issue is logged as a Cake
+// warning, except broken-cdata which fails the build so nothing site-breaking is
+// ever published; a file that will not parse at all already throws from
+// XDocument.Load. Missing-doc placeholders are reported separately (also
+// warnings).
+// ===========================================================================
+
+string OBSOLETE_MAP_PATH = MakeAbsolute (File (
+    Argument ("obsoleteMap", EnvironmentVariable ("OBSOLETE_MAP")
+        ?? ROOT_PATH.CombineWithFilePath (".agents/skills/api-docs/references/obsolete-api-map.md").FullPath))).FullPath;
+
+// Count of broken-cdata errors found this run; > 0 fails docs-format-docs.
+int DocErrors = 0;
+
+var MISSPELLINGS = new Dictionary<string, string> {
+    { "teh", "the" }, { "recieve", "receive" }, { "seperate", "separate" }, { "occured", "occurred" },
+    { "paramter", "parameter" }, { "retreive", "retrieve" }, { "initalize", "initialize" },
+    { "lenght", "length" }, { "widht", "width" }, { "colour", "color" }, { "visable", "visible" },
+    { "arguement", "argument" }, { "depricated", "deprecated" }, { "existant", "existent" }
+};
+var CREF_PREFIXES = new [] { "T:", "M:", "P:", "F:", "E:", "N:", "Overload:" };
+
+bool IsGeneratedDocFile (string path)
+{
+    var name = System.IO.Path.GetFileName (path);
+    if (name == "index.xml" || name == "_filter.xml") return true;
+    if (name.StartsWith ("ns-") && name.EndsWith (".xml")) return true;
+    if (Regex.IsMatch (path, @"[\\/]FrameworksIndex[\\/]")) return true;
+    return false;
+}
+
+string RelativeToRepo (string abs)
+{
+    var full = abs;
+    try { full = System.IO.Path.GetFullPath (abs); } catch { }
+    var r = ROOT_PATH.FullPath.Replace ('\\', '/').TrimEnd ('/');
+    var f = full.Replace ('\\', '/');
+    if (f.StartsWith (r)) return f.Substring (r.Length).TrimStart ('/');
+    return f;
+}
+
+
+List<string> ReadObsoleteMembers ()
+{
+    var members = new List<string> ();
+    if (!System.IO.File.Exists (OBSOLETE_MAP_PATH)) return members;
+    var inBlock = false;
+    foreach (var line in System.IO.File.ReadAllLines (OBSOLETE_MAP_PATH)) {
+        if (line.StartsWith ("```obsolete-map")) { inBlock = true; continue; }
+        if (inBlock && line.StartsWith ("```")) break;
+        if (!inBlock) continue;
+        var cols = line.Split ('|').Select (c => c.Trim ()).ToArray ();
+        if (cols.Length < 3) continue;
+        if (cols[0] == "Type" || cols[0] == "") continue;
+        var member = Regex.Replace (cols[1], @"\(.*$", "").Trim ();
+        if (!string.IsNullOrEmpty (member)) members.Add (member);
+    }
+    return members.Distinct ().OrderBy (x => x, StringComparer.Ordinal).ToList ();
+}
+
+// Prose text for natural-language checks (repeated word, spelling): one string
+// per text/CDATA node, with fenced code blocks stripped out of CDATA. Splitting
+// per text node means empty inline elements (e.g. <see cref=".." />) act as
+// boundaries, so words on either side are never treated as adjacent. (XCData
+// derives from XText, so OfType<XText> yields both kinds.)
+List<string> ProseSegments (XElement node)
+{
+    var segments = new List<string> ();
+    foreach (var t in node.DescendantNodes ().OfType<XText> ()) {
+        var val = t.Value;
+        if (string.IsNullOrWhiteSpace (val)) continue;
+        if (t is XCData)
+            val = Regex.Replace (val, "(?s)```.*?```", " ");
+        segments.Add (val);
+    }
+    return segments;
+}
+
+// Lint one <Docs> element against the live tree docs-format-docs already loaded
+// (no re-parse). Logs each issue as "[docs] <class> | <file> | <docId> | <msg>"
+// and returns how many it found; broken-cdata is also counted in DocErrors and
+// fails the build, everything else is just a warning.
+int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string rel, List<string> obsoleteMembers)
+{
+    if (string.IsNullOrEmpty (docId)) docId = "-";
+    var where = $"{rel} | {docId}";
+    var count = 0;
+
+    // Empty summary/value/returns (a real defect — mdoc stubs say "To be added.")
+    foreach (var tag in new [] { "summary", "value", "returns" }) {
+        var el = docs.Element (tag);
+        if (el != null && !el.HasElements && string.IsNullOrWhiteSpace (el.Value)) {
+            Warning ($"[docs] empty-tag | {where} | <{tag}> is empty");
+            count++;
+        }
+    }
+
+    foreach (var node in docs.Elements ()) {
+        if (string.IsNullOrWhiteSpace (node.Value) && !node.HasElements)
+            continue;
+        var name = node.Name.LocalName;
+
+        // Half-filled AI remarks scaffold (Value spans CDATA too)
+        if (node.Value.Contains ("[Describe ") || node.Value.Contains ("[Show ")) {
+            Warning ($"[docs] placeholder | {where} | <{name}> has an unfilled remarks scaffold");
+            count++;
+        }
+
+        // Repeated words + spelling run on prose only (code fences stripped;
+        // per text node so empty inline elements don't fuse adjacent words)
+        var reportedRepeat = false;
+        foreach (var seg in ProseSegments (node)) {
+            if (!reportedRepeat) {
+                var rm = Regex.Match (seg, @"(?<![-\w])([A-Za-z]{2,})\s+\1\b", RegexOptions.IgnoreCase);
+                if (rm.Success && rm.Groups[1].Value.ToLowerInvariant () != "that" && rm.Groups[1].Value.ToLowerInvariant () != "had") {
+                    Warning ($"[docs] repeated-word | {where} | repeated word '{rm.Groups[1].Value}' in <{name}>");
+                    count++;
+                    reportedRepeat = true;
+                }
+            }
+            foreach (var kv in MISSPELLINGS) {
+                if (Regex.IsMatch (seg, $@"\b{kv.Key}\b", RegexOptions.IgnoreCase)) {
+                    Warning ($"[docs] spelling | {where} | '{kv.Key}' -> '{kv.Value}' in <{name}>");
+                    count++;
+                }
+            }
+        }
+
+        // <see cref="..."> must carry a DocId prefix (structured XML, not CDATA)
+        foreach (var see in node.Descendants ("see")) {
+            var cref = (string) see.Attribute ("cref");
+            if (cref != null && !CREF_PREFIXES.Any (p => cref.StartsWith (p))) {
+                Warning ($"[docs] invalid-cref | {where} | <see cref='{cref}'> missing DocId prefix (T:/M:/P:/F:)");
+                count++;
+            }
+        }
+
+        // xref / CDATA integrity, by node kind. A <xref: in an ordinary text node
+        // means the CDATA wrapper was destroyed (it is stored escaped as &lt;xref:);
+        // inside CDATA an xref must use the bare UID (no DocId prefix) and must not be
+        // doubly escaped. CDATA also carries the csharp examples we obsolete-check.
+        foreach (var t in node.DescendantNodes ().OfType<XText> ()) {
+            var val = t.Value;
+            if (t is XCData) {
+                if (val.Contains ("&lt;xref:")) {
+                    Error ($"[docs] broken-cdata | {where} | escaped '&lt;xref:' inside CDATA — xref will not resolve");
+                    count++;
+                    DocErrors++;
+                }
+                foreach (Match mm in Regex.Matches (val, @"<xref:(T:|M:|P:|F:)")) {
+                    Warning ($"[docs] bad-xref | {where} | <xref:{mm.Groups[1].Value}...> uses a DocId prefix; xref takes the bare UID");
+                    count++;
+                }
+                foreach (Match fence in Regex.Matches (val, @"(?s)```csharp(.*?)```")) {
+                    var code = fence.Groups[1].Value;
+                    foreach (var om in obsoleteMembers) {
+                        if (Regex.IsMatch (code, @"\." + Regex.Escape (om) + @"\b")) {
+                            Warning ($"[docs] obsolete-in-example | {where} | example uses obsolete member '.{om}' (see obsolete-api-map.md)");
+                            count++;
+                        }
+                    }
+                }
+            } else if (val.Contains ("<xref:")) {
+                Error ($"[docs] broken-cdata | {where} | '<xref:' in plain text — CDATA was destroyed");
+                count++;
+                DocErrors++;
+            }
+        }
+    }
+
+    // Accessor verb agreement on property summaries
+    if (isProp) {
+        var summary = docs.Element ("summary");
+        if (summary != null && !string.IsNullOrWhiteSpace (summary.Value)) {
+            var s = summary.Value.TrimStart ();
+            if (hasSet) {
+                if (Regex.IsMatch (s, @"^Gets\b", RegexOptions.IgnoreCase) && !Regex.IsMatch (s, @"^Gets or sets\b", RegexOptions.IgnoreCase)) {
+                    Warning ($"[docs] accessor-verb | {where} | settable property summary should be 'Gets or sets'");
+                    count++;
+                }
+            } else {
+                if (Regex.IsMatch (s, @"^Gets or sets\b", RegexOptions.IgnoreCase)) {
+                    Warning ($"[docs] accessor-verb | {where} | read-only property summary should be 'Gets' (not 'Gets or sets')");
+                    count++;
+                }
+            }
+        }
+    }
+
+    return count;
+}
+
 Task ("docs-download-output")
     .Does (async () =>
 {
@@ -299,14 +494,13 @@ Task ("docs-format-docs")
         }
     }
 
-    // QA gate state. docs-format-docs is both a formatter and a checker: in the
-    // same pass it walks every type's <Docs> and runs the deterministic lint (see
-    // QaCheckDocs), failing the build if any file has broken CDATA that would break
-    // the site.
-    var qaObsolete = QaObsoleteMembers ();
-    var qaTypeFiles = 0;
-    var qaFindings = 0;
-    QA_ERRORS = 0;
+    // docs-format-docs is both a formatter and a checker: in the same pass it walks
+    // every type's <Docs> and runs the deterministic lint (see CheckDocs), failing
+    // the build if any file has broken CDATA that would break the site.
+    var obsolete = ReadObsoleteMembers ();
+    var lintedTypes = 0;
+    var lintFindings = 0;
+    DocErrors = 0;
 
     foreach (var file in docFiles) {
         Debug("Processing {0}...", file.FullPath);
@@ -318,7 +512,7 @@ Task ("docs-format-docs")
         try {
             xdoc = XDocument.Load (file.FullPath);
         } catch (Exception ex) {
-            throw new Exception ($"{QaRelToRepo (file.FullPath)}: XML will not parse - {ex.Message}", ex);
+            throw new Exception ($"{RelativeToRepo (file.FullPath)}: XML will not parse - {ex.Message}", ex);
         }
 
         // Delete orphan namespace stub files (ns-*.xml) whose namespace no longer
@@ -574,16 +768,16 @@ Task ("docs-format-docs")
         // re-parse). Missing-doc placeholders are reported above; here we drill into
         // each <Docs> to catch broken CDATA (an error - it would break the site) plus
         // quality issues (warnings). Generated index/ns/framework files are skipped.
-        if (xdoc.Root.Name == "Type" && !QaIsGenerated (file.FullPath)) {
-            qaTypeFiles++;
-            var rel = QaRelToRepo (file.FullPath);
+        if (xdoc.Root.Name == "Type" && !IsGeneratedDocFile (file.FullPath)) {
+            lintedTypes++;
+            var rel = RelativeToRepo (file.FullPath);
             var fullName = xdoc.Root.Attribute ("FullName")?.Value;
             var typeName = !string.IsNullOrEmpty (fullName) ? fullName : xdoc.Root.Attribute ("Name")?.Value;
 
             // type-level Docs
             var typeDocs = xdoc.Root.Element ("Docs");
             if (typeDocs != null)
-                qaFindings += QaCheckDocs (typeDocs, "T:" + typeName, false, false, rel, qaObsolete);
+                lintFindings += CheckDocs (typeDocs, "T:" + typeName, false, false, rel, obsolete);
 
             // each Member's Docs (DocId + property accessor shape come from the member)
             foreach (var mn in xdoc.Root.Elements ("Members").Elements ("Member")) {
@@ -594,14 +788,14 @@ Task ("docs-format-docs")
                 var csharp = sigs.FirstOrDefault (s => (string) s.Attribute ("Language") == "C#")?.Attribute ("Value")?.Value ?? "";
                 var isProp = (string) mn.Element ("MemberType") == "Property";
                 var hasSet = isProp && Regex.IsMatch (csharp, @"set\s*;");
-                qaFindings += QaCheckDocs (d, docId, isProp, hasSet, rel, qaObsolete);
+                lintFindings += CheckDocs (d, docId, isProp, hasSet, rel, obsolete);
             }
 
             // MemberGroup carries shared remarks/examples for overload sets (e.g. DrawText)
             foreach (var g in xdoc.Root.Elements ("Members").Elements ("MemberGroup")) {
                 var d = g.Element ("Docs");
                 if (d == null) continue;
-                qaFindings += QaCheckDocs (d, $"G:{typeName}.{(string) g.Attribute ("MemberName")}", false, false, rel, qaObsolete);
+                lintFindings += CheckDocs (d, $"G:{typeName}.{(string) g.Attribute ("MemberName")}", false, false, rel, obsolete);
             }
         }
     }
@@ -681,197 +875,11 @@ Task ("docs-format-docs")
 
     // Lint summary, then fail the build if any doc has broken XML/CDATA.
     Information ("Docs lint: scanned {0} type file(s), {1} finding(s), {2} error(s).",
-        qaTypeFiles, qaFindings, QA_ERRORS);
-    if (QA_ERRORS > 0)
+        lintedTypes, lintFindings, DocErrors);
+    if (DocErrors > 0)
         throw new Exception (
-            $"{QA_ERRORS} doc(s) have broken XML/CDATA that would break the site — fix the [docs] errors logged above.");
+            $"{DocErrors} doc(s) have broken XML/CDATA that would break the site — fix the [docs] errors logged above.");
 });
-
-// ===========================================================================
-// Docs lint (no LLM) — the deterministic content checks that docs-format-docs
-// runs over every type file in the same pass that formats it, working on the
-// XDocument it already loaded (see QaCheckDocs). Findings surface as Cake
-// warnings, except broken-cdata (QA_ERROR_CLASSES) which fails the build so
-// nothing site-breaking is ever published. A file that will not parse at all
-// already throws from XDocument.Load. Missing-doc placeholders are reported
-// separately by docs-format-docs (also as warnings).
-//
-// QA_REPO_ROOT points at the SkiaSharp clone so binding/ lookups and the
-// obsolete-api map resolve even when docs are a separate checkout (the gh-aw
-// auto-api-docs-writer sandbox).
-// ===========================================================================
-
-string QA_REPO_ROOT = ROOT_PATH.FullPath;
-string QA_OBSOLETE_MAP = MakeAbsolute (File (
-    Argument ("obsoleteMap", EnvironmentVariable ("OBSOLETE_MAP")
-        ?? ROOT_PATH.CombineWithFilePath (".agents/skills/api-docs/references/obsolete-api-map.md").FullPath))).FullPath;
-
-var QA_MISSPELL = new Dictionary<string, string> {
-    { "teh", "the" }, { "recieve", "receive" }, { "seperate", "separate" }, { "occured", "occurred" },
-    { "paramter", "parameter" }, { "retreive", "retrieve" }, { "initalize", "initialize" },
-    { "lenght", "length" }, { "widht", "width" }, { "colour", "color" }, { "visable", "visible" },
-    { "arguement", "argument" }, { "depricated", "deprecated" }, { "existant", "existent" }
-};
-var QA_CREF_PREFIXES = new [] { "T:", "M:", "P:", "F:", "E:", "N:", "Overload:" };
-
-bool QaIsGenerated (string path)
-{
-    var name = System.IO.Path.GetFileName (path);
-    if (name == "index.xml" || name == "_filter.xml") return true;
-    if (name.StartsWith ("ns-") && name.EndsWith (".xml")) return true;
-    if (Regex.IsMatch (path, @"[\\/]FrameworksIndex[\\/]")) return true;
-    return false;
-}
-
-string QaRelToRepo (string abs)
-{
-    var full = abs;
-    try { full = System.IO.Path.GetFullPath (abs); } catch { }
-    var r = QA_REPO_ROOT.Replace ('\\', '/').TrimEnd ('/');
-    var f = full.Replace ('\\', '/');
-    if (f.StartsWith (r)) return f.Substring (r.Length).TrimStart ('/');
-    return f;
-}
-
-List<string> QaObsoleteMembers ()
-{
-    var members = new List<string> ();
-    if (!System.IO.File.Exists (QA_OBSOLETE_MAP)) return members;
-    var inBlock = false;
-    foreach (var line in System.IO.File.ReadAllLines (QA_OBSOLETE_MAP)) {
-        if (line.StartsWith ("```obsolete-map")) { inBlock = true; continue; }
-        if (inBlock && line.StartsWith ("```")) break;
-        if (!inBlock) continue;
-        var cols = line.Split ('|').Select (c => c.Trim ()).ToArray ();
-        if (cols.Length < 3) continue;
-        if (cols[0] == "Type" || cols[0] == "") continue;
-        var member = Regex.Replace (cols[1], @"\(.*$", "").Trim ();
-        if (!string.IsNullOrEmpty (member)) members.Add (member);
-    }
-    return members.Distinct ().OrderBy (x => x, StringComparer.Ordinal).ToList ();
-}
-
-// The only class that means the XML's CDATA was destroyed (an escaped xref) and
-// would break the published site, so it FAILS the build. A file that will not
-// parse at all already throws from XDocument.Load in docs-format-docs. Everything
-// else (missing pieces, spelling, style) is a non-fatal warning.
-HashSet<string> QA_ERROR_CLASSES = new HashSet<string> { "broken-cdata" };
-int QA_ERRORS = 0;
-
-int QaEmit (string cls, string file, string docId, string msg)
-{
-    if (string.IsNullOrEmpty (docId)) docId = "-";
-    var line = $"[docs] {cls} | {file} | {docId} | {msg}";
-    if (QA_ERROR_CLASSES.Contains (cls)) { QA_ERRORS++; Error (line); }
-    else { Warning (line); }
-    return 1;
-}
-
-// Prose text for natural-language checks (repeated word, spelling): one string
-// per text/CDATA node, with fenced code blocks stripped out of CDATA. Splitting
-// per text node means empty inline elements (e.g. <see cref=".." />) act as
-// boundaries, so words on either side are never treated as adjacent. (XCData
-// derives from XText, so OfType<XText> yields both kinds.)
-List<string> QaProseSegments (XElement node)
-{
-    var segments = new List<string> ();
-    foreach (var t in node.DescendantNodes ().OfType<XText> ()) {
-        var val = t.Value;
-        if (string.IsNullOrWhiteSpace (val)) continue;
-        if (t is XCData)
-            val = Regex.Replace (val, "(?s)```.*?```", " ");
-        segments.Add (val);
-    }
-    return segments;
-}
-
-// Lint one <Docs> element against the live tree docs-format-docs already loaded
-// (no re-parse). Returns the number of findings; broken-cdata fails the build via
-// QaEmit, everything else is a warning.
-int QaCheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string rel, List<string> obsoleteMembers)
-{
-    var count = 0;
-
-    // Empty summary/value/returns (a real defect — mdoc stubs say "To be added.")
-    foreach (var tag in new [] { "summary", "value", "returns" }) {
-        var el = docs.Element (tag);
-        if (el != null && !el.HasElements && string.IsNullOrWhiteSpace (el.Value))
-            count += QaEmit ("empty-tag", rel, docId, $"<{tag}> is empty");
-    }
-
-    foreach (var node in docs.Elements ()) {
-        if (string.IsNullOrWhiteSpace (node.Value) && !node.HasElements)
-            continue;
-        var name = node.Name.LocalName;
-
-        // Half-filled AI remarks scaffold (Value spans CDATA too)
-        if (node.Value.Contains ("[Describe ") || node.Value.Contains ("[Show "))
-            count += QaEmit ("placeholder", rel, docId, $"<{name}> has an unfilled remarks scaffold");
-
-        // Repeated words + spelling run on prose only (code fences stripped;
-        // per text node so empty inline elements don't fuse adjacent words)
-        var reportedRepeat = false;
-        foreach (var seg in QaProseSegments (node)) {
-            if (!reportedRepeat) {
-                var rm = Regex.Match (seg, @"(?<![-\w])([A-Za-z]{2,})\s+\1\b", RegexOptions.IgnoreCase);
-                if (rm.Success && rm.Groups[1].Value.ToLowerInvariant () != "that" && rm.Groups[1].Value.ToLowerInvariant () != "had") {
-                    count += QaEmit ("repeated-word", rel, docId, $"repeated word '{rm.Groups[1].Value}' in <{name}>");
-                    reportedRepeat = true;
-                }
-            }
-            foreach (var kv in QA_MISSPELL) {
-                if (Regex.IsMatch (seg, $@"\b{kv.Key}\b", RegexOptions.IgnoreCase))
-                    count += QaEmit ("spelling", rel, docId, $"'{kv.Key}' -> '{kv.Value}' in <{name}>");
-            }
-        }
-
-        // <see cref="..."> must carry a DocId prefix (structured XML, not CDATA)
-        foreach (var see in node.Descendants ("see")) {
-            var cref = (string) see.Attribute ("cref");
-            if (cref != null && !QA_CREF_PREFIXES.Any (p => cref.StartsWith (p)))
-                count += QaEmit ("invalid-cref", rel, docId, $"<see cref='{cref}'> missing DocId prefix (T:/M:/P:/F:)");
-        }
-
-        // xref / CDATA integrity, by node kind. A <xref: in an ordinary text node
-        // means the CDATA wrapper was destroyed (it is stored escaped as &lt;xref:);
-        // inside CDATA an xref must use the bare UID (no DocId prefix) and must not be
-        // doubly escaped. CDATA also carries the csharp examples we obsolete-check.
-        foreach (var t in node.DescendantNodes ().OfType<XText> ()) {
-            var val = t.Value;
-            if (t is XCData) {
-                if (val.Contains ("&lt;xref:"))
-                    count += QaEmit ("broken-cdata", rel, docId, "escaped '&lt;xref:' inside CDATA — xref will not resolve");
-                foreach (Match mm in Regex.Matches (val, @"<xref:(T:|M:|P:|F:)"))
-                    count += QaEmit ("bad-xref", rel, docId, $"<xref:{mm.Groups[1].Value}...> uses a DocId prefix; xref takes the bare UID");
-                foreach (Match fence in Regex.Matches (val, @"(?s)```csharp(.*?)```")) {
-                    var code = fence.Groups[1].Value;
-                    foreach (var om in obsoleteMembers)
-                        if (Regex.IsMatch (code, @"\." + Regex.Escape (om) + @"\b"))
-                            count += QaEmit ("obsolete-in-example", rel, docId, $"example uses obsolete member '.{om}' (see obsolete-api-map.md)");
-                }
-            } else if (val.Contains ("<xref:")) {
-                count += QaEmit ("broken-cdata", rel, docId, "'<xref:' in plain text — CDATA was destroyed");
-            }
-        }
-    }
-
-    // Accessor verb agreement on property summaries
-    if (isProp) {
-        var summary = docs.Element ("summary");
-        if (summary != null && !string.IsNullOrWhiteSpace (summary.Value)) {
-            var s = summary.Value.TrimStart ();
-            if (hasSet) {
-                if (Regex.IsMatch (s, @"^Gets\b", RegexOptions.IgnoreCase) && !Regex.IsMatch (s, @"^Gets or sets\b", RegexOptions.IgnoreCase))
-                    count += QaEmit ("accessor-verb", rel, docId, "settable property summary should be 'Gets or sets'");
-            } else {
-                if (Regex.IsMatch (s, @"^Gets or sets\b", RegexOptions.IgnoreCase))
-                    count += QaEmit ("accessor-verb", rel, docId, "read-only property summary should be 'Gets' (not 'Gets or sets')");
-            }
-        }
-    }
-
-    return count;
-}
 
 Task ("update-docs")
     .Description ("Regenerate all docs.")
